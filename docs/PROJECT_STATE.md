@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`0495e95e3bc59fcf546ffa02ee83704a1f63e366`、tree `30071d5a9f4fd92e93f54ddea2e9713382247f74`。これはr13設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`ab91621561926bbd4af90bb0d1ca8551699797d7`、tree `dc8dcc085bcc4e21429201d64e36e4290a14d027`。これはr14設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r13` Sections 28-29。r12 Stage 6 actionability/failure-cursor contractを維持し、Stage 25 same-frame target-ownership evidence closureとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r14` Sections 28-30。r12 Stage 6 exact-pointer／receipt／failure-cursor、r13 Stage 25 same-frame target-ownershipを維持し、required remote Stage 6のscheduler-independent actionability/evidence lifecycleとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -62,11 +62,12 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
-- current required failureは未commit r12 six-path draft上のlocal ordered sequence `r12-trio-fresh-2-d5986723-b`、ordered position 3、variant `stage25-president`、actual stage ID `stage-mugarian-executive-lab`、WebKit 932x430。sole unresolved checkpointは`living-human-target-acquired-or-not-required`で、sequence 3は未実行。failure JSON SHA-256は`78349ab86a65c333c2ce3bebafa4649dd3430a9d04c2fa79e7b7734a47aee469`。
-- Stage 25はshield attack、deployment complete、causal 4軸、screenshot、live battle、fatal diagnostics 0を保持したが、page-lifetime historyはsource-target ID edgeとactor kindだけで同一snapshotのID->side/kind/HPを保持しない。live contact pollはhistorical attack成立時に止まるため、瞬間的なshield -> living-human targetとnon-human targetをartifactから区別できない。unresolvedはtruthfulであり、product targeting/gameplay failureもhuman target成立も現evidenceでは確定しない。
-- r13 classification：`QA_HARNESS_TARGET_OWNERSHIP_HISTORY / LIVE_ONLY_CONTACT_CHECKPOINT + ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION / DESIGN_CHANGE_REQUIRED`。remediationは`PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`。
-- r13 correctionは両`mergeCombatActivityHistory` ownerへ最大96件の`targetOwnershipHistory`を追加し、同一production snapshotでsource/target双方を解決できたtargetId／attackIdentity／pendingWeaponHitsだけを単調保持する。requested zombie proof actor -> live humanのexact observationだけがcheckpointを補完でき、generic edge／attack／audio／causal axes／human count／screenshot／non-human targetは代用不可。r12 pointer/mutex/receipt/acceptance/cancellation/failure-cursor/timeout/checkpoint contractは維持する。
-- r12 required remote history：run `32636742294`、Phase G job `97189630445`、Stage 6 WebKit 667x375、artifact `9492754238`、PR Verify `97187545551` green。r12 draft後はStage 6 standalone 3/3、ordered sequence 1 full 3/3、sequence 2 Stage 6/24までgreenであり、Stage 6 failureはrepeatしていない。
+- current required failureはr13 atomic candidate HEAD `ab91621561926bbd4af90bb0d1ca8551699797d7`／tree `dc8dcc085bcc4e21429201d64e36e4290a14d027`のautomatic run `32656697160`、required Phase G job `97238965438`、artifact `9497903328`。`remote-trio-1` ordered position 1、variant `stage06-spitter-seal`、actual stage ID `stage-nishijin-station-tunnel-seal`、WebKit 667x375で、最初のrAF-only diagnostic sampleが1,041 msでtimeoutし、DOM sample／pointer／receipt／production acceptance前に停止した。Stage 24/25とsequences 2/3は未実行。
+- artifactはexact candidate node `deployment-card-2`／kind `ranger`／slot `1`、correct route/stage/mount/formation、seven cards、energy 70、pointer count 0、fatal console/page/request/HTTP 0を保持する。初期eligibilityとrail centeringは完了したが、post-center DOM rect／hit owner／viewport／rail sampleはrAF待ちより後にあったため取得されなかった。product DOM、deployment handler、gameplay、balance、AI failureは確定しない。
+- r14 classification：`QA_HARNESS_RENDER_OPPORTUNITY_COUPLING / RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT + UNCANCELLED_EVALUATE + PREFLIGHT_EVIDENCE_LOSS / DESIGN_CHANGE_REQUIRED`。remediationは`PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY / HOST_TURN_SEPARATED_SYNC_SNAPSHOTS + NONBLOCKING_RAF_TELEMETRY + PREINPUT_CANCELLATION_AND_EVIDENCE / DESIGN_CHANGE_REQUIRED`。
+- r14 correctionはawaited rAFをdeployment DOM diagnosticsの前提から外す。host-owned 40 ms turnで分離したsynchronous snapshot二件にexact identity／eligibility／hit owner／stable rect/railとpage wall/performance advanceを要求し、rAFはnon-blocking telemetryのみとする。pre-input timeoutはcurrent capture page/contextをclose/awaitし、pending settlementと全preflight/cancellation evidenceを保持してpointer-zero attemptを一件recordする。timeout増加、retry、second pointer、acceptance弱体化、product/gameplay変更は禁止。
+- r13 historical failureはlocal ordered sequence `r12-trio-fresh-2-d5986723-b`のStage 25 target-ownership gap。classificationは`QA_HARNESS_TARGET_OWNERSHIP_HISTORY / LIVE_ONLY_CONTACT_CHECKPOINT + ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION / DESIGN_CHANGE_REQUIRED`、remediationは`PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`。r13 candidateではStage 25 fresh 3/3とordered trio fresh 3/3が成立し、bounded `targetOwnershipHistory`／no-substitution contractを実装済み。これはr14で維持するが、required remote Stage 6 redの代用にはならない。
+- r12 required remote history：base HEAD `0495e95e3bc59fcf546ffa02ee83704a1f63e366`／tree `30071d5a9f4fd92e93f54ddea2e9713382247f74`、run `32636742294`、Phase G job `97189630445`、Stage 6 WebKit 667x375、artifact `9492754238`、PR Verify `97187545551` green。現在は同じrequired Stage 6 gateの二回目failureであり、immediate symptomが異なっても`SAME_GATE_REPEAT_COUNT: 2`として六subsystem auditを完了した。
 - r12 historical classification：`QA_HARNESS_ACTIONABILITY_GATE_POLICY_FAILURE / PRE_POINTER_LOCATOR_STABILITY_TIMEOUT + FAILURE_CURSOR_FINALIZATION_LOSS / DESIGN_CHANGE_REQUIRED`。remediation classは`PHASE_G_REAL_POINTER_ACTIONABILITY / EXPLICIT_HIT_TEST + STABLE_RECT + ONE_INPUT + TRUE_FAILURE_CURSOR / DESIGN_CHANGE_REQUIRED`。Section 28のcontractはr13でも維持する。
 - 以下のr8-r11項目は監査履歴でありcurrent cursorではない。
 - r10 same-worktree bootstrap/preflight、focused source 43/43、lint、build、base-range／six-path auditはgreen。Stage 24 WebKit run 1はPASS、run 2は35 samples中`source=false`のみでFAILし、run 3／canonical Stage 3／correction commit・push／remote CIは未実行のままLunaが`BLOCKED_RETURN_TO_SOL_R10_RUNTIME`で停止した。
@@ -89,23 +90,25 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r11 source-contract history：HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`、tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`、class `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`。これはcurrent cursorではない。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r13 Section 29
+## 6. Version 1.0.0 execution cursor — r14 Section 30
 
-- `LOOP_ITERATION`: `2`。Stage 25 material findingがsecond coherent remediation cycleを開始した。r12 material candidate commitは未作成のためr13 atomic candidateもiteration 2。workflow-restoration promotion HEADを後で作る場合のみiteration 3
-- `SAME_GATE_REPEAT_COUNT`: `1` for current Stage 25 ordered-trio target-ownership checkpoint。これはStage 6の二回目failureではない。同じStage 25 checkpointの次failureで`2`とし、追加edit前にsubsystem-level auditを必須化
-- `LAST_AUDITED_HEAD`: `0495e95e3bc59fcf546ffa02ee83704a1f63e366`
-- `LAST_AUDITED_TREE`: `30071d5a9f4fd92e93f54ddea2e9713382247f74`
-- `FAILED_GATE`: local ordered sequence `r12-trio-fresh-2-d5986723-b`／ordered position 3／Stage 25 WebKit 932x430／`living-human-target-acquired-or-not-required` unresolved；sequence 3未実行
-- `LAST_GREEN_GATE`: r12 source 54/54／lint／build／diff／topology、Stage 6 standalone 3/3、ordered sequence 1 full 3/3、sequence 2 Stage 6/24。r13 runner bytes変更後のacceptanceへ流用しない
-- `REMEDIATION_CLASS`: `PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: same exact six-path worktree -> publish/lock r13 four-path design bytes -> two-path target-history remediation -> focused 54/54/static/lint/build/diff/topology -> fresh Stage 25 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic six-path candidate commit/push -> complete focused remote green -> unchanged Section 28 promotion/full/unfiltered/runtime/final-review/release route
-- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: `2` at failed r13 candidate `ab916215`。next atomic r14 material candidateはiteration 3。focused required gate完全green後に作るworkflow-only release-validation HEADはiteration 4
+- `SAME_GATE_REPEAT_COUNT`: `2` for required Stage 6 gate。r14 focused required gateが完全greenになるまでreset禁止。同じgateの次failureは`3`とし、追加edit前に新しいsix-subsystem auditを必須化
+- `ROLE_LOCK`: `SOL_DESIGN` until r14 four-path publication and green design/source proof；then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `ab91621561926bbd4af90bb0d1ca8551699797d7`
+- `LAST_AUDITED_TREE`: `dc8dcc085bcc4e21429201d64e36e4290a14d027`
+- `FAILED_GATE`: run `32656697160`／required Phase G job `97238965438`／artifact `9497903328`／`remote-trio-1` ordered position 1／Stage 6 WebKit 667x375／first rAF-only sample timeout before DOM sample and pointer。Stage 24/25、sequences 2/3未実行
+- `LAST_GREEN_GATE`: PR Verify `97236416025`、six enemy-runtime shards、Hosted Runner Evidence、three canonical Stage 3 routes、r13 local source/static/Stage25/ordered-trio comparison evidence。required Phase G redへ代用不可
+- `CLASSIFICATION`: `QA_HARNESS_RENDER_OPPORTUNITY_COUPLING / RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT + UNCANCELLED_EVALUATE + PREFLIGHT_EVIDENCE_LOSS / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY / HOST_TURN_SEPARATED_SYNC_SNAPSHOTS + NONBLOCKING_RAF_TELEMETRY + PREINPUT_CANCELLATION_AND_EVIDENCE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact clean `ab916215` worktree -> publish/lock r14 four-path bytes -> two-path scheduler-independent harness remediation -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> fresh Stage 6 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic iteration-3 candidate commit/push -> automatic focused remote complete green -> workflow-only iteration-4 restoration -> same-HEAD full local 54/54/validator/regressions -> one promotion push -> unfiltered remote complete green -> exact-HEAD runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r14 publication and green design/source proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r13はまず四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとdesign/source green proofで固定し、`SOL_REMEDIATION`では二つのPhase G harness pathsだけを追加編集する。最初のmaterial commitは合計six-path atomic candidateであり、作成時にnew HEAD/treeをIssue ledgerへ固定する。旧HEAD/r12 runtime evidenceをr13 candidate acceptanceへ流用しない。focused remote完全green後のpromotion/full/unfiltered routeはSection 28を維持する。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r14はまず四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとdesign/source green proofで固定し、`SOL_REMEDIATION`では二つのPhase G harness pathsだけを追加編集する。最初のmaterial commitはexact six-path atomic iteration-3 candidate。r13 local greenやfailed-HEAD artifactをr14 acceptance/final freezeへ流用しない。focused remote完全green後だけsame-gate countを0へresetし、workflow-only iteration-4 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-29のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r13を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-30のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r14を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

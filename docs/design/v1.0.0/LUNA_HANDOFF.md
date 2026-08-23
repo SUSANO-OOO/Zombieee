@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r13`
+- Canonical Design Lock: `V100-SOL-DL-001 r14`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-21 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 22 is the sole current execution handoff.
+Sections 1-22 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 23 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -970,3 +970,31 @@ Acceptance is exact five-file focused 54/54 with the target-history behavior add
 Current SOL required reading is `AGENTS.md`, `docs/CODEX_TWO_THREAD_WORKFLOW.md`, `docs/CODEX_SOL_ROLE.md`, `docs/PROJECT_STATE.md`, Producer Decisions, Design Lock Sections 28-29, this Section 22, the latest Issue #172 cursor, and live PR/CI/artifacts. It does not alter the historical Luna reading list.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r13` and Issue #172.** In `SOL_DESIGN`, publish and byte-lock the four current docs/design-test paths without an intermediate commit. Only after that publication switch to `SOL_REMEDIATION` and edit the two existing Phase G harness paths. Add first-96/no-eviction same-frame `targetOwnershipHistory` to both merge owners, the exact no-substitution selector/reader/report evidence, the one no-wait final-predicate consumer read, and the required behavior assertions inside the existing causal-history probe. Preserve the r12 six-path draft and every r12 actionability/cursor contract. Require focused 54/54, checkpoint 12/12, static gates, Stage 25 3/3, ordered trio 3/3, one atomic six-path candidate, complete focused remote green, then the unchanged promotion/full/unfiltered/runtime/final-review/release route. Any failure returns inside this SOL-owned `/goal`; do not route to Luna.
+
+## 23. Revision r14 — no active Luna handoff / scheduler-independent Stage 6 actionability
+
+Design Lock Section 30 and the latest explicitly labeled Issue #172 r14 loop-ledger entry are the sole active cursor. Sections 21-22 remain immutable r12-r13 history. Producer's SOL single-owner override remains active; Luna is stopped and receives no classification, retry, correction, QA, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r14 four-path packet is published, byte-locked, and its design/source proof is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `ab91621561926bbd4af90bb0d1ca8551699797d7`
+- `LAST_AUDITED_TREE`: `dc8dcc085bcc4e21429201d64e36e4290a14d027`
+- `FAILED_GATE`: automatic run `32656697160`, required Phase G job `97238965438`, artifact `9497903328`, `remote-trio-1` ordered position 1, Stage 6 WebKit 667x375; first rAF-only diagnostic sample timed out before any DOM sample or pointer; Stage 24/25 and sequences 2/3 were not run
+- `LAST_GREEN_GATE`: PR Verify `97236416025`, six enemy-runtime shards, Hosted Runner Evidence, three canonical Stage 3 routes, plus r13 local source/static/Stage25/ordered-trio comparison evidence; none substitutes for required Phase G red
+- `CLASSIFICATION`: `QA_HARNESS_RENDER_OPPORTUNITY_COUPLING / RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT + UNCANCELLED_EVALUATE + PREFLIGHT_EVIDENCE_LOSS / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY / HOST_TURN_SEPARATED_SYNC_SNAPSHOTS + NONBLOCKING_RAF_TELEMETRY + PREINPUT_CANCELLATION_AND_EVIDENCE / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `2` at failed r13 candidate; the atomic r14 material candidate is iteration 3; the later workflow-only release-validation HEAD is iteration 4
+- `SAME_GATE_REPEAT_COUNT`: `2` for the required Stage 6 gate; reset only after the r14 focused required gate is completely green
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r14 publication and green design/source proof
+- `RESUME_FROM`: exact clean `ab916215` worktree -> publish/lock r14 four-path bytes -> edit only the two Phase G harness paths -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> fresh Stage 6 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic iteration-3 candidate push -> focused remote complete green -> workflow-only iteration-4 restoration -> same-HEAD full local/unfiltered remote/runtime/human/final-review/release route
+
+The bounded correction removes awaited `requestAnimationFrame` from deployment diagnostics. Each sample uses one host-owned 40 ms turn followed by one synchronous, 1,000 ms-bounded DOM/runtime/hit-test snapshot. Two consecutive observations must preserve exact node/kind/slot, eligibility, hit owner, card rect, and rail position while proving increasing ordinals, at least 39 ms host separation, and at least 16 ms page wall/performance advance. One QA-only rAF probe is non-blocking telemetry: `pending` neither passes nor fails the gate. The terminal synchronous recheck, single real `page.mouse.click`, exact trusted pointerdown/up/click receipt, pre-handler identity/eligibility/owner, and production acceptance remain mandatory.
+
+Any pre-input timeout must close and await only the current capture page/context, observe pending settlement, persist cancellation/lifecycle evidence, and record exactly one pointer-zero deployment attempt before rethrowing the primary classified error. Initial diagnostics, centering, scheduler probe, host turns, all samples, terminal recheck, cleanup, and primary/cleanup errors must survive in the failure artifact. There is no timeout increase, retry, second pointer, extra canonical attempt, product mutation, gameplay/balance/AI change, acceptance weakening, workflow edit in the material candidate, or repository-wide normalization. Preserve every r13 target-ownership/no-substitution and causal-evidence rule.
+
+Acceptance remains five-file load 5/5, focused 54/54, checkpoint 12/12, static source proof, lint/build/diff/byte/topology, fresh Stage 6 3/3, and fresh ordered trio 3/3. Create one atomic six-path iteration-3 candidate only after all local gates are green. Required remote red remains authoritative. Another Stage 6 failure sets the same-gate count to 3 and returns to `SOL_DESIGN` with a fresh subsystem audit; no rerun or immediate micro-patch is permitted. Focused complete green alone authorizes the separate workflow-only iteration-4 restoration and the unchanged full/unfiltered/runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval stacked integration/release/Pages/public-QA/recovery/closure tail.
+
+Current SOL required reading is `AGENTS.md`, `docs/CODEX_TWO_THREAD_WORKFLOW.md`, `docs/CODEX_SOL_ROLE.md`, `docs/PROJECT_STATE.md`, Producer Decisions, Design Lock Sections 28-30, this Section 23, the latest Issue #172 cursor, and live PR/CI/artifacts. It does not reactivate the historical Luna reading list.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r14` and Issue #172.** Publish and byte-lock the four r14 design/source paths first. Then, in `SOL_REMEDIATION`, change only the runner and checkpoint test: synchronous scheduler-independent deployment snapshots separated by host turns, non-blocking rAF telemetry, finite cancellation, complete preflight evidence, and one recorded pointer-zero attempt on thrown pre-input failure. Keep r12 receipt/acceptance/cursor and r13 target-ownership contracts unchanged. Require focused 54/54, checkpoint 12/12, Stage 6 3/3, ordered trio 3/3, and one atomic iteration-3 candidate with automatic focused remote complete green. Any failure returns inside this SOL-owned `/goal`; do not route to Luna.

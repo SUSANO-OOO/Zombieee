@@ -101,7 +101,8 @@ const BATTLE_EXTRA_CHECKPOINTS = Object.freeze([
 const RESOLVED_CHECKPOINT_STATUSES = new Set(["completed", "observed", "not-required", "absent"]);
 const DEPLOYMENT_QUEUE_CAPACITY = 3;
 const DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000;
-const DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS = 1_000;
+const DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS = 1_000;
+const DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS = 40;
 const DEPLOYMENT_POINTER_MAX_SAMPLES = 12;
 const DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS = 2_000;
 const DEPLOYMENT_POINTER_ACCEPTANCE_DEADLINE_MS = 5_000;
@@ -185,7 +186,7 @@ function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [],
   const expected = expectedIdentity ?? deploymentCardIdentity(samples[0]?.card);
   if (terminal) {
     if (samples.length < 2) {
-      return { status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", pointerCount: 0, reason: "two-consecutive-rAF-samples-required" };
+      return { status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", pointerCount: 0, reason: "two-consecutive-task-turn-samples-required" };
     }
     const sampleDecision = deploymentPointerPreconditionDecision({ expectedIdentity: expected, samples });
     if (sampleDecision.status !== "ready-for-pointer") return sampleDecision;
@@ -207,6 +208,22 @@ function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [],
   }
   const previous = terminal ? samples.at(-1) : samples.at(-2);
   const previousIdentity = deploymentCardIdentity(previous?.card);
+  const schedulerStateValid = (sample) => ["pending", "observed"].includes(sample?.schedulerProbe?.status);
+  const taskTurnEvidenceValid = terminal || Boolean(
+    Number.isFinite(Number(previous?.sampleOrdinal))
+      && Number.isFinite(Number(current?.sampleOrdinal))
+      && Number(current.sampleOrdinal) > Number(previous.sampleOrdinal)
+      && Number.isFinite(Number(current?.hostTurn?.elapsedMs))
+      && Number(current.hostTurn.elapsedMs) >= DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS - 1
+      && Number.isFinite(Number(previous?.sampledAtWallTimeMs))
+      && Number.isFinite(Number(current?.sampledAtWallTimeMs))
+      && Number(current.sampledAtWallTimeMs) - Number(previous.sampledAtWallTimeMs) >= 16
+      && Number.isFinite(Number(previous?.sampledAtPerformanceMs))
+      && Number.isFinite(Number(current?.sampledAtPerformanceMs))
+      && Number(current.sampledAtPerformanceMs) - Number(previous.sampledAtPerformanceMs) >= 16
+      && schedulerStateValid(previous)
+      && schedulerStateValid(current)
+  );
   const actionable = current.card.rect?.visible === true
     && Number(current.card.rect.width) >= 28
     && Number(current.card.rect.height) >= 24
@@ -245,11 +262,11 @@ function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [],
     || previous.card.pointerEvents === "none"
     || !stableDeploymentRect(previous.card.rect, current.card.rect)
     || Math.abs(Number(previous.card.rail?.scrollLeft ?? 0) - Number(current.card.rail?.scrollLeft ?? 0)) > DEPLOYMENT_POINTER_STABILITY_EPSILON_PX
-    || (!terminal && previous.frameToken === current.frameToken)) {
+    || !taskTurnEvidenceValid) {
     return {
       status: terminal ? "coordinate-invalidated-before-pointer" : "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
       pointerCount: 0,
-      reason: "candidate-not-stable",
+      reason: taskTurnEvidenceValid ? "candidate-not-stable" : "scheduler-independent-sample-separation-missing",
     };
   }
   return {
@@ -848,15 +865,27 @@ function phaseGPointerFailure(code, evidence = {}, pointerCount = 0) {
   return error;
 }
 
-async function withDeploymentPointerDeadline(promise, deadlineMs, code, evidence = {}) {
+async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs, code, evidence = {}) {
   let timeoutId;
   try {
-    return await Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(phaseGPointerFailure(code, { ...evidence, deadlineMs }, 0)), deadlineMs);
+    const outcome = await Promise.race([
+      operationPromise.then(
+        (value) => ({ status: "fulfilled", value }),
+        (error) => ({ status: "rejected", error }),
+      ),
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve({ status: "timeout" }), deadlineMs);
       }),
     ]);
+    if (outcome.status === "fulfilled") return outcome.value;
+    if (outcome.status === "rejected") throw outcome.error;
+    const cancellation = await terminateTimedOutDeploymentPreinput(page, operationPromise);
+    throw phaseGPointerFailure(code, {
+      ...evidence,
+      reason: "preinput-operation-timeout",
+      deadlineMs,
+      cancellation,
+    }, 0);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -878,6 +907,43 @@ async function observePromiseWithin(promise, timeoutMs) {
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function terminateTimedOutDeploymentPreinput(page, operationPromise) {
+  const context = page.context();
+  const browser = context.browser();
+  const lifecycle = [];
+  const pageClosedBeforeCancellation = page.isClosed();
+  const browserConnectedBeforeCancellation = browser?.isConnected() ?? null;
+  const independentLifecycleLoss = pageClosedBeforeCancellation || browserConnectedBeforeCancellation === false;
+  const attemptClose = async (owner, operation, closed) => {
+    const startedAt = Date.now();
+    try {
+      await operation();
+      const verifiedClosed = closed();
+      lifecycle.push({ owner, status: "fulfilled", verifiedClosed, elapsedMs: Date.now() - startedAt });
+      return verifiedClosed;
+    } catch (error) {
+      const verifiedClosed = closed();
+      lifecycle.push({ owner, status: "rejected", error: String(error), verifiedClosed, elapsedMs: Date.now() - startedAt });
+      return verifiedClosed;
+    }
+  };
+  let closed = independentLifecycleLoss;
+  if (!closed) closed = await attemptClose("context", () => context.close(), () => page.isClosed());
+  if (!closed) closed = await attemptClose("page", () => page.close({ runBeforeUnload: false }), () => page.isClosed());
+  const operationSettlement = await observePromiseWithin(operationPromise, 250);
+  return {
+    lifecycle,
+    operationSettlement: { ...operationSettlement, value: undefined },
+    pageClosedBeforeCancellation,
+    browserConnectedBeforeCancellation,
+    independentLifecycleLoss,
+    pageClosed: page.isClosed(),
+    browserConnected: browser?.isConnected() ?? null,
+    terminalLifecycleVerified: closed,
+    lateOperationFulfillment: operationSettlement.status === "fulfilled",
+  };
 }
 
 async function terminateTimedOutDeploymentPointer(page, pointerPromise) {
@@ -931,6 +997,65 @@ async function terminateTimedOutDeploymentPointer(page, pointerPromise) {
     latePointerFulfillment: pointerSettlement.status === "fulfilled",
   };
   return evidence;
+}
+
+async function installDeploymentSchedulerProbe(page, probeId) {
+  if (page.isClosed()) return { probeId, status: "disposed-with-page" };
+  return page.evaluate((schedulerProbeId) => {
+    const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__ ??= new Map();
+    const existing = registry.get(schedulerProbeId);
+    if (existing?.status === "pending" && Number.isFinite(Number(existing.handle))) {
+      cancelAnimationFrame(existing.handle);
+    }
+    const entry = {
+      probeId: schedulerProbeId,
+      status: "pending",
+      requestedAtWallTimeMs: Date.now(),
+      requestedAtPerformanceMs: performance.now(),
+      handle: null,
+      observedAtWallTimeMs: null,
+      observedAtPerformanceMs: null,
+      callbackTimestamp: null,
+    };
+    entry.handle = requestAnimationFrame((callbackTimestamp) => {
+      entry.status = "observed";
+      entry.observedAtWallTimeMs = Date.now();
+      entry.observedAtPerformanceMs = performance.now();
+      entry.callbackTimestamp = callbackTimestamp;
+    });
+    registry.set(schedulerProbeId, entry);
+    return {
+      probeId: entry.probeId,
+      status: entry.status,
+      requestedAtWallTimeMs: entry.requestedAtWallTimeMs,
+      requestedAtPerformanceMs: entry.requestedAtPerformanceMs,
+      observedAtWallTimeMs: entry.observedAtWallTimeMs,
+      observedAtPerformanceMs: entry.observedAtPerformanceMs,
+      callbackTimestamp: entry.callbackTimestamp,
+    };
+  }, probeId);
+}
+
+async function removeDeploymentSchedulerProbe(page, probeId) {
+  if (page.isClosed()) return { probeId, status: "disposed-with-page" };
+  return page.evaluate((schedulerProbeId) => {
+    const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__;
+    const entry = registry?.get(schedulerProbeId) ?? null;
+    if (!entry) return { probeId: schedulerProbeId, status: "missing" };
+    const statusBeforeCleanup = entry.status;
+    if (entry.status === "pending" && Number.isFinite(Number(entry.handle))) cancelAnimationFrame(entry.handle);
+    registry.delete(schedulerProbeId);
+    return {
+      probeId: schedulerProbeId,
+      status: "removed",
+      statusBeforeCleanup,
+      requestedAtWallTimeMs: entry.requestedAtWallTimeMs,
+      requestedAtPerformanceMs: entry.requestedAtPerformanceMs,
+      observedAtWallTimeMs: entry.observedAtWallTimeMs,
+      observedAtPerformanceMs: entry.observedAtPerformanceMs,
+      callbackTimestamp: entry.callbackTimestamp,
+    };
+  }, probeId);
 }
 
 async function centerDeploymentCardInRail(page, identity) {
@@ -1088,7 +1213,7 @@ async function removeDeploymentPointerReceipt(page, attemptId) {
     if (!entry) return;
     for (const type of ["pointerdown", "pointerup", "click"]) document.removeEventListener(type, entry.handler, true);
     registry.delete(receiptAttemptId);
-  }, attemptId), DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS);
+  }, attemptId), DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS);
   if (removal.status !== "fulfilled") {
     throw phaseGPointerFailure("QA_HARNESS_POINTER_RECEIPT_CLEANUP_DIVERGENCE", { attemptId, removal }, 1);
   }
@@ -1102,7 +1227,10 @@ async function performVerifiedDeploymentPointer(page, {
 } = {}) {
   return withPhaseGPageInputLock(page, async () => {
     const recorder = checkpointRecorderFor(page);
+    let attemptRecorded = false;
     const recordPointerResult = (result) => {
+      if (attemptRecorded) return result;
+      attemptRecorded = true;
       const entry = {
         requestedKind: result.requestedKind ?? requestedKind,
         requestedSlot,
@@ -1118,6 +1246,33 @@ async function performVerifiedDeploymentPointer(page, {
       return result;
     };
     const preflightStartedAt = Date.now();
+    const schedulerProbeId = `deployment-scheduler-${preflightStartedAt}-${Math.random().toString(36).slice(2)}`;
+    const preflightEvidence = {
+      schemaVersion: 1,
+      phase,
+      requestedKind,
+      requestedSlot,
+      startedAt: new Date(preflightStartedAt).toISOString(),
+      schedulerProbe: {
+        probeId: schedulerProbeId,
+        installation: null,
+        cleanup: null,
+      },
+      initial: null,
+      resolvedIdentity: null,
+      centered: null,
+      hostTurns: [],
+      samples: [],
+      terminal: null,
+      receiptInstallation: null,
+      timeoutCancellation: null,
+      preinputErrors: [],
+      primaryError: null,
+      cleanupErrors: [],
+    };
+    let schedulerProbeInstalled = false;
+    let pointerDispatched = false;
+    let executionError = null;
     const preflightRemaining = () => DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS - (Date.now() - preflightStartedAt);
     const preflightStep = async (operationFactory, code = "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", evidence = {}) => {
       const remaining = preflightRemaining();
@@ -1127,30 +1282,58 @@ async function performVerifiedDeploymentPointer(page, {
         throw phaseGPointerFailure(code, failureEvidence, 0);
       }
       try {
-        return await withDeploymentPointerDeadline(
-          operationFactory(),
-          Math.min(remaining, DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS),
+        const operationPromise = Promise.resolve().then(operationFactory);
+        return await withDeploymentPreinputDeadline(
+          page,
+          operationPromise,
+          Math.min(remaining, DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS),
           code,
           { phase, ...evidence },
         );
       } catch (error) {
+        const preinputError = {
+          code: error?.code ?? code,
+          error: String(error),
+          pointerCount: error?.pointerCount ?? 0,
+          evidence: error?.phaseGPointerEvidence ?? null,
+        };
+        preflightEvidence.preinputErrors.push(preinputError);
+        if (error?.phaseGPointerEvidence?.cancellation) {
+          preflightEvidence.timeoutCancellation = error.phaseGPointerEvidence.cancellation;
+        }
         if (error?.phaseGTerminalInputFailure === true) {
-          recorder?.setLatestReadableState(error.phaseGPointerEvidence ?? { phase, ...evidence, error: String(error) });
+          recorder?.setLatestReadableState({ preflight: preflightEvidence, failure: preinputError });
           throw error;
         }
         const failureEvidence = { phase, ...evidence, error: String(error) };
-        recorder?.setLatestReadableState(failureEvidence);
+        recorder?.setLatestReadableState({ preflight: preflightEvidence, failure: failureEvidence });
         if (isTransientBrowserClosure(error)) {
           throw phaseGPointerFailure("lifecycle-loss", failureEvidence, 0);
         }
         throw phaseGPointerFailure(code, failureEvidence, 0);
       }
     };
+    const executePointer = async () => {
+    preflightEvidence.schedulerProbe.installation = await preflightStep(
+      () => installDeploymentSchedulerProbe(page, schedulerProbeId),
+      "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      { operation: "scheduler-probe-install", schedulerProbeId },
+    );
+    schedulerProbeInstalled = ["pending", "observed"].includes(preflightEvidence.schedulerProbe.installation?.status);
+    if (!schedulerProbeInstalled) {
+      throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", {
+        phase,
+        reason: "scheduler-probe-installation-missing",
+        schedulerProbe: preflightEvidence.schedulerProbe.installation,
+      }, 0);
+    }
     const initial = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
       requestedKind,
       requestedSlot,
       phase: `${phase}:final-requery`,
+      schedulerProbeId,
     }));
+    preflightEvidence.initial = initial;
     recorder?.setLatestReadableState(initial);
     if (initial.pageClosed || initial.evaluateError) {
       throw phaseGPointerFailure("lifecycle-loss", { phase, initial }, 0);
@@ -1166,31 +1349,54 @@ async function performVerifiedDeploymentPointer(page, {
         requestedKind,
         requestedSlot,
         diagnostics: initial,
+        evidence: { preflight: preflightEvidence },
       });
     }
     const identity = deploymentCardIdentity(candidate);
+    preflightEvidence.resolvedIdentity = identity;
     const centered = await preflightStep(() => centerDeploymentCardInRail(page, identity));
+    preflightEvidence.centered = centered;
     if (centered.status === "candidate-invalidated-before-pointer") {
-      return recordPointerResult({ ...centered, pointerCount: 0, accepted: false, requestedKind: candidate.kind, requestedSlot, diagnostics: initial });
+      return recordPointerResult({
+        ...centered,
+        pointerCount: 0,
+        accepted: false,
+        requestedKind: candidate.kind,
+        requestedSlot,
+        diagnostics: initial,
+        evidence: { preflight: preflightEvidence },
+      });
     }
     if (centered.status !== "centered") {
       throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { phase, identity, centered }, 0);
     }
 
-    const samples = [];
+    const samples = preflightEvidence.samples;
     let stableDecision = null;
     for (let sampleIndex = 0; sampleIndex < DEPLOYMENT_POINTER_MAX_SAMPLES; sampleIndex += 1) {
+      const hostTurnStartedAtWallTimeMs = Date.now();
+      await new Promise((resolve) => setTimeout(resolve, DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS));
+      const hostTurnEndedAtWallTimeMs = Date.now();
+      const hostTurn = {
+        sequence: sampleIndex + 1,
+        startedAtWallTimeMs: hostTurnStartedAtWallTimeMs,
+        endedAtWallTimeMs: hostTurnEndedAtWallTimeMs,
+        elapsedMs: hostTurnEndedAtWallTimeMs - hostTurnStartedAtWallTimeMs,
+      };
+      preflightEvidence.hostTurns.push(hostTurn);
       let diagnostics;
       try {
         diagnostics = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
           requestedKind: candidate.kind,
           requestedSlot,
-          phase: `${phase}:frame-${sampleIndex + 1}`,
-          awaitAnimationFrame: true,
-        }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { samples });
+          phase: `${phase}:sample-${sampleIndex + 1}`,
+          schedulerProbeId,
+        }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { operation: "diagnostic-snapshot", sampleIndex: sampleIndex + 1 });
       } catch (error) {
         samples.push({
-          frameToken: null,
+          sampleOrdinal: null,
+          hostTurn,
+          schedulerProbe: null,
           status: error?.phaseGPointerEvidence?.deadlineMs ? "timeout" : "error",
           sampleIndex: sampleIndex + 1,
           elapsedMs: Date.now() - preflightStartedAt,
@@ -1201,7 +1407,15 @@ async function performVerifiedDeploymentPointer(page, {
         throw phaseGPointerFailure(error?.code ?? "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
       }
       const card = diagnostics.cards?.find((entry) => sameDeploymentCardIdentity(identity, deploymentCardIdentity(entry))) ?? null;
-      const sample = { frameToken: diagnostics.frameToken ?? null, card, diagnostics };
+      const sample = {
+        sampleOrdinal: diagnostics.sampleOrdinal ?? null,
+        hostTurn,
+        sampledAtWallTimeMs: diagnostics.sampledAtWallTimeMs ?? null,
+        sampledAtPerformanceMs: diagnostics.sampledAtPerformanceMs ?? null,
+        schedulerProbe: diagnostics.schedulerProbe ?? null,
+        card,
+        diagnostics,
+      };
       samples.push(sample);
       if (diagnostics.pageClosed || diagnostics.evaluateError) {
         const failureEvidence = { phase, identity, samples, diagnostics };
@@ -1210,7 +1424,15 @@ async function performVerifiedDeploymentPointer(page, {
       }
       const invalidation = deploymentPointerPreconditionDecision({ expectedIdentity: identity, samples: [sample] });
       if (invalidation.status === "candidate-invalidated-before-pointer") {
-        return recordPointerResult({ ...invalidation, accepted: false, requestedKind: candidate.kind, requestedSlot, samples, diagnostics });
+        return recordPointerResult({
+          ...invalidation,
+          accepted: false,
+          requestedKind: candidate.kind,
+          requestedSlot,
+          samples,
+          diagnostics,
+          evidence: { preflight: preflightEvidence },
+        });
       }
       if (samples.length >= 2) {
         const decision = deploymentPointerPreconditionDecision({ expectedIdentity: identity, samples: samples.slice(-2) });
@@ -1224,7 +1446,7 @@ async function performVerifiedDeploymentPointer(page, {
       const failureEvidence = {
         phase,
         identity,
-        reason: "no-two-consecutive-stable-actionable-frames",
+        reason: "no-two-consecutive-stable-actionable-task-turn-samples",
         samples,
       };
       recorder?.setLatestReadableState(failureEvidence);
@@ -1235,14 +1457,20 @@ async function performVerifiedDeploymentPointer(page, {
     let receiptInstalled = false;
     let primaryError = null;
     try {
-      await preflightStep(() => installDeploymentPointerReceipt(page, attemptId, identity), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { identity, samples });
+      preflightEvidence.receiptInstallation = await preflightStep(
+        () => installDeploymentPointerReceipt(page, attemptId, identity),
+        "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+        { operation: "receipt-install", attemptId, identity },
+      );
       receiptInstalled = true;
       const terminalDiagnostics = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
         requestedKind: candidate.kind,
         requestedSlot,
         phase: `${phase}:terminal-recheck`,
+        schedulerProbeId,
         dispatchAttemptId: attemptId,
-      }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { identity, samples });
+      }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { operation: "terminal-diagnostic", attemptId, identity });
+      preflightEvidence.terminal = terminalDiagnostics;
       if (terminalDiagnostics.pageClosed || terminalDiagnostics.evaluateError) {
         const failureEvidence = { phase, identity, samples, terminalDiagnostics };
         recorder?.setLatestReadableState(failureEvidence);
@@ -1256,14 +1484,29 @@ async function performVerifiedDeploymentPointer(page, {
         throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
       }
       const terminalCard = terminalDiagnostics.cards?.find((entry) => sameDeploymentCardIdentity(identity, deploymentCardIdentity(entry))) ?? null;
-      const terminal = { frameToken: terminalDiagnostics.frameToken ?? null, card: terminalCard, diagnostics: terminalDiagnostics };
+      const terminal = {
+        sampleOrdinal: terminalDiagnostics.sampleOrdinal ?? null,
+        sampledAtWallTimeMs: terminalDiagnostics.sampledAtWallTimeMs ?? null,
+        sampledAtPerformanceMs: terminalDiagnostics.sampledAtPerformanceMs ?? null,
+        schedulerProbe: terminalDiagnostics.schedulerProbe ?? null,
+        card: terminalCard,
+        diagnostics: terminalDiagnostics,
+      };
       const terminalDecision = deploymentPointerPreconditionDecision({
         expectedIdentity: identity,
         samples,
         terminal,
       });
       if (["candidate-invalidated-before-pointer", "coordinate-invalidated-before-pointer"].includes(terminalDecision.status)) {
-        return recordPointerResult({ ...terminalDecision, accepted: false, requestedKind: candidate.kind, requestedSlot, samples, diagnostics: terminalDiagnostics });
+        return recordPointerResult({
+          ...terminalDecision,
+          accepted: false,
+          requestedKind: candidate.kind,
+          requestedSlot,
+          samples,
+          diagnostics: terminalDiagnostics,
+          evidence: { preflight: preflightEvidence },
+        });
       }
       if (terminalDecision.status !== "ready-for-pointer") {
         const failureEvidence = {
@@ -1284,6 +1527,7 @@ async function performVerifiedDeploymentPointer(page, {
 
       const point = terminalDecision.point;
       const dispatchStartedAt = Date.now();
+      pointerDispatched = true;
       const pointerPromise = page.mouse.click(point.x, point.y);
       let dispatchTimer;
       const dispatchResult = await Promise.race([
@@ -1345,6 +1589,7 @@ async function performVerifiedDeploymentPointer(page, {
           receiptReads: receiptResult.reads,
           samples,
           before: terminalDiagnostics,
+          preflight: preflightEvidence,
         }, receiptOutcome.pointerCount);
       }
       const acceptance = await waitForDeploymentAcceptance(
@@ -1384,6 +1629,7 @@ async function performVerifiedDeploymentPointer(page, {
         before: terminalDiagnostics,
         after: acceptance.diagnostics,
         acceptanceReads: acceptance.reads,
+        preflight: preflightEvidence,
       };
       recorder?.setLatestReadableState(evidence);
       if (outcome.status !== "accepted") {
@@ -1416,6 +1662,93 @@ async function performVerifiedDeploymentPointer(page, {
             primaryFailure: primaryError.phaseGPointerEvidence,
             receiptCleanupFailure: cleanupEvidence,
           });
+        }
+      }
+    }
+    };
+    try {
+      return await executePointer();
+    } catch (error) {
+      executionError = error;
+      preflightEvidence.primaryError = {
+        name: error?.name ?? null,
+        code: error?.code ?? null,
+        message: error?.message ?? String(error),
+        pointerCount: error?.pointerCount ?? 0,
+      };
+      if (!pointerDispatched) {
+        const failureEvidence = {
+          ...(error?.phaseGPointerEvidence ?? {}),
+          preflight: preflightEvidence,
+        };
+        error.phaseGPointerEvidence = failureEvidence;
+        if (!attemptRecorded) {
+          recordPointerResult({
+            status: error?.code ?? "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+            pointerCount: error?.pointerCount ?? 0,
+            accepted: false,
+            requestedKind: preflightEvidence.resolvedIdentity?.kind ?? requestedKind,
+            requestedSlot,
+            samples: preflightEvidence.samples,
+            diagnostics: preflightEvidence.terminal
+              ?? preflightEvidence.samples.at(-1)?.diagnostics
+              ?? preflightEvidence.initial,
+            evidence: failureEvidence,
+          });
+        }
+      }
+      throw error;
+    } finally {
+      if (schedulerProbeInstalled) {
+        try {
+          const cleanupPromise = Promise.resolve().then(() => removeDeploymentSchedulerProbe(page, schedulerProbeId));
+          preflightEvidence.schedulerProbe.cleanup = await withDeploymentPreinputDeadline(
+            page,
+            cleanupPromise,
+            DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS,
+            "QA_HARNESS_POINTER_SCHEDULER_CLEANUP_DIVERGENCE",
+            { phase, schedulerProbeId, operation: "scheduler-probe-cleanup" },
+          );
+        } catch (cleanupError) {
+          const cleanupEvidence = cleanupError?.phaseGPointerEvidence ?? {
+            phase,
+            schedulerProbeId,
+            error: String(cleanupError),
+          };
+          preflightEvidence.schedulerProbe.cleanup = { status: "failed", evidence: cleanupEvidence };
+          preflightEvidence.cleanupErrors.push({ owner: "scheduler-probe", evidence: cleanupEvidence });
+          if (executionError) {
+            executionError.phaseGPointerEvidence = {
+              ...(executionError.phaseGPointerEvidence ?? {}),
+              schedulerCleanupFailure: cleanupEvidence,
+              preflight: preflightEvidence,
+            };
+            recorder?.setLatestReadableState({
+              primaryFailure: executionError.phaseGPointerEvidence,
+              schedulerCleanupFailure: cleanupEvidence,
+            });
+          } else {
+            const cleanupFailure = phaseGPointerFailure(
+              "QA_HARNESS_POINTER_SCHEDULER_CLEANUP_DIVERGENCE",
+              { phase, schedulerProbeId, preflight: preflightEvidence, cleanup: cleanupEvidence },
+              pointerDispatched ? 1 : 0,
+            );
+            if (!attemptRecorded) {
+              recordPointerResult({
+                status: cleanupFailure.code,
+                pointerCount: cleanupFailure.pointerCount,
+                accepted: false,
+                requestedKind: preflightEvidence.resolvedIdentity?.kind ?? requestedKind,
+                requestedSlot,
+                samples: preflightEvidence.samples,
+                diagnostics: preflightEvidence.terminal
+                  ?? preflightEvidence.samples.at(-1)?.diagnostics
+                  ?? preflightEvidence.initial,
+                evidence: cleanupFailure.phaseGPointerEvidence,
+              });
+            }
+            throw cleanupFailure;
+          }
         }
       }
     }
@@ -2403,7 +2736,7 @@ async function readBattleDeploymentDiagnostics(page, {
   requestedKind = null,
   requestedSlot = null,
   phase = null,
-  awaitAnimationFrame = false,
+  schedulerProbeId = null,
   dispatchAttemptId = null,
 } = {}) {
   if (page.isClosed()) {
@@ -2413,14 +2746,26 @@ async function readBattleDeploymentDiagnostics(page, {
       requestedKind,
       requestedSlot,
       phase,
-      awaitAnimationFrame,
+      schedulerProbeId,
       dispatchAttemptId,
     };
   }
-  const diagnostics = await page.evaluate(async ({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, waitForAnimationFrame, receiptAttemptId }) => {
-    const frameToken = waitForAnimationFrame
-      ? await new Promise((resolve) => requestAnimationFrame(resolve))
-      : performance.now();
+  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, activeSchedulerProbeId, receiptAttemptId }) => {
+    const diagnosticRegistry = window.__V100_PHASE_G_DEPLOYMENT_DIAGNOSTICS__ ??= { sampleOrdinal: 0 };
+    diagnosticRegistry.sampleOrdinal += 1;
+    const sampleOrdinal = diagnosticRegistry.sampleOrdinal;
+    const schedulerEntry = activeSchedulerProbeId
+      ? window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__?.get(activeSchedulerProbeId)
+      : null;
+    const schedulerProbe = schedulerEntry ? {
+      probeId: schedulerEntry.probeId,
+      status: schedulerEntry.status,
+      requestedAtWallTimeMs: schedulerEntry.requestedAtWallTimeMs,
+      requestedAtPerformanceMs: schedulerEntry.requestedAtPerformanceMs,
+      observedAtWallTimeMs: schedulerEntry.observedAtWallTimeMs,
+      observedAtPerformanceMs: schedulerEntry.observedAtPerformanceMs,
+      callbackTimestamp: schedulerEntry.callbackTimestamp,
+    } : (activeSchedulerProbeId ? { probeId: activeSchedulerProbeId, status: "missing" } : null);
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
     const nodeRegistry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
       ids: new WeakMap(),
@@ -2548,9 +2893,10 @@ async function readBattleDeploymentDiagnostics(page, {
       phase: diagnosticPhase,
       dispatchAttemptId: receiptAttemptId,
       dispatchStartedAtPerformanceMs: dispatchReceipt?.dispatchStartedAtPerformanceMs ?? null,
-      frameToken,
+      sampleOrdinal,
       sampledAtWallTimeMs: Date.now(),
       sampledAtPerformanceMs: performance.now(),
+      schedulerProbe,
       viewport: {
         x: window.visualViewport?.offsetLeft ?? 0,
         y: window.visualViewport?.offsetTop ?? 0,
@@ -2562,6 +2908,7 @@ async function readBattleDeploymentDiagnostics(page, {
         visibilityState: document.visibilityState,
         hidden: document.hidden,
         readyState: document.readyState,
+        hasFocus: document.hasFocus(),
         v100Phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
         battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
       },
@@ -2603,13 +2950,13 @@ async function readBattleDeploymentDiagnostics(page, {
       })),
       objectiveText,
     };
-  }, { requestedKind, requestedSlot, phase, waitForAnimationFrame: awaitAnimationFrame, receiptAttemptId: dispatchAttemptId }).catch((error) => ({
+  }, { requestedKind, requestedSlot, phase, activeSchedulerProbeId: schedulerProbeId, receiptAttemptId: dispatchAttemptId }).catch((error) => ({
     capturedAt: new Date().toISOString(),
     pageClosed: page.isClosed(),
     requestedKind,
     requestedSlot,
     phase,
-    awaitAnimationFrame,
+    schedulerProbeId,
     dispatchAttemptId,
     evaluateError: String(error),
   }));

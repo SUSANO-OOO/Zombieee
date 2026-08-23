@@ -38,9 +38,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r13`/u);
+  assert.match(design, /Revision: `r14`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r13`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r14`/u);
   assert.match(handoff, /docs\/CODEX_SOL_ROLE\.md/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -302,7 +302,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /sourceToTargetEdges/u);
   assert.match(causalTest, /sourceAttribution/u);
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r13`/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r14`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
   for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
     assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
@@ -319,17 +319,19 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
 });
 
-test("r12-r13 lock SOL actionability and target-ownership closure with one final Producer checkpoint", async () => {
+test("r12-r14 lock SOL actionability, target ownership, and scheduler-independent closure with one final Producer checkpoint", async () => {
   const [design, handoff, projectState] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
     readFile(PROJECT_STATE, "utf8"),
   ]);
   const r12 = design.match(/## 28\. Revision r12([\s\S]+?)(?=## 29\. Revision r13)/u)?.[1] ?? "";
-  const r13 = design.match(/## 29\. Revision r13([\s\S]*)$/u)?.[1] ?? "";
-  const activeHandoff = handoff.match(/## 22\. Revision r13([\s\S]*)$/u)?.[1] ?? "";
+  const r13 = design.match(/## 29\. Revision r13([\s\S]+?)(?=## 30\. Revision r14)/u)?.[1] ?? "";
+  const r14 = design.match(/## 30\. Revision r14([\s\S]*)$/u)?.[1] ?? "";
+  const historicalHandoff = handoff.match(/## 22\. Revision r13([\s\S]+?)(?=## 23\. Revision r14)/u)?.[1] ?? "";
+  const activeHandoff = handoff.match(/## 23\. Revision r14([\s\S]*)$/u)?.[1] ?? "";
   const currentProcess = projectState.match(/## 4\. 実行体制 — V1 SOL single-owner override([\s\S]+?)## 5\./u)?.[1] ?? "";
-  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r13 Section 29([\s\S]+?)### Post-V1/u)?.[1] ?? "";
+  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r14 Section 30([\s\S]+?)### Post-V1/u)?.[1] ?? "";
 
   for (const source of [r12, projectState]) {
     assert.match(source, /0495e95e3bc59fcf546ffa02ee83704a1f63e366/u);
@@ -424,17 +426,19 @@ test("r12-r13 lock SOL actionability and target-ownership closure with one final
   assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
   assert.doesNotMatch(activeHandoff, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   assert.match(activeHandoff, /ROLE_LOCK`: `SOL_DESIGN`[\s\S]*then `SOL_REMEDIATION`/u);
-  assert.match(activeHandoff, /Issue-locked r13 publication/u);
-  assert.match(activeHandoff, /actual stage ID `stage-mugarian-executive-lab`/u);
-  assert.match(activeHandoff, /targetOwnershipHistory/u);
-  assert.match(activeHandoff, /maximum 96/u);
-  assert.match(activeHandoff, /proofActorHumanTargetFromHistory/u);
-  assert.match(activeHandoff, /Generic source-target edges[\s\S]*never substitutes/u);
-  assert.match(activeHandoff, /Stage 25 fresh 3\/3/u);
-  assert.match(activeHandoff, /ordered trio fresh 3\/3/u);
+  assert.match(activeHandoff, /Issue-locked r14 publication/u);
+  assert.match(historicalHandoff, /actual stage ID `stage-mugarian-executive-lab`/u);
+  assert.match(historicalHandoff, /targetOwnershipHistory/u);
+  assert.match(historicalHandoff, /maximum 96/u);
+  assert.match(historicalHandoff, /proofActorHumanTargetFromHistory/u);
+  assert.match(historicalHandoff, /Generic source-target edges[\s\S]*never substitutes/u);
+  assert.match(historicalHandoff, /Stage 25 fresh 3\/3/u);
+  assert.match(historicalHandoff, /ordered trio fresh 3\/3/u);
   assert.match(r13, /QA_HARNESS_TARGET_OWNERSHIP_HISTORY \/ LIVE_ONLY_CONTACT_CHECKPOINT \+ ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION \/ DESIGN_CHANGE_REQUIRED/u);
-  for (const source of [r13, activeHandoff, projectState, currentCursor]) {
+  for (const source of [r13, historicalHandoff, projectState]) {
     assert.match(source, /PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP \/ MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY \+ NO_GENERIC_SUBSTITUTION \/ DESIGN_CHANGE_REQUIRED/u);
+  }
+  for (const source of [r13, historicalHandoff]) {
     assert.match(source, /r12-trio-fresh-2-d5986723-b/u);
     assert.match(source, /living-human-target-acquired-or-not-required/u);
   }
@@ -457,13 +461,59 @@ test("r12-r13 lock SOL actionability and target-ownership closure with one final
   assert.match(r13, /QA_HARNESS_TARGET_IDENTITY_OBSERVATION_GAP/u);
   assert.match(r13, /LOOP_ITERATION`: `2`/u);
   assert.match(r13, /SAME_GATE_REPEAT_COUNT`: `1` for the current Stage 25/u);
-  for (const source of [r12, r13, activeHandoff, currentCursor]) {
+  for (const source of [r12, r13, historicalHandoff]) {
     assert.match(source, /workflow-restoration promotion HEAD|workflow-only iteration-3 HEAD/u);
     assert.match(source, /remain `2`|remain iteration 2|iteration 3|`2`を維持/u);
   }
+
+  for (const source of [r14, activeHandoff, projectState, currentCursor]) {
+    assert.match(source, /ab91621561926bbd4af90bb0d1ca8551699797d7/u);
+    assert.match(source, /dc8dcc085bcc4e21429201d64e36e4290a14d027/u);
+    assert.match(source, /32656697160/u);
+    assert.match(source, /97238965438/u);
+    assert.match(source, /9497903328/u);
+    assert.match(source, /QA_HARNESS_RENDER_OPPORTUNITY_COUPLING \/ RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT \+ UNCANCELLED_EVALUATE \+ PREFLIGHT_EVIDENCE_LOSS \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY \/ HOST_TURN_SEPARATED_SYNC_SNAPSHOTS \+ NONBLOCKING_RAF_TELEMETRY \+ PREINPUT_CANCELLATION_AND_EVIDENCE \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /SAME_GATE_REPEAT_COUNT`: `2`/u);
+  }
+  assert.match(r14, /DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000/u);
+  assert.match(r14, /DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS = 1_000/u);
+  assert.match(r14, /DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS = 40/u);
+  assert.match(r14, /no existing deadline increases/u);
+  assert.match(r14, /synchronous page evaluation/u);
+  assert.match(r14, /Remove its `awaitAnimationFrame` parameter/u);
+  assert.match(r14, /QA-only rAF telemetry probe/u);
+  assert.match(r14, /never await it/u);
+  assert.match(r14, /Pending rAF alone never authorizes or rejects a pointer/u);
+  assert.match(r14, /wait exactly one host-owned 40 ms sampling turn/u);
+  assert.match(r14, /two consecutive samples with strictly increasing ordinal/u);
+  assert.match(r14, /40 ms host separation minus a 1 ms scheduling tolerance/u);
+  assert.match(r14, /at least 16 ms positive page wall-clock and performance-clock advance/u);
+  assert.match(r14, /rAF may be pending in a valid pair/u);
+  assert.match(r14, /terminal recheck remains required[\s\S]*synchronous/u);
+  assert.match(r14, /Close and await disposal of the current capture context\/page/u);
+  assert.match(r14, /record exactly one deployment attempt before rethrowing/u);
+  assert.match(r14, /initial diagnostics, centered result, scheduler-probe installation\/readback\/cleanup, every host turn, every synchronous sample, terminal recheck, timeout cancellation/u);
+  assert.match(r14, /rAF pending plus two valid task-turn samples is positive/u);
+  assert.match(r14, /same-turn\/repeated-ordinal\/non-advancing clocks remain pointer-zero divergence/u);
+  assert.match(r14, /Add no test block[\s\S]*exactly 12 tests[\s\S]*exactly 54\/54/u);
+  assert.match(r14, /Preserve r13 `targetOwnershipHistory`/u);
+  assert.match(r14, /three separate fresh Stage 6 WebKit 667x375 processes/u);
+  assert.match(r14, /three separate fresh ordered Stage 6 -> Stage 24 -> Stage 25 WebKit processes/u);
+  assert.match(r14, /atomic six-path r14 candidate[\s\S]*`LOOP_ITERATION: 3`/u);
+  assert.match(r14, /workflow-only restoration commit as iteration 4/u);
+  assert.match(r14, /A repeat at Stage 6 increments `SAME_GATE_REPEAT_COUNT` to 3/u);
+  assert.match(activeHandoff, /synchronous scheduler-independent deployment snapshots separated by host turns/u);
+  assert.match(activeHandoff, /focused 54\/54, checkpoint 12\/12, Stage 6 3\/3, ordered trio 3\/3/u);
+  assert.match(activeHandoff, /one atomic iteration-3 candidate/u);
+  assert.match(activeHandoff, /workflow-only iteration-4 restoration/u);
+  for (const source of [r14, activeHandoff, currentCursor]) {
+    assert.match(source, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT|one final Producer checkpoint/u);
+    assert.match(source, /SOL_FINAL_REVIEW/u);
+  }
   assert.doesNotMatch(currentProcess, /-> LUNA_IMPLEMENTATION|`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`|`PRODUCER_FINAL_ACCEPTANCE`/u);
   assert.doesNotMatch(currentCursor, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
-  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `1`/u);
+  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `2`/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {

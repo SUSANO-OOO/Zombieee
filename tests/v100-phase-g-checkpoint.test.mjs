@@ -116,10 +116,28 @@ function actionablePointerCard(overrides = {}) {
   };
 }
 
-function pointerSample(frameToken, overrides = {}) {
+function pointerSample(sampleOrdinal, overrides = {}) {
+  const {
+    schedulerStatus = "pending",
+    hostTurn: hostTurnOverrides = {},
+    sampledAtWallTimeMs = 1_000 + sampleOrdinal * 40,
+    sampledAtPerformanceMs = 2_000 + sampleOrdinal * 40,
+    sampleOrdinal: observedOrdinal = sampleOrdinal,
+    ...cardOverrides
+  } = overrides;
   return {
-    frameToken,
-    card: actionablePointerCard(overrides),
+    sampleOrdinal: observedOrdinal,
+    hostTurn: {
+      sequence: sampleOrdinal,
+      startedAtWallTimeMs: 5_000 + sampleOrdinal * 40,
+      endedAtWallTimeMs: 5_040 + sampleOrdinal * 40,
+      elapsedMs: 40,
+      ...hostTurnOverrides,
+    },
+    sampledAtWallTimeMs,
+    sampledAtPerformanceMs,
+    schedulerProbe: { probeId: "probe-1", status: schedulerStatus },
+    card: actionablePointerCard(cardOverrides),
   };
 }
 
@@ -219,7 +237,9 @@ test("Phase G rejects full queues and terminal battle state before any candidate
 test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints", async () => {
   const source = await readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8");
   assert.match(source, /const DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000/u);
-  assert.match(source, /const DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS = 1_000/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS = 1_000/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS = 40/u);
+  assert.doesNotMatch(source, /DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS/u);
   assert.match(source, /const DEPLOYMENT_POINTER_MAX_SAMPLES = 12/u);
   assert.match(source, /const DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS = 2_000/u);
   assert.equal((source.match(/\bperformVerifiedDeploymentPointer\b/gu) ?? []).length, 6);
@@ -247,6 +267,10 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /terminalError/u);
   assert.match(source, /recordPointerResult/u);
   assert.match(source, /terminateTimedOutDeploymentPointer/u);
+  assert.match(source, /terminateTimedOutDeploymentPreinput/u);
+  assert.match(source, /withDeploymentPreinputDeadline/u);
+  assert.match(source, /installDeploymentSchedulerProbe/u);
+  assert.match(source, /removeDeploymentSchedulerProbe/u);
   assert.match(source, /observePromiseWithin\(page\.evaluate/u);
   assert.match(source, /elapsedSinceDispatchStartMs/u);
   assert.ok(source.indexOf("V100_PHASE_G_DEPLOYMENT_POINTER_PROBE") < source.indexOf("await mkdir(evidenceDir"));
@@ -259,12 +283,32 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(deploymentHelper, /terminateTimedOutDeploymentPointer/u);
   assert.match(deploymentHelper, /let primaryError = null/u);
   assert.match(deploymentHelper, /receiptCleanupFailure/u);
+  assert.match(deploymentHelper, /preflightEvidence/u);
+  assert.match(deploymentHelper, /recordPointerResult\(\{[\s\S]*?pointerCount: error\?\.pointerCount \?\? 0/u);
+  assert.match(deploymentHelper, /setTimeout\(resolve, DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS\)/u);
+  assert.match(deploymentHelper, /schedulerProbeId/u);
+  assert.match(deploymentHelper, /hostTurns/u);
+  assert.match(deploymentHelper, /timeoutCancellation/u);
   assert.doesNotMatch(deploymentHelper, /await pointerPromise\b|context\(\)\.close\(\)\.catch/u);
   const cancellationHelper = source.match(/async function terminateTimedOutDeploymentPointer[\s\S]*?(?=\nasync function centerDeploymentCardInRail)/u)?.[0] ?? "";
   assert.match(cancellationHelper, /await operation\(\)/u);
   assert.match(cancellationHelper, /terminalLifecycleVerified/u);
   assert.match(cancellationHelper, /independentLifecycleLoss/u);
   assert.doesNotMatch(cancellationHelper, /BROWSER_POINTER_CANCELLATION_FAILURE|observePromiseWithin\(operation/u);
+  const preinputCancellation = source.match(/async function terminateTimedOutDeploymentPreinput[\s\S]*?(?=\nasync function terminateTimedOutDeploymentPointer)/u)?.[0] ?? "";
+  assert.match(preinputCancellation, /context\.close\(\)/u);
+  assert.match(preinputCancellation, /operationSettlement/u);
+  assert.match(preinputCancellation, /terminalLifecycleVerified/u);
+  assert.doesNotMatch(preinputCancellation, /browser\.close\(\)/u);
+  const schedulerProbe = source.match(/async function installDeploymentSchedulerProbe[\s\S]*?(?=\nasync function centerDeploymentCardInRail)/u)?.[0] ?? "";
+  assert.equal((schedulerProbe.match(/requestAnimationFrame/gu) ?? []).length, 1);
+  assert.match(schedulerProbe, /status: "pending"/u);
+  assert.match(schedulerProbe, /entry\.status = "observed"/u);
+  const diagnosticHelper = source.match(/async function readBattleDeploymentDiagnostics[\s\S]*?(?=\nfunction deploymentWasAccepted)/u)?.[0] ?? "";
+  assert.doesNotMatch(diagnosticHelper, /awaitAnimationFrame|waitForAnimationFrame|requestAnimationFrame/u);
+  assert.match(diagnosticHelper, /sampleOrdinal/u);
+  assert.match(diagnosticHelper, /document\.hasFocus\(\)/u);
+  assert.match(diagnosticHelper, /schedulerProbe/u);
   const receiptWait = source.match(/async function waitForDeploymentPointerReceipts[\s\S]*?(?=\nasync function removeDeploymentPointerReceipt)/u)?.[0] ?? "";
   assert.match(receiptWait, /if \(read\.status === "fulfilled"\) receipts = read\.receipts/u);
   assert.doesNotMatch(receiptWait, /^\s{4}receipts = read\.receipts;/mu);
@@ -374,19 +418,21 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal(boundedHistory.humanTarget.targetId, "human-0");
 });
 
-test("r12 pointer precondition accepts two stable distinct frames and an immediate terminal recheck", () => {
-  const samples = [
-    pointerSample(1),
-    pointerSample(2, { rect: { x: 10.75 }, rail: { scrollLeft: 12.75 } }),
-  ];
-  const terminal = pointerSample(2, { rect: { x: 11.5 }, rail: { scrollLeft: 13.5 } });
-  const result = runPointerProbe({
-    precondition: { expectedIdentity: pointerIdentity, samples, terminal },
-  }).precondition;
-  assert.equal(result.status, "ready-for-pointer");
-  assert.equal(result.pointerCount, 0);
-  assert.deepEqual(result.identity, pointerIdentity);
-  assert.deepEqual(result.point, terminal.card.center);
+test("r14 pointer precondition accepts scheduler-independent samples with pending or observed rAF and an immediate terminal recheck", () => {
+  for (const schedulerStatus of ["pending", "observed"]) {
+    const samples = [
+      pointerSample(1, { schedulerStatus }),
+      pointerSample(2, { schedulerStatus, rect: { x: 10.75 }, rail: { scrollLeft: 12.75 } }),
+    ];
+    const terminal = pointerSample(3, { schedulerStatus, rect: { x: 11.5 }, rail: { scrollLeft: 13.5 } });
+    const result = runPointerProbe({
+      precondition: { expectedIdentity: pointerIdentity, samples, terminal },
+    }).precondition;
+    assert.equal(result.status, "ready-for-pointer");
+    assert.equal(result.pointerCount, 0);
+    assert.deepEqual(result.identity, pointerIdentity);
+    assert.deepEqual(result.point, terminal.card.center);
+  }
 });
 
 test("r12 pointer precondition keeps identity and terminal coordinate invalidations at zero input", () => {
@@ -420,7 +466,7 @@ test("r12 pointer precondition keeps identity and terminal coordinate invalidati
   assert.equal(eligibilityChange.pointerCount, 0);
 });
 
-test("r12 pointer preflight hard-fails unstable, obstructed, off-viewport, and lifecycle evidence without input", () => {
+test("r14 pointer preflight hard-fails unstable, obstructed, off-viewport, same-turn, clock, ordinal, and lifecycle evidence without input", () => {
   const cases = [
     {
       expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
@@ -433,6 +479,21 @@ test("r12 pointer preflight hard-fails unstable, obstructed, off-viewport, and l
     {
       expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
       input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { centerInViewport: false, viewportIntersection: false })] },
+    },
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { schedulerStatus: "observed", hostTurn: { elapsedMs: 0 } })] },
+    },
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { sampleOrdinal: 1 })] },
+    },
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: {
+        expectedIdentity: pointerIdentity,
+        samples: [pointerSample(1), pointerSample(2, { sampledAtWallTimeMs: 1_040, sampledAtPerformanceMs: 2_040 })],
+      },
     },
     {
       expected: "lifecycle-loss",
