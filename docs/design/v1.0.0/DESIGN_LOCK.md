@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r14`
+- Revision: `r16`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -47,6 +47,8 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r12 consumes the required Stage 6 WebKit actionability stop and replaces opaque locator stability ownership with explicit hit-test/stability evidence, exactly one trusted real pointer, production acceptance, page-scoped input serialization, and an immutable failure cursor. It also applies the Producer's temporary SOL single-owner and one-final-checkpoint release loop. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r13 consumes the second fresh local ordered-trio result under r12. It keeps the completed pointer/cursor correction and all product/release gates unchanged, and adds only monotonic same-frame source/target ownership evidence for the Stage 25 contact-first proof checkpoint. Generic attack, audio, causal-axis, or surviving-fighter evidence may not substitute for an exact living human target observation. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r14 consumes the authoritative r13 remote focused failure at the repeated required Stage 6 gate. It replaces r12's render-opportunity-coupled `requestAnimationFrame` actionability prerequisite with two host-turn-separated synchronous DOM/runtime/hit-test observations, retains rAF only as non-blocking scheduler evidence, and closes the pre-input timeout/evidence lifecycle. It changes no product, gameplay, timing, acceptance, viewport, retry, workflow, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r15 consumes the recurring remote Stage 24 WebKit renderer crash and replaces the localhost Phase G observer's full 40 ms combat snapshot with one bounded lean schema while preserving the unchanged long production route and every r12-r14 acceptance rule. It changes no public-host product path, gameplay, balance, AI, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r16 consumes the r15 pre-candidate local focused-source stop. It corrects only an LF-only source-test boundary that could not parse the contractually preserved CRLF `app/AshfallGame.tsx`; the r15 app and runner remediation bytes, product behavior, Phase G route, acceptance thresholds, workflow, and release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1598,3 +1600,148 @@ No local or remote failure authorizes retry, rerun, timeout tuning, or immediate
 - `RESUME_FROM`: exact clean `ab916215` worktree -> publish/lock r14 four-path bytes -> edit only two harness paths -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> fresh Stage 6 3/3 -> fresh ordered trio 3/3 -> one atomic iteration-3 candidate push -> complete focused remote green -> workflow-only iteration-4 restoration -> same-HEAD full local/unfiltered remote/runtime/human/final-review/release route
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits using the raw log, downloaded artifact/PNG, exact source, local positive scheduler timing, current live PR/Issue/run/job/artifact state, the HTML rendering-opportunity model, and every downstream release transition. The contract cannot treat rAF absence as product failure or success; cannot dispatch without two exact actionable snapshots; cannot weaken trusted receipt/production acceptance; cannot leave a timed-out pre-input operation live; and cannot reuse local green against remote red. Revision r14 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 31. Revision r15 — recurring remote Stage 24 WebKit observability-pressure closure
+
+This section supersedes Section 30 only for the new Stage 24 renderer failure, the Phase G combat-snapshot owner, the current cursor, and iteration numbering. Every r12 pointer/receipt/acceptance/failure-cursor rule, every r13 target-ownership/no-substitution rule, and every r14 scheduler-independent actionability rule remains authoritative. The focused workflow, exact Stage 6 -> Stage 24 -> Stage 25 order, all fourteen checkpoints, causal four axes, viewports, product timing, and the SOL single-owner release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 31.1 Live failure, comparison evidence, and classification
+
+The r14 iteration-3 candidate is PR #171 HEAD `7793433921f82c483a5b2f4a3887e56f6182c3f0`, tree `9a2ce2ca3028337a83667adf164c870e9ab157f6`, parent `ab91621561926bbd4af90bb0d1ca8551699797d7`. Its exact six-path local acceptance was green: five-file load 5/5, focused 54/54, checkpoint 12/12, lint/build/diff/byte/topology, Stage 6 fresh 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 fresh 3/3. Those results are comparison evidence only after a new candidate changes observable QA bytes.
+
+Automatic focused run `32661183323`, attempt 1, used the candidate and reached a different required failure. PR Verify `97247537836`, all six enemy-runtime shards, Hosted Runner Evidence, and all three canonical Stage 3 audio routes were green. Required Phase G job `97250055296` failed in `remote-trio-1`, ordered position 2, `stage24-panther-commander`, actual stage ID `stage-mugarian-tech-tower`, WebKit 736x414. Stage 6 completed and saved `webkit-667x375-battle-extra.png`; Stage 25 and sequences 2/3 did not run. There was no rerun, retry, timeout change, or edit.
+
+Artifact `9499106555`, `v100-phase-g-webkit-battle-extra-focused`, is 719,239 bytes with uploaded and independently verified ZIP SHA-256 `535c9a038ad15da1aa7100438119c97d9d490b791121c0c8f01d33a58d3f8d9b`. Its Stage 6 PNG is 459,606 bytes, SHA-256 `2b4bebd008bccb65b2c50118c6200d2099c67b458a47ba5ce66a2b4b66b61dcf`. Its Stage 24 failure JSON is 6,533,382 bytes, SHA-256 `1969d8aa263666d0825721081167573da9b32eb6aabca04c81f3d89782517576`.
+
+The exact current failure is `page.waitForFunction: Target crashed` at 120,717 ms with a `page-crash` lifecycle event at 120,711 ms. Console/page/request/HTTP fatal arrays are all zero and `failureState` is null. Six exact real deployments were already accepted with one trusted pointer each: medic, scout, ranger, brawler, babayaga, and kumaverson. The RED PANTHER commander was mounted and its production attack was retained historically at about 26.4 seconds. At the last accepted deployment, wall time was 84,995 ms and production battle time was 70.233 seconds. The recorder then awaited boss-frontline slot 7; Stage 25 never started.
+
+Three same-tree local ordered runs completed Stage 24 at about 89.1 seconds wall time with battle time about 80.9 seconds, causal 4/4, screenshot, and unresolved zero. A historical remote run `32570366466`, job `97026632697`, artifact `9475382616` on the same unchanged product `app` tree also passed Stage 6 and crashed the Stage 24 page, then at 63,636 ms after three accepted units. Its ZIP SHA-256 is `75696823a9f366d5acb96563a3cb2e65f6d26e37de03536e9dff9c3b9823afeb`; failure JSON is 130,507 bytes, SHA-256 `9dc56384cf365ccf9ba4e2080f01a3cac7844de1820936f02e62857334ae8d5c`. The two Stage 24 crashes have clean fatal channels but different wall positions, so there is no proved fixed 60/120-second product deadline.
+
+The source owner is finite and QA-only. `startCombatRuntimeObserver` invokes the full localhost `__ASHFALL_BATTLE_QA__.getSnapshot()` every 40 ms for the entire long-lived battle. That full snapshot deep-copies campaign/save/survival/equipment/geometry state and, for every live fighter, up to 128 `fighterRenderAuditHistory` entries plus animation/VFX state. Other Phase G polls invoke the same full snapshot concurrently. Stage 24 is the longest focused route and retains the most fighters/history while the sustain and deployment loops remain active. The 40 ms observer therefore creates repeated deep allocation and traversal that a player-facing Pages build never executes: the bridge and injected observer exist only on localhost/127.0.0.1. The remote-only wall/battle dilation, recurrent clean renderer crash, unchanged product tree, and local success establish the Phase G observability workload as the required-gate owner; they do not establish gameplay, balance, AI, DOM, asset, audio, or production Pages failure.
+
+Classification is `QA_HARNESS_OBSERVABILITY_RESOURCE_PRESSURE / 40MS_FULL_BATTLE_QA_DEEP_SNAPSHOT + LONG_LIVED_STAGE24_WEBKIT_RENDERER_CRASH / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `PHASE_G_LEAN_COMBAT_OBSERVABILITY / LOCALHOST_ONLY_BOUNDED_SNAPSHOT_SCHEMA + NO_FULL_SNAPSHOT_FALLBACK + PROFILED_LONG_ROUTE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`.
+
+The native WebKit termination mechanism (for example an internal renderer fault versus operating-system resource termination) is not inferred without process evidence. It does not leave implementation ambiguity: the proven unsupported workload is removed, the same long Stage 24 route remains mandatory, and any crash after that removal returns with the new lean-profile evidence rather than authorizing another patch.
+
+### 31.2 Exact coherent remediation
+
+Use one seven-path atomic r15 topology relative to exact clean base `7793433921f82c483a5b2f4a3887e56f6182c3f0` / `9a2ce2ca3028337a83667adf164c870e9ab157f6`:
+
+1. `app/AshfallGame.tsx`;
+2. `scripts/v100-phase-g-production-matrix.mjs`;
+3. `tests/v100-phase-g-checkpoint.test.mjs`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+6. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+7. `docs/PROJECT_STATE.md`.
+
+Under `SOL_DESIGN`, paths 4-7 are published and byte-locked in Issue #172 without an intermediate commit. Only after their source proof is green may `SOL_REMEDIATION` edit paths 1-3. The material commit contains all seven paths atomically.
+
+Implement every requirement below together:
+
+1. Add exactly one `getPhaseGCombatSnapshot` method to the existing localhost-only `__ASHFALL_BATTLE_QA__` bridge. The enclosing hostname guard remains unchanged and returns before bridge creation on non-local hosts. Do not alter the existing full `getSnapshot` method or any game state, render loop, battle clock, save, audio, input, or production Pages code path.
+2. The lean snapshot is read-only and contains only Phase G facts already required by the runner: screen/stage/time/phase/lifecycle flags; objective and bounded mission state; formation, command, queue, cooldown, wave and spawn facts; fighters with identity/side/kind/HP/position/target/combat/attack/reaction/ability/VFX fields; attack identity, pending hits, damage text, presentation effects, battlefield objects, crawler/manual-ability facts, and the small bounded receipts needed by causal proof. It must not serialize survival/save/equipment inventories, navigation or geometry audits, fighter/corpse render-audit histories, complete campaign state, authoring assets, or unrelated QA proof state.
+3. `startCombatRuntimeObserver` installs one page-lifetime exact reader backed only by `getPhaseGCombatSnapshot`. Missing method, thrown read, null schema, wrong stage/screen, or a forbidden heavy field fails closed before the 40 ms observer starts. There is no fallback to full `getSnapshot`, DOM reconstruction, generic actor substitution, or acceptance weakening.
+4. Keep the observer interval exactly 40 ms and keep the existing first-96 target ownership, last-24 combat arrays, last-48 boss lifecycle, source attribution, attack/audio/status histories, and causal four-axis consumers. Replace every Phase G battle/runtime read in this runner, including pointer receipt, deployment diagnostics, wait predicates, sustain loop, final causal collection, runtime report, and failure-state capture, with the exact page-lifetime lean reader after it is installed.
+5. At installation, serialize a `phaseGCombatSnapshotProfile` containing schema/method, sample byte length, read duration, fighter count, and explicit zero forbidden-field hits. Attach it to `combat-observer-started`, final runtime evidence, and failure evidence. The profile proves the lean owner in every Stage 6/24/25 artifact; it is diagnostic evidence, not a timeout or performance-threshold substitute.
+6. Preserve the last non-null readable checkpoint state when a crash makes the final `page.evaluate` return null. Null/undefined cleanup reads may not overwrite prior state. First-write failure ownership, frozen cursor, lifecycle order, and fatal channels remain unchanged.
+7. Keep Stage 24's same full production route, seven-slot formation, real resource/cooldown waits, sustain controls, proof actor, boss configuration, 4.8-second causal window, and screenshot. Do not stop early after commander attack, reset the browser between ordered positions, mutate HP/energy/time, reduce actors, reduce observer semantics, or shorten the route. This deliberately proves that removing the full-snapshot workload—not avoiding the long battle—closes the gate.
+8. Extend existing source/behavior test blocks without increasing test count. Require the localhost-only lean method and exact required fields; absence of `renderAuditHistory`, `survivalRun`, `survivalProgress`, `equipmentInventory`, `geometry`, and full-snapshot fallback; exact 40 ms cadence; profile/failure-state retention; and unchanged pointer, receipt, target-ownership, causal, viewport, and checkpoint contracts. The checkpoint file remains exactly 12 tests and the five-file focused suite remains exactly 54/54.
+
+Forbidden changes are `.github/**`, package/lock, `public/**`, any app path other than the localhost QA bridge block in `app/AshfallGame.tsx`, product DOM/CSS, render/game loop, gameplay, balance, AI, targeting, damage, HP, command generation, battle timing, formation/content/story, asset/audio/VFX, save/PWA, viewport, timeout, retry count, pointer count, ordered-trio count, checkpoint/causal/receipt/acceptance weakening, browser reset, route shortening, or repository-wide normalization.
+
+### 31.3 Acceptance, remote proof, and stop routing
+
+After the four-path r15 design publication is byte-locked and source-green, require in order:
+
+1. exact seven-path status; staged/untracked zero before remediation; preserved package/lock; EOL/BOM contracts; five-file load-only 5/5; focused suite 54/54; checkpoint 12/12; lean-schema/no-fallback source assertions;
+2. `npm.cmd run lint`, `npm.cmd run build`, working-tree `git diff --check`, exact seven-path allowlist, semantic/EOL/BOM audit, and forbidden product-tree diff zero outside the one QA bridge block;
+3. three fresh Stage 6 WebKit 667x375 processes and three fresh Stage 24 WebKit 736x414 processes, then three fresh ordered Stage 6 -> Stage 24 -> Stage 25 WebKit processes. Every capture must prove exact mapping, lean profile with forbidden-field hits zero, trusted pointer receipts, production acceptance, r13 target ownership, causal 4/4, screenshot, unresolved zero, and fatal zero. Pre-r15 processes do not count;
+4. create and normally publish one atomic seven-path iteration-4 candidate, read back exact GitHub HEAD/tree, and require automatic focused run attempt 1 completely green: PR Verify, all three ordered remote sequences, every required job, artifact/digest, and whole-run conclusion. No manual rerun or job retry;
+5. only after complete focused green, reset both the deferred Stage 6 repeat ledger and the active Stage 24 repeat ledger to zero. Create the already-planned workflow-only unfiltered restoration as iteration 5, run same-HEAD local Phase G 54/54, validator and full regressions before its single push, then require complete unfiltered remote green and artifacts;
+6. continue unchanged through exact-HEAD runtime/human visual-battle-event-audio/save/PWA/asset/release audit, frozen read-only/adversarial `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, explicit approval, stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, Project State, Issue closure, and `/goal COMPLETE` only after public green.
+
+Any local or remote failure persists raw evidence and returns to `SOL_DESIGN` without rerun, retry, timeout adjustment, early-stop policy, browser reset, or immediate edit. A repeat Stage 24 crash with a valid lean profile is a different unresolved browser/product-lifecycle finding and requires process/resource evidence before another correction. A missing/invalid profile is a source/harness failure. Any product error channel or gameplay state failure is product-owned and may not be relabeled as observability pressure.
+
+### 31.4 Current cursor and audit result
+
+- `LOOP_ITERATION`: `3` at failed r14 candidate `7793433921`; the atomic r15 material candidate is iteration 4; later workflow-only unfiltered restoration is iteration 5
+- `SAME_GATE_REPEAT_COUNT`: `1` for the active r14 Stage 24 required gate; historical Stage 24 crashes make this a subsystem recurrence but are not a consecutive-candidate counter
+- `DEFERRED_STAGE6_REPEAT_COUNT`: `2`; current Stage 6 passed and does not increment it, but Section 30 defers reset until focused required CI is completely green
+- `ROLE_LOCK`: `SOL_DESIGN` until the r15 four-path publication is byte-locked and green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
+- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
+- `FAILED_GATE`: run `32661183323`, job `97250055296`, artifact `9499106555`, `remote-trio-1` ordered position 2, Stage 24 WebKit 736x414, clean `page-crash` at 120,711 ms after six trusted accepted deployments; Stage 25 and sequences 2/3 not run
+- `LAST_GREEN_GATE`: exact-tree local r14 source/static + Stage 6 3/3 + ordered trio 3/3; current automatic PR Verify, six enemy-runtime shards, Hosted Runner Evidence, three Stage 3 routes, and remote ordered position 1 Stage 6. None substitutes for required Phase G red
+- `CLASSIFICATION`: `QA_HARNESS_OBSERVABILITY_RESOURCE_PRESSURE / 40MS_FULL_BATTLE_QA_DEEP_SNAPSHOT + LONG_LIVED_STAGE24_WEBKIT_RENDERER_CRASH / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_LEAN_COMBAT_OBSERVABILITY / LOCALHOST_ONLY_BOUNDED_SNAPSHOT_SCHEMA + NO_FULL_SNAPSHOT_FALLBACK + PROFILED_LONG_ROUTE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r15 publication and green design/source proof
+- `RESUME_FROM`: exact clean `7793433921` worktree -> publish/lock r15 four design/source paths -> implement three-path lean QA observability -> focused/static/lint/build/diff/byte -> Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> atomic iteration-4 candidate -> automatic focused complete green -> workflow-only iteration-5 restoration -> full local/unfiltered remote/runtime/human/final-review/final-Producer-checkpoint/release/public-QA/closure tail
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits using both downloaded Stage 24 crash artifacts, raw logs, current and historical lifecycle timing, unchanged product-tree evidence, full-snapshot source allocation ownership, local three-run comparisons, and every downstream release boundary. The contract neither hides the crash by shortening the route nor changes product behavior; it removes a proved localhost QA overload, fails closed on missing lean ownership, and requires the same long remote route to pass. Revision r15 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 32. Revision r16 — CRLF-safe lean-snapshot source contract closure
+
+This section supersedes Section 31 only for the new local source-test failure, current cursor, active handoff section, and exact pre-candidate acceptance. Every r12-r15 pointer, receipt, target-ownership, scheduler, lean-snapshot, long-route, failure-evidence, workflow-promotion, final-review, one-Producer-checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 32.1 Failed gate and independent classification
+
+The r15 material candidate had not been committed or published. In the same exact seven-path draft on base HEAD/tree `7793433921f82c483a5b2f4a3887e56f6182c3f0` / `9a2ce2ca3028337a83667adf164c870e9ab157f6`, SOL completed fresh standalone Stage 6 3/3, standalone Stage 24 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 3/3. Every route used `v100-phase-g-combat-snapshot/v1`, reported forbidden-field hits zero, causal proof green, unresolved checkpoints zero, and fatal diagnostics zero. The final five-file load-only command then passed 5/5, but the mandatory five-file focused command stopped at 53/54 in the existing checkpoint test `Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints`. No retry, rerun, edit, candidate commit, ref move, or remote run followed that failure.
+
+The failed assertion was `missing localhost-only Phase G combat snapshot method`. The method exists exactly once in `app/AshfallGame.tsx` inside the localhost guard and had already served all fresh runtime runs. The app working-tree file is UTF-8 without BOM, CRLF-only with 22,263 CRLF sequences and zero bare LF. `tests/v100-phase-g-checkpoint.test.mjs` is correctly LF-only under `.gitattributes`. Its source extractor nevertheless required literal LF at both method boundaries:
+
+`getPhaseGCombatSnapshot ... \n      },\n      getSnapshot ...`
+
+Node `readFile(..., "utf8")` preserves CRLF, so the extractor returned an empty string before any semantic field assertion. This is independent of the r14 remote Stage 24 renderer crash and is not an app method, schema, runner, product, gameplay, balance, AI, browser, causal-proof, or evidence-quality failure.
+
+Classification is `SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`.
+
+### 32.2 Exact bounded correction
+
+Preserve the current seven-path r15 draft. The four SOL-owned design/source paths are revised and byte-locked as r16; the existing r15 `app/AshfallGame.tsx` and `scripts/v100-phase-g-production-matrix.mjs` remediation bytes are immutable. Under `SOL_REMEDIATION`, edit only the already-dirty `tests/v100-phase-g-checkpoint.test.mjs` source extractor so both exact method-boundary newlines use `\r?\n`. Do not normalize the app string before inspection, make whitespace arbitrary, widen either method name or brace boundary, change any required/forbidden field, add or remove a test block, or alter any runtime assertion. The checkpoint file remains exactly 12 tests and the five-file focused suite remains exactly 54 tests.
+
+The complete material candidate remains exactly these seven paths and remains iteration 4:
+
+1. `app/AshfallGame.tsx`;
+2. `scripts/v100-phase-g-production-matrix.mjs`;
+3. `tests/v100-phase-g-checkpoint.test.mjs`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+6. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+7. `docs/PROJECT_STATE.md`.
+
+Forbidden changes remain `.github/**`, package/lock, `public/**`, any additional app or runner byte, product DOM/CSS, render/game loop, gameplay, balance, AI, targeting, damage, HP, timing, story/content, asset/audio/VFX, save/PWA, timeout, retry, pointer, viewport, checkpoint, causal, receipt, acceptance, browser-reset, early-stop, or repository-wide EOL normalization.
+
+### 32.3 Acceptance and stop routing
+
+After the r16 four-path publication is byte-locked and its Design Lock test is green:
+
+1. apply the one extractor correction without touching the preserved app/runner draft;
+2. run the previously failing checkpoint test once, then five-file load-only 5/5, five-file focused 54/54, and checkpoint inventory 12/12;
+3. require `node --check` for the runner, `npm.cmd run lint`, `npm.cmd run build`, working-tree `git diff --check`, exact seven-path topology, UTF-8/BOM/EOL contracts, preserved package/lock/workflow/public tree, and an adversarial diff proving that app changes remain solely inside the localhost QA bridge;
+4. because the final candidate source tree changes after the prior runtime captures, treat every pre-r16 Stage 6/24/ordered capture as diagnosis/comparison only. Run three fresh Stage 6 WebKit 667x375 processes, three fresh Stage 24 WebKit 736x414 processes, and three fresh ordered Stage 6 -> Stage 24 -> Stage 25 WebKit processes on the final r16 bytes, requiring the unchanged Section 31 lean profile, pointer, target, causal, checkpoint, screenshot, and fatal-zero acceptance;
+5. create and normally publish one atomic seven-path iteration-4 candidate, read back exact GitHub HEAD/tree, and require its single automatic focused run attempt 1 completely green. No manual rerun or job retry;
+6. only complete focused green authorizes both repeat ledgers to reset to zero and the workflow-only iteration-5 restoration, same-HEAD local unfiltered Phase G 54/54 plus validator/full regressions, one promotion push, complete unfiltered remote green, exact-HEAD runtime/human audit, read-only/adversarial `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and the approval-only integration/release/public-QA/closure tail.
+
+Any failure stops at its first raw evidence and returns to `SOL_DESIGN` without retry, rerun, immediate edit, timeout change, or scope expansion. A repeated EOL assertion failure is source-test-owned; a missing/invalid lean profile is harness/source-owned; a browser crash with a valid lean profile requires new lifecycle/resource classification; any product error channel or gameplay failure is product-owned. These classes may not be conflated.
+
+### 32.4 Current cursor and audits
+
+- `LOOP_ITERATION`: `3`; no r15 material candidate was created, so the r16 atomic material candidate remains iteration 4 and the later workflow-only restoration remains iteration 5
+- `SAME_GATE_REPEAT_COUNT`: `1` for the deferred active Stage 24 required remote gate; this distinct local source-contract failure does not increment it
+- `DEFERRED_STAGE6_REPEAT_COUNT`: `2` until focused required CI is completely green
+- `ROLE_LOCK`: `SOL_DESIGN` until the r16 four-path publication is byte-locked and its Design Lock source proof is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
+- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
+- `FAILED_GATE`: same-worktree local five-file focused source acceptance, 53/54; `tests/v100-phase-g-checkpoint.test.mjs` line 243, `missing localhost-only Phase G combat snapshot method`; no commit or remote run
+- `LAST_GREEN_GATE`: r16 pre-correction five-file load-only 5/5; r15 fresh Stage 6 3/3, Stage 24 3/3, and ordered trio 3/3 are retained as diagnosis/comparison only, not r16 candidate acceptance
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r16 publication and green Design Lock source proof
+- `RESUME_FROM`: preserve exact current seven-path draft -> lock r16 four design/source paths -> one CRLF/LF extractor correction in checkpoint test -> focused/static/lint/build/diff/byte -> fresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> atomic iteration-4 candidate -> automatic focused complete green -> unchanged iteration-5/full/unfiltered/runtime/human/final-review/one-Producer-checkpoint/release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw local failure, app/test bytes and attributes, actual runtime reports, current seven-path topology, and downstream exact-HEAD boundaries. The correction makes the source assertion portable across the two allowed checkout newline forms without relaxing any semantic assertion or changing runtime bytes. Revision r16 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

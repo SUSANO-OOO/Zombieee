@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`ab91621561926bbd4af90bb0d1ca8551699797d7`、tree `dc8dcc085bcc4e21429201d64e36e4290a14d027`。これはr14設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`7793433921f82c483a5b2f4a3887e56f6182c3f0`、tree `9a2ce2ca3028337a83667adf164c870e9ab157f6`。これはr15設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r14` Sections 28-30。r12 Stage 6 exact-pointer／receipt／failure-cursor、r13 Stage 25 same-frame target-ownershipを維持し、required remote Stage 6のscheduler-independent actionability/evidence lifecycleとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r16` Sections 28-32。r12 exact-pointer／receipt／failure-cursor、r13 same-frame target-ownership、r14 scheduler-independent actionability、r15 localhost-only lean combat observabilityを維持し、CRLF-safe source acceptanceとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -62,6 +62,15 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- r15 material candidateは未commit／未push。current exact seven-path draftでfresh Stage 6 3/3、Stage 24 3/3、ordered Stage 6 -> Stage 24 -> Stage 25 3/3は成立したが、その後のmandatory five-file focused source acceptanceが53/54で停止した。`app/AshfallGame.tsx`はUTF-8 no-BOM／CRLF-onlyでlean methodが一件存在しruntimeでも使用済みだが、LF-onlyの`tests/v100-phase-g-checkpoint.test.mjs` extractorがmethod boundaryをliteral LFだけで照合し、`missing localhost-only Phase G combat snapshot method`となった。retry／rerun／即時修正／commit／remote runは行っていない。
+- r16 classification：`SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`。remediationは`SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`。r15 app／runner draft bytesを保持し、checkpoint extractorの二つのnewline boundaryだけをexact `\r?\n`へ変更する。意味assertion、test数、product、runtime、acceptanceは変更しない。
+- current required failureはr14 iteration-3 candidate HEAD `7793433921f82c483a5b2f4a3887e56f6182c3f0`／tree `9a2ce2ca3028337a83667adf164c870e9ab157f6`のautomatic run `32661183323`、required Phase G job `97250055296`、artifact `9499106555`。`remote-trio-1` ordered position 1のStage 6 WebKit 667x375はproduction screenshotまで通過し、ordered position 2の`stage24-panther-commander`／actual `stage-mugarian-tech-tower`／WebKit 736x414でclean `page-crash`が120,711 msに発生した。Stage 25とsequences 2/3は未実行。
+- Stage 24はmedic／scout／ranger／brawler／babayaga／kumaversonの六つのreal pointerをtrusted receipt＋production acceptanceで受理し、RED PANTHER commanderのmount／attack historyも成立済みだった。fatal console/page/request/HTTPは0、failureStateはnull。remote last accepted stateはwall 84,995 ms／battle 70.233 s、local same-tree三runは約89.1 s wall／約80.9 s battleでcausal 4/4、screenshot、unresolved 0まで完了した。
+- historical remote run `32570366466`／job `97026632697`／artifact `9475382616`もunchanged product app treeでStage 6通過後のStage 24をclean page crashで停止しており、今回とwall位置は異なる。固定60/120秒product deadlineは成立しないが、long-lived Stage 24とremote WebKitでobservability workloadが再発ownerになっている。
+- r15 classification：`QA_HARNESS_OBSERVABILITY_RESOURCE_PRESSURE / 40MS_FULL_BATTLE_QA_DEEP_SNAPSHOT + LONG_LIVED_STAGE24_WEBKIT_RENDERER_CRASH / DESIGN_CHANGE_REQUIRED`。remediationは`PHASE_G_LEAN_COMBAT_OBSERVABILITY / LOCALHOST_ONLY_BOUNDED_SNAPSHOT_SCHEMA + NO_FULL_SNAPSHOT_FALLBACK + PROFILED_LONG_ROUTE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`。
+- source上、Phase G observerは40 msごとにfull localhost `getSnapshot()`を呼び、campaign/save/survival/equipment/geometryと各fighter最大128件のrender-audit historyをdeep-copyする。他のPhase G pollも同じfull snapshotを並行取得する。これはPages player-facing pathには存在しないlocalhost QA負荷である。r15は既存QA bridge内へread-only bounded `getPhaseGCombatSnapshot`を追加し、runner全battle readをno-fallbackでそこへ固定する。同じ長いStage 24 route／40 ms cadence／real deployment／causal acceptanceは維持し、early stop、browser reset、timeout、retry、product/gameplay変更を行わない。
+- r15 material topologyは`app/AshfallGame.tsx`、Phase G runner/test、Design Lock test、Design Lock、Handoff、Project Stateのexact seven paths。app変更は既存localhost-only QA bridge block内のlean read methodだけであり、full `getSnapshot`とproduction public-host pathは不変。
+- 以下のr14 Stage 6 failureはcurrent cursorではなく直前のrequired history。current runではStage 6が通過したため同gate counterは増えないが、focused全体green前のresetは禁止されている。
 - current required failureはr13 atomic candidate HEAD `ab91621561926bbd4af90bb0d1ca8551699797d7`／tree `dc8dcc085bcc4e21429201d64e36e4290a14d027`のautomatic run `32656697160`、required Phase G job `97238965438`、artifact `9497903328`。`remote-trio-1` ordered position 1、variant `stage06-spitter-seal`、actual stage ID `stage-nishijin-station-tunnel-seal`、WebKit 667x375で、最初のrAF-only diagnostic sampleが1,041 msでtimeoutし、DOM sample／pointer／receipt／production acceptance前に停止した。Stage 24/25とsequences 2/3は未実行。
 - artifactはexact candidate node `deployment-card-2`／kind `ranger`／slot `1`、correct route/stage/mount/formation、seven cards、energy 70、pointer count 0、fatal console/page/request/HTTP 0を保持する。初期eligibilityとrail centeringは完了したが、post-center DOM rect／hit owner／viewport／rail sampleはrAF待ちより後にあったため取得されなかった。product DOM、deployment handler、gameplay、balance、AI failureは確定しない。
 - r14 classification：`QA_HARNESS_RENDER_OPPORTUNITY_COUPLING / RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT + UNCANCELLED_EVALUATE + PREFLIGHT_EVIDENCE_LOSS / DESIGN_CHANGE_REQUIRED`。remediationは`PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY / HOST_TURN_SEPARATED_SYNC_SNAPSHOTS + NONBLOCKING_RAF_TELEMETRY + PREINPUT_CANCELLATION_AND_EVIDENCE / DESIGN_CHANGE_REQUIRED`。
@@ -90,25 +99,26 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r11 source-contract history：HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`、tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`、class `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`。これはcurrent cursorではない。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r14 Section 30
+## 6. Version 1.0.0 execution cursor — r16 Section 32
 
-- `LOOP_ITERATION`: `2` at failed r13 candidate `ab916215`。next atomic r14 material candidateはiteration 3。focused required gate完全green後に作るworkflow-only release-validation HEADはiteration 4
-- `SAME_GATE_REPEAT_COUNT`: `2` for required Stage 6 gate。r14 focused required gateが完全greenになるまでreset禁止。同じgateの次failureは`3`とし、追加edit前に新しいsix-subsystem auditを必須化
-- `ROLE_LOCK`: `SOL_DESIGN` until r14 four-path publication and green design/source proof；then `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `ab91621561926bbd4af90bb0d1ca8551699797d7`
-- `LAST_AUDITED_TREE`: `dc8dcc085bcc4e21429201d64e36e4290a14d027`
-- `FAILED_GATE`: run `32656697160`／required Phase G job `97238965438`／artifact `9497903328`／`remote-trio-1` ordered position 1／Stage 6 WebKit 667x375／first rAF-only sample timeout before DOM sample and pointer。Stage 24/25、sequences 2/3未実行
-- `LAST_GREEN_GATE`: PR Verify `97236416025`、six enemy-runtime shards、Hosted Runner Evidence、three canonical Stage 3 routes、r13 local source/static/Stage25/ordered-trio comparison evidence。required Phase G redへ代用不可
-- `CLASSIFICATION`: `QA_HARNESS_RENDER_OPPORTUNITY_COUPLING / RAF_ONLY_PRE-DOM_SAMPLE_TIMEOUT + UNCANCELLED_EVALUATE + PREFLIGHT_EVIDENCE_LOSS / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `PHASE_G_SCHEDULER_INDEPENDENT_ACTIONABILITY / HOST_TURN_SEPARATED_SYNC_SNAPSHOTS + NONBLOCKING_RAF_TELEMETRY + PREINPUT_CANCELLATION_AND_EVIDENCE / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: exact clean `ab916215` worktree -> publish/lock r14 four-path bytes -> two-path scheduler-independent harness remediation -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> fresh Stage 6 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic iteration-3 candidate commit/push -> automatic focused remote complete green -> workflow-only iteration-4 restoration -> same-HEAD full local 54/54/validator/regressions -> one promotion push -> unfiltered remote complete green -> exact-HEAD runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r14 publication and green design/source proof
+- `LOOP_ITERATION`: `3`。r15 material candidateは未作成のためnext atomic r16 material candidateはiteration 4、focused required gate完全green後のworkflow-only unfiltered restorationはiteration 5
+- `SAME_GATE_REPEAT_COUNT`: `1` for deferred Stage 24 required gate。distinct local source-contract failureはincrementしない
+- `DEFERRED_STAGE6_REPEAT_COUNT`: `2`。focused required CI完全green前にresetしない
+- `ROLE_LOCK`: `SOL_DESIGN` until r16 four-path publication and green Design Lock source proof；then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
+- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
+- `FAILED_GATE`: same-worktree five-file focused source acceptance 53/54。`tests/v100-phase-g-checkpoint.test.mjs` line 243のLF-only extractorがCRLF app method boundaryを抽出できず`missing localhost-only Phase G combat snapshot method`。candidate commit／remote runなし
+- `LAST_GREEN_GATE`: r16 pre-correction five-file load-only 5/5。r15 fresh Stage 6 3/3、Stage 24 3/3、ordered trio 3/3はdiagnosis／comparison evidenceのみでr16 candidate acceptanceへ流用しない
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact current seven-path draft -> publish/lock r16 four design/source paths -> checkpoint extractorの二boundaryだけexact `\r?\n`へ修正 -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> final r16 bytesでfresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> one atomic iteration-4 candidate -> automatic focused remote complete green -> workflow-only iteration-5 restoration -> same-HEAD full local 54/54/validator/regressions -> one unfiltered remote run -> exact-HEAD runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r16 publication and green Design Lock source proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r14はまず四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとdesign/source green proofで固定し、`SOL_REMEDIATION`では二つのPhase G harness pathsだけを追加編集する。最初のmaterial commitはexact six-path atomic iteration-3 candidate。r13 local greenやfailed-HEAD artifactをr14 acceptance/final freezeへ流用しない。focused remote完全green後だけsame-gate countを0へresetし、workflow-only iteration-4 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r16は四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとDesign Lock source proofで固定し、`SOL_REMEDIATION`では既存checkpoint testのEOL boundaryだけを追加編集する。r15 app／runner draftはbyte-preserveする。最初のmaterial commitはexact seven-path atomic iteration-4 candidate。pre-r16 local runtime evidenceやfailed-HEAD artifactをr16 acceptance/final freezeへ流用しない。focused remote完全green後だけ両gate counterを0へresetし、workflow-only iteration-5 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-30のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r14を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-32のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r16を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

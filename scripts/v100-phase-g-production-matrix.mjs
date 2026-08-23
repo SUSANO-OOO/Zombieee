@@ -403,6 +403,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
   const deploymentAttempts = [];
   let awaiting = null;
   let latestReadableState = null;
+  let phaseGCombatSnapshotProfile = null;
   let failureFilePath = null;
   let failureScreenshotPath = null;
   let failurePayload = null;
@@ -461,7 +462,11 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
   };
 
   const setLatestReadableState = (state) => {
-    if (state !== undefined) latestReadableState = state;
+    if (state !== undefined && state !== null) latestReadableState = state;
+  };
+
+  const setPhaseGCombatSnapshotProfile = (profile) => {
+    phaseGCombatSnapshotProfile = cloneDiagnosticValue(profile);
   };
 
   const recordDeploymentAttempt = (details) => {
@@ -523,6 +528,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
       unresolvedCheckpoints: checkpoints.filter((entry) => !RESOLVED_CHECKPOINT_STATUSES.has(entry.status)).map((entry) => entry.name),
       awaiting,
       deploymentAttempts: [...deploymentAttempts],
+      phaseGCombatSnapshotProfile,
       latestReadableState,
       lifecycle: [...lifecycle],
       events: [...eventLog],
@@ -580,6 +586,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
     setAwaiting,
     clearAwaiting,
     setLatestReadableState,
+    setPhaseGCombatSnapshotProfile,
     recordDeploymentAttempt,
     snapshot,
     persistFailure,
@@ -1107,7 +1114,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
       const owner = target?.closest("button.unit-card") ?? null;
       const hitTarget = document.elementFromPoint(event.clientX, event.clientY);
       const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const ariaLabel = owner?.getAttribute("aria-label") ?? "";
       const costMatch = ariaLabel.match(/コスト\s*(\d+)/u);
       const card = owner ? {
@@ -2129,8 +2136,72 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
 }
 
 async function startCombatRuntimeObserver(page) {
-  await page.evaluate(() => {
+  const phaseGCombatSnapshotProfile = await page.evaluate(() => {
     window.__PHASE_G_COMBAT_OBSERVER__?.stop?.();
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (!bridge || typeof bridge.getPhaseGCombatSnapshot !== "function") {
+      throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_METHOD_MISSING");
+    }
+    const forbiddenFields = new Set([
+      "renderAudit",
+      "renderAuditHistory",
+      "survivalRun",
+      "survivalProgress",
+      "equipmentInventory",
+      "geometry",
+      "battleSpace",
+      "navigationRouteReleases",
+      "completedStageIds",
+      "unlockedStageIds",
+      "processedResultIds",
+      "unitLevels",
+      "unitRanks",
+      "settings",
+      "corpses",
+      "areaEffects",
+    ]);
+    const readCombatSnapshot = () => {
+      const snapshot = bridge.getPhaseGCombatSnapshot();
+      if (!snapshot || typeof snapshot !== "object") throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_NULL_SCHEMA");
+      if (snapshot.schema !== "v100-phase-g-combat-snapshot/v1") throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_WRONG_SCHEMA");
+      if (snapshot.screen !== "battle" || typeof snapshot.stageId !== "string") throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_WRONG_ROUTE");
+      if (!Array.isArray(snapshot.fighters) || !Array.isArray(snapshot.attackIdentity) || !Array.isArray(snapshot.pendingWeaponHits)) {
+        throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_REQUIRED_ARRAY_MISSING");
+      }
+      return snapshot;
+    };
+    window.__PHASE_G_READ_COMBAT_SNAPSHOT__ = readCombatSnapshot;
+    const readStartedAt = performance.now();
+    const profileSample = readCombatSnapshot();
+    const readDurationMs = Math.round((performance.now() - readStartedAt) * 1000) / 1000;
+    const forbiddenFieldHits = [];
+    const scanForbiddenFields = (value, path = "$", seen = new Set()) => {
+      if (!value || typeof value !== "object" || seen.has(value)) return;
+      seen.add(value);
+      if (Array.isArray(value)) {
+        value.forEach((entry, index) => scanForbiddenFields(entry, `${path}[${index}]`, seen));
+        return;
+      }
+      for (const [key, nested] of Object.entries(value)) {
+        if (forbiddenFields.has(key)) forbiddenFieldHits.push(`${path}.${key}`);
+        scanForbiddenFields(nested, `${path}.${key}`, seen);
+      }
+    };
+    scanForbiddenFields(profileSample);
+    if (forbiddenFieldHits.length > 0) {
+      throw new Error(`PHASE_G_LEAN_COMBAT_SNAPSHOT_FORBIDDEN_FIELDS:${forbiddenFieldHits.join(",")}`);
+    }
+    const serialized = JSON.stringify(profileSample);
+    const profile = {
+      schema: profileSample.schema,
+      method: "getPhaseGCombatSnapshot",
+      sampleBytes: new TextEncoder().encode(serialized).byteLength,
+      readDurationMs,
+      fighterCount: profileSample.fighters.length,
+      forbiddenFieldHits,
+      forbiddenFieldHitCount: forbiddenFieldHits.length,
+    };
+    window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ = profile;
     const mergeCombatActivityHistory = (previous = {}, snapshot = {}) => {
       const currentAttackIdentity = Array.isArray(snapshot.attackIdentity) ? snapshot.attackIdentity : [];
       const currentPendingWeaponHits = Array.isArray(snapshot.pendingWeaponHits) ? snapshot.pendingWeaponHits : [];
@@ -2235,7 +2306,7 @@ async function startCombatRuntimeObserver(page) {
     window.__PHASE_G_COMBAT_HISTORY_MERGE__ = mergeCombatActivityHistory;
     window.__PHASE_G_PROOF_ACTOR_HUMAN_TARGET_FROM_HISTORY__ = proofActorHumanTargetFromHistory;
     const observe = () => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       if (!snapshot || snapshot.screen !== "battle") return;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const fighterActors = new Set(activity.fighterActors ?? []);
@@ -2320,8 +2391,12 @@ async function startCombatRuntimeObserver(page) {
       },
     };
     observe();
+    return profile;
   });
-  checkpointRecorderFor(page)?.markOnce("combat-observer-started", "completed", { intervalMs: 40 });
+  const recorder = checkpointRecorderFor(page);
+  recorder?.setPhaseGCombatSnapshotProfile(phaseGCombatSnapshotProfile);
+  recorder?.markOnce("combat-observer-started", "completed", { intervalMs: 40, phaseGCombatSnapshotProfile });
+  return phaseGCombatSnapshotProfile;
 }
 
 async function waitForCombatActivity(page, { bossKind = null } = {}) {
@@ -2329,7 +2404,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
   recorder?.setAwaiting("combat-activity", { bossKind, predicate: "production attack/contact/presentation activity" });
   try {
     await page.waitForFunction(() => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       if (!snapshot || snapshot.screen !== "battle") return false;
       const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -2352,7 +2427,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
     const state = await page.evaluate(() => ({
       battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
       snapshot: (() => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
         return snapshot ? {
           time: snapshot.time,
           wave: snapshot.wave,
@@ -2377,7 +2452,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
           const historicalCue = (activity.audioCues ?? []).includes(`enemy-${expectedKind}-attack`);
           const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === `enemy-${expectedKind}-attack`);
           if (historicalAttack || historicalCue || runtimeCue) return true;
-          const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+          const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
           return snapshot?.fighters?.some((fighter) => (
             fighter.side === "zombie"
             && fighter.kind === expectedKind
@@ -2402,7 +2477,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
         campaignPhase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
         battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
         body: document.body.innerText.slice(0, 1400),
-        snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
+        snapshot: window.__PHASE_G_READ_COMBAT_SNAPSHOT__(),
       })).catch(() => null);
       throw new Error(`boss ${bossKind} did not become live: ${String(error)} state=${JSON.stringify(state)}`);
     }
@@ -2439,7 +2514,7 @@ const stateContracts = Object.freeze({
 async function productionStateContract(page, state) {
   const contract = stateContracts[state];
   invariant(contract, `missing Phase G state contract: ${state}`);
-  const observed = await page.evaluate((expected) => {
+  const observed = await page.evaluate(({ expected, battleState }) => {
     const visible = (selector) => {
       const element = document.querySelector(selector);
       if (!element) return false;
@@ -2473,7 +2548,7 @@ async function productionStateContract(page, state) {
         canvasAudit = { width: canvas.width, height: canvas.height, sampled, visiblePixels, visibleRatio: sampled ? visiblePixels / sampled : 0, lumaMean: mean, lumaVariance: sampled ? varianceTotal / sampled : 0 };
       }
     }
-    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
     const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
     const buttons = [...document.querySelectorAll("button")].filter((button) => {
       const rect = button.getBoundingClientRect();
@@ -2491,7 +2566,7 @@ async function productionStateContract(page, state) {
       canvas: canvasAudit,
       fighterKinds: Array.isArray(snapshot?.fighters) ? [...new Set(snapshot.fighters.map((fighter) => `${fighter.side}:${fighter.kind}`))] : [],
     };
-  }, contract);
+  }, { expected: contract, battleState: state.startsWith("battle") });
   const missingSelectors = contract.selectors.filter((selector) => observed.selectorHits?.[selector] !== true);
   const phaseOk = contract.phases.includes(observed.phase);
   const surfaceOk = !contract.surfaces || contract.surfaces.includes(observed.surface);
@@ -2504,7 +2579,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < durationMs) {
     samples.push(await page.evaluate(() => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
@@ -2647,8 +2722,8 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     const screenshot = await saveScreenshot(page, imagePath(label), label);
     checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
     const overflow = await overflowAudit(page);
-    const runtime = await page.evaluate(() => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    const runtime = await page.evaluate((battleState) => {
+      const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
       if (!snapshot) return { screen: null };
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
@@ -2674,8 +2749,9 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         missionObjects: snapshot.battlefieldObjects ?? [],
         manualAbilityVfx: snapshot.manualAbilityVfx ?? [],
         manualAbilityReceipts: snapshot.manualAbilityReceipts ?? [],
+        phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
       };
-    });
+    }, state.startsWith("battle"));
     invariant(overflow.every(({ delta }) => delta <= 1), `${label} horizontal overflow: ${JSON.stringify(overflow)}`);
     invariant(await page.locator("body").evaluate((body) => body.innerText.trim().length > 0), `${label} blank body`);
     invariant(diagnostics.consoleErrors.length === 0, `${label} console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
@@ -2687,13 +2763,14 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, ...captureMeta });
     return screenshot;
   } catch (error) {
-    const failureState = await page.evaluate(() => ({
+    const failureState = await page.evaluate((battleState) => ({
       url: location.href,
       phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
       surface: document.querySelector(".v100-shell")?.getAttribute("data-v100-surface") ?? null,
       body: document.body.innerText.slice(0, 1600),
+      phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
       snapshot: (() => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+        const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
         return snapshot ? {
           screen: snapshot.screen,
           stageId: snapshot.stageId,
@@ -2715,7 +2792,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         } : null;
       })(),
       phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
-    })).catch(() => null);
+    }), state.startsWith("battle")).catch(() => null);
     const checkpointFailure = checkpointRecorder
       ? await checkpointRecorder.persistFailure({ label, error, failureState, diagnostics })
       : null;
@@ -2766,7 +2843,7 @@ async function readBattleDeploymentDiagnostics(page, {
       observedAtPerformanceMs: schedulerEntry.observedAtPerformanceMs,
       callbackTimestamp: schedulerEntry.callbackTimestamp,
     } : (activeSchedulerProbeId ? { probeId: activeSchedulerProbeId, status: "missing" } : null);
-    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
     const nodeRegistry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
       ids: new WeakMap(),
       next: 1,
@@ -3255,7 +3332,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   // starts and makes the runtime proof depend on roster DOM order.
   await click(page, page.getByRole("button", { name: "戦闘へ", exact: true }), "formation battle CTA");
   await waitBattle(page);
-  await startCombatRuntimeObserver(page);
+  const phaseGCombatSnapshotProfile = await startCombatRuntimeObserver(page);
   if (bossKind) {
     const equippedSupport = await page.evaluate(() => {
       const button = document.querySelector(".support-row button.support-btn[data-category=\"support\"]");
@@ -3301,7 +3378,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeProofActorAttack = async () => {
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
     const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const actorKey = `zombie:${expectedKind}`;
@@ -3347,7 +3424,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const readProofActorContactState = async () => {
     if (!proofActor) return null;
     const state = await page.evaluate((expectedKind) => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const fighters = snapshot?.fighters ?? [];
       const actor = fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -3418,7 +3495,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
     const observation = await page.evaluate((expectedKind) => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const actor = snapshot?.fighters?.find((fighter) => (
         fighter.side === "human"
@@ -3459,7 +3536,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeVehicleAction = async () => {
     if (vehicleActionObserved) return vehicleActionObserved;
     vehicleActionObserved = await page.evaluate(() => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       const crawler = snapshot?.crawlerAbility;
       const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === "weapon-barrage");
       const observed = runtimeCue === true
@@ -3481,7 +3558,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   let bossDeploymentFinished = !bossKind;
   let sustainFailure = null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
-    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie"
       && fighter.kind === expectedKind
@@ -3504,7 +3581,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (!battleVisible) break;
       const bossEngaged = await bossIsLive();
       const liveHumanTargetCount = await page.evaluate(() => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
         return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
       }).catch(() => 0);
       await observeProofActorAttack();
@@ -3598,7 +3675,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // vehicle before the real boss reaches the battlefield.
         await page.evaluate((expectedKind) => {
           const bridge = window.__ASHFALL_BATTLE_QA__;
-          const snapshot = bridge?.getSnapshot?.();
+          const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
           const boss = snapshot?.fighters?.find((fighter) => (
             fighter.side === "zombie"
             && fighter.kind === expectedKind
@@ -3801,7 +3878,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofActor) {
       recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
       await page.waitForFunction(({ expectedKind, expectedCueId }) => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
         const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
         const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
         const actorKey = `zombie:${expectedKind}`;
@@ -3869,7 +3946,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await lockedAbility.click({ timeout: 700 });
       });
       await page.waitForFunction((expectedKind) => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
         const markedEnemy = snapshot?.fighters?.some((fighter) => fighter.side === "zombie" && Number(fighter.marked) > 0);
         const receipt = snapshot?.manualAbilityReceipts?.some((entry) => entry?.kind === expectedKind && entry?.eventType === "impact");
         if (markedEnemy === true) {
@@ -3899,7 +3976,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await page.waitForTimeout(250);
       }
       await page.waitForFunction(() => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
         const crawler = snapshot?.crawlerAbility;
         const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
         const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === "weapon-barrage");
@@ -3913,7 +3990,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
     }
-    await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
+    await page.waitForFunction(() => window.__PHASE_G_READ_COMBAT_SNAPSHOT__().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
     if (!bossKind || !waitForBossAttack) {
       await waitForCombatActivity(page);
     } else {
@@ -3929,7 +4006,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (sustainFailure) throw sustainFailure;
   }
   const runtime = await page.evaluate(() => {
-    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
     return {
       stageId: snapshot?.stageId ?? null,
       enemyKinds: [...new Set((snapshot?.fighters ?? []).filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind))],
@@ -3947,6 +4024,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     expectedEnemyKinds: [...new Set(definition?.timeline?.flatMap((wave) => wave.units) ?? [])],
     observedEnemyKinds: runtime.enemyKinds,
     fighterKinds: runtime.fighterKinds,
+    phaseGCombatSnapshotProfile,
     deploymentTrace,
   };
 }

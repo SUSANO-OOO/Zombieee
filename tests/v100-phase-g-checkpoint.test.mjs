@@ -235,7 +235,58 @@ test("Phase G rejects full queues and terminal battle state before any candidate
 });
 
 test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints", async () => {
-  const source = await readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8");
+  const [source, appSource] = await Promise.all([
+    readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8"),
+    readFile(path.join(repositoryRoot, "app/AshfallGame.tsx"), "utf8"),
+  ]);
+  const leanSnapshotBlock = appSource.match(/getPhaseGCombatSnapshot: \(\) => \{([\s\S]*?)\r?\n      \},\r?\n      getSnapshot: \(\) => \{/u)?.[1] ?? "";
+  assert.ok(leanSnapshotBlock.length > 0, "missing localhost-only Phase G combat snapshot method");
+  assert.equal((appSource.match(/getPhaseGCombatSnapshot:/gu) ?? []).length, 1);
+  assert.ok(
+    appSource.indexOf('if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;')
+      < appSource.indexOf("getPhaseGCombatSnapshot:"),
+    "lean snapshot must remain inside the existing localhost bridge guard",
+  );
+  for (const contract of [
+    'schema: "v100-phase-g-combat-snapshot/v1"',
+    "formationKinds",
+    "deployCooldowns",
+    "pendingSpawnCount",
+    "stageMission",
+    "crawlerAbility",
+    "attackIdentity",
+    "pendingWeaponHits",
+    "battlePresentation",
+    "manualAbilityReceipts",
+    "manualAbilityVfx",
+    "animationPresentation",
+    "enemyVfx",
+  ]) assert.match(leanSnapshotBlock, new RegExp(contract, "u"));
+  for (const forbidden of [
+    "getSnapshot",
+    "renderAudit",
+    "renderAuditHistory",
+    "survivalRun",
+    "survivalProgress",
+    "equipmentInventory",
+    "geometry",
+    "battleSpace",
+    "navigationRouteReleases",
+    "campaignSave",
+    "corpses",
+    "areaEffects",
+  ]) assert.doesNotMatch(leanSnapshotBlock, new RegExp(forbidden, "u"));
+  assert.match(source, /typeof bridge\.getPhaseGCombatSnapshot !== "function"/u);
+  assert.match(source, /const snapshot = bridge\.getPhaseGCombatSnapshot\(\)/u);
+  assert.match(source, /window\.__PHASE_G_READ_COMBAT_SNAPSHOT__ = readCombatSnapshot/u);
+  assert.doesNotMatch(source, /__ASHFALL_BATTLE_QA__[\s\S]{0,80}getSnapshot/u);
+  assert.match(source, /const timer = window\.setInterval\(observe, 40\)/u);
+  assert.match(source, /phaseGCombatSnapshotProfile/u);
+  assert.match(source, /sampleBytes: new TextEncoder\(\)\.encode\(serialized\)\.byteLength/u);
+  assert.match(source, /forbiddenFieldHitCount: forbiddenFieldHits\.length/u);
+  assert.match(source, /recorder\?\.setPhaseGCombatSnapshotProfile\(phaseGCombatSnapshotProfile\)/u);
+  assert.match(source, /if \(state !== undefined && state !== null\) latestReadableState = state/u);
+  assert.match(source, /phaseGCombatSnapshotProfile: window\.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ \?\? null/u);
   assert.match(source, /const DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000/u);
   assert.match(source, /const DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS = 1_000/u);
   assert.match(source, /const DEPLOYMENT_POINTER_SAMPLE_SEPARATION_MS = 40/u);

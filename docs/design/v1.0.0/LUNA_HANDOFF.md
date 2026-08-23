@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r14`
+- Canonical Design Lock: `V100-SOL-DL-001 r16`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-22 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 23 is the sole current execution handoff.
+Sections 1-24 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 25 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -998,3 +998,51 @@ Acceptance remains five-file load 5/5, focused 54/54, checkpoint 12/12, static s
 Current SOL required reading is `AGENTS.md`, `docs/CODEX_TWO_THREAD_WORKFLOW.md`, `docs/CODEX_SOL_ROLE.md`, `docs/PROJECT_STATE.md`, Producer Decisions, Design Lock Sections 28-30, this Section 23, the latest Issue #172 cursor, and live PR/CI/artifacts. It does not reactivate the historical Luna reading list.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r14` and Issue #172.** Publish and byte-lock the four r14 design/source paths first. Then, in `SOL_REMEDIATION`, change only the runner and checkpoint test: synchronous scheduler-independent deployment snapshots separated by host turns, non-blocking rAF telemetry, finite cancellation, complete preflight evidence, and one recorded pointer-zero attempt on thrown pre-input failure. Keep r12 receipt/acceptance/cursor and r13 target-ownership contracts unchanged. Require focused 54/54, checkpoint 12/12, Stage 6 3/3, ordered trio 3/3, and one atomic iteration-3 candidate with automatic focused remote complete green. Any failure returns inside this SOL-owned `/goal`; do not route to Luna.
+
+## 24. Revision r15 — no active Luna handoff / lean Stage 24 combat observability
+
+Design Lock Section 31 and the latest explicitly labeled Issue #172 r15 loop-ledger entry are the sole active cursor. Sections 21-23 remain immutable r12-r14 history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, source edit, retry, QA, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r15 four-path packet is published, byte-locked, and source-green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
+- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
+- `FAILED_GATE`: automatic run `32661183323`, required Phase G job `97250055296`, artifact `9499106555`, `remote-trio-1` ordered position 2, Stage 24 WebKit 736x414, clean `page-crash` at 120,711 ms after six trusted accepted deployments; Stage 6 passed, Stage 25 and sequences 2/3 did not run
+- `LAST_GREEN_GATE`: exact-tree local r14 source/static, Stage 6 3/3, ordered trio 3/3; current PR Verify, six enemy-runtime shards, Hosted Runner Evidence, three Stage 3 routes, and remote Stage 6. None substitutes for required Phase G red
+- `CLASSIFICATION`: `QA_HARNESS_OBSERVABILITY_RESOURCE_PRESSURE / 40MS_FULL_BATTLE_QA_DEEP_SNAPSHOT + LONG_LIVED_STAGE24_WEBKIT_RENDERER_CRASH / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_LEAN_COMBAT_OBSERVABILITY / LOCALHOST_ONLY_BOUNDED_SNAPSHOT_SCHEMA + NO_FULL_SNAPSHOT_FALLBACK + PROFILED_LONG_ROUTE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `3`; r15 material candidate is 4; later workflow-only unfiltered restoration is 5
+- `SAME_GATE_REPEAT_COUNT`: `1` for active Stage 24; deferred Stage 6 count remains 2 until focused complete green
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r15 publication and green source proof
+- `RESUME_FROM`: exact clean `7793433921` worktree -> four-path r15 byte lock -> three-path lean QA remediation -> focused/static/lint/build/diff/byte -> Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> atomic iteration-4 candidate -> focused remote complete green -> workflow-only iteration-5 unfiltered restoration -> full/runtime/human/SOL_FINAL_REVIEW -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release/public-QA/closure tail
+
+The sole app change is one read-only `getPhaseGCombatSnapshot` method inside the already localhost-only QA bridge block. It exposes only the bounded battle facts required by Phase G and excludes campaign/save/survival/equipment/geometry and render-audit histories. The existing full `getSnapshot`, production render/game loop, player behavior, and public-host path remain unchanged. The Phase G runner must use the lean method without fallback for every battle read, retain the exact 40 ms observer cadence and all r12-r14 proof rules, emit a lean schema/profile in success and failure evidence, and preserve the last non-null readable state across a crash.
+
+Do not shorten Stage 24, stop after the commander attack, reset the browser between ordered positions, reduce actors, alter resources/timing, add a timeout/retry/pointer, or edit workflow/product behavior. Fresh acceptance is focused 54/54 and checkpoint 12/12, exact seven-path static/lint/build/diff/byte, Stage 6 3/3, Stage 24 3/3, ordered trio 3/3, then one automatic focused remote attempt completely green. A lean-profile Stage 24 crash returns to `SOL_DESIGN` for process/resource evidence with no immediate edit.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r15` and Issue #172.** Publish and byte-lock the four r15 design/source paths first. In `SOL_REMEDIATION`, edit only `app/AshfallGame.tsx`, `scripts/v100-phase-g-production-matrix.mjs`, and `tests/v100-phase-g-checkpoint.test.mjs` to add the localhost-only bounded combat snapshot, require it without full-snapshot fallback, profile it, and retain the last readable crash cursor. Preserve every pointer, receipt, target-ownership, causal, timing, viewport, and no-retry rule. Require the exact local and remote sequence above; any failure stays inside this SOL-owned `/goal` and never routes to Luna.
+
+## 25. Revision r16 — no active Luna handoff / CRLF-safe source acceptance
+
+Design Lock Section 32 and the latest explicitly labeled Issue #172 r16 byte-lock comment are the sole active cursor. Sections 21-24 remain immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, source edit, retry, QA, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r16 four-path packet is published, byte-locked, and Design Lock source-green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
+- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
+- `FAILED_GATE`: same-worktree five-file focused source acceptance 53/54; checkpoint test line 243 could not extract the existing CRLF lean method with an LF-only boundary regex; no commit or remote run
+- `LAST_GREEN_GATE`: five-file load-only 5/5; r15 fresh Stage 6/24/ordered runtime results are comparison-only after r16 source bytes change
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `3`; r16 material candidate remains 4; workflow-only restoration remains 5
+- `SAME_GATE_REPEAT_COUNT`: `1` for deferred Stage 24; `DEFERRED_STAGE6_REPEAT_COUNT`: `2`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r16 publication and green Design Lock proof
+- `RESUME_FROM`: preserve current seven-path draft -> change only the checkpoint extractor to exact `\r?\n` boundaries -> focused/static/lint/build/diff/byte -> fresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> atomic iteration-4 candidate -> one automatic focused attempt -> unchanged promotion/full/runtime/human audit -> fixed-HEAD `SOL_FINAL_REVIEW` -> `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release tail
+
+Keep the r15 app and runner draft bytes unchanged. The only post-lock remediation edit is the existing checkpoint test's lean-method boundary extractor. It must accept CRLF or LF only, retain exact method names and brace indentation, and preserve every required/forbidden field assertion, the exact 40 ms cadence, profile/failure cursor, twelve-test inventory, and 54-test focused total. Do not normalize the app source in memory or on disk, loosen arbitrary whitespace, change app/runner/workflow/package/public bytes, rerun around a failure, or weaken runtime acceptance.
+
+After the one correction, run the previously failing checkpoint test once; then require load 5/5, focused 54/54, checkpoint 12/12, runner syntax, lint, build, diff/EOL/BOM/topology, and a frozen seven-path adversarial diff. Because final candidate source bytes differ from all earlier captures, repeat fresh Stage 6 3/3, Stage 24 3/3, and ordered trio 3/3 before the one atomic candidate. Any failure returns inside this SOL-owned `/goal` to `SOL_DESIGN` with raw evidence and no retry, rerun, or immediate edit.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r16` and Issue #172.** Byte-lock the four r16 design/source paths, keep the r15 app/runner draft unchanged, then edit only the checkpoint extractor from LF-only boundaries to exact CRLF-or-LF boundaries. Re-run the complete r16 acceptance on final bytes, publish one seven-path iteration-4 candidate, and require one automatic focused remote attempt completely green before promotion. No product change, Luna route, retry, Ready, merge, tag, Release, or Pages action is authorized.
