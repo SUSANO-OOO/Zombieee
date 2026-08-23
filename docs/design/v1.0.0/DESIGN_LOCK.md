@@ -1271,3 +1271,55 @@ Focused remote complete green resumes Section 23.4 exactly: local full Phase G 5
 - `RESUME_FROM`: same stopped six-path worktree -> non-overlapping r11 fast-forward -> one r11 resume preflight -> exact monotonic-history correction in two existing dirty paths -> five-file load + focused 47/47 -> lint/build/diff/byte audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> unchanged full/unfiltered/dynamic-quality route
 
 A Sol docs/test/preflight-only r11 packet run is metadata-only. Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw run evidence and live refs. Revision r11 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 27. Revision r11 same-revision packet — Sol-owned source-contract consistency closure
+
+This section supersedes Section 26 only for the source-gate cursor after `BLOCKED_RETURN_TO_SOL_R11_SOURCE`. The causal-history design, Luna's six-path correction draft, acceptance thresholds, stop rules, promotion route, Producer Loop-Breaker, and release boundaries are unchanged. This is a Sol-owned canonical-document correction, not a product, runtime, gameplay, balance, AI, evidence, dependency, workspace, or retry-policy change. The authoritative Design ID remains `V100-SOL-DL-001 r11`; no r12 revision is created. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 27.1 Independent failure classification and ownership decision
+
+Sol re-fetched PR #171 open/Draft/unmerged at HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`, tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`, read the commit-pinned Section 26, Handoff Section 19, `tests/v100-design-lock.test.mjs`, and `docs/PROJECT_STATE.md`, then reproduced the exact five-file focused command in the same stopped six-path worktree. The result was 47 total / 46 pass / 1 fail, while the resume preflight, five-file load, all four r11 causal tests, and every other focused assertion were green.
+
+The reported `SOL human-player quality audit未完了` absence is not the failing contract. That literal exists in both the live file and the stopped worktree and its assertion is reached only after the actual failure. The terminal failure is the earlier assertion at the r10 cross-source loop: `PROJECT_STATE.md` does not contain `LOCAL_ACCEPTANCE_BOOTSTRAP / LOCKFILE_INSTALL + WORKTREE_LOCAL_BROWSERS + DRAFT_BYTE_PRESERVATION / DESIGN_CHANGE_REQUIRED`. Design Lock Section 25 and Handoff Section 18 both own that exact r10 `REMEDIATION_CLASS`; Project State records the r10 head/tree, 26/20/6 result, classification, and bootstrap evidence but omitted the remediation-class literal.
+
+The test assertion is correct because it verifies one historical execution contract across all three canonical owners. `PROJECT_STATE.md` is incomplete. Do not delete, relax, redirect, or make the assertion optional. Add the exact r10 `REMEDIATION_CLASS` to the existing r10 blocker entry and update the active cursor to this same-revision packet.
+
+Classification is `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`.
+
+### 27.2 Exact Sol-owned correction and proof
+
+The Sol packet may change only these four Sol-owned paths:
+
+1. `docs/PROJECT_STATE.md`: add the missing exact r10 remediation-class literal and record this source return/current cursor;
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`: add this same-revision closure;
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`: add the corresponding resume-only handoff;
+4. `tests/v100-design-lock.test.mjs`: bind Sections 27/20 and the corrected Project State contract without creating another test case or weakening any existing assertion.
+
+Preserve the existing six-path Luna draft byte-for-byte. No `app/**`, product/runtime source, package/lock, workflow, preflight, causal test, timeout, retry count, evidence threshold, or other document/test is allowed. The correction must remain a separate Sol-owned commit whose parent is `f3db25f00c9209830d79d7f01b599bdb02834a06`.
+
+Before handoff, Sol must run in that same stopped worktree and require:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+node --test --test-name-pattern='r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal history' tests/v100-design-lock.test.mjs
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs tests/v100-r11-combat-causal-history.test.mjs
+git diff --check
+```
+
+The targeted Design Lock/Project State contract must pass 1/1 and the focused source suite must pass exactly 47/47. The six draft SHA-256 values and path set must equal the pre-correction snapshot. Only the four Sol-owned paths may be staged for the Sol packet; after that commit, the worktree must again show exactly the same six Luna-owned unstaged paths.
+
+This Sol execution closes only the Sol-owned source-contract failure. It is not product, lint, build, Stage 24/Stage 3 runtime, correction-commit, remote, Phase G, promotion, or final evidence.
+
+### 27.3 Cursor, resume point, and exact owner
+
+- `LAST_AUDITED_HEAD`: `f3db25f00c9209830d79d7f01b599bdb02834a06`
+- `LAST_AUDITED_TREE`: `ee0bcd81f3aed9bedaf642f6990acf8907865259`
+- `FAILED_GATE`: r11 focused source acceptance, 47 total / 46 pass / 1 fail; `tests/v100-design-lock.test.mjs` r10 cross-source `REMEDIATION_CLASS` assertion; lint/build/runtime/commit/push not run
+- `LAST_GREEN_GATE`: r11 resume preflight, five-file load, 46/47 focused assertions including r11 causal 4/4; after this packet, Sol-owned targeted 1/1 and exact focused 47/47 are mandatory before handoff
+- `REMEDIATION_CLASS`: `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` only after Sol's same-worktree 1/1 and 47/47 proof, four-path packet commit/push, six-draft byte read-back, and live GitHub normalization
+- `RESUME_FROM`: same stopped six-path worktree at the published Section 27 packet -> no repeat of resume preflight, five-file load, or focused 47/47 -> lint -> build -> diff/byte/six-path audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> unchanged Section 23 full/unfiltered/dynamic-quality route
+
+Luna must not edit or recommit any of the four Sol-owned packet paths. If live history does not contain the published Section 27 packet directly after `f3db25f00c9209830d79d7f01b599bdb02834a06`, the six dirty paths/hashes differ from the recorded values, or any new source failure appears, return `BLOCKED_RETURN_TO_SOL_R11_SOURCE` without retry, rerun, additional edit, commit, or push. Existing Section 26 runtime/remote stop statuses remain unchanged.
+
+Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits for this same-revision correction. `High ambiguity: 0`; `Medium ambiguity: 0`.

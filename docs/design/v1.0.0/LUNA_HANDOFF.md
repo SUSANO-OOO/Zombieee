@@ -901,3 +901,21 @@ On any stop, record live HEAD/tree, command, exit, first failure, environment, s
 ### 19.4 Exact short Luna handoff
 
 Re-fetch PR #171 and execute Design Lock Section 26 / Handoff Section 19 only. In the same stopped six-path worktree, fast-forward the non-overlapping r11 packet, keep `PLAYWRIGHT_BROWSERS_PATH=0`, and run the r11 `resume` preflight once; do not reinstall or repeat the green r10 gates. Correct only monotonic source-target history/non-destructive final merge in `scripts/v100-phase-g-production-matrix.mjs` plus the one LF line in `.gitattributes`; preserve the other four draft paths and all Sol-owned r11 files. Require five-file load, focused 47/47, lint/build/diff/byte audit, fresh corrected Stage 24 3/3, and canonical Stage 3 3/3; then make the one six-path correction commit/push and require focused remote complete green. On any failure use the exact r11 return status with no retry/rerun/extra edit. No Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure.
+
+## 20. Revision r11 same-revision handoff — Sol-owned source-contract closure
+
+Run this section only. Design Lock Section 27 is the active cursor; Section 26 remains the unchanged causal implementation/runtime contract. Sol independently reproduced the 46/47 return and proved that the live/stopped Project State already contains `SOL human-player quality audit未完了`. The actual failing regex is the earlier missing r10 `LOCAL_ACCEPTANCE_BOOTSTRAP / LOCKFILE_INSTALL + WORKTREE_LOCAL_BROWSERS + DRAFT_BYTE_PRESERVATION / DESIGN_CHANGE_REQUIRED` remediation-class literal. Sol corrected Project State and retained the assertion. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 20.1 Cursor
+
+- `LAST_AUDITED_HEAD`: `f3db25f00c9209830d79d7f01b599bdb02834a06`
+- `LAST_AUDITED_TREE`: `ee0bcd81f3aed9bedaf642f6990acf8907865259`
+- `FAILED_GATE`: r11 focused source acceptance 46/47; Sol-owned r10 cross-source Project State contract; lint/build/runtime/commit/push not run
+- `LAST_GREEN_GATE`: r11 resume preflight, five-file load, causal 4/4, and every other focused assertion; Sol then requires same-worktree targeted 1/1 and focused 47/47 before publishing this packet
+- Classification/`REMEDIATION_CLASS`: `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` after the published Sol packet and green proof only
+- `RESUME_FROM`: same stopped six-path worktree at the Section 27 packet -> lint -> build -> diff/byte/six-path audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> unchanged full/unfiltered/dynamic-quality route
+
+### 20.2 Exact short Luna handoff
+
+Re-fetch PR #171 and require its live history to contain the published Design Lock Section 27 / Handoff Section 20 Sol packet directly after `f3db25f00c9209830d79d7f01b599bdb02834a06`. Continue in the same stopped worktree with exactly the same six unstaged paths and hashes. Do not edit or recommit `docs/PROJECT_STATE.md`, either design document, or `tests/v100-design-lock.test.mjs`; Sol has already run the targeted contract 1/1 and the exact focused suite 47/47 in this worktree. Do not repeat the resume preflight, five-file load, or focused source suite. Resume at lint, then build, diff/byte/six-path audit, fresh corrected Stage 24 3/3, canonical Stage 3 3/3, the one six-path correction commit/push, and focused remote complete green. On any failure, drift, or need outside the six-path correction, use the existing exact r11 return status and stop without retry/rerun/extra edit. No Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure.

@@ -143,6 +143,8 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   const bootstrap = handoff.match(/## 18\. Revision r10([\s\S]*)$/u)?.[1] ?? "";
   const causalClosure = design.match(/## 26\. Revision r11([\s\S]*)$/u)?.[1] ?? "";
   const causalHandoff = handoff.match(/## 19\. Revision r11([\s\S]*)$/u)?.[1] ?? "";
+  const sourceConsistency = design.match(/## 27\. Revision r11 same-revision packet([\s\S]*)$/u)?.[1] ?? "";
+  const sourceConsistencyHandoff = handoff.match(/## 20\. Revision r11 same-revision handoff([\s\S]*)$/u)?.[1] ?? "";
 
   for (const source of [packet, execution]) {
     assert.match(source, /d1aab90ccefa8ad6601821c8520741bde49cd087/u);
@@ -300,6 +302,19 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
   assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r11`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
+  for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
+    assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
+    assert.match(source, /f3db25f00c9209830d79d7f01b599bdb02834a06/u);
+    assert.match(source, /ee0bcd81f3aed9bedaf642f6990acf8907865259/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  }
+  assert.match(sourceConsistency, /reported `SOL human-player quality audit未完了` absence is not the failing contract/u);
+  assert.match(sourceConsistency, /Do not delete, relax, redirect, or make the assertion optional/u);
+  assert.match(sourceConsistency, /targeted Design Lock\/Project State contract must pass 1\/1/u);
+  assert.match(sourceConsistency, /focused source suite must pass exactly 47\/47/u);
+  assert.match(sourceConsistency, /no r12 revision is created/u);
+  assert.match(sourceConsistencyHandoff, /Do not repeat the resume preflight, five-file load, or focused source suite/u);
+  assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {
