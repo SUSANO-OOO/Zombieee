@@ -31,3 +31,6 @@ tests/ci-contract.test.mjs text eol=lf
 tests/stage3-final-bounded.test.mjs text eol=lf
 tests/v0995-runtime-evidence-contract.test.mjs text eol=lf
 .gitattributes text eol=lf
+scripts/run-v099-hud-states-bounded.mjs text eol=lf
+tests/v099-hud-states-bounded.test.mjs text eol=lf
+tests/v100-r11-combat-causal-history.test.mjs text eol=lf

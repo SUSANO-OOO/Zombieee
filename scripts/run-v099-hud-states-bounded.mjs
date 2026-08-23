@@ -1,9 +1,7 @@
 import { spawn } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { isRetryableTargetClosedLog } from "./run-v0995-enemy-runtime-bounded.mjs";
 
 export const CANONICAL_HUD_STATES = Object.freeze([
   "stage1-normal",
@@ -57,6 +55,85 @@ export function isolatedHudStatePassed(summary, stateId) {
     && Object.values(result.diagnostics ?? {}).every((entries) => entries.length === 0);
 }
 
+function cleanHudDiagnostics(diagnostics) {
+  if (!diagnostics || typeof diagnostics !== "object") return false;
+  const requiredKeys = ["consoleErrors", "pageErrors", "requestFailures", "httpErrors"];
+  return requiredKeys.every((key) => Array.isArray(diagnostics[key]) && diagnostics[key].length === 0)
+    && Object.values(diagnostics).every((entries) => Array.isArray(entries) && entries.length === 0);
+}
+
+async function evidencePathInside(rootPath, candidatePath) {
+  try {
+    const [root, candidate] = await Promise.all([
+      realpath(rootPath),
+      realpath(candidatePath),
+    ]);
+    const relative = path.relative(root, candidate);
+    return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  } catch {
+    return false;
+  }
+}
+
+async function readLifecycleJsonl(lifecyclePath) {
+  try {
+    const raw = await readFile(lifecyclePath, "utf8");
+    const lines = raw.split(/\r?\n/u).filter((line) => line.trim().length > 0);
+    if (lines.length === 0) return null;
+    return lines.map((line) => {
+      const entry = JSON.parse(line);
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new Error("invalid lifecycle entry");
+      return entry;
+    });
+  } catch {
+    return null;
+  }
+}
+
+function hasTerminalTargetClosedOrCrash(text) {
+  return /Target (?:page, context or browser has been closed|crashed)|Target crashed/i.test(String(text));
+}
+
+async function cleanUnexpectedHudCrashRetryable({ cwd, attemptDir, execution, summary, stateId }) {
+  if (summary?.total !== 1 || summary.passed !== 0 || summary.failed !== 1) return false;
+  if (summary.caseTypes?.length !== 1 || summary.caseTypes[0] !== "hud") return false;
+  if (summary.hudStateFilterActive !== true
+    || summary.hudStates?.length !== 1 || summary.hudStates[0] !== stateId) return false;
+  const result = summary.results?.length === 1 ? summary.results[0] : null;
+  if (result?.type !== "hud" || result.status !== "failed") return false;
+  if (!cleanHudDiagnostics(result.diagnostics)) return false;
+  if (summary.buildIdentityStable !== true) return false;
+  const startSha = summary.buildIdentityAtStart?.combinedSha256;
+  const endSha = summary.buildIdentityAtEnd?.combinedSha256;
+  if (typeof startSha !== "string" || !startSha || startSha !== endSha) return false;
+  const terminalText = [
+    execution?.output,
+    result.error,
+    ...(summary.cases ?? []).map((entry) => entry?.error),
+  ].filter(Boolean).join("\n");
+  if (!hasTerminalTargetClosedOrCrash(terminalText)) return false;
+  if (typeof result.lifecycleLog !== "string" || !result.lifecycleLog) return false;
+  const resolvedLifecycle = path.resolve(cwd, result.lifecycleLog);
+  if (!await evidencePathInside(path.resolve(cwd, attemptDir), resolvedLifecycle)) return false;
+  const entries = await readLifecycleJsonl(resolvedLifecycle);
+  if (!entries) return false;
+  const crashEntries = entries.filter((entry) => entry.event === "page crash" && entry.unexpected === true);
+  if (crashEntries.length !== 1) return false;
+  const crashIndex = entries.indexOf(crashEntries[0]);
+  const beforeCrash = entries.slice(0, crashIndex);
+  if (crashEntries[0].normalCleanupStarted === true
+    || beforeCrash.some((entry) => entry.normalCleanupStarted === true
+      || ["page close begin", "context close begin", "browser close begin", "page close"].includes(entry.event))) {
+    return false;
+  }
+  if (!beforeCrash.some((entry) => entry.event === "battle readiness complete"
+    || entry.milestone === "battle readiness complete")) return false;
+  if (entries.slice(0, crashIndex + 1).some((entry) => (
+    entry.pageDiagnostics && !cleanHudDiagnostics(entry.pageDiagnostics)
+  ))) return false;
+  return true;
+}
+
 export async function runCanonicalHudStates({
   cwd = process.cwd(),
   env = process.env,
@@ -84,8 +161,13 @@ export async function runCanonicalHudStates({
         .then(JSON.parse)
         .catch(() => null);
       const passed = execution.code === 0 && isolatedHudStatePassed(summary, stateId);
-      const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}\n${summary?.cases?.[0]?.error ?? ""}`;
-      const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
+      const retryableTargetClosed = execution.code !== 0 && await cleanUnexpectedHudCrashRetryable({
+        cwd,
+        attemptDir,
+        execution,
+        summary,
+        stateId,
+      });
       attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
       if (passed) break;
       if (attempt !== 1 || !retryableTargetClosed) break;
@@ -120,12 +202,17 @@ export async function runOneHudStateBounded({
     await mkdir(attemptDir, { recursive: true });
     const execution = await (runAttempt ?? runProcess)({ cwd, env, stateId, attempt, attemptDir });
     await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
-    const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
-      .then(JSON.parse)
-      .catch(() => null);
-    const passed = execution.code === 0 && isolatedHudStatePassed(summary, stateId);
-    const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}\n${summary?.cases?.[0]?.error ?? ""}`;
-    const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
+      const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
+        .then(JSON.parse)
+        .catch(() => null);
+      const passed = execution.code === 0 && isolatedHudStatePassed(summary, stateId);
+      const retryableTargetClosed = execution.code !== 0 && await cleanUnexpectedHudCrashRetryable({
+        cwd,
+        attemptDir,
+        execution,
+        summary,
+        stateId,
+      });
     attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
     if (passed) break;
     if (attempt !== 1 || !retryableTargetClosed) break;

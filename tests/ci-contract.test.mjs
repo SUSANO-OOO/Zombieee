@@ -145,7 +145,14 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
     assert.match(hudBoundedRunner, new RegExp(`"${stateId}"`, "u"));
   }
   assert.match(hudBoundedRunner, /attempt <= 2/u);
-  assert.match(hudBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.doesNotMatch(hudBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(hudBoundedRunner, /cleanUnexpectedHudCrashRetryable/u);
+  assert.match(hudBoundedRunner, /evidencePathInside/u);
+  assert.match(hudBoundedRunner, /buildIdentityStable/u);
+  assert.match(hudBoundedRunner, /event === "page crash"/u);
+  assert.match(hudBoundedRunner, /event === "battle readiness complete"/u);
+  assert.match(hudBoundedRunner, /lifecycleLog/u);
+  assert.match(hudBoundedRunner, /attemptDir/u);
   assert.match(hudBoundedRunner, /new Set\(stateIds\)\.size !== stateIds\.length/u);
   assert.match(hudBoundedRunner, /result\.states\?\.length === 1/u);
   assert.doesNotMatch(hudBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);

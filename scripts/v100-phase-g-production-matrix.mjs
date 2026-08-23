@@ -98,6 +98,67 @@ const BATTLE_EXTRA_CHECKPOINTS = Object.freeze([
   "screenshot-saved",
 ]);
 const RESOLVED_CHECKPOINT_STATUSES = new Set(["completed", "observed", "not-required", "absent"]);
+const DEPLOYMENT_QUEUE_CAPACITY = 3;
+const DEPLOYMENT_ACTIONABILITY_DEADLINE_MS = 2_000;
+
+function deploymentEligibilityForCard(card, battle) {
+  const reasons = [];
+  const cost = card?.cost === null || card?.cost === undefined ? Number.NaN : Number(card.cost);
+  const energy = Number(battle?.energy);
+  const cooldown = card?.kind ? Number(battle?.deployCooldowns?.[card.kind]) : Number.NaN;
+  const queue = Array.isArray(battle?.deployQueue) ? battle.deployQueue : null;
+  const domReady = card?.rect?.visible === true
+    && card?.state === "ready"
+    && card?.ariaDisabled === "false";
+  const liveBattle = battle?.screen === "battle"
+    && battle.running === true
+    && battle.paused !== true
+    && battle.over !== true
+    && battle.won !== true;
+  if (!card?.kind) reasons.push("missing-kind");
+  if (!domReady) reasons.push("dom-not-deployable");
+  if (!liveBattle) reasons.push("runtime-not-live");
+  if (!queue || queue.length >= DEPLOYMENT_QUEUE_CAPACITY) reasons.push("deployment-queue-full");
+  if (!Number.isFinite(cost)) reasons.push("cost-not-finite");
+  if (!Number.isFinite(energy) || energy < cost) reasons.push("insufficient-energy");
+  if (!Number.isFinite(cooldown) || cooldown !== 0) reasons.push("cooldown-not-zero");
+  return {
+    eligible: reasons.length === 0,
+    reasons,
+    domReady,
+    liveBattle,
+    queueLength: queue?.length ?? null,
+    queueCapacity: DEPLOYMENT_QUEUE_CAPACITY,
+    cost: Number.isFinite(cost) ? cost : null,
+    energy: Number.isFinite(energy) ? energy : null,
+    cooldown: Number.isFinite(cooldown) ? cooldown : null,
+  };
+}
+
+function deploymentCandidatesFromDiagnostics(diagnostics, excludedKinds = new Set()) {
+  const excluded = excludedKinds instanceof Set ? excludedKinds : new Set(excludedKinds);
+  return (diagnostics?.cards ?? [])
+    .filter((card) => !excluded.has(card.kind) && card.actionability?.eligible === true);
+}
+
+function isDeploymentActionabilityError(error) {
+  return /TimeoutError:|not actionable|not attached|intercepts pointer|not visible|outside of the viewport|receives pointer events|element is obscured/i.test(String(error));
+}
+
+function deploymentActionabilityOutcome({ error, after, requestedKind }) {
+  const errorText = String(error);
+  const evaluationText = String(after?.evaluateError ?? "");
+  if (isTransientBrowserClosure(error)
+    || after?.pageClosed === true
+    || /page crash|target (?:page, context or browser has been closed|crashed)|browser has been closed/i.test(`${errorText}\n${evaluationText}`)) {
+    return "lifecycle-loss";
+  }
+  if (!isDeploymentActionabilityError(error)) return "non-actionability-error";
+  const liveCandidate = after?.cards?.find((card) => card.kind === requestedKind);
+  return liveCandidate?.actionability?.eligible === true
+    ? "QA_HARNESS_ACTIONABILITY_DIVERGENCE"
+    : "candidate-invalidated";
+}
 
 function checkpointRecorderFor(page) {
   return pageCheckpointRecorders.get(page) ?? null;
@@ -371,6 +432,39 @@ function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+if (process.env.V100_PHASE_G_CONTRACT_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_CONTRACT_PROBE_INPUT ?? "{}");
+  const withActionability = (diagnostics) => ({
+    ...diagnostics,
+    cards: (diagnostics?.cards ?? []).map((card) => ({
+      ...card,
+      actionability: deploymentEligibilityForCard(card, diagnostics?.battle),
+    })),
+  });
+  const sample = withActionability({ cards: input.cards ?? [], battle: input.battle ?? null });
+  const after = input.after ? withActionability(input.after) : null;
+  const candidates = deploymentCandidatesFromDiagnostics(sample, new Set(input.excludedKinds ?? []));
+  const outcome = input.error
+    ? deploymentActionabilityOutcome({ error: input.error, after, requestedKind: input.requestedKind ?? null })
+    : null;
+  console.log(JSON.stringify({
+    candidates: candidates.map((card) => card.kind),
+    outcome,
+    sample: sample.cards.map((card) => ({ kind: card.kind, actionability: card.actionability })),
+  }));
+  process.exit(0);
+}
+
+if (process.env.V100_PHASE_G_CAUSAL_HISTORY_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_CAUSAL_HISTORY_PROBE_INPUT ?? "{}");
+  let history = {};
+  for (const frame of input.observerFrames ?? []) history = mergeCombatActivityHistory(history, frame);
+  history = mergeCombatActivityHistory(history, input.waitSnapshot ?? {});
+  const proof = buildCombatCausalProof(input.proofSamples ?? [], history);
+  console.log(JSON.stringify({ history, proof }));
+  process.exit(0);
+}
+
 function viewportLabel(viewport) {
   return `${viewport.width}x${viewport.height}`;
 }
@@ -465,6 +559,13 @@ async function click(page, locator, label) {
   const box = await locator.boundingBox();
   invariant(box && box.width >= 28 && box.height >= 24, `${label} has unusable hit target: ${JSON.stringify(box)}`);
   await locator.click();
+}
+
+async function clickDeploymentCard(page, locator, label) {
+  await locator.waitFor({ state: "visible", timeout: DEPLOYMENT_ACTIONABILITY_DEADLINE_MS });
+  const box = await locator.boundingBox();
+  invariant(box && box.width >= 28 && box.height >= 24, `${label} has unusable hit target: ${JSON.stringify(box)}`);
+  await locator.click({ timeout: DEPLOYMENT_ACTIONABILITY_DEADLINE_MS });
 }
 
 async function openRoute(page, save = null) {
@@ -564,9 +665,237 @@ async function waitBattle(page) {
   });
 }
 
+function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
+  const currentAttackIdentity = Array.isArray(snapshot.attackIdentity) ? snapshot.attackIdentity : [];
+  const currentPendingWeaponHits = Array.isArray(snapshot.pendingWeaponHits) ? snapshot.pendingWeaponHits : [];
+  const currentPresentationEffects = Array.isArray(snapshot.battlePresentationEffects)
+    ? snapshot.battlePresentationEffects
+    : snapshot.battlePresentation?.effects ?? [];
+  const appendBounded = (existing, current, limit) => [...(existing ?? []), ...current].slice(-limit);
+  const sourceToTargetEdges = [...new Set(previous.sourceToTargetEdges ?? [])];
+  const sourceEdgeSet = new Set(sourceToTargetEdges);
+  const sourceAttribution = [...(previous.sourceAttribution ?? [])];
+  const sourceAttributionKeys = new Set(sourceAttribution.map(({ edge, channel }) => `${channel}:${edge}`));
+  const records = [
+    ...currentAttackIdentity.map((record) => ["attackIdentity", record]),
+    ...currentPendingWeaponHits.map((record) => ["pendingWeaponHits", record]),
+  ];
+  for (const [channel, record] of records) {
+    if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
+    const edge = `${record.sourceId}->${record.targetId}`;
+    if (!sourceEdgeSet.has(edge)) {
+      sourceEdgeSet.add(edge);
+      sourceToTargetEdges.push(edge);
+    }
+    const attributionKey = `${channel}:${edge}`;
+    if (!sourceAttributionKeys.has(attributionKey)) {
+      sourceAttributionKeys.add(attributionKey);
+      sourceAttribution.push({ edge, sourceId: record.sourceId, targetId: record.targetId, channel });
+    }
+  }
+  return {
+    ...previous,
+    attackIdentity: appendBounded(previous.attackIdentity, currentAttackIdentity, 24),
+    pendingWeaponHits: appendBounded(previous.pendingWeaponHits, currentPendingWeaponHits, 24),
+    battlePresentationEffects: appendBounded(previous.battlePresentationEffects, currentPresentationEffects, 24),
+    sourceToTargetEdges,
+    sourceAttribution,
+  };
+}
+
+function buildCombatCausalProof(samples, stableHistory = {}) {
+  const valid = samples.filter(Boolean);
+  const edges = new Set(stableHistory.sourceToTargetEdges ?? []);
+  const sourceAttribution = [];
+  const sourceAttributionKeys = new Set();
+  const addAttribution = (attribution) => {
+    if (!attribution?.edge || !attribution?.channel) return;
+    const key = `${attribution.channel}:${attribution.edge}`;
+    if (sourceAttributionKeys.has(key)) return;
+    sourceAttributionKeys.add(key);
+    sourceAttribution.push({
+      edge: attribution.edge,
+      sourceId: attribution.sourceId,
+      targetId: attribution.targetId,
+      channel: attribution.channel,
+    });
+  };
+  for (const edge of stableHistory.sourceToTargetEdges ?? []) edges.add(edge);
+  for (const attribution of stableHistory.sourceAttribution ?? []) addAttribution(attribution);
+  const visualEvents = new Set();
+  const reactionKeys = new Set();
+  const audioCueIds = new Set();
+  const actorKinds = new Set();
+  const fighterActors = new Set();
+  const attackingActors = new Set();
+  const abilityActors = new Set();
+  const actorPhaseObservations = new Set();
+  const reactingActors = new Set();
+  const supportActors = new Set();
+  const vehicleActions = new Set();
+  const missionStageIds = new Set();
+  const missionTypes = new Set();
+  const missionSignals = new Set();
+  const statusMarkers = new Set();
+  for (const sample of valid) {
+    for (const edge of sample.activitySourceToTargetEdges ?? []) edges.add(edge);
+    for (const attribution of sample.activitySourceAttribution ?? []) addAttribution(attribution);
+    for (const actorKey of sample.activityFighterActors ?? []) fighterActors.add(actorKey);
+    for (const actorKey of sample.activityAttackingActors ?? []) attackingActors.add(actorKey);
+    for (const action of sample.activityVehicleActions ?? []) vehicleActions.add(action);
+    for (const marker of sample.activityStatusMarkers ?? []) statusMarkers.add(marker);
+    if (sample.stageId) missionStageIds.add(sample.stageId);
+    if (sample.stageMission?.missionType) missionTypes.add(sample.stageMission.missionType);
+    for (const transition of sample.stageMission?.transitions ?? []) missionSignals.add(transition);
+    for (const fighter of sample.fighters ?? []) {
+      if (!fighter.kind || !fighter.side) continue;
+      const actorKey = `${fighter.side}:${fighter.kind}`;
+      actorKinds.add(fighter.kind);
+      fighterActors.add(actorKey);
+      const abilityPhase = String(fighter.stationAbility?.phase ?? fighter.enemyVfx?.abilityPhase ?? "idle");
+      const vfxPhase = String(fighter.enemyVfx?.phase ?? "idle");
+      actorPhaseObservations.add(`${actorKey}:${abilityPhase}:${vfxPhase}`);
+      if (fighter.enemyVfx?.abilityActive === true
+        || ["warning", "active", "recovery"].includes(abilityPhase)
+        || ["warning", "attack"].includes(vfxPhase)) {
+        abilityActors.add(actorKey);
+      }
+      const animationState = String(fighter.animationPresentation?.state ?? "");
+      const attacking = Number(fighter.attack) > 0
+        || Number(fighter.attackWindup) > 0
+        || Number(fighter.abilityWindup) > 0
+        || Number(fighter.attackSequence) > 0
+        || fighter.enemyVfx?.attacking === true
+        || fighter.enemyVfx?.attackWindup === true
+        || fighter.enemyVfx?.abilityActive === true
+        || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
+        || /attack|windup|ability/u.test(animationState);
+      if (attacking) attackingActors.add(actorKey);
+      if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || /hurt|hit|stagger|die/u.test(animationState)) reactingActors.add(actorKey);
+      if (Number(fighter.marked) > 0) statusMarkers.add(`${actorKey}:marked`);
+    }
+    const fightersById = new Map((sample.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
+    for (const [channel, records] of [["attackIdentity", sample.attackIdentity ?? []], ["pendingWeaponHits", sample.pendingWeaponHits ?? []]]) {
+      for (const attack of records) {
+        if (attack.sourceId !== undefined && attack.sourceId !== null && attack.targetId !== undefined && attack.targetId !== null) {
+          const edge = `${attack.sourceId}->${attack.targetId}`;
+          edges.add(edge);
+          addAttribution({ edge, sourceId: attack.sourceId, targetId: attack.targetId, channel });
+        }
+        if (attack.weapon || attack.effect) visualEvents.add(String(attack.weapon ?? attack.effect));
+        const source = attack.sourceId === undefined || attack.sourceId === null
+          ? null
+          : fightersById.get(String(attack.sourceId));
+        if (source?.kind && source?.side) attackingActors.add(`${source.side}:${source.kind}`);
+      }
+    }
+    for (const effect of sample.battlePresentationEffects ?? []) visualEvents.add(String(effect.semantic ?? effect.kind ?? "presentation"));
+    for (const fighter of sample.fighters ?? []) if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || Number(fighter.attackWindup) > 0) reactionKeys.add(`${fighter.id}:${fighter.flash > 0 ? "flash" : "knock"}`);
+    for (const text of sample.damageTexts ?? []) {
+      if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
+      if (/索敵|マーク|目標|ロック/u.test(String(text?.value ?? ""))) statusMarkers.add("status-mission-target");
+    }
+    for (const object of sample.battlefieldObjects ?? []) {
+      const objectKind = String(object.kind ?? "");
+      if (objectKind.includes("support-healing")) supportActors.add("support-healing");
+      if (objectKind.includes("support")) visualEvents.add(objectKind);
+    }
+    for (const effect of sample.manualAbilityVfx ?? []) if (effect?.kind) visualEvents.add(`manual:${effect.kind}`);
+    for (const request of sample.audioCueRequests ?? []) {
+      if (!request?.cueId) continue;
+      audioCueIds.add(request.cueId);
+      if (request.cueId === "support-heal") supportActors.add("support-healing");
+      if (request.cueId === "support-airstrike") supportActors.add("support-airstrike");
+      if (request.cueId === "support-explosion") supportActors.add("support-explosion");
+      if (request.cueId === "weapon-barrage") vehicleActions.add("vehicle-barrage");
+    }
+    for (const receipt of sample.manualAbilityReceipts ?? []) {
+      if (receipt?.kind) visualEvents.add(`receipt:${receipt.kind}:${receipt.eventType ?? "unknown"}`);
+    }
+    if (sample.crawlerAbility?.abilityId === "vehicle-barrage"
+      || sample.crawlerAbility?.phase === "firing"
+      || sample.crawlerAbility?.damageTriggered === true
+      || Number(sample.crawlerAbility?.hitCount) > 0) {
+      vehicleActions.add("vehicle-barrage");
+      visualEvents.add("vehicle-barrage");
+    }
+    if (sample.researchContainer || sample.stageMission?.missionType === "sequential-seal") missionSignals.add("station-mission-runtime");
+    if ((sample.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) statusMarkers.add("status-mission-target");
+  }
+  const causalProof = {
+    sampleCount: valid.length,
+    sourceToTargetEdges: [...edges],
+    sourceAttribution,
+    visualEvents: [...visualEvents],
+    reactionEvents: [...reactionKeys],
+    audioCueIds: [...audioCueIds],
+    observed: {
+      actorKinds: [...actorKinds],
+      fighterActors: [...fighterActors],
+      attackingActors: [...attackingActors],
+      abilityActors: [...abilityActors],
+      actorPhaseObservations: [...actorPhaseObservations],
+      reactingActors: [...reactingActors],
+      supportActors: [...supportActors],
+      vehicleActions: [...vehicleActions],
+      missionStageIds: [...missionStageIds],
+      missionTypes: [...missionTypes],
+      missionSignals: [...missionSignals],
+      statusMarkers: [...statusMarkers],
+      audioCueIds: [...audioCueIds],
+    },
+    stages: {
+      source: edges.size > 0,
+      travelOrContact: visualEvents.size > 0,
+      targetReaction: reactionKeys.size > 0,
+      audio: audioCueIds.size > 0,
+    },
+  };
+  causalProof.ok = causalProof.sampleCount > 0 && causalProof.stages.source && causalProof.stages.travelOrContact && causalProof.stages.targetReaction && causalProof.stages.audio;
+  return causalProof;
+}
+
 async function startCombatRuntimeObserver(page) {
   await page.evaluate(() => {
     window.__PHASE_G_COMBAT_OBSERVER__?.stop?.();
+    const mergeCombatActivityHistory = (previous = {}, snapshot = {}) => {
+      const currentAttackIdentity = Array.isArray(snapshot.attackIdentity) ? snapshot.attackIdentity : [];
+      const currentPendingWeaponHits = Array.isArray(snapshot.pendingWeaponHits) ? snapshot.pendingWeaponHits : [];
+      const currentPresentationEffects = Array.isArray(snapshot.battlePresentationEffects)
+        ? snapshot.battlePresentationEffects
+        : snapshot.battlePresentation?.effects ?? [];
+      const appendBounded = (existing, current, limit) => [...(existing ?? []), ...current].slice(-limit);
+      const sourceToTargetEdges = [...new Set(previous.sourceToTargetEdges ?? [])];
+      const sourceEdgeSet = new Set(sourceToTargetEdges);
+      const sourceAttribution = [...(previous.sourceAttribution ?? [])];
+      const sourceAttributionKeys = new Set(sourceAttribution.map(({ edge, channel }) => `${channel}:${edge}`));
+      const records = [
+        ...currentAttackIdentity.map((record) => ["attackIdentity", record]),
+        ...currentPendingWeaponHits.map((record) => ["pendingWeaponHits", record]),
+      ];
+      for (const [channel, record] of records) {
+        if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
+        const edge = `${record.sourceId}->${record.targetId}`;
+        if (!sourceEdgeSet.has(edge)) {
+          sourceEdgeSet.add(edge);
+          sourceToTargetEdges.push(edge);
+        }
+        const attributionKey = `${channel}:${edge}`;
+        if (!sourceAttributionKeys.has(attributionKey)) {
+          sourceAttributionKeys.add(attributionKey);
+          sourceAttribution.push({ edge, sourceId: record.sourceId, targetId: record.targetId, channel });
+        }
+      }
+      return {
+        ...previous,
+        attackIdentity: appendBounded(previous.attackIdentity, currentAttackIdentity, 24),
+        pendingWeaponHits: appendBounded(previous.pendingWeaponHits, currentPendingWeaponHits, 24),
+        battlePresentationEffects: appendBounded(previous.battlePresentationEffects, currentPresentationEffects, 24),
+        sourceToTargetEdges,
+        sourceAttribution,
+      };
+    };
+    window.__PHASE_G_COMBAT_HISTORY_MERGE__ = mergeCombatActivityHistory;
     const observe = () => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
       if (!snapshot || snapshot.screen !== "battle") return;
@@ -575,9 +904,6 @@ async function startCombatRuntimeObserver(page) {
       const attackingActors = new Set(activity.attackingActors ?? []);
       const statusMarkers = new Set(activity.statusMarkers ?? []);
       const audioCues = new Set(activity.audioCues ?? []);
-      const attackIdentity = [...(activity.attackIdentity ?? [])];
-      const pendingWeaponHits = [...(activity.pendingWeaponHits ?? [])];
-      const battlePresentationEffects = [...(activity.battlePresentationEffects ?? [])];
       const bossLifecycle = [...(activity.bossLifecycle ?? [])];
       const actorById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
       for (const fighter of snapshot.fighters ?? []) {
@@ -630,24 +956,20 @@ async function startCombatRuntimeObserver(page) {
           attackingActors.add(actorKey);
         }
       }
-      for (const attack of snapshot.attackIdentity ?? []) attackIdentity.push(attack);
-      for (const hit of snapshot.pendingWeaponHits ?? []) pendingWeaponHits.push(hit);
-      for (const effect of snapshot.battlePresentation?.effects ?? []) battlePresentationEffects.push(effect);
       for (const request of window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? []) {
         if (request?.cueId) audioCues.add(String(request.cueId));
       }
       if ((snapshot.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) {
         statusMarkers.add("status-mission-target");
       }
+      const mergedHistory = mergeCombatActivityHistory(activity, snapshot);
       window.__PHASE_G_COMBAT_ACTIVITY__ = {
         ...activity,
+        ...mergedHistory,
         fighterActors: [...fighterActors],
         attackingActors: [...attackingActors],
         statusMarkers: [...statusMarkers],
         audioCues: [...audioCues],
-        attackIdentity: attackIdentity.slice(-24),
-        pendingWeaponHits: pendingWeaponHits.slice(-24),
-        battlePresentationEffects: battlePresentationEffects.slice(-24),
         bossLifecycle: bossLifecycle.slice(-48),
       };
     };
@@ -673,18 +995,17 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
       if (!snapshot || snapshot.screen !== "battle") return false;
       const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+      const mergedActivity = window.__PHASE_G_COMBAT_HISTORY_MERGE__?.(activity, snapshot) ?? activity;
       const hasPresentation = (snapshot.attackIdentity?.length ?? 0) > 0
         || (snapshot.pendingWeaponHits?.length ?? 0) > 0
         || (snapshot.battlePresentation?.effects?.length ?? 0) > 0
-        || (activity.attackIdentity?.length ?? 0) > 0
-        || (activity.pendingWeaponHits?.length ?? 0) > 0
-        || (activity.battlePresentationEffects?.length ?? 0) > 0;
+        || (mergedActivity.attackIdentity?.length ?? 0) > 0
+        || (mergedActivity.pendingWeaponHits?.length ?? 0) > 0
+        || (mergedActivity.battlePresentationEffects?.length ?? 0) > 0;
       if (!hasFighters || !hasPresentation) return false;
       window.__PHASE_G_COMBAT_ACTIVITY__ = {
-        ...(window.__PHASE_G_COMBAT_ACTIVITY__ ?? {}),
-        attackIdentity: snapshot.attackIdentity ?? [],
-        pendingWeaponHits: snapshot.pendingWeaponHits ?? [],
-        battlePresentationEffects: snapshot.battlePresentation?.effects ?? [],
+        ...activity,
+        ...mergedActivity,
       };
       return true;
     }, null, { timeout: Math.min(battleTimeout, 45_000) });
@@ -865,6 +1186,8 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         } : null,
         attackIdentity: (snapshot?.attackIdentity?.length ?? 0) > 0 ? snapshot.attackIdentity : observedCombatActivity.attackIdentity ?? [],
         pendingWeaponHits: (snapshot?.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
+        activitySourceToTargetEdges: observedCombatActivity.sourceToTargetEdges ?? [],
+        activitySourceAttribution: observedCombatActivity.sourceAttribution ?? [],
         activityFighterActors: observedCombatActivity.fighterActors ?? [],
         activityAttackingActors: observedCombatActivity.attackingActors ?? [],
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
@@ -916,130 +1239,15 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
     }).catch(() => null));
     await page.waitForTimeout(120);
   }
-  const valid = samples.filter(Boolean);
-  const edges = new Set();
-  const visualEvents = new Set();
-  const reactionKeys = new Set();
-  const audioCueIds = new Set();
-  const actorKinds = new Set();
-  const fighterActors = new Set();
-  const attackingActors = new Set();
-  const abilityActors = new Set();
-  const actorPhaseObservations = new Set();
-  const reactingActors = new Set();
-  const supportActors = new Set();
-  const vehicleActions = new Set();
-  const missionStageIds = new Set();
-  const missionTypes = new Set();
-  const missionSignals = new Set();
-  const statusMarkers = new Set();
-  for (const sample of valid) {
-    for (const actorKey of sample.activityFighterActors ?? []) fighterActors.add(actorKey);
-    for (const actorKey of sample.activityAttackingActors ?? []) attackingActors.add(actorKey);
-    for (const action of sample.activityVehicleActions ?? []) vehicleActions.add(action);
-    for (const marker of sample.activityStatusMarkers ?? []) statusMarkers.add(marker);
-    if (sample.stageId) missionStageIds.add(sample.stageId);
-    if (sample.stageMission?.missionType) missionTypes.add(sample.stageMission.missionType);
-    for (const transition of sample.stageMission?.transitions ?? []) missionSignals.add(transition);
-    for (const fighter of sample.fighters ?? []) {
-      if (!fighter.kind || !fighter.side) continue;
-      const actorKey = `${fighter.side}:${fighter.kind}`;
-      actorKinds.add(fighter.kind);
-      fighterActors.add(actorKey);
-      const abilityPhase = String(fighter.stationAbility?.phase ?? fighter.enemyVfx?.abilityPhase ?? "idle");
-      const vfxPhase = String(fighter.enemyVfx?.phase ?? "idle");
-      actorPhaseObservations.add(`${actorKey}:${abilityPhase}:${vfxPhase}`);
-      if (fighter.enemyVfx?.abilityActive === true
-        || ["warning", "active", "recovery"].includes(abilityPhase)
-        || ["warning", "attack"].includes(vfxPhase)) {
-        abilityActors.add(actorKey);
-      }
-      const animationState = String(fighter.animationPresentation?.state ?? "");
-      const attacking = Number(fighter.attack) > 0
-        || Number(fighter.attackWindup) > 0
-        || Number(fighter.abilityWindup) > 0
-        || Number(fighter.attackSequence) > 0
-        || fighter.enemyVfx?.attacking === true
-        || fighter.enemyVfx?.attackWindup === true
-        || fighter.enemyVfx?.abilityActive === true
-        || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
-        || /attack|windup|ability/u.test(animationState);
-      if (attacking) attackingActors.add(actorKey);
-      if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || /hurt|hit|stagger|die/u.test(animationState)) reactingActors.add(actorKey);
-      if (Number(fighter.marked) > 0) statusMarkers.add(`${actorKey}:marked`);
-    }
-    const fightersById = new Map((sample.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
-    for (const attack of [...(sample.attackIdentity ?? []), ...(sample.pendingWeaponHits ?? [])]) {
-      if (attack.sourceId !== undefined && attack.targetId !== undefined && attack.targetId !== null) edges.add(`${attack.sourceId}->${attack.targetId}`);
-      if (attack.weapon || attack.effect) visualEvents.add(String(attack.weapon ?? attack.effect));
-      const source = attack.sourceId === undefined || attack.sourceId === null
-        ? null
-        : fightersById.get(String(attack.sourceId));
-      if (source?.kind && source?.side) attackingActors.add(`${source.side}:${source.kind}`);
-    }
-    for (const effect of sample.battlePresentationEffects ?? []) visualEvents.add(String(effect.semantic ?? effect.kind ?? "presentation"));
-    for (const fighter of sample.fighters ?? []) if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || Number(fighter.attackWindup) > 0) reactionKeys.add(`${fighter.id}:${fighter.flash > 0 ? "flash" : "knock"}`);
-    for (const text of sample.damageTexts ?? []) {
-      if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
-      if (/索敵|マーク|目標|ロック/u.test(String(text?.value ?? ""))) statusMarkers.add("status-mission-target");
-    }
-    for (const object of sample.battlefieldObjects ?? []) {
-      const objectKind = String(object.kind ?? "");
-      if (objectKind.includes("support-healing")) supportActors.add("support-healing");
-      if (objectKind.includes("support")) visualEvents.add(objectKind);
-    }
-    for (const effect of sample.manualAbilityVfx ?? []) if (effect?.kind) visualEvents.add(`manual:${effect.kind}`);
-    for (const request of sample.audioCueRequests ?? []) {
-      if (!request?.cueId) continue;
-      audioCueIds.add(request.cueId);
-      if (request.cueId === "support-heal") supportActors.add("support-healing");
-      if (request.cueId === "support-airstrike") supportActors.add("support-airstrike");
-      if (request.cueId === "support-explosion") supportActors.add("support-explosion");
-      if (request.cueId === "weapon-barrage") vehicleActions.add("vehicle-barrage");
-    }
-    for (const receipt of sample.manualAbilityReceipts ?? []) {
-      if (receipt?.kind) visualEvents.add(`receipt:${receipt.kind}:${receipt.eventType ?? "unknown"}`);
-    }
-    if (sample.crawlerAbility?.abilityId === "vehicle-barrage"
-      || sample.crawlerAbility?.phase === "firing"
-      || sample.crawlerAbility?.damageTriggered === true
-      || Number(sample.crawlerAbility?.hitCount) > 0) {
-      vehicleActions.add("vehicle-barrage");
-      visualEvents.add("vehicle-barrage");
-    }
-    if (sample.researchContainer || sample.stageMission?.missionType === "sequential-seal") missionSignals.add("station-mission-runtime");
-    if ((sample.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) statusMarkers.add("status-mission-target");
-  }
-  const causalProof = {
-    sampleCount: valid.length,
-    sourceToTargetEdges: [...edges],
-    visualEvents: [...visualEvents],
-    reactionEvents: [...reactionKeys],
-    audioCueIds: [...audioCueIds],
-    observed: {
-      actorKinds: [...actorKinds],
-      fighterActors: [...fighterActors],
-      attackingActors: [...attackingActors],
-      abilityActors: [...abilityActors],
-      actorPhaseObservations: [...actorPhaseObservations],
-      reactingActors: [...reactingActors],
-      supportActors: [...supportActors],
-      vehicleActions: [...vehicleActions],
-      missionStageIds: [...missionStageIds],
-      missionTypes: [...missionTypes],
-      missionSignals: [...missionSignals],
-      statusMarkers: [...statusMarkers],
-      audioCueIds: [...audioCueIds],
-    },
-    stages: {
-      source: edges.size > 0,
-      travelOrContact: visualEvents.size > 0,
-      targetReaction: reactionKeys.size > 0,
-      audio: audioCueIds.size > 0,
-    },
-  };
-  causalProof.ok = causalProof.sampleCount > 0 && causalProof.stages.source && causalProof.stages.travelOrContact && causalProof.stages.targetReaction && causalProof.stages.audio;
-  return causalProof;
+  const stableHistory = await page.evaluate(() => {
+    const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+    return {
+      sourceToTargetEdges: activity.sourceToTargetEdges ?? [],
+      sourceAttribution: activity.sourceAttribution ?? [],
+      battlePresentationEffects: activity.battlePresentationEffects ?? [],
+    };
+  }).catch(() => ({}));
+  return buildCombatCausalProof(samples, stableHistory);
 }
 
 async function saveScreenshot(page, filePath, label) {
@@ -1197,7 +1405,7 @@ async function readBattleDeploymentDiagnostics(page, {
       phase,
     };
   }
-  return page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase }) => {
+  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase }) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
     const visibleRect = (element) => {
       const rect = element.getBoundingClientRect();
@@ -1297,6 +1505,14 @@ async function readBattleDeploymentDiagnostics(page, {
     phase,
     evaluateError: String(error),
   }));
+  if (!Array.isArray(diagnostics.cards)) return diagnostics;
+  return {
+    ...diagnostics,
+    cards: diagnostics.cards.map((card) => ({
+      ...card,
+      actionability: deploymentEligibilityForCard(card, diagnostics.battle),
+    })),
+  };
 }
 
 function deploymentWasAccepted(before, after, requestedKind) {
@@ -1887,6 +2103,32 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     deploymentTrace.push(entry);
     recorder?.recordDeploymentAttempt(entry);
   };
+  const rereadAfterDeploymentActionabilityError = async ({ error, kind, slot }) => {
+    const after = await readBattleDeploymentDiagnostics(page, {
+      requestedKind: kind,
+      requestedSlot: slot,
+      phase: "after-actionability-error",
+    });
+    const outcome = deploymentActionabilityOutcome({ error, after, requestedKind: kind });
+    recordDeployment({
+      slot,
+      requestedKind: kind,
+      action: outcome === "candidate-invalidated"
+        ? "candidate-invalidated-after-actionability-error"
+        : outcome,
+      clickError: String(error),
+      accepted: false,
+      diagnostics: after,
+    });
+    if (outcome === "candidate-invalidated") return false;
+    if (outcome === "lifecycle-loss") {
+      throw new Error(`deployment actionability lifecycle loss for ${kind}: ${String(error)} diagnostics=${JSON.stringify(after)}`);
+    }
+    if (outcome === "QA_HARNESS_ACTIONABILITY_DIVERGENCE") {
+      throw new Error(`QA_HARNESS_ACTIONABILITY_DIVERGENCE for ${kind}: ${String(error)} diagnostics=${JSON.stringify(after)}`);
+    }
+    throw error;
+  };
   try {
     if (!bossKind) {
       // Compact fixtures can reorder the formation and start with less
@@ -1899,65 +2141,52 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         recorder?.setAwaiting("formation-deployment", { slot: slot + 1, predicate: "a real ready formation card is accepted by production runtime" });
         while (!deployed && Date.now() < deadline) {
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
-          let selectedKind = null;
-          const readyKinds = await page.evaluate(() => [...document.querySelectorAll(
-            'button.unit-card[data-state="ready"][aria-disabled="false"]',
-          )].map((card) => card.getAttribute("data-kind")).filter(Boolean)).catch(() => []);
+          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+            requestedSlot: slot + 1,
+            phase: "candidate-sample",
+          });
+          recorder?.setLatestReadableState(candidateSample);
+          const candidateCards = deploymentCandidatesFromDiagnostics(candidateSample, deployedKinds);
           // When a focused contract names a canonical player proof unit,
           // prefer that currently-ready card first. This keeps the evidence
           // plan on the real formation without substituting a different
           // actor or changing the production battle rules.
-          const openingCandidates = readyKinds
-            .filter((kind) => kind !== proofUnitKind)
-            .map((kind) => ({ kind, content: unitContentFor(kind) }))
+          const openingCandidates = candidateCards
+            .filter((card) => card.kind !== proofUnitKind)
+            .map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }))
             .sort((left, right) => {
               const leftDps = Number(left.content?.damage) / Math.max(.01, Number(left.content?.attackEvery) || 1);
               const rightDps = Number(right.content?.damage) / Math.max(.01, Number(right.content?.attackEvery) || 1);
               if (leftDps !== rightDps) return leftDps - rightDps;
               return Number(left.content?.cost ?? 0) - Number(right.content?.cost ?? 0);
             });
-          selectedKind = (proofUnitFirst && slot === 0 && proofUnitKind
-            ? readyKinds.find((kind) => kind === proofUnitKind)
+          const selectedCandidate = (proofUnitFirst && slot === 0 && proofUnitKind
+            ? candidateCards.find((card) => card.kind === proofUnitKind)
             : slot > 0 && proofUnitKind
-            ? readyKinds.find((kind) => kind === proofUnitKind)
+            ? candidateCards.find((card) => card.kind === proofUnitKind)
             : null)
-            ?? openingCandidates[0]?.kind
-            ?? readyKinds[0]
+            ?? openingCandidates[0]?.card
+            ?? candidateCards[0]
             ?? null;
-          // If the formation has only one affordable card at this moment, a
-          // card that already completed its cooldown is still a real player
-          // choice. Prefer a new kind, but never fail on a fixed uniqueness
-          // assumption when the production roster exposes a valid ready card.
-          if (!selectedKind && readyKinds.length > 0) selectedKind = readyKinds[0];
-          if (!selectedKind) {
+          if (!selectedCandidate) {
             await page.waitForTimeout(120);
             continue;
           }
-          // Re-query by stable data-kind after reading the live collection.
-          // WebKit can rerender the card rail between the nth() read and the
-          // click; never let a stale positional locator turn that repaint
-          // into a false product failure.
-          const card = page.locator(`button.unit-card[data-kind="${selectedKind}"][data-state="ready"][aria-disabled="false"]`).first();
-          if (await card.count().catch(() => 0) === 0 || !await card.isVisible().catch(() => false)) {
-            await page.waitForTimeout(120);
-            continue;
-          }
-          const kind = selectedKind;
+          const kind = selectedCandidate.kind;
           const before = await readBattleDeploymentDiagnostics(page, {
             requestedKind: kind,
             requestedSlot: slot + 1,
-            phase: "before-click",
+            phase: "pre-click-recheck",
           });
+          if (before.pageClosed || before.evaluateError) {
+            throw new Error(`deployment candidate pre-click lifecycle loss for ${kind}: ${JSON.stringify(before)}`);
+          }
           const requestedCard = before.cards?.find((entry) => entry.kind === kind);
-          // The selector and the production runtime can cross a resource tick
-          // between collection/read and click. A card that was ready in the
-          // stale DOM but is already insufficient in the runtime must not be
-          // treated as a failed player action or clicked again.
-          if (requestedCard?.state !== "ready" || requestedCard.ariaDisabled === "true") {
+          if (requestedCard?.actionability?.eligible !== true) {
             recordDeployment({
               slot: slot + 1,
               requestedKind: kind,
-              action: "stale-ready-card",
+              action: "candidate-invalidated-before-click",
               accepted: false,
               diagnostics: before,
             });
@@ -1965,35 +2194,38 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             continue;
           }
           recordDeployment({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
-          let clickError = null;
+          const card = page.locator(`button.unit-card[data-kind="${kind}"]`).first();
           try {
-            await click(page, card, `deploy ready battle unit ${slot + 1}`);
+            await clickDeploymentCard(page, card, `deploy ready battle unit ${slot + 1}`);
           } catch (error) {
-            clickError = String(error);
+            const retryCandidate = await rereadAfterDeploymentActionabilityError({ error, kind, slot: slot + 1 });
+            if (!retryCandidate) {
+              await page.waitForTimeout(120);
+              continue;
+            }
           }
           const acceptance = await waitForDeploymentAcceptance(
             page,
             before,
             kind,
             slot + 1,
-            clickError ? 1_000 : 5_000,
+            5_000,
           );
           recordDeployment({
             slot: slot + 1,
             requestedKind: kind,
-            action: clickError ? "click-error-after-state-check" : "after-click",
-            clickError,
+            action: "after-click",
+            clickError: null,
             accepted: acceptance.accepted,
             diagnostics: acceptance.diagnostics,
           });
-           if (!acceptance.accepted) {
-             throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
-           }
-           recorder?.clearAwaiting();
-           deployedKinds.add(kind);
+          if (!acceptance.accepted) {
+            throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError: null })}`);
+          }
+          recorder?.clearAwaiting();
+          deployedKinds.add(kind);
           if (kind === proofUnitKind) proofUnitDeployed = true;
           deployed = true;
-          }
           invariant(deployed, `no ready battle unit for slot ${slot + 1}`);
           if (slot === 0 && proofActor && proofUnitKind && !proofActorAttackObserved) {
             const proofActorDeadline = Date.now() + Math.min(6_000, battleTimeout);
@@ -2005,6 +2237,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           }
           await page.waitForTimeout(60);
         }
+      }
     } else {
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
         let deployed = false;
@@ -2020,13 +2253,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               break;
             }
           }
-          const readyKinds = await page.evaluate(() => [...document.querySelectorAll(
-            'button.unit-card[data-state="ready"][aria-disabled="false"]',
-          )].map((card) => card.getAttribute("data-kind")).filter(Boolean)).catch(() => []);
-          let card = null;
-          const readyCandidates = readyKinds
-            .map((kind, candidateIndex) => ({ kind, content: unitContentFor(kind), candidateIndex }))
-            .filter(({ kind }) => !deployedKinds.has(kind));
+          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+            requestedSlot: deployment + 1,
+            phase: "candidate-sample",
+          });
+          recorder?.setLatestReadableState(candidateSample);
+          const readyCandidates = deploymentCandidatesFromDiagnostics(candidateSample, deployedKinds)
+            .map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }));
           if (proofActorRequiresContactFirst && !proofActorAttackObserved) {
             readyCandidates.sort((left, right) => {
               const leftSupport = left.content?.aiProfile === "support" ? 0 : 1;
@@ -2041,37 +2274,52 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const selectedCandidate = readyCandidates[0] ?? null;
           if (selectedCandidate) {
             const kind = selectedCandidate.kind;
-            card = page.locator(`button.unit-card[data-kind="${kind}"][data-state="ready"][aria-disabled="false"]`).first();
             const before = await readBattleDeploymentDiagnostics(page, {
               requestedKind: kind,
               requestedSlot: deployment + 1,
-              phase: "before-click",
+              phase: "pre-click-recheck",
             });
+            if (before.pageClosed || before.evaluateError) {
+              throw new Error(`deployment candidate pre-click lifecycle loss for ${kind}: ${JSON.stringify(before)}`);
+            }
+            const requestedCard = before.cards?.find((entry) => entry.kind === kind);
+            if (requestedCard?.actionability?.eligible !== true) {
+              recordDeployment({
+                slot: deployment + 1,
+                requestedKind: kind,
+                action: "candidate-invalidated-before-click",
+                accepted: false,
+                diagnostics: before,
+              });
+              await page.waitForTimeout(120);
+              continue;
+            }
+            const card = page.locator(`button.unit-card[data-kind="${kind}"]`).first();
             recordDeployment({ slot: deployment + 1, requestedKind: kind, action: "before-click", diagnostics: before });
-            let clickError = null;
             try {
-              await click(page, card, `deploy boss frontline unit ${deployment + 1}`);
+              await clickDeploymentCard(page, card, `deploy boss frontline unit ${deployment + 1}`);
             } catch (error) {
-              clickError = String(error);
+              const retryCandidate = await rereadAfterDeploymentActionabilityError({ error, kind, slot: deployment + 1 });
+              if (!retryCandidate) {
+                await page.waitForTimeout(120);
+                continue;
+              }
             }
             const acceptance = await waitForDeploymentAcceptance(
               page,
               before,
               kind,
               deployment + 1,
-              clickError ? 1_000 : 5_000,
+              5_000,
             );
             recordDeployment({
               slot: deployment + 1,
               requestedKind: kind,
-              action: clickError ? "click-error-after-state-check" : "after-click",
-              clickError,
+              action: "after-click",
+              clickError: null,
               accepted: acceptance.accepted,
               diagnostics: acceptance.diagnostics,
             });
-            if (clickError && !acceptance.accepted) {
-              throw new Error(`boss frontline unit ${deployment + 1} deployment click failed deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
-            }
             if (acceptance.accepted) {
               recorder?.clearAwaiting();
               deployed = true;
