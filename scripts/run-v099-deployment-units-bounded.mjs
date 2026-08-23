@@ -3,8 +3,6 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isRetryableTargetClosedLog } from "./run-v0995-enemy-runtime-bounded.mjs";
-
 export const CANONICAL_DEPLOYMENT_KINDS = Object.freeze([
   "scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic",
 ]);
@@ -68,23 +66,16 @@ export async function runCanonicalDeploymentUnits({
   const units = [];
   for (const kind of kinds) {
     const attempts = [];
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
-      const attemptDir = path.join(root, kind, `attempt-${attempt}`);
-      await mkdir(attemptDir, { recursive: true });
-      const execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
-      await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
-      const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
-        .then(JSON.parse)
-        .catch(() => null);
-      const passed = execution.code === 0 && summary && assertUnitPass(summary, kind);
-      const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}`;
-      const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
-      attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
-      if (passed) break;
-      if (attempt !== 1 || !retryableTargetClosed) break;
-      console.warn(`Retrying ${kind} once after an exact hosted-WebKit target-closed incident.`);
-    }
-    const passed = attempts.at(-1)?.passed === true;
+    const attempt = 1;
+    const attemptDir = path.join(root, kind, `attempt-${attempt}`);
+    await mkdir(attemptDir, { recursive: true });
+    const execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
+    await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
+    const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
+      .then(JSON.parse)
+      .catch(() => null);
+    const passed = execution.code === 0 && summary && assertUnitPass(summary, kind);
+    attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, summary });
     units.push({ kind, passed, attempts });
     if (!passed) break;
   }

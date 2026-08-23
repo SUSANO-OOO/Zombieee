@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`7793433921f82c483a5b2f4a3887e56f6182c3f0`、tree `9a2ce2ca3028337a83667adf164c870e9ab157f6`。これはr15設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`d11464927efd1d21e573d969a767057bdd5c8b04`、tree `2ce952c6fe70c347e866e7201824ac623bbbe993`。これはr19設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r16` Sections 28-32。r12 exact-pointer／receipt／failure-cursor、r13 same-frame target-ownership、r14 scheduler-independent actionability、r15 localhost-only lean combat observabilityを維持し、CRLF-safe source acceptanceとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r19` Sections 28-35。r12-r17のQA／evidence契約とr18のCI one-attempt assertion整合を維持し、`tests/ci-contract.test.mjs`の既存UTF-8 BOM＋LF byte contractを正しく固定する。SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -62,6 +62,14 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- r17 ten-path draftはcommitせず保持中。three-script syntax、checkpoint／deployment／runtime source-behavior、seven-file load 7/7はgreenだが、exact focused source commandは59/60で停止した。唯一のfailureは`tests/ci-contract.test.mjs`がdeployment bounded runnerへ旧`attempt <= 2`／`isRetryableTargetClosedLog`を要求したこと。r17でlockedしたone-attempt/no-retry policyと矛盾する既存source ownerをtopologyへ含めなかったSOL設計自己不整合であり、browser／lint／build／commit／pushは未実行。
+- r18 classification：`SOL_OWNED_SOURCE_CONTRACT_TOPOLOGY_OMISSION / NO_RETRY_DEPLOYMENT_POLICY_CONFLICT_WITH_EXISTING_CI_SOURCE_ASSERTION / DESIGN_CHANGE_REQUIRED`。remediation：`CI_CONTRACT_NO_RETRY_ALIGNMENT / EXACT_SINGLE_ATTEMPT_POSITIVE_NEGATIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`。既存ten-path draftをbyte-preserveし、`tests/ci-contract.test.mjs`のdeployment assertion regionだけを追加修正する。material candidateはexact eleven paths／iteration 5のまま。
+- r19 classification：`SOL_OWNED_BYTE_CONTRACT_MISDECLARATION / PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM / DESIGN_CHANGE_REQUIRED`。r18 correction後はtargeted 1/1、load 7/7、focused 60/60、checkpoint 12/12、Design Lock 19/19、three-script syntaxがgreen。pre-lint byte auditでbase／worktree双方の`tests/ci-contract.test.mjs`が既存UTF-8 BOM＋LF-onlyと実証され、r18 no-BOM記述だけが誤りと確定した。eleven-path draftとCI assertion semantic diffを保持し、BOM除去／repository normalization／product変更を行わない。
+- current required runはr16 iteration-4 candidate HEAD `d11464927efd1d21e573d969a767057bdd5c8b04`／tree `2ce952c6fe70c347e866e7201824ac623bbbe993`のautomatic focused run `32667714653`（#921、attempt 1）。PR Verify、六enemy-runtime shard、Hosted Runner、三Stage 3 route、deployment 1280x720／667x375／844x390／844x340／932x430はgreenだが、required Phase G job `97266100902`とdeployment 736x414 job `97267069513`がredでありrun全体はfailure。retry／rerun／timeout変更は行っていない。
+- Phase G artifact `9500819430`／ZIP SHA-256 `797a635d4705a88fe4f3e9f135c4572f5f89faa3fa2e707d34fd4c1031ff99c5`はStage 6 WebKit 667x375でlean schema、1,406 bytes／1 ms、forbidden 0、二つのtrusted product pointerとproduction acceptanceを証明した後、elapsed 52,248 msにclean page crash、後刻`page.waitForFunction: Target crashed`。console／page／request／HTTPは0、failureState null。40 ms observerとrAF/default-pollingを含む多数consumerが同じlean bridgeを重複readしている。
+- deployment artifact `9500961088`／ZIP SHA-256 `2b0f8158f4ac32181f537607a30f99dfb913dc722381e811a8f332d52b30ba57`は736x414でranger／scout／brawlerが全checkpoint pass後、Crazy Kingが33,219 msでclean crashし、既存automatic retryも28,681 msでclean crash。667x375 artifact `9500913162`／ZIP SHA-256 `53d7a462af9889fd8863a4f268eb5af61d52da48b628f6085deaebb89c98d00e`では同じexact candidateの全八unitがpassした。traceの250 ms full canvas auditとfirst-frame rAF毎のfull auditは六つのfrozen acceptance checkpoint auditに対し重複している。
+- r17 classification：`QA_HARNESS_OBSERVATION_REENTRANCY / VALID_LEAN_PROFILE + RAF_RATE_DUPLICATE_SNAPSHOT + NONCHECKPOINT_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`。remediation：`WEBKIT_QA_SINGLE_PRODUCER_OBSERVABILITY / 40MS_OBSERVER_CACHE_CONSUMERS + CHECKPOINT_ONLY_PIXEL_AUDIT + HOST_TURN_FIRST_FRAME_FREEZE + NO_RETRY / DESIGN_CHANGE_REQUIRED`。native WebKit termination mechanismは推測しない。`app/**`／product／gameplay／balance／AI／timing／viewport／timeout／causal／pixel acceptanceは変更しない。
+- 以下のr15／r16項目はcurrent failureの来歴として保持するが、r17 cursorを上書きしない。
 - r15 material candidateは未commit／未push。current exact seven-path draftでfresh Stage 6 3/3、Stage 24 3/3、ordered Stage 6 -> Stage 24 -> Stage 25 3/3は成立したが、その後のmandatory five-file focused source acceptanceが53/54で停止した。`app/AshfallGame.tsx`はUTF-8 no-BOM／CRLF-onlyでlean methodが一件存在しruntimeでも使用済みだが、LF-onlyの`tests/v100-phase-g-checkpoint.test.mjs` extractorがmethod boundaryをliteral LFだけで照合し、`missing localhost-only Phase G combat snapshot method`となった。retry／rerun／即時修正／commit／remote runは行っていない。
 - r16 classification：`SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`。remediationは`SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`。r15 app／runner draft bytesを保持し、checkpoint extractorの二つのnewline boundaryだけをexact `\r?\n`へ変更する。意味assertion、test数、product、runtime、acceptanceは変更しない。
 - current required failureはr14 iteration-3 candidate HEAD `7793433921f82c483a5b2f4a3887e56f6182c3f0`／tree `9a2ce2ca3028337a83667adf164c870e9ab157f6`のautomatic run `32661183323`、required Phase G job `97250055296`、artifact `9499106555`。`remote-trio-1` ordered position 1のStage 6 WebKit 667x375はproduction screenshotまで通過し、ordered position 2の`stage24-panther-commander`／actual `stage-mugarian-tech-tower`／WebKit 736x414でclean `page-crash`が120,711 msに発生した。Stage 25とsequences 2/3は未実行。
@@ -99,26 +107,27 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r11 source-contract history：HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`、tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`、class `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`。これはcurrent cursorではない。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r16 Section 32
+## 6. Version 1.0.0 execution cursor — r19 Section 35
 
-- `LOOP_ITERATION`: `3`。r15 material candidateは未作成のためnext atomic r16 material candidateはiteration 4、focused required gate完全green後のworkflow-only unfiltered restorationはiteration 5
-- `SAME_GATE_REPEAT_COUNT`: `1` for deferred Stage 24 required gate。distinct local source-contract failureはincrementしない
-- `DEFERRED_STAGE6_REPEAT_COUNT`: `2`。focused required CI完全green前にresetしない
-- `ROLE_LOCK`: `SOL_DESIGN` until r16 four-path publication and green Design Lock source proof；then `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `7793433921f82c483a5b2f4a3887e56f6182c3f0`
-- `LAST_AUDITED_TREE`: `9a2ce2ca3028337a83667adf164c870e9ab157f6`
-- `FAILED_GATE`: same-worktree five-file focused source acceptance 53/54。`tests/v100-phase-g-checkpoint.test.mjs` line 243のLF-only extractorがCRLF app method boundaryを抽出できず`missing localhost-only Phase G combat snapshot method`。candidate commit／remote runなし
-- `LAST_GREEN_GATE`: r16 pre-correction five-file load-only 5/5。r15 fresh Stage 6 3/3、Stage 24 3/3、ordered trio 3/3はdiagnosis／comparison evidenceのみでr16 candidate acceptanceへ流用しない
-- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_EOL_MISMATCH / LF_ONLY_REGEX_AGAINST_CRLF_APP_SOURCE / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `SOURCE_TEST_EOL_PORTABILITY / CRLF_OR_LF_METHOD_BOUNDARY_WITHOUT_SOURCE_NORMALIZATION / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: preserve exact current seven-path draft -> publish/lock r16 four design/source paths -> checkpoint extractorの二boundaryだけexact `\r?\n`へ修正 -> focused 54/54/checkpoint 12/12/static/lint/build/diff/byte -> final r16 bytesでfresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> one atomic iteration-4 candidate -> automatic focused remote complete green -> workflow-only iteration-5 restoration -> same-HEAD full local 54/54/validator/regressions -> one unfiltered remote run -> exact-HEAD runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r16 publication and green Design Lock source proof
+- `LOOP_ITERATION`: `4` at failed r16 candidate。atomic r17 material candidateはiteration 5、focused required gate完全green後のworkflow-only unfiltered restorationはiteration 6
+- `SAME_GATE_REPEAT_COUNT`: `3` for required Stage 6。focused required CI完全green前にresetしない
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `1`。同じcomplete green前にresetしない
+- `DEPLOYMENT_736_REPEAT_COUNT`: `1`。同じcomplete green前にresetしない
+- `ROLE_LOCK`: `SOL_DESIGN` until r19 four-path publication and green Design Lock 19/19；then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: r18 pre-lint byte audit。base／worktree `tests/ci-contract.test.mjs`は双方とも既存UTF-8 BOM＋LF-onlyだがr18がno-BOMと誤記。lint／build／browser／commit／pushなし
+- `LAST_GREEN_GATE`: r18 targeted 1/1、load 7/7、focused 60/60、checkpoint 12/12、Design Lock 19/19、three-script syntax、exact eleven-path topology before BOM assertion
+- `CLASSIFICATION`: `SOL_OWNED_BYTE_CONTRACT_MISDECLARATION / PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_BYTE_CONTRACT_CORRECTION / PRESERVE_EXISTING_UTF8_BOM_AND_LF_WITH_ZERO_SEMANTIC_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve current eleven-path draft -> publish/lock r19 four design/source paths -> final load 7/7 + focused 60/60 + checkpoint 12/12 + Design Lock 19/19 + syntax/diff/topology/corrected byte audit -> lint/build -> fresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 + canonical deployment 8/8 once/48 PNG/8 sheets -> atomic iteration-5 candidate -> one automatic focused complete green -> workflow-only iteration-6 restoration -> same-HEAD full Phase G 54/54/validator/regressions -> one unfiltered remote run -> exact-HEAD runtime/human audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r19 publication and green Design Lock proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r16は四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとDesign Lock source proofで固定し、`SOL_REMEDIATION`では既存checkpoint testのEOL boundaryだけを追加編集する。r15 app／runner draftはbyte-preserveする。最初のmaterial commitはexact seven-path atomic iteration-4 candidate。pre-r16 local runtime evidenceやfailed-HEAD artifactをr16 acceptance/final freezeへ流用しない。focused remote完全green後だけ両gate counterを0へresetし、workflow-only iteration-5 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r19は四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとDesign Lock source proofで固定する。`SOL_REMEDIATION`ではexact eleven-path draftを保持し、`tests/ci-contract.test.mjs`の既存BOM／LFとalready-green assertion diffを変更しない。r16 `app/AshfallGame.tsx`をbyte-preserveし、failed-HEAD artifactをr19 acceptance/final freezeへ流用しない。focused remote完全green後だけ三counterを0へresetし、workflow-only iteration-6 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-32のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r16を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-35のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r19を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

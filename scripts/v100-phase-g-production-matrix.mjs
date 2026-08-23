@@ -2195,6 +2195,7 @@ async function startCombatRuntimeObserver(page) {
     const profile = {
       schema: profileSample.schema,
       method: "getPhaseGCombatSnapshot",
+      consumerMode: "single-producer-cache",
       sampleBytes: new TextEncoder().encode(serialized).byteLength,
       readDurationMs,
       fighterCount: profileSample.fighters.length,
@@ -2202,6 +2203,7 @@ async function startCombatRuntimeObserver(page) {
       forbiddenFieldHitCount: forbiddenFieldHits.length,
     };
     window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ = profile;
+    window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ = profileSample;
     const mergeCombatActivityHistory = (previous = {}, snapshot = {}) => {
       const currentAttackIdentity = Array.isArray(snapshot.attackIdentity) ? snapshot.attackIdentity : [];
       const currentPendingWeaponHits = Array.isArray(snapshot.pendingWeaponHits) ? snapshot.pendingWeaponHits : [];
@@ -2308,6 +2310,7 @@ async function startCombatRuntimeObserver(page) {
     const observe = () => {
       const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
       if (!snapshot || snapshot.screen !== "battle") return;
+      window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ = snapshot;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const fighterActors = new Set(activity.fighterActors ?? []);
       const attackingActors = new Set(activity.attackingActors ?? []);
@@ -2404,7 +2407,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
   recorder?.setAwaiting("combat-activity", { bossKind, predicate: "production attack/contact/presentation activity" });
   try {
     await page.waitForFunction(() => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       if (!snapshot || snapshot.screen !== "battle") return false;
       const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -2421,13 +2424,13 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
         ...mergedActivity,
       };
       return true;
-    }, null, { timeout: Math.min(battleTimeout, 45_000) });
+    }, null, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
     recorder?.clearAwaiting();
   } catch (error) {
     const state = await page.evaluate(() => ({
       battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
       snapshot: (() => {
-        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+        const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
         return snapshot ? {
           time: snapshot.time,
           wave: snapshot.wave,
@@ -2452,7 +2455,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
           const historicalCue = (activity.audioCues ?? []).includes(`enemy-${expectedKind}-attack`);
           const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === `enemy-${expectedKind}-attack`);
           if (historicalAttack || historicalCue || runtimeCue) return true;
-          const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+          const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
           return snapshot?.fighters?.some((fighter) => (
             fighter.side === "zombie"
             && fighter.kind === expectedKind
@@ -2469,7 +2472,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
               || ["warning", "attack"].includes(fighter.enemyVfx?.phase)
             )
           )) === true;
-      }, bossKind, { timeout: battleTimeout });
+      }, bossKind, { timeout: battleTimeout, polling: 100 });
       recorder?.clearAwaiting();
     } catch (error) {
       const state = await page.evaluate(() => ({
@@ -2477,7 +2480,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
         campaignPhase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
         battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
         body: document.body.innerText.slice(0, 1400),
-        snapshot: window.__PHASE_G_READ_COMBAT_SNAPSHOT__(),
+        snapshot: window.__PHASE_G_LAST_COMBAT_SNAPSHOT__,
       })).catch(() => null);
       throw new Error(`boss ${bossKind} did not become live: ${String(error)} state=${JSON.stringify(state)}`);
     }
@@ -2548,7 +2551,7 @@ async function productionStateContract(page, state) {
         canvasAudit = { width: canvas.width, height: canvas.height, sampled, visiblePixels, visibleRatio: sampled ? visiblePixels / sampled : 0, lumaMean: mean, lumaVariance: sampled ? varianceTotal / sampled : 0 };
       }
     }
-    const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
+    const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
     const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
     const buttons = [...document.querySelectorAll("button")].filter((button) => {
       const rect = button.getBoundingClientRect();
@@ -2579,7 +2582,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < durationMs) {
     samples.push(await page.evaluate(() => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
@@ -2723,7 +2726,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
     const overflow = await overflowAudit(page);
     const runtime = await page.evaluate((battleState) => {
-      const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
+      const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
       if (!snapshot) return { screen: null };
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
@@ -2770,7 +2773,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       body: document.body.innerText.slice(0, 1600),
       phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
       snapshot: (() => {
-        const snapshot = battleState ? window.__PHASE_G_READ_COMBAT_SNAPSHOT__() : null;
+        const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
         return snapshot ? {
           screen: snapshot.screen,
           stageId: snapshot.stageId,
@@ -2843,7 +2846,7 @@ async function readBattleDeploymentDiagnostics(page, {
       observedAtPerformanceMs: schedulerEntry.observedAtPerformanceMs,
       callbackTimestamp: schedulerEntry.callbackTimestamp,
     } : (activeSchedulerProbeId ? { probeId: activeSchedulerProbeId, status: "missing" } : null);
-    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+    const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
     const nodeRegistry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
       ids: new WeakMap(),
       next: 1,
@@ -3378,7 +3381,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeProofActorAttack = async () => {
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
     const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const actorKey = `zombie:${expectedKind}`;
@@ -3424,7 +3427,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const readProofActorContactState = async () => {
     if (!proofActor) return null;
     const state = await page.evaluate((expectedKind) => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const fighters = snapshot?.fighters ?? [];
       const actor = fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -3495,7 +3498,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
     const observation = await page.evaluate((expectedKind) => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const actor = snapshot?.fighters?.find((fighter) => (
         fighter.side === "human"
@@ -3536,7 +3539,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeVehicleAction = async () => {
     if (vehicleActionObserved) return vehicleActionObserved;
     vehicleActionObserved = await page.evaluate(() => {
-      const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+      const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const crawler = snapshot?.crawlerAbility;
       const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === "weapon-barrage");
       const observed = runtimeCue === true
@@ -3558,7 +3561,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   let bossDeploymentFinished = !bossKind;
   let sustainFailure = null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
-    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+    const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie"
       && fighter.kind === expectedKind
@@ -3581,7 +3584,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (!battleVisible) break;
       const bossEngaged = await bossIsLive();
       const liveHumanTargetCount = await page.evaluate(() => {
-        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+        const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
         return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
       }).catch(() => 0);
       await observeProofActorAttack();
@@ -3675,7 +3678,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // vehicle before the real boss reaches the battlefield.
         await page.evaluate((expectedKind) => {
           const bridge = window.__ASHFALL_BATTLE_QA__;
-          const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+          const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
           const boss = snapshot?.fighters?.find((fighter) => (
             fighter.side === "zombie"
             && fighter.kind === expectedKind
@@ -3878,7 +3881,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofActor) {
       recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
       await page.waitForFunction(({ expectedKind, expectedCueId }) => {
-        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+        const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
         const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
         const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
         const actorKey = `zombie:${expectedKind}`;
@@ -3903,7 +3906,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           };
         }
         return observed;
-      }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000) });
+      }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
       proofActorAttackObserved = true;
       if (proofActorRequiresContactFirst) await readProofActorContactState();
       recorder?.clearAwaiting();
@@ -3938,15 +3941,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     if (manualAbilityKind) {
       recorder?.setAwaiting("manual-ability-action", { abilityKind: manualAbilityKind, predicate: "manual ability impact marker or receipt" });
-      await page.waitForFunction((expectedKind) => Boolean(
-        document.querySelector(`button.manual-ability-ready.available[data-ability-kind="${expectedKind}"][aria-disabled="false"]`),
-      ), manualAbilityKind, { timeout: Math.min(battleTimeout, 45_000) });
+      await page.waitForFunction((expectedKind) => (
+        window.__PHASE_G_LAST_COMBAT_SNAPSHOT__?.screen === "battle"
+          && Boolean(document.querySelector(`button.manual-ability-ready.available[data-ability-kind="${expectedKind}"][aria-disabled="false"]`))
+      ), manualAbilityKind, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
       await withPhaseGPageInputLock(page, async () => {
         const lockedAbility = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
         await lockedAbility.click({ timeout: 700 });
       });
       await page.waitForFunction((expectedKind) => {
-        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+        const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
         const markedEnemy = snapshot?.fighters?.some((fighter) => fighter.side === "zombie" && Number(fighter.marked) > 0);
         const receipt = snapshot?.manualAbilityReceipts?.some((entry) => entry?.kind === expectedKind && entry?.eventType === "impact");
         if (markedEnemy === true) {
@@ -3957,7 +3961,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           };
         }
         return markedEnemy === true || receipt === true;
-      }, manualAbilityKind, { timeout: Math.min(battleTimeout, 10_000) });
+      }, manualAbilityKind, { timeout: Math.min(battleTimeout, 10_000), polling: 100 });
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: `manual-ability:${manualAbilityKind}` });
     }
@@ -3976,7 +3980,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await page.waitForTimeout(250);
       }
       await page.waitForFunction(() => {
-        const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+        const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
         const crawler = snapshot?.crawlerAbility;
         const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
         const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === "weapon-barrage");
@@ -3985,12 +3989,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           || runtimeCue === true
           || crawler?.abilityId === "vehicle-barrage"
           && (crawler.phase === "firing" || crawler.damageTriggered === true || Number(crawler.hitCount ?? crawler.hits?.length ?? 0) > 0);
-      }, null, { timeout: Math.min(battleTimeout, 45_000) });
+      }, null, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
       vehicleActionObserved = true;
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
     }
-    await page.waitForFunction(() => window.__PHASE_G_READ_COMBAT_SNAPSHOT__().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
+    await page.waitForFunction(() => window.__PHASE_G_LAST_COMBAT_SNAPSHOT__?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
     if (!bossKind || !waitForBossAttack) {
       await waitForCombatActivity(page);
     } else {
@@ -4006,7 +4010,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (sustainFailure) throw sustainFailure;
   }
   const runtime = await page.evaluate(() => {
-    const snapshot = window.__PHASE_G_READ_COMBAT_SNAPSHOT__();
+    const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
     return {
       stageId: snapshot?.stageId ?? null,
       enemyKinds: [...new Set((snapshot?.fighters ?? []).filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind))],

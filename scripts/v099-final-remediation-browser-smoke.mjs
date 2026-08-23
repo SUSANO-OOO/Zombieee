@@ -121,6 +121,7 @@ const timeout = Math.max(
 );
 const DIAGNOSTIC_TRACE_INTERVAL_MS = 250;
 const DIAGNOSTIC_TRACE_MAX_SAMPLES = 160;
+const DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS = 100;
 const evidenceDir = path.resolve(
   process.env.V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR
     ?? "docs/qa/v099/final-remediation/browser",
@@ -2041,45 +2042,57 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
 }
 
 async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
-  return page.evaluate(async ({ kind, maximumMs }) => {
-    const qa = window.__ASHFALL_BATTLE_QA__;
-    if (qa.queueCrawlerDefenseUnit(kind, 1) !== true) {
-      throw new Error(`CRAWLER queue rejected ${kind}`);
-    }
-    const startedAt = performance.now();
-    while (performance.now() - startedAt < maximumMs) {
-      const snapshot = qa.getSnapshot();
-      const fighter = snapshot.fighters.find((candidate) => (
-        candidate.side === "human"
-          && candidate.kind === kind
-          && candidate.spawnPortalId === "crawler-door"
-      ));
-      if (fighter) {
-        const audit = qa.auditFighterUnitLayer(fighter.id);
+  try {
+    await page.evaluate((kind) => {
+      const qa = window.__ASHFALL_BATTLE_QA__;
+      if (qa.queueCrawlerDefenseUnit(kind, 1) !== true) {
+        throw new Error(`CRAWLER queue rejected ${kind}`);
+      }
+    }, unitKind);
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeout) {
+      const candidate = await page.evaluate((kind) => {
+        const qa = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = qa.getSnapshot();
+        const fighter = snapshot.fighters.find((entry) => (
+          entry.side === "human"
+            && entry.kind === kind
+            && entry.spawnPortalId === "crawler-door"
+        ));
+        if (!fighter) return null;
         const bannerReady = document.querySelector(".battle-banner")?.textContent
           ?.includes("移動拠点から出撃") === true;
         const doorX = Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x);
         const rampX = Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1);
         const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
-        if (bannerReady && audit?.deploymentPlan?.checkpoint === "fully-inside" && progress === 0) {
-          qa.setRepresentativeSixProofPaused(true);
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          const frozenSnapshot = qa.getSnapshot();
-          const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === fighter.id);
-          const frozenAudit = qa.auditFighterUnitLayer(fighter.id);
-          if (frozenAudit?.deploymentPlan?.checkpoint === "fully-inside"
-            && frozenFighter.x === fighter.x) {
-            return { fighter: frozenFighter, audit: frozenAudit, observedProgress: progress };
-          }
-          qa.setRepresentativeSixProofPaused(false);
+        if (!(bannerReady && progress === 0)) return { ready: false };
+        qa.setRepresentativeSixProofPaused(true);
+        return { ready: true, fighterId: fighter.id, fighterX: fighter.x, observedProgress: progress };
+      }, unitKind);
+      if (candidate?.ready === true) {
+        await page.waitForTimeout(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+        const frozen = await page.evaluate(({ fighterId, expectedX }) => {
+          const qa = window.__ASHFALL_BATTLE_QA__;
+          const snapshot = qa.getSnapshot();
+          const fighter = snapshot.fighters.find((entry) => entry.id === fighterId) ?? null;
+          const audit = fighter ? qa.auditFighterUnitLayer(fighterId) : null;
+          return {
+            fighter,
+            audit,
+            frozen: fighter?.x === expectedX,
+          };
+        }, { fighterId: candidate.fighterId, expectedX: candidate.fighterX });
+        if (frozen.frozen === true && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside") {
+          return { fighter: frozen.fighter, audit: frozen.audit, observedProgress: candidate.observedProgress };
         }
+        await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
       }
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await page.waitForTimeout(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
     }
-    throw new Error(`first deployment frame for ${kind} timed out`);
-  }, { kind: unitKind, maximumMs: timeout }).catch((error) => {
+    throw new Error(`first deployment frame for ${unitKind} timed out`);
+  } catch (error) {
     throw new Error(`${label}: ${String(error)}`);
-  });
+  }
 }
 
 function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase) {
@@ -2101,9 +2114,6 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
               && candidate.kind === kind
               && candidate.spawnPortalId === "crawler-door"
         )) ?? null;
-        const audit = fighter && typeof battleApi?.auditFighterUnitLayer === "function"
-          ? battleApi.auditFighterUnitLayer(fighter.id)
-          : null;
         const doorX = fighter
           ? Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x)
           : null;
@@ -2129,22 +2139,6 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
           gateEntering: fighter?.gateEntering ?? null,
           combatReady: fighter?.combatReady ?? null,
           entryRampCleared: fighter?.entryRampCleared ?? null,
-          audit: audit ? {
-            active: audit.deploymentPlan?.active ?? null,
-            checkpoint: audit.deploymentPlan?.checkpoint ?? null,
-            unitPass: audit.deploymentPlan?.unitPass ?? null,
-            actual: {
-              nonzeroPixels: audit.actual?.nonzeroPixels ?? null,
-              bounds: audit.actual?.bounds ?? null,
-            },
-            opaque: {
-              nonzeroPixels: audit.opaque?.nonzeroPixels ?? null,
-              bounds: audit.opaque?.bounds ?? null,
-            },
-            actualPixelBounds: audit.actual?.bounds ?? null,
-            opaquePixelBounds: audit.opaque?.bounds ?? null,
-            finalCompositePixels: audit.finalCompositePixels ?? null,
-          } : null,
           readableSnapshot: snapshot ? {
             time: snapshot.time ?? null,
             paused: snapshot.paused ?? null,

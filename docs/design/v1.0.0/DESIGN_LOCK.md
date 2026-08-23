@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r16`
+- Revision: `r19`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -49,6 +49,9 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r14 consumes the authoritative r13 remote focused failure at the repeated required Stage 6 gate. It replaces r12's render-opportunity-coupled `requestAnimationFrame` actionability prerequisite with two host-turn-separated synchronous DOM/runtime/hit-test observations, retains rAF only as non-blocking scheduler evidence, and closes the pre-input timeout/evidence lifecycle. It changes no product, gameplay, timing, acceptance, viewport, retry, workflow, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r15 consumes the recurring remote Stage 24 WebKit renderer crash and replaces the localhost Phase G observer's full 40 ms combat snapshot with one bounded lean schema while preserving the unchanged long production route and every r12-r14 acceptance rule. It changes no public-host product path, gameplay, balance, AI, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r16 consumes the r15 pre-candidate local focused-source stop. It corrects only an LF-only source-test boundary that could not parse the contractually preserved CRLF `app/AshfallGame.tsx`; the r15 app and runner remediation bytes, product behavior, Phase G route, acceptance thresholds, workflow, and release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r17 consumes the exact r16 automatic focused run and closes two independently evidenced WebKit renderer crashes as one QA-observation subsystem correction: Phase G becomes a 40 ms single-producer lean-snapshot cache with non-rAF consumers, and canonical deployment evidence confines pixel audits to the six frozen acceptance checkpoints with exactly one attempt per unit. Product code, gameplay, balance, AI, timing, viewports, timeouts, causal proof, pixel thresholds, and release gates remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r18 consumes the first r17 focused-source execution stop. It preserves all ten r17 draft paths byte-for-byte and adds the omitted existing `tests/ci-contract.test.mjs` owner so its deployment-runner assertion matches the locked one-attempt/no-retry policy. No harness, product, workflow, acceptance, or iteration rule changes. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r19 consumes the r18 pre-lint byte-audit stop. It corrects only r18's false no-BOM declaration for `tests/ci-contract.test.mjs`: exact base and working bytes both retain the pre-existing UTF-8 BOM and LF-only line endings. The eleven-path remediation, no-retry semantics, product boundaries, acceptance, iteration numbers, and release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1745,3 +1748,212 @@ Any failure stops at its first raw evidence and returns to `SOL_DESIGN` without 
 - `RESUME_FROM`: preserve exact current seven-path draft -> lock r16 four design/source paths -> one CRLF/LF extractor correction in checkpoint test -> focused/static/lint/build/diff/byte -> fresh Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 -> atomic iteration-4 candidate -> automatic focused complete green -> unchanged iteration-5/full/unfiltered/runtime/human/final-review/one-Producer-checkpoint/release tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw local failure, app/test bytes and attributes, actual runtime reports, current seven-path topology, and downstream exact-HEAD boundaries. The correction makes the source assertion portable across the two allowed checkout newline forms without relaxing any semantic assertion or changing runtime bytes. Revision r16 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 33. Revision r17 — WebKit QA single-producer observability closure
+
+This section supersedes Section 32 only for automatic run `32667714653`, its two required WebKit failures, the QA-observation implementation owner, current cursor, material topology, and iteration numbering. Every r12-r16 trusted-pointer, receipt, target-ownership, scheduler-independent actionability, lean-schema, long-route, EOL, failure-evidence, workflow-promotion, exact-HEAD review, single-Producer-checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 33.1 Terminal run, actual evidence, and independent classifications
+
+The exact r16 iteration-4 candidate is PR #171 HEAD `d11464927efd1d21e573d969a767057bdd5c8b04`, tree `2ce952c6fe70c347e866e7201824ac623bbbe993`, parent `7793433921f82c483a5b2f4a3887e56f6182c3f0`. Its seven-path local acceptance was green: failed assertion 1/1, load 5/5, focused 54/54, checkpoint 12/12, Design Lock 19/19, runner syntax, lint/build/diff/EOL/BOM/topology, Stage 6 3/3, Stage 24 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 3/3. Automatic focused run `32667714653`, run #921, attempt 1, is terminal failure. No job rerun, workflow rerun, timeout change, retry-only candidate, or evidence substitution occurred.
+
+Remote green comparison evidence on that exact candidate is PR Verify `97263692314`; all six WebKit enemy-runtime shards; Hosted Runner Evidence; all three Stage 3 audio routes; and canonical deployment viewports 1280x720, 667x375, 844x390, 844x340, and 932x430. They do not override either required red job.
+
+Required Phase G job `97266100902` failed at ordered position 1, `stage06-spitter-seal`, actual stage ID `stage-nishijin-station-tunnel-seal`, WebKit 667x375. Artifact `9500819430`, `v100-phase-g-webkit-battle-extra-focused`, has independently verified ZIP SHA-256 `797a635d4705a88fe4f3e9f135c4572f5f89faa3fa2e707d34fd4c1031ff99c5`. Its raw JSON proves schema `v100-phase-g-combat-snapshot/v1`, method `getPhaseGCombatSnapshot`, sample size 1,406 bytes, one-millisecond profile read, forbidden-field hits zero, and two trusted real product pointer deployments accepted before the stop. Console/page/request/HTTP fatal channels are zero and `failureState` is null. At elapsed 52,248 ms the page emitted `page-crash` while the final proof-actor wait was active; Playwright later surfaced `page.waitForFunction: Target crashed`. The combat clock had advanced only about 1.03 seconds between battle mount and the second accepted deployment, while the same bytes complete locally. Actor, causal, screenshot, and later ordered positions remained unresolved and are failures, not waived evidence.
+
+The r16 lean reader removed the former full-snapshot workload, but `startCombatRuntimeObserver` still calls it every 40 ms while numerous causal, sustain, final-proof, runtime, and failure consumers call the same bridge again. Several `page.waitForFunction` predicates use default requestAnimationFrame polling and invoke the reader on every rendering opportunity. `collectCombatCausalProof` adds another direct 120 ms sampling loop. This violates a single-producer observability model and recreates avoidable page-side serialization pressure despite a valid lean profile. The native WebKit termination mechanism is not inferred. The finite source owner is the duplicate QA read topology, not product gameplay.
+
+Phase G classification is `QA_HARNESS_SNAPSHOT_SINGLE_PRODUCER_VIOLATION / 40MS_LEAN_OBSERVER + RAF_RATE_DUPLICATE_BRIDGE_READS / VALID_LEAN_PROFILE_PAGE_CRASH`.
+
+Required canonical deployment job `97267069513`, WebKit 736x414, failed independently. Artifact `9500961088`, `issue156-webkit-deployment-736x414`, has ZIP SHA-256 `2b0f8158f4ac32181f537607a30f99dfb913dc722381e811a8f332d52b30ba57`. Ranger, scout, and brawler each completed all six checkpoints. Crazy King attempt 1 clean-crashed after fighter mount at 33,219 ms with five trace samples; the existing automatic target-closed retry clean-crashed at 28,681 ms with two samples. Both attempts have zero console/page/request/HTTP failures. Later units did not run. In the exact-candidate 667x375 artifact `9500913162`, ZIP SHA-256 `53d7a462af9889fd8863a4f268eb5af61d52da48b628f6085deaebb89c98d00e`, all eight canonical units pass and Crazy King completes in 12,017 ms with 21 trace samples. Together with the other four green viewports, this disproves a missing asset or deterministic product/canvas-size failure.
+
+`createDeploymentTrace` currently performs the full `auditFighterUnitLayer`, including canvas creation, `getImageData`, opaque-reference comparison, and `finalCompositePixels`, every 250 ms. `queueAndPauseAtFirstDeploymentFrame` also performs that full audit on each in-page requestAnimationFrame until it freezes. Those audits are redundant: the production acceptance already performs and validates the same pixel audit at each of exactly six frozen deployment checkpoints, with screenshots and a contact sheet. The automatic second attempt further conflicts with the no-blind-rerun mission boundary.
+
+Deployment classification is `QA_HARNESS_PIXEL_AUDIT_REENTRANCY / RAF + 250MS_FULL_CANVAS_AUDIT_OUTSIDE_CHECKPOINTS / CLEAN_PAGE_CRASH`.
+
+Combined classification is `QA_HARNESS_OBSERVATION_REENTRANCY / VALID_LEAN_PROFILE + RAF_RATE_DUPLICATE_SNAPSHOT + NONCHECKPOINT_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `WEBKIT_QA_SINGLE_PRODUCER_OBSERVABILITY / 40MS_OBSERVER_CACHE_CONSUMERS + CHECKPOINT_ONLY_PIXEL_AUDIT + HOST_TURN_FIRST_FRAME_FREEZE + NO_RETRY / DESIGN_CHANGE_REQUIRED`.
+
+The two failed jobs are not assumed to share a native browser cause. They share a proved repository-owned QA observation anti-pattern and are closed by one coherent subsystem packet. A product, gameplay, balance, AI, asset, or acceptance defect is not established; a future failure after this correction must be classified from its new raw evidence.
+
+### 33.2 Exact ten-path packet and role boundary
+
+Use exactly these ten material paths relative to clean candidate `d11464927efd1d21e573d969a767057bdd5c8b04` / `2ce952c6fe70c347e866e7201824ac623bbbe993`:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`;
+2. `scripts/v099-final-remediation-browser-smoke.mjs`;
+3. `scripts/run-v099-deployment-units-bounded.mjs`;
+4. `tests/v100-phase-g-checkpoint.test.mjs`;
+5. `tests/v099-deployment-units-bounded.test.mjs`;
+6. `tests/v0995-runtime-evidence-contract.test.mjs`;
+7. `tests/v100-design-lock.test.mjs`;
+8. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+9. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+10. `docs/PROJECT_STATE.md`.
+
+Under `SOL_DESIGN`, paths 7-10 are changed, verified, and byte-locked in Issue #172 without an intermediate commit. Only after that exact four-path publication and Design Lock 19/19 may `ROLE_LOCK` become `SOL_REMEDIATION` and edit paths 1-6. Preserve the existing r16 product `app/AshfallGame.tsx` byte-for-byte. The material correction is one atomic iteration-5 commit; the later workflow-only unfiltered restoration is iteration 6.
+
+No existing six-path or seven-path history is reconstructed. Do not reset, stash, amend, rebase, normalize repository-wide, or create a docs-only candidate.
+
+### 33.3 Phase G single-producer snapshot contract
+
+Implement all of the following together in `scripts/v100-phase-g-production-matrix.mjs` and its existing checkpoint test block without adding a test block:
+
+1. Keep exactly one page-lifetime lean bridge reader and the exact 40 ms `startCombatRuntimeObserver` interval. Each observer tick reads `getPhaseGCombatSnapshot` once, validates the schema, updates all immutable histories, and writes the latest non-null snapshot to `window.__PHASE_G_LAST_COMBAT_SNAPSHOT__`. The observer is the sole continuous bridge producer.
+2. All causal sampling, sustain loops, deployment diagnostics after the pointer event, proof-actor/proof-unit/vehicle/manual-ability predicates, combat-activity waits, final runtime report, and failure-state reads consume `window.__PHASE_G_LAST_COMBAT_SNAPSHOT__`; they never call `window.__PHASE_G_READ_COMBAT_SNAPSHOT__` or the bridge. A cache read may not mutate, clear, or synthesize snapshot state.
+3. The bounded installation/profile read, the observer tick, observer stop/final observation, and the existing trusted pointer event-time receipt snapshot are the only allowed direct reader sites. The event-time exception remains a single read tied to the trusted product event and is not a loop or acceptance substitute.
+4. Every combat `page.waitForFunction` predicate reads the cache and specifies explicit numeric `polling: 100`. Default requestAnimationFrame polling is forbidden for these predicates. Existing timeout values are unchanged.
+5. `collectCombatCausalProof` reads the cache on its existing 120 ms host cadence. It preserves the exact causal four axes, target ownership, monotonic histories, source attribution, pointer/receipt/production acceptance, and no-generic-substitution rules.
+6. Extend `phaseGCombatSnapshotProfile` with `consumerMode: "single-producer-cache"`; emit it in observer-start, final runtime, and failure evidence. Preserve schema/method/sampleBytes/readDuration/fighterCount/forbidden zero. Missing cache/schema/profile or any direct-reader consumer outside the bounded allowlist fails source acceptance.
+7. Failure finalization reads the cached last snapshot and retains the previous non-null state if the page is gone. A crash must not trigger another bridge call, erase `failureState`, change first-write ownership, or hide unresolved checkpoints.
+
+Do not change `app/**`, the lean schema fields, observer cadence, causal window, stage mapping/order, formation, proof actor/unit, boss route, resources, battle clock, timeout, viewport, pointer count, retry count, screenshot contract, or fatal-zero acceptance.
+
+### 33.4 Canonical deployment checkpoint-only pixel contract
+
+Implement all of the following together in the two deployment scripts and their two existing source/behavior test blocks:
+
+1. `createDeploymentTrace` remains bounded at 250 ms and 160 samples, but each trace sample is lightweight: lifecycle/diagnostic counts, one readable battle snapshot, fighter identity/position, door/ramp coordinates, computed progress, gate/combat/entry flags, expected checkpoint, and expected progress only. It must not call `auditFighterUnitLayer`, create/read canvas pixels, serialize `actual`, `opaque`, `finalCompositePixels`, or run any pixel/composite comparison.
+2. `queueAndPauseAtFirstDeploymentFrame` queues exactly once, then uses a Node-host 100 ms turn loop. Each synchronous page evaluation reads fighter/banner/progress only. When banner is present and progress is exactly zero, the same evaluation pauses the representative-six proof. A separate single frozen verification then calls `getSnapshot` and `auditFighterUnitLayer` exactly once. It returns only if fighter identity/position remains frozen and checkpoint is `fully-inside`; otherwise it unpauses and continues inside the unchanged deadline. No in-page requestAnimationFrame loop or pre-freeze pixel audit is allowed.
+3. `pauseAtDeploymentCheckpoint`, `validateDeploymentCheckpoint`, and all six exact checkpoint pixel/opacity/silhouette/final-canvas assertions, screenshots, and contact sheets remain unchanged. This is where pixel acceptance belongs; no threshold or checkpoint may be removed.
+4. `runCanonicalDeploymentUnits` runs each of the eight canonical kinds exactly once in canonical order. Remove the retry-classifier import, two-attempt loop, target-closed retry flag, and warning. Any nonzero exit, missing/malformed summary, lifecycle close, error channel, incomplete six-checkpoint result, screenshot/contact-sheet failure, or unit failure is terminal for that run and is reported as one failed attempt.
+5. Keep each unit in its existing fresh process/browser boundary, all server/context cleanup, exact five required deployment viewports, and all production assets/routes. No product fixture, timeout, kind, checkpoint, image, or audit threshold changes.
+
+The removal of noncheckpoint pixel work and retry does not weaken acceptance: every one of the 48 canonical checkpoint images and eight contact sheets at 736x414 must still be produced by a successful local inventory, and any first-attempt page crash is red.
+
+### 33.5 Forbidden changes and acceptance order
+
+Forbidden in iteration 5: `.github/**`; `app/**`; `public/**`; package/lock; product DOM/CSS/render/game loop; gameplay, balance, AI, targeting, damage, HP, resources, timing, story/content, assets/audio/VFX, save/PWA; viewport/timeout expansion; causal, target, pointer, receipt, deployment pixel, screenshot, error-channel, or evidence weakening; browser retry/reset inside an ordered sequence; additional attempts; early route termination; synthetic snapshot state; or repository-wide EOL normalization.
+
+After the four-path r17 design publication is byte-locked and Design Lock source proof is green, execute in order:
+
+1. edit only the six remediation paths and require the ten-path allowlist, staged/untracked zero before commit, UTF-8/BOM/EOL preservation, app hash equal to r16, and workflow/package/public diff zero;
+2. seven-file load-only 7/7; the existing five-file focused suite 54/54 plus deployment/runtime contract suites 6/6, total 60/60; checkpoint 12/12; Design Lock 19/19; static positive and negative assertions for every Section 33.3-33.4 rule; `node --check` on all three edited scripts;
+3. `npm.cmd run lint`, `npm.cmd run build`, working-tree `git diff --check`, exact ten-path topology, byte/EOL/BOM audit, and adversarial diff. No browser run begins if any source/static gate is red;
+4. three separate fresh Stage 6 WebKit 667x375 processes, three separate fresh Stage 24 WebKit 736x414 processes, and three separate fresh ordered Stage 6 -> Stage 24 -> Stage 25 WebKit processes. Require exact mapping/order, `consumerMode: "single-producer-cache"`, direct-reader allowlist, trusted product pointers/receipts/acceptance, target ownership, causal 4/4, fourteen resolved checkpoints, screenshots, unresolved zero, and fatal zero;
+5. one fresh canonical WebKit 736x414 deployment inventory: each of eight canonical units exactly once, six unchanged pixel checkpoints per unit, exactly 48 checkpoint PNGs and eight contact sheets, complete lightweight traces, and lifecycle/console/page/request/HTTP fatal zero;
+6. create and normally push one atomic ten-path iteration-5 candidate. Re-fetch GitHub HEAD/tree/compare and require its single automatic focused run attempt 1 completely green across every job, including ordered trio and all six deployment viewports. There is no manual/automatic retry or rerun;
+7. only complete focused green resets Stage 6, Stage 24, and deployment repeat ledgers to zero and authorizes a separate workflow-only iteration-6 restoration. Restore the exact unfiltered Phase G workflow from Section 28, then on that same local HEAD require Phase G 54/54, validator, all full regressions, lint/build/diff/byte, one normal push, and complete unfiltered remote CI/artifacts;
+8. continue only on the exact green HEAD through production runtime, SOL human-player visual/battle/event/audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, read-only/adversarial `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, explicit approval, stacked integration, approved-tree equivalence, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, state/Issue closure, and `/goal COMPLETE` only after public green.
+
+Any failure stops on first raw evidence and returns within the same SOL-owned `/goal` to `SOL_DESIGN`. No retry, rerun, timeout edit, immediate micro-patch, stale green, or downstream promotion is authorized. A valid single-producer profile followed by a crash is a new lifecycle/resource finding; a cache/direct-reader violation is QA-harness-owned; a checkpoint pixel mismatch is product-render or fixture-owned from its exact audit; an error channel or gameplay state failure retains its product owner. SOL must classify before any new correction.
+
+### 33.6 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` after the four-path Issue byte lock and Design Lock 19/19
+- `LOOP_ITERATION`: `4` at failed r16 candidate; the atomic r17 material candidate is iteration 5; later workflow-only unfiltered restoration is iteration 6
+- `SAME_GATE_REPEAT_COUNT`: `3` for the required Stage 6 gate; reset only after r17 automatic focused complete green
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; reset only after the same complete green
+- `DEPLOYMENT_736_REPEAT_COUNT`: `1`; reset only after the same complete green
+- `ROLE_LOCK`: `SOL_DESIGN` until the r17 four-path publication is byte-locked and Design Lock source proof is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: automatic run `32667714653`, attempt 1: required Phase G job `97266100902`, artifact `9500819430`, ordered position 1 Stage 6 WebKit 667x375 valid-lean-profile page crash after two accepted pointers; independently required deployment job `97267069513`, artifact `9500961088`, WebKit 736x414 Crazy King clean page crashes in both the original attempt and the forbidden-to-preserve automatic retry
+- `LAST_GREEN_GATE`: exact-tree local r16 source/static + Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3; remote PR Verify, six enemy-runtime shards, Hosted Runner, three Stage 3 routes, and five other deployment viewports on the exact candidate. None substitutes for either required red job
+- `CLASSIFICATION`: `QA_HARNESS_OBSERVATION_REENTRANCY / VALID_LEAN_PROFILE + RAF_RATE_DUPLICATE_SNAPSHOT + NONCHECKPOINT_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_QA_SINGLE_PRODUCER_OBSERVABILITY / 40MS_OBSERVER_CACHE_CONSUMERS + CHECKPOINT_ONLY_PIXEL_AUDIT + HOST_TURN_FIRST_FRAME_FREEZE + NO_RETRY / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r17 four-path publication and green Design Lock proof
+- `RESUME_FROM`: exact clean `d1146492` worktree -> publish/lock four r17 design/source paths -> edit only six QA harness/test paths -> 60/60 + checkpoint 12/12 + Design Lock 19/19 + syntax/lint/build/diff/byte -> Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 + canonical deployment 8/8 once/48 PNG/8 sheets -> atomic iteration-5 candidate -> one automatic focused complete green -> workflow-only iteration-6 restoration -> full local/unfiltered remote -> exact-HEAD runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against both raw artifacts, lifecycle timing, five green viewport comparisons, exact source call sites, existing unchanged checkpoint assertions, retry source, live PR/Issue/run state, and every downstream exact-HEAD boundary. The packet eliminates proved redundant QA observation while preserving all product and acceptance semantics and makes a first-attempt crash authoritative. Revision r17 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 34. Revision r18 — no-retry CI source-owner closure
+
+This section supersedes Section 33 only for the local focused-source stop, exact topology, current role/cursor, and pre-browser acceptance order. Every r12-r17 product boundary, QA single-producer implementation requirement, checkpoint/pixel/causal threshold, no-retry rule, material iteration 5, workflow restoration iteration 6, exact-HEAD review, Producer checkpoint, and release tail remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 34.1 Failed gate and classification
+
+After the r17 four-path byte lock, SOL preserved the exact candidate base `d11464927efd1d21e573d969a767057bdd5c8b04` / `2ce952c6fe70c347e866e7201824ac623bbbe993` and implemented the six authorized QA harness/test paths without committing. Three edited scripts passed syntax, the new checkpoint/deployment/runtime source and behavior suites passed, seven-file load-only passed 7/7, and the exact focused command stopped at 59/60. No lint, build, browser acceptance, commit, push, remote run, retry, rerun, or additional harness edit followed.
+
+The sole failure is the pre-existing first test in `tests/ci-contract.test.mjs`. Lines 131-139 read `scripts/run-v099-deployment-units-bounded.mjs` and require both `attempt <= 2` and `isRetryableTargetClosedLog`. Section 33 intentionally removed those two tokens and made every canonical unit first-attempt failure terminal. The dedicated deployment behavior test already proves all eight units run exactly once and target-close stops after one call. Therefore this is not a deployment implementation, runtime, browser, workflow, product, acceptance, or evidence failure. Section 33's material topology omitted an existing source-contract owner that directly contradicted the new locked retry policy.
+
+Classification is `SOL_OWNED_SOURCE_CONTRACT_TOPOLOGY_OMISSION / NO_RETRY_DEPLOYMENT_POLICY_CONFLICT_WITH_EXISTING_CI_SOURCE_ASSERTION / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `CI_CONTRACT_NO_RETRY_ALIGNMENT / EXACT_SINGLE_ATTEMPT_POSITIVE_NEGATIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`.
+
+### 34.2 Exact bounded correction
+
+Preserve the current ten r17 draft paths byte-for-byte. Under `SOL_DESIGN`, revise and Issue-lock only the same four design/source paths: `tests/v100-design-lock.test.mjs`, Design Lock, Handoff, and Project State. After their Design Lock 19/19 proof, `SOL_REMEDIATION` may edit exactly one additional path: `tests/ci-contract.test.mjs`.
+
+The material r18 candidate is exactly eleven paths relative to clean `d1146492`:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`;
+2. `scripts/v099-final-remediation-browser-smoke.mjs`;
+3. `scripts/run-v099-deployment-units-bounded.mjs`;
+4. `tests/v100-phase-g-checkpoint.test.mjs`;
+5. `tests/v099-deployment-units-bounded.test.mjs`;
+6. `tests/v0995-runtime-evidence-contract.test.mjs`;
+7. `tests/ci-contract.test.mjs`;
+8. `tests/v100-design-lock.test.mjs`;
+9. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+10. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+11. `docs/PROJECT_STATE.md`.
+
+In the existing deployment-runner assertion region only:
+
+1. replace the two positive retry assertions with a positive exact `const attempt = 1` assertion;
+2. add negative assertions forbidding `attempt <= 2`, `isRetryableTargetClosedLog`, and the deployment target-close retry warning;
+3. preserve canonical eight-kind inventory, six checkpoints, unique inventory, fail-closed status, and every enemy/HUD/Stage 3/workflow assertion elsewhere in the test unchanged;
+4. do not add/remove a test block or change workflow/harness/runtime bytes.
+
+No comment/token shim, dormant retry code, or false source assertion may satisfy the test. Repository-wide normalization remains forbidden. Existing r17 draft EOL/BOM contracts remain exact; `tests/ci-contract.test.mjs` remains LF and UTF-8 without BOM.
+
+### 34.3 Acceptance and cursor
+
+After the four-path r18 publication is byte-locked and Design Lock 19/19 is green:
+
+1. change only the existing `tests/ci-contract.test.mjs` deployment-runner assertion region;
+2. run its previously failing test once and require targeted 1/1; then seven-file load-only 7/7 and exact focused 60/60; checkpoint 12/12; Design Lock 19/19; three script syntax checks; `git diff --check`; exact eleven-path topology; EOL/BOM/hash/app/workflow/package/public negative audits;
+3. only then resume Section 33.5 at lint/build and the fresh Stage 6 3/3, Stage 24 3/3, ordered trio 3/3, canonical 736x414 deployment 8/8 exactly once/48 PNG/eight sheets gates;
+4. one atomic iteration-5 candidate and one automatic focused attempt remain mandatory. No prior local browser evidence exists or is reused. Section 33's iteration-6/full/unfiltered/runtime/human/read-only `SOL_FINAL_REVIEW`/one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`/release route is unchanged.
+
+Any failure returns to `SOL_DESIGN` without retry, rerun, immediate edit, timeout change, or promotion.
+
+- `LOOP_ITERATION`: `4`; material candidate remains 5; workflow-only restoration remains 6
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r18 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: local exact seven-file focused source command 59/60; `tests/ci-contract.test.mjs` required the Section 33-removed deployment retry tokens; no browser run or candidate commit
+- `LAST_GREEN_GATE`: r18 pre-correction seven-file load-only 7/7 and 59/60 focused, including checkpoint/deployment/runtime/design behavior; r17 design byte lock and three script syntax checks
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_TOPOLOGY_OMISSION / NO_RETRY_DEPLOYMENT_POLICY_CONFLICT_WITH_EXISTING_CI_SOURCE_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CI_CONTRACT_NO_RETRY_ALIGNMENT / EXACT_SINGLE_ATTEMPT_POSITIVE_NEGATIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r18 four-path publication and green Design Lock proof
+- `RESUME_FROM`: preserve ten-path r17 draft -> r18 four-path byte lock -> one ci-contract assertion correction -> targeted 1/1 + load 7/7 + focused 60/60 + static/lint/build/diff/byte -> unchanged fresh browser acceptance -> atomic iteration-5 candidate -> one automatic focused complete green -> Section 33 release loop
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw 59/60 output, exact CI source assertion, current eleven-path topology, r17 no-retry evidence boundary, and downstream gates. Revision r18 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 35. Revision r19 — preserve the existing CI source BOM contract
+
+This section supersedes Section 34 only for the `tests/ci-contract.test.mjs` BOM declaration, current failed/green gate, active revision, and resume cursor. Every r17-r18 harness rule, exact eleven-path topology, one-attempt/no-retry policy, product prohibition, acceptance threshold, iteration number, read-only `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and release tail remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 35.1 Raw-byte finding and classification
+
+After the Issue-locked r18 publication, SOL changed only the authorized deployment assertion region. Targeted acceptance passed 1/1, load-only passed 7/7, focused passed 60/60, checkpoint passed 12/12, Design Lock passed 19/19, and all three edited scripts passed syntax. Before lint/build/browser execution, the mandatory byte audit stopped because Section 34 declared that `tests/ci-contract.test.mjs` was UTF-8 without BOM while the file began with `EF BB BF`.
+
+Raw comparison proves this is not remediation-introduced byte drift: the exact `d1146492` HEAD blob is 15,154 bytes, starts `EF BB BF 69 6D 70 6F 72`, has 232 LF and zero CRLF; the current assertion-only worktree file is 15,204 bytes, starts with the same bytes, and has the same 232 LF and zero CRLF. Its semantic diff is exactly the authorized two removed and two added assertion lines. The existing BOM must therefore be preserved under the repository-byte contract; stripping it would be an unauthorized normalization.
+
+Classification is `SOL_OWNED_BYTE_CONTRACT_MISDECLARATION / PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `SOURCE_BYTE_CONTRACT_CORRECTION / PRESERVE_EXISTING_UTF8_BOM_AND_LF_WITH_ZERO_SEMANTIC_CHANGE / DESIGN_CHANGE_REQUIRED`.
+
+### 35.2 Exact correction and acceptance
+
+Preserve the current eleven-path draft byte-for-byte while SOL revises and Issue-locks only the same four design/source paths: this Design Lock, Handoff, Project State, and `tests/v100-design-lock.test.mjs`. Section 34's `tests/ci-contract.test.mjs` no-BOM clause is superseded: that path must remain LF-only, UTF-8 **with its existing BOM**, and contain only the already-green assertion-region semantic diff. Do not strip/rewrite the BOM, normalize the repository, change another CI assertion, or edit harness/product/workflow/package/public bytes.
+
+After the four-path r19 publication is byte-locked and Design Lock 19/19 is green, resume as `SOL_REMEDIATION`. Re-run seven-file load-only 7/7 and exact focused 60/60 on final r19 bytes, checkpoint 12/12, three-script syntax, `git diff --check`, exact eleven-path topology, and the corrected per-path EOL/BOM audit. The previously green targeted 1/1 need not be repeated separately because the CI test and runner bytes do not change under r19 and the exact 60/60 rerun includes that test. Only then run lint/build and Section 33 browser acceptance. Any failure returns to `SOL_DESIGN` without retry, rerun, immediate edit, or promotion.
+
+- `LOOP_ITERATION`: `4`; material candidate remains 5; workflow-only restoration remains 6
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r19 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: r18 pre-lint byte/EOL/BOM audit; base and worktree `tests/ci-contract.test.mjs` both preserve a UTF-8 BOM, contradicting r18's no-BOM declaration; no lint/build/browser/commit/push
+- `LAST_GREEN_GATE`: r18 targeted 1/1, seven-file load-only 7/7, exact focused 60/60, checkpoint 12/12, Design Lock 19/19, three-script syntax, exact eleven-path topology before the BOM assertion
+- `CLASSIFICATION`: `SOL_OWNED_BYTE_CONTRACT_MISDECLARATION / PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_BYTE_CONTRACT_CORRECTION / PRESERVE_EXISTING_UTF8_BOM_AND_LF_WITH_ZERO_SEMANTIC_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r19 four-path publication and green Design Lock proof
+- `RESUME_FROM`: preserve current eleven-path draft -> r19 four-path byte lock -> final load 7/7 + focused 60/60 + checkpoint 12/12 + syntax/diff/topology/corrected byte audit -> lint/build -> unchanged fresh browser acceptance -> atomic iteration-5 candidate -> one automatic focused complete green -> Section 33 full/unfiltered/runtime/human/final-review/one-Producer-checkpoint/release loop
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against raw base/worktree bytes, the exact two-line assertion diff, r18 acceptance output, current topology, and downstream gates. Revision r19 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

@@ -96,6 +96,16 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(finalRemediationHarness, /setupTraceFailureScreenshot/);
   assert.match(finalRemediationHarness, /function createDeploymentTrace\(/);
   assert.match(finalRemediationHarness, /expectedCheckpoint/);
+  const deploymentTrace = finalRemediationHarness.match(/function createDeploymentTrace[\s\S]+?(?=\nfunction validateDeploymentCheckpoint)/u)?.[0] ?? "";
+  assert.match(deploymentTrace, /computedProgress/u);
+  assert.match(deploymentTrace, /readableSnapshot/u);
+  assert.doesNotMatch(deploymentTrace, /auditFighterUnitLayer|finalCompositePixels|getImageData/u);
+  const firstFrame = finalRemediationHarness.match(/async function queueAndPauseAtFirstDeploymentFrame[\s\S]+?(?=\nfunction createDeploymentTrace)/u)?.[0] ?? "";
+  assert.match(finalRemediationHarness, /DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS = 100/u);
+  assert.match(firstFrame, /page\.waitForTimeout\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/u);
+  assert.match(firstFrame, /progress === 0/u);
+  assert.equal((firstFrame.match(/auditFighterUnitLayer/gu) ?? []).length, 1);
+  assert.doesNotMatch(firstFrame, /requestAnimationFrame/u);
   assert.match(finalRemediationHarness, /finalCompositePixels/);
   assert.match(finalRemediationHarness, /failureScreenshot: result\.failureScreenshot/);
   assert.match(finalRemediationHarness, /maximumMs: timeout/);

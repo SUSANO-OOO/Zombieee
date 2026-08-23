@@ -132,8 +132,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   for (const kind of ["scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic"]) {
     assert.match(deploymentBoundedRunner, new RegExp(`"${kind}"`, "u"));
   }
-  assert.match(deploymentBoundedRunner, /attempt <= 2/u);
-  assert.match(deploymentBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(deploymentBoundedRunner, /const attempt = 1/u);
+  assert.doesNotMatch(deploymentBoundedRunner, /attempt <= 2|isRetryableTargetClosedLog|Retrying .*target-closed/u);
   assert.match(deploymentBoundedRunner, /checkpoints\?\.length === 6/u);
   assert.match(deploymentBoundedRunner, /new Set\(kinds\)\.size !== kinds\.length/u);
   assert.doesNotMatch(deploymentBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);

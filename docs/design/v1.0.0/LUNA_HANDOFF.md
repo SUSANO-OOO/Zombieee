@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r16`
+- Canonical Design Lock: `V100-SOL-DL-001 r19`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-24 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 25 is the sole current execution handoff.
+Sections 1-27 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 28 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1046,3 +1046,71 @@ Keep the r15 app and runner draft bytes unchanged. The only post-lock remediatio
 After the one correction, run the previously failing checkpoint test once; then require load 5/5, focused 54/54, checkpoint 12/12, runner syntax, lint, build, diff/EOL/BOM/topology, and a frozen seven-path adversarial diff. Because final candidate source bytes differ from all earlier captures, repeat fresh Stage 6 3/3, Stage 24 3/3, and ordered trio 3/3 before the one atomic candidate. Any failure returns inside this SOL-owned `/goal` to `SOL_DESIGN` with raw evidence and no retry, rerun, or immediate edit.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r16` and Issue #172.** Byte-lock the four r16 design/source paths, keep the r15 app/runner draft unchanged, then edit only the checkpoint extractor from LF-only boundaries to exact CRLF-or-LF boundaries. Re-run the complete r16 acceptance on final bytes, publish one seven-path iteration-4 candidate, and require one automatic focused remote attempt completely green before promotion. No product change, Luna route, retry, Ready, merge, tag, Release, or Pages action is authorized.
+
+## 26. Revision r17 — no active Luna handoff / WebKit QA single-producer observability
+
+Design Lock Section 33 and the latest explicitly labeled Issue #172 r17 byte-lock comment are the sole active cursor. Sections 21-25 remain immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, source edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r17 four-path packet is published, byte-locked, and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: automatic run `32667714653`, attempt 1; Phase G job `97266100902` / artifact `9500819430`, Stage 6 WebKit 667x375 valid-lean-profile page crash after two accepted pointers; independently deployment job `97267069513` / artifact `9500961088`, WebKit 736x414 Crazy King clean page crashes under the existing high-frequency pixel trace and automatic retry
+- `LAST_GREEN_GATE`: exact-tree local r16 gates plus remote PR Verify, six enemy-runtime shards, Hosted Runner, all Stage 3 routes, and deployment 1280x720/667x375/844x390/844x340/932x430; none substitutes for either required red job
+- `CLASSIFICATION`: `QA_HARNESS_OBSERVATION_REENTRANCY / VALID_LEAN_PROFILE + RAF_RATE_DUPLICATE_SNAPSHOT + NONCHECKPOINT_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_QA_SINGLE_PRODUCER_OBSERVABILITY / 40MS_OBSERVER_CACHE_CONSUMERS + CHECKPOINT_ONLY_PIXEL_AUDIT + HOST_TURN_FIRST_FRAME_FREEZE + NO_RETRY / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `4`; r17 material candidate is 5; workflow-only unfiltered restoration is 6
+- `SAME_GATE_REPEAT_COUNT`: `3` for Stage 6; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r17 publication and green Design Lock proof
+- `RESUME_FROM`: exact clean r16 candidate -> four-path r17 byte lock -> six-path QA-only remediation -> 60/60/static/lint/build/diff/byte -> Stage 6 3/3 + Stage 24 3/3 + ordered trio 3/3 + canonical deployment eight units once/48 PNG/eight sheets -> one iteration-5 candidate -> one automatic focused complete green -> iteration-6 workflow restoration -> full/unfiltered/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/public-QA/closure
+
+Phase G keeps one direct lean bridge producer at 40 ms and publishes `window.__PHASE_G_LAST_COMBAT_SNAPSHOT__`. Every continuous consumer reads that cache; all combat `page.waitForFunction` predicates use explicit numeric `polling: 100`; the bounded profile/observer/event-time sites are the only direct-reader exceptions. Preserve exact pointer receipts, target ownership, causal 4/4, fourteen checkpoints, timeouts, viewports, and failure cursor. The profile must say `consumerMode: "single-producer-cache"`.
+
+Canonical deployment trace samples retain lifecycle/snapshot/fighter/progress facts but perform no canvas or pixel audit. First-frame discovery uses 100 ms Node host turns, pauses on banner plus exact progress zero, and performs one frozen pixel verification. All six existing checkpoint pixel/opacity/silhouette/final-canvas validations, 48 screenshots, and eight contact sheets remain mandatory. Each canonical unit runs exactly once; target-close or any other first-attempt failure is terminal, with no retry.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r17` and Issue #172.** Byte-lock the four r17 design/source paths first. Then edit only the six QA harness/test paths from Section 33: one 40 ms lean-snapshot producer with cached consumers, explicit 100 ms wait polling, checkpoint-only deployment pixel audits, host-turn first-frame freeze, and exactly one canonical attempt per unit. Preserve `app/**` byte-for-byte and every product/causal/pixel/viewport/timeout gate. Require the complete local sequence, one atomic iteration-5 candidate, and one automatic focused attempt completely green before workflow restoration. Any failure stays inside this SOL-owned `/goal` and returns to `SOL_DESIGN`; do not route to Luna or retry.
+
+## 27. Revision r18 — no active Luna handoff / CI no-retry source-owner alignment
+
+Design Lock Section 34 and the latest explicitly labeled Issue #172 r18 byte-lock comment are the sole active cursor. Sections 21-26 remain immutable audit history. Producer's SOL single-owner override remains active; Luna remains stopped.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r18 four-path packet is published, byte-locked, and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: local exact seven-file focused source command 59/60; the existing `tests/ci-contract.test.mjs` deployment region still required two-attempt/target-close-retry tokens removed by locked r17; browser/lint/build/commit/push were not run
+- `LAST_GREEN_GATE`: seven-file load-only 7/7, 59/60 focused, checkpoint/deployment/runtime/design source and behavior, and three edited-script syntax checks
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_CONTRACT_TOPOLOGY_OMISSION / NO_RETRY_DEPLOYMENT_POLICY_CONFLICT_WITH_EXISTING_CI_SOURCE_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CI_CONTRACT_NO_RETRY_ALIGNMENT / EXACT_SINGLE_ATTEMPT_POSITIVE_NEGATIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `4`; material candidate remains 5; workflow-only restoration remains 6
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r18 publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact ten-path r17 draft -> change only existing ci-contract deployment assertions -> targeted 1/1 + load 7/7 + focused 60/60 + complete source/static gates -> unchanged browser acceptance -> iteration-5 candidate -> one automatic focused run -> Section 33 full/unfiltered/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release loop
+
+The only post-lock correction is `tests/ci-contract.test.mjs`: replace its two positive deployment retry-token assertions with positive exact `const attempt = 1` and negative no-retry assertions. Preserve every other assertion and all ten existing draft paths. The final material topology is exactly eleven paths; `app/**`, workflow, package/lock, public, product, timeout, viewport, causal, pixel, and evidence bytes remain forbidden.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r18` and Issue #172.** Byte-lock the four r18 design/source paths, then edit only the existing deployment-runner assertion region in `tests/ci-contract.test.mjs`. Require targeted 1/1, load 7/7, focused 60/60 and all Section 34 source gates before resuming Section 33 browser acceptance. Do not rebuild the ten-path draft, retry, route to Luna, or change any harness/product contract.
+
+## 28. Revision r19 — no active Luna handoff / preserve existing CI source BOM
+
+Design Lock Section 35 and the latest explicitly labeled Issue #172 r19 byte-lock comment are the sole active cursor. Sections 21-27 remain immutable audit history. Producer's SOL single-owner override remains active; Luna remains stopped.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r19 four-path packet is published, byte-locked, and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `d11464927efd1d21e573d969a767057bdd5c8b04`
+- `LAST_AUDITED_TREE`: `2ce952c6fe70c347e866e7201824ac623bbbe993`
+- `FAILED_GATE`: r18 pre-lint byte audit; exact base and current `tests/ci-contract.test.mjs` both have the pre-existing UTF-8 BOM and LF-only lines, while r18 incorrectly declared no BOM; no lint/build/browser/commit/push
+- `LAST_GREEN_GATE`: targeted 1/1, load 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, three-script syntax, and exact eleven-path topology before the BOM assertion
+- `CLASSIFICATION`: `SOL_OWNED_BYTE_CONTRACT_MISDECLARATION / PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SOURCE_BYTE_CONTRACT_CORRECTION / PRESERVE_EXISTING_UTF8_BOM_AND_LF_WITH_ZERO_SEMANTIC_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `4`; material candidate remains 5; workflow-only restoration remains 6
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r19 publication and green Design Lock proof
+- `RESUME_FROM`: preserve the exact current eleven-path draft -> r19 four-path byte lock -> final load 7/7 + focused 60/60 + checkpoint 12/12 + syntax/diff/topology/corrected byte audit -> lint/build -> unchanged browser acceptance -> iteration-5 candidate -> one automatic focused complete green -> Section 33 full/unfiltered/runtime/human -> `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release loop
+
+The sole r19 correction is the canonical byte declaration. `tests/ci-contract.test.mjs` remains LF-only, UTF-8 with its existing BOM, and keeps exactly the already-green deployment assertion diff. Do not edit that path again, strip its BOM, normalize any file, repeat the targeted test separately, or change another design/harness/product/acceptance rule. Final focused 60/60 includes the CI source contract.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r19` and Issue #172.** Byte-lock the four r19 design/source paths, preserve all eleven candidate paths including the existing `tests/ci-contract.test.mjs` BOM, then run the final Section 35 source/byte gates and resume Section 33 browser acceptance only if green. No Luna route, retry, rerun, product edit, Ready, merge, tag, Release, or Pages action is authorized.
