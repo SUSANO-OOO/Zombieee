@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const SNAPSHOT_PATH = path.resolve("outputs/v100-r10-local-gate/draft-snapshot.json");
+const R10_PACKET_HEAD = "3f4190eb0fa89eef59141692e338ff3a9c81b40b";
 const EXPECTED_DIRTY = Object.freeze([
   " M .gitattributes",
   " M scripts/run-v099-hud-states-bounded.mjs",
@@ -76,8 +77,26 @@ async function verifySnapshot() {
   return after;
 }
 
-async function runtimePreflight() {
-  const state = await verifySnapshot();
+function isAncestor(base, head) {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", base, head], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function verifyR11Resume() {
+  const [before, after] = await Promise.all([readJson(SNAPSHOT_PATH), collectState()]);
+  assert(before.head === R10_PACKET_HEAD, `r10 snapshot head mismatch: ${before.head}`);
+  assert(isAncestor(before.head, after.head), `current HEAD ${after.head} does not descend from the proven r10 packet`);
+  assert(JSON.stringify(after.status) === JSON.stringify(before.status), "six-path dirty status changed after the proven r10 gate");
+  assert(JSON.stringify(after.hashes) === JSON.stringify(before.hashes), "package, lockfile, or six-path bytes changed after the proven r10 gate");
+  return after;
+}
+
+async function runtimePreflight({ verify = verifySnapshot, status = "V100_R10_LOCAL_GATE_PREFLIGHT_OK" } = {}) {
+  const state = await verify();
   assert(nodeMeetsRepositoryMinimum(), `Node ${process.version} is below the repository minimum 22.13.0`);
   assert(process.env.PLAYWRIGHT_BROWSERS_PATH === "0", "PLAYWRIGHT_BROWSERS_PATH must be exactly 0");
 
@@ -117,9 +136,9 @@ async function runtimePreflight() {
     launches.push({ name, executable });
   }
 
-  await verifySnapshot();
+  await verify();
   console.log(JSON.stringify({
-    status: "V100_R10_LOCAL_GATE_PREFLIGHT_OK",
+    status,
     head: state.head,
     node: process.version,
     playwright: installedPlaywright.version,
@@ -132,9 +151,13 @@ async function runtimePreflight() {
 const mode = process.argv[2];
 if (mode === "snapshot") await snapshot();
 else if (mode === "runtime") await runtimePreflight();
+else if (mode === "resume") await runtimePreflight({
+  verify: verifyR11Resume,
+  status: "V100_R11_RUNTIME_RETURN_PREFLIGHT_OK",
+});
 else if (mode === "verify") {
   const state = await verifySnapshot();
   console.log(JSON.stringify({ status: "V100_R10_DRAFT_VERIFY_OK", head: state.head }));
 } else {
-  throw new Error("Usage: node scripts/v100-r10-local-gate-preflight.mjs <snapshot|runtime|verify>");
+  throw new Error("Usage: node scripts/v100-r10-local-gate-preflight.mjs <snapshot|runtime|resume|verify>");
 }

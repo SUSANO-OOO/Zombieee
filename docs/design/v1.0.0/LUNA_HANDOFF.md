@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r10`
+- Canonical Design Lock: `V100-SOL-DL-001 r11`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -856,3 +856,48 @@ Run each phase once. Environment/bootstrap/hash/native/browser failure returns `
 ### 18.5 Exact short Luna handoff
 
 Re-fetch PR #171 and execute Design Lock Section 25 / Handoff Section 18 only. Keep the same stopped isolated worktree and existing six-path r8/r9 draft; fast-forward only the non-overlapping r10 Sol packet without stash/reset/clean/reconstruction. Run exactly one worktree-local `npm ci`, set `PLAYWRIGHT_BROWSERS_PATH=0`, install Chromium/WebKit once, prove package/lock and all six draft hashes/status unchanged, then run the r10 native/browser preflight, four-file load, and focused 43/43 once. Only after green run lint/build/base-range six-path audit, Stage 24 WebKit 3/3, and canonical Stage 3 WebKit 3/3; then make the still-unmade one correction commit/push and require focused remote green before the unchanged promotion/dynamic-evidence route. Route environment, loadability, source, or later failures to the matching `BLOCKED_RETURN_TO_SOL_R10_*` status with no retry/rerun/self-repair or extra edit.
+
+## 19. Revision r11 — Stage 24 causal-history handoff
+
+Run this section only. Design Lock Section 26 is the sole active cursor. Keep Producer Loop-Breaker `5379794856`; do not reinterpret route `5383696506` as permission to retry run 2 or make a product change. Sections 23-25 / Handoff Sections 16-18 remain authoritative where Section 26 does not supersede them. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 19.1 Cursor and fixed classification
+
+- `LAST_AUDITED_HEAD`: `3f4190eb0fa89eef59141692e338ff3a9c81b40b`
+- `LAST_AUDITED_TREE`: `8782ed45b0cc85130d0a86fc2ce3135be1f22160`
+- `FAILED_GATE`: Stage 24 WebKit local run 2; 35 samples, `source=false`, travel/contact + reaction + audio true; run 3 and canonical Stage 3 not run; no correction commit/push/remote CI
+- `LAST_GREEN_GATE`: r10 environment/source 43/43, lint, build, base-range/six-path audit, and Stage 24 run 1 positive control in the same stopped worktree; control only
+- Classification: `QA_HARNESS_CAUSAL_HISTORY / MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER + FINAL_WINDOW_PHASE_COUPLING / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_CAUSAL_HISTORY / MONOTONIC_SOURCE_EDGE + NON_DESTRUCTIVE_FINAL_MERGE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Design Lock Section 26 / Handoff Section 19 only
+- `RESUME_FROM`: same stopped six-path worktree -> r11 fast-forward -> resume preflight -> exact two-path causal-history correction -> five-file load + 47/47 -> lint/build/diff/byte audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> unchanged full/unfiltered/dynamic-quality route
+
+### 19.2 Workspace, preflight, and exact correction
+
+Re-fetch PR #171. Require open, Draft, unmerged, branch `codex/v1.0.0-luna-implementation`, base `codex/v1.0.0-sol-design` at `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and live history containing r10 packet `3f4190eb0fa89eef59141692e338ff3a9c81b40b` followed only by the r11 Sol packet. In the same stopped isolated worktree, fast-forward the non-overlapping packet without stash/reset/clean/rebase/checkout/copy/reconstruction. Require no staged/untracked file and exactly the existing six unstaged paths.
+
+Do not run `npm ci`, install a browser/package, or rerun the r10 bootstrap/source 43. Keep the existing local dependencies, set `PLAYWRIGHT_BROWSERS_PATH=0`, and run `node scripts/v100-r10-local-gate-preflight.mjs resume` once before editing. Require `V100_R11_RUNTIME_RETURN_PREFLIGHT_OK`.
+
+Then change only:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`: implement the exact page-lifetime deduplicated `sourceToTargetEdges`/`sourceAttribution`, non-destructive wait merge, proof merge/serialization, and shared `V100_PHASE_G_CAUSAL_HISTORY_PROBE` contract in Design Lock 26.2.
+2. `.gitattributes`: add exactly `tests/v100-r11-combat-causal-history.test.mjs text eol=lf` and nothing else.
+
+Preserve the four other r8/r9 draft paths byte-for-byte. Do not edit the Sol-owned r11 test, documents, design test, or preflight. Do not treat attacker/audio/impact/reaction evidence without an actual sourceId-targetId record as source proof. No synthetic edge, timeout/retry extension, product/runtime mutation, `app/**`, package/lock/workflow, assertion weakening, or seventh correction path.
+
+### 19.3 Acceptance, commit, continuation, and stop
+
+With `PLAYWRIGHT_BROWSERS_PATH=0`, run once: five-file load-only; the same five-file focused source command; lint; build; working-tree `git diff --check`; exact six-path semantic/EOL/BOM audit. The five files are the four r10 focused files plus `tests/v100-r11-combat-causal-history.test.mjs`; require 47/47.
+
+Run three fresh corrected Stage 24 WebKit processes and then three canonical 667x375 Stage 3 WebKit processes with the Section 23.3 commands, naming evidence `r11-stage24-local-1..3` and `r11-stage3-canonical-local-1..3`. The old run 1/2 are comparison evidence only and do not count. After complete local green, make one normal correction commit containing exactly the six established paths, run base-to-HEAD `git diff --check`, push once, and require the resulting automatic focused remote run completely green.
+
+- resume-preflight failure: `BLOCKED_RETURN_TO_SOL_R11_ENVIRONMENT`;
+- load/source/lint/build/diff/allowlist/EOL failure: `BLOCKED_RETURN_TO_SOL_R11_SOURCE`;
+- local Stage 24/Stage 3 failure or different evidence cause: `BLOCKED_RETURN_TO_SOL_R11_RUNTIME`;
+- remote failure/skip/missing artifact/new cause: `BLOCKED_RETURN_TO_SOL_R11_REMOTE`.
+
+On any stop, record live HEAD/tree, command, exit, first failure, environment, status/hashes, and raw evidence paths; do not retry, rerun, self-repair, add a fix, change workspace, commit, push again, or promote. Only focused remote complete green resumes local full Phase G 54/54 + validator + full regressions, one unfiltered-workflow restoration, unfiltered remote complete green, dynamic-quality packet, and `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`.
+
+### 19.4 Exact short Luna handoff
+
+Re-fetch PR #171 and execute Design Lock Section 26 / Handoff Section 19 only. In the same stopped six-path worktree, fast-forward the non-overlapping r11 packet, keep `PLAYWRIGHT_BROWSERS_PATH=0`, and run the r11 `resume` preflight once; do not reinstall or repeat the green r10 gates. Correct only monotonic source-target history/non-destructive final merge in `scripts/v100-phase-g-production-matrix.mjs` plus the one LF line in `.gitattributes`; preserve the other four draft paths and all Sol-owned r11 files. Require five-file load, focused 47/47, lint/build/diff/byte audit, fresh corrected Stage 24 3/3, and canonical Stage 3 3/3; then make the one six-path correction commit/push and require focused remote complete green. On any failure use the exact r11 return status with no retry/rerun/extra edit. No Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure.

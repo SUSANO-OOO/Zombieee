@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r10`
+- Revision: `r11`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -42,6 +42,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r8 keeps Sections 18-19 and all product/release thresholds unchanged. It independently classifies CI #910's Phase G Stage 24 stale DOM/runtime deployment race and canonical Stage 3 clean unexpected-page-crash classifier gap, fixes their bounded QA ownership in Section 23, and makes Producer Directive `5377824157` an exact-HEAD/tree dynamic game-quality gate before the Producer Visual Checkpoint. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r9 keeps every r8 remediation, promotion, dynamic-quality, and release contract unchanged. It closes the focused-local 41/43 return by adding one omitted source-contract test owner and fixing one diagnostic-probe serialization boundary; no runtime selection rule, retry policy, acceptance threshold, `app/**`, or product behavior changes. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r10 keeps the six-path r9 correction and all product/runtime/release contracts unchanged. It closes Producer Loop-Breaker `5379794856` by making isolated-worktree dependency bootstrap, worktree-local browser installation, native/browser/test-load preflight, draft byte preservation, failure ownership, and retry policy one executable local-gate contract. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r11 consumes runtime return route `5383696506` and the raw Stage 24 WebKit run-1/run-2 evidence. It corrects only the Phase G harness's non-monotonic source-to-target history and its final sampling-window coupling; it changes no product VFX, combat, audio, gameplay, balance, AI, timeout, acceptance threshold, or release gate. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1186,3 +1187,87 @@ Sol independently created a fresh detached isolated Windows worktree with no `no
 - `RESUME_FROM`: same stopped isolated six-path draft -> normal fast-forward to r10 packet -> one mandatory lockfile/bootstrap sequence -> immutable-hash/status proof -> native/browser/load preflight -> focused 43/43 -> lint/build/base-range six-path audit -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> unchanged Section 23 promotion/dynamic-evidence route
 
 A Sol docs/test/preflight-only r10 packet run is metadata-only. Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, Producer Loop-Breaker, package/lock owners, clean installation, browser runtime, reproduced source correction, and release tail. Revision r10 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 26. Revision r11 — Stage 24 monotonic causal-history closure
+
+This section supersedes Section 25 only for the active cursor after the successful r10 environment/source/lint/build gates and the Stage 24 run-2 return. Sections 23-25 retain the six-path r8/r9 correction, bootstrap policy, Stage 3 correction, promotion, dynamic-quality, Producer, and release contracts except where this section gives a later exact command or return status. Producer Loop-Breaker `5379794856` and route `5383696506` remain binding. No `app/**`, product/runtime/content/asset/audio/save/PWA, gameplay, balance, AI, timeout, retry-count, evidence threshold, package, lockfile, workflow, or release change is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 26.1 Raw run comparison and classification
+
+Sol re-fetched PR #171 open/Draft/unmerged at HEAD `3f4190eb0fa89eef59141692e338ff3a9c81b40b`, tree `8782ed45b0cc85130d0a86fc2ce3135be1f22160`, and independently read both local evidence trees from the same stopped six-path worktree.
+
+- Run 1 and run 2 used the same `stage24-panther-commander`, WebKit, 736x414 contract and the same six accepted player-card sequence after the same initial medic invalidation: medic, scout, ranger, brawler, babayaga, kumaverson. Each recorder contains 14 deployment attempts, 35 causal samples, a mounted/attacking RED PANTHER commander, and a completed frontline sequence.
+- Run 1 passed with source edge `13->25`, nine visual events, six reaction records, the required audio, all four causal stages true, and final Futago HP about 2361.4/2500.
+- Run 2 failed only `source`: `sourceToTargetEdges=[]`, while travel/contact, reaction, and audio were true. Its raw activity still records the RED PANTHER commander and nine other actors attacking, `enemy-red-panther-commander-attack`, six start/impact receipts, damage/reaction, support impact, and Futago warning/impact audio. Futago remained 2500/2500 in the final 4.8-second window.
+- Run 2 has zero console error, page error, request failure, or HTTP failure. Its only page/context close events occur at 90,676 ms during the runner's post-failure cleanup; there is no preceding lifecycle/resource loss. The production battle remains mounted with ten fighters and a combat-ready Futago.
+
+Run 1 is a valid positive product/runtime control: an actual production source-target edge can be captured at this HEAD. It is not a deterministic acceptance control because the current harness makes success depend on whether another transient edge happens to occur inside the final proof window.
+
+The current file does not serialize the 35 raw sample objects and the destructive assignment has already erased the pre-window edge arrays, so the evidence cannot prove that run 2 itself owned an earlier source-target edge. Sol therefore does not relabel run 2 green. That evidence-integrity loss is the reason to correct monotonic capture and require a fresh corrected 3/3; it is not permission to infer or synthesize a missing edge.
+
+The exact harness defect is independent of the earlier deployment race. `startCombatRuntimeObserver` accumulates the last observed `attackIdentity` and `pendingWeaponHits`, but `waitForCombatActivity` replaces those histories with only the instantaneous snapshot arrays. `battlePage` then stops the observer before `collectCombatCausalProof`. The proof therefore sees an earlier real edge only if a new transient edge is present after the destructive replacement; run 1 happened to receive `13->25`, while run 2 did not. Attacker identity, attack cue, impact, reaction, and clean lifecycle prove that run 2 is not a production combat/VFX/audio failure, but they are intentionally not substituted for the missing source-target edge.
+
+Classification is `QA_HARNESS_CAUSAL_HISTORY / MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER + FINAL_WINDOW_PHASE_COUPLING / DESIGN_CHANGE_REQUIRED`. The authoritative Design ID is `V100-SOL-DL-001 r11`.
+
+### 26.2 Exact coherent correction
+
+The existing six-path r8/r9 draft remains the correction unit. Relative to the r11 Sol packet, Luna may change only these two already-dirty paths for r11 while preserving the other four draft paths byte-for-byte:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`
+   - maintain page-lifetime, deduplicated `sourceToTargetEdges` and `sourceAttribution` from every real `snapshot.attackIdentity` and `snapshot.pendingWeaponHits` record with non-null `sourceId` and `targetId`;
+   - serialize each attribution as exactly `{ edge, sourceId, targetId, channel }`, where `channel` is `attackIdentity` or `pendingWeaponHits`, and retain the first observation for a duplicate edge/channel;
+   - keep transient attack/effect arrays bounded as today, but never replace or truncate the unique page-lifetime source-edge set merely because a later snapshot is empty;
+   - make `waitForCombatActivity` merge current snapshot evidence into observer history instead of replacing historical attack, pending-hit, presentation, edge, or attribution fields;
+   - make `collectCombatCausalProof` merge the stable observer edges/attribution into every proof result, including failure diagnostics, while still requiring at least one actual non-null source-target edge;
+   - add the exact `V100_PHASE_G_CAUSAL_HISTORY_PROBE` JSON contract required by the Sol-owned r11 tests; production execution must use the same merge/aggregation helpers as the probe.
+2. `.gitattributes`
+   - add exactly `tests/v100-r11-combat-causal-history.test.mjs text eol=lf`; preserve every other line and the existing LF/no-BOM contract.
+
+The Sol packet owns `tests/v100-r11-combat-causal-history.test.mjs`, the r11 `resume` preflight mode, documents, and design-lock assertions. Luna must not edit them. The first correction commit remains exactly the same six dirty paths already owned by Sections 23-24; r11 adds no seventh correction path.
+
+Forbidden: treating `attackingActors`, an attack cue, a visual receipt, damage, reaction, or audio alone as `source=true`; synthetic edges; actor/target substitution; force click or DOM event injection; combat clock/HP/resource mutation; longer proof time; new retry; assertion/axis/checkpoint weakening; `app/**`; package/lock/workflow edits; repository-wide formatting. Product acceptance stays `source -> travel/contact -> target reaction -> audio`.
+
+### 26.3 Preserved environment and focused acceptance
+
+Do not reinstall dependencies, reinstall browsers, rerun the already-green r10 bootstrap, reconstruct the draft, or replace the workspace. In the same stopped worktree, fast-forward only the non-overlapping r11 Sol packet. Before any r11 edit, require exactly the same six unstaged paths, no staged/untracked file, the r10 snapshot at `outputs/v100-r10-local-gate/draft-snapshot.json`, unchanged package/lock and six draft hashes, and `PLAYWRIGHT_BROWSERS_PATH=0`. Run once:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+node scripts/v100-r10-local-gate-preflight.mjs resume
+```
+
+It must emit `V100_R11_RUNTIME_RETURN_PREFLIGHT_OK`; this proves that the snapshot head is the r10 packet, current HEAD descends from it, the six-path/package/lock bytes are unchanged from the already-green gate, sharp still runs, and worktree-local Chromium/WebKit still launch. Failure returns `BLOCKED_RETURN_TO_SOL_R11_ENVIRONMENT` without install, retry, workspace change, or edit.
+
+After the exact two-path r11 correction, run each command once and require success:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+node --test --test-name-pattern='(?!)' tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs tests/v100-r11-combat-causal-history.test.mjs
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs tests/v100-r11-combat-causal-history.test.mjs
+npm.cmd run lint
+npm.cmd run build
+git diff --check
+```
+
+The load-only command must load five files; focused source acceptance is exactly 47/47. The four new tests require monotonic edge survival, non-destructive final merge, stable production-channel attribution, and the no-substitution negative. Audit the working diff as exactly the six established correction paths; package/lock, `app/**`, workflow, and every Sol-owned r11 path must be clean. Preserve LF/BOM contracts.
+
+Then run one corrected-harness acceptance sequence: three fresh-process Stage 24 WebKit-only runs followed by three canonical 667x375 Stage 3 WebKit runs, using the Section 23.3 commands with only sequence/evidence names changed to `r11-stage24-local-1..3` and `r11-stage3-canonical-local-1..3`. Pre-r11 run 1 is control evidence and run 2 is root-cause evidence; neither counts toward corrected 3/3 and neither is rerun as a generic retry.
+
+Any source/lint/build/diff/allowlist/EOL failure returns `BLOCKED_RETURN_TO_SOL_R11_SOURCE`. Any Stage 24 or Stage 3 failure, different cause, missing raw evidence, or forbidden-file need returns `BLOCKED_RETURN_TO_SOL_R11_RUNTIME`. No command retry, run rerun, timeout increase, second local fix, or alternative attribution rule is authorized.
+
+### 26.4 Commit, remote gate, continuation, and cursor
+
+Only after focused 47/47, lint, build, diff/byte audit, corrected Stage 24 3/3, and canonical Stage 3 3/3 may Luna create the still-unmade single correction commit containing exactly the six established paths and push once normally. Require the resulting automatic focused remote run completely green. Any failure, skip, missing artifact, or new cause returns `BLOCKED_RETURN_TO_SOL_R11_REMOTE` with no manual rerun or second correction.
+
+Focused remote complete green resumes Section 23.4 exactly: local full Phase G 54/54 plus validator and full regressions, one unfiltered-workflow restoration commit/push, complete unfiltered remote green, exact-HEAD/tree dynamic game-quality evidence, then `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`. Every Producer and release boundary remains unchanged.
+
+- `LAST_AUDITED_HEAD`: `3f4190eb0fa89eef59141692e338ff3a9c81b40b`
+- `LAST_AUDITED_TREE`: `8782ed45b0cc85130d0a86fc2ce3135be1f22160`
+- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `FAILED_GATE`: r10 Stage 24 WebKit corrected-candidate local sequence, run 2 causal proof; `source=false`, other three stages true; run 3 and canonical Stage 3 not run; no correction commit/push/remote CI
+- `LAST_GREEN_GATE`: same stopped worktree — r10 snapshot/bootstrap/native/browser/load/source 43/43, lint, build, base-range/six-path audit, plus Stage 24 run 1 positive control; none is correction-HEAD, promotion, or final-freeze evidence
+- `REMEDIATION_CLASS`: `PHASE_G_CAUSAL_HISTORY / MONOTONIC_SOURCE_EDGE + NON_DESTRUCTIVE_FINAL_MERGE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 26 / Handoff Section 19 only
+- `RESUME_FROM`: same stopped six-path worktree -> non-overlapping r11 fast-forward -> one r11 resume preflight -> exact monotonic-history correction in two existing dirty paths -> five-file load + focused 47/47 -> lint/build/diff/byte audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> unchanged full/unfiltered/dynamic-quality route
+
+A Sol docs/test/preflight-only r11 packet run is metadata-only. Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw run evidence and live refs. Revision r11 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

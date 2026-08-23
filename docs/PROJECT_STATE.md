@@ -20,10 +20,10 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
-- LAST_AUDITED_HEAD：`3a40b95eafe8df17b9de907b6644e66912e1e218`、tree `486b9cf0cc92152372ff6414b61e2df440e8087a`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`3f4190eb0fa89eef59141692e338ff3a9c81b40b`、tree `8782ed45b0cc85130d0a86fc2ce3135be1f22160`。これはSOLが内容とr10 Stage 24 raw evidenceを監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r10`（Section 25がProducer Loop-Breaker `5379794856`を受け、既存six-path correctionを保持したisolated-worktree lockfile bootstrap、worktree-local browser、native/browser/load preflight、hash preservation、failure routingを閉じる。Sections 23-24のsource/runtime/promotion、Sections 18-19のPhase G／release loopを維持。`PRODUCT_DESIGN_CHANGE: 0`）
-- execution ledger：Issue #172。r10 Section 25 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
+- current Design Lock：`V100-SOL-DL-001 r11`（Section 26がroute `5383696506`のStage 24 run 1／run 2 raw evidenceを比較し、QA observerのmonotonic source-target historyをfinal waitが瞬間snapshotで上書きするharness defectを閉じる。r10 bootstrap、six-path draft、acceptance threshold、Sections 23-25のpromotion／dynamic-quality／release loopを維持。`PRODUCT_DESIGN_CHANGE: 0`）
+- execution ledger：Issue #172。r11 Section 26 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
 - main merge／tag／Release／Pages公開：未実施
 
 ## 3. Version 1.0.0固定事項
@@ -67,8 +67,11 @@ SolとLunaを同時並行に動かさない。
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- r10 same-worktree bootstrap/preflight、focused source 43/43、lint、build、base-range／six-path auditはgreen。Stage 24 WebKit run 1はPASS、run 2は35 samples中`source=false`のみでFAILし、run 3／canonical Stage 3／correction commit・push／remote CIは未実行のままLunaが`BLOCKED_RETURN_TO_SOL_R10_RUNTIME`で停止した。
+- raw run 2はRED PANTHER commander attack state／専用SE、impact receipt、damage/reaction、Futago ability、active battleを保持し、console/page/request/HTTP failure 0、cleanup前lifecycle loss 0。run 1だけ`13->25` edgeがfinal proof windowへ再出現した。production combat／VFX／audio defectではない。
+- r11 classificationは`QA_HARNESS_CAUSAL_HISTORY / MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER + FINAL_WINDOW_PHASE_COUPLING / DESIGN_CHANGE_REQUIRED`。`startCombatRuntimeObserver`の履歴を`waitForCombatActivity`が瞬間arrayで置換し、observer停止後の`collectCombatCausalProof`を偶発的なfinal-window edgeへ依存させる。Section 26／Handoff 19はpage-lifetime edge attribution、non-destructive merge、negative no-substitution、same-worktree resume preflightを一つのcoherent contractとして固定する。
 - r9 packet HEAD `3a40b95eafe8df17b9de907b6644e66912e1e218`、tree `486b9cf0cc92152372ff6414b61e2df440e8087a`でLunaはsix-path r8/r9 draftを保持／再構築したが、isolated worktreeに`sharp`と`playwright`がなく、focused commandは26 total／20 pass／6 failでsource assertionへ到達しなかった。dependency repair、retry／rerun、lint/build、WebKit、commit/push、remote correction CIはなく、`BLOCKED_RETURN_TO_SOL_R9`で停止した。
-- 今回のclassificationは`EXECUTION_ENVIRONMENT_PRECONDITION / ISOLATED_WORKTREE_DEPENDENCIES_ABSENT + HANDOFF_BOOTSTRAP_OMISSION / DESIGN_CHANGE_REQUIRED`。source/product/gameplay failureではない。Design Lock r10 Section 25／Handoff 18は、same stopped worktreeのsix-path draftを再作成せず、lockfile固定`npm ci`、worktree-local Chromium/WebKit、package/draft hash preservation、native/browser/four-file load preflight、43/43、失敗phase別returnを一つのcontractとして所有する。
+- r10 bootstrap returnのclassificationは`EXECUTION_ENVIRONMENT_PRECONDITION / ISOLATED_WORKTREE_DEPENDENCIES_ABSENT + HANDOFF_BOOTSTRAP_OMISSION / DESIGN_CHANGE_REQUIRED`。source/product/gameplay failureではない。Design Lock r10 Section 25／Handoff 18は、same stopped worktreeのsix-path draftを再作成せず、lockfile固定`npm ci`、worktree-local Chromium/WebKit、package/draft hash preservation、native/browser/four-file load preflight、43/43、失敗phase別returnを一つのcontractとして所有する。
 - Solはfresh isolated Windows worktree／`node_modules`なしから同contractを実証した。512 packages、Playwright 1.56.1、sharp 0.35.3、local Chromium build 1194／WebKit build 2215、両browser launch、four-file load、focused 43/43がgreenで、package／lock／six draft hashはbootstrap前後不変だった。これはsetup/source controlでありLuna correction、Phase G、remote、final evidenceには流用しない。
 - r8 Sol packet HEAD `c6d3a2e8a925ca294fad82b47954d79b02a127bc`、tree `a4568cc2dbac3c6352de17170f92150865329ea2`でLunaはcorrection commit／push前のfocused source commandを実行し、43 total／41 pass／2 failで停止した。追加fix、retry／rerun、commit／push、remote correction CIはなく、Issue route `5379131527`どおり`BLOCKED_RETURN_TO_SOL_R8`でSOLへ戻った。
 - `tests/ci-contract.test.mjs` failureは`DESIGN_CONTRACT_DEFECT / STALE_HUD_GENERIC_RETRY_ASSERTION + FIRST_COMMIT_ALLOWLIST_OMISSION / DESIGN_CHANGE_REQUIRED`。r8必須のattempt-local classifier behavioral testsは全件passしたが、pre-r8 CI source assertionがHUD runnerへgeneric `isRetryableTargetClosedLog`を要求し、Section 23は修正必須の同testをfirst-commit allowlistから漏らしていた。product／HUD implementation failureではない。
@@ -79,27 +82,27 @@ SolとLunaを同時並行に動かさない。
 - Phase G `96949389397`／artifact `9466905397`のStage 24 WebKit 736x414 failureは`QA_PREDICATE_OR_ORCHESTRATION / STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE`。DOM ready表示と同一sampleのruntime command 27.8／cost 45が矛盾したままgeneric 30秒click waitへ入り、その後page crashとなった。production deployment／balance failureの証拠ではない。
 - canonical WebKit `96954658044`／artifact `9467643324`の667x375 `stage3-boss` failureは`BROWSER_LIFECYCLE_OR_RESOURCE / CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER`。battle-ready後、clean diagnosticsのままunexpected page crashがlifecycle JSONLへ記録されたが、wrapped target-closeを既存classifierが認識しなかった。product message duration／presentation assertion failureの証拠ではない。
 - CI #910の二件はpage crashという終端だけを共有し、原因ownerは独立する。Design Lock r8 Section 23／r9 Section 24がatomic DOM/runtime deployment eligibility、attempt-local clean-crash classification、source-contract closureを固定する。generic retry、blanket timeout extension、assertion弱体化、`app/**`／gameplay／balance／AI変更は禁止する。
-- current candidateでlocal Stage 24 3/3、canonical Stage 3 3/3、correction-HEAD focused remote complete green、local full Phase G 54/54＋validator＋full regressions、unfiltered-workflow restoration、unfiltered remote complete green、dynamic evidence packet、Producer Visual Checkpointは未完了である。
+- r11 corrected harnessでfresh local Stage 24 3/3、canonical Stage 3 3/3、correction-HEAD focused remote complete green、local full Phase G 54/54＋validator＋full regressions、unfiltered-workflow restoration、unfiltered remote complete green、dynamic evidence packet、Producer Visual Checkpointは未完了である。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r10 Section 25
+## 6. Version 1.0.0 execution cursor — r11 Section 26
 
-- `LAST_AUDITED_HEAD`: `3a40b95eafe8df17b9de907b6644e66912e1e218`
-- `LAST_AUDITED_TREE`: `486b9cf0cc92152372ff6414b61e2df440e8087a`
+- `LAST_AUDITED_HEAD`: `3f4190eb0fa89eef59141692e338ff3a9c81b40b`
+- `LAST_AUDITED_TREE`: `8782ed45b0cc85130d0a86fc2ce3135be1f22160`
 - `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
-- `FAILED_GATE`: r9 focused local setup 26 total／20 pass／6 fail；isolated worktreeで`sharp`／`playwright` unavailable、source assertions未評価；lint/build/WebKit/correction commit／push／remote correction CIなし
-- `LAST_GREEN_GATE`: Sol r10 control — fresh lockfile install、package/draft hash不変、sharp native＋local Chromium/WebKit launch、four-file load、focused 43/43。controlのみ、candidate／final evidenceではない
-- `REMEDIATION_CLASS`: `LOCAL_ACCEPTANCE_BOOTSTRAP / LOCKFILE_INSTALL + WORKTREE_LOCAL_BROWSERS + DRAFT_BYTE_PRESERVATION / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: same stopped six-path draft -> normal fast-forward r10 -> one lockfile/bootstrap sequence -> immutable hash/status -> native/browser/load preflight -> focused 43/43 -> lint/build/base-range six-path audit -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> Section 23 promotion/dynamic-evidence route
-- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 25／Handoff Section 18のみ。dependency／workspace／retry／root cause／promotion／製品判断権限なし）
+- `FAILED_GATE`: r10 Stage 24 WebKit local run 2 causal proof；`source=false`、travel/contact・reaction・audio=true；run 3／canonical Stage 3／correction commit・push／remote CIなし
+- `LAST_GREEN_GATE`: same stopped worktreeのr10 bootstrap/native/browser/load/source 43/43、lint、build、base-range/six-path audit＋Stage 24 run 1 positive control。correction-HEAD／promotion／final evidenceではない
+- `REMEDIATION_CLASS`: `PHASE_G_CAUSAL_HISTORY / MONOTONIC_SOURCE_EDGE + NON_DESTRUCTIVE_FINAL_MERGE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: same stopped six-path worktree -> non-overlapping r11 fast-forward -> one resume preflight -> exact two-path monotonic-history closure -> five-file load + 47/47 -> lint/build/diff/byte audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> Section 23 full/unfiltered/dynamic-quality route
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 26／Handoff Section 19のみ。dependency／workspace／retry／root cause／attribution threshold／promotion／製品判断権限なし）
 
-Lunaは同じisolated worktreeのsix-path draftを保持し、Section 25のbootstrap/preflightを各一回だけ実行する。environment、loadability、source、later runtimeのfailure classに応じて`BLOCKED_RETURN_TO_SOL_R10_*`で戻し、dependency self-repair／別workspace／retry／rerun／追加editをしない。focused remote complete greenの場合だけSections 23-24のlocal full gateと一回のunfiltered-workflow restorationへ進む。
+Lunaは同じisolated worktreeのsix-path draftを保持し、r10 bootstrapを繰り返さずSection 26の`resume` preflightを一回だけ実行する。r11のenvironment、source、runtime、remote failure classに応じた`BLOCKED_RETURN_TO_SOL_R11_*`で戻し、dependency self-repair／別workspace／retry／rerun／追加editをしない。focused remote complete greenの場合だけSections 23-24のlocal full gateと一回のunfiltered-workflow restorationへ進む。
 
 PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。作業開始・push前・gate判定前にGitHubのPR refを再取得する。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock Section 19／23-25のProducer Visual Checkpoint／Final Acceptance経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r10を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock Section 19／23-26のProducer Visual Checkpoint／Final Acceptance経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r11を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
 
 ## 7. Release gate
 

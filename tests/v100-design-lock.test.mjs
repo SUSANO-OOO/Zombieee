@@ -11,6 +11,7 @@ const PROJECT_STATE = "docs/PROJECT_STATE.md";
 const PROVENANCE = "assets/source/v100/PROVENANCE.md";
 const SPRITE_MANIFEST_SOURCE = "app/spriteManifest.js";
 const R10_PREFLIGHT = "scripts/v100-r10-local-gate-preflight.mjs";
+const R11_CAUSAL_TEST = "tests/v100-r11-combat-causal-history.test.mjs";
 
 const selectedAssets = Object.freeze([
   ["assets/source/v100/characters/segawa-identity-master-r2.png", "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d", 934, 1684],
@@ -37,9 +38,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r10`/u);
+  assert.match(design, /Revision: `r11`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r10`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r11`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -126,12 +127,13 @@ test("r7 Section 22 locks the single-file attributes remediation and mandatory S
   assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
 });
 
-test("r10 preserves r8/r9 ownership and closes the isolated local-gate bootstrap", async () => {
-  const [design, handoff, projectState, preflight] = await Promise.all([
+test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal history", async () => {
+  const [design, handoff, projectState, preflight, causalTest] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
     readFile(PROJECT_STATE, "utf8"),
     readFile(R10_PREFLIGHT, "utf8"),
+    readFile(R11_CAUSAL_TEST, "utf8"),
   ]);
   const packet = design.match(/## 23\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
   const execution = handoff.match(/## 16\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
@@ -139,6 +141,8 @@ test("r10 preserves r8/r9 ownership and closes the isolated local-gate bootstrap
   const resume = handoff.match(/## 17\. Revision r9([\s\S]*)$/u)?.[1] ?? "";
   const loopBreaker = design.match(/## 25\. Revision r10([\s\S]*)$/u)?.[1] ?? "";
   const bootstrap = handoff.match(/## 18\. Revision r10([\s\S]*)$/u)?.[1] ?? "";
+  const causalClosure = design.match(/## 26\. Revision r11([\s\S]*)$/u)?.[1] ?? "";
+  const causalHandoff = handoff.match(/## 19\. Revision r11([\s\S]*)$/u)?.[1] ?? "";
 
   for (const source of [packet, execution]) {
     assert.match(source, /d1aab90ccefa8ad6601821c8520741bde49cd087/u);
@@ -260,7 +264,41 @@ test("r10 preserves r8/r9 ownership and closes the isolated local-gate bootstrap
   assert.match(preflight, /V100_R10_DRAFT_SNAPSHOT_OK/u);
   assert.match(preflight, /V100_R10_LOCAL_GATE_PREFLIGHT_OK/u);
   assert.match(preflight, /V100_R10_DRAFT_VERIFY_OK/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r10`/u);
+  for (const source of [causalClosure, causalHandoff, projectState]) {
+    assert.match(source, /3f4190eb0fa89eef59141692e338ff3a9c81b40b/u);
+    assert.match(source, /8782ed45b0cc85130d0a86fc2ce3135be1f22160/u);
+    assert.match(source, /QA_HARNESS_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER \+ FINAL_WINDOW_PHASE_COUPLING \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /PHASE_G_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_EDGE \+ NON_DESTRUCTIVE_FINAL_MERGE \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  }
+  assert.match(causalClosure, /route `5383696506`/u);
+  assert.match(causalClosure, /Run 1 passed with source edge `13->25`/u);
+  assert.match(causalClosure, /zero console error, page error, request failure, or HTTP failure/u);
+  assert.match(causalClosure, /does not relabel run 2 green/u);
+  assert.match(causalClosure, /waitForCombatActivity` replaces those histories with only the instantaneous snapshot arrays/u);
+  assert.match(causalClosure, /sourceToTargetEdges` and `sourceAttribution`/u);
+  assert.match(causalClosure, /channel` is `attackIdentity` or `pendingWeaponHits`/u);
+  assert.match(causalClosure, /never replace or truncate the unique page-lifetime source-edge set/u);
+  assert.match(causalClosure, /attackingActors`[\s\S]*alone as `source=true`/u);
+  assert.match(causalClosure, /focused source acceptance is exactly 47\/47/u);
+  assert.match(causalClosure, /fresh corrected Stage 24 3\/3/u);
+  assert.match(causalClosure, /Revision r11 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`/u);
+  assert.match(causalHandoff, /Do not run `npm ci`, install a browser\/package, or rerun the r10 bootstrap\/source 43/u);
+  assert.match(causalHandoff, /V100_R11_RUNTIME_RETURN_PREFLIGHT_OK/u);
+  assert.match(causalHandoff, /preserve the other four draft paths and all Sol-owned r11 files/u);
+  assert.match(causalHandoff, /five-file load, focused 47\/47/u);
+  for (const status of ["ENVIRONMENT", "SOURCE", "RUNTIME", "REMOTE"]) {
+    assert.match(causalHandoff, new RegExp(`BLOCKED_RETURN_TO_SOL_R11_${status}`, "u"));
+  }
+  assert.match(preflight, /R10_PACKET_HEAD = "3f4190eb0fa89eef59141692e338ff3a9c81b40b"/u);
+  assert.match(preflight, /merge-base", "--is-ancestor"/u);
+  assert.match(preflight, /V100_R11_RUNTIME_RETURN_PREFLIGHT_OK/u);
+  assert.match(preflight, /mode === "resume"/u);
+  assert.match(causalTest, /V100_PHASE_G_CAUSAL_HISTORY_PROBE/u);
+  assert.match(causalTest, /sourceToTargetEdges/u);
+  assert.match(causalTest, /sourceAttribution/u);
+  assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r11`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
 });
 
