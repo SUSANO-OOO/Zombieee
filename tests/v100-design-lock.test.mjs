@@ -38,11 +38,11 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r11`/u);
+  assert.match(design, /Revision: `r13`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r11`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r13`/u);
+  assert.match(handoff, /docs\/CODEX_SOL_ROLE\.md/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
-  assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
   assert.match(design, /4833a1eed29e3901e3dcfca01cf77db6846e5265/u);
   assert.match(design, /c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4/u);
@@ -220,8 +220,8 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
     assert.match(source, /486b9cf0cc92152372ff6414b61e2df440e8087a/u);
     assert.match(source, /26[^\n]*20[^\n]*6 fail/u);
     assert.match(source, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
-    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   }
+  for (const source of [loopBreaker, bootstrap]) assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   assert.match(loopBreaker, /Producer Loop-Breaker `5379794856`/u);
   assert.match(loopBreaker, /EXECUTION_ENVIRONMENT_PRECONDITION \/ ISOLATED_WORKTREE_DEPENDENCIES_ABSENT \+ HANDOFF_BOOTSTRAP_OMISSION \/ DESIGN_CHANGE_REQUIRED/u);
   assert.match(loopBreaker, /same stopped isolated worktree/u);
@@ -266,13 +266,15 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(preflight, /V100_R10_DRAFT_SNAPSHOT_OK/u);
   assert.match(preflight, /V100_R10_LOCAL_GATE_PREFLIGHT_OK/u);
   assert.match(preflight, /V100_R10_DRAFT_VERIFY_OK/u);
-  for (const source of [causalClosure, causalHandoff, projectState]) {
+  for (const source of [causalClosure, causalHandoff]) {
     assert.match(source, /3f4190eb0fa89eef59141692e338ff3a9c81b40b/u);
     assert.match(source, /8782ed45b0cc85130d0a86fc2ce3135be1f22160/u);
     assert.match(source, /QA_HARNESS_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER \+ FINAL_WINDOW_PHASE_COUPLING \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /PHASE_G_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_EDGE \+ NON_DESTRUCTIVE_FINAL_MERGE \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   }
+  assert.match(projectState, /QA_HARNESS_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER \+ FINAL_WINDOW_PHASE_COUPLING \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(projectState, /PHASE_G_CAUSAL_HISTORY \/ MONOTONIC_SOURCE_EDGE \+ NON_DESTRUCTIVE_FINAL_MERGE \/ DESIGN_CHANGE_REQUIRED/u);
   assert.match(causalClosure, /route `5383696506`/u);
   assert.match(causalClosure, /Run 1 passed with source edge `13->25`/u);
   assert.match(causalClosure, /zero console error, page error, request failure, or HTTP failure/u);
@@ -300,14 +302,14 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /sourceToTargetEdges/u);
   assert.match(causalTest, /sourceAttribution/u);
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r11`/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r13`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
   for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
     assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
     assert.match(source, /f3db25f00c9209830d79d7f01b599bdb02834a06/u);
     assert.match(source, /ee0bcd81f3aed9bedaf642f6990acf8907865259/u);
-    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   }
+  for (const source of [sourceConsistency, sourceConsistencyHandoff]) assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
   assert.match(sourceConsistency, /reported `SOL human-player quality audit未完了` absence is not the failing contract/u);
   assert.match(sourceConsistency, /Do not delete, relax, redirect, or make the assertion optional/u);
   assert.match(sourceConsistency, /targeted Design Lock\/Project State contract must pass 1\/1/u);
@@ -315,6 +317,153 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(sourceConsistency, /no r12 revision is created/u);
   assert.match(sourceConsistencyHandoff, /Do not repeat the resume preflight, five-file load, or focused source suite/u);
   assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
+});
+
+test("r12-r13 lock SOL actionability and target-ownership closure with one final Producer checkpoint", async () => {
+  const [design, handoff, projectState] = await Promise.all([
+    readFile(DESIGN, "utf8"),
+    readFile(HANDOFF, "utf8"),
+    readFile(PROJECT_STATE, "utf8"),
+  ]);
+  const r12 = design.match(/## 28\. Revision r12([\s\S]+?)(?=## 29\. Revision r13)/u)?.[1] ?? "";
+  const r13 = design.match(/## 29\. Revision r13([\s\S]*)$/u)?.[1] ?? "";
+  const activeHandoff = handoff.match(/## 22\. Revision r13([\s\S]*)$/u)?.[1] ?? "";
+  const currentProcess = projectState.match(/## 4\. 実行体制 — V1 SOL single-owner override([\s\S]+?)## 5\./u)?.[1] ?? "";
+  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r13 Section 29([\s\S]+?)### Post-V1/u)?.[1] ?? "";
+
+  for (const source of [r12, projectState]) {
+    assert.match(source, /0495e95e3bc59fcf546ffa02ee83704a1f63e366/u);
+    assert.match(source, /30071d5a9f4fd92e93f54ddea2e9713382247f74/u);
+    assert.match(source, /32636742294/u);
+    assert.match(source, /97189630445/u);
+    assert.match(source, /9492754238/u);
+    assert.match(source, /PHASE_G_REAL_POINTER_ACTIONABILITY \/ EXPLICIT_HIT_TEST \+ STABLE_RECT \+ ONE_INPUT \+ TRUE_FAILURE_CURSOR \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /NEXT_OWNER`: `SOL_REMEDIATION`/u);
+  }
+  assert.match(r12, /QA_HARNESS_ACTIONABILITY_GATE_POLICY_FAILURE \/ PRE_POINTER_LOCATOR_STABILITY_TIMEOUT \+ FAILURE_CURSOR_FINALIZATION_LOSS \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(projectState, /QA_HARNESS_ACTIONABILITY_GATE_POLICY_FAILURE \/ PRE_POINTER_LOCATOR_STABILITY_TIMEOUT \+ FAILURE_CURSOR_FINALIZATION_LOSS \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(r12, /performVerifiedDeploymentPointer/u);
+  assert.match(r12, /withPhaseGPageInputLock/u);
+  assert.match(r12, /concurrent main-flow manual\/vehicle proof actions/u);
+  assert.match(r12, /final `before` snapshot and `waitForDeploymentAcceptance`/u);
+  assert.match(r12, /exact DOM node plus `data-kind` plus `data-slot-index`/u);
+  assert.match(r12, /event\.target\.closest\('button\.unit-card'\)/u);
+  assert.match(r12, /diagnostics DOM-order eligible candidate `\[0\]`/u);
+  assert.match(r12, /candidate-invalidated-before-pointer/u);
+  assert.match(r12, /coordinate-invalidated-before-pointer/u);
+  assert.match(r12, /candidate-invalidated-during-pointer/u);
+  assert.match(r12, /coordinate-invalidated-during-pointer/u);
+  assert.match(r12, /no second pointer/u);
+  assert.match(r12, /document\.elementFromPoint/u);
+  assert.match(r12, /two consecutive distinct `requestAnimationFrame` samples/u);
+  assert.match(r12, /terminal immediate recheck[\s\S]*same 0\.75 CSS-pixel tolerance/u);
+  assert.match(r12, /DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000/u);
+  assert.match(r12, /DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS = 1_000/u);
+  assert.match(r12, /DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS = 2_000/u);
+  assert.match(r12, /absolute delta <= 0\.75 CSS px/u);
+  assert.match(r12, /minimum 28x24 CSS-pixel hit surface/u);
+  assert.match(r12, /targetLeft = clamp\(rail\.scrollLeft \+ cardCenterX - railCenterX, 0, rail\.scrollWidth - rail\.clientWidth\)/u);
+  assert.match(r12, /rail\.scrollTo\(\{ left: targetLeft, behavior: "instant" \}\)/u);
+  assert.match(r12, /scrollIntoViewIfNeeded/u);
+  assert.match(r12, /page\.mouse\.click/u);
+  assert.match(r12, /document remains live[\s\S]*remove it in `finally`/u);
+  assert.match(r12, /await page\/context close before returning/u);
+  assert.match(r12, /expected cancellation close remains `BROWSER_POINTER_DISPATCH_TIMEOUT`/u);
+  assert.match(r12, /pointerdown -> pointerup -> click/u);
+  assert.match(r12, /only after steps 1-3 are green, evaluate\/wait the unchanged production acceptance/u);
+  assert.match(r12, /successful ready-to-cooldown\/queue\/energy\/card\/fighter transition is acceptance/u);
+  assert.match(r12, /receipt-time pre-handler identity\/eligibility\/owner/u);
+  assert.match(r12, /Success requires the logical AND of the exact ordered trusted same-card receipt,[\s\S]*production acceptance/u);
+  assert.match(r12, /missing, partial, untrusted, mixed-owner, or out-of-order exact sequence is `BROWSER_POINTER_RECEIPT_MISSING`/u);
+  assert.match(r12, /correlated trusted sequence whose normalized owner differs[\s\S]*`PRODUCT_ACTIONABILITY_SURFACE_DIVERGENCE`/u);
+  assert.match(r12, /Neither branch may become success even if production state changes/u);
+  assert.match(r12, /hard `QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE` return to `SOL_DESIGN`/u);
+  assert.match(r12, /BROWSER_POINTER_DISPATCH_TIMEOUT/u);
+  assert.match(r12, /BROWSER_POINTER_API_ERROR/u);
+  assert.match(r12, /BROWSER_POINTER_RECEIPT_MISSING/u);
+  assert.match(r12, /PRODUCT_DEPLOYMENT_ACCEPTANCE_MISSING/u);
+  assert.match(r12, /PRODUCT_ACTIONABILITY_SURFACE_DIVERGENCE/u);
+  assert.match(r12, /deploymentPointerPreconditionDecision/u);
+  assert.match(r12, /deploymentPointerOutcome/u);
+  assert.match(r12, /awaitingAtFailure/u);
+  assert.match(r12, /lastCompletedBeforeFailure/u);
+  assert.match(r12, /unresolvedBeforeFailure/u);
+  assert.match(r12, /failure\.preFinalizationCheckpointSnapshot/u);
+  assert.match(r12, /freezeCheckpointFailureCursor/u);
+  assert.match(r12, /V100_PHASE_G_CHECKPOINT_FINALIZATION_PROBE/u);
+  assert.match(r12, /V100_PHASE_G_DEPLOYMENT_POINTER_PROBE/u);
+  assert.match(r12, /published five-file focused suite 48\/48/u);
+  assert.match(r12, /require exactly 54\/54/u);
+  assert.match(r12, /exactly five r12 pointer contracts and one failure-cursor contract/u);
+  assert.match(r12, /Scope negative source assertions to the deployment helper plus its six invocation regions/u);
+  assert.match(r12, /Existing non-deployment QA reads[\s\S]*non-WebKit capture retry elsewhere[\s\S]*not globally forbidden tokens/u);
+  assert.match(r12, /capture variant `stage06-spitter-seal`, actual stage ID `stage-nishijin-station-tunnel-seal`/u);
+  assert.match(r12, /workflow-only restoration commit/u);
+  assert.match(r12, /sole workflow exception and cannot be folded into the first candidate/u);
+  assert.match(r12, /locally committed restored-workflow HEAD/u);
+  assert.match(r12, /one `npm run qa:v100-phase-g`/u);
+  assert.match(r12, /v100-phase-g-production-evidence/u);
+  assert.match(r12, /ACTIVE_PRODUCER_CHECKPOINT_COUNT: 1/u);
+  assert.match(r12, /SOL_FINAL_REVIEW \(read-only\/adversarial\)/u);
+  assert.match(r12, /staged, unstaged, and untracked state all empty/u);
+  assert.match(r12, /`High: 0`, `Medium: 0`, `PB: 0`/u);
+  assert.match(r12, /`RELEASE_READY: YES`/u);
+  assert.match(r12, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT/u);
+  assert.match(r12, /PR #169 -> #170 -> #171/u);
+  assert.match(r12, /annotated `v1\.0\.0` tag/u);
+  assert.match(r12, /High ambiguity: 0` and `Medium ambiguity: 0/u);
+  for (const path of [
+    "scripts/v100-phase-g-production-matrix.mjs",
+    "tests/v100-phase-g-checkpoint.test.mjs",
+    "tests/v100-design-lock.test.mjs",
+    "docs/design/v1.0.0/DESIGN_LOCK.md",
+    "docs/design/v1.0.0/LUNA_HANDOFF.md",
+    "docs/PROJECT_STATE.md",
+  ]) assert.match(r12, new RegExp(path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
+  assert.match(handoff.slice(0, 700), /Active handoff: `NONE`/u);
+  assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.doesNotMatch(activeHandoff, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  assert.match(activeHandoff, /ROLE_LOCK`: `SOL_DESIGN`[\s\S]*then `SOL_REMEDIATION`/u);
+  assert.match(activeHandoff, /Issue-locked r13 publication/u);
+  assert.match(activeHandoff, /actual stage ID `stage-mugarian-executive-lab`/u);
+  assert.match(activeHandoff, /targetOwnershipHistory/u);
+  assert.match(activeHandoff, /maximum 96/u);
+  assert.match(activeHandoff, /proofActorHumanTargetFromHistory/u);
+  assert.match(activeHandoff, /Generic source-target edges[\s\S]*never substitutes/u);
+  assert.match(activeHandoff, /Stage 25 fresh 3\/3/u);
+  assert.match(activeHandoff, /ordered trio fresh 3\/3/u);
+  assert.match(r13, /QA_HARNESS_TARGET_OWNERSHIP_HISTORY \/ LIVE_ONLY_CONTACT_CHECKPOINT \+ ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION \/ DESIGN_CHANGE_REQUIRED/u);
+  for (const source of [r13, activeHandoff, projectState, currentCursor]) {
+    assert.match(source, /PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP \/ MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY \+ NO_GENERIC_SUBSTITUTION \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /r12-trio-fresh-2-d5986723-b/u);
+    assert.match(source, /living-human-target-acquired-or-not-required/u);
+  }
+  assert.match(r13, /targetOwnershipHistory/u);
+  assert.match(r13, /Once 96 unique observations exist/u);
+  assert.match(r13, /proofActorHumanTargetFromHistory/u);
+  assert.match(r13, /source side is `zombie`[\s\S]*target side is `human`[\s\S]*targetAlive === true/u);
+  assert.match(r13, /exact field names `channel`, `battleTime`, `sourceId`, `sourceSide`, `sourceKind`, `targetId`, `targetSide`, `targetKind`, `targetHp`, and `targetAlive`/u);
+  assert.match(r13, /Once 96 unique observations exist, ignore later new unique observations; never evict, replace, clear, or reorder/u);
+  assert.match(r13, /scans accepted observations in first-observed order/u);
+  assert.match(r13, /final proof-actor attack predicate succeeds[\s\S]*call `readProofActorContactState` exactly once with no added wait, retry, deployment, or attack attempt/u);
+  assert.match(r13, /A passing attack against a support object is not human-target proof/u);
+  assert.match(r13, /V100_PHASE_G_CAUSAL_HISTORY_PROBE/u);
+  assert.match(r13, /five-file focused total exactly 54\/54/u);
+  assert.match(r13, /checkpoint test remains exactly 12 tests/u);
+  assert.match(r13, /fresh Stage 25 WebKit 932x430 processes/u);
+  assert.match(r13, /Neither r12 ordered sequence counts for r13 acceptance/u);
+  assert.match(r13, /QA_HARNESS_TARGET_HISTORY_CONSUMER_DIVERGENCE/u);
+  assert.match(r13, /PROOF_ACTOR_HUMAN_TARGET_NOT_ESTABLISHED/u);
+  assert.match(r13, /QA_HARNESS_TARGET_IDENTITY_OBSERVATION_GAP/u);
+  assert.match(r13, /LOOP_ITERATION`: `2`/u);
+  assert.match(r13, /SAME_GATE_REPEAT_COUNT`: `1` for the current Stage 25/u);
+  for (const source of [r12, r13, activeHandoff, currentCursor]) {
+    assert.match(source, /workflow-restoration promotion HEAD|workflow-only iteration-3 HEAD/u);
+    assert.match(source, /remain `2`|remain iteration 2|iteration 3|`2`を維持/u);
+  }
+  assert.doesNotMatch(currentProcess, /-> LUNA_IMPLEMENTATION|`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`|`PRODUCER_FINAL_ACCEPTANCE`/u);
+  assert.doesNotMatch(currentCursor, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `1`/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {

@@ -80,6 +80,7 @@ const results = [];
 const phaseGBrowsers = new Map();
 const phaseGCheckpointRecorders = new Set();
 const pageCheckpointRecorders = new WeakMap();
+const phaseGPageInputTails = new WeakMap();
 
 const BATTLE_EXTRA_CHECKPOINTS = Object.freeze([
   "route-opened",
@@ -99,7 +100,12 @@ const BATTLE_EXTRA_CHECKPOINTS = Object.freeze([
 ]);
 const RESOLVED_CHECKPOINT_STATUSES = new Set(["completed", "observed", "not-required", "absent"]);
 const DEPLOYMENT_QUEUE_CAPACITY = 3;
-const DEPLOYMENT_ACTIONABILITY_DEADLINE_MS = 2_000;
+const DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000;
+const DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS = 1_000;
+const DEPLOYMENT_POINTER_MAX_SAMPLES = 12;
+const DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS = 2_000;
+const DEPLOYMENT_POINTER_ACCEPTANCE_DEADLINE_MS = 5_000;
+const DEPLOYMENT_POINTER_STABILITY_EPSILON_PX = 0.75;
 
 function deploymentEligibilityForCard(card, battle) {
   const reasons = [];
@@ -109,7 +115,8 @@ function deploymentEligibilityForCard(card, battle) {
   const queue = Array.isArray(battle?.deployQueue) ? battle.deployQueue : null;
   const domReady = card?.rect?.visible === true
     && card?.state === "ready"
-    && card?.ariaDisabled === "false";
+    && card?.ariaDisabled === "false"
+    && card?.disabled !== true;
   const liveBattle = battle?.screen === "battle"
     && battle.running === true
     && battle.paused !== true
@@ -141,23 +148,229 @@ function deploymentCandidatesFromDiagnostics(diagnostics, excludedKinds = new Se
     .filter((card) => !excluded.has(card.kind) && card.actionability?.eligible === true);
 }
 
-function isDeploymentActionabilityError(error) {
-  return /TimeoutError:|not actionable|not attached|intercepts pointer|not visible|outside of the viewport|receives pointer events|element is obscured/i.test(String(error));
+function deploymentCardIdentity(card) {
+  if (!card) return null;
+  return {
+    nodeId: card.nodeId ?? null,
+    kind: card.kind ?? null,
+    slot: card.slot ?? null,
+  };
 }
 
-function deploymentActionabilityOutcome({ error, after, requestedKind }) {
-  const errorText = String(error);
-  const evaluationText = String(after?.evaluateError ?? "");
-  if (isTransientBrowserClosure(error)
-    || after?.pageClosed === true
-    || /page crash|target (?:page, context or browser has been closed|crashed)|browser has been closed/i.test(`${errorText}\n${evaluationText}`)) {
-    return "lifecycle-loss";
+function sameDeploymentCardIdentity(left, right) {
+  return Boolean(left && right)
+    && left.nodeId === right.nodeId
+    && left.kind === right.kind
+    && left.slot === right.slot;
+}
+
+function sameNormalizedDeploymentOwner(left, right) {
+  if (left === null && right === null) return true;
+  return sameDeploymentCardIdentity(left, right);
+}
+
+function stableDeploymentRect(left, right) {
+  if (!left || !right) return false;
+  return ["x", "y", "width", "height"].every((key) => (
+    Number.isFinite(Number(left[key]))
+    && Number.isFinite(Number(right[key]))
+    && Math.abs(Number(left[key]) - Number(right[key])) <= DEPLOYMENT_POINTER_STABILITY_EPSILON_PX
+  ));
+}
+
+function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [], terminal = null, lifecycle = null } = {}) {
+  if (lifecycle?.lost === true) {
+    return { status: "lifecycle-loss", pointerCount: 0, retry: false, reason: lifecycle.reason ?? "independent-lifecycle-loss" };
   }
-  if (!isDeploymentActionabilityError(error)) return "non-actionability-error";
-  const liveCandidate = after?.cards?.find((card) => card.kind === requestedKind);
-  return liveCandidate?.actionability?.eligible === true
-    ? "QA_HARNESS_ACTIONABILITY_DIVERGENCE"
-    : "candidate-invalidated";
+  const expected = expectedIdentity ?? deploymentCardIdentity(samples[0]?.card);
+  if (terminal) {
+    if (samples.length < 2) {
+      return { status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", pointerCount: 0, reason: "two-consecutive-rAF-samples-required" };
+    }
+    const sampleDecision = deploymentPointerPreconditionDecision({ expectedIdentity: expected, samples });
+    if (sampleDecision.status !== "ready-for-pointer") return sampleDecision;
+  }
+  const current = terminal ?? samples.at(-1) ?? null;
+  if (!expected || !current?.card) {
+    return { status: "candidate-invalidated-before-pointer", pointerCount: 0, reason: "candidate-missing" };
+  }
+  const currentIdentity = deploymentCardIdentity(current.card);
+  if (!sameDeploymentCardIdentity(expected, currentIdentity)
+    || current.card.actionability?.eligible !== true) {
+    return {
+      status: "candidate-invalidated-before-pointer",
+      pointerCount: 0,
+      reason: !sameDeploymentCardIdentity(expected, currentIdentity) ? "candidate-identity-changed" : "candidate-ineligible",
+      expectedIdentity: expected,
+      actualIdentity: currentIdentity,
+    };
+  }
+  const previous = terminal ? samples.at(-1) : samples.at(-2);
+  const previousIdentity = deploymentCardIdentity(previous?.card);
+  const actionable = current.card.rect?.visible === true
+    && Number(current.card.rect.width) >= 28
+    && Number(current.card.rect.height) >= 24
+    && current.card.disabled !== true
+    && current.card.centerInCard === true
+    && current.card.centerInViewport === true
+    && current.card.centerInRail === true
+    && current.card.viewportIntersection === true
+    && current.card.railIntersection === true
+    && current.card.hitOwnerMatches === true
+    && current.card.pointerEvents !== "none";
+  if (!actionable) {
+    return {
+      status: terminal ? "coordinate-invalidated-before-pointer" : "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      pointerCount: 0,
+      reason: current.card.hitOwnerMatches !== true
+        ? "pointer-owner-mismatch"
+        : current.card.centerInViewport !== true || current.card.centerInRail !== true
+          ? "candidate-offviewport"
+          : "candidate-not-actionable",
+    };
+  }
+  if (!previous
+    || !sameDeploymentCardIdentity(expected, previousIdentity)
+    || previous.card.actionability?.eligible !== true
+    || previous.card.rect?.visible !== true
+    || Number(previous.card.rect.width) < 28
+    || Number(previous.card.rect.height) < 24
+    || previous.card.disabled === true
+    || previous.card.centerInCard !== true
+    || previous.card.centerInViewport !== true
+    || previous.card.centerInRail !== true
+    || previous.card.viewportIntersection !== true
+    || previous.card.railIntersection !== true
+    || previous.card.hitOwnerMatches !== true
+    || previous.card.pointerEvents === "none"
+    || !stableDeploymentRect(previous.card.rect, current.card.rect)
+    || Math.abs(Number(previous.card.rail?.scrollLeft ?? 0) - Number(current.card.rail?.scrollLeft ?? 0)) > DEPLOYMENT_POINTER_STABILITY_EPSILON_PX
+    || (!terminal && previous.frameToken === current.frameToken)) {
+    return {
+      status: terminal ? "coordinate-invalidated-before-pointer" : "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      pointerCount: 0,
+      reason: "candidate-not-stable",
+    };
+  }
+  return {
+    status: "ready-for-pointer",
+    pointerCount: 0,
+    identity: expected,
+    point: current.card.center,
+  };
+}
+
+function deploymentPointerOutcome({ dispatch = {}, receipts = [], expectedIdentity, point, attemptId = null, acceptance = null, post = null } = {}) {
+  if (dispatch.status === "timeout") return { status: "BROWSER_POINTER_DISPATCH_TIMEOUT", pointerCount: 1, retry: false };
+  if (dispatch.status === "lifecycle-error") return { status: "lifecycle-loss", pointerCount: 1, retry: false };
+  if (dispatch.status !== "completed") return { status: "BROWSER_POINTER_API_ERROR", pointerCount: 1, retry: false };
+  const correlated = receipts.filter((receipt) => (
+    receipt?.attemptId === attemptId
+    && receipt?.button === 0
+    && Number.isFinite(Number(receipt.clientX))
+    && Number.isFinite(Number(receipt.clientY))
+    && Math.abs(Number(receipt.clientX) - Number(point?.x)) <= 1
+    && Math.abs(Number(receipt.clientY) - Number(point?.y)) <= 1
+    && Number(receipt.elapsedMs) >= 0
+    && receipt.elapsedSinceDispatchStartMs !== null
+    && receipt.elapsedSinceDispatchStartMs !== undefined
+    && Number(receipt.elapsedSinceDispatchStartMs) >= 0
+    && (!Number.isFinite(Number(dispatch.elapsedMs)) || Number(receipt.elapsedMs) <= Number(dispatch.elapsedMs) + 1_000)
+    && (!Number.isFinite(Number(dispatch.elapsedMs)) || Number(receipt.elapsedSinceDispatchStartMs) <= Number(dispatch.elapsedMs) + 1_000)
+  ));
+  const orderedTypes = correlated.map((receipt) => receipt.type);
+  const exactOrder = correlated.length === 3
+    && orderedTypes[0] === "pointerdown"
+    && orderedTypes[1] === "pointerup"
+    && orderedTypes[2] === "click";
+  const allTrusted = correlated.every((receipt) => receipt.isTrusted === true);
+  const exactMouseSequence = correlated.every((receipt) => receipt.pointerType === "mouse"
+      && Number.isFinite(Number(receipt.sequence))
+      && Number.isFinite(Number(receipt.elapsedMs))
+      && Number.isFinite(Number(receipt.elapsedSinceDispatchStartMs)))
+    && correlated.every((receipt, index) => index === 0
+      || Number(receipt.sequence) > Number(correlated[index - 1].sequence))
+    && correlated.every((receipt, index) => index === 0
+      || Number(receipt.elapsedMs) >= Number(correlated[index - 1].elapsedMs))
+    && correlated.every((receipt, index) => index === 0
+      || Number(receipt.elapsedSinceDispatchStartMs) >= Number(correlated[index - 1].elapsedSinceDispatchStartMs));
+  const oneOtherOwner = exactOrder
+    && allTrusted
+    && exactMouseSequence
+    && correlated.every((receipt) => sameNormalizedDeploymentOwner(correlated[0]?.owner ?? null, receipt.owner ?? null))
+    && !sameDeploymentCardIdentity(expectedIdentity, correlated[0]?.owner);
+  if (oneOtherOwner) {
+    return { status: "PRODUCT_ACTIONABILITY_SURFACE_DIVERGENCE", pointerCount: 1, retry: false };
+  }
+  if (!exactOrder
+    || !allTrusted
+    || !exactMouseSequence
+    || correlated.some((receipt) => !sameDeploymentCardIdentity(expectedIdentity, receipt.owner))) {
+    return { status: "BROWSER_POINTER_RECEIPT_MISSING", pointerCount: 1, retry: false };
+  }
+  if (correlated.some((receipt) => (
+    !sameDeploymentCardIdentity(expectedIdentity, receipt.preHandler?.identity)
+    || receipt.preHandler?.eligible !== true
+    || !sameDeploymentCardIdentity(expectedIdentity, deploymentCardIdentity(receipt.preHandler?.card))
+    || deploymentEligibilityForCard(receipt.preHandler?.card, receipt.preHandler?.battle).eligible !== true
+  ))) {
+    return { status: "candidate-invalidated-during-pointer", pointerCount: 1, retry: false };
+  }
+  if (correlated.some((receipt) => !sameDeploymentCardIdentity(expectedIdentity, receipt.preHandler?.hitOwner))) {
+    return { status: "coordinate-invalidated-during-pointer", pointerCount: 1, retry: false };
+  }
+  if (acceptance === null) return { status: "receipt-verified", pointerCount: 1, retry: false };
+  if (acceptance !== true) {
+    if (post?.lifecycleLost === true) return { status: "lifecycle-loss", pointerCount: 1, retry: false };
+    if (post?.candidateMissing === true) return { status: "candidate-invalidated-during-pointer", pointerCount: 1, retry: false };
+    if (post?.card && !sameDeploymentCardIdentity(expectedIdentity, deploymentCardIdentity(post.card))) {
+      return { status: "candidate-invalidated-during-pointer", pointerCount: 1, retry: false };
+    }
+    if (post?.card && (post.card.hitOwnerMatches !== true || !stableDeploymentRect(post.card.rect, post.beforeRect))) {
+      return { status: "coordinate-invalidated-during-pointer", pointerCount: 1, retry: false };
+    }
+    return { status: "PRODUCT_DEPLOYMENT_ACCEPTANCE_MISSING", pointerCount: 1, retry: false };
+  }
+  return { status: "accepted", pointerCount: 1, retry: false };
+}
+
+function cloneDiagnosticValue(value) {
+  return value === undefined ? null : JSON.parse(JSON.stringify(value));
+}
+
+function deepFreezeDiagnosticValue(value) {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const nested of Object.values(value)) deepFreezeDiagnosticValue(nested);
+  return Object.freeze(value);
+}
+
+function isDeepFrozenDiagnosticValue(value) {
+  if (!value || typeof value !== "object") return true;
+  return Object.isFrozen(value) && Object.values(value).every(isDeepFrozenDiagnosticValue);
+}
+
+function freezeCheckpointFailureCursor(snapshotValue) {
+  return deepFreezeDiagnosticValue(cloneDiagnosticValue(snapshotValue ?? {}));
+}
+
+function buildCheckpointFailurePayload(snapshotValue, details = {}) {
+  const frozen = freezeCheckpointFailureCursor(snapshotValue);
+  const awaitingAtFailure = cloneDiagnosticValue(frozen.awaiting ?? null);
+  const lastCompletedBeforeFailure = frozen.lastCompletedCheckpoint ?? null;
+  const unresolvedBeforeFailure = [...(frozen.unresolvedCheckpoints ?? [])];
+  return {
+    ...frozen,
+    awaitingAtFailure,
+    lastCompletedBeforeFailure,
+    unresolvedBeforeFailure,
+    failure: {
+      ...cloneDiagnosticValue(details),
+      awaitingAtFailure,
+      lastCompletedBeforeFailure,
+      unresolvedBeforeFailure,
+      preFinalizationCheckpointSnapshot: frozen,
+    },
+  };
 }
 
 function checkpointRecorderFor(page) {
@@ -301,42 +514,30 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
 
   const finalizeFailure = (details = {}) => {
     if (failurePayload) return;
-    const current = snapshot();
-    for (const name of current.unresolvedCheckpoints) {
-      const absence = [
-        "proof-actor-mounted-or-absent",
-        "living-human-target-acquired-or-not-required",
-        "proof-unit-deployed-and-attacked-or-not-required",
-      ].includes(name);
-      mark(name, absence ? "absent" : "unresolved", {
-        reason: "diagnostic-failure-before-checkpoint-completion",
-        lastReadableState: current.latestReadableState,
-      });
-    }
-    failurePayload = {
-      ...snapshot(),
-      failure: {
-        ...details,
-        lastCompletedCheckpoint: snapshot().lastCompletedCheckpoint,
-        unresolvedCheckpoints: snapshot().unresolvedCheckpoints,
-        awaiting: snapshot().awaiting,
-      },
-    };
+    failurePayload = buildCheckpointFailurePayload(snapshot(), details);
   };
 
   async function writeFailureFile() {
     if (!failureFilePath || !failurePayload) return;
-    await writeFile(failureFilePath, `${JSON.stringify({ ...failurePayload, ...snapshot() }, null, 2)}\n`).catch(() => {});
+    await writeFile(failureFilePath, `${JSON.stringify(failurePayload, null, 2)}\n`).catch(() => {});
   }
 
   const persistFailure = async ({ label, error, failureState, diagnostics }) => {
     const safeLabel = `${contract.variant}-${engineName}-${viewportLabel(viewport)}`;
     const diagnosticsDir = path.join(evidenceDir, "diagnostics");
+    const structuredError = error && typeof error === "object" ? {
+      name: error.name ?? null,
+      code: error.code ?? null,
+      pointerCount: error.pointerCount ?? null,
+      terminalInputFailure: error.phaseGTerminalInputFailure === true,
+      pointerEvidence: cloneDiagnosticValue(error.phaseGPointerEvidence ?? null),
+      receiptCleanupFailure: cloneDiagnosticValue(error.phaseGReceiptCleanupFailure ?? null),
+    } : null;
     await mkdir(diagnosticsDir, { recursive: true });
     failureFilePath = path.join(diagnosticsDir, `${safeLabel}.json`);
     failureScreenshotPath = path.join(diagnosticsDir, `${safeLabel}.png`);
     setLatestReadableState(failureState);
-    finalizeFailure({ label, error: String(error), diagnostics });
+    finalizeFailure({ label, error: String(error), structuredError, diagnostics });
     try {
       if (!page.isClosed()) await page.screenshot({ path: failureScreenshotPath, animations: "disabled" });
     } catch {
@@ -344,13 +545,14 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
     }
     failurePayload.failure = {
       ...failurePayload.failure,
+      structuredError,
       screenshot: failureScreenshotPath ? relativeEvidence(failureScreenshotPath) : null,
     };
     await writeFailureFile();
     return {
       file: relativeEvidence(failureFilePath),
       screenshot: failureScreenshotPath ? relativeEvidence(failureScreenshotPath) : null,
-      ...snapshot(),
+      ...failurePayload,
     };
   };
 
@@ -426,8 +628,6 @@ const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
   }),
 ));
 
-await mkdir(evidenceDir, { recursive: true });
-
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -442,15 +642,63 @@ if (process.env.V100_PHASE_G_CONTRACT_PROBE === "1") {
     })),
   });
   const sample = withActionability({ cards: input.cards ?? [], battle: input.battle ?? null });
-  const after = input.after ? withActionability(input.after) : null;
   const candidates = deploymentCandidatesFromDiagnostics(sample, new Set(input.excludedKinds ?? []));
-  const outcome = input.error
-    ? deploymentActionabilityOutcome({ error: input.error, after, requestedKind: input.requestedKind ?? null })
-    : null;
   console.log(JSON.stringify({
     candidates: candidates.map((card) => card.kind),
-    outcome,
     sample: sample.cards.map((card) => ({ kind: card.kind, actionability: card.actionability })),
+  }));
+  process.exit(0);
+}
+
+if (process.env.V100_PHASE_G_DEPLOYMENT_POINTER_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_DEPLOYMENT_POINTER_PROBE_INPUT ?? "{}");
+  console.log(JSON.stringify({
+    precondition: input.precondition
+      ? deploymentPointerPreconditionDecision(input.precondition)
+      : null,
+    outcome: input.outcome
+      ? deploymentPointerOutcome(input.outcome)
+      : null,
+  }));
+  process.exit(0);
+}
+
+if (process.env.V100_PHASE_G_CHECKPOINT_FINALIZATION_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_CHECKPOINT_FINALIZATION_PROBE_INPUT ?? "{}");
+  let payload = null;
+  const finalize = (details) => {
+    if (payload) return payload;
+    payload = buildCheckpointFailurePayload(input.snapshot ?? {}, details ?? {});
+    return payload;
+  };
+  const first = finalize(input.details ?? {});
+  const firstSerialized = JSON.stringify(first);
+  const frozenSnapshot = first.failure.preFinalizationCheckpointSnapshot;
+  let mutationRejected = false;
+  try {
+    frozenSnapshot.awaiting = { predicate: "mutated" };
+  } catch {
+    mutationRejected = true;
+  }
+  const mutationUnchanged = JSON.stringify(first) === firstSerialized;
+  const second = finalize(input.secondDetails ?? { label: "second-finalization-must-not-win" });
+  const persisted = {
+    ...first,
+    postFinalizationAppend: cloneDiagnosticValue(input.laterAppend ?? null),
+  };
+  console.log(JSON.stringify({
+    payload: first,
+    persisted,
+    audit: {
+      nestedDeepFrozen: isDeepFrozenDiagnosticValue(frozenSnapshot),
+      mutationRejected,
+      mutationUnchanged,
+      firstWriteWins: second === first && JSON.stringify(second) === firstSerialized,
+      attemptedOverlayIgnored: input.attemptedOverlay === undefined
+        || persisted.awaitingAtFailure === first.awaitingAtFailure
+        && persisted.lastCompletedBeforeFailure === first.lastCompletedBeforeFailure
+        && JSON.stringify(persisted.unresolvedBeforeFailure) === JSON.stringify(first.unresolvedBeforeFailure),
+    },
   }));
   process.exit(0);
 }
@@ -461,9 +709,12 @@ if (process.env.V100_PHASE_G_CAUSAL_HISTORY_PROBE === "1") {
   for (const frame of input.observerFrames ?? []) history = mergeCombatActivityHistory(history, frame);
   history = mergeCombatActivityHistory(history, input.waitSnapshot ?? {});
   const proof = buildCombatCausalProof(input.proofSamples ?? [], history);
-  console.log(JSON.stringify({ history, proof }));
+  const humanTarget = proofActorHumanTargetFromHistory(history.targetOwnershipHistory, input.proofActor);
+  console.log(JSON.stringify({ history, proof, humanTarget }));
   process.exit(0);
 }
+
+await mkdir(evidenceDir, { recursive: true });
 
 function viewportLabel(viewport) {
   return `${viewport.width}x${viewport.height}`;
@@ -561,11 +812,614 @@ async function click(page, locator, label) {
   await locator.click();
 }
 
-async function clickDeploymentCard(page, locator, label) {
-  await locator.waitFor({ state: "visible", timeout: DEPLOYMENT_ACTIONABILITY_DEADLINE_MS });
-  const box = await locator.boundingBox();
-  invariant(box && box.width >= 28 && box.height >= 24, `${label} has unusable hit target: ${JSON.stringify(box)}`);
-  await locator.click({ timeout: DEPLOYMENT_ACTIONABILITY_DEADLINE_MS });
+function phaseGPageInputState(page) {
+  let state = phaseGPageInputTails.get(page);
+  if (!state) {
+    state = { tail: Promise.resolve(), terminalError: null };
+    phaseGPageInputTails.set(page, state);
+  }
+  return state;
+}
+
+async function withPhaseGPageInputLock(page, operation) {
+  const state = phaseGPageInputState(page);
+  const previous = state.tail;
+  let release;
+  state.tail = new Promise((resolve) => { release = resolve; });
+  await previous.catch(() => {});
+  try {
+    if (state.terminalError) throw state.terminalError;
+    return await operation();
+  } catch (error) {
+    if (error?.phaseGTerminalInputFailure === true && !state.terminalError) state.terminalError = error;
+    throw error;
+  } finally {
+    release();
+  }
+}
+
+function phaseGPointerFailure(code, evidence = {}, pointerCount = 0) {
+  const error = new Error(`${code}: ${JSON.stringify(evidence)}`);
+  error.name = "PhaseGPointerContractError";
+  error.code = code;
+  error.pointerCount = pointerCount;
+  error.phaseGTerminalInputFailure = true;
+  error.phaseGPointerEvidence = evidence;
+  return error;
+}
+
+async function withDeploymentPointerDeadline(promise, deadlineMs, code, evidence = {}) {
+  let timeoutId;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(phaseGPointerFailure(code, { ...evidence, deadlineMs }, 0)), deadlineMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function observePromiseWithin(promise, timeoutMs) {
+  const boundedMs = Math.max(1, Math.floor(Number(timeoutMs) || 1));
+  let timeoutId;
+  try {
+    return await Promise.race([
+      promise.then(
+        (value) => ({ status: "fulfilled", value }),
+        (error) => ({ status: "rejected", error: String(error) }),
+      ),
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve({ status: "timeout", timeoutMs: boundedMs }), boundedMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function terminateTimedOutDeploymentPointer(page, pointerPromise) {
+  const context = page.context();
+  const browser = context.browser();
+  const lifecycle = [];
+  const pageClosedBeforeCancellation = page.isClosed();
+  const browserConnectedBeforeCancellation = browser?.isConnected() ?? null;
+  const independentLifecycleLoss = pageClosedBeforeCancellation || browserConnectedBeforeCancellation === false;
+  const attemptClose = async (owner, operation, closed) => {
+    const startedAt = Date.now();
+    try {
+      await operation();
+      const verifiedClosed = closed();
+      lifecycle.push({ owner, status: "fulfilled", verifiedClosed, elapsedMs: Date.now() - startedAt });
+      return verifiedClosed;
+    } catch (error) {
+      const verifiedClosed = closed();
+      lifecycle.push({ owner, status: "rejected", error: String(error), verifiedClosed, elapsedMs: Date.now() - startedAt });
+      return verifiedClosed;
+    }
+  };
+  let closed = independentLifecycleLoss;
+  // Never unwind the input mutex while a timed-out pointer can still settle
+  // against a live document. Browser disposal is therefore awaited without a
+  // secondary deadline; rejected owners fall through to the remaining owners.
+  if (!closed && browser) closed = await attemptClose("browser", () => browser.close(), () => page.isClosed() || !browser.isConnected());
+  if (!closed) closed = await attemptClose("context", () => context.close(), () => page.isClosed());
+  if (!closed) closed = await attemptClose("page", () => page.close({ runBeforeUnload: false }), () => page.isClosed());
+  if (!closed) {
+    await new Promise((resolve) => {
+      const verify = () => {
+        if (page.isClosed() || (browser && !browser.isConnected())) resolve();
+      };
+      page.once("close", verify);
+      browser?.once("disconnected", verify);
+      verify();
+    });
+    closed = page.isClosed() || (browser ? !browser.isConnected() : false);
+  }
+  const pointerSettlement = await observePromiseWithin(pointerPromise, 250);
+  const evidence = {
+    lifecycle,
+    pointerSettlement: { ...pointerSettlement, value: undefined },
+    pageClosedBeforeCancellation,
+    browserConnectedBeforeCancellation,
+    independentLifecycleLoss,
+    pageClosed: page.isClosed(),
+    browserConnected: browser?.isConnected() ?? null,
+    terminalLifecycleVerified: closed,
+    latePointerFulfillment: pointerSettlement.status === "fulfilled",
+  };
+  return evidence;
+}
+
+async function centerDeploymentCardInRail(page, identity) {
+  return page.evaluate((expectedIdentity) => {
+    const registry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
+      ids: new WeakMap(),
+      next: 1,
+    };
+    const nodeIdFor = (node) => {
+      if (!registry.ids.has(node)) registry.ids.set(node, `deployment-card-${registry.next++}`);
+      return registry.ids.get(node);
+    };
+    const card = [...document.querySelectorAll("button.unit-card")].find((candidate) => (
+      nodeIdFor(candidate) === expectedIdentity.nodeId
+      && candidate.getAttribute("data-kind") === expectedIdentity.kind
+      && candidate.getAttribute("data-slot-index") === expectedIdentity.slot
+    ));
+    if (!card) return { status: "candidate-invalidated-before-pointer", reason: "candidate-node-missing" };
+    const rail = card.closest(".unit-cards");
+    if (!rail) return { status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", reason: "unit-cards-rail-missing" };
+    const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(value, maximum));
+    const cardRect = card.getBoundingClientRect();
+    const railRect = rail.getBoundingClientRect();
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const railCenterX = railRect.left + railRect.width / 2;
+    const targetLeft = clamp(rail.scrollLeft + cardCenterX - railCenterX, 0, rail.scrollWidth - rail.clientWidth);
+    rail.scrollTo({ left: targetLeft, behavior: "instant" });
+    return { status: "centered", targetLeft };
+  }, identity);
+}
+
+async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity) {
+  return page.evaluate(({ receiptAttemptId, identity }) => {
+    const nodeRegistry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
+      ids: new WeakMap(),
+      next: 1,
+    };
+    const nodeIdFor = (node) => {
+      if (!nodeRegistry.ids.has(node)) nodeRegistry.ids.set(node, `deployment-card-${nodeRegistry.next++}`);
+      return nodeRegistry.ids.get(node);
+    };
+    const receiptRegistry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__ ??= new Map();
+    const receipts = [];
+    const receiptStartedAt = performance.now();
+    const handler = (event) => {
+      const observedAtPerformanceMs = performance.now();
+      const dispatchStartedAtPerformanceMs = receiptRegistry.get(receiptAttemptId)?.dispatchStartedAtPerformanceMs ?? null;
+      const target = event.target instanceof Element ? event.target : null;
+      const owner = target?.closest("button.unit-card") ?? null;
+      const hitTarget = document.elementFromPoint(event.clientX, event.clientY);
+      const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      const ariaLabel = owner?.getAttribute("aria-label") ?? "";
+      const costMatch = ariaLabel.match(/コスト\s*(\d+)/u);
+      const card = owner ? {
+        nodeId: nodeIdFor(owner),
+        kind: owner.getAttribute("data-kind"),
+        slot: owner.getAttribute("data-slot-index"),
+        state: owner.getAttribute("data-state"),
+        ariaDisabled: owner.getAttribute("aria-disabled"),
+        disabled: owner.disabled === true,
+        cost: costMatch ? Number(costMatch[1]) : null,
+        rect: { visible: owner.getBoundingClientRect().width > 0 && owner.getBoundingClientRect().height > 0 },
+      } : null;
+      const battle = snapshot ? {
+        screen: snapshot.screen ?? null,
+        running: snapshot.running === true,
+        paused: snapshot.paused === true,
+        over: snapshot.over === true,
+        won: snapshot.won === true,
+        energy: Number(snapshot.energy ?? Number.NaN),
+        deployQueue: snapshot.deployQueue ?? [],
+        deployCooldowns: snapshot.deployCooldowns ?? {},
+      } : null;
+      const reasons = [];
+      const numericCost = Number(card?.cost);
+      const energy = Number(battle?.energy);
+      const cooldown = card?.kind ? Number(battle?.deployCooldowns?.[card.kind]) : Number.NaN;
+      if (!card?.kind) reasons.push("missing-kind");
+      if (!(card?.rect?.visible === true && card?.state === "ready" && card?.ariaDisabled === "false" && card?.disabled !== true)) reasons.push("dom-not-deployable");
+      if (!(battle?.screen === "battle" && battle.running === true && battle.paused !== true && battle.over !== true && battle.won !== true)) reasons.push("runtime-not-live");
+      if (!Array.isArray(battle?.deployQueue) || battle.deployQueue.length >= 3) reasons.push("deployment-queue-full");
+      if (!Number.isFinite(numericCost)) reasons.push("cost-not-finite");
+      if (!Number.isFinite(energy) || energy < numericCost) reasons.push("insufficient-energy");
+      if (!Number.isFinite(cooldown) || cooldown !== 0) reasons.push("cooldown-not-zero");
+      receipts.push({
+        sequence: receipts.length + 1,
+        attemptId: receiptAttemptId,
+        elapsedMs: Math.round((observedAtPerformanceMs - receiptStartedAt) * 100) / 100,
+        elapsedSinceDispatchStartMs: Number.isFinite(Number(dispatchStartedAtPerformanceMs))
+          ? Math.round((observedAtPerformanceMs - dispatchStartedAtPerformanceMs) * 100) / 100
+          : null,
+        type: event.type,
+        isTrusted: event.isTrusted,
+        pointerType: event.pointerType ?? "mouse",
+        button: event.button,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        targetNodeName: target?.nodeName ?? null,
+        targetClassName: target instanceof Element ? target.getAttribute("class") : null,
+        owner: card ? { nodeId: card.nodeId, kind: card.kind, slot: card.slot } : null,
+        expectedIdentity: identity,
+        preHandler: {
+          identity: card ? { nodeId: card.nodeId, kind: card.kind, slot: card.slot } : null,
+          eligible: reasons.length === 0,
+          reasons,
+          card,
+          battle,
+          hitOwner: hitOwner ? {
+            nodeId: nodeIdFor(hitOwner),
+            kind: hitOwner.getAttribute("data-kind"),
+            slot: hitOwner.getAttribute("data-slot-index"),
+          } : null,
+        },
+      });
+    };
+    for (const type of ["pointerdown", "pointerup", "click"]) document.addEventListener(type, handler, true);
+    receiptRegistry.set(receiptAttemptId, { receipts, handler, dispatchStartedAtPerformanceMs: null });
+    return true;
+  }, { receiptAttemptId: attemptId, identity: expectedIdentity });
+}
+
+async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
+  if (page.isClosed()) return { status: "page-closed", receipts: [] };
+  if (timeoutMs <= 0) return { status: "timeout", timeoutMs: 0, receipts: [] };
+  const result = await observePromiseWithin(page.evaluate((receiptAttemptId) => (
+    window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId)?.receipts ?? []
+  ), attemptId), timeoutMs);
+  return {
+    ...result,
+    value: undefined,
+    receipts: result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [],
+  };
+}
+
+async function waitForDeploymentPointerReceipts(page, attemptId, deadlineAt) {
+  const reads = [];
+  let receipts = [];
+  while (Date.now() < deadlineAt && !page.isClosed()) {
+    const read = await readDeploymentPointerReceipts(page, attemptId, deadlineAt - Date.now());
+    reads.push({ ...read, receiptCount: read.receipts.length });
+    if (read.status === "fulfilled") receipts = read.receipts;
+    if (receipts.length >= 3 && receipts.some((receipt) => receipt.type === "click")) break;
+    if (read.status !== "fulfilled") break;
+    await new Promise((resolve) => setTimeout(resolve, Math.min(8, Math.max(1, deadlineAt - Date.now()))));
+  }
+  return { receipts, reads };
+}
+
+async function removeDeploymentPointerReceipt(page, attemptId) {
+  if (page.isClosed()) return { status: "disposed-with-page" };
+  const removal = await observePromiseWithin(page.evaluate((receiptAttemptId) => {
+    const registry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__;
+    const entry = registry?.get(receiptAttemptId);
+    if (!entry) return;
+    for (const type of ["pointerdown", "pointerup", "click"]) document.removeEventListener(type, entry.handler, true);
+    registry.delete(receiptAttemptId);
+  }, attemptId), DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS);
+  if (removal.status !== "fulfilled") {
+    throw phaseGPointerFailure("QA_HARNESS_POINTER_RECEIPT_CLEANUP_DIVERGENCE", { attemptId, removal }, 1);
+  }
+  return { status: "removed" };
+}
+
+async function performVerifiedDeploymentPointer(page, {
+  requestedKind = null,
+  requestedSlot = null,
+  phase = "deployment-pointer",
+} = {}) {
+  return withPhaseGPageInputLock(page, async () => {
+    const recorder = checkpointRecorderFor(page);
+    const recordPointerResult = (result) => {
+      const entry = {
+        requestedKind: result.requestedKind ?? requestedKind,
+        requestedSlot,
+        action: result.status,
+        accepted: result.accepted === true,
+        pointerCount: result.pointerCount ?? 0,
+        samples: result.samples ?? result.evidence?.samples ?? [],
+        diagnostics: result.diagnostics ?? null,
+        evidence: result.evidence ?? null,
+      };
+      recorder?.recordDeploymentAttempt(entry);
+      recorder?.setLatestReadableState(entry);
+      return result;
+    };
+    const preflightStartedAt = Date.now();
+    const preflightRemaining = () => DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS - (Date.now() - preflightStartedAt);
+    const preflightStep = async (operationFactory, code = "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", evidence = {}) => {
+      const remaining = preflightRemaining();
+      if (remaining <= 0) {
+        const failureEvidence = { phase, ...evidence, reason: "preflight-budget-exhausted" };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure(code, failureEvidence, 0);
+      }
+      try {
+        return await withDeploymentPointerDeadline(
+          operationFactory(),
+          Math.min(remaining, DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS),
+          code,
+          { phase, ...evidence },
+        );
+      } catch (error) {
+        if (error?.phaseGTerminalInputFailure === true) {
+          recorder?.setLatestReadableState(error.phaseGPointerEvidence ?? { phase, ...evidence, error: String(error) });
+          throw error;
+        }
+        const failureEvidence = { phase, ...evidence, error: String(error) };
+        recorder?.setLatestReadableState(failureEvidence);
+        if (isTransientBrowserClosure(error)) {
+          throw phaseGPointerFailure("lifecycle-loss", failureEvidence, 0);
+        }
+        throw phaseGPointerFailure(code, failureEvidence, 0);
+      }
+    };
+    const initial = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
+      requestedKind,
+      requestedSlot,
+      phase: `${phase}:final-requery`,
+    }));
+    recorder?.setLatestReadableState(initial);
+    if (initial.pageClosed || initial.evaluateError) {
+      throw phaseGPointerFailure("lifecycle-loss", { phase, initial }, 0);
+    }
+    const candidate = requestedKind
+      ? initial.cards?.find((card) => card.kind === requestedKind)
+      : deploymentCandidatesFromDiagnostics(initial)[0];
+    if (!candidate || candidate.actionability?.eligible !== true) {
+      return recordPointerResult({
+        status: "candidate-invalidated-before-pointer",
+        pointerCount: 0,
+        accepted: false,
+        requestedKind,
+        requestedSlot,
+        diagnostics: initial,
+      });
+    }
+    const identity = deploymentCardIdentity(candidate);
+    const centered = await preflightStep(() => centerDeploymentCardInRail(page, identity));
+    if (centered.status === "candidate-invalidated-before-pointer") {
+      return recordPointerResult({ ...centered, pointerCount: 0, accepted: false, requestedKind: candidate.kind, requestedSlot, diagnostics: initial });
+    }
+    if (centered.status !== "centered") {
+      throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { phase, identity, centered }, 0);
+    }
+
+    const samples = [];
+    let stableDecision = null;
+    for (let sampleIndex = 0; sampleIndex < DEPLOYMENT_POINTER_MAX_SAMPLES; sampleIndex += 1) {
+      let diagnostics;
+      try {
+        diagnostics = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
+          requestedKind: candidate.kind,
+          requestedSlot,
+          phase: `${phase}:frame-${sampleIndex + 1}`,
+          awaitAnimationFrame: true,
+        }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { samples });
+      } catch (error) {
+        samples.push({
+          frameToken: null,
+          status: error?.phaseGPointerEvidence?.deadlineMs ? "timeout" : "error",
+          sampleIndex: sampleIndex + 1,
+          elapsedMs: Date.now() - preflightStartedAt,
+          error: String(error),
+        });
+        const failureEvidence = { phase, identity, samples, cause: error?.phaseGPointerEvidence ?? null };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure(error?.code ?? "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
+      }
+      const card = diagnostics.cards?.find((entry) => sameDeploymentCardIdentity(identity, deploymentCardIdentity(entry))) ?? null;
+      const sample = { frameToken: diagnostics.frameToken ?? null, card, diagnostics };
+      samples.push(sample);
+      if (diagnostics.pageClosed || diagnostics.evaluateError) {
+        const failureEvidence = { phase, identity, samples, diagnostics };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure("lifecycle-loss", failureEvidence, 0);
+      }
+      const invalidation = deploymentPointerPreconditionDecision({ expectedIdentity: identity, samples: [sample] });
+      if (invalidation.status === "candidate-invalidated-before-pointer") {
+        return recordPointerResult({ ...invalidation, accepted: false, requestedKind: candidate.kind, requestedSlot, samples, diagnostics });
+      }
+      if (samples.length >= 2) {
+        const decision = deploymentPointerPreconditionDecision({ expectedIdentity: identity, samples: samples.slice(-2) });
+        if (decision.status === "ready-for-pointer") {
+          stableDecision = decision;
+          break;
+        }
+      }
+    }
+    if (!stableDecision) {
+      const failureEvidence = {
+        phase,
+        identity,
+        reason: "no-two-consecutive-stable-actionable-frames",
+        samples,
+      };
+      recorder?.setLatestReadableState(failureEvidence);
+      throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
+    }
+
+    const attemptId = `deployment-pointer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let receiptInstalled = false;
+    let primaryError = null;
+    try {
+      await preflightStep(() => installDeploymentPointerReceipt(page, attemptId, identity), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { identity, samples });
+      receiptInstalled = true;
+      const terminalDiagnostics = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
+        requestedKind: candidate.kind,
+        requestedSlot,
+        phase: `${phase}:terminal-recheck`,
+        dispatchAttemptId: attemptId,
+      }), "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { identity, samples });
+      if (terminalDiagnostics.pageClosed || terminalDiagnostics.evaluateError) {
+        const failureEvidence = { phase, identity, samples, terminalDiagnostics };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure("lifecycle-loss", failureEvidence, 0);
+      }
+      if (terminalDiagnostics.dispatchStartedAtPerformanceMs === null
+        || terminalDiagnostics.dispatchStartedAtPerformanceMs === undefined
+        || !Number.isFinite(Number(terminalDiagnostics.dispatchStartedAtPerformanceMs))) {
+        const failureEvidence = { phase, identity, samples, terminalDiagnostics, reason: "dispatch-correlation-marker-missing" };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
+      }
+      const terminalCard = terminalDiagnostics.cards?.find((entry) => sameDeploymentCardIdentity(identity, deploymentCardIdentity(entry))) ?? null;
+      const terminal = { frameToken: terminalDiagnostics.frameToken ?? null, card: terminalCard, diagnostics: terminalDiagnostics };
+      const terminalDecision = deploymentPointerPreconditionDecision({
+        expectedIdentity: identity,
+        samples,
+        terminal,
+      });
+      if (["candidate-invalidated-before-pointer", "coordinate-invalidated-before-pointer"].includes(terminalDecision.status)) {
+        return recordPointerResult({ ...terminalDecision, accepted: false, requestedKind: candidate.kind, requestedSlot, samples, diagnostics: terminalDiagnostics });
+      }
+      if (terminalDecision.status !== "ready-for-pointer") {
+        const failureEvidence = {
+          phase,
+          identity,
+          samples,
+          terminalDecision,
+          terminalDiagnostics,
+        };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
+      }
+      if (preflightRemaining() <= 0) {
+        const failureEvidence = { phase, identity, samples, terminalDiagnostics, reason: "preflight-budget-exhausted-before-dispatch" };
+        recorder?.setLatestReadableState(failureEvidence);
+        throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", failureEvidence, 0);
+      }
+
+      const point = terminalDecision.point;
+      const dispatchStartedAt = Date.now();
+      const pointerPromise = page.mouse.click(point.x, point.y);
+      let dispatchTimer;
+      const dispatchResult = await Promise.race([
+        pointerPromise.then(() => ({ status: "completed" }), (error) => ({
+          status: isTransientBrowserClosure(error) ? "lifecycle-error" : "api-error",
+          error: String(error),
+        })),
+        new Promise((resolve) => {
+          dispatchTimer = setTimeout(() => resolve({ status: "timeout" }), DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS);
+        }),
+      ]);
+      clearTimeout(dispatchTimer);
+      let cancellation = null;
+      if (dispatchResult.status === "timeout") {
+        cancellation = await terminateTimedOutDeploymentPointer(page, pointerPromise);
+      }
+      let dispatch = {
+        ...dispatchResult,
+        attemptId,
+        startedAt: new Date(dispatchStartedAt).toISOString(),
+        endedAt: new Date().toISOString(),
+        elapsedMs: Date.now() - dispatchStartedAt,
+        lifecycle: {
+          pageClosed: page.isClosed(),
+        },
+        cancellation,
+      };
+      if (dispatch.status === "timeout" && cancellation?.independentLifecycleLoss === true) {
+        dispatch = { ...dispatch, status: "lifecycle-error", error: "independent lifecycle loss won the pointer deadline race" };
+      }
+      if (dispatch.status === "completed" && page.isClosed()) {
+        dispatch = { ...dispatch, status: "lifecycle-error", error: "independent page close after pointer dispatch" };
+      }
+      const receiptResult = dispatch.status === "completed"
+        ? await waitForDeploymentPointerReceipts(
+          page,
+          attemptId,
+          dispatchStartedAt + DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS,
+        )
+        : { receipts: [], reads: [] };
+      const receipts = receiptResult.receipts;
+      const receiptOutcome = deploymentPointerOutcome({
+        dispatch,
+        receipts,
+        expectedIdentity: identity,
+        point,
+        attemptId,
+        acceptance: null,
+      });
+      if (receiptOutcome.status !== "receipt-verified") {
+        throw phaseGPointerFailure(receiptOutcome.status, {
+          phase,
+          requestedKind: candidate.kind,
+          requestedSlot,
+          identity,
+          point,
+          dispatch,
+          receipts,
+          receiptReads: receiptResult.reads,
+          samples,
+          before: terminalDiagnostics,
+        }, receiptOutcome.pointerCount);
+      }
+      const acceptance = await waitForDeploymentAcceptance(
+        page,
+        terminalDiagnostics,
+        candidate.kind,
+        requestedSlot,
+        DEPLOYMENT_POINTER_ACCEPTANCE_DEADLINE_MS,
+      );
+      const postCard = acceptance.diagnostics?.cards?.find((entry) => entry.kind === candidate.kind) ?? null;
+      const post = {
+        lifecycleLost: acceptance.diagnostics?.pageClosed === true
+          || /target page, context or browser has been closed/i.test(String(acceptance.diagnostics?.evaluateError ?? "")),
+        candidateMissing: !postCard,
+        card: postCard,
+        beforeRect: terminalCard?.rect ?? null,
+      };
+      const outcome = deploymentPointerOutcome({
+        dispatch,
+        receipts,
+        receiptReads: receiptResult.reads,
+        expectedIdentity: identity,
+        point,
+        attemptId,
+        acceptance: acceptance.accepted,
+        post,
+      });
+      const evidence = {
+        phase,
+        requestedKind: candidate.kind,
+        requestedSlot,
+        identity,
+        point,
+        dispatch,
+        receipts,
+        samples,
+        before: terminalDiagnostics,
+        after: acceptance.diagnostics,
+        acceptanceReads: acceptance.reads,
+      };
+      recorder?.setLatestReadableState(evidence);
+      if (outcome.status !== "accepted") {
+        throw phaseGPointerFailure(outcome.status, evidence, outcome.pointerCount);
+      }
+      return recordPointerResult({
+        ...outcome,
+        accepted: true,
+        requestedKind: candidate.kind,
+        requestedSlot,
+        diagnostics: acceptance.diagnostics,
+        evidence,
+      });
+    } catch (error) {
+      primaryError = error;
+      throw error;
+    } finally {
+      if (receiptInstalled) {
+        try {
+          await removeDeploymentPointerReceipt(page, attemptId);
+        } catch (cleanupError) {
+          const cleanupEvidence = cleanupError?.phaseGPointerEvidence ?? { attemptId, error: String(cleanupError) };
+          if (!primaryError) throw cleanupError;
+          primaryError.phaseGPointerEvidence = {
+            ...(primaryError.phaseGPointerEvidence ?? {}),
+            receiptCleanupFailure: cleanupEvidence,
+          };
+          primaryError.phaseGReceiptCleanupFailure = cleanupEvidence;
+          recorder?.setLatestReadableState({
+            primaryFailure: primaryError.phaseGPointerEvidence,
+            receiptCleanupFailure: cleanupEvidence,
+          });
+        }
+      }
+    }
+  });
 }
 
 async function openRoute(page, save = null) {
@@ -676,6 +1530,21 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
   const sourceEdgeSet = new Set(sourceToTargetEdges);
   const sourceAttribution = [...(previous.sourceAttribution ?? [])];
   const sourceAttributionKeys = new Set(sourceAttribution.map(({ edge, channel }) => `${channel}:${edge}`));
+  const targetOwnershipHistory = [...(previous.targetOwnershipHistory ?? [])];
+  const targetOwnershipKeys = new Set(targetOwnershipHistory.map((observation) => JSON.stringify([
+    observation?.channel ?? null,
+    observation?.sourceId ?? null,
+    observation?.sourceSide ?? null,
+    observation?.sourceKind ?? null,
+    observation?.targetId ?? null,
+    observation?.targetSide ?? null,
+    observation?.targetKind ?? null,
+    observation?.targetAlive === true,
+  ])));
+  const fighters = Array.isArray(snapshot.fighters) ? snapshot.fighters : [];
+  const fighterById = new Map(fighters
+    .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null)
+    .map((fighter) => [fighter.id, fighter]));
   const records = [
     ...currentAttackIdentity.map((record) => ["attackIdentity", record]),
     ...currentPendingWeaponHits.map((record) => ["pendingWeaponHits", record]),
@@ -693,6 +1562,45 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
       sourceAttribution.push({ edge, sourceId: record.sourceId, targetId: record.targetId, channel });
     }
   }
+  const ownershipRecords = [
+    ...fighters
+      .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null && fighter?.targetId !== undefined && fighter?.targetId !== null)
+      .map((fighter) => ["targetId", { sourceId: fighter.id, targetId: fighter.targetId }]),
+    ...records,
+  ];
+  const battleTime = Number(snapshot.time);
+  for (const [channel, record] of ownershipRecords) {
+    if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
+    const source = fighterById.get(record.sourceId);
+    const target = fighterById.get(record.targetId);
+    if (!source || !target) continue;
+    const targetHp = Number(target.hp);
+    const observation = {
+      channel,
+      battleTime: Number.isFinite(battleTime) ? battleTime : null,
+      sourceId: source.id,
+      sourceSide: source.side ?? null,
+      sourceKind: source.kind ?? null,
+      targetId: target.id,
+      targetSide: target.side ?? null,
+      targetKind: target.kind ?? null,
+      targetHp: Number.isFinite(targetHp) ? targetHp : null,
+      targetAlive: Number.isFinite(targetHp) && targetHp > 0,
+    };
+    const key = JSON.stringify([
+      observation.channel,
+      observation.sourceId,
+      observation.sourceSide,
+      observation.sourceKind,
+      observation.targetId,
+      observation.targetSide,
+      observation.targetKind,
+      observation.targetAlive,
+    ]);
+    if (targetOwnershipKeys.has(key) || targetOwnershipHistory.length >= 96) continue;
+    targetOwnershipKeys.add(key);
+    targetOwnershipHistory.push(observation);
+  }
   return {
     ...previous,
     attackIdentity: appendBounded(previous.attackIdentity, currentAttackIdentity, 24),
@@ -700,7 +1608,18 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
     battlePresentationEffects: appendBounded(previous.battlePresentationEffects, currentPresentationEffects, 24),
     sourceToTargetEdges,
     sourceAttribution,
+    targetOwnershipHistory,
   };
+}
+
+function proofActorHumanTargetFromHistory(history = [], expectedKind = null) {
+  if (!expectedKind || !Array.isArray(history)) return null;
+  return history.find((observation) => (
+    observation?.sourceSide === "zombie"
+    && observation?.sourceKind === expectedKind
+    && observation?.targetSide === "human"
+    && observation?.targetAlive === true
+  )) ?? null;
 }
 
 function buildCombatCausalProof(samples, stableHistory = {}) {
@@ -708,6 +1627,24 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
   const edges = new Set(stableHistory.sourceToTargetEdges ?? []);
   const sourceAttribution = [];
   const sourceAttributionKeys = new Set();
+  const targetOwnershipHistory = [];
+  const targetOwnershipKeys = new Set();
+  const addTargetOwnership = (observation) => {
+    if (!observation || targetOwnershipHistory.length >= 96) return;
+    const key = JSON.stringify([
+      observation.channel ?? null,
+      observation.sourceId ?? null,
+      observation.sourceSide ?? null,
+      observation.sourceKind ?? null,
+      observation.targetId ?? null,
+      observation.targetSide ?? null,
+      observation.targetKind ?? null,
+      observation.targetAlive === true,
+    ]);
+    if (targetOwnershipKeys.has(key)) return;
+    targetOwnershipKeys.add(key);
+    targetOwnershipHistory.push(observation);
+  };
   const addAttribution = (attribution) => {
     if (!attribution?.edge || !attribution?.channel) return;
     const key = `${attribution.channel}:${attribution.edge}`;
@@ -722,6 +1659,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
   };
   for (const edge of stableHistory.sourceToTargetEdges ?? []) edges.add(edge);
   for (const attribution of stableHistory.sourceAttribution ?? []) addAttribution(attribution);
+  for (const observation of stableHistory.targetOwnershipHistory ?? []) addTargetOwnership(observation);
   const visualEvents = new Set();
   const reactionKeys = new Set();
   const audioCueIds = new Set();
@@ -740,6 +1678,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
   for (const sample of valid) {
     for (const edge of sample.activitySourceToTargetEdges ?? []) edges.add(edge);
     for (const attribution of sample.activitySourceAttribution ?? []) addAttribution(attribution);
+    for (const observation of sample.activityTargetOwnershipHistory ?? []) addTargetOwnership(observation);
     for (const actorKey of sample.activityFighterActors ?? []) fighterActors.add(actorKey);
     for (const actorKey of sample.activityAttackingActors ?? []) attackingActors.add(actorKey);
     for (const action of sample.activityVehicleActions ?? []) vehicleActions.add(action);
@@ -826,6 +1765,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     sampleCount: valid.length,
     sourceToTargetEdges: [...edges],
     sourceAttribution,
+    targetOwnershipHistory,
     visualEvents: [...visualEvents],
     reactionEvents: [...reactionKeys],
     audioCueIds: [...audioCueIds],
@@ -869,6 +1809,21 @@ async function startCombatRuntimeObserver(page) {
       const sourceEdgeSet = new Set(sourceToTargetEdges);
       const sourceAttribution = [...(previous.sourceAttribution ?? [])];
       const sourceAttributionKeys = new Set(sourceAttribution.map(({ edge, channel }) => `${channel}:${edge}`));
+      const targetOwnershipHistory = [...(previous.targetOwnershipHistory ?? [])];
+      const targetOwnershipKeys = new Set(targetOwnershipHistory.map((observation) => JSON.stringify([
+        observation?.channel ?? null,
+        observation?.sourceId ?? null,
+        observation?.sourceSide ?? null,
+        observation?.sourceKind ?? null,
+        observation?.targetId ?? null,
+        observation?.targetSide ?? null,
+        observation?.targetKind ?? null,
+        observation?.targetAlive === true,
+      ])));
+      const fighters = Array.isArray(snapshot.fighters) ? snapshot.fighters : [];
+      const fighterById = new Map(fighters
+        .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null)
+        .map((fighter) => [fighter.id, fighter]));
       const records = [
         ...currentAttackIdentity.map((record) => ["attackIdentity", record]),
         ...currentPendingWeaponHits.map((record) => ["pendingWeaponHits", record]),
@@ -886,6 +1841,45 @@ async function startCombatRuntimeObserver(page) {
           sourceAttribution.push({ edge, sourceId: record.sourceId, targetId: record.targetId, channel });
         }
       }
+      const ownershipRecords = [
+        ...fighters
+          .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null && fighter?.targetId !== undefined && fighter?.targetId !== null)
+          .map((fighter) => ["targetId", { sourceId: fighter.id, targetId: fighter.targetId }]),
+        ...records,
+      ];
+      const battleTime = Number(snapshot.time);
+      for (const [channel, record] of ownershipRecords) {
+        if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
+        const source = fighterById.get(record.sourceId);
+        const target = fighterById.get(record.targetId);
+        if (!source || !target) continue;
+        const targetHp = Number(target.hp);
+        const observation = {
+          channel,
+          battleTime: Number.isFinite(battleTime) ? battleTime : null,
+          sourceId: source.id,
+          sourceSide: source.side ?? null,
+          sourceKind: source.kind ?? null,
+          targetId: target.id,
+          targetSide: target.side ?? null,
+          targetKind: target.kind ?? null,
+          targetHp: Number.isFinite(targetHp) ? targetHp : null,
+          targetAlive: Number.isFinite(targetHp) && targetHp > 0,
+        };
+        const key = JSON.stringify([
+          observation.channel,
+          observation.sourceId,
+          observation.sourceSide,
+          observation.sourceKind,
+          observation.targetId,
+          observation.targetSide,
+          observation.targetKind,
+          observation.targetAlive,
+        ]);
+        if (targetOwnershipKeys.has(key) || targetOwnershipHistory.length >= 96) continue;
+        targetOwnershipKeys.add(key);
+        targetOwnershipHistory.push(observation);
+      }
       return {
         ...previous,
         attackIdentity: appendBounded(previous.attackIdentity, currentAttackIdentity, 24),
@@ -893,9 +1887,20 @@ async function startCombatRuntimeObserver(page) {
         battlePresentationEffects: appendBounded(previous.battlePresentationEffects, currentPresentationEffects, 24),
         sourceToTargetEdges,
         sourceAttribution,
+        targetOwnershipHistory,
       };
     };
+    const proofActorHumanTargetFromHistory = (history = [], expectedKind = null) => {
+      if (!expectedKind || !Array.isArray(history)) return null;
+      return history.find((observation) => (
+        observation?.sourceSide === "zombie"
+        && observation?.sourceKind === expectedKind
+        && observation?.targetSide === "human"
+        && observation?.targetAlive === true
+      )) ?? null;
+    };
     window.__PHASE_G_COMBAT_HISTORY_MERGE__ = mergeCombatActivityHistory;
+    window.__PHASE_G_PROOF_ACTOR_HUMAN_TARGET_FROM_HISTORY__ = proofActorHumanTargetFromHistory;
     const observe = () => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
       if (!snapshot || snapshot.screen !== "battle") return;
@@ -1188,6 +2193,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         pendingWeaponHits: (snapshot?.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
         activitySourceToTargetEdges: observedCombatActivity.sourceToTargetEdges ?? [],
         activitySourceAttribution: observedCombatActivity.sourceAttribution ?? [],
+        activityTargetOwnershipHistory: observedCombatActivity.targetOwnershipHistory ?? [],
         activityFighterActors: observedCombatActivity.fighterActors ?? [],
         activityAttackingActors: observedCombatActivity.attackingActors ?? [],
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
@@ -1244,6 +2250,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
     return {
       sourceToTargetEdges: activity.sourceToTargetEdges ?? [],
       sourceAttribution: activity.sourceAttribution ?? [],
+      targetOwnershipHistory: activity.targetOwnershipHistory ?? [],
       battlePresentationEffects: activity.battlePresentationEffects ?? [],
     };
   }).catch(() => ({}));
@@ -1325,6 +2332,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         fighters: snapshot.fighters?.map((fighter) => ({ side: fighter.side, kind: fighter.kind, hp: fighter.hp, attack: fighter.attack, attackWindup: fighter.attackWindup, abilityWindup: fighter.abilityWindup, abilityCooldown: fighter.abilityCooldown, cooldown: fighter.cooldown, stunned: fighter.stunned, aiMoveDirection: fighter.aiMoveDirection, aiDestinationX: fighter.aiDestinationX, stationAbility: fighter.stationAbility ? { phase: fighter.stationAbility.phase, remainingSeconds: fighter.stationAbility.remainingSeconds } : null, targetId: fighter.targetId, x: fighter.x, y: fighter.y, combatReady: fighter.combatReady })) ?? [],
         attackIdentity: (snapshot.attackIdentity?.length ?? 0) > 0 ? snapshot.attackIdentity : observedCombatActivity.attackIdentity ?? [],
         pendingWeaponHits: (snapshot.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
+        targetOwnershipHistory: observedCombatActivity.targetOwnershipHistory ?? [],
         battlePresentationEffects: (snapshot.battlePresentation?.effects?.length ?? 0) > 0 ? snapshot.battlePresentation.effects : observedCombatActivity.battlePresentationEffects ?? [],
         shots: snapshot.shots?.map((shot) => ({ sourceId: shot.sourceId, targetId: shot.targetId, weapon: shot.weapon, effect: shot.effect, x: shot.x, y: shot.y, tx: shot.tx, ty: shot.ty, life: shot.life })) ?? [],
         damageTexts: snapshot.damageTexts?.map((entry) => ({ value: entry.value, x: entry.x, y: entry.y, life: entry.life })) ?? [],
@@ -1395,6 +2403,8 @@ async function readBattleDeploymentDiagnostics(page, {
   requestedKind = null,
   requestedSlot = null,
   phase = null,
+  awaitAnimationFrame = false,
+  dispatchAttemptId = null,
 } = {}) {
   if (page.isClosed()) {
     return {
@@ -1403,10 +2413,23 @@ async function readBattleDeploymentDiagnostics(page, {
       requestedKind,
       requestedSlot,
       phase,
+      awaitAnimationFrame,
+      dispatchAttemptId,
     };
   }
-  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase }) => {
+  const diagnostics = await page.evaluate(async ({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, waitForAnimationFrame, receiptAttemptId }) => {
+    const frameToken = waitForAnimationFrame
+      ? await new Promise((resolve) => requestAnimationFrame(resolve))
+      : performance.now();
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const nodeRegistry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
+      ids: new WeakMap(),
+      next: 1,
+    };
+    const nodeIdFor = (node) => {
+      if (!nodeRegistry.ids.has(node)) nodeRegistry.ids.set(node, `deployment-card-${nodeRegistry.next++}`);
+      return nodeRegistry.ids.get(node);
+    };
     const visibleRect = (element) => {
       const rect = element.getBoundingClientRect();
       const style = window.getComputedStyle(element);
@@ -1424,20 +2447,90 @@ async function readBattleDeploymentDiagnostics(page, {
     };
     const cards = [...document.querySelectorAll("button.unit-card")].map((card) => {
       const rect = visibleRect(card);
+      const style = window.getComputedStyle(card);
+      const rail = card.closest(".unit-cards");
+      const railRect = rail ? visibleRect(rail) : null;
+      const viewportRect = {
+        x: window.visualViewport?.offsetLeft ?? 0,
+        y: window.visualViewport?.offsetTop ?? 0,
+        width: window.visualViewport?.width ?? window.innerWidth,
+        height: window.visualViewport?.height ?? window.innerHeight,
+      };
+      const intersects = (left, right) => Boolean(left && right)
+        && left.x < right.x + right.width
+        && left.x + left.width > right.x
+        && left.y < right.y + right.height
+        && left.y + left.height > right.y;
+      const center = {
+        x: Math.round((rect.x + rect.width / 2) * 100) / 100,
+        y: Math.round((rect.y + rect.height / 2) * 100) / 100,
+      };
+      const hitTarget = document.elementFromPoint(center.x, center.y);
+      const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
+      const nodeId = nodeIdFor(card);
       const ariaLabel = card.getAttribute("aria-label") ?? "";
       const cost = ariaLabel.match(/コスト\s*(\d+)/u)?.[1] ?? null;
       return {
+        nodeId,
         kind: card.getAttribute("data-kind"),
         slot: card.getAttribute("data-slot-index"),
         state: card.getAttribute("data-state"),
         blockReason: card.getAttribute("data-block-reason"),
         ariaDisabled: card.getAttribute("aria-disabled"),
+        disabled: card.disabled === true,
         ariaLabel,
         cost: cost === null ? null : Number(cost),
         text: (card.textContent ?? "").trim().replace(/\s+/gu, " ").slice(0, 180),
         rect,
+        center,
+        centerInCard: center.x >= rect.x
+          && center.x <= rect.x + rect.width
+          && center.y >= rect.y
+          && center.y <= rect.y + rect.height,
+        centerInViewport: center.x >= viewportRect.x
+          && center.x <= viewportRect.x + viewportRect.width
+          && center.y >= viewportRect.y
+          && center.y <= viewportRect.y + viewportRect.height,
+        centerInRail: Boolean(railRect)
+          && center.x >= railRect.x
+          && center.x <= railRect.x + railRect.width
+          && center.y >= railRect.y
+          && center.y <= railRect.y + railRect.height,
+        viewportIntersection: intersects(rect, viewportRect),
+        railIntersection: intersects(rect, railRect),
+        pointerEvents: style.pointerEvents,
+        style: {
+          display: style.display,
+          visibility: style.visibility,
+          opacity: style.opacity,
+          pointerEvents: style.pointerEvents,
+        },
+        activeAnimations: card.getAnimations().filter((animation) => animation.playState === "running").map((animation) => ({
+          playState: animation.playState,
+          currentTime: Number.isFinite(Number(animation.currentTime)) ? Number(animation.currentTime) : null,
+          playbackRate: animation.playbackRate,
+        })),
+        hitOwner: hitOwner ? {
+          nodeId: nodeIdFor(hitOwner),
+          kind: hitOwner.getAttribute("data-kind"),
+          slot: hitOwner.getAttribute("data-slot-index"),
+        } : null,
+        hitOwnerMatches: hitOwner === card,
+        hitTarget: hitTarget instanceof Element ? {
+          tag: hitTarget.tagName,
+          classes: hitTarget.getAttribute("class"),
+        } : null,
+        rail: rail ? {
+          scrollLeft: Math.round(rail.scrollLeft * 100) / 100,
+          scrollWidth: rail.scrollWidth,
+          clientWidth: rail.clientWidth,
+          rect: railRect,
+        } : null,
       };
     });
+    const dispatchReceipt = receiptAttemptId
+      ? window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId)
+      : null;
     const humanFighters = (snapshot?.fighters ?? []).filter((fighter) => (
       fighter.side === "human" && Number(fighter.hp) > 0
     ));
@@ -1445,6 +2538,7 @@ async function readBattleDeploymentDiagnostics(page, {
     const objectiveText = [...document.querySelectorAll(
       ".battle-objective, [data-battle-objective], [aria-label*='目標' i]",
     )].map((element) => (element.textContent ?? "").trim()).filter(Boolean);
+    if (dispatchReceipt) dispatchReceipt.dispatchStartedAtPerformanceMs = performance.now();
     return {
       capturedAt: new Date().toISOString(),
       pageClosed: false,
@@ -1452,6 +2546,18 @@ async function readBattleDeploymentDiagnostics(page, {
       requestedKind: kind,
       requestedSlot: slot,
       phase: diagnosticPhase,
+      dispatchAttemptId: receiptAttemptId,
+      dispatchStartedAtPerformanceMs: dispatchReceipt?.dispatchStartedAtPerformanceMs ?? null,
+      frameToken,
+      sampledAtWallTimeMs: Date.now(),
+      sampledAtPerformanceMs: performance.now(),
+      viewport: {
+        x: window.visualViewport?.offsetLeft ?? 0,
+        y: window.visualViewport?.offsetTop ?? 0,
+        width: window.visualViewport?.width ?? window.innerWidth,
+        height: window.visualViewport?.height ?? window.innerHeight,
+        scale: window.visualViewport?.scale ?? 1,
+      },
       pageLifecycle: {
         visibilityState: document.visibilityState,
         hidden: document.hidden,
@@ -1497,12 +2603,14 @@ async function readBattleDeploymentDiagnostics(page, {
       })),
       objectiveText,
     };
-  }, { requestedKind, requestedSlot, phase }).catch((error) => ({
+  }, { requestedKind, requestedSlot, phase, waitForAnimationFrame: awaitAnimationFrame, receiptAttemptId: dispatchAttemptId }).catch((error) => ({
     capturedAt: new Date().toISOString(),
     pageClosed: page.isClosed(),
     requestedKind,
     requestedSlot,
     phase,
+    awaitAnimationFrame,
+    dispatchAttemptId,
     evaluateError: String(error),
   }));
   if (!Array.isArray(diagnostics.cards)) return diagnostics;
@@ -1543,25 +2651,45 @@ async function waitForDeploymentAcceptance(page, before, requestedKind, requeste
   const recorder = checkpointRecorderFor(page);
   recorder?.setAwaiting("deployment-accepted", { requestedKind, requestedSlot, predicate: "production card leaves ready state or enters deployment queue" });
   const deadline = Date.now() + timeoutMs;
-  let latest = await readBattleDeploymentDiagnostics(page, {
-    requestedKind,
-    requestedSlot,
-    phase: "after-click",
-  });
-  while (!deploymentWasAccepted(before, latest, requestedKind) && Date.now() < deadline) {
-    await page.waitForTimeout(60);
-    latest = await readBattleDeploymentDiagnostics(page, {
+  const reads = [];
+  let latest = null;
+  let fulfilledPostRead = false;
+  let sampleIndex = 0;
+  while (Date.now() < deadline) {
+    const remaining = deadline - Date.now();
+    const read = await observePromiseWithin(readBattleDeploymentDiagnostics(page, {
       requestedKind,
       requestedSlot,
-      phase: "after-click-wait",
+      phase: sampleIndex === 0 ? "after-click" : "after-click-wait",
+    }), remaining);
+    reads.push({
+      status: read.status,
+      timeoutMs: read.timeoutMs ?? null,
+      error: read.error ?? null,
+      sampleIndex: sampleIndex + 1,
     });
+    sampleIndex += 1;
+    if (read.status !== "fulfilled") {
+      latest = {
+        ...before,
+        phase: "after-click-read-bounded-stop",
+        acceptanceReadStatus: read.status,
+        acceptanceReadError: read.error ?? null,
+      };
+      break;
+    }
+    latest = read.value;
+    fulfilledPostRead = true;
+    if (deploymentWasAccepted(before, latest, requestedKind) || latest?.pageClosed || latest?.evaluateError) break;
+    await new Promise((resolve) => setTimeout(resolve, Math.min(60, Math.max(1, deadline - Date.now()))));
   }
-  const accepted = deploymentWasAccepted(before, latest, requestedKind);
+  const accepted = fulfilledPostRead && latest !== null && deploymentWasAccepted(before, latest, requestedKind);
   if (accepted) recorder?.clearAwaiting();
   recorder?.setLatestReadableState(latest);
   return {
     accepted,
     diagnostics: latest,
+    reads,
   };
 }
 
@@ -1880,17 +3008,52 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const target = actor?.targetId === null || actor?.targetId === undefined
         ? null
         : fighters.find((fighter) => String(fighter.id) === String(actor.targetId)) ?? null;
-      return {
-        mounted: Boolean(actor) || (activity.fighterActors ?? []).includes(actorKey),
-        hasHumanTarget: target?.side === "human" && Number(target.hp) > 0,
-        actorX: actor?.x ?? null,
-        actorLane: actor?.lane ?? null,
+      const liveHumanTarget = target?.side === "human" && Number.isFinite(Number(target.hp)) && Number(target.hp) > 0;
+      const historicalTarget = window.__PHASE_G_PROOF_ACTOR_HUMAN_TARGET_FROM_HISTORY__?.(
+        activity.targetOwnershipHistory ?? [],
+        expectedKind,
+      ) ?? null;
+      const evidence = liveHumanTarget ? {
+        evidence: "live-target",
+        channel: "targetId",
+        battleTime: Number.isFinite(Number(snapshot?.time)) ? Number(snapshot.time) : null,
+        sourceId: actor?.id ?? null,
+        targetId: target?.id ?? null,
         targetKind: target?.kind ?? null,
         targetSide: target?.side ?? null,
+      } : historicalTarget ? {
+        evidence: "monotonic-target-history",
+        channel: historicalTarget.channel ?? null,
+        battleTime: historicalTarget.battleTime ?? null,
+        sourceId: historicalTarget.sourceId ?? null,
+        targetId: historicalTarget.targetId ?? null,
+        targetKind: historicalTarget.targetKind ?? null,
+        targetSide: historicalTarget.targetSide ?? null,
+      } : null;
+      return {
+        mounted: Boolean(actor) || (activity.fighterActors ?? []).includes(actorKey),
+        hasHumanTarget: evidence !== null,
+        actorX: actor?.x ?? null,
+        actorLane: actor?.lane ?? null,
+        evidence: evidence?.evidence ?? null,
+        observationChannel: evidence?.channel ?? null,
+        sourceId: evidence?.sourceId ?? null,
+        targetId: evidence?.targetId ?? null,
+        targetKind: evidence?.targetKind ?? target?.kind ?? null,
+        targetSide: evidence?.targetSide ?? target?.side ?? null,
+        productionTime: evidence?.battleTime ?? null,
       };
     }, proofActor).catch(() => null);
     if (state?.mounted === true) recorder?.mark("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
-    if (state?.hasHumanTarget === true) recorder?.mark("living-human-target-acquired-or-not-required", "observed", { actor: proofActor, targetKind: state.targetKind });
+    if (state?.hasHumanTarget === true) recorder?.mark("living-human-target-acquired-or-not-required", "observed", {
+      actor: proofActor,
+      evidence: state.evidence,
+      observationChannel: state.observationChannel,
+      sourceId: state.sourceId,
+      targetId: state.targetId,
+      targetKind: state.targetKind,
+      productionTime: state.productionTime,
+    });
     return state;
   };
   const waitForProofActorContact = async (durationMs = 1_800) => {
@@ -1969,6 +3132,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   };
   let sustainActive = Boolean(bossKind);
   let bossDeploymentFinished = !bossKind;
+  let sustainFailure = null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
@@ -1984,7 +3148,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
-  const sustainDone = bossKind ? (async () => {
+  const sustainTask = bossKind ? (async () => {
     // These are ordinary player-facing controls.  The loop keeps the
     // evidence run alive long enough to reach the authored boss wave without
     // mutating HP, clocks, enemy state, or battle definitions.
@@ -2001,12 +3165,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await observeVehicleAction();
 
       if (proofActorAttackObserved && proofUnitKind && !proofUnitDeployed) {
-        const proofCard = page.locator(`button.unit-card[data-kind="${proofUnitKind}"][data-state="ready"][aria-disabled="false"]`).first();
-        if (await proofCard.count().catch(() => 0)) {
-          await proofCard.click({ timeout: 700 }).catch(() => {});
-          const proofState = await page.locator(`button.unit-card[data-kind="${proofUnitKind}"]`).first().getAttribute("data-state").catch(() => null);
-          proofUnitDeployed = proofState !== "ready";
-        }
+        const proofPointer = await performVerifiedDeploymentPointer(page, {
+          requestedKind: proofUnitKind,
+          phase: "sustain-proof",
+        });
+        proofUnitDeployed = proofPointer.accepted === true;
       }
 
       const abilityButtons = page.locator('button.manual-ability-ready.available:not([disabled])');
@@ -2014,26 +3177,35 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const proofCombatReady = proofActorAttackObserved && proofUnitAttackObserved;
       if (!bossEngaged && proofCombatReady) {
         for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
-          await abilityButtons.nth(index).click({ timeout: 500 }).catch(() => {});
+          await withPhaseGPageInputLock(page, async () => {
+            const lockedAbility = page.locator('button.manual-ability-ready.available:not([disabled])').nth(index);
+            if (await lockedAbility.count().catch(() => 0)) await lockedAbility.click({ timeout: 500 }).catch(() => {});
+          });
           await page.waitForTimeout(85);
         }
       }
 
       const crawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
       if (proofCombatReady && !vehicleActionObserved && await crawler.count().catch(() => 0)) {
-        await crawler.click({ timeout: 500 }).catch(() => {});
+        await withPhaseGPageInputLock(page, async () => {
+          const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
+          if (await lockedCrawler.count().catch(() => 0)) await lockedCrawler.click({ timeout: 500 }).catch(() => {});
+        });
       }
 
       const canvas = page.locator("canvas.battlefield");
       const box = await canvas.boundingBox().catch(() => null);
       if (box) {
-        const target = { x: box.width * .67, y: box.height * .5 };
         if (!bossEngaged && proofCombatReady) {
-          const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
-          if (await airstrike.count().catch(() => 0)) {
-            await airstrike.click({ timeout: 500 }).catch(() => {});
-            await canvas.click({ position: target, timeout: 700 }).catch(() => {});
-          }
+          await withPhaseGPageInputLock(page, async () => {
+            const lockedCanvas = page.locator("canvas.battlefield");
+            const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
+            const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
+            if (lockedBox && await airstrike.count().catch(() => 0)) {
+              await airstrike.click({ timeout: 500 }).catch(() => {});
+              await lockedCanvas.click({ position: { x: lockedBox.width * .67, y: lockedBox.height * .5 }, timeout: 700 }).catch(() => {});
+            }
+          });
         }
         // Keep recovery available while keeping a contact-first enemy's route
         // clear: before the proof attack, place the real medical supply on an
@@ -2044,14 +3216,17 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         const proofActorContactState = proofActorContactPlanPending
           ? await readProofActorContactState()
           : null;
-        const medicalY = proofActorContactPlanPending && Number.isFinite(Number(proofActorContactState?.actorLane))
-          ? (Number(proofActorContactState?.actorLane) >= 1 ? box.height * .3 : box.height * .7)
-          : box.height * .5;
-        const medical = page.locator('button.support-btn.medical[data-state="ready"][aria-disabled="false"]').first();
-        if (await medical.count().catch(() => 0)) {
+        await withPhaseGPageInputLock(page, async () => {
+          const lockedCanvas = page.locator("canvas.battlefield");
+          const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
+          const medical = page.locator('button.support-btn.medical[data-state="ready"][aria-disabled="false"]').first();
+          if (!lockedBox || !(await medical.count().catch(() => 0))) return;
+          const medicalY = proofActorContactPlanPending && Number.isFinite(Number(proofActorContactState?.actorLane))
+            ? (Number(proofActorContactState?.actorLane) >= 1 ? lockedBox.height * .3 : lockedBox.height * .7)
+            : lockedBox.height * .5;
           await medical.click({ timeout: 500 }).catch(() => {});
-          await canvas.click({ position: { x: box.width * .34, y: medicalY }, timeout: 700 }).catch(() => {});
-        }
+          await lockedCanvas.click({ position: { x: lockedBox.width * .34, y: medicalY }, timeout: 700 }).catch(() => {});
+        });
       }
       const proofActorContactPlanPending = proofActorRequiresContactFirst && !proofActorAttackObserved;
       if (bossDeploymentFinished && !proofActorContactPlanPending) {
@@ -2062,10 +3237,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // Continue after the boss is live as well: medical support and
         // ordinary redeployment keep a real target on the battlefield long
         // enough for the boss-owned attack/ability lifecycle to be observed.
-        const redeploy = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]').first();
         const targetSurvivalPlanPending = keepHumanTargetAlive && bossEngaged && liveHumanTargetCount < 2;
-        if (((proofCombatReady && proofUnitDeployed) || targetSurvivalPlanPending) && await redeploy.count().catch(() => 0)) {
-          await redeploy.click({ timeout: 500 }).catch(() => {});
+        if ((proofCombatReady && proofUnitDeployed) || targetSurvivalPlanPending) {
+          await performVerifiedDeploymentPointer(page, {
+            phase: "sustain-redeploy",
+          });
         }
       }
       if (bossKind) {
@@ -2087,6 +3263,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await page.waitForTimeout(520);
     }
   })() : null;
+  const sustainDone = sustainTask?.catch((error) => {
+    sustainFailure = error;
+    sustainActive = false;
+  }) ?? null;
   // Keep the fixture player-like while ensuring the long pre-boss wave has
   // the canonical formation available on WebKit as well as Chromium. These
   // are ordinary card clicks against the current seeded formation; no HP,
@@ -2101,33 +3281,6 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const deploymentTrace = [];
   const recordDeployment = (entry) => {
     deploymentTrace.push(entry);
-    recorder?.recordDeploymentAttempt(entry);
-  };
-  const rereadAfterDeploymentActionabilityError = async ({ error, kind, slot }) => {
-    const after = await readBattleDeploymentDiagnostics(page, {
-      requestedKind: kind,
-      requestedSlot: slot,
-      phase: "after-actionability-error",
-    });
-    const outcome = deploymentActionabilityOutcome({ error, after, requestedKind: kind });
-    recordDeployment({
-      slot,
-      requestedKind: kind,
-      action: outcome === "candidate-invalidated"
-        ? "candidate-invalidated-after-actionability-error"
-        : outcome,
-      clickError: String(error),
-      accepted: false,
-      diagnostics: after,
-    });
-    if (outcome === "candidate-invalidated") return false;
-    if (outcome === "lifecycle-loss") {
-      throw new Error(`deployment actionability lifecycle loss for ${kind}: ${String(error)} diagnostics=${JSON.stringify(after)}`);
-    }
-    if (outcome === "QA_HARNESS_ACTIONABILITY_DIVERGENCE") {
-      throw new Error(`QA_HARNESS_ACTIONABILITY_DIVERGENCE for ${kind}: ${String(error)} diagnostics=${JSON.stringify(after)}`);
-    }
-    throw error;
   };
   try {
     if (!bossKind) {
@@ -2173,54 +3326,23 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             continue;
           }
           const kind = selectedCandidate.kind;
-          const before = await readBattleDeploymentDiagnostics(page, {
+          const pointerResult = await performVerifiedDeploymentPointer(page, {
             requestedKind: kind,
             requestedSlot: slot + 1,
-            phase: "pre-click-recheck",
+            phase: "non-boss-primary",
           });
-          if (before.pageClosed || before.evaluateError) {
-            throw new Error(`deployment candidate pre-click lifecycle loss for ${kind}: ${JSON.stringify(before)}`);
-          }
-          const requestedCard = before.cards?.find((entry) => entry.kind === kind);
-          if (requestedCard?.actionability?.eligible !== true) {
-            recordDeployment({
-              slot: slot + 1,
-              requestedKind: kind,
-              action: "candidate-invalidated-before-click",
-              accepted: false,
-              diagnostics: before,
-            });
-            await page.waitForTimeout(120);
-            continue;
-          }
-          recordDeployment({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
-          const card = page.locator(`button.unit-card[data-kind="${kind}"]`).first();
-          try {
-            await clickDeploymentCard(page, card, `deploy ready battle unit ${slot + 1}`);
-          } catch (error) {
-            const retryCandidate = await rereadAfterDeploymentActionabilityError({ error, kind, slot: slot + 1 });
-            if (!retryCandidate) {
-              await page.waitForTimeout(120);
-              continue;
-            }
-          }
-          const acceptance = await waitForDeploymentAcceptance(
-            page,
-            before,
-            kind,
-            slot + 1,
-            5_000,
-          );
           recordDeployment({
             slot: slot + 1,
             requestedKind: kind,
-            action: "after-click",
-            clickError: null,
-            accepted: acceptance.accepted,
-            diagnostics: acceptance.diagnostics,
+            action: pointerResult.status,
+            accepted: pointerResult.accepted,
+            pointerCount: pointerResult.pointerCount,
+            diagnostics: pointerResult.diagnostics,
+            pointerEvidence: pointerResult.evidence ?? null,
           });
-          if (!acceptance.accepted) {
-            throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError: null })}`);
+          if (!pointerResult.accepted) {
+            await page.waitForTimeout(120);
+            continue;
           }
           recorder?.clearAwaiting();
           deployedKinds.add(kind);
@@ -2274,53 +3396,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const selectedCandidate = readyCandidates[0] ?? null;
           if (selectedCandidate) {
             const kind = selectedCandidate.kind;
-            const before = await readBattleDeploymentDiagnostics(page, {
+            const pointerResult = await performVerifiedDeploymentPointer(page, {
               requestedKind: kind,
               requestedSlot: deployment + 1,
-              phase: "pre-click-recheck",
+              phase: "boss-primary",
             });
-            if (before.pageClosed || before.evaluateError) {
-              throw new Error(`deployment candidate pre-click lifecycle loss for ${kind}: ${JSON.stringify(before)}`);
-            }
-            const requestedCard = before.cards?.find((entry) => entry.kind === kind);
-            if (requestedCard?.actionability?.eligible !== true) {
-              recordDeployment({
-                slot: deployment + 1,
-                requestedKind: kind,
-                action: "candidate-invalidated-before-click",
-                accepted: false,
-                diagnostics: before,
-              });
-              await page.waitForTimeout(120);
-              continue;
-            }
-            const card = page.locator(`button.unit-card[data-kind="${kind}"]`).first();
-            recordDeployment({ slot: deployment + 1, requestedKind: kind, action: "before-click", diagnostics: before });
-            try {
-              await clickDeploymentCard(page, card, `deploy boss frontline unit ${deployment + 1}`);
-            } catch (error) {
-              const retryCandidate = await rereadAfterDeploymentActionabilityError({ error, kind, slot: deployment + 1 });
-              if (!retryCandidate) {
-                await page.waitForTimeout(120);
-                continue;
-              }
-            }
-            const acceptance = await waitForDeploymentAcceptance(
-              page,
-              before,
-              kind,
-              deployment + 1,
-              5_000,
-            );
             recordDeployment({
               slot: deployment + 1,
               requestedKind: kind,
-              action: "after-click",
-              clickError: null,
-              accepted: acceptance.accepted,
-              diagnostics: acceptance.diagnostics,
+              action: pointerResult.status,
+              accepted: pointerResult.accepted,
+              pointerCount: pointerResult.pointerCount,
+              diagnostics: pointerResult.diagnostics,
+              pointerEvidence: pointerResult.evidence ?? null,
             });
-            if (acceptance.accepted) {
+            if (pointerResult.accepted) {
               recorder?.clearAwaiting();
               deployed = true;
               if (kind) deployedKinds.add(kind);
@@ -2359,7 +3449,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     });
     recorder?.mark("frontline-deployment-sequence-completed", "completed", {
       attemptedSlots: [...new Set(deploymentTrace.map((entry) => entry.slot))],
-      terminalCardStates: deploymentTrace.filter((entry) => entry.action === "after-click").map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
+      terminalCardStates: deploymentTrace.filter((entry) => entry.accepted === true).map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
     });
     if (proofActor) {
       recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
@@ -2391,6 +3481,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         return observed;
       }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000) });
       proofActorAttackObserved = true;
+      if (proofActorRequiresContactFirst) await readProofActorContactState();
       recorder?.clearAwaiting();
       recorder?.mark("proof-actor-mounted-or-absent", "observed", { actor: proofActor, source: "final-proof-predicate" });
       recorder?.mark("proof-actor-attack-observed-or-not-required", "observed", { actor: proofActor, evidence: "final-proof-predicate" });
@@ -2398,16 +3489,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();
     if (proofUnitKind && !proofUnitDeployed) {
       recorder?.setAwaiting("proof-unit-deployment", { unitKind: proofUnitKind, predicate: "proof unit card leaves ready state" });
-      await page.waitForFunction((expectedKind) => Boolean(
-        document.querySelector(`button.unit-card[data-kind="${expectedKind}"][data-state="ready"][aria-disabled="false"]`),
-      ), proofUnitKind, { timeout: Math.min(battleTimeout, 45_000) });
-      const proofCard = page.locator(`button.unit-card[data-kind="${proofUnitKind}"][data-state="ready"][aria-disabled="false"]`).first();
-      await proofCard.click({ timeout: 700 });
-      await page.waitForFunction((expectedKind) => {
-        const card = document.querySelector(`button.unit-card[data-kind="${expectedKind}"]`);
-        return card?.getAttribute("data-state") !== "ready";
-      }, proofUnitKind, { timeout: 5_000 });
-      proofUnitDeployed = true;
+      const fallbackDeadline = Date.now() + Math.min(battleTimeout, 45_000);
+      while (!proofUnitDeployed && Date.now() < fallbackDeadline) {
+        const proofPointer = await performVerifiedDeploymentPointer(page, {
+          requestedKind: proofUnitKind,
+          phase: "proof-fallback",
+        });
+        proofUnitDeployed = proofPointer.accepted === true;
+        if (!proofUnitDeployed) await page.waitForTimeout(120);
+      }
+      invariant(proofUnitDeployed, `proof unit was not deployable inside the bounded fallback: ${proofUnitKind}`);
       recorder?.clearAwaiting();
     }
     if (proofUnitKind && !proofUnitAttackObserved) {
@@ -2423,11 +3514,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     if (manualAbilityKind) {
       recorder?.setAwaiting("manual-ability-action", { abilityKind: manualAbilityKind, predicate: "manual ability impact marker or receipt" });
-      const abilityButton = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
       await page.waitForFunction((expectedKind) => Boolean(
         document.querySelector(`button.manual-ability-ready.available[data-ability-kind="${expectedKind}"][aria-disabled="false"]`),
       ), manualAbilityKind, { timeout: Math.min(battleTimeout, 45_000) });
-      await abilityButton.click({ timeout: 700 });
+      await withPhaseGPageInputLock(page, async () => {
+        const lockedAbility = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
+        await lockedAbility.click({ timeout: 700 });
+      });
       await page.waitForFunction((expectedKind) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
         const markedEnemy = snapshot?.fighters?.some((fighter) => fighter.side === "zombie" && Number(fighter.marked) > 0);
@@ -2450,7 +3543,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await observeVehicleAction();
         if (vehicleActionObserved) break;
         const crawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
-        if (await crawler.count().catch(() => 0)) await crawler.click({ timeout: 700 }).catch(() => {});
+        if (await crawler.count().catch(() => 0)) {
+          await withPhaseGPageInputLock(page, async () => {
+            const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
+            if (await lockedCrawler.count().catch(() => 0)) await lockedCrawler.click({ timeout: 700 }).catch(() => {});
+          });
+        }
         await page.waitForTimeout(250);
       }
       await page.waitForFunction(() => {
@@ -2481,6 +3579,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     sustainActive = false;
     await sustainDone;
     await page.evaluate(() => window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()).catch(() => {});
+    if (sustainFailure) throw sustainFailure;
   }
   const runtime = await page.evaluate(() => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();

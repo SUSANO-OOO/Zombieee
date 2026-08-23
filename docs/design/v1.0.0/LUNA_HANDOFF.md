@@ -1,11 +1,13 @@
-# Version 1.0.0 Luna Implementation Handoff
+# Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r11`
+- Canonical Design Lock: `V100-SOL-DL-001 r13`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
-- Role lock for implementation: `LUNA_IMPLEMENTATION`
+- Active execution owner: `SOL`
+- Active handoff: `NONE`
+- Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Luna must read the entire Design Lock and Asset Inventory before editing. The values in those files are product decisions, not starting suggestions.
+Sections 1-21 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 22 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -919,3 +921,52 @@ Run this section only. Design Lock Section 27 is the active cursor; Section 26 r
 ### 20.2 Exact short Luna handoff
 
 Re-fetch PR #171 and require its live history to contain the published Design Lock Section 27 / Handoff Section 20 Sol packet directly after `f3db25f00c9209830d79d7f01b599bdb02834a06`. Continue in the same stopped worktree with exactly the same six unstaged paths and hashes. Do not edit or recommit `docs/PROJECT_STATE.md`, either design document, or `tests/v100-design-lock.test.mjs`; Sol has already run the targeted contract 1/1 and the exact focused suite 47/47 in this worktree. Do not repeat the resume preflight, five-file load, or focused source suite. Resume at lint, then build, diff/byte/six-path audit, fresh corrected Stage 24 3/3, canonical Stage 3 3/3, the one six-path correction commit/push, and focused remote complete green. On any failure, drift, or need outside the six-path correction, use the existing exact r11 return status and stop without retry/rerun/extra edit. No Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure.
+
+## 21. Revision r12 — no active Luna handoff
+
+Design Lock Section 28 and the latest explicitly labeled Issue #172 loop-ledger entry are the sole active cursor. Producer directives `5386346594`, `5386372849`, `5386391321`, `5386349725`, and `5386314197` replace the previous SOL/Luna routing for this Version until explicitly revoked; `5386320133` is the initial SOL cursor, not a permanently current value. The repository filename, Section 2 historical reading list, and historical `LUNA_HANDOFF_READY: YES` do not assign current ownership.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `DESIGN_PUBLICATION_ROLE`: `SOL_DESIGN`
+- `NEXT_ROLE`: `SOL_REMEDIATION`; the active role is read from the current Issue #172 cursor
+- `LAST_AUDITED_HEAD`: `0495e95e3bc59fcf546ffa02ee83704a1f63e366`
+- `LAST_AUDITED_TREE`: `30071d5a9f4fd92e93f54ddea2e9713382247f74`
+- `FAILED_GATE`: run `32636742294`, Phase G job `97189630445`, capture variant `stage06-spitter-seal`, actual stage ID `stage-nishijin-station-tunnel-seal`, WebKit 667x375 before pointer dispatch; artifact `9492754238`
+- `LAST_GREEN_GATE`: PR Verify `97187545551`; prior same-app-tree Stage 6 positive control only
+- `CLASSIFICATION`: `QA_HARNESS_ACTIONABILITY_GATE_POLICY_FAILURE / PRE_POINTER_LOCATOR_STABILITY_TIMEOUT + FAILURE_CURSOR_FINALIZATION_LOSS / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_REAL_POINTER_ACTIONABILITY / EXPLICIT_HIT_TEST + STABLE_RECT + ONE_INPUT + TRUE_FAILURE_CURSOR / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `1` now -> `2` at the atomic six-path candidate -> `3` only if the workflow-restoration promotion HEAD is created; without restoration remain `2`
+- `SAME_GATE_REPEAT_COUNT`: `1` now; reset only after the candidate focused required gate is green, before an authorized promotion HEAD
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact `0495e95` worktree with Issue-locked four-path design packet -> edit only the two Phase G harness paths -> focused 54/54/static gates -> Stage 6 3/3 -> ordered Stage 6/24/25 trio 3/3 -> one atomic six-path candidate commit/push -> candidate remote focused complete green -> local workflow-only restoration commit -> same-HEAD local full 54/54/validator/regressions -> one promotion push -> unfiltered remote complete green -> exact-HEAD runtime/human audit -> frozen read-only `SOL_FINAL_REVIEW`
+
+Current SOL required reading is `AGENTS.md`, `docs/CODEX_TWO_THREAD_WORKFLOW.md`, `docs/CODEX_SOL_ROLE.md`, `docs/PROJECT_STATE.md`, Producer Decisions, Design Lock Section 28, this Section 21, the latest Issue #172 cursor, and live PR/CI/artifacts. It does not alter the historical Luna reading list.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r12` and Issue #172.** Do not send these instructions to Luna. Under `SOL_DESIGN`, lock the exact four docs/design-test paths byte-for-byte in Issue #172 without an intermediate commit. Under `SOL_REMEDIATION`, edit only `scripts/v100-phase-g-production-matrix.mjs` and `tests/v100-phase-g-checkpoint.test.mjs`, producing one atomic six-path material candidate. Implement the page-scoped single-flight mutex for every battle pointer that can overlap the sustain task, exact node/kind/slot preflight, the clamped centered DOM rail-scroll formula, bounded real pointer/receipt/outcome contract whose success is `exact trusted receipt AND receipt-time pre-handler match AND production acceptance`, and immutable failure cursor from Section 28.2. Require the exact Section 28.3 preflight and focused 54/54 (five pointer plus one cursor contract), capture variant plus actual stage-ID evidence, Stage 6 3/3, ordered trio 3/3, and complete focused remote green. If workflow restoration is required, reset the same-gate counter, create the workflow-only iteration-3 HEAD locally, run local full gates at that HEAD, then make the single unfiltered promotion push; without restoration remain iteration 2. Record every old/new HEAD/tree and invalidate earlier final evidence. Any failure returns inside the same SOL-owned `/goal`; the only routine Producer stop is `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` after a clean fixed-HEAD `SOL_FINAL_REVIEW`.
+
+## 22. Revision r13 — no active Luna handoff / Stage 25 target ownership
+
+Design Lock Section 29 and the latest explicitly labeled Issue #172 r13 loop-ledger entry are the sole active cursor. Section 21 is retained as the completed r12 design/remediation/runtime history. Producer's SOL single-owner override remains active; no Luna execution, classification, retry, correction choice, or handoff is authorized.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r13 four-path design/source packet is published and locked; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `0495e95e3bc59fcf546ffa02ee83704a1f63e366`
+- `LAST_AUDITED_TREE`: `30071d5a9f4fd92e93f54ddea2e9713382247f74`
+- `FAILED_GATE`: local ordered sequence `r12-trio-fresh-2-d5986723-b`, ordered position 3, variant `stage25-president`, actual stage ID `stage-mugarian-executive-lab`, WebKit 932x430; sole unresolved checkpoint `living-human-target-acquired-or-not-required`; sequence 3 was not run
+- `LAST_GREEN_GATE`: r12 source 54/54 plus lint/build/diff/topology, Stage 6 standalone 3/3, ordered sequence 1 complete 3/3, and sequence 2 Stage 6/24; diagnosis/comparison evidence only after r13 runner bytes change
+- `CLASSIFICATION`: `QA_HARNESS_TARGET_OWNERSHIP_HISTORY / LIVE_ONLY_CONTACT_CHECKPOINT + ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `2`; the r12 material candidate was never committed, the r13 atomic six-path candidate remains iteration 2, and only a later workflow-restoration promotion HEAD is iteration 3
+- `SAME_GATE_REPEAT_COUNT`: `1` for the current Stage 25 target-ownership checkpoint; this is not a repeated Stage 6 failure
+- `NEXT_OWNER`: `SOL_REMEDIATION` after the Issue-locked r13 publication
+- `RESUME_FROM`: same exact six-path worktree -> publish/lock r13 four-path design bytes -> edit only the two Phase G harness paths -> focused 54/54/static/lint/build/diff/topology -> fresh Stage 25 WebKit 932x430 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic six-path candidate commit/push -> complete focused remote green -> unchanged Section 28 promotion/full/unfiltered/runtime/final-review/release route
+
+The r13 correction is finite. Extend both behaviorally identical `mergeCombatActivityHistory` owners with bounded monotonic `targetOwnershipHistory` (maximum 96). Each positive observation must resolve the exact source and target IDs in the same production snapshot and use the exact fields `channel`, `battleTime`, `sourceId`, `sourceSide`, `sourceKind`, `targetId`, `targetSide`, `targetKind`, `targetHp`, and `targetAlive`. Preserve first-observed order; after the first 96 unique observations, ignore newer uniques without eviction or replacement. `proofActorHumanTargetFromHistory` returns the first accepted requested proof actor on side `zombie` targeting a live `human`; current live-target evidence has priority. Immediately after the final proof-actor predicate succeeds, invoke the contact reader once without wait/retry so accepted history is consumed before checkpoint completeness. Generic source-target edges, attacking actors, audio, causal axes, current human count, screenshots, or non-human targets are never substitutes. Preserve all r12 pointer, mutex, receipt, acceptance, cancellation, failure-cursor, timeout, checkpoint, viewport, and no-retry contracts.
+
+Acceptance is exact five-file focused 54/54 with the target-history behavior added inside the existing `V100_PHASE_G_CAUSAL_HISTORY_PROBE`, checkpoint file still exactly 12 tests, then static gates, Stage 25 fresh 3/3, and ordered trio fresh 3/3. A history-positive/checkpoint-unresolved mismatch returns `QA_HARNESS_TARGET_HISTORY_CONSUMER_DIVERGENCE`; shield attack with only non-human ownership returns `PROOF_ACTOR_HUMAN_TARGET_NOT_ESTABLISHED`; attack evidence without same-frame identity returns `QA_HARNESS_TARGET_IDENTITY_OBSERVATION_GAP`. No failure authorizes rerun, immediate edit, gameplay/targeting change, timeout extension, checkpoint weakening, or extra attempt.
+
+Current SOL required reading is `AGENTS.md`, `docs/CODEX_TWO_THREAD_WORKFLOW.md`, `docs/CODEX_SOL_ROLE.md`, `docs/PROJECT_STATE.md`, Producer Decisions, Design Lock Sections 28-29, this Section 22, the latest Issue #172 cursor, and live PR/CI/artifacts. It does not alter the historical Luna reading list.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r13` and Issue #172.** In `SOL_DESIGN`, publish and byte-lock the four current docs/design-test paths without an intermediate commit. Only after that publication switch to `SOL_REMEDIATION` and edit the two existing Phase G harness paths. Add first-96/no-eviction same-frame `targetOwnershipHistory` to both merge owners, the exact no-substitution selector/reader/report evidence, the one no-wait final-predicate consumer read, and the required behavior assertions inside the existing causal-history probe. Preserve the r12 six-path draft and every r12 actionability/cursor contract. Require focused 54/54, checkpoint 12/12, static gates, Stage 25 3/3, ordered trio 3/3, one atomic six-path candidate, complete focused remote green, then the unchanged promotion/full/unfiltered/runtime/final-review/release route. Any failure returns inside this SOL-owned `/goal`; do not route to Luna.

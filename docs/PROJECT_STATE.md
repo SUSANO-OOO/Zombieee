@@ -1,6 +1,6 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-08-22
+更新日：2026-08-24
 
 ## 1. 現在の正式公開
 
@@ -19,11 +19,11 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - 正史：v10 event script
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
-- implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
-- LAST_AUDITED_HEAD：`3f4190eb0fa89eef59141692e338ff3a9c81b40b`、tree `8782ed45b0cc85130d0a86fc2ce3135be1f22160`。これはSOLが内容とr10 Stage 24 raw evidenceを監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
+- LAST_AUDITED_HEAD：`0495e95e3bc59fcf546ffa02ee83704a1f63e366`、tree `30071d5a9f4fd92e93f54ddea2e9713382247f74`。これはr13設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r11`（Section 26がroute `5383696506`のStage 24 causal-history defectを閉じ、same-revision Section 27がSOL-owned Project State contract omissionを補完する。r10 bootstrap、six-path draft、acceptance threshold、Sections 23-26のpromotion／dynamic-quality／release loopを維持。`PRODUCT_DESIGN_CHANGE: 0`）
-- execution ledger：Issue #172。r11 Sections 26-27 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
+- current Design Lock：`V100-SOL-DL-001 r13` Sections 28-29。r12 Stage 6 actionability/failure-cursor contractを維持し、Stage 25 same-frame target-ownership evidence closureとSOL単独ownerのsingle-checkpoint ship loopを固定。`PRODUCT_DESIGN_CHANGE: 0`
+- execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
 ## 3. Version 1.0.0固定事項
@@ -47,26 +47,28 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 
 exact stats、cost、reward、duration、wave、unlock、装甲車両upgrade curve、boss他mode配置、旧player記念CAPS額は、固定guardrail内でSolが自律確定する。
 
-## 4. 実行体制
+## 4. 実行体制 — V1 SOL single-owner override
 
-1. Producer／司令塔が正本と製品境界を固定
-2. 元のSol threadが`SOL_DESIGN`
-3. SolがDesign Lock、有限asset inventory、必要asset candidate、Luna Handoffを作成
-4. Lunaが`LUNA_IMPLEMENTATION`としてproduction実装、asset統合、tests、browser QA、Draft PR
-5. remote required CI／unfiltered Phase G 54/54＋validator完全green後、Lunaはexact HEAD/treeで`DYNAMIC_GAME_QUALITY_EVIDENCE_PACKET`を収集する。既存QA／developer controlは状態到達だけに使用し、difficulty／balance／reward／clearability／save integrityの証拠へ流用しない
-6. dynamic packet完成後、Lunaは`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`へ遷移し、packet参照とactual productionの12画面（TITLE、名前入力、作戦地図、通常Stage選択、Boss Stage選択、出撃編成、隊員、出撃装備、装甲車両強化、代表event、通常battle HUD、戦果）をProducer確認へ出す
-7. Producer Visual Approval前はCompletion Packetを確定せず、`READY_FOR_SOL_FINAL_REVIEW`へ進まない
-8. Producer Visual Approval後に承認HEAD/tree、12 evidence ID、dynamic packet IDをfreezeし、branch commitを作らずLuna Completion PacketをIssue／PR／immutable artifactで確定して元のSolへ返す。承認後のcommitはVisual Approvalとfreezeを無効化する
-9. 元のSolが`SOL_FINAL_REVIEW`でactual runtime／dynamic evidenceをhuman-player視点で監査し、High／Medium 0なら`APPROVE`
-10. `SOL FINAL REVIEW APPROVE`後も直ちに統合・公開せず、`PRODUCER_FINAL_ACCEPTANCE`へ進む
-11. Producerの明示承認後だけPR #169 -> #170 -> #171をfresh checks／exact head／synthetic treeで順次統合し、#171 merge-result SHA/treeが承認treeと一致した場合だけtag、GitHub Release、official Pagesを実行する
-12. published SHAを固定してpost-release QAを行い、その成功後に`PROJECT_STATE`更新と対象Issue／PR closeを行う
+Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-endで所有する。旧`NEXT_OWNER: LUNA_IMPLEMENTATION`とbranch名は履歴であり実行指示ではない。
 
-SolとLunaを同時並行に動かさない。
+`SOL_DESIGN -> SOL_REMEDIATION -> machine gates -> browser/runtime verification -> human-player quality audit -> exact HEAD/tree freeze -> SOL_FINAL_REVIEW (read-only/adversarial) -> FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`。
+
+- finding／required failure／Producer rejectは同一`/goal`の`SOL_DESIGN`へ戻す。new candidateは影響evidenceを無効化し、再validationとfixed-HEAD reviewを行う
+- Producerへ通常停止するのは最後のcheckpoint一度だけ。12画面はfinal packageへ統合し、旧Producer Visual Approvalと旧Producer Final Acceptanceの二段停止は使わない
+- Producer承認後だけPR #169 -> #170 -> #171をlive ref／checks／mergeability／synthetic treeで順次統合する。verified #171 merge-result SHA/treeをrelease基準とし、approved candidate treeとの一致を必須とする
+- その後だけannotated `v1.0.0`、GitHub Release、official Pages request、published-SHA public/PWA QA、recovery、Project State／Issue closureへ進む
+- public environment green前に`/goal COMPLETE`、Issue close、release完了報告を行わない
 
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- current required failureは未commit r12 six-path draft上のlocal ordered sequence `r12-trio-fresh-2-d5986723-b`、ordered position 3、variant `stage25-president`、actual stage ID `stage-mugarian-executive-lab`、WebKit 932x430。sole unresolved checkpointは`living-human-target-acquired-or-not-required`で、sequence 3は未実行。failure JSON SHA-256は`78349ab86a65c333c2ce3bebafa4649dd3430a9d04c2fa79e7b7734a47aee469`。
+- Stage 25はshield attack、deployment complete、causal 4軸、screenshot、live battle、fatal diagnostics 0を保持したが、page-lifetime historyはsource-target ID edgeとactor kindだけで同一snapshotのID->side/kind/HPを保持しない。live contact pollはhistorical attack成立時に止まるため、瞬間的なshield -> living-human targetとnon-human targetをartifactから区別できない。unresolvedはtruthfulであり、product targeting/gameplay failureもhuman target成立も現evidenceでは確定しない。
+- r13 classification：`QA_HARNESS_TARGET_OWNERSHIP_HISTORY / LIVE_ONLY_CONTACT_CHECKPOINT + ATTACK_HISTORY_WITHOUT_SIDE_KIND_TARGET_ATTRIBUTION / DESIGN_CHANGE_REQUIRED`。remediationは`PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`。
+- r13 correctionは両`mergeCombatActivityHistory` ownerへ最大96件の`targetOwnershipHistory`を追加し、同一production snapshotでsource/target双方を解決できたtargetId／attackIdentity／pendingWeaponHitsだけを単調保持する。requested zombie proof actor -> live humanのexact observationだけがcheckpointを補完でき、generic edge／attack／audio／causal axes／human count／screenshot／non-human targetは代用不可。r12 pointer/mutex/receipt/acceptance/cancellation/failure-cursor/timeout/checkpoint contractは維持する。
+- r12 required remote history：run `32636742294`、Phase G job `97189630445`、Stage 6 WebKit 667x375、artifact `9492754238`、PR Verify `97187545551` green。r12 draft後はStage 6 standalone 3/3、ordered sequence 1 full 3/3、sequence 2 Stage 6/24までgreenであり、Stage 6 failureはrepeatしていない。
+- r12 historical classification：`QA_HARNESS_ACTIONABILITY_GATE_POLICY_FAILURE / PRE_POINTER_LOCATOR_STABILITY_TIMEOUT + FAILURE_CURSOR_FINALIZATION_LOSS / DESIGN_CHANGE_REQUIRED`。remediation classは`PHASE_G_REAL_POINTER_ACTIONABILITY / EXPLICIT_HIT_TEST + STABLE_RECT + ONE_INPUT + TRUE_FAILURE_CURSOR / DESIGN_CHANGE_REQUIRED`。Section 28のcontractはr13でも維持する。
+- 以下のr8-r11項目は監査履歴でありcurrent cursorではない。
 - r10 same-worktree bootstrap/preflight、focused source 43/43、lint、build、base-range／six-path auditはgreen。Stage 24 WebKit run 1はPASS、run 2は35 samples中`source=false`のみでFAILし、run 3／canonical Stage 3／correction commit・push／remote CIは未実行のままLunaが`BLOCKED_RETURN_TO_SOL_R10_RUNTIME`で停止した。
 - raw run 2はRED PANTHER commander attack state／専用SE、impact receipt、damage/reaction、Futago ability、active battleを保持し、console/page/request/HTTP failure 0、cleanup前lifecycle loss 0。run 1だけ`13->25` edgeがfinal proof windowへ再出現した。production combat／VFX／audio defectではない。
 - r11 classificationは`QA_HARNESS_CAUSAL_HISTORY / MONOTONIC_SOURCE_TARGET_EDGE_CLOBBER + FINAL_WINDOW_PHASE_COUPLING / DESIGN_CHANGE_REQUIRED`、causal `REMEDIATION_CLASS`は`PHASE_G_CAUSAL_HISTORY / MONOTONIC_SOURCE_EDGE + NON_DESTRUCTIVE_FINAL_MERGE / DESIGN_CHANGE_REQUIRED`。`startCombatRuntimeObserver`の履歴を`waitForCombatActivity`が瞬間arrayで置換し、observer停止後の`collectCombatCausalProof`を偶発的なfinal-window edgeへ依存させる。Section 26／Handoff 19はpage-lifetime edge attribution、non-destructive merge、negative no-substitution、same-worktree resume preflightを一つのcoherent contractとして固定する。
@@ -82,28 +84,28 @@ SolとLunaを同時並行に動かさない。
 - Phase G `96949389397`／artifact `9466905397`のStage 24 WebKit 736x414 failureは`QA_PREDICATE_OR_ORCHESTRATION / STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE`。DOM ready表示と同一sampleのruntime command 27.8／cost 45が矛盾したままgeneric 30秒click waitへ入り、その後page crashとなった。production deployment／balance failureの証拠ではない。
 - canonical WebKit `96954658044`／artifact `9467643324`の667x375 `stage3-boss` failureは`BROWSER_LIFECYCLE_OR_RESOURCE / CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER`。battle-ready後、clean diagnosticsのままunexpected page crashがlifecycle JSONLへ記録されたが、wrapped target-closeを既存classifierが認識しなかった。product message duration／presentation assertion failureの証拠ではない。
 - CI #910の二件はpage crashという終端だけを共有し、原因ownerは独立する。Design Lock r8 Section 23／r9 Section 24がatomic DOM/runtime deployment eligibility、attempt-local clean-crash classification、source-contract closureを固定する。generic retry、blanket timeout extension、assertion弱体化、`app/**`／gameplay／balance／AI変更は禁止する。
-- r11 corrected harnessでfresh local Stage 24 3/3、canonical Stage 3 3/3、correction-HEAD focused remote complete green、local full Phase G 54/54＋validator＋full regressions、unfiltered-workflow restoration、unfiltered remote complete green、dynamic evidence packet、Producer Visual Checkpointは未完了である。
+- r11 corrected harnessでfresh local Stage 24 3/3、canonical Stage 3 3/3、six-path correction commit／push `0495e95e3bc59fcf546ffa02ee83704a1f63e366`までは完了した。correction-HEAD remote run #918はcurrent Stage 6 failureでredのため、focused remote complete green以後のlocal full Phase G 54/54＋validator＋full regressions、unfiltered remote complete green、dynamic runtime/human-quality evidenceは未完了である。
 - r11 LUNA source returnはresume preflight PASS、five-file load PASS、focused 47 total／46 pass／1 fail、causal tests 4/4 PASS。実際の失敗は`tests/v100-design-lock.test.mjs`のr10 cross-source remediation-class assertionであり、`SOL human-player quality audit未完了` literalはlive／worktree双方に存在する。Section 27はtestを弱めず、Project Stateへ欠落していたr10 `REMEDIATION_CLASS`を追加するSOL-owned same-revision correctionとして閉じる。
+- r11 source-contract history：HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`、tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`、class `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`。これはcurrent cursorではない。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r11 Sections 26-27
+## 6. Version 1.0.0 execution cursor — r13 Section 29
 
-- `LAST_AUDITED_HEAD`: `f3db25f00c9209830d79d7f01b599bdb02834a06`
-- `LAST_AUDITED_TREE`: `ee0bcd81f3aed9bedaf642f6990acf8907865259`
-- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
-- `FAILED_GATE`: r11 focused source acceptance 47 total／46 pass／1 fail；Sol-owned Project Stateにr10 `REMEDIATION_CLASS` literalが欠落。lint／build／runtime／commit／push未実施
-- `LAST_GREEN_GATE`: r11 resume preflight、five-file load、46/47 focused assertions（causal 4/4を含む）。Section 27 packet公開前にSol自身のtargeted 1/1＋same-worktree focused 47/47を必須とする
-- `REMEDIATION_CLASS`: `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`
-- `RESUME_FROM`: published Section 27 packet in the same stopped six-path worktree -> no repeat of resume/load/focused -> lint -> build -> diff/byte/six-path audit -> fresh corrected Stage 24 3/3 -> canonical Stage 3 3/3 -> one six-path correction commit/push -> focused remote complete green -> Section 23 full/unfiltered/dynamic-quality route
-- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Solのtargeted 1/1、focused 47/47、four-path packet commit/push、six-draft byte read-back後。Design Lock Section 27／Handoff Section 20のみ）
+- `LOOP_ITERATION`: `2`。Stage 25 material findingがsecond coherent remediation cycleを開始した。r12 material candidate commitは未作成のためr13 atomic candidateもiteration 2。workflow-restoration promotion HEADを後で作る場合のみiteration 3
+- `SAME_GATE_REPEAT_COUNT`: `1` for current Stage 25 ordered-trio target-ownership checkpoint。これはStage 6の二回目failureではない。同じStage 25 checkpointの次failureで`2`とし、追加edit前にsubsystem-level auditを必須化
+- `LAST_AUDITED_HEAD`: `0495e95e3bc59fcf546ffa02ee83704a1f63e366`
+- `LAST_AUDITED_TREE`: `30071d5a9f4fd92e93f54ddea2e9713382247f74`
+- `FAILED_GATE`: local ordered sequence `r12-trio-fresh-2-d5986723-b`／ordered position 3／Stage 25 WebKit 932x430／`living-human-target-acquired-or-not-required` unresolved；sequence 3未実行
+- `LAST_GREEN_GATE`: r12 source 54/54／lint／build／diff／topology、Stage 6 standalone 3/3、ordered sequence 1 full 3/3、sequence 2 Stage 6/24。r13 runner bytes変更後のacceptanceへ流用しない
+- `REMEDIATION_CLASS`: `PHASE_G_PROOF_ACTOR_TARGET_OWNERSHIP / MONOTONIC_SAME_FRAME_SOURCE_TARGET_IDENTITY + NO_GENERIC_SUBSTITUTION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: same exact six-path worktree -> publish/lock r13 four-path design bytes -> two-path target-history remediation -> focused 54/54/static/lint/build/diff/topology -> fresh Stage 25 3/3 -> fresh ordered Stage 6/24/25 trio 3/3 -> one atomic six-path candidate commit/push -> complete focused remote green -> unchanged Section 28 promotion/full/unfiltered/runtime/final-review/release route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
 
-Lunaは同じisolated worktreeのsix-path draftを保持する。Section 27 packet後はSolが同じworktreeでsource 47/47まで確認済みのため、resume preflight／load／focusedを繰り返さずlintから再開する。r11のsource、runtime、remote failure classに応じた`BLOCKED_RETURN_TO_SOL_R11_*`で戻し、dependency self-repair／別workspace／retry／rerun／追加editをしない。focused remote complete greenの場合だけSections 23-24のlocal full gateと一回のunfiltered-workflow restorationへ進む。
-
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。作業開始・push前・gate判定前にGitHubのPR refを再取得する。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r13はまず四つのSOL-owned design/source pathsをcommitせずIssue #172へraw SHA-256／blob ID／combined patch hashとdesign/source green proofで固定し、`SOL_REMEDIATION`では二つのPhase G harness pathsだけを追加編集する。最初のmaterial commitは合計six-path atomic candidateであり、作成時にnew HEAD/treeをIssue ledgerへ固定する。旧HEAD/r12 runtime evidenceをr13 candidate acceptanceへ流用しない。focused remote完全green後のpromotion/full/unfiltered routeはSection 28を維持する。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock Section 19／23-27のProducer Visual Checkpoint／Final Acceptance経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r11を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-29のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r13を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 
@@ -118,6 +120,6 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 - CAPS、reward、unlock、event、receiptの二重適用
 - save、offline、PWA update、rollbackの破壊
 - 844×390、844×340、1280×720で切れ、重なり、豆粒化、操作不能
-- `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`のactual production 12画面に対するProducer Visual Approval未取得
-- exact HEAD/treeのdynamic game-quality packetとSOL human-player quality audit未完了
+- exact HEAD/treeの12画面を含むfinal release-candidate packageとSOL human-player quality audit未完了
+- read-only／adversarial fixed-HEAD `SOL_FINAL_REVIEW`と一度だけの`FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`未完了
 - High／Medium finding未解消

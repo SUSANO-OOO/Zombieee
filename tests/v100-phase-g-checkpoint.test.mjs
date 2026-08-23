@@ -22,6 +22,51 @@ function runContractProbe(input) {
   return JSON.parse(result.stdout.trim());
 }
 
+function runPointerProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_DEPLOYMENT_POINTER_PROBE: "1",
+      V100_PHASE_G_DEPLOYMENT_POINTER_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
+function runCheckpointFinalizationProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_CHECKPOINT_FINALIZATION_PROBE: "1",
+      V100_PHASE_G_CHECKPOINT_FINALIZATION_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
+function runHistoryProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_CAUSAL_HISTORY_PROBE: "1",
+      V100_PHASE_G_CAUSAL_HISTORY_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
 function readyCard(kind, cost) {
   return {
     kind,
@@ -42,6 +87,77 @@ function liveBattle(overrides = {}) {
     energy: 100,
     deployQueue: [],
     deployCooldowns: { ranger: 0, medic: 0 },
+    ...overrides,
+  };
+}
+
+const pointerIdentity = Object.freeze({ nodeId: "deployment-card-1", kind: "ranger", slot: "0" });
+
+function actionablePointerCard(overrides = {}) {
+  const rect = { x: 10, y: 20, width: 80, height: 60, visible: true, ...(overrides.rect ?? {}) };
+  return {
+    ...pointerIdentity,
+    state: "ready",
+    ariaDisabled: "false",
+    disabled: false,
+    actionability: { eligible: true, reasons: [] },
+    rect,
+    center: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
+    centerInCard: true,
+    centerInViewport: true,
+    centerInRail: true,
+    viewportIntersection: true,
+    railIntersection: true,
+    pointerEvents: "auto",
+    hitOwnerMatches: true,
+    rail: { scrollLeft: 12, rect: { x: 0, y: 0, width: 320, height: 90 } },
+    ...overrides,
+    rect,
+  };
+}
+
+function pointerSample(frameToken, overrides = {}) {
+  return {
+    frameToken,
+    card: actionablePointerCard(overrides),
+  };
+}
+
+function pointerReceipt(type, overrides = {}) {
+  const sequence = type === "pointerdown" ? 1 : type === "pointerup" ? 2 : 3;
+  const preHandler = {
+    identity: { ...pointerIdentity },
+    eligible: true,
+    card: actionablePointerCard({ cost: 45 }),
+    battle: liveBattle({ energy: 100 }),
+    hitOwner: { ...pointerIdentity },
+    ...(overrides.preHandler ?? {}),
+  };
+  return {
+    attemptId: "attempt-1",
+    type,
+    sequence,
+    isTrusted: true,
+    pointerType: "mouse",
+    button: 0,
+    clientX: 50,
+    clientY: 50,
+    elapsedMs: sequence * 2,
+    elapsedSinceDispatchStartMs: sequence,
+    owner: { ...pointerIdentity },
+    ...overrides,
+    preHandler,
+  };
+}
+
+function verifiedOutcomeInput(overrides = {}) {
+  return {
+    dispatch: { status: "completed", elapsedMs: 20 },
+    receipts: [pointerReceipt("pointerdown"), pointerReceipt("pointerup"), pointerReceipt("click")],
+    expectedIdentity: { ...pointerIdentity },
+    point: { x: 50, y: 50 },
+    attemptId: "attempt-1",
+    acceptance: true,
     ...overrides,
   };
 }
@@ -76,52 +192,387 @@ test("Phase G selects an affordable cooldown-zero candidate from the coherent sa
   assert.deepEqual(result.candidates, ["ranger"]);
 });
 
-test("Phase G records pre-click invalidation and reselects instead of clicking a stale candidate", () => {
+test("Phase G preserves the bounded exclusion set when choosing a coherent primary candidate", () => {
   const result = runContractProbe({
-    requestedKind: "ranger",
-    cards: [readyCard("ranger", 45)],
-    battle: liveBattle({ energy: 45 }),
-    error: "TimeoutError: locator.click: element is not actionable",
-    after: {
-      cards: [readyCard("ranger", 45)],
-      battle: liveBattle({ energy: 20 }),
-    },
+    cards: [readyCard("ranger", 45), readyCard("medic", 30)],
+    battle: liveBattle({ energy: 100 }),
+    excludedKinds: ["ranger"],
   });
-  assert.deepEqual(result.candidates, ["ranger"]);
-  assert.equal(result.outcome, "candidate-invalidated");
+  assert.deepEqual(result.candidates, ["medic"]);
 });
 
-test("Phase G fails closed on persistent actionability divergence and lifecycle loss", () => {
-  const divergence = runContractProbe({
-    requestedKind: "ranger",
+test("Phase G rejects full queues and terminal battle state before any candidate selection", () => {
+  const fullQueue = runContractProbe({
     cards: [readyCard("ranger", 45)],
-    battle: liveBattle({ energy: 45 }),
-    error: "TimeoutError: locator.click: element is not actionable",
-    after: {
-      cards: [readyCard("ranger", 45)],
-      battle: liveBattle({ energy: 45 }),
-    },
+    battle: liveBattle({ deployQueue: ["medic", "brute", "sniper"] }),
   });
-  assert.equal(divergence.outcome, "QA_HARNESS_ACTIONABILITY_DIVERGENCE");
-  const lifecycle = runContractProbe({
-    requestedKind: "ranger",
+  assert.deepEqual(fullQueue.candidates, []);
+  assert.match(JSON.stringify(fullQueue.sample), /deployment-queue-full/u);
+  const terminal = runContractProbe({
     cards: [readyCard("ranger", 45)],
-    battle: liveBattle({ energy: 45 }),
-    error: "locator.click: Target page, context or browser has been closed",
-    after: { pageClosed: true },
+    battle: liveBattle({ running: false, over: true }),
   });
-  assert.equal(lifecycle.outcome, "lifecycle-loss");
+  assert.deepEqual(terminal.candidates, []);
+  assert.match(JSON.stringify(terminal.sample), /runtime-not-live/u);
 });
 
-test("Phase G keeps the named deployment deadline, normal click, acceptance, and fourteen checkpoints", async () => {
+test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints", async () => {
   const source = await readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8");
-  assert.match(source, /const DEPLOYMENT_ACTIONABILITY_DEADLINE_MS = 2_000/u);
-  assert.match(source, /clickDeploymentCard/u);
-  assert.match(source, /locator\.click\(\{ timeout: DEPLOYMENT_ACTIONABILITY_DEADLINE_MS \}\)/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS = 5_000/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_FRAME_SAMPLE_TIMEOUT_MS = 1_000/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_MAX_SAMPLES = 12/u);
+  assert.match(source, /const DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS = 2_000/u);
+  assert.equal((source.match(/\bperformVerifiedDeploymentPointer\b/gu) ?? []).length, 6);
+  assert.equal((source.match(/page\.mouse\.click/gu) ?? []).length, 1);
+  assert.equal((source.match(/\bwithPhaseGPageInputLock\b/gu) ?? []).length, 8);
+  for (const phase of ["sustain-proof", "sustain-redeploy", "non-boss-primary", "boss-primary", "proof-fallback"]) {
+    const phaseMarker = `phase: "${phase}"`;
+    const phaseIndex = source.indexOf(phaseMarker);
+    const helperIndex = source.lastIndexOf("performVerifiedDeploymentPointer", phaseIndex);
+    assert.ok(phaseIndex >= 0, `missing deployment phase ${phase}`);
+    assert.ok(helperIndex >= 0 && phaseIndex - helperIndex < 240, `${phase} is not owned by performVerifiedDeploymentPointer`);
+  }
+  assert.equal((source.match(/const lockedAbility =/gu) ?? []).length, 2);
+  assert.equal((source.match(/const lockedCrawler =/gu) ?? []).length, 2);
+  assert.equal((source.match(/const lockedCanvas =/gu) ?? []).length, 2);
+  assert.equal((source.match(/await withPhaseGPageInputLock\(page, async \(\) => \{\s*const lockedAbility =/gu) ?? []).length, 2);
+  assert.equal((source.match(/await withPhaseGPageInputLock\(page, async \(\) => \{\s*const lockedCrawler =/gu) ?? []).length, 2);
+  assert.equal((source.match(/await withPhaseGPageInputLock\(page, async \(\) => \{\s*const lockedCanvas =/gu) ?? []).length, 2);
+  assert.match(source, /targetLeft = clamp\(rail\.scrollLeft \+ cardCenterX - railCenterX, 0, rail\.scrollWidth - rail\.clientWidth\)/u);
+  assert.match(source, /rail\.scrollTo\(\{ left: targetLeft, behavior: "instant" \}\)/u);
   assert.match(source, /deploymentWasAccepted/u);
-  assert.match(source, /candidate-invalidated-before-click/u);
-  assert.match(source, /QA_HARNESS_ACTIONABILITY_DIVERGENCE/u);
-  assert.doesNotMatch(source, /force\s*:\s*true/u);
+  assert.match(source, /candidate-invalidated-before-pointer/u);
+  assert.match(source, /coordinate-invalidated-before-pointer/u);
+  assert.match(source, /QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE/u);
+  assert.match(source, /terminalError/u);
+  assert.match(source, /recordPointerResult/u);
+  assert.match(source, /terminateTimedOutDeploymentPointer/u);
+  assert.match(source, /observePromiseWithin\(page\.evaluate/u);
+  assert.match(source, /elapsedSinceDispatchStartMs/u);
+  assert.ok(source.indexOf("V100_PHASE_G_DEPLOYMENT_POINTER_PROBE") < source.indexOf("await mkdir(evidenceDir"));
+  assert.match(source, /if \(failurePayload\) return/u);
+  assert.match(source, /deepFreezeDiagnosticValue/u);
+  assert.doesNotMatch(source, /clickDeploymentCard/u);
+  const deploymentHelper = source.match(/async function performVerifiedDeploymentPointer[\s\S]*?(?=\nasync function openRoute)/u)?.[0] ?? "";
+  assert.match(deploymentHelper, /page\.mouse\.click/u);
+  assert.match(deploymentHelper, /waitForDeploymentAcceptance/u);
+  assert.match(deploymentHelper, /terminateTimedOutDeploymentPointer/u);
+  assert.match(deploymentHelper, /let primaryError = null/u);
+  assert.match(deploymentHelper, /receiptCleanupFailure/u);
+  assert.doesNotMatch(deploymentHelper, /await pointerPromise\b|context\(\)\.close\(\)\.catch/u);
+  const cancellationHelper = source.match(/async function terminateTimedOutDeploymentPointer[\s\S]*?(?=\nasync function centerDeploymentCardInRail)/u)?.[0] ?? "";
+  assert.match(cancellationHelper, /await operation\(\)/u);
+  assert.match(cancellationHelper, /terminalLifecycleVerified/u);
+  assert.match(cancellationHelper, /independentLifecycleLoss/u);
+  assert.doesNotMatch(cancellationHelper, /BROWSER_POINTER_CANCELLATION_FAILURE|observePromiseWithin\(operation/u);
+  const receiptWait = source.match(/async function waitForDeploymentPointerReceipts[\s\S]*?(?=\nasync function removeDeploymentPointerReceipt)/u)?.[0] ?? "";
+  assert.match(receiptWait, /if \(read\.status === "fulfilled"\) receipts = read\.receipts/u);
+  assert.doesNotMatch(receiptWait, /^\s{4}receipts = read\.receipts;/mu);
+  const acceptanceWait = source.match(/async function waitForDeploymentAcceptance[\s\S]*?(?=\nfunction isTransientBrowserClosure)/u)?.[0] ?? "";
+  assert.match(acceptanceWait, /let latest = null/u);
+  assert.match(acceptanceWait, /let fulfilledPostRead = false/u);
+  assert.match(acceptanceWait, /fulfilledPostRead = true/u);
+  assert.match(acceptanceWait, /const accepted = fulfilledPostRead && latest !== null/u);
+  assert.match(acceptanceWait, /while \(Date\.now\(\) < deadline\)/u);
+  assert.doesNotMatch(acceptanceWait, /let latest = before|while \(!deploymentWasAccepted/u);
+  const failurePersistence = source.match(/const persistFailure = async[\s\S]*?(?=\n\s*const recorder = \{)/u)?.[0] ?? "";
+  assert.match(failurePersistence, /structuredError/u);
+  assert.match(failurePersistence, /pointerEvidence: cloneDiagnosticValue/u);
+  assert.match(failurePersistence, /receiptCleanupFailure: cloneDiagnosticValue/u);
+  assert.doesNotMatch(deploymentHelper, /locator\.click|scrollIntoViewIfNeeded|force\s*:\s*true|dispatchEvent|\.evaluate\([^)]*\.click\(/u);
+  const battleRegion = source.slice(source.indexOf("async function battlePage"), source.indexOf("for (const viewport of requiredViewports)"));
+  assert.doesNotMatch(battleRegion, /page\.locator\([^)]*button\.unit-card[^)]*\)[\s\S]{0,160}?\.click\s*\(/u);
+  assert.doesNotMatch(battleRegion, /document\.querySelector\([^)]*button\.unit-card[^)]*\)[\s\S]{0,80}?\.click\s*\(/u);
+  assert.doesNotMatch(battleRegion, /scrollIntoViewIfNeeded|force\s*:\s*true|dispatchEvent\([^)]*unit-card/u);
+  assert.doesNotMatch(source, /JSON\.stringify\(\{ \.\.\.failurePayload, \.\.\.snapshot\(\) \}/u);
   const checkpointBlock = source.match(/const BATTLE_EXTRA_CHECKPOINTS = Object\.freeze\(\[([\s\S]*?)\]\);/u)?.[1] ?? "";
   assert.equal((checkpointBlock.match(/"[^"]+"/gu) ?? []).length, 14);
+  assert.equal((source.match(/const targetOwnershipHistory = \[\.\.\.\(previous\.targetOwnershipHistory \?\? \[\]\)\];/gu) ?? []).length, 2);
+  assert.match(source, /function proofActorHumanTargetFromHistory\(history = \[\], expectedKind = null\)/u);
+  assert.match(source, /const proofActorHumanTargetFromHistory = \(history = \[\], expectedKind = null\) =>/u);
+  assert.match(source, /activityTargetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
+  assert.match(source, /targetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
+  assert.match(source, /proofActorAttackObserved = true;\s*if \(proofActorRequiresContactFirst\) await readProofActorContactState\(\);/u);
+
+  const livingHumanHistory = runHistoryProbe({
+    proofActor: "red-panther-shield",
+    observerFrames: [{
+      time: 40_483,
+      fighters: [
+        { id: 10, side: "zombie", kind: "red-panther-shield", hp: 240, targetId: 20 },
+        { id: 20, side: "human", kind: "guardian", hp: 190, targetId: null },
+      ],
+    }, {
+      time: 40_523,
+      fighters: [],
+      attackIdentity: [],
+      pendingWeaponHits: [],
+    }],
+    waitSnapshot: { time: 40_563, fighters: [], attackIdentity: [], pendingWeaponHits: [] },
+  });
+  assert.equal(livingHumanHistory.history.targetOwnershipHistory.length, 1);
+  assert.deepEqual(livingHumanHistory.humanTarget, {
+    channel: "targetId",
+    battleTime: 40_483,
+    sourceId: 10,
+    sourceSide: "zombie",
+    sourceKind: "red-panther-shield",
+    targetId: 20,
+    targetSide: "human",
+    targetKind: "guardian",
+    targetHp: 190,
+    targetAlive: true,
+  });
+
+  const nonHumanHistory = runHistoryProbe({
+    proofActor: "red-panther-shield",
+    observerFrames: [{
+      time: 12_000,
+      fighters: [
+        { id: 30, side: "zombie", kind: "red-panther-shield", hp: 240, targetId: 31 },
+        { id: 31, side: "object", kind: "medical-support", hp: 100, targetId: null },
+      ],
+      attackIdentity: [{ sourceId: 30, targetId: 31 }],
+    }],
+  });
+  assert.equal(nonHumanHistory.humanTarget, null);
+  assert.equal(nonHumanHistory.history.targetOwnershipHistory.every((observation) => observation.targetSide !== "human"), true);
+
+  const identitylessHistory = runHistoryProbe({
+    proofActor: "red-panther-shield",
+    observerFrames: [{
+      time: 15_000,
+      fighters: [],
+      attackIdentity: [{ sourceId: 40, targetId: 41 }],
+      attackingActors: ["zombie:red-panther-shield"],
+    }],
+    proofSamples: [{
+      activitySourceToTargetEdges: ["40->41"],
+      battlePresentationEffects: [{ semantic: "impact" }],
+      audioCueRequests: [{ cueId: "shield-hit" }],
+    }],
+  });
+  assert.equal(identitylessHistory.humanTarget, null);
+  assert.deepEqual(identitylessHistory.history.targetOwnershipHistory, []);
+  assert.deepEqual(identitylessHistory.history.sourceToTargetEdges, ["40->41"]);
+
+  const boundedFrames = Array.from({ length: 98 }, (_, index) => ({
+    time: index,
+    fighters: [
+      { id: `shield-${index}`, side: "zombie", kind: "red-panther-shield", hp: 240, targetId: `human-${index}` },
+      { id: `human-${index}`, side: "human", kind: `human-${index}`, hp: 100, targetId: null },
+    ],
+  }));
+  const boundedHistory = runHistoryProbe({
+    proofActor: "red-panther-shield",
+    observerFrames: boundedFrames,
+    waitSnapshot: { time: 99, fighters: [] },
+  });
+  assert.equal(boundedHistory.history.targetOwnershipHistory.length, 96);
+  assert.equal(boundedHistory.history.targetOwnershipHistory[0].targetId, "human-0");
+  assert.equal(boundedHistory.history.targetOwnershipHistory[95].targetId, "human-95");
+  assert.equal(boundedHistory.humanTarget.targetId, "human-0");
+});
+
+test("r12 pointer precondition accepts two stable distinct frames and an immediate terminal recheck", () => {
+  const samples = [
+    pointerSample(1),
+    pointerSample(2, { rect: { x: 10.75 }, rail: { scrollLeft: 12.75 } }),
+  ];
+  const terminal = pointerSample(2, { rect: { x: 11.5 }, rail: { scrollLeft: 13.5 } });
+  const result = runPointerProbe({
+    precondition: { expectedIdentity: pointerIdentity, samples, terminal },
+  }).precondition;
+  assert.equal(result.status, "ready-for-pointer");
+  assert.equal(result.pointerCount, 0);
+  assert.deepEqual(result.identity, pointerIdentity);
+  assert.deepEqual(result.point, terminal.card.center);
+});
+
+test("r12 pointer precondition keeps identity and terminal coordinate invalidations at zero input", () => {
+  const samples = [pointerSample(1), pointerSample(2)];
+  const identityChange = runPointerProbe({
+    precondition: {
+      expectedIdentity: pointerIdentity,
+      samples,
+      terminal: pointerSample(2, { nodeId: "deployment-card-2" }),
+    },
+  }).precondition;
+  assert.equal(identityChange.status, "candidate-invalidated-before-pointer");
+  assert.equal(identityChange.pointerCount, 0);
+  const coordinateChange = runPointerProbe({
+    precondition: {
+      expectedIdentity: pointerIdentity,
+      samples,
+      terminal: pointerSample(2, { hitOwnerMatches: false }),
+    },
+  }).precondition;
+  assert.equal(coordinateChange.status, "coordinate-invalidated-before-pointer");
+  assert.equal(coordinateChange.pointerCount, 0);
+  const eligibilityChange = runPointerProbe({
+    precondition: {
+      expectedIdentity: pointerIdentity,
+      samples,
+      terminal: pointerSample(2, { actionability: { eligible: false, reasons: ["insufficient-energy"] } }),
+    },
+  }).precondition;
+  assert.equal(eligibilityChange.status, "candidate-invalidated-before-pointer");
+  assert.equal(eligibilityChange.pointerCount, 0);
+});
+
+test("r12 pointer preflight hard-fails unstable, obstructed, off-viewport, and lifecycle evidence without input", () => {
+  const cases = [
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { rect: { x: 10.76 } })] },
+    },
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { hitOwnerMatches: false })] },
+    },
+    {
+      expected: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2, { centerInViewport: false, viewportIntersection: false })] },
+    },
+    {
+      expected: "lifecycle-loss",
+      input: { expectedIdentity: pointerIdentity, samples: [pointerSample(1), pointerSample(2)], lifecycle: { lost: true, reason: "page-close" } },
+    },
+  ];
+  for (const entry of cases) {
+    const result = runPointerProbe({ precondition: entry.input }).precondition;
+    assert.equal(result.status, entry.expected);
+    assert.equal(result.pointerCount, 0);
+  }
+});
+
+test("r12 pointer outcome requires the attempt-correlated trusted trio and production acceptance", () => {
+  const unrelated = pointerReceipt("pointerdown", {
+    attemptId: "another-attempt",
+    owner: { nodeId: "deployment-card-9", kind: "medic", slot: "1" },
+  });
+  const result = runPointerProbe({
+    outcome: verifiedOutcomeInput({
+      receipts: [unrelated, pointerReceipt("pointerdown"), pointerReceipt("pointerup"), pointerReceipt("click")],
+      acceptance: true,
+      post: {
+        card: actionablePointerCard({ nodeId: "post-handler-node", state: "cooldown", rect: { x: 80 } }),
+        beforeRect: { x: 10, y: 20, width: 80, height: 60 },
+      },
+    }),
+  }).outcome;
+  assert.deepEqual(result, { status: "accepted", pointerCount: 1, retry: false });
+});
+
+test("r12 pointer outcome keeps dispatch, receipt, during-pointer, and no-acceptance failures distinct with no retry", () => {
+  const otherIdentity = { nodeId: "deployment-card-2", kind: "medic", slot: "1" };
+  const exactOtherOwner = ["pointerdown", "pointerup", "click"].map((type) => pointerReceipt(type, {
+    owner: otherIdentity,
+    preHandler: { identity: otherIdentity, eligible: true, hitOwner: otherIdentity },
+  }));
+  const mixedOwner = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup", { owner: otherIdentity }),
+    pointerReceipt("click"),
+  ];
+  const identityMismatch = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup"),
+    pointerReceipt("click", { preHandler: { identity: otherIdentity, eligible: true, hitOwner: pointerIdentity } }),
+  ];
+  const coordinateMismatch = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup"),
+    pointerReceipt("click", { preHandler: { identity: pointerIdentity, eligible: true, hitOwner: otherIdentity } }),
+  ];
+  const nullOwner = ["pointerdown", "pointerup", "click"].map((type) => pointerReceipt(type, { owner: null }));
+  const touchSequence = ["pointerdown", "pointerup", "click"].map((type) => pointerReceipt(type, { pointerType: "touch" }));
+  const nonMonotonicSequence = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup", { sequence: 1, elapsedMs: 1 }),
+    pointerReceipt("click"),
+  ];
+  const nonMonotonicDispatchElapsed = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup", { elapsedSinceDispatchStartMs: 0.5 }),
+    pointerReceipt("click"),
+  ];
+  const missingRawState = [
+    pointerReceipt("pointerdown"),
+    pointerReceipt("pointerup"),
+    pointerReceipt("click", { preHandler: { card: null } }),
+  ];
+  const stablePost = {
+    card: actionablePointerCard(),
+    beforeRect: { x: 10, y: 20, width: 80, height: 60 },
+  };
+  const rows = [
+    ["BROWSER_POINTER_DISPATCH_TIMEOUT", { dispatch: { status: "timeout", elapsedMs: 2_000 } }],
+    ["lifecycle-loss", { dispatch: { status: "lifecycle-error", elapsedMs: 12 } }],
+    ["BROWSER_POINTER_API_ERROR", { dispatch: { status: "api-error", elapsedMs: 12 } }],
+    ["PRODUCT_ACTIONABILITY_SURFACE_DIVERGENCE", { receipts: exactOtherOwner }],
+    ["PRODUCT_ACTIONABILITY_SURFACE_DIVERGENCE", { receipts: nullOwner }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: [pointerReceipt("pointerdown"), pointerReceipt("pointerup")] }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: [pointerReceipt("pointerdown"), pointerReceipt("pointerup", { isTrusted: false }), pointerReceipt("click")] }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: mixedOwner, acceptance: true }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: touchSequence, acceptance: true }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: nonMonotonicSequence, acceptance: true }],
+    ["BROWSER_POINTER_RECEIPT_MISSING", { receipts: nonMonotonicDispatchElapsed, acceptance: true }],
+    ["candidate-invalidated-during-pointer", { receipts: identityMismatch }],
+    ["candidate-invalidated-during-pointer", { receipts: missingRawState }],
+    ["coordinate-invalidated-during-pointer", { receipts: coordinateMismatch }],
+    ["PRODUCT_DEPLOYMENT_ACCEPTANCE_MISSING", { acceptance: false, post: stablePost }],
+    ["candidate-invalidated-during-pointer", { acceptance: false, post: { candidateMissing: true, card: null } }],
+    ["coordinate-invalidated-during-pointer", { acceptance: false, post: { card: actionablePointerCard({ rect: { x: 11 } }), beforeRect: stablePost.beforeRect } }],
+    ["lifecycle-loss", { acceptance: false, post: { lifecycleLost: true } }],
+  ];
+  for (const [expected, overrides] of rows) {
+    const result = runPointerProbe({ outcome: verifiedOutcomeInput(overrides) }).outcome;
+    assert.equal(result.status, expected);
+    assert.equal(result.pointerCount, 1);
+    assert.equal(result.retry, false);
+  }
+});
+
+test("r12 failure cursor preserves the immutable pre-finalization truth against hostile detail keys", () => {
+  const snapshot = {
+    awaiting: { predicate: "formation-deployment", details: { slot: 2 } },
+    lastCompletedCheckpoint: "combat-observer-started",
+    unresolvedCheckpoints: ["deployment-attempts-recorded", "frontline-deployment-sequence-completed", "screenshot-saved"],
+    checkpoints: [
+      { name: "combat-observer-started", status: "completed" },
+      { name: "deployment-attempts-recorded", status: "unresolved" },
+      { name: "screenshot-saved", status: "unresolved" },
+    ],
+    lifecycle: [{ event: "attached" }],
+  };
+  const result = runCheckpointFinalizationProbe({
+    snapshot,
+    details: {
+      label: "hostile-overlay",
+      awaitingAtFailure: null,
+      lastCompletedBeforeFailure: "screenshot-saved",
+      unresolvedBeforeFailure: [],
+      preFinalizationCheckpointSnapshot: { corrupted: true },
+    },
+    secondDetails: { label: "second-finalization-must-not-win" },
+    laterAppend: { lifecycle: [{ event: "page-close" }], latestReadableState: { phase: "later" } },
+    attemptedOverlay: {
+      awaitingAtFailure: null,
+      lastCompletedBeforeFailure: "screenshot-saved",
+      unresolvedBeforeFailure: [],
+    },
+  });
+  assert.deepEqual(result.payload.failure.preFinalizationCheckpointSnapshot, snapshot);
+  assert.deepEqual(result.payload.failure.awaitingAtFailure, snapshot.awaiting);
+  assert.equal(result.payload.failure.lastCompletedBeforeFailure, snapshot.lastCompletedCheckpoint);
+  assert.deepEqual(result.payload.failure.unresolvedBeforeFailure, snapshot.unresolvedCheckpoints);
+  assert.equal(result.payload.failure.preFinalizationCheckpointSnapshot.checkpoints[1].status, "unresolved");
+  assert.equal(result.payload.failure.preFinalizationCheckpointSnapshot.checkpoints[2].status, "unresolved");
+  assert.deepEqual(result.persisted.postFinalizationAppend.lifecycle, [{ event: "page-close" }]);
+  assert.equal(result.audit.nestedDeepFrozen, true);
+  assert.equal(result.audit.mutationRejected, true);
+  assert.equal(result.audit.mutationUnchanged, true);
+  assert.equal(result.audit.firstWriteWins, true);
+  assert.equal(result.audit.attemptedOverlayIgnored, true);
 });
