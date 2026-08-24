@@ -234,6 +234,7 @@ jobs:
 
       - name: Capture ordered WebKit battle-extra trio (focused)
         env:
+          DEBUG: pw:browser
           V100_PHASE_G_ONLY: battle-extra
           V100_PHASE_G_ONLY_ENGINE: webkit
         run: |
@@ -298,6 +299,7 @@ jobs:
 
       - name: Capture Version 0.9.9.5 station final-canvas evidence (WebKit)
         env:
+          DEBUG: pw:browser
           V0995_VISUAL_QA_ENGINES: webkit
           V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity/webkit
         run: node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
@@ -389,7 +391,9 @@ jobs:
 
   webkit-viewport:
     name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }}, ${{ matrix.hud_state }})
-    needs: webkit-deployment-viewport
+    needs:
+      - webkit-deployment-viewport
+      - webkit-hosted
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -458,6 +462,7 @@ jobs:
   webkit-deployment-viewport:
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
     needs: webkit-stage3-audio
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:

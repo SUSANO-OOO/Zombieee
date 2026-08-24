@@ -405,11 +405,24 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     assert.match(hostTelemetrySource, new RegExp(systemPath.replaceAll("/", "\\/"), "u"));
   }
   assert.match(hostTelemetrySource, /descendantTree\(rootPid\)/u);
+  assert.match(hostTelemetrySource, /parseWebKitHostProcStat/u);
+  assert.match(hostTelemetrySource, /`\$\{PROC_ROOT\}\/self`/u);
+  assert.match(hostTelemetrySource, /boundedProcParentIndex/u);
+  assert.match(hostTelemetrySource, /wpeweb/u);
+  assert.match(hostTelemetrySource, /rootObservedCount/u);
+  assert.match(hostTelemetrySource, /webContentObservedCount/u);
+  assert.match(hostTelemetrySource, /status = writeError \? "failed" : invalidReason \? "invalid" : "complete"/u);
   assert.match(hostTelemetrySource, /cgroupEventDeltas/u);
   assert.match(hostTelemetrySource, /descendantLeftovers/u);
   assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
   assert.match(hostTelemetrySource, /telemetry persistence integrity failed/u);
   assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
+  assert.match(captureState, /let pageCrashPrimary = null/u);
+  assert.match(captureState, /code: "WEBKIT_PAGE_CRASH"/u);
+  assert.match(captureState, /primary WebKit page crash/u);
+  assert.match(captureState, /secondaryError/u);
+  assert.match(captureState, /WEBKIT_HOST_TELEMETRY_INVALID/u);
+  assert.match(captureState, /capturePrimaryFailure\.phaseGFailure\.telemetryFailure/u);
   const browserSessionHelper = source.match(/function phaseGBrowserSessionForCapture[\s\S]+?(?=\nasync function closePhaseGBrowsers)/u)?.[0] ?? "";
   assert.match(browserSessionHelper, /metadata\.captureCount \+= 1/u);
   assert.match(browserSessionHelper, /metadata\.captureCount <= policy\.maxCapturesPerBrowser/u);

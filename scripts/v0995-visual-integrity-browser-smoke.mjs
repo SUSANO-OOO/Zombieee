@@ -7,6 +7,7 @@ import { CAMPAIGN_STAGES } from "../app/campaign.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import sharp from "sharp";
 
 const baseUrl = new URL(process.env.V0995_VISUAL_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -31,16 +32,7 @@ const invariant = (condition, message) => { if (!condition) throw new Error(mess
 const diagnostics = [];
 const faultDiagnostics = [];
 const transportRetries = [];
-const isTransientBrowserClosure = (error) => {
-  let current = error;
-  for (let depth = 0; current && depth < 4; depth += 1) {
-    if (/Target page, context or browser has been closed|Target closed|Browser has been closed/i.test(String(current.message ?? current))) {
-      return true;
-    }
-    current = current.cause;
-  }
-  return false;
-};
+const hostResourceTelemetryResults = [];
 const missionStage = CAMPAIGN_STAGES.find(({ missionType }) => missionType === "sequential-seal");
 const lateEnemyStage = CAMPAIGN_STAGES.find(({ waves }) => waves?.some(({ groups }, index) => (
   index > 0 && groups.length > 0
@@ -66,11 +58,32 @@ const faultClasses = [
   { className: "support", stageId: missionStage.id, path: missionPlan.persistent.find(({ category }) => category === "support").path, plan: missionPlan },
 ];
 const runEngine = async (engineName, browserType) => {
-  const browser = await browserType.launch({ headless: true });
+  const hostResourceTelemetry = engineName === "webkit"
+    ? await createWebKitHostResourceTelemetry({
+      evidenceDir,
+      label: `${engineName}-visual-integrity`,
+      referenceRoot: process.cwd(),
+      metadata: { owner: "hosted-visual-integrity", engine: engineName },
+    })
+    : null;
+  const hostResourceTelemetryRecord = hostResourceTelemetry?.reference() ?? null;
+  if (hostResourceTelemetryRecord) hostResourceTelemetryResults.push(hostResourceTelemetryRecord);
+  hostResourceTelemetry?.event("browser-launch-begin", { engine: engineName });
+  let browser = null;
+  let primaryFailure = null;
+  const attachPageTelemetry = (page, details) => {
+    hostResourceTelemetry?.event("page-created", details);
+    page.on("crash", () => hostResourceTelemetry?.event("page-crash", details));
+    page.on("close", () => hostResourceTelemetry?.event("page-close", details));
+  };
   try {
+    browser = await browserType.launch({ headless: true });
+    hostResourceTelemetry?.event("browser-launched", { engine: engineName });
+    browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect", { engine: engineName }));
     for (const viewport of viewports) {
       const context = await browser.newContext({ viewport });
       const page = await context.newPage();
+      attachPageTelemetry(page, { phase: "ready-case", viewport: `${viewport.width}x${viewport.height}` });
       const errors = [];
       page.on("console", (message) => { if (message.type() === "error") errors.push(`console:${message.text()}`); });
       page.on("pageerror", (error) => errors.push(`page:${error.message}`));
@@ -159,6 +172,12 @@ const runEngine = async (engineName, browserType) => {
         for (const faultViewport of faultViewports) {
         const context = await browser.newContext({ viewport: faultViewport });
         const page = await context.newPage();
+        attachPageTelemetry(page, {
+          phase: "fault-case",
+          viewport: `${faultViewport.width}x${faultViewport.height}`,
+          faultClass: fixture.className,
+          faultMode: mode,
+        });
         const requestCounts = new Map();
         page.on("request", (request) => {
           const pathname = new URL(request.url()).pathname;
@@ -314,31 +333,70 @@ const runEngine = async (engineName, browserType) => {
         }
       }
     }
+  } catch (error) {
+    primaryFailure = error;
+    hostResourceTelemetry?.event("engine-failure", { engine: engineName, error: String(error) });
+    throw error;
   } finally {
-    await browser.close().catch(() => {});
+    hostResourceTelemetry?.event("browser-cleanup-begin", { engine: engineName });
+    let browserCleanupFailure = null;
+    try {
+      await browser?.close();
+    } catch (cleanupError) {
+      if (primaryFailure) primaryFailure.browserCleanupError = String(cleanupError);
+      else browserCleanupFailure = cleanupError;
+    }
+    let telemetrySummary = null;
+    try {
+      telemetrySummary = await hostResourceTelemetry?.stop({ event: "hosted-visual-cleanup-complete", engine: engineName });
+    } catch (telemetryError) {
+      const priorFailure = primaryFailure ?? browserCleanupFailure;
+      if (priorFailure) {
+        priorFailure.hostResourceTelemetryFailure = {
+          code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+          error: String(telemetryError),
+        };
+      } else {
+        throw telemetryError;
+      }
+    }
+    if (telemetrySummary && hostResourceTelemetryRecord) {
+      Object.assign(hostResourceTelemetryRecord, {
+        status: telemetrySummary.status,
+        valid: telemetrySummary.valid,
+        invalidReason: telemetrySummary.invalidReason ?? null,
+      });
+    }
+    if (telemetrySummary?.supported === true && telemetrySummary.status !== "complete") {
+      const telemetryFailure = {
+        code: "WEBKIT_HOST_TELEMETRY_INVALID",
+        status: telemetrySummary.status,
+        invalidReason: telemetrySummary.invalidReason ?? null,
+      };
+      const priorFailure = primaryFailure ?? browserCleanupFailure;
+      if (priorFailure) priorFailure.hostResourceTelemetryFailure = telemetryFailure;
+      else throw Object.assign(new Error(`hosted visual telemetry invalid: ${JSON.stringify(telemetryFailure)}`), telemetryFailure);
+    }
+    if (browserCleanupFailure) throw browserCleanupFailure;
   }
 };
 
+let terminalFailure = null;
 for (const engineName of engines) {
   const browserType = playwright[engineName];
   invariant(browserType, `unknown browser ${engineName}`);
-  const diagnosticsStart = diagnostics.length;
-  const faultDiagnosticsStart = faultDiagnostics.length;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      await runEngine(engineName, browserType);
-      break;
-    } catch (error) {
-      diagnostics.length = diagnosticsStart;
-      faultDiagnostics.length = faultDiagnosticsStart;
-      if (attempt === 0 && isTransientBrowserClosure(error)) {
-        const retry = { engine: engineName, attempt: attempt + 1, reason: String(error.message ?? error) };
-        transportRetries.push(retry);
-        console.warn(`[v0995 visual QA] retrying ${engineName} after transient browser closure: ${retry.reason}`);
-        continue;
-      }
-      throw error;
-    }
+  try {
+    await runEngine(engineName, browserType);
+  } catch (error) {
+    terminalFailure = {
+      engine: engineName,
+      attempt: 1,
+      error: String(error),
+      code: error?.code ?? null,
+      hostResourceTelemetryFailure: error?.hostResourceTelemetryFailure ?? null,
+      browserCleanupError: error?.browserCleanupError ?? null,
+    };
+    break;
   }
 }
 
@@ -348,6 +406,9 @@ const report = {
   diagnostics,
   faultDiagnostics,
   transportRetries,
+  attemptCount: 1,
+  hostResourceTelemetry: hostResourceTelemetryResults,
+  terminalFailure,
 };
 const reportFile = path.join(evidenceDir, "visual-integrity-report.json");
 await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`);
@@ -360,7 +421,8 @@ await writeFile(compactFile, `${JSON.stringify({
   missionFinalCanvasCases: faultDiagnostics.filter(({ finalCanvas }) => finalCanvas?.pass).length,
   missionFallbackPixelCount: faultDiagnostics.reduce((sum, { blocked }) => sum + Number(blocked.mount?.fallbackDrawCount ?? 0), 0),
   transportRetries,
-  failures: [],
+  hostResourceTelemetry: hostResourceTelemetryResults,
+  failures: terminalFailure ? [terminalFailure] : [],
 }, null, 2)}\n`);
 const representativeMissionImages = faultDiagnostics
   .flatMap(({ mutableMissionStates }) => mutableMissionStates ?? [])
@@ -375,6 +437,9 @@ if (representativeMissionImages.length === 3) {
     .composite(panels.map((panel, index) => ({ ...panel, left: index * 640, top: 0 })))
     .png({ compressionLevel: 9 })
     .toFile(path.join(compactDir, "station-mission-state-contact-sheet.png"));
+}
+if (terminalFailure) {
+  throw new Error(`v0995 visual QA failed on first attempt: ${JSON.stringify(terminalFailure)}`);
 }
 const digest = createHash("sha256").update(await readFile(reportFile)).digest("hex");
 console.log(JSON.stringify({ status: "passed", cases: diagnostics.length, faultCases: faultDiagnostics.length, report: path.relative(process.cwd(), reportFile).replaceAll("\\", "/"), digest }, null, 2));

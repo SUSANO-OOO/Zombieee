@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r27`
+- Revision: `r28`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -2596,3 +2596,86 @@ Only a later coherent remediation candidate may become iteration 10. Its automat
 - `RESUME_FROM`: exact clean r26 HEAD/tree -> r27 four-path byte lock -> six-path host/process diagnostic instrumentation -> source/static/local fallback integration -> atomic iteration-9 diagnostic candidate -> one automatic focused attempt -> mandatory SOL_DESIGN evidence classification -> coherent iteration-10 remediation -> complete focused green -> workflow-only iteration-11 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every terminal CI #925 job, all three failure logs/artifacts, four same-run green deployment controls, exact local r26 controls, r25 stop rules, current source ownership, and the release tail. The revision neither infers a native mechanism nor sends another speculative lifecycle patch. It obtains the missing process/cgroup evidence without touching product behavior or acceptance and mandates SOL reclassification before remediation. Revision r27 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 44. Revision r28 — fail-closed WebKit process evidence and three-axis terminal isolation
+
+This section supersedes Section 43 only for terminal automatic CI #926, the invalid r27 Linux descendant telemetry, the masked Phase G Stage 25 page crash, the independently failing Hosted visual route, the dependency-skipped deployment route, and the current cursor. All accepted r25 fresh-browser/cooperative page-I/O bytes, r26 live-target-continuity bytes, product behavior, timeouts, causal/pointer/checkpoint/pixel acceptance, one-attempt policy, exact-HEAD boundaries, single final Producer checkpoint, and release tail remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 44.1 Terminal CI #926 evidence and independent classifications
+
+The published r27 diagnostic candidate is PR #171 HEAD `63eb718fa81ad378c71098c8e01798ea18d4ca4c`, tree `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`, parent `8e914497272a45ecb7e0558546b05fd4f1bd6cac`. Its exact local source/static gates and the three bounded local browser controls were green; the worktree was clean and the normal non-force push contained exactly the ten Section 43 paths. Automatic CI #926 / run `32704113198`, attempt 1, is terminal failure. PR Verify and all six enemy-runtime shards passed. Pages run `32704113207` built and smoked the candidate but skipped deployment. No retry, rerun, timeout edit, promotion, release, or public mutation occurred.
+
+The failures and unobserved axis are classified independently:
+
+1. Phase G job `97366143168`, artifact `9512347298`, uploaded ZIP SHA-256 `b6746ccfa2ef370553b75836bb940e42688fe75b79f2f98303d6641f13334e75`: fresh Stage 6 and Stage 24 passed. Ordered position 3 `stage25-president`, WebKit 932x430, fresh session `webkit-3`, accepted real Medic and Guardian pointers and repeatedly observed the RED PANTHER shield mounted. The page emitted `page-crash` at elapsed 62,239 ms. The browser did not emit `browser-disconnect` until cleanup at 62,855 ms. The final generic message, `boss frontline unit 3 never entered cooldown from the ready state`, is secondary: source audit proves the crashed-but-not-closed page makes the visibility loop break, later reads fail to false/null, and the invariant plus failure-state catch obscure the prior page crash. Classification: `REMOTE_WEBKIT_PAGE_PROCESS_TERMINATION / STAGE25_PAGE_CRASH_PRECEDES_BROWSER_DISCONNECT + GENERIC_COOLDOWN_ERROR_MASK / DESIGN_CHANGE_REQUIRED`.
+2. All three r27 Linux summaries claim `supported: true`, `status: complete`, but every sample contains `processes: []`, aggregate process/descendant count 0, RSS 0, and no role set even though each summary records root PID `5383` and live WebKit pages. The cgroup/host fields populated, so the whole telemetry file is not absent. The helper reads the root only through numeric `/proc/<pid>`, accepts an unparsed/missing root, and never requires a WebContent role before declaring completion. Classification: `R27_DIAGNOSTIC_SOURCE_FAIL_OPEN / LINUX_ROOT_DESCENDANT_TREE_EMPTY_ACCEPTED_AS_COMPLETE / DESIGN_CHANGE_REQUIRED`.
+3. The last Stage 25 sample before the crash, at 62,041 ms, records cgroup memory 7,394,234,368 bytes and 155 pids. The page-crash event records 5,928,267,776 bytes and 114 pids: a contemporaneous drop of about 1.466 GB and 41 pids. `memory.events` has zero low/high/max/oom/oom_kill/oom_group_kill delta, `pids.events` has zero max delta, host available memory remains large, and browser disconnect follows only during cleanup. This excludes cgroup OOM/pid-limit and browser-root disappearance as the complete Phase G owner, but the invalid descendant tree cannot yet name the disappeared role or native exit signal. Classification: `REMOTE_WEBKIT_WEBCONTENT_NATIVE_PROCESS_TERMINATION_SUSPECTED / CGROUP_RSS_PID_DISAPPEARANCE + ZERO_OOM_OR_PID_LIMIT + ROLE_UNOBSERVED / FINAL_DIAGNOSTIC_BOUNDARY_REQUIRED`.
+4. Hosted Runner job `97364691262`, artifact `9512206336`, uploaded ZIP SHA-256 `278bcf9246b32e7f4d8915c018eda0abdb35a8f9de4be6caf7915c3bfcf4f722`: safe-area/portrait/metadata passed 11/11 and records passed 5/5. The existing Version 0.9.9.5 visual harness then lost its first WebKit browser during `page.evaluate`; its built-in second attempt independently lost the browser during `page.screenshot`. The artifact has 42 PNGs but no report, lifecycle JSONL, or process telemetry. No evidence proves this shares the Phase G owner. Classification: `REMOTE_WEBKIT_HOSTED_VISUAL_PAGE_TERMINATION / TWO EXISTING ATTEMPTS CLOSED + PROCESS_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`.
+5. Stage 3, all six WebKit deployment viewports, and canonical HUD were dependency-skipped after Hosted failed. Deployment therefore has no same-HEAD r27 remote process evidence. Classification: `DEPENDENCY_SKIPPED / DEPLOYMENT_AXIS_UNOBSERVED / FINAL_DIAGNOSTIC_BOUNDARY_REQUIRED`.
+
+Aggregate classification is `R27_DIAGNOSTIC_EVIDENCE_INVALID_AND_INCOMPLETE / MASKED_PHASE_G_PAGE_CRASH + HOSTED_VISUAL_PAGE_TERMINATION + DEPLOYMENT_UNOBSERVED / DESIGN_CHANGE_REQUIRED`.
+
+Diagnostic remediation class is `WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`.
+
+### 44.2 Exact bounded r28 packet
+
+Create one final diagnostic-repair iteration-10 candidate on exact clean r27 HEAD/tree. The r28 delta relative to r27 is exactly thirteen paths; no other path may change:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/webkit-host-resource-telemetry.mjs`;
+6. `scripts/v100-phase-g-production-matrix.mjs`;
+7. `tests/v100-phase-g-checkpoint.test.mjs`;
+8. `scripts/v0995-visual-integrity-browser-smoke.mjs`;
+9. `scripts/v099-final-remediation-browser-smoke.mjs`;
+10. `scripts/run-v099-deployment-units-bounded.mjs`;
+11. `tests/v0995-runtime-evidence-contract.test.mjs`;
+12. `.github/workflows/ci.yml`;
+13. `tests/ci-contract.test.mjs`.
+
+Under `SOL_DESIGN`, publish and Issue-byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, edit only paths 5-11 with these exact semantics:
+
+1. Repair the shared helper's Linux source. Resolve its own root through `/proc/self`; parse `/proc/<pid>/stat` by the first `(` and final `)` with a pure fixture-tested parser; retain numeric child paths; use the bounded task-children tree and a bounded numeric `/proc` PPID fallback when the child list does not yield WebKit roles. Recognize actual WPE names including `WPEWebProcess`, `WPENetworkProcess`, `WPEGPUProcess`, and MiniBrowser. Persist only the bounded descendant set, never unrelated process command lines, environment, credentials, or payloads.
+2. Add fail-closed validity fields. Linux completion requires the root to have been parsed at least once and at least one WebKit WebContent role to have been observed while the browser/page is active. Persist root-observed count, WebContent-observed count, bounded collection errors, fallback-scan count, validity, and invalid reason. Empty descendants may never be `status: complete`. Non-Linux `supported: false` remains a truthful clean fallback. Invalid telemetry fails a passing diagnostic axis but may not replace an already captured page/browser primary failure. Update both existing deployment telemetry callers so a passing child/parent with invalid Linux telemetry becomes diagnostic-source failure, while an already failed unit/page remains the primary error with telemetry invalidity attached as secondary evidence.
+3. In Phase G, latch the first `page-crash` event with wall/elapsed/checkpoint context. When it precedes a generic locator, deployment, cooldown, screenshot, or evaluate error, persist and throw the page crash as primary, with the later error as secondary. A crashed page is always hard failure; no cooldown, causal, target, pointer, timeout, or checkpoint predicate changes.
+4. Attach the repaired helper to the Hosted visual WebKit lifecycle before browser launch, with engine/viewport/phase events, page crash/close and browser disconnect, cleanup, final summary, and a terminal report written even on failure. Remove only the historical transient-browser automatic second attempt: r28 executes exactly one attempt and never discards first-failure arrays. This makes the diagnostic stricter and cannot convert failure to pass.
+5. Set `DEBUG: pw:browser` only on the Phase G focused step and Hosted visual step; deployment already has it. This captures Playwright-owned browser child stderr/exit signals without changing browser flags, version, page input, or product runtime.
+6. Temporarily add job-level `if: ${{ always() }}` to the existing `webkit-deployment-viewport` job so its six unchanged required cases execute even when Hosted/Stage 3 are red or skipped. Keep `needs: webkit-stage3-audio`, fail-fast false, max-parallel 1, and hard result semantics. Add `webkit-hosted` as an explicit additional dependency of canonical `webkit-viewport`, so this temporary diagnostic route can never unlock canonical HUD or promotion while Hosted is red. The overall workflow remains fail-closed. Both topology changes are diagnostic-only and must be removed in the later workflow-restoration candidate.
+7. Extend only existing Phase G checkpoint, runtime-evidence, CI-contract, and Design Lock test blocks. Add no test block. Require the pure proc-stat fixture including a name containing `)`, `/proc/self` root ownership, WPE role mapping, root/WebContent validity, invalid-summary behavior, primary page-crash preservation, Hosted one-attempt telemetry/report persistence, `DEBUG=pw:browser`, deployment `always()` observation, Hosted-gated canonical HUD, and unchanged runtime acceptance.
+
+Forbidden changes are `app/**`, package/lock, `public/**`, assets/audio/VFX, product/gameplay/balance/AI/targeting/damage/HP/timing/save/PWA, Playwright/browser version or launch flags, runner OS, timeout, product polling cadence, pointer/receipt/causal/checkpoint/pixel/screenshot/artifact thresholds, route/viewport/unit inventory, additional attempt/retry, failure swallowing, `continue-on-error`, repository-wide normalization, Ready/merge/tag/Release/Pages/public mutation, and any claim that Hosted and Phase G share an owner before process evidence proves it.
+
+### 44.3 Acceptance, one automatic run, and mandatory SOL return
+
+After the four-path r28 design publication is Issue-byte-locked and Design Lock 19/19 is green, execute once:
+
+1. implement paths 5-13; prove exact thirteen-path topology, all r27 product/package/public bytes unchanged, byte/EOL/BOM contracts, `git diff --check`, edited-script syntax, helper parser/validity fixtures, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, runtime/deployment 3/3, CI contract, lint, and production build;
+2. run one local non-Linux fallback probe and the same three bounded local controls used by r27 only as regression/loadability checks. Do not repeat the full r26 browser matrices solely for diagnostic-source/workflow bytes;
+3. create one atomic eleven-path iteration-10 commit and normal non-force publish; re-fetch exact HEAD/tree/compare and accept exactly one automatic CI attempt. No manual rerun/job retry;
+4. require terminal logs and artifacts from Phase G, Hosted visual, and all six deployment cases even if another axis is red. Require each executed Linux WebKit page to have valid root/WebContent process evidence or an explicit fail-closed diagnostic-source error. Preserve `pw:browser` native stderr/exit evidence and the first failure without substitution;
+5. always return to `SOL_DESIGN`, even if all three axes are green. Classify each independently: cgroup OOM/pid delta -> host resource; WebContent role disappearance or native signal while root/browser survives -> WebContent/native process; browser-root disappearance -> browser process; roles survive while operation stops -> page-I/O liveness; invalid evidence -> diagnostic source. One final owner-specific coherent remediation is iteration 11. No further diagnostic revision is permitted unless the r28 source itself fails its explicit validity acceptance.
+
+Only a fully green later iteration-11 focused run resets deferred counters. Workflow-only restoration becomes iteration 12, restoring the original dependency topology and unfiltered Phase G. Then the unchanged exact-HEAD full Phase G 54/54, validators/regressions, unfiltered remote complete green, actual runtime/human/save/PWA/asset/release audits, read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` remain mandatory. Producer approval alone authorizes stacked PR #169 -> #170 -> #171 integration, annotated `v1.0.0`, GitHub Release, official Pages, published-SHA public QA/recovery, closure, and `/goal COMPLETE`.
+
+### 44.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r28 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: r27 iteration 9 rejected; r28 final diagnostic-repair candidate is iteration 10; owner-specific remediation is iteration 11; workflow-only restoration is iteration 12
+- `SAME_GATE_REPEAT_COUNT`: `6` for required Phase G
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `3`; Stage 24 passed in CI #926 and is not the current failing position
+- `R27_REMOTE_STAGE25_PAGE_CRASH_COUNT`: `1`
+- `R27_REMOTE_HOSTED_VISUAL_TERMINATION_COUNT`: `1` job with two historical internal attempts; r28 permits one attempt only
+- `R27_DIAGNOSTIC_SOURCE_INVALID_COUNT`: `1` candidate affecting all three summaries
+- `ROLE_LOCK`: `SOL_DESIGN` until r28 four-path byte lock and Design Lock 19/19; then `SOL_REMEDIATION`; automatic result always returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `63eb718fa81ad378c71098c8e01798ea18d4ca4c`
+- `LAST_AUDITED_TREE`: `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`
+- `FAILED_GATE`: terminal automatic CI #926 / run `32704113198`: Phase G job `97366143168` Stage 25 page crash masked by generic cooldown error; Hosted job `97364691262` visual WebKit page/browser termination; Stage 3/deployment/canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: same-HEAD PR Verify, six enemy-runtime shards, Phase G Stage 6 and Stage 24 captures, Hosted safe-area 11/11 and records 5/5; all are comparison evidence and do not override required red
+- `CLASSIFICATION`: `R27_DIAGNOSTIC_EVIDENCE_INVALID_AND_INCOMPLETE / MASKED_PHASE_G_PAGE_CRASH + HOSTED_VISUAL_PAGE_TERMINATION + DEPLOYMENT_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r28 publication and green Design Lock proof
+- `RESUME_FROM`: exact clean r27 HEAD/tree -> r28 four-path byte lock -> nine-path diagnostic repair -> source/static/local bounded controls -> atomic iteration-10 candidate -> one automatic three-axis observation -> mandatory SOL_DESIGN classification -> owner-specific iteration-11 remediation -> complete focused green -> workflow-only iteration-12 restoration -> full/unfiltered/runtime/human/fixed review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every terminal CI #926 job, both downloaded failure artifacts and hashes, every r27 JSONL/summary sample, Phase G source control flow, Hosted retry/report topology, workflow dependency graph, and the unchanged release tail. The packet neither treats the generic cooldown message as root cause nor assumes the Hosted and Phase G failures share an owner. Every executable branch, validity failure, primary-error precedence, downstream dependency, and return route is finite. Revision r28 has `High ambiguity: 0` and `Medium ambiguity: 0`.

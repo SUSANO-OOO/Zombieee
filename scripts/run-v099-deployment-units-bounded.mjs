@@ -76,6 +76,8 @@ export async function runCanonicalDeploymentUnits({
   });
   const units = [];
   let hostResourceTelemetrySummary = null;
+  let primaryFailure = null;
+  let hostResourceTelemetryStopError = null;
   try {
     for (const kind of kinds) {
       const attempts = [];
@@ -105,23 +107,51 @@ export async function runCanonicalDeploymentUnits({
       units.push({ kind, passed, attempts });
       if (!passed) break;
     }
+  } catch (error) {
+    primaryFailure = error;
+    throw error;
   } finally {
-    hostResourceTelemetrySummary = await hostResourceTelemetry.stop({
-      event: "bounded-parent-complete",
-      completedUnitCount: units.length,
-      allCanonicalUnitsReached: units.length === CANONICAL_DEPLOYMENT_KINDS.length,
-    });
+    try {
+      hostResourceTelemetrySummary = await hostResourceTelemetry.stop({
+        event: "bounded-parent-complete",
+        completedUnitCount: units.length,
+        allCanonicalUnitsReached: units.length === CANONICAL_DEPLOYMENT_KINDS.length,
+      });
+    } catch (telemetryError) {
+      hostResourceTelemetryStopError = String(telemetryError);
+      if (primaryFailure) {
+        primaryFailure.hostResourceTelemetryFailure = {
+          code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+          error: hostResourceTelemetryStopError,
+        };
+      } else if (!units.some(({ passed }) => !passed)) {
+        throw telemetryError;
+      }
+    }
   }
-  const complete = units.length === CANONICAL_DEPLOYMENT_KINDS.length && units.every(({ passed }) => passed);
+  const hostResourceTelemetryValid = hostResourceTelemetrySummary?.supported !== true
+    || hostResourceTelemetrySummary.status === "complete";
+  const complete = units.length === CANONICAL_DEPLOYMENT_KINDS.length
+    && units.every(({ passed }) => passed)
+    && hostResourceTelemetryValid
+    && hostResourceTelemetryStopError === null;
   const report = {
     status: complete ? "passed" : "failed",
     canonicalKinds: CANONICAL_DEPLOYMENT_KINDS,
     units,
     hostResourceTelemetry: hostResourceTelemetry.reference(),
-    hostResourceTelemetryStatus: hostResourceTelemetrySummary.status,
+    hostResourceTelemetryStatus: hostResourceTelemetrySummary?.status ?? "failed",
+    hostResourceTelemetryValidity: hostResourceTelemetrySummary?.valid ?? null,
+    hostResourceTelemetryInvalidReason: hostResourceTelemetrySummary?.invalidReason ?? null,
+    hostResourceTelemetryStopError,
   };
   await writeFile(path.join(root, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  if (!complete) throw new Error(`bounded deployment evidence failed at ${units.at(-1)?.kind ?? "inventory"}`);
+  if (!complete) {
+    const failedAt = units.some(({ passed }) => !passed)
+      ? units.at(-1)?.kind ?? "inventory"
+      : "host-resource-telemetry";
+    throw new Error(`bounded deployment evidence failed at ${failedAt}`);
+  }
   return report;
 }
 

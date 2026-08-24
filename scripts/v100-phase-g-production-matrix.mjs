@@ -2777,6 +2777,9 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
+  const captureStartedAt = Date.now();
+  let pageCrashPrimary = null;
+  let capturePrimaryFailure = null;
   const hostResourceTelemetry = engineName === "webkit" && state === "battle-extra" && checkpointContract
     ? await createWebKitHostResourceTelemetry({
       evidenceDir: path.join(evidenceDir, "diagnostics"),
@@ -2796,7 +2799,15 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     variant: checkpointContract?.variant ?? null,
     browserSessionId: browserSession.sessionId,
   });
-  page.on("crash", () => hostResourceTelemetry?.event("page-crash"));
+  page.on("crash", () => {
+    pageCrashPrimary ??= {
+      code: "WEBKIT_PAGE_CRASH",
+      label,
+      occurredAt: new Date().toISOString(),
+      elapsedMs: Date.now() - captureStartedAt,
+    };
+    hostResourceTelemetry?.event("page-crash", pageCrashPrimary);
+  });
   page.on("close", () => hostResourceTelemetry?.event("page-close"));
   context.on("close", () => hostResourceTelemetry?.event("context-close"));
   browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect"));
@@ -2864,6 +2875,14 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
     return screenshot;
   } catch (error) {
+    const primaryError = pageCrashPrimary
+      ? Object.assign(new Error(`${label} primary WebKit page crash at ${pageCrashPrimary.elapsedMs} ms`), {
+        code: pageCrashPrimary.code,
+        pageCrash: pageCrashPrimary,
+        secondaryError: String(error),
+        cause: error,
+      })
+      : error;
     const failureState = await page.evaluate((battleState) => ({
       url: location.href,
       phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
@@ -2895,10 +2914,20 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
     }), state.startsWith("battle")).catch(() => null);
     const checkpointFailure = checkpointRecorder
-      ? await checkpointRecorder.persistFailure({ label, error, failureState, diagnostics })
+      ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics })
       : null;
-    const failure = new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)} checkpointEvidence=${JSON.stringify(checkpointFailure)}`);
-    failure.phaseGFailure = { label, failureState, diagnostics, checkpointEvidence: checkpointFailure };
+    const failure = new Error(`${label} failed: ${String(primaryError)} secondary=${pageCrashPrimary ? String(error) : "none"} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)} checkpointEvidence=${JSON.stringify(checkpointFailure)}`);
+    failure.cause = primaryError;
+    failure.phaseGFailure = {
+      label,
+      primaryCode: primaryError?.code ?? null,
+      pageCrash: pageCrashPrimary,
+      secondaryError: pageCrashPrimary ? String(error) : null,
+      failureState,
+      diagnostics,
+      checkpointEvidence: checkpointFailure,
+    };
+    capturePrimaryFailure = failure;
     throw failure;
   } finally {
     try {
@@ -2914,10 +2943,35 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         hostResourceTelemetry?.event("browser-cleanup-begin");
         await resetPhaseGBrowser(engineName);
       }
-      await hostResourceTelemetry?.stop({
-        event: "capture-cleanup-complete",
-        variant: checkpointContract?.variant ?? null,
-      });
+      let hostResourceTelemetrySummary = null;
+      try {
+        hostResourceTelemetrySummary = await hostResourceTelemetry?.stop({
+          event: "capture-cleanup-complete",
+          variant: checkpointContract?.variant ?? null,
+        });
+      } catch (telemetryError) {
+        if (capturePrimaryFailure) {
+          capturePrimaryFailure.phaseGFailure.telemetryFailure = {
+            code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+            error: String(telemetryError),
+          };
+        } else {
+          throw telemetryError;
+        }
+      }
+      if (hostResourceTelemetrySummary?.supported === true
+        && hostResourceTelemetrySummary.status !== "complete") {
+        const telemetryFailure = {
+          code: "WEBKIT_HOST_TELEMETRY_INVALID",
+          status: hostResourceTelemetrySummary.status,
+          invalidReason: hostResourceTelemetrySummary.invalidReason ?? null,
+        };
+        if (capturePrimaryFailure) {
+          capturePrimaryFailure.phaseGFailure.telemetryFailure = telemetryFailure;
+        } else {
+          throw Object.assign(new Error(`${label} host telemetry invalid: ${JSON.stringify(telemetryFailure)}`), telemetryFailure);
+        }
+      }
     }
   }
 }

@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r27`
+- Canonical Design Lock: `V100-SOL-DL-001 r28`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-35 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 36 is the sole current execution handoff.
+Sections 1-36 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 37 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1315,3 +1315,34 @@ The release tail remains unchanged: later coherent remediation -> complete focus
 `High ambiguity: 0`. `Medium ambiguity: 0`.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r27` and Issue #172.**
+
+## 37. Revision r28 — no active Luna handoff / fail-closed three-axis WebKit diagnostics
+
+Design Lock Section 44 and the latest explicitly labeled Issue #172 r28 byte-lock comment are the sole active cursor. Sections 1-36 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r28 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `63eb718fa81ad378c71098c8e01798ea18d4ca4c`
+- `LAST_AUDITED_TREE`: `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`
+- `FAILED_GATE`: terminal automatic CI #926 / run `32704113198`: Phase G `97366143168` Stage 25 page crash masked by a generic cooldown invariant; Hosted `97364691262` visual WebKit termination; Stage 3/deployment/HUD dependency-skipped
+- `LAST_GREEN_GATE`: same-HEAD PR Verify, six enemy-runtime shards, Phase G Stage 6 and Stage 24, Hosted safe-area 11/11 and records 5/5; comparison only
+- `CLASSIFICATION`: `R27_DIAGNOSTIC_EVIDENCE_INVALID_AND_INCOMPLETE / MASKED_PHASE_G_PAGE_CRASH + HOSTED_VISUAL_PAGE_TERMINATION + DEPLOYMENT_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r28 byte lock and 19/19; then `SOL_REMEDIATION`; the automatic result always returns to `SOL_DESIGN`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after that lock. Luna remains stopped
+- `RESUME_FROM`: clean r27 -> nine-path diagnostic repair -> exact source/static/local bounded controls -> atomic iteration 10 -> one automatic three-axis observation -> mandatory SOL_DESIGN owner classification
+
+Exact SOL execution packet:
+
+1. Change only the nine remediation paths named in Section 44.2. Repair Linux telemetry around `/proc/self`, robust stat parsing, bounded descendant fallback, WPE role recognition, and fail-closed root/WebContent validity. Update both existing deployment telemetry callers so invalid Linux telemetry fails an otherwise passing axis but remains secondary to a prior page/unit failure.
+2. Latch and preserve the first Phase G `page-crash` as primary over later generic cooldown/locator/evaluate messages. Do not change any existing acceptance or deadline.
+3. Give Hosted visual exactly one WebKit attempt, attach process/page/browser lifecycle telemetry before launch, and persist its terminal report on failure. Do not discard first-failure arrays.
+4. Add `DEBUG: pw:browser` to Phase G and Hosted visual. Keep the existing deployment debug setting.
+5. Temporarily execute the unchanged six-case deployment matrix with job-level `always()` even when Hosted/Stage 3 is red, while adding Hosted as a direct canonical-HUD dependency so diagnostic deployment can never unlock promotion. No `continue-on-error`; all job results remain hard.
+6. Prove the exact thirteen-path topology, parser/validity/crash precedence, existing test counts, CI dependency contract, syntax/load/focused/runtime/lint/build/diff/byte gates, non-Linux fallback, and the three bounded local regression controls. Publish one normal atomic iteration-10 commit and accept one automatic run only.
+7. Return to `SOL_DESIGN` whether red or green. Classify Phase G, Hosted, and deployment independently from valid process/cgroup/native stderr evidence. No additional diagnostic revision is allowed unless r28 itself fails its explicit diagnostic-source validity contract.
+
+The release tail is unchanged: owner-specific iteration-11 remediation -> complete focused green -> workflow-only iteration-12 restoration -> exact-HEAD full Phase G 54/54/validators/regressions/unfiltered remote/runtime/human/save/PWA/asset/release audits -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only stacked integration/tag/Release/official Pages/published-SHA QA/recovery/closure.
+
+`High ambiguity: 0`. `Medium ambiguity: 0`.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r28` and Issue #172.**

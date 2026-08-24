@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`8e914497272a45ecb7e0558546b05fd4f1bd6cac`、tree `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`。これはr27設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`63eb718fa81ad378c71098c8e01798ea18d4ca4c`、tree `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`。これはr28設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r27` Sections 28-43。r25のfresh-process／cooperative page-I/Oとr26のlive-target continuityを保持する。terminal CI #925で再発したPhase G／deploymentのclean WebKit page crashを、原因推測や別micro-patchではなく、Linux `/proc`／cgroup／descendant lifecycleの有限host-process診断で分類する。診断candidateはgreenでもpromotionせず必ずSOL_DESIGNへ戻す。製品byte、timeout、retry、target／causal／pixel acceptance、SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r28` Sections 28-44。r25 fresh-process／cooperative page-I/Oとr26 live-target continuityを保持する。terminal CI #926で、Phase G Stage 25の先行page crash、独立したHosted visual termination、dependency-skipped deployment、空process treeを`complete`扱いしたr27 telemetry source defectが判明した。`/proc/self`基準のfail-closed WPE process証拠、primary crash latch、Hosted one-attempt telemetry、fail-closed deployment observationを一つの有限packetに固定する。結果はgreenでもpromotionせずSOL_DESIGNへ戻す。製品byte、timeout、causal／pixel acceptance、SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -122,12 +122,15 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - CI #925 Phase G job `97346394306`／artifact `9509889112`はStage 6通過後のfresh Stage 24 sessionでmedic／scoutをreal pointer受理し、commander mountとlast readable live/focused/fatal-zero stateを保持した後、57,361 msにpage crash。deployment job `97347974699`／artifact `9510070531`は667x375 Tataraが二checkpoint後の`quarter` armで、job `97347974482`／artifact `9510311447`は844x340 Mayo-chanが一checkpoint後の`first-visible` armでevaluate returnを失いpage crash。両deployment traceはcooperative overlap-wait 0／fatal 0／one attempt。736x414／844x390／932x430／1280x720は全八unit green。
 - r27 classification：`REMOTE_WEBKIT_CLEAN_PAGE_CRASH_RECURRENCE / FRESH_PHASE_G_AND_COOPERATIVE_DEPLOYMENT_PAGES + PROCESS_RESOURCE_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`。remediation class：`WEBKIT_HOST_PROCESS_RESOURCE_TELEMETRY / PROC_CGROUP_DESCENDANT_LIFECYCLE + PAGE_CRASH_CORRELATION + ZERO_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`。既存artifactはOOM、WebContent native exit、browser root exit、surviving renderer hangのいずれも確定できないため、次はhost-only 500 ms `/proc`／cgroup／pressure／descendant telemetryをPhase G page、deployment child、deployment parentへ付加する診断candidateだけを許可する。
 - r27 diagnostic candidateはiteration 9。`app/**`／workflow／package／public／browser version/flags／product／timeout／既存polling／retry／attempt／checkpoint／causal／pixel／artifact acceptanceは変更禁止。remote結果はgreenでも`DIAGNOSTIC_NO_REPRODUCTION`としてSOL_DESIGNへ戻し、iteration 10のcoherent remediationを別にlockする。完全focused green後のworkflow-only restorationはiteration 11へ繰り下げる。
+- r27 candidate HEAD `63eb718fa81ad378c71098c8e01798ea18d4ca4c`／tree `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`のautomatic CI #926／run `32704113198`はterminal failure。PR Verifyと六enemy-runtime shardはgreen。Phase G job `97366143168`／artifact `9512347298`はStage 6／24通過後のfresh Stage 25 pageが62,239 msでcrashし、browser disconnectはcleanup時の62,855 ms、generic cooldown errorはsecondaryだった。cgroupは直前からcrash eventまで約1.466 GB／41 pids低下したがOOM／pid-limit delta 0。Hosted job `97364691262`／artifact `9512206336`はsafe-area 11/11、records 5/5後、visual harnessの既存二attemptがevaluate／screenshotでbrowser close。Stage 3／deployment／HUDはdependency-skipped。
+- r27 telemetry artifactの三summaryはLinux supported／completeを主張しながら全sampleのprocess tree、role set、RSSが空だった。`R27_DIAGNOSTIC_SOURCE_FAIL_OPEN / LINUX_ROOT_DESCENDANT_TREE_EMPTY_ACCEPTED_AS_COMPLETE / DESIGN_CHANGE_REQUIRED`。Phase Gは`REMOTE_WEBKIT_PAGE_PROCESS_TERMINATION / STAGE25_PAGE_CRASH_PRECEDES_BROWSER_DISCONNECT + GENERIC_COOLDOWN_ERROR_MASK / DESIGN_CHANGE_REQUIRED`、Hostedは独立して`REMOTE_WEBKIT_HOSTED_VISUAL_PAGE_TERMINATION / TWO EXISTING ATTEMPTS CLOSED + PROCESS_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`。
+- r28 remediation class：`WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`。exact thirteen-path iteration 10でhelper validity、Phase G primary failure、Hosted single-attempt telemetry、既存deployment child/parentのprimary-error precedence、temporary fail-closed deployment observationを閉じる。一回のautomatic run後は全axis greenでもSOL_DESIGNへ戻り、owner-specific iteration 11をlockする。workflow-only restorationはiteration 12。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r27 Section 43
+## 6. Version 1.0.0 execution cursor — r28 Section 44
 
-- `LOOP_ITERATION`: `8` rejected。r27 diagnostic candidateはiteration 9、later coherent remediationはiteration 10、focused完全green後のworkflow-only unfiltered restorationはiteration 11
-- `SAME_GATE_REPEAT_COUNT`: `5` for required Phase G job
+- `LOOP_ITERATION`: r27 iteration 9 rejected。r28 final diagnostic-repair candidateはiteration 10、owner-specific remediationはiteration 11、focused完全green後のworkflow-only unfiltered restorationはiteration 12
+- `SAME_GATE_REPEAT_COUNT`: `6` for required Phase G job
 - `DEFERRED_STAGE24_REPEAT_COUNT`: `3`
 - `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
 - `R26_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
@@ -137,21 +140,24 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - `DEPLOYMENT_844_REPEAT_COUNT`: `1`
 - `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`
 - `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
-- `ROLE_LOCK`: `SOL_DESIGN` until r27 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；automatic diagnostic result always returns to `SOL_DESIGN`
-- `LAST_AUDITED_HEAD`: `8e914497272a45ecb7e0558546b05fd4f1bd6cac`
-- `LAST_AUDITED_TREE`: `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`
-- `FAILED_GATE`: terminal automatic focused CI #925／run `32697709716`。Phase G Stage 24 fresh page crash、deployment 667x375 Tatara fresh page crash、deployment 844x340 Mayo-chan fresh page crash、canonical HUD dependency-skipped。retry／rerunなし
-- `LAST_GREEN_GATE`: exact r26 local complete acceptanceとremote PR Verify／six enemy-runtime／Hosted Runner／three Stage 3／four deployment viewport controls。required redの代替にはならずcomparison-only
-- `CLASSIFICATION`: `REMOTE_WEBKIT_CLEAN_PAGE_CRASH_RECURRENCE / FRESH_PHASE_G_AND_COOPERATIVE_DEPLOYMENT_PAGES + PROCESS_RESOURCE_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `WEBKIT_HOST_PROCESS_RESOURCE_TELEMETRY / PROC_CGROUP_DESCENDANT_LIFECYCLE + PAGE_CRASH_CORRELATION + ZERO_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: exact clean r26 HEAD/tree -> r27 four-path byte lock -> six-path host/process diagnostic instrumentation -> source/static/local fallback integration -> atomic iteration-9 diagnostic candidate -> one automatic focused attempt -> mandatory SOL_DESIGN evidence classification -> coherent iteration-10 remediation -> complete focused green -> workflow-only iteration-11 restoration -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r27 publication and green Design Lock proof
+- `R27_REMOTE_STAGE25_PAGE_CRASH_COUNT`: `1`
+- `R27_REMOTE_HOSTED_VISUAL_TERMINATION_COUNT`: `1` job with two historical internal attempts；r28 permits one attempt only
+- `R27_DIAGNOSTIC_SOURCE_INVALID_COUNT`: `1` candidate affecting all three summaries
+- `ROLE_LOCK`: `SOL_DESIGN` until r28 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；automatic r28 result always returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `63eb718fa81ad378c71098c8e01798ea18d4ca4c`
+- `LAST_AUDITED_TREE`: `a675ee258d2fa65114fda6b5cb9c0ca645e5494a`
+- `FAILED_GATE`: terminal automatic CI #926／run `32704113198`。Phase G Stage 25 page crash masked by generic cooldown error、Hosted visual WebKit termination、Stage 3／deployment／canonical HUD dependency-skipped。manual retry／rerunなし
+- `LAST_GREEN_GATE`: same-HEAD PR Verify、six enemy-runtime、Phase G Stage 6／24、Hosted safe-area 11/11／records 5/5。required redの代替にはならずcomparison-only
+- `CLASSIFICATION`: `R27_DIAGNOSTIC_EVIDENCE_INVALID_AND_INCOMPLETE / MASKED_PHASE_G_PAGE_CRASH + HOSTED_VISUAL_PAGE_TERMINATION + DEPLOYMENT_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact clean r27 HEAD/tree -> r28 four-path byte lock -> nine-path diagnostic repair -> source/static/local bounded controls -> atomic iteration-10 candidate -> one automatic three-axis observation -> mandatory SOL_DESIGN classification -> owner-specific iteration-11 remediation -> complete focused green -> workflow-only iteration-12 restoration -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r28 publication and green Design Lock proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r24 product commit/tree、r25 WebKit fresh-process／cooperative deployment、r26 live-target continuityは再作成せず保持する。r27はhost/process diagnosticだけであり、pageへread/inputせず、既存browser/runtime acceptanceを変更しない。automatic diagnostic結果は成否にかかわらずSOL_DESIGNへ戻し、process/cgroup evidenceでownerを確定してからiteration 10 remediationをlockする。later automatic focused remote完全green後だけdeferred countersを0へresetし、workflow-only iteration-11 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r24 product commit/tree、r25 WebKit fresh-process／cooperative deployment、r26 live-target continuity、r27 raw evidenceは再作成せず保持する。r28はfail-closed process diagnostic repairだけであり、productへread/inputせず、既存browser/runtime acceptanceを変更しない。automatic resultは成否にかかわらずSOL_DESIGNへ戻し、有効なprocess/cgroup/native stderr evidenceでownerを確定してからiteration 11 remediationをlockする。later automatic focused remote完全green後だけdeferred countersを0へresetし、workflow-only iteration-12 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-43のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r27を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-44のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r28を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

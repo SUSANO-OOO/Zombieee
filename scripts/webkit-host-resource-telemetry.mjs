@@ -94,32 +94,44 @@ function pressureInfo(source) {
   return result;
 }
 
-function processRole(name) {
+export function webKitHostProcessRole(name) {
   const normalized = String(name ?? "").toLowerCase();
-  if (normalized.startsWith("webkitweb") || normalized === "webprocess") return "webkit-web-content";
-  if (normalized.startsWith("webkitnetwork") || normalized.includes("networkprocess")) return "webkit-network";
-  if (normalized.startsWith("webkitgpu") || normalized.includes("gpuprocess")) return "webkit-gpu";
+  if (normalized.startsWith("webkitweb") || normalized.startsWith("wpeweb") || normalized === "webprocess") return "webkit-web-content";
+  if (normalized.startsWith("webkitnetwork") || normalized.startsWith("wpenetwork") || normalized.includes("networkprocess")) return "webkit-network";
+  if (normalized.startsWith("webkitgpu") || normalized.startsWith("wpegpu") || normalized.includes("gpuprocess")) return "webkit-gpu";
   if (normalized.includes("minibrowser")) return "webkit-browser-root";
   if (normalized === "node" || normalized === "node.exe") return "node-host";
   return `other-${safeLabel(normalized || "unknown")}`;
 }
 
-function parseProcStat(source) {
-  const match = source?.match(/^(\d+) \((.*)\) ([A-Za-z]) (.+)$/u);
-  if (!match) return null;
-  const fields = match[4].trim().split(/\s+/u);
+export function parseWebKitHostProcStat(source) {
+  const normalized = String(source ?? "").trim();
+  const open = normalized.indexOf("(");
+  const close = normalized.lastIndexOf(")");
+  if (open <= 0 || close <= open) return null;
+  const pid = Number.parseInt(normalized.slice(0, open).trim(), 10);
+  const suffix = normalized.slice(close + 1).trim().split(/\s+/u);
+  if (!Number.isFinite(pid) || suffix.length < 21 || !/^[A-Za-z]$/u.test(suffix[0])) return null;
+  const fields = suffix.slice(1);
   return {
-    pid: Number.parseInt(match[1], 10),
-    name: sanitizeText(match[2], 64),
-    state: match[3],
+    pid,
+    name: sanitizeText(normalized.slice(open + 1, close), 64),
+    state: suffix[0],
     ppid: Number.parseInt(fields[0], 10),
     startTicks: parseInteger(fields[18]),
     virtualBytes: parseInteger(fields[19]),
   };
 }
 
-async function readProcess(pid) {
-  const processRoot = `${PROC_ROOT}/${pid}`;
+export function webKitHostTelemetryValidity({ supported, rootObservedCount, webContentObservedCount }) {
+  if (!supported) return { valid: null, invalidReason: null };
+  if (rootObservedCount === 0) return { valid: false, invalidReason: "root-process-never-observed" };
+  if (webContentObservedCount === 0) return { valid: false, invalidReason: "webkit-web-content-never-observed" };
+  return { valid: true, invalidReason: null };
+}
+
+async function readProcess(pid, rootPid) {
+  const processRoot = pid === rootPid ? `${PROC_ROOT}/self` : `${PROC_ROOT}/${pid}`;
   const [statSource, statusSource, oomScoreSource, childSource, fileDescriptors] = await Promise.all([
     readText(`${processRoot}/stat`),
     readText(`${processRoot}/status`),
@@ -127,13 +139,13 @@ async function readProcess(pid) {
     readText(`${processRoot}/task/${pid}/children`),
     readDirectory(`${processRoot}/fd`),
   ]);
-  const stat = parseProcStat(statSource);
+  const stat = parseWebKitHostProcStat(statSource);
   if (!stat) return null;
   const status = parseKeyValueLines(statusSource);
   const children = (childSource ?? "").trim().split(/\s+/u)
     .map((value) => Number.parseInt(value, 10))
     .filter(Number.isFinite);
-  const role = processRole(stat.name);
+  const role = webKitHostProcessRole(stat.name);
   return {
     pid: stat.pid,
     ppid: stat.ppid,
@@ -152,6 +164,25 @@ async function readProcess(pid) {
   };
 }
 
+async function boundedProcParentIndex() {
+  const entries = (await readDirectory(PROC_ROOT))
+    .filter((entry) => /^\d+$/u.test(entry))
+    .map((entry) => Number.parseInt(entry, 10))
+    .filter(Number.isFinite)
+    .sort((left, right) => left - right)
+    .slice(0, 512);
+  const stats = await Promise.all(entries.map(async (pid) => (
+    parseWebKitHostProcStat(await readText(`${PROC_ROOT}/${pid}/stat`))
+  )));
+  const childrenByParent = new Map();
+  for (const stat of stats.filter(Boolean)) {
+    const children = childrenByParent.get(stat.ppid) ?? [];
+    children.push(stat.pid);
+    childrenByParent.set(stat.ppid, children);
+  }
+  return childrenByParent;
+}
+
 async function descendantTree(rootPid) {
   const queue = [rootPid];
   const seen = new Set();
@@ -160,13 +191,35 @@ async function descendantTree(rootPid) {
     const pid = queue.shift();
     if (!Number.isFinite(pid) || seen.has(pid)) continue;
     seen.add(pid);
-    const entry = await readProcess(pid);
+    const entry = await readProcess(pid, rootPid);
     if (!entry) continue;
     processes.push(entry);
     for (const child of entry.children) if (!seen.has(child)) queue.push(child);
   }
+  let fallbackScanUsed = false;
+  if (processes.length > 0 && !processes.some(({ role }) => role === "webkit-web-content")) {
+    fallbackScanUsed = true;
+    const childrenByParent = await boundedProcParentIndex();
+    const fallbackQueue = [processes[0].pid];
+    while (fallbackQueue.length > 0 && seen.size < 512) {
+      const parentPid = fallbackQueue.shift();
+      for (const childPid of childrenByParent.get(parentPid) ?? []) {
+        if (seen.has(childPid)) continue;
+        seen.add(childPid);
+        const entry = await readProcess(childPid, rootPid);
+        if (!entry) continue;
+        processes.push(entry);
+        fallbackQueue.push(entry.pid);
+      }
+    }
+  }
   processes.sort((left, right) => left.pid - right.pid);
-  return processes;
+  return {
+    processes,
+    rootObserved: processes.length > 0,
+    webContentObserved: processes.some(({ role }) => role === "webkit-web-content"),
+    fallbackScanUsed,
+  };
 }
 
 async function cgroupDirectory() {
@@ -258,6 +311,10 @@ export async function createWebKitHostResourceTelemetry({
   let lastCgroup = null;
   let lastProcesses = [];
   let priorIdentity = new Map();
+  let rootObservedCount = 0;
+  let webContentObservedCount = 0;
+  let fallbackScanCount = 0;
+  const collectionErrors = new Set();
   const disappearedRoles = new Set();
   const lastKnownWebKitRoles = new Set();
   const peaks = {
@@ -305,7 +362,7 @@ export async function createWebKitHostResourceTelemetry({
     let aggregate = null;
     let disappeared = [];
     if (supported) {
-      const [meminfoSource, memoryPressureSource, cpuPressureSource, ioPressureSource, collectedCgroup, collectedProcesses] = await Promise.all([
+      const [meminfoSource, memoryPressureSource, cpuPressureSource, ioPressureSource, collectedCgroup, collectedTree] = await Promise.all([
         readText(`${PROC_ROOT}/meminfo`),
         readText(`${PROC_ROOT}/pressure/memory`),
         readText(`${PROC_ROOT}/pressure/cpu`),
@@ -322,7 +379,11 @@ export async function createWebKitHostResourceTelemetry({
         },
       };
       cgroup = collectedCgroup;
-      processes = collectedProcesses;
+      processes = collectedTree.processes;
+      if (collectedTree.rootObserved) rootObservedCount += 1;
+      else collectionErrors.add("root-process-unobserved");
+      if (collectedTree.webContentObserved) webContentObservedCount += 1;
+      if (collectedTree.fallbackScanUsed) fallbackScanCount += 1;
       aggregate = processAggregate(processes);
       const currentIdentity = new Map(processes.map((entry) => [`${entry.pid}:${entry.startTicks}`, entry.role]));
       disappeared = [...priorIdentity.entries()]
@@ -407,12 +468,21 @@ export async function createWebKitHostResourceTelemetry({
       await enqueue("event", "telemetry-stop", details, { allowStopped: true });
       await writeQueue;
       const stoppedAt = Date.now();
-      const summary = manifest(writeError ? "failed" : "complete", {
+      const validity = webKitHostTelemetryValidity({ supported, rootObservedCount, webContentObservedCount });
+      const invalidReason = validity.invalidReason;
+      const status = writeError ? "failed" : invalidReason ? "invalid" : "complete";
+      const summary = manifest(status, {
         stoppedAt: new Date(stoppedAt).toISOString(),
         elapsedMs: stoppedAt - startedAt,
         sampleCount,
         eventCount,
         periodicSkippedCount,
+        valid: validity.valid,
+        invalidReason,
+        rootObservedCount,
+        webContentObservedCount,
+        fallbackScanCount,
+        collectionErrors: [...collectionErrors].sort().slice(0, 16),
         peaks,
         cgroupEventDeltas: supported ? {
           memory: counterDelta(firstCgroup?.memoryEvents, lastCgroup?.memoryEvents),
@@ -438,7 +508,8 @@ export async function createWebKitHostResourceTelemetry({
         || persistedEntries[0]?.event !== "telemetry-start"
         || persistedEntries.at(-1)?.event !== "telemetry-stop"
         || persistedSummary.schema !== WEBKIT_HOST_RESOURCE_TELEMETRY_SCHEMA
-        || persistedSummary.status !== "complete") {
+        || persistedSummary.status !== status
+        || persistedSummary.valid !== validity.valid) {
         throw new Error("WebKit host resource telemetry persistence integrity failed");
       }
       return summary;

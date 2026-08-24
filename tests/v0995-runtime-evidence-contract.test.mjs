@@ -4,6 +4,11 @@ import test from "node:test";
 
 import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
+import {
+  parseWebKitHostProcStat,
+  webKitHostProcessRole,
+  webKitHostTelemetryValidity,
+} from "../scripts/webkit-host-resource-telemetry.mjs";
 
 const enemyHarness = await readFile(new URL("../scripts/v0995-enemy-runtime-browser-smoke.mjs", import.meta.url), "utf8");
 const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-browser-smoke.mjs", import.meta.url), "utf8");
@@ -85,6 +90,14 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /finalCompositePixels\?\.singleUnitSilhouette === true/);
   assert.doesNotMatch(visualHarness, /campaign-primary/);
   assert.match(gameSource, /screen !== "battle" \|\| !assetsReady \|\| assetError/);
+  assert.match(visualHarness, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
+  assert.match(visualHarness, /label: `\$\{engineName\}-visual-integrity`/u);
+  assert.match(visualHarness, /attemptCount: 1/u);
+  assert.match(visualHarness, /terminalFailure/u);
+  assert.match(visualHarness, /hostResourceTelemetryResults/u);
+  assert.match(visualHarness, /page\.on\("crash"/u);
+  assert.match(visualHarness, /browser\.on\("disconnected"/u);
+  assert.doesNotMatch(visualHarness, /attempt < 2|retrying .* transient browser closure|isTransientBrowserClosure/u);
 });
 
 test("r6 deployment diagnostics are bounded and preserve the existing acceptance contract", () => {
@@ -103,13 +116,51 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(boundedDeploymentHarness, /finally \{[\s\S]*hostResourceTelemetry\.stop\(\{/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetry: hostResourceTelemetry\.reference\(\)/u);
   assert.match(hostTelemetrySource, /WEBKIT_HOST_RESOURCE_TELEMETRY_INTERVAL_MS = 500/u);
+  const parsedStat = parseWebKitHostProcStat(`321 (WPEWeb)Process) S ${Array.from({ length: 25 }, (_, index) => index + 1).join(" ")}`);
+  assert.deepEqual(parsedStat, {
+    pid: 321,
+    name: "WPEWeb)Process",
+    state: "S",
+    ppid: 1,
+    startTicks: 19,
+    virtualBytes: 20,
+  });
+  assert.equal(webKitHostProcessRole("WPEWebProcess"), "webkit-web-content");
+  assert.equal(webKitHostProcessRole("WPENetworkProcess"), "webkit-network");
+  assert.equal(webKitHostProcessRole("WPEGPUProcess"), "webkit-gpu");
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: false, rootObservedCount: 0, webContentObservedCount: 0 }), {
+    valid: null,
+    invalidReason: null,
+  });
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: true, rootObservedCount: 0, webContentObservedCount: 0 }), {
+    valid: false,
+    invalidReason: "root-process-never-observed",
+  });
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: true, rootObservedCount: 1, webContentObservedCount: 0 }), {
+    valid: false,
+    invalidReason: "webkit-web-content-never-observed",
+  });
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: true, rootObservedCount: 1, webContentObservedCount: 1 }), {
+    valid: true,
+    invalidReason: null,
+  });
   assert.match(hostTelemetrySource, /linux-proc-cgroup-unavailable/u);
+  assert.match(hostTelemetrySource, /pid === rootPid \? `\$\{PROC_ROOT\}\/self`/u);
+  assert.match(hostTelemetrySource, /root-process-never-observed/u);
+  assert.match(hostTelemetrySource, /webkit-web-content-never-observed/u);
+  assert.match(hostTelemetrySource, /status = writeError \? "failed" : invalidReason \? "invalid" : "complete"/u);
+  assert.match(hostTelemetrySource, /boundedProcParentIndex/u);
   assert.match(hostTelemetrySource, /lastKnownWebKitRoleSet/u);
   assert.match(hostTelemetrySource, /disappearedRoles/u);
   assert.match(hostTelemetrySource, /descendantLeftovers/u);
   assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
   assert.match(hostTelemetrySource, /normalized\.startsWith\("webkitweb"\)/u);
   assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
+  assert.match(boundedDeploymentHarness, /hostResourceTelemetryValid/u);
+  assert.match(boundedDeploymentHarness, /hostResourceTelemetryInvalidReason/u);
+  assert.match(boundedDeploymentHarness, /failed at \$\{failedAt\}/u);
+  assert.match(finalRemediationHarness, /WEBKIT_HOST_TELEMETRY_INVALID/u);
+  assert.match(finalRemediationHarness, /priorFailure\.hostResourceTelemetryFailure/u);
   assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_INTERVAL_MS = 250/);
   assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_MAX_SAMPLES = 160/);
   assert.match(finalRemediationHarness, /function createSetupTrace\(/);

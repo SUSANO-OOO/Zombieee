@@ -301,10 +301,10 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     flush: async () => {
       await writeQueue;
       if (writeError) throw new Error(`Lifecycle diagnostics could not be written: ${writeError}`);
-      await hostResourceTelemetry?.stop({
+      return await hostResourceTelemetry?.stop({
         event: "deployment-child-cleanup-complete",
         caseType,
-      });
+      }) ?? null;
     },
   };
 }
@@ -2798,34 +2798,84 @@ for (const engine of engines) {
         }
       }
       let browser = null;
+      let primaryFailure = null;
+      const caseResults = new Map();
       try {
         lifecycleByCase.forEach((lifecycle) => lifecycle.setPhase("browser launch"));
         browser = await browserType.launch({ headless: true });
         lifecycleByCase.forEach((lifecycle) => lifecycle.attachBrowser(browser));
         if (caseTypes.includes("crawler-equipment")) {
-          results.push(await runEquipmentCase(
+          const equipmentResult = await runEquipmentCase(
             browser,
             engine,
             viewport,
             runtimeEvidence,
             lifecycleByCase.get("crawler-equipment"),
-          ));
+          );
+          results.push(equipmentResult);
+          caseResults.set("crawler-equipment", equipmentResult);
         }
         if (caseTypes.includes("deployment")) {
-          results.push(await runDeploymentCase(
+          const deploymentResult = await runDeploymentCase(
             browser,
             engine,
             viewport,
             lifecycleByCase.get("deployment"),
-          ));
+          );
+          results.push(deploymentResult);
+          caseResults.set("deployment", deploymentResult);
         }
+      } catch (error) {
+        primaryFailure = error;
+        throw error;
       } finally {
         lifecycleByCase.forEach((lifecycle) => {
           lifecycle.setPhase("browser teardown");
           lifecycle.markBrowserCloseBegin();
         });
-        if (browser) await browser.close();
-        for (const lifecycle of lifecycleByCase.values()) await lifecycle.flush();
+        let browserCleanupFailure = null;
+        try {
+          if (browser) await browser.close();
+        } catch (cleanupError) {
+          browserCleanupFailure = cleanupError;
+          if (primaryFailure) primaryFailure.browserCleanupError = String(cleanupError);
+        }
+        for (const [caseType, lifecycle] of lifecycleByCase) {
+          const caseResult = caseResults.get(caseType) ?? null;
+          let telemetrySummary = null;
+          try {
+            telemetrySummary = await lifecycle.flush();
+          } catch (telemetryError) {
+            const priorFailure = primaryFailure ?? browserCleanupFailure ?? (caseResult?.status === "failed" ? caseResult : null);
+            if (priorFailure) {
+              priorFailure.hostResourceTelemetryFailure = {
+                code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+                error: String(telemetryError),
+              };
+              continue;
+            }
+            throw telemetryError;
+          }
+          if (caseResult && telemetrySummary) {
+            caseResult.hostResourceTelemetryStatus = telemetrySummary.status;
+            caseResult.hostResourceTelemetryValidity = telemetrySummary.valid;
+          }
+          if (telemetrySummary?.supported === true && telemetrySummary.status !== "complete") {
+            const telemetryFailure = {
+              code: "WEBKIT_HOST_TELEMETRY_INVALID",
+              status: telemetrySummary.status,
+              invalidReason: telemetrySummary.invalidReason ?? null,
+            };
+            const priorFailure = primaryFailure ?? browserCleanupFailure ?? (caseResult?.status === "failed" ? caseResult : null);
+            if (priorFailure) priorFailure.hostResourceTelemetryFailure = telemetryFailure;
+            else throw Object.assign(new Error(`deployment host telemetry invalid: ${JSON.stringify(telemetryFailure)}`), telemetryFailure);
+          }
+        }
+        if (browserCleanupFailure && !primaryFailure) {
+          const failedCase = [...caseResults.values()].find(({ status }) => status === "failed");
+          if (failedCase) failedCase.browserCleanupError = String(browserCleanupFailure);
+          else throw browserCleanupFailure;
+        }
       }
     }
   }
