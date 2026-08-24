@@ -67,6 +67,21 @@ function runHistoryProbe(input) {
   return JSON.parse(result.stdout.trim());
 }
 
+function runBrowserLifecycleProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_BROWSER_LIFECYCLE_PROBE: "1",
+      V100_PHASE_G_BROWSER_LIFECYCLE_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
 function readyCard(kind, cost) {
   return {
     kind,
@@ -337,6 +352,43 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /observePromiseWithin\(page\.evaluate/u);
   assert.match(source, /elapsedSinceDispatchStartMs/u);
   assert.ok(source.indexOf("V100_PHASE_G_DEPLOYMENT_POINTER_PROBE") < source.indexOf("await mkdir(evidenceDir"));
+  assert.ok(source.indexOf("V100_PHASE_G_BROWSER_LIFECYCLE_PROBE") < source.indexOf("await mkdir(evidenceDir"));
+  assert.deepEqual(runBrowserLifecycleProbe({ engineName: "webkit", state: "battle-extra" }), {
+    engineName: "webkit",
+    state: "battle-extra",
+    isolation: "fresh-process-per-capture",
+    closeExistingBeforeCapture: true,
+    closeAfterCapture: true,
+    maxCapturesPerBrowser: 1,
+  });
+  assert.deepEqual(runBrowserLifecycleProbe({ engineName: "webkit", state: "battle-normal" }), {
+    engineName: "webkit",
+    state: "battle-normal",
+    isolation: "shared-per-engine",
+    closeExistingBeforeCapture: false,
+    closeAfterCapture: false,
+    maxCapturesPerBrowser: null,
+  });
+  assert.deepEqual(runBrowserLifecycleProbe({ engineName: "chromium", state: "battle-extra" }), {
+    engineName: "chromium",
+    state: "battle-extra",
+    isolation: "shared-per-engine",
+    closeExistingBeforeCapture: false,
+    closeAfterCapture: false,
+    maxCapturesPerBrowser: null,
+  });
+  const captureState = source.match(/async function captureStateImpl[\s\S]+?(?=\nasync function readBattleDeploymentDiagnostics)/u)?.[0] ?? "";
+  assert.match(captureState, /phaseGBrowserLifecyclePolicy\(engineName, state\)/u);
+  assert.match(captureState, /if \(browserPolicy\.closeExistingBeforeCapture\) await resetPhaseGBrowser\(engineName\)/u);
+  assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
+  assert.match(captureState, /browserSession \}\)/u);
+  assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) await resetPhaseGBrowser\(engineName\)/u);
+  const browserSessionHelper = source.match(/function phaseGBrowserSessionForCapture[\s\S]+?(?=\nasync function closePhaseGBrowsers)/u)?.[0] ?? "";
+  assert.match(browserSessionHelper, /metadata\.captureCount \+= 1/u);
+  assert.match(browserSessionHelper, /metadata\.captureCount <= policy\.maxCapturesPerBrowser/u);
+  assert.match(browserSessionHelper, /captureOrdinal: metadata\.captureCount/u);
+  const checkpointRecorder = source.match(/function createBattleExtraCheckpointRecorder[\s\S]+?(?=\nif \(process\.env\.V100_PHASE_G_CHECKPOINT_NEGATIVE)/u)?.[0] ?? "";
+  assert.match(checkpointRecorder, /browserSession: cloneDiagnosticValue\(browserSession\)/u);
   assert.match(source, /if \(failurePayload\) return/u);
   assert.match(source, /deepFreezeDiagnosticValue/u);
   assert.doesNotMatch(source, /clickDeploymentCard/u);
@@ -400,6 +452,14 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /activityTargetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
   assert.match(source, /targetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
   assert.match(source, /proofActorAttackObserved = true;\s*if \(proofActorRequiresContactFirst\) await readProofActorContactState\(\);/u);
+  assert.match(source, /function proofActorTargetContinuityDecision\(\{/u);
+  assert.match(source, /hasLiveHumanTarget: liveHumanTarget/u);
+  assert.equal((source.match(/contactState\?\.hasLiveHumanTarget === true/gu) ?? []).length, 2);
+  assert.equal((source.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 0);
+  assert.match(source, /targetContinuity\.allowSustainRedeploy/u);
+  assert.match(source, /targetContinuity\.targetSurvivalPlanPending/u);
+  const continuityHelper = source.match(/function proofActorTargetContinuityDecision\(\{([\s\S]+?)\n\}\n\nif \(process\.env\.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE/u)?.[1] ?? "";
+  assert.doesNotMatch(continuityHelper, /page\.|window\.|fighter|targetId|attackIdentity|audio|\bhp\b|resource|clock/u);
 
   const livingHumanHistory = runHistoryProbe({
     proofActor: "red-panther-shield",
@@ -416,6 +476,14 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
       pendingWeaponHits: [],
     }],
     waitSnapshot: { time: 40_563, fighters: [], attackIdentity: [], pendingWeaponHits: [] },
+    targetContinuity: {
+      bossDeploymentFinished: true,
+      bossEngaged: true,
+      keepHumanTargetAlive: false,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: false,
+      liveHumanTargetCount: 0,
+    },
   });
   assert.equal(livingHumanHistory.history.targetOwnershipHistory.length, 1);
   assert.deepEqual(livingHumanHistory.humanTarget, {
@@ -429,6 +497,86 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     targetKind: "guardian",
     targetHp: 190,
     targetAlive: true,
+  });
+  assert.deepEqual(livingHumanHistory.targetContinuity, {
+    proofActorContactPlanPending: true,
+    targetSurvivalPlanPending: true,
+    allowSustainRedeploy: true,
+  });
+
+  const oneLiveHuman = runHistoryProbe({
+    targetContinuity: {
+      bossDeploymentFinished: true,
+      bossEngaged: true,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: false,
+      liveHumanTargetCount: 1,
+    },
+  });
+  assert.deepEqual(oneLiveHuman.targetContinuity, {
+    proofActorContactPlanPending: true,
+    targetSurvivalPlanPending: true,
+    allowSustainRedeploy: true,
+  });
+
+  const twoLiveHumans = runHistoryProbe({
+    targetContinuity: {
+      bossDeploymentFinished: true,
+      bossEngaged: true,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: false,
+      liveHumanTargetCount: 2,
+    },
+  });
+  assert.deepEqual(twoLiveHumans.targetContinuity, {
+    proofActorContactPlanPending: true,
+    targetSurvivalPlanPending: false,
+    allowSustainRedeploy: false,
+  });
+
+  const disengagedBoss = runHistoryProbe({
+    targetContinuity: {
+      bossDeploymentFinished: true,
+      bossEngaged: false,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: false,
+      liveHumanTargetCount: 0,
+    },
+  });
+  assert.deepEqual(disengagedBoss.targetContinuity, {
+    proofActorContactPlanPending: true,
+    targetSurvivalPlanPending: false,
+    allowSustainRedeploy: false,
+  });
+
+  const unfinishedOpening = runHistoryProbe({
+    targetContinuity: {
+      bossDeploymentFinished: false,
+      bossEngaged: true,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: false,
+      liveHumanTargetCount: 0,
+    },
+  });
+  assert.deepEqual(unfinishedOpening.targetContinuity, {
+    proofActorContactPlanPending: true,
+    targetSurvivalPlanPending: true,
+    allowSustainRedeploy: false,
+  });
+
+  const observedAttack = runHistoryProbe({
+    targetContinuity: {
+      bossDeploymentFinished: true,
+      bossEngaged: true,
+      proofActorRequiresContactFirst: true,
+      proofActorAttackObserved: true,
+      liveHumanTargetCount: 0,
+    },
+  });
+  assert.deepEqual(observedAttack.targetContinuity, {
+    proofActorContactPlanPending: false,
+    targetSurvivalPlanPending: false,
+    allowSustainRedeploy: true,
   });
 
   const nonHumanHistory = runHistoryProbe({

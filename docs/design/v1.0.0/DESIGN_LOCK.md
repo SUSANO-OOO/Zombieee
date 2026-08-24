@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r24`
+- Revision: `r26`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -54,6 +54,10 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r19 consumes the r18 pre-lint byte-audit stop. It corrects only r18's false no-BOM declaration for `tests/ci-contract.test.mjs`: exact base and working bytes both retain the pre-existing UTF-8 BOM and LF-only line endings. The eleven-path remediation, no-retry semantics, product boundaries, acceptance, iteration numbers, and release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r21 consumes the first r20 local six-viewport Chromium deployment acceptance. It preserves the complete r20 finite-asset, lean-observation, frozen-audit, and production-canvas PNG packet, and replaces only later deployment-checkpoint host polling/freeze ownership with a localhost-only runtime semantic latch. It changes no product gameplay, movement, timing, checkpoint, pixel threshold, viewport, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r22 consumes the post-gate execution audit of the passing r21 Chromium 844x390 Mayo-chan acceptance. It preserves the complete r21 runtime semantic latch bytes and adds only exact accepted checkpoint-receipt persistence to the existing deployment summary plus its source contract. It changes no product, latch, simulation, checkpoint, pixel, PNG, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r23 consumes the first r22 full Chromium deployment artifact readback. It preserves every product, runtime-latch, pixel, timeout, retry, and release rule and closes only family-level filename collisions plus final-disk hash integrity in the deployment evidence runner. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r24 consumes the post-push canonical source audit. It changes only the active Design/Handoff/Project State/design-test revision identity and stale-current negative assertions; all r23 implementation and acceptance bytes remain fixed. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r25 consumes terminal automatic focused CI #924 and closes two independently evidenced WebKit QA lifecycle couplings: shared Phase G battle-extra browser processes and reentrant deployment page I/O. It changes no product, gameplay, timeout, retry, checkpoint, pixel, causal, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r26 consumes the first r25 ordered local Stage 25 failure. It preserves the complete r25 fresh-process and cooperative deployment corrections and separates historical target evidence from current live-target continuity while a contact-first proof attack is pending. It changes no product, stage, gameplay, balance, AI, timeout, retry, causal threshold, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -2341,3 +2345,168 @@ Any first r24 correction or focused-run failure returns inside the same SOL-owne
 - `RESUME_FROM`: preserve r23 product/runtime/runner bytes and remote commit -> correct four current design/source paths -> byte lock + 60/60 + 12/12 + 19/19 + syntax/lint/build/diff/byte -> atomic docs/test-only iteration-7 candidate -> one automatic r24 focused run -> complete green -> workflow-only iteration-8 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
 
 SOL re-ran SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all active revision declarations, the r23 remote tree/compare, the exact four-path correction boundary, test false-green behavior, and every downstream exact-HEAD boundary. Revision r24 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 41. Revision r25 — remote WebKit capture lifecycle isolation
+
+This section supersedes Section 40 only for terminal CI #924, the two independently classified WebKit lifecycle couplings, the exact eight-path correction, and the current execution cursor. Every r12-r24 product, gameplay, causal, pixel, artifact-integrity, one-attempt/no-retry, exact-HEAD, single Producer checkpoint, and release contract remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 41.1 Terminal r24 evidence and independent classifications
+
+Remote r24 candidate HEAD `585eed74e5725e40f992ef4c7f85a0179ae2ae8f`, tree `09f04dd9b6bdadef99c9b71ddc2cad5553077c1f`, automatic focused CI `32687912194` (#924), attempt 1, is terminal. Nineteen jobs ended: fifteen succeeded, the downstream canonical viewport job was dependency-skipped, and exactly three jobs failed. There was no retry, rerun, edit, or promotion.
+
+Required Phase G job `97319047736` failed in `remote-trio-1` at ordered position 2, `stage24-panther-commander` / actual `stage-mugarian-tech-tower` / WebKit 736x414. Stage 6 completed. Stage 24 accepted four trusted real-pointer deployments and observed the RED PANTHER commander mount and attack from historical runtime state before the last readable production state at wall 51,671 ms. The page stopped answering and emitted clean `page-crash` at 79,365 ms; fatal console/page/request/HTTP arrays were empty and `failureState` was null. Stage 25 and later sequences did not run. Artifact `9506668044`, 642,823 bytes, has ZIP SHA-256 `e2775d3a267f4e05a0c6ce5dec3d94d4f5bdf29cda07a3e0975c26615a55ef6c`; its Stage 24 JSON SHA-256 is `1145770a93c6d186573d055dbedeefce51b2e4ccb0bb78a58f656a24f0e7c61d`. Exact local r23 standalone Stage 24 and ordered Stage 24 passed 3/3 each with fresh browser processes. Source audit proves the full runner instead reuses one `phaseGBrowsers` WebKit process across Stage 6 and Stage 24. Native WebKit/OOM cause is not inferred; cross-capture browser reuse is the remaining repository-owned coupling.
+
+Classification A is `QA_HARNESS_WEBKIT_CAPTURE_PROCESS_REUSE / STAGE6_TO_STAGE24_SHARED_BROWSER + CLEAN_STAGE24_PAGE_CRASH / DESIGN_CHANGE_REQUIRED`.
+
+Two deployment viewport jobs failed independently, while 667x375, 736x414, 932x430, and 1280x720 passed the same eight-unit contract:
+
+- job `97320937838`, WebKit 844x340, artifact `9507055506`, ZIP SHA-256 `57b927d6ecca2af6b44b61f2f34c97085bb62d08a1439eebf1dd620f47eac97a`: Hachi passed; Ranger passed `fully-inside`, `first-visible`, and `quarter`; the exact half arm was valid at progress `0.4441977364351769`; its independent trace last read at 3,257 ms, then the page clean-crashed at 26,932 ms with fatal channels zero;
+- job `97320937859`, WebKit 844x390, artifact `9507008698`, ZIP SHA-256 `98e3d10a13326d662fad3a954e7c51a1a7462a5e42b9e928d4272874153acd21`: Hachi, Ranger, and Paisen passed; Crazy King entered the real fixture and production deployment at progress 0; its independent trace last read at 756 ms, then the page clean-crashed at 24,888 ms with fatal channels zero.
+
+Each bounded unit already owns a fresh Node/server/browser process, and each browser later exited zero during normal teardown. The failure unit, viewport, and checkpoint differ; valid product receipts and pixels before each stop exclude a deterministic unit, checkpoint, geometry, asset, gameplay, or pixel-threshold owner. Source audit instead proves `createBoundedTrace` launches an independent 250 ms interval whose `page.evaluate` may overlap the deployment main flow's own `page.evaluate`. In both failures the diagnostic read and main-flow operation stopped advancing long before the unexpected page crash. Native renderer termination is not inferred; overlapping runner-owned page I/O is the remaining shared controllable coupling.
+
+Classification B is `QA_HARNESS_WEBKIT_PAGE_IO_REENTRANCY / INDEPENDENT_INTERVAL_TRACE + MAIN_FLOW_PAGE_EVALUATE + CLEAN_RENDERER_CRASH / DESIGN_CHANGE_REQUIRED`.
+
+The coherent remediation class is `WEBKIT_QA_CAPTURE_LIFECYCLE_ISOLATION / FRESH_PHASE_G_BATTLE_EXTRA_BROWSER_PER_CAPTURE + COOPERATIVE_SINGLE_PAGE_IO_DEPLOYMENT_TRACE / DESIGN_CHANGE_REQUIRED`.
+
+### 41.2 Exact bounded eight-path packet
+
+Preserve every r24 product byte and change exactly these eight paths relative to remote r24:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/v100-phase-g-production-matrix.mjs`;
+6. `tests/v100-phase-g-checkpoint.test.mjs`;
+7. `scripts/v099-final-remediation-browser-smoke.mjs`;
+8. `tests/v0995-runtime-evidence-contract.test.mjs`.
+
+Under `SOL_DESIGN`, revise and Issue-byte-lock paths 1-4 first without an intermediate commit. Under `SOL_REMEDIATION`, change only paths 5-8. One atomic eight-path iteration-8 candidate is required; the later workflow-only unfiltered restoration becomes iteration 9.
+
+Phase G correction:
+
+1. Add pure `phaseGBrowserLifecyclePolicy(engineName, state)`. Only WebKit `battle-extra` returns `fresh-process-per-capture`, close-existing-before-capture true, close-after-capture true, and maximum one capture. WebKit core and every Chromium state retain shared-per-engine behavior.
+2. Before every WebKit battle-extra capture, close/await any existing WebKit browser, then launch a fresh process. After context/recorder cleanup, close/await that process in an unconditional cleanup path. Stage 6, Stage 24, Stage 25, standalone filters, ordered sequences, and full 54-state execution all use the same rule.
+3. Give each launched browser an immutable session ID/launch ordinal and a mutable capture count. Fail closed if an isolated session records anything other than capture count 1. Persist bounded `browserSession` policy/session/capture-count evidence in every battle-extra checkpoint snapshot and `contract-identified` entry.
+4. Add a load-only `V100_PHASE_G_BROWSER_LIFECYCLE_PROBE` before evidence-directory creation. Positive controls must prove WebKit battle-extra isolation; negative controls must prove WebKit core and Chromium battle-extra remain shared. Add or remove no test block: checkpoint remains 12 tests and focused remains 60.
+
+Deployment correction:
+
+1. Extend `createBoundedTrace` with explicit `automaticInterval`. Existing setup traces retain automatic interval behavior; deployment traces set it false and expose `captureMode: "cooperative-main-flow"`, capture-attempt count, and overlap-wait count.
+2. Remove the independent interval/initial fire only from deployment traces. The main flow owns every deployment trace read: after each completed queue, arm, receipt/readback, freeze audit, and explicit checkpoint boundary it awaits exactly one lean trace capture before the next page operation. No trace capture and acceptance operation may be in flight concurrently.
+3. Require cooperative deployment evidence to report overlap-wait count 0. Preserve the last completed cooperative sample on failure. Extend the existing runtime source test block with positive cooperative ownership and negative independent-interval/reentrant-page-I/O assertions. Add or remove no test block.
+
+No `app/**`, `.github/**`, product gameplay, balance, AI, timing, movement, asset, render, pixel threshold, causal threshold, viewport, timeout, retry, attempt count, screenshot count, artifact-integrity, package/lock, public, release-request, or CI-BOM byte may change. Do not add a browser retry, reset a product route, shorten Stage 24, widen a deadline, skip a unit/checkpoint, or accept a crash.
+
+### 41.3 Acceptance, stop route, and release continuation
+
+After the four-path r25 Issue byte lock and Design Lock 19/19, execute once in this order:
+
+1. apply only the four runner/test corrections; prove exact eight-path topology, r24 product/workflow/package/public byte equality, EOL/BOM preservation, `git diff --check`, two-script syntax, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, lint, and production build;
+2. on final r25 bytes run three fresh Stage 6 WebKit 667x375 captures, three fresh Stage 24 WebKit 736x414 captures, and three ordered Stage 6 -> Stage 24 -> Stage 25 sequences. Require each battle-extra artifact to show a different fresh-process session with capture count 1, unchanged fourteen checkpoints/causal/pointer/production acceptance, unresolved zero, and fatal zero;
+3. run the two corrected deployment failure targets first: WebKit 844x340 Ranger 3/3 and WebKit 844x390 Crazy King 3/3, each in fresh one-attempt processes with cooperative capture mode, overlap-wait zero, six receipts/PNGs, one sheet, artifact integrity, and fatal zero;
+4. because deployment runner bytes changed, run full Chromium six viewports and bounded WebKit six viewports. Require Chromium 48 units / 288 checkpoint PNGs / 48 sheets and WebKit 48 fresh one-attempt unit processes / 288 PNGs / 48 sheets, exact receipts/pixels, unique paths/final disk SHA, cooperative overlap-wait zero, stable build identity, and fatal zero;
+5. only complete local green authorizes one atomic eight-path iteration-8 commit and normal non-force publish. Re-fetch exact GitHub HEAD/tree/compare and accept exactly one automatic focused attempt. Any first source, runtime, artifact, or remote failure persists raw evidence and returns to `SOL_DESIGN` in this same `/goal`; no immediate edit, retry, rerun, micro-patch, Luna route, or stale-evidence substitution;
+6. complete focused green alone resets deferred counters and authorizes workflow-only iteration-9 restoration. Then require same-HEAD full Phase G 54/54, validator, full regressions, one unfiltered remote complete green, production runtime/human/save/PWA/asset/release audits, clean fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, and the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` before approval-only stacked integration/release/official Pages/published-SHA QA/recovery/closure.
+
+If either corrected lifecycle axis fails again, do not apply another lifecycle patch. Return to `SOL_DESIGN` and add one finite diagnostic candidate limited to browser process/WebContent exit and host/resource telemetry for that exact runner; product edits, retries, timeout changes, and acceptance weakening remain forbidden.
+
+### 41.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r25 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: `7`; the r25 atomic material candidate is iteration 8; workflow-only restoration becomes iteration 9
+- `SAME_GATE_REPEAT_COUNT`: `4` for the required Phase G job
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `2`
+- `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
+- `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`; `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`; `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r25 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `585eed74e5725e40f992ef4c7f85a0179ae2ae8f`
+- `LAST_AUDITED_TREE`: `09f04dd9b6bdadef99c9b71ddc2cad5553077c1f`
+- `FAILED_GATE`: terminal automatic focused CI #924 / run `32687912194`, attempt 1: Phase G job `97319047736` clean Stage 24 page crash plus independent WebKit deployment jobs `97320937838` and `97320937859` clean page crashes; every other executable job green except one dependency-skipped downstream job
+- `LAST_GREEN_GATE`: r24 PR Verify, six enemy-runtime jobs, hosted-runner job, three Stage 3 jobs, and deployment 667x375/736x414/932x430/1280x720 jobs; r23 local Phase G/deployment controls remain comparison-only after runner bytes change
+- `CLASSIFICATION`: `REMOTE_WEBKIT_QA_LIFECYCLE_COUPLING / PHASE_G_CROSS_CAPTURE_BROWSER_REUSE + DEPLOYMENT_DIAGNOSTIC_PAGE_IO_REENTRANCY / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_QA_CAPTURE_LIFECYCLE_ISOLATION / FRESH_PHASE_G_BATTLE_EXTRA_BROWSER_PER_CAPTURE + COOPERATIVE_SINGLE_PAGE_IO_DEPLOYMENT_TRACE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r25 publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact r24 HEAD/tree and all product bytes -> r25 four-path byte lock -> four runner/test corrections -> source/static/lint/build/diff/byte -> Stage 6/24/ordered 3/3 with session-count proof -> 844x340 Ranger 3/3 + 844x390 Crazy King 3/3 cooperative proof -> full Chromium/WebKit deployment -> atomic iteration-8 candidate -> one automatic focused complete green -> workflow-only iteration-9 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all nineteen terminal jobs, both downloaded deployment artifacts, the downloaded Phase G artifact, r23 positive controls, exact runner call topology, and every downstream exact-HEAD boundary. Revision r25 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 42. Revision r26 — contact-first live-target continuity
+
+This section supersedes Section 41 only for the first r25 local ordered Stage 25 stop, the exact Phase G target-continuity correction, and the current execution cursor. The implemented r25 fresh-process-per-capture and cooperative deployment page-I/O bytes remain mandatory. Every r12-r25 product, gameplay, causal-history, target-ownership, pointer, pixel, artifact-integrity, one-attempt/no-retry, exact-HEAD, single Producer checkpoint, and release contract remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 42.1 Actual PASS/failure evidence and independent classification
+
+On the final r25 eight-path draft, source/static gates were green: two-script syntax, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, deployment/runtime contract 3/3, lint, production build, `git diff --check`, exact topology, and byte/EOL/BOM audit. Fresh WebKit Stage 6 standalone passed 3/3 and Stage 24 standalone passed 3/3. Ordered run 1 passed Stage 6 -> Stage 24 -> Stage 25. Ordered run 2 passed Stage 6 and Stage 24 and then failed its first Stage 25 attempt. Ordered run 3, all deployment acceptance, commit, push, and remote CI were not run. There was no edit, retry, rerun, evidence substitution, or promotion after the stop.
+
+The passing ordered-run-1 report `outputs/v100-r25/ordered/run-1/phase-g-report.json` is 14,189,194 bytes with SHA-256 `0b4fd89d6ecdc18fcb6a2b953f2f583d8825049d81b4d16fa53ca185dfe3c35c`. Its Stage 25 `stage25-president` / actual `stage-mugarian-executive-lab` WebKit 932x430 capture used fresh session `webkit-3`, launch ordinal 3, capture ordinal 1. Four production deployment pointers were accepted. The RED PANTHER shield acquired a live Guardian target and performed its authored attack; all four causal axes completed, unresolved checkpoints were zero, fatal channels were zero, and the screenshot was saved.
+
+The failing ordered-run-2 diagnostic `outputs/v100-r25/ordered/run-2/diagnostics/stage25-president-webkit-932x430.json` is 5,459,013 bytes with SHA-256 `62e09be01f9b60be1799ab548b63b388df32e7746d653ed763439075c8ae1f9b`; its diagnostic screenshot SHA-256 is `fbd4c3a55bc5692f5b6ec3d4876ebd0ece92947b219d9d665e8e94b0035ac0d8`. The same Stage 25 contract used fresh session `webkit-3`, launch ordinal 3, capture ordinal 1. Four production pointers were accepted, the shield mounted, and monotonic target history truthfully recorded shield id 4 owning living Ranger id 6 at production time 40.95. The final readable production state at time 84.283 still had the mutated president and shield alive but had zero live human fighters. No shield attack identity/source attribution or shield attack audio existed. The fixed 45,000 ms proof wait therefore ended with `proof-actor-attack-observed-or-not-required`, `causal-proof-complete`, and `screenshot-saved` unresolved. The page remained live and console/page/request/HTTP fatal arrays were all zero.
+
+Source audit fixes the owner without inferring a product failure:
+
+1. `readProofActorContactState` currently collapses a current live human target and monotonic historical target ownership into one `hasHumanTarget` boolean. The historical evidence is correct for the r13 acceptance checkpoint.
+2. Both contact-first boss-deployment breaks use that collapsed historical boolean. Once any living target was observed, further opening frontline deployment can stop even if that target later dies.
+3. The sustain loop sets `proofActorContactPlanPending` while the shield has not attacked, then blocks the existing `sustain-redeploy` real-card pointer for that entire pending interval. Its separate survival exception is limited to `keepHumanTargetAlive`, which Stage 25 does not set.
+4. The failing evidence is the exact reachable consequence: historical target proof remains true, current live humans fall to zero, and the live shield has no production target from which an authored attack can occur. The same bytes' passing control proves the attack and causal predicate can succeed when a live target survives. A product targeting, gameplay, balance, or AI defect is not established.
+
+Classification is `QA_HARNESS_CONTACT_FIRST_TARGET_CONTINUITY_DEADLOCK / MONOTONIC_LIVING_TARGET_HISTORY_STOPS_FRONTLINE + SUPPRESSES_REAL_CARD_REDEPLOY_BEFORE_PROOF_ATTACK / DESIGN_CHANGE_REQUIRED`.
+
+The coherent remediation class is `PHASE_G_CONTACT_FIRST_LIVE_TARGET_CONTINUITY / HISTORICAL_TARGET_EVIDENCE_ONLY + REAL_CARD_SURVIVAL_REDEPLOY_WHILE_ATTACK_PENDING / DESIGN_CHANGE_REQUIRED`.
+
+### 42.2 Exact bounded correction
+
+The material candidate remains exactly the Section 41 eight paths relative to remote r24. Preserve the current r25 bytes of all eight paths. Under `SOL_DESIGN`, revise and Issue-byte-lock only paths 1-4. Under `SOL_REMEDIATION`, change only paths 5-6 for r26; paths 7-8 retain their already-green r25 cooperative deployment bytes exactly:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/v100-phase-g-production-matrix.mjs`;
+6. `tests/v100-phase-g-checkpoint.test.mjs`;
+7. `scripts/v099-final-remediation-browser-smoke.mjs`;
+8. `tests/v0995-runtime-evidence-contract.test.mjs`.
+
+Implement one host-owned policy with these exact semantics:
+
+1. Add pure `proofActorTargetContinuityDecision({ bossDeploymentFinished, bossEngaged, keepHumanTargetAlive, proofActorRequiresContactFirst, proofActorAttackObserved, liveHumanTargetCount })`. It returns immutable `proofActorContactPlanPending`, `targetSurvivalPlanPending`, and `allowSustainRedeploy` values. `proofActorContactPlanPending` is true only when contact-first is required and its attack is not yet observed. `targetSurvivalPlanPending` is true only when the boss is engaged, fewer than two current live humans exist, and either existing `keepHumanTargetAlive` or the contact-first plan is pending. `allowSustainRedeploy` is true only after opening deployment is finished and either the contact-first plan is not pending or its target-survival plan is pending.
+2. Extend `readProofActorContactState` with separate `hasLiveHumanTarget`, derived only from the current lean snapshot's actor target whose side is human and HP is greater than zero. Retain `hasHumanTarget` and all monotonic target-history fields unchanged as acceptance evidence. Historical evidence must never set `hasLiveHumanTarget`.
+3. In both contact-first boss-deployment early-break locations, an observed attack may still break; target-based early break must use `hasLiveHumanTarget`, never historical `hasHumanTarget` alone.
+4. In the sustain loop, compute the pure decision from the current live-human count. When `allowSustainRedeploy` is true and the existing proof-combat or target-survival condition is true, invoke exactly the existing `performVerifiedDeploymentPointer` `sustain-redeploy` path. This may deploy only a currently ready real production card through the existing trusted pointer and production acceptance. It may not synthesize a fighter, target, attack, audio cue, causal sample, resource, HP, clock, boss state, card state, or checkpoint.
+5. Extend the existing load-only `V100_PHASE_G_CAUSAL_HISTORY_PROBE` result with the pure target-continuity decision. Extend the existing checkpoint test block; add or remove no test block. Prove historical target ownership still satisfies the target-evidence checkpoint but not `hasLiveHumanTarget`; zero or one live human with an engaged boss and pending contact-first attack enables survival redeploy; two live humans do not; a disengaged boss or unfinished opening deployment does not; an observed proof attack returns to the pre-r26 sustain rule.
+
+Do not set Stage 25 `keepHumanTargetAlive`, change any Stage contract/order/formation, widen the 45,000 ms proof deadline, add an attempt/retry, change product save/energy/HP/damage/AI/timing/targeting, substitute a generic actor/audio/attack, relax four-axis causal proof, or edit `app/**`, `.github/**`, workflow, package/lock, public, assets, release request, or deployment runner/test bytes.
+
+### 42.3 Acceptance, stop route, and release continuation
+
+After the r26 four-path Issue byte lock and green Design Lock 19/19, execute once in this order on final r26 bytes:
+
+1. apply only the two Phase G runner/test changes; prove exact eight-path topology, r24 product/workflow/package/public byte equality, r25 deployment runner/test byte equality, EOL/BOM preservation, `git diff --check`, two edited-script syntax, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, deployment/runtime contract 3/3, lint, and production build;
+2. run fresh WebKit standalone Stage 6 667x375 3/3, Stage 24 736x414 3/3, and Stage 25 932x430 3/3, then three ordered Stage 6 -> Stage 24 -> Stage 25 sequences. Require every capture to persist a unique fresh-process session with capture ordinal/count 1, correct stage/variant, fourteen completed checkpoints, exact living-human target ownership, exact proof-actor attack attribution, four-axis causal proof, trusted real-pointer receipts, unresolved zero, and fatal zero. r25 browser results are comparison evidence only after Phase G bytes change;
+3. resume the unexecuted r25 deployment gates: WebKit 844x340 Ranger 3/3, WebKit 844x390 Crazy King 3/3, full Chromium six-viewports 48 units / 288 checkpoint PNGs / 48 sheets, and bounded WebKit six-viewports 48 fresh one-attempt processes / 288 PNGs / 48 sheets. Require cooperative capture, overlap-wait zero, exact receipts/pixels, unique paths, final-disk SHA integrity, stable build identity, and fatal zero;
+4. only complete local green authorizes one atomic eight-path iteration-8 commit and normal non-force publish. Re-fetch exact GitHub HEAD/tree/compare and accept exactly one automatic focused attempt. Any first source, runtime, artifact, or remote failure persists raw evidence and returns to `SOL_DESIGN` in this same `/goal`; no immediate edit, retry, rerun, micro-patch, Luna route, or stale-evidence substitution;
+5. complete focused green alone resets the deferred remote counters and authorizes workflow-only iteration-9 restoration. Then require exact-HEAD full Phase G 54/54, validator, full regressions, one unfiltered remote complete green, production runtime/human/save/PWA/asset/release audits, clean fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, and the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` before approval-only stacked integration/release/official Pages/published-SHA QA/recovery/closure.
+
+If the first r26 Stage 25 standalone or ordered process again reaches a live proof actor with no current live human before its authored attack, or any new first failure occurs, stop without editing or rerunning and return to `SOL_DESIGN` with the exact diagnostic/artifact. Do not add another target-survival micro-patch or infer a product defect without product-owned evidence.
+
+### 42.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r26 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: `7`; the atomic material candidate remains iteration 8; workflow-only restoration remains iteration 9
+- `SAME_GATE_REPEAT_COUNT`: `4` for the deferred required Phase G job
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `2`
+- `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
+- `R25_LOCAL_STAGE25_PROOF_ATTACK_REPEAT_COUNT`: `1`
+- `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`; `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`; `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r26 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `585eed74e5725e40f992ef4c7f85a0179ae2ae8f`
+- `LAST_AUDITED_TREE`: `09f04dd9b6bdadef99c9b71ddc2cad5553077c1f`
+- `FAILED_GATE`: first r25 local ordered acceptance, run 2 position 3 Stage 25 WebKit 932x430; fresh session stayed live with fatal zero, historical living-human target evidence existed, current humans reached zero, shield attack/causal proof never occurred, and the fixed 45,000 ms proof wait expired; ordered run 3 and all later gates were not run
+- `LAST_GREEN_GATE`: r25 final source/static gates, Stage 6 standalone 3/3, Stage 24 standalone 3/3, ordered run 1 all three stages, and ordered run 2 positions 1-2; all browser results become comparison-only after r26 Phase G bytes change
+- `CLASSIFICATION`: `QA_HARNESS_CONTACT_FIRST_TARGET_CONTINUITY_DEADLOCK / MONOTONIC_LIVING_TARGET_HISTORY_STOPS_FRONTLINE + SUPPRESSES_REAL_CARD_REDEPLOY_BEFORE_PROOF_ATTACK / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_CONTACT_FIRST_LIVE_TARGET_CONTINUITY / HISTORICAL_TARGET_EVIDENCE_ONLY + REAL_CARD_SURVIVAL_REDEPLOY_WHILE_ATTACK_PENDING / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r26 publication and green Design Lock proof
+- `RESUME_FROM`: preserve the exact r25 eight-path draft and raw PASS/failure evidence -> r26 four-path byte lock -> two-path Phase G live-target-continuity correction -> source/static/lint/build/diff/byte -> fresh Stage 6/24/25 standalone 3/3 each + ordered trio 3/3 -> r25 targeted and full deployment acceptance -> atomic iteration-8 candidate -> one automatic focused complete-green attempt -> workflow-only iteration-9 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact r25 PASS and failure artifacts, source control flow, unchanged r13 target-history acceptance, r25 lifecycle corrections, current eight-path draft topology, and every downstream exact-HEAD boundary. Revision r26 has `High ambiguity: 0` and `Medium ambiguity: 0`.

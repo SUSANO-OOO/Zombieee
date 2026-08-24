@@ -404,7 +404,7 @@ function diagnosticsClean(diagnostics) {
   return Object.values(diagnostics).every((entries) => entries.length === 0);
 }
 
-function createBoundedTrace({ page, readSample }) {
+function createBoundedTrace({ page, readSample, automaticInterval = true }) {
   const startedAt = Date.now();
   const samples = [];
   let active = true;
@@ -413,6 +413,8 @@ function createBoundedTrace({ page, readSample }) {
   let timer = null;
   let lastSampleError = null;
   let lastReadableSnapshot = null;
+  let captureAttemptCount = 0;
+  let overlapWaitCount = 0;
   const pageSignals = {
     close: false,
     crash: false,
@@ -422,7 +424,9 @@ function createBoundedTrace({ page, readSample }) {
 
   const capture = async () => {
     if (!active || samples.length >= DIAGNOSTIC_TRACE_MAX_SAMPLES) return;
+    captureAttemptCount += 1;
     if (inFlight) {
+      overlapWaitCount += 1;
       await inFlight;
       return;
     }
@@ -453,8 +457,10 @@ function createBoundedTrace({ page, readSample }) {
     pageSignals.crash = true;
     pageSignals.crashAtElapsedMs ??= Date.now() - startedAt;
   });
-  void capture();
-  timer = setInterval(() => { void capture(); }, DIAGNOSTIC_TRACE_INTERVAL_MS);
+  if (automaticInterval) {
+    void capture();
+    timer = setInterval(() => { void capture(); }, DIAGNOSTIC_TRACE_INTERVAL_MS);
+  }
 
   return {
     async stop() {
@@ -471,6 +477,9 @@ function createBoundedTrace({ page, readSample }) {
         lastReadableSnapshot,
         lastSampleError,
         pageSignals,
+        captureMode: automaticInterval ? "automatic-interval" : "cooperative-main-flow",
+        captureAttemptCount,
+        overlapWaitCount,
       };
     },
     capture,
@@ -2188,11 +2197,12 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence, life
   return result;
 }
 
-async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label) {
+async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label, captureTrace = null) {
   try {
     const arm = await page.evaluate(({ id, expectedCheckpoint }) => (
       window.__ASHFALL_BATTLE_QA__.armCrawlerDeploymentCheckpoint(id, expectedCheckpoint)
     ), { id: fighterId, expectedCheckpoint: checkpoint });
+    if (captureTrace) await captureTrace();
     invariant(arm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
       && arm.armed === true
       && arm.fighterId === fighterId
@@ -2216,6 +2226,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
           snapshot,
         };
       }, { id: fighterId, expectedCheckpoint: checkpoint });
+      if (captureTrace) await captureTrace();
       lastSnapshot = candidate.snapshot;
       if (candidate.snapshot?.checkpointReceipt
         && (candidate.snapshot.checkpointReceipt.fighterId !== fighterId
@@ -2239,6 +2250,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
               && snapshot.checkpointReceipt.checkpoint === expectedCheckpoint,
           };
         }, { id: fighterId, expectedCheckpoint: checkpoint });
+        if (captureTrace) await captureTrace();
         const receipt = frozen.checkpointReceipt;
         if (frozen.paused === true
           && frozen.exactReceipt === true
@@ -2259,7 +2271,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
   }
 }
 
-async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
+async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label, captureTrace = null) {
   try {
     await page.evaluate((kind) => {
       const qa = window.__ASHFALL_BATTLE_QA__;
@@ -2267,6 +2279,7 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
         throw new Error(`CRAWLER queue rejected ${kind}`);
       }
     }, unitKind);
+    if (captureTrace) await captureTrace();
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeout) {
       const candidate = await page.evaluate((kind) => {
@@ -2281,6 +2294,7 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
         qa.setRepresentativeSixProofPaused(true);
         return { ready: true, fighterId: fighter.id, fighterX: fighter.x, observedProgress: progress };
       }, unitKind);
+      if (captureTrace) await captureTrace();
       if (candidate?.ready === true) {
         await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
         const frozen = await page.evaluate(({ fighterId, expectedX }) => {
@@ -2295,10 +2309,12 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
             frozen: fighter?.x === expectedX,
           };
         }, { fighterId: candidate.fighterId, expectedX: candidate.fighterX });
+        if (captureTrace) await captureTrace();
         if (frozen.frozen === true && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside") {
           return frozen;
         }
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+        if (captureTrace) await captureTrace();
       }
       await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
     }
@@ -2316,6 +2332,7 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
   let queueResult = null;
   const trace = createBoundedTrace({
     page,
+    automaticInterval: false,
     readSample: async ({ elapsedWallMs }) => {
       const runtime = await page.evaluate(({ kind, id, checkpoint, progress }) => {
         const battleApi = window.__ASHFALL_BATTLE_QA__;
@@ -2382,6 +2399,7 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
     setQueueResult(result) {
       queueResult = result;
     },
+    capture: trace.capture,
     async stop() {
       const result = await trace.stop();
       return {
@@ -2503,6 +2521,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
         unit.kind,
       );
+      await activeDeploymentTrace.capture();
       invariant(unitAsset?.kind === unit.kind
         && typeof unitAsset.path === "string"
         && unitAsset.width > 0
@@ -2518,6 +2537,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       ), unit.kind);
       activeFixtureResult = prepared;
       activeDeploymentTrace.setFixtureResult(prepared);
+      await activeDeploymentTrace.capture();
       invariant(Number.isInteger(prepared?.attackerId),
         `${name}/${unit.kind}: deployment fixture is unavailable`);
       activeQueueResult = { requested: true, result: null };
@@ -2526,6 +2546,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         page,
         unit.kind,
         `${name}/${unit.kind}`,
+        activeDeploymentTrace.capture,
       );
       activeQueueResult = { requested: true, result: firstFrame };
       activeDeploymentTrace.setQueueResult(activeQueueResult);
@@ -2542,6 +2563,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
             checkpoint.id,
             checkpoint.progress,
             `${name}/${unit.family}/${checkpoint.id}`,
+            activeDeploymentTrace.capture,
           );
         }
         const label = `${name}/${unit.family}/${checkpoint.id}`;
@@ -2582,6 +2604,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
           label,
         );
+        await activeDeploymentTrace.capture();
         const screenshotPath = canvasCapture.path;
         const screenshotSha256 = await evidenceSha256(screenshotPath);
         unitResult.checkpoints.push({
@@ -2644,6 +2667,9 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         unitResult.checkpoints,
       );
       unitResult.deploymentTrace = await activeDeploymentTrace.stop();
+      invariant(unitResult.deploymentTrace.captureMode === "cooperative-main-flow"
+        && unitResult.deploymentTrace.overlapWaitCount === 0,
+      `${name}/${unit.kind}: deployment trace page I/O was not cooperative`);
       activeDeploymentTrace = null;
       unitResult.status = "passed";
       unitResult.fighterId = fighterId;

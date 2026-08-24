@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`、tree `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`。これはr24設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`585eed74e5725e40f992ef4c7f85a0179ae2ae8f`、tree `09f04dd9b6bdadef99c9b71ddc2cad5553077c1f`。これはr25設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r24` Sections 28-40。r12-r23のQA／evidence／artifact-integrity契約を維持し、r23 Section 39を追加した一方でcurrent Design/Handoff/Project State headersとtest assertionがr22に残ったSOL-owned canonical revision driftを、製品byte変更なしで閉じる。SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r26` Sections 28-42。r25のWebKit fresh-process／cooperative page-I/O correctionを保持し、最初のlocal ordered Stage 25 stopを、monotonic target evidenceとcurrent live-target continuityの混同によるcontact-first harness deadlockとして閉じる。既存real-card pointer以外のtarget／attack／stateは生成しない。製品byte、timeout、retry、target／causal acceptance、SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -116,32 +116,36 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r11 corrected harnessでfresh local Stage 24 3/3、canonical Stage 3 3/3、six-path correction commit／push `0495e95e3bc59fcf546ffa02ee83704a1f63e366`までは完了した。correction-HEAD remote run #918はcurrent Stage 6 failureでredのため、focused remote complete green以後のlocal full Phase G 54/54＋validator＋full regressions、unfiltered remote complete green、dynamic runtime/human-quality evidenceは未完了である。
 - r11 LUNA source returnはresume preflight PASS、five-file load PASS、focused 47 total／46 pass／1 fail、causal tests 4/4 PASS。実際の失敗は`tests/v100-design-lock.test.mjs`のr10 cross-source remediation-class assertionであり、`SOL human-player quality audit未完了` literalはlive／worktree双方に存在する。Section 27はtestを弱めず、Project Stateへ欠落していたr10 `REMEDIATION_CLASS`を追加するSOL-owned same-revision correctionとして閉じる。
 - r11 source-contract history：HEAD `f3db25f00c9209830d79d7f01b599bdb02834a06`、tree `ee0bcd81f3aed9bedaf642f6990acf8907865259`、class `SOL_PACKET_CANONICAL_STATE_CONTRACT / R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE / REMEDIATION_LOCAL`。これはcurrent cursorではない。
+- r25 final draftのsource/staticはsyntax、load-only 7/7、focused 60/60、checkpoint 12/12、Design Lock 19/19、deployment/runtime 3/3、lint、build、diff、byte auditがgreen。fresh WebKit Stage 6 standalone 3/3、Stage 24 standalone 3/3、ordered run 1全3 position、ordered run 2のStage 6／24までgreen。run 2 position 3 Stage 25だけがfixed 45秒内にshield attackを観測できず停止し、ordered run 3、deployment、commit、push、remote CIは未実行。
+- r25 Stage 25 failureでは、shieldからliving Rangerへのmonotonic target historyは真だが、failure時のcurrent live humanは0、shield attack identity／audio／causal proofは不存在、pageはlive、fatal channelsは0。source上、historical `hasHumanTarget`がopening deploymentを止め、contact-first pendingが既存`sustain-redeploy`を抑止する。product targeting／gameplay failureではなく、`QA_HARNESS_CONTACT_FIRST_TARGET_CONTINUITY_DEADLOCK / MONOTONIC_LIVING_TARGET_HISTORY_STOPS_FRONTLINE + SUPPRESSES_REAL_CARD_REDEPLOY_BEFORE_PROOF_ATTACK / DESIGN_CHANGE_REQUIRED`。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r24 Section 40
+## 6. Version 1.0.0 execution cursor — r26 Section 42
 
-- `LOOP_ITERATION`: `6`。r23 atomic material candidateはiteration 6、r24 docs/test-only candidateはiteration 7、focused required gate完全green後のworkflow-only unfiltered restorationはiteration 8
-- `SAME_GATE_REPEAT_COUNT`: `3` for deferred Stage 6
-- `DEFERRED_STAGE24_REPEAT_COUNT`: `1`
+- `LOOP_ITERATION`: `7`。atomic eight-path material candidateは引き続きiteration 8、focused required gate完全green後のworkflow-only unfiltered restorationはiteration 9
+- `SAME_GATE_REPEAT_COUNT`: `4` for required Phase G job
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `2`
+- `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
+- `R25_LOCAL_STAGE25_PROOF_ATTACK_REPEAT_COUNT`: `1`
 - `DEPLOYMENT_736_REPEAT_COUNT`: `2`
 - `DEPLOYMENT_844_REPEAT_COUNT`: `1`
 - `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`
 - `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
-- `ROLE_LOCK`: `SOL_DESIGN` until r24 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`
-- `LAST_AUDITED_TREE`: `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`
-- `FAILED_GATE`: r23 remote push後かつqueued automatic focused CI #923のterminal受入前に実施したcanonical source audit。Design Lock Section 39／Handoff Section 32／Project State cursorはr23だったが、三つのcurrent revision header/summaryとpositive source assertionはr22のままで、green testがdriftを固定する構造だった
-- `LAST_GREEN_GATE`: r23 final local source/static/lint/build/diff/byte、targeted Chromium 14/14 artifact integrity、fresh Phase G Stage 6/24/ordered各3/3、full Chromium 336/336、full WebKit 48/48 processes／336/336。r24でexact HEADが変わるためdiagnosis/remediation controlでありfinal candidate proofへ流用しない
-- `CLASSIFICATION`: `SOL_OWNED_CANONICAL_REVISION_HEADER_DRIFT / R23_SECTIONS_PUBLISHED_WITH_R22_DESIGN_HANDOFF_PROJECT_STATE_HEADERS_AND_POSITIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `CANONICAL_REVISION_IDENTITY_ALIGNMENT / R24_HEADER_SUMMARY_CURSOR_AND_NEGATIVE_STALE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: preserve r23 product/runtime/runner bytes and remote commit/tree -> correct only four current design/source paths -> Issue byte lock + load 7/7 + focused 60/60 + checkpoint 12/12 + Design Lock 19/19 + syntax/lint/build/diff/byte -> atomic docs/test-only iteration-7 candidate -> one automatic r24 focused run -> complete green -> workflow-only iteration-8 restoration -> exact-HEAD full Phase G 54/54/validator/regressions -> one unfiltered remote run -> runtime/human/save/PWA/asset/release audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r24 publication and green Design Lock proof
+- `ROLE_LOCK`: `SOL_DESIGN` until r26 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `585eed74e5725e40f992ef4c7f85a0179ae2ae8f`
+- `LAST_AUDITED_TREE`: `09f04dd9b6bdadef99c9b71ddc2cad5553077c1f`
+- `FAILED_GATE`: first r25 local ordered acceptance、run 2 position 3 Stage 25 WebKit 932x430。fresh sessionはlive／fatal 0、historical living-human target evidenceは存在したがcurrent humansが0となり、exact shield attack／four-axis causal proofを観測しないままfixed 45秒でtimeout。ordered run 3以降は未実行
+- `LAST_GREEN_GATE`: r25 final source/static、Stage 6 standalone 3/3、Stage 24 standalone 3/3、ordered run 1全position、ordered run 2 positions 1-2。r26 Phase G byte変更後はbrowser evidenceをcomparison-onlyとする
+- `CLASSIFICATION`: `QA_HARNESS_CONTACT_FIRST_TARGET_CONTINUITY_DEADLOCK / MONOTONIC_LIVING_TARGET_HISTORY_STOPS_FRONTLINE + SUPPRESSES_REAL_CARD_REDEPLOY_BEFORE_PROOF_ATTACK / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_G_CONTACT_FIRST_LIVE_TARGET_CONTINUITY / HISTORICAL_TARGET_EVIDENCE_ONLY + REAL_CARD_SURVIVAL_REDEPLOY_WHILE_ATTACK_PENDING / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact r25 eight-path draft/raw evidence -> r26 four-path byte lock -> two-path Phase G current-live-target continuity correction -> 60/60 + 12/12 + 19/19 + syntax/lint/build/diff/byte -> fresh Stage 6/24/25 standalone 3/3 each + ordered trio 3/3 -> 844x340 Ranger 3/3 + 844x390 Crazy King 3/3 -> full Chromium/WebKit deployment -> atomic iteration-8 candidate -> one automatic focused run -> complete green -> workflow-only iteration-9 restoration -> exact-HEAD full Phase G 54/54/validator/regressions -> one unfiltered remote run -> runtime/human/save/PWA/asset/release audit -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approved stacked integration/release/Pages/public QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r26 publication and green Design Lock proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r23 product/runtime/runner correctionとremote commit/treeは再作成せず保持する。r24はDesign Lock／Handoff／Project State／既存Design Lock testのcurrent revision identityだけを整合させ、active headerではr22/r23をnegative rejectする。exact seven-path topology、product、Phase G、workflow、bounded runner、CI BOM、public/package bytesは不変。r24 automatic focused remote完全green後だけrepeat countersを0へresetし、workflow-only iteration-8 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r24 remote commit/treeと全product bytes、r25 WebKit fresh-process／cooperative deployment correctionは再作成せず保持する。r26はsame exact eight-path draftのうちPhase G runner/checkpoint testだけへ`hasLiveHumanTarget`とpure target-continuity decisionを追加する。historical target evidenceは維持し、current targetの代替にしない。生存継続は既存trusted real-card pointerだけを使い、Stage 25 flag、timeout、retry、attempt、checkpoint、target／causal／pixel／artifact thresholdは不変。automatic focused remote完全green後だけdeferred countersを0へresetし、workflow-only iteration-9 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-39のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r23を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-42のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r26を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

@@ -78,6 +78,8 @@ const sequenceId = process.env.V100_PHASE_G_SEQUENCE_ID ?? null;
 const storageKeys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good", "nishijin-campaign-v100:owner"];
 const results = [];
 const phaseGBrowsers = new Map();
+const phaseGBrowserMetadata = new WeakMap();
+let phaseGBrowserSessionOrdinal = 0;
 const phaseGCheckpointRecorders = new Set();
 const pageCheckpointRecorders = new WeakMap();
 const phaseGPageInputTails = new WeakMap();
@@ -394,7 +396,7 @@ function checkpointRecorderFor(page) {
   return pageCheckpointRecorders.get(page) ?? null;
 }
 
-function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, context, page, browser }) {
+function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, context, page, browser, browserSession = null }) {
   const startedAt = Date.now();
   const checkpointLog = [];
   const checkpointState = new Map();
@@ -507,6 +509,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
       engine: engineName,
       viewport: viewportLabel(viewport),
       sequenceId,
+      browserSession: cloneDiagnosticValue(browserSession),
       orderedRunPosition: ["stage06-spitter-seal", "stage24-panther-commander", "stage25-president"].indexOf(contract.variant) + 1,
       startedAt: new Date(startedAt).toISOString(),
       elapsedMs: Date.now() - startedAt,
@@ -600,6 +603,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
     proofActor: contract.proofActor ?? null,
     proofUnitKind: contract.proofUnitKind ?? null,
     orderedRunPosition: recorder.snapshot().orderedRunPosition,
+    browserSession: cloneDiagnosticValue(browserSession),
   });
   return recorder;
 }
@@ -654,6 +658,47 @@ const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function phaseGBrowserLifecyclePolicy(engineName, state) {
+  const isolated = engineName === "webkit" && state === "battle-extra";
+  return Object.freeze({
+    engineName,
+    state,
+    isolation: isolated ? "fresh-process-per-capture" : "shared-per-engine",
+    closeExistingBeforeCapture: isolated,
+    closeAfterCapture: isolated,
+    maxCapturesPerBrowser: isolated ? 1 : null,
+  });
+}
+
+function proofActorTargetContinuityDecision({
+  bossDeploymentFinished = false,
+  bossEngaged = false,
+  keepHumanTargetAlive = false,
+  proofActorRequiresContactFirst = false,
+  proofActorAttackObserved = false,
+  liveHumanTargetCount = 0,
+} = {}) {
+  const normalizedLiveHumanTargetCount = Number.isFinite(Number(liveHumanTargetCount))
+    ? Math.max(0, Number(liveHumanTargetCount))
+    : 0;
+  const proofActorContactPlanPending = Boolean(proofActorRequiresContactFirst) && !proofActorAttackObserved;
+  const targetSurvivalPlanPending = Boolean(bossEngaged)
+    && normalizedLiveHumanTargetCount < 2
+    && (Boolean(keepHumanTargetAlive) || proofActorContactPlanPending);
+  return Object.freeze({
+    proofActorContactPlanPending,
+    targetSurvivalPlanPending,
+    allowSustainRedeploy: Boolean(bossDeploymentFinished)
+      && (!proofActorContactPlanPending || targetSurvivalPlanPending),
+  });
+}
+
+if (process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE_INPUT ?? "{}");
+  console.log(JSON.stringify(phaseGBrowserLifecyclePolicy(input.engineName, input.state)));
+  process.exit(0);
 }
 
 if (process.env.V100_PHASE_G_CONTRACT_PROBE === "1") {
@@ -734,7 +779,8 @@ if (process.env.V100_PHASE_G_CAUSAL_HISTORY_PROBE === "1") {
   history = mergeCombatActivityHistory(history, input.waitSnapshot ?? {});
   const proof = buildCombatCausalProof(input.proofSamples ?? [], history);
   const humanTarget = proofActorHumanTargetFromHistory(history.targetOwnershipHistory, input.proofActor);
-  console.log(JSON.stringify({ history, proof, humanTarget }));
+  const targetContinuity = proofActorTargetContinuityDecision(input.targetContinuity ?? {});
+  console.log(JSON.stringify({ history, proof, humanTarget, targetContinuity }));
   process.exit(0);
 }
 
@@ -2676,13 +2722,37 @@ async function saveScreenshot(page, filePath, label) {
   return { path: relativeEvidence(filePath), sha256: createHash("sha256").update(bytes).digest("hex"), bytes: metadata.size };
 }
 
-async function phaseGBrowser(engineName) {
+async function phaseGBrowser(engineName, isolation = "shared-per-engine") {
   const current = phaseGBrowsers.get(engineName);
   if (current?.isConnected?.()) return current;
   if (current) await current.close().catch(() => {});
   const browser = await playwright[engineName].launch({ headless: true });
+  phaseGBrowserSessionOrdinal += 1;
+  phaseGBrowserMetadata.set(browser, {
+    sessionId: `${engineName}-${phaseGBrowserSessionOrdinal}`,
+    launchOrdinal: phaseGBrowserSessionOrdinal,
+    engineName,
+    isolation,
+    captureCount: 0,
+  });
   phaseGBrowsers.set(engineName, browser);
   return browser;
+}
+
+function phaseGBrowserSessionForCapture(browser, policy) {
+  const metadata = phaseGBrowserMetadata.get(browser);
+  invariant(metadata, `Phase G browser metadata missing for ${policy.engineName}/${policy.state}`);
+  metadata.captureCount += 1;
+  invariant(policy.maxCapturesPerBrowser === null || metadata.captureCount <= policy.maxCapturesPerBrowser,
+    `Phase G browser session ${metadata.sessionId} exceeded ${policy.maxCapturesPerBrowser} capture(s)`);
+  return Object.freeze({
+    sessionId: metadata.sessionId,
+    launchOrdinal: metadata.launchOrdinal,
+    engineName: metadata.engineName,
+    isolation: metadata.isolation,
+    captureOrdinal: metadata.captureCount,
+    maxCapturesPerBrowser: policy.maxCapturesPerBrowser,
+  });
 }
 
 async function closePhaseGBrowsers() {
@@ -2698,13 +2768,16 @@ async function resetPhaseGBrowser(engineName) {
 }
 
 async function captureStateImpl(engineName, viewport, state, configure, checkpointContract = null) {
-  const browser = await phaseGBrowser(engineName);
+  const browserPolicy = phaseGBrowserLifecyclePolicy(engineName, state);
+  if (browserPolicy.closeExistingBeforeCapture) await resetPhaseGBrowser(engineName);
+  const browser = await phaseGBrowser(engineName, browserPolicy.isolation);
+  const browserSession = phaseGBrowserSessionForCapture(browser, browserPolicy);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
   const diagnostics = diagnosticsFor(page);
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
   const checkpointRecorder = engineName === "webkit" && state === "battle-extra" && checkpointContract
-    ? createBattleExtraCheckpointRecorder({ contract: checkpointContract, engineName, viewport, context, page, browser })
+    ? createBattleExtraCheckpointRecorder({ contract: checkpointContract, engineName, viewport, context, page, browser, browserSession })
     : null;
   checkpointRecorder?.attach();
   try {
@@ -2803,11 +2876,15 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     failure.phaseGFailure = { label, failureState, diagnostics, checkpointEvidence: checkpointFailure };
     throw failure;
   } finally {
-    await context.close();
-    if (checkpointRecorder) {
-      await checkpointRecorder.writeFailureFile();
-      phaseGCheckpointRecorders.delete(checkpointRecorder);
-      pageCheckpointRecorders.delete(page);
+    try {
+      await context.close();
+    } finally {
+      if (checkpointRecorder) {
+        await checkpointRecorder.writeFailureFile();
+        phaseGCheckpointRecorders.delete(checkpointRecorder);
+        pageCheckpointRecorders.delete(page);
+      }
+      if (browserPolicy.closeAfterCapture) await resetPhaseGBrowser(engineName);
     }
   }
 }
@@ -3459,6 +3536,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       } : null;
       return {
         mounted: Boolean(actor) || (activity.fighterActors ?? []).includes(actorKey),
+        hasLiveHumanTarget: liveHumanTarget,
         hasHumanTarget: evidence !== null,
         actorX: actor?.x ?? null,
         actorLane: actor?.lane ?? null,
@@ -3655,8 +3733,15 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await lockedCanvas.click({ position: { x: lockedBox.width * .34, y: medicalY }, timeout: 700 }).catch(() => {});
         });
       }
-      const proofActorContactPlanPending = proofActorRequiresContactFirst && !proofActorAttackObserved;
-      if (bossDeploymentFinished && !proofActorContactPlanPending) {
+      const targetContinuity = proofActorTargetContinuityDecision({
+        bossDeploymentFinished,
+        bossEngaged,
+        keepHumanTargetAlive,
+        proofActorRequiresContactFirst,
+        proofActorAttackObserved,
+        liveHumanTargetCount,
+      });
+      if (targetContinuity.allowSustainRedeploy) {
         // Once the opening formation has been established, keep the same
         // player-facing redeploy control alive as cards recover. This is
         // especially important for compact boss routes where a fallen
@@ -3664,8 +3749,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // Continue after the boss is live as well: medical support and
         // ordinary redeployment keep a real target on the battlefield long
         // enough for the boss-owned attack/ability lifecycle to be observed.
-        const targetSurvivalPlanPending = keepHumanTargetAlive && bossEngaged && liveHumanTargetCount < 2;
-        if ((proofCombatReady && proofUnitDeployed) || targetSurvivalPlanPending) {
+        // Monotonic target history proves prior ownership only. While a
+        // contact-first attack is still pending, current live-human count
+        // owns survival planning and may use only this real production card.
+        if ((proofCombatReady && proofUnitDeployed) || targetContinuity.targetSurvivalPlanPending) {
           await performVerifiedDeploymentPointer(page, {
             phase: "sustain-redeploy",
           });
@@ -3798,7 +3885,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           if (await bossIsLive()) break;
           if (proofActorRequiresContactFirst && !proofActorAttackObserved) {
             const contactState = await waitForProofActorContact();
-            if (proofActorAttackObserved || contactState?.hasHumanTarget === true) {
+            if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) {
               break;
             }
           }
@@ -3844,7 +3931,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               if (kind === proofUnitKind) proofUnitDeployed = true;
               if (proofActorRequiresContactFirst && !proofActorAttackObserved) {
                 const contactState = await waitForProofActorContact();
-                if (proofActorAttackObserved || contactState?.hasHumanTarget === true) break;
+                if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) break;
               }
               break;
             }
