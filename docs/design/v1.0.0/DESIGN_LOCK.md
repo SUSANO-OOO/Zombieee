@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r19`
+- Revision: `r22`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -52,6 +52,8 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r17 consumes the exact r16 automatic focused run and closes two independently evidenced WebKit renderer crashes as one QA-observation subsystem correction: Phase G becomes a 40 ms single-producer lean-snapshot cache with non-rAF consumers, and canonical deployment evidence confines pixel audits to the six frozen acceptance checkpoints with exactly one attempt per unit. Product code, gameplay, balance, AI, timing, viewports, timeouts, causal proof, pixel thresholds, and release gates remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r18 consumes the first r17 focused-source execution stop. It preserves all ten r17 draft paths byte-for-byte and adds the omitted existing `tests/ci-contract.test.mjs` owner so its deployment-runner assertion matches the locked one-attempt/no-retry policy. No harness, product, workflow, acceptance, or iteration rule changes. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r19 consumes the r18 pre-lint byte-audit stop. It corrects only r18's false no-BOM declaration for `tests/ci-contract.test.mjs`: exact base and working bytes both retain the pre-existing UTF-8 BOM and LF-only line endings. The eleven-path remediation, no-retry semantics, product boundaries, acceptance, iteration numbers, and release loop remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r21 consumes the first r20 local six-viewport Chromium deployment acceptance. It preserves the complete r20 finite-asset, lean-observation, frozen-audit, and production-canvas PNG packet, and replaces only later deployment-checkpoint host polling/freeze ownership with a localhost-only runtime semantic latch. It changes no product gameplay, movement, timing, checkpoint, pixel threshold, viewport, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r22 consumes the post-gate execution audit of the passing r21 Chromium 844x390 Mayo-chan acceptance. It preserves the complete r21 runtime semantic latch bytes and adds only exact accepted checkpoint-receipt persistence to the existing deployment summary plus its source contract. It changes no product, latch, simulation, checkpoint, pixel, PNG, timeout, retry, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1957,3 +1959,318 @@ After the four-path r19 publication is byte-locked and Design Lock 19/19 is gree
 - `RESUME_FROM`: preserve current eleven-path draft -> r19 four-path byte lock -> final load 7/7 + focused 60/60 + checkpoint 12/12 + syntax/diff/topology/corrected byte audit -> lint/build -> unchanged fresh browser acceptance -> atomic iteration-5 candidate -> one automatic focused complete green -> Section 33 full/unfiltered/runtime/human/final-review/one-Producer-checkpoint/release loop
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against raw base/worktree bytes, the exact two-line assertion diff, r18 acceptance output, current topology, and downstream gates. Revision r19 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 36. Revision r20 — finite deployment lifecycle and production-canvas evidence closure
+
+This section supersedes Section 35 only for automatic run `32673445643` (#922), its PR Verify/deployment failures, the deployment QA lifecycle owner, current cursor, material topology, and iteration numbering. Every r12-r19 pointer, receipt, target-ownership, causal, Phase G cache, one-attempt/no-retry, pixel threshold, byte, exact-HEAD review, single Producer checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 36.1 Terminal run, actual evidence, and classification
+
+The exact r19 iteration-5 candidate is PR #171 HEAD `4191afe2fe84283125c0e9ec817185c94685630c`, tree `cb808fff195d58fd96718cb8381f7f9091e9f313`, parent `d11464927efd1d21e573d969a767057bdd5c8b04`. Its exact-tree local source/static gates, Stage 6 3/3, Stage 24 3/3, ordered Stage 6 -> Stage 24 -> Stage 25 3/3, and canonical WebKit 736x414 deployment eight units/48 checkpoint PNGs/eight contact sheets were green. Automatic focused run `32673445643`, attempt 1, is terminal failure. It was not retried or rerun.
+
+PR Verify job `97277691325`, artifact `9502107835`, failed five of six Chromium deployment viewports before the first audited unit. The 736x414 axis completed all eight units and 48 checkpoints. The 667x375, 844x390, 844x340, 932x430, and 1280x720 axes timed out at the unchanged 30-second readiness boundary with live/visible battle pages, `running: true`, asset generation terminal `state: "error"`, `completed === total === 55`, `pending: 0`, and respectively 5/1/4/3/3 failed decodes. Console/page/request/HTTP channels were all zero. The setup trace did not retain `getFailedPaths`, because the old readiness predicate waited only for ready/degraded-ready and the later full boundary serializer was never reached. A historical exact-product Chromium run had all axes green, and the same current job's 736x414 axis is a positive control. This does not establish a missing production asset or deterministic viewport defect. It establishes that the deployment-only local QA route incorrectly selected the exhaustive 55-sprite decode plan instead of the existing finite battle plan, then hid the terminal error behind a generic readiness timeout.
+
+The four failed WebKit deployment jobs are independently evidenced:
+
+- 667x375 job `97281054120`, artifact `9502382671`: Hachi's fully-inside checkpoint and PNG completed, then `page.screenshot: Target crashed` during first-visible capture after fonts reported loaded; page crash at 45,765 ms.
+- 736x414 job `97281054139`, artifact `9502419282`: Hachi completed all six checkpoints; Mizuchi reached and saved fully-inside, then the next page operation observed a closed page; page crash at 45,639 ms.
+- 844x340 job `97281054121`, artifact `9502503149`: Hachi completed; Mizuchi's fresh page reached battle readiness, then stalled in the full asset-boundary evaluation and crashed at 44,491 ms before its fixture.
+- 932x430 job `97281054124`, artifact `9502552285`: Hachi, Mizuchi, and Paisen completed; Crazy King reached first-visible, then the next checkpoint wait ended on a closed page; page crash at 36,724 ms.
+
+All four failures have zero console/page/request/HTTP errors and unexpected page `crash` before normal cleanup. The 844x390 job `97281054143` / artifact `9502468021` and 1280x720 job `97281054202` / artifact `9502627728` completed all eight units. Failure position varies by viewport and unit, and the two green axes complete the identical assets, renderer, six pixel audits, and image inventory. Therefore neither unit identity, pixel threshold, viewport geometry, nor product gameplay is the deterministic owner.
+
+The remaining repository-owned lifecycle pressure is finite and cumulative:
+
+1. deployment selected the exhaustive local-QA asset plan (`includeAllSprites: true`, 55 critical decodes), although the production battle requires only selected formation/enemy/persistent/stage assets and the bridge already provides strict one-kind `ensureUnitRenderProofAsset`;
+2. readiness used a page-owned predicate that could not terminally classify asset `error`, and common-path asset-boundary sealing transferred full session history and full required-plan data even though deployment discarded the returned boundary;
+3. `pauseAtDeploymentCheckpoint` still ran one full `getSnapshot()` and `auditFighterUnitLayer()` on every page requestAnimationFrame until each checkpoint, contradicting Section 33's intended checkpoint-only pixel topology;
+4. lightweight trace and first-frame/checkpoint discovery still constructed the very large full `getSnapshot()` instead of a deployment-specific read-only snapshot;
+5. accepted deployment evidence used Playwright's full-page compositor screenshot, including font/compositor synchronization, even though acceptance is the frozen production `canvas.battlefield.active` and its RGBA audit.
+
+The native WebKit/Chromium termination or decode mechanism is not inferred. The proved owner is the repository QA route's cumulative lifecycle and observation topology.
+
+Classification is `QA_HARNESS_DEPLOYMENT_LIFECYCLE_OVERLOAD / EXHAUSTIVE_55_ASSET_GATE + FULL_SNAPSHOT_CHECKPOINT_POLLING + COMPOSITOR_SCREENSHOT / CLEAN_PAGE_CRASH / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `FINITE_DEPLOYMENT_EVIDENCE_LIFECYCLE / REQUIRED_ASSET_PLAN + LEAN_HOST_TURN_CHECKPOINTS + FROZEN_PRODUCTION_CANVAS_PNG / DESIGN_CHANGE_REQUIRED`.
+
+### 36.2 Exact seven-path coherent packet
+
+Use exactly these seven material paths relative to clean candidate `4191afe2fe84283125c0e9ec817185c94685630c` / `cb808fff195d58fd96718cb8381f7f9091e9f313`:
+
+1. `app/AshfallGame.tsx`;
+2. `scripts/v099-final-remediation-browser-smoke.mjs`;
+3. `tests/v0995-runtime-evidence-contract.test.mjs`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+6. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+7. `docs/PROJECT_STATE.md`.
+
+Under `SOL_DESIGN`, paths 4-7 are changed, source-verified, and byte-locked in Issue #172 without an intermediate commit. Only after that publication may `ROLE_LOCK` become `SOL_REMEDIATION` and edit paths 1-3. Create one atomic iteration-6 material commit only after complete local acceptance. The later workflow-only unfiltered restoration becomes iteration 7.
+
+Do not reconstruct or edit the committed r19 eleven-path packet. In particular, preserve `.github/**`, `scripts/v100-phase-g-production-matrix.mjs`, `scripts/run-v099-deployment-units-bounded.mjs`, their tests, `tests/ci-contract.test.mjs` including its existing UTF-8 BOM/LF contract, public assets, and package/lock byte-for-byte.
+
+### 36.3 Finite asset and terminal setup contract
+
+1. Deployment navigation must set the existing localhost-only `qaHudFiniteAssets=1` switch. Do not add a public-host query behavior or alter production asset planning. The initial critical plan remains the real selected formation, stage enemies, mission/stage objects, support, CRAWLER, and required V1 paths; it must not use `includeAllSprites: true`.
+2. Immediately before each canonical unit fixture, call the existing strict `ensureUnitRenderProofAsset(kind)` once. Require the returned kind/path and positive decoded dimensions before queueing. This includes Mayo-chan, the one canonical deployment kind not guaranteed by the default seven-card local fixture. A decode failure is terminal and is not a retry or fallback.
+3. Replace the battle-readiness page predicate with a Node-host 100 ms bounded loop. Each synchronous page read returns only screen/running plus compact asset state and, only on terminal `error`, `getFailedPaths()`. Ready/degraded-ready retains the current acceptance; `error` fails immediately with exact paths/state; timeout keeps the unchanged overall deadline and last compact state. No timeout extension or degraded/error acceptance is allowed.
+4. In common-path boundary sealing, transfer compact asset state, required sprite identity, loaded sprite keys, failed/pending paths, and diagnostic counts only. Read full session history only when setup request failures actually require cancellation classification. Preserve the classifier, fatal-zero rules, and accepted-superseded-request contract; deployment may not silently discard an error.
+
+### 36.4 Lean host-turn checkpoint and frozen audit contract
+
+1. Add exactly one read-only method, `getCrawlerDeploymentProofSnapshot`, inside the existing localhost-only `__ASHFALL_BATTLE_QA__` bridge. It returns schema `v099-crawler-deployment-snapshot/v1`, screen/time/running/paused/over/banner, crawler door/ramp coordinates, computed progress, and only the selected fighter's identity, kind, side, position, spawn portal, gate/combat/entry flags, current bounded `renderAudit` record (including `poseOpacity`/`effectiveOpacity`), and current sampled `animationPose` (including `opacity`). It does not mutate state, read canvas pixels, copy render histories, or expose campaign/save/equipment inventories. Public-host/player behavior and the full `getSnapshot()` remain unchanged.
+2. `createDeploymentTrace`, `queueAndPauseAtFirstDeploymentFrame`, and `pauseAtDeploymentCheckpoint` must use only that lean snapshot for continuous observation. The trace remains 250 ms/160 samples. First-frame and later checkpoint loops use non-overlapping Node-host 100 ms turns; no in-page requestAnimationFrame loop, Playwright `waitForFunction`, or full `getSnapshot()` is permitted in these three continuous paths.
+3. When the lean snapshot reaches the exact candidate progress/identity condition, the same synchronous evaluation pauses the representative-six proof. After one Node-host 100 ms settle turn, perform exactly one frozen `auditFighterUnitLayer(fighterId)` and one lean reread. Accept only if identity/position is frozen and the audit reports the exact requested deployment checkpoint/progress. Otherwise unpause and continue within the unchanged deadline.
+4. All six existing checkpoint validations remain exact: unit draw count, atlas pose opacity, final composite RGBA, opaque unit retention, single silhouette, foreground alpha, door-plane ownership, monotonic progress, fully-outside ramp/combat flags, six images, and one contact sheet per unit. No pixel assertion, checkpoint, unit, viewport, timeout, or error-channel rule is removed or widened.
+
+### 36.5 Production-canvas PNG contract
+
+For accepted deployment checkpoints only, replace full-page Playwright compositor capture with a direct PNG serialization of the frozen production `canvas.battlefield.active`. The page returns that exact canvas's PNG data plus intrinsic width/height; Node writes the existing checkpoint filename, reads it with `sharp`, and requires PNG format, exact intrinsic dimensions, positive byte count, and matching decoded metadata before hashing. The capture may not redraw, clone, rasterize a fixture, crop a hidden canvas, use a DOM screenshot, wait on fonts, or synthesize pixels. Contact sheets continue to derive only from the six accepted production-canvas PNGs, and every distinctness/hash/count contract remains.
+
+Generic page screenshots remain allowed for HUD/equipment/failure diagnosis outside accepted deployment checkpoints. A direct-canvas export failure, tainted canvas, zero/incorrect dimensions, hash collapse, missing PNG, or contact-sheet failure is terminal.
+
+### 36.6 Acceptance, stop routing, and release continuation
+
+After the r20 four-path Issue byte lock and green Design Lock 19/19, execute in this order:
+
+1. edit only the three remediation paths; require exact seven-path topology, no staged/untracked file before commit, EOL/BOM preservation, and workflow/Phase-G/bounded-runner/CI-BOM/public/package negative audits;
+2. seven-file load-only 7/7; exact focused source/behavior 60/60; checkpoint 12/12; Design Lock 19/19; syntax for the edited deployment runner; static positive/negative assertions covering Sections 36.3-36.5;
+3. `npm.cmd run lint`, `npm.cmd run build`, working-tree `git diff --check`, exact semantic/byte/topology audit, and adversarial proof that the only app change is the read-only localhost bridge method;
+4. on final bytes, three separate fresh Stage 6 WebKit 667x375 processes, three Stage 24 WebKit 736x414 processes, and three ordered Stage 6 -> Stage 24 -> Stage 25 WebKit processes with the unchanged Section 33 Phase G acceptance;
+5. run the exact PR Verify Chromium deployment route across all six required viewports and require six cases, eight units each, 288 production-canvas checkpoint PNGs, 48 contact sheets, finite initial plans, per-unit strict-decode receipts, and fatal zero;
+6. run the exact bounded WebKit deployment route for all six required viewports. Each of 48 unit processes executes once, yields six validated production-canvas PNGs and one contact sheet, and has setup/lifecycle/console/page/request/HTTP fatal zero. No local retry or duplicate attempt;
+7. create and normally push one atomic seven-path iteration-6 candidate. Re-fetch exact GitHub HEAD/tree/compare and require its one automatic focused run attempt 1 completely green across PR Verify, Phase G ordered trio, six enemy shards, Hosted Runner, three Stage 3 routes, every WebKit HUD/deployment axis, artifacts, and dry-run Pages contract. No rerun;
+8. only focused complete green resets all deferred repeat counters and authorizes the separate workflow-only iteration-7 restoration. Restore the exact unfiltered Phase G job from Section 28, then require same-HEAD local Phase G 54/54, validator, all full regressions, lint/build/diff/byte, one normal push, and complete unfiltered remote green/artifacts;
+9. continue on the exact green HEAD through production runtime, SOL human-player visual/battle/event/audio/mobile/save/PWA/asset/release audits, twelve-screen package, HEAD/tree freeze, read-only/adversarial `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, explicit approval, stacked PR #169 -> #170 -> #171 integration, approved-tree equivalence, annotated `v1.0.0`, GitHub Release, official Pages, published-SHA QA/recovery, Project State/Issue closure, and `/goal COMPLETE` only after public green.
+
+Any failure stops on first raw evidence and returns within the same SOL-owned `/goal` to `SOL_DESIGN`. No retry, rerun, timeout-only edit, immediate micro-patch, evidence weakening, stale green reuse, or promotion is authorized. Asset `error` with exact failed paths is asset/session evidence; lean-snapshot absence is QA source-owned; a frozen pixel mismatch is product-render/fixture-owned; direct-canvas export failure is evidence-pipeline-owned; a clean page crash after all r20 lifecycle facts are present requires a new finite process/resource classification. These classes may not be conflated.
+
+### 36.7 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` after the four-path Issue byte lock and Design Lock 19/19
+- `LOOP_ITERATION`: `5` at failed r19 candidate; atomic r20 material candidate is iteration 6; workflow-only unfiltered restoration is iteration 7
+- `SAME_GATE_REPEAT_COUNT`: `3` for deferred Stage 6; Phase G was skipped in run #922 and does not increment or reset it
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; Phase G was skipped and does not increment or reset it
+- `DEPLOYMENT_736_REPEAT_COUNT`: `2`; 736x414 is a repeated required deployment failure
+- `ROLE_LOCK`: `SOL_DESIGN` until the r20 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: automatic focused run `32673445643`, attempt 1: PR Verify `97277691325` Chromium setup/asset failures at five viewports; WebKit deployment jobs `97281054120`, `97281054139`, `97281054121`, and `97281054124` clean page crashes at 667x375, 736x414, 844x340, and 932x430; required Phase G skipped by dependency
+- `LAST_GREEN_GATE`: exact-tree r19 local source/static/Phase-G/deployment acceptance; remote six enemy-runtime shards, Hosted Runner, three Stage 3 routes, WebKit deployment 844x390 and 1280x720, and Pages dry-run contract. None substitutes for the failed/skipped required gates
+- `CLASSIFICATION`: `QA_HARNESS_DEPLOYMENT_LIFECYCLE_OVERLOAD / EXHAUSTIVE_55_ASSET_GATE + FULL_SNAPSHOT_CHECKPOINT_POLLING + COMPOSITOR_SCREENSHOT / CLEAN_PAGE_CRASH / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `FINITE_DEPLOYMENT_EVIDENCE_LIFECYCLE / REQUIRED_ASSET_PLAN + LEAN_HOST_TURN_CHECKPOINTS + FROZEN_PRODUCTION_CANVAS_PNG / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r20 publication and green Design Lock proof
+- `RESUME_FROM`: exact clean `4191afe2` worktree -> publish/lock four r20 design/source paths -> edit only three remediation paths -> 60/60/static/lint/build/diff/byte -> Phase G Stage 6/24/ordered 3/3 -> Chromium six-viewports deployment -> WebKit 48 first-attempt unit processes -> atomic iteration-6 candidate -> one automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against run #922 job conclusions, downloaded summaries/lifecycle logs/PNGs, exact source call sites, positive-control axes, unchanged product tree, current GitHub PR/Issue state, and every downstream exact-HEAD boundary. Revision r20 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 37. Revision r21 — runtime-owned deployment semantic checkpoint latch
+
+This section supersedes Section 36 only for the failed r20 local Chromium 844x390 Mayo-chan `first-visible` checkpoint, later-checkpoint freeze ownership, current cursor, and final-byte acceptance order. Every r12-r20 finite-asset, terminal setup, lean snapshot, one frozen RGBA audit, direct production-canvas PNG, six-checkpoint/pixel, one-attempt/no-retry, exact-HEAD review, single Producer checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 37.1 First-attempt evidence and independent classification
+
+The uncommitted r20 seven-path draft at base HEAD `4191afe2fe84283125c0e9ec817185c94685630c` / tree `cb808fff195d58fd96718cb8381f7f9091e9f313` passed final source/static gates, lint, production build, and diff/byte/topology audits. On those exact bytes, fresh WebKit Phase G Stage 6 passed 3/3, Stage 24 passed 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 passed 3/3. All nine reports retained exact mapping/order, fourteen resolved checkpoints, causal 4/4, `consumerMode: "single-producer-cache"`, unresolved zero, and fatal zero. These are r20 diagnosis controls, not r21 final evidence.
+
+The first and only r20 Chromium six-viewport deployment matrix produced six cases: five passed all eight units, while 844x390 failed only Mayo-chan's `first-visible` checkpoint after Hachi, Mizuchi, Paisen, Crazy King, and Kumaverson had completed all six checkpoints and Mayo-chan's `fully-inside` production-canvas PNG had passed. The failure screenshot shows the same live battle with Mayo-chan already beyond the ramp in normal combat. Asset setup, strict decode, direct canvas serialization, page lifecycle, console, page, request, and HTTP channels remained clean.
+
+The bounded independent lean trace proves the natural semantic interval existed before overshoot: at 1,052 ms it recorded progress `0.117268`, `gateEntering: true`, and `combatReady: false`, followed by progress `0.3811`, `0.6450`, `0.9088`, then `1` with combat readiness. The other five viewports each accepted all six Mayo-chan checkpoints. This rules out an absent product motion interval, deterministic viewport geometry defect, missing atlas, pixel failure, page crash, and timeout exhaustion as the owner. It does not claim whether any particular 100 ms host read began inside the interval; it proves only that the independent trace observed the natural interval and the host-driven checkpoint flow did not latch and accept it before monotonic overshoot.
+
+The r20 runner pauses only after a host read finds progress at or above a minimum, then audits the current semantic checkpoint. If that read arrives after the requested semantic band, unpause-and-continue can never return the monotonic fighter to the earlier band. Increasing frequency, widening thresholds, teleporting the fighter, or retrying would mask rather than close this ownership gap.
+
+Classification is `QA_HARNESS_CHECKPOINT_FREEZE_OWNERSHIP_GAP / HOST_POLL_POST_CANDIDATE_FREEZE_DID_NOT_LATCH_EXISTING_NATURAL_SEMANTIC_INTERVAL / MONOTONIC_OVERSHOOT / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `RUNTIME_SEMANTIC_CHECKPOINT_LATCH / LOCALHOST_ONLY_ARM + SAME_SIMULATION_TICK_PAUSE_RECEIPT + HOST_READBACK_ONE_AUDIT / DESIGN_CHANGE_REQUIRED`.
+
+### 37.2 Exact seven-path packet and product guard
+
+Preserve the existing r20 seven-path draft and its finite lifecycle correction; do not reset, stash, reconstruct, or add a path. The material r21 candidate remains exactly these seven paths relative to clean `4191afe2`:
+
+1. `app/AshfallGame.tsx`;
+2. `scripts/v099-final-remediation-browser-smoke.mjs`;
+3. `tests/v0995-runtime-evidence-contract.test.mjs`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+6. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+7. `docs/PROJECT_STATE.md`.
+
+Under `SOL_DESIGN`, change and Issue-lock paths 4-7 first without an intermediate commit. Under `SOL_REMEDIATION`, revise only the existing r20 changes in paths 1-3. The material candidate remains iteration 6 and the later workflow-only restoration remains iteration 7 because r20 stopped before any material commit/push.
+
+The app addition is localhost QA control, not production behavior. Public-host code cannot install or call the bridge. Unarmed simulation must execute the exact existing movement, speed, position, readiness, gameplay, AI, damage, balance, animation, and render path. No code may alter fighter position, progress, `gateEntrySpeed`, `dt`, hitbox, checkpoint boundaries, or production pause state to make evidence pass.
+
+### 37.3 Runtime-owned semantic latch contract
+
+Implement all of the following as one coherent app/runner contract:
+
+1. Add localhost-only refs `qaArmedCrawlerDeploymentCheckpointRef` and `qaCrawlerDeploymentCheckpointReceiptRef`. An arm identifies exactly one existing human crawler-door fighter and one later checkpoint from `first-visible`, `quarter`, `half`, `three-quarters`, or `fully-outside`; `fully-inside` remains owned by the existing first-frame freeze.
+2. Add one bridge method `armCrawlerDeploymentCheckpoint(fighterId, checkpoint)`. Validate fighter identity/side/portal/entry state and the exact allowed checkpoint before mutation. A valid arm clears any previous frozen fighter and receipt, records the single arm, atomically sets `g.last = performance.now()` and `g.paused = false`, and returns an explicit armed receipt. It may not move or otherwise mutate the fighter. Invalid input fails closed without partial mutation.
+3. In the existing production simulation's `f.gateEntering` movement branch, run the unchanged natural movement and readiness transition first. On that same simulation tick, derive the existing `crawlerDeploymentPlanForFighter(f).checkpoint` and the armed checkpoint's unchanged minimum progress from `CRAWLER_DEPLOYMENT_CHECKPOINTS`; the arm method accepts no caller-supplied threshold. If and only if the current localhost arm matches this fighter and exact checkpoint and computed progress meets that canonical minimum (including `0.08` for `first-visible`), set `g.paused = true`, set the existing frozen-fighter ref, write one immutable receipt with schema `v099-crawler-deployment-checkpoint-receipt/v1`, fighter ID, kind, checkpoint, x/y, computed progress, battle time, `gateEntering`, `combatReady`, and `entryRampCleared`, then clear the arm. Do not synthesize, rewind, clamp, teleport, or step the fighter for QA.
+4. Extend `getCrawlerDeploymentProofSnapshot` only with the current selected fighter's bounded `checkpointArm` and `checkpointReceipt`. It remains read-only, copies no history, and exposes no inventory/save data. Existing explicit unpause/case reset must cancel a stale arm and receipt as well as the frozen fighter; a new valid arm also clears the preceding receipt before unpausing.
+5. `pauseAtDeploymentCheckpoint` first calls `armCrawlerDeploymentCheckpoint` exactly once. Its bounded Node-host 100 ms loop only reads the lean snapshot until an exact matching receipt is present with `paused: true`; it never calls `setRepresentativeSixProofPaused(true)`, mutates position, or treats progress alone as acceptance. After one host settle turn, perform exactly one `auditFighterUnitLayer(fighterId)` and one lean reread. Require stable fighter ID/x/y/computed progress/receipt plus the exact audit checkpoint before returning.
+6. Remove the separate pre-checkpoint unpause in the canonical deployment loop because the arm call owns that transition atomically. Preserve the existing post-case cleanup and `fully-inside` flow. Timeout/failure evidence must include the last bounded arm/receipt/snapshot state. The unchanged 30-second deadline remains terminal; there is no retry, second arm, fallback host freeze, threshold widening, or sampling-frequency change.
+
+### 37.4 Source/static and browser acceptance
+
+After the r21 four-path Issue byte lock and green Design Lock 19/19, execute once in this order:
+
+1. finish only the r21 app/runner/runtime-test changes and prove exact seven-path topology, no staged/untracked path beyond the allowlist, EOL/BOM preservation, and Phase G/workflow/bounded runner/CI BOM/public/package byte equality;
+2. seven-file load-only 7/7; exact focused 60/60; checkpoint 12/12; Design Lock 19/19; deployment-runner syntax; positive assertions for arm, same-tick exact latch, bounded receipt, one audit, and atomic unpause; negative assertions for position/progress mutation, loop-side pause, threshold widening, retry, second arm, rAF, `waitForFunction`, full snapshot, and extra direct pixel reads;
+3. lint, production build, working-tree `git diff --check`, semantic/byte/topology audit, and adversarial public-host/unarmed-path proof;
+4. run one fresh bounded Chromium 844x390 Mayo-chan-only acceptance first. Require exactly six checkpoints in order, one strict decode, six direct production-canvas PNGs, one contact sheet, semantic receipts, lifecycle/fatal zero, and no second attempt. This is the first gate of the corrected r21 bytes, not a rerun of the failed r20 gate;
+5. because app bytes changed, run fresh r21 Phase G Stage 6 WebKit 667x375 3/3, Stage 24 WebKit 736x414 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 WebKit 3/3. The r20 9/9 controls cannot substitute;
+6. run the full Chromium six-viewport deployment matrix and then the bounded WebKit six-viewport matrix with the unchanged Section 36 counts and one-attempt policy. Require Chromium six cases/48 units/288 PNGs/48 sheets and WebKit 48 fresh unit processes/288 PNGs/48 sheets, exact checkpoint order, stable semantic receipts, setup/lifecycle/error-channel fatal zero;
+7. only complete local green authorizes one atomic seven-path iteration-6 commit and normal push. Re-fetch exact GitHub HEAD/tree/compare and require one automatic focused run attempt 1 completely green. No rerun;
+8. only then reset repeat counters, create the separate workflow-only iteration-7 restoration, run the same-HEAD full Phase G 54/54, validator, complete regressions/static gates, push once, and require complete unfiltered remote green before exact-HEAD runtime/human audits, read-only/adversarial `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and the existing approval-only release tail.
+
+Any gate failure returns on its first raw evidence to the same SOL-owned `/goal` in `SOL_DESIGN`. Do not immediately edit, retry, rerun, widen the interval, change a timeout, reuse r20 green evidence as r21 final evidence, commit, push, or promote. A missing/invalid arm or receipt is QA-source-owned; a receipt on the wrong semantic state is latch implementation-owned; a stable exact receipt followed by a pixel mismatch is product-render/fixture-owned; a clean lifecycle crash remains a new finite resource finding. SOL classifies before a new revision.
+
+### 37.5 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` after the r21 four-path Issue byte lock and Design Lock 19/19
+- `LOOP_ITERATION`: `5`; the atomic r21 material candidate remains iteration 6; workflow-only unfiltered restoration remains iteration 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`
+- `DEPLOYMENT_844_REPEAT_COUNT`: `1` for the local 844x390 Mayo-chan checkpoint ownership failure; reset only after automatic focused complete green with the other counters
+- `ROLE_LOCK`: `SOL_DESIGN` until the r21 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: first r20 local Chromium six-viewport deployment acceptance; 5/6 cases green, 844x390 failed only Mayo-chan `first-visible` after its `fully-inside` pass; the bounded lean trace independently recorded the natural first-visible interval and later monotonic overshoot; no retry or downstream WebKit deployment
+- `LAST_GREEN_GATE`: final r20 source/static/lint/build/diff/byte plus r20 Phase G Stage 6 3/3, Stage 24 3/3, ordered trio 3/3 and five Chromium deployment viewport controls. These diagnose scope but do not count as final r21 evidence
+- `CLASSIFICATION`: `QA_HARNESS_CHECKPOINT_FREEZE_OWNERSHIP_GAP / HOST_POLL_POST_CANDIDATE_FREEZE_DID_NOT_LATCH_EXISTING_NATURAL_SEMANTIC_INTERVAL / MONOTONIC_OVERSHOOT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `RUNTIME_SEMANTIC_CHECKPOINT_LATCH / LOCALHOST_ONLY_ARM + SAME_SIMULATION_TICK_PAUSE_RECEIPT + HOST_READBACK_ONE_AUDIT / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r21 four-path publication and green Design Lock proof
+- `RESUME_FROM`: preserve the exact r20 seven-path draft -> publish/lock four r21 design/source paths -> finish three-path semantic-latch correction -> source/static/lint/build/diff/byte -> Chromium 844x390 Mayo-only once -> fresh r21 Phase G Stage 6/24/ordered 3/3 -> full Chromium six-viewports -> WebKit 48 one-attempt unit processes -> atomic iteration-6 candidate -> one automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the failed six-viewport summary, exact Mayo-chan failure PNG, its independent lean trace, five positive-control viewports, current r20 source, immutable product timing, and every downstream exact-HEAD boundary. Revision r21 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 38. Revision r22 — accepted checkpoint-receipt persistence closure
+
+This section supersedes Section 37 only for the post-r21 execution-audit finding, deployment summary serialization, current cursor, and first corrected browser evidence. Every r12-r21 product guard, exact runtime semantic latch, canonical minimum, same-tick pause, stable readback, frozen RGBA audit, direct production-canvas PNG, checkpoint/pixel threshold, one-attempt/no-retry, exact-HEAD review, single Producer checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 38.1 Passing control and evidence-persistence finding
+
+On the first final r21 source bytes, load-only passed 7/7, focused passed 60/60, checkpoint passed 12/12, Design Lock passed 19/19, lint had zero errors and nine pre-existing warnings, production build passed, and diff/EOL/BOM/topology/forbidden-byte audits passed. One fresh Chromium 844x390 Mayo-chan-only deployment process then passed on its first attempt. It produced all six exact checkpoints in order, six validated 844x390 production-canvas PNGs, one contact sheet, finite 30/30 asset readiness, strict atlas decode, stable build identity, and zero console/page/request/HTTP errors. The `first-visible` checkpoint was accepted at progress `0.08795115181416581` against the unchanged `0.08` minimum. Summary SHA-256 is `01033765479be3378ad96b67ffd836ea2f5edd603dc43228b80d12fb4b282fd8`; contact-sheet SHA-256 is `08ed7ee9a849bbb0a9558d9836b8e92472dd583cfd26d53d40c6020a06e32623`.
+
+The runtime latch itself is green. `pauseAtDeploymentCheckpoint` returns the exact stable `checkpointReceipt` that it already verifies against paused state, fighter ID/x/y, computed progress, checkpoint, canonical minimum, and one full audit. However, the later `unitResult.checkpoints.push` writes checkpoint/progress/fighter/audit/PNG fields and omits that returned receipt. The resulting `summary.json` contains `checkpointReceipt: null` when queried at every checkpoint record, so a remote artifact consumer cannot independently prove the five later same-tick receipts from the summary alone. `fully-inside` correctly has no runtime arm receipt and remains the existing first-frame proof.
+
+This is not a product, movement, latch, checkpoint, pixel, image, asset, browser, lifecycle, or timeout failure. It is an evidence-persistence implementation mismatch discovered after a passing bounded control. The r21 control is retained for diagnosis but cannot count as final r22 evidence and is not rerun on unchanged bytes.
+
+Classification is `QA_EVIDENCE_PERSISTENCE_GAP / VERIFIED_RUNTIME_CHECKPOINT_RECEIPT_OMITTED_FROM_SUMMARY / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `CHECKPOINT_RECEIPT_SERIALIZATION / EXACT_ACCEPTED_RECEIPT + STATIC_AND_RUNTIME_SUMMARY_ASSERTION / DESIGN_CHANGE_REQUIRED`.
+
+### 38.2 Exact bounded correction
+
+Preserve the existing seven-path r21 draft; do not reset, stash, reconstruct, add a path, or change `app/AshfallGame.tsx` from its r21 bytes. Under `SOL_DESIGN`, revise and Issue-lock only `tests/v100-design-lock.test.mjs`, Design Lock, Handoff, and Project State. Under `SOL_REMEDIATION`, change only the existing r21 regions in:
+
+1. `scripts/v099-final-remediation-browser-smoke.mjs`;
+2. `tests/v0995-runtime-evidence-contract.test.mjs`.
+
+The material candidate remains the same exact seven paths relative to clean `4191afe2`; iteration remains 6 and workflow-only restoration remains 7.
+
+For each checkpoint after `fully-inside`, before adding the checkpoint result, require the returned receipt schema `v099-crawler-deployment-checkpoint-receipt/v1`, exact fighter ID/kind/checkpoint, x/y equality with the frozen fighter, computed-progress equality with the accepted observation, and canonical minimum satisfaction. Then serialize a bounded copy as exact field `checkpointReceipt` on that checkpoint result. For `fully-inside`, serialize `checkpointReceipt: null` and retain the existing first-frame freeze semantics. Do not serialize refs, histories, full snapshots, extra fighters, inventory/save state, or a caller-supplied threshold.
+
+The runtime source test must positively require the result-level `checkpointReceipt` field and its post-first-frame invariant block, and negatively prove no full snapshot/history/retry/second arm/position mutation/threshold override was added. Do not add or remove a test block; exact focused count remains 60 and Design Lock count remains 19.
+
+### 38.3 Acceptance and continuation
+
+After the r22 four-path Issue byte lock and green Design Lock 19/19:
+
+1. apply only the two bounded source/test corrections; prove exact seven-path topology, byte/EOL/BOM preservation, r21 app SHA-256 equality, and forbidden Phase G/workflow/bounded runner/CI BOM/public/package equality;
+2. require load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, runner syntax, lint, production build, `git diff --check`, and adversarial receipt-size/no-history/no-product proof;
+3. run one new fresh Chromium 844x390 Mayo-chan-only process once. Require six checkpoints, five exact persisted receipts after `fully-inside`, exact schema/identity/checkpoint/coordinates/progress, six production-canvas PNGs, one contact sheet, finite setup, stable build identity, and fatal zero. The r21 process is a control only;
+4. on the same final r22 bytes, run fresh Stage 6 WebKit 667x375 3/3, Stage 24 WebKit 736x414 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 WebKit 3/3, then full Chromium six-viewports and all 48 one-attempt WebKit unit processes under Section 37;
+5. only complete local green authorizes one atomic seven-path iteration-6 commit/push and its single automatic focused run. Complete focused green alone authorizes counter reset and workflow-only iteration-7 restoration; every later full/unfiltered/runtime/human/`SOL_FINAL_REVIEW`/`FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`/approval-only release boundary remains unchanged.
+
+Any failure returns on first raw evidence to `SOL_DESIGN` inside this same `/goal`. Do not immediately edit, retry, rerun, reuse the r21 control, weaken persistence, commit, push, or promote. A persisted receipt mismatch is runner/latch integration-owned; a stable receipt plus pixel mismatch is product-render/fixture-owned; a lifecycle crash remains separately classified.
+
+### 38.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` after the r22 four-path Issue byte lock and Design Lock 19/19
+- `LOOP_ITERATION`: `5`; atomic material candidate remains 6; workflow-only restoration remains 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r22 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: post-r21 execution audit after the passing Chromium 844x390 Mayo-only process; exact stable receipts were verified internally but omitted from every serialized checkpoint result; no subsequent Phase G/full deployment/commit/push
+- `LAST_GREEN_GATE`: r21 final source/static and the first-attempt Mayo 6/6 pixel/PNG/contact-sheet control; diagnosis only, not final r22 evidence
+- `CLASSIFICATION`: `QA_EVIDENCE_PERSISTENCE_GAP / VERIFIED_RUNTIME_CHECKPOINT_RECEIPT_OMITTED_FROM_SUMMARY / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CHECKPOINT_RECEIPT_SERIALIZATION / EXACT_ACCEPTED_RECEIPT + STATIC_AND_RUNTIME_SUMMARY_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r22 four-path publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact r21 seven-path draft and app bytes -> r22 four-path byte lock -> two-path checkpoint-receipt persistence -> source/static/lint/build/diff/byte -> new Chromium 844x390 Mayo-only once with five persisted receipts -> fresh Phase G Stage 6/24/ordered 3/3 -> full Chromium -> WebKit 48 one-attempt units -> atomic iteration-6 candidate -> automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the passing r21 summary, all six PNGs/contact sheet, exact returned `frozen` object, omitted result serializer, source tests, unchanged app latch, and downstream artifact consumers. Revision r22 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 39. Revision r23 — unique deployment artifact identity and persisted-file integrity
+
+This section supersedes Section 38 only for deployment artifact path ownership, summary-to-disk integrity, the current cursor, and the first corrected evidence sequence. Every r12-r22 product guard, runtime semantic latch, persisted checkpoint receipt, six-checkpoint/pixel threshold, direct production-canvas PNG, one-attempt/no-retry, exact-HEAD review, single Producer checkpoint, and release rule remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 39.1 First-attempt evidence and independent classification
+
+On the final r22 seven-path bytes, load-only passed 7/7, focused passed 60/60, checkpoint passed 12/12, Design Lock passed 19/19, syntax/lint/build/diff/byte/topology gates passed, and one fresh bounded Chromium 844x390 Mayo-chan-only process passed with five exact persisted receipts. Fresh Phase G then passed Stage 6 WebKit 667x375 3/3, Stage 24 WebKit 736x414 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 WebKit 3/3. These remain diagnosis controls only after r23 changes the deployment runner bytes.
+
+The first full r22 Chromium deployment process completed all six viewports, 48 logical unit cases, 288 logical checkpoint records, and 48 logical contact-sheet records and exited zero. Mandatory post-run artifact readback then proved that the apparent pass was not a valid evidence set:
+
+- checkpoint filenames used `${name}-deployment-${unit.family}-${checkpointIndex}-${checkpoint.id}.png`, while contact-sheet filenames used `${name}-deployment-${family}-contact-sheet.png`;
+- `kumaverson` and `medic` both have family `standard-human`, so their six checkpoint destinations and one contact-sheet destination were identical within every viewport;
+- the summary contained 288 checkpoint entries but only 252 unique checkpoint paths, a collision of 36 entries; it contained 48 contact-sheet entries but only 42 unique contact-sheet paths, a collision of six entries;
+- every recorded Kumaverson checkpoint SHA-256 mismatched the final file at its recorded path, while the same final file matched the later Medic record, proving last-writer-wins overwrite rather than benign duplicate content;
+- at 667x375 `fully-inside`, Kumaverson recorded `b7770f...`, Medic recorded `48ae6d...`, and the final disk file matched Medic; equivalent ownership loss occurred in all six viewports.
+
+No WebKit full deployment process was started after this first raw failure. There was no retry, rerun, edit, commit, or push. Product/runtime/checkpoint/pixel/asset/lifecycle/browser/timing behavior is not the owner: all accepted images were produced, but the repository evidence writer did not give distinct units distinct persistent identities and the terminal summary did not compare its logical inventory with unique final paths and final disk bytes.
+
+Classification is `QA_EVIDENCE_ARTIFACT_IDENTITY_COLLISION / SHARED_FAMILY_FILENAME + LAST_WRITER_WINS_PNG_AND_CONTACT_SHEET_OVERWRITE / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `DEPLOYMENT_ARTIFACT_UNIQUE_IDENTITY_AND_INTEGRITY / FAMILY_PLUS_KIND_FILENAME + PRE-PASS_UNIQUE_PATH_AND_DISK_SHA_ASSERTION / DESIGN_CHANGE_REQUIRED`.
+
+### 39.2 Exact bounded correction and product guard
+
+Preserve the exact existing seven-path r22 draft; do not reset, stash, reconstruct, add a path, or change `app/AshfallGame.tsx` from its r21 bytes. Under `SOL_DESIGN`, revise and Issue-lock only `tests/v100-design-lock.test.mjs`, this Design Lock, Handoff, and Project State. Under `SOL_REMEDIATION`, change only the existing deployment-artifact regions in:
+
+1. `scripts/v099-final-remediation-browser-smoke.mjs`;
+2. `tests/v0995-runtime-evidence-contract.test.mjs`.
+
+The material candidate remains the same exact seven paths relative to clean HEAD `4191afe2fe84283125c0e9ec817185c94685630c`, tree `cb808fff195d58fd96718cb8381f7f9091e9f313`. It remains iteration 6; the later workflow-only restoration remains iteration 7.
+
+Apply this complete correction as one packet:
+
+1. Every deployment checkpoint filename must include both the existing semantic family and the stable unique unit kind: `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`. The contact-sheet builder must accept the same family plus kind identity and output `${name}-deployment-${family}-${kind}-contact-sheet.png`. Do not remove family, checkpoint index, checkpoint ID, or viewport-run name.
+2. Before any terminal pass decision, derive one inventory from every recorded deployment checkpoint path/SHA and contact-sheet path/SHA in the completed result set. Persist its bounded result in `summary.json`. A failure summary may still be written for diagnosis, but a terminal pass is forbidden unless integrity is green.
+3. Require the checkpoint entry count to equal `summary.screenshotCount`, the contact-sheet entry count to equal the summary's logical contact-sheet count, every combined recorded path to be unique, every path to exist as a non-empty regular file, and the final disk SHA-256 at every path to equal that entry's recorded SHA-256. The persisted integrity record must expose logical counts, unique-path counts, disk-SHA verified counts, and `ok`.
+4. The integrity gate applies to filtered targeted runs, full Chromium, and each bounded WebKit unit process regardless of `canonicalAxes`. It may not be skipped because a route uses one viewport or a unit filter.
+5. Do not require content hashes to be globally unique: two valid frames may be byte-identical. Ownership is proved by unique stable paths plus equality between each recorded SHA and its final disk file. Do not rename unit kinds, change production content, redraw an image, synthesize a file, delete an earlier file, or accept a collision by deduplication.
+6. Update the existing runtime source test block with positive assertions for family-plus-kind checkpoint/contact-sheet paths, unique inventory, final file existence/non-empty status, recorded-to-disk SHA equality, and pass gating; add negative assertions against family-only output and canonical-axis-only enforcement. Add or remove no test block. Exact focused count remains 60 and Design Lock count remains 19.
+
+No gameplay, balance, AI, movement, asset plan, atlas, render, checkpoint, pixel, timeout, retry, viewport, unit inventory, Phase G, workflow, public, package, or CI-BOM byte may change.
+
+### 39.3 Acceptance, stop routing, and continuation
+
+After the r23 four-path Issue byte lock and green Design Lock 19/19, execute exactly once in this order:
+
+1. apply only the two bounded runner/test corrections; prove exact seven-path topology, r21 app SHA-256 equality, EOL/BOM preservation, and Phase G/workflow/bounded-runner/CI-BOM/public/package byte equality;
+2. require load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, runner syntax, lint, production build, `git diff --check`, and adversarial proof that terminal success is impossible with a duplicate path, missing/empty file, or recorded-to-disk SHA mismatch;
+3. run one fresh Chromium 667x375 process filtered to exactly `kumaverson,medic`. Require two units, 12 unique checkpoint paths, two unique contact-sheet paths, exact final disk SHA equality for all 14 artifacts, five persisted runtime receipts per unit, stable build identity, and fatal zero. No second attempt;
+4. because deployment-runner source bytes changed, run fresh r23 Phase G Stage 6 WebKit 667x375 3/3, Stage 24 WebKit 736x414 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 WebKit 3/3 on the final r23 bytes. The r22 9/9 controls cannot substitute;
+5. run the full Chromium six-viewport deployment process. Require six cases, 48 units, exactly 288 logical and unique checkpoint paths, exactly 48 logical and unique contact-sheet paths, final disk SHA equality for all 336 artifacts, exact receipts/checkpoints/pixels, finite setup, stable build identity, and fatal zero;
+6. run the bounded WebKit deployment route for all six viewports. Each of 48 fresh unit processes executes once and must independently pass its six unique checkpoint paths, one unique contact-sheet path, final disk SHA equality, exact receipt/checkpoint/pixel contracts, lifecycle, and all error channels. No retry or duplicate attempt;
+7. only complete local green authorizes one atomic seven-path iteration-6 commit and normal push. Re-fetch exact GitHub HEAD/tree/compare and require its one automatic focused run attempt 1 completely green. Only complete focused green resets all deferred repeat counters and authorizes workflow-only iteration-7 restoration;
+8. preserve the existing same-HEAD full Phase G 54/54, validator, complete regressions, unfiltered remote run, production runtime/human audit, clean fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, explicit approval, stacked integration, release, official Pages, published-SHA QA/recovery, and closure tail.
+
+Any first failure returns inside this same SOL-owned `/goal` to `SOL_DESIGN`. Do not immediately edit, retry, rerun, rename only the observed pair, weaken integrity, reuse r22 output as final evidence, commit, push, or promote. A duplicate path or disk-SHA mismatch is evidence-writer-owned; a unique persisted image whose pixel audit fails is product-render/fixture-owned; a lifecycle crash remains separately classified.
+
+### 39.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` after the r23 four-path Issue byte lock and Design Lock 19/19
+- `LOOP_ITERATION`: `5`; atomic material candidate remains 6; workflow-only restoration remains 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`
+- `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r23 four-path publication is byte-locked and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: first r22 full Chromium deployment post-run artifact readback; runner exited zero with 288 logical PNG and 48 logical sheet records, but only 252 and 42 unique paths existed, 36 PNG plus six sheet entries collided, and every Kumaverson recorded SHA mismatched the Medic-overwritten final file; no WebKit full deployment, commit, or push
+- `LAST_GREEN_GATE`: r22 final source/static, first-attempt bounded Mayo receipt/PNG control, and fresh r22 Phase G Stage 6 3/3, Stage 24 3/3, ordered trio 3/3. The full Chromium terminal output is invalid evidence and is not a green gate; all r22 controls are diagnosis-only after runner bytes change
+- `CLASSIFICATION`: `QA_EVIDENCE_ARTIFACT_IDENTITY_COLLISION / SHARED_FAMILY_FILENAME + LAST_WRITER_WINS_PNG_AND_CONTACT_SHEET_OVERWRITE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `DEPLOYMENT_ARTIFACT_UNIQUE_IDENTITY_AND_INTEGRITY / FAMILY_PLUS_KIND_FILENAME + PRE-PASS_UNIQUE_PATH_AND_DISK_SHA_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r23 publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact r22 seven-path draft/app bytes -> r23 four-path byte lock -> two-path artifact identity/integrity correction -> source/static/lint/build/diff/byte -> one Chromium 667x375 Kumaverson+Medic process -> fresh r23 Phase G Stage 6/24/ordered 3/3 -> full Chromium with 288+48 unique/disk-verified artifacts -> 48 one-attempt WebKit units -> atomic iteration-6 candidate -> automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw r22 full Chromium summary, final disk file inventory and hashes, exact colliding filename call sites, Kumaverson/Medic shared-family identity, r22 positive controls, unchanged product bytes, and every downstream exact-HEAD boundary. Revision r23 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

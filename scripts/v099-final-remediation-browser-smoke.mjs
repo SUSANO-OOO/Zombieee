@@ -285,6 +285,10 @@ function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function hostTurn(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 function relativeEvidencePath(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
@@ -295,12 +299,14 @@ function safeAreaForViewport(viewport) {
     : { top: 0, right: 0, bottom: 0, left: 0, preset: null };
 }
 
-function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
+function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null, finiteAssets = false } = {}) {
   const url = new URL(baseUrl);
   const parameters = { qa: qaMode };
   if (safeAreaPreset) parameters.safe = safeAreaPreset;
   if (qaMode === "mission") Object.assign(parameters, { stage: String(stageNumber), state: "start" });
-  if (caseTypes.length === 1 && caseTypes[0] === "hud") parameters.qaHudFiniteAssets = "1";
+  if (finiteAssets || (caseTypes.length === 1 && caseTypes[0] === "hud")) {
+    parameters.qaHudFiniteAssets = "1";
+  }
   url.search = new URLSearchParams(parameters).toString();
   return String(url);
 }
@@ -541,9 +547,10 @@ function createSetupTrace(page, diagnosticControl) {
 async function sealAssetSetupBoundary(page, diagnosticControl, label) {
   const asset = await page.evaluate(() => ({
     state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-    history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [],
     requiredSprites: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().sprites ?? [],
     loadedSpriteKeys: window.__ASHFALL_ASSET_QA__?.getLoadedSpriteKeys?.() ?? [],
+    failedPaths: window.__ASHFALL_ASSET_QA__?.getFailedPaths?.() ?? [],
+    pendingPaths: window.__ASHFALL_ASSET_QA__?.getPendingPaths?.() ?? [],
   }));
   if (new URL(page.url()).searchParams.get("qaHudFiniteAssets") === "1") {
     for (const requiredKind of ["ranger", "medic"]) {
@@ -554,9 +561,13 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
     }
   }
   const setup = await diagnosticControl.beginPostReadyObservation();
+  const historyRequired = setup.diagnostics.requestFailureDetails.length > 0;
+  const history = historyRequired
+    ? await page.evaluate(() => window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [])
+    : [];
   const classification = classifySupersededAssetRequestFailures({
     failures: setup.diagnostics.requestFailureDetails,
-    history: asset.history,
+    history,
     requiredSprites: asset.requiredSprites,
     loadedSpriteKeys: asset.loadedSpriteKeys,
     terminalState: asset.state,
@@ -570,11 +581,48 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
   return {
     label,
     boundaryAt: setup.boundaryAt,
-    asset,
+    asset: { ...asset, historyRead: historyRequired, historyEntryCount: history.length },
     rawDiagnostics: setup.diagnostics,
     pageClockCalibrations: setup.pageClockCalibrations,
     acceptedSupersededFailures: classification.accepted,
   };
+}
+
+async function waitForBattleReadiness(page, label) {
+  const startedAt = Date.now();
+  let lastState = null;
+  while (Date.now() - startedAt < timeout) {
+    lastState = await page.evaluate(() => {
+      const battle = window.__ASHFALL_BATTLE_QA__;
+      const assets = window.__ASHFALL_ASSET_QA__;
+      const snapshot = battle?.getCrawlerDeploymentProofSnapshot?.() ?? null;
+      const asset = assets?.getState?.() ?? null;
+      return {
+        screen: snapshot?.screen ?? document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+        running: snapshot?.running ?? null,
+        asset: asset ? {
+          state: asset.state ?? null,
+          generation: asset.generation ?? null,
+          completed: asset.completed ?? null,
+          total: asset.total ?? null,
+          pending: asset.pending ?? null,
+          failed: asset.failed ?? null,
+          reason: asset.reason ?? asset.failureReason ?? null,
+        } : null,
+        failedPaths: asset?.state === "error" ? assets?.getFailedPaths?.() ?? [] : [],
+      };
+    });
+    if (lastState.asset?.state === "error") {
+      throw new Error(`${label}: asset readiness failed ${JSON.stringify(lastState)}`);
+    }
+    if (lastState.screen === "battle"
+      && lastState.running === true
+      && ["ready", "degraded-ready"].includes(lastState.asset?.state)) {
+      return lastState;
+    }
+    await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+  }
+  throw new Error(`${label}: battle readiness timed out ${JSON.stringify(lastState)}`);
 }
 
 async function nextRender(page) {
@@ -588,6 +636,42 @@ async function screenshot(page, filename) {
   const screenshotPath = path.join(evidenceDir, filename);
   await page.screenshot({ path: screenshotPath, animations: "allow" });
   return relativeEvidencePath(screenshotPath);
+}
+
+async function deploymentCanvasPng(page, filename, label) {
+  const serialized = await page.evaluate(() => {
+    const canvas = document.querySelector("canvas.battlefield.active");
+    if (!(canvas instanceof HTMLCanvasElement) || !canvas.isConnected) {
+      throw new Error("active production battlefield canvas unavailable");
+    }
+    return {
+      dataUrl: canvas.toDataURL("image/png"),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  });
+  invariant(serialized.dataUrl.startsWith("data:image/png;base64,"),
+    `${label}: production canvas did not serialize PNG data`);
+  const bytes = Buffer.from(serialized.dataUrl.slice("data:image/png;base64,".length), "base64");
+  invariant(bytes.length > 0, `${label}: production canvas PNG is empty`);
+  const metadata = await sharp(bytes, { failOn: "error" }).metadata();
+  invariant(metadata.format === "png",
+    `${label}: production canvas evidence is not PNG (${metadata.format})`);
+  invariant(metadata.width === serialized.width && metadata.height === serialized.height,
+    `${label}: production canvas dimensions drifted ${JSON.stringify({
+      serialized: { width: serialized.width, height: serialized.height },
+      decoded: { width: metadata.width, height: metadata.height },
+    })}`);
+  const screenshotPath = path.join(evidenceDir, filename);
+  await writeFile(screenshotPath, bytes);
+  return {
+    path: relativeEvidencePath(screenshotPath),
+    bytes: bytes.length,
+    width: serialized.width,
+    height: serialized.height,
+    format: metadata.format,
+    source: "canvas.battlefield.active",
+  };
 }
 
 async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
@@ -627,9 +711,9 @@ async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
   };
 }
 
-async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
+async function deploymentRuntimeContactSheet(name, family, kind, viewport, entries) {
   invariant(entries.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length,
-    `${name}/${family}: deployment contact sheet is incomplete`);
+    `${name}/${family}/${kind}: deployment contact sheet is incomplete`);
   const crop = {
     left: 0,
     top: Math.max(0, Math.round(viewport.height * .1)),
@@ -644,7 +728,7 @@ async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
       .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
       .toBuffer());
   }
-  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-contact-sheet.png`);
+  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-${kind}-contact-sheet.png`);
   await sharp({
     create: {
       width: 320 * entries.length,
@@ -669,6 +753,124 @@ async function evidenceSha256(relativePath) {
   return createHash("sha256")
     .update(await readFile(path.resolve(relativePath)))
     .digest("hex");
+}
+
+function collectDeploymentArtifactInventory(resultsToInspect) {
+  const checkpoints = [];
+  const contactSheets = [];
+  for (const result of resultsToInspect) {
+    if (result.type !== "deployment") continue;
+    for (const unit of result.units ?? []) {
+      for (const checkpoint of unit.checkpoints ?? []) {
+        if (typeof checkpoint.screenshot !== "string"
+          || typeof checkpoint.screenshotSha256 !== "string") continue;
+        checkpoints.push({
+          type: "checkpoint",
+          family: unit.family,
+          kind: unit.kind,
+          checkpoint: checkpoint.checkpoint,
+          path: checkpoint.screenshot,
+          recordedSha256: checkpoint.screenshotSha256,
+        });
+      }
+      if (typeof unit.contactSheet?.path === "string"
+        && typeof unit.contactSheet?.sha256 === "string") {
+        contactSheets.push({
+          type: "contact-sheet",
+          family: unit.family,
+          kind: unit.kind,
+          path: unit.contactSheet.path,
+          recordedSha256: unit.contactSheet.sha256,
+        });
+      }
+    }
+  }
+  return { checkpoints, contactSheets };
+}
+
+async function inspectDeploymentArtifactIntegrity(resultsToInspect) {
+  const inventory = collectDeploymentArtifactInventory(resultsToInspect);
+  const combined = [...inventory.checkpoints, ...inventory.contactSheets];
+  const pathOccurrences = new Map();
+  for (const entry of combined) {
+    pathOccurrences.set(entry.path, (pathOccurrences.get(entry.path) ?? 0) + 1);
+  }
+  const duplicatePaths = [...pathOccurrences.entries()]
+    .filter(([, occurrences]) => occurrences > 1)
+    .map(([artifactPath, occurrences]) => ({ path: artifactPath, occurrences }));
+  const invalidFiles = [];
+  const hashMismatches = [];
+  const diskShaVerifiedCount = { checkpoint: 0, "contact-sheet": 0 };
+  for (const entry of combined) {
+    try {
+      const file = await stat(path.resolve(entry.path));
+      if (!file.isFile() || file.size <= 0) {
+        invalidFiles.push({
+          type: entry.type,
+          path: entry.path,
+          reason: file.isFile() ? "empty-file" : "not-regular-file",
+        });
+        continue;
+      }
+      const diskSha256 = await evidenceSha256(entry.path);
+      if (diskSha256 !== entry.recordedSha256) {
+        hashMismatches.push({
+          type: entry.type,
+          path: entry.path,
+          recordedSha256: entry.recordedSha256,
+          diskSha256,
+        });
+        continue;
+      }
+      diskShaVerifiedCount[entry.type] += 1;
+    } catch (error) {
+      invalidFiles.push({
+        type: entry.type,
+        path: entry.path,
+        reason: "unreadable-file",
+        error: String(error),
+      });
+    }
+  }
+  const diagnosticLimit = 64;
+  const checkpointUniquePathCount = new Set(inventory.checkpoints.map(({ path: artifactPath }) => artifactPath)).size;
+  const contactSheetUniquePathCount = new Set(inventory.contactSheets.map(({ path: artifactPath }) => artifactPath)).size;
+  const combinedUniquePathCount = pathOccurrences.size;
+  const rawOk = duplicatePaths.length === 0
+    && invalidFiles.length === 0
+    && hashMismatches.length === 0
+    && diskShaVerifiedCount.checkpoint === inventory.checkpoints.length
+    && diskShaVerifiedCount["contact-sheet"] === inventory.contactSheets.length;
+  return {
+    schema: "v099-deployment-artifact-integrity/v1",
+    ok: rawOk,
+    checkpoint: {
+      logicalCount: inventory.checkpoints.length,
+      uniquePathCount: checkpointUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount.checkpoint,
+    },
+    contactSheet: {
+      logicalCount: inventory.contactSheets.length,
+      uniquePathCount: contactSheetUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount["contact-sheet"],
+    },
+    combined: {
+      logicalCount: combined.length,
+      uniquePathCount: combinedUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount.checkpoint + diskShaVerifiedCount["contact-sheet"],
+    },
+    diagnostics: {
+      limit: diagnosticLimit,
+      duplicatePaths: duplicatePaths.slice(0, diagnosticLimit),
+      invalidFiles: invalidFiles.slice(0, diagnosticLimit),
+      hashMismatches: hashMismatches.slice(0, diagnosticLimit),
+      omitted: {
+        duplicatePaths: Math.max(0, duplicatePaths.length - diagnosticLimit),
+        invalidFiles: Math.max(0, invalidFiles.length - diagnosticLimit),
+        hashMismatches: Math.max(0, hashMismatches.length - diagnosticLimit),
+      },
+    },
+  };
 }
 
 async function enterLegacyQaBattle(page, qaMode) {
@@ -749,17 +951,7 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
     await enterLegacyQaBattle(page, qaMode);
     setPhase("battle readiness");
     lifecycle?.event("battle readiness start", { page });
-    await page.waitForFunction(
-      () => {
-        const battle = window.__ASHFALL_BATTLE_QA__;
-        const assets = window.__ASHFALL_ASSET_QA__;
-        return battle?.getSnapshot?.().screen === "battle"
-          && battle.getSnapshot().running === true
-          && ["ready", "degraded-ready"].includes(assets?.getState?.().state);
-      },
-      undefined,
-      { timeout },
-    );
+    await waitForBattleReadiness(page, `${qaMode}/${viewport.width}x${viewport.height}`);
     lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
     setPhase("post-readiness settling");
     try {
@@ -1997,48 +2189,74 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence, life
 }
 
 async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label) {
-  return page.evaluate(async ({ id, expected, requiredProgress, maximumMs }) => {
-    const startedAt = performance.now();
-    while (performance.now() - startedAt < maximumMs) {
-      const qa = window.__ASHFALL_BATTLE_QA__;
-      const snapshot = qa.getSnapshot();
-      const fighter = snapshot.fighters.find((candidate) => candidate.id === id);
-      if (fighter) {
-        const audit = qa.auditFighterUnitLayer(id);
-        const doorX = Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x);
-        const rampX = Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1);
-        const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
-        if (audit?.deploymentPlan?.checkpoint === expected && progress + 1e-6 >= requiredProgress) {
-          qa.setRepresentativeSixProofPaused(true);
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          const frozenSnapshot = qa.getSnapshot();
-          const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === id);
-          const frozenAudit = qa.auditFighterUnitLayer(id);
-          if (frozenAudit?.deploymentPlan?.checkpoint === expected) {
-            const frozenDoorX = Number(frozenSnapshot.battleSpace?.crawlerDoor?.x ?? frozenFighter.x);
-            const frozenRampX = Number(frozenFighter.entryRampX ?? frozenFighter.combatReadyX ?? frozenDoorX + 1);
-            const frozenProgress = Math.max(0, Math.min(
-              1,
-              (frozenFighter.x - frozenDoorX) / Math.max(1, frozenRampX - frozenDoorX),
-            ));
-            if (frozenProgress + 1e-6 >= requiredProgress) {
-              return { fighter: frozenFighter, audit: frozenAudit, observedProgress: frozenProgress };
-            }
-          }
-          qa.setRepresentativeSixProofPaused(false);
-        }
+  try {
+    const arm = await page.evaluate(({ id, expectedCheckpoint }) => (
+      window.__ASHFALL_BATTLE_QA__.armCrawlerDeploymentCheckpoint(id, expectedCheckpoint)
+    ), { id: fighterId, expectedCheckpoint: checkpoint });
+    invariant(arm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+      && arm.armed === true
+      && arm.fighterId === fighterId
+      && arm.checkpoint === checkpoint
+      && Math.abs(arm.minimumProgress - minimumProgress) <= 1e-6,
+    `${label}: deployment checkpoint arm rejected or changed the canonical minimum`);
+    const startedAt = Date.now();
+    let lastSnapshot = null;
+    while (Date.now() - startedAt < timeout) {
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+      const candidate = await page.evaluate(({ id, expectedCheckpoint }) => {
+        const qa = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId: id });
+        const receipt = snapshot?.checkpointReceipt ?? null;
+        return {
+          ready: snapshot?.schema === "v099-crawler-deployment-snapshot/v1"
+            && snapshot.paused === true
+            && receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+            && receipt.fighterId === id
+            && receipt.checkpoint === expectedCheckpoint,
+          snapshot,
+        };
+      }, { id: fighterId, expectedCheckpoint: checkpoint });
+      lastSnapshot = candidate.snapshot;
+      if (candidate.snapshot?.checkpointReceipt
+        && (candidate.snapshot.checkpointReceipt.fighterId !== fighterId
+          || candidate.snapshot.checkpointReceipt.checkpoint !== checkpoint)) {
+        throw new Error(`deployment checkpoint receipt mismatch ${JSON.stringify(candidate.snapshot.checkpointReceipt)}`);
       }
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+      if (candidate.ready === true) {
+        await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+        const frozen = await page.evaluate(({ id, expectedCheckpoint }) => {
+          const qa = window.__ASHFALL_BATTLE_QA__;
+          const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId: id });
+          const audit = snapshot?.fighter ? qa.auditFighterUnitLayer(id) : null;
+          return {
+            fighter: snapshot?.fighter ?? null,
+            audit,
+            observedProgress: snapshot?.computedProgress ?? null,
+            checkpointReceipt: snapshot?.checkpointReceipt ?? null,
+            paused: snapshot?.paused === true,
+            exactReceipt: snapshot?.checkpointReceipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+              && snapshot.checkpointReceipt.fighterId === id
+              && snapshot.checkpointReceipt.checkpoint === expectedCheckpoint,
+          };
+        }, { id: fighterId, expectedCheckpoint: checkpoint });
+        const receipt = frozen.checkpointReceipt;
+        if (frozen.paused === true
+          && frozen.exactReceipt === true
+          && frozen.fighter?.id === receipt?.fighterId
+          && frozen.fighter?.x === receipt?.x
+          && frozen.fighter?.y === receipt?.y
+          && frozen.observedProgress === receipt?.computedProgress
+          && frozen.audit?.deploymentPlan?.checkpoint === checkpoint
+          && frozen.observedProgress + 1e-6 >= minimumProgress) {
+          return frozen;
+        }
+        throw new Error(`deployment checkpoint receipt was not stable ${JSON.stringify(frozen)}`);
+      }
     }
-    throw new Error(`deployment checkpoint ${expected} timed out`);
-  }, {
-    id: fighterId,
-    expected: checkpoint,
-    requiredProgress: minimumProgress,
-    maximumMs: timeout,
-  }).catch((error) => {
+    throw new Error(`deployment checkpoint ${checkpoint} timed out; last=${JSON.stringify(lastSnapshot)}`);
+  } catch (error) {
     throw new Error(`${label}: ${String(error)}`);
-  });
+  }
 }
 
 async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
@@ -2053,41 +2271,36 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
     while (Date.now() - startedAt < timeout) {
       const candidate = await page.evaluate((kind) => {
         const qa = window.__ASHFALL_BATTLE_QA__;
-        const snapshot = qa.getSnapshot();
-        const fighter = snapshot.fighters.find((entry) => (
-          entry.side === "human"
-            && entry.kind === kind
-            && entry.spawnPortalId === "crawler-door"
-        ));
+        const snapshot = qa.getCrawlerDeploymentProofSnapshot({ kind });
+        const fighter = snapshot?.fighter ?? null;
         if (!fighter) return null;
         const bannerReady = document.querySelector(".battle-banner")?.textContent
           ?.includes("移動拠点から出撃") === true;
-        const doorX = Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x);
-        const rampX = Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1);
-        const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
+        const progress = snapshot.computedProgress;
         if (!(bannerReady && progress === 0)) return { ready: false };
         qa.setRepresentativeSixProofPaused(true);
         return { ready: true, fighterId: fighter.id, fighterX: fighter.x, observedProgress: progress };
       }, unitKind);
       if (candidate?.ready === true) {
-        await page.waitForTimeout(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+        await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
         const frozen = await page.evaluate(({ fighterId, expectedX }) => {
           const qa = window.__ASHFALL_BATTLE_QA__;
-          const snapshot = qa.getSnapshot();
-          const fighter = snapshot.fighters.find((entry) => entry.id === fighterId) ?? null;
+          const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId });
+          const fighter = snapshot?.fighter ?? null;
           const audit = fighter ? qa.auditFighterUnitLayer(fighterId) : null;
           return {
             fighter,
             audit,
+            observedProgress: snapshot?.computedProgress ?? null,
             frozen: fighter?.x === expectedX,
           };
         }, { fighterId: candidate.fighterId, expectedX: candidate.fighterX });
         if (frozen.frozen === true && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside") {
-          return { fighter: frozen.fighter, audit: frozen.audit, observedProgress: candidate.observedProgress };
+          return frozen;
         }
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
       }
-      await page.waitForTimeout(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
     }
     throw new Error(`first deployment frame for ${unitKind} timed out`);
   } catch (error) {
@@ -2106,23 +2319,10 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
     readSample: async ({ elapsedWallMs }) => {
       const runtime = await page.evaluate(({ kind, id, checkpoint, progress }) => {
         const battleApi = window.__ASHFALL_BATTLE_QA__;
-        const snapshot = battleApi?.getSnapshot?.() ?? null;
-        const fighter = snapshot?.fighters?.find((candidate) => (
-          id !== null
-            ? candidate.id === id
-            : candidate.side === "human"
-              && candidate.kind === kind
-              && candidate.spawnPortalId === "crawler-door"
-        )) ?? null;
-        const doorX = fighter
-          ? Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x)
-          : null;
-        const rampX = fighter
-          ? Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1)
-          : null;
-        const computedProgress = fighter && doorX !== null && rampX !== null
-          ? Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)))
-          : null;
+        const snapshot = battleApi?.getCrawlerDeploymentProofSnapshot?.({
+          ...(id !== null ? { fighterId: id } : { kind }),
+        }) ?? null;
+        const fighter = snapshot?.fighter ?? null;
         return {
           documentVisibility: document.visibilityState,
           snapshot: snapshot ? {
@@ -2133,12 +2333,14 @@ function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase)
           fighterPresent: Boolean(fighter),
           fighterId: fighter?.id ?? id,
           fighter: fighter ? { id: fighter.id, x: fighter.x, y: fighter.y } : null,
-          doorX,
-          rampX,
-          computedProgress,
+          doorX: snapshot?.doorX ?? null,
+          rampX: snapshot?.rampX ?? null,
+          computedProgress: snapshot?.computedProgress ?? null,
           gateEntering: fighter?.gateEntering ?? null,
           combatReady: fighter?.combatReady ?? null,
           entryRampCleared: fighter?.entryRampCleared ?? null,
+          checkpointArm: snapshot?.checkpointArm ?? null,
+          checkpointReceipt: snapshot?.checkpointReceipt ?? null,
           readableSnapshot: snapshot ? {
             time: snapshot.time ?? null,
             paused: snapshot.paused ?? null,
@@ -2229,7 +2431,7 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
     `${label}: final canvas does not retain opaque unit pixels`);
   invariant(fighter?.renderAudit?.poseOpacity === 1
     && fighter?.renderAudit?.effectiveOpacity === 1
-    && fighter?.animationPresentation?.pose?.opacity === 1,
+    && fighter?.animationPose?.opacity === 1,
   `${label}: live fighter render remained translucent`);
   if (expectedCheckpoint === "fully-outside") {
     invariant(audit.deploymentPlan.active === false
@@ -2261,6 +2463,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
     pendingRequestCount: 0,
   });
   let setupTrace = null;
+  let assetSetupBoundary = null;
   let deploymentLifecyclePhase = "deployment setup";
   let activeDeploymentTrace = null;
   let activeUnitResult = null;
@@ -2273,13 +2476,14 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   const result = { type: "deployment", engine, viewport, status: "failed", units: [] };
   try {
     setDeploymentPhase("deployment setup");
-    ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace } = await openBattlePage(
+    ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace, assetSetupBoundary } = await openBattlePage(
       context,
       "mission",
-      { setupTrace: engine === "chromium" },
+      { setupTrace: engine === "chromium", finiteAssets: true },
       lifecycle,
     ));
     if (setupTrace) result.setupTrace = setupTrace;
+    result.assetSetupBoundary = assetSetupBoundary;
     await loadedCrawlerAssets(page, name);
     for (const unit of deploymentUnits) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
@@ -2295,6 +2499,16 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         unit,
         () => deploymentLifecyclePhase,
       );
+      const unitAsset = await page.evaluate(
+        (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
+        unit.kind,
+      );
+      invariant(unitAsset?.kind === unit.kind
+        && typeof unitAsset.path === "string"
+        && unitAsset.width > 0
+        && unitAsset.height > 0,
+      `${name}/${unit.kind}: strict unit asset decode failed ${JSON.stringify(unitAsset)}`);
+      unitResult.asset = unitAsset;
       const prepared = await page.evaluate((kind) => (
         window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
           attackerKind: kind === "crazy-king" ? "crusher" : "walker",
@@ -2322,7 +2536,6 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         let evidence = firstFrame;
         activeDeploymentTrace.setExpected(checkpoint.id, checkpoint.progress);
         if (checkpointIndex > 0) {
-          await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
           evidence = await pauseAtDeploymentCheckpoint(
             page,
             fighterId,
@@ -2339,10 +2552,37 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           checkpoint: checkpoint.id,
         });
         validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label);
-        const screenshotPath = await screenshot(
+        const receipt = checkpointIndex === 0 ? null : evidence.checkpointReceipt;
+        if (checkpointIndex > 0) {
+          invariant(receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+            && receipt.fighterId === fighterId
+            && receipt.kind === unit.kind
+            && receipt.checkpoint === checkpoint.id
+            && receipt.x === evidence.fighter?.x
+            && receipt.y === evidence.fighter?.y
+            && receipt.computedProgress === evidence.observedProgress
+            && receipt.computedProgress + 1e-6 >= checkpoint.progress,
+          `${label}: accepted checkpoint receipt was not serializable`);
+        }
+        const serializedCheckpointReceipt = receipt ? {
+          schema: receipt.schema,
+          fighterId: receipt.fighterId,
+          kind: receipt.kind,
+          checkpoint: receipt.checkpoint,
+          x: receipt.x,
+          y: receipt.y,
+          computedProgress: receipt.computedProgress,
+          battleTime: receipt.battleTime,
+          gateEntering: receipt.gateEntering,
+          combatReady: receipt.combatReady,
+          entryRampCleared: receipt.entryRampCleared,
+        } : null;
+        const canvasCapture = await deploymentCanvasPng(
           page,
-          `${name}-deployment-${unit.family}-${checkpointIndex}-${checkpoint.id}.png`,
+          `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
+          label,
         );
+        const screenshotPath = canvasCapture.path;
         const screenshotSha256 = await evidenceSha256(screenshotPath);
         unitResult.checkpoints.push({
           checkpoint: checkpoint.id,
@@ -2351,8 +2591,10 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           observedProgress: evidence.observedProgress ?? null,
           fighter: evidence.fighter,
           audit: evidence.audit,
+          checkpointReceipt: serializedCheckpointReceipt,
           screenshot: screenshotPath,
           screenshotSha256,
+          canvasCapture,
         });
         lifecycle?.event("deployment checkpoint complete", {
           page,
@@ -2397,6 +2639,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       unitResult.contactSheet = await deploymentRuntimeContactSheet(
         name,
         unit.family,
+        unit.kind,
         viewport,
         unitResult.checkpoints,
       );
@@ -2546,6 +2789,16 @@ const canonicalAxes = engines.length === canonicalEngines.length
   && !hudStateFilterActive
   && caseTypes.length === canonicalCaseTypes.length
   && canonicalCaseTypes.every((caseType) => caseTypes.includes(caseType));
+const deploymentScreenshotCount = results.reduce((total, result) => (
+  result.type === "deployment"
+    ? total + result.units.reduce((sum, unit) => sum + unit.checkpoints.length, 0)
+    : total
+), 0);
+const deploymentContactSheetCount = results.reduce((total, result) => (
+  result.type === "deployment"
+    ? total + result.units.filter(({ contactSheet }) => Boolean(contactSheet)).length
+    : total
+), 0);
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
@@ -2570,6 +2823,8 @@ const summary = {
   total: results.length,
   passed: results.filter(({ status }) => status === "passed").length,
   failed: results.filter(({ status }) => status !== "passed").length,
+  deploymentScreenshotCount,
+  deploymentContactSheetCount,
   screenshotCount: results.reduce((total, result) => {
     if (result.type === "hud") return total + (result.status === "passed" ? result.states.length : 0);
     if (result.type === "crawler-equipment") {
@@ -2589,6 +2844,29 @@ const summary = {
   ), 0),
   results,
 };
+const artifactInventoryIntegrity = await inspectDeploymentArtifactIntegrity(results);
+const deploymentOnly = caseTypes.length === 1 && caseTypes[0] === "deployment";
+const countContract = {
+  checkpointMatchesDeploymentSummary:
+    artifactInventoryIntegrity.checkpoint.logicalCount === summary.deploymentScreenshotCount,
+  contactSheetMatchesDeploymentSummary:
+    artifactInventoryIntegrity.contactSheet.logicalCount === summary.deploymentContactSheetCount,
+  checkpointMatchesRouteScreenshotCount: deploymentOnly
+    ? artifactInventoryIntegrity.checkpoint.logicalCount === summary.screenshotCount
+    : null,
+  contactSheetMatchesRouteContactSheetCount: deploymentOnly
+    ? artifactInventoryIntegrity.contactSheet.logicalCount === summary.contactSheetCount
+    : null,
+};
+summary.deploymentArtifactIntegrity = {
+  ...artifactInventoryIntegrity,
+  ok: artifactInventoryIntegrity.ok
+    && countContract.checkpointMatchesDeploymentSummary
+    && countContract.contactSheetMatchesDeploymentSummary
+    && countContract.checkpointMatchesRouteScreenshotCount !== false
+    && countContract.contactSheetMatchesRouteContactSheetCount !== false,
+  countContract,
+};
 const summaryPath = path.join(evidenceDir, "summary.json");
 await writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
 console.log(JSON.stringify({
@@ -2599,6 +2877,7 @@ console.log(JSON.stringify({
   passed: summary.passed,
   failed: summary.failed,
   screenshotCount: summary.screenshotCount,
+  deploymentArtifactIntegrity: summary.deploymentArtifactIntegrity,
   buildIdentityStable,
   cases: results.map(({ type, engine, viewport, status, error }) => ({
     type,
@@ -2609,6 +2888,8 @@ console.log(JSON.stringify({
   })),
 }, null, 2));
 
+invariant(summary.deploymentArtifactIntegrity.ok,
+  `Deployment artifact integrity failed; see ${relativeEvidencePath(summaryPath)}`);
 invariant(buildIdentityStable, "Production dist changed while final-remediation browser QA was running");
 invariant(results.length === expectedCaseCount,
   `Final-remediation QA produced ${results.length}/${expectedCaseCount} cases`);

@@ -38,9 +38,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r19`/u);
+  assert.match(design, /Revision: `r22`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r19`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r22`/u);
   assert.match(handoff, /docs\/CODEX_SOL_ROLE\.md/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -302,7 +302,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /sourceToTargetEdges/u);
   assert.match(causalTest, /sourceAttribution/u);
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r19`/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r22`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
   for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
     assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
@@ -319,7 +319,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
 });
 
-test("r12-r19 lock SOL actionability and single-producer WebKit QA observability with one final Producer checkpoint", async () => {
+test("r12-r23 lock SOL actionability and persisted deployment evidence with one final Producer checkpoint", async () => {
   const [design, handoff, projectState] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
@@ -332,16 +332,24 @@ test("r12-r19 lock SOL actionability and single-producer WebKit QA observability
   const r16 = design.match(/## 32\. Revision r16([\s\S]+?)(?=## 33\. Revision r17)/u)?.[1] ?? "";
   const r17 = design.match(/## 33\. Revision r17([\s\S]+?)(?=## 34\. Revision r18)/u)?.[1] ?? "";
   const r18 = design.match(/## 34\. Revision r18([\s\S]+?)(?=## 35\. Revision r19)/u)?.[1] ?? "";
-  const r19 = design.match(/## 35\. Revision r19([\s\S]*)$/u)?.[1] ?? "";
+  const r19 = design.match(/## 35\. Revision r19([\s\S]+?)(?=## 36\. Revision r20)/u)?.[1] ?? "";
+  const r20 = design.match(/## 36\. Revision r20([\s\S]+?)(?=## 37\. Revision r21)/u)?.[1] ?? "";
+  const r21 = design.match(/## 37\. Revision r21([\s\S]+?)(?=## 38\. Revision r22)/u)?.[1] ?? "";
+  const r22 = design.match(/## 38\. Revision r22([\s\S]+?)(?=## 39\. Revision r23)/u)?.[1] ?? "";
+  const r23 = design.match(/## 39\. Revision r23([\s\S]*)$/u)?.[1] ?? "";
   const historicalHandoff = handoff.match(/## 22\. Revision r13([\s\S]+?)(?=## 23\. Revision r14)/u)?.[1] ?? "";
   const r14Handoff = handoff.match(/## 23\. Revision r14([\s\S]+?)(?=## 24\. Revision r15)/u)?.[1] ?? "";
   const r15Handoff = handoff.match(/## 24\. Revision r15([\s\S]+?)(?=## 25\. Revision r16)/u)?.[1] ?? "";
   const r16Handoff = handoff.match(/## 25\. Revision r16([\s\S]+?)(?=## 26\. Revision r17)/u)?.[1] ?? "";
   const r17Handoff = handoff.match(/## 26\. Revision r17([\s\S]+?)(?=## 27\. Revision r18)/u)?.[1] ?? "";
   const r18Handoff = handoff.match(/## 27\. Revision r18([\s\S]+?)(?=## 28\. Revision r19)/u)?.[1] ?? "";
-  const activeHandoff = handoff.match(/## 28\. Revision r19([\s\S]*)$/u)?.[1] ?? "";
+  const r19Handoff = handoff.match(/## 28\. Revision r19([\s\S]+?)(?=## 29\. Revision r20)/u)?.[1] ?? "";
+  const r20Handoff = handoff.match(/## 29\. Revision r20([\s\S]+?)(?=## 30\. Revision r21)/u)?.[1] ?? "";
+  const r21Handoff = handoff.match(/## 30\. Revision r21([\s\S]+?)(?=## 31\. Revision r22)/u)?.[1] ?? "";
+  const r22Handoff = handoff.match(/## 31\. Revision r22([\s\S]+?)(?=## 32\. Revision r23)/u)?.[1] ?? "";
+  const activeHandoff = handoff.match(/## 32\. Revision r23([\s\S]*)$/u)?.[1] ?? "";
   const currentProcess = projectState.match(/## 4\. 実行体制 — V1 SOL single-owner override([\s\S]+?)## 5\./u)?.[1] ?? "";
-  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r19 Section 35([\s\S]+?)### Post-V1/u)?.[1] ?? "";
+  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r23 Section 39([\s\S]+?)### Post-V1/u)?.[1] ?? "";
 
   for (const source of [r12, projectState]) {
     assert.match(source, /0495e95e3bc59fcf546ffa02ee83704a1f63e366/u);
@@ -627,7 +635,7 @@ test("r12-r19 lock SOL actionability and single-producer WebKit QA observability
   assert.match(r18Handoff, /edit only the existing deployment-runner assertion region/u);
   assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `3`/u);
 
-  for (const source of [r19, activeHandoff, projectState, currentCursor]) {
+  for (const source of [r19, r19Handoff, projectState]) {
     assert.match(source, /SOL_OWNED_BYTE_CONTRACT_MISDECLARATION \/ PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /SOURCE_BYTE_CONTRACT_CORRECTION \/ PRESERVE_EXISTING_UTF8_BOM_AND_LF_WITH_ZERO_SEMANTIC_CHANGE \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /(?:pre-)?existing UTF-8 BOM|existing BOM|既存UTF-8 BOM/u);
@@ -638,9 +646,125 @@ test("r12-r19 lock SOL actionability and single-producer WebKit QA observability
   assert.match(r19, /232 LF and zero CRLF/u);
   assert.match(r19, /Do not strip\/rewrite the BOM/u);
   assert.match(r19, /The previously green targeted 1\/1 need not be repeated separately/u);
-  assert.match(activeHandoff, /preserve all eleven candidate paths/u);
+  assert.match(r19Handoff, /preserve all eleven candidate paths/u);
 
-  for (const source of [r14, r15, r16, r17, r18, r19, activeHandoff, currentCursor]) {
+  for (const source of [r20, r20Handoff, projectState]) {
+    assert.match(source, /4191afe2fe84283125c0e9ec817185c94685630c/u);
+    assert.match(source, /cb808fff195d58fd96718cb8381f7f9091e9f313/u);
+    assert.match(source, /32673445643/u);
+    assert.match(source, /97277691325/u);
+    assert.match(source, /QA_HARNESS_DEPLOYMENT_LIFECYCLE_OVERLOAD \/ EXHAUSTIVE_55_ASSET_GATE \+ FULL_SNAPSHOT_CHECKPOINT_POLLING \+ COMPOSITOR_SCREENSHOT \/ CLEAN_PAGE_CRASH \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /FINITE_DEPLOYMENT_EVIDENCE_LIFECYCLE \/ REQUIRED_ASSET_PLAN \+ LEAN_HOST_TURN_CHECKPOINTS \+ FROZEN_PRODUCTION_CANVAS_PNG \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /DEPLOYMENT_736_REPEAT_COUNT`: `2`/u);
+  }
+  for (const job of ["97281054120", "97281054139", "97281054121", "97281054124"]) {
+    assert.match(r20, new RegExp(job, "u"));
+  }
+  assert.match(r20, /exactly one read-only method, `getCrawlerDeploymentProofSnapshot`/u);
+  assert.match(r20, /schema `v099-crawler-deployment-snapshot\/v1`/u);
+  assert.match(r20, /current bounded `renderAudit` record \(including `poseOpacity`\/`effectiveOpacity`\)/u);
+  assert.match(r20, /current sampled `animationPose` \(including `opacity`\)/u);
+  assert.match(r20, /does not mutate state, read canvas pixels, copy render histories/u);
+  assert.match(r20, /existing localhost-only `qaHudFiniteAssets=1` switch/u);
+  assert.match(r20, /strict `ensureUnitRenderProofAsset\(kind\)` once/u);
+  assert.match(r20, /Node-host 100 ms bounded loop/u);
+  assert.match(r20, /Read full session history only when setup request failures/u);
+  assert.match(r20, /no in-page requestAnimationFrame loop, Playwright `waitForFunction`, or full `getSnapshot\(\)`/u);
+  assert.match(r20, /exactly one frozen `auditFighterUnitLayer\(fighterId\)`/u);
+  assert.match(r20, /direct PNG serialization of the frozen production `canvas\.battlefield\.active`/u);
+  assert.match(r20, /requires PNG format, exact intrinsic dimensions, positive byte count/u);
+  assert.match(r20, /exact PR Verify Chromium deployment route across all six required viewports/u);
+  assert.match(r20, /288 production-canvas checkpoint PNGs, 48 contact sheets/u);
+  assert.match(r20, /exact bounded WebKit deployment route for all six required viewports/u);
+  assert.match(r20, /48 unit processes executes once/u);
+  assert.match(r20, /atomic seven-path iteration-6 candidate/u);
+  assert.match(r20, /workflow-only iteration-7 restoration/u);
+  assert.match(r20Handoff, /current `renderAudit` record \(including pose\/effective opacity\)/u);
+  assert.match(r20Handoff, /current sampled `animationPose`/u);
+  assert.match(r20Handoff, /copies no render history/u);
+  for (const path of [
+    "app/AshfallGame.tsx",
+    "scripts/v099-final-remediation-browser-smoke.mjs",
+    "tests/v0995-runtime-evidence-contract.test.mjs",
+    "tests/v100-design-lock.test.mjs",
+    "docs/design/v1.0.0/DESIGN_LOCK.md",
+    "docs/design/v1.0.0/LUNA_HANDOFF.md",
+    "docs/PROJECT_STATE.md",
+  ]) assert.match(r20, new RegExp(path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
+
+  for (const source of [r21, r21Handoff, projectState]) {
+    assert.match(source, /QA_HARNESS_CHECKPOINT_FREEZE_OWNERSHIP_GAP \/ HOST_POLL_POST_CANDIDATE_FREEZE_DID_NOT_LATCH_EXISTING_NATURAL_SEMANTIC_INTERVAL \/ MONOTONIC_OVERSHOOT \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /RUNTIME_SEMANTIC_CHECKPOINT_LATCH \/ LOCALHOST_ONLY_ARM \+ SAME_SIMULATION_TICK_PAUSE_RECEIPT \+ HOST_READBACK_ONE_AUDIT \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /DEPLOYMENT_844_REPEAT_COUNT`: `1`/u);
+  }
+  assert.match(r21, /progress `0\.117268`/u);
+  assert.match(r21, /does not claim whether any particular 100 ms host read began inside the interval/u);
+  assert.match(r21, /armCrawlerDeploymentCheckpoint/u);
+  assert.match(r21, /qaArmedCrawlerDeploymentCheckpointRef/u);
+  assert.match(r21, /qaCrawlerDeploymentCheckpointReceiptRef/u);
+  assert.match(r21, /same simulation tick/u);
+  assert.match(r21, /unchanged minimum progress from `CRAWLER_DEPLOYMENT_CHECKPOINTS`/u);
+  assert.match(r21, /including `0\.08` for `first-visible`/u);
+  assert.match(r21, /arm method accepts no caller-supplied threshold/u);
+  assert.match(r21, /v099-crawler-deployment-checkpoint-receipt\/v1/u);
+  assert.match(r21, /never calls `setRepresentativeSixProofPaused\(true\)`/u);
+  assert.match(r21, /Remove the separate pre-checkpoint unpause/u);
+  assert.match(r21, /one fresh bounded Chromium 844x390 Mayo-chan-only acceptance/u);
+  assert.match(r21, /fresh r21 Phase G Stage 6 WebKit 667x375 3\/3/u);
+  assert.match(r21, /Chromium six cases\/48 units\/288 PNGs\/48 sheets/u);
+  assert.match(r21, /WebKit 48 fresh unit processes\/288 PNGs\/48 sheets/u);
+  assert.match(r21, /material candidate remains iteration 6/u);
+  assert.match(r21, /workflow-only restoration remains iteration 7/u);
+  assert.match(r21Handoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(r21Handoff, /natural simulation as owner/u);
+  assert.match(r21Handoff, /same simulation tick/u);
+
+  for (const source of [r22, r22Handoff]) {
+    assert.match(source, /QA_EVIDENCE_PERSISTENCE_GAP \/ VERIFIED_RUNTIME_CHECKPOINT_RECEIPT_OMITTED_FROM_SUMMARY \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /CHECKPOINT_RECEIPT_SERIALIZATION \/ EXACT_ACCEPTED_RECEIPT \+ STATIC_AND_RUNTIME_SUMMARY_ASSERTION \/ DESIGN_CHANGE_REQUIRED/u);
+  }
+  assert.match(r22, /01033765479be3378ad96b67ffd836ea2f5edd603dc43228b80d12fb4b282fd8/u);
+  assert.match(r22, /08ed7ee9a849bbb0a9558d9836b8e92472dd583cfd26d53d40c6020a06e32623/u);
+  assert.match(r22, /progress `0\.08795115181416581`/u);
+  assert.match(r22, /`summary\.json` contains `checkpointReceipt: null`/u);
+  assert.match(r22, /Preserve the existing seven-path r21 draft/u);
+  assert.match(r22, /or change `app\/AshfallGame\.tsx` from its r21 bytes/u);
+  assert.match(r22, /serialize a bounded copy as exact field `checkpointReceipt`/u);
+  assert.match(r22, /For `fully-inside`, serialize `checkpointReceipt: null`/u);
+  assert.match(r22, /five exact persisted receipts/u);
+  assert.match(r22, /exact focused count remains 60/u);
+  assert.match(r22, /Design Lock count remains 19/u);
+  assert.match(r22Handoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(r22Handoff, /r21 runtime semantic latch is accepted and must remain byte-identical/u);
+
+  for (const source of [r23, activeHandoff, projectState, currentCursor]) {
+    assert.match(source, /QA_EVIDENCE_ARTIFACT_IDENTITY_COLLISION \/ SHARED_FAMILY_FILENAME \+ LAST_WRITER_WINS_PNG_AND_CONTACT_SHEET_OVERWRITE \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /DEPLOYMENT_ARTIFACT_UNIQUE_IDENTITY_AND_INTEGRITY \/ FAMILY_PLUS_KIND_FILENAME \+ PRE-PASS_UNIQUE_PATH_AND_DISK_SHA_ASSERTION \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`/u);
+    assert.match(source, /NEXT_OWNER`: `SOL_REMEDIATION`/u);
+  }
+  assert.match(r23, /288 checkpoint entries but only 252 unique checkpoint paths/u);
+  assert.match(r23, /48 contact-sheet entries but only 42 unique contact-sheet paths/u);
+  assert.match(r23, /every recorded Kumaverson checkpoint SHA-256 mismatched the final file/u);
+  assert.match(r23, /No WebKit full deployment process was started/u);
+  assert.match(r23, /\$\{name\}-deployment-\$\{unit\.family\}-\$\{unit\.kind\}-\$\{checkpointIndex\}-\$\{checkpoint\.id\}\.png/u);
+  assert.match(r23, /\$\{name\}-deployment-\$\{family\}-\$\{kind\}-contact-sheet\.png/u);
+  assert.match(r23, /Before any terminal pass decision/u);
+  assert.match(r23, /combined recorded path to be unique/u);
+  assert.match(r23, /final disk SHA-256 at every path to equal that entry's recorded SHA-256/u);
+  assert.match(r23, /regardless of `canonicalAxes`/u);
+  assert.match(r23, /Do not require content hashes to be globally unique/u);
+  assert.match(r23, /Add or remove no test block/u);
+  assert.match(r23, /Exact focused count remains 60 and Design Lock count remains 19/u);
+  assert.match(r23, /Chromium 667x375 process filtered to exactly `kumaverson,medic`/u);
+  assert.match(r23, /12 unique checkpoint paths, two unique contact-sheet paths/u);
+  assert.match(r23, /exactly 288 logical and unique checkpoint paths/u);
+  assert.match(r23, /exactly 48 logical and unique contact-sheet paths/u);
+  assert.match(r23, /material candidate remains the same exact seven paths/u);
+  assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(activeHandoff, /family-plus-kind filenames and fail-closed unique-path\/final-disk-SHA integrity/u);
+
+  for (const source of [r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, activeHandoff, currentCursor]) {
     assert.match(source, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT|one final Producer checkpoint/u);
     assert.match(source, /SOL_FINAL_REVIEW/u);
   }

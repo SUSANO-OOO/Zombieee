@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r19`
+- Canonical Design Lock: `V100-SOL-DL-001 r22`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-27 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 28 is the sole current execution handoff.
+Sections 1-28 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 29 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1114,3 +1114,91 @@ Design Lock Section 35 and the latest explicitly labeled Issue #172 r19 byte-loc
 The sole r19 correction is the canonical byte declaration. `tests/ci-contract.test.mjs` remains LF-only, UTF-8 with its existing BOM, and keeps exactly the already-green deployment assertion diff. Do not edit that path again, strip its BOM, normalize any file, repeat the targeted test separately, or change another design/harness/product/acceptance rule. Final focused 60/60 includes the CI source contract.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r19` and Issue #172.** Byte-lock the four r19 design/source paths, preserve all eleven candidate paths including the existing `tests/ci-contract.test.mjs` BOM, then run the final Section 35 source/byte gates and resume Section 33 browser acceptance only if green. No Luna route, retry, rerun, product edit, Ready, merge, tag, Release, or Pages action is authorized.
+
+## 29. Revision r20 — no active Luna handoff / finite deployment lifecycle
+
+Design Lock Section 36 and the latest explicitly labeled Issue #172 r20 byte-lock comment are the sole active cursor. Sections 21-28 remain immutable audit history. Producer's SOL single-owner override remains active; Luna remains stopped and receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r20 four-path packet is published, byte-locked, and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: automatic run `32673445643`, attempt 1: PR Verify `97277691325` failed five Chromium deployment setup axes with terminal 55-asset error hidden behind readiness timeout; WebKit deployment jobs `97281054120`, `97281054139`, `97281054121`, and `97281054124` clean-crashed at 667x375, 736x414, 844x340, and 932x430; Phase G was dependency-skipped
+- `LAST_GREEN_GATE`: exact r19 local source/static/Phase-G/deployment gates plus remote six enemy shards, Hosted Runner, three Stage 3 routes, WebKit deployment 844x390/1280x720, and Pages dry-run; none substitutes for required red/skipped gates
+- `CLASSIFICATION`: `QA_HARNESS_DEPLOYMENT_LIFECYCLE_OVERLOAD / EXHAUSTIVE_55_ASSET_GATE + FULL_SNAPSHOT_CHECKPOINT_POLLING + COMPOSITOR_SCREENSHOT / CLEAN_PAGE_CRASH / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `FINITE_DEPLOYMENT_EVIDENCE_LIFECYCLE / REQUIRED_ASSET_PLAN + LEAN_HOST_TURN_CHECKPOINTS + FROZEN_PRODUCTION_CANVAS_PNG / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `5`; r20 material candidate is 6; workflow-only unfiltered restoration is 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r20 publication and green Design Lock proof
+- `RESUME_FROM`: exact clean r19 candidate -> four-path r20 byte lock -> three-path finite deployment remediation -> source/static/lint/build/diff/byte -> Phase G Stage 6/24/ordered 3/3 -> Chromium six-viewports deployment -> WebKit six-viewports/48 one-attempt unit processes -> atomic iteration-6 candidate -> one automatic focused complete green -> iteration-7 unfiltered restoration -> full/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only integration/release/public-QA/closure
+
+The only app edit is one read-only `getCrawlerDeploymentProofSnapshot` method inside the existing localhost-only battle QA bridge. Its selected-fighter receipt includes only current bounded identity/position/entry facts, the current `renderAudit` record (including pose/effective opacity), and current sampled `animationPose`; it copies no render history. Continuous deployment trace/first-frame/checkpoint reads use that bounded schema on Node-host 100 ms turns; each accepted checkpoint still performs one frozen full RGBA audit. Deployment uses the existing finite local asset plan and strict-decodes each exact unit atlas once before its fixture. Setup reports terminal asset error and failed paths immediately. Accepted checkpoint evidence is serialized directly from the frozen production battle canvas to validated PNG; it does not use the full-page compositor or wait on fonts. All six checkpoints, all pixel thresholds, eight units, six viewports, hashes, contact sheets, timeouts, error channels, and first-attempt-only policy remain mandatory.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r20` and Issue #172.** Publish and byte-lock the four r20 design/source paths first. Then edit only `app/AshfallGame.tsx`, `scripts/v099-final-remediation-browser-smoke.mjs`, and `tests/v0995-runtime-evidence-contract.test.mjs`: finite deployment asset mode plus one strict unit decode, terminal compact setup, localhost-only lean deployment snapshot, Node-host checkpoint freeze with one full audit, and frozen production-canvas PNG capture. Preserve Phase G, bounded runner, workflow, CI BOM, product/gameplay, timeout, viewport, and acceptance bytes. Require the complete local matrix, one atomic iteration-6 candidate, and one automatic focused attempt completely green before workflow restoration. Any failure stays inside this SOL-owned `/goal` and returns to `SOL_DESIGN`; do not route to Luna or retry.
+
+## 30. Revision r21 — no active Luna handoff / runtime semantic checkpoint latch
+
+Design Lock Section 37 and the latest explicitly labeled Issue #172 r21 byte-lock comment are the sole active cursor. Sections 21-29 remain immutable audit history. Producer's SOL single-owner override remains active; Luna remains stopped and receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r21 four-path packet is published, byte-locked, and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: first r20 local Chromium six-viewport deployment run; five cases passed and 844x390 failed only Mayo-chan `first-visible` after `fully-inside`, while the independent lean trace proved the natural semantic interval occurred before monotonic overshoot; no retry and no later WebKit deployment
+- `LAST_GREEN_GATE`: r20 final source/static/lint/build/diff/byte, r20 Phase G Stage 6/24/ordered 3/3, and five Chromium viewport controls; comparison/diagnosis only for r21
+- `CLASSIFICATION`: `QA_HARNESS_CHECKPOINT_FREEZE_OWNERSHIP_GAP / HOST_POLL_POST_CANDIDATE_FREEZE_DID_NOT_LATCH_EXISTING_NATURAL_SEMANTIC_INTERVAL / MONOTONIC_OVERSHOOT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `RUNTIME_SEMANTIC_CHECKPOINT_LATCH / LOCALHOST_ONLY_ARM + SAME_SIMULATION_TICK_PAUSE_RECEIPT + HOST_READBACK_ONE_AUDIT / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `5`; r21 material candidate remains 6; workflow-only unfiltered restoration remains 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r21 publication and green Design Lock proof
+- `RESUME_FROM`: preserve r20 seven-path draft -> r21 four-path byte lock -> finish three-path semantic-latch correction -> source/static/lint/build/diff/byte -> Chromium 844x390 Mayo-only once -> fresh r21 Phase G Stage 6/24/ordered 3/3 -> Chromium six-viewports -> WebKit six-viewports/48 one-attempt units -> atomic iteration-6 candidate -> automatic focused complete green -> iteration-7 unfiltered restoration -> full/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only integration/release/public-QA/closure
+
+The exact correction keeps the natural simulation as owner. `armCrawlerDeploymentCheckpoint` atomically arms one existing crawler-door fighter/checkpoint and unpauses without changing position or accepting a caller threshold. The unchanged `f.gateEntering` movement path evaluates its existing semantic checkpoint after natural movement, derives the unchanged canonical minimum from `CRAWLER_DEPLOYMENT_CHECKPOINTS` (including `0.08` for `first-visible`), and on the same simulation tick pauses and records one bounded immutable receipt. Host code waits for that exact receipt, then performs one settled lean reread and one full RGBA audit. It does not pause from progress alone, add a second arm, increase sampling frequency, rewind/teleport/step the fighter, widen thresholds, extend timeout, retry, use rAF/`waitForFunction`, or weaken any of six checkpoint/pixel/PNG/contact-sheet contracts. Public-host and unarmed behavior remain unchanged.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r21` and Issue #172.** Preserve all existing r20 draft bytes and exact seven-path topology. Publish and byte-lock the four r21 design/source paths, then edit only the existing app/runner/runtime-test paths to add one localhost-only exact checkpoint arm, same-simulation-tick pause receipt, bounded snapshot readback, and host one-audit acceptance. Require load 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, syntax/lint/build/diff/byte, one fresh Chromium 844x390 Mayo-only process, fresh r21 Stage 6/24/ordered 3/3, the full Chromium matrix, and 48 fresh WebKit unit processes. Any first failure returns inside this SOL-owned `/goal` to `SOL_DESIGN` with no immediate edit/retry/rerun; do not route to Luna.
+
+## 31. Revision r22 — no active Luna handoff / receipt persistence
+
+Design Lock Section 38 and the latest explicitly labeled Issue #172 r22 byte-lock comment are the sole active cursor. Sections 21-30 remain immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, QA, retry, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r22 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: post-r21 execution audit after a first-attempt passing Chromium 844x390 Mayo-only process; internal stable checkpoint receipts were not copied into serialized checkpoint results; later Phase G/full deployment/commit/push not run
+- `LAST_GREEN_GATE`: r21 source/static and Mayo 6/6 pixel/PNG/contact-sheet control; not final r22 evidence
+- `CLASSIFICATION`: `QA_EVIDENCE_PERSISTENCE_GAP / VERIFIED_RUNTIME_CHECKPOINT_RECEIPT_OMITTED_FROM_SUMMARY / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CHECKPOINT_RECEIPT_SERIALIZATION / EXACT_ACCEPTED_RECEIPT + STATIC_AND_RUNTIME_SUMMARY_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `5`; material candidate 6; workflow-only restoration 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r22 publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact r21 seven-path draft/app bytes -> r22 four-path byte lock -> runner/test receipt serialization only -> source/static/lint/build/diff/byte -> one new Chromium 844x390 Mayo-only process with five persisted receipts -> fresh Phase G Stage 6/24/ordered 3/3 -> full Chromium -> full WebKit -> atomic iteration-6 candidate -> automatic focused complete green -> unfiltered/full/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release loop
+
+The r21 runtime semantic latch is accepted and must remain byte-identical. For the five checkpoints after `fully-inside`, the runner copies the already-verified bounded receipt into each checkpoint result only after asserting exact schema, fighter identity/kind, checkpoint, x/y, progress, and canonical minimum. `fully-inside` stores `checkpointReceipt: null`. No ref/history/full snapshot, product state, threshold input, second arm, retry, or extra attempt is allowed.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r22` and Issue #172.** Preserve the r21 app latch and all seven draft paths. Publish/byte-lock the four r22 design/source paths, then edit only the runner checkpoint-result serializer and its existing runtime source test. Require exact 60/60, 12/12, 19/19, syntax/lint/build/diff/byte, and one new Chromium 844x390 Mayo-only process whose summary has null for `fully-inside` plus five exact persisted receipts. Then run fresh Phase G Stage 6/24/ordered 3/3 and the full Chromium/WebKit deployment gates. Any first failure returns to `SOL_DESIGN` in this same `/goal` without immediate edit/retry/rerun; do not route to Luna.
+
+## 32. Revision r23 — no active Luna handoff / unique persisted deployment artifacts
+
+Design Lock Section 39 and the latest explicitly labeled Issue #172 r23 byte-lock comment are the sole active cursor. Sections 21-31 remain immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, QA, retry, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r23 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `4191afe2fe84283125c0e9ec817185c94685630c`
+- `LAST_AUDITED_TREE`: `cb808fff195d58fd96718cb8381f7f9091e9f313`
+- `FAILED_GATE`: first r22 full Chromium deployment post-run artifact readback; 288 logical PNG records mapped to only 252 unique paths and 48 logical sheets mapped to only 42 unique paths because Kumaverson and Medic shared family-only destinations; later Medic bytes overwrote every Kumaverson destination; no WebKit full deployment/commit/push
+- `LAST_GREEN_GATE`: r22 final source/static, bounded Mayo receipt/PNG control, and fresh r22 Stage 6 3/3, Stage 24 3/3, ordered trio 3/3. Full Chromium's exit-zero result is invalid evidence and all r22 controls are diagnosis-only after runner changes
+- `CLASSIFICATION`: `QA_EVIDENCE_ARTIFACT_IDENTITY_COLLISION / SHARED_FAMILY_FILENAME + LAST_WRITER_WINS_PNG_AND_CONTACT_SHEET_OVERWRITE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `DEPLOYMENT_ARTIFACT_UNIQUE_IDENTITY_AND_INTEGRITY / FAMILY_PLUS_KIND_FILENAME + PRE-PASS_UNIQUE_PATH_AND_DISK_SHA_ASSERTION / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `5`; material candidate remains 6; workflow-only restoration remains 7
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`; `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r23 publication and green Design Lock proof
+- `RESUME_FROM`: preserve exact r22 seven-path draft/app bytes -> r23 four-path byte lock -> runner/test family-plus-kind paths and pre-pass unique-path/final-disk-SHA integrity -> source/static/lint/build/diff/byte -> Chromium 667x375 Kumaverson+Medic once -> fresh r23 Stage 6/24/ordered 3/3 -> full Chromium 288+48 unique/disk-verified artifacts -> 48 one-attempt WebKit units -> atomic iteration-6 candidate -> automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human -> clean fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release loop
+
+The correction is evidence-only. Checkpoint paths must include `${unit.family}-${unit.kind}` and contact sheets must include `${family}-${kind}`. Before terminal pass, the runner inventories all recorded checkpoint and sheet paths, requires logical counts, combined path uniqueness, non-empty regular files, and exact recorded-to-final-disk SHA-256 equality, and persists the bounded integrity result in `summary.json`. This applies even to filtered/noncanonical runs. Equal content hashes are allowed; equal paths are not. Product, app bytes, gameplay, render, checkpoint, pixel, timeout, retry, viewport, Phase G, workflow, public/package, and CI-BOM contracts do not change.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r23` and Issue #172.** Preserve all seven current draft paths and the r21 app bytes. Publish/byte-lock the four r23 design/source paths, then edit only the deployment runner and its existing runtime source test to add family-plus-kind filenames and fail-closed unique-path/final-disk-SHA integrity. Require 60/60, 12/12, 19/19, syntax/lint/build/diff/byte, one fresh Chromium 667x375 Kumaverson+Medic process with 12+2 unique verified artifacts, fresh r23 Stage 6/24/ordered 3/3, full Chromium with 288+48 unique verified artifacts, and 48 fresh WebKit unit processes. Any first failure returns to `SOL_DESIGN` in this same `/goal`; do not route to Luna, retry, rerun, micro-patch, commit, push, or promote.

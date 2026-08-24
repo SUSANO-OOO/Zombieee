@@ -46,6 +46,7 @@ import {
   resetPressureLatchRuntime,
 } from "./battleMusicRuntime.js";
 import {
+  CRAWLER_DEPLOYMENT_CHECKPOINTS,
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
   crawlerDeploymentCompositePlan,
@@ -7903,6 +7904,24 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // battle bridge and is released with the same proof pause control.
   const qaFreezeNextCrawlerDeploymentKindRef = useRef<UnitKind | null>(null);
   const qaFrozenCrawlerDeploymentFighterIdRef = useRef<number | null>(null);
+  const qaArmedCrawlerDeploymentCheckpointRef = useRef<{
+    fighterId: number;
+    checkpoint: string;
+    minimumProgress: number;
+  } | null>(null);
+  const qaCrawlerDeploymentCheckpointReceiptRef = useRef<{
+    schema: "v099-crawler-deployment-checkpoint-receipt/v1";
+    fighterId: number;
+    kind: UnitKind;
+    checkpoint: string;
+    x: number;
+    y: number;
+    computedProgress: number;
+    battleTime: number;
+    gateEntering: boolean;
+    combatReady: boolean;
+    entryRampCleared: boolean;
+  } | null>(null);
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const navigationRouteReleaseAuditRef = useRef<Array<{
@@ -9169,10 +9188,51 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       setRepresentativeSixProofPaused: (requestedPaused = true) => {
         const g = gameRef.current;
-        if (!requestedPaused) qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        if (!requestedPaused) {
+          qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+          qaArmedCrawlerDeploymentCheckpointRef.current = null;
+          qaCrawlerDeploymentCheckpointReceiptRef.current = null;
+        }
         g.last = performance.now();
         g.paused = Boolean(requestedPaused);
         return g.paused;
+      },
+      armCrawlerDeploymentCheckpoint: (fighterId: number, checkpoint: string) => {
+        const g = gameRef.current;
+        const checkpointDefinition = CRAWLER_DEPLOYMENT_CHECKPOINTS.find((candidate) => (
+          candidate.id !== "fully-inside" && candidate.id === checkpoint
+        ));
+        const fighter = g.fighters.find((candidate) => (
+          candidate.id === fighterId
+          && candidate.side === "human"
+          && candidate.spawnPortalId === "crawler-door"
+          && candidate.gateEntering === true
+        ));
+        if (!fighter || !checkpointDefinition) {
+          return {
+            schema: "v099-crawler-deployment-checkpoint-arm/v1",
+            armed: false,
+            fighterId,
+            checkpoint,
+          };
+        }
+        qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        qaCrawlerDeploymentCheckpointReceiptRef.current = null;
+        qaArmedCrawlerDeploymentCheckpointRef.current = {
+          fighterId: fighter.id,
+          checkpoint: checkpointDefinition.id,
+          minimumProgress: checkpointDefinition.progress,
+        };
+        g.last = performance.now();
+        g.paused = false;
+        return {
+          schema: "v099-crawler-deployment-checkpoint-arm/v1",
+          armed: true,
+          fighterId: fighter.id,
+          kind: fighter.kind,
+          checkpoint: checkpointDefinition.id,
+          minimumProgress: checkpointDefinition.progress,
+        };
       },
       armRepresentativeSixPhasePause: (
         ownerId: number,
@@ -9953,6 +10013,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.qaNextDeploymentLane = null;
         qaFreezeNextCrawlerDeploymentKindRef.current = null;
         qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        qaArmedCrawlerDeploymentCheckpointRef.current = null;
+        qaCrawlerDeploymentCheckpointReceiptRef.current = null;
         g.crawlerDoor = createCrawlerDoorRuntime();
         g.battlefieldObjects = [];
         g.energy = COMMAND_MAX;
@@ -11850,6 +11912,72 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           graphicsProfileRef.current,
           canvasTransformRef.current,
         );
+      },
+      getCrawlerDeploymentProofSnapshot: ({
+        fighterId = null,
+        kind = null,
+      }: { fighterId?: number | null; kind?: UnitKind | null } = {}) => {
+        const g = gameRef.current;
+        const fighter = g.fighters.find((candidate) => (
+          candidate.side === "human"
+          && candidate.spawnPortalId === "crawler-door"
+          && (fighterId !== null
+            ? candidate.id === fighterId
+            : kind !== null ? candidate.kind === kind : true)
+        )) ?? null;
+        const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
+        const doorX = Number(battleSpace.crawler.door.x);
+        const rampX = fighter
+          ? Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1)
+          : Number(battleSpace.crawler.rampFoot.x);
+        const computedProgress = fighter
+          ? Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)))
+          : null;
+        const checkpointArm = qaArmedCrawlerDeploymentCheckpointRef.current;
+        const checkpointReceipt = qaCrawlerDeploymentCheckpointReceiptRef.current;
+        return {
+          schema: "v099-crawler-deployment-snapshot/v1",
+          screen,
+          time: g.time,
+          running: g.running,
+          paused: g.paused,
+          over: g.over,
+          banner: g.banner,
+          doorX,
+          rampX,
+          computedProgress,
+          checkpointArm: fighter && checkpointArm?.fighterId === fighter.id
+            ? { ...checkpointArm }
+            : null,
+          checkpointReceipt: fighter && checkpointReceipt?.fighterId === fighter.id
+            ? { ...checkpointReceipt }
+            : null,
+          fighter: fighter ? {
+            id: fighter.id,
+            side: fighter.side,
+            kind: fighter.kind,
+            x: fighter.x,
+            y: fighter.y,
+            combatReady: fighter.combatReady,
+            gateEntering: fighter.gateEntering,
+            spawnPortalId: fighter.spawnPortalId ?? null,
+            combatReadyX: fighter.combatReadyX,
+            combatReadyY: fighter.combatReadyY ?? fighter.y,
+            entryRampX: fighter.entryRampX ?? null,
+            entryRampY: fighter.entryRampY ?? null,
+            entryRampCleared: fighter.entryRampCleared ?? true,
+            renderAudit: fighterRenderAudit.get(fighter)
+              ? { ...fighterRenderAudit.get(fighter)! }
+              : null,
+            animationPose: {
+              ...sampleAnimationClip(
+                fighter.kind,
+                fighter.animationPresentation.state,
+                fighter.animationPresentation.elapsedSeconds,
+              ).pose,
+            },
+          } : null,
+        };
       },
       getPhaseGCombatSnapshot: () => {
         const g = gameRef.current;
@@ -18547,6 +18675,36 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.gateEntering = false;
               f.combatReady = true;
               f.cooldown = Math.max(f.cooldown, .18);
+            }
+            const armedCheckpoint = qaArmedCrawlerDeploymentCheckpointRef.current;
+            if (armedCheckpoint?.fighterId === f.id) {
+              const semanticCheckpoint = crawlerDeploymentPlanForFighter(f).checkpoint;
+              const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
+              const deploymentDoorX = Number(battleSpace.crawler.door.x);
+              const deploymentRampX = Number(f.entryRampX ?? f.combatReadyX ?? battleSpace.crawler.rampFoot.x);
+              const computedProgress = Math.max(
+                0,
+                Math.min(1, (f.x - deploymentDoorX) / Math.max(1, deploymentRampX - deploymentDoorX)),
+              );
+              if (semanticCheckpoint === armedCheckpoint.checkpoint
+                && computedProgress + 1e-6 >= armedCheckpoint.minimumProgress) {
+                qaFrozenCrawlerDeploymentFighterIdRef.current = f.id;
+                g.paused = true;
+                qaCrawlerDeploymentCheckpointReceiptRef.current = Object.freeze({
+                  schema: "v099-crawler-deployment-checkpoint-receipt/v1",
+                  fighterId: f.id,
+                  kind: f.kind,
+                  checkpoint: semanticCheckpoint,
+                  x: f.x,
+                  y: f.y,
+                  computedProgress,
+                  battleTime: g.time,
+                  gateEntering: f.gateEntering,
+                  combatReady: f.combatReady,
+                  entryRampCleared: f.entryRampCleared === true,
+                });
+                qaArmedCrawlerDeploymentCheckpointRef.current = null;
+              }
             }
             continue;
           }
