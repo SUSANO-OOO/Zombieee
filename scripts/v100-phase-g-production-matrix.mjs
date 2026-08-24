@@ -2954,6 +2954,41 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       },
     })
     : null;
+  const telemetryCaseDetails = {
+    owner: "phase-g-battle-extra",
+    variant: checkpointContract?.variant ?? state,
+    engine: engineName,
+    viewport: viewportLabel(viewport),
+    browserSessionId: browserSession.sessionId,
+    captureOrdinal: browserSession.captureOrdinal,
+  };
+  const setTelemetryIdle = () => hostResourceTelemetry?.setContext({
+    ...telemetryCaseDetails,
+    operationId: "phase-g-idle",
+    operationStatus: "idle",
+  });
+  const runPhaseGTelemetryOperation = async (operationId, details, operation) => {
+    const operationContext = {
+      ...telemetryCaseDetails,
+      ...details,
+      operationId,
+      operationStatus: "running",
+    };
+    hostResourceTelemetry?.setContext(operationContext);
+    hostResourceTelemetry?.event("operation-begin", operationContext);
+    try {
+      const result = await operation();
+      hostResourceTelemetry?.event("operation-end", { ...operationContext, operationStatus: "completed" });
+      setTelemetryIdle();
+      return result;
+    } catch (error) {
+      const failedContext = { ...operationContext, operationStatus: "failed", error: String(error) };
+      hostResourceTelemetry?.event("operation-end", failedContext);
+      hostResourceTelemetry?.setContext(failedContext);
+      throw error;
+    }
+  };
+  setTelemetryIdle();
   hostResourceTelemetry?.event("page-created", {
     variant: checkpointContract?.variant ?? null,
     browserSessionId: browserSession.sessionId,
@@ -2976,19 +3011,35 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     : null;
   checkpointRecorder?.attach();
   try {
-    const captureMeta = await configure(page) ?? {};
-    const productionContract = await productionStateContract(page, state);
+    const captureMeta = await runPhaseGTelemetryOperation(
+      "phase-g/configure",
+      { state },
+      async () => await configure(page) ?? {},
+    );
+    const productionContract = await runPhaseGTelemetryOperation(
+      "phase-g/production-contract-readback",
+      { state },
+      () => productionStateContract(page, state),
+    );
     invariant(productionContract.ok, `${label} production state contract failed: ${JSON.stringify(productionContract)}`);
     checkpointRecorder?.setLatestReadableState(productionContract);
     checkpointRecorder?.setAwaiting("causal-proof", { predicate: "source -> contact/travel -> reaction -> audio" });
     let combatCausalProof = null;
     try {
       if (state.startsWith("battle")) {
-        combatCausalProof = await collectCombatCausalProof(page, { durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs });
+        combatCausalProof = await runPhaseGTelemetryOperation(
+          "phase-g/causal-proof",
+          { state, durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs },
+          () => collectCombatCausalProof(page, { durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs }),
+        );
       }
     } finally {
       if (state.startsWith("battle")) {
-        await page.evaluate(() => window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()).catch(() => {});
+        await runPhaseGTelemetryOperation(
+          "phase-g/observer-stop",
+          { state },
+          () => page.evaluate(() => window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()).catch(() => {}),
+        );
       }
     }
     if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
@@ -2999,10 +3050,21 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         stages: combatCausalProof?.stages ?? null,
       });
     }
-    const screenshot = await saveScreenshot(page, imagePath(label), label);
+    const screenshot = await runPhaseGTelemetryOperation(
+      "phase-g/production-screenshot",
+      { state, output: relativeEvidence(imagePath(label)) },
+      () => saveScreenshot(page, imagePath(label), label),
+    );
     checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
-    const overflow = await overflowAudit(page);
-    const runtime = await page.evaluate((battleState) => {
+    const overflow = await runPhaseGTelemetryOperation(
+      "phase-g/overflow-audit",
+      { state },
+      () => overflowAudit(page),
+    );
+    const runtime = await runPhaseGTelemetryOperation(
+      "phase-g/runtime-readback",
+      { state },
+      () => page.evaluate((battleState) => {
       const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
       if (!snapshot) return { screen: null };
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -3032,16 +3094,26 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         manualAbilityReceipts: snapshot.manualAbilityReceipts ?? [],
         phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
       };
-    }, state.startsWith("battle"));
-    invariant(overflow.every(({ delta }) => delta <= 1), `${label} horizontal overflow: ${JSON.stringify(overflow)}`);
-    invariant(await page.locator("body").evaluate((body) => body.innerText.trim().length > 0), `${label} blank body`);
-    invariant(diagnostics.consoleErrors.length === 0, `${label} console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
-    invariant(diagnostics.pageErrors.length === 0, `${label} page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
-    invariant(diagnostics.httpFailures.length === 0, `${label} HTTP failures: ${JSON.stringify(diagnostics.httpFailures)}`);
-    invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
-    const checkpointEvidence = checkpointRecorder?.snapshot() ?? null;
-    if (checkpointEvidence) invariant(checkpointEvidence.unresolvedCheckpoints.length === 0, `${label} checkpoint recorder incomplete: ${JSON.stringify(checkpointEvidence)}`);
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
+      }, state.startsWith("battle")),
+    );
+    const finalDiagnostics = await runPhaseGTelemetryOperation(
+      "phase-g/final-diagnostics",
+      { state },
+      async () => {
+        invariant(overflow.every(({ delta }) => delta <= 1), `${label} horizontal overflow: ${JSON.stringify(overflow)}`);
+        invariant(await page.locator("body").evaluate((body) => body.innerText.trim().length > 0), `${label} blank body`);
+        invariant(diagnostics.consoleErrors.length === 0, `${label} console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
+        invariant(diagnostics.pageErrors.length === 0, `${label} page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
+        invariant(diagnostics.httpFailures.length === 0, `${label} HTTP failures: ${JSON.stringify(diagnostics.httpFailures)}`);
+        invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
+        const checkpointEvidence = checkpointRecorder?.snapshot() ?? null;
+        if (checkpointEvidence) invariant(checkpointEvidence.unresolvedCheckpoints.length === 0, `${label} checkpoint recorder incomplete: ${JSON.stringify(checkpointEvidence)}`);
+        const pwaOfferShown = await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown");
+        return { checkpointEvidence, pwaOfferShown };
+      },
+    );
+    const { checkpointEvidence, pwaOfferShown } = finalDiagnostics;
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown, evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
     return screenshot;
   } catch (error) {
     const primaryError = pageCrashPrimary
@@ -3052,39 +3124,46 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         cause: error,
       })
       : error;
-    const failureState = await page.evaluate((battleState) => ({
-      url: location.href,
-      phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
-      surface: document.querySelector(".v100-shell")?.getAttribute("data-v100-surface") ?? null,
-      body: document.body.innerText.slice(0, 1600),
-      phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
-      snapshot: (() => {
-        const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
-        return snapshot ? {
-          screen: snapshot.screen,
-          stageId: snapshot.stageId,
-          time: snapshot.time,
-          wave: snapshot.wave,
-          fighters: snapshot.fighters?.map((fighter) => ({
-            side: fighter.side,
-            kind: fighter.kind,
-            hp: fighter.hp,
-            x: fighter.x,
-            combatReady: fighter.combatReady,
-            gateEntering: fighter.gateEntering,
-            attack: fighter.attack,
-            attackWindup: fighter.attackWindup,
-            attackSequence: fighter.attackSequence,
-            enemyVfxPhase: fighter.enemyVfx?.phase,
-            enemyVfxAttacking: fighter.enemyVfx?.attacking,
-          })) ?? [],
-        } : null;
-      })(),
-      phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
-    }), state.startsWith("battle")).catch(() => null);
-    const checkpointFailure = checkpointRecorder
-      ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics })
-      : null;
+    const { failureState, checkpointFailure } = await runPhaseGTelemetryOperation(
+      "phase-g/final-diagnostics",
+      { state, diagnosticOutcome: "failure" },
+      async () => {
+        const failureState = await page.evaluate((battleState) => ({
+          url: location.href,
+          phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
+          surface: document.querySelector(".v100-shell")?.getAttribute("data-v100-surface") ?? null,
+          body: document.body.innerText.slice(0, 1600),
+          phaseGCombatSnapshotProfile: window.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ ?? null,
+          snapshot: (() => {
+            const snapshot = battleState ? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ : null;
+            return snapshot ? {
+              screen: snapshot.screen,
+              stageId: snapshot.stageId,
+              time: snapshot.time,
+              wave: snapshot.wave,
+              fighters: snapshot.fighters?.map((fighter) => ({
+                side: fighter.side,
+                kind: fighter.kind,
+                hp: fighter.hp,
+                x: fighter.x,
+                combatReady: fighter.combatReady,
+                gateEntering: fighter.gateEntering,
+                attack: fighter.attack,
+                attackWindup: fighter.attackWindup,
+                attackSequence: fighter.attackSequence,
+                enemyVfxPhase: fighter.enemyVfx?.phase,
+                enemyVfxAttacking: fighter.enemyVfx?.attacking,
+              })) ?? [],
+            } : null;
+          })(),
+          phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
+        }), state.startsWith("battle")).catch(() => null);
+        const checkpointFailure = checkpointRecorder
+          ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics })
+          : null;
+        return { failureState, checkpointFailure };
+      },
+    );
     const failure = new Error(`${label} failed: ${String(primaryError)} secondary=${pageCrashPrimary ? String(error) : "none"} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)} checkpointEvidence=${JSON.stringify(checkpointFailure)}`);
     failure.cause = primaryError;
     failure.phaseGFailure = {

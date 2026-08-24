@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`e8cfc3b557e9316a33186935c98d110f33bcc5a9`、tree `0bbffaf3d14114985bf9c4ba7ddca5ae0524f195`。これはr34設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`a12d738ddb276c096fad6eee6490e78cb2914a51`、tree `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`。これはr35設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r34` Sections 28-50。r30のapproved-pixel atlas/PWA、r31のfirst-96 reaction history、r32のobserver lifetime、r33のidentity-bound edge-target reactionを保持する。r33 iteration-15のautomatic CI #929／`32747475096`は、PR Verifyの三stale byte snapshots、Stage 3 final-candidateの二clean target losses、deployment 667x375／932x430のWPE WebContent disappearance/replacementでterminal red。r34は承認済みbyte delta、失敗を出した三job familyのdigest-pinned Playwright 1.56.1 runtime envelope、exact preflight、Stage 3 process telemetryだけを一体で補正する。製品／asset／package/browser version／timeout／retry／viewport／acceptanceは不変。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r35` Sections 28-51。r30のapproved-pixel atlas/PWA、r31のfirst-96 reaction history、r32のobserver lifetime、r33のidentity-bound edge-target reaction、r34のrelease snapshotsとdigest-pinned Playwright runtimeを保持する。r34 iteration-16のautomatic CI #930／`32756548112`は、Hosted、Phase G Stage 6、deployment 667x375／844x390／844x340／932x430でWPE WebContentを失いterminal red。六terminal axisはWPE `D` stateとelevated host I/O PSIを共有し、26 green deployment controlsは`D` 0だが、kernel wait ownerは未観測。r35は`wchan`／proc I/O／block-I/O delay／exact operation spanだけを一回の有限diagnosticへ追加し、結果がgreenでもSOL_DESIGNへ戻す。製品／workflow／asset／browser／timeout／retry／acceptanceは不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -135,12 +135,15 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r34 runtime classification：Stage 3 final-candidate `97503465033`／artifact `9528828235`は既存二attemptともclean target-closed。exact base `97503464988`とparent candidate controlはgreenで、r33 diffにStage 3 loaded product pathはないため、`REMOTE_WEBKIT_STAGE3_TARGET_LIFECYCLE_TERMINATION / TWO_CLEAN_TARGET_CLOSED_ATTEMPTS + EXACT_BASE_AND_PARENT_CONTROLS_GREEN / NATIVE_PROCESS_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`。deployment 667x375 `97507755900`／artifact `9529101582`と932x430 `97507755990`／artifact `9529738512`は、異なるunit/checkpointでWPE WebContentがD state後に消失・置換し、MiniBrowser/network生存、fatal 0、OOM/pid delta 0、失敗RSSはgreen control以下。aggregateは`REMOTE_HOSTED_WEBKIT_NATIVE_RUNTIME_ENVELOPE / MULTI_HARNESS_TARGET_PROCESS_LOSS + UNPINNED_SYSTEM_DEPENDENCY_SURFACE / DESIGN_CHANGE_REQUIRED`。
 - r34 runtime remediation：`MATCHED_PLAYWRIGHT_RUNTIME_ENVELOPE / DIGEST_PINNED_OFFICIAL_V1_56_1_NOBLE + INIT_IPC + EXACT_PACKAGE_BROWSER_PREFLIGHT + STAGE3_PROCESS_TELEMETRY / DESIGN_CHANGE_REQUIRED`。Phase G／Stage 3／deploymentだけをofficial 1.56.1 noble index digest `f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a`、`--init --ipc=host`へ固定し、dynamic browser installをexact preflightへ置換する。package1.56.1、Chromium1194／141.0.7390.37、WebKit2215／26.0、timeout／attempt／acceptanceは不変。Stage 3 bounded parentに既存process telemetryをfail-closedで接続する。
 - 同runでsix enemy shards、Hosted、Stage 3 entrance/base、deployment 736x414／844x390／844x340／1280x720はgreen。1280 artifact `9529897014`／SHA-256 `236ae51abd65600c3262f483f2e05f118cc4904436ab11213794a370a5aca597`。Phase Gとcanonical HUD 48 caseはdependency-skipped。Pages preview `32747475124`はbuild success／deploy skipped。retry／rerunなし。
+- r35 terminal input：r34 HEAD `a12d738ddb276c096fad6eee6490e78cb2914a51`／tree `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`のautomatic CI #930／run `32756548112`はterminal failure。PR Verifyとsix enemy shards、deployment 736x414／1280x720はgreen。Hosted `97529855291`、Phase G `97531166109`、deployment 667x375 `97531211614`、844x390 `97531211541`、844x340 `97531211559`、932x430 `97531211515`が異なるproduction boundaryでWPE WebContentを失った。Stage 3とcanonical HUDはdependency-skipped。Pages preview `32756547734`はbuild success／deploy skipped。retry／rerun／editなし。
+- r35 classification：`REMOTE_WEBKIT_HOST_IO_WAIT_CORRELATION / SIX_TERMINAL_AXES_WITH_WPE_D_STATE + ELEVATED_HOST_IO_PSI / KERNEL_WAIT_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`；`R34_RUNTIME_HYPOTHESIS_FALSIFIED / PINNED_OFFICIAL_RUNTIME_STILL_LOSES_WPE_ACROSS_HOSTED_PHASE_G_DEPLOYMENT / DESIGN_CHANGE_REQUIRED`。六terminal axesは合計87 `D` samples、26 green deployment unit controlsは`D` 0。failed host I/O `full avg10` peakは32.40-83.16、green controlsは最大15.71。OOM/pid deltaは全件0で、green側が同等以上のRSSを持つ例がある。従ってmemory threshold／unit／viewport／checkpoint／causal／asset-ready ownerは除外するが、file I/O／screenshot IPC／cache／audio等はまだ断定しない。
+- r35 diagnostic：`WEBKIT_KERNEL_WAIT_OWNER_DIAGNOSTIC / D_STATE_WCHAN + PROC_IO_AND_BLKIO + EXACT_OPERATION_SPANS / DESIGN_CHANGE_REQUIRED`。exact ten pathsのiteration 17でnested wait-ownerと三harness operation contextだけを追加する。workflow／container／browser／timeout／retry／acceptance／productは変更禁止。automatic resultはgreenを含め常にSOL_DESIGNへ戻し、`DIAGNOSTIC_COMPLETE`／`DIAGNOSTIC_EVIDENCE_INVALID`／`DIAGNOSTIC_NO_REPRODUCTION`のいずれかをSOLが分類してowner-specific r36をlockする。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r34 Section 50
+## 6. Version 1.0.0 execution cursor — r35 Section 51
 
-- `LOOP_ITERATION`: r33 iteration 15はautomatic CI #929でterminal red。r34 exact eleven-path correctionはiteration 16、focused完全green後のworkflow-only unfiltered restorationはiteration 17
-- `SAME_GATE_REPEAT_COUNT`: `7` for required Phase G job
+- `LOOP_ITERATION`: r34 iteration 16はautomatic CI #930でterminal red。r35 diagnosticはiteration 17、owner-specific remediationはno earlier than iteration 18、workflow-only unfiltered restorationはno earlier than iteration 19
+- `SAME_GATE_REPEAT_COUNT`: `8` for required Phase G job
 - `DEFERRED_STAGE24_REPEAT_COUNT`: `4`
 - `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
 - `R26_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
@@ -167,21 +170,28 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - `R33_REMOTE_DEPLOYMENT_WEBCONTENT_TERMINATION_COUNT`: `2` of six viewports
 - `R33_REMOTE_DEPLOYMENT_GREEN_COUNT`: `4` of six viewports
 - `R33_REMOTE_CANONICAL_HUD_DEPENDENCY_SKIPPED_COUNT`: `1` aggregate matrix／`48` cases unexecuted
-- `ROLE_LOCK`: `SOL_DESIGN` until r34 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；any failed gate returns to `SOL_DESIGN`
-- `LAST_AUDITED_HEAD`: `e8cfc3b557e9316a33186935c98d110f33bcc5a9`
-- `LAST_AUDITED_TREE`: `0bbffaf3d14114985bf9c4ba7ddca5ae0524f195`
-- `FAILED_GATE`: terminal automatic CI #929／`32747475096`。PR Verify `97496346503`三stale byte snapshots；Stage 3 final-candidate `97503465033`二clean target losses；deployment 667x375 `97507755900`と932x430 `97507755990`のWPE WebContent disappearance/replacement；Phase Gとcanonical HUD dependency-skipped。retry／rerun／editなし
-- `LAST_GREEN_GATE`: exact r33 local source／static／material／18 browser captures、same remote provenance／whitespace／lint／content／build、six enemy shards、Hosted、Stage 3 entrance/base、four deployment viewports、Pages preview `32747475124` build success／deploy skipped。r34 promotionにはすべてcomparison-only
-- `CLASSIFICATION`: `SOL_OWNED_RELEASE_PREP_BYTE_SNAPSHOT_DRIFT / APPROVED_SIX_ATLAS_TRANSPORT_REDUCTION_NOT_PROPAGATED_TO_EXACT_UPDATE_BYTE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`；`REMOTE_HOSTED_WEBKIT_NATIVE_RUNTIME_ENVELOPE / MULTI_HARNESS_TARGET_PROCESS_LOSS + UNPINNED_SYSTEM_DEPENDENCY_SURFACE / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `RELEASE_PREP_APPROVED_SIZE_SNAPSHOT_PROPAGATION / ONE_SIX_PATH_TRANSPORT_DELTA + ALL_COUNTS_HASH_REUSE_AND_PAYLOAD_VERIFICATION_PRESERVED / DESIGN_CHANGE_REQUIRED`；`MATCHED_PLAYWRIGHT_RUNTIME_ENVELOPE / DIGEST_PINNED_OFFICIAL_V1_56_1_NOBLE + INIT_IPC + EXACT_PACKAGE_BROWSER_PREFLIGHT + STAGE3_PROCESS_TELEMETRY / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: exact clean r33 HEAD/tree -> r34 four-path byte lock -> exact seven-path remediation -> focused 35/35 + full 1,195/1,195 + static gates -> atomic exact eleven-path iteration-16 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-17 restoration retaining pinned envelope -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r34 publication and green Design Lock proof
+- `R34_REMOTE_HOSTED_WEBCONTENT_TERMINATION_COUNT`: `1`
+- `R34_REMOTE_PHASE_G_STAGE6_WEBCONTENT_TERMINATION_COUNT`: `1`
+- `R34_REMOTE_DEPLOYMENT_WEBCONTENT_TERMINATION_COUNT`: `4` of six viewports
+- `R34_REMOTE_DEPLOYMENT_GREEN_COUNT`: `2` of six viewports
+- `R34_REMOTE_WPE_D_STATE_SAMPLE_COUNT`: `87` across six terminal axes；`0` across 26 green deployment unit controls
+- `R34_REMOTE_STAGE3_DEPENDENCY_SKIPPED_COUNT`: `1` aggregate／`3` cases unexecuted
+- `R34_REMOTE_CANONICAL_HUD_DEPENDENCY_SKIPPED_COUNT`: `1` aggregate matrix／`48` cases unexecuted
+- `ROLE_LOCK`: `SOL_DESIGN` until r35 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；every automatic diagnostic result returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `a12d738ddb276c096fad6eee6490e78cb2914a51`
+- `LAST_AUDITED_TREE`: `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`
+- `FAILED_GATE`: terminal automatic CI #930／`32756548112`。Hosted `97529855291`、Phase G `97531166109`、deployment 667x375 `97531211614`、844x390 `97531211541`、844x340 `97531211559`、932x430 `97531211515`がWPE WebContentを喪失；Stage 3とcanonical HUD dependency-skipped。retry／rerun／editなし
+- `LAST_GREEN_GATE`: exact r34 local focused 35/35／Design Lock 19/19／full 1,195/1,195／static gates、remote PR Verify、six enemy shards、deployment 736x414／1280x720、Pages preview `32756547734` build success／deploy skipped。すべてcomparison-only
+- `CLASSIFICATION`: `REMOTE_WEBKIT_HOST_IO_WAIT_CORRELATION / SIX_TERMINAL_AXES_WITH_WPE_D_STATE + ELEVATED_HOST_IO_PSI / KERNEL_WAIT_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`；`R34_RUNTIME_HYPOTHESIS_FALSIFIED / PINNED_OFFICIAL_RUNTIME_STILL_LOSES_WPE_ACROSS_HOSTED_PHASE_G_DEPLOYMENT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_KERNEL_WAIT_OWNER_DIAGNOSTIC / D_STATE_WCHAN + PROC_IO_AND_BLKIO + EXACT_OPERATION_SPANS / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact clean r34 HEAD/tree -> r35 four-path byte lock -> exact six-path diagnostic implementation -> focused 34/34 + full/static gates -> atomic exact ten-path iteration-17 candidate -> one automatic diagnostic run -> always return to SOL_DESIGN -> owner-specific r36 remediation -> complete focused automatic green -> workflow-only restoration no earlier than iteration 19 -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r35 publication and green Design Lock proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25 fresh-process／cooperative deployment、r26 live-target continuity、r28 fail-closed process evidence、r29 QA case／region ownership、r30 approved-pixel atlas/PWA bytes、r31 reaction history／exact command、r32 observer lifetime、r33 identity-bound reactionを再作成せず保持する。r34は承認済み六transport delta、failure-bearing三WebKit job familyのmatched runtime envelope、exact preflight、Stage 3 process telemetryだけを補正し、product／manifest／update planner／counts／hash reuse／payload verification／browser version／acceptanceを変更しない。automatic focused remote完全green後だけdeferred countersを0へresetし、pinned envelopeを保持したworkflow-only iteration-17 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25 fresh-process／cooperative deployment、r26 live-target continuity、r28 fail-closed process evidence、r29 QA case／region ownership、r30 approved-pixel atlas/PWA bytes、r31 reaction history／exact command、r32 observer lifetime、r33 identity-bound reaction、r34 release snapshots／pinned runtimeを再作成せず保持する。r35はhost-only wait-ownerとexact operation contextだけを追加し、product／workflow／container／manifest／browser／timeout／retry／acceptanceを変更しない。automatic diagnostic結果はgreenでもSOL_DESIGNへ戻り、owner-specific r36完全green後だけdeferred countersをresetしてworkflow-only restoration no earlier than iteration 19とSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-50のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r34を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-51のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r35を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

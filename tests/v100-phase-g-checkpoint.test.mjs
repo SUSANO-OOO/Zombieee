@@ -346,7 +346,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(causalProofBuilder, /targetReaction: targetReactionKeys\.size > 0/u);
   assert.doesNotMatch(causalProofBuilder, /channel: "damage-text"/u);
   assert.doesNotMatch(causalProofBuilder, /attackWindup[^\n]*reactionKeys|pendingWeaponHits[^\n]*reactionKeys|audioCueIds[^\n]*reactionKeys/u);
-  const captureFailure = source.match(/const failureState = await page\.evaluate[\s\S]+?(?=\n    const checkpointFailure)/u)?.[0] ?? "";
+  const captureFailure = source.match(/const \{ failureState, checkpointFailure \} = await runPhaseGTelemetryOperation[\s\S]+?(?=\n    const failure = new Error)/u)?.[0] ?? "";
   assert.match(captureFailure, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.doesNotMatch(captureFailure, /__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/u);
   assert.match(captureFailure, /phaseGActivity: window\.__PHASE_G_COMBAT_ACTIVITY__ \?\? null/u);
@@ -422,9 +422,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
   assert.match(captureState, /browserSession, hostResourceTelemetry \}\)/u);
   assert.match(captureState, /reactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
-  assert.match(captureState, /let combatCausalProof = null;\s*try \{[\s\S]*combatCausalProof = await collectCombatCausalProof\([\s\S]*\}\s*finally \{[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
+  assert.match(captureState, /let combatCausalProof = null;\s*try \{[\s\S]*combatCausalProof = await runPhaseGTelemetryOperation\([\s\S]*collectCombatCausalProof\([\s\S]*\}\s*finally \{[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
   assert.equal((captureState.match(/window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/gu) ?? []).length, 1);
-  assert.ok(captureState.indexOf("combatCausalProof = await collectCombatCausalProof")
+  assert.ok(captureState.indexOf("combatCausalProof = await runPhaseGTelemetryOperation")
     < captureState.indexOf("window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()"));
   assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) \{[\s\S]*await resetPhaseGBrowser\(engineName\)[\s\S]*\}/u);
   assert.match(source, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
@@ -432,7 +432,25 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.ok(captureState.indexOf("const page = await context.newPage()")
     < captureState.indexOf("await createWebKitHostResourceTelemetry({"));
   assert.ok(captureState.indexOf("await createWebKitHostResourceTelemetry({")
-    < captureState.indexOf("const captureMeta = await configure(page)"));
+    < captureState.indexOf("const captureMeta = await runPhaseGTelemetryOperation"));
+  assert.match(captureState, /hostResourceTelemetry\?\.setContext\(operationContext\)/u);
+  assert.match(captureState, /hostResourceTelemetry\?\.event\("operation-begin", operationContext\)/u);
+  assert.match(captureState, /hostResourceTelemetry\?\.event\("operation-end"/u);
+  for (const operation of [
+    "phase-g/configure",
+    "phase-g/production-contract-readback",
+    "phase-g/causal-proof",
+    "phase-g/observer-stop",
+    "phase-g/production-screenshot",
+    "phase-g/overflow-audit",
+    "phase-g/runtime-readback",
+    "phase-g/final-diagnostics",
+  ]) assert.match(captureState, new RegExp(operation.replaceAll("/", "\\/"), "u"));
+  assert.ok(captureState.indexOf('"phase-g/configure"') < captureState.indexOf('"phase-g/production-contract-readback"'));
+  assert.ok(captureState.indexOf('"phase-g/causal-proof"') < captureState.indexOf('"phase-g/observer-stop"'));
+  assert.ok(captureState.indexOf('"phase-g/observer-stop"') < captureState.indexOf('"phase-g/production-screenshot"'));
+  assert.ok(captureState.indexOf('"phase-g/production-screenshot"') < captureState.indexOf('"phase-g/overflow-audit"'));
+  assert.ok(captureState.indexOf('"phase-g/overflow-audit"') < captureState.indexOf('"phase-g/runtime-readback"'));
   for (const event of ["page-created", "page-crash", "page-close", "context-close", "browser-disconnect", "context-cleanup-begin", "browser-cleanup-begin"]) {
     assert.match(captureState, new RegExp(`hostResourceTelemetry\\?\\.event\\("${event}"`, "u"));
   }
@@ -458,6 +476,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(hostTelemetrySource, /cgroupEventDeltas/u);
   assert.match(hostTelemetrySource, /descendantLeftovers/u);
   assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
+  assert.match(hostTelemetrySource, /v100-webkit-wait-owner\/v1/u);
+  assert.match(hostTelemetrySource, /d-state-wait-owner-attempt-missing/u);
+  assert.match(hostTelemetrySource, /persistedWaitOwnerAttemptCount !== persistedDStateSampleCount/u);
   assert.match(hostTelemetrySource, /telemetry persistence integrity failed/u);
   assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
   assert.match(captureState, /let pageCrashPrimary = null/u);

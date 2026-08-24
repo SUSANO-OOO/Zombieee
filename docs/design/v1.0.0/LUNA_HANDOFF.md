@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r34`
+- Canonical Design Lock: `V100-SOL-DL-001 r35`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-42 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 43 is the sole current execution handoff.
+Sections 1-43 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 44 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1510,3 +1510,32 @@ Exact SOL execution handoff:
 8. Complete iteration-16 green alone authorizes workflow-only iteration 17 retaining the pinned envelope. It does not authorize Ready, merge, tag, Release, Pages, or final evidence.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r34` and Issue #172.**
+
+## 44. Revision r35 — no active Luna handoff / bounded WebKit wait-owner diagnostic
+
+Design Lock Section 51 and the latest explicitly labeled Issue #172 r35 byte-lock comment are the sole active cursor. Sections 1-43 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r35 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `a12d738ddb276c096fad6eee6490e78cb2914a51`
+- `LAST_AUDITED_TREE`: `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`
+- `FAILED_GATE`: terminal automatic CI #930 / run `32756548112`: Hosted `97529855291`, Phase G `97531166109`, and deployment 667x375 `97531211614`, 844x390 `97531211541`, 844x340 `97531211559`, 932x430 `97531211515` lost WPE WebContent; Stage 3 and canonical HUD dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r34 local focused 35/35, Design Lock 19/19, full 1,195/1,195 and static gates; remote PR Verify, six enemy shards, deployment 736x414 and 1280x720, and Pages preview build/deploy-skipped. Comparison-only
+- `CLASSIFICATION`: `REMOTE_WEBKIT_HOST_IO_WAIT_CORRELATION / SIX_TERMINAL_AXES_WITH_WPE_D_STATE + ELEVATED_HOST_IO_PSI / KERNEL_WAIT_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`; `R34_RUNTIME_HYPOTHESIS_FALSIFIED / PINNED_OFFICIAL_RUNTIME_STILL_LOSES_WPE_ACROSS_HOSTED_PHASE_G_DEPLOYMENT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_KERNEL_WAIT_OWNER_DIAGNOSTIC / D_STATE_WCHAN + PROC_IO_AND_BLKIO + EXACT_OPERATION_SPANS / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r35 byte lock and 19/19; then `SOL_REMEDIATION`; every automatic diagnostic result returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r34 iteration 16 is terminal red; r35 diagnostic is iteration 17; owner-specific remediation is no earlier than iteration 18; workflow-only restoration is no earlier than iteration 19
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r35 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact clean r34 HEAD/tree -> r35 four-path byte lock -> exact six-path diagnostic implementation -> focused 34/34 + full/static gates -> atomic exact ten-path iteration-17 candidate -> one automatic diagnostic run -> always return to SOL_DESIGN -> owner-specific r36 remediation -> complete focused automatic green -> workflow-only restoration no earlier than iteration 19 -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Change exactly the ten Section 51.3 paths. Under remediation edit only the shared host telemetry, its existing runtime test, the deployment harness, Hosted visual harness, Phase G harness, and existing Phase G checkpoint test. Preserve every other r34 byte.
+2. Keep outer telemetry schema/cadence. On each WPE WebContent `D` sample, persist the bounded identity-bound nested wait-owner record: sanitized `wchan`, proc I/O counters, proc stat fault/tick/thread/block-I/O-delay fields, bounded stack status/content, current PSI/cgroup/process fields, and current operation context. Cap details at the first 64 `D` samples per stable identity; summary retains all counts/fingerprints/first-last counters.
+3. Add sanitized mutable context and begin/end events. Deployment must name asset, fixture, first-frame, requested checkpoint advance, validation, canvas PNG, hash, trace, and contact sheet before each operation. Hosted must name ready/fault case and asset/fault/recovery/final-canvas/mutable-canvas/screenshot operations. Phase G must name configure, production contract, causal proof, observer stop, screenshot, overflow, runtime, and final diagnostics.
+4. A Linux `D` sample without a matching wait-owner attempt is telemetry-invalid. Permission denial, `wchan=0`, process disappearance, partial reads, and no reproduction are explicit diagnostic outcomes, not pass substitutes.
+5. Do not change workflow, container, browser/package version or flags, timeout, retry/attempt count, dependencies, focus, viewport/unit/stage/checkpoint/causal/pixel/evidence contracts, `app/**`, `public/**`, assets, package/lock, release request, or product behavior. Do not add RAM/cache/GC/sleep/resource-threshold remediation in r35.
+6. Require parser/missing-permission tests, operation-span static proof, focused 34/34, full tests, content, lint, build, YAML, diff/EOL/BOM/topology, clean worktree, and forbidden zero. Windows unsupported output is not Linux runtime proof.
+7. Only complete local green authorizes one atomic exact ten-path iteration-17 commit, normal non-force push, and one automatic attempt. No rerun, retry, edit, or alternate host.
+8. The automatic result always returns to `SOL_DESIGN`, even if green. Classify only `DIAGNOSTIC_COMPLETE`, `DIAGNOSTIC_EVIDENCE_INVALID`, or `DIAGNOSTIC_NO_REPRODUCTION`, then lock one owner-specific r36 remediation. No Ready, merge, tag, Release, Pages, or final evidence.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r35` and Issue #172.**

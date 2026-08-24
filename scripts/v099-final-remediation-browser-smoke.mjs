@@ -135,6 +135,8 @@ function noOpLifecycleDiagnostics() {
     file: null,
     hostResourceTelemetry: null,
     setPhase: () => {},
+    beginOperation: () => {},
+    endOperation: () => {},
     event: () => {},
     attachBrowser: () => {},
     attachContext: () => {},
@@ -170,6 +172,7 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
   const pageDiagnostics = new WeakMap();
   let lastPage = null;
   let currentPhase = "initialization";
+  let currentOperation = null;
   let lastSuccessfulMilestone = null;
   let normalCleanupStarted = false;
   let expectedBrowserClose = false;
@@ -218,6 +221,16 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     writeQueue = writeQueue.then(() => appendFile(filePath, line, "utf8")).catch((error) => {
       writeError ??= error;
     });
+    hostResourceTelemetry?.setContext({
+      owner: "deployment-child",
+      engine,
+      viewport: `${viewport.width}x${viewport.height}`,
+      caseType,
+      phase: currentPhase,
+      operationId: currentOperation?.operationId ?? "deployment-idle",
+      operationStatus: currentOperation?.status ?? "idle",
+      ...(currentOperation?.details ?? {}),
+    });
     hostResourceTelemetry?.event(event, {
       phase,
       currentPhase,
@@ -231,6 +244,31 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
   function setPhase(phase, milestone = null) {
     currentPhase = phase;
     record("phase changed", { phase, milestone });
+  }
+
+  function beginOperation(operationId, details = {}) {
+    currentOperation = { operationId, status: "running", details };
+    record("operation-begin", { operationId, operationStatus: "running", ...details });
+  }
+
+  function endOperation(operationId, status, details = {}) {
+    if (currentOperation?.operationId !== operationId) {
+      throw new Error(`deployment telemetry operation mismatch ${currentOperation?.operationId ?? "none"}/${operationId}`);
+    }
+    currentOperation = { ...currentOperation, status };
+    record("operation-end", { operationId, operationStatus: status, ...details });
+    if (status === "completed") {
+      currentOperation = null;
+      hostResourceTelemetry?.setContext({
+        owner: "deployment-child",
+        engine,
+        viewport: `${viewport.width}x${viewport.height}`,
+        caseType,
+        phase: currentPhase,
+        operationId: "deployment-idle",
+        operationStatus: "idle",
+      });
+    }
   }
 
   function attachBrowser(browser) {
@@ -291,6 +329,8 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     file: relativeEvidencePath(filePath),
     hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
     setPhase,
+    beginOperation,
+    endOperation,
     event: record,
     attachBrowser,
     attachContext,
@@ -315,6 +355,18 @@ function invariant(condition, message) {
 
 function hostTurn(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function withDeploymentDiagnosticOperation(lifecycle, operationId, details, operation) {
+  lifecycle?.beginOperation(operationId, details);
+  try {
+    const result = await operation();
+    lifecycle?.endOperation(operationId, "completed", details);
+    return result;
+  } catch (error) {
+    lifecycle?.endOperation(operationId, "failed", { ...details, error: String(error) });
+    throw error;
+  }
 }
 
 function relativeEvidencePath(filePath) {
@@ -2522,15 +2574,22 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   const result = { type: "deployment", engine, viewport, status: "failed", units: [] };
   try {
     setDeploymentPhase("deployment setup");
-    ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace, assetSetupBoundary } = await openBattlePage(
-      context,
-      "mission",
-      { setupTrace: engine === "chromium", finiteAssets: true },
+    await withDeploymentDiagnosticOperation(
       lifecycle,
-    ));
-    if (setupTrace) result.setupTrace = setupTrace;
-    result.assetSetupBoundary = assetSetupBoundary;
-    await loadedCrawlerAssets(page, name);
+      "deployment/navigation-readiness-asset-boundary",
+      { caseIdentity: name },
+      async () => {
+        ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace, assetSetupBoundary } = await openBattlePage(
+          context,
+          "mission",
+          { setupTrace: engine === "chromium", finiteAssets: true },
+          lifecycle,
+        ));
+        if (setupTrace) result.setupTrace = setupTrace;
+        result.assetSetupBoundary = assetSetupBoundary;
+        await loadedCrawlerAssets(page, name);
+      },
+    );
     for (const unit of deploymentUnits) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
         `${name}/${unit.kind}: static deployment family mapping drifted`);
@@ -2545,36 +2604,62 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         unit,
         () => deploymentLifecyclePhase,
       );
-      const unitAsset = await page.evaluate(
-        (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
-        unit.kind,
+      const unitDetails = { caseIdentity: name, unitFamily: unit.family, unitKind: unit.kind };
+      const unitAsset = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/unit-asset-proof",
+        unitDetails,
+        () => page.evaluate(
+          (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
+          unit.kind,
+        ),
       );
-      await activeDeploymentTrace.capture();
+      await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/trace-capture",
+        { ...unitDetails, traceBoundary: "unit-asset-proof" },
+        () => activeDeploymentTrace.capture(),
+      );
       invariant(unitAsset?.kind === unit.kind
         && typeof unitAsset.path === "string"
         && unitAsset.width > 0
         && unitAsset.height > 0,
       `${name}/${unit.kind}: strict unit asset decode failed ${JSON.stringify(unitAsset)}`);
       unitResult.asset = unitAsset;
-      const prepared = await page.evaluate((kind) => (
-        window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
-          attackerKind: kind === "crazy-king" ? "crusher" : "walker",
-          lane: 1,
-          existingClaim: false,
-        })
-      ), unit.kind);
+      const prepared = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/fixture-preparation",
+        unitDetails,
+        () => page.evaluate((kind) => (
+          window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
+            attackerKind: kind === "crazy-king" ? "crusher" : "walker",
+            lane: 1,
+            existingClaim: false,
+          })
+        ), unit.kind),
+      );
       activeFixtureResult = prepared;
       activeDeploymentTrace.setFixtureResult(prepared);
-      await activeDeploymentTrace.capture();
+      await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/trace-capture",
+        { ...unitDetails, traceBoundary: "fixture-preparation" },
+        () => activeDeploymentTrace.capture(),
+      );
       invariant(Number.isInteger(prepared?.attackerId),
         `${name}/${unit.kind}: deployment fixture is unavailable`);
       activeQueueResult = { requested: true, result: null };
       activeDeploymentTrace.setQueueResult(activeQueueResult);
-      const firstFrame = await queueAndPauseAtFirstDeploymentFrame(
-        page,
-        unit.kind,
-        `${name}/${unit.kind}`,
-        activeDeploymentTrace.capture,
+      const firstFrame = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/first-frame-queue-readback",
+        unitDetails,
+        () => queueAndPauseAtFirstDeploymentFrame(
+          page,
+          unit.kind,
+          `${name}/${unit.kind}`,
+          activeDeploymentTrace.capture,
+        ),
       );
       activeQueueResult = { requested: true, result: firstFrame };
       activeDeploymentTrace.setQueueResult(activeQueueResult);
@@ -2583,25 +2668,43 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       activeDeploymentTrace.setFighterId(fighterId);
       for (const [checkpointIndex, checkpoint] of CRAWLER_DEPLOYMENT_CHECKPOINTS.entries()) {
         let evidence = firstFrame;
-        activeDeploymentTrace.setExpected(checkpoint.id, checkpoint.progress);
-        if (checkpointIndex > 0) {
-          evidence = await pauseAtDeploymentCheckpoint(
-            page,
-            fighterId,
-            checkpoint.id,
-            checkpoint.progress,
-            `${name}/${unit.family}/${checkpoint.id}`,
-            activeDeploymentTrace.capture,
-          );
-        }
         const label = `${name}/${unit.family}/${checkpoint.id}`;
+        const checkpointDetails = {
+          ...unitDetails,
+          fighterId,
+          requestedCheckpoint: checkpoint.id,
+          requestedProgress: checkpoint.progress,
+        };
+        activeDeploymentTrace.setExpected(checkpoint.id, checkpoint.progress);
         setDeploymentPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
         lifecycle?.event("deployment checkpoint start", {
           page,
           family: unit.family,
           checkpoint: checkpoint.id,
+          requestedCheckpoint: checkpoint.id,
+          requestedProgress: checkpoint.progress,
         });
-        validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label);
+        if (checkpointIndex > 0) {
+          evidence = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/checkpoint-advance",
+            checkpointDetails,
+            () => pauseAtDeploymentCheckpoint(
+              page,
+              fighterId,
+              checkpoint.id,
+              checkpoint.progress,
+              label,
+              activeDeploymentTrace.capture,
+            ),
+          );
+        }
+        await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/checkpoint-validation",
+          checkpointDetails,
+          async () => validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label),
+        );
         const receipt = checkpointIndex === 0 ? null : evidence.checkpointReceipt;
         if (checkpointIndex > 0) {
           invariant(receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
@@ -2627,14 +2730,29 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           combatReady: receipt.combatReady,
           entryRampCleared: receipt.entryRampCleared,
         } : null;
-        const canvasCapture = await deploymentCanvasPng(
-          page,
-          `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
-          label,
+        const canvasCapture = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/final-canvas-png",
+          checkpointDetails,
+          () => deploymentCanvasPng(
+            page,
+            `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
+            label,
+          ),
         );
-        await activeDeploymentTrace.capture();
+        await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/trace-capture",
+          { ...checkpointDetails, traceBoundary: "final-canvas-png" },
+          () => activeDeploymentTrace.capture(),
+        );
         const screenshotPath = canvasCapture.path;
-        const screenshotSha256 = await evidenceSha256(screenshotPath);
+        const screenshotSha256 = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/hash-persistence",
+          checkpointDetails,
+          () => evidenceSha256(screenshotPath),
+        );
         unitResult.checkpoints.push({
           checkpoint: checkpoint.id,
           requestedProgress: checkpoint.progress,
@@ -2687,12 +2805,17 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         rampClear,
         combatReady: rampClear,
       };
-      unitResult.contactSheet = await deploymentRuntimeContactSheet(
-        name,
-        unit.family,
-        unit.kind,
-        viewport,
-        unitResult.checkpoints,
+      unitResult.contactSheet = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/contact-sheet",
+        unitDetails,
+        () => deploymentRuntimeContactSheet(
+          name,
+          unit.family,
+          unit.kind,
+          viewport,
+          unitResult.checkpoints,
+        ),
       );
       unitResult.deploymentTrace = await activeDeploymentTrace.stop();
       invariant(unitResult.deploymentTrace.captureMode === "cooperative-main-flow"

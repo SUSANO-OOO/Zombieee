@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r34`
+- Revision: `r35`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -3157,3 +3157,93 @@ The unchanged release tail remains: freeze the exact candidate HEAD/tree; enter 
 - `NEXT_OWNER`: `SOL_REMEDIATION` only after the r34 Issue byte lock and green Design Lock proof
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every terminal CI #929 job/log/artifact, exact base and parent Stage 3 controls, both deployment process traces, all green sibling controls, the workflow dependency graph, live MCR manifest/config metadata, Playwright official container guidance, snapshot arithmetic, r33 topology, Pages deploy guards, and the unchanged release tail. The packet changes no shipped byte, test browser version, timeout, retry count, viewport, product behavior, or acceptance threshold. Failure routing is finite and owner-specific. Revision r34 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 51. Revision r35 — bounded WebKit kernel wait-owner diagnostic
+
+This section consumes the complete terminal result of r34 iteration 16 and supersedes Section 50 only for that remote evidence, the finite diagnostic below, iteration numbering, and the current cursor. Candidate HEAD `a12d738ddb276c096fad6eee6490e78cb2914a51`, tree `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`, parent `e8cfc3b557e9316a33186935c98d110f33bcc5a9` is the exact committed r34 eleven-path result. The approved r30 material, r31-r33 causal proof, r34 release snapshots, digest-pinned Playwright runtime, product behavior, and release boundaries remain fixed. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 51.1 Terminal r34 evidence and classification
+
+Automatic CI #930 / run `32756548112`, attempt 1, is terminal failure. No retry, rerun, dispatch, timeout change, or post-push edit occurred. PR Verify `97525306409` and all six enemy-runtime shards passed. Pages preview run `32756547734` passed build validation with deployment and release mutation skipped. The required red set is:
+
+1. Hosted job `97529855291`, visual artifact `9531717054`, ZIP SHA-256 `1e9e54609b9ad956660a5fd95035413110b460ed9b09d7a97490cc715ad5b258`: every ready case passed. The terminal 844x390 `background/decode-reject` fault case completed the intended failed-load and same-screen recovery contract, then lost WPE WebContent at the final-canvas boundary. Console/page/request/HTTP remained zero. The terminal process had 15 sampled `D` states, later stayed at about 859 MiB, and disappeared at page-crash; cgroup OOM/pid deltas were zero.
+2. Phase G job `97531166109`, artifact `9531824504`, ZIP SHA-256 `65505a91d435ff5ddf4c8aac21dbdf8eef371f3f4d4735764c63d74fa40b5df3`: pinned-container preflight passed. Stage 6 667x375 completed route, battle mount, three accepted deployments, enemy attack proof, human Ranger attack proof, and causal source/travel-or-contact/identity-bound target reaction/audio 4/4 with 70 samples. Only the subsequent production screenshot operation lost the page. WPE WebContent had 18 sampled `D` states, remained near 1.49 GiB, then disappeared/restarted; fatal channels and cgroup OOM/pid deltas were zero. Stage 24/25 and Stage 3 were not run.
+3. Deployment 667x375 job `97531211614`, artifact `9531853897`, ZIP SHA-256 `afa180effd75f06acae1ecb4e792042b51ac4b966bca57dc376bdaf75511cd55`: Scout and Ranger passed; Brawler lost WPE during the real fixture/first-deployment-frame boundary before the first keyframe. It had 13 sampled `D` states and no product/fatal/OOM signal.
+4. Deployment 844x390 job `97531211541`, artifact `9532067109`, ZIP SHA-256 `29bc8d25a08c6e015fe78007049cedd3615bb070f2b440e6db5f91ef49b55af2`: Scout, Ranger, and Brawler passed. Crazy King passed five final-canvas checkpoints and reached a readable fully-outside production snapshot, then lost WPE before persisting the sixth checkpoint. It had 10 sampled `D` states and no product/fatal/OOM signal.
+5. Deployment 844x340 job `97531211559`, artifact `9532172101`, ZIP SHA-256 `b6d3dd1873bb0d118ea5dcfa65ffc1cf28d10252e9a5dd86c2b3b862ae27d114`: five prior units passed. Mayo-chan lost WPE while sealing the same 30/30-ready finite asset boundary, before fixture or checkpoint logic. It had 16 sampled `D` states and no product/fatal/OOM signal.
+6. Deployment 932x430 job `97531211515`, artifact `9532238214`, ZIP SHA-256 `478bb12b11d1b1b5e8f34697907b156e3c8fa45dc1886a425f9bc9f6a607ae7e`: Scout passed five exact production checkpoints, then lost WPE while advancing to fully-outside. It had 15 sampled `D` states and no product/fatal/OOM signal.
+
+Deployment 736x414 `97531211549` and 1280x720 `97531211502` passed all eight units. Their artifacts are `9531973368` / SHA-256 `68d9e1757fd1fa2d8f6e5ba2c041633550f65a06c5a5edd2cbed53301f92fc67` and `9532375038` / SHA-256 `af056c4c8ced3983462cdc58c938b2af025b5b7e24ef12033476babec6dac125`. Across the downloaded deployment evidence, 26 successful unit processes contain zero WPE `D` samples; the four terminal deployment processes contain 54. Adding Hosted and Phase G yields 87 `D` samples across six terminal axes. Failed runs reached host I/O `full avg10` peaks from 32.40 to 83.16, while all 26 successful deployment controls remained at or below 15.71. Successful controls also reached equal or higher resident memory than several failures. Thus RSS threshold, deterministic unit/viewport/checkpoint behavior, causal-proof failure, asset-readiness failure, and cgroup OOM/pid exhaustion are excluded.
+
+The digest-pinned official runtime remained exact and still failed in Phase G and four deployment jobs, so r34's unmatched-runtime-envelope hypothesis is falsified. Linux `D` plus elevated host I/O pressure is a cross-harness discriminator, but current telemetry does not record the blocking wait channel, per-process I/O counters, block-I/O delay, or exact active Playwright/product-readback operation. SOL therefore does not guess file I/O, screenshot IPC, WebKit cache, audio, storage hardware, or product asset ownership. Classification: `REMOTE_WEBKIT_HOST_IO_WAIT_CORRELATION / SIX_TERMINAL_AXES_WITH_WPE_D_STATE + ELEVATED_HOST_IO_PSI / KERNEL_WAIT_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`. The r34 hypothesis result is `R34_RUNTIME_HYPOTHESIS_FALSIFIED / PINNED_OFFICIAL_RUNTIME_STILL_LOSES_WPE_ACROSS_HOSTED_PHASE_G_DEPLOYMENT / DESIGN_CHANGE_REQUIRED`.
+
+### 51.2 Finite diagnostic contract
+
+Remediation class for r35 is diagnostic only: `WEBKIT_KERNEL_WAIT_OWNER_DIAGNOSTIC / D_STATE_WCHAN + PROC_IO_AND_BLKIO + EXACT_OPERATION_SPANS / DESIGN_CHANGE_REQUIRED`.
+
+Keep the outer `v100-webkit-host-resource-telemetry/v1` persistence contract and 500 ms cadence. Add a nested `v100-webkit-wait-owner/v1` record only for an observed WPE WebContent `D` sample. The record must bind exact `pid:startTicks` identity and contain:
+
+- sanitized `/proc/<pid>/wchan` read status and value;
+- parsed `/proc/<pid>/io` counters: `rchar`, `wchar`, `syscr`, `syscw`, `read_bytes`, `write_bytes`, and `cancelled_write_bytes`;
+- `/proc/<pid>/stat` minor/major faults, user/system ticks, thread count, and `delayacct_blkio_ticks` when the kernel exposes them;
+- a bounded `/proc/<pid>/stack` read status and at most the first 16 sanitized lines; permission denial is recorded, never hidden or promoted to a guessed owner;
+- contemporaneous host memory/cpu/I/O PSI, cgroup counters, process state/RSS/threads/file descriptors, and current diagnostic operation context already owned by the same sample.
+
+Detailed wait-owner capture is bounded to the first 64 `D` samples per stable process identity. Summary must retain total `D` sample count, identities, captured/unavailable counts, distinct sanitized wait-channel fingerprints and counts, first/last elapsed time, maximum I/O PSI, and first/last proc-I/O and block-I/O-delay counters. A Linux run that observes `D` but persists no matching wait-owner attempt is telemetry-invalid. A readable `wchan` is evidence, not an acceptance predicate; `0`, permission denial, process disappearance, and partial proc reads remain explicit outcomes.
+
+Add mutable sanitized telemetry context without page access inside the shared helper. Harnesses, not the helper, set context and emit begin/end events. Exact operation ownership is:
+
+- deployment: navigation/readiness/asset-boundary, unit asset proof, fixture preparation, first-frame queue/readback, each checkpoint advance, checkpoint validation, final-canvas PNG acquisition, hash persistence, trace capture, and contact sheet. Set the requested checkpoint context before the cross-page advance so a fully-outside failure cannot inherit `three-quarters`;
+- Hosted visual integrity: ready or fault case identity plus asset-boundary wait, fault start, blocked-state readback, same-screen recovery, final-canvas audit, mutable-canvas audit, and page screenshot;
+- Phase G battle-extra: configure, production-contract readback, causal proof, observer stop, production screenshot, overflow audit, runtime readback, and final diagnostics.
+
+Every begin/end event includes the same bounded operation id and case identity. Periodic samples carry the current context. No helper may import Playwright, execute a child process, inspect product DOM, or alter application state. Diagnostic events do not replace any existing lifecycle, causal, pixel, request, artifact, or fatal assertion.
+
+### 51.3 Exact r35 allowlist and forbidden changes
+
+Relative to r34 HEAD, the one atomic r35 diagnostic candidate may change exactly these ten tracked paths and no others:
+
+1. `docs/PROJECT_STATE.md`;
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/webkit-host-resource-telemetry.mjs`;
+6. `tests/v0995-runtime-evidence-contract.test.mjs`;
+7. `scripts/v099-final-remediation-browser-smoke.mjs`;
+8. `scripts/v0995-visual-integrity-browser-smoke.mjs`;
+9. `scripts/v100-phase-g-production-matrix.mjs`;
+10. `tests/v100-phase-g-checkpoint.test.mjs`.
+
+Under `SOL_DESIGN`, publish and Issue-byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, edit only paths 5-10. Preserve every other r34 byte. In particular, `.github/workflows/**`, `app/**`, `public/**`, assets, package/lock, release request, r34 container image/options/preflight, browser/package version, browser flags, timeout, retry/attempt count, job dependencies, focus variables, viewport/unit/stage order, checkpoint count, causal/pixel thresholds, evidence counts, gameplay, balance, AI, save, audio, story, and product asset planning are forbidden.
+
+Do not add RAM staging, cache flags, garbage collection, sleeps, resource thresholds, conditional pass, browser relaunch, retry, screenshot substitution, missing-artifact tolerance, or product correction in r35. Those are possible owner-specific remediations only after the diagnostic identifies their owner. Existing r34 local and remote evidence remains comparison evidence and cannot become final evidence.
+
+### 51.4 Validation, remote result, and stop routing
+
+After the four r35 design/source paths are Issue-byte-locked and Design Lock 19/19 is green:
+
+1. implement only paths 5-10. Require syntax/load checks; deterministic parser tests for proc stat/I/O/wchan/stack sanitization and missing/permission outcomes; static proof of all three harness operation spans; focused `tests/v100-design-lock.test.mjs`, `tests/v0995-runtime-evidence-contract.test.mjs`, and `tests/v100-phase-g-checkpoint.test.mjs` at exactly 34/34; complete `npm test`; production-content validation; lint with zero errors; build; YAML parse; `git diff --check`; UTF-8/EOL/BOM; exact ten-path topology; staged/unstaged/untracked; and forbidden-path zero;
+2. do not run a local browser reproduction merely to obtain Linux proc evidence. Local Windows must report the existing truthful unsupported platform; unit fixtures validate only parsing/persistence behavior;
+3. only complete local green authorizes one atomic exact ten-path iteration-17 commit, normal non-force push, exact ref/tree/parent/compare readback, clean worktree, and its single automatic CI attempt. No dispatch, retry, rerun, edit, timeout change, or alternate host while it runs;
+4. audit every terminal job/log/artifact. For every observed `D`, require identity-matched nested wait-owner attempt, operation context, PSI/cgroup/process continuity, and persisted-summary consistency. Retain green matched controls and compare the same fields;
+5. the automatic result always returns to `SOL_DESIGN`, including complete green. Complete green with zero `D` is `DIAGNOSTIC_NO_REPRODUCTION`, not promotion evidence. Any missing/invalid diagnostic is `DIAGNOSTIC_EVIDENCE_INVALID`. Reproduced `D` with records is `DIAGNOSTIC_COMPLETE`. SOL alone classifies the dominant wait owner and locks one coherent r36 remediation; no r35 code may remain accepted merely because a transient run is green;
+6. workflow-only unfiltered restoration is deferred to no earlier than iteration 19: r35 diagnostic iteration 17, owner-specific r36 remediation no earlier than iteration 18, then complete automatic remediation green only. None of these stages authorizes Ready, merge, tag, Release, Pages, or final evidence.
+
+After the owner-specific remediation and workflow restoration, the unchanged Section 28 release tail remains mandatory: exact-HEAD full Phase G 54/54, validators, full regressions, unfiltered remote CI, actual production runtime/human visual-event-battle-audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, and fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`. Only `High: 0`, `Medium: 0`, `PB: 0`, no obvious unfinished defect, and `RELEASE_READY: YES` may reach the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone authorizes stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, closure, and `/goal COMPLETE`.
+
+### 51.5 Current execution cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r35 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: r34 iteration 16 is terminal red; r35 diagnostic is iteration 17; owner-specific remediation is no earlier than iteration 18; workflow-only restoration is no earlier than iteration 19
+- `SAME_GATE_REPEAT_COUNT`: `8` for required remote Phase G; diagnostic and local controls do not reset it
+- `ROLE_LOCK`: `SOL_DESIGN` until r35 byte lock and 19/19; then `SOL_REMEDIATION`; every automatic diagnostic result returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `a12d738ddb276c096fad6eee6490e78cb2914a51`
+- `LAST_AUDITED_TREE`: `4d59d17634a7b8bbda02aaf6576abba99dd9e7de`
+- `FAILED_GATE`: terminal automatic CI #930 / run `32756548112`: Hosted `97529855291`, Phase G `97531166109`, deployment 667x375 `97531211614`, 844x390 `97531211541`, 844x340 `97531211559`, and 932x430 `97531211515` lost WPE WebContent; Stage 3 and canonical HUD dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r34 local focused 35/35, Design Lock 19/19, full 1,195/1,195 and static gates; remote PR Verify, six enemy shards, deployment 736x414 and 1280x720, and Pages preview build/deploy-skipped. All are comparison-only
+- `CLASSIFICATION`: `REMOTE_WEBKIT_HOST_IO_WAIT_CORRELATION / SIX_TERMINAL_AXES_WITH_WPE_D_STATE + ELEVATED_HOST_IO_PSI / KERNEL_WAIT_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`; `R34_RUNTIME_HYPOTHESIS_FALSIFIED / PINNED_OFFICIAL_RUNTIME_STILL_LOSES_WPE_ACROSS_HOSTED_PHASE_G_DEPLOYMENT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_KERNEL_WAIT_OWNER_DIAGNOSTIC / D_STATE_WCHAN + PROC_IO_AND_BLKIO + EXACT_OPERATION_SPANS / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact clean r34 HEAD/tree -> r35 four-path byte lock -> six-path diagnostic implementation -> focused 34/34 + full/static gates -> atomic exact ten-path iteration-17 candidate -> one automatic diagnostic run -> always return to SOL_DESIGN -> one owner-specific r36 remediation -> complete focused automatic green -> workflow-only restoration no earlier than iteration 19 -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r35 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every terminal CI #930 job and dependency edge, all eight cited ZIPs and their hashes, six terminal WPE timelines, 26 matched green deployment controls, PSI/cgroup/process histories, exact failure operations, the r34 diff/runtime envelope, current telemetry source, r34 topology, Pages guards, and the unchanged release tail. r35 changes observation only, cannot produce promotion, and leaves every product and acceptance byte fixed. Revision r35 has `High ambiguity: 0` and `Medium ambiguity: 0`.

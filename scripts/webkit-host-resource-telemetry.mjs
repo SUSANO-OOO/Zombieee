@@ -3,6 +3,8 @@ import path from "node:path";
 
 export const WEBKIT_HOST_RESOURCE_TELEMETRY_SCHEMA = "v100-webkit-host-resource-telemetry/v1";
 export const WEBKIT_HOST_RESOURCE_TELEMETRY_INTERVAL_MS = 500;
+export const WEBKIT_WAIT_OWNER_SCHEMA = "v100-webkit-wait-owner/v1";
+export const WEBKIT_WAIT_OWNER_DETAIL_LIMIT = 64;
 
 const CGROUP_ROOT = "/sys/fs/cgroup";
 const PROC_ROOT = "/proc";
@@ -55,6 +57,11 @@ function parseInteger(value) {
   if (trimmed === "max") return "max";
   const parsed = Number.parseInt(trimmed, 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function nullableInteger(value) {
+  const parsed = parseInteger(value);
+  return typeof parsed === "number" ? parsed : null;
 }
 
 function parseKeyValueLines(source) {
@@ -118,16 +125,183 @@ export function parseWebKitHostProcStat(source) {
     name: sanitizeText(normalized.slice(open + 1, close), 64),
     state: suffix[0],
     ppid: Number.parseInt(fields[0], 10),
+    minorFaults: nullableInteger(fields[6]),
+    majorFaults: nullableInteger(fields[8]),
+    userTicks: nullableInteger(fields[10]),
+    systemTicks: nullableInteger(fields[11]),
+    threads: nullableInteger(fields[16]),
     startTicks: parseInteger(fields[18]),
     virtualBytes: parseInteger(fields[19]),
+    delayacctBlkioTicks: nullableInteger(fields[38]),
   };
 }
 
-export function webKitHostTelemetryValidity({ supported, rootObservedCount, webContentObservedCount }) {
+const PROC_IO_COUNTERS = Object.freeze([
+  "rchar",
+  "wchar",
+  "syscr",
+  "syscw",
+  "read_bytes",
+  "write_bytes",
+  "cancelled_write_bytes",
+]);
+
+export function parseWebKitWaitOwnerProcIo(source) {
+  const parsed = parseKeyValueLines(source);
+  return Object.fromEntries(PROC_IO_COUNTERS.map((key) => [key, nullableInteger(parsed[key])]));
+}
+
+export function sanitizeWebKitWaitOwnerStack(source) {
+  const allLines = String(source ?? "").split(/\r?\n/gu).map((line) => sanitizeText(line, 256)).filter(Boolean);
+  return {
+    lines: allLines.slice(0, 16),
+    truncated: allLines.length > 16,
+    sourceLineCount: allLines.length,
+  };
+}
+
+export function classifyWebKitWaitOwnerReadError(error) {
+  const code = sanitizeText(error?.code ?? "UNKNOWN", 32) || "UNKNOWN";
+  if (code === "EACCES" || code === "EPERM") return { status: "permission-denied", errorCode: code };
+  if (code === "ENOENT" || code === "ESRCH") return { status: "process-disappeared", errorCode: code };
+  return { status: "unavailable", errorCode: code };
+}
+
+export function webKitHostTelemetryValidity({
+  supported,
+  rootObservedCount,
+  webContentObservedCount,
+  dStateSampleCount = 0,
+  waitOwnerAttemptCount = 0,
+  waitOwnerCaptureErrorCount = 0,
+}) {
   if (!supported) return { valid: null, invalidReason: null };
   if (rootObservedCount === 0) return { valid: false, invalidReason: "root-process-never-observed" };
   if (webContentObservedCount === 0) return { valid: false, invalidReason: "webkit-web-content-never-observed" };
+  if (dStateSampleCount > waitOwnerAttemptCount) return { valid: false, invalidReason: "d-state-wait-owner-attempt-missing" };
+  if (waitOwnerCaptureErrorCount > 0) return { valid: false, invalidReason: "d-state-wait-owner-capture-error" };
   return { valid: true, invalidReason: null };
+}
+
+async function readWaitOwnerProcFile(filePath) {
+  try {
+    return { status: "available", errorCode: null, source: await readFile(filePath, "utf8") };
+  } catch (error) {
+    return { ...classifyWebKitWaitOwnerReadError(error), source: null };
+  }
+}
+
+function readResult(status, value = null, extra = {}) {
+  return {
+    status: status.status,
+    errorCode: status.errorCode ?? null,
+    value,
+    ...extra,
+  };
+}
+
+function ioPressureFullAvg10(host) {
+  const value = host?.pressure?.io?.full?.avg10;
+  return typeof value === "number" ? value : null;
+}
+
+async function captureWebKitWaitOwner({ processEntry, rootPid, elapsedMs, host, cgroup, operationContext }) {
+  const identity = `${processEntry.pid}:${processEntry.startTicks}`;
+  const processRoot = processEntry.pid === rootPid ? `${PROC_ROOT}/self` : `${PROC_ROOT}/${processEntry.pid}`;
+  const [wchanRead, ioRead, statRead, stackRead] = await Promise.all([
+    readWaitOwnerProcFile(`${processRoot}/wchan`),
+    readWaitOwnerProcFile(`${processRoot}/io`),
+    readWaitOwnerProcFile(`${processRoot}/stat`),
+    readWaitOwnerProcFile(`${processRoot}/stack`),
+  ]);
+  const parsedStat = statRead.source === null ? null : parseWebKitHostProcStat(statRead.source);
+  const identityMatched = parsedStat?.pid === processEntry.pid && parsedStat?.startTicks === processEntry.startTicks;
+  const statStatus = statRead.status !== "available"
+    ? statRead.status
+    : parsedStat === null ? "parse-failed" : identityMatched ? "available" : "identity-changed";
+  const stack = stackRead.source === null ? { lines: [], truncated: false, sourceLineCount: 0 } : sanitizeWebKitWaitOwnerStack(stackRead.source);
+  const detailedStatus = [wchanRead, ioRead, statRead, stackRead].some(({ status }) => status === "available")
+    ? "captured"
+    : "unavailable";
+  return {
+    schema: WEBKIT_WAIT_OWNER_SCHEMA,
+    identity,
+    pid: processEntry.pid,
+    startTicks: processEntry.startTicks,
+    role: processEntry.role,
+    state: processEntry.state,
+    detailStatus: detailedStatus,
+    wchan: readResult(wchanRead, wchanRead.source === null ? null : sanitizeText(wchanRead.source, 160)),
+    procIo: readResult(ioRead, ioRead.source === null ? null : parseWebKitWaitOwnerProcIo(ioRead.source)),
+    procStat: readResult(
+      { status: statStatus, errorCode: statRead.errorCode },
+      parsedStat === null ? null : {
+        pid: parsedStat.pid,
+        startTicks: parsedStat.startTicks,
+        identityMatched,
+        minorFaults: parsedStat.minorFaults,
+        majorFaults: parsedStat.majorFaults,
+        userTicks: parsedStat.userTicks,
+        systemTicks: parsedStat.systemTicks,
+        threads: parsedStat.threads,
+        delayacctBlkioTicks: parsedStat.delayacctBlkioTicks,
+      },
+    ),
+    stack: readResult(stackRead, stack.lines, {
+      truncated: stack.truncated,
+      sourceLineCount: stack.sourceLineCount,
+    }),
+    observation: {
+      elapsedMs,
+      ioPressureFullAvg10: ioPressureFullAvg10(host),
+      hostPressure: host?.pressure ?? null,
+      cgroup,
+      process: {
+        pid: processEntry.pid,
+        ppid: processEntry.ppid,
+        startTicks: processEntry.startTicks,
+        role: processEntry.role,
+        state: processEntry.state,
+        rssBytes: processEntry.rssBytes,
+        threads: processEntry.threads,
+        fileDescriptors: processEntry.fileDescriptors,
+      },
+      operationContext,
+    },
+  };
+}
+
+function cappedWebKitWaitOwner({ processEntry, elapsedMs, host, cgroup, operationContext }) {
+  return {
+    schema: WEBKIT_WAIT_OWNER_SCHEMA,
+    identity: `${processEntry.pid}:${processEntry.startTicks}`,
+    pid: processEntry.pid,
+    startTicks: processEntry.startTicks,
+    role: processEntry.role,
+    state: processEntry.state,
+    detailStatus: "detail-cap-reached",
+    wchan: { status: "detail-cap-reached", errorCode: null, value: null },
+    procIo: { status: "detail-cap-reached", errorCode: null, value: null },
+    procStat: { status: "detail-cap-reached", errorCode: null, value: null },
+    stack: { status: "detail-cap-reached", errorCode: null, value: [], truncated: false, sourceLineCount: 0 },
+    observation: {
+      elapsedMs,
+      ioPressureFullAvg10: ioPressureFullAvg10(host),
+      hostPressure: host?.pressure ?? null,
+      cgroup,
+      process: {
+        pid: processEntry.pid,
+        ppid: processEntry.ppid,
+        startTicks: processEntry.startTicks,
+        role: processEntry.role,
+        state: processEntry.state,
+        rssBytes: processEntry.rssBytes,
+        threads: processEntry.threads,
+        fileDescriptors: processEntry.fileDescriptors,
+      },
+      operationContext,
+    },
+  };
 }
 
 async function readProcess(pid, rootPid) {
@@ -154,10 +328,15 @@ async function readProcess(pid, rootPid) {
     role,
     webKitRole: role.startsWith("webkit-") ? role : null,
     state: stat.state,
+    minorFaults: stat.minorFaults,
+    majorFaults: stat.majorFaults,
+    userTicks: stat.userTicks,
+    systemTicks: stat.systemTicks,
+    delayacctBlkioTicks: stat.delayacctBlkioTicks,
     rssBytes: typeof status.VmRSS === "number" ? status.VmRSS * 1024 : null,
     virtualBytes: typeof status.VmSize === "number" ? status.VmSize * 1024 : stat.virtualBytes,
     swapBytes: typeof status.VmSwap === "number" ? status.VmSwap * 1024 : null,
-    threads: typeof status.Threads === "number" ? status.Threads : null,
+    threads: typeof status.Threads === "number" ? status.Threads : stat.threads,
     fileDescriptors: fileDescriptors.length,
     oomScore: parseInteger(oomScoreSource),
     children,
@@ -276,6 +455,71 @@ function counterDelta(first = {}, last = {}) {
   }));
 }
 
+function waitChannelFingerprint(attempt) {
+  const status = attempt.wchan?.status ?? "missing";
+  const value = attempt.wchan?.value ?? "null";
+  return sanitizeText(`${status}:${value}`, 192);
+}
+
+function updateWaitOwnerIdentitySummary(summaries, attempt) {
+  const prior = summaries.get(attempt.identity) ?? {
+    schema: WEBKIT_WAIT_OWNER_SCHEMA,
+    identity: attempt.identity,
+    pid: attempt.pid,
+    startTicks: attempt.startTicks,
+    role: attempt.role,
+    totalDSampleCount: 0,
+    detailedAttemptCount: 0,
+    capturedCount: 0,
+    unavailableCount: 0,
+    cappedCount: 0,
+    firstElapsedMs: null,
+    lastElapsedMs: null,
+    maxIoPressureFullAvg10: null,
+    waitChannelFingerprints: new Map(),
+    firstProcIo: null,
+    lastProcIo: null,
+    firstDelayacctBlkioTicks: null,
+    lastDelayacctBlkioTicks: null,
+  };
+  prior.totalDSampleCount += 1;
+  if (attempt.detailStatus === "detail-cap-reached") prior.cappedCount += 1;
+  else {
+    prior.detailedAttemptCount += 1;
+    if (attempt.detailStatus === "captured") prior.capturedCount += 1;
+    else prior.unavailableCount += 1;
+  }
+  const elapsedMs = attempt.observation?.elapsedMs;
+  if (typeof elapsedMs === "number") {
+    prior.firstElapsedMs ??= elapsedMs;
+    prior.lastElapsedMs = elapsedMs;
+  }
+  const pressure = attempt.observation?.ioPressureFullAvg10;
+  if (typeof pressure === "number") {
+    prior.maxIoPressureFullAvg10 = Math.max(prior.maxIoPressureFullAvg10 ?? pressure, pressure);
+  }
+  const fingerprint = waitChannelFingerprint(attempt);
+  prior.waitChannelFingerprints.set(fingerprint, (prior.waitChannelFingerprints.get(fingerprint) ?? 0) + 1);
+  const procIo = attempt.procIo?.value;
+  if (procIo) {
+    prior.firstProcIo ??= procIo;
+    prior.lastProcIo = procIo;
+  }
+  const blockDelay = attempt.procStat?.value?.delayacctBlkioTicks;
+  if (typeof blockDelay === "number") {
+    prior.firstDelayacctBlkioTicks ??= blockDelay;
+    prior.lastDelayacctBlkioTicks = blockDelay;
+  }
+  summaries.set(attempt.identity, prior);
+}
+
+function serializedWaitOwnerSummaries(summaries) {
+  return [...summaries.values()].sort((left, right) => left.identity.localeCompare(right.identity)).map((entry) => ({
+    ...entry,
+    waitChannelFingerprints: Object.fromEntries([...entry.waitChannelFingerprints.entries()].sort(([left], [right]) => left.localeCompare(right))),
+  }));
+}
+
 export async function createWebKitHostResourceTelemetry({
   evidenceDir,
   label,
@@ -314,6 +558,23 @@ export async function createWebKitHostResourceTelemetry({
   let rootObservedCount = 0;
   let webContentObservedCount = 0;
   let fallbackScanCount = 0;
+  let currentOperationContext = sanitizeValue({ operationId: "telemetry-idle", status: "idle" });
+  let dStateSampleCount = 0;
+  let waitOwnerAttemptCount = 0;
+  let waitOwnerDetailedCaptureCount = 0;
+  let waitOwnerUnavailableCount = 0;
+  let waitOwnerCappedCount = 0;
+  let waitOwnerCaptureErrorCount = 0;
+  let waitOwnerFirstElapsedMs = null;
+  let waitOwnerLastElapsedMs = null;
+  let waitOwnerMaxIoPressureFullAvg10 = null;
+  let waitOwnerFirstProcIo = null;
+  let waitOwnerLastProcIo = null;
+  let waitOwnerFirstDelayacctBlkioTicks = null;
+  let waitOwnerLastDelayacctBlkioTicks = null;
+  const waitOwnerFingerprints = new Map();
+  const waitOwnerDetailCounts = new Map();
+  const waitOwnerIdentitySummaries = new Map();
   const collectionErrors = new Set();
   const disappearedRoles = new Set();
   const lastKnownWebKitRoles = new Set();
@@ -333,6 +594,8 @@ export async function createWebKitHostResourceTelemetry({
     supported,
     reason,
     sampleIntervalMs,
+    waitOwnerSchema: WEBKIT_WAIT_OWNER_SCHEMA,
+    waitOwnerDetailLimit: WEBKIT_WAIT_OWNER_DETAIL_LIMIT,
     rootPid,
     log: relativeReference(referenceRoot, logPath),
     summary: relativeReference(referenceRoot, summaryPath),
@@ -354,13 +617,14 @@ export async function createWebKitHostResourceTelemetry({
     periodicSkippedCount: 0,
   }), null, 2)}\n`, "utf8");
 
-  async function collectEntry(kind, event, details) {
+  async function collectEntry(kind, event, details, operationContext) {
     const capturedAt = Date.now();
     let host = null;
     let cgroup = null;
     let processes = [];
     let aggregate = null;
     let disappeared = [];
+    let waitOwners = [];
     if (supported) {
       const [meminfoSource, memoryPressureSource, cpuPressureSource, ioPressureSource, collectedCgroup, collectedTree] = await Promise.all([
         readText(`${PROC_ROOT}/meminfo`),
@@ -403,6 +667,72 @@ export async function createWebKitHostResourceTelemetry({
       peaks.descendantCount = Math.max(peaks.descendantCount, aggregate.descendantCount);
       peaks.cgroupMemoryCurrent = Math.max(peaks.cgroupMemoryCurrent, typeof cgroup.memoryCurrent === "number" ? cgroup.memoryCurrent : 0);
       peaks.cgroupPidsCurrent = Math.max(peaks.cgroupPidsCurrent, typeof cgroup.pidsCurrent === "number" ? cgroup.pidsCurrent : 0);
+      const blockedWebContent = processes.filter(({ role, state }) => role === "webkit-web-content" && state === "D");
+      waitOwners = await Promise.all(blockedWebContent.map(async (processEntry) => {
+        dStateSampleCount += 1;
+        const identity = `${processEntry.pid}:${processEntry.startTicks}`;
+        const priorDetailCount = waitOwnerDetailCounts.get(identity) ?? 0;
+        let attempt;
+        if (priorDetailCount >= WEBKIT_WAIT_OWNER_DETAIL_LIMIT) {
+          waitOwnerCappedCount += 1;
+          attempt = cappedWebKitWaitOwner({ processEntry, elapsedMs: capturedAt - startedAt, host, cgroup, operationContext });
+        } else {
+          waitOwnerDetailCounts.set(identity, priorDetailCount + 1);
+          try {
+            attempt = await captureWebKitWaitOwner({ processEntry, rootPid, elapsedMs: capturedAt - startedAt, host, cgroup, operationContext });
+          } catch (error) {
+            waitOwnerCaptureErrorCount += 1;
+            collectionErrors.add("wait-owner-capture-error");
+            attempt = {
+              schema: WEBKIT_WAIT_OWNER_SCHEMA,
+              identity,
+              pid: processEntry.pid,
+              startTicks: processEntry.startTicks,
+              role: processEntry.role,
+              state: processEntry.state,
+              detailStatus: "capture-error",
+              captureError: sanitizeText(error, 256),
+              wchan: { status: "capture-error", errorCode: null, value: null },
+              procIo: { status: "capture-error", errorCode: null, value: null },
+              procStat: { status: "capture-error", errorCode: null, value: null },
+              stack: { status: "capture-error", errorCode: null, value: [], truncated: false, sourceLineCount: 0 },
+              observation: {
+                elapsedMs: capturedAt - startedAt,
+                ioPressureFullAvg10: ioPressureFullAvg10(host),
+                hostPressure: host?.pressure ?? null,
+                cgroup,
+                process: processEntry,
+                operationContext,
+              },
+            };
+          }
+        }
+        waitOwnerAttemptCount += 1;
+        if (attempt.detailStatus === "captured") waitOwnerDetailedCaptureCount += 1;
+        else if (attempt.detailStatus !== "detail-cap-reached") waitOwnerUnavailableCount += 1;
+        const elapsedMs = attempt.observation?.elapsedMs;
+        if (typeof elapsedMs === "number") {
+          waitOwnerFirstElapsedMs ??= elapsedMs;
+          waitOwnerLastElapsedMs = elapsedMs;
+        }
+        const pressure = attempt.observation?.ioPressureFullAvg10;
+        if (typeof pressure === "number") {
+          waitOwnerMaxIoPressureFullAvg10 = Math.max(waitOwnerMaxIoPressureFullAvg10 ?? pressure, pressure);
+        }
+        const fingerprint = waitChannelFingerprint(attempt);
+        waitOwnerFingerprints.set(fingerprint, (waitOwnerFingerprints.get(fingerprint) ?? 0) + 1);
+        if (attempt.procIo?.value) {
+          waitOwnerFirstProcIo ??= attempt.procIo.value;
+          waitOwnerLastProcIo = attempt.procIo.value;
+        }
+        const blockDelay = attempt.procStat?.value?.delayacctBlkioTicks;
+        if (typeof blockDelay === "number") {
+          waitOwnerFirstDelayacctBlkioTicks ??= blockDelay;
+          waitOwnerLastDelayacctBlkioTicks = blockDelay;
+        }
+        updateWaitOwnerIdentitySummary(waitOwnerIdentitySummaries, attempt);
+        return attempt;
+      }));
     }
     const entry = {
       schema: WEBKIT_HOST_RESOURCE_TELEMETRY_SCHEMA,
@@ -415,12 +745,14 @@ export async function createWebKitHostResourceTelemetry({
       reason,
       metadata: safeMetadata,
       details: sanitizeValue(details ?? {}),
+      operationContext,
       nodeMemory: process.memoryUsage(),
       host,
       cgroup,
       processes,
       aggregate,
       disappeared,
+      waitOwners,
     };
     if (kind === "sample") sampleCount += 1;
     if (kind === "event") eventCount += 1;
@@ -430,7 +762,8 @@ export async function createWebKitHostResourceTelemetry({
 
   function enqueue(kind, event = null, details = {}, { allowStopped = false } = {}) {
     if (stopped && !allowStopped) return writeQueue;
-    const operation = writeQueue.then(() => collectEntry(kind, event, details));
+    const operationContext = sanitizeValue(currentOperationContext);
+    const operation = writeQueue.then(() => collectEntry(kind, event, details, operationContext));
     writeQueue = operation.catch((error) => {
       writeError ??= error;
     });
@@ -455,6 +788,12 @@ export async function createWebKitHostResourceTelemetry({
     void enqueue("event", sanitizeText(name, 96), details);
   };
 
+  const setContext = (context = {}) => {
+    if (stopped) return currentOperationContext;
+    currentOperationContext = sanitizeValue(context);
+    return currentOperationContext;
+  };
+
   const flush = async () => {
     await writeQueue;
     if (writeError) throw new Error(`WebKit host resource telemetry write failed: ${writeError}`);
@@ -468,7 +807,14 @@ export async function createWebKitHostResourceTelemetry({
       await enqueue("event", "telemetry-stop", details, { allowStopped: true });
       await writeQueue;
       const stoppedAt = Date.now();
-      const validity = webKitHostTelemetryValidity({ supported, rootObservedCount, webContentObservedCount });
+      const validity = webKitHostTelemetryValidity({
+        supported,
+        rootObservedCount,
+        webContentObservedCount,
+        dStateSampleCount,
+        waitOwnerAttemptCount,
+        waitOwnerCaptureErrorCount,
+      });
       const invalidReason = validity.invalidReason;
       const status = writeError ? "failed" : invalidReason ? "invalid" : "complete";
       const summary = manifest(status, {
@@ -482,6 +828,25 @@ export async function createWebKitHostResourceTelemetry({
         rootObservedCount,
         webContentObservedCount,
         fallbackScanCount,
+        waitOwner: {
+          schema: WEBKIT_WAIT_OWNER_SCHEMA,
+          detailLimitPerIdentity: WEBKIT_WAIT_OWNER_DETAIL_LIMIT,
+          dStateSampleCount,
+          attemptCount: waitOwnerAttemptCount,
+          detailedCaptureCount: waitOwnerDetailedCaptureCount,
+          unavailableCount: waitOwnerUnavailableCount,
+          cappedCount: waitOwnerCappedCount,
+          captureErrorCount: waitOwnerCaptureErrorCount,
+          firstElapsedMs: waitOwnerFirstElapsedMs,
+          lastElapsedMs: waitOwnerLastElapsedMs,
+          maxIoPressureFullAvg10: waitOwnerMaxIoPressureFullAvg10,
+          waitChannelFingerprints: Object.fromEntries([...waitOwnerFingerprints.entries()].sort(([left], [right]) => left.localeCompare(right))),
+          firstProcIo: waitOwnerFirstProcIo,
+          lastProcIo: waitOwnerLastProcIo,
+          firstDelayacctBlkioTicks: waitOwnerFirstDelayacctBlkioTicks,
+          lastDelayacctBlkioTicks: waitOwnerLastDelayacctBlkioTicks,
+          identities: serializedWaitOwnerSummaries(waitOwnerIdentitySummaries),
+        },
         collectionErrors: [...collectionErrors].sort().slice(0, 16),
         peaks,
         cgroupEventDeltas: supported ? {
@@ -503,13 +868,21 @@ export async function createWebKitHostResourceTelemetry({
         .map((line) => JSON.parse(line));
       const persistedSummary = JSON.parse(await readFile(summaryPath, "utf8"));
       const expectedEntryCount = sampleCount + eventCount;
+      const persistedWaitOwnerAttemptCount = persistedEntries.reduce((total, entry) => total + (entry.waitOwners?.length ?? 0), 0);
+      const persistedDStateSampleCount = persistedEntries.reduce((total, entry) => total + (entry.processes ?? [])
+        .filter(({ role, state }) => role === "webkit-web-content" && state === "D").length, 0);
       if (persistedEntries.length !== expectedEntryCount
         || persistedEntries.some((entry, index) => entry.schema !== WEBKIT_HOST_RESOURCE_TELEMETRY_SCHEMA || entry.sequence !== index + 1)
         || persistedEntries[0]?.event !== "telemetry-start"
         || persistedEntries.at(-1)?.event !== "telemetry-stop"
         || persistedSummary.schema !== WEBKIT_HOST_RESOURCE_TELEMETRY_SCHEMA
         || persistedSummary.status !== status
-        || persistedSummary.valid !== validity.valid) {
+        || persistedSummary.valid !== validity.valid
+        || persistedWaitOwnerAttemptCount !== waitOwnerAttemptCount
+        || persistedDStateSampleCount !== dStateSampleCount
+        || persistedWaitOwnerAttemptCount !== persistedDStateSampleCount
+        || persistedSummary.waitOwner?.attemptCount !== waitOwnerAttemptCount
+        || persistedSummary.waitOwner?.dStateSampleCount !== dStateSampleCount) {
         throw new Error("WebKit host resource telemetry persistence integrity failed");
       }
       return summary;
@@ -522,6 +895,7 @@ export async function createWebKitHostResourceTelemetry({
     supported,
     reason,
     event,
+    setContext,
     flush,
     stop,
     reference,

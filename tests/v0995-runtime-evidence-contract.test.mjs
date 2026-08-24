@@ -5,7 +5,12 @@ import test from "node:test";
 import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
 import {
+  WEBKIT_WAIT_OWNER_DETAIL_LIMIT,
+  WEBKIT_WAIT_OWNER_SCHEMA,
+  classifyWebKitWaitOwnerReadError,
   parseWebKitHostProcStat,
+  parseWebKitWaitOwnerProcIo,
+  sanitizeWebKitWaitOwnerStack,
   webKitHostProcessRole,
   webKitHostTelemetryValidity,
 } from "../scripts/webkit-host-resource-telemetry.mjs";
@@ -132,9 +137,52 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
     name: "WPEWeb)Process",
     state: "S",
     ppid: 1,
+    minorFaults: 7,
+    majorFaults: 9,
+    userTicks: 11,
+    systemTicks: 12,
+    threads: 17,
     startTicks: 19,
     virtualBytes: 20,
+    delayacctBlkioTicks: null,
   });
+  const completeStat = parseWebKitHostProcStat(`654 (WPEWebProcess) D ${Array.from({ length: 45 }, (_, index) => index + 1).join(" ")}`);
+  assert.equal(completeStat.delayacctBlkioTicks, 39);
+  assert.deepEqual(parseWebKitWaitOwnerProcIo([
+    "rchar: 101",
+    "wchar: 202",
+    "syscr: 3",
+    "syscw: 4",
+    "read_bytes: 505",
+    "write_bytes: 606",
+    "cancelled_write_bytes: 7",
+  ].join("\n")), {
+    rchar: 101,
+    wchar: 202,
+    syscr: 3,
+    syscw: 4,
+    read_bytes: 505,
+    write_bytes: 606,
+    cancelled_write_bytes: 7,
+  });
+  assert.deepEqual(parseWebKitWaitOwnerProcIo("rchar: 1\nread_bytes: invalid"), {
+    rchar: 1,
+    wchar: null,
+    syscr: null,
+    syscw: null,
+    read_bytes: null,
+    write_bytes: null,
+    cancelled_write_bytes: null,
+  });
+  const boundedStack = sanitizeWebKitWaitOwnerStack(Array.from({ length: 18 }, (_, index) => `line-${index + 1}\u0000`).join("\n"));
+  assert.equal(boundedStack.lines.length, 16);
+  assert.equal(boundedStack.truncated, true);
+  assert.equal(boundedStack.sourceLineCount, 18);
+  assert.deepEqual(classifyWebKitWaitOwnerReadError({ code: "EACCES" }), { status: "permission-denied", errorCode: "EACCES" });
+  assert.deepEqual(classifyWebKitWaitOwnerReadError({ code: "ENOENT" }), { status: "process-disappeared", errorCode: "ENOENT" });
+  assert.deepEqual(classifyWebKitWaitOwnerReadError({ code: "EIO" }), { status: "unavailable", errorCode: "EIO" });
+  assert.equal(WEBKIT_WAIT_OWNER_SCHEMA, "v100-webkit-wait-owner/v1");
+  assert.equal(WEBKIT_WAIT_OWNER_DETAIL_LIMIT, 64);
   assert.equal(webKitHostProcessRole("WPEWebProcess"), "webkit-web-content");
   assert.equal(webKitHostProcessRole("WPENetworkProcess"), "webkit-network");
   assert.equal(webKitHostProcessRole("WPEGPUProcess"), "webkit-gpu");
@@ -154,6 +202,14 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
     valid: true,
     invalidReason: null,
   });
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: true, rootObservedCount: 1, webContentObservedCount: 1, dStateSampleCount: 1, waitOwnerAttemptCount: 0 }), {
+    valid: false,
+    invalidReason: "d-state-wait-owner-attempt-missing",
+  });
+  assert.deepEqual(webKitHostTelemetryValidity({ supported: true, rootObservedCount: 1, webContentObservedCount: 1, dStateSampleCount: 1, waitOwnerAttemptCount: 1, waitOwnerCaptureErrorCount: 1 }), {
+    valid: false,
+    invalidReason: "d-state-wait-owner-capture-error",
+  });
   assert.match(hostTelemetrySource, /linux-proc-cgroup-unavailable/u);
   assert.match(hostTelemetrySource, /pid === rootPid \? `\$\{PROC_ROOT\}\/self`/u);
   assert.match(hostTelemetrySource, /root-process-never-observed/u);
@@ -164,8 +220,41 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(hostTelemetrySource, /disappearedRoles/u);
   assert.match(hostTelemetrySource, /descendantLeftovers/u);
   assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
+  assert.match(hostTelemetrySource, /WEBKIT_WAIT_OWNER_SCHEMA = "v100-webkit-wait-owner\/v1"/u);
+  assert.match(hostTelemetrySource, /WEBKIT_WAIT_OWNER_DETAIL_LIMIT = 64/u);
+  assert.match(hostTelemetrySource, /readWaitOwnerProcFile\(`\$\{processRoot\}\/wchan`\)/u);
+  assert.match(hostTelemetrySource, /readWaitOwnerProcFile\(`\$\{processRoot\}\/io`\)/u);
+  assert.match(hostTelemetrySource, /delayacctBlkioTicks/u);
+  assert.match(hostTelemetrySource, /sanitizeWebKitWaitOwnerStack/u);
+  assert.match(hostTelemetrySource, /persistedWaitOwnerAttemptCount !== persistedDStateSampleCount/u);
+  assert.match(hostTelemetrySource, /waitChannelFingerprints/u);
+  assert.match(hostTelemetrySource, /firstProcIo/u);
+  assert.match(hostTelemetrySource, /lastDelayacctBlkioTicks/u);
+  assert.match(hostTelemetrySource, /setContext/u);
   assert.match(hostTelemetrySource, /normalized\.startsWith\("webkitweb"\)/u);
   assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
+  for (const operation of [
+    "deployment/navigation-readiness-asset-boundary",
+    "deployment/unit-asset-proof",
+    "deployment/fixture-preparation",
+    "deployment/first-frame-queue-readback",
+    "deployment/checkpoint-advance",
+    "deployment/checkpoint-validation",
+    "deployment/final-canvas-png",
+    "deployment/hash-persistence",
+    "deployment/trace-capture",
+    "deployment/contact-sheet",
+  ]) assert.match(finalRemediationHarness, new RegExp(operation.replaceAll("/", "\\/"), "u"));
+  for (const operation of [
+    "hosted/asset-boundary",
+    "hosted/fault-start",
+    "hosted/blocked-state-readback",
+    "hosted/same-screen-recovery",
+    "hosted/final-canvas-audit",
+    "hosted/mutable-canvas-audit",
+    "hosted/page-screenshot",
+  ]) assert.match(visualHarness, new RegExp(operation.replaceAll("/", "\\/"), "u"));
+  assert.match(finalRemediationHarness, /requestedCheckpoint: checkpoint\.id[\s\S]*withDeploymentDiagnosticOperation\([\s\S]*"deployment\/checkpoint-advance"/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryValid/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryInvalidReason/u);
   assert.match(boundedDeploymentHarness, /failed at \$\{failedAt\}/u);

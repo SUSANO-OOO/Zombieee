@@ -71,6 +71,36 @@ const runEngine = async (engineName, browserType) => {
   let browser = null;
   let activeCaseDetails = null;
   let primaryFailure = null;
+  const setTelemetryIdle = (details = activeCaseDetails ?? {}) => hostResourceTelemetry?.setContext({
+    owner: "hosted-visual-integrity",
+    engine: engineName,
+    ...details,
+    operationId: "hosted-visual-idle",
+    operationStatus: "idle",
+  });
+  const runHostTelemetryOperation = async (operationId, details, operation) => {
+    const operationContext = {
+      owner: "hosted-visual-integrity",
+      engine: engineName,
+      ...(activeCaseDetails ?? {}),
+      ...details,
+      operationId,
+      operationStatus: "running",
+    };
+    hostResourceTelemetry?.setContext(operationContext);
+    hostResourceTelemetry?.event("operation-begin", operationContext);
+    try {
+      const result = await operation();
+      hostResourceTelemetry?.event("operation-end", { ...operationContext, operationStatus: "completed" });
+      setTelemetryIdle();
+      return result;
+    } catch (error) {
+      const failedContext = { ...operationContext, operationStatus: "failed", error: String(error) };
+      hostResourceTelemetry?.event("operation-end", failedContext);
+      hostResourceTelemetry?.setContext(failedContext);
+      throw error;
+    }
+  };
   const attachPageTelemetry = (page, details) => {
     hostResourceTelemetry?.event("page-created", details);
     page.on("crash", () => hostResourceTelemetry?.event("page-crash", details));
@@ -78,11 +108,13 @@ const runEngine = async (engineName, browserType) => {
   };
   const launchCaseBrowser = async (details) => {
     invariant(browser === null, `${engineName}: previous case browser was not closed`);
+    hostResourceTelemetry?.setContext({ owner: "hosted-visual-integrity", engine: engineName, ...details, operationId: "browser-launch", operationStatus: "running" });
     hostResourceTelemetry?.event("browser-launch-begin", { engine: engineName, ...details });
     browser = await browserType.launch({ headless: true });
     activeCaseDetails = details;
     hostResourceTelemetry?.event("browser-launched", { engine: engineName, ...details });
     browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect", { engine: engineName, ...details }));
+    setTelemetryIdle(details);
     return browser;
   };
   const closeCaseBrowser = async (details) => {
@@ -90,9 +122,11 @@ const runEngine = async (engineName, browserType) => {
     browser = null;
     activeCaseDetails = null;
     if (!caseBrowser) return;
+    hostResourceTelemetry?.setContext({ owner: "hosted-visual-integrity", engine: engineName, ...details, operationId: "browser-cleanup", operationStatus: "running" });
     hostResourceTelemetry?.event("browser-cleanup-begin", { engine: engineName, ...details });
     await caseBrowser.close();
     hostResourceTelemetry?.event("browser-cleanup-complete", { engine: engineName, ...details });
+    setTelemetryIdle(details);
   };
   try {
     for (const viewport of viewports) {
@@ -112,30 +146,39 @@ const runEngine = async (engineName, browserType) => {
         state: "start",
         qaVisualIntegrity: "1",
       }).toString();
-      await page.goto(url.href, { waitUntil: "domcontentloaded" });
-      await dismissInstallOffer(page);
-      await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 });
-      await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: 30_000 });
-      const audit = await page.evaluate(() => {
-        const bridge = window.__ASHFALL_ASSET_QA__;
-        const state = bridge.getState();
-        const plan = bridge.getRequiredPlan();
-        const sprites = new Set(bridge.getLoadedSpriteKeys());
-        const stageObjects = new Set(bridge.getLoadedStageObjectKeys());
-        return {
-          state,
-          plan: { stageId: plan.stageId, paths: plan.paths, sprites: plan.sprites, stageObjects: plan.stageObjects },
-          missingSprites: plan.sprites.filter(({ kind }) => !sprites.has(kind)).map(({ kind }) => kind),
-          missingStageObjects: plan.stageObjects.filter(({ id }) => !stageObjects.has(id)).map(({ id }) => id),
-          mount: bridge.getBattleMountState(),
-        };
+      await runHostTelemetryOperation("hosted/asset-boundary", { caseKind: "ready" }, async () => {
+        await page.goto(url.href, { waitUntil: "domcontentloaded" });
+        await dismissInstallOffer(page);
+        await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 });
+        await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: 30_000 });
       });
+      const audit = await runHostTelemetryOperation(
+        "hosted/final-canvas-audit",
+        { caseKind: "ready", auditKind: "required-assets" },
+        () => page.evaluate(() => {
+          const bridge = window.__ASHFALL_ASSET_QA__;
+          const state = bridge.getState();
+          const plan = bridge.getRequiredPlan();
+          const sprites = new Set(bridge.getLoadedSpriteKeys());
+          const stageObjects = new Set(bridge.getLoadedStageObjectKeys());
+          return {
+            state,
+            plan: { stageId: plan.stageId, paths: plan.paths, sprites: plan.sprites, stageObjects: plan.stageObjects },
+            missingSprites: plan.sprites.filter(({ kind }) => !sprites.has(kind)).map(({ kind }) => kind),
+            missingStageObjects: plan.stageObjects.filter(({ id }) => !stageObjects.has(id)).map(({ id }) => id),
+            mount: bridge.getBattleMountState(),
+          };
+        }),
+      );
       invariant(audit.state.state === "ready" && audit.state.failed === 0, JSON.stringify(audit.state));
       invariant(audit.missingSprites.length === 0, `missing sprites ${audit.missingSprites}`);
       invariant(audit.missingStageObjects.length === 0, `missing stage objects ${audit.missingStageObjects}`);
       let monkeyRenderProof = null;
       if (viewport.width === 844 && viewport.height === 390) {
-        monkeyRenderProof = await page.evaluate(async () => {
+        monkeyRenderProof = await runHostTelemetryOperation(
+          "hosted/final-canvas-audit",
+          { caseKind: "ready", auditKind: "engineer-render" },
+          () => page.evaluate(async () => {
           const qa = window.__ASHFALL_BATTLE_QA__;
           const asset = await qa.ensureUnitRenderProofAsset("engineer");
           const prepared = qa.prepareCrawlerDefenseProof({ attackerKind: "walker", lane: 1, existingClaim: false });
@@ -167,7 +210,8 @@ const runEngine = async (engineName, browserType) => {
             await new Promise((resolve) => requestAnimationFrame(resolve));
           }
           throw new Error(`Monkey never reached the production battle renderer ${JSON.stringify(lastObservation)}`);
-        });
+          }),
+        );
         invariant(monkeyRenderProof.asset?.path === "/art/v070/characters/engineer-battle-v1.png",
           `${engineName}: Monkey renderer resolved ${monkeyRenderProof.asset?.path}`);
         invariant(monkeyRenderProof.fighter?.renderAudit?.assetReady === true,
@@ -179,7 +223,11 @@ const runEngine = async (engineName, browserType) => {
       }
       invariant(errors.length === 0, `${engineName}/${viewport.width}x${viewport.height}: ${errors.join("\n")}`);
       const screenshot = path.join(evidenceDir, `${engineName}-${viewport.width}x${viewport.height}-required-assets.png`);
-      await page.screenshot({ path: screenshot, fullPage: true });
+      await runHostTelemetryOperation(
+        "hosted/page-screenshot",
+        { caseKind: "ready", screenshotKind: "required-assets" },
+        () => page.screenshot({ path: screenshot, fullPage: true }),
+      );
       diagnostics.push({ engine: engineName, viewport, audit, monkeyRenderProof, errors, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
       await context.close();
       await closeCaseBrowser(caseDetails);
@@ -211,70 +259,82 @@ const runEngine = async (engineName, browserType) => {
           qaVisualIntegrity: "1",
           faultNonce: `${engineName}-${fixture.className}-${mode}`,
         }).toString();
-        await page.goto(url.href, { waitUntil: "domcontentloaded" });
-        await dismissInstallOffer(page);
-        await page.waitForFunction(({ expectedPath }) => document.documentElement.dataset.assetLoadState === "ready"
-          && window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().background.path === expectedPath,
-        { expectedPath: fixture.plan.background.path }, { timeout: 120_000 }).catch(async (error) => {
-          const debug = await page.evaluate(() => ({
-            state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-            history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? null,
-            requiredBackground: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().background.path ?? null,
-          }));
-          throw new Error(`${engineName}/${fixture.className}/${mode}: baseline ready timeout ${JSON.stringify(debug)}`, { cause: error });
+        const faultOperationDetails = {
+          caseKind: "fault",
+          faultClass: fixture.className,
+          faultMode: mode,
+          faultPath: fixture.path,
+        };
+        await runHostTelemetryOperation("hosted/asset-boundary", faultOperationDetails, async () => {
+          await page.goto(url.href, { waitUntil: "domcontentloaded" });
+          await dismissInstallOffer(page);
+          await page.waitForFunction(({ expectedPath }) => document.documentElement.dataset.assetLoadState === "ready"
+            && window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().background.path === expectedPath,
+          { expectedPath: fixture.plan.background.path }, { timeout: 120_000 }).catch(async (error) => {
+            const debug = await page.evaluate(() => ({
+              state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+              history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? null,
+              requiredBackground: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().background.path ?? null,
+            }));
+            throw new Error(`${engineName}/${fixture.className}/${mode}: baseline ready timeout ${JSON.stringify(debug)}`, { cause: error });
+          });
         });
-        if (mode === "decode-reject" || mode === "decode-timeout") {
-          await page.evaluate(({ faultPath, faultMode }) => {
-          const originalDecode = HTMLImageElement.prototype.decode;
-          window.__ASHFALL_QA_RESTORE_DECODE__ = () => {
-            Object.defineProperty(HTMLImageElement.prototype, "decode", { configurable: true, value: originalDecode });
-            delete window.__ASHFALL_QA_RESTORE_DECODE__;
-          };
-            Object.defineProperty(HTMLImageElement.prototype, "decode", {
-              configurable: true,
-              value() {
-                const sourcePath = (() => {
-                  try { return new URL(this.currentSrc || this.src, location.href).pathname; } catch { return ""; }
-                })();
-                if (sourcePath === faultPath) {
-                  if (faultMode === "decode-timeout") return new Promise(() => {});
-                  return Promise.reject(new DOMException("QA decode rejection", "EncodingError"));
-                }
-                return originalDecode.call(this);
-              },
-            });
-          }, { faultPath: fixture.path, faultMode: mode });
-        }
-        await page.evaluate(({ path: faultPath, mode: faultMode }) => {
-          const next = new URL(window.location.href);
-          next.searchParams.set("assetTimeout", "400");
-          next.searchParams.set("assetFaultPath", faultPath);
-          if (["delay", "404", "corrupt"].includes(faultMode)) next.searchParams.set("assetFaultMode", faultMode);
-          else next.searchParams.delete("assetFaultMode");
-          history.replaceState(history.state, "", next);
-          window.__ASHFALL_ASSET_QA__.startAssetFaultProof();
-        }, { path: fixture.path, mode });
-        await page.waitForFunction(({ expectedPath, faultPath }) => {
-          if (document.documentElement.dataset.assetLoadState !== "error") return false;
-          const bridge = window.__ASHFALL_ASSET_QA__;
-          return bridge?.getRequiredPlan?.().background.path === expectedPath
-            && bridge?.getFailedPaths?.().includes(faultPath);
-        }, { expectedPath: fixture.plan.background.path, faultPath: fixture.path }, { timeout: 20_000 }).catch(async (error) => {
-          const debug = await page.evaluate(() => ({
-            state: document.documentElement.dataset.assetLoadState,
-            asset: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-          }));
-          throw new Error(`${engineName}/${fixture.className}/${mode}: terminal timeout ${JSON.stringify(debug)}`, { cause: error });
+        await runHostTelemetryOperation("hosted/fault-start", faultOperationDetails, async () => {
+          if (mode === "decode-reject" || mode === "decode-timeout") {
+            await page.evaluate(({ faultPath, faultMode }) => {
+              const originalDecode = HTMLImageElement.prototype.decode;
+              window.__ASHFALL_QA_RESTORE_DECODE__ = () => {
+                Object.defineProperty(HTMLImageElement.prototype, "decode", { configurable: true, value: originalDecode });
+                delete window.__ASHFALL_QA_RESTORE_DECODE__;
+              };
+              Object.defineProperty(HTMLImageElement.prototype, "decode", {
+                configurable: true,
+                value() {
+                  const sourcePath = (() => {
+                    try { return new URL(this.currentSrc || this.src, location.href).pathname; } catch { return ""; }
+                  })();
+                  if (sourcePath === faultPath) {
+                    if (faultMode === "decode-timeout") return new Promise(() => {});
+                    return Promise.reject(new DOMException("QA decode rejection", "EncodingError"));
+                  }
+                  return originalDecode.call(this);
+                },
+              });
+            }, { faultPath: fixture.path, faultMode: mode });
+          }
+          await page.evaluate(({ path: faultPath, mode: faultMode }) => {
+            const next = new URL(window.location.href);
+            next.searchParams.set("assetTimeout", "400");
+            next.searchParams.set("assetFaultPath", faultPath);
+            if (["delay", "404", "corrupt"].includes(faultMode)) next.searchParams.set("assetFaultMode", faultMode);
+            else next.searchParams.delete("assetFaultMode");
+            history.replaceState(history.state, "", next);
+            window.__ASHFALL_ASSET_QA__.startAssetFaultProof();
+          }, { path: fixture.path, mode });
         });
-        const blocked = await page.evaluate(() => ({
-          state: window.__ASHFALL_ASSET_QA__.getState(),
-          failedPaths: window.__ASHFALL_ASSET_QA__.getFailedPaths(),
-          history: window.__ASHFALL_ASSET_QA__.getHistory(),
-          mount: window.__ASHFALL_ASSET_QA__.getBattleMountState(),
-          assetsState: document.querySelector(".game-frame")?.getAttribute("data-assets-state") ?? null,
-          href: window.location.href,
-          planBackground: window.__ASHFALL_ASSET_QA__.getRequiredPlan().background.path,
-        }));
+        const blocked = await runHostTelemetryOperation("hosted/blocked-state-readback", faultOperationDetails, async () => {
+          await page.waitForFunction(({ expectedPath, faultPath }) => {
+            if (document.documentElement.dataset.assetLoadState !== "error") return false;
+            const bridge = window.__ASHFALL_ASSET_QA__;
+            return bridge?.getRequiredPlan?.().background.path === expectedPath
+              && bridge?.getFailedPaths?.().includes(faultPath);
+          }, { expectedPath: fixture.plan.background.path, faultPath: fixture.path }, { timeout: 20_000 }).catch(async (error) => {
+            const debug = await page.evaluate(() => ({
+              state: document.documentElement.dataset.assetLoadState,
+              asset: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+            }));
+            throw new Error(`${engineName}/${fixture.className}/${mode}: terminal timeout ${JSON.stringify(debug)}`, { cause: error });
+          });
+          return page.evaluate(() => ({
+            state: window.__ASHFALL_ASSET_QA__.getState(),
+            failedPaths: window.__ASHFALL_ASSET_QA__.getFailedPaths(),
+            history: window.__ASHFALL_ASSET_QA__.getHistory(),
+            mount: window.__ASHFALL_ASSET_QA__.getBattleMountState(),
+            assetsState: document.querySelector(".game-frame")?.getAttribute("data-assets-state") ?? null,
+            href: window.location.href,
+            planBackground: window.__ASHFALL_ASSET_QA__.getRequiredPlan().background.path,
+          }));
+        });
         invariant(blocked.state.state === "error" && blocked.state.retryAvailable === true, `${engineName}/${fixture.className}/${mode}: not blocked ${JSON.stringify(blocked)}`);
         invariant(blocked.failedPaths.includes(fixture.path), `${engineName}/${fixture.className}/${mode}: fault path absent ${JSON.stringify(blocked)}`);
         const terminalSession = blocked.history.at(-1);
@@ -291,48 +351,66 @@ const runEngine = async (engineName, browserType) => {
           `${engineName}/${fixture.className}/${mode}/${faultViewport.width}x${faultViewport.height}: fault mounted battle ${JSON.stringify(blocked.mount)}`);
         invariant(blocked.mount.fallbackDrawCount === 0,
           `${engineName}/${fixture.className}/${mode}: production diagnostic fallback drew pixels`);
-        const decodedBeforeRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
-        await page.evaluate(() => {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("assetFaultPath");
-          url.searchParams.delete("assetFaultMode");
-          history.replaceState(history.state, "", url);
-          window.__ASHFALL_QA_RESTORE_DECODE__?.();
-          window.__ASHFALL_ASSET_QA__.retry();
-        });
-        await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 }).catch(async (error) => {
-          const debug = await page.evaluate(() => ({
-            dataset: { ...document.documentElement.dataset },
-            state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-            history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? null,
-            failedPaths: window.__ASHFALL_ASSET_QA__?.getFailedPaths?.() ?? null,
-            pendingPaths: window.__ASHFALL_ASSET_QA__?.getPendingPaths?.() ?? null,
+        const recovery = await runHostTelemetryOperation("hosted/same-screen-recovery", faultOperationDetails, async () => {
+          const decodedBeforeRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
+          await page.evaluate(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("assetFaultPath");
+            url.searchParams.delete("assetFaultMode");
+            history.replaceState(history.state, "", url);
+            window.__ASHFALL_QA_RESTORE_DECODE__?.();
+            window.__ASHFALL_ASSET_QA__.retry();
+          });
+          await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 }).catch(async (error) => {
+            const debug = await page.evaluate(() => ({
+              dataset: { ...document.documentElement.dataset },
+              state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+              history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? null,
+              failedPaths: window.__ASHFALL_ASSET_QA__?.getFailedPaths?.() ?? null,
+              pendingPaths: window.__ASHFALL_ASSET_QA__?.getPendingPaths?.() ?? null,
+            }));
+            throw new Error(`${engineName}/${fixture.className}/${mode}: recovery timeout ${JSON.stringify(debug)}`, { cause: error });
+          });
+          const decodedAfterRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
+          const recovered = await page.evaluate(() => ({
+            mount: window.__ASHFALL_ASSET_QA__.getBattleMountState(),
+            state: window.__ASHFALL_ASSET_QA__.getState(),
+            history: window.__ASHFALL_ASSET_QA__.getHistory(),
+            failedPaths: window.__ASHFALL_ASSET_QA__.getFailedPaths(),
+            pendingPaths: window.__ASHFALL_ASSET_QA__.getPendingPaths(),
           }));
-          throw new Error(`${engineName}/${fixture.className}/${mode}: recovery timeout ${JSON.stringify(debug)}`, { cause: error });
+          await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__.getBattleMountState().battleMounted === true, null, { timeout: 30_000 });
+          await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          return { decodedBeforeRetry, decodedAfterRetry, recovered };
         });
-        const decodedAfterRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
-        const recovered = await page.evaluate(() => ({
-          mount: window.__ASHFALL_ASSET_QA__.getBattleMountState(),
-          state: window.__ASHFALL_ASSET_QA__.getState(),
-          history: window.__ASHFALL_ASSET_QA__.getHistory(),
-          failedPaths: window.__ASHFALL_ASSET_QA__.getFailedPaths(),
-          pendingPaths: window.__ASHFALL_ASSET_QA__.getPendingPaths(),
-        }));
-        await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__.getBattleMountState().battleMounted === true, null, { timeout: 30_000 });
-        await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const { decodedBeforeRetry, decodedAfterRetry, recovered } = recovery;
         const finalCanvas = fixture.className === "mission"
-          ? await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit())
+          ? await runHostTelemetryOperation(
+            "hosted/final-canvas-audit",
+            faultOperationDetails,
+            () => page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit()),
+          )
           : null;
         const mutableMissionStates = [];
         if (finalCanvas) {
           invariant(finalCanvas.pass === true, `${engineName}/${mode}/${faultViewport.width}x${faultViewport.height}: final mission canvas did not contain authored pixels ${JSON.stringify(finalCanvas)}`);
           for (const state of ["start", "power-1", "power-3"]) {
-            await page.evaluate((nextState) => window.__ASHFALL_BATTLE_QA__.setStationMissionPixelAuditState(nextState), state);
-            await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-            const pixelAudit = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit());
+            const pixelAudit = await runHostTelemetryOperation(
+              "hosted/mutable-canvas-audit",
+              { ...faultOperationDetails, mutableState: state },
+              async () => {
+                await page.evaluate((nextState) => window.__ASHFALL_BATTLE_QA__.setStationMissionPixelAuditState(nextState), state);
+                await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+                return page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit());
+              },
+            );
             invariant(pixelAudit.pass === true, `${engineName}/${mode}/${state}: authored state missing from final canvas ${JSON.stringify(pixelAudit)}`);
             const screenshot = path.join(evidenceDir, `${engineName}-${faultViewport.width}x${faultViewport.height}-${mode}-${state}.png`);
-            await page.screenshot({ path: screenshot });
+            await runHostTelemetryOperation(
+              "hosted/page-screenshot",
+              { ...faultOperationDetails, mutableState: state },
+              () => page.screenshot({ path: screenshot }),
+            );
             mutableMissionStates.push({ state, pixelAudit, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
           }
           invariant(new Set(mutableMissionStates.map(({ pixelAudit }) => pixelAudit.authoredStateSignature)).size === mutableMissionStates.length,
