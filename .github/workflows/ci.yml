@@ -207,6 +207,15 @@ jobs:
     name: V1 Phase G Production Matrix
     needs: verify
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      options: --init --ipc=host
+    defaults:
+      run:
+        shell: bash
+    env:
+      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      V100_PLAYWRIGHT_CONTAINER_ENGINES: chromium,webkit
     timeout-minutes: 90
 
     steps:
@@ -226,11 +235,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify pinned Playwright container runtime
+        run: node scripts/verify-playwright-container-runtime.mjs
+
       - name: Build production application
         run: npm run build
-
-      - name: Install Phase G browser engines
-        run: npx playwright install --with-deps chromium webkit
 
       - name: Capture ordered WebKit battle-extra trio (focused)
         env:
@@ -464,6 +473,15 @@ jobs:
     needs: webkit-stage3-audio
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      options: --init --ipc=host
+    defaults:
+      run:
+        shell: bash
+    env:
+      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      V100_PLAYWRIGHT_CONTAINER_ENGINES: webkit
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -490,10 +508,10 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Verify pinned Playwright container runtime
+        run: node scripts/verify-playwright-container-runtime.mjs
       - name: Build production application
         run: npm run build
-      - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
       - name: Capture final-canvas deployment evidence
         env:
           DEBUG: pw:browser
@@ -515,6 +533,15 @@ jobs:
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
     needs: webkit-hosted
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      options: --init --ipc=host
+    defaults:
+      run:
+        shell: bash
+    env:
+      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      V100_PLAYWRIGHT_CONTAINER_ENGINES: webkit
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -542,12 +569,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify pinned Playwright container runtime
+        run: node scripts/verify-playwright-container-runtime.mjs
+
       - name: Build candidate production application
         if: matrix.audio_case != 'final-base'
         run: npm run build
-
-      - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
 
       - name: Capture bounded candidate Stage 3 audio route
         if: matrix.audio_case != 'final-base'

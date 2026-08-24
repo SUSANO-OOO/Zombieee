@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r33`
+- Canonical Design Lock: `V100-SOL-DL-001 r34`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-41 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 42 is the sole current execution handoff.
+Sections 1-42 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 43 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1481,3 +1481,32 @@ Exact SOL execution handoff:
 7. Only complete local green authorizes one atomic exact 32-path iteration-15 commit, normal non-force push, and one automatic focused attempt. Complete focused green alone authorizes workflow-only iteration 16, not Ready or release.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r33` and Issue #172.**
+
+## 43. Revision r34 — no active Luna handoff / byte snapshots and matched WebKit runtime
+
+Design Lock Section 50 and the latest explicitly labeled Issue #172 r34 byte-lock comment are the sole active cursor. Sections 1-42 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r34 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `e8cfc3b557e9316a33186935c98d110f33bcc5a9`
+- `LAST_AUDITED_TREE`: `0bbffaf3d14114985bf9c4ba7ddca5ae0524f195`
+- `FAILED_GATE`: terminal automatic CI #929 / run `32747475096`: PR Verify `97496346503` three stale byte snapshots; Stage 3 final-candidate `97503465033` two clean target losses; deployment 667x375 `97507755900` and 932x430 `97507755990` WPE WebContent disappearance/replacement; Phase G and canonical HUD dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r33 local source/static/material and 18 browser captures; same remote provenance/whitespace/lint/content/build; six enemy shards, Hosted, Stage 3 entrance/base, four deployment viewports; Pages preview `32747475124` build green/deploy skipped. Comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_RELEASE_PREP_BYTE_SNAPSHOT_DRIFT / APPROVED_SIX_ATLAS_TRANSPORT_REDUCTION_NOT_PROPAGATED_TO_EXACT_UPDATE_BYTE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`; `REMOTE_HOSTED_WEBKIT_NATIVE_RUNTIME_ENVELOPE / MULTI_HARNESS_TARGET_PROCESS_LOSS + UNPINNED_SYSTEM_DEPENDENCY_SURFACE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `RELEASE_PREP_APPROVED_SIZE_SNAPSHOT_PROPAGATION / ONE_SIX_PATH_TRANSPORT_DELTA + ALL_COUNTS_HASH_REUSE_AND_PAYLOAD_VERIFICATION_PRESERVED / DESIGN_CHANGE_REQUIRED`; `MATCHED_PLAYWRIGHT_RUNTIME_ENVELOPE / DIGEST_PINNED_OFFICIAL_V1_56_1_NOBLE + INIT_IPC + EXACT_PACKAGE_BROWSER_PREFLIGHT + STAGE3_PROCESS_TELEMETRY / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r34 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r33 iteration 15 is terminal red; r34 exact eleven-path correction is iteration 16; workflow-only unfiltered restoration is iteration 17
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r34 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: preserve exact clean r33 candidate -> r34 four-path byte lock -> exact seven-path remediation -> focused 35/35 + full 1,195/1,195 and static gates -> atomic exact eleven-path iteration-16 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-17 restoration retaining the pinned envelope -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Keep the 28 r33 committed paths outside the Section 50.2 allowlist byte-identical. Of the four overlapping governance paths (`docs/PROJECT_STATE.md`, Design Lock, Handoff, and `tests/v100-design-lock.test.mjs`), permit only the locked r34 design/source delta. Change exactly the eleven Section 50.2 paths; no `app/**`, `public/**`, package/lock, product, asset, timeout, retry, viewport, checkpoint, pixel, causal, release-request, or acceptance change.
+2. Propagate the one approved `6_309_676`-byte transport reduction to the four exact release-prep snapshots while preserving every count/hash/path/payload assertion and exactly three release-prep tests.
+3. In only Phase G, Stage 3, and deployment jobs, use exact official image `mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a`, options `--init --ipc=host`, explicit bash, and the exact preflight. Remove only those jobs' dynamic browser-install steps; keep package/browser versions and all QA commands unchanged.
+4. Add the one bounded preflight source/test. Require Linux, `/ms-playwright`, package 1.56.1, Chromium 1194/141.0.7390.37 when requested, WebKit 2215/26.0, exact executable roots, and one local-data launch/evaluate/close per requested engine. No download or fallback.
+5. Attach existing host-process telemetry to the Stage 3 bounded parent across its unchanged maximum two attempts. A Linux pass requires complete valid root/WebContent evidence; product failure remains primary. Do not change clean-target-close eligibility or deadline.
+6. Require focused 35/35, full 1,195/1,195, content, lint, build, diff/EOL/BOM/topology and forbidden-path zero. Local Windows source checks are not Linux container proof; do not rerun or promote r33 browser evidence.
+7. Only complete local green authorizes one atomic exact eleven-path iteration-16 commit, normal non-force push, and one automatic attempt. Every required job and artifact listed in Section 50.5 must be green. Any first red returns to SOL_DESIGN without edit/retry/rerun/host fallback.
+8. Complete iteration-16 green alone authorizes workflow-only iteration 17 retaining the pinned envelope. It does not authorize Ready, merge, tag, Release, Pages, or final evidence.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r34` and Issue #172.**

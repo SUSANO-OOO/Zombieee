@@ -98,6 +98,27 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.doesNotMatch(stage3Job, /npm run qa:p5/u);
   assert.equal((stage3Job.match(/node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
+  const pinnedImage = "mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a";
+  const assertPinnedRuntime = (job, engines) => {
+    assert.match(job, new RegExp(`container:\\n\\s+image: ${pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\n\\s+options: --init --ipc=host`, "u"));
+    assert.match(job, /defaults:\n\s+run:\n\s+shell: bash/u);
+    assert.match(job, new RegExp(`V100_PLAYWRIGHT_CONTAINER_IMAGE: ${pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`, "u"));
+    assert.match(job, new RegExp(`V100_PLAYWRIGHT_CONTAINER_ENGINES: ${engines}`, "u"));
+    const install = job.indexOf("run: npm ci");
+    const preflight = job.indexOf("run: node scripts/verify-playwright-container-runtime.mjs");
+    const build = job.indexOf("Build production application") >= 0
+      ? job.indexOf("Build production application")
+      : job.indexOf("Build candidate production application");
+    assert.ok(install >= 0 && install < preflight && preflight < build);
+    assert.doesNotMatch(job, /npx playwright install/u);
+  };
+  assertPinnedRuntime(phaseGJob, "chromium,webkit");
+  assertPinnedRuntime(deploymentJob, "webkit");
+  assertPinnedRuntime(stage3Job, "webkit");
+  assert.equal((workflow.match(new RegExp(pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "gu")) ?? []).length, 6);
+  for (const unchangedHostJob of [enemyJob, hostedJob, hudJob]) {
+    assert.doesNotMatch(unchangedHostJob, /verify-playwright-container-runtime|container:\n/u);
+  }
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);

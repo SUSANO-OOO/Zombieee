@@ -1,8 +1,10 @@
 ﻿import assert from "node:assert/strict";
 import test from "node:test";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
-import { isRetryableTargetClosed } from "../scripts/run-stage3-audio-bounded.mjs";
+import { isRetryableTargetClosed, runStage3AudioBounded } from "../scripts/run-stage3-audio-bounded.mjs";
 
 function cleanDiagnostics() {
   return {
@@ -138,4 +140,56 @@ test("r7 final-cut waiting is Node-owned with the unchanged predicate and deadli
   assert.match(smoke, /FINAL_CUT_TRACE_INTERVAL_MS = 1_000/);
   assert.match(smoke, /FINAL_CUT_TRACE_MAX_SAMPLES = 75/);
   assert.match(smoke, /const timeout = Math\.max\(5_000, Number\(process\.env\.P5_QA_TIMEOUT_MS\) \|\| 45_000\)/);
+});
+
+test("r34 Stage 3 parent telemetry is serialized and fails closed without replacing product acceptance", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage3-r34-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const executeAttempt = async (_baseRoot, attemptDir) => {
+    await writeFile(path.join(attemptDir, "summary.json"), `${JSON.stringify({
+      total: 1,
+      failed: 0,
+      results: [{ status: "passed" }],
+    })}\n`, "utf8");
+    return { code: 0, signal: null };
+  };
+  const telemetryFactory = (summary) => async () => ({
+    supported: summary.supported,
+    event() {},
+    reference: () => ({ schema: "v100-webkit-host-resource-telemetry/v1", supported: summary.supported }),
+    stop: async () => summary,
+  });
+
+  const passed = await runStage3AudioBounded({
+    mode: "final",
+    evidenceRoot: path.join(root, "valid"),
+    executeAttempt,
+    createHostResourceTelemetry: telemetryFactory({
+      supported: true,
+      status: "complete",
+      valid: true,
+      invalidReason: null,
+    }),
+  });
+  assert.equal(passed.status, "passed");
+  assert.equal(passed.hostResourceTelemetryStatus, "complete");
+  assert.equal(passed.hostResourceTelemetryValidity, true);
+  assert.equal(passed.attempts.length, 1);
+
+  await assert.rejects(runStage3AudioBounded({
+    mode: "final",
+    evidenceRoot: path.join(root, "invalid"),
+    executeAttempt,
+    createHostResourceTelemetry: telemetryFactory({
+      supported: true,
+      status: "invalid",
+      valid: false,
+      invalidReason: "webkit-web-content-never-observed",
+    }),
+  }), /failed at host-resource-telemetry/u);
+  const failed = JSON.parse(await readFile(path.join(root, "invalid", "bounded-summary.json"), "utf8"));
+  assert.equal(failed.status, "failed");
+  assert.equal(failed.hostResourceTelemetryValidity, false);
+  assert.equal(failed.hostResourceTelemetryInvalidReason, "webkit-web-content-never-observed");
+  assert.equal(failed.attempts[0].code, 0);
 });

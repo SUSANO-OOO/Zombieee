@@ -9,6 +9,19 @@ import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js"
 
 const PUBLISHED_V0982_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
 const PUBLISHED_V0993_SHA = "827e1b7942221d24901332bdaa543704fbc730cc";
+const APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION = 6_309_676;
+const PRE_REPACK_SIZE_SNAPSHOTS = Object.freeze({
+  candidateTotalBytes: 110_872_347,
+  candidateDistinctHashBytes: 110_332_444,
+  updateFromV0982Bytes: 37_821_230,
+  updateFromV0993Bytes: 27_446_536,
+});
+const APPROVED_SIZE_SNAPSHOTS = Object.freeze({
+  candidateTotalBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateTotalBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 104_562_671
+  candidateDistinctHashBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateDistinctHashBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 104_022_768
+  updateFromV0982Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0982Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 31_511_554
+  updateFromV0993Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0993Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 21_136_860
+});
 const publishedSource = JSON.parse(execFileSync("git", [
   "show",
   `${PUBLISHED_V0982_SHA}:public/asset-manifest.json`,
@@ -23,15 +36,22 @@ const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.js
 const v100ApprovedAssets = candidate.assets.filter(({ path }) => path.startsWith("/art/v100/"));
 
 test("the Version 0.9.9.5 release candidate has one immutable identity and complete manifest", () => {
+  assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 6_309_676);
+  assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
+    candidateTotalBytes: 104_562_671,
+    candidateDistinctHashBytes: 104_022_768,
+    updateFromV0982Bytes: 31_511_554,
+    updateFromV0993Bytes: 21_136_860,
+  });
   assert.equal(RELEASE_VERSION, "0.9.9.5");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(v100ApprovedAssets.length, 44);
   assert.equal(candidate.assets.length, 459);
-  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 110_872_347);
+  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), APPROVED_SIZE_SNAPSHOTS.candidateTotalBytes);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
-  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 110_332_444);
+  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), APPROVED_SIZE_SNAPSHOTS.candidateDistinctHashBytes);
 });
 
 test("the real Version 0.9.8.2 pack updates by hash without re-downloading unchanged assets", () => {
@@ -51,7 +71,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "0.9.9.5");
   assert.equal(update.downloadCount, 108);
-  assert.equal(update.downloadBytes, 37_821_230);
+  assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 348);
   assert.equal(update.reusedCount, 3);
   assert.equal(update.removedCount, 26);
@@ -86,7 +106,7 @@ test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchan
   assert.equal(update.fromVersion, "0.9.9.3");
   assert.equal(update.toVersion, "0.9.9.5");
   assert.equal(update.downloadCount, 59);
-  assert.equal(update.downloadBytes, 27_446_536);
+  assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 397);
   assert.equal(update.reusedCount, 3);
   assert.equal(update.removedCount, 19);
