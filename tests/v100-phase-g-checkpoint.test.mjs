@@ -82,6 +82,21 @@ function runBrowserLifecycleProbe(input) {
   return JSON.parse(result.stdout.trim());
 }
 
+function runCausalConvergenceProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE: "1",
+      V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
 function readyCard(kind, cost) {
   return {
     kind,
@@ -314,7 +329,29 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(causalCollector, /reactionHistory: activity\.reactionHistory \?\? \[\]/u);
   assert.match(causalCollector, /await page\.waitForTimeout\(120\)/u);
   assert.match(source, /const combatProofDurationMs = Math\.max\(2_400, Number\(process\.env\.V100_PHASE_G_COMBAT_PROOF_MS\) \|\| 12_000\)/u);
+  assert.match(source, /const COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS = 2_400/u);
+  assert.match(source, /const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8/u);
   assert.match(source, /combatProofDurationMs: 4_800/u);
+  assert.match(causalCollector, /combatCausalConvergenceDecision\([\s\S]*buildCombatCausalProof\(samples\)[\s\S]*if \(convergenceDecision\.accepted\) break/u);
+  assert.match(causalCollector, /const proof = buildCombatCausalProof\(samples, stableHistory\)/u);
+  assert.match(causalCollector, /v100-phase-g-causal-collection\/v1/u);
+  assert.match(causalCollector, /attemptedSampleCount: samples\.length/u);
+  assert.match(causalCollector, /validSampleCount: proof\.sampleCount/u);
+  assert.match(causalCollector, /causal-contract-satisfied-after-minimum-observation/u);
+  assert.match(causalCollector, /duration-budget-exhausted/u);
+  const completeCausalProof = {
+    ok: true,
+    sampleCount: 8,
+    stages: { source: true, travelOrContact: true, targetReaction: true, audio: true },
+  };
+  assert.equal(runCausalConvergenceProbe({ proof: completeCausalProof, options: { elapsedMs: 2_400 } }).accepted, true);
+  assert.equal(runCausalConvergenceProbe({ proof: completeCausalProof, options: { elapsedMs: 2_399 } }).accepted, false);
+  assert.equal(runCausalConvergenceProbe({ proof: { ...completeCausalProof, sampleCount: 7 }, options: { elapsedMs: 12_000 } }).accepted, false);
+  assert.equal(runCausalConvergenceProbe({
+    proof: { ...completeCausalProof, stages: { ...completeCausalProof.stages, targetReaction: false } },
+    options: { elapsedMs: 12_000 },
+  }).accepted, false);
+  assert.equal(runCausalConvergenceProbe({ proof: { ...completeCausalProof, ok: false }, options: { elapsedMs: 12_000 } }).accepted, false);
   const moduleHistoryMerge = source.match(/function mergeCombatActivityHistory[\s\S]+?(?=\nfunction proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   const pageHistoryMerge = source.match(/const mergeCombatActivityHistory = \(previous = \{\}, snapshot = \{\}\) => \{[\s\S]+?(?=\n    const proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   for (const historyOwner of [moduleHistoryMerge, pageHistoryMerge]) {
@@ -392,6 +429,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /elapsedSinceDispatchStartMs/u);
   assert.ok(source.indexOf("V100_PHASE_G_DEPLOYMENT_POINTER_PROBE") < source.indexOf("await mkdir(evidenceDir"));
   assert.ok(source.indexOf("V100_PHASE_G_BROWSER_LIFECYCLE_PROBE") < source.indexOf("await mkdir(evidenceDir"));
+  assert.ok(source.indexOf("V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE") < source.indexOf("await mkdir(evidenceDir"));
   assert.deepEqual(runBrowserLifecycleProbe({ engineName: "webkit", state: "battle-extra" }), {
     engineName: "webkit",
     state: "battle-extra",
@@ -564,7 +602,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal((source.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 0);
   assert.match(source, /targetContinuity\.allowSustainRedeploy/u);
   assert.match(source, /targetContinuity\.targetSurvivalPlanPending/u);
-  const continuityHelper = source.match(/function proofActorTargetContinuityDecision\(\{([\s\S]+?)\n\}\n\nif \(process\.env\.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE/u)?.[1] ?? "";
+  const continuityHelper = source.match(/function proofActorTargetContinuityDecision\(\{([\s\S]+?)\n\}\n\nfunction combatCausalConvergenceDecision/u)?.[1] ?? "";
   assert.doesNotMatch(continuityHelper, /page\.|window\.|fighter|targetId|attackIdentity|audio|\bhp\b|resource|clock/u);
 
   const livingHumanHistory = runHistoryProbe({

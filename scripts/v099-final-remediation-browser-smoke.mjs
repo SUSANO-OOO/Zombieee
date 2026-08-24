@@ -2277,6 +2277,14 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence, life
   return result;
 }
 
+function validDeploymentAuditScratchReceipt(audit) {
+  return audit?.scratchSurface?.schema === "v100-fighter-unit-layer-audit-scratch/v1"
+    && audit.scratchSurface.kind === "detached-dom-canvas"
+    && audit.scratchSurface.surfaceCount === 1
+    && audit.scratchSurface.contextCount === 1
+    && audit.scratchSurface.passCount === 6;
+}
+
 async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label, captureTrace = null) {
   try {
     const arm = await page.evaluate(({ id, expectedCheckpoint }) => (
@@ -2339,6 +2347,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
           && frozen.fighter?.y === receipt?.y
           && frozen.observedProgress === receipt?.computedProgress
           && frozen.audit?.deploymentPlan?.checkpoint === checkpoint
+          && validDeploymentAuditScratchReceipt(frozen.audit)
           && frozen.observedProgress + 1e-6 >= minimumProgress) {
           return frozen;
         }
@@ -2390,7 +2399,9 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label, captur
           };
         }, { fighterId: candidate.fighterId, expectedX: candidate.fighterX });
         if (captureTrace) await captureTrace();
-        if (frozen.frozen === true && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside") {
+        if (frozen.frozen === true
+          && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside"
+          && validDeploymentAuditScratchReceipt(frozen.audit)) {
           return frozen;
         }
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));

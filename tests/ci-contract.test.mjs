@@ -192,13 +192,16 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
   const boundedRunner = await readFile("scripts/run-stage3-audio-bounded.mjs", "utf8");
   assert.match(workflow, /Build exact PR base for the same bounded final fixture/);
-  assert.match(workflow, /git worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
+  assert.match(workflow, /git -c safe\.directory="\$GITHUB_WORKSPACE" cat-file -e "\$PR_BASE_SHA\^\{commit\}"/);
+  assert.match(workflow, /git -c safe\.directory="\$GITHUB_WORKSPACE" worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
   assert.match(workflow, /npm ci[\s\S]*npm run build/);
   assert.match(workflow, /run-stage3-audio-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
   const stage3Job = workflow.match(/  webkit-stage3-audio:\r?\n([\s\S]*)$/u)?.[1] ?? "";
   assert.match(stage3Job, /- entrance-candidate[\s\S]*- final-candidate[\s\S]*- final-base/u);
   assert.equal((stage3Job.match(/- final-base/gmu) ?? []).length, 1);
   assert.match(stage3Job, /Build exact PR base[\s\S]*if: matrix\.audio_case == 'final-base'/u);
+  assert.equal((stage3Job.match(/git -c safe\.directory="\$GITHUB_WORKSPACE"/gu) ?? []).length, 2);
+  assert.doesNotMatch(stage3Job, /git config|safe\.directory=(?:"?'?\*|\/)/u);
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.match(boundedRunner, /attempt <= 2/);
   assert.match(boundedRunner, /isRetryableTargetClosedLog\(failure\.error/);

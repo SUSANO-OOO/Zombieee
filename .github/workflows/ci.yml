@@ -596,7 +596,8 @@ jobs:
         run: |
           set -euo pipefail
           base_source="$RUNNER_TEMP/stage3-final-base"
-          git worktree add --detach "$base_source" "$PR_BASE_SHA"
+          git -c safe.directory="$GITHUB_WORKSPACE" cat-file -e "$PR_BASE_SHA^{commit}"
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add --detach "$base_source" "$PR_BASE_SHA"
           (
             cd "$base_source"
             npm ci

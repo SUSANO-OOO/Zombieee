@@ -26,6 +26,8 @@ const evidenceDir = path.resolve(process.env.V100_PHASE_G_EVIDENCE_DIR ?? "outpu
 const timeout = Math.max(20_000, Number(process.env.V100_PHASE_G_TIMEOUT_MS) || 60_000);
 const battleTimeout = Math.max(60_000, Number(process.env.V100_PHASE_G_BATTLE_TIMEOUT_MS) || 150_000);
 const combatProofDurationMs = Math.max(2_400, Number(process.env.V100_PHASE_G_COMBAT_PROOF_MS) || 12_000);
+const COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS = 2_400;
+const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8;
 const requiredViewports = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
@@ -697,9 +699,41 @@ function proofActorTargetContinuityDecision({
   });
 }
 
+function combatCausalConvergenceDecision(proof, {
+  elapsedMs = 0,
+  minimumDwellMs = COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS,
+  minimumSamples = COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES,
+} = {}) {
+  const stages = proof?.stages ?? {};
+  const sampleCount = Number(proof?.sampleCount) || 0;
+  const allStagesComplete = stages.source === true
+    && stages.travelOrContact === true
+    && stages.targetReaction === true
+    && stages.audio === true;
+  const dwellComplete = Number(elapsedMs) >= minimumDwellMs;
+  const samplesComplete = sampleCount >= minimumSamples;
+  return Object.freeze({
+    accepted: proof?.ok === true && allStagesComplete && dwellComplete && samplesComplete,
+    proofOk: proof?.ok === true,
+    allStagesComplete,
+    dwellComplete,
+    samplesComplete,
+    elapsedMs: Number(elapsedMs) || 0,
+    sampleCount,
+    minimumDwellMs,
+    minimumSamples,
+  });
+}
+
 if (process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE === "1") {
   const input = JSON.parse(process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE_INPUT ?? "{}");
   console.log(JSON.stringify(phaseGBrowserLifecyclePolicy(input.engineName, input.state)));
+  process.exit(0);
+}
+
+if (process.env.V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE === "1") {
+  const input = JSON.parse(process.env.V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE_INPUT ?? "{}");
+  console.log(JSON.stringify(combatCausalConvergenceDecision(input.proof, input.options)));
   process.exit(0);
 }
 
@@ -2784,6 +2818,7 @@ async function productionStateContract(page, state) {
 async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
   const samples = [];
   const startedAt = Date.now();
+  let convergenceDecision = null;
   while (Date.now() - startedAt < durationMs) {
     samples.push(await page.evaluate(() => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
@@ -2860,7 +2895,13 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         audioCueRequests: audio,
       };
     }).catch(() => null));
-    await page.waitForTimeout(120);
+    const elapsedMs = Date.now() - startedAt;
+    convergenceDecision = combatCausalConvergenceDecision(
+      buildCombatCausalProof(samples),
+      { elapsedMs },
+    );
+    if (convergenceDecision.accepted) break;
+    if (Date.now() - startedAt < durationMs) await page.waitForTimeout(120);
   }
   const stableHistory = await page.evaluate(() => {
     const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -2872,7 +2913,26 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
       battlePresentationEffects: activity.battlePresentationEffects ?? [],
     };
   }).catch(() => ({}));
-  return buildCombatCausalProof(samples, stableHistory);
+  const proof = buildCombatCausalProof(samples, stableHistory);
+  const elapsedMs = Date.now() - startedAt;
+  const finalConvergence = combatCausalConvergenceDecision(proof, { elapsedMs });
+  const converged = convergenceDecision?.accepted === true && finalConvergence.accepted === true;
+  return {
+    ...proof,
+    collection: {
+      schema: "v100-phase-g-causal-collection/v1",
+      durationBudgetMs: durationMs,
+      elapsedMs,
+      attemptedSampleCount: samples.length,
+      validSampleCount: proof.sampleCount,
+      minimumDwellMs: COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS,
+      minimumSamples: COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES,
+      converged,
+      terminationReason: converged
+        ? "causal-contract-satisfied-after-minimum-observation"
+        : "duration-budget-exhausted",
+    },
+  };
 }
 
 async function saveScreenshot(page, filePath, label) {

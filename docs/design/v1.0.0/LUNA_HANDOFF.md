@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r35`
+- Canonical Design Lock: `V100-SOL-DL-001 r36`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-43 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 44 is the sole current execution handoff.
+Sections 1-44 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 45 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1539,3 +1539,34 @@ Exact SOL execution handoff:
 8. The automatic result always returns to `SOL_DESIGN`, even if green. Classify only `DIAGNOSTIC_COMPLETE`, `DIAGNOSTIC_EVIDENCE_INVALID`, or `DIAGNOSTIC_NO_REPRODUCTION`, then lock one owner-specific r36 remediation. No Ready, merge, tag, Release, Pages, or final evidence.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r35` and Issue #172.**
+
+## 45. Revision r36 — no active Luna handoff / owner-specific WebKit QA closure
+
+Design Lock Section 52 and the latest explicitly labeled Issue #172 r36 byte-lock comment are the sole active cursor. Sections 1-44 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r36 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `be4acc7a034858cd9918714895d423da71f4ebf6`
+- `LAST_AUDITED_TREE`: `f9c7d4306f7104b57ab287767aebba3d19d48775`
+- `FAILED_GATE`: automatic CI #931 / `32764650981`: Phase G Stage 6 `97557384758` crashed during already-satisfied causal collection; deployment 736x414 `97559866922`, 844x340 `97559866871`, and 1280x720 `97559866973` lost the page during QA-only final checkpoint audit; Stage 3 final-base `97558371928` stopped in source preparation at command-scoped repository ownership; canonical HUD dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r35 local focused 34/34, Design Lock 19/19, full 1,195/1,195 and static gates; remote PR Verify, six enemy shards, Hosted, both Stage 3 candidate cases, deployment 667x375/844x390/932x430, and Pages preview build/deploy-skipped. Comparison-only
+- `CLASSIFICATION`: `QA_HARNESS_WEBKIT_CAUSAL_COLLECTION_LIFETIME / PROOF_ALREADY_COMPLETE + MAX_DURATION_POLLING_CONTINUES_INTO_ANON_PIPE_WRITE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`; `QA_ONLY_DEPLOYMENT_PIXEL_AUDIT_SURFACE_LIFETIME / FOUR_DETACHED_CANVASES_PER_CHECKPOINT + SYNCHRONOUS_FINAL_AUDIT_OVER_WPE_ANON_PIPE / DESIGN_CHANGE_REQUIRED`; `WORKFLOW_REPOSITORY_SAFE_DIRECTORY_PRECONDITION / STAGE3_FINAL_BASE_SOURCE_PREPARATION_ONLY / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `BOUNDED_CAUSAL_PROOF_CONVERGENCE + SINGLE_REUSABLE_QA_PIXEL_AUDIT_SURFACE + COMMAND_SCOPED_STAGE3_SAFE_DIRECTORY / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r36 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r35 diagnostic iteration 17 is terminal; r36 coherent remediation is iteration 18; workflow-only unfiltered restoration is iteration 19 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r36 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact clean r35 HEAD/tree -> r36 corrected four-path byte lock -> exact seven-path remediation -> source/static/full/browser acceptance -> atomic exact eleven-path iteration-18 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-19 restoration -> same-HEAD full local/unfiltered remote -> production runtime/human audit -> evidence freeze -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Change exactly the eleven Design Lock Section 52.3 paths. Under remediation edit only the Phase G harness/test, QA-only fighter audit, deployment harness/runtime contract test, and workflow/CI contract test. Of the six r35 diagnostic implementation paths, preserve the two non-overlapping paths (`scripts/webkit-host-resource-telemetry.mjs` and `scripts/v0995-visual-integrity-browser-smoke.mjs`) byte-for-byte; in the four overlapping paths, permit only the exact r36 contract and preserve all r35 operation-span diagnostics.
+   Preserve `tmp-r35-deploy-compare/`, `tmp-r35-hosted/`, `tmp-r35-phaseg/`, and ignored `outputs/r36-*` local evidence unstaged and uncommitted under the `AGENTS.md` no-delete boundary. Candidate readback requires exact eleven-path index/tree ownership and tracked/index clean after commit, with no untracked path outside those three named forensic directories; fixed-HEAD final review later uses a separate fresh-equivalent fully clean checkout.
+2. Phase G: keep the existing maximum durations, 120 ms sample cadence, 40 ms observer, final stable-history rebuild, four-stage proof, and final invariant. Permit convergence only after actual 4/4 proof, 2,400 ms minimum dwell, and eight valid samples. Persist the exact `v100-phase-g-causal-collection/v1` receipt. No incomplete or early proof may pass.
+3. Deployment: use exactly one reusable detached DOM scratch canvas/context for the six unchanged copied pixel passes. Return and validate `v100-fighter-unit-layer-audit-scratch/v1` with surface/context counts 1 and pass count 6. Preserve production pixels, geometry, transforms, draw order, analyzer, metrics, thresholds, six checkpoints, 48 one-attempt units, PNGs, sheets, and artifacts.
+4. Stage 3: add only command-scoped `git -c safe.directory="$GITHUB_WORKSPACE"` to exact-base `cat-file` verification and worktree creation. No Git config mutation, wildcard, clone, SHA substitution, attempt change, or runtime bypass.
+5. Require all source/static/full gates plus fresh Chromium Phase G core 3/3, WebKit Stage 6 3/3, ordered trio 3/3, full Chromium deployment, and full bounded WebKit deployment. Existing evidence is comparison-only. Any first red returns to `SOL_DESIGN`; no retry/rerun/edit.
+6. Only one atomic exact eleven-path iteration-18 commit and normal non-force push is permitted. Its automatic attempt must be completely green across every required job and artifact. Complete green alone authorizes separate workflow-only iteration 19; it authorizes no Ready, merge, tag, Release, Pages, or final evidence.
+7. Iteration 19 restores only the exact unfiltered Phase G 54/54 invocation, retains r34/r36 runtime and evidence contracts, and must pass same-HEAD local full/validator/regressions and one unfiltered automatic remote run before production runtime/human and fixed-HEAD final review.
+8. Continue without Luna until the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; only explicit Producer approval authorizes stacked integration and release operations.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r36` and Issue #172.**
