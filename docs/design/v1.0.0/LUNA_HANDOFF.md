@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r36`
+- Canonical Design Lock: `V100-SOL-DL-001 r48`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-44 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 45 is the sole current execution handoff.
+Sections 1-56 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 57 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1570,3 +1570,310 @@ Exact SOL execution handoff:
 8. Continue without Luna until the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; only explicit Producer approval authorizes stacked integration and release operations.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r36` and Issue #172.**
+
+## 46. Revision r37 — no active Luna handoff / atomic P5 Stage 3 deploy boundary
+
+Design Lock Section 53 and the latest explicitly labeled Issue #172 r37 byte-lock comment are the sole active cursor. Sections 1-45 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r37 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: automatic CI #932 / `32776384366`, PR Verify `97588303976`, P5 physical-width TAKUYA route 2/4; both Chromium entrance viewports timed out in `navigation`, both matching final viewports passed; Phase G `97591867928` dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r36 local Design Lock 19/19, full 1,195/1,195, source/static/build, Stage 6 3/3, ordered 6 -> 24 -> 25 3/3, deployment 96/96 units and 576/576 checkpoints; #932 pre-P5 PR Verify steps, six enemy shards, Hosted `97592445315`, and bounded Stage 3 `97594773378` / `97594773397` / `97594773579` green comparison controls
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_LOADOUT_DISPATCH_ATOMICITY / TARGET_ASSET_GENERATION_READY + NATIVE_DISABLED_FALSE_DOES_NOT_PROVE_ARIA_OR_HANDLER_READINESS + SPLIT_IPC_CLICK_BOUNDARY / DESIGN_CHANGE_REQUIRED`; `PR_VERIFY_ARTIFACT_CASCADE / ISSUE165_CAPTURE_SKIPPED_AFTER_PRIMARY_P5_FAILURE / NOT_INDEPENDENT_PRODUCT_FAILURE`
+- `REMEDIATION_CLASS`: `ATOMIC_PLAYER_FACING_LOADOUT_READY_RECEIPT + SAME_PAGE_TASK_SINGLE_DEPLOY_DISPATCH + BOUNDED_POST_DISPATCH_ENTRY_EVIDENCE / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r37 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r36 iteration 18 is terminal; r37 correction is iteration 19; workflow-only unfiltered restoration is iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; #932 skipped Phase G and does not change it
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r37 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact r36 candidate HEAD/tree with preserved local evidence -> r37 four-path byte lock -> exact two-path P5 QA correction -> source/static/full/P5 browser acceptance -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> same-HEAD full local/unfiltered remote -> production runtime/human audit -> evidence freeze -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Re-fetch PR #171 and require open Draft/unmerged, exact branch/base, live HEAD/tree equal to the cursor above, and no target-path drift. Preserve `tmp-r35-deploy-compare/`, `tmp-r35-hosted/`, `tmp-r35-phaseg/`, ignored `outputs/r36-*`, and ignored `outputs/r37-*`; no delete, clean, stash, move, hide, or commit.
+2. After the four design/source paths are Issue-byte-locked and Design Lock 19/19 is green, change only `scripts/p5-browser-smoke.mjs` and `tests/p5-story-audio-contract.test.mjs`. Implement Design Lock 53.2 exactly: simultaneous player-facing readiness observation and exactly one deploy click in one `page.evaluate` task, structured `p5-stage3-loadout-dispatch/v1` receipt, unchanged 45,000 ms deadline, no click retry/fallback/internal API, and fail-closed `failureEvidence`.
+3. Run Section 53.4 once. Require focused/source/full/static gates, one Chromium entrance-only 2/2 process, and one Chromium full battle-audio 4/4 process on final bytes. Do not rerun r36 Phase G/deployment merely because this P5-only correction changes no shared source.
+4. Require exact six-path topology, tracked/index clean after commit, and preserved r36 non-overlap bytes; fixed-HEAD review later uses a separate fresh-equivalent checkout. Create one normal non-amended atomic iteration-19 commit, normal push, and consume one automatic focused run. Any first failure returns to `SOL_DESIGN`; no retry, rerun, second correction, or promotion.
+5. Complete automatic green alone authorizes workflow-only iteration 20 and the unchanged Section 28 release route. No Ready, merge, tag, Release, Pages, evidence freeze, or Producer checkpoint is authorized by r37 correction alone.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL resumes from candidate `246d2cce8086a14ff8a5139f0eded45376aea822` under `V100-SOL-DL-001 r37`, implements only the atomic P5 loadout-dispatch boundary, and stops on the first failed gate.**
+
+## 47. Revision r38 — no active Luna handoff / two regex escapes only
+
+Design Lock Section 54 and the latest explicitly labeled Issue #172 r38 byte-lock comment are the sole active cursor. Sections 1-46 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r38 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r37 local source gate; `tests/p5-story-audio-contract.test.mjs` failed to parse on two Unicode regex literal closing braces; browser/runtime, commit, push, and CI were not reached
+- `LAST_GREEN_GATE`: r37 Issue byte lock and Design Lock 19/19; remote #932 controls and exact r36 local gates remain comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_REGEX_SYNTAX / TWO_UNESCAPED_LITERAL_RBRACES_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `TWO_LITERAL_RBRACE_ESCAPES_ONLY + R37_P5_DRAFT_BYTE_PRESERVATION / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r38 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only unfiltered restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r38 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact preserved r37 six-path draft -> two test-regex escape backslashes -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve `scripts/p5-browser-smoke.mjs` exactly at 110,350 bytes / SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb`, CRLF 2,562 / lone LF 0 / no BOM. Preserve all other r37 behavior and the local evidence inventory.
+2. In `tests/p5-story-audio-contract.test.mjs`, add only two backslashes: change the literal closing brace in each source-extraction lookahead from `\n}` to `\n\}`. Change no assertion or other byte.
+3. Resume once from the failed source boundary under Section 54.3. Require both syntax checks, Design Lock 19/19, exact focused/full/static gates, Chromium entrance 2/2, Chromium full battle-audio 4/4, exact six-path topology, tracked/index clean, and later fresh-equivalent fixed-HEAD review. Do not rerun r36 Phase G/deployment.
+4. Create one normal non-amended iteration-19 commit, normal push, and consume one automatic focused run only after every local gate is green. Any new first failure returns to `SOL_DESIGN`; no same-revision retry/rerun/additional correction.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL preserves the r37 P5 draft, escapes exactly two Unicode-regex literal closing braces under `V100-SOL-DL-001 r38`, and resumes at the failed source gate.**
+
+## 48. Revision r39 — no active Luna handoff / two remaining assertion escapes
+
+Design Lock Section 55 and the latest explicitly labeled Issue #172 r39 byte-lock comment are the sole active cursor. Sections 1-47 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r39 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r38 local source gate; parser passed the two r38 lookaheads and stopped at the first of two remaining unescaped assertion-regex closing braces; runtime/commit/push/CI not reached
+- `LAST_GREEN_GATE`: r38 Issue byte lock and Design Lock 19/19; prior remote/local results remain comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_REGEX_BRACE_AUDIT_INCOMPLETE / TWO_ASSERTION_RBRACES_REMAIN_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMPLETE_NEW_BLOCK_RBRACE_ESCAPE_AUDIT + TWO_ASSERTION_ESCAPES_ONLY / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r39 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r39 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact preserved r38 six-path draft -> two assertion-regex escape backslashes -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve `scripts/p5-browser-smoke.mjs` at SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb` and the current P5 contract-test draft at SHA-256 `23df5695ea1a7ee9d32a8232cd4dac725f5a670818ccfb5cc1ed6c78cd84b0c2`, except for exactly two added backslashes.
+2. Escape only the closing brace after `dispatchCount: 1[\s\S]+` and the closing brace after `timeout ` in the negative legacy-click regex. The two lookahead escapes remain unchanged. Change no assertion or behavior.
+3. Resume at both syntax checks, then the exact focused/full/static/P5 browser gates. Preserve exact six-path topology, tracked/index clean, local evidence, and the later fresh-equivalent fixed-HEAD review checkout. Do not rerun r36 Phase G/deployment.
+4. Any new first failure returns to `SOL_DESIGN` without same-revision retry/rerun/additional correction. All local green permits one normal iteration-19 commit/push and one automatic focused run only.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL preserves both current drafts, adds exactly the two remaining assertion-regex brace escapes under `V100-SOL-DL-001 r39`, and resumes at syntax.**
+
+## 49. Revision r40 — no active Luna handoff / portable P5 source boundaries
+
+Design Lock Section 56 and the latest explicitly labeled Issue #172 r40 byte-lock comment are the sole active cursor. Sections 1-48 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r40 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r39 focused suite 38/39; syntax green, but LF-only function-boundary regex returned an empty dispatch slice from authoritative CRLF source; browser/runtime/commit/push/CI not reached
+- `LAST_GREEN_GATE`: r39 Issue byte lock, Design Lock 19/19, both P5 syntax checks, and 38 focused tests
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_EOL_PORTABILITY / LF_ONLY_FUNCTION_BOUNDARY_REGEX_AGAINST_CRLF_SOURCE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CRLF_OR_LF_FUNCTION_BOUNDARY_REGEX + SIX_OPTIONAL_CR_FRAGMENTS_ONLY / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r40 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only unfiltered restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r40 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact preserved r39 six-path draft -> six optional-CR regex fragments -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve the P5 script SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb` and current P5 test SHA-256 `cef9871675243da80c07994a8231289a586d02c87c96e97cfd5f5bd8cc9ec29a`, except for exactly six inserted `\r?` fragments.
+2. Convert only the three newline tokens in each of the two function-boundary lookaheads from `\n` to `\r?\n`. Preserve all four brace escapes, regex flags, assertions, and behavior. Do not normalize source inside the test.
+3. SOL read-only preflight already proved the proposed patterns extract 3,398 / 1,402 characters and exactly one click from the actual CRLF source. Resume at syntax and the exact focused/full/static/P5 browser gates. Do not rerun r36 Phase G/deployment.
+4. Preserve exact six-path topology, tracked/index clean, local evidence, and fresh-equivalent fixed-HEAD review. Any new first failure returns to `SOL_DESIGN`; all local green permits one normal iteration-19 commit/push and one automatic focused run only.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL adds exactly six optional-CR fragments under `V100-SOL-DL-001 r40`, preserves every brace/assertion/harness byte, and resumes at syntax.**
+
+## 50. Revision r41 — no active Luna handoff / pre-dispatch bootstrap diagnostic
+
+Design Lock Section 57 and the latest explicitly labeled Issue #172 r41 byte-lock comment are the sole active cursor. Sections 1-49 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r41 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r40 Chromium entrance-only process 0/2; both cases timed out before `loadout-dispatch-wait`; full P5/commit/push/CI not run; no retry/rerun
+- `LAST_GREEN_GATE`: r40 syntax, focused 39/39, content, full 1,196/1,196, lint zero errors, build, diff, byte/EOL/BOM, and exact six-path topology
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_BOOTSTRAP_OBSERVABILITY_GAP / PRE_DISPATCH_COMPOSITE_WAITFORFUNCTION_TIMEOUT + NO_LAST_PREDICATE_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_STAGE3_BOOTSTRAP_TRANSITION_DIAGNOSTIC / ZERO_LOADOUT_ACTION + CHANGE_ONLY_HISTORY + EXACT_TIMEOUT_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN / LOCAL_DIAGNOSTIC`; no candidate remediation is authorized yet
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by future complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN / LOCAL_DIAGNOSTIC`
+- `RESUME_FROM`: exact preserved r40 six-path draft -> r41 four-path byte lock -> one ignored Chromium 667x375 zero-loadout-action diagnostic -> mandatory SOL_DESIGN classification -> later owner-specific revision; no direct acceptance/candidate continuation
+
+Exact SOL execution handoff:
+
+1. Preserve both r40 implementation files at SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb` and `fb93cccd8b4ce04d061d4c63fd71f6ed0297e1f3957a65b8747574629432c8ef`; preserve all forensic and ignored evidence.
+2. After the four r41 governance/source-contract bytes are Issue-locked and Design Lock 19/19 is green, create only the ignored Section 57 diagnostic. Run one Chromium 667x375 process for at most 45,000 ms, dismissing the PWA offer at most once and performing zero loadout/deploy action.
+3. Persist the exact `p5-stage3-bootstrap-observation/v1` change-only history and terminal summary with every Section 57 axis. Missing/malformed evidence stops as invalid. Do not run the 2/2 or 4/4 P5 acceptance again in r41.
+4. Return the one diagnostic result to SOL_DESIGN and lock a later coherent owner-specific revision. No timeout/retry/product change, commit, push, CI, promotion, release, or Producer checkpoint follows directly from diagnostic completion.
+   The unchanged future tail remains fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only integration/release/Pages/public-QA/closure.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL runs one zero-loadout-action Stage 3 bootstrap diagnostic under `V100-SOL-DL-001 r41`, then returns to SOL_DESIGN for actual-evidence classification.**
+
+## 51. Revision r42 — SOL remediation handoff / finite Stage 3 P5 asset route
+
+Design Lock Section 58 and the latest explicitly labeled Issue #172 r42 byte-lock comment are the sole active cursor. Sections 1-50 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active, and Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r42 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: the one r41 Chromium 667x375 diagnostic reached generation-3 asset error with 55/55 unique paths complete, 3 failed, clean fatal diagnostics, no resident publication, and loadout action 0; full P5/commit/push/CI remain unexecuted
+- `LAST_GREEN_GATE`: exact r40 source/full/static gates and the valid uncapped r41 one-process transition receipt; earlier remote results remain comparison-only
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_ASSET_SCOPE_MISMATCH / P5_LEGACY_QA_ROUTE_TRIGGERS_EXHAUSTIVE_55_PATH_74MB_NON_STAGE3_DECODE_SET / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `P5_LOCALHOST_FINITE_REQUIRED_ASSET_ROUTE / EXISTING_QA_HUD_FINITE_SWITCH + EXACT_FINITE_RESIDENT_SCOPE + UNCHANGED_STRICT_DECODE / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION` only after r42 publication and green Design Lock 19/19; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION` after the r42 byte lock and green Design Lock proof
+- `RESUME_FROM`: exact preserved r40 six-path draft plus preserved r41 diagnostic -> exact Section 58 two-path finite-route correction -> source/full/static -> Chromium entrance 2/2 -> full P5 4/4 -> atomic iteration-19 commit/push -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration and unchanged final route
+
+Exact SOL execution handoff:
+
+1. Preserve all current six-path draft bytes except the explicitly authorized semantic edits in `scripts/p5-browser-smoke.mjs` and `tests/p5-story-audio-contract.test.mjs`; preserve all forensic and ignored evidence, including `outputs/r41-stage3-bootstrap-diagnostic/`.
+2. In `battleQaUrl` add exactly `qaHudFiniteAssets: "1"`. Change only the Stage 3 stable-loadout and atomic-dispatch resident-scope expectations from `all-local-qa` to `finite-hud-runtime-qa`. Update the existing P5 source contract for that exact query/scope route. No `app/**`, timeout, retry, product, asset, story, audio, case, browser-option, Phase G, or acceptance change.
+3. Run the ordered Section 58 source/full/static gates once, then one fresh Chromium entrance-only process requiring 2/2 and one fresh Chromium full battle-audio process requiring 4/4. Each case retains strict decoded required-plan readiness and exactly one player-facing dispatch receipt.
+4. Any first failure returns to `SOL_DESIGN` without retry/rerun/edit. Complete local green alone authorizes the one normal atomic exact six-path iteration-19 commit and push; wait for exactly one automatic focused run. Complete automatic green alone authorizes workflow-only iteration 20.
+5. The unchanged future tail remains same-HEAD full local Phase G 54/54 plus validator/full regressions -> unfiltered remote complete green -> production runtime/human audit -> evidence freeze -> fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration/release/Pages/public-QA/recovery/closure.
+
+Actual r42 local acceptance: both P5 syntax checks, focused 39/39, Design Lock 19/19, content validation, full 1,196/1,196, lint 0 errors / 9 existing warnings, production build, diff/byte/EOL/BOM/six-path topology, fresh Chromium entrance 2/2, and fresh Chromium full 4/4 all passed on their first authorized attempts. Every browser case reported `finite-hud-runtime-qa`, generation 3, total 29, pending 0, failed 0, `dispatchCount: 1`, and fatal diagnostic counts 0. Iteration-19 commit, push, and automatic CI have not yet run.
+
+Current cursor readback:
+
+- `STATUS`: `DESIGN_LOCKED / R42_LOCAL_ACCEPTANCE_GREEN / ITERATION_19_CANDIDATE_READY`
+- `FAILED_GATE`: none in r42 local acceptance; the latest historical failure is the classified r41 exhaustive-plan diagnostic asset error
+- `LAST_GREEN_GATE`: actual final-byte r42 local acceptance through fresh Chromium entrance 2/2 and full 4/4 on their first authorized attempts
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: atomic exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration-20 restoration and the unchanged final route
+
+Exact handoff: **SOL_REMEDIATION — preserve the green final r42 six-path bytes, create the one normal non-amended atomic iteration-19 commit, push normally, and consume exactly one automatic focused run; return its first terminal failure to SOL_DESIGN without rerun, or continue to workflow-only iteration 20 only if completely green.**
+
+## 52. Revision r43 — no active Luna handoff / current-cursor source placement
+
+Design Lock Section 59 and the latest explicitly labeled Issue #172 r43 byte-lock comment are the sole active cursor. Sections 1-51 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R43_SOURCE_REMEDIATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first post-r42 terminal-readback focused source suite 38/39; only the `PROJECT_STATE.md` Section 6 extraction-placement assertion failed
+- `LAST_GREEN_GATE`: final r42 source/full/static plus first-attempt Chromium entrance 2/2 and full 4/4; P5/product bytes unchanged
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_CURSOR_ASSERTION_PLACEMENT / PROJECT_STATE_ACCEPTANCE_READBACK_OUTSIDE_SECTION6_EXTRACTION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CURRENT_CURSOR_READBACK_RELOCATION / ONE_EXISTING_LINE_MOVE + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` through r43 source correction and final source/static gates; then candidate commit/push remains SOL-owned
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN`
+- `RESUME_FROM`: move the one existing acceptance-readback bullet into Section 6 -> same focused 39/39 -> full/static gates -> atomic exact six-path iteration-19 commit/push -> exactly one automatic focused run -> complete green only -> unchanged continuation
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL moves the existing r42 acceptance readback into the extracted PROJECT_STATE current cursor, validates final r43 source/static bytes without rerunning the unchanged r42 browsers, then commits/pushes the exact six-path iteration-19 candidate only if green.**
+
+## 53. Revision r44 — no active Luna handoff / release-tail literal closure
+
+Design Lock Section 60 and the latest explicitly labeled Issue #172 r44 byte-lock comment are the sole active cursor. Sections 1-52 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R44_SOURCE_REMEDIATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r43 focused source suite 38/39; only active Handoff Section 52 lacked the required final Producer checkpoint literal
+- `LAST_GREEN_GATE`: relocated r43 current-cursor assertions and every earlier focused assertion, plus unchanged final r42 browser evidence
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_OMISSION / SECTION52_LACKS_FINAL_PRODUCER_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` through final r44 source/static gates; then candidate commit/push remains SOL-owned
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN`
+- `RESUME_FROM`: final r44 focused 39/39 -> full/static gates -> atomic exact six-path iteration-19 commit/push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20 -> unchanged final route
+
+The immutable future tail is: fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA public QA, recovery, and closure.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL validates the exact r44 four-governance/two-P5 candidate, keeps the r42 Chromium evidence without rerun, and commits/pushes iteration 19 only after 39/39 plus full/static green.**
+
+## 54. Revision r45 — no active Luna handoff / one-character source assertion
+
+Design Lock Section 61 and the latest explicitly labeled Issue #172 r45 byte-lock comment are the sole active cursor. Sections 1-53 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R45_SOURCE_REMEDIATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r44 focused source suite 38/39; only capital `D` versus lowercase `d` mismatched
+- `LAST_GREEN_GATE`: r44 release-tail literal and every preceding assertion, plus unchanged r42 browser evidence
+- `CLASSIFICATION`: `SOL_OWNED_CASE_SENSITIVE_ASSERTION_MISMATCH / LOWERCASE_DESIGN_LITERAL_VS_UPPERCASE_TEST_EXPECTATION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_CHARACTER_ASSERTION_CASE_ALIGNMENT / CAPITAL_D_TO_LOWERCASE_D + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` through final r45 source/static gates; then candidate commit/push remains SOL-owned
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN`
+- `RESUME_FROM`: one-character assertion alignment -> focused 39/39 -> full/static -> exact six-path iteration-19 commit/push -> one automatic focused run -> complete green only -> workflow-only iteration 20
+
+The future tail remains fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA public QA, recovery, and closure.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL aligns the one case-sensitive assertion, keeps both green r42 Chromium processes without rerun, and advances only after final 39/39 plus full/static green.**
+
+## 55. Revision r46 — no active Luna handoff / Design release-token closure
+
+Design Lock Section 62 and the latest explicitly labeled Issue #172 r46 byte-lock comment are the sole active cursor. Sections 1-54 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R46_SOURCE_REMEDIATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r45 focused source suite 38/39; only Section 61 lacked literal `SOL_FINAL_REVIEW`
+- `LAST_GREEN_GATE`: r45 case alignment and every preceding assertion, plus unchanged r42 browser evidence
+- `CLASSIFICATION`: `SOL_OWNED_DESIGN_RELEASE_TAIL_LITERAL_OMISSION / R45_SECTION_LACKS_SOL_FINAL_REVIEW_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_SECTION_RELEASE_TOKEN_NORMALIZATION / FIXED_REVIEW_TO_FIXED_HEAD_SOL_FINAL_REVIEW + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` through final r46 source/static gates; then candidate commit/push remains SOL-owned
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN`
+- `RESUME_FROM`: final-loop static preflight -> focused 39/39 -> full/static -> exact six-path iteration-19 commit/push -> one automatic focused run -> complete green only -> workflow-only iteration 20
+
+The future tail remains fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA public QA, recovery, and closure.
+
+Actual r46 source/static acceptance: final-loop static preflight checked 35 sources with missing 0; P5 syntax passed; focused passed 39/39; content validation passed; full tests/build passed 1,196/1,196; lint passed with 0 errors / 9 existing warnings; diff/byte/EOL/BOM/exact-six-path/forbidden/preservation audits passed. The unchanged r42 Chromium entrance 2/2 and full 4/4 remain local continuity evidence.
+
+Current terminal cursor:
+
+- `STATUS`: `DESIGN_LOCKED / R46_SOURCE_STATIC_GREEN / ITERATION_19_CANDIDATE_READY`
+- `FAILED_GATE`: none in final r46 source/static acceptance; commit/push/automatic CI remain unexecuted
+- `LAST_GREEN_GATE`: actual final r46 source/static gates plus unchanged first-attempt r42 Chromium 2/2 and 4/4
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20 and unchanged final route
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL preserves the final green six-path r46 bytes, creates one normal non-amended iteration-19 commit, pushes normally, and consumes exactly one automatic focused run; first failure returns to SOL_DESIGN without rerun, complete green alone advances to workflow-only iteration 20.**
+
+## 56. Revision r47 — no active Luna handoff / historical-current owner separation
+
+Design Lock Section 63 and the latest explicitly labeled Issue #172 r47 byte-lock comment are the sole active cursor. Sections 1-55 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R47_SOURCE_REMEDIATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first terminal-cursor r46 focused suite 38/39; historical loops aliased mutable Project State owner
+- `LAST_GREEN_GATE`: r46 pre-terminal source/static 39/39 and full 1,196/1,196 plus unchanged r42 browser evidence
+- `CLASSIFICATION`: `SOL_OWNED_HISTORICAL_OWNER_CURRENT_STATE_ALIAS / R43_R46_HISTORY_LOOPS_INCLUDE_MUTABLE_PROJECT_STATE_NEXT_OWNER / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_CURRENT_ASSERTION_SEPARATION / DESIGN_HANDOFF_HISTORY_ONLY + PROJECT_CURRENT_CURSOR_ONLY + OWNER_COHERENCE / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_DESIGN` through final r47 source/static gates; then candidate commit/push remains SOL-owned
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_DESIGN`
+- `RESUME_FROM`: focused 39/39 -> full/static -> coherent terminal owner readback -> exact six-path iteration-19 commit/push -> one automatic focused run -> complete green only -> workflow-only iteration 20
+
+The future tail remains fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA public QA, recovery, and closure.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL separates historical owner assertions from the current Project State cursor, validates r47, preserves r42 browser evidence without rerun, and commits/pushes only after final source/static green.**
+
+## 57. Revision r48 — no active Luna handoff / stable historical assertion
+
+Design Lock Section 64 and the latest explicitly labeled Issue #172 r48 byte-lock comment are the sole active cursor. Sections 1-56 are immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R48_SOURCE_STATIC_GREEN / ITERATION_19_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: none in final r48 source/static acceptance; commit/push/automatic CI remain unexecuted
+- `LAST_GREEN_GATE`: actual final r48 preflight/focused 39/39/full 1,196/1,196/build/lint/static green plus unchanged r42 browser evidence
+- `CLASSIFICATION`: `SOL_OWNED_HISTORICAL_FAILURE_ASSERTION_STABILITY / R46_TERMINAL_READBACK_REPLACED_FAILED_GATE_LITERAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `IMMUTABLE_NARRATIVE_ASSERTION_BINDING / R45_SUITE_STOPPED_38_OF_39 + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20
+
+The future tail remains fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA public QA, recovery, and closure.
+
+Actual r48 source/static acceptance: final-loop preflight 37 sources / missing 0, P5 syntax, focused 39/39, full 1,196/1,196 plus build, lint 0 errors / 9 existing warnings, and static/byte/topology/preservation gates are green. r42 Chromium 2/2 and 4/4 remain unchanged local continuity evidence.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL preserves the final green r48 six-path bytes, makes one normal non-amended iteration-19 commit, pushes normally, and consumes exactly one automatic focused run; first failure returns to SOL_DESIGN without rerun, complete green alone advances to workflow-only iteration 20.**

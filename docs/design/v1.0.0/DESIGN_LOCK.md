@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r36`
+- Revision: `r48`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -3319,3 +3319,461 @@ The release tail remains unchanged: exact HEAD/tree production runtime and human
 - `NEXT_OWNER`: `SOL_REMEDIATION` only after the r36 Issue byte lock and green Design Lock proof
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every CI #931 job/dependency, the Phase G/Hosted/Stage 3/deployment artifacts, raw telemetry and operation spans, matched passing controls, exact r35 source, workflow ownership, current PR/head/tree, Pages guards, and the unchanged release state machine. Each owner is bounded, every acceptance remains fail-closed, and no Luna or Producer decision is delegated. Revision r36 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 53. Revision r37 — atomic Stage 3 loadout readiness and deploy dispatch
+
+This section consumes the r36 iteration-18 automatic result and supersedes Section 52 only for its terminal evidence, the P5 Stage 3 loadout-dispatch boundary, iteration ledger, and current cursor. The complete r36 bounded causal convergence, single reusable deployment audit surface, command-scoped exact-base preparation, local green evidence, source bytes, and product behavior remain authoritative. Every r25-r36 browser/runtime, approved-material, causal, pixel, timeout, attempt, acceptance, fixed-HEAD, single Producer checkpoint, and release boundary remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 53.1 Terminal r36 evidence and independent classifications
+
+PR #171 candidate HEAD `246d2cce8086a14ff8a5139f0eded45376aea822`, tree `b01ae916859559136f96ad035a316c654c0a2a0b`, parent `be4acc7a034858cd9918714895d423da71f4ebf6`, was exact eleven-path r36 iteration 18. Its automatic CI #932 / run `32776384366` is terminal red without retry, rerun, manual dispatch, or post-failure edit. PR Verify job `97588303976` passed provenance, whitespace, lint, content, build, full test, PWA, canonical HUD, final-canvas, safe-area, and records gates, then failed only `Capture Issue 156 physical-width TAKUYA audio route (Chromium)`. Its P5 summary was 2 passed / 2 failed: both 667x375 and 736x414 entrance cases timed out in `navigation` after approximately 45.5 s and 45.3 s, while both matching final cases completed in approximately 20.7 s and 21.1 s. Both failed cases had `failureState: null`, zero console/page/request/HTTP/pending diagnostics, and remained on the loadout. Their target bootstrap receipts were already `ready`, pending 0, failed 0, generation-matched, and resident on `stage-nishijin-defense-line-takuya` under `all-local-qa`.
+
+The exact P5 harness and P5 workflow step were unchanged from r35 automatic CI #931 / PR Verify `97551268574`, whose four cases passed first attempt: 667x375 entrance about 11.0 s, 667x375 final about 21.8 s, 736x414 entrance about 11.2 s, and 736x414 final about 21.8 s. The r36 workflow delta touches only the exact-base Stage 3 safe-directory commands, and r36's `app/AshfallGame.tsx` QA bridge is never called by P5 and creates its reusable scratch canvas lazily. Six WebKit enemy shards, WebKit Hosted Runner `97592445315`, and all three bounded Stage 3 controls—exact-base final `97594773378`, candidate entrance `97594773397`, candidate final `97594773579`—are terminal green. Phase G job `97591867928` is dependency-skipped and therefore does not increment or reset the required-Phase-G repeat counter. The Issue 165 upload failure is a downstream skipped-capture cascade after the primary P5 step, not an independent product failure; Issue 156 artifact `9538488716` was uploaded with SHA-256 `69739962fd49593e5dbd9d19e56a283f495f548de5358417fac51ae81df8df89`.
+
+The primary classification is `QA_HARNESS_STAGE3_LOADOUT_DISPATCH_ATOMICITY / TARGET_ASSET_GENERATION_READY + NATIVE_DISABLED_FALSE_DOES_NOT_PROVE_ARIA_OR_HANDLER_READINESS + SPLIT_IPC_CLICK_BOUNDARY / DESIGN_CHANGE_REQUIRED`. The secondary classification is `PR_VERIFY_ARTIFACT_CASCADE / ISSUE165_CAPTURE_SKIPPED_AFTER_PRIMARY_P5_FAILURE / NOT_INDEPENDENT_PRODUCT_FAILURE`.
+
+The production loadout button expresses player-facing readiness with `aria-disabled={formationUnitIds.length === 0 || !assetsReady}` and leaves native `disabled` unset. Its handler independently rejects an empty formation or non-ready/error asset state. The old P5 harness first proved only target asset generation stability, then performed separate page/locator/native-`disabled`/click IPC tasks; its `!deploy.disabled` predicate was always compatible with an aria-disabled or handler-rejected action. The failing summaries prove target assets ready but no accepted battle dispatch, with clean diagnostics and immediate same-viewport final-case controls. The bounded owner is therefore the harness's fail-open dispatch observation, not Stage 3 product/audio/gameplay, the r36 QA-only canvas work, or the remote browser/runtime envelope.
+
+### 53.2 Exact coherent r37 remediation
+
+Remediation class: `ATOMIC_PLAYER_FACING_LOADOUT_READY_RECEIPT + SAME_PAGE_TASK_SINGLE_DEPLOY_DISPATCH + BOUNDED_POST_DISPATCH_ENTRY_EVIDENCE / DESIGN_CHANGE_REQUIRED`.
+
+In `scripts/p5-browser-smoke.mjs`, replace the split native-disabled wait and locator click inside `enterLegacyQaBattle` with one Node-owned bounded helper named `dispatchReadyTakuyaLoadout`. On each observation the helper performs one `page.evaluate` task that reads the current shell screen/stage, exact asset bridge state/generation/total/pending/failed, resident dataset scope/stage/generation, selected formation count, `.formation-footer .campaign-primary` text, native disabled state, and `aria-disabled`. It may dispatch only when all of these are simultaneously true: loadout screen; exact TAKUYA stage; bridge `ready`; positive matched generation and total; pending 0; failed 0; `all-local-qa`; exact resident stage; at least one selected formation unit; exact player-facing deploy text; native disabled false; and `aria-disabled !== "true"`. In that same page task it calls the button's player-facing `click()` exactly once and returns an immutable structured pre-click receipt with schema `p5-stage3-loadout-dispatch/v1` and `dispatchCount: 1`.
+
+The helper polls observation only until the unchanged 45,000 ms P5 deadline. It never clicks before the full predicate, never retries a click/product action, never changes formation, and never falls back to an internal API. If no simultaneous ready boundary appears, it throws the existing `TimeoutError` with its last structured observation. Both entrance and final cases store the receipt as `deployBoundary`; both catches serialize `error.evidence` as `failureEvidence`. Progress adds `loadout-dispatch-wait`, `loadout-dispatched`, and `battle-entry` checkpoints while preserving `result.phase = "navigation"` until the existing semantic phase transition, so the bounded Stage 3 target-closed retry allowlist is neither broadened nor reclassified. The existing event advance, exact battle-stage/running assertion, audio assertions, story FIFO, screenshots, diagnostic drains, and teardown remain unchanged.
+
+### 53.3 Exact r37 topology and forbidden changes
+
+Relative to r36 HEAD, one atomic r37 iteration-19 candidate may change exactly these six tracked paths and no others:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `tests/v100-design-lock.test.mjs`
+5. `scripts/p5-browser-smoke.mjs`
+6. `tests/p5-story-audio-contract.test.mjs`
+
+Under `SOL_DESIGN`, first change and Issue-byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, change only paths 5-6. Paths 1-4 may then receive only exact terminal/candidate cursor readback before the atomic commit. The other seven r36 paths, all `app/**`, `.github/workflows/ci.yml`, every other script/test, all `public/**`, assets, package/lock, provenance, manifests, PWA derivatives, release request, product render behavior, gameplay, balance, AI, save, audio, story, browser/package/container/options/dependencies, timeouts, retries/attempts, viewport/case counts, P5 audio/story predicates, Phase G/deployment evidence contracts, and artifact fail-closed rules are byte-frozen. No product-button change, timeout increase, second click, action retry, direct handler/internal API call, case removal, acceptance relaxation, repository-wide normalization, screenshot substitution, missing-artifact tolerance, manual rerun, or blind retry is allowed.
+
+Preserve `tmp-r35-deploy-compare/`, `tmp-r35-hosted/`, `tmp-r35-phaseg/`, ignored `outputs/r36-*`, and ignored `outputs/r37-*` unstaged and uncommitted. Deleting, cleaning, stashing, moving, or hiding them is forbidden. Candidate integrity means the index contains exactly the six paths above and, after commit, tracked/index clean while the three named forensic directories remain the only untracked paths. The later fixed-HEAD `SOL_FINAL_REVIEW` uses a separate fresh-equivalent checkout.
+
+### 53.4 Focused validation, automatic acceptance, and stop routing
+
+On final bytes, SOL performs once and in order:
+
+1. syntax/load and the targeted `tests/v100-design-lock.test.mjs`, `tests/p5-story-audio-contract.test.mjs`, `tests/stage3-final-bounded.test.mjs`, and relevant CI-contract assertions; require Design Lock 19/19 and all focused tests green;
+2. content validation, full `npm test`, lint, production build, `git diff --check`, UTF-8/BOM/EOL audit, forbidden-negative audit, exact six-path topology, r36 non-overlap byte audit, and preserved untracked-evidence inventory;
+3. one local Chromium entrance-only process containing 667x375 and 736x414, exactly 2/2 on one attempt, then one local Chromium full battle-audio process containing the unchanged four cases, exactly 4/4 on one attempt. Each case must contain one valid `p5-stage3-loadout-dispatch/v1` receipt and `dispatchCount: 1`;
+4. do not rerun already-green r36 local Phase G/deployment solely because this P5-only correction changes no shared product or those harnesses. Those results remain continuity/comparison evidence and never become final-freeze evidence;
+5. create one normal, non-amended atomic exact six-path iteration-19 commit and normal push. Consume exactly one automatic focused CI run. Any first local or remote failure returns immediately to `SOL_DESIGN`; no retry, rerun, second correction, promotion, or evidence reuse is authorized;
+6. only complete automatic iteration-19 green authorizes a separate workflow-only iteration-20 commit restoring the exact unfiltered Phase G 54/54 invocation. Iteration 20 then requires same-HEAD full local Phase G 54/54, validator, all regressions, one normal push, unfiltered remote complete green, production runtime/human audit, evidence freeze, fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW`, and the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` before any approval-only integration/release tail.
+
+### 53.5 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED` only after the r37 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: r36 remediation iteration 18 is terminal red and classified; r37 coherent correction is iteration 19; workflow-only unfiltered restoration is iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; CI #932 skipped Phase G and does not change it
+- `R36_REMOTE_PR_VERIFY_P5_ENTRANCE_DISPATCH_FAILURE_COUNT`: `1` job / `2` of four P5 cases
+- `R36_REMOTE_PHASE_G_DEPENDENCY_SKIPPED_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r37 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: automatic CI #932 / run `32776384366`, PR Verify `97588303976`, P5 physical-width TAKUYA route 2/4; Phase G `97591867928` dependency-skipped; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r36 local Design Lock 19/19, full 1,195/1,195, source/static/build, WebKit Stage 6 standalone 3/3, ordered 6 -> 24 -> 25 3/3, Chromium/WebKit deployment 96/96 units and 576/576 checkpoints; in #932, all pre-P5 PR Verify steps, six WebKit enemy shards, Hosted `97592445315`, and bounded Stage 3 `97594773378` / `97594773397` / `97594773579` are green comparison controls
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_LOADOUT_DISPATCH_ATOMICITY / TARGET_ASSET_GENERATION_READY + NATIVE_DISABLED_FALSE_DOES_NOT_PROVE_ARIA_OR_HANDLER_READINESS + SPLIT_IPC_CLICK_BOUNDARY / DESIGN_CHANGE_REQUIRED`; `PR_VERIFY_ARTIFACT_CASCADE / ISSUE165_CAPTURE_SKIPPED_AFTER_PRIMARY_P5_FAILURE / NOT_INDEPENDENT_PRODUCT_FAILURE`
+- `REMEDIATION_CLASS`: `ATOMIC_PLAYER_FACING_LOADOUT_READY_RECEIPT + SAME_PAGE_TASK_SINGLE_DEPLOY_DISPATCH + BOUNDED_POST_DISPATCH_ENTRY_EVIDENCE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact r36 candidate HEAD/tree with preserved local evidence -> r37 four-path byte lock -> exact two-path P5 QA correction -> source/static/full/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> same-HEAD full local/unfiltered remote -> production runtime/human audit -> evidence freeze -> fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r37 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual #932 P5 summaries/logs/artifact, r35 passing controls, exact r35-r36 source/workflow diff, production loadout readiness/handler source, job dependencies, current PR/head/tree, preserved local evidence, and unchanged release state machine. The design closes the observation/action gap without changing product behavior or retrying a product action. Revision r37 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 54. Revision r38 — Unicode contract-test literal correction
+
+This section consumes the first r37 local source-gate failure and supersedes Section 53 only for that exact source evidence, two-character test correction, and current cursor. The complete r37 atomic player-facing readiness/dispatch design, six-path topology, implementation draft, unchanged 45,000 ms deadline, no-action-retry boundary, validation order, automatic-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release route remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 54.1 Independent failure classification
+
+After the r37 four-file Issue byte lock and Design Lock 19/19 green, SOL changed only the two authorized remediation paths. The first command group stopped before P5 runtime because `node --check tests/p5-story-audio-contract.test.mjs` reported `SyntaxError: Invalid regular expression ... Lone quantifier brackets` at the new source-extraction lookahead. The same parse failure was the sole focused test failure; Design Lock 19/19, CI contract, and Stage 3 bounded tests remained green. No browser process, production code, commit, push, automatic CI, retry, or rerun occurred.
+
+Classification: `SOL_OWNED_STATIC_TEST_REGEX_SYNTAX / TWO_UNESCAPED_LITERAL_RBRACES_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`. This is not a P5 harness behavior failure and does not reopen the r37 root cause. In JavaScript Unicode regex mode, each literal closing brace in `(?=\n}\n\nasync function ...)` must be escaped. The test has exactly two such lookaheads: before `enterLegacyQaBattle` and before `waitForNetworkQuiet`.
+
+### 54.2 Exact bounded correction and byte preservation
+
+Under `SOL_DESIGN`, update only the four governance/source files and Issue-byte-lock r38 with Design Lock 19/19 green. Under `SOL_REMEDIATION`, preserve the current `scripts/p5-browser-smoke.mjs` draft byte-for-byte at 110,350 bytes / SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb`, UTF-8 without BOM, CRLF 2,562 / lone LF 0. In `tests/p5-story-audio-contract.test.mjs`, change only the two source-extraction lookaheads from literal `\n}` to `\n\}`. No assertion, helper contract, timeout, case, product predicate, or other byte may change.
+
+The final iteration-19 topology relative to r36 remains the exact same six paths from Section 53.3. The three r37 governance paths and `tests/v100-design-lock.test.mjs` may change only for r38 identity/evidence/cursor assertions; the P5 script remains the exact hash above; the P5 contract test receives only two added escape backslashes. Every forbidden r37 path and behavior remains forbidden. Preserve the exact local-evidence inventory and require tracked/index clean after commit plus a separate fresh-equivalent fixed-HEAD review checkout.
+
+### 54.3 Resume gate and stop routing
+
+After the r38 byte lock, apply the two escapes once, normalize only the six authorized paths to their existing CRLF/no-BOM contract, then restart from the failed source boundary: `node --check` for both P5 paths followed by Design Lock 19/19 and the exact focused suite from Section 53.4. If green, continue once through full/static gates, Chromium entrance 2/2, Chromium full battle-audio 4/4, exact six-path commit, normal push, and one automatic focused run. Do not repeat any r36 Phase G/deployment gate. Any new first failure returns to `SOL_DESIGN`; no same-revision retry, rerun, or additional correction. Complete automatic green alone authorizes workflow-only iteration 20.
+
+### 54.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED` only after the r38 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: iteration 19 remains unconsumed because no commit/push/automatic run occurred; workflow-only restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` until r38 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r37 local source gate; P5 contract test parse failure before runtime; no commit/push/CI
+- `LAST_GREEN_GATE`: r37 Issue byte lock and Design Lock 19/19; remote #932 terminal controls and all r36 local gates remain comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_REGEX_SYNTAX / TWO_UNESCAPED_LITERAL_RBRACES_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `TWO_LITERAL_RBRACE_ESCAPES_ONLY + R37_P5_DRAFT_BYTE_PRESERVATION / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact preserved r37 six-path draft -> two test-regex escape backslashes -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r38 Issue byte lock and green Design Lock proof
+
+SOL re-ran SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact parser error, both regex literals, unchanged P5 script draft hash, current diff topology, remote cursor, stop rules, and release boundary. The correction is finite and cannot alter product or harness behavior. Revision r38 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 55. Revision r39 — complete new-block Unicode closing-brace audit
+
+This section consumes the first r38 local source-gate failure and supersedes Section 54 only for its expanded static-regex evidence, exact two remaining escape insertions, and current cursor. The r37 P5 harness design and draft, the two r38 lookahead escapes, exact six-path topology, unchanged acceptance, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release route remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 55.1 Independent failure and exhaustive source classification
+
+SOL applied exactly the two r38 lookahead escapes and preserved the P5 script hash. On the resumed `node --check`, parsing advanced to the next new assertion and stopped at line 701: the Unicode regex containing `[...] +}, \{ expectedStageId` still had a literal unescaped closing brace. No focused test body or browser/runtime ran; no commit, push, CI, retry, or rerun occurred.
+
+SOL then audited every regex literal in the entire newly added test block, rather than classifying from the first parser location alone. Exactly two unescaped literal closing braces remain: (1) the serialized `page.evaluate` callback terminator before `, \{ expectedStageId`; and (2) the negative legacy-click fragment `deployButton\.click\(\{ timeout }\)`. The two lookahead braces are already escaped; every other brace in the block is either outside a regex or already escaped. Classification: `SOL_OWNED_STATIC_TEST_REGEX_BRACE_AUDIT_INCOMPLETE / TWO_ASSERTION_RBRACES_REMAIN_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`.
+
+### 55.2 Exact coherent r39 correction
+
+Remediation class: `COMPLETE_NEW_BLOCK_RBRACE_ESCAPE_AUDIT + TWO_ASSERTION_ESCAPES_ONLY / REMEDIATION_LOCAL`.
+
+Preserve `scripts/p5-browser-smoke.mjs` exactly at 110,350 bytes / SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb`, CRLF 2,562 / lone LF 0 / no BOM. Preserve the current `tests/p5-story-audio-contract.test.mjs` r38 draft at 34,834 bytes / SHA-256 `23df5695ea1a7ee9d32a8232cd4dac725f5a670818ccfb5cc1ed6c78cd84b0c2`, CRLF 799 / lone LF 0 / no BOM except for exactly two added backslashes:
+
+1. change `dispatchCount: 1[\s\S]+}, \{ expectedStageId` to `dispatchCount: 1[\s\S]+\}, \{ expectedStageId`;
+2. change `deployButton\.click\(\{ timeout }\)` to `deployButton\.click\(\{ timeout \}\)`.
+
+No lookahead, assertion meaning, regex flag, helper behavior, timeout, case, product predicate, documentation outside the four source files, or other byte may change. Final topology remains the same exact six r37 paths. Preserve all local evidence, require tracked/index clean after commit, and use a separate fresh-equivalent fixed-HEAD review checkout.
+
+### 55.3 Resume gate and stop routing
+
+After the r39 four-file Issue byte lock and Design Lock 19/19 green, apply the two assertion escapes once. Resume again at both P5 `node --check` commands, then run the exact focused suite. Only green authorizes the remaining full/static and P5 browser gates from Section 53.4. Do not repeat r36 Phase G/deployment. Any new first failure returns to `SOL_DESIGN`; no same-revision retry/rerun/additional correction. If all local gates pass, iteration 19 proceeds to one atomic exact six-path commit, normal push, and one automatic focused run; complete green alone authorizes workflow-only iteration 20.
+
+### 55.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED` only after the r39 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` until r39 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r38 local source gate; parser advanced past both lookaheads and stopped at the first of two remaining assertion braces; runtime/commit/push/CI not reached
+- `LAST_GREEN_GATE`: r38 Issue byte lock and Design Lock 19/19; prior remote/local results remain comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_REGEX_BRACE_AUDIT_INCOMPLETE / TWO_ASSERTION_RBRACES_REMAIN_UNDER_UNICODE_MODE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMPLETE_NEW_BLOCK_RBRACE_ESCAPE_AUDIT + TWO_ASSERTION_ESCAPES_ONLY / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact preserved r38 six-path draft -> two assertion-regex escape backslashes -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r39 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits over every regex literal in the new contract-test block, both current draft hashes, exact diff, unchanged r37 behavior, stop rules, and release tail. Revision r39 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 56. Revision r40 — CRLF-or-LF P5 source-boundary extraction
+
+This section consumes the first r39 focused source-test failure and supersedes Section 55 only for its EOL evidence, exact portable-boundary correction, and current cursor. All r37 harness behavior, all four completed brace escapes, exact six-path topology, unchanged acceptance, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release route remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 56.1 Independent failure and preflight classification
+
+Both P5 files passed `node --check` after r39. The exact focused suite then passed 38/39 tests; only the new atomic dispatch contract test failed because `dispatchSource` was empty. The extraction lookaheads used LF-only `\n\}\n\nasync function ...`, while the authoritative working-byte contract for `scripts/p5-browser-smoke.mjs` is CRLF-only. This is `SOL_OWNED_STATIC_TEST_EOL_PORTABILITY / LF_ONLY_FUNCTION_BOUNDARY_REGEX_AGAINST_CRLF_SOURCE / REMEDIATION_LOCAL`, not a harness, product, browser, or assertion failure. Browser/runtime, full gates, commit, push, and CI were not reached; no retry or rerun occurred.
+
+Before locking remediation, SOL applied the proposed regexes read-only to the actual CRLF P5 source. `dispatchReadyTakuyaLoadout` extracted 3,398 characters, `enterLegacyQaBattle` extracted 1,402 characters, and the dispatch slice contained exactly one `deployButton.click();`. This validates loadability without editing or weakening any assertion.
+
+### 56.2 Exact coherent r40 correction
+
+Remediation class: `CRLF_OR_LF_FUNCTION_BOUNDARY_REGEX + SIX_OPTIONAL_CR_FRAGMENTS_ONLY / REMEDIATION_LOCAL`.
+
+Preserve `scripts/p5-browser-smoke.mjs` exactly at SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb`. Preserve the current P5 contract-test draft at 34,836 bytes / SHA-256 `cef9871675243da80c07994a8231289a586d02c87c96e97cfd5f5bd8cc9ec29a`, CRLF 799 / lone LF 0 / no BOM except for exactly six inserted `\r?` fragments:
+
+1. change `(?=\n\}\n\nasync function enterLegacyQaBattle)` to `(?=\r?\n\}\r?\n\r?\nasync function enterLegacyQaBattle)`;
+2. change `(?=\n\}\n\nasync function waitForNetworkQuiet)` to `(?=\r?\n\}\r?\n\r?\nasync function waitForNetworkQuiet)`.
+
+No brace escape, regex flag, assertion, helper behavior, timeout, case, product predicate, or other byte may change. The patterns must accept CRLF and LF; no source normalization is added. Final topology remains the same exact six r37 paths. Preserve all local evidence, require tracked/index clean after commit, and use a separate fresh-equivalent fixed-HEAD review checkout.
+
+### 56.3 Resume gate and stop routing
+
+After the r40 four-file Issue byte lock and Design Lock 19/19 green, apply the six optional-CR fragments once. Resume at both syntax checks and the exact focused suite. Only green authorizes full/static and P5 browser gates from Section 53.4. Do not repeat r36 Phase G/deployment. Any new first failure returns to `SOL_DESIGN`; no same-revision retry/rerun/additional correction. All local green permits one atomic exact six-path iteration-19 commit, normal push, and one automatic focused run; complete green alone authorizes workflow-only iteration 20.
+
+### 56.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED` only after the r40 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` until r40 byte lock and 19/19; then `SOL_REMEDIATION`; any next first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r39 focused source suite, 38/39; one EOL-boundary extraction failure after syntax green; browser/runtime/commit/push/CI not reached
+- `LAST_GREEN_GATE`: r39 Issue byte lock, Design Lock 19/19, both P5 syntax checks, and 38 focused tests
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_TEST_EOL_PORTABILITY / LF_ONLY_FUNCTION_BOUNDARY_REGEX_AGAINST_CRLF_SOURCE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CRLF_OR_LF_FUNCTION_BOUNDARY_REGEX + SIX_OPTIONAL_CR_FRAGMENTS_ONLY / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact preserved r39 six-path draft -> six optional-CR regex fragments -> source/focused/full/static/P5 browser gates -> atomic exact six-path iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r40 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against both exact EOL-sensitive boundaries, actual CRLF source loadability, every completed brace escape, draft hashes, topology, stop rules, and release tail. Revision r40 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 57. Revision r41 — pre-dispatch Stage 3 bootstrap transition diagnostic
+
+This section consumes the first r40 browser acceptance and supersedes Section 56 only for that terminal local evidence, the finite pre-dispatch diagnostic, and the current cursor. The complete r37 atomic deploy contract, all r38-r40 source corrections, exact six-path draft, unchanged 45,000 ms acceptance deadline, one-action/no-retry rule, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release route remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 57.1 Independent failure classification
+
+On the final r40 bytes, both P5 files passed syntax, the focused suite passed 39/39, content validation passed, full tests passed 1,196/1,196, lint had zero errors, production build passed, and exact six-path byte/EOL/BOM/topology checks passed. SOL then ran the authorized single Chromium entrance-only process at 667x375 and 736x414. Both cases failed 0/2 at the unchanged 45,000 ms boundary: approximately 46.0 s and 45.4 s. Progress emitted `navigation` and then `failure:navigation`; neither case emitted `loadout-dispatch-wait`. The full 4/4 process, commit, push, and automatic CI were not run. There was no retry or rerun.
+
+The first unresolved owner is therefore before `dispatchReadyTakuyaLoadout`. `waitForStableTakuyaLoadoutAssets` currently expresses eleven simultaneous DOM/asset predicates through one opaque `page.waitForFunction`; on timeout it persists no last predicate values or transition history. The generic `failureState` is the battle bridge's current game object and must not be treated as proof of the live shell's `data-stage-id`. Clean console/page/request/HTTP/pending diagnostics also do not identify which bootstrap predicate remained false.
+
+Classification: `QA_HARNESS_STAGE3_BOOTSTRAP_OBSERVABILITY_GAP / PRE_DISPATCH_COMPOSITE_WAITFORFUNCTION_TIMEOUT + NO_LAST_PREDICATE_RECEIPT / DESIGN_CHANGE_REQUIRED`. This evidence does not establish a product, save, audio, Stage 3, asset-file, or atomic-dispatch defect.
+
+### 57.2 Exact finite r41 diagnostic
+
+Remediation class: `BOUNDED_STAGE3_BOOTSTRAP_TRANSITION_DIAGNOSTIC / ZERO_LOADOUT_ACTION + CHANGE_ONLY_HISTORY + EXACT_TIMEOUT_RECEIPT / DESIGN_CHANGE_REQUIRED`.
+
+Under `SOL_DESIGN`, modify and Issue-byte-lock only the four governance/source-contract paths: `docs/PROJECT_STATE.md`, this Design Lock, `docs/design/v1.0.0/LUNA_HANDOFF.md`, and `tests/v100-design-lock.test.mjs`. Preserve both r40 implementation paths exactly at SHA-256 `92a2ea0bef01670ea69b4c7412d9c328603ec0d9536343d31dbf9b43edd986bb` and `fb93cccd8b4ce04d061d4c63fd71f6ed0297e1f3957a65b8747574629432c8ef`. Preserve the exact six-path candidate topology relative to r36; the diagnostic creates no tracked candidate path.
+
+After Design Lock 19/19 is green, create one ignored, uncommitted diagnostic under `outputs/r41-stage3-bootstrap-diagnostic/` and run exactly one Chromium 667x375 process against the same production build and URL `?qa=takuya-entrance&safe=iphone-landscape`. It may dismiss the existing PWA install offer exactly once. It must then perform zero loadout/deploy clicks, zero QA-bridge mutations, zero handler/internal-API calls, and zero storage writes. For at most 45,000 ms it samples every 50 ms in one page task and records a transition only when the normalized observation changes, capped at 64 transitions.
+
+Every observation uses schema `p5-stage3-bootstrap-observation/v1` and records: elapsed/ordinal; current URL hostname/search; PWA manifest state; QA badge text; shell screen, stage, asset-state, save-persistence; asset bridge state/generation/total/completed/pending/failed; dataset asset generation/resident stage/resident scope; selected formation count; and loadout button text/native-disabled/ARIA-disabled. The summary also records navigation response, install-offer disposition, console/page/request/HTTP/pending diagnostics, terminal reason, last observation, and change-only history. Success means only that the unchanged Section 53 bootstrap predicate became simultaneously true; it is diagnostic completion, not P5 acceptance and must not dispatch the player action.
+
+The one process always returns to `SOL_DESIGN`. SOL classifies actual evidence without a second run: URL/QA identity loss routes to PWA/navigation ownership; stable shell-stage mismatch routes to legacy-QA selection ownership; ready bridge with resident metadata mismatch routes to asset-session publication ownership; nonterminal loading/pending routes to asset/decode lifecycle ownership; an exact predicate-ready receipt routes to an observation/wait ownership audit. Missing/malformed/capped-before-terminal evidence is `DIAGNOSTIC_EVIDENCE_INVALID`. No branch authorizes a timeout increase, retry, action, product correction, or automatic candidate continuation.
+
+### 57.3 Preservation, resume, and stop routing
+
+Preserve the existing three forensic directories and every ignored `outputs/r36-*` through `outputs/r41-*`; do not delete, clean, stash, move, hide, or commit them. r40 source/focused/full/static results remain same-byte continuity evidence, not final freeze evidence. Iteration 19 remains unconsumed. Do not run the full P5 4/4 process, r36 Phase G/deployment, commit, push, CI, workflow restoration, Ready, merge, tag, Release, Pages, evidence freeze, or Producer checkpoint until a later owner-specific revision is locked and its required acceptance passes.
+
+### 57.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED` only after the r41 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 only after a future complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN / LOCAL_DIAGNOSTIC`; no remediation or candidate continuation is authorized
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r40 Chromium entrance-only process, 0/2; both pre-dispatch composite bootstrap waits timed out at 45,000 ms; no full P5, commit, push, or CI
+- `LAST_GREEN_GATE`: exact r40 syntax, focused 39/39, content validator, full 1,196/1,196, lint zero errors, build, diff, byte/EOL/BOM, and six-path topology
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_BOOTSTRAP_OBSERVABILITY_GAP / PRE_DISPATCH_COMPOSITE_WAITFORFUNCTION_TIMEOUT + NO_LAST_PREDICATE_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_STAGE3_BOOTSTRAP_TRANSITION_DIAGNOSTIC / ZERO_LOADOUT_ACTION + CHANGE_ONLY_HISTORY + EXACT_TIMEOUT_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact preserved r40 six-path draft -> r41 four-path byte lock -> one ignored Chromium 667x375 zero-loadout-action diagnostic -> mandatory SOL_DESIGN evidence classification -> later coherent owner-specific revision -> source/full/P5 acceptance -> atomic iteration-19 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged final route
+- `NEXT_OWNER`: `SOL_DESIGN / LOCAL_DIAGNOSTIC`
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual r40 0/2 summary/progress, exact pre-dispatch source boundary, generic bridge-state limitation, preserved hashes/topology, finite zero-action diagnostic, stop rules, and unchanged release tail. Revision r41 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 58. Revision r42 — Stage 3 P5 finite required-asset routing
+
+This section consumes the one r41 diagnostic and supersedes Section 57 only for its actual evidence, root-owner classification, bounded P5 correction, and current cursor. The r37 atomic one-click dispatch contract, r38-r40 source corrections, exact six-path iteration-19 topology, unchanged 45,000 ms case deadline, no action retry, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release route remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 58.1 Actual r41 evidence and independent classification
+
+The authorized r41 Chromium 667x375 diagnostic ran exactly once against `?qa=takuya-entrance&safe=iphone-landscape`, dismissed the PWA offer once, performed zero loadout/deploy action, and produced valid uncapped `p5-stage3-bootstrap-observation/v1` evidence. URL, PWA manifest, QA badge, loadout screen, exact Stage 3 ID, recovered save, six selected units, and the production button remained coherent. Generation 3 advanced from loading to a terminal asset error: the UI first exposed 58 unnormalized jobs, the session completed all 55 unique paths, and `failed` reached 3; terminal error appeared by 881 ms and remained unchanged through the 44,991 ms last sample. Resident stage/scope were correctly absent because the asset session publishes them only after a ready result. Console, page, request, HTTP, and pending-request diagnostics were all zero. The atomic loadout helper was never reached.
+
+Static source and path-plan audit closes the owner without rerunning that diagnostic. `qa=takuya-entrance` is a legacy local-QA route, so `localQaRequested` currently selects `includeAllSprites: true` unless one of the existing finite switches is present. That creates 58 jobs / 55 unique paths totaling 74,002,181 repository bytes, including every legacy ally, enemy, and boss atlas. `AshfallGame.tsx` explicitly documents that this exhaustive one-document plan is not a product path and can create artificial decode contention. The same source already owns the localhost-only `qaHudFiniteAssets=1` route, which retains strict `requireDecode` readiness but limits the session to the selected formation, exact Stage 3 enemy roster including TAKUYA, `turned`, background/base, every Stage 3 object state, support, and armored-vehicle assets. With the current six-unit QA formation that is 32 jobs / 29 unique required paths. Filesystem existence and independent Sharp decode controls passed 55/55; those controls establish source integrity but do not substitute for browser acceptance. The r41 diagnostic did not capture the three individual failure paths or reasons, so no individual asset is declared defective and no asset/product change is authorized.
+
+Classification: `QA_HARNESS_STAGE3_ASSET_SCOPE_MISMATCH / P5_LEGACY_QA_ROUTE_TRIGGERS_EXHAUSTIVE_55_PATH_74MB_NON_STAGE3_DECODE_SET / DESIGN_CHANGE_REQUIRED`. The failure is not evidence of Stage 3 product, gameplay, save, audio, story, atomic dispatch, or required Stage 3 asset failure. The exact bounded owner is the P5 battle-audio URL and its resident-scope assertions.
+
+### 58.2 Exact coherent r42 remediation
+
+Remediation class: `P5_LOCALHOST_FINITE_REQUIRED_ASSET_ROUTE / EXISTING_QA_HUD_FINITE_SWITCH + EXACT_FINITE_RESIDENT_SCOPE + UNCHANGED_STRICT_DECODE / DESIGN_CHANGE_REQUIRED`.
+
+Relative to r36, the final iteration-19 candidate remains exactly these six paths and no others:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `tests/v100-design-lock.test.mjs`
+5. `scripts/p5-browser-smoke.mjs`
+6. `tests/p5-story-audio-contract.test.mjs`
+
+Under `SOL_DESIGN`, first update and Issue-byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, preserve the existing r40 implementation draft, then make only these semantic changes in paths 5-6:
+
+1. in `battleQaUrl`, add the existing local-only query `qaHudFiniteAssets: "1"` for both P5 Stage 3 battle-audio modes;
+2. in `waitForStableTakuyaLoadoutAssets`, require resident scope `finite-hud-runtime-qa` instead of `all-local-qa` at both the initial and stable same-generation boundaries;
+3. in `dispatchReadyTakuyaLoadout`, require and record the same exact `finite-hud-runtime-qa` scope;
+4. update the existing P5 source contract to prove that one query insertion and the three finite-scope assertions, while retaining exactly one player-facing click, both cases, the exact Stage 3 identity, strict asset state/generation/total/pending/failed gates, and the unchanged deadline.
+
+No `app/**` change is needed or allowed. The existing finite switch, `requiredBattleAssetPlan`, strict `requireDecode`, concurrency 2, image/session timeouts, retry attempts, product readiness, selected formation, enemy roster, stage objects, support, vehicle assets, story/audio predicates, browser options, viewports, case counts, and one-click receipt remain byte- or behavior-frozen. Do not replace the finite plan with a hand-written subset, skip a required path, accept missing resident metadata, suppress an asset error, raise a timeout, add a click/action retry, call an internal handler, alter product data, or change Phase G/deployment evidence. The r41 ignored diagnostic remains preserved and uncommitted.
+
+### 58.3 Focused acceptance, continuation, and stop conditions
+
+On final r42 bytes, SOL runs once and in order:
+
+1. both P5 syntax checks and the exact focused source suite from r40; require Design Lock 19/19 and all focused tests green;
+2. content validation, full tests, lint, production build, `git diff --check`, UTF-8/BOM/EOL audit, exact six-path topology, forbidden-negative audit, and preserved evidence inventory;
+3. one fresh local Chromium entrance-only process containing 667x375 and 736x414, exactly 2/2 on one attempt. Every case must prove resident scope `finite-hud-runtime-qa`, positive finite asset total, pending 0, failed 0, matched generation/stage, one valid `p5-stage3-loadout-dispatch/v1` receipt, and `dispatchCount: 1`;
+4. only after 2/2 green, one fresh local Chromium full battle-audio process containing the unchanged four cases, exactly 4/4 on one attempt with the same finite-scope and one-click evidence;
+5. do not repeat r36 local Phase G/deployment solely for this isolated P5 URL/scope correction. If every r42 gate is green, create one normal non-amended atomic exact six-path iteration-19 commit and normal push, then consume exactly one automatic focused CI run;
+6. any first local or automatic failure stops immediately in `SOL_DESIGN` with its actual receipt/artifact. No retry, rerun, second click, second correction, promotion, or evidence substitution is authorized. A finite-plan asset error is a new evidence class and must not be treated as proof that the exhaustive-plan correction failed;
+7. complete automatic iteration-19 green alone authorizes the separate workflow-only iteration-20 restoration and the unchanged same-HEAD full local Phase G 54/54, validator, full regressions, unfiltered remote complete green, production runtime/human audit, evidence freeze, fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW`, and one final Producer checkpoint.
+
+Actual r42 local acceptance: both P5 syntax checks, focused 39/39, Design Lock 19/19, content validation, full 1,196/1,196, lint 0 errors / 9 existing warnings, production build, diff/byte/EOL/BOM/six-path topology, fresh Chromium entrance 2/2, and fresh Chromium full 4/4 all passed on their first authorized attempts. Every browser case reported `finite-hud-runtime-qa`, generation 3, total 29, pending 0, failed 0, `dispatchCount: 1`, and fatal diagnostic counts 0. These local outputs remain ignored working evidence and are not final-freeze evidence.
+
+### 58.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R42_LOCAL_ACCEPTANCE_GREEN / ITERATION_19_CANDIDATE_READY`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: none in r42 local acceptance; the latest historical failure is the classified r41 exhaustive-plan diagnostic asset error. Iteration-19 commit, push, and automatic CI remain unexecuted
+- `LAST_GREEN_GATE`: actual final-byte r42 syntax, focused 39/39, Design Lock 19/19, content, full 1,196/1,196, lint 0 errors / 9 existing warnings, build, static/byte/topology, fresh Chromium entrance 2/2, and fresh Chromium full 4/4, each on its first authorized attempt
+- `CLASSIFICATION`: `QA_HARNESS_STAGE3_ASSET_SCOPE_MISMATCH / P5_LEGACY_QA_ROUTE_TRIGGERS_EXHAUSTIVE_55_PATH_74MB_NON_STAGE3_DECODE_SET / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `P5_LOCALHOST_FINITE_REQUIRED_ASSET_ROUTE / EXISTING_QA_HUD_FINITE_SWITCH + EXACT_FINITE_RESIDENT_SCOPE + UNCHANGED_STRICT_DECODE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: atomic exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> same-HEAD full local/unfiltered remote -> production runtime/human audit -> evidence freeze -> fresh-equivalent fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the single r41 transition history, exact asset-session source, exhaustive and finite plan inventories, 55/55 filesystem/Sharp controls, current P5 route/predicates, preserved six-path draft, stop routing, and unchanged release tail. r42 neither assumes an individual failed path nor weakens production acceptance. Revision r42 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 59. Revision r43 — SOL-owned current-cursor source-contract placement
+
+This section consumes the first post-r42 terminal-readback focused source failure and supersedes Section 58 only for that exact documentation/test placement inconsistency and current cursor. The r42 finite-route implementation, first-attempt Chromium 2/2 and 4/4 evidence, exact six-path topology, one automatic-run budget, workflow-only iteration 20, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The failing focused run was 38/39. P5 syntax and every non-design-lock focused test were green. The sole failure was the new assertion that `Actual r42 local acceptance` must exist in the extracted `PROJECT_STATE.md` current cursor. SOL had written that exact readback immediately before the `## 6` heading, so it existed in the full document but was intentionally excluded by the Section 6 extraction regex. This is not a P5, runtime, asset, product, browser, acceptance, or r42 remediation failure.
+
+Classification: `SOL_OWNED_CURRENT_CURSOR_ASSERTION_PLACEMENT / PROJECT_STATE_ACCEPTANCE_READBACK_OUTSIDE_SECTION6_EXTRACTION / REMEDIATION_LOCAL`.
+
+Remediation class: `CURRENT_CURSOR_READBACK_RELOCATION / ONE_EXISTING_LINE_MOVE + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`.
+
+The exact correction is to move the existing `Actual r42 local acceptance` bullet, byte-for-text unchanged, from immediately before `## 6. Version 1.0.0 execution cursor` to immediately after that heading. Do not duplicate or rewrite it. Update only the four SOL-owned governance/source-contract files for r43 identity, classification, extraction, and cursor assertions; preserve the two P5 remediation files byte-for-byte at their final r42 hashes. Final candidate topology remains the same exact six paths from Section 58.2. No `app/**`, workflow, product, timeout, retry, case, browser, asset, audio, story, Phase G, or acceptance change is allowed.
+
+On final r43 bytes, run both P5 syntax checks and the same four-file focused suite, requiring exactly 39/39; then content validation, full tests, lint, production build, `git diff --check`, UTF-8/BOM/EOL, six-path topology, forbidden-negative, and evidence-preservation audits. Do not rerun either r42 Chromium process: their product and P5 harness bytes are unchanged, both first authorized attempts are already green, and they remain local continuity evidence rather than final-freeze evidence. Any first r43 source/static failure returns to SOL_DESIGN without same-revision correction. Complete r43 source/static green authorizes the one normal non-amended exact six-path iteration-19 commit and push, followed by exactly one automatic focused run.
+
+- `STATUS`: `DESIGN_LOCKED / R43_SOURCE_REMEDIATION_ACTIVE`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` through r43 publication and correction; then `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH` after final source/static green
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first post-r42 terminal-readback focused source suite, 38/39; only the current-cursor extraction placement assertion failed; no P5 browser rerun, commit, push, or automatic CI followed
+- `LAST_GREEN_GATE`: final r42 P5 syntax/source/full/static and first-attempt Chromium entrance 2/2 plus full 4/4; all product and P5 harness bytes remain unchanged
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_CURSOR_ASSERTION_PLACEMENT / PROJECT_STATE_ACCEPTANCE_READBACK_OUTSIDE_SECTION6_EXTRACTION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CURRENT_CURSOR_READBACK_RELOCATION / ONE_EXISTING_LINE_MOVE + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact one-line current-cursor relocation + r43 identity/assertions -> focused 39/39 -> full/static gates -> atomic exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged fixed-review/final-Producer/release route
+- `NEXT_OWNER`: `SOL_DESIGN`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact 38/39 receipt, Section 6 extraction boundary, unchanged P5 hashes/evidence, six-path topology, stop route, and release tail. Revision r43 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 60. Revision r44 — active-handoff release-tail literal closure
+
+This section consumes the first r43 focused source result and supersedes Section 59 only for that exact active-handoff release-tail omission and current cursor. The Section 59 current-cursor line relocation is correct and retained. The r42 P5 implementation and browser evidence, exact six-path topology, one automatic-run budget, workflow-only iteration 20, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The r43 focused suite again stopped at 38/39. Every assertion before the final release-tail loop passed, including the relocated `PROJECT_STATE.md` current cursor and all r42 evidence fields. The sole failure was that active Handoff Section 52 ended at “unchanged continuation” and did not itself contain either accepted final-checkpoint literal, while the design test intentionally requires every active execution source to preserve that release boundary. No P5 browser, runtime, commit, push, or automatic CI followed.
+
+Classification: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_OMISSION / SECTION52_LACKS_FINAL_PRODUCER_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`.
+
+Remediation class: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / REMEDIATION_LOCAL`.
+
+Under SOL_DESIGN, publish r44 in the four governance/source-contract paths and make Handoff Section 53 the sole active handoff. It must retain the r43 correction and add the exact future tail `fresh-equivalent fixed-HEAD SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure`. No other semantic change is authorized. Preserve both P5 files byte-for-byte at the final r42 hashes; do not rerun the already-green r42 Chromium processes.
+
+Run both P5 syntax checks and the same four-file focused suite once, requiring 39/39. Complete green authorizes content validation, full tests, lint, build, diff/byte/EOL/BOM/topology/preservation audits and then the one exact six-path iteration-19 commit/push. Any first r44 failure returns to SOL_DESIGN without same-revision correction. Exactly one automatic focused run remains authorized after push; complete green alone authorizes workflow-only iteration 20.
+
+- `STATUS`: `DESIGN_LOCKED / R44_SOURCE_REMEDIATION_ACTIVE`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only restoration remains iteration 20 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` through r44 publication and source/static gates; then `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r43 focused source suite, 38/39; only active Handoff Section 52 lacked the required final Producer checkpoint literal; no browser rerun, commit, push, or CI followed
+- `LAST_GREEN_GATE`: relocated r43 current-cursor assertions plus all preceding focused assertions, and unchanged final r42 source/full/static and Chromium 2/2 plus 4/4 evidence
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_OMISSION / SECTION52_LACKS_FINAL_PRODUCER_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: final r44 focused 39/39 -> full/static gates -> atomic exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration-20 restoration -> unchanged fixed-review/final-Producer/release route
+- `NEXT_OWNER`: `SOL_DESIGN`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the terminal r43 assertion location, active-handoff extraction, unchanged P5 bytes/evidence, exact candidate topology, stop rule, and release boundary. Revision r44 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 61. Revision r45 — case-exact r44 source assertion
+
+This section consumes the first r44 focused source result and supersedes Section 60 only for one case-sensitive SOL-owned assertion mismatch and the current cursor. The r43 cursor relocation, r44 active-handoff release tail, r42 P5 implementation/browser evidence, six-path topology, one automatic-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and release tail are unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The r44 suite stopped at 38/39 after all earlier source and release-tail assertions passed. Its sole failure expected capitalized `Do not rerun the already-green r42 Chromium processes`, while authoritative Section 60 contains lowercase `do not rerun the already-green r42 Chromium processes`. Classification: `SOL_OWNED_CASE_SENSITIVE_ASSERTION_MISMATCH / LOWERCASE_DESIGN_LITERAL_VS_UPPERCASE_TEST_EXPECTATION / REMEDIATION_LOCAL`. Remediation class: `ONE_CHARACTER_ASSERTION_CASE_ALIGNMENT / CAPITAL_D_TO_LOWERCASE_D + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`.
+
+Change only that one `D` to `d` in `tests/v100-design-lock.test.mjs`, alongside the four governance files' r45 identity/cursor record. Preserve both P5 files byte-for-byte and do not rerun r42 Chromium. Run the same P5 syntax and four-file focused suite once, requiring 39/39, then full/static gates. Any first r45 failure returns to SOL_DESIGN. Complete green authorizes the exact six-path iteration-19 commit/push and exactly one automatic focused run.
+
+- `STATUS`: `DESIGN_LOCKED / R45_SOURCE_REMEDIATION_ACTIVE`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` through r45 source/static gates; then `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first r44 focused source suite 38/39; only a capital-D versus lowercase-d source assertion failed; no browser rerun, commit, push, or CI followed
+- `LAST_GREEN_GATE`: r44 active-handoff release tail and every preceding assertion, plus unchanged r42 source/full/static and Chromium 2/2 plus 4/4 evidence
+- `CLASSIFICATION`: `SOL_OWNED_CASE_SENSITIVE_ASSERTION_MISMATCH / LOWERCASE_DESIGN_LITERAL_VS_UPPERCASE_TEST_EXPECTATION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_CHARACTER_ASSERTION_CASE_ALIGNMENT / CAPITAL_D_TO_LOWERCASE_D + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `RESUME_FROM`: final r45 focused 39/39 -> full/static gates -> exact six-path iteration-19 commit/push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20 -> unchanged fixed-review/final-Producer/release route
+- `NEXT_OWNER`: `SOL_DESIGN`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact assertion bytes, authoritative lowercase literal, unchanged P5 evidence, candidate topology, and release boundary. Revision r45 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 62. Revision r46 — r45 Design release-tail literal closure
+
+This section consumes the first r45 focused source result and supersedes Section 61 only for one missing historical Design literal and current cursor. The exact case alignment is correct and retained. The r42 P5 implementation/browser evidence, six-path topology, automatic-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The r45 suite stopped at 38/39 only in the final all-revisions release-loop assertion: Section 61 said “fixed review” instead of the required literal `SOL_FINAL_REVIEW`. Classification: `SOL_OWNED_DESIGN_RELEASE_TAIL_LITERAL_OMISSION / R45_SECTION_LACKS_SOL_FINAL_REVIEW_TOKEN / REMEDIATION_LOCAL`. Remediation class: `HISTORICAL_SECTION_RELEASE_TOKEN_NORMALIZATION / FIXED_REVIEW_TO_FIXED_HEAD_SOL_FINAL_REVIEW + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`.
+
+Replace only that phrase in Section 61 while publishing r46 identity/cursor records in the four governance/source-contract paths. Preserve both P5 files byte-for-byte and do not rerun the green r42 Chromium processes. Before the focused run, statically require every source in the test's final revision loop, including Sections 61-62, active Handoff, and current cursor, to contain both `SOL_FINAL_REVIEW` and `one final Producer checkpoint` or `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Then run P5 syntax and the four-file focused suite once, requiring 39/39, followed by full/static gates. Any first r46 failure returns to SOL_DESIGN. Complete green authorizes the exact six-path iteration-19 commit/push and one automatic focused run.
+
+Actual r46 source/static acceptance: final-loop static preflight checked 35 sources with missing 0; P5 syntax passed; focused passed 39/39; content validation passed; full tests and production build passed 1,196/1,196; lint passed with 0 errors / 9 existing warnings; `git diff --check`, UTF-8/BOM/EOL, exact six-path topology, forbidden-negative, and preserved-evidence audits passed. The unchanged r42 P5 hashes are `d57b502b2b42d69b69c23715cd3bb7e53470dac06eaf6092b22aacbff4cae790` and `70723ef3104093371360dbca13a980e4e63f9785e964b15177c1fd0e352e300c`; the first-attempt Chromium entrance 2/2 and full 4/4 remain valid local continuity evidence, not final-freeze evidence.
+
+- `STATUS`: `DESIGN_LOCKED / R46_SOURCE_STATIC_GREEN / ITERATION_19_CANDIDATE_READY`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: none in final r46 source/static acceptance; the latest historical failure is the classified r45 missing release literal. Commit, push, and automatic CI remain unexecuted
+- `LAST_GREEN_GATE`: actual final r46 preflight/focused 39/39/content/full 1,196/1,196/build/lint/static/byte/topology green plus unchanged first-attempt r42 Chromium entrance 2/2 and full 4/4
+- `CLASSIFICATION`: `SOL_OWNED_DESIGN_RELEASE_TAIL_LITERAL_OMISSION / R45_SECTION_LACKS_SOL_FINAL_REVIEW_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_SECTION_RELEASE_TOKEN_NORMALIZATION / FIXED_REVIEW_TO_FIXED_HEAD_SOL_FINAL_REVIEW + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20 -> fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the terminal r45 receipt, complete final-loop source list, unchanged P5 evidence, candidate topology, and fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint boundary. Revision r46 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 63. Revision r47 — historical-owner/current-cursor assertion separation
+
+This section consumes the first terminal-cursor r46 focused result and supersedes Section 62 only for the exact source-model alias and current cursor. The final r46 source/static acceptance and its SOL_REMEDIATION cursor are valid facts. The r42 P5/browser evidence, exact six-path topology, automatic-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The final-byte r46 focused suite stopped at 38/39. The sole failure came from historical r43-r45 assertion loops that included the entire mutable `PROJECT_STATE.md` while requiring historical `NEXT_OWNER: SOL_DESIGN`. Once the current r46 cursor correctly advanced to `NEXT_OWNER: SOL_REMEDIATION`, that alias became false. Historical Design/Handoff sections remain correct; Project State remains correct; only the test topology conflated historical and current owner surfaces.
+
+Classification: `SOL_OWNED_HISTORICAL_OWNER_CURRENT_STATE_ALIAS / R43_R46_HISTORY_LOOPS_INCLUDE_MUTABLE_PROJECT_STATE_NEXT_OWNER / REMEDIATION_LOCAL`.
+
+Remediation class: `HISTORICAL_CURRENT_ASSERTION_SEPARATION / DESIGN_HANDOFF_HISTORY_ONLY + PROJECT_CURRENT_CURSOR_ONLY + OWNER_COHERENCE / REMEDIATION_LOCAL`.
+
+In `tests/v100-design-lock.test.mjs`, remove `projectState` only from the r43, r44, r45, and r46 historical owner loops. Retain direct Project State classification/evidence assertions without historical owner coupling. Parse r47 as active and require r47 Design, active Handoff, and current cursor to expose one coherent current owner; `SOL_DESIGN` is valid during source validation and `SOL_REMEDIATION` is valid only after final green terminal readback. Change no product or acceptance assertion. Preserve both P5 files byte-for-byte and do not rerun r42 Chromium.
+
+Run final-loop preflight, P5 syntax, and the same focused suite once, requiring 39/39, then content/full/build/lint/static gates. Any first r47 failure returns to SOL_DESIGN. Complete green authorizes terminal owner readback and the exact six-path iteration-19 commit/push with exactly one automatic focused run.
+
+- `STATUS`: `DESIGN_LOCKED / R47_SOURCE_REMEDIATION_ACTIVE`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_DESIGN` through final r47 source/static gates; then `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: first terminal-cursor r46 focused suite 38/39; historical loops incorrectly required mutable Project State to retain historical SOL_DESIGN owner; no browser rerun, commit, push, or CI followed
+- `LAST_GREEN_GATE`: actual r46 pre-terminal source/static 39/39 and full 1,196/1,196, plus unchanged first-attempt r42 Chromium 2/2 and 4/4
+- `CLASSIFICATION`: `SOL_OWNED_HISTORICAL_OWNER_CURRENT_STATE_ALIAS / R43_R46_HISTORY_LOOPS_INCLUDE_MUTABLE_PROJECT_STATE_NEXT_OWNER / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_CURRENT_ASSERTION_SEPARATION / DESIGN_HANDOFF_HISTORY_ONLY + PROJECT_CURRENT_CURSOR_ONLY + OWNER_COHERENCE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: final-loop preflight -> focused 39/39 -> full/static -> terminal coherent owner readback -> exact six-path iteration-19 commit/push -> one automatic focused run -> complete green only -> workflow-only iteration 20 -> fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+- `NEXT_OWNER`: `SOL_DESIGN`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the failing assertion scope, historical/current ownership model, exact release-loop sources, unchanged P5 evidence, and fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint boundary. Revision r47 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 64. Revision r48 — stable historical failure assertion
+
+This section consumes the first r47 focused result and supersedes Section 63 only for one historical assertion bound to a mutable terminal cursor field. The r47 owner-surface separation is correct and retained. The r42 P5/browser evidence, six-path topology, automatic-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+The r47 suite stopped at 38/39 only because the r46 test expected the literal `first r45 focused source suite 38/39` from r46's mutable `FAILED_GATE`. The final r46 terminal readback correctly changed that field to no current failure while its immutable narrative still says `The r45 suite stopped at 38/39`. Classification: `SOL_OWNED_HISTORICAL_FAILURE_ASSERTION_STABILITY / R46_TERMINAL_READBACK_REPLACED_FAILED_GATE_LITERAL / REMEDIATION_LOCAL`. Remediation class: `IMMUTABLE_NARRATIVE_ASSERTION_BINDING / R45_SUITE_STOPPED_38_OF_39 + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`.
+
+Change only that one r46 assertion to match `r45 suite stopped at 38/39`. Publish r48 identity/current cursor in the four governance/source-contract paths, preserve both P5 files byte-for-byte, and do not rerun r42 Chromium. Run final-loop preflight, syntax, focused 39/39, then full/static gates. Any first r48 failure returns to SOL_DESIGN. Complete green authorizes coherent terminal owner readback and the exact six-path iteration-19 commit/push with one automatic focused run.
+
+Actual r48 source/static acceptance: final-loop preflight checked 37 sources with missing 0; P5 syntax passed; focused passed 39/39; full tests/build passed 1,196/1,196; lint passed with 0 errors / 9 existing warnings; prior final-byte content validation remained green; diff/byte/EOL/BOM/exact-six-path/forbidden/preservation audits passed. Both P5 hashes and first-attempt r42 Chromium 2/2 plus 4/4 evidence remain unchanged.
+
+- `STATUS`: `DESIGN_LOCKED / R48_SOURCE_STATIC_GREEN / ITERATION_19_CANDIDATE_READY`
+- `LOOP_ITERATION`: iteration 19 remains unconsumed; workflow-only iteration 20 remains gated by complete automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `9` for required remote Phase G; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION / CANDIDATE_COMMIT_PUSH`; any first commit, push, or automatic failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `246d2cce8086a14ff8a5139f0eded45376aea822`
+- `LAST_AUDITED_TREE`: `b01ae916859559136f96ad035a316c654c0a2a0b`
+- `FAILED_GATE`: none in final r48 source/static acceptance; latest historical failure is the classified r47 mutable historical assertion. Commit, push, and automatic CI remain unexecuted
+- `LAST_GREEN_GATE`: actual final r48 preflight/focused 39/39/full 1,196/1,196/build/lint/static/byte/topology green plus unchanged first-attempt r42 Chromium entrance 2/2 and full 4/4
+- `CLASSIFICATION`: `SOL_OWNED_HISTORICAL_FAILURE_ASSERTION_STABILITY / R46_TERMINAL_READBACK_REPLACED_FAILED_GATE_LITERAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `IMMUTABLE_NARRATIVE_ASSERTION_BINDING / R45_SUITE_STOPPED_38_OF_39 + NO_RUNTIME_RERUN / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact six-path iteration-19 commit -> normal push -> exactly one automatic focused run -> complete green only -> workflow-only iteration 20 -> fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r46 immutable narrative, mutable cursor fields, r47 owner separation, unchanged P5 evidence, and fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint boundary. Revision r48 has `High ambiguity: 0` and `Medium ambiguity: 0`.

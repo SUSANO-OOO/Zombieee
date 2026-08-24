@@ -397,6 +397,7 @@ function battleQaUrl(mode) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({
     qa: mode,
+    qaHudFiniteAssets: "1",
     safe: "iphone-landscape",
   }).toString();
   return String(url);
@@ -416,7 +417,7 @@ async function waitForStableTakuyaLoadoutAssets(page, label) {
         && Number(assetState.total) > 0
         && assetState.pending === 0
         && assetState.failed === 0
-        && root.dataset.assetResidentScope === "all-local-qa"
+        && root.dataset.assetResidentScope === "finite-hud-runtime-qa"
         && root.dataset.assetResidentStage === expectedStageId
         && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
     },
@@ -453,7 +454,7 @@ async function waitForStableTakuyaLoadoutAssets(page, label) {
       && after.total === before.total
       && after.datasetGeneration === after.generation
       && after.stageId === expectedTakuyaStageId
-      && after.scope === "all-local-qa") {
+      && after.scope === "finite-hud-runtime-qa") {
       stable = { before, after };
     }
   }
@@ -474,7 +475,92 @@ function assertLocalQaBootstrapDiagnostics(raw, label) {
     `${label} bootstrap retained pending requests: ${JSON.stringify(raw.pendingRequestUrls)}`);
 }
 
-async function enterLegacyQaBattle(page, label) {
+async function dispatchReadyTakuyaLoadout(page, label) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({ expectedStageId }) => {
+      const root = document.documentElement;
+      const shell = document.querySelector(".game-shell");
+      const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
+      const deployButton = document.querySelector(".formation-footer .campaign-primary");
+      const selectedFormationCount = document.querySelectorAll(
+        '.formation-unit-select[aria-pressed="true"]',
+      ).length;
+      const screen = shell?.getAttribute("data-screen") ?? null;
+      const stageId = shell?.getAttribute("data-stage-id") ?? null;
+      const assetGeneration = Number(assetState?.generation);
+      const assetTotal = Number(assetState?.total);
+      const assetPending = Number(assetState?.pending);
+      const assetFailed = Number(assetState?.failed);
+      const datasetGeneration = Number(root.dataset.assetLoadGeneration);
+      const residentStageId = root.dataset.assetResidentStage ?? null;
+      const residentScope = root.dataset.assetResidentScope ?? null;
+      const buttonText = deployButton?.textContent?.replace(/\s+/gu, " ").trim() ?? null;
+      const buttonNativeDisabled = deployButton instanceof HTMLButtonElement
+        ? deployButton.disabled
+        : null;
+      const buttonAriaDisabled = deployButton?.getAttribute("aria-disabled") ?? null;
+      const ready = screen === "loadout"
+        && stageId === expectedStageId
+        && assetState?.state === "ready"
+        && assetGeneration > 0
+        && assetTotal > 0
+        && assetPending === 0
+        && assetFailed === 0
+        && datasetGeneration === assetGeneration
+        && residentStageId === expectedStageId
+        && residentScope === "finite-hud-runtime-qa"
+        && selectedFormationCount > 0
+        && buttonText?.includes("この編成で出撃") === true
+        && buttonNativeDisabled === false
+        && buttonAriaDisabled !== "true"
+        && typeof deployButton?.click === "function";
+      const receipt = {
+        schema: "p5-stage3-loadout-dispatch/v1",
+        dispatchCount: 0,
+        ready,
+        expectedStageId,
+        screen,
+        stageId,
+        assetStatus: assetState?.state ?? null,
+        assetGeneration,
+        assetTotal,
+        assetPending,
+        assetFailed,
+        datasetGeneration,
+        residentStageId,
+        residentScope,
+        selectedFormationCount,
+        buttonText,
+        buttonNativeDisabled,
+        buttonAriaDisabled,
+      };
+      if (!ready) return Object.freeze(receipt);
+      deployButton.click();
+      return Object.freeze({ ...receipt, dispatchCount: 1 });
+    }, { expectedStageId: expectedTakuyaStageId });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.dispatchCount === 1) return Object.freeze(lastEvidence);
+    const remainingMs = timeout - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(
+        `${label} loadout dispatch readiness timed out after ${timeout}ms`,
+        lastEvidence,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
+async function enterLegacyQaBattle(page, label, startedAt) {
   await page.waitForFunction(
     () => {
       const screen = document.querySelector(".game-shell")?.getAttribute("data-screen");
@@ -483,34 +569,11 @@ async function enterLegacyQaBattle(page, label) {
     undefined,
     { timeout },
   );
+  let deployBoundary = null;
   if (await page.locator('.game-shell[data-screen="loadout"]').count()) {
-    // Let the loadout generation finish before the deploy selection starts the
-    // battle generation. Otherwise the harness itself aborts an in-flight
-    // loadout asset request and obscures real product request failures.
-    await page.waitForFunction(
-      () => {
-        const root = document.documentElement;
-        const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
-        return assetState?.state === "ready"
-          && assetState.pending === 0
-          && assetState.failed === 0
-          && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
-      },
-      undefined,
-      { timeout },
-    );
-    const deployButton = page.getByRole("button", { name: /この編成で出撃/ });
-    await deployButton.waitFor({ state: "visible", timeout });
-    await page.waitForFunction(
-      () => {
-        const buttons = [...document.querySelectorAll("button")];
-        const deploy = buttons.find((button) => button.textContent?.includes("この編成で出撃"));
-        return Boolean(deploy && !deploy.disabled);
-      },
-      undefined,
-      { timeout },
-    );
-    await deployButton.click({ timeout });
+    stage3Progress(label, "loadout-dispatch-wait", startedAt);
+    deployBoundary = await dispatchReadyTakuyaLoadout(page, label);
+    stage3Progress(label, "loadout-dispatched", startedAt);
   }
   await page.waitForFunction(
     () => {
@@ -529,6 +592,8 @@ async function enterLegacyQaBattle(page, label) {
   const snapshot = await storyBattleSnapshot(page);
   invariant(snapshot?.stageId === expectedTakuyaStageId && snapshot?.running === true,
     `${label} did not enter the deterministic Stage 3 battle`);
+  stage3Progress(label, "battle-entry", startedAt);
+  return deployBoundary;
 }
 
 async function waitForNetworkQuiet(page) {
@@ -1786,7 +1851,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
     diagnostics.reset();
     diagnostics.setPhase("stage3-setup");
-    await enterLegacyQaBattle(page, label);
+    result.deployBoundary = await enterLegacyQaBattle(page, label, auditStartedAt);
     result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
     assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
     diagnostics.reset();
@@ -1950,6 +2015,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
   } catch (error) {
     stage3Progress(label, `failure:${result.phase}`, auditStartedAt);
     result.error = String(error);
+    result.failureEvidence = error?.evidence ?? null;
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
@@ -1992,7 +2058,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
     diagnostics.reset();
     diagnostics.setPhase("stage3-setup");
-    await enterLegacyQaBattle(page, label);
+    result.deployBoundary = await enterLegacyQaBattle(page, label, startedAt);
     result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
     assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
     diagnostics.reset();
@@ -2200,6 +2266,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   } catch (error) {
     stage3Progress(label, `failure:${result.phase}`, startedAt);
     result.error = String(error);
+    result.failureEvidence = error?.evidence ?? null;
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);

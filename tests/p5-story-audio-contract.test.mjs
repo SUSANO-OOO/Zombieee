@@ -689,6 +689,44 @@ test("TAKUYA entrance starts boss music immediately and composes a 3.4 second tr
   assert.doesNotMatch(browserSmokeSource, /expectedRemaining: TAKUYA_ENTRANCE_AUDIO\.durationSeconds - \.15/u);
 });
 
+test("P5 dispatches the Stage 3 loadout once from one atomic player-facing readiness task", async () => {
+  const browserSmokeSource = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const dispatchSource = browserSmokeSource.match(
+    /async function dispatchReadyTakuyaLoadout[\s\S]+?(?=\r?\n\}\r?\n\r?\nasync function enterLegacyQaBattle)/u,
+  )?.[0] ?? "";
+  const entrySource = browserSmokeSource.match(
+    /async function enterLegacyQaBattle[\s\S]+?(?=\r?\n\}\r?\n\r?\nasync function waitForNetworkQuiet)/u,
+  )?.[0] ?? "";
+
+  assert.match(dispatchSource, /const evidence = await page\.evaluate\([\s\S]+deployButton\.click\(\);[\s\S]+dispatchCount: 1[\s\S]+\}, \{ expectedStageId/u);
+  assert.match(dispatchSource, /schema: "p5-stage3-loadout-dispatch\/v1"/u);
+  assert.match(dispatchSource, /screen === "loadout"[\s\S]+stageId === expectedStageId/u);
+  assert.match(dispatchSource, /assetPending === 0[\s\S]+assetFailed === 0[\s\S]+datasetGeneration === assetGeneration/u);
+  assert.match(browserSmokeSource, /function battleQaUrl\(mode\)[\s\S]+qa: mode,[\s\S]+qaHudFiniteAssets: "1"[\s\S]+safe: "iphone-landscape"/u);
+  assert.equal((browserSmokeSource.match(/qaHudFiniteAssets: "1"/gu) ?? []).length, 1);
+  assert.equal((browserSmokeSource.match(/finite-hud-runtime-qa/gu) ?? []).length, 3);
+  assert.equal((browserSmokeSource.match(/all-local-qa/gu) ?? []).length, 0);
+  assert.match(dispatchSource, /residentStageId === expectedStageId[\s\S]+residentScope === "finite-hud-runtime-qa"/u);
+  assert.match(dispatchSource, /selectedFormationCount > 0/u);
+  assert.match(dispatchSource, /buttonText\?\.includes\("この編成で出撃"\) === true/u);
+  assert.match(dispatchSource, /buttonNativeDisabled === false[\s\S]+buttonAriaDisabled !== "true"/u);
+  assert.match(dispatchSource, /throw new TimeoutError\([\s\S]+lastEvidence/u);
+  assert.equal((dispatchSource.match(/deployButton\.click\(\);/gu) ?? []).length, 1);
+  assert.equal((dispatchSource.match(/dispatchCount: 1/gu) ?? []).length, 1);
+  assert.doesNotMatch(dispatchSource, /getByRole|locator|__ASHFALL_BATTLE_QA__|onStartBattle/u);
+
+  assert.match(entrySource, /"loadout-dispatch-wait"[\s\S]+dispatchReadyTakuyaLoadout[\s\S]+"loadout-dispatched"/u);
+  assert.match(entrySource, /"battle-entry"/u);
+  assert.doesNotMatch(entrySource, /!deploy\.disabled|deployButton\.click\(\{ timeout \}\)|getByRole\("button", \{ name: \/この編成で出撃\//u);
+  assert.equal((browserSmokeSource.match(
+    /result\.deployBoundary = await enterLegacyQaBattle\(page, label, (?:auditStartedAt|startedAt)\);/gu,
+  ) ?? []).length, 2);
+  assert.equal((browserSmokeSource.match(
+    /result\.failureEvidence = error\?\.evidence \?\? null;/gu,
+  ) ?? []).length, 2);
+  assert.match(browserSmokeSource, /const timeout = Math\.max\(5_000, Number\(process\.env\.P5_QA_TIMEOUT_MS\) \|\| 45_000\);/u);
+});
+
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {
   for (const event of Object.values(story.STORY_EVENTS)) {
     assert.equal(event.presentation.characterVoice, false, `${event.id} disables story dialogue voiceover`);
