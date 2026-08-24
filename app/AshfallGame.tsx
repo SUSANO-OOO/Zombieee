@@ -4139,20 +4139,23 @@ function fighterUnitLayerPixelAudit(
   const width = Math.max(1, right - left);
   const height = Math.max(1, bottom - top);
   const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Unit-layer audit canvas unavailable");
 
   const capture = (options: FighterDrawOptions) => {
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(-left, -top);
     const drawResult = drawSpriteFighter(ctx, fighter, sprites, {
       ...options,
       includeGroundShadow: false,
       recordAudit: false,
     });
+    ctx.restore();
     return {
-      data: ctx.getImageData(left, top, width, height).data,
+      data: ctx.getImageData(0, 0, width, height).data,
       clipRect: drawResult?.clipRect ?? null,
       deploymentPlan: drawResult?.deploymentPlan ?? null,
     };
@@ -4160,14 +4163,17 @@ function fighterUnitLayerPixelAudit(
   const actual = capture({});
   const opaque = capture({ forceOpaque: true });
   const foregroundCanvas = document.createElement("canvas");
-  foregroundCanvas.width = W;
-  foregroundCanvas.height = H;
+  foregroundCanvas.width = width;
+  foregroundCanvas.height = height;
   const foregroundContext = foregroundCanvas.getContext("2d", { willReadFrequently: true });
   if (!foregroundContext) throw new Error("Foreground-layer audit canvas unavailable");
   const captureForeground = (forceOpaque: boolean) => {
-    foregroundContext.clearRect(0, 0, W, H);
+    foregroundContext.clearRect(0, 0, width, height);
+    foregroundContext.save();
+    foregroundContext.translate(-left, -top);
     drawCrawlerForegroundMask(foregroundContext, g, sprites, graphicsProfile, forceOpaque);
-    return foregroundContext.getImageData(left, top, width, height).data;
+    foregroundContext.restore();
+    return foregroundContext.getImageData(0, 0, width, height).data;
   };
   const finalAuditCanvas = document.createElement("canvas");
   finalAuditCanvas.width = width;
@@ -4190,10 +4196,12 @@ function fighterUnitLayerPixelAudit(
   );
   const finalRgba = finalAuditContext.getImageData(0, 0, width, height).data;
   const compositeCanvas = document.createElement("canvas");
-  compositeCanvas.width = W;
-  compositeCanvas.height = H;
+  compositeCanvas.width = width;
+  compositeCanvas.height = height;
   const compositeContext = compositeCanvas.getContext("2d", { willReadFrequently: true });
   if (!compositeContext) throw new Error("Deployment final composite audit canvas unavailable");
+  compositeContext.save();
+  compositeContext.translate(-left, -top);
   drawCrawler(compositeContext, g, sprites, graphicsProfile);
   if (actual.deploymentPlan?.active
     && actual.deploymentPlan.unitPass === "before-foreground-mask") {
@@ -4203,7 +4211,8 @@ function fighterUnitLayerPixelAudit(
     drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
     drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
   }
-  const compositeRgba = compositeContext.getImageData(left, top, width, height).data;
+  compositeContext.restore();
+  const compositeRgba = compositeContext.getImageData(0, 0, width, height).data;
   const compositePixels = analyzeDeploymentCompositePixels({
     finalRgba: compositeRgba,
     renderedUnitRgba: actual.data,

@@ -56,8 +56,15 @@ export async function runCanonicalDeploymentUnits({
   evidenceRoot = env.ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT,
   kinds = CANONICAL_DEPLOYMENT_KINDS,
   runAttempt,
+  createHostResourceTelemetry = createWebKitHostResourceTelemetry,
 } = {}) {
   if (!evidenceRoot) throw new Error("ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT is required");
+  if (typeof createHostResourceTelemetry !== "function") {
+    throw new Error("deployment telemetry factory must be a function");
+  }
+  if (createHostResourceTelemetry !== createWebKitHostResourceTelemetry && typeof runAttempt !== "function") {
+    throw new Error("deployment telemetry override requires an injected runAttempt");
+  }
   if (kinds.length !== CANONICAL_DEPLOYMENT_KINDS.length
     || new Set(kinds).size !== kinds.length
     || !CANONICAL_DEPLOYMENT_KINDS.every((kind) => kinds.includes(kind))) {
@@ -65,7 +72,7 @@ export async function runCanonicalDeploymentUnits({
   }
   const root = path.resolve(cwd, evidenceRoot);
   await mkdir(root, { recursive: true });
-  const hostResourceTelemetry = await createWebKitHostResourceTelemetry({
+  const hostResourceTelemetry = await createHostResourceTelemetry({
     evidenceDir: root,
     label: "bounded-deployment-parent",
     referenceRoot: cwd,

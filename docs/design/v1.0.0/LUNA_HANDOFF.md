@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r28`
+- Canonical Design Lock: `V100-SOL-DL-001 r29`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-36 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 37 is the sole current execution handoff.
+Sections 1-37 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 38 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1346,3 +1346,30 @@ The release tail is unchanged: owner-specific iteration-11 remediation -> comple
 `High ambiguity: 0`. `Medium ambiguity: 0`.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r28` and Issue #172.**
+
+## 38. Revision r29 — no active Luna handoff / owner-specific WebKit QA correction
+
+Design Lock Section 45 and the latest explicitly labeled Issue #172 r29 byte-lock comment are the sole active cursor. Sections 1-37 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r29 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `2328e28a6678d56c65582fa07f9b5cff470d8799`
+- `LAST_AUDITED_TREE`: `6781c750a7901324462039003ce12c16ad6c58a3`
+- `FAILED_GATE`: automatic CI #927 / run `32709911420`: PR Verify Linux mock/default-telemetry mismatch, Hosted cross-case WebKit termination, five deployment viewport QA-only frozen-audit terminations; Phase G and Stage 3 dependency-skipped; no retry/rerun
+- `LAST_GREEN_GATE`: same-HEAD six enemy-runtime shards, Hosted safe-area 11/11 and records 5/5, deployment 667x375 eight units/48 checkpoints, and local r28 controls; comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_QA_WEBKIT_EXECUTION_BOUNDARIES / LINUX_MOCK_TELEMETRY_REALISM + HOSTED_CROSS_CASE_BROWSER_LIFETIME + DEPLOYMENT_FULL_WORLD_PIXEL_AUDIT_SURFACES / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_QA_CASE_AND_REGION_OWNERSHIP / TEST_ONLY_TELEMETRY_INJECTION + FRESH_HOSTED_BROWSER_PER_CASE + REGION_LOCAL_FROZEN_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r29 byte lock and 19/19; then `SOL_REMEDIATION`; any failed gate returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r29 owner-specific candidate is iteration 11; workflow-only unfiltered restoration remains iteration 12
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r29 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact clean r28 HEAD/tree -> r29 four-path byte lock -> exact five-path implementation -> source/static plus bounded browser controls -> atomic nine-path iteration-11 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-12 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Change only the five implementation/test paths in Section 45.2 after the four design paths are byte-locked. Preserve the r28 diagnostic workflow topology and every product/acceptance byte outside the named QA-only function.
+2. Add the test-only deployment telemetry factory boundary with production default identity and primary-error precedence; use deterministic unsupported and supported-invalid fixtures inside the existing three test blocks.
+3. Give each Hosted ready/fault case one fresh browser and close/await it after the case. Keep the exact cases, order, assertions, report, artifacts, timeouts, and one attempt.
+4. Make only the QA-only `fighterUnitLayerPixelAudit` unit/foreground/composite surfaces region-sized with integer world-to-region translation and `(0,0,width,height)` reads. Product draw order, crop, pixels, thresholds, checkpoints, and public canvas remain unchanged.
+5. Require final syntax/load, bounded deployment 3/3, runtime evidence 3/3, focused 60/60, Design Lock 19/19, lint/build/diff/byte/topology/negative audits; then Chromium 844x340/brute, the five exact WebKit deployment pairs, Hosted 844x340 ready plus mission/delay 844x340, and ordered Phase G Stage 6 -> Stage 24 -> Stage 25 3/3 as fixed in Section 45.3. Do not rerun a failed command before returning to `SOL_DESIGN`.
+6. If all local gates are green, create one atomic exact nine-path iteration-11 commit, normal non-force push, exact ref/tree/compare readback, and accept only its automatic CI attempt. Any red returns to `SOL_DESIGN` without immediate edit/retry. Complete automatic focused green alone authorizes workflow-only iteration 12, not readiness or release.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r29` and Issue #172.**

@@ -97,6 +97,13 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /hostResourceTelemetryResults/u);
   assert.match(visualHarness, /page\.on\("crash"/u);
   assert.match(visualHarness, /browser\.on\("disconnected"/u);
+  assert.match(visualHarness, /const launchCaseBrowser = async \(details\)/u);
+  assert.match(visualHarness, /const closeCaseBrowser = async \(details\)/u);
+  assert.equal((visualHarness.match(/await launchCaseBrowser\(caseDetails\)/gu) ?? []).length, 2);
+  assert.equal((visualHarness.match(/await closeCaseBrowser\(caseDetails\)/gu) ?? []).length, 2);
+  assert.match(visualHarness, /for \(const viewport of viewports\) \{[\s\S]*?await launchCaseBrowser\(caseDetails\);[\s\S]*?await closeCaseBrowser\(caseDetails\);/u);
+  assert.match(visualHarness, /for \(const faultViewport of faultViewports\) \{[\s\S]*?await launchCaseBrowser\(caseDetails\);[\s\S]*?await closeCaseBrowser\(caseDetails\);/u);
+  assert.doesNotMatch(visualHarness, /try \{\r?\n\s*browser = await browserType\.launch/u);
   assert.doesNotMatch(visualHarness, /attempt < 2|retrying .* transient browser closure|isTransientBrowserClosure/u);
 });
 
@@ -108,7 +115,10 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(finalRemediationHarness, /await hostResourceTelemetry\?\.stop\(\{/u);
   assert.match(finalRemediationHarness, /hostResourceTelemetry: hostResourceTelemetry\?\.reference\(\) \?\? null/u);
   assert.match(boundedDeploymentHarness, /label: "bounded-deployment-parent"/u);
-  assert.ok(boundedDeploymentHarness.indexOf("await createWebKitHostResourceTelemetry({")
+  assert.match(boundedDeploymentHarness, /createHostResourceTelemetry = createWebKitHostResourceTelemetry/u);
+  assert.match(boundedDeploymentHarness, /createHostResourceTelemetry !== createWebKitHostResourceTelemetry && typeof runAttempt !== "function"/u);
+  assert.match(boundedDeploymentHarness, /await createHostResourceTelemetry\(\{/u);
+  assert.ok(boundedDeploymentHarness.indexOf("await createHostResourceTelemetry({")
     < boundedDeploymentHarness.indexOf("for (const kind of kinds)"));
   assert.match(boundedDeploymentHarness, /hostResourceTelemetry\.event\("unit-child-start"/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetry\.event\("unit-child-exit"/u);
@@ -159,6 +169,18 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryValid/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryInvalidReason/u);
   assert.match(boundedDeploymentHarness, /failed at \$\{failedAt\}/u);
+  const fighterAudit = gameSource.match(/function fighterUnitLayerPixelAudit[\s\S]+?(?=\r?\nfunction drawEnemyCombatReadabilityVfx)/u)?.[0] ?? "";
+  assert.match(fighterAudit, /canvas\.width = width;[\s\S]*canvas\.height = height;/u);
+  assert.match(fighterAudit, /foregroundCanvas\.width = width;[\s\S]*foregroundCanvas\.height = height;/u);
+  assert.match(fighterAudit, /compositeCanvas\.width = width;[\s\S]*compositeCanvas\.height = height;/u);
+  assert.equal((fighterAudit.match(/\.translate\(-left, -top\)/gu) ?? []).length, 3);
+  assert.match(fighterAudit, /ctx\.translate\(-left, -top\);[\s\S]*drawSpriteFighter/u);
+  assert.match(fighterAudit, /foregroundContext\.translate\(-left, -top\);[\s\S]*drawCrawlerForegroundMask/u);
+  assert.match(fighterAudit, /compositeContext\.translate\(-left, -top\);[\s\S]*drawCrawler\(compositeContext/u);
+  assert.match(fighterAudit, /ctx\.getImageData\(0, 0, width, height\)/u);
+  assert.match(fighterAudit, /foregroundContext\.getImageData\(0, 0, width, height\)/u);
+  assert.match(fighterAudit, /compositeContext\.getImageData\(0, 0, width, height\)/u);
+  assert.doesNotMatch(fighterAudit, /(?:canvas|foregroundCanvas|compositeCanvas)\.(?:width|height) = [WH];/u);
   assert.match(finalRemediationHarness, /WEBKIT_HOST_TELEMETRY_INVALID/u);
   assert.match(finalRemediationHarness, /priorFailure\.hostResourceTelemetryFailure/u);
   assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_INTERVAL_MS = 250/);

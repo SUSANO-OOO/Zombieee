@@ -68,22 +68,39 @@ const runEngine = async (engineName, browserType) => {
     : null;
   const hostResourceTelemetryRecord = hostResourceTelemetry?.reference() ?? null;
   if (hostResourceTelemetryRecord) hostResourceTelemetryResults.push(hostResourceTelemetryRecord);
-  hostResourceTelemetry?.event("browser-launch-begin", { engine: engineName });
   let browser = null;
+  let activeCaseDetails = null;
   let primaryFailure = null;
   const attachPageTelemetry = (page, details) => {
     hostResourceTelemetry?.event("page-created", details);
     page.on("crash", () => hostResourceTelemetry?.event("page-crash", details));
     page.on("close", () => hostResourceTelemetry?.event("page-close", details));
   };
-  try {
+  const launchCaseBrowser = async (details) => {
+    invariant(browser === null, `${engineName}: previous case browser was not closed`);
+    hostResourceTelemetry?.event("browser-launch-begin", { engine: engineName, ...details });
     browser = await browserType.launch({ headless: true });
-    hostResourceTelemetry?.event("browser-launched", { engine: engineName });
-    browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect", { engine: engineName }));
+    activeCaseDetails = details;
+    hostResourceTelemetry?.event("browser-launched", { engine: engineName, ...details });
+    browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect", { engine: engineName, ...details }));
+    return browser;
+  };
+  const closeCaseBrowser = async (details) => {
+    const caseBrowser = browser;
+    browser = null;
+    activeCaseDetails = null;
+    if (!caseBrowser) return;
+    hostResourceTelemetry?.event("browser-cleanup-begin", { engine: engineName, ...details });
+    await caseBrowser.close();
+    hostResourceTelemetry?.event("browser-cleanup-complete", { engine: engineName, ...details });
+  };
+  try {
     for (const viewport of viewports) {
+      const caseDetails = { phase: "ready-case", viewport: `${viewport.width}x${viewport.height}` };
+      await launchCaseBrowser(caseDetails);
       const context = await browser.newContext({ viewport });
       const page = await context.newPage();
-      attachPageTelemetry(page, { phase: "ready-case", viewport: `${viewport.width}x${viewport.height}` });
+      attachPageTelemetry(page, caseDetails);
       const errors = [];
       page.on("console", (message) => { if (message.type() === "error") errors.push(`console:${message.text()}`); });
       page.on("pageerror", (error) => errors.push(`page:${error.message}`));
@@ -165,19 +182,22 @@ const runEngine = async (engineName, browserType) => {
       await page.screenshot({ path: screenshot, fullPage: true });
       diagnostics.push({ engine: engineName, viewport, audit, monkeyRenderProof, errors, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
       await context.close();
+      await closeCaseBrowser(caseDetails);
     }
     for (const fixture of faultClasses.filter(({ className }) => selectedFaultClasses.has(className))) {
       for (const mode of ["delay", "404", "corrupt", "decode-reject", "decode-timeout"].filter((entry) => selectedFaultModes.has(entry))) {
         const faultViewports = fixture.className === "mission" ? viewports : [{ width: 844, height: 390 }];
         for (const faultViewport of faultViewports) {
-        const context = await browser.newContext({ viewport: faultViewport });
-        const page = await context.newPage();
-        attachPageTelemetry(page, {
+        const caseDetails = {
           phase: "fault-case",
           viewport: `${faultViewport.width}x${faultViewport.height}`,
           faultClass: fixture.className,
           faultMode: mode,
-        });
+        };
+        await launchCaseBrowser(caseDetails);
+        const context = await browser.newContext({ viewport: faultViewport });
+        const page = await context.newPage();
+        attachPageTelemetry(page, caseDetails);
         const requestCounts = new Map();
         page.on("request", (request) => {
           const pathname = new URL(request.url()).pathname;
@@ -330,6 +350,7 @@ const runEngine = async (engineName, browserType) => {
         `${engineName}/${fixture.className}/${mode}: failed-only recovery session missing ${JSON.stringify(retrySession)}`);
         faultDiagnostics.push({ engine: engineName, viewport: faultViewport, fixture: { className: fixture.className, stageId: fixture.stageId, path: fixture.path }, mode, blocked, recovered, finalCanvas, mutableMissionStates, decodedBeforeRetry, decodedAfterRetry, missingDecodedSuccesses, requestCounts: Object.fromEntries(requestCounts) });
         await context.close();
+        await closeCaseBrowser(caseDetails);
         }
       }
     }
@@ -338,10 +359,10 @@ const runEngine = async (engineName, browserType) => {
     hostResourceTelemetry?.event("engine-failure", { engine: engineName, error: String(error) });
     throw error;
   } finally {
-    hostResourceTelemetry?.event("browser-cleanup-begin", { engine: engineName });
+    hostResourceTelemetry?.event("engine-cleanup-begin", { engine: engineName });
     let browserCleanupFailure = null;
     try {
-      await browser?.close();
+      await closeCaseBrowser({ ...(activeCaseDetails ?? {}), cleanupReason: "engine-finally" });
     } catch (cleanupError) {
       if (primaryFailure) primaryFailure.browserCleanupError = String(cleanupError);
       else browserCleanupFailure = cleanupError;
