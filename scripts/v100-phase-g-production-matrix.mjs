@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
@@ -396,7 +397,7 @@ function checkpointRecorderFor(page) {
   return pageCheckpointRecorders.get(page) ?? null;
 }
 
-function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, context, page, browser, browserSession = null }) {
+function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, context, page, browser, browserSession = null, hostResourceTelemetry = null }) {
   const startedAt = Date.now();
   const checkpointLog = [];
   const checkpointState = new Map();
@@ -510,6 +511,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
       viewport: viewportLabel(viewport),
       sequenceId,
       browserSession: cloneDiagnosticValue(browserSession),
+      hostResourceTelemetry: cloneDiagnosticValue(hostResourceTelemetry?.reference() ?? null),
       orderedRunPosition: ["stage06-spitter-seal", "stage24-panther-commander", "stage25-president"].indexOf(contract.variant) + 1,
       startedAt: new Date(startedAt).toISOString(),
       elapsedMs: Date.now() - startedAt,
@@ -2774,10 +2776,33 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
   const browserSession = phaseGBrowserSessionForCapture(browser, browserPolicy);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
-  const diagnostics = diagnosticsFor(page);
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
+  const hostResourceTelemetry = engineName === "webkit" && state === "battle-extra" && checkpointContract
+    ? await createWebKitHostResourceTelemetry({
+      evidenceDir: path.join(evidenceDir, "diagnostics"),
+      label: `${checkpointContract.variant}-${engineName}-${viewportLabel(viewport)}`,
+      referenceRoot: process.cwd(),
+      metadata: {
+        owner: "phase-g-battle-extra",
+        variant: checkpointContract.variant,
+        engine: engineName,
+        viewport: viewportLabel(viewport),
+        browserSessionId: browserSession.sessionId,
+        captureOrdinal: browserSession.captureOrdinal,
+      },
+    })
+    : null;
+  hostResourceTelemetry?.event("page-created", {
+    variant: checkpointContract?.variant ?? null,
+    browserSessionId: browserSession.sessionId,
+  });
+  page.on("crash", () => hostResourceTelemetry?.event("page-crash"));
+  page.on("close", () => hostResourceTelemetry?.event("page-close"));
+  context.on("close", () => hostResourceTelemetry?.event("context-close"));
+  browser.on("disconnected", () => hostResourceTelemetry?.event("browser-disconnect"));
+  const diagnostics = diagnosticsFor(page);
   const checkpointRecorder = engineName === "webkit" && state === "battle-extra" && checkpointContract
-    ? createBattleExtraCheckpointRecorder({ contract: checkpointContract, engineName, viewport, context, page, browser, browserSession })
+    ? createBattleExtraCheckpointRecorder({ contract: checkpointContract, engineName, viewport, context, page, browser, browserSession, hostResourceTelemetry })
     : null;
   checkpointRecorder?.attach();
   try {
@@ -2836,7 +2861,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
     const checkpointEvidence = checkpointRecorder?.snapshot() ?? null;
     if (checkpointEvidence) invariant(checkpointEvidence.unresolvedCheckpoints.length === 0, `${label} checkpoint recorder incomplete: ${JSON.stringify(checkpointEvidence)}`);
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, ...captureMeta });
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
     return screenshot;
   } catch (error) {
     const failureState = await page.evaluate((battleState) => ({
@@ -2877,6 +2902,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     throw failure;
   } finally {
     try {
+      hostResourceTelemetry?.event("context-cleanup-begin");
       await context.close();
     } finally {
       if (checkpointRecorder) {
@@ -2884,7 +2910,14 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         phaseGCheckpointRecorders.delete(checkpointRecorder);
         pageCheckpointRecorders.delete(page);
       }
-      if (browserPolicy.closeAfterCapture) await resetPhaseGBrowser(engineName);
+      if (browserPolicy.closeAfterCapture) {
+        hostResourceTelemetry?.event("browser-cleanup-begin");
+        await resetPhaseGBrowser(engineName);
+      }
+      await hostResourceTelemetry?.stop({
+        event: "capture-cleanup-complete",
+        variant: checkpointContract?.variant ?? null,
+      });
     }
   }
 }

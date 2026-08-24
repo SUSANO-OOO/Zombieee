@@ -8,6 +8,8 @@ import { productionVisualIntegrityInventory } from "../app/visualIntegrityInvent
 const enemyHarness = await readFile(new URL("../scripts/v0995-enemy-runtime-browser-smoke.mjs", import.meta.url), "utf8");
 const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-browser-smoke.mjs", import.meta.url), "utf8");
 const finalRemediationHarness = await readFile(new URL("../scripts/v099-final-remediation-browser-smoke.mjs", import.meta.url), "utf8");
+const boundedDeploymentHarness = await readFile(new URL("../scripts/run-v099-deployment-units-bounded.mjs", import.meta.url), "utf8");
+const hostTelemetrySource = await readFile(new URL("../scripts/webkit-host-resource-telemetry.mjs", import.meta.url), "utf8");
 const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
 test("F3 runtime evidence is finite, uses production draw/runtime, and observes every semantic state", () => {
@@ -86,6 +88,28 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
 });
 
 test("r6 deployment diagnostics are bounded and preserve the existing acceptance contract", () => {
+  assert.match(finalRemediationHarness, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
+  assert.match(boundedDeploymentHarness, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
+  assert.match(finalRemediationHarness, /caseType === "deployment"[\s\S]*await createWebKitHostResourceTelemetry\(\{/u);
+  assert.match(finalRemediationHarness, /hostResourceTelemetry\?\.event\(event/u);
+  assert.match(finalRemediationHarness, /await hostResourceTelemetry\?\.stop\(\{/u);
+  assert.match(finalRemediationHarness, /hostResourceTelemetry: hostResourceTelemetry\?\.reference\(\) \?\? null/u);
+  assert.match(boundedDeploymentHarness, /label: "bounded-deployment-parent"/u);
+  assert.ok(boundedDeploymentHarness.indexOf("await createWebKitHostResourceTelemetry({")
+    < boundedDeploymentHarness.indexOf("for (const kind of kinds)"));
+  assert.match(boundedDeploymentHarness, /hostResourceTelemetry\.event\("unit-child-start"/u);
+  assert.match(boundedDeploymentHarness, /hostResourceTelemetry\.event\("unit-child-exit"/u);
+  assert.match(boundedDeploymentHarness, /catch \(error\) \{[\s\S]*status: "runner-error"[\s\S]*throw error/u);
+  assert.match(boundedDeploymentHarness, /finally \{[\s\S]*hostResourceTelemetry\.stop\(\{/u);
+  assert.match(boundedDeploymentHarness, /hostResourceTelemetry: hostResourceTelemetry\.reference\(\)/u);
+  assert.match(hostTelemetrySource, /WEBKIT_HOST_RESOURCE_TELEMETRY_INTERVAL_MS = 500/u);
+  assert.match(hostTelemetrySource, /linux-proc-cgroup-unavailable/u);
+  assert.match(hostTelemetrySource, /lastKnownWebKitRoleSet/u);
+  assert.match(hostTelemetrySource, /disappearedRoles/u);
+  assert.match(hostTelemetrySource, /descendantLeftovers/u);
+  assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
+  assert.match(hostTelemetrySource, /normalized\.startsWith\("webkitweb"\)/u);
+  assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
   assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_INTERVAL_MS = 250/);
   assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_MAX_SAMPLES = 160/);
   assert.match(finalRemediationHarness, /function createSetupTrace\(/);

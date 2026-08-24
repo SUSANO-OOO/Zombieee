@@ -25,6 +25,7 @@ import {
 import { AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF } from "../app/gameRules.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import {
   classifySupersededAssetRequestFailures,
   reconcilePageClockRequestFailures,
@@ -132,6 +133,7 @@ await mkdir(evidenceDir, { recursive: true });
 function noOpLifecycleDiagnostics() {
   return {
     file: null,
+    hostResourceTelemetry: null,
     setPhase: () => {},
     event: () => {},
     attachBrowser: () => {},
@@ -149,6 +151,19 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
 
   const filePath = path.join(evidenceDir, `${name}-${caseType}-lifecycle.jsonl`);
   await writeFile(filePath, "", "utf8");
+  const hostResourceTelemetry = caseType === "deployment"
+    ? await createWebKitHostResourceTelemetry({
+      evidenceDir,
+      label: `${name}-${caseType}`,
+      referenceRoot: process.cwd(),
+      metadata: {
+        owner: "deployment-child",
+        engine,
+        viewport: `${viewport.width}x${viewport.height}`,
+        caseType,
+      },
+    })
+    : null;
   const startedAt = Date.now();
   const expectedPages = new WeakSet();
   const expectedContexts = new WeakSet();
@@ -202,6 +217,14 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     const line = `${JSON.stringify(entry)}\n`;
     writeQueue = writeQueue.then(() => appendFile(filePath, line, "utf8")).catch((error) => {
       writeError ??= error;
+    });
+    hostResourceTelemetry?.event(event, {
+      phase,
+      currentPhase,
+      milestone,
+      normalCleanupStarted,
+      expected: fields.expected ?? null,
+      unexpected: fields.unexpected ?? null,
     });
   }
 
@@ -266,6 +289,7 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
   record("case start");
   return {
     file: relativeEvidencePath(filePath),
+    hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
     setPhase,
     event: record,
     attachBrowser,
@@ -277,6 +301,10 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     flush: async () => {
       await writeQueue;
       if (writeError) throw new Error(`Lifecycle diagnostics could not be written: ${writeError}`);
+      await hostResourceTelemetry?.stop({
+        event: "deployment-child-cleanup-complete",
+        caseType,
+      });
     },
   };
 }
@@ -2727,6 +2755,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
     lifecycle?.markContextCloseBegin(context);
     await context.close();
     if (lifecycle?.file) result.lifecycleLog = lifecycle.file;
+    if (lifecycle?.hostResourceTelemetry) result.hostResourceTelemetry = lifecycle.hostResourceTelemetry;
   }
   return result;
 }

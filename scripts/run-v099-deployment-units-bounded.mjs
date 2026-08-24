@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
+
 export const CANONICAL_DEPLOYMENT_KINDS = Object.freeze([
   "scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic",
 ]);
@@ -63,24 +65,61 @@ export async function runCanonicalDeploymentUnits({
   }
   const root = path.resolve(cwd, evidenceRoot);
   await mkdir(root, { recursive: true });
+  const hostResourceTelemetry = await createWebKitHostResourceTelemetry({
+    evidenceDir: root,
+    label: "bounded-deployment-parent",
+    referenceRoot: cwd,
+    metadata: {
+      owner: "deployment-bounded-parent",
+      canonicalUnitCount: CANONICAL_DEPLOYMENT_KINDS.length,
+    },
+  });
   const units = [];
-  for (const kind of kinds) {
-    const attempts = [];
-    const attempt = 1;
-    const attemptDir = path.join(root, kind, `attempt-${attempt}`);
-    await mkdir(attemptDir, { recursive: true });
-    const execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
-    await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
-    const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
-      .then(JSON.parse)
-      .catch(() => null);
-    const passed = execution.code === 0 && summary && assertUnitPass(summary, kind);
-    attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, summary });
-    units.push({ kind, passed, attempts });
-    if (!passed) break;
+  let hostResourceTelemetrySummary = null;
+  try {
+    for (const kind of kinds) {
+      const attempts = [];
+      const attempt = 1;
+      const attemptDir = path.join(root, kind, `attempt-${attempt}`);
+      await mkdir(attemptDir, { recursive: true });
+      hostResourceTelemetry.event("unit-child-start", { kind, attempt });
+      let execution;
+      try {
+        execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
+      } catch (error) {
+        hostResourceTelemetry.event("unit-child-exit", { kind, attempt, status: "runner-error" });
+        throw error;
+      }
+      hostResourceTelemetry.event("unit-child-exit", {
+        kind,
+        attempt,
+        code: execution.code,
+        signal: execution.signal ?? null,
+      });
+      await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
+      const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
+        .then(JSON.parse)
+        .catch(() => null);
+      const passed = execution.code === 0 && summary && assertUnitPass(summary, kind);
+      attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, summary });
+      units.push({ kind, passed, attempts });
+      if (!passed) break;
+    }
+  } finally {
+    hostResourceTelemetrySummary = await hostResourceTelemetry.stop({
+      event: "bounded-parent-complete",
+      completedUnitCount: units.length,
+      allCanonicalUnitsReached: units.length === CANONICAL_DEPLOYMENT_KINDS.length,
+    });
   }
   const complete = units.length === CANONICAL_DEPLOYMENT_KINDS.length && units.every(({ passed }) => passed);
-  const report = { status: complete ? "passed" : "failed", canonicalKinds: CANONICAL_DEPLOYMENT_KINDS, units };
+  const report = {
+    status: complete ? "passed" : "failed",
+    canonicalKinds: CANONICAL_DEPLOYMENT_KINDS,
+    units,
+    hostResourceTelemetry: hostResourceTelemetry.reference(),
+    hostResourceTelemetryStatus: hostResourceTelemetrySummary.status,
+  };
   await writeFile(path.join(root, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
   if (!complete) throw new Error(`bounded deployment evidence failed at ${units.at(-1)?.kind ?? "inventory"}`);
   return report;

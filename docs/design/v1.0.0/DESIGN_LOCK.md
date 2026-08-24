@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r26`
+- Revision: `r27`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -2510,3 +2510,89 @@ If the first r26 Stage 25 standalone or ordered process again reaches a live pro
 - `RESUME_FROM`: preserve the exact r25 eight-path draft and raw PASS/failure evidence -> r26 four-path byte lock -> two-path Phase G live-target-continuity correction -> source/static/lint/build/diff/byte -> fresh Stage 6/24/25 standalone 3/3 each + ordered trio 3/3 -> r25 targeted and full deployment acceptance -> atomic iteration-8 candidate -> one automatic focused complete-green attempt -> workflow-only iteration-9 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact r25 PASS and failure artifacts, source control flow, unchanged r13 target-history acceptance, r25 lifecycle corrections, current eight-path draft topology, and every downstream exact-HEAD boundary. Revision r26 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 43. Revision r27 — finite WebKit process/resource termination diagnostics
+
+This section supersedes Section 42 only for terminal automatic focused CI #925, the recurring clean WebKit page-crash owner audit, the finite diagnostic candidate, and the current cursor. The accepted r25 fresh-browser/cooperative page-I/O bytes and the accepted r26 live-target-continuity bytes remain immutable. Every product, gameplay, causal, pointer, checkpoint, pixel, artifact-integrity, one-attempt/no-retry, exact-HEAD, single Producer checkpoint, and release boundary from Sections 28-42 remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 43.1 Terminal evidence and independent classifications
+
+The atomic r26 iteration-8 candidate is PR #171 HEAD `8e914497272a45ecb7e0558546b05fd4f1bd6cac`, tree `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`, parent `585eed74e5725e40f992ef4c7f85a0179ae2ae8f`. Its final local gates were green: two-script syntax, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, deployment/runtime contract 3/3, lint, build, diff/byte audit, standalone Stage 6/24/25 3/3 each, ordered Stage 6 -> Stage 24 -> Stage 25 3/3, targeted deployment axes 3/3, Chromium 48/48 units and bounded WebKit 48/48 first-attempt unit processes with 288 checkpoint PNGs plus 48 sheets each. Those browser results are comparison evidence only after any diagnostic byte changes.
+
+Automatic focused CI #925 / run `32697709716`, attempt 1, is terminal failure. PR Verify, all six enemy-runtime shards, Hosted Runner, all three Stage 3 routes, and WebKit deployment 736x414, 844x390, 932x430, and 1280x720 were green. Canonical WebKit HUD was dependency-skipped because the deployment matrix was red. Pages Release run `32697709704` built and smoked the candidate but skipped deployment; no release or Pages mutation occurred. There was no retry, rerun, timeout change, edit, or promotion.
+
+The three required failures are independent until process evidence proves a shared termination owner:
+
+1. Phase G job `97346394306`, artifact `9509889112`, uploaded ZIP SHA-256 `1c2c0e383400ddb0307de4c05dc4fc1f0f187cdf7128d43708d7e9f81ce77265`: `remote-trio-1` Stage 6 passed; ordered position 2 `stage24-panther-commander` used fresh WebKit session `webkit-2`, capture ordinal/count 1. Medic and Scout each had one trusted real pointer and production acceptance; commander mount was observed. The last readable state at 16,207 ms was visible/focused/live with battle time 10.6167, two live humans, command 41.85, and all fatal channels zero. No further readable page sample returned; `page-crash` occurred at 57,361 ms while slot 3 remained pending. Stage 25 and later ordered sequences did not run. Local same-byte Stage 24 processes completed around 89 seconds with all fourteen checkpoints, causal 4/4, screenshot, unresolved zero, and fatal zero. Classification: `REMOTE_WEBKIT_PHASE_G_PAGE_TERMINATION_UNRESOLVED / FRESH_STAGE24_PAGE + LAST_READABLE_BOSS_OPENING_STATE + NO_PROCESS_EXIT_OR_CGROUP_EVIDENCE / DESIGN_CHANGE_REQUIRED`.
+2. Deployment 667x375 job `97347974699`, artifact `9510070531`, ZIP SHA-256 `a18f738317940a56fb6e643288c81e643fec89ab094f09c8643f8c9572aa6382`: six prior canonical unit child processes passed. Fresh Tatara/Brute attempt 1 completed `fully-inside` and `first-visible` with production canvas PNGs, then the `quarter` arm `page.evaluate` did not return and the page crashed at lifecycle 28,927 ms / trace-relative 25,464 ms. The cooperative trace had overlap-wait zero, fatal channels zero, and no retry. Same-run 736x414 Tatara completed all six checkpoints in about 8.6 seconds; local exact bytes completed every viewport/unit. Classification: `REMOTE_WEBKIT_DEPLOYMENT_CHECKPOINT_TRANSITION_TERMINATION_UNRESOLVED / FRESH_TATARA_PAGE + QUARTER_ARM_RETURN_LOSS + COOPERATIVE_IO_ZERO / DESIGN_CHANGE_REQUIRED`.
+3. Deployment 844x340 job `97347974482`, artifact `9510311447`, ZIP SHA-256 `798e9b1263c3e1b5733fecdcbA059333019ced66199c8658bf279f992e7ef998` case-insensitively normalized as `798e9b1263c3e1b5733fecdcba059333019ced66199c8658bf279f992e7ef998`: five prior canonical unit child processes passed. Fresh Mayo-chan attempt 1 completed `fully-inside`, then the `first-visible` arm `page.evaluate` did not return and the page crashed at lifecycle 29,955 ms / trace-relative 26,521 ms. The cooperative trace had overlap-wait zero, fatal channels zero, and no retry. Same-run 844x390 and the other three green viewport jobs completed all eight units. Classification: `REMOTE_WEBKIT_DEPLOYMENT_CHECKPOINT_TRANSITION_TERMINATION_UNRESOLVED / FRESH_MAYO_PAGE + FIRST_VISIBLE_ARM_RETURN_LOSS + COOPERATIVE_IO_ZERO / DESIGN_CHANGE_REQUIRED`.
+
+These artifacts disprove the prior r25 owners as a complete explanation: every Phase G battle-extra capture has a fresh browser and each deployment trace is cooperative with overlap-wait zero. They do not prove a shared product defect, a specific unit/viewport defect, an operating-system OOM, a WebContent native crash, a browser-process exit, or a surviving-but-unresponsive renderer. Top-level MiniBrowser logs end with exit code 0 only after harness cleanup begins and do not expose the WebContent descendant or cgroup event that preceded the Playwright page-crash event. Therefore another lifecycle correction or unit-specific micro-patch is forbidden before one finite host/process diagnostic candidate.
+
+Aggregate classification is `REMOTE_WEBKIT_CLEAN_PAGE_CRASH_RECURRENCE / FRESH_PHASE_G_AND_COOPERATIVE_DEPLOYMENT_PAGES + PROCESS_RESOURCE_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`.
+
+Diagnostic remediation class is `WEBKIT_HOST_PROCESS_RESOURCE_TELEMETRY / PROC_CGROUP_DESCENDANT_LIFECYCLE + PAGE_CRASH_CORRELATION + ZERO_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`.
+
+### 43.2 Exact finite diagnostic packet
+
+Create one r27 diagnostic-only iteration-9 candidate on exact clean r26 HEAD/tree. The r27 delta is exactly ten paths; the cumulative material topology relative to r24 is also exactly ten paths because the two added paths join the existing eight and all existing r25/r26 bytes remain present:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/webkit-host-resource-telemetry.mjs` — new;
+6. `scripts/v100-phase-g-production-matrix.mjs`;
+7. `tests/v100-phase-g-checkpoint.test.mjs`;
+8. `scripts/run-v099-deployment-units-bounded.mjs`;
+9. `scripts/v099-final-remediation-browser-smoke.mjs`;
+10. `tests/v0995-runtime-evidence-contract.test.mjs`.
+
+Under `SOL_DESIGN`, publish and byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, edit only paths 5-10. Do not change any existing acceptance predicate, timeout, interval owned by the product or evidence contract, attempt count, retry policy, route, formation, pointer, checkpoint, screenshot, artifact-integrity rule, or product byte.
+
+Implement one shared read-only `v100-webkit-host-resource-telemetry/v1` helper with all of these properties:
+
+1. It uses Node host filesystem reads only. It may read Linux `/proc`, `/sys/fs/cgroup`, and `/proc/pressure`; it must not spawn/exec a process, inspect the production page, issue browser input, mutate environment variables, read repository content, capture secrets, or alter application/browser behavior.
+2. On Linux it samples every 500 ms through one serialized, non-overlapping writer. Each bounded JSONL sample records wall/elapsed time; current Node memory; cgroup v2 memory current/max/events and pids current/max/events when present; host memory and pressure summaries; and the current-process descendant tree with PID/PPID/start ticks, sanitized process role/name, state, RSS/virtual/swap, threads, fd count, oom score, and aggregate totals. It records disappeared descendants relative to the prior sample. Raw environment, credentials, network payloads, and unrestricted command lines are forbidden.
+3. It emits explicit event samples for telemetry start, page created, page crash/close, context close, browser disconnect/cleanup, unit child start/exit, and telemetry stop. A page event never waits on or changes the production page. The final bounded summary records sample/event counts, peak aggregate RSS/fds/descendants, cgroup event deltas, last-known WebKit role set, disappeared roles, and descendant leftovers after expected cleanup.
+4. On non-Linux local hosts it writes a valid `supported: false` manifest with reason `linux-proc-cgroup-unavailable`; this fallback must load and stop cleanly and may not pretend to be Linux process evidence.
+5. Phase G starts one telemetry recorder immediately after each fresh WebKit battle-extra page is created and before route configuration. The recorder is attached to the existing checkpoint lifecycle, persists inside that capture's existing diagnostics artifact, samples the same browser/WebContent descendants, and is stopped/flushed only after existing context/browser cleanup. Passing and failing captures both retain the reference and summary. Missing/corrupt telemetry fails the r27 diagnostic contract but does not change the existing battle acceptance result.
+6. The deployment harness starts one per-child WebKit deployment recorder before browser launch through the existing lifecycle owner, correlates page crash/close and browser disconnect, and flushes after browser cleanup. The bounded parent starts a second job-lifetime recorder before unit 1, records each canonical child start/exit, and stops after the first existing fail-closed stop or all eight units. This distinguishes per-page termination from descendants/resources retained across otherwise fresh child processes.
+7. Extend only existing Phase G checkpoint and deployment-runtime source-test blocks; add or remove no test block. Require helper import/ownership, 500 ms serialized host-only sampling, forbidden `child_process`/page/input/environment access, both Phase G and deployment lifecycle attachments, parent cross-unit ownership, evidence paths, and unchanged fresh-process/cooperative/one-attempt/causal/checkpoint/pixel contracts.
+
+The r27 telemetry is diagnostic evidence, not a pass substitute. A green later attempt cannot replace a failed earlier required case, and a cgroup/process sample cannot satisfy a gameplay, causal, pointer, screenshot, or artifact predicate.
+
+Forbidden changes are `app/**`, `.github/**`, package/lock, `public/**`, release request, product DOM/CSS/render/game loop, gameplay, balance, AI, targeting, damage, HP, command generation, battle timing, stage/formation/content/story, assets/audio/VFX, save/PWA, Playwright/browser version, launch flags, timeout, polling cadence other than the new host-only 500 ms sampler, retry/attempt count, fail-fast order, viewport/unit inventory, pointer count, checkpoint/receipt/causal/pixel/screenshot/artifact acceptance, route shortening, browser substitution, failure swallowing, repository-wide normalization, and any release action.
+
+### 43.3 Diagnostic acceptance and mandatory SOL return
+
+After the four-path r27 design publication is Issue-byte-locked and Design Lock 19/19 is green, execute once in this order:
+
+1. implement paths 5-10; prove exact ten-path delta/cumulative topology, r26 product/workflow/package/public equality, preserved r25/r26 semantic bytes outside the explicitly instrumented host lifecycle sites, EOL/BOM contracts, `git diff --check`, three edited/new-script syntax, helper import/fallback load, load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, deployment/runtime contract 3/3, lint, and production build;
+2. run one local Windows fallback probe, one fresh Stage 24 WebKit capture, and one fresh deployment target process for 667x375 Tatara and 844x340 Mayo-chan. Existing runtime acceptance must remain green; local telemetry must truthfully report unsupported Linux telemetry rather than substitute evidence. The full r26 local matrix is not repeated solely for diagnostic bytes;
+3. create one atomic ten-path diagnostic iteration-9 commit and normal non-force publish. Re-fetch exact GitHub HEAD/tree/compare and accept exactly one automatic focused attempt 1. No manual rerun or job retry;
+4. require telemetry artifacts for every executed Phase G battle-extra and WebKit deployment child/parent, whether the existing runtime gate passes or fails. Fetch every terminal job/log/artifact and independently correlate page lifecycle timestamp, descendant roles, process disappearance, cgroup memory/pid event deltas, aggregate peaks, and expected cleanup;
+5. after the automatic run, always return to `SOL_DESIGN`. Even complete green is `DIAGNOSTIC_NO_REPRODUCTION`, not focused promotion, counter reset, or workflow restoration. A reproduced crash with an OOM/pid delta is host-resource-owned; a disappeared WebContent role with no cgroup event is WebContent/native-process-owned; browser-root disappearance is browser-process-owned; a surviving role set with an unresolved evaluate is renderer/page-I/O liveness-owned; missing/invalid telemetry is diagnostic-source-owned. If evidence does not select exactly one bounded owner for an axis, mark that axis `DIAGNOSTIC_INCONCLUSIVE` and design one final isolation boundary rather than guessing.
+
+Only a later coherent remediation candidate may become iteration 10. Its automatic focused run must be completely green before deferred counters reset. Workflow-only unfiltered restoration becomes iteration 11, followed by the unchanged same-HEAD full Phase G 54/54, validator/regressions, unfiltered remote green, production runtime/human/save/PWA/asset/release audits, clean fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone authorizes stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, Project State closure, Issue closure, and `/goal COMPLETE`.
+
+### 43.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r27 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: `8` rejected; r27 diagnostic candidate is iteration 9; later remediation is iteration 10; workflow-only restoration is iteration 11
+- `SAME_GATE_REPEAT_COUNT`: `5` for required Phase G
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `3`
+- `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`; `R26_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
+- `R26_REMOTE_STAGE24_CLEAN_CRASH_COUNT`: `1`
+- `R25_LOCAL_STAGE25_PROOF_ATTACK_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r27 four-path byte lock and Design Lock 19/19; then `SOL_REMEDIATION`; automatic diagnostic result always returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `8e914497272a45ecb7e0558546b05fd4f1bd6cac`
+- `LAST_AUDITED_TREE`: `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`
+- `FAILED_GATE`: terminal automatic focused CI #925 / run `32697709716`: Phase G job `97346394306` Stage 24 clean page crash; deployment jobs `97347974699` 667x375 Tatara and `97347974482` 844x340 Mayo-chan clean page crashes; downstream canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: exact r26 local complete acceptance plus remote PR Verify, six enemy-runtime shards, Hosted Runner, three Stage 3 routes, and four of six deployment viewport jobs; all are comparison evidence and do not override required red
+- `CLASSIFICATION`: `REMOTE_WEBKIT_CLEAN_PAGE_CRASH_RECURRENCE / FRESH_PHASE_G_AND_COOPERATIVE_DEPLOYMENT_PAGES + PROCESS_RESOURCE_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `WEBKIT_HOST_PROCESS_RESOURCE_TELEMETRY / PROC_CGROUP_DESCENDANT_LIFECYCLE + PAGE_CRASH_CORRELATION + ZERO_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r27 publication and green Design Lock proof
+- `RESUME_FROM`: exact clean r26 HEAD/tree -> r27 four-path byte lock -> six-path host/process diagnostic instrumentation -> source/static/local fallback integration -> atomic iteration-9 diagnostic candidate -> one automatic focused attempt -> mandatory SOL_DESIGN evidence classification -> coherent iteration-10 remediation -> complete focused green -> workflow-only iteration-11 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against every terminal CI #925 job, all three failure logs/artifacts, four same-run green deployment controls, exact local r26 controls, r25 stop rules, current source ownership, and the release tail. The revision neither infers a native mechanism nor sends another speculative lifecycle patch. It obtains the missing process/cgroup evidence without touching product behavior or acceptance and mandates SOL reclassification before remediation. Revision r27 has `High ambiguity: 0` and `Medium ambiguity: 0`.

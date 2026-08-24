@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r26`
+- Canonical Design Lock: `V100-SOL-DL-001 r27`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-34 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 35 is the sole current execution handoff.
+Sections 1-35 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 36 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1266,3 +1266,52 @@ The exact correction is finite. Keep monotonic target history and `hasHumanTarge
 Paths 1-4 are SOL-owned design/source publication. Under `SOL_REMEDIATION`, edit only `scripts/v100-phase-g-production-matrix.mjs` and `tests/v100-phase-g-checkpoint.test.mjs`; preserve the r25 cooperative deployment runner/test bytes. Extend the existing `V100_PHASE_G_CAUSAL_HISTORY_PROBE` and existing checkpoint test block without changing the 12/60/19 counts. After static green, require new Stage 6/24/25 standalone 3/3 and ordered 3/3 evidence on final bytes, then the unexecuted r25 targeted/full deployment matrix. Any first failure returns to `SOL_DESIGN` with raw evidence and no edit/retry/rerun.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r26` and Issue #172.** Byte-lock the four r26 design/source paths, then change only the Phase G runner/checkpoint test to separate historical target evidence from current live-target continuity and enable the existing real-card survival redeploy while contact-first attack proof is pending. Preserve all r25 lifecycle/deployment bytes, product bytes, timeouts, attempts, target/causal acceptance, and release boundaries. Run the exact Section 42 sequence once; any first failure returns to `SOL_DESIGN` without Luna, retry, rerun, or micro-patch.
+
+## 36. Revision r27 — no active Luna handoff / finite WebKit host-process diagnostics
+
+- `ROLE_LOCK`: `SOL_DESIGN` until the four SOL-owned design/source files are byte-locked in Issue #172 and Design Lock 19/19 is green; then `SOL_REMEDIATION`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after that lock. Luna remains stopped and receives no handoff.
+
+### Classification and immutable input
+
+- exact rejected candidate: HEAD `8e914497272a45ecb7e0558546b05fd4f1bd6cac`, tree `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`
+- terminal automatic focused CI: #925 / run `32697709716`, attempt 1
+- Phase G failure: job `97346394306`, artifact `9509889112`, `remote-trio-1` position 2 Stage 24, fresh browser, two accepted real deployments, fatal zero, last readable live state at 16,207 ms, page crash at 57,361 ms
+- deployment failures: job `97347974699`, artifact `9510070531`, 667x375 Tatara after two completed checkpoints; job `97347974482`, artifact `9510311447`, 844x340 Mayo-chan after one completed checkpoint. Both used fresh one-attempt child processes, cooperative page-I/O with overlap-wait zero, fatal zero, and no retry
+- same-run green controls: every source/nondeployment required job plus deployment 736x414, 844x390, 932x430, and 1280x720
+- aggregate classification: `REMOTE_WEBKIT_CLEAN_PAGE_CRASH_RECURRENCE / FRESH_PHASE_G_AND_COOPERATIVE_DEPLOYMENT_PAGES + PROCESS_RESOURCE_OWNER_UNOBSERVED / DESIGN_CHANGE_REQUIRED`
+- remediation class: `WEBKIT_HOST_PROCESS_RESOURCE_TELEMETRY / PROC_CGROUP_DESCENDANT_LIFECYCLE + PAGE_CRASH_CORRELATION + ZERO_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`
+
+Do not infer product, gameplay, a named unit/viewport, OOM, native WebContent, browser root, or surviving-renderer ownership without r27 telemetry. Preserve all r25/r26 behavior and evidence predicates exactly.
+
+### Exact execution packet
+
+Relative to clean r26 HEAD, the r27 delta is exactly ten paths: Design Lock, this Handoff, Project State, Design Lock test, new `scripts/webkit-host-resource-telemetry.mjs`, Phase G runner/checkpoint test, deployment bounded parent, deployment browser harness, and deployment runtime source test. Under `SOL_REMEDIATION`, only the six runner/helper/test paths may change; the four design/source paths are locked bytes.
+
+Implement exactly Section 43.2:
+
+1. one host-only, no-spawn/no-exec/no-page/no-input/no-env-mutation Linux `/proc` + cgroup v2 + pressure JSONL recorder at serialized 500 ms cadence, with sanitized descendant roles/resources, event correlation, disappearance tracking, and bounded final summary;
+2. truthful non-Linux `supported: false / linux-proc-cgroup-unavailable` fallback;
+3. per-fresh-page Phase G WebKit battle-extra recorder attached after page creation and before route configuration, retained through page/context/browser lifecycle and existing failure artifact;
+4. per-child deployment recorder owned by the existing WebKit lifecycle plus one parent recorder across canonical unit child start/exit boundaries;
+5. existing test blocks only, with positive telemetry ownership and negative child-process/page/input/environment assertions;
+6. zero changes to `app/**`, `.github/**`, workflow/package/public/release bytes, browser version/flags, product behavior, timeout, existing polling, retry/attempt, route/order, pointer, checkpoint, causal, pixel, screenshot, or artifact acceptance.
+
+### Acceptance and exact cursor
+
+Run in this order: exact topology/byte/EOL/BOM/diff audit -> three-script syntax -> helper import/fallback -> load-only 7/7 -> focused 60/60 -> checkpoint 12/12 -> Design Lock 19/19 -> deployment/runtime 3/3 -> lint -> build -> one local Stage 24 and fresh 667x375 Tatara plus 844x340 Mayo integration -> atomic iteration-9 diagnostic commit -> normal non-force push -> one automatic focused attempt 1.
+
+The remote diagnostic result always returns to `SOL_DESIGN`, including complete green. Green is `DIAGNOSTIC_NO_REPRODUCTION`, not promotion. Any failure retains its first evidence; no rerun, retry, micro-patch, or stale substitution. SOL uses cgroup deltas and descendant-role survival/disappearance to select host-resource, WebContent/native, browser-root, renderer/page-I/O liveness, diagnostic-source, or inconclusive ownership before an iteration-10 remediation. Workflow-only unfiltered restoration is iteration 11 and remains forbidden until the later remediation candidate has complete focused green.
+
+- `LAST_AUDITED_HEAD`: `8e914497272a45ecb7e0558546b05fd4f1bd6cac`
+- `LAST_AUDITED_TREE`: `310742c60cba2ee07ba4f9acd8bd9d23b7fa8db8`
+- `FAILED_GATE`: CI #925 Phase G Stage 24 plus deployment 667x375 Tatara and 844x340 Mayo-chan clean page crashes; canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: exact r26 local complete acceptance and the listed remote green controls; comparison only
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after r27 byte lock and Design Lock 19/19
+- `RESUME_FROM`: clean r26 -> finite telemetry implementation/local integration -> atomic diagnostic iteration 9 -> one automatic remote attempt -> mandatory SOL_DESIGN classification
+
+The release tail remains unchanged: later coherent remediation -> complete focused green -> workflow-only iteration 11 -> same-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit approval only -> stacked integration/tag/Release/official Pages/published-SHA QA/recovery/closure.
+
+`High ambiguity: 0`. `Medium ambiguity: 0`.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r27` and Issue #172.**

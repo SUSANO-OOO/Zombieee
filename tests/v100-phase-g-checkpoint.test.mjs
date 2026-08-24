@@ -250,9 +250,10 @@ test("Phase G rejects full queues and terminal battle state before any candidate
 });
 
 test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints", async () => {
-  const [source, appSource] = await Promise.all([
+  const [source, appSource, hostTelemetrySource] = await Promise.all([
     readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8"),
     readFile(path.join(repositoryRoot, "app/AshfallGame.tsx"), "utf8"),
+    readFile(path.join(repositoryRoot, "scripts/webkit-host-resource-telemetry.mjs"), "utf8"),
   ]);
   const leanSnapshotBlock = appSource.match(/getPhaseGCombatSnapshot: \(\) => \{([\s\S]*?)\r?\n      \},\r?\n      getSnapshot: \(\) => \{/u)?.[1] ?? "";
   assert.ok(leanSnapshotBlock.length > 0, "missing localhost-only Phase G combat snapshot method");
@@ -381,14 +382,41 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(captureState, /phaseGBrowserLifecyclePolicy\(engineName, state\)/u);
   assert.match(captureState, /if \(browserPolicy\.closeExistingBeforeCapture\) await resetPhaseGBrowser\(engineName\)/u);
   assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
-  assert.match(captureState, /browserSession \}\)/u);
-  assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) await resetPhaseGBrowser\(engineName\)/u);
+  assert.match(captureState, /browserSession, hostResourceTelemetry \}\)/u);
+  assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) \{[\s\S]*await resetPhaseGBrowser\(engineName\)[\s\S]*\}/u);
+  assert.match(source, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
+  assert.match(captureState, /await createWebKitHostResourceTelemetry\(\{/u);
+  assert.ok(captureState.indexOf("const page = await context.newPage()")
+    < captureState.indexOf("await createWebKitHostResourceTelemetry({"));
+  assert.ok(captureState.indexOf("await createWebKitHostResourceTelemetry({")
+    < captureState.indexOf("const captureMeta = await configure(page)"));
+  for (const event of ["page-created", "page-crash", "page-close", "context-close", "browser-disconnect", "context-cleanup-begin", "browser-cleanup-begin"]) {
+    assert.match(captureState, new RegExp(`hostResourceTelemetry\\?\\.event\\("${event}"`, "u"));
+  }
+  assert.match(captureState, /await hostResourceTelemetry\?\.stop\(\{/u);
+  assert.ok(captureState.indexOf("await resetPhaseGBrowser(engineName)")
+    < captureState.lastIndexOf("await hostResourceTelemetry?.stop({"));
+  assert.match(hostTelemetrySource, /v100-webkit-host-resource-telemetry\/v1/u);
+  assert.match(hostTelemetrySource, /WEBKIT_HOST_RESOURCE_TELEMETRY_INTERVAL_MS = 500/u);
+  assert.match(hostTelemetrySource, /setInterval\([\s\S]*sampleIntervalMs/u);
+  assert.match(hostTelemetrySource, /writeQueue = operation\.catch/u);
+  assert.match(hostTelemetrySource, /linux-proc-cgroup-unavailable/u);
+  for (const systemPath of ["/proc", "/sys/fs/cgroup", "/pressure/memory", "/pressure/cpu", "/pressure/io"]) {
+    assert.match(hostTelemetrySource, new RegExp(systemPath.replaceAll("/", "\\/"), "u"));
+  }
+  assert.match(hostTelemetrySource, /descendantTree\(rootPid\)/u);
+  assert.match(hostTelemetrySource, /cgroupEventDeltas/u);
+  assert.match(hostTelemetrySource, /descendantLeftovers/u);
+  assert.match(hostTelemetrySource, /persistedEntries\.length !== expectedEntryCount/u);
+  assert.match(hostTelemetrySource, /telemetry persistence integrity failed/u);
+  assert.doesNotMatch(hostTelemetrySource, /node:child_process|\bspawn\s*\(|\bexec\s*\(|process\.env|page\.|mouse\.|keyboard\.|evaluate\s*\(/u);
   const browserSessionHelper = source.match(/function phaseGBrowserSessionForCapture[\s\S]+?(?=\nasync function closePhaseGBrowsers)/u)?.[0] ?? "";
   assert.match(browserSessionHelper, /metadata\.captureCount \+= 1/u);
   assert.match(browserSessionHelper, /metadata\.captureCount <= policy\.maxCapturesPerBrowser/u);
   assert.match(browserSessionHelper, /captureOrdinal: metadata\.captureCount/u);
   const checkpointRecorder = source.match(/function createBattleExtraCheckpointRecorder[\s\S]+?(?=\nif \(process\.env\.V100_PHASE_G_CHECKPOINT_NEGATIVE)/u)?.[0] ?? "";
   assert.match(checkpointRecorder, /browserSession: cloneDiagnosticValue\(browserSession\)/u);
+  assert.match(checkpointRecorder, /hostResourceTelemetry: cloneDiagnosticValue\(hostResourceTelemetry\?\.reference\(\) \?\? null\)/u);
   assert.match(source, /if \(failurePayload\) return/u);
   assert.match(source, /deepFreezeDiagnosticValue/u);
   assert.doesNotMatch(source, /clickDeploymentCard/u);
