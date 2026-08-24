@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r22`
+- Revision: `r24`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -2274,3 +2274,70 @@ Any first failure returns inside this same SOL-owned `/goal` to `SOL_DESIGN`. Do
 - `RESUME_FROM`: preserve exact r22 seven-path draft/app bytes -> r23 four-path byte lock -> two-path artifact identity/integrity correction -> source/static/lint/build/diff/byte -> one Chromium 667x375 Kumaverson+Medic process -> fresh r23 Phase G Stage 6/24/ordered 3/3 -> full Chromium with 288+48 unique/disk-verified artifacts -> 48 one-attempt WebKit units -> atomic iteration-6 candidate -> automatic focused complete green -> workflow-only iteration-7 restoration -> full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw r22 full Chromium summary, final disk file inventory and hashes, exact colliding filename call sites, Kumaverson/Medic shared-family identity, r22 positive controls, unchanged product bytes, and every downstream exact-HEAD boundary. Revision r23 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 40. Revision r24 — canonical revision-header and current-cursor integrity
+
+This section supersedes Section 39 only for canonical revision identity, current-state summaries, the post-r23 source finding, and the next execution cursor. Every r12-r23 product, runtime, artifact-integrity, one-attempt/no-retry, exact-HEAD, single Producer checkpoint, and release contract remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 40.1 Post-push source finding and classification
+
+SOL completed the locked r23 correction locally and produced one atomic seven-path iteration-6 commit. The local tree `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727` was transported without force to remote PR #171 as commit `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`; GitHub compare proved one commit ahead, zero behind, and the exact seven expected paths. The final r23 source/static gates passed, targeted Chromium Kumaverson+Medic passed 14/14 unique persisted artifacts, fresh Stage 6/Stage 24/ordered Phase G passed 3/3 each, full Chromium passed 336/336 unique persisted artifacts, and 48 fresh one-attempt WebKit unit processes passed 336/336. These r23 results remain diagnosis/remediation controls and cannot substitute for final exact-r24 release evidence.
+
+Before accepting the queued automatic focused run, SOL's post-push source audit found that the new Section 39 and Section 32 were present but three authoritative current-revision declarations still identified r22:
+
+- this document's header said `Revision: r22`;
+- Handoff's header said `Canonical Design Lock: V100-SOL-DL-001 r22` and its introductory routing sentence still named historical Section 29 as sole current;
+- Project State's current Design Lock summary said r22 Sections 28-38 and described the previous receipt-serialization remediation, while its cursor separately said r23 Section 39;
+- `tests/v100-design-lock.test.mjs` positively required those stale r22 header literals, so a green source test would preserve rather than detect the canonical drift.
+
+This is a SOL-owned canonical source/test defect. It is not a product, gameplay, render, artifact-integrity, browser, Phase G, workflow, or release failure. CI run `32686937760` (#923) had not supplied a terminal focused result when the source finding was classified, and no green result from that run may override this finding.
+
+Classification is `SOL_OWNED_CANONICAL_REVISION_HEADER_DRIFT / R23_SECTIONS_PUBLISHED_WITH_R22_DESIGN_HANDOFF_PROJECT_STATE_HEADERS_AND_POSITIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `CANONICAL_REVISION_IDENTITY_ALIGNMENT / R24_HEADER_SUMMARY_CURSOR_AND_NEGATIVE_STALE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`.
+
+### 40.2 Exact bounded correction
+
+Preserve the exact r23 product/runtime/runner bytes and the seven-path topology relative to clean base HEAD `4191afe2fe84283125c0e9ec817185c94685630c`. Under `SOL_DESIGN`, edit only these four already-tracked design/source paths:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`.
+
+Apply one coherent correction:
+
+1. Set the Design Lock header, Handoff canonical header, Project State current Design Lock summary, current cursor heading, and the matching source assertions to `V100-SOL-DL-001 r24` / Section 40.
+2. Make Handoff Section 33 the sole current execution handoff and retain Sections 1-32 only as audit history.
+3. Record remote r23 HEAD `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`, tree `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`, the completed r23 local controls, the non-terminal/invalidated #923 state, this classification, and the iteration-7/8 route in Project State and Handoff.
+4. Extend the existing Design Lock test block without adding or removing a test. Require current r24 headers/cursor and require the active header/summary regions not to contain r22 or r23 as the current revision. Historical Section 38/39 text and r22/r23 audit assertions remain intact.
+
+No `app/**`, runner, runtime evidence test, gameplay, balance, AI, render, asset, timeout, retry, viewport, Phase G, workflow, public/package, lockfile, CI-BOM, release request, or production byte may change. Do not rewrite history or claim the queued r23 run as exact-r24 evidence.
+
+### 40.3 Acceptance and continuation
+
+1. Prove exact four-path r24 correction scope against remote r23, and exact seven-path candidate topology against `4191afe2...`; require every non-design path blob to equal r23, EOL/BOM contracts preserved, and `git diff --check` green.
+2. Require load-only 7/7, focused 60/60, checkpoint 12/12, Design Lock 19/19, runner syntax, lint, and production build on the final r24 bytes. The Design Lock test must fail if any active Design/Handoff/Project State revision is independently reverted to r22 or r23.
+3. Publish the four-path r24 byte lock to Issue #172, create one atomic docs/test-only iteration-7 commit, push normally, and re-fetch exact remote HEAD/tree/compare. Do not amend or recreate the accepted r23 commit/tree.
+4. Allow exactly one automatic focused run for the new r24 HEAD. Any r23 run is superseded for promotion. Complete r24 focused green is required before reset of deferred counters and before the workflow-only unfiltered restoration, now iteration 8.
+5. After focused green, preserve the existing route: workflow-only restoration -> same-exact-HEAD full Phase G 54/54, validators and full regressions -> one unfiltered remote run -> production runtime/human/save/PWA/asset/release audits -> read-only adversarial fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only stacked integration/release/official Pages/published-SHA QA/recovery/closure.
+
+Any first r24 correction or focused-run failure returns inside the same SOL-owned `/goal` to `SOL_DESIGN`. Do not immediately edit, retry, rerun, weaken acceptance, reuse r23 results as final candidate proof, or promote.
+
+### 40.4 Current cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r24 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: `6`; the r24 docs/test-only material candidate is iteration 7; workflow-only restoration becomes iteration 8
+- `SAME_GATE_REPEAT_COUNT`: `3`; `DEFERRED_STAGE24_REPEAT_COUNT`: `1`; `DEPLOYMENT_736_REPEAT_COUNT`: `2`; `DEPLOYMENT_844_REPEAT_COUNT`: `1`; `DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`
+- `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until the r24 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`
+- `LAST_AUDITED_TREE`: `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`
+- `FAILED_GATE`: post-push canonical source audit before acceptance of CI #923; active r23 sections existed, but Design/Handoff/Project State current headers and their positive source assertions remained r22
+- `LAST_GREEN_GATE`: r23 final local source/static/lint/build/diff/byte, targeted Chromium 14/14 artifact integrity, fresh Phase G Stage 6/24/ordered 3/3, full Chromium 336/336, full WebKit 48/48 processes and 336/336; these are diagnosis/remediation controls after r24 changes the exact HEAD
+- `CLASSIFICATION`: `SOL_OWNED_CANONICAL_REVISION_HEADER_DRIFT / R23_SECTIONS_PUBLISHED_WITH_R22_DESIGN_HANDOFF_PROJECT_STATE_HEADERS_AND_POSITIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CANONICAL_REVISION_IDENTITY_ALIGNMENT / R24_HEADER_SUMMARY_CURSOR_AND_NEGATIVE_STALE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r24 publication and green Design Lock proof
+- `RESUME_FROM`: preserve r23 product/runtime/runner bytes and remote commit -> correct four current design/source paths -> byte lock + 60/60 + 12/12 + 19/19 + syntax/lint/build/diff/byte -> atomic docs/test-only iteration-7 candidate -> one automatic r24 focused run -> complete green -> workflow-only iteration-8 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed-review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL re-ran SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all active revision declarations, the r23 remote tree/compare, the exact four-path correction boundary, test false-green behavior, and every downstream exact-HEAD boundary. Revision r24 has `High ambiguity: 0` and `Medium ambiguity: 0`.

@@ -38,9 +38,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r22`/u);
+  assert.match(design, /Revision: `r24`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r22`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r24`/u);
   assert.match(handoff, /docs\/CODEX_SOL_ROLE\.md/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -302,7 +302,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /sourceToTargetEdges/u);
   assert.match(causalTest, /sourceAttribution/u);
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r22`/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r24`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
   for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
     assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
@@ -319,7 +319,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
 });
 
-test("r12-r23 lock SOL actionability and persisted deployment evidence with one final Producer checkpoint", async () => {
+test("r12-r24 lock SOL actionability and canonical revision integrity with one final Producer checkpoint", async () => {
   const [design, handoff, projectState] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
@@ -336,7 +336,8 @@ test("r12-r23 lock SOL actionability and persisted deployment evidence with one 
   const r20 = design.match(/## 36\. Revision r20([\s\S]+?)(?=## 37\. Revision r21)/u)?.[1] ?? "";
   const r21 = design.match(/## 37\. Revision r21([\s\S]+?)(?=## 38\. Revision r22)/u)?.[1] ?? "";
   const r22 = design.match(/## 38\. Revision r22([\s\S]+?)(?=## 39\. Revision r23)/u)?.[1] ?? "";
-  const r23 = design.match(/## 39\. Revision r23([\s\S]*)$/u)?.[1] ?? "";
+  const r23 = design.match(/## 39\. Revision r23([\s\S]+?)(?=## 40\. Revision r24)/u)?.[1] ?? "";
+  const r24 = design.match(/## 40\. Revision r24([\s\S]*)$/u)?.[1] ?? "";
   const historicalHandoff = handoff.match(/## 22\. Revision r13([\s\S]+?)(?=## 23\. Revision r14)/u)?.[1] ?? "";
   const r14Handoff = handoff.match(/## 23\. Revision r14([\s\S]+?)(?=## 24\. Revision r15)/u)?.[1] ?? "";
   const r15Handoff = handoff.match(/## 24\. Revision r15([\s\S]+?)(?=## 25\. Revision r16)/u)?.[1] ?? "";
@@ -347,9 +348,10 @@ test("r12-r23 lock SOL actionability and persisted deployment evidence with one 
   const r20Handoff = handoff.match(/## 29\. Revision r20([\s\S]+?)(?=## 30\. Revision r21)/u)?.[1] ?? "";
   const r21Handoff = handoff.match(/## 30\. Revision r21([\s\S]+?)(?=## 31\. Revision r22)/u)?.[1] ?? "";
   const r22Handoff = handoff.match(/## 31\. Revision r22([\s\S]+?)(?=## 32\. Revision r23)/u)?.[1] ?? "";
-  const activeHandoff = handoff.match(/## 32\. Revision r23([\s\S]*)$/u)?.[1] ?? "";
+  const r23Handoff = handoff.match(/## 32\. Revision r23([\s\S]+?)(?=## 33\. Revision r24)/u)?.[1] ?? "";
+  const activeHandoff = handoff.match(/## 33\. Revision r24([\s\S]*)$/u)?.[1] ?? "";
   const currentProcess = projectState.match(/## 4\. 実行体制 — V1 SOL single-owner override([\s\S]+?)## 5\./u)?.[1] ?? "";
-  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r23 Section 39([\s\S]+?)### Post-V1/u)?.[1] ?? "";
+  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r24 Section 40([\s\S]+?)### Post-V1/u)?.[1] ?? "";
 
   for (const source of [r12, projectState]) {
     assert.match(source, /0495e95e3bc59fcf546ffa02ee83704a1f63e366/u);
@@ -737,7 +739,7 @@ test("r12-r23 lock SOL actionability and persisted deployment evidence with one 
   assert.match(r22Handoff, /NO ACTIVE LUNA HANDOFF/u);
   assert.match(r22Handoff, /r21 runtime semantic latch is accepted and must remain byte-identical/u);
 
-  for (const source of [r23, activeHandoff, projectState, currentCursor]) {
+  for (const source of [r23, r23Handoff, projectState]) {
     assert.match(source, /QA_EVIDENCE_ARTIFACT_IDENTITY_COLLISION \/ SHARED_FAMILY_FILENAME \+ LAST_WRITER_WINS_PNG_AND_CONTACT_SHEET_OVERWRITE \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /DEPLOYMENT_ARTIFACT_UNIQUE_IDENTITY_AND_INTEGRITY \/ FAMILY_PLUS_KIND_FILENAME \+ PRE-PASS_UNIQUE_PATH_AND_DISK_SHA_ASSERTION \/ DESIGN_CHANGE_REQUIRED/u);
     assert.match(source, /DEPLOYMENT_ARTIFACT_COLLISION_REPEAT_COUNT`: `1`/u);
@@ -761,10 +763,30 @@ test("r12-r23 lock SOL actionability and persisted deployment evidence with one 
   assert.match(r23, /exactly 288 logical and unique checkpoint paths/u);
   assert.match(r23, /exactly 48 logical and unique contact-sheet paths/u);
   assert.match(r23, /material candidate remains the same exact seven paths/u);
-  assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
-  assert.match(activeHandoff, /family-plus-kind filenames and fail-closed unique-path\/final-disk-SHA integrity/u);
+  assert.match(r23Handoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(r23Handoff, /family-plus-kind filenames and fail-closed unique-path\/final-disk-SHA integrity/u);
 
-  for (const source of [r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, activeHandoff, currentCursor]) {
+  for (const source of [r24, activeHandoff, projectState, currentCursor]) {
+    assert.match(source, /SOL_OWNED_CANONICAL_REVISION_HEADER_DRIFT \/ R23_SECTIONS_PUBLISHED_WITH_R22_DESIGN_HANDOFF_PROJECT_STATE_HEADERS_AND_POSITIVE_ASSERTIONS \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /CANONICAL_REVISION_IDENTITY_ALIGNMENT \/ R24_HEADER_SUMMARY_CURSOR_AND_NEGATIVE_STALE_ASSERTIONS \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /97e6bc60a9130c68b8a1cfcd86b7b76b9d769478/u);
+    assert.match(source, /f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727/u);
+    assert.match(source, /CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`/u);
+    assert.match(source, /NEXT_OWNER`: `SOL_REMEDIATION`/u);
+  }
+  assert.match(r24, /CI run `32686937760` \(#923\)/u);
+  assert.match(r24, /exact four-path r24 correction scope/u);
+  assert.match(r24, /workflow-only unfiltered restoration, now iteration 8/u);
+  assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(activeHandoff, /Correct only the four named design\/source paths/u);
+  const designHeader = design.match(/^# Version 1\.0\.0 Design Lock[\s\S]+?(?=## 1\.)/u)?.[0] ?? "";
+  const handoffHeader = handoff.match(/^# Version 1\.0\.0 Historical Luna Handoff[\s\S]+?(?=## 1\.)/u)?.[0] ?? "";
+  const projectCurrentSummary = projectState.match(/## 2\. 次の正式release target([\s\S]+?)(?=## 3\.)/u)?.[1] ?? "";
+  for (const activeSource of [designHeader, handoffHeader, projectCurrentSummary]) {
+    assert.doesNotMatch(activeSource, /(?:V100-SOL-DL-001 |Revision: `)r(?:22|23)`/u);
+  }
+
+  for (const source of [r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, activeHandoff, currentCursor]) {
     assert.match(source, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT|one final Producer checkpoint/u);
     assert.match(source, /SOL_FINAL_REVIEW/u);
   }

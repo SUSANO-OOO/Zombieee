@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r22`
+- Canonical Design Lock: `V100-SOL-DL-001 r24`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-28 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 29 is the sole current execution handoff.
+Sections 1-32 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 33 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1202,3 +1202,25 @@ Design Lock Section 39 and the latest explicitly labeled Issue #172 r23 byte-loc
 The correction is evidence-only. Checkpoint paths must include `${unit.family}-${unit.kind}` and contact sheets must include `${family}-${kind}`. Before terminal pass, the runner inventories all recorded checkpoint and sheet paths, requires logical counts, combined path uniqueness, non-empty regular files, and exact recorded-to-final-disk SHA-256 equality, and persists the bounded integrity result in `summary.json`. This applies even to filtered/noncanonical runs. Equal content hashes are allowed; equal paths are not. Product, app bytes, gameplay, render, checkpoint, pixel, timeout, retry, viewport, Phase G, workflow, public/package, and CI-BOM contracts do not change.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r23` and Issue #172.** Preserve all seven current draft paths and the r21 app bytes. Publish/byte-lock the four r23 design/source paths, then edit only the deployment runner and its existing runtime source test to add family-plus-kind filenames and fail-closed unique-path/final-disk-SHA integrity. Require 60/60, 12/12, 19/19, syntax/lint/build/diff/byte, one fresh Chromium 667x375 Kumaverson+Medic process with 12+2 unique verified artifacts, fresh r23 Stage 6/24/ordered 3/3, full Chromium with 288+48 unique verified artifacts, and 48 fresh WebKit unit processes. Any first failure returns to `SOL_DESIGN` in this same `/goal`; do not route to Luna, retry, rerun, micro-patch, commit, push, or promote.
+
+## 33. Revision r24 — no active Luna handoff / canonical revision identity alignment
+
+Design Lock Section 40 and the latest explicitly labeled Issue #172 r24 byte-lock comment are the sole active cursor. Sections 21-32 remain immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, QA, retry, promotion, or release decision.
+
+- `STATUS`: `NO_ACTIVE_LUNA_HANDOFF`
+- `CURRENT_OWNER`: `SOL`
+- `ROLE_LOCK`: `SOL_DESIGN` until r24 four-path publication/byte lock and Design Lock 19/19; then `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`
+- `LAST_AUDITED_TREE`: `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`
+- `FAILED_GATE`: post-push canonical source audit before acceptance of queued CI #923; active r23 sections existed, but Design/Handoff/Project State current revision declarations and their positive source assertions remained r22
+- `LAST_GREEN_GATE`: r23 final local source/static/lint/build/diff/byte, targeted Chromium 14/14, fresh Phase G Stage 6/24/ordered 3/3, full Chromium 336/336, and full WebKit 48/48 processes/336 artifacts; all are diagnosis/remediation controls after exact HEAD changes
+- `CLASSIFICATION`: `SOL_OWNED_CANONICAL_REVISION_HEADER_DRIFT / R23_SECTIONS_PUBLISHED_WITH_R22_DESIGN_HANDOFF_PROJECT_STATE_HEADERS_AND_POSITIVE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CANONICAL_REVISION_IDENTITY_ALIGNMENT / R24_HEADER_SUMMARY_CURSOR_AND_NEGATIVE_STALE_ASSERTIONS / DESIGN_CHANGE_REQUIRED`
+- `LOOP_ITERATION`: `6`; r24 docs/test-only candidate is iteration 7; workflow-only restoration is iteration 8
+- `CANONICAL_REVISION_HEADER_DRIFT_REPEAT_COUNT`: `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the Issue-locked r24 publication and green Design Lock proof
+- `RESUME_FROM`: preserve r23 product/runtime/runner bytes and remote commit -> correct only Design/Handoff/Project State/design-test current revision identity -> byte lock and source gates -> atomic iteration-7 docs/test candidate -> one automatic focused r24 run -> complete green -> workflow-only iteration-8 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release loop
+
+The r24 correction is canonical docs/test ownership only. It changes no product, app, runner, runtime evidence, gameplay, balance, AI, render, artifact, timeout, retry, viewport, Phase G, workflow, public/package, lockfile, CI-BOM, or release-request byte. The source test must positively require r24 in all active headers/cursor and negatively reject r22/r23 there while retaining historical r22/r23 audit sections.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r24` and Issue #172.** Preserve remote r23 commit/tree and every non-design blob. Correct only the four named design/source paths, prove 60/60, 12/12, 19/19, syntax/lint/build/diff/byte, publish one atomic docs/test-only iteration-7 candidate, and accept only its one automatic focused run. Any first failure returns to `SOL_DESIGN` in this same `/goal`; do not route to Luna, retry, rerun, micro-patch, or promote.
