@@ -2,11 +2,11 @@
   "format": "nishijin-v100-motion-atlas-metadata",
   "version": 1,
   "cell": {
-    "width": 1280,
+    "width": 544,
     "height": 512
   },
   "atlas": {
-    "width": 10240,
+    "width": 4352,
     "height": 1024
   },
   "commonScale": 0.3218707015130674,
@@ -37,7 +37,7 @@
         "alphaPixels": 339333
       },
       "contentRect": {
-        "x": 485,
+        "x": 117,
         "y": 61,
         "width": 310,
         "height": 435
@@ -67,7 +67,7 @@
         "alphaPixels": 404081
       },
       "contentRect": {
-        "x": 494,
+        "x": 126,
         "y": 28,
         "width": 292,
         "height": 468
@@ -97,7 +97,7 @@
         "alphaPixels": 338590
       },
       "contentRect": {
-        "x": 489,
+        "x": 121,
         "y": 65,
         "width": 302,
         "height": 431
@@ -127,7 +127,7 @@
         "alphaPixels": 202147
       },
       "contentRect": {
-        "x": 476,
+        "x": 108,
         "y": 210,
         "width": 328,
         "height": 286
@@ -157,7 +157,7 @@
         "alphaPixels": 325622
       },
       "contentRect": {
-        "x": 485,
+        "x": 117,
         "y": 113,
         "width": 310,
         "height": 383
@@ -187,7 +187,7 @@
         "alphaPixels": 336528
       },
       "contentRect": {
-        "x": 476,
+        "x": 108,
         "y": 60,
         "width": 328,
         "height": 436
@@ -217,7 +217,7 @@
         "alphaPixels": 282012
       },
       "contentRect": {
-        "x": 478,
+        "x": 110,
         "y": 124,
         "width": 323,
         "height": 372
@@ -247,7 +247,7 @@
         "alphaPixels": 258223
       },
       "contentRect": {
-        "x": 400,
+        "x": 32,
         "y": 305,
         "width": 480,
         "height": 191

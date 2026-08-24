@@ -2,11 +2,11 @@
   "format": "nishijin-v100-motion-atlas-metadata",
   "version": 1,
   "cell": {
-    "width": 1280,
+    "width": 544,
     "height": 512
   },
   "atlas": {
-    "width": 6400,
+    "width": 2720,
     "height": 1024
   },
   "commonScale": 0.31117021276595747,
@@ -36,7 +36,7 @@
         "alphaPixels": 467602
       },
       "contentRect": {
-        "x": 544,
+        "x": 176,
         "y": 28,
         "width": 191,
         "height": 468
@@ -66,7 +66,7 @@
         "alphaPixels": 507058
       },
       "contentRect": {
-        "x": 490,
+        "x": 122,
         "y": 40,
         "width": 299,
         "height": 456
@@ -96,7 +96,7 @@
         "alphaPixels": 192140
       },
       "contentRect": {
-        "x": 493,
+        "x": 125,
         "y": 88,
         "width": 294,
         "height": 408
@@ -126,7 +126,7 @@
         "alphaPixels": 551711
       },
       "contentRect": {
-        "x": 496,
+        "x": 128,
         "y": 45,
         "width": 288,
         "height": 451
@@ -156,7 +156,7 @@
         "alphaPixels": 461515
       },
       "contentRect": {
-        "x": 407,
+        "x": 39,
         "y": 203,
         "width": 465,
         "height": 293

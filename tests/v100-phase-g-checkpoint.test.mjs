@@ -309,9 +309,47 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   const causalCollector = source.match(/async function collectCombatCausalProof[\s\S]+?(?=\nasync function capture)/u)?.[0] ?? "";
   assert.match(causalCollector, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.doesNotMatch(causalCollector, /__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/u);
+  assert.match(causalCollector, /battleTime: snapshot\?\.time \?\? null/u);
+  assert.match(causalCollector, /activityReactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
+  assert.match(causalCollector, /reactionHistory: activity\.reactionHistory \?\? \[\]/u);
+  assert.match(causalCollector, /await page\.waitForTimeout\(120\)/u);
+  assert.match(source, /const combatProofDurationMs = Math\.max\(2_400, Number\(process\.env\.V100_PHASE_G_COMBAT_PROOF_MS\) \|\| 12_000\)/u);
+  assert.match(source, /combatProofDurationMs: 4_800/u);
+  const moduleHistoryMerge = source.match(/function mergeCombatActivityHistory[\s\S]+?(?=\nfunction proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
+  const pageHistoryMerge = source.match(/const mergeCombatActivityHistory = \(previous = \{\}, snapshot = \{\}\) => \{[\s\S]+?(?=\n    const proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
+  for (const historyOwner of [moduleHistoryMerge, pageHistoryMerge]) {
+    assert.match(historyOwner, /const hasTargetReactionIdentity = \(observation\) =>/u);
+    assert.match(historyOwner, /observation\?\.targetId !== undefined[\s\S]+?typeof observation\?\.targetSide === "string"[\s\S]+?typeof observation\?\.targetKind === "string"/u);
+    assert.match(historyOwner, /const isAllowedFighterReaction = \(observation\) =>/u);
+    assert.match(historyOwner, /observation\.channel === "fighter-flash"[\s\S]+?observation\.channel === "fighter-knock"[\s\S]+?observation\.channel === "fighter-animation"/u);
+    assert.match(historyOwner, /const reactionHistory = \[\.\.\.\(previous\.reactionHistory \?\? \[\]\)\][\s\S]+?\.filter\(isAllowedFighterReaction\)[\s\S]+?\.slice\(0, 96\)/u);
+    assert.match(historyOwner, /if \(!isAllowedFighterReaction\(observation\) \|\| reactionHistory\.length >= 96\) return/u);
+    assert.match(historyOwner, /reactionHistory\.length >= 96/u);
+    assert.match(historyOwner, /channel: "fighter-flash"/u);
+    assert.match(historyOwner, /channel: "fighter-knock"/u);
+    assert.match(historyOwner, /channel: "fighter-animation"/u);
+    assert.match(historyOwner, /\/hurt\|hit\|stagger\|die\/u/u);
+    assert.doesNotMatch(historyOwner, /channel: "damage-text"|snapshot\.damageTexts/u);
+  }
+  const causalProofBuilder = source.match(/function buildCombatCausalProof[\s\S]+?(?=\nasync function startCombatRuntimeObserver)/u)?.[0] ?? "";
+  assert.match(causalProofBuilder, /const hasTargetReactionIdentity = \(observation\) =>/u);
+  assert.match(causalProofBuilder, /const isAllowedFighterReaction = \(observation\) =>/u);
+  assert.match(causalProofBuilder, /if \(!isAllowedFighterReaction\(observation\) \|\| reactionHistory\.length >= 96\) return/u);
+  assert.match(causalProofBuilder, /for \(const observation of stableHistory\.reactionHistory \?\? \[\]\) addReactionHistory\(observation\)/u);
+  assert.match(causalProofBuilder, /for \(const observation of sample\.activityReactionHistory \?\? \[\]\) addReactionHistory\(observation\)/u);
+  assert.match(causalProofBuilder, /const sourceEdgeTargetIds = new Set\(sourceAttribution/u);
+  assert.match(causalProofBuilder, /edges\.has\(attribution\.edge\)[\s\S]+?String\(attribution\.targetId\)/u);
+  assert.match(causalProofBuilder, /const targetReactionHistory = reactionHistory\.filter\(\(observation\) => sourceEdgeTargetIds\.has\(String\(observation\.targetId\)\)\)/u);
+  assert.match(causalProofBuilder, /const targetReactionKeys = new Set\(targetReactionHistory\.map\(reactionHistoryKey\)\)/u);
+  assert.match(causalProofBuilder, /reactionHistory,/u);
+  assert.match(causalProofBuilder, /targetReactionHistory,/u);
+  assert.match(causalProofBuilder, /targetReaction: targetReactionKeys\.size > 0/u);
+  assert.doesNotMatch(causalProofBuilder, /channel: "damage-text"/u);
+  assert.doesNotMatch(causalProofBuilder, /attackWindup[^\n]*reactionKeys|pendingWeaponHits[^\n]*reactionKeys|audioCueIds[^\n]*reactionKeys/u);
   const captureFailure = source.match(/const failureState = await page\.evaluate[\s\S]+?(?=\n    const checkpointFailure)/u)?.[0] ?? "";
   assert.match(captureFailure, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.doesNotMatch(captureFailure, /__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/u);
+  assert.match(captureFailure, /phaseGActivity: window\.__PHASE_G_COMBAT_ACTIVITY__ \?\? null/u);
   assert.match(source, /recorder\?\.setPhaseGCombatSnapshotProfile\(phaseGCombatSnapshotProfile\)/u);
   assert.match(source, /if \(state !== undefined && state !== null\) latestReadableState = state/u);
   assert.match(source, /phaseGCombatSnapshotProfile: window\.__PHASE_G_COMBAT_SNAPSHOT_PROFILE__ \?\? null/u);
@@ -383,6 +421,11 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(captureState, /if \(browserPolicy\.closeExistingBeforeCapture\) await resetPhaseGBrowser\(engineName\)/u);
   assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
   assert.match(captureState, /browserSession, hostResourceTelemetry \}\)/u);
+  assert.match(captureState, /reactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
+  assert.match(captureState, /let combatCausalProof = null;\s*try \{[\s\S]*combatCausalProof = await collectCombatCausalProof\([\s\S]*\}\s*finally \{[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
+  assert.equal((captureState.match(/window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/gu) ?? []).length, 1);
+  assert.ok(captureState.indexOf("combatCausalProof = await collectCombatCausalProof")
+    < captureState.indexOf("window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()"));
   assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) \{[\s\S]*await resetPhaseGBrowser\(engineName\)[\s\S]*\}/u);
   assert.match(source, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
   assert.match(captureState, /await createWebKitHostResourceTelemetry\(\{/u);
@@ -481,6 +524,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(failurePersistence, /receiptCleanupFailure: cloneDiagnosticValue/u);
   assert.doesNotMatch(deploymentHelper, /locator\.click|scrollIntoViewIfNeeded|force\s*:\s*true|dispatchEvent|\.evaluate\([^)]*\.click\(/u);
   const battleRegion = source.slice(source.indexOf("async function battlePage"), source.indexOf("for (const viewport of requiredViewports)"));
+  assert.doesNotMatch(battleRegion, /window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
   assert.doesNotMatch(battleRegion, /page\.locator\([^)]*button\.unit-card[^)]*\)[\s\S]{0,160}?\.click\s*\(/u);
   assert.doesNotMatch(battleRegion, /document\.querySelector\([^)]*button\.unit-card[^)]*\)[\s\S]{0,80}?\.click\s*\(/u);
   assert.doesNotMatch(battleRegion, /scrollIntoViewIfNeeded|force\s*:\s*true|dispatchEvent\([^)]*unit-card/u);

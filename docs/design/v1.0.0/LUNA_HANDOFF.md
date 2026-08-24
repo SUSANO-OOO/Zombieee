@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r29`
+- Canonical Design Lock: `V100-SOL-DL-001 r33`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-37 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 38 is the sole current execution handoff.
+Sections 1-41 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 42 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -1373,3 +1373,111 @@ Exact SOL execution handoff:
 6. If all local gates are green, create one atomic exact nine-path iteration-11 commit, normal non-force push, exact ref/tree/compare readback, and accept only its automatic CI attempt. Any red returns to `SOL_DESIGN` without immediate edit/retry. Complete automatic focused green alone authorizes workflow-only iteration 12, not readiness or release.
 
 Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r29` and Issue #172.**
+
+## 39. Revision r30 — no active Luna handoff / approved-pixel atlas and PWA transport correction
+
+Design Lock Section 46 and the latest explicitly labeled Issue #172 r30 byte-lock comment are the sole active cursor. Sections 1-38 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r30 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: terminal automatic CI #928 / run `32716292056`, attempt 1: only Phase G `97402460108`, Stage 24 WebKit 736x414 WPE WebContent termination; exact clean-HEAD PWA raster check independently reports six stale V1 motion derivatives; no retry/rerun
+- `LAST_GREEN_GATE`: same-HEAD 65/66 CI jobs and exact r29 local gates; comparison-only
+- `CLASSIFICATION`: `V1_RUNTIME_ATLAS_PACKING_AND_TRANSPORT_CONSISTENCY / OVERSIZED_TRANSPARENT_CELL_SURFACES + SIX_STALE_PWA_DERIVATIVES / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `V1_APPROVED_PIXEL_PRESERVING_ATLAS_REPACK / 544PX_CENTERED_CELLS + EXACT_VISIBLE_AND_DISPLAY_GEOMETRY_HASHES + LOSSLESS_PWA_REGENERATION / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r30 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r29 iteration 11 rejected; r30 material candidate is iteration 12; workflow-only restoration becomes iteration 13
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r30 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: exact clean r29 HEAD/tree -> r30 four-path byte lock -> exact 25 material/generated paths -> reproducible source/static/browser acceptance -> atomic 29-path iteration-12 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-13 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Change only the 25 material/generated paths after the four design paths are byte-locked. Set the six custom atlas cells to 544 x 512, preserve the exact common scale and every approved bounded RGBA pixel, subtract the 368 px centered transparent crop from manifest x coordinates, and change no renderer/gameplay/animation behavior.
+2. Generate in this order: V1 runtime assets, lossless PWA raster derivatives, asset manifest. After each command require only its Design Lock Section 46 allowlist; repeat/check each generator and require zero drift. The final cumulative topology is exactly 29 paths.
+3. Require the six approved visible hashes, exact 84-record display geometry hash `93e48efa1692b14a61d2de29641570cd10d2f02149f85d9f89815f68861ff53d`, six unchanged common scales, exact 76.50 MiB decoded budget, 16 px gutters, flip/state/source/provenance contracts, and logical-PNG/PWA alpha plus visible-RGB equality.
+4. Run Section 46.3 source/static/lint/build/diff/byte/topology gates once, then fresh Stage 24 standalone 3/3, Stage 25 standalone 3/3, and ordered Stage 6 -> Stage 24 -> Stage 25 3/3 on final bytes. Do not use r29 captures as candidate proof.
+5. If all local gates pass, create one atomic exact 29-path iteration-12 commit, normal non-force push, exact ref/tree/compare readback, and accept only its automatic CI attempt. Any red returns to `SOL_DESIGN` with first evidence and no edit/retry/rerun. Complete focused green only authorizes workflow-only iteration 13, not readiness or release.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r30` and Issue #172.**
+
+## 40. Revision r31 — no active Luna handoff / exact ordered invocation and reaction-history continuity
+
+Design Lock Section 47 and the latest explicitly labeled Issue #172 r31 byte-lock comment are the sole active cursor. Sections 1-39 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r31 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: the first r30 ordered-local command omitted `V100_PHASE_G_ONLY=battle-extra` and `V100_PHASE_G_ONLY_ENGINE=webkit`, entered the full matrix, and stopped before Stage 6 at Chromium 1280x720 battle-normal; source/contact/audio true, target reaction false, 81 samples, a real impact pending for 0.02 seconds, live page, fatal diagnostics zero; no retry/rerun/edit
+- `LAST_GREEN_GATE`: exact r30 generator/source/static/lint/build/byte audits and fresh Stage 24 standalone 3/3 plus Stage 25 standalone 3/3; comparison-only after runner proof bytes change
+- `CLASSIFICATION`: `QA_HARNESS_EPHEMERAL_TARGET_REACTION_HISTORY_GAP / 40MS_OBSERVER_REACTION_NOT_SERIALIZED + 120MS_CONSUMER_BOUNDARY / DESIGN_CHANGE_REQUIRED`; independent `SOL_LOCAL_EXECUTION_CONTRACT_OMISSION / ORDERED_COMMAND_MISSING_BATTLE_EXTRA_AND_WEBKIT_FILTERS / INVALID_CURRENT_GATE_OBSERVATION`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_REACTION_HISTORY_CONTINUITY / ACTUAL_40MS_REACTION_RECORDS + 96_RECORD_FIRST_OBSERVED_BOUND + EXACT_FOCUSED_ORDERED_PREFLIGHT / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r31 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r30 uncommitted iteration 12 returned; r31 coherent candidate is iteration 13; workflow-only restoration becomes iteration 14
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r31 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: preserve exact r30 29-path draft -> r31 four-path byte lock -> edit only runner plus existing checkpoint/causal-history tests -> full source/static/core/standalone/ordered acceptance -> atomic exact 32-path iteration-13 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-14 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve all current r30 atlas, PNG, metadata, PWA, manifest, provenance, app-manifest, runtime-sprite, generator, runtime-motion test, and four design/source draft bytes. Do not regenerate or rebuild the 29-path draft merely because r31 changes QA proof ownership.
+2. After the r31 four-path byte lock, edit only `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, and `tests/v100-r11-combat-causal-history.test.mjs`. In both history merge owners, retain only actual 40 ms snapshot reactions: fighter flash, knock, hurt/hit/stagger/die animation, or defined damage text. Deduplicate exact signals and keep the first 96 without eviction.
+3. Propagate the structured history into samples, stable history, proof/report/failure evidence and the unchanged `targetReaction` predicate. Audio, pending hit, source edge, attack, presentation, ownership, elapsed time, or predicted future impact may never substitute. Keep all durations, cadences, timeouts, browsers, attempts, causal stages, and product behavior unchanged.
+4. Extend existing test blocks only. Require real-reaction survival after empty frames, pending-hit/audio no-substitution, first-96 bound, both owners, propagation, 40 ms cadence, fixed durations, r11 4/4, checkpoint 12/12, focused 60/60, Design Lock 19/19, and all Section 47.3 static gates.
+5. Run the focused Chromium battle-normal control, then fresh Stage 24 3/3 and Stage 25 3/3. For each ordered N=1..3 set exactly `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, no `V100_PHASE_G_ONLY_VARIANT`, a unique sequence id and evidence root; require exactly Stage 6/24/25 and sessions `webkit-1/2/3`. Do not use an unfiltered command and do not rerun a first red.
+6. Only complete local green authorizes one atomic exact 32-path iteration-13 commit, normal non-force push, exact ref/tree/compare readback, and its one automatic focused attempt. Complete focused green alone authorizes workflow-only iteration 14, not Ready or release.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r31` and Issue #172.**
+
+## 41. Revision r32 — no active Luna handoff / observer lifetime covers causal proof
+
+Design Lock Section 48 and the latest explicitly labeled Issue #172 r32 byte-lock comment are the sole active cursor. Sections 1-40 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r32 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: correctly filtered r31 Chromium battle-normal control; 1280x720 completed, first 844x390 attempt failed with 88 samples, source/contact/audio true, actual reaction/history empty, live page and fatal diagnostics zero; 844x340 and every later browser/commit/remote gate were not run; no retry/rerun/edit
+- `LAST_GREEN_GATE`: complete r31 source/static/material/lint/build gates plus Chromium 1280x720 production screenshot; comparison-only after observer-lifecycle bytes change
+- `CLASSIFICATION`: `QA_HARNESS_COMBAT_OBSERVER_LIFETIME_GAP / OBSERVER_STOPS_IN_CONFIGURE_BEFORE_CAUSAL_COLLECTION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_OBSERVER_PROOF_WINDOW_OWNERSHIP / KEEP_40MS_OBSERVER_LIVE_THROUGH_COLLECTOR + STOP_IN_CAPTURE_FINALLY + EXISTING_ACTUAL_REACTION_HISTORY / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r32 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r31 uncommitted iteration 13 returned; r32 coherent candidate is iteration 14; workflow-only restoration becomes iteration 15
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r32 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: preserve exact r31 32-path draft -> r32 four-path byte lock -> same three-path observer-lifetime correction -> complete source/static/Chromium-core/Stage24/Stage25/exact-ordered acceptance -> atomic exact 32-path iteration-14 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-15 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve every r30 material byte and every r31 actual-reaction history byte. The cumulative allowlist remains exactly 32 paths; add no file.
+2. Edit only `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, and, only if required by the existing block, `tests/v100-r11-combat-causal-history.test.mjs`.
+3. Keep the existing 40 ms observer start in `battlePage`, remove only its stop from the `battlePage` finally, and keep sustain shutdown/error ownership unchanged. In `captureStateImpl`, wrap the unchanged causal collector in `try/finally`; keep the observer live through all samples and its stable-history read, then stop it in that finally before acceptance/screenshot/runtime promotion. Context cleanup remains terminal if configure fails before collection.
+4. Do not change actual-signal allowlist, first 96, no-substitution, 40/120 ms, 12,000/4,800 ms, timeout, browser, attempt, viewport, stage, causal predicate, product, asset, workflow, package, or release bytes. Extend existing test blocks only and require the exact Section 48.2 lifecycle order.
+5. Re-run all Section 48.3 static gates, then a wholly new filtered Chromium three-viewport core control. The r31 1280 screenshot cannot be promoted. Run new Stage 24 3/3, Stage 25 3/3, and three exact filtered ordered sequences only after core 3/3. Any first red returns to SOL_DESIGN with no edit/retry/rerun.
+6. Only complete local green authorizes one atomic exact 32-path iteration-14 commit, normal non-force push, and one automatic focused attempt. Complete focused green alone authorizes workflow-only iteration 15, not Ready or release.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r32` and Issue #172.**
+
+## 42. Revision r33 — no active Luna handoff / identity-bound causal target reaction
+
+Design Lock Section 49 and the latest explicitly labeled Issue #172 r33 byte-lock comment are the sole active cursor. Sections 1-41 are immutable audit history. Producer's SOL single-owner override remains active; Luna receives no diagnosis, edit, retry, QA, promotion, or release decision.
+
+- `STATUS`: `DESIGN_LOCKED` only after the four SOL-owned r33 design/source files are Issue-byte-locked and Design Lock 19/19 is green
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: post-r32-green adversarial aggregate/source acceptance audit; 18/18 production captures were green, but 120/1,728 reaction records were target-less `damage-text`, including status/heal labels, and the current predicate accepts any reaction key; no commit/push/remote/retry/rerun followed
+- `LAST_GREEN_GATE`: complete r32 source/static/material/lint/build and 18 fresh production browser captures; comparison-only after proof eligibility changes
+- `CLASSIFICATION`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_FAIL_OPEN / TARGETLESS_DAMAGE_TEXT_INCLUDES_STATUS_AND_HEAL + ANY_REACTION_PREDICATE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_BINDING / FIGHTER_ID_SIDE_KIND_ONLY + SOURCE_EDGE_TARGET_MATCH + DAMAGE_TEXT_EXCLUDED / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_DESIGN` until r33 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r32 uncommitted iteration 14 returned from post-green adversarial audit; r33 coherent candidate is iteration 15; workflow-only restoration becomes iteration 16
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r33 Issue byte lock and green Design Lock proof
+- `RESUME_FROM`: preserve exact r32 32-path draft -> r33 four-path byte lock -> edit only the same three QA paths -> full source/static/new Chromium core/Stage24/Stage25/exact-ordered acceptance -> atomic exact 32-path iteration-15 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-16 restoration -> exact-HEAD full/unfiltered/runtime/human -> read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only release tail
+
+Exact SOL execution handoff:
+
+1. Preserve all r30 material bytes, r31 first-96 observation continuity, and r32 observer-lifetime ownership. The cumulative allowlist remains exactly 32 paths; add no file.
+2. Edit only `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, and `tests/v100-r11-combat-causal-history.test.mjs`.
+3. In both reaction-history owners, retain only fighter `flash > 0`, `knock > 0`, and `hurt|hit|stagger|die` animation records with target id/side/kind. Remove all `damage-text` reaction records while preserving its independent status-marker parsing. Keep exact dedupe and first 96.
+4. In the proof builder, reject target-less history again and require at least one identity-bound fighter reaction whose target id occurs as the target in a real source-target edge. Serialize `targetReactionHistory`; unrelated fighter reaction and damage/status/heal text cannot substitute.
+5. Extend existing test blocks only; keep r11 4/4, checkpoint 12/12, focused 60/60, Design Lock 19/19, every r32 lifecycle/timing negative, and every product/material byte unchanged.
+6. Invalidate r32 browser reports for promotion. Run wholly new r33 Chromium core 3/3, Stage 24 standalone 3/3, Stage 25 standalone 3/3, and ordered trio 3/3. Every one of 18 captures requires causal 4/4, nonempty identity-bound edge-matched `targetReactionHistory`, no target-less/damage-text reaction, production PNG/hash, and fatal zero. First red returns to SOL_DESIGN without edit/retry/rerun.
+7. Only complete local green authorizes one atomic exact 32-path iteration-15 commit, normal non-force push, and one automatic focused attempt. Complete focused green alone authorizes workflow-only iteration 16, not Ready or release.
+
+Exact handoff: **NO ACTIVE LUNA HANDOFF — SOL continues under `V100-SOL-DL-001 r33` and Issue #172.**

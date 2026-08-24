@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const CELL_WIDTH = 1280;
+const CELL_WIDTH = 544;
 const CELL_HEIGHT = 512;
 const ATLAS_HEIGHT = CELL_HEIGHT * 2;
 const GUTTER = 16;

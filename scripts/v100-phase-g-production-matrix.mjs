@@ -1929,6 +1929,41 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
     observation?.targetKind ?? null,
     observation?.targetAlive === true,
   ])));
+  const hasTargetReactionIdentity = (observation) => (
+    observation?.targetId !== undefined
+    && observation?.targetId !== null
+    && typeof observation?.targetSide === "string"
+    && observation.targetSide.trim().length > 0
+    && typeof observation?.targetKind === "string"
+    && observation.targetKind.trim().length > 0
+  );
+  const isAllowedFighterReaction = (observation) => (
+    hasTargetReactionIdentity(observation)
+    && (
+      (observation.channel === "fighter-flash" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+      || (observation.channel === "fighter-knock" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+      || (observation.channel === "fighter-animation" && /hurt|hit|stagger|die/u.test(String(observation.state ?? "")))
+    )
+  );
+  const reactionHistory = [...(previous.reactionHistory ?? [])]
+    .filter(isAllowedFighterReaction)
+    .slice(0, 96);
+  const reactionHistoryKey = (observation) => JSON.stringify([
+    observation?.channel ?? null,
+    observation?.targetId ?? null,
+    observation?.targetSide ?? null,
+    observation?.targetKind ?? null,
+    observation?.state ?? null,
+    observation?.value ?? null,
+  ]);
+  const reactionHistoryKeys = new Set(reactionHistory.map(reactionHistoryKey));
+  const appendReaction = (observation) => {
+    if (!isAllowedFighterReaction(observation) || reactionHistory.length >= 96) return;
+    const key = reactionHistoryKey(observation);
+    if (reactionHistoryKeys.has(key)) return;
+    reactionHistoryKeys.add(key);
+    reactionHistory.push(observation);
+  };
   const fighters = Array.isArray(snapshot.fighters) ? snapshot.fighters : [];
   const fighterById = new Map(fighters
     .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null)
@@ -1957,6 +1992,21 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
     ...records,
   ];
   const battleTime = Number(snapshot.time);
+  const observedBattleTime = Number.isFinite(battleTime) ? battleTime : null;
+  for (const fighter of fighters) {
+    const target = {
+      battleTime: observedBattleTime,
+      targetId: fighter?.id ?? null,
+      targetSide: fighter?.side ?? null,
+      targetKind: fighter?.kind ?? null,
+    };
+    const flash = Number(fighter?.flash);
+    const knock = Number(fighter?.knock);
+    const animationState = String(fighter?.animationPresentation?.state ?? "");
+    if (Number.isFinite(flash) && flash > 0) appendReaction({ ...target, channel: "fighter-flash", state: null, value: flash });
+    if (Number.isFinite(knock) && knock > 0) appendReaction({ ...target, channel: "fighter-knock", state: null, value: knock });
+    if (/hurt|hit|stagger|die/u.test(animationState)) appendReaction({ ...target, channel: "fighter-animation", state: animationState, value: null });
+  }
   for (const [channel, record] of ownershipRecords) {
     if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
     const source = fighterById.get(record.sourceId);
@@ -1997,6 +2047,7 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
     sourceToTargetEdges,
     sourceAttribution,
     targetOwnershipHistory,
+    reactionHistory,
   };
 }
 
@@ -2063,10 +2114,47 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
   const missionTypes = new Set();
   const missionSignals = new Set();
   const statusMarkers = new Set();
+  const hasTargetReactionIdentity = (observation) => (
+    observation?.targetId !== undefined
+    && observation?.targetId !== null
+    && typeof observation?.targetSide === "string"
+    && observation.targetSide.trim().length > 0
+    && typeof observation?.targetKind === "string"
+    && observation.targetKind.trim().length > 0
+  );
+  const isAllowedFighterReaction = (observation) => (
+    hasTargetReactionIdentity(observation)
+    && (
+      (observation.channel === "fighter-flash" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+      || (observation.channel === "fighter-knock" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+      || (observation.channel === "fighter-animation" && /hurt|hit|stagger|die/u.test(String(observation.state ?? "")))
+    )
+  );
+  const reactionHistory = [];
+  const reactionHistoryKey = (observation) => JSON.stringify([
+    observation?.channel ?? null,
+    observation?.targetId ?? null,
+    observation?.targetSide ?? null,
+    observation?.targetKind ?? null,
+    observation?.state ?? null,
+    observation?.value ?? null,
+  ]);
+  const reactionHistoryKeys = new Set();
+  const addReactionHistory = (observation) => {
+    if (!isAllowedFighterReaction(observation) || reactionHistory.length >= 96) return;
+    const key = reactionHistoryKey(observation);
+    if (reactionHistoryKeys.has(key)) return;
+    reactionHistoryKeys.add(key);
+    reactionHistory.push(observation);
+    reactionKeys.add(key);
+    if (observation.targetSide && observation.targetKind) reactingActors.add(`${observation.targetSide}:${observation.targetKind}`);
+  };
+  for (const observation of stableHistory.reactionHistory ?? []) addReactionHistory(observation);
   for (const sample of valid) {
     for (const edge of sample.activitySourceToTargetEdges ?? []) edges.add(edge);
     for (const attribution of sample.activitySourceAttribution ?? []) addAttribution(attribution);
     for (const observation of sample.activityTargetOwnershipHistory ?? []) addTargetOwnership(observation);
+    for (const observation of sample.activityReactionHistory ?? []) addReactionHistory(observation);
     for (const actorKey of sample.activityFighterActors ?? []) fighterActors.add(actorKey);
     for (const actorKey of sample.activityAttackingActors ?? []) attackingActors.add(actorKey);
     for (const action of sample.activityVehicleActions ?? []) vehicleActions.add(action);
@@ -2098,7 +2186,18 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
         || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
         || /attack|windup|ability/u.test(animationState);
       if (attacking) attackingActors.add(actorKey);
-      if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || /hurt|hit|stagger|die/u.test(animationState)) reactingActors.add(actorKey);
+      const sampleBattleTime = Number(sample.battleTime);
+      const reactionTarget = {
+        battleTime: Number.isFinite(sampleBattleTime) ? sampleBattleTime : null,
+        targetId: fighter.id ?? null,
+        targetSide: fighter.side ?? null,
+        targetKind: fighter.kind ?? null,
+      };
+      const flash = Number(fighter.flash);
+      const knock = Number(fighter.knock);
+      if (Number.isFinite(flash) && flash > 0) addReactionHistory({ ...reactionTarget, channel: "fighter-flash", state: null, value: flash });
+      if (Number.isFinite(knock) && knock > 0) addReactionHistory({ ...reactionTarget, channel: "fighter-knock", state: null, value: knock });
+      if (/hurt|hit|stagger|die/u.test(animationState)) addReactionHistory({ ...reactionTarget, channel: "fighter-animation", state: animationState, value: null });
       if (Number(fighter.marked) > 0) statusMarkers.add(`${actorKey}:marked`);
     }
     const fightersById = new Map((sample.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
@@ -2117,9 +2216,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
       }
     }
     for (const effect of sample.battlePresentationEffects ?? []) visualEvents.add(String(effect.semantic ?? effect.kind ?? "presentation"));
-    for (const fighter of sample.fighters ?? []) if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || Number(fighter.attackWindup) > 0) reactionKeys.add(`${fighter.id}:${fighter.flash > 0 ? "flash" : "knock"}`);
     for (const text of sample.damageTexts ?? []) {
-      if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
       if (/索敵|マーク|目標|ロック/u.test(String(text?.value ?? ""))) statusMarkers.add("status-mission-target");
     }
     for (const object of sample.battlefieldObjects ?? []) {
@@ -2149,6 +2246,11 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     if (sample.researchContainer || sample.stageMission?.missionType === "sequential-seal") missionSignals.add("station-mission-runtime");
     if ((sample.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) statusMarkers.add("status-mission-target");
   }
+  const sourceEdgeTargetIds = new Set(sourceAttribution
+    .filter((attribution) => edges.has(attribution.edge) && attribution.targetId !== undefined && attribution.targetId !== null)
+    .map((attribution) => String(attribution.targetId)));
+  const targetReactionHistory = reactionHistory.filter((observation) => sourceEdgeTargetIds.has(String(observation.targetId)));
+  const targetReactionKeys = new Set(targetReactionHistory.map(reactionHistoryKey));
   const causalProof = {
     sampleCount: valid.length,
     sourceToTargetEdges: [...edges],
@@ -2156,6 +2258,9 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     targetOwnershipHistory,
     visualEvents: [...visualEvents],
     reactionEvents: [...reactionKeys],
+    reactionHistory,
+    targetReactionEvents: [...targetReactionKeys],
+    targetReactionHistory,
     audioCueIds: [...audioCueIds],
     observed: {
       actorKinds: [...actorKinds],
@@ -2175,7 +2280,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     stages: {
       source: edges.size > 0,
       travelOrContact: visualEvents.size > 0,
-      targetReaction: reactionKeys.size > 0,
+      targetReaction: targetReactionKeys.size > 0,
       audio: audioCueIds.size > 0,
     },
   };
@@ -2274,6 +2379,41 @@ async function startCombatRuntimeObserver(page) {
         observation?.targetKind ?? null,
         observation?.targetAlive === true,
       ])));
+      const hasTargetReactionIdentity = (observation) => (
+        observation?.targetId !== undefined
+        && observation?.targetId !== null
+        && typeof observation?.targetSide === "string"
+        && observation.targetSide.trim().length > 0
+        && typeof observation?.targetKind === "string"
+        && observation.targetKind.trim().length > 0
+      );
+      const isAllowedFighterReaction = (observation) => (
+        hasTargetReactionIdentity(observation)
+        && (
+          (observation.channel === "fighter-flash" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+          || (observation.channel === "fighter-knock" && Number.isFinite(Number(observation.value)) && Number(observation.value) > 0)
+          || (observation.channel === "fighter-animation" && /hurt|hit|stagger|die/u.test(String(observation.state ?? "")))
+        )
+      );
+      const reactionHistory = [...(previous.reactionHistory ?? [])]
+        .filter(isAllowedFighterReaction)
+        .slice(0, 96);
+      const reactionHistoryKey = (observation) => JSON.stringify([
+        observation?.channel ?? null,
+        observation?.targetId ?? null,
+        observation?.targetSide ?? null,
+        observation?.targetKind ?? null,
+        observation?.state ?? null,
+        observation?.value ?? null,
+      ]);
+      const reactionHistoryKeys = new Set(reactionHistory.map(reactionHistoryKey));
+      const appendReaction = (observation) => {
+        if (!isAllowedFighterReaction(observation) || reactionHistory.length >= 96) return;
+        const key = reactionHistoryKey(observation);
+        if (reactionHistoryKeys.has(key)) return;
+        reactionHistoryKeys.add(key);
+        reactionHistory.push(observation);
+      };
       const fighters = Array.isArray(snapshot.fighters) ? snapshot.fighters : [];
       const fighterById = new Map(fighters
         .filter((fighter) => fighter?.id !== undefined && fighter?.id !== null)
@@ -2302,6 +2442,21 @@ async function startCombatRuntimeObserver(page) {
         ...records,
       ];
       const battleTime = Number(snapshot.time);
+      const observedBattleTime = Number.isFinite(battleTime) ? battleTime : null;
+      for (const fighter of fighters) {
+        const target = {
+          battleTime: observedBattleTime,
+          targetId: fighter?.id ?? null,
+          targetSide: fighter?.side ?? null,
+          targetKind: fighter?.kind ?? null,
+        };
+        const flash = Number(fighter?.flash);
+        const knock = Number(fighter?.knock);
+        const animationState = String(fighter?.animationPresentation?.state ?? "");
+        if (Number.isFinite(flash) && flash > 0) appendReaction({ ...target, channel: "fighter-flash", state: null, value: flash });
+        if (Number.isFinite(knock) && knock > 0) appendReaction({ ...target, channel: "fighter-knock", state: null, value: knock });
+        if (/hurt|hit|stagger|die/u.test(animationState)) appendReaction({ ...target, channel: "fighter-animation", state: animationState, value: null });
+      }
       for (const [channel, record] of ownershipRecords) {
         if (record?.sourceId === undefined || record?.sourceId === null || record?.targetId === undefined || record?.targetId === null) continue;
         const source = fighterById.get(record.sourceId);
@@ -2342,6 +2497,7 @@ async function startCombatRuntimeObserver(page) {
         sourceToTargetEdges,
         sourceAttribution,
         targetOwnershipHistory,
+        reactionHistory,
       };
     };
     const proofActorHumanTargetFromHistory = (history = [], expectedKind = null) => {
@@ -2634,6 +2790,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
       const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
+        battleTime: snapshot?.time ?? null,
         stageId: snapshot?.stageId ?? null,
         stageMission: snapshot?.stageMission ? {
           missionType: snapshot.stageMission.missionType ?? null,
@@ -2653,6 +2810,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         activitySourceToTargetEdges: observedCombatActivity.sourceToTargetEdges ?? [],
         activitySourceAttribution: observedCombatActivity.sourceAttribution ?? [],
         activityTargetOwnershipHistory: observedCombatActivity.targetOwnershipHistory ?? [],
+        activityReactionHistory: observedCombatActivity.reactionHistory ?? [],
         activityFighterActors: observedCombatActivity.fighterActors ?? [],
         activityAttackingActors: observedCombatActivity.attackingActors ?? [],
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
@@ -2710,6 +2868,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
       sourceToTargetEdges: activity.sourceToTargetEdges ?? [],
       sourceAttribution: activity.sourceAttribution ?? [],
       targetOwnershipHistory: activity.targetOwnershipHistory ?? [],
+      reactionHistory: activity.reactionHistory ?? [],
       battlePresentationEffects: activity.battlePresentationEffects ?? [],
     };
   }).catch(() => ({}));
@@ -2822,7 +2981,16 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     invariant(productionContract.ok, `${label} production state contract failed: ${JSON.stringify(productionContract)}`);
     checkpointRecorder?.setLatestReadableState(productionContract);
     checkpointRecorder?.setAwaiting("causal-proof", { predicate: "source -> contact/travel -> reaction -> audio" });
-    const combatCausalProof = state.startsWith("battle") ? await collectCombatCausalProof(page, { durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs }) : null;
+    let combatCausalProof = null;
+    try {
+      if (state.startsWith("battle")) {
+        combatCausalProof = await collectCombatCausalProof(page, { durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs });
+      }
+    } finally {
+      if (state.startsWith("battle")) {
+        await page.evaluate(() => window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()).catch(() => {});
+      }
+    }
     if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
     if (checkpointRecorder) {
       checkpointRecorder.clearAwaiting();
@@ -2853,6 +3021,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         attackIdentity: (snapshot.attackIdentity?.length ?? 0) > 0 ? snapshot.attackIdentity : observedCombatActivity.attackIdentity ?? [],
         pendingWeaponHits: (snapshot.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
         targetOwnershipHistory: observedCombatActivity.targetOwnershipHistory ?? [],
+        reactionHistory: observedCombatActivity.reactionHistory ?? [],
         battlePresentationEffects: (snapshot.battlePresentation?.effects?.length ?? 0) > 0 ? snapshot.battlePresentation.effects : observedCombatActivity.battlePresentationEffects ?? [],
         shots: snapshot.shots?.map((shot) => ({ sourceId: shot.sourceId, targetId: shot.targetId, weapon: shot.weapon, effect: shot.effect, x: shot.x, y: shot.y, tx: shot.tx, ty: shot.ty, life: shot.life })) ?? [],
         damageTexts: snapshot.damageTexts?.map((entry) => ({ value: entry.value, x: entry.x, y: entry.y, life: entry.life })) ?? [],
@@ -4180,7 +4349,6 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   } finally {
     sustainActive = false;
     await sustainDone;
-    await page.evaluate(() => window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()).catch(() => {});
     if (sustainFailure) throw sustainFailure;
   }
   const runtime = await page.evaluate(() => {

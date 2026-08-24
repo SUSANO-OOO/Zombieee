@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`2328e28a6678d56c65582fa07f9b5cff470d8799`、tree `6781c750a7901324462039003ce12c16ad6c58a3`。これはr29設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`2962be753c2c3e8741a523a4d67a3092f1d90b50`、tree `7effc512b6969759ceea2d62aa5a8d2ed1502747`。これはr33設計が監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r29` Sections 28-45。terminal CI #927の三failureを、Linux synthetic unit fixtureとproduction telemetry defaultの不一致、Hosted visual 19 case間のbrowser寿命蓄積、deployment QA-only frozen pixel auditのfull-world offscreen surfaceとして独立分類した。r29はtest-only telemetry injection、Hosted fresh browser per case、region-local audit surfaceを一つのowner-specific packetで閉じる。r25-r28成立済みbytes、製品rendering／gameplay、timeout、attempt、causal／pixel acceptance、SOL単独ownerのsingle-checkpoint ship loopは不変。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r33` Sections 28-49。r30のexact 29-path atlas/PWA draft、r31のfirst-96 reaction history、r32のobserver lifetimeを保持する。r32 localはsource/static/materialと18 production browser capturesがgreenだったが、adversarial readbackで1,728 reaction中120件のtarget-less `damage-text`にstatus/heal labelを確認した。r33はfighter id/side/kindを必須にし、real source-edge targetと一致する反応だけを`targetReaction`へ認定する。damage textは反応から除外しstatus marker用途だけを維持する。製品appearance／gameplay／timingは不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -127,13 +127,17 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r28 remediation class：`WEBKIT_PROCESS_EVIDENCE_FAIL_CLOSED / PROC_SELF_ROOT + WPE_ROLE_LIFECYCLE + PRIMARY_CRASH_LATCH + HOSTED_AND_DEPLOYMENT_TERMINAL_OBSERVATION / DESIGN_CHANGE_REQUIRED`。exact thirteen-path iteration 10でhelper validity、Phase G primary failure、Hosted single-attempt telemetry、既存deployment child/parentのprimary-error precedence、temporary fail-closed deployment observationを閉じる。一回のautomatic run後は全axis greenでもSOL_DESIGNへ戻り、owner-specific iteration 11をlockする。workflow-only restorationはiteration 12。
 - r28 aggregate classification：`R27_DIAGNOSTIC_EVIDENCE_INVALID_AND_INCOMPLETE / MASKED_PHASE_G_PAGE_CRASH + HOSTED_VISUAL_PAGE_TERMINATION + DEPLOYMENT_UNOBSERVED / DESIGN_CHANGE_REQUIRED`。これはCI #926を受けたr28 diagnostic-repair cursorの履歴であり、CI #927のcurrent r29 owner classificationを上書きしない。
 - r29 classification：`SOL_OWNED_QA_WEBKIT_EXECUTION_BOUNDARIES / LINUX_MOCK_TELEMETRY_REALISM + HOSTED_CROSS_CASE_BROWSER_LIFETIME + DEPLOYMENT_FULL_WORLD_PIXEL_AUDIT_SURFACES / DESIGN_CHANGE_REQUIRED`。remediation：`WEBKIT_QA_CASE_AND_REGION_OWNERSHIP / TEST_ONLY_TELEMETRY_INJECTION + FRESH_HOSTED_BROWSER_PER_CASE + REGION_LOCAL_FROZEN_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`。r28 HEAD `2328e28a6678d56c65582fa07f9b5cff470d8799`／tree `6781c750a7901324462039003ce12c16ad6c58a3`のautomatic CI #927／run `32709911420`は、PR Verify `97378886572`、Hosted `97382911906`、deployment 736x414／844x390／844x340／932x430／1280x720でterminal red。six enemy shardとdeployment 667x375はgreen、Phase G `97379490612`とStage 3 `97384489130`はdependency-skipped。retry／rerunなし。exact nine-path iteration 11で三ownerを閉じ、完全focused green後だけworkflow-only iteration 12へ進む。
+- r30 classification：`V1_RUNTIME_ATLAS_PACKING_AND_TRANSPORT_CONSISTENCY / OVERSIZED_TRANSPARENT_CELL_SURFACES + SIX_STALE_PWA_DERIVATIVES / DESIGN_CHANGE_REQUIRED`。remediation：`V1_APPROVED_PIXEL_PRESERVING_ATLAS_REPACK / 544PX_CENTERED_CELLS + EXACT_VISIBLE_AND_DISPLAY_GEOMETRY_HASHES + LOSSLESS_PWA_REGENERATION / DESIGN_CHANGE_REQUIRED`。r29 HEAD `2962be753c2c3e8741a523a4d67a3092f1d90b50`／tree `7effc512b6969759ceea2d62aa5a8d2ed1502747`のautomatic CI #928／run `32716292056`は65/66 job green。唯一のredはPhase G `97402460108`／artifact `9516654088` Stage 24 WPE WebContent terminationで、cooldown文言はsecondary。独立source checkは六PWA motion transportsだけをstaleと確定した。exact 29-path iteration 12でvisible content不変のsurface budgetとPWA transportを一体で閉じ、完全focused green後だけworkflow-only iteration 13へ進む。
+- r31 classification：`QA_HARNESS_EPHEMERAL_TARGET_REACTION_HISTORY_GAP / 40MS_OBSERVER_REACTION_NOT_SERIALIZED + 120MS_CONSUMER_BOUNDARY / DESIGN_CHANGE_REQUIRED`。独立execution classification：`SOL_LOCAL_EXECUTION_CONTRACT_OMISSION / ORDERED_COMMAND_MISSING_BATTLE_EXTRA_AND_WEBKIT_FILTERS / INVALID_CURRENT_GATE_OBSERVATION`。remediation：`QA_CAUSAL_REACTION_HISTORY_CONTINUITY / ACTUAL_40MS_REACTION_RECORDS + 96_RECORD_FIRST_OBSERVED_BOUND + EXACT_FOCUSED_ORDERED_PREFLIGHT / DESIGN_CHANGE_REQUIRED`。r30 29-path draftの全material bytesとgreen gateを保持。最初のordered commandは`V100_PHASE_G_ONLY=battle-extra`／`V100_PHASE_G_ONLY_ENGINE=webkit`欠落によりfull matrixへ入り、Stage 6前のChromium 1280×720 battle-normalでsource／contact／audio true、reaction false、81 samples、pending impact 0.02秒、fatal 0となった。retry／rerunなし。r31 exact 32-path iteration 13はrunnerと既存2 testだけを追加し、actual 40 ms reaction first 96 continuityとliteral ordered preflightを閉じる。focused完全green後だけworkflow-only iteration 14へ進む。
+- r32 classification：`QA_HARNESS_COMBAT_OBSERVER_LIFETIME_GAP / OBSERVER_STOPS_IN_CONFIGURE_BEFORE_CAUSAL_COLLECTION / DESIGN_CHANGE_REQUIRED`。remediation：`QA_CAUSAL_OBSERVER_PROOF_WINDOW_OWNERSHIP / KEEP_40MS_OBSERVER_LIVE_THROUGH_COLLECTOR + STOP_IN_CAPTURE_FINALLY + EXISTING_ACTUAL_REACTION_HISTORY / DESIGN_CHANGE_REQUIRED`。r31 source/static/material/lint/buildはgreen。正しくfilteredしたChromium coreは1280×720 screenshotまで通過し、first 844×390で88 samples、source／contact／audio true、actual reaction history empty、page live、fatal 0で停止した。`battlePage`が40 ms observerをconfigure return前に止め、その後`captureStateImpl`がcollectorを開始するsource orderがroot cause。844×340以降は未実行、retry／rerun／editなし。same exact 32-path iteration 14でstop ownerだけをcollector後へ移し、workflow-only restorationはiteration 15。
+- r33 classification：`QA_CAUSAL_TARGET_REACTION_IDENTITY_FAIL_OPEN / TARGETLESS_DAMAGE_TEXT_INCLUDES_STATUS_AND_HEAL + ANY_REACTION_PREDICATE / DESIGN_CHANGE_REQUIRED`。remediation：`QA_CAUSAL_TARGET_REACTION_IDENTITY_BINDING / FIGHTER_ID_SIDE_KIND_ONLY + SOURCE_EDGE_TARGET_MATCH + DAMAGE_TEXT_EXCLUDED / DESIGN_CHANGE_REQUIRED`。r32 exact 32-path draftは全source/static/material gateに加えてfresh Chromium core 3/3、Stage 24 standalone 3/3、Stage 25 standalone 3/3、ordered Stage 6->24->25を3/3でgreen。全18 capture causal 4/4／fatal 0だった。その後の必須adversarial readbackでreaction 1,728件中120件がtarget id/side/kind nullの`damage-text`で、`索敵マーク`、`救護`、回復、statusを含むことと、現predicateがany reaction keyを受理するfail-openを確定した。各captureにはreal edge targetと一致するfighter reactionが36-57件ありgreenは文字列だけに依存しないが、acceptance defectのためpromotionせずr33へ戻す。commit／push／remote／retry／rerunなし。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r29 Section 45
+## 6. Version 1.0.0 execution cursor — r33 Section 49
 
-- `LOOP_ITERATION`: r28 diagnostic candidate iteration 10 rejected。r29 owner-specific remediation candidateはiteration 11、focused完全green後のworkflow-only unfiltered restorationはiteration 12
-- `SAME_GATE_REPEAT_COUNT`: `6` for required Phase G job
-- `DEFERRED_STAGE24_REPEAT_COUNT`: `3`
+- `LOOP_ITERATION`: uncommitted r32 iteration 14 draftはpost-green adversarial acceptance auditでreturn。r33 coherent candidateはiteration 15、focused完全green後のworkflow-only unfiltered restorationはiteration 16
+- `SAME_GATE_REPEAT_COUNT`: `7` for required Phase G job
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `4`
 - `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
 - `R26_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
 - `R26_REMOTE_STAGE24_CLEAN_CRASH_COUNT`: `1`
@@ -148,21 +152,27 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - `R28_PR_VERIFY_FIXTURE_FAILURE_COUNT`: `1`
 - `R28_REMOTE_HOSTED_CROSS_CASE_TERMINATION_COUNT`: `1`
 - `R28_REMOTE_DEPLOYMENT_QA_AUDIT_TERMINATION_COUNT`: `5` of six viewports；667x375 control green
-- `ROLE_LOCK`: `SOL_DESIGN` until r29 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；any failed gate returns to `SOL_DESIGN`
-- `LAST_AUDITED_HEAD`: `2328e28a6678d56c65582fa07f9b5cff470d8799`
-- `LAST_AUDITED_TREE`: `6781c750a7901324462039003ce12c16ad6c58a3`
-- `FAILED_GATE`: terminal automatic CI #927／run `32709911420`。PR Verify Linux synthetic fixture telemetry、Hosted visual cross-case WebKit termination、五deployment viewportのQA-only frozen pixel-audit termination。Phase G／Stage 3はdependency-skipped。manual retry／rerunなし
-- `LAST_GREEN_GATE`: same-HEAD six enemy-runtime shards、Hosted safe-area 11/11／records 5/5、deployment 667x375 all 8 units／48 checkpoints、local r28 controls。required redの代替にはならずcomparison-only
-- `CLASSIFICATION`: `SOL_OWNED_QA_WEBKIT_EXECUTION_BOUNDARIES / LINUX_MOCK_TELEMETRY_REALISM + HOSTED_CROSS_CASE_BROWSER_LIFETIME + DEPLOYMENT_FULL_WORLD_PIXEL_AUDIT_SURFACES / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `WEBKIT_QA_CASE_AND_REGION_OWNERSHIP / TEST_ONLY_TELEMETRY_INJECTION + FRESH_HOSTED_BROWSER_PER_CASE + REGION_LOCAL_FROZEN_PIXEL_AUDIT / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: exact clean r28 HEAD/tree -> r29 four-path byte lock -> five-path coherent remediation -> source/static/local bounded controls -> atomic iteration-11 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-12 restoration -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
-- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r29 publication and green Design Lock proof
+- `R29_REMOTE_STAGE24_NATIVE_TERMINATION_COUNT`: `1`
+- `R29_PWA_DERIVATIVE_DRIFT_COUNT`: `6` exact motion paths
+- `R30_LOCAL_EXECUTION_CONTRACT_OMISSION_COUNT`: `1`
+- `R30_LOCAL_CORE_CAUSAL_REACTION_HISTORY_GAP_COUNT`: `1`
+- `R31_LOCAL_CORE_OBSERVER_LIFETIME_GAP_COUNT`: `1`
+- `R32_LOCAL_CAUSAL_REACTION_IDENTITY_FAIL_OPEN_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r33 four-path publication/byte lock and green Design Lock 19/19；then `SOL_REMEDIATION`；any failed gate returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: post-r32-green adversarial aggregate/source acceptance audit。18/18 production captureはgreenだが、120/1,728 stored reactionsがtarget-less `damage-text`でstatus/healを含み、source上any oneが`targetReaction`を成立可能。commit／push／remote／retry／rerunなし
+- `LAST_GREEN_GATE`: complete r32 source／static／material／lint／buildと18 fresh production browser captures。reaction eligibility／proof bytes変更後は全てcomparison-only
+- `CLASSIFICATION`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_FAIL_OPEN / TARGETLESS_DAMAGE_TEXT_INCLUDES_STATUS_AND_HEAL + ANY_REACTION_PREDICATE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_BINDING / FIGHTER_ID_SIDE_KIND_ONLY + SOURCE_EDGE_TARGET_MATCH + DAMAGE_TEXT_EXCLUDED / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact r32 32-path draft -> r33 four-path byte lock -> same three-path identity-binding correction -> source/static/new-core/standalone/ordered acceptance -> atomic exact 32-path iteration-15 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-16 restoration -> exact-HEAD full/unfiltered/runtime/human -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r33 publication and green Design Lock proof
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25 fresh-process／cooperative deployment、r26 live-target continuity、r28 fail-closed process evidenceとtemporary three-axis workflowは再作成せず保持する。r29はQA-only case／region ownershipだけを補正し、product rendering／gameplay、timeout、attempt、browser version、existing acceptanceを変更しない。automatic focused remote完全green後だけdeferred countersを0へresetし、workflow-only iteration-12 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25 fresh-process／cooperative deployment、r26 live-target continuity、r28 fail-closed process evidence、r29 QA case／region ownership、r30 approved-pixel atlas/PWA bytes、r31 reaction history／exact command、r32 observer lifetimeを再作成せず保持する。r33はtarget-less／unrelated reactionのacceptanceだけを閉じ、product gameplay、40／120 ms、duration、timeout、attempt、browser versionを変更しない。automatic focused remote完全green後だけdeferred countersを0へresetし、workflow-only iteration-16 restorationとSection 28のfull/unfiltered/runtime/final-review/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-45のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r29を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-49のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r33を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

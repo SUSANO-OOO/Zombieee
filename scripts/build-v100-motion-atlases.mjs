@@ -8,7 +8,7 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 // Wide cells keep the authored lunge and fall poses at the same vertical
 // content scale as standing frames. A narrow square forced wide poses to
 // shrink the whole character and weapon just to fit the cell.
-const CELL_WIDTH = 1280;
+const CELL_WIDTH = 544;
 const CELL_HEIGHT = 512;
 const ATLAS_HEIGHT = CELL_HEIGHT * 2;
 const MOTION_GUTTER = 16;
@@ -248,16 +248,21 @@ async function buildAtlas({ frameDirectory, outputRelativePath, identityMaster, 
   const identityReference = referenceFrames.length > 0 ? referenceFrames : cleanedFrames;
   const referenceHeight = Math.max(...identityReference.map((frame) => frame.sourceBounds.height));
   const maximumHeight = Math.max(...cleanedFrames.map((frame) => frame.sourceBounds.height));
-  const maximumWidth = Math.max(...cleanedFrames.map((frame) => frame.sourceBounds.width));
   // One scale is calculated for the complete motion set. The standing/move
   // frames establish the identity body size; attack and death may become
-  // wider or lower, but they never get independently shrunk into a cell.
+  // wider or lower, but they never get independently shrunk into a cell. A
+  // width outlier fails closed instead of silently changing approved scale.
   const scale = Math.min(
     (CELL_HEIGHT - MOTION_GUTTER * 2) / maximumHeight,
-    (CELL_WIDTH - MOTION_GUTTER * 2) / maximumWidth,
     468 / referenceHeight,
   );
   if (!Number.isFinite(scale) || scale <= 0) throw new Error(`invalid common motion scale: ${outputRelativePath}`);
+  const renderedMaximumWidth = Math.max(...cleanedFrames.map((frame) => (
+    Math.max(1, Math.round(frame.sourceBounds.width * scale))
+  )));
+  if (renderedMaximumWidth > CELL_WIDTH - MOTION_GUTTER * 2) {
+    throw new Error(`motion set exceeds approved centered width: ${outputRelativePath} rendered=${renderedMaximumWidth} limit=${CELL_WIDTH - MOTION_GUTTER * 2}`);
+  }
   const frames = [];
   for (const frame of cleanedFrames) frames.push(await placeSubject(frame, scale));
 

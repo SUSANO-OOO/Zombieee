@@ -7,7 +7,7 @@ const DIRECTIONS = Object.freeze(["right", "left"]);
 const BOSS_COLUMNS = 8;
 const ROLE_COLUMNS = 5;
 const PAISEN_CELL_WIDTH = 384;
-const CUSTOM_CELL_WIDTH = 1280;
+const CUSTOM_CELL_WIDTH = 544;
 const CELL_HEIGHT = 512;
 
 const RUNTIME_SPRITES = Object.freeze({

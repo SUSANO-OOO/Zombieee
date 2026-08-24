@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r29`
+- Revision: `r33`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -58,7 +58,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r24 consumes the post-push canonical source audit. It changes only the active Design/Handoff/Project State/design-test revision identity and stale-current negative assertions; all r23 implementation and acceptance bytes remain fixed. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r25 consumes terminal automatic focused CI #924 and closes two independently evidenced WebKit QA lifecycle couplings: shared Phase G battle-extra browser processes and reentrant deployment page I/O. It changes no product, gameplay, timeout, retry, checkpoint, pixel, causal, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r26 consumes the first r25 ordered local Stage 25 failure. It preserves the complete r25 fresh-process and cooperative deployment corrections and separates historical target evidence from current live-target continuity while a contact-first proof attack is pending. It changes no product, stage, gameplay, balance, AI, timeout, retry, causal threshold, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
-- Revision r27 adds finite host-process evidence without changing product behavior or acceptance. Revision r28 repairs that evidence fail-closed and observes Phase G, Hosted visual, and deployment independently in one automatic run. Revision r29 consumes that terminal evidence and closes three SOL-owned QA execution boundaries: Linux mock telemetry realism, Hosted per-case WebKit browser ownership, and region-local deployment pixel-audit surfaces. It changes no product rendering, gameplay, balance, AI, timeout, attempt, viewport, checkpoint, pixel, causal, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r27 adds finite host-process evidence without changing product behavior or acceptance. Revision r28 repairs that evidence fail-closed and observes Phase G, Hosted visual, and deployment independently in one automatic run. Revision r29 consumes that terminal evidence and closes three SOL-owned QA execution boundaries: Linux mock telemetry realism, Hosted per-case WebKit browser ownership, and region-local deployment pixel-audit surfaces. Revision r30 consumes terminal CI #928 and closes the repository-owned V1 motion-atlas decoded-surface outlier plus the independently detected six-file PWA raster-derivative drift while preserving every approved visible pixel and runtime display geometry. Revision r31 preserves that complete material draft, corrects the exact ordered-local invocation, and records actual 40 ms production reaction observations. Revision r32 keeps that observer live through the existing causal collector before stopping it in the capture owner. Revision r33 consumes the complete r32 local green plus its adversarial evidence audit and makes `targetReaction` fail closed: only an identity-bound fighter reaction whose target is present in a real source-target edge qualifies; target-less damage/status/heal text never qualifies. It changes no product identity, rendered appearance, animation, gameplay, balance, AI, observer/collector cadence, duration, timeout, attempt, viewport, checkpoint set, pixel, or release rule. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -2754,3 +2754,308 @@ Only a terminal automatic run with PR Verify, all enemy shards, Hosted, Phase G,
 - `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r29 publication and green Design Lock proof
 
 SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against terminal CI #927, all jobs and dependency edges, the hosted and six deployment artifacts and hashes, raw telemetry JSONL, reports, screenshots, source draw/case control flow, the Linux/Windows unit-fixture divergence, r28 primary-error precedence, and the unchanged release tail. The packet does not infer product failure from QA-only terminations, does not treat all page closures as one cause, and does not weaken evidence to obtain green. Every injection, case lifecycle, region transform, failure precedence, validation branch, return, promotion, and release route is finite. Revision r29 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 46. Revision r30 — approved-pixel-preserving V1 motion-atlas surface budget and PWA transport consistency
+
+This section consumes the one permitted r29 automatic run and supersedes Section 45 only for its terminal evidence, the iteration-12 material correction, current cursor, and promotion condition. Every r25 fresh-process/cooperative page-I/O correction, r26 live-target continuity, r28 fail-closed telemetry, r29 QA case/region ownership, temporary three-axis workflow topology, one-attempt/no-rerun rule, browser version and flags, timeouts, viewports, checkpoints, causal and pixel thresholds, exact-HEAD boundaries, read-only `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and approval-only release tail remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 46.1 Terminal CI #928 and two independent source owners
+
+The r29 candidate is PR #171 HEAD `2962be753c2c3e8741a523a4d67a3092f1d90b50`, tree `7effc512b6969759ceea2d62aa5a8d2ed1502747`, parent `2328e28a6678d56c65582fa07f9b5cff470d8799`. Its exact nine-path compare, local source/static gates, targeted browser controls, normal non-force push, and clean worktree were verified. Automatic CI #928 / run `32716292056`, attempt 1, is terminal failure: 65 of 66 jobs passed and only V1 Phase G Production Matrix job `97402460108` failed. There was no dispatch, retry, rerun, edit during the run, promotion, release, or public mutation. Draft Pages run `32716292197` built and smoked only; it did not deploy.
+
+Phase G artifact `9516654088` has independently downloaded ZIP SHA-256 `b53f53ac4525f365f386dd983df906123e5478fce48d7ad0b311014edde24ec0`. Ordered position 1 Stage 6 passed. Position 2 `stage24-panther-commander`, actual `stage-mugarian-tech-tower`, used fresh WebKit session `webkit-2`; Medic and Scout received trusted real pointers and production acceptance, and the commander mounted. The last readable page remained visible, focused, battle-active, and fatal-zero at about 15 seconds wall / 8.933 seconds battle. At 53,597 ms the WPE WebContent child disappeared while the browser root and network process survived; a replacement WebContent later appeared. The primary failure is `page-crash`. `boss frontline unit 3 never entered cooldown from the ready state` is a post-crash secondary invariant and is not a product or balance classification. Telemetry is valid: 107 samples, root observed 116 times, WebContent 110, bounded fallback 6, parser errors 0, cgroup OOM and pid-limit deltas 0, and ample host memory. No native stack or signal was emitted, so r30 does not claim OOM, a particular WebKit engine defect, or a product cooldown defect.
+
+The finite source comparison selects the remaining repository-owned runtime surface outlier. The six V1 motion atlases alone use fixed 1280 x 512 transparent cells: RED PANTHER sheets are 6400 x 1024 / 25 MiB decoded each; the mutated president and TAKUYA-OMEGA sheets are 10240 x 1024 / 40 MiB decoded each; combined decoded RGBA is 180.00 MiB. No other large production atlas exceeds 3360 x 896 / 11.484 MiB decoded. Stage 6 loads none of these six and passed. Stage 24 loads commander, shield, and SMG and terminated in r29. Stage 25 loads those three plus the mutated president and was the late failing position in the prior valid remote observation. Stage 6 nevertheless reached a higher aggregate process peak, so aggregate RSS alone is explicitly rejected as the root. Classification: `V1_RUNTIME_MOTION_ATLAS_SURFACE_BUDGET / FIXED_1280PX_TRANSPARENT_CELLS + 6400_OR_10240PX_SHEETS + LATE_STAGE_WPE_WEBCONTENT_NATIVE_TERMINATION / DESIGN_CHANGE_REQUIRED`.
+
+An independent exact-clean-HEAD source check, `node scripts/build-pwa-raster-derivatives.mjs --check`, fails with exactly the same six V1 motion WebP paths and no other derivative. The committed `public/asset-manifest.json` truthfully hashes those committed WebPs, but the WebPs are stale relative to the current logical PNGs: alpha and visible RGB differ, so a PWA install may serve older artwork under the logical URL. This is a real release-path source contract defect but is not asserted to have caused the direct-PNG Phase G crash. Classification: `V1_PWA_RASTER_DERIVATIVE_DRIFT / SIX_MOTION_TRANSPORTS_NOT_REPRODUCIBLE_FROM_LOGICAL_PNG + STALE_VISIBLE_OR_ALPHA_PIXELS / DESIGN_CHANGE_REQUIRED`.
+
+Aggregate classification is `V1_RUNTIME_ATLAS_PACKING_AND_TRANSPORT_CONSISTENCY / OVERSIZED_TRANSPARENT_CELL_SURFACES + SIX_STALE_PWA_DERIVATIVES / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class is `V1_APPROVED_PIXEL_PRESERVING_ATLAS_REPACK / 544PX_CENTERED_CELLS + EXACT_VISIBLE_AND_DISPLAY_GEOMETRY_HASHES + LOSSLESS_PWA_REGENERATION / DESIGN_CHANGE_REQUIRED`.
+
+### 46.2 Exact coherent r30 packet
+
+Create one material iteration-12 candidate from the exact clean r29 HEAD/tree. The cumulative r30 delta relative to r29 is exactly 29 paths; no other path may change:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+3. `docs/PROJECT_STATE.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `scripts/build-v100-motion-atlases.mjs`;
+6. `scripts/check-v100-motion-atlases.mjs`;
+7. `app/spriteManifest.js`;
+8. `app/v100RuntimeSprites.js`;
+9. `tests/v100-runtime-motion-atlas.test.mjs`;
+10. `assets/source/v100/runtime/v100-runtime-assets-provenance.json`;
+11. `public/art/v100/bosses/mugarian-president-mutated-battle-v1.png`;
+12. `public/art/v100/bosses/takuya-omega-battle-v1.png`;
+13. `public/art/v100/enemies/red-panther-knife-battle-v1.png`;
+14. `public/art/v100/enemies/red-panther-shield-battle-v1.png`;
+15. `public/art/v100/enemies/red-panther-smg-battle-v1.png`;
+16. `public/art/v100/enemies/red-panther-commander-battle-v1.png`;
+17. `public/art/v100/bosses/mugarian-president-mutated-battle-v1-metadata.json`;
+18. `public/art/v100/bosses/takuya-omega-battle-v1-metadata.json`;
+19. `public/art/v100/enemies/red-panther-knife-battle-v1-metadata.json`;
+20. `public/art/v100/enemies/red-panther-shield-battle-v1-metadata.json`;
+21. `public/art/v100/enemies/red-panther-smg-battle-v1-metadata.json`;
+22. `public/art/v100/enemies/red-panther-commander-battle-v1-metadata.json`;
+23. `public/pwa-optimized/art/v100/bosses/mugarian-president-mutated-battle-v1.webp`;
+24. `public/pwa-optimized/art/v100/bosses/takuya-omega-battle-v1.webp`;
+25. `public/pwa-optimized/art/v100/enemies/red-panther-knife-battle-v1.webp`;
+26. `public/pwa-optimized/art/v100/enemies/red-panther-shield-battle-v1.webp`;
+27. `public/pwa-optimized/art/v100/enemies/red-panther-smg-battle-v1.webp`;
+28. `public/pwa-optimized/art/v100/enemies/red-panther-commander-battle-v1.webp`;
+29. `public/asset-manifest.json`.
+
+Under `SOL_DESIGN`, publish and Issue-byte-lock paths 1-4 and require Design Lock 19/19. Under `SOL_REMEDIATION`, apply paths 5-29 with these exact semantics:
+
+1. Change only the six custom motion-atlas cells from 1280 x 512 to 544 x 512; keep two direction rows, state order/count, 16 px transparent perimeter, PNG RGBA, source masters, cleanup, Lanczos3 resize, bottom baseline, derived horizontal flip, identity/weapon policy, and every common scale unchanged. Calculate scale only from the existing height/reference identity terms and fail before generation if any rounded frame width exceeds 512 px; never silently shrink a wide frame. The largest approved frame is 509 px wide, leaving integer 17/18 px horizontal gutters.
+2. Crop exactly 368 transparent pixels from both horizontal sides of every old cell. In `app/spriteManifest.js`, set custom cell width to 544 and subtract exactly 368 from every left-facing visible x coordinate; derive the right row through the existing mirror function. In `app/v100RuntimeSprites.js`, set only the custom cell width to 544. Do not change cell height, source state mapping, anchor, battle envelope, battle scale, draw path, animation clip, facing, or any product draw code.
+3. Preserve approved rendered content by invariant, not visual estimation. For each of all 72 native atlas cells, hash direction/state, alpha bounds relative to cell center, and the complete RGBA rectangle inside those bounds. Exact approved hashes are: president `02a65632ef9731f91a9977e7cd4d58e4ff87999ff6bada097afac85376b39de3`; TAKUYA-OMEGA `8c70bd8b2eac413fa2909e1a60ab18db7a40d464f6a0eb234ef757ee6288676f`; knife `64306872600104595040f2f8dd1d29f18cd347a8e96964694622e6cede855035`; shield `4e10e673db28baedde72cc98e38e4c132ad616dde21093310c788a97cbe1aaf7`; SMG `8c12fa3dd831b6c5e400e13d4b642b79e5cde37a9a1076c24c2b85f9f182d56b`; commander `8756beab8bde3780f72c6957c5155b27a3a5b7cdf4f6151af52ea7d0b0201c10`.
+4. For all six kinds x seven runtime states x two directions, canonicalize per-source-pixel display scale, rendered visible bounds relative to the battle anchor, and anchor coordinates to nine decimals. The exact 84-record SHA-256 is `93e48efa1692b14a61d2de29641570cd10d2f02149f85d9f89815f68861ff53d`. The hash must be identical before and after repack. The six `commonScale` values remain exactly `0.33994334277620397`, `0.3218707015130674`, `0.33766233766233766`, `0.31388329979879276`, `0.31117021276595747`, and `0.30708661417322836` in president, TAKUYA-OMEGA, knife, shield, SMG, commander order.
+5. Regenerate the six PNGs, six metadata JSON files, and provenance through `node scripts/build-v100-runtime-assets.mjs`. Only those thirteen generated paths may change. Require metadata/provenance cell 544 x 512, atlas geometry 4352 x 1024 for each boss and 2720 x 1024 for each RED PANTHER role, `noClipping: true`, exact common scales, sources, directions, states, frame metadata, and current output hashes. Decoded six-atlas RGBA must be exactly 76.50 MiB / 80,216,064 bytes, a 57.50% reduction from 180.00 MiB, without removing a single state or visible pixel.
+6. Run `node scripts/build-pwa-raster-derivatives.mjs`; exactly the six named WebPs may change. For each logical PNG/transport WebP pair require exact dimensions/channels, every alpha byte equal, and every RGB byte whose alpha is nonzero equal. Hidden RGB under fully transparent alpha is not player-visible and is not used as a false lossless criterion. Run the derivative command again with `--check` and require zero stale paths.
+7. Run `node scripts/build-asset-manifest.mjs`; only `public/asset-manifest.json` may additionally change. Require each of the six logical PNG records to retain its exact WebP `sourcePath`, current logical and transport hashes/bytes, criticality and pack. Re-run `--check` and require exact reproducibility.
+8. Extend the existing runtime-motion test block only; add/remove no test block. Prove 544/512 geometry, 16 px perimeter, exact flip pairing, metadata/provenance/common-scale/state/identity contracts, the six approved visible hashes, exact 76.50 MiB decoded budget, exact 84-record display-geometry hash, and exact logical-PNG/PWA visible+alpha equivalence. Existing sprite-manifest, PWA integration/distribution, asset-plan, and content validators remain mandatory.
+
+Forbidden: image generation, resampling to a different visible size, visible RGBA change, identity/weapon/body change, anchor/baseline/scale/state/facing/animation change, asset omission or lazy-load bypass, PWA sourcePath bypass, browser/version/flag/timeout/retry/attempt/order/viewports/checkpoint/causal/pixel acceptance change, Phase G harness/workflow edit, package/lock edit, gameplay/balance/AI/save/audio/story/release change, repository-wide normalization, or any path outside the 29-path allowlist.
+
+### 46.3 Focused validation and promotion boundary
+
+After the four r30 design/source paths are Issue-byte-locked and Design Lock 19/19 is green, execute once on final bytes in this order:
+
+1. patch only paths 5-9, then run the runtime asset generator, raster derivative generator, and asset-manifest generator in the exact order fixed above; inspect after each generator and stop if its permitted changed-path set is exceeded;
+2. re-run runtime asset generation, raster derivative `--check`, and asset-manifest `--check`; require no additional drift and exact 29-path topology relative to r29;
+3. run syntax for both edited scripts and both edited app modules; `npm.cmd run qa:v100:motion-atlas`; exact existing runtime-motion, sprite-manifest, V1 PWA integration, PWA distribution, battle-asset-plan, content-validator, focused 60/60, checkpoint 12/12, Design Lock 19/19, bounded deployment 3/3, and runtime-evidence 3/3 suites; then lint, production build, `git diff --check`, EOL/BOM, binary/text attributes, source-master equality, package/lock/workflow/Phase-G-harness negative audits, and exact manifest/provenance readback;
+4. run three fresh standalone Stage 24 WebKit 736x414 processes and three fresh standalone Stage 25 WebKit 932x430 processes, then three fresh ordered Stage 6 667x375 -> Stage 24 736x414 -> Stage 25 932x430 processes. Every capture must retain fresh session count 1, exact stage mapping, all trusted pointer/production acceptances, fourteen resolved checkpoints, exact proof-actor/target ownership, causal 4/4, production screenshot, valid telemetry, and fatal zero. No old r29 capture is candidate proof;
+5. if every gate passes, create one atomic exact 29-path iteration-12 commit and normal non-force push; re-fetch exact HEAD/tree/parent/compare and clean worktree; accept only the single automatically triggered focused CI attempt. Do not dispatch, retry, rerun, or edit while it runs;
+6. any local or automatic first failure returns directly to `SOL_DESIGN` with its exact source/log/artifact and no immediate edit/rerun. Phase G, PWA/source, PR Verify, Hosted, Stage 3, each enemy shard, deployment, and canonical viewport axes remain independent. A page crash stays primary over a later cooldown invariant.
+
+Only a terminal automatic run with all 66 jobs green, including PR Verify, six enemy shards, Hosted, Phase G ordered trio, Stage 3, all deployment and canonical viewport axes, build/smoke, artifacts, and dependency edges authorizes workflow-only unfiltered restoration as iteration 13. It does not authorize Ready, merge, tag, Release, or Pages. After that complete focused green, restore only the already-locked workflow topology, validate and publish it normally, then on that exact HEAD execute full Phase G 54/54, validators, full regressions, unfiltered remote CI, actual production runtime/human visual-event-battle-audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, and read-only/adversarial `SOL_FINAL_REVIEW`. Only `High: 0`, `Medium: 0`, `PB: 0`, no obvious unfinished defect, and `RELEASE_READY: YES` may reach the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; only explicit approval may enter stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA, recovery, and closure.
+
+### 46.4 Current execution cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r30 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: r29 iteration 11 rejected; r30 approved-pixel-preserving material candidate is iteration 12; workflow-only unfiltered restoration becomes iteration 13
+- `SAME_GATE_REPEAT_COUNT`: `7` for required Phase G
+- `DEFERRED_STAGE24_REPEAT_COUNT`: `4`
+- `R29_REMOTE_STAGE24_NATIVE_TERMINATION_COUNT`: `1`
+- `R29_PWA_DERIVATIVE_DRIFT_COUNT`: `6` exact motion paths
+- `ROLE_LOCK`: `SOL_DESIGN` until r30 publication/byte lock and 19/19; then `SOL_REMEDIATION`; any failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: terminal automatic CI #928 / run `32716292056`, attempt 1: only Phase G job `97402460108`, Stage 24 WebKit 736x414 WPE WebContent native termination at 53,597 ms; secondary cooldown invariant; plus exact clean-HEAD PWA derivative `--check` reports the six stale V1 motion transports; no retry/rerun
+- `LAST_GREEN_GATE`: same-HEAD 65/66 CI jobs, including PR Verify, six enemy shards, Hosted, Stage 3, all six deployment viewports and all 48 canonical viewport jobs, plus exact r29 local gates; comparison-only and not promotion evidence
+- `CLASSIFICATION`: `V1_RUNTIME_ATLAS_PACKING_AND_TRANSPORT_CONSISTENCY / OVERSIZED_TRANSPARENT_CELL_SURFACES + SIX_STALE_PWA_DERIVATIVES / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `V1_APPROVED_PIXEL_PRESERVING_ATLAS_REPACK / 544PX_CENTERED_CELLS + EXACT_VISIBLE_AND_DISPLAY_GEOMETRY_HASHES + LOSSLESS_PWA_REGENERATION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact clean r29 HEAD/tree -> r30 four-path byte lock -> 25-path material/generator output correction -> reproducible source/static/browser acceptance -> atomic exact 29-path iteration-12 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-13 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after Issue-locked r30 publication and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against terminal CI #928 all 66 jobs/dependencies, the Phase G log/artifact/JSONL/process lineage, Stage 6 and Stage 24 resource comparison, asset-plan source, all production atlas dimensions and decoded budgets, generator scaling/placement, renderer anchor/display math, current logical PNG and PWA transport decoded pixels, provenance/manifest ownership, and the unchanged ship tail. The packet does not infer a missing native stack, does not merge PWA drift into the Phase G causal claim, and cannot obtain green by changing a visible pixel or acceptance rule. Every generation, hash, changed-path, failure, return, promotion, and release branch is finite. Revision r30 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 47. Revision r31 — exact ordered WebKit invocation and observed reaction-history continuity
+
+This section consumes the first r30 local execution failure and supersedes Section 46 only for that evidence, the three additional QA source paths, exact local command, iteration ledger, and current cursor. The complete r30 approved-pixel atlas/PWA material draft and every green deterministic generator, source, static, lint, build, byte, and six standalone WebKit result are preserved; no generated asset is rebuilt merely because the QA runner changes. Every r25-r30 product, asset, browser-lifecycle, process-evidence, pointer, checkpoint, pixel, one-attempt/no-rerun, fixed-HEAD, single Producer checkpoint, and release boundary remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 47.1 First local failure and two independent classifications
+
+After the r30 29-path draft reached generator stability, exact 29/29 topology, source 46/46, focused 60/60, checkpoint 12/12, Design Lock 19/19, deployment 3/3, runtime evidence 3/3, content validation, lint with zero errors, build, diff/byte/attribute/provenance audits, Stage 24 standalone 3/3, and Stage 25 standalone 3/3, SOL began the ordered control with only `V100_PHASE_G_SEQUENCE_ID` and `V100_PHASE_G_EVIDENCE_DIR`. It omitted the workflow's two focus variables. The runner therefore entered the full matrix instead of the WebKit battle-extra trio and stopped before Stage 6 at `chromium-1280x720-battle-normal`. There was no retry, rerun, source edit, commit, push, or evidence substitution after that first red.
+
+The omitted variables are `V100_PHASE_G_ONLY=battle-extra` and `V100_PHASE_G_ONLY_ENGINE=webkit`. With no `V100_PHASE_G_ONLY_VARIANT`, those two filters select exactly the ordered Stage 6 667x375, Stage 24 736x414, and Stage 25 932x430 captures, each under the runner's existing fresh-process-per-capture policy. Classification: `SOL_LOCAL_EXECUTION_CONTRACT_OMISSION / ORDERED_COMMAND_MISSING_BATTLE_EXTRA_AND_WEBKIT_FILTERS / INVALID_CURRENT_GATE_OBSERVATION`. This is not a product or r30 atlas result, but Section 46's prose-only command left Medium execution ambiguity; r31 names the exact environment and negative preflight.
+
+The accidentally exposed core result is independently material because full Phase G remains a later required gate. Its 81 production samples proved source, travel/contact, and audio, but `targetReaction` alone was false. Diagnostics were console/page/request/HTTP zero; the page remained live; this was not a crash. The final readable battle time was about 15.333 seconds with a real Medic projectile pending for 0.02 seconds, while the actual audio history already contained enemy hurt/death cues and the proof's reaction list was empty. Source audit proves production `flash` may last only 0.12 seconds; `collectCombatCausalProof` polls at 120 ms, while the existing production-snapshot observer polls at 40 ms. Both copies of `mergeCombatActivityHistory` preserve attacks, presentation, ownership, actor, status, and audio history but omit actual reaction history. A valid 0.12-second flash can therefore occur entirely between 120 ms consumer samples or just beyond the fixed window even though the 40 ms observer read it. Classification: `QA_HARNESS_EPHEMERAL_TARGET_REACTION_HISTORY_GAP / 40MS_OBSERVER_REACTION_NOT_SERIALIZED + 120MS_CONSUMER_BOUNDARY / DESIGN_CHANGE_REQUIRED`.
+
+No audio cue, pending hit, source edge, attack state, or inferred future impact may satisfy `targetReaction`. Revision r31 is required to retain only reaction signals already present in the actual production snapshot. It does not change the 12,000 ms core duration, 4,800 ms Stage 24 duration, any other timeout, causal stages, required predicate, sampling cadence, browser, attempt, viewport, product behavior, or acceptance threshold.
+
+### 47.2 Exact coherent r31 packet
+
+Preserve the complete current r30 draft. Relative to r29 HEAD/tree, the final r31 candidate has exactly the same 29 paths from Section 46 plus exactly these three QA paths, for a cumulative exact 32-path topology:
+
+30. `scripts/v100-phase-g-production-matrix.mjs`;
+31. `tests/v100-phase-g-checkpoint.test.mjs`;
+32. `tests/v100-r11-combat-causal-history.test.mjs`.
+
+Under `SOL_DESIGN`, update and Issue-byte-lock only the same four SOL-owned design/source paths: this file, `LUNA_HANDOFF.md`, `PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`; require Design Lock 19/19. Under `SOL_REMEDIATION`, edit only paths 30-32 with these semantics:
+
+1. In both the module-scope probe owner and page-scope runtime owner of `mergeCombatActivityHistory`, append a finite first-observed reaction history from the actual lean production snapshot at the unchanged 40 ms observer cadence. A record is allowed only when a fighter has numeric `flash > 0`, numeric `knock > 0`, an actual animation state matching `hurt|hit|stagger|die`, or an actual `damageTexts` entry with a defined value. Store the actual battle time, channel, target id/side/kind when available, and exact state/value. Deduplicate by the exact observed identity/signal tuple and stop accepting new distinct records at 96; do not evict the first observation.
+2. Carry those structured records through the existing activity merge, proof samples, final stable-history read, proof output, runtime report, and failure evidence. Seed `buildCombatCausalProof` reaction keys from actual reaction-history records as well as its existing direct samples. Do not manufacture a reaction from audio, `pendingWeaponHits`, `attackIdentity`, presentation, source-target ownership, elapsed time, or a predicted impact.
+3. Extend existing test blocks only. The behavioral probe must prove a real observed flash/knock/hurt/damage record survives later empty frames and completes the otherwise complete causal proof; pending hit plus audio plus source/contact without an observed reaction must remain red; distinct history is capped at the first 96. Static source acceptance must prove both merge owners, collector/stable-history/report propagation, the 40 ms cadence, the no-substitution negative, and unchanged causal predicate/durations. Add or remove no test block: r11 remains 4/4, checkpoint remains 12/12, Design Lock remains 19/19, focused remains 60/60.
+4. Preserve every r30 material/generated byte outside the four design/source files and the three QA paths. No `.github/**`, `app/**` beyond the already-locked r30 manifest/runtime-sprite changes, package/lock, public output beyond the already-generated r30 assets, product draw/runtime, gameplay, balance, AI, save, audio, story, browser flag/version, timeout, retry, attempt, viewport, checkpoint, causal stage, pixel threshold, or release request may change.
+
+The exact ordered local PowerShell contract for each of three fresh sequences is:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH='0'
+$env:V100_PHASE_G_ONLY='battle-extra'
+$env:V100_PHASE_G_ONLY_ENGINE='webkit'
+Remove-Item Env:V100_PHASE_G_ONLY_VARIANT -ErrorAction SilentlyContinue
+$env:V100_PHASE_G_SEQUENCE_ID='r31-ordered-N'
+$env:V100_PHASE_G_EVIDENCE_DIR='outputs/v100-r31/ordered-N'
+npm.cmd run qa:v100-phase-g
+```
+
+Before each command, assert the two focus values above and that `V100_PHASE_G_ONLY_VARIANT` is absent. Each report must contain exactly three results in Stage 6 -> Stage 24 -> Stage 25 order, actual stage ids, sessions `webkit-1`, `webkit-2`, `webkit-3`, launch ordinals 1/2/3, capture ordinal 1, max captures 1, 14/14 resolved checkpoints, trusted pointer/production acceptance, causal 4/4, production PNG with matching final hash, platform-truthful telemetry, and fatal zero. A missing filter, extra core/Chromium result, wrong order, wrong session, or reused evidence root fails before promotion and is not rerun.
+
+### 47.3 Focused validation and promotion boundary
+
+After the four r31 design/source paths are byte-locked and Design Lock 19/19 is green:
+
+1. implement only the three QA paths; require their syntax, r11 4/4, checkpoint 12/12, exact focused 60/60, Design Lock 19/19, bounded deployment 3/3, runtime evidence 3/3, the unchanged r30 runtime/PWA/source suites, content validator, lint, build, `git diff --check`, exact 32-path topology, EOL/BOM/attributes, generator `--check` stability, source-master equality, and negative product/workflow/package/timeout/acceptance audits;
+2. run one bounded Chromium core control with exactly `V100_PHASE_G_ONLY=battle-normal` and `V100_PHASE_G_ONLY_ENGINE=chromium`; require all three canonical viewports to retain unchanged causal 4/4, production screenshots, and fatal zero. This is the focused regression for the independent reaction-history owner and is not a full Phase G substitute;
+3. because runner proof bytes change, invalidate the earlier six standalone captures as final candidate proof and run fresh Stage 24 standalone 3/3 plus fresh Stage 25 standalone 3/3 under their unchanged exact variant contracts;
+4. run the exact focused ordered command above for N=1,2,3. Do not execute an unfiltered command at this gate and do not rerun any first red;
+5. only complete local green authorizes one atomic exact 32-path iteration-13 commit and normal non-force push. Re-fetch exact HEAD/tree/parent/compare and clean worktree, then accept only its one automatic focused CI attempt. No dispatch, retry, rerun, or edit while it runs;
+6. any local or automatic first failure returns to `SOL_DESIGN` with its exact owner/evidence. Core causal reaction, Stage 6/24/25 battle-extra, PR Verify, Hosted, Stage 3, enemy shards, deployment, and canonical viewport axes remain independent.
+
+Only a terminal automatic focused run with all required jobs and dependency edges green authorizes workflow-only unfiltered restoration as iteration 14. It does not authorize Ready, merge, tag, Release, or Pages. After restoration, require same-HEAD full Phase G 54/54, validators, regressions, unfiltered remote CI, actual production runtime/human visual-event-battle-audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, and read-only/adversarial `SOL_FINAL_REVIEW`. Only `High: 0`, `Medium: 0`, `PB: 0`, no obvious unfinished defect, and `RELEASE_READY: YES` may reach the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone authorizes stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, closure, and `/goal COMPLETE`.
+
+### 47.4 Current execution cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r31 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: uncommitted r30 iteration-12 draft returned on first local red; r31 coherent candidate is iteration 13; workflow-only restoration becomes iteration 14
+- `SAME_GATE_REPEAT_COUNT`: `7` for the required remote Phase G gate; the invalid local command does not increment or reset it
+- `R30_LOCAL_EXECUTION_CONTRACT_OMISSION_COUNT`: `1`
+- `R30_LOCAL_CORE_CAUSAL_REACTION_HISTORY_GAP_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r31 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: r30 first ordered-local invocation omitted focus variables and entered full Chromium core; `chromium-1280x720-battle-normal` then independently failed only actual reaction continuity with source/contact/audio true, sample count 81, pending impact 0.02 seconds, live page and fatal diagnostics zero; no retry/rerun/edit
+- `LAST_GREEN_GATE`: r30 deterministic generators/source/static/lint/build/byte audits plus Stage 24 standalone 3/3 and Stage 25 standalone 3/3; comparison-only after runner proof bytes change
+- `CLASSIFICATION`: `QA_HARNESS_EPHEMERAL_TARGET_REACTION_HISTORY_GAP / 40MS_OBSERVER_REACTION_NOT_SERIALIZED + 120MS_CONSUMER_BOUNDARY / DESIGN_CHANGE_REQUIRED`; independent command classification `SOL_LOCAL_EXECUTION_CONTRACT_OMISSION / ORDERED_COMMAND_MISSING_BATTLE_EXTRA_AND_WEBKIT_FILTERS / INVALID_CURRENT_GATE_OBSERVATION`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_REACTION_HISTORY_CONTINUITY / ACTUAL_40MS_REACTION_RECORDS + 96_RECORD_FIRST_OBSERVED_BOUND + EXACT_FOCUSED_ORDERED_PREFLIGHT / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact r30 29-path draft -> r31 four-path byte lock -> three-path QA-only continuity correction -> source/static/core/standalone/ordered acceptance -> atomic exact 32-path iteration-13 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-14 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r31 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact local command, workflow focus environment, first-failure payload, production flash lifetime, observer/collector cadences, both history owners, proof consumer, r30 dirty topology, and unchanged release tail. Actual visual reaction remains mandatory; audio/pending/source/contact cannot substitute for it. Every record, bound, negative, command preflight, changed path, first failure, promotion, and release branch is finite. Revision r31 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 48. Revision r32 — causal collector owns the live 40 ms observer window
+
+This section consumes the first correctly filtered r31 Chromium core control and supersedes Section 47 only for observer lifetime, current evidence/cursor, iteration numbers, and the corresponding existing-test assertions. The complete r30 29-path material draft and the r31 actual-reaction history implementation remain preserved. The cumulative candidate stays exactly 32 paths relative to r29; r32 adds no file. Every product, atlas/PWA, causal predicate, timeout, cadence, browser, attempt, viewport, pointer, checkpoint, pixel, one-attempt/no-rerun, fixed-HEAD, single Producer checkpoint, and release boundary remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 48.1 First r31 core failure and root cause
+
+After r31 source/static gates passed — syntax, r11 4/4, checkpoint 12/12, load 7/7, focused 60/60, Design Lock 19/19, deployment 3/3, runtime evidence 3/3, unchanged r30 asset/source suites, PWA/manifest checks, content validation, lint with zero errors, build, exact 32-path and forbidden-diff audits — SOL ran the correctly filtered control with `V100_PHASE_G_ONLY=battle-normal`, `V100_PHASE_G_ONLY_ENGINE=chromium`, no variant, sequence `r31-core-chromium`, and a new evidence root. Chromium 1280x720 completed through its production screenshot (1,277,771 bytes; SHA-256 `f0cbe4fa4d3ffd7859de16d9fa002e51f2a180b59957494f45cb66a0cda390ae`). The same command then stopped on its first non-retryable red at Chromium 844x390. Chromium 844x340, Stage 24/25 standalone, ordered runs, commit, push, and remote CI were not run. There was no edit, retry, rerun, evidence substitution, or promotion after the red.
+
+The 844x390 proof had 88 actual production samples. Source, travel/contact, and audio were true; target reaction alone was false; structured `reactionHistory` was empty. The page remained live at battle time about 14.283 seconds, console/page/request/HTTP arrays were empty, and a real Medic impact remained pending at the boundary. Actual audio history already contained enemy/human hurt and death cues, but none may substitute for reaction.
+
+The source order fixes the owner unambiguously:
+
+1. `battlePage` starts `startCombatRuntimeObserver(page)` at the unchanged 40 ms interval;
+2. `battlePage` currently stops that observer in its own `finally`;
+3. `battlePage` is the async `configure` passed to `captureStateImpl`;
+4. `captureStateImpl` awaits `configure(page)` to completion and only then invokes `collectCombatCausalProof` on the unchanged 120 ms cadence.
+
+Thus the 40 ms observer is not alive during the proof window. It can return as soon as pre-proof activity sees a source/pending contact, stop before that impact becomes a reaction, and leave the 120 ms collector with the exact boundary loss r31 was meant to close. The r31 probe correctly proves history preservation once an actual reaction is observed; the browser failure proves the production observer lifetime never covered the collector. Classification: `QA_HARNESS_COMBAT_OBSERVER_LIFETIME_GAP / OBSERVER_STOPS_IN_CONFIGURE_BEFORE_CAUSAL_COLLECTION / DESIGN_CHANGE_REQUIRED`.
+
+### 48.2 Exact coherent r32 correction
+
+Preserve all current 32-path bytes except the same three r31 QA implementation paths:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`;
+2. `tests/v100-phase-g-checkpoint.test.mjs`;
+3. `tests/v100-r11-combat-causal-history.test.mjs` (no semantic change is required unless an existing block needs an assertion to keep the coherent packet green).
+
+In the runner:
+
+1. keep `startCombatRuntimeObserver(page)` at its existing `battlePage` location and 40 ms cadence;
+2. remove only the observer stop from `battlePage`'s `finally`; retain `sustainActive = false`, `await sustainDone`, and `sustainFailure` ownership exactly;
+3. in `captureStateImpl`, keep the observer live while `collectCombatCausalProof` performs every 120 ms sample, its final stable-history read, and `buildCombatCausalProof` return. Own that call with a bounded `try/finally` and stop the page observer in the `finally` immediately after collection resolves or rejects, before causal acceptance/screenshot/runtime promotion;
+4. if `configure` fails before collection begins, preserve the existing context/page cleanup as the terminal owner; do not fabricate a proof or a second configure attempt. If collection fails, preserve that primary error; observer-stop cleanup may not replace it;
+5. preserve both r31 history merge owners, allowed actual signals, exact tuple deduplication, first 96 bound, sample/stable/report/failure propagation, and the negative against audio/pending/attack/presentation/ownership/elapsed/prediction substitution.
+
+Do not move the observer into product code, add another interval, change 40 ms or 120 ms, extend 12,000 ms or 4,800 ms, change `maxAttempts`, add a retry, change stage mapping/order, or stop the observer before the collector's stable-history read. No `app/**`, `.github/**`, package/lock, public/generated material, gameplay, balance, AI, save, audio, VFX, story, browser flag/version, viewport, checkpoint, causal stage/predicate, pixel threshold, or release request may change.
+
+Extend the existing checkpoint test block only. It must prove the `battlePage` owner contains no observer stop, `captureStateImpl` contains the collector and the post-collector stop in a `try/finally`, the collector precedes the stop, stable history remains inside the collector, 40/120 ms and 12,000/4,800 ms are unchanged, and the no-substitution negative remains. Add/remove no test block: r11 stays 4/4, checkpoint 12/12, focused 60/60, Design Lock 19/19.
+
+Remediation: `QA_CAUSAL_OBSERVER_PROOF_WINDOW_OWNERSHIP / KEEP_40MS_OBSERVER_LIVE_THROUGH_COLLECTOR + STOP_IN_CAPTURE_FINALLY + EXISTING_ACTUAL_REACTION_HISTORY / DESIGN_CHANGE_REQUIRED`.
+
+### 48.3 Validation and promotion boundary
+
+After the r32 four-path design/source byte lock and Design Lock 19/19:
+
+1. edit only the same three QA paths and require syntax, r11 4/4, checkpoint 12/12, load 7/7, focused 60/60, Design Lock 19/19, deployment 3/3, runtime evidence 3/3, unchanged r30 runtime/PWA/source suites, content validator, lint, build, `git diff --check`, exact 32-path topology, EOL/BOM/attributes, generator/PWA/manifest stability, and negative product/workflow/package/timeout/cadence/attempt/acceptance audits;
+2. run one new Chromium battle-normal control under the exact r31 filters and a new r32 evidence root; require all three canonical viewports in order with causal 4/4, nonempty structured actual reaction history, production PNG/hash, and fatal zero. The r31 1280 screenshot is comparison-only and cannot be reused;
+3. run fresh Stage 24 WebKit 736x414 standalone 3/3 and fresh Stage 25 WebKit 932x430 standalone 3/3 under their unchanged exact variant contracts;
+4. run three fresh ordered sequences with `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, no variant, unique r32 sequence/evidence roots, and exactly Stage 6 -> Stage 24 -> Stage 25 sessions `webkit-1/2/3`; require every Section 47 checkpoint/pointer/causal/PNG/telemetry/fatal-zero rule;
+5. any first local red returns to `SOL_DESIGN` without edit/retry/rerun. Only complete local green authorizes one atomic exact 32-path iteration-14 commit, normal non-force push, exact ref/tree/compare readback, and its one automatic focused CI attempt;
+6. only terminal complete automatic green authorizes workflow-only unfiltered restoration as iteration 15. It does not authorize Ready, merge, tag, Release, or Pages.
+
+After restoration, require same-HEAD full Phase G 54/54, validator, full regressions, unfiltered remote CI, actual production runtime/human visual-event-battle-audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, and fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`. Only `High: 0`, `Medium: 0`, `PB: 0`, no obvious unfinished defect, and `RELEASE_READY: YES` may reach the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone authorizes stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, closure, and `/goal COMPLETE`.
+
+### 48.4 Current execution cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r32 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: r31 uncommitted iteration-13 candidate returned on first browser red; r32 coherent candidate is iteration 14; workflow-only restoration becomes iteration 15
+- `SAME_GATE_REPEAT_COUNT`: `7` for required remote Phase G; local controls do not increment or reset it
+- `R31_LOCAL_CORE_OBSERVER_LIFETIME_GAP_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r32 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: correctly filtered r31 Chromium battle-normal control; 1280x720 completed, first 844x390 attempt failed causal proof with sample count 88, source/contact/audio true, actual reaction/history empty, live page and fatal channels zero; 844x340 and all later gates not run; no retry/rerun/edit
+- `LAST_GREEN_GATE`: final r31 source/static/material/lint/build gates plus Chromium 1280x720 battle-normal production screenshot; comparison-only after observer-lifecycle bytes change
+- `CLASSIFICATION`: `QA_HARNESS_COMBAT_OBSERVER_LIFETIME_GAP / OBSERVER_STOPS_IN_CONFIGURE_BEFORE_CAUSAL_COLLECTION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_OBSERVER_PROOF_WINDOW_OWNERSHIP / KEEP_40MS_OBSERVER_LIVE_THROUGH_COLLECTOR + STOP_IN_CAPTURE_FINALLY + EXISTING_ACTUAL_REACTION_HISTORY / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact r31 32-path draft -> r32 four-path byte lock -> same three-path observer-lifetime correction -> complete source/static/Chromium-core/standalone/ordered acceptance -> atomic exact 32-path iteration-14 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-15 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r32 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact first-red output, partial evidence root, start/stop/collector source order, r31 probe behavior, causal signal negatives, current 32-path topology, and unchanged release tail. The correction cannot turn audio or a pending impact into reaction, cannot extend a window, and cannot obtain green without an actual 40 ms production observation during that window. Revision r32 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 49. Revision r33 — identity-bound causal target reaction
+
+This section consumes the complete r32 local result and supersedes Section 48 only for reaction eligibility, the post-green adversarial finding, fresh-evidence ownership, iteration numbers, and the current cursor. The complete r30 29-path approved-pixel material draft, r31 40 ms history continuity, and r32 observer lifetime remain preserved. The cumulative candidate stays exactly 32 paths relative to r29 and r33 adds no file. Every product, atlas/PWA, timing, browser, attempt, viewport, checkpoint, pixel, one-attempt/no-rerun, fixed-HEAD, single Producer checkpoint, and release boundary remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 49.1 r32 complete local green and adversarial finding
+
+On the final r32 bytes, SOL completed syntax, r11 4/4, checkpoint 12/12, load-only 7/7, focused 60/60, Design Lock 19/19, deployment 3/3, runtime evidence 3/3, unchanged material/source suites, motion-atlas and PWA derivative checks, content validation, lint with zero errors, build, `git diff --check`, exact 32-path topology, and all forbidden-diff/byte/attribute audits. Fresh browser evidence then completed Chromium battle-normal 3/3, Stage 24 standalone 3/3, Stage 25 standalone 3/3, and three exact ordered Stage 6 -> Stage 24 -> Stage 25 WebKit sequences. All 18 production captures had causal 4/4, 96 reaction-history records, production PNG/hash, and fatal diagnostics zero.
+
+The required post-gate aggregate readback found that 120 of the 1,728 reaction records had null target id, side, and kind. Every one used channel `damage-text`; observed values included `索敵マーク`, `救護`, `緊急処置 +30`, positive heals, and crawler/status labels as well as numeric damage. Production `DamageText` contains position/value/lifetime/color and no fighter identity. Both history owners nevertheless append every defined value, and `buildCombatCausalProof` sets `targetReaction` from any reaction key. A future capture can therefore pass that stage from player-facing status/heal text without proving which attack target reacted.
+
+The existing r32 result is not a false green in fact: the same 18 captures contained 1,608 identity-bound `fighter-flash`, `fighter-knock`, or `fighter-animation` records, and each capture contained 36-57 such records whose target id also appeared in a real source-target edge. The defect is still a fail-open acceptance path and cannot be promoted. Classification: `QA_CAUSAL_TARGET_REACTION_IDENTITY_FAIL_OPEN / TARGETLESS_DAMAGE_TEXT_INCLUDES_STATUS_AND_HEAL + ANY_REACTION_PREDICATE / DESIGN_CHANGE_REQUIRED`.
+
+### 49.2 Exact coherent r33 correction
+
+Preserve every current byte except the same three QA implementation paths:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`;
+2. `tests/v100-phase-g-checkpoint.test.mjs`;
+3. `tests/v100-r11-combat-causal-history.test.mjs`.
+
+In both module-scope and page-scope `mergeCombatActivityHistory` owners, accept an actual reaction record only from the existing fighter snapshot signals: numeric `flash > 0`, numeric `knock > 0`, or animation state matching `hurt|hit|stagger|die`. Every accepted record must have non-null target id and non-empty target side and kind. Keep the exact tuple deduplication and first 96 bound. Remove `damageTexts` from reaction-history eligibility entirely; its existing status-marker parsing remains unchanged.
+
+`buildCombatCausalProof` must revalidate identity on stable-history and direct-sample records. It must expose the complete identity-bound bounded `reactionHistory` and a structured `targetReactionHistory` containing only records whose target id occurs as the target of a real captured source-target edge. `stages.targetReaction` is true only when `targetReactionHistory` is nonempty. A reaction on an unrelated fighter may not substitute for the edge target. Do not infer identity from text, coordinates, color, sign, audio, pending hit, attack state, presentation, ownership alone, elapsed time, or predicted impact.
+
+Extend existing test blocks only. Keep r11 at 4/4 and prove: a matching identity-bound fighter reaction survives empty frames and completes the otherwise complete proof; target-less numeric damage, `索敵マーク`, `救護`, and positive heal text cannot create reaction history or `targetReaction`; an identity-bound reaction for an unrelated fighter cannot satisfy an edge targeting another fighter; matching edge-target reaction succeeds; and distinct valid records remain bounded at the first 96. Keep checkpoint at 12/12 and statically prove both history owners exclude `damage-text`, enforce fighter identity, the builder revalidates identity, the target-edge intersection owns the unchanged stage name, and all r32 lifecycle/timing negatives remain.
+
+Remediation: `QA_CAUSAL_TARGET_REACTION_IDENTITY_BINDING / FIGHTER_ID_SIDE_KIND_ONLY + SOURCE_EDGE_TARGET_MATCH + DAMAGE_TEXT_EXCLUDED / DESIGN_CHANGE_REQUIRED`.
+
+Forbidden: `app/**`, `.github/**`, package/lock, public/generated material, product draw/runtime, gameplay, balance, AI, save, audio, story, 40/120 ms cadence, 12,000/4,800 ms duration, any timeout, retry, attempt, browser flag/version, viewport, stage mapping/order, checkpoint count, other causal stages, pixel threshold, or release request. This correction strengthens the existing causal contract; it may not delete the reaction stage, accept a text surrogate, or relabel an unrelated reaction as the target reaction.
+
+### 49.3 Validation and promotion boundary
+
+After the four r33 design/source paths are Issue-byte-locked and Design Lock 19/19 is green:
+
+1. edit only the same three QA paths and require syntax, r11 4/4, checkpoint 12/12, load 7/7, focused 60/60, Design Lock 19/19, deployment 3/3, runtime evidence 3/3, unchanged r30 runtime/PWA/source suites, content validator, lint, build, `git diff --check`, exact 32-path topology, EOL/BOM/attributes, generator/PWA/manifest stability, and negative product/workflow/package/timing/attempt audits;
+2. all r32 browser reports become comparison-only because reaction eligibility and proof output change. Run a wholly new r33 Chromium battle-normal three-viewport control, fresh Stage 24 WebKit 736x414 standalone 3/3, fresh Stage 25 WebKit 932x430 standalone 3/3, then three fresh exact filtered ordered sequences with only Stage 6 667x375 -> Stage 24 736x414 -> Stage 25 932x430 and sessions `webkit-1/2/3`;
+3. for every one of the 18 new captures require source/contact/identity-bound edge-target reaction/audio 4/4, nonempty `targetReactionHistory`, every accepted reaction record with target id/side/kind, no `damage-text` reaction record, 14/14 checkpoints where applicable, trusted production pointer, PNG/final-disk hash equality, platform-truthful telemetry, and fatal zero;
+4. any first local red returns to `SOL_DESIGN` without edit, retry, rerun, or evidence substitution. Only complete local green authorizes one atomic exact 32-path iteration-15 commit, normal non-force push, exact ref/tree/compare readback, and its one automatic focused CI attempt;
+5. only terminal complete automatic green authorizes workflow-only unfiltered restoration as iteration 16. It does not authorize Ready, merge, tag, Release, or Pages.
+
+After restoration, require same-HEAD full Phase G 54/54, validators, full regressions, unfiltered remote CI, actual production runtime/human visual-event-battle-audio/mobile/save/PWA/asset/release audits, exact HEAD/tree freeze, and fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`. Only `High: 0`, `Medium: 0`, `PB: 0`, no obvious unfinished defect, and `RELEASE_READY: YES` may reach the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone authorizes stacked integration, annotated tag, GitHub Release, official Pages, published-SHA QA/recovery, closure, and `/goal COMPLETE`.
+
+### 49.4 Current execution cursor and audit result
+
+- `STATUS`: `DESIGN_LOCKED` only after the r33 four-path Issue byte lock and Design Lock 19/19 are green
+- `LOOP_ITERATION`: uncommitted r32 iteration-14 candidate returned from post-green adversarial acceptance audit; r33 coherent candidate is iteration 15; workflow-only restoration becomes iteration 16
+- `SAME_GATE_REPEAT_COUNT`: `7` for required remote Phase G; local controls do not increment or reset it
+- `R32_LOCAL_CAUSAL_REACTION_IDENTITY_FAIL_OPEN_COUNT`: `1`
+- `ROLE_LOCK`: `SOL_DESIGN` until r33 byte lock and 19/19; then `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `2962be753c2c3e8741a523a4d67a3092f1d90b50`
+- `LAST_AUDITED_TREE`: `7effc512b6969759ceea2d62aa5a8d2ed1502747`
+- `FAILED_GATE`: post-r32-green adversarial aggregate/source acceptance audit; 18/18 captures were green but 120/1,728 stored reactions were target-less `damage-text`, including status/heal labels, and source proves any one could satisfy `targetReaction`; no commit, push, remote run, retry, or rerun followed
+- `LAST_GREEN_GATE`: complete r32 source/static/material/lint/build plus 18 fresh production browser captures; all are comparison-only after reaction eligibility/proof bytes change
+- `CLASSIFICATION`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_FAIL_OPEN / TARGETLESS_DAMAGE_TEXT_INCLUDES_STATUS_AND_HEAL + ANY_REACTION_PREDICATE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QA_CAUSAL_TARGET_REACTION_IDENTITY_BINDING / FIGHTER_ID_SIDE_KIND_ONLY + SOURCE_EDGE_TARGET_MATCH + DAMAGE_TEXT_EXCLUDED / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: preserve exact r32 32-path draft -> r33 four-path byte lock -> same three-path identity-binding correction -> complete source/static/new-core/standalone/ordered acceptance -> atomic exact 32-path iteration-15 candidate -> one automatic focused run -> complete green only -> workflow-only iteration-16 restoration -> exact-HEAD full/unfiltered/runtime/human/fixed review -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION` only after the r33 Issue byte lock and green Design Lock proof
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all 18 r32 production reports, every reaction record, the production `DamageText` type, both history owners, the proof builder, edge-target intersections, exact 32-path topology, and the unchanged release tail. Target-less or unrelated reactions cannot qualify; actual edge-target fighter reaction remains mandatory. Revision r33 has `High ambiguity: 0` and `Medium ambiguity: 0`.
