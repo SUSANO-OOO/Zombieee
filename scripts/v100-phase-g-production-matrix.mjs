@@ -52,19 +52,19 @@ const extraBattleContracts = Object.freeze([
   // Keep the three deployed slots combat-active on the compact WebKit proof:
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
-  { variant: "stage06-spitter-seal", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 6, bossKind: null, proofActor: "spitter", proofUnitKind: "ranger", proofUnitFirst: true, presentationQuiescenceUntilBattleTime: 34, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
+  { variant: "stage06-spitter-seal", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 6, bossKind: null, proofActor: "spitter", proofUnitKind: "ranger", proofUnitFirst: true, presentationQuiescence: true, presentationQuiescenceUntilBattleTime: 34, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
   // The compact WebKit boss route establishes an opening frontline with the
   // first three currently ready cards, then continues real redeploy actions
   // as cards recover. It does not force a fixed DOM index or mutate battle
   // state; the boss gate and combat proof remain fully production-owned.
-  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", proofActor: "red-panther-commander", waitForBossAttack: false, combatProofDurationMs: 4_800, unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-nao", "unit-hachi", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
+  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", proofActor: "red-panther-commander", waitForBossAttack: false, combatProofDurationMs: 4_800, presentationQuiescence: true, unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-nao", "unit-hachi", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
   // Start every boss fixture with the same low-cost opening a player can use
   // to establish a frontline before the expensive cards recover. The
   // interaction below selects the first currently ready cards, so the
   // compact WebKit proof does not depend on a fixed card index.
   // The formation still contains seven canonical V1 units; this is a QA
   // interaction plan, not a gameplay or balance change.
-  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS },
+  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", presentationQuiescence: true, formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS },
 ].map((contract) => Object.freeze({
   ...contract,
   stageId: V100_STAGE_IDS[contract.stageNumber - 1],
@@ -528,6 +528,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
         proofUnitKind: contract.proofUnitKind ?? null,
         manualAbilityKind: contract.manualAbilityKind ?? null,
         requireVehicleAction: contract.requireVehicleAction === true,
+        presentationQuiescence: contract.presentationQuiescence === true,
         presentationQuiescenceUntilBattleTime: contract.presentationQuiescenceUntilBattleTime ?? null,
         formationUnitIds: contract.formationUnitIds ?? [],
       },
@@ -2564,7 +2565,7 @@ async function startCombatRuntimeObserver(page) {
       const actorById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
       const postQuiescenceProofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
       const epochActorFor = (fighter) => (
-        postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
           ? postQuiescenceProofEpoch.actors?.find((candidate) => (
             candidate.side === fighter?.side
             && candidate.kind === fighter?.kind
@@ -2643,8 +2644,11 @@ async function startCombatRuntimeObserver(page) {
         }
       }
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
-        ? allAudioRequests.slice(Number(postQuiescenceProofEpoch.audioCueRequestBaseline) || 0)
+      const proofAudioRequests = postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
+        ? allAudioRequests.filter((request) => (
+          Number.isFinite(Number(request?.at))
+          && Number(request.at) > Number(postQuiescenceProofEpoch.audioCueRequestCutoffAt)
+        ))
         : allAudioRequests;
       for (const request of proofAudioRequests) {
         if (request?.cueId) audioCues.add(String(request.cueId));
@@ -2872,8 +2876,11 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
       const allAudio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const audio = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
-        ? allAudio.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+      const audio = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
+        ? allAudio.filter((request) => (
+          Number.isFinite(Number(request?.at))
+          && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
+        ))
         : allAudio;
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
@@ -2903,7 +2910,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
         activityVehicleActions: observedCombatActivity.vehicleActions ?? [],
         fighters: snapshot?.fighters?.map((fighter) => {
-          const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+          const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
             ? proofEpoch.actors?.find((candidate) => (
               candidate.side === fighter.side
               && candidate.kind === fighter.kind
@@ -3876,22 +3883,13 @@ function normalizePhaseGPresentationQuiescenceBoundary(value) {
   return normalized;
 }
 
-async function runPhaseGPresentationQuiescence(page, {
+async function armPhaseGPresentationQuiescence(page, {
   expectedStageId,
-  proofActor,
-  proofActorAttackCueId,
-  proofUnitKind,
-  proofUnitAttackCueId,
-  untilBattleTime,
   recorder = null,
 }) {
-  const normalizedUntilBattleTime = Number(untilBattleTime);
-  invariant(Number.isFinite(normalizedUntilBattleTime) && normalizedUntilBattleTime > 0, "presentation quiescence requires a finite positive battle-time boundary");
   recorder?.setAwaiting("presentation-quiescence", {
     expectedStageId,
-    proofActor,
-    untilBattleTime: normalizedUntilBattleTime,
-    predicate: "simulation advances with presentation held, then production rendering resumes before proof attack",
+    predicate: "production simulation and player setup advance while pre-proof presentation is held",
   });
   const arm = await page.evaluate(({ stageId }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
@@ -3906,11 +3904,29 @@ async function runPhaseGPresentationQuiescence(page, {
   invariant(arm?.schema === "v100-qa-presentation-quiescence/v1", `presentation quiescence arm schema drifted: ${JSON.stringify(arm)}`);
   invariant(arm.active === true && arm.datasetActive === true && arm.owner === "phase-g-pre-proof" && arm.route === "phase-g", `presentation quiescence did not arm: ${JSON.stringify(arm)}`);
   invariant(arm.stageId === expectedStageId && arm.running === true && arm.paused !== true && arm.over !== true, `presentation quiescence armed outside the live expected battle: ${JSON.stringify(arm)}`);
-  invariant(Number(arm.battleTime) < normalizedUntilBattleTime, `presentation quiescence armed after its release boundary: ${JSON.stringify({ arm, normalizedUntilBattleTime })}`);
+  return arm;
+}
 
-  let waitError = null;
-  let releaseEnvelope = null;
-  try {
+async function releasePhaseGPresentationQuiescence(page, {
+  arm,
+  expectedStageId,
+  proofActor,
+  proofActorAttackCueId,
+  proofUnitKind,
+  proofUnitAttackCueId,
+  untilBattleTime,
+  recorder = null,
+}) {
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1" && arm.active === true, `presentation quiescence release lacks its exact arm receipt: ${JSON.stringify(arm)}`);
+  const normalizedUntilBattleTime = normalizePhaseGPresentationQuiescenceBoundary(untilBattleTime);
+  recorder?.setAwaiting("presentation-quiescence", {
+    expectedStageId,
+    proofActor,
+    untilBattleTime: normalizedUntilBattleTime,
+    predicate: "player setup is complete and any contract minimum battle time is reached before production rendering resumes",
+  });
+  if (normalizedUntilBattleTime !== null) {
+    invariant(Number(arm.battleTime) < normalizedUntilBattleTime, `presentation quiescence armed after its release boundary: ${JSON.stringify({ arm, normalizedUntilBattleTime })}`);
     await page.waitForFunction(({ stageId, targetBattleTime }) => {
       const bridge = window.__ASHFALL_BATTLE_QA__;
       const quiescence = bridge?.getQaPresentationQuiescence?.();
@@ -3928,11 +3944,8 @@ async function runPhaseGPresentationQuiescence(page, {
         && snapshot?.over !== true
         && Number(snapshot?.time) >= targetBattleTime;
     }, { stageId: expectedStageId, targetBattleTime: normalizedUntilBattleTime }, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
-  } catch (error) {
-    waitError = error;
-  } finally {
-    if (!page.isClosed()) {
-      releaseEnvelope = await page.evaluate(({ expectedKind, expectedCueId }) => {
+  }
+  const releaseEnvelope = await page.evaluate(({ expectedKind, expectedCueId }) => {
         const bridge = window.__ASHFALL_BATTLE_QA__;
         const receipt = bridge?.setQaPresentationQuiesced?.(false, "phase-g-pre-proof") ?? null;
         const snapshot = bridge?.getPhaseGCombatSnapshot?.() ?? window.__PHASE_G_LAST_COMBAT_SNAPSHOT__ ?? null;
@@ -3961,19 +3974,18 @@ async function runPhaseGPresentationQuiescence(page, {
             targetId: actor.targetId,
           } : null,
         };
-      }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }).catch(() => null);
-    }
-  }
+  }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId });
 
   invariant(releaseEnvelope?.receipt?.schema === "v100-qa-presentation-quiescence/v1", `presentation quiescence release receipt missing: ${JSON.stringify(releaseEnvelope)}`);
   const release = releaseEnvelope.receipt;
   invariant(release.active === false && release.datasetActive === false, `presentation quiescence did not release: ${JSON.stringify(releaseEnvelope)}`);
-  invariant(release.stageId === expectedStageId && Number(release.battleTime) >= normalizedUntilBattleTime, `presentation quiescence released before the required battle-time boundary: ${JSON.stringify({ releaseEnvelope, normalizedUntilBattleTime })}`);
+  invariant(release.stageId === expectedStageId, `presentation quiescence released outside the expected stage: ${JSON.stringify({ releaseEnvelope, expectedStageId })}`);
+  if (normalizedUntilBattleTime !== null) {
+    invariant(Number(release.battleTime) >= normalizedUntilBattleTime, `presentation quiescence released before the required battle-time boundary: ${JSON.stringify({ releaseEnvelope, normalizedUntilBattleTime })}`);
+  }
   invariant(Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames), `a production render escaped the quiescence window: ${JSON.stringify(release)}`);
   invariant(Number(release.releasedAtSimulationTicks) > Number(release.enteredAtSimulationTicks), `simulation did not advance through presentation quiescence: ${JSON.stringify(release)}`);
   invariant(Number(release.suppressedRenderFrames) > 0, `presentation quiescence suppressed no scheduled render: ${JSON.stringify(release)}`);
-  if (waitError) throw waitError;
-
   const restoredHandle = await page.waitForFunction(({ stageId, releasedRenderFrames }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
     const quiescence = bridge?.getQaPresentationQuiescence?.();
@@ -4051,13 +4063,19 @@ async function runPhaseGPresentationQuiescence(page, {
     );
     if (actors.some(({ fighters }) => fighters.some((fighter) => !actorIsNeutral(fighter)))) return false;
     const existing = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-    if (existing?.schema === "v100-phase-g-post-quiescence-proof/v1") return existing;
-    const audioCueRequestBaseline = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.length ?? 0;
+    if (existing?.schema === "v100-phase-g-post-quiescence-proof/v2") return existing;
+    const audioCueRequestsAtArm = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+    // The production QA bridge retains only its newest 128 requests. Array
+    // length therefore stops being a monotonic cursor once the ring is full.
+    // A page-clock cutoff keeps every post-epoch request visible even while
+    // the bridge evicts an older entry and the retained length stays at 128.
+    const audioCueRequestCutoffAt = performance.now();
     const epoch = {
-      schema: "v100-phase-g-post-quiescence-proof/v1",
+      schema: "v100-phase-g-post-quiescence-proof/v2",
       stageId,
       armedAtBattleTime: Number(snapshot.time),
-      audioCueRequestBaseline,
+      audioCueRequestCutoffAt,
+      audioCueRequestBaselineCount: audioCueRequestsAtArm.length,
       excludedQuiescedAttackObserved,
       actors: actors.map(({ spec, fighters }) => ({
         side: spec.side,
@@ -4111,7 +4129,9 @@ async function runPhaseGPresentationQuiescence(page, {
   }, { timeout: Math.min(battleTimeout, 10_000), polling: 50 });
   const postReleaseProofEpoch = await postReleaseProofHandle.jsonValue();
   await postReleaseProofHandle.dispose();
-  invariant(postReleaseProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1", `post-quiescence proof epoch did not arm: ${JSON.stringify(postReleaseProofEpoch)}`);
+  invariant(postReleaseProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
+    && Number.isFinite(Number(postReleaseProofEpoch.audioCueRequestCutoffAt)),
+  `post-quiescence proof epoch did not arm: ${JSON.stringify(postReleaseProofEpoch)}`);
   invariant(postReleaseProofEpoch.stageId === expectedStageId && Number(postReleaseProofEpoch.armedAtBattleTime) >= Number(release.battleTime), `post-quiescence proof epoch armed before restoration: ${JSON.stringify({ release, postReleaseProofEpoch })}`);
   recorder?.clearAwaiting();
   recorder?.mark("presentation-quiescence-released-or-not-required", "completed", {
@@ -4127,9 +4147,10 @@ async function runPhaseGPresentationQuiescence(page, {
   return { arm, release, restored, postReleaseProofEpoch };
 }
 
-async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, presentationQuiescenceUntilBattleTime = null } = {}) {
+async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, presentationQuiescenceEnabled = false, presentationQuiescenceUntilBattleTime = null } = {}) {
   const recorder = checkpointRecorderFor(page);
   const presentationQuiescenceBattleTime = normalizePhaseGPresentationQuiescenceBoundary(presentationQuiescenceUntilBattleTime);
+  invariant(presentationQuiescenceBattleTime === null || presentationQuiescenceEnabled === true, "presentation quiescence battle-time boundary requires the explicit quiescence contract");
   await formationPage(page, save, stageName);
   // The seeded save already contains the canonical formation for this capture.
   // Do not overwrite slot 1 with the first roster card: doing so erases the
@@ -4138,6 +4159,15 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   await click(page, page.getByRole("button", { name: "戦闘へ", exact: true }), "formation battle CTA");
   await waitBattle(page);
   const phaseGCombatSnapshotProfile = await startCombatRuntimeObserver(page);
+  const expectedStageId = V100_STAGES.find((entry) => entry.displayName === stageName)?.id ?? V100_STAGE_IDS[0];
+  let presentationQuiescenceArm = null;
+  let presentationQuiescence = null;
+  if (presentationQuiescenceEnabled) {
+    presentationQuiescenceArm = await armPhaseGPresentationQuiescence(page, {
+      expectedStageId,
+      recorder,
+    });
+  }
   if (bossKind) {
     const equippedSupport = await page.evaluate(() => {
       const button = document.querySelector(".support-row button.support-btn[data-category=\"support\"]");
@@ -4155,7 +4185,6 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   let vehicleActionObserved = !requireVehicleAction;
   let proofUnitDeployed = proofUnitKind === null;
   let proofUnitAttackObserved = proofUnitKind === null;
-  let presentationQuiescence = null;
   const proofActorAttackCueId = proofActor
     ? V100_COMBAT_FX_INVENTORY.find((entry) => entry?.actor === proofActor)?.soundCue ?? null
     : null;
@@ -4183,7 +4212,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (!proofActorRequiresContactFirst) recorder.markOnce("living-human-target-acquired-or-not-required", "not-required", { reason: "contract-does-not-require-contact-first" });
     if (!proofUnitKind) recorder.mark("proof-unit-deployed-and-attacked-or-not-required", "not-required", { reason: "contract-has-no-proof-unit" });
     if (!manualAbilityKind && !requireVehicleAction) recorder.mark("manual-vehicle-action-observed-or-not-required", "not-required", { reason: "contract-has-no-manual-or-vehicle-action" });
-    if (presentationQuiescenceBattleTime === null) recorder.mark("presentation-quiescence-released-or-not-required", "not-required", { reason: "contract-has-no-presentation-quiescence" });
+    if (!presentationQuiescenceEnabled) recorder.mark("presentation-quiescence-released-or-not-required", "not-required", { reason: "contract-has-no-presentation-quiescence" });
   }
   const observeProofActorAttack = async () => {
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
@@ -4191,7 +4220,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
         : null;
       const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
@@ -4226,8 +4255,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         || actor.enemyVfx?.attackWindup === true
         || ["attack", "warning"].includes(actor.enemyVfx?.phase));
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
-        ? allAudioRequests.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
+        ? allAudioRequests.filter((request) => (
+          Number.isFinite(Number(request?.at))
+          && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
+        ))
         : allAudioRequests;
       const audioAttack = expectedCueId && proofAudioRequests.some((request) => request?.cueId === expectedCueId);
       const historicalAudioAttack = expectedCueId && (epochActor
@@ -4290,7 +4322,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const fighters = snapshot?.fighters ?? [];
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
         : null;
       const epochFighterIds = new Set((epochActor?.fighterBaselines ?? []).map((baseline) => String(baseline.fighterId)));
@@ -4382,7 +4414,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "human" && candidate.kind === expectedKind) ?? null
         : null;
       const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
@@ -4418,8 +4450,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // the same observer history used for enemy proof actors so that a
       // fleeting but genuine player attack is not erased by defeat.
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
-        ? allAudioRequests.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
+        ? allAudioRequests.filter((request) => (
+          Number.isFinite(Number(request?.at))
+          && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
+        ))
         : allAudioRequests;
       const audioAttack = expectedCueId && (proofAudioRequests.some((request) => request?.cueId === expectedCueId)
         || epochActor?.audioObserved === true);
@@ -4813,9 +4848,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       attemptedSlots: [...new Set(deploymentTrace.map((entry) => entry.slot))],
       terminalCardStates: deploymentTrace.filter((entry) => entry.accepted === true).map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
     });
-    if (presentationQuiescenceBattleTime !== null) {
-      presentationQuiescence = await runPhaseGPresentationQuiescence(page, {
-        expectedStageId: V100_STAGES.find((entry) => entry.displayName === stageName)?.id ?? V100_STAGE_IDS[0],
+    if (presentationQuiescenceArm) {
+      presentationQuiescence = await releasePhaseGPresentationQuiescence(page, {
+        arm: presentationQuiescenceArm,
+        expectedStageId,
         proofActor,
         proofActorAttackCueId,
         proofUnitKind,
@@ -4904,7 +4940,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const observedPostEpochActors = (finalPostQuiescenceProofEpoch?.actors ?? [])
         .filter((actor) => actor.observedPostEpochAttack === true)
         .map((actor) => `${actor.side}:${actor.kind}`);
-      invariant(finalPostQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+      invariant(finalPostQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v2"
         && expectedPostEpochActors.every((actorKey) => observedPostEpochActors.includes(actorKey)),
       `post-quiescence proof did not observe fresh exact attacks: ${JSON.stringify({ expectedPostEpochActors, observedPostEpochActors, finalPostQuiescenceProofEpoch })}`);
       presentationQuiescence.postReleaseProofEpochFinal = finalPostQuiescenceProofEpoch;
@@ -4976,6 +5012,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   } finally {
     sustainActive = false;
     await sustainDone;
+    if (presentationQuiescenceArm && !presentationQuiescence && !page.isClosed()) {
+      await page.evaluate(({ stageId }) => {
+        const bridge = window.__ASHFALL_BATTLE_QA__;
+        const current = bridge?.getQaPresentationQuiescence?.();
+        if (current?.stageId !== stageId || current?.active !== true || current?.owner !== "phase-g-pre-proof") return current ?? null;
+        return bridge?.setQaPresentationQuiesced?.(false, "phase-g-pre-proof") ?? null;
+      }, { stageId: expectedStageId }).catch(() => null);
+    }
     if (sustainFailure) throw sustainFailure;
   }
   const runtime = await page.evaluate(() => {
@@ -5047,7 +5091,7 @@ for (const contract of extraBattleContracts) {
     stageNumber: contract.stageNumber,
     stageName: contract.stageName,
     expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
-    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, presentationQuiescenceUntilBattleTime: contract.presentationQuiescenceUntilBattleTime ?? null }),
+    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, presentationQuiescenceEnabled: contract.presentationQuiescence === true, presentationQuiescenceUntilBattleTime: contract.presentationQuiescenceUntilBattleTime ?? null }),
     variant: contract.variant,
   }), contract);
 }

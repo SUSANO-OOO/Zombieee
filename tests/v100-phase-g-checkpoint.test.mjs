@@ -339,20 +339,25 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   const presentationLoopBlock = appSource.match(/const qaPresentationQuiescence = qaPresentationQuiescenceRef\.current;([\s\S]*?)\r?\n      ctx\.imageSmoothingEnabled/u)?.[1] ?? "";
   assert.match(presentationLoopBlock, /!cadence\.shouldRender \|\| qaPresentationQuiescence\.active/u);
   assert.match(presentationLoopBlock, /qaPresentationQuiescence\.suppressedRenderFrames \+= 1/u);
-  const presentationBoundaryNormalizer = source.match(/function normalizePhaseGPresentationQuiescenceBoundary\(value\) \{([\s\S]*?)(?=\nasync function runPhaseGPresentationQuiescence)/u)?.[1] ?? "";
+  const presentationBoundaryNormalizer = source.match(/function normalizePhaseGPresentationQuiescenceBoundary\(value\) \{([\s\S]*?)(?=\nasync function armPhaseGPresentationQuiescence)/u)?.[1] ?? "";
   assert.ok(presentationBoundaryNormalizer.length > 0, "missing single optional presentation-boundary normalizer");
   assert.match(presentationBoundaryNormalizer, /value === null \|\| value === undefined/u);
   assert.match(presentationBoundaryNormalizer, /const normalized = Number\(value\)/u);
   assert.match(presentationBoundaryNormalizer, /!Number\.isFinite\(normalized\) \|\| normalized <= 0/u);
   assert.match(presentationBoundaryNormalizer, /presentation quiescence requires a finite positive battle-time boundary/u);
-  assert.equal((source.match(/normalizePhaseGPresentationQuiescenceBoundary/gu) ?? []).length, 2);
-  const presentationHarnessBlock = source.match(/async function runPhaseGPresentationQuiescence([\s\S]*?)(?=\nasync function battlePage)/u)?.[1] ?? "";
+  assert.equal((source.match(/normalizePhaseGPresentationQuiescenceBoundary/gu) ?? []).length, 3);
+  const presentationHarnessBlock = source.match(/async function armPhaseGPresentationQuiescence([\s\S]*?)(?=\nasync function battlePage)/u)?.[1] ?? "";
   assert.ok(presentationHarnessBlock.length > 0, "missing bounded presentation quiescence harness");
+  assert.equal((source.match(/presentationQuiescence: true/gu) ?? []).length, 3);
+  for (const variant of ["stage06-spitter-seal", "stage24-panther-commander", "stage25-president"]) {
+    assert.match(source, new RegExp(`variant: "${variant}"[^\\n]+presentationQuiescence: true`, "u"));
+  }
   assert.match(source, /presentationQuiescenceUntilBattleTime: 34/u);
   assert.equal((source.match(/presentationQuiescenceUntilBattleTime: 34/gu) ?? []).length, 1);
   assert.match(source, /const presentationQuiescenceBattleTime = normalizePhaseGPresentationQuiescenceBoundary\(presentationQuiescenceUntilBattleTime\)/u);
-  assert.match(source, /if \(presentationQuiescenceBattleTime === null\) recorder\.mark\("presentation-quiescence-released-or-not-required", "not-required"/u);
-  assert.match(source, /if \(presentationQuiescenceBattleTime !== null\) \{[\s\S]*?untilBattleTime: presentationQuiescenceBattleTime/u);
+  assert.match(source, /if \(!presentationQuiescenceEnabled\) recorder\.mark\("presentation-quiescence-released-or-not-required", "not-required"/u);
+  assert.match(source, /if \(presentationQuiescenceEnabled\) \{[\s\S]*?presentationQuiescenceArm = await armPhaseGPresentationQuiescence/u);
+  assert.match(source, /if \(presentationQuiescenceArm\) \{[\s\S]*?presentationQuiescence = await releasePhaseGPresentationQuiescence[\s\S]*?untilBattleTime: presentationQuiescenceBattleTime/u);
   assert.doesNotMatch(source, /Number\.isFinite\(Number\(presentationQuiescenceUntilBattleTime\)\)/u);
   assert.match(presentationHarnessBlock, /setQaPresentationQuiesced\?\.\(false, "phase-g-pre-proof"\)/u);
   assert.match(presentationHarnessBlock, /actorAttackObservedBeforeRelease/u);
@@ -361,27 +366,42 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(presentationHarnessBlock, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
   assert.match(presentationHarnessBlock, /Number\(quiescence\?\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
   assert.match(presentationHarnessBlock, /style\.visibility !== "hidden"/u);
-  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v1/u);
+  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v2/u);
   assert.match(presentationHarnessBlock, /fighterBaselines: fighters\.map\(\(fighter\) => \(\{/u);
   assert.match(presentationHarnessBlock, /fighterId: fighter\.id,[\s\S]*baselineAttackSequence: Number\(fighter\.attackSequence\) \|\| 0/u);
   assert.match(presentationHarnessBlock, /observedFighterId: null/u);
-  assert.match(presentationHarnessBlock, /audioCueRequestBaseline/u);
+  assert.match(presentationHarnessBlock, /const audioCueRequestCutoffAt = performance\.now\(\)/u);
+  assert.match(presentationHarnessBlock, /audioCueRequestBaselineCount: audioCueRequestsAtArm\.length/u);
   assert.match(presentationHarnessBlock, /excludedQuiescedAttackObserved/u);
   assert.match(presentationHarnessBlock, /attackIdentity: \[\][\s\S]*sourceToTargetEdges: \[\][\s\S]*reactionHistory: \[\]/u);
   assert.doesNotMatch(presentationHarnessBlock, /\.time\s*=|eventIndex\s*=|(?:snapshot|game|g)\.fighters\s*=|\.hp\s*=|\.speed\s*=|setGraphicsQuality|accelerateBossFoundationEntry/u);
   const battleRegionStart = source.indexOf("async function battlePage");
-  const quiescenceCallIndex = source.indexOf("presentationQuiescence = await runPhaseGPresentationQuiescence", battleRegionStart);
+  const quiescenceArmIndex = source.indexOf("presentationQuiescenceArm = await armPhaseGPresentationQuiescence", battleRegionStart);
+  const sustainTaskIndex = source.indexOf("const sustainTask = bossKind", battleRegionStart);
+  const quiescenceReleaseIndex = source.indexOf("presentationQuiescence = await releasePhaseGPresentationQuiescence", battleRegionStart);
   const frontlineCheckpointIndex = source.indexOf('recorder?.mark("frontline-deployment-sequence-completed"', battleRegionStart);
   const proofActorTargetWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-live-human-target"', battleRegionStart);
   const proofActorWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-attack"', proofActorTargetWaitIndex);
-  assert.ok(frontlineCheckpointIndex < quiescenceCallIndex && quiescenceCallIndex < proofActorTargetWaitIndex && proofActorTargetWaitIndex < proofActorWaitIndex, "presentation must restore after real deployments, before the contact-first prerequisite and authored attack phases");
+  assert.ok(quiescenceArmIndex < sustainTaskIndex && sustainTaskIndex < frontlineCheckpointIndex && frontlineCheckpointIndex < quiescenceReleaseIndex && quiescenceReleaseIndex < proofActorTargetWaitIndex && proofActorTargetWaitIndex < proofActorWaitIndex, "presentation must quiesce before sustain/deployment setup and restore before the contact-first prerequisite and authored attack phases");
+  assert.match(source, /if \(presentationQuiescenceArm && !presentationQuiescence && !page\.isClosed\(\)\)[\s\S]*?setQaPresentationQuiesced\?\.\(false, "phase-g-pre-proof"\)/u);
   const causalCollector = source.match(/async function collectCombatCausalProof[\s\S]+?(?=\nasync function capture)/u)?.[0] ?? "";
   assert.match(causalCollector, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.doesNotMatch(causalCollector, /__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/u);
   assert.match(causalCollector, /battleTime: snapshot\?\.time \?\? null/u);
   assert.match(causalCollector, /activityReactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
   assert.match(causalCollector, /reactionHistory: activity\.reactionHistory \?\? \[\]/u);
-  assert.match(causalCollector, /allAudio\.slice\(Number\(proofEpoch\.audioCueRequestBaseline\) \|\| 0\)/u);
+  assert.match(causalCollector, /allAudio\.filter\(\(request\) => \([\s\S]*Number\(request\.at\) > Number\(proofEpoch\.audioCueRequestCutoffAt\)/u);
+  assert.doesNotMatch(causalCollector, /audioCueRequestBaseline|allAudio\.slice\(/u);
+  const saturatedAudioRing = Array.from({ length: 128 }, (_, index) => ({ cueId: `old-${index}`, at: index + 1 }));
+  const audioCutoffAt = 128.5;
+  const rotatedAudioRing = [...saturatedAudioRing, { cueId: "enemy-red-panther-commander-attack", at: 129 }].slice(-128);
+  assert.equal(rotatedAudioRing.length, saturatedAudioRing.length, "the production QA ring must reproduce the saturated-length condition");
+  assert.deepEqual(rotatedAudioRing.slice(saturatedAudioRing.length), [], "a length cursor must demonstrably lose the new request after rotation");
+  assert.deepEqual(
+    rotatedAudioRing.filter((request) => Number.isFinite(Number(request.at)) && Number(request.at) > audioCutoffAt),
+    [{ cueId: "enemy-red-panther-commander-attack", at: 129 }],
+    "the monotonic page-clock cutoff must retain the new request after ring rotation",
+  );
   assert.match(causalCollector, /attackSequenceAdvanced/u);
   assert.match(causalCollector, /await page\.waitForTimeout\(120\)/u);
   assert.match(source, /const combatProofDurationMs = Math\.max\(2_400, Number\(process\.env\.V100_PHASE_G_COMBAT_PROOF_MS\) \|\| 12_000\)/u);
