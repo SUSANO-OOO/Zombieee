@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r59`
+- Revision: `r63`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -4277,3 +4277,197 @@ Only complete source/full/static green authorizes fresh r59 WebKit deployment pr
 - `NEXT_OWNER`: `SOL_REMEDIATION`
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failing global assertion, every r12-r59 final-review token, r58 source correction, locked r57 runtime hashes, absence of runtime execution, one-run budget, and unchanged release state machine. Revision r59 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 76. Revision r60 — WebKit presentation transport and post-restoration proof epoch
+
+This section consumes the terminal r59 automatic focused CI run `32800772737` at remote HEAD `c0b21d64fdfda1095660fae0f9b35676833cf4a0` / tree `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe` and supersedes Section 75 only for the four failed required axes, their coherent bounded correction, and the current cursor. PR #171 remains Draft / open / unmerged. Pages run `32800772733` completed its build successfully and skipped deploy; no official deployment occurred. All product behavior, gameplay, balance, AI, content, save, story, visual acceptance, retry policy, final `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and approval-only release tail remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 76.1 Independent terminal classifications
+
+The failures are not one undifferentiated product defect.
+
+1. Phase G job `97664349518`, artifact `9546828552`: Stage 6 completed the hidden presentation interval with simulation advancing, released presentation, and remained a live readable battle, but the harness rejected a real proof-actor attack merely because it occurred while presentation was intentionally quiesced. Classification: `QA_HARNESS_POST_QUIESCENCE_PROOF_EPOCH_GAP / HIDDEN_SIMULATION_ATTACK_WRONGLY_REJECTED_INSTEAD_OF_EXCLUDED / DESIGN_CHANGE_REQUIRED`.
+2. Stage 3 final-candidate job `97664790381`, artifact `9546921736`: the exact final predicate was already satisfied before the WebKit page closed. Host evidence then recorded 17 WebContent D-state samples owned by `anon_pipe_write`, with cumulative `wchar` growth from about 1.25 GB to 7.309 GB and no OOM, console, page, request, or HTTP product failure. Final-base job `97664790328`, artifact `9546987663`, independently closed on both bounded attempts with 38 equivalent D-state samples and about 7.3 GB `wchar` per WebContent process, again without product diagnostics. Classification: `REMOTE_WEBKIT_STAGE3_FINAL_PRESENTATION_TRANSPORT_BACKPRESSURE / EXACT_FINAL_PREDICATE_GREEN_THEN_ANON_PIPE_WRITE_D_STATE / DESIGN_CHANGE_REQUIRED`.
+3. Deployment 844x390 job `97666125752`, artifact `9547248883`: all brute/tatara semantic checkpoints through fully-outside and the post-restoration production readback were green. Five PNG checkpoints persisted; only `deployment/final-canvas-png` closed the page. Host evidence recorded 15 `anon_pipe_write` D-state samples and `wchar` growth from about 2.817 GB to 7.073 GB, with OOM/pid deltas and product diagnostics zero. Classification: `REMOTE_WEBKIT_DEPLOYMENT_FINAL_PNG_PRESENTATION_TRANSPORT_BACKPRESSURE / FULLY_OUTSIDE_SEMANTICS_GREEN_THEN_SCREENSHOT_PIPE_D_STATE / DESIGN_CHANGE_REQUIRED`.
+
+PR Verify, all six enemy-runtime jobs, Hosted Runner Evidence, Stage 3 entrance-candidate, and deployment 667x375 / 736x414 / 844x340 / 932x430 / 1280x720 were green. Canonical HUD was dependency-skipped only because the 844x390 matrix dependency was red. No retry, rerun, dispatch, or evidence substitution occurred.
+
+The Phase G semantic failure is independent from the two host-transport failures. The coherent r60 remediation class is nevertheless one bounded QA presentation contract: `POST_RESTORATION_PROOF_EPOCH + FINITE_PRESENTATION_TRANSPORT_OWNERS / PRODUCT_SIMULATION_AND_ACCEPTANCE_UNCHANGED / DESIGN_CHANGE_REQUIRED`.
+
+### 76.2 Exact allowed correction
+
+The r60 delta relative to the immutable r59 transport commit is exactly these eleven tracked paths:
+
+1. `app/AshfallGame.tsx`
+2. `scripts/v100-phase-g-production-matrix.mjs`
+3. `tests/v100-phase-g-checkpoint.test.mjs`
+4. `scripts/p5-browser-smoke.mjs`
+5. `tests/p5-story-audio-contract.test.mjs`
+6. `scripts/v099-final-remediation-browser-smoke.mjs`
+7. `tests/v0995-runtime-evidence-contract.test.mjs`
+8. `docs/design/v1.0.0/DESIGN_LOCK.md`
+9. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+10. `docs/PROJECT_STATE.md`
+11. `tests/v100-design-lock.test.mjs`
+
+`app/AshfallGame.tsx` may extend only the existing localhost QA presentation-quiescence bridge: exact `qa=endgame&qaHudFiniteAssets=1` may accept owner `p5-stage3-final-cut`, and exact deployment QA may accept owner `deployment-evidence-capture` while the production battle is paused. Public/product routes remain fail-closed. The bridge may suppress scheduled render presentation and pause/resume existing DOM animations only; it must not alter simulation, battle time, HP, fighter state, AI, damage, cooldown, audio, dialogue, or acceptance.
+
+For Stage 6, after quiescence release and at least three restored production frames, the harness must wait until every living fighter matching each required side/kind is neutral. It then arms schema `v100-phase-g-post-quiescence-proof/v1`, records every matching fighter ID and its exact attack-sequence baseline plus one post-arm audio-request baseline, clears only accumulated QA evidence history, and excludes all hidden-interval attack evidence. A required actor/unit passes only after a fresh post-arm live state, sequence advance, or exact authored cue; causal collection uses only post-arm audio/history and still requires source, travel/contact, target reaction, and audio. Newly invented actors, forced targets, timing extension, HP/damage mutation, and kind-only stale pre-arm history are forbidden.
+
+For Stage 3 final, the candidate route uses owner `p5-stage3-final-cut` while the exact PR-base build, which lacks that bridge, uses a strict same-surface DOM-visibility fallback. In both modes simulation and authored audio/dialogue continue until the unchanged exact final predicate; presentation alone is bounded. Release must restore the exact prior surface/animations, observe at least three production frames and advancing battle time, and only then run the unchanged pause/frozen scripted-bark/FIFO proof. Bridge rejection must fail closed and must not silently select the fallback.
+
+For deployment PNGs, the unchanged semantic pause, checkpoint receipt, three restored production frames, post-restoration readback, canvas pixel thresholds, PNG hash, and artifact counts remain mandatory. Immediately around each `deploymentCanvasPng`, owner `deployment-evidence-capture` freezes only canvas presentation in the already paused live battle. Before PNG capture the harness must finitely observe at least one actually suppressed scheduled render; throughout capture render-frame and simulation-tick counters must remain equal to their arm values. It then releases the owner and persists arm/pre-capture/release receipts. A zero-suppression capture fails closed.
+
+Forbidden: any file outside the eleven paths; `.github/workflows/ci.yml`; package/browser/container changes; timeout or retry expansion; a second battle engine; product-route QA exposure; gameplay/balance/AI/audio/story/save/content changes; synthetic combat or checkpoint evidence; weakened predicate/pixel/artifact checks; repository cleanup; modification of the three protected forensic directories; Ready/merge/tag/Release/official Pages actions.
+
+### 76.3 Focused validation and promotion
+
+On final normalized r60 bytes SOL must execute, in this order:
+
+1. syntax/load checks and the three focused source contracts, requiring 24/24; Design Lock 19/19; the canonical focused suite 54/54;
+2. one Stage 6 WebKit `stage06-spitter-seal` process proving the two-sided post-restoration epoch and causal 4/4; one candidate Stage 3 final WebKit route; one exact PR-base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769` fresh-install/build final route using the fallback; and one WebKit 844x390 brute deployment process requiring all six checkpoints, seven artifact hashes, positive pre-capture suppression, no frame/tick escape, and diagnostics zero;
+3. content validation, full tests, lint, build, `git diff --check`, exact eleven-path topology, semantic forbidden-negative audit, UTF-8/BOM/EOL, and protected-directory preservation. Local WebKit without `AudioContext` may report audio capability `blocked` only when logic is passed, the exact audio route remains asserted, fatal diagnostics are zero, and the bounded runner itself is passed; it is not physical-device audio evidence.
+
+Any first failure on final r60 bytes returns to `SOL_DESIGN`; no same-byte retry, rerun, micro-patch, or stale evidence substitution is authorized. Complete local green authorizes one normal non-amended iteration-23 commit and one normal non-force transport, followed by exactly one automatic focused CI run. Any red in that automatic run returns to `SOL_DESIGN` without rerun.
+
+Complete automatic focused green alone authorizes a separate workflow-only iteration 24 restoring unfiltered Phase G. Then require same-HEAD local Phase G 54/54 plus validator/full regressions, unfiltered remote required CI complete green, actual production dynamic/human-player quality audit, exact HEAD/tree evidence freeze, read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW`, and one final Producer release-candidate checkpoint. Producer approval alone authorizes the unchanged stacked integration, release SHA/tag/GitHub Release/official Pages, published-SHA QA, rollback/recovery, Project State update, and closure route.
+
+### 76.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R60_COHERENT_PRESENTATION_REMEDIATION_READY`
+- `LOOP_ITERATION`: r59 automatic focused candidate is terminal red at iteration 22; r60 coherent correction is iteration 23; workflow-only unfiltered restoration is iteration 24 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `11` for the required focused Phase G job
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: automatic focused CI `32800772737`: Phase G Stage 6 semantic proof-epoch gap; Stage 3 final-candidate/base WebKit presentation pipe termination; deployment 844x390 final-PNG presentation pipe termination; Canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: all other r59 required jobs plus r60 source 24/24 and bounded local Stage 6, candidate Stage 3 final, exact-base Stage 3 final, and deployment 844x390/brute diagnostic acceptance
+- `CLASSIFICATION`: `INDEPENDENT_QA_SEMANTIC_AND_WEBKIT_TRANSPORT_FAILURES / POST_QUIESCENCE_PROOF_EPOCH_GAP + STAGE3_FINAL_AND_DEPLOYMENT_PNG_ANON_PIPE_WRITE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `POST_RESTORATION_PROOF_EPOCH + FINITE_PRESENTATION_TRANSPORT_OWNERS / PRODUCT_SIMULATION_AND_ACCEPTANCE_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: normalize exact eleven paths -> source/design/focused -> four bounded local runtime axes -> content/full/lint/build/static -> iteration-23 commit/normal transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24 -> same-HEAD full/unfiltered/runtime/human audit/freeze/`SOL_FINAL_REVIEW` -> one final Producer checkpoint -> explicit approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all four terminal jobs, exact artifacts/traces/host wait owners, green controls and dependency edge, product/QA route boundary, eleven-path topology, local source/runtime loadability, one-run budget, and unchanged release state machine. Revision r60 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 77. Revision r61 — canonical focused-suite cardinality alignment
+
+### 77.1 Trigger and classification
+
+On normalized r60 bytes, SOL executed the required syntax checks 3/3, the three focused source contracts 24/24, and Design Lock 19/19. The first canonical six-file command then executed every test successfully but reported **55/55**, while Section 76.4 required the stale total **54/54**. No browser/runtime, full regression, commit, transport, or remote CI followed that cardinality stop.
+
+The inventory is deterministic: Design Lock 19 + Phase G checkpoint 12 + runtime evidence 3 + CI contract 4 + P5 story/audio 9 + Stage 3 bounded 8 = 55. Relative to r59, r60 intentionally added exactly one required P5 final-cut presentation contract test. The suite has no failed, skipped, cancelled, or todo test; the correction does not add, remove, skip, rename, or weaken a test. Classification is `SOL_OWNED_FOCUSED_SUITE_CARDINALITY_DRIFT / R60_ADDED_ONE_P5_FINAL_CUT_CONTRACT_WITHOUT_ADVANCING_CANONICAL_SIX_FILE_TOTAL / DESIGN_CHANGE_REQUIRED`. Remediation is `CANONICAL_FOCUSED_INVENTORY_ALIGNMENT / EXACT_55_TESTS_WITH_NO_TEST_OR_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`.
+
+### 77.2 Exact correction and preservation boundary
+
+The r61 correction changes only these four governance/source-owner paths inside the existing eleven-path r60 material topology:
+
+- `docs/design/v1.0.0/DESIGN_LOCK.md`
+- `docs/design/v1.0.0/LUNA_HANDOFF.md`
+- `docs/PROJECT_STATE.md`
+- `tests/v100-design-lock.test.mjs`
+
+The Design Lock test may update only active revision/header/cursor extraction, r61 positive assertions, current-owner routing, and the exact canonical total. It must not add or remove a test block. Historical r60 remains the immutable source-return record. The following seven normalized runtime/source paths are byte-locked through the r61 correction:
+
+| Path | Bytes | SHA-256 |
+|---|---:|---|
+| `app/AshfallGame.tsx` | 1,053,015 | `6af7e12ff30385bcf74b6b8be2bf62e395b666607f42608c7ac99f3658ca5fef` |
+| `scripts/p5-browser-smoke.mjs` | 118,234 | `ba473ee4bf9b0855ac1df390d32f07f93fb75a07602bfbec5d5215041061585b` |
+| `scripts/v099-final-remediation-browser-smoke.mjs` | 153,031 | `7d145784ddc5ac7766117537042646d109940e365917ba91f5e27fe6801daaa5` |
+| `scripts/v100-phase-g-production-matrix.mjs` | 255,111 | `bd25f757c5168b8344dfb73b46257e776b36f02ad2b4e19ce32e3150678aa4ac` |
+| `tests/p5-story-audio-contract.test.mjs` | 38,525 | `0c1649db10184670f6adaad700445e7b4b7c71cf9f085361c2742b84c46a630f` |
+| `tests/v0995-runtime-evidence-contract.test.mjs` | 39,238 | `e9879cb337a3e740febf615d0909c2ce438e13198f6f754c2c62fa1f71842038` |
+| `tests/v100-phase-g-checkpoint.test.mjs` | 60,864 | `c51100bab04659ad0f5c4d8e74448348d903e991ad546f0a70cb35da3cc86d44` |
+
+Forbidden: app/runtime/harness/test-behavior changes outside the Design Lock binding, test removal or filtering, acceptance weakening, package/lock/workflow/public changes, repository-wide normalization, protected forensic-directory mutation, gameplay/balance/AI/content/save/audio change, retry/rerun substitution, Luna delegation, and every pre-approval Ready/merge/tag/Release/Pages action.
+
+### 77.3 Acceptance and resume contract
+
+Do not rerun the already-green normalized r60 syntax 3/3 or focused source 24/24 solely for this four-path correction. Run the Design Lock test once and require 19/19, then run the exact same canonical six-file command and require **55/55**, with fail/cancelled/skipped/todo all zero. Verify the seven byte-locked paths against Section 77.2, exact eleven-path topology, prescribed EOL/BOM, protected forensic directories, and `git diff --check`. Only complete r61 source/static green authorizes the still-unexecuted r60 final-byte runtime sequence: Stage 6 WebKit once, candidate Stage 3 final once, exact-base Stage 3 final once, and WebKit 844x390 brute deployment once. Then run content validator, full tests, lint, and build as Section 76 requires.
+
+Any first r61 source/static/runtime/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, skipped test, stale runtime evidence, or substitution is authorized. Complete local green retains one normal non-amended exact-eleven-path iteration-23 commit/non-force transport and exactly one automatic focused CI run. Complete automatic focused green alone authorizes the separate workflow-only iteration 24 and the unchanged same-HEAD full/unfiltered/runtime/human/evidence-freeze/fixed-HEAD `SOL_FINAL_REVIEW`/one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`/approval-only release route.
+
+### 77.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R61_FOCUSED_CARDINALITY_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first normalized r60 canonical six-file source gate; all 55 tests passed but the active contract required stale 54/54; no runtime followed
+- `LAST_GREEN_GATE`: normalized r60 syntax 3/3, focused source 24/24, Design Lock 19/19, and all 55 underlying canonical tests green
+- `CLASSIFICATION`: `SOL_OWNED_FOCUSED_SUITE_CARDINALITY_DRIFT / R60_ADDED_ONE_P5_FINAL_CUT_CONTRACT_WITHOUT_ADVANCING_CANONICAL_SIX_FILE_TOTAL / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CANONICAL_FOCUSED_INVENTORY_ALIGNMENT / EXACT_55_TESTS_WITH_NO_TEST_OR_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r61 stays inside material iteration 23; workflow-only restoration remains iteration 24 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; focused-suite cardinality drift count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r61 four-path binding -> Design Lock 19/19 -> canonical six-file 55/55 -> byte/topology/static -> four bounded runtime axes -> content/full/lint/build -> iteration-23 normal commit/transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact test inventory, r60 source delta, seven byte locks, four-path correction boundary, eleven-path material topology, no-retry rule, and unchanged release state machine. Revision r61 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 78. Revision r62 — active Project State release-tail literal closure
+
+### 78.1 Source return and classification
+
+The first r61 Design Lock run executed 19 tests and stopped at 18 pass / 1 fail. Every r61 cardinality assertion before the final release-loop guard passed. The sole failure was the active Project State cursor: its `RESUME_FROM` ended with abbreviated `unchanged final route` and therefore omitted the exact `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` token required in every active execution cursor. No canonical six-file rerun, browser/runtime, full gate, commit, transport, or remote CI followed.
+
+Classification is `SOL_OWNED_ACTIVE_CURSOR_RELEASE_TOKEN_OMISSION / R61_PROJECT_STATE_RESUME_FROM_ABBREVIATED_UNCHANGED_FINAL_ROUTE_WITHOUT_CANONICAL_FINAL_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`. Remediation is `CANONICAL_RELEASE_TAIL_LITERAL_RESTORATION / ADD_EXACT_SOL_FINAL_REVIEW_AND_FINAL_PRODUCER_CHECKPOINT_TO_CURRENT_CURSOR + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`.
+
+### 78.2 Exact correction and acceptance
+
+Keep the exact seven runtime/source path byte locks from Section 77.2. Change only Design Lock, Handoff, Project State, and the Design Lock test. In Project State, expand the active `RESUME_FROM` after workflow-only iteration 24 to the exact unchanged same-HEAD full/unfiltered/runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only integration/release/Pages/public-QA/recovery/closure tail. Update only r62 header/current-section/source-test bindings elsewhere; do not change a test block or the canonical 55-test inventory.
+
+Run Design Lock once and require 19/19, then the canonical six-file command once and require 55/55. Do not rerun the already-green normalized syntax 3/3 or focused source 24/24 solely for this docs/test correction. Reverify the seven byte locks, exact eleven-path topology, EOL/BOM, protected forensic directories, and `git diff --check`, then resume the four bounded runtime axes and full gates from Section 77.3. Any first failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, or evidence substitution is authorized.
+
+### 78.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R62_RELEASE_TAIL_LITERAL_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first r61 Design Lock source gate, 18/19; active Project State cursor omitted the canonical final Producer checkpoint token; no later gate executed
+- `LAST_GREEN_GATE`: all r61 cardinality assertions before the final release-loop guard plus normalized r60 syntax 3/3, focused source 24/24, and underlying canonical 55/55
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_CURSOR_RELEASE_TOKEN_OMISSION / R61_PROJECT_STATE_RESUME_FROM_ABBREVIATED_UNCHANGED_FINAL_ROUTE_WITHOUT_CANONICAL_FINAL_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CANONICAL_RELEASE_TAIL_LITERAL_RESTORATION / ADD_EXACT_SOL_FINAL_REVIEW_AND_FINAL_PRODUCER_CHECKPOINT_TO_CURRENT_CURSOR + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r62 stays inside material iteration 23; workflow-only restoration remains iteration 24
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; focused-suite cardinality drift count `1`; active release-token omission count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r62 four-path binding -> Design Lock 19/19 -> canonical six-file 55/55 -> byte/topology/static -> four bounded runtime axes -> content/full/lint/build -> iteration-23 normal commit/transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24 -> same-HEAD full/unfiltered/runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only integration/release/Pages/public-QA/recovery/closure
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the failed assertion, active Project State extraction boundary, exact release-tail tokens, seven byte locks, eleven-path topology, and approval boundaries. Revision r62 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 79. Revision r63 — fresh production build before bounded runtime axes
+
+### 79.1 Runtime return and classification
+
+Final r62 source/static preparation passed Design Lock 19/19, canonical six-file 55/55, all seven byte locks, exact eleven-path topology, UTF-8/BOM/EOL, protected forensic-directory preservation, and `git diff --check`. Stage 6, candidate Stage 3 final, and exact-base Stage 3 final then completed once as logic-green comparison controls. The first deployment command stopped before browser launch with `Production build is stale; rebuild before final-remediation browser QA`.
+
+The build freshness guard is correct. Final EOL normalization advanced the tracked app source mtime after the existing `dist` build, while Sections 76-78 ordered the fresh production build after the four bounded runtime axes. This made the prescribed deployment precondition impossible and means the three earlier r62 axes were not served from a build freshly derived after final source normalization. They are retained as comparison evidence only and are invalid for r63 acceptance. Classification is `SOL_OWNED_RUNTIME_BUILD_FRESHNESS_ORDERING_GAP / FINAL_NORMALIZATION_ADVANCED_APP_MTIME_AFTER_LAST_BUILD_WHILE_DEPLOYMENT_RUNNER_FAILS_CLOSED_BEFORE_RUNTIME / DESIGN_CHANGE_REQUIRED`. Remediation is `PRE_RUNTIME_PRODUCTION_BUILD_REFRESH / ONE_BUILD_BEFORE_ALL_FOUR_BOUNDED_AXES + INVALIDATE_PRE_BUILD_RUNTIME_RESULTS / DESIGN_CHANGE_REQUIRED`.
+
+### 79.2 Exact correction and execution contract
+
+Keep the exact seven runtime/source bytes and hashes in Section 77.2. Change only Design Lock, Handoff, Project State, and the Design Lock test. Update no runtime, app, harness, package/lock, workflow, public, product, acceptance, timeout, retry, or artifact rule. The r63 correction changes execution order only:
+
+1. Design Lock 19/19, canonical six-file 55/55, seven byte locks, exact eleven-path topology, EOL/BOM, protected forensic directories, and `git diff --check`;
+2. one `npm.cmd run build` from the final normalized tracked source; require success and fresh production build identity before any bounded browser axis;
+3. fresh unique evidence directories, one attempt each and stop on first failure: Stage 6 WebKit; candidate Stage 3 final WebKit; exact-base Stage 3 final WebKit; WebKit 844x390 brute deployment;
+4. content validator, complete tests, lint, final build/static/byte/topology checks.
+
+The r62 Stage 6 and two Stage 3 outputs cannot satisfy item 3. The r62 deployment process did not launch a browser and is a precondition failure, not a product attempt. Do not delete, overwrite, or relabel any r62 evidence. Do not rerun normalized syntax 3/3 or focused source 24/24 solely for this four-path correction. Any first r63 source/build/runtime/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, or evidence substitution is authorized.
+
+Complete local green retains one normal non-amended exact-eleven-path iteration-23 commit/non-force transport and exactly one automatic focused CI run. Complete automatic focused green alone authorizes workflow-only iteration 24 and the unchanged same-HEAD full/unfiltered/runtime/human/evidence-freeze/fixed-HEAD `SOL_FINAL_REVIEW`/one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`/explicit-approval-only release route.
+
+### 79.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R63_PRE_RUNTIME_BUILD_REFRESH_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first r62 deployment precondition before browser launch; production build stale after final app EOL normalization; no deployment attempt executed
+- `LAST_GREEN_GATE`: r62 Design Lock 19/19, canonical 55/55, seven byte locks/topology/static; three pre-build runtime axes are comparison-only
+- `CLASSIFICATION`: `SOL_OWNED_RUNTIME_BUILD_FRESHNESS_ORDERING_GAP / FINAL_NORMALIZATION_ADVANCED_APP_MTIME_AFTER_LAST_BUILD_WHILE_DEPLOYMENT_RUNNER_FAILS_CLOSED_BEFORE_RUNTIME / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PRE_RUNTIME_PRODUCTION_BUILD_REFRESH / ONE_BUILD_BEFORE_ALL_FOUR_BOUNDED_AXES + INVALIDATE_PRE_BUILD_RUNTIME_RESULTS / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r63 stays inside material iteration 23; workflow-only restoration remains iteration 24
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; pre-runtime build-order failure count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r63 four-path binding -> Design Lock 19/19 -> canonical 55/55 -> byte/topology/static -> production build refresh -> fresh Stage 6 -> fresh candidate Stage 3 final -> fresh exact-base Stage 3 final -> fresh deployment 844x390 brute -> content/full/lint/final static -> iteration-23 normal commit/transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24 -> fixed-HEAD final route
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against build freshness implementation, source/dist order, all four runtime consumers, invalidation boundary, seven byte locks, eleven-path topology, no-retry policy, and approval tail. Revision r63 has `High ambiguity: 0` and `Medium ambiguity: 0`.

@@ -2427,6 +2427,93 @@ async function withDeploymentPresentationQuiescence(
   };
 }
 
+async function withDeploymentCanvasCaptureQuiescence(page, label, operation) {
+  const owner = "deployment-evidence-capture";
+  const arm = await page.evaluate((requestedOwner) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (typeof bridge?.setQaPresentationQuiesced !== "function"
+      || typeof bridge?.getQaPresentationQuiescence !== "function") {
+      throw new Error("deployment evidence-capture presentation bridge is unavailable");
+    }
+    return bridge.setQaPresentationQuiesced(true, requestedOwner);
+  }, owner);
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "deployment"
+    && arm.datasetActive === true
+    && arm.running === true
+    && arm.paused === true
+    && arm.over !== true,
+  `${label}: deployment evidence-capture quiescence did not arm ${JSON.stringify(arm)}`);
+
+  let value;
+  let preCapture = null;
+  let operationError = null;
+  try {
+    const preCaptureHandle = await page.waitForFunction((requestedOwner) => {
+      const receipt = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.() ?? null;
+      return receipt?.schema === "v100-qa-presentation-quiescence/v1"
+        && receipt.active === true
+        && receipt.owner === requestedOwner
+        && receipt.route === "deployment"
+        && receipt.datasetActive === true
+        && receipt.running === true
+        && receipt.paused === true
+        && receipt.over !== true
+        && Number(receipt.renderFrames) === Number(receipt.enteredAtRenderFrames)
+        && Number(receipt.simulationTicks) === Number(receipt.enteredAtSimulationTicks)
+        && Number(receipt.suppressedRenderFrames) > 0
+        ? receipt
+        : false;
+    }, owner, { timeout: Math.min(timeout, 2_000), polling: 16 });
+    preCapture = await preCaptureHandle.jsonValue();
+    await preCaptureHandle.dispose();
+    value = await operation();
+  } catch (error) {
+    operationError = error;
+  }
+
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      release = await page.evaluate((requestedOwner) => (
+        window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
+      ), owner);
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) throw new Error(`${String(operationError)}; deployment evidence-capture release also failed: ${String(releaseError)}`);
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "v100-qa-presentation-quiescence/v1"
+    && release.active === false
+    && release.owner === owner
+    && release.route === "deployment"
+    && release.datasetActive === false
+    && release.running === true
+    && release.paused === true
+    && release.over !== true
+    && Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames)
+    && Number(release.releasedAtSimulationTicks) === Number(release.enteredAtSimulationTicks)
+    && Number(release.suppressedRenderFrames) > 0,
+  `${label}: deployment evidence-capture quiescence did not preserve the restored frozen frame ${JSON.stringify(release)}`);
+  return {
+    value,
+    receipt: {
+      schema: "v100-deployment-evidence-capture-quiescence/v1",
+      owner,
+      arm,
+      preCapture,
+      release,
+    },
+  };
+}
+
 async function refreshDeploymentEvidenceAfterRestoredFrames(
   page,
   evidence,
@@ -3057,16 +3144,17 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           combatReady: receipt.combatReady,
           entryRampCleared: receipt.entryRampCleared,
         } : null;
-        const canvasCapture = await withDeploymentDiagnosticOperation(
+        const canvasCaptureEnvelope = await withDeploymentDiagnosticOperation(
           lifecycle,
           "deployment/final-canvas-png",
           checkpointDetails,
-          () => deploymentCanvasPng(
+          () => withDeploymentCanvasCaptureQuiescence(page, label, () => deploymentCanvasPng(
             page,
             `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
             label,
-          ),
+          )),
         );
+        const canvasCapture = canvasCaptureEnvelope.value;
         await withDeploymentDiagnosticOperation(
           lifecycle,
           "deployment/trace-capture",
@@ -3090,6 +3178,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           checkpointReceipt: serializedCheckpointReceipt,
           presentationQuiescence: evidence.presentationQuiescence ?? null,
           postRestorationReadback: evidence.postRestorationReadback ?? null,
+          evidenceCaptureQuiescence: canvasCaptureEnvelope.receipt,
           screenshot: screenshotPath,
           screenshotSha256,
           canvasCapture,

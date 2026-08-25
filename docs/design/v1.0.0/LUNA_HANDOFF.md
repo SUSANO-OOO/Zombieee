@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r59`
+- Canonical Design Lock: `V100-SOL-DL-001 r63`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-67 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 68 is the sole current execution handoff.
+Sections 1-71 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 72 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2131,3 +2131,97 @@ Forbidden: deployment/runtime source changes, app, Phase G, runner, gameplay, ti
 The unchanged tail is complete automatic focused green -> workflow-only iteration 23 -> same-HEAD full local/unfiltered remote green -> production runtime/human audit -> evidence freeze -> read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit approval-only integration, tag, GitHub Release, official Pages, published-SHA QA, recovery, and closure.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve all r57 runtime bytes; add only the canonical `SOL_FINAL_REVIEW` token correction plus r59 governance/test bindings, require Design Lock 19/19 and unchanged full/static green, then execute fresh WebKit 736x414 -> 844x340 -> 844x390 as exact 8/48 first-attempt axes; any first failure returns to SOL_DESIGN without retry.**
+
+## 69. Revision r60 — no active Luna handoff / coherent presentation remediation
+
+Design Lock Section 76 and the latest explicitly labeled Issue #172 r60 lock are the sole active cursor. Sections 1-68 remain immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R60_COHERENT_PRESENTATION_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: automatic focused CI `32800772737`: Phase G Stage 6 proof-epoch semantics; Stage 3 final-candidate/base presentation pipe termination; deployment 844x390 final-PNG presentation pipe termination; Canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: all other r59 required jobs plus r60 focused source 24/24 and bounded local loadability/runtime evidence for Stage 6, candidate/exact-base Stage 3 final, and 844x390 brute deployment
+- `CLASSIFICATION`: `INDEPENDENT_QA_SEMANTIC_AND_WEBKIT_TRANSPORT_FAILURES / POST_QUIESCENCE_PROOF_EPOCH_GAP + STAGE3_FINAL_AND_DEPLOYMENT_PNG_ANON_PIPE_WRITE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `POST_RESTORATION_PROOF_EPOCH + FINITE_PRESENTATION_TRANSPORT_OWNERS / PRODUCT_SIMULATION_AND_ACCEPTANCE_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r60 is iteration 23; workflow-only restoration is iteration 24 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `11`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact eleven-path normalization -> source/design/focused -> four bounded local runtime axes -> content/full/lint/build/static -> iteration-23 normal commit/transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24
+
+Allowed tracked paths are exactly the eleven listed in Design Lock Section 76.2. Implement only the three bounded contracts already owned by SOL: all-live-candidate post-restoration attack baselines for Phase G; candidate bridge plus strict exact-base DOM fallback for Stage 3 final; and paused deployment PNG capture with a positive pre-capture suppressed-frame receipt. Keep public routes fail-closed and keep simulation, audio, gameplay, timing, balance, AI, checkpoint, pixel, artifact, and retry acceptance unchanged.
+
+Required local order is focused source 24/24 -> Design Lock 19/19 -> canonical focused 54/54 -> Stage 6 WebKit -> candidate Stage 3 final -> fresh exact-base Stage 3 final -> WebKit 844x390 brute deployment -> content/full/lint/build/static. Local WebKit `AudioContext` absence is capability-only when logic and the bounded runner pass with fatal diagnostics zero. Any first final-byte failure stops at `SOL_DESIGN`; no retry, rerun, micro-patch, or substitution.
+
+Complete local green permits one iteration-23 commit/non-force transport and exactly one automatic focused run. Complete automatic green alone permits workflow-only iteration 24; then the unchanged same-HEAD full/unfiltered/dynamic-human-audit/evidence-freeze/`SOL_FINAL_REVIEW`/one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` route applies. No Ready, merge, tag, Release, official Pages, or final checkpoint action is authorized before those gates.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL owns r60 Section 76 end to end: normalize exactly eleven paths; require source 24/24, Design Lock 19/19, focused 54/54, the four bounded local runtime axes, and full/static green; make one normal iteration-23 transport and observe one automatic focused CI; any red returns to SOL_DESIGN without retry, while complete green alone unlocks workflow-only iteration 24 and the unchanged final route.**
+
+## 70. Revision r61 — no active Luna handoff / focused-suite cardinality alignment
+
+Design Lock Section 77 and the latest explicitly labeled Issue #172 r61 lock are the sole active cursor. Sections 1-69 remain immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R61_FOCUSED_CARDINALITY_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first normalized r60 canonical six-file source gate; all 55 tests passed while the stale active declaration required 54/54; browser/runtime/full/commit/transport not executed
+- `LAST_GREEN_GATE`: normalized syntax 3/3, focused source 24/24, Design Lock 19/19, and the complete underlying six-file inventory 55/55 green
+- `CLASSIFICATION`: `SOL_OWNED_FOCUSED_SUITE_CARDINALITY_DRIFT / R60_ADDED_ONE_P5_FINAL_CUT_CONTRACT_WITHOUT_ADVANCING_CANONICAL_SIX_FILE_TOTAL / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CANONICAL_FOCUSED_INVENTORY_ALIGNMENT / EXACT_55_TESTS_WITH_NO_TEST_OR_ACCEPTANCE_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r61 stays inside material iteration 23; workflow-only restoration remains iteration 24
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; focused-suite cardinality drift count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: update only four r61 governance/design-test bindings -> Design Lock 19/19 -> same canonical six-file command 55/55 -> exact seven-byte locks/eleven-path topology/static -> Stage 6 -> candidate Stage 3 final -> exact-base Stage 3 final -> deployment 844x390 brute -> content/full/lint/build -> iteration-23 normal transport -> one automatic focused CI
+
+Keep the seven normalized runtime/source paths at the exact bytes and SHA-256 values in Design Lock Section 77.2. Do not add, remove, filter, skip, or weaken a test. Do not repeat the already-green syntax 3/3 or source 24/24 solely for this docs/test correction. Product, app behavior, simulation, gameplay, balance, AI, content, save, audio, harness acceptance, viewport, timeout, artifact, retry, package/lock, workflow, public and release boundaries remain unchanged.
+
+Complete automatic focused green alone unlocks workflow-only iteration 24, followed by same-HEAD full/unfiltered/runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure. Any first failure returns to `SOL_DESIGN` without retry or same-revision edit.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve the seven r60 runtime/source bytes exactly; align only the four r61 governance/design-test bindings to the actual canonical six-file inventory of 55 tests; require Design Lock 19/19, six-file 55/55, byte/topology/static, the four bounded runtime axes, and full gates; make one normal iteration-23 transport and observe one automatic focused CI; any red returns to SOL_DESIGN without retry.**
+
+## 71. Revision r62 — no active Luna handoff / release-tail literal closure
+
+Design Lock Section 78 and the latest explicitly labeled Issue #172 r62 lock are the sole active cursor. Sections 1-70 remain immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R62_RELEASE_TAIL_LITERAL_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first r61 Design Lock run, 18/19; active Project State `RESUME_FROM` omitted the canonical final Producer checkpoint token; no later gate executed
+- `LAST_GREEN_GATE`: all preceding r61 assertions plus normalized r60 syntax 3/3, focused source 24/24, and underlying canonical 55/55
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_CURSOR_RELEASE_TOKEN_OMISSION / R61_PROJECT_STATE_RESUME_FROM_ABBREVIATED_UNCHANGED_FINAL_ROUTE_WITHOUT_CANONICAL_FINAL_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CANONICAL_RELEASE_TAIL_LITERAL_RESTORATION / ADD_EXACT_SOL_FINAL_REVIEW_AND_FINAL_PRODUCER_CHECKPOINT_TO_CURRENT_CURSOR + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r62 stays inside material iteration 23; workflow-only restoration remains iteration 24
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; focused-suite cardinality drift count `1`; active release-token omission count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: four-path r62 binding -> Design Lock 19/19 -> canonical six-file 55/55 -> exact seven-byte locks/eleven-path topology/static -> four bounded runtime axes -> content/full/lint/build -> iteration-23 normal transport -> one automatic focused CI -> complete green only -> workflow-only iteration 24 -> fixed-HEAD final route
+
+Keep all seven Section 77.2 runtime/source paths byte-identical. Add only the exact release-tail tokens to the active Project State cursor and update r62 governance/design-test bindings. Do not add/remove/filter a test, change canonical 55, or repeat syntax/source 24/24 solely for this correction. Product, runtime, harness, gameplay, timing, acceptance, retry, workflow, package/public and release behavior remain unchanged.
+
+Complete automatic focused green alone unlocks workflow-only iteration 24, then same-HEAD full/unfiltered/runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure. Any first red returns to `SOL_DESIGN` without retry.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve all seven r60 runtime/source bytes; restore the exact `SOL_FINAL_REVIEW` and `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` literals in the active Project State route; require Design Lock 19/19, canonical six-file 55/55, byte/topology/static, four bounded runtime axes, and full gates; transport iteration 23 once and observe one automatic focused CI; any red returns to SOL_DESIGN without retry.**
+
+## 72. Revision r63 — no active Luna handoff / pre-runtime build refresh
+
+Design Lock Section 79 and the latest explicitly labeled Issue #172 r63 lock are the sole active cursor. Sections 1-71 remain immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R63_PRE_RUNTIME_BUILD_REFRESH_READY`
+- `LAST_AUDITED_HEAD`: `c0b21d64fdfda1095660fae0f9b35676833cf4a0`
+- `LAST_AUDITED_TREE`: `fcb616a7cdc5d52d7ed214f7c0916bfbd0947dbe`
+- `FAILED_GATE`: first r62 deployment command failed its production-build freshness precondition before browser launch after final app EOL normalization
+- `LAST_GREEN_GATE`: r62 Design Lock 19/19, canonical 55/55, seven byte locks/topology/static; r62 Stage 6 and two Stage 3 axes are comparison-only because they preceded a fresh final-source build
+- `CLASSIFICATION`: `SOL_OWNED_RUNTIME_BUILD_FRESHNESS_ORDERING_GAP / FINAL_NORMALIZATION_ADVANCED_APP_MTIME_AFTER_LAST_BUILD_WHILE_DEPLOYMENT_RUNNER_FAILS_CLOSED_BEFORE_RUNTIME / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PRE_RUNTIME_PRODUCTION_BUILD_REFRESH / ONE_BUILD_BEFORE_ALL_FOUR_BOUNDED_AXES + INVALIDATE_PRE_BUILD_RUNTIME_RESULTS / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r63 stays inside material iteration 23; workflow-only restoration remains iteration 24
+- `SAME_GATE_REPEAT_COUNT`: `11` for required Phase G; pre-runtime build-order failure count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: four-path r63 binding -> Design Lock 19/19 -> canonical 55/55 -> seven-byte locks/eleven-path topology/static -> `npm.cmd run build` -> fresh Stage 6 -> candidate Stage 3 final -> exact-base Stage 3 final -> deployment 844x390 brute -> content/full/lint/final static -> iteration-23 normal transport -> one automatic focused CI
+
+Keep all seven Section 77.2 runtime/source paths byte-identical. Do not reuse the r62 pre-build runtime outputs for acceptance and do not delete or overwrite them. The stale-build deployment stop occurred before browser launch. Build exactly once before the four fresh axes, then execute each axis once in a unique directory and stop on the first failure. Do not change product, runtime, harness, acceptance, package/lock, workflow, public, timeout, retry, or artifact semantics.
+
+Complete automatic focused green alone unlocks workflow-only iteration 24, then same-HEAD full/unfiltered/runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve the seven runtime/source byte locks; validate r63 governance and canonical 55/55, build production once from final normalized source before browser execution, run four fresh bounded axes once each, then full/static gates; transport iteration 23 once and observe one automatic focused CI; any red returns to SOL_DESIGN without retry.**

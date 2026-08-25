@@ -8838,11 +8838,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         ? "phase-g"
         : parameters.get("qa") === "mission" && parameters.get("qaHudFiniteAssets") === "1"
           ? "deployment"
+          : parameters.get("qa") === "endgame" && parameters.get("qaHudFiniteAssets") === "1"
+            ? "stage3-final"
           : null;
       const allowedOwners = route === "phase-g"
         ? ["phase-g-pre-proof"]
         : route === "deployment"
-          ? ["deployment-first-frame", "deployment-checkpoint-advance"]
+          ? ["deployment-first-frame", "deployment-checkpoint-advance", "deployment-evidence-capture"]
+          : route === "stage3-final"
+            ? ["p5-stage3-final-cut"]
           : [];
       if (!allowedOwners.includes(requestedOwner)) {
         throw new Error("QA presentation quiescence owner is unavailable on this local route");
@@ -8857,7 +8861,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return qaPresentationQuiescenceSnapshot();
       }
       if (nextActive) {
-        if (screen !== "battle" || !g.running || g.paused || g.over) {
+        const pausedEvidenceCapture = route === "deployment" && requestedOwner === "deployment-evidence-capture";
+        if (screen !== "battle"
+          || !g.running
+          || g.over
+          || (pausedEvidenceCapture ? !g.paused : g.paused)) {
           throw new Error("QA presentation quiescence requires a live production battle");
         }
         const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');

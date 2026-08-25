@@ -727,6 +727,40 @@ test("P5 dispatches the Stage 3 loadout once from one atomic player-facing readi
   assert.match(browserSmokeSource, /const timeout = Math\.max\(5_000, Number\(process\.env\.P5_QA_TIMEOUT_MS\) \|\| 45_000\);/u);
 });
 
+test("P5 final-cut keeps simulation and audio live while bounding WebKit presentation transport", async () => {
+  const browserSmokeSource = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const suppression = browserSmokeSource.match(
+    /async function withStage3FinalPresentationSuppression[\s\S]+?(?=\nasync function closePlaywrightResource)/u,
+  )?.[0] ?? "";
+  assert.ok(suppression.length > 0, "missing bounded Stage 3 final-cut presentation owner");
+  assert.match(suppression, /parameters\.get\("qa"\) === "endgame"[\s\S]*parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
+  assert.match(suppression, /const owner = "p5-stage3-final-cut"/u);
+  assert.match(suppression, /snapshot\.running !== true \|\| snapshot\.paused === true \|\| snapshot\.over === true/u);
+  assert.match(suppression, /typeof bridge\?\.setQaPresentationQuiesced === "function"/u);
+  assert.match(suppression, /receipt\.route === "stage3-final"/u);
+  assert.match(suppression, /mode: "base-dom-suppression"/u);
+  assert.match(suppression, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
+  assert.match(suppression, /battleRoot\.style\.visibility = "hidden"/u);
+  assert.match(suppression, /state\.battleRootStyle === null[\s\S]*removeAttribute\("style"\)[\s\S]*setAttribute\("style", state\.battleRootStyle\)/u);
+  assert.match(suppression, /releasedAtRenderFrames\) === Number\(receipt\.enteredAtRenderFrames/u);
+  assert.match(suppression, /releasedAtSimulationTicks\) > Number\(receipt\.enteredAtSimulationTicks/u);
+  assert.match(suppression, /Number\(quiescence\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
+  assert.match(suppression, /frames >= 3/u);
+  assert.match(suppression, /Number\(snapshot\?\.time\) > Number\(releasedBattleTime\)/u);
+  assert.match(suppression, /p5-stage3-final-presentation-suppression\/v1/u);
+  assert.doesNotMatch(suppression, /\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|bossDefeated\s*=|setGraphicsQuality|prepareTakuyaBossDefeatAudioProof/u);
+  assert.match(gameSource, /parameters\.get\("qa"\) === "endgame" && parameters\.get\("qaHudFiniteAssets"\) === "1"[\s\S]*\? "stage3-final"/u);
+  assert.match(gameSource, /route === "stage3-final"[\s\S]*\? \["p5-stage3-final-cut"\]/u);
+  const finalAuditStart = browserSmokeSource.indexOf("async function auditTakuyaFinalAudio");
+  const suppressionCall = browserSmokeSource.indexOf("const finalCutPresentation = await withStage3FinalPresentationSuppression", finalAuditStart);
+  const exactPredicateCall = browserSmokeSource.indexOf("operation: () => waitForFinalCutPredicateFromNode", suppressionCall);
+  const pauseCall = browserSmokeSource.indexOf("const pauseEvidence = await pauseAndVerifyFrozenScriptedBark", exactPredicateCall);
+  assert.ok(finalAuditStart >= 0 && finalAuditStart < suppressionCall && suppressionCall < exactPredicateCall && exactPredicateCall < pauseCall);
+  assert.match(browserSmokeSource, /activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches/u);
+  assert.equal((browserSmokeSource.match(/await withStage3FinalPresentationSuppression\(\{/gu) ?? []).length, 1);
+});
+
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {
   for (const event of Object.values(story.STORY_EVENTS)) {
     assert.equal(event.presentation.characterVoice, false, `${event.id} disables story dialogue voiceover`);

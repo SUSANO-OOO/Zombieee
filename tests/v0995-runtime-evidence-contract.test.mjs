@@ -249,6 +249,8 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.ok(presentationBridge.length > 0, "missing shared localhost QA presentation quiescence bridge");
   assert.match(presentationBridge, /parameters\.get\("qa"\) === "mission" && parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
   assert.match(presentationBridge, /"deployment-first-frame", "deployment-checkpoint-advance"/u);
+  assert.match(presentationBridge, /"deployment-evidence-capture"/u);
+  assert.match(presentationBridge, /pausedEvidenceCapture[\s\S]*pausedEvidenceCapture \? !g\.paused : g\.paused/u);
   assert.match(presentationBridge, /schema: "v100-qa-presentation-quiescence\/v1"/u);
   assert.match(presentationBridge, /state\.owner !== requestedOwner \|\| state\.route !== route/u);
   assert.match(presentationBridge, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
@@ -265,6 +267,19 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(presentationHarness, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
   assert.match(presentationHarness, /Number\(quiescence\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
   assert.match(presentationHarness, /v100-deployment-presentation-quiescence-receipt\/v1/u);
+  const evidenceCaptureHarness = finalRemediationHarness.match(/async function withDeploymentCanvasCaptureQuiescence[\s\S]+?(?=\nasync function refreshDeploymentEvidenceAfterRestoredFrames)/u)?.[0] ?? "";
+  assert.ok(evidenceCaptureHarness.length > 0, "missing frozen production-frame capture quiescence owner");
+  assert.match(evidenceCaptureHarness, /const owner = "deployment-evidence-capture"/u);
+  assert.match(evidenceCaptureHarness, /arm\.paused === true/u);
+  assert.match(evidenceCaptureHarness, /release\.paused === true/u);
+  assert.match(evidenceCaptureHarness, /releasedAtRenderFrames\) === Number\(release\.enteredAtRenderFrames/u);
+  assert.match(evidenceCaptureHarness, /releasedAtSimulationTicks\) === Number\(release\.enteredAtSimulationTicks/u);
+  assert.match(evidenceCaptureHarness, /Number\(receipt\.suppressedRenderFrames\) > 0/u);
+  assert.match(evidenceCaptureHarness, /timeout: Math\.min\(timeout, 2_000\), polling: 16/u);
+  assert.match(evidenceCaptureHarness, /Number\(release\.suppressedRenderFrames\) > 0/u);
+  assert.match(evidenceCaptureHarness, /v100-deployment-evidence-capture-quiescence\/v1/u);
+  assert.match(evidenceCaptureHarness, /preCapture,/u);
+  assert.doesNotMatch(evidenceCaptureHarness, /setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint|auditFighterUnitLayer|\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=/u);
   assert.doesNotMatch(presentationHarness, /\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=|setGraphicsQuality|force\s*:/u);
   const postRestorationReadback = finalRemediationHarness.match(/async function refreshDeploymentEvidenceAfterRestoredFrames[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
   assert.ok(postRestorationReadback.length > 0, "missing post-restoration production snapshot readback");
@@ -286,6 +301,8 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(presentationDeploymentCase, /firstFrameBeforeProductionReadback[\s\S]*refreshDeploymentEvidenceAfterRestoredFrames\([\s\S]*"fully-inside",[\s\S]*0,/u);
   assert.match(presentationDeploymentCase, /checkpointBeforeProductionReadback[\s\S]*refreshDeploymentEvidenceAfterRestoredFrames\([\s\S]*checkpoint\.id,[\s\S]*checkpoint\.progress/u);
   assert.match(presentationDeploymentCase, /postRestorationReadback: evidence\.postRestorationReadback \?\? null/u);
+  assert.match(presentationDeploymentCase, /withDeploymentCanvasCaptureQuiescence\(page, label, \(\) => deploymentCanvasPng/u);
+  assert.match(presentationDeploymentCase, /evidenceCaptureQuiescence: canvasCaptureEnvelope\.receipt/u);
   for (const operation of [
     "hosted/asset-boundary",
     "hosted/fault-start",

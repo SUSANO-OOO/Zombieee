@@ -120,6 +120,226 @@ async function waitForFinalCutPredicateFromNode({ page, cueFragment, expectedSce
   }
 }
 
+async function withStage3FinalPresentationSuppression({ page, label, operation }) {
+  const owner = "p5-stage3-final-cut";
+  const arm = await page.evaluate(({ requestedOwner }) => {
+    const parameters = new URLSearchParams(location.search);
+    const localRoute = ["localhost", "127.0.0.1"].includes(location.hostname)
+      && parameters.get("qa") === "endgame"
+      && parameters.get("qaHudFiniteAssets") === "1";
+    if (!localRoute) throw new Error("P5_STAGE3_FINAL_PRESENTATION_ROUTE_UNAVAILABLE");
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    if (snapshot?.screen !== "battle" || snapshot.running !== true || snapshot.paused === true || snapshot.over === true) {
+      throw new Error("P5_STAGE3_FINAL_PRESENTATION_REQUIRES_LIVE_BATTLE");
+    }
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (typeof bridge?.setQaPresentationQuiesced === "function") {
+      const receipt = bridge.setQaPresentationQuiesced(true, requestedOwner);
+      if (!(receipt?.schema === "v100-qa-presentation-quiescence/v1"
+        && receipt.active === true
+        && receipt.owner === requestedOwner
+        && receipt.route === "stage3-final"
+        && receipt.datasetActive === true
+        && receipt.running === true
+        && receipt.paused !== true
+        && receipt.over !== true)) {
+        throw new Error(`P5_STAGE3_FINAL_PRESENTATION_BRIDGE_REJECTED:${JSON.stringify(receipt)}`);
+      }
+      const state = {
+        schema: "p5-stage3-final-presentation-state/v1",
+        owner: requestedOwner,
+        mode: "app-bridge",
+        enteredAtBattleTime: Number(snapshot.time),
+        bridgeArm: receipt,
+      };
+      window.__P5_STAGE3_FINAL_PRESENTATION_STATE__ = state;
+      return state;
+    }
+    const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
+    const canvas = battleRoot?.querySelector("canvas.battlefield");
+    if (!(battleRoot instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_SURFACE_MISSING");
+    }
+    const rect = canvas.getBoundingClientRect();
+    const style = getComputedStyle(canvas);
+    if (rect.width <= 0 || rect.height <= 0 || style.display === "none" || style.visibility === "hidden" || Number(style.opacity) <= 0) {
+      throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_SURFACE_NOT_VISIBLE");
+    }
+    const runningAnimations = typeof battleRoot.getAnimations === "function"
+      ? battleRoot.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running")
+      : [];
+    for (const animation of runningAnimations) animation.pause();
+    const state = {
+      schema: "p5-stage3-final-presentation-state/v1",
+      owner: requestedOwner,
+      mode: "base-dom-suppression",
+      enteredAtBattleTime: Number(snapshot.time),
+      battleRoot,
+      battleRootStyle: battleRoot.getAttribute("style"),
+      pausedAnimations: runningAnimations,
+      pausedAnimationCount: runningAnimations.length,
+      entryCanvas: { width: rect.width, height: rect.height, display: style.display, visibility: style.visibility, opacity: style.opacity },
+    };
+    battleRoot.style.visibility = "hidden";
+    document.documentElement.dataset.p5Stage3FinalPresentationSuppressed = "true";
+    window.__P5_STAGE3_FINAL_PRESENTATION_STATE__ = state;
+    return {
+      schema: state.schema,
+      owner: state.owner,
+      mode: state.mode,
+      enteredAtBattleTime: state.enteredAtBattleTime,
+      pausedAnimationCount: state.pausedAnimationCount,
+      entryCanvas: state.entryCanvas,
+    };
+  }, { requestedOwner: owner });
+
+  let value;
+  let operationError = null;
+  try {
+    value = await operation();
+  } catch (error) {
+    operationError = error;
+  }
+
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      release = await page.evaluate(({ requestedOwner }) => {
+        const state = window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+        if (!(state?.schema === "p5-stage3-final-presentation-state/v1" && state.owner === requestedOwner)) {
+          throw new Error("P5_STAGE3_FINAL_PRESENTATION_RELEASE_OWNER_MISSING");
+        }
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        if (state.mode === "app-bridge") {
+          const receipt = window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null;
+          if (!(receipt?.schema === "v100-qa-presentation-quiescence/v1"
+            && receipt.active === false
+            && receipt.owner === requestedOwner
+            && receipt.route === "stage3-final"
+            && receipt.datasetActive === false
+            && receipt.running === true
+            && receipt.paused !== true
+            && receipt.over !== true
+            && Number(receipt.releasedAtRenderFrames) === Number(receipt.enteredAtRenderFrames)
+            && Number(receipt.releasedAtSimulationTicks) > Number(receipt.enteredAtSimulationTicks)
+            && Number(receipt.suppressedRenderFrames) > 0)) {
+            throw new Error(`P5_STAGE3_FINAL_PRESENTATION_RELEASE_INVALID:${JSON.stringify(receipt)}`);
+          }
+          delete window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+          return {
+            schema: "p5-stage3-final-presentation-release/v1",
+            owner: requestedOwner,
+            mode: state.mode,
+            enteredAtBattleTime: state.enteredAtBattleTime,
+            releasedAtBattleTime: Number(snapshot?.time),
+            bridgeArm: state.bridgeArm,
+            bridgeRelease: receipt,
+            resumedAnimationCount: receipt.resumedAnimationCount,
+          };
+        }
+        if (state.mode !== "base-dom-suppression" || !(state.battleRoot instanceof HTMLElement)) {
+          throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_RELEASE_INVALID");
+        }
+        if (state.battleRootStyle === null) state.battleRoot.removeAttribute("style");
+        else state.battleRoot.setAttribute("style", state.battleRootStyle);
+        let resumedAnimationCount = 0;
+        for (const animation of state.pausedAnimations ?? []) {
+          try {
+            if (animation.playState === "paused") {
+              animation.play();
+              resumedAnimationCount += 1;
+            }
+          } catch {
+            // Detached CSS animations cannot affect the restored surface.
+          }
+        }
+        delete document.documentElement.dataset.p5Stage3FinalPresentationSuppressed;
+        delete window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+        return {
+          schema: "p5-stage3-final-presentation-release/v1",
+          owner: requestedOwner,
+          mode: state.mode,
+          enteredAtBattleTime: state.enteredAtBattleTime,
+          releasedAtBattleTime: Number(snapshot?.time),
+          pausedAnimationCount: state.pausedAnimationCount,
+          resumedAnimationCount,
+          entryCanvas: state.entryCanvas,
+        };
+      }, { requestedOwner: owner });
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) throw new Error(`${String(operationError)}; Stage 3 presentation release also failed: ${String(releaseError)}`);
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "p5-stage3-final-presentation-release/v1"
+    && release.owner === owner
+    && Number(release.releasedAtBattleTime) > Number(release.enteredAtBattleTime),
+  `${label} did not advance the production battle through final-cut presentation suppression`);
+
+  const restored = release.mode === "app-bridge"
+    ? await page.waitForFunction(({ releasedRenderFrames, releasedBattleTime }) => {
+      const quiescence = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.();
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const canvas = document.querySelector('.game-shell[data-screen="battle"] canvas.battlefield');
+      const rect = canvas?.getBoundingClientRect();
+      const style = canvas ? getComputedStyle(canvas) : null;
+      const ready = quiescence?.active === false
+        && Number(quiescence.renderFrames) >= Number(releasedRenderFrames) + 3
+        && Number(snapshot?.time) > Number(releasedBattleTime)
+        && rect?.width > 0
+        && rect?.height > 0
+        && style?.display !== "none"
+        && style?.visibility !== "hidden"
+        && Number(style?.opacity) > 0;
+      return ready ? { renderFrames: quiescence.renderFrames, battleTime: snapshot.time, width: rect.width, height: rect.height } : false;
+    }, {
+      releasedRenderFrames: release.bridgeRelease.releasedAtRenderFrames,
+      releasedBattleTime: release.releasedAtBattleTime,
+    }, { timeout: Math.min(timeout, 10_000), polling: 50 }).then(async (handle) => {
+      const receipt = await handle.jsonValue();
+      await handle.dispose();
+      return receipt;
+    })
+    : await page.evaluate(async ({ releasedBattleTime }) => {
+      await new Promise((resolve) => {
+        let frames = 0;
+        const step = () => {
+          frames += 1;
+          if (frames >= 3) resolve();
+          else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const canvas = document.querySelector('.game-shell[data-screen="battle"] canvas.battlefield');
+      const rect = canvas?.getBoundingClientRect();
+      const style = canvas ? getComputedStyle(canvas) : null;
+      if (!(Number(snapshot?.time) > Number(releasedBattleTime)
+        && rect?.width > 0
+        && rect?.height > 0
+        && style?.display !== "none"
+        && style?.visibility !== "hidden"
+        && Number(style?.opacity) > 0)) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_RESTORATION_INVALID");
+      }
+      return { renderFrames: 3, battleTime: snapshot.time, width: rect.width, height: rect.height };
+    }, { releasedBattleTime: release.releasedAtBattleTime });
+  return {
+    value,
+    receipt: {
+      schema: "p5-stage3-final-presentation-suppression/v1",
+      arm,
+      release,
+      restored,
+    },
+  };
+}
+
 async function closePlaywrightResource(resource, label) {
   let timer;
   const closed = await Promise.race([
@@ -2090,13 +2310,19 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     result.phase = "final-cut";
     stage3Progress(label, "final-cut", startedAt);
     diagnostics.setPhase(result.phase);
-    await waitForFinalCutPredicateFromNode({
+    const finalCutPresentation = await withStage3FinalPresentationSuppression({
       page,
-      cueFragment: "stage-takuya-final-v070",
-      expectedSceneId: expectedTakuyaBossSceneId,
       label,
-      timeoutMs: timeout,
+      operation: () => waitForFinalCutPredicateFromNode({
+        page,
+        cueFragment: "stage-takuya-final-v070",
+        expectedSceneId: expectedTakuyaBossSceneId,
+        label,
+        timeoutMs: timeout,
+      }),
     });
+    result.finalCutPredicate = finalCutPresentation.value;
+    result.finalCutPresentationSuppression = finalCutPresentation.receipt;
     const pauseEvidence = await pauseAndVerifyFrozenScriptedBark({
       page,
       cueFragment: "stage-takuya-final-v070",

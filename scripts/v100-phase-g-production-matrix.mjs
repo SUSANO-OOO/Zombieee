@@ -2087,11 +2087,12 @@ function mergeCombatActivityHistory(previous = {}, snapshot = {}) {
   };
 }
 
-function proofActorHumanTargetFromHistory(history = [], expectedKind = null) {
+function proofActorHumanTargetFromHistory(history = [], expectedKind = null, expectedFighterId = null) {
   if (!expectedKind || !Array.isArray(history)) return null;
   return history.find((observation) => (
     observation?.sourceSide === "zombie"
     && observation?.sourceKind === expectedKind
+    && (expectedFighterId === null || expectedFighterId === undefined || String(observation?.sourceId) === String(expectedFighterId))
     && observation?.targetSide === "human"
     && observation?.targetAlive === true
   )) ?? null;
@@ -2215,7 +2216,9 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
       const attacking = Number(fighter.attack) > 0
         || Number(fighter.attackWindup) > 0
         || Number(fighter.abilityWindup) > 0
-        || Number(fighter.attackSequence) > 0
+        || (fighter.attackSequenceBaseline === null || fighter.attackSequenceBaseline === undefined
+          ? Number(fighter.attackSequence) > 0
+          : fighter.attackSequenceAdvanced === true)
         || fighter.enemyVfx?.attacking === true
         || fighter.enemyVfx?.attackWindup === true
         || fighter.enemyVfx?.abilityActive === true
@@ -2536,11 +2539,12 @@ async function startCombatRuntimeObserver(page) {
         reactionHistory,
       };
     };
-    const proofActorHumanTargetFromHistory = (history = [], expectedKind = null) => {
+    const proofActorHumanTargetFromHistory = (history = [], expectedKind = null, expectedFighterId = null) => {
       if (!expectedKind || !Array.isArray(history)) return null;
       return history.find((observation) => (
         observation?.sourceSide === "zombie"
         && observation?.sourceKind === expectedKind
+        && (expectedFighterId === null || expectedFighterId === undefined || String(observation?.sourceId) === String(expectedFighterId))
         && observation?.targetSide === "human"
         && observation?.targetAlive === true
       )) ?? null;
@@ -2558,6 +2562,16 @@ async function startCombatRuntimeObserver(page) {
       const audioCues = new Set(activity.audioCues ?? []);
       const bossLifecycle = [...(activity.bossLifecycle ?? [])];
       const actorById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
+      const postQuiescenceProofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+      const epochActorFor = (fighter) => (
+        postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+          ? postQuiescenceProofEpoch.actors?.find((candidate) => (
+            candidate.side === fighter?.side
+            && candidate.kind === fighter?.kind
+            && candidate.fighterBaselines?.some((baseline) => String(baseline.fighterId) === String(fighter?.id))
+          )) ?? null
+          : null
+      );
       for (const fighter of snapshot.fighters ?? []) {
         if (!fighter.side || !fighter.kind) continue;
         const actorKey = `${fighter.side}:${fighter.kind}`;
@@ -2567,15 +2581,35 @@ async function startCombatRuntimeObserver(page) {
           fighterActors.add(actorKey);
         }
         const animationState = String(fighter.animationPresentation?.state ?? "");
+        const epochActor = epochActorFor(fighter);
+        const epochFighterBaseline = epochActor?.fighterBaselines?.find((baseline) => (
+          String(baseline.fighterId) === String(fighter.id)
+        )) ?? null;
+        const attackSequenceAdvanced = epochActor
+          ? Number(fighter.attackSequence) > Number(epochFighterBaseline?.baselineAttackSequence)
+          : Number(fighter.attackSequence) > 0;
         const attacking = Number(fighter.attack) > 0
           || Number(fighter.attackWindup) > 0
           || Number(fighter.abilityWindup) > 0
-          || Number(fighter.attackSequence) > 0
+          || attackSequenceAdvanced
           || fighter.enemyVfx?.attacking === true
           || fighter.enemyVfx?.attackWindup === true
           || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
           || /attack|windup|ability/u.test(animationState);
         if (attacking) attackingActors.add(actorKey);
+        if (epochActor && attackSequenceAdvanced && epochActor.observedAttackSequence === null) {
+          const target = fighter.targetId === null || fighter.targetId === undefined
+            ? null
+            : actorById.get(String(fighter.targetId)) ?? null;
+          epochActor.observedPostEpochAttack = true;
+          epochActor.observedFighterId = fighter.id;
+          epochActor.observedAttackSequence = Number(fighter.attackSequence);
+          epochActor.observedAtBattleTime = Number(snapshot.time);
+          epochActor.targetId = target?.id ?? fighter.targetId ?? null;
+          epochActor.targetSide = target?.side ?? null;
+          epochActor.targetKind = target?.kind ?? null;
+          epochActor.targetAlive = target ? Number(target.hp) > 0 : null;
+        }
         if (Number(fighter.marked) > 0) statusMarkers.add(`${actorKey}:marked`);
         if (fighter.gateEntering === true || /president|takuya|futago|gate-eater|kurome|mother|ooguchi|gairen/u.test(String(fighter.kind))) {
           bossLifecycle.push({
@@ -2608,8 +2642,19 @@ async function startCombatRuntimeObserver(page) {
           attackingActors.add(actorKey);
         }
       }
-      for (const request of window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? []) {
+      const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const proofAudioRequests = postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? allAudioRequests.slice(Number(postQuiescenceProofEpoch.audioCueRequestBaseline) || 0)
+        : allAudioRequests;
+      for (const request of proofAudioRequests) {
         if (request?.cueId) audioCues.add(String(request.cueId));
+        for (const epochActor of postQuiescenceProofEpoch?.actors ?? []) {
+          if (epochActor.cueId && request?.cueId === epochActor.cueId && epochActor.audioObserved !== true) {
+            epochActor.observedPostEpochAttack = true;
+            epochActor.audioObserved = true;
+            epochActor.audioObservedAtBattleTime = Number(snapshot.time);
+          }
+        }
       }
       if ((snapshot.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) {
         statusMarkers.add("status-mission-target");
@@ -2623,6 +2668,7 @@ async function startCombatRuntimeObserver(page) {
         statusMarkers: [...statusMarkers],
         audioCues: [...audioCues],
         bossLifecycle: bossLifecycle.slice(-48),
+        postQuiescenceProofEpoch: postQuiescenceProofEpoch ?? activity.postQuiescenceProofEpoch ?? null,
       };
     };
     const timer = window.setInterval(observe, 40);
@@ -2824,7 +2870,11 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
   while (Date.now() - startedAt < durationMs) {
     samples.push(await page.evaluate(() => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
-      const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+      const allAudio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const audio = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? allAudio.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+        : allAudio;
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
         battleTime: snapshot?.time ?? null,
@@ -2852,7 +2902,18 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         activityAttackingActors: observedCombatActivity.attackingActors ?? [],
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
         activityVehicleActions: observedCombatActivity.vehicleActions ?? [],
-        fighters: snapshot?.fighters?.map((fighter) => ({
+        fighters: snapshot?.fighters?.map((fighter) => {
+          const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+            ? proofEpoch.actors?.find((candidate) => (
+              candidate.side === fighter.side
+              && candidate.kind === fighter.kind
+              && candidate.fighterBaselines?.some((baseline) => String(baseline.fighterId) === String(fighter.id))
+            )) ?? null
+            : null;
+          const epochFighterBaseline = epochActor?.fighterBaselines?.find((baseline) => (
+            String(baseline.fighterId) === String(fighter.id)
+          )) ?? null;
+          return {
           id: fighter.id,
           side: fighter.side,
           kind: fighter.kind,
@@ -2869,6 +2930,10 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
           aiMoveDirection: fighter.aiMoveDirection,
           aiDestinationX: fighter.aiDestinationX,
           attackSequence: fighter.attackSequence,
+          attackSequenceBaseline: epochFighterBaseline?.baselineAttackSequence ?? null,
+          attackSequenceAdvanced: epochActor
+            ? Number(fighter.attackSequence) > Number(epochFighterBaseline?.baselineAttackSequence)
+            : null,
           stunned: fighter.stunned,
           stationAbility: fighter.stationAbility ? {
             phase: fighter.stationAbility.phase,
@@ -2886,7 +2951,8 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
             abilityActive: fighter.enemyVfx.abilityActive,
             phase: fighter.enemyVfx.phase,
           } : null,
-        })) ?? [],
+        };
+        }) ?? [],
         shots: snapshot?.shots ?? [],
         damageTexts: snapshot?.damageTexts ?? [],
         battlefieldObjects: snapshot?.battlefieldObjects ?? [],
@@ -2895,6 +2961,7 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
         manualAbilityVfx: snapshot?.manualAbilityVfx ?? [],
         battlePresentationEffects: (snapshot?.battlePresentation?.effects?.length ?? 0) > 0 ? snapshot.battlePresentation.effects : observedCombatActivity.battlePresentationEffects ?? [],
         audioCueRequests: audio,
+        postQuiescenceProofEpoch: proofEpoch ?? null,
       };
     }).catch(() => null));
     const elapsedMs = Date.now() - startedAt;
@@ -3813,6 +3880,8 @@ async function runPhaseGPresentationQuiescence(page, {
   expectedStageId,
   proofActor,
   proofActorAttackCueId,
+  proofUnitKind,
+  proofUnitAttackCueId,
   untilBattleTime,
   recorder = null,
 }) {
@@ -3900,7 +3969,6 @@ async function runPhaseGPresentationQuiescence(page, {
   const release = releaseEnvelope.receipt;
   invariant(release.active === false && release.datasetActive === false, `presentation quiescence did not release: ${JSON.stringify(releaseEnvelope)}`);
   invariant(release.stageId === expectedStageId && Number(release.battleTime) >= normalizedUntilBattleTime, `presentation quiescence released before the required battle-time boundary: ${JSON.stringify({ releaseEnvelope, normalizedUntilBattleTime })}`);
-  invariant(releaseEnvelope.actorAttackObservedBeforeRelease !== true, `proof actor attacked while presentation evidence was quiesced: ${JSON.stringify(releaseEnvelope)}`);
   invariant(Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames), `a production render escaped the quiescence window: ${JSON.stringify(release)}`);
   invariant(Number(release.releasedAtSimulationTicks) > Number(release.enteredAtSimulationTicks), `simulation did not advance through presentation quiescence: ${JSON.stringify(release)}`);
   invariant(Number(release.suppressedRenderFrames) > 0, `presentation quiescence suppressed no scheduled render: ${JSON.stringify(release)}`);
@@ -3938,6 +4006,113 @@ async function runPhaseGPresentationQuiescence(page, {
   }, { stageId: expectedStageId, releasedRenderFrames: release.releasedAtRenderFrames }, { timeout: Math.min(battleTimeout, 10_000), polling: 50 });
   const restored = await restoredHandle.jsonValue();
   await restoredHandle.dispose();
+  const postReleaseProofHandle = await page.waitForFunction(({
+    stageId,
+    expectedProofActor,
+    expectedProofActorCueId,
+    expectedProofUnitKind,
+    expectedProofUnitCueId,
+    excludedQuiescedAttackObserved,
+  }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const quiescence = bridge?.getQaPresentationQuiescence?.();
+    const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
+    if (quiescence?.active !== false
+      || quiescence?.datasetActive !== false
+      || quiescence?.stageId !== stageId
+      || snapshot?.stageId !== stageId
+      || snapshot?.screen !== "battle"
+      || snapshot?.running !== true
+      || snapshot?.paused === true
+      || snapshot?.over === true) return false;
+    const specs = [
+      expectedProofActor ? { side: "zombie", kind: expectedProofActor, cueId: expectedProofActorCueId } : null,
+      expectedProofUnitKind ? { side: "human", kind: expectedProofUnitKind, cueId: expectedProofUnitCueId } : null,
+    ].filter(Boolean);
+    const actors = specs.map((spec) => {
+      const fighters = (snapshot.fighters ?? [])
+        .filter((candidate) => (
+          candidate.side === spec.side
+          && candidate.kind === spec.kind
+          && Number(candidate.hp) > 0
+        ))
+        .sort((left, right) => Number(left.id) - Number(right.id));
+      return { spec, fighters };
+    });
+    if (actors.some(({ fighters }) => fighters.length === 0)) return false;
+    const actorIsNeutral = (fighter) => (
+      Number(fighter.attack) <= 0
+      && Number(fighter.attackWindup) <= 0
+      && Number(fighter.abilityWindup) <= 0
+      && fighter.enemyVfx?.attacking !== true
+      && fighter.enemyVfx?.attackWindup !== true
+      && !["attack", "warning"].includes(fighter.enemyVfx?.phase)
+      && !/attack|windup|ability/u.test(String(fighter.animationPresentation?.state ?? ""))
+    );
+    if (actors.some(({ fighters }) => fighters.some((fighter) => !actorIsNeutral(fighter)))) return false;
+    const existing = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+    if (existing?.schema === "v100-phase-g-post-quiescence-proof/v1") return existing;
+    const audioCueRequestBaseline = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.length ?? 0;
+    const epoch = {
+      schema: "v100-phase-g-post-quiescence-proof/v1",
+      stageId,
+      armedAtBattleTime: Number(snapshot.time),
+      audioCueRequestBaseline,
+      excludedQuiescedAttackObserved,
+      actors: actors.map(({ spec, fighters }) => ({
+        side: spec.side,
+        kind: spec.kind,
+        cueId: spec.cueId ?? null,
+        fighterIds: fighters.map((fighter) => fighter.id),
+        fighterBaselines: fighters.map((fighter) => ({
+          fighterId: fighter.id,
+          baselineAttackSequence: Number(fighter.attackSequence) || 0,
+        })),
+        observedPostEpochAttack: false,
+        observedFighterId: null,
+        observedAttackSequence: null,
+        observedAtBattleTime: null,
+        targetId: null,
+        targetSide: null,
+        targetKind: null,
+        targetAlive: null,
+        audioObserved: spec.cueId ? false : null,
+        audioObservedAtBattleTime: null,
+      })),
+    };
+    window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ = epoch;
+    const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+    window.__PHASE_G_COMBAT_ACTIVITY__ = {
+      ...activity,
+      attackIdentity: [],
+      pendingWeaponHits: [],
+      battlePresentationEffects: [],
+      sourceToTargetEdges: [],
+      sourceAttribution: [],
+      targetOwnershipHistory: [],
+      reactionHistory: [],
+      attackingActors: [],
+      audioCues: [],
+      statusMarkers: [],
+      vehicleActions: [],
+      fighterActors: [...new Set((snapshot.fighters ?? [])
+        .filter((fighter) => fighter?.side && fighter?.kind && Number(fighter.hp) > 0)
+        .map((fighter) => `${fighter.side}:${fighter.kind}`))],
+      postQuiescenceProofEpoch: epoch,
+    };
+    return epoch;
+  }, {
+    stageId: expectedStageId,
+    expectedProofActor: proofActor,
+    expectedProofActorCueId: proofActorAttackCueId,
+    expectedProofUnitKind: proofUnitKind,
+    expectedProofUnitCueId: proofUnitAttackCueId,
+    excludedQuiescedAttackObserved: releaseEnvelope.actorAttackObservedBeforeRelease === true,
+  }, { timeout: Math.min(battleTimeout, 10_000), polling: 50 });
+  const postReleaseProofEpoch = await postReleaseProofHandle.jsonValue();
+  await postReleaseProofHandle.dispose();
+  invariant(postReleaseProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1", `post-quiescence proof epoch did not arm: ${JSON.stringify(postReleaseProofEpoch)}`);
+  invariant(postReleaseProofEpoch.stageId === expectedStageId && Number(postReleaseProofEpoch.armedAtBattleTime) >= Number(release.battleTime), `post-quiescence proof epoch armed before restoration: ${JSON.stringify({ release, postReleaseProofEpoch })}`);
   recorder?.clearAwaiting();
   recorder?.mark("presentation-quiescence-released-or-not-required", "completed", {
     untilBattleTime: normalizedUntilBattleTime,
@@ -3945,9 +4120,11 @@ async function runPhaseGPresentationQuiescence(page, {
     release,
     actorMountedAtRelease: releaseEnvelope.actorMountedAtRelease,
     actorStateAtRelease: releaseEnvelope.actorStateAtRelease,
+    excludedQuiescedAttackObserved: releaseEnvelope.actorAttackObservedBeforeRelease === true,
     restored,
+    postReleaseProofEpoch,
   });
-  return { arm, release, restored };
+  return { arm, release, restored, postReleaseProofEpoch };
 }
 
 async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, presentationQuiescenceUntilBattleTime = null } = {}) {
@@ -3982,6 +4159,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const proofActorAttackCueId = proofActor
     ? V100_COMBAT_FX_INVENTORY.find((entry) => entry?.actor === proofActor)?.soundCue ?? null
     : null;
+  const proofUnitAttackCueId = proofUnitKind
+    ? V100_COMBAT_FX_INVENTORY.find((entry) => entry?.actor === proofUnitKind)?.soundCue ?? null
+    : null;
   const proofActorContent = proofActor ? enemyContentFor(proofActor) : null;
   const proofActorAiProfile = proofActorContent
     ? enemyAiProfileFor(proofActorContent.aiProfile ?? proofActor)
@@ -4009,27 +4189,77 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
     const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
-      const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+      const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
+        : null;
+      const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
+        String(baseline.fighterId) === String(fighter?.id)
+      )) ?? null;
+      const matchingActors = (snapshot?.fighters ?? []).filter((fighter) => (
+        fighter.side === "zombie"
+        && fighter.kind === expectedKind
+        && (!epochActor || Boolean(epochBaselineFor(fighter)))
+      ));
+      const actor = matchingActors.find((fighter) => (
+        Number(fighter.attackSequence) > Number(epochBaselineFor(fighter)?.baselineAttackSequence)
+        || Number(fighter.attack) > 0
+        || Number(fighter.attackWindup) > 0
+        || fighter.enemyVfx?.attacking === true
+        || fighter.enemyVfx?.attackWindup === true
+        || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
+      )) ?? matchingActors[0] ?? null;
+      const actorBaseline = epochBaselineFor(actor);
       const actorKey = `zombie:${expectedKind}`;
       const fighterMounted = Boolean(actor)
+        || Boolean(epochActor)
         || (activity.fighterActors ?? []).includes(actorKey);
       if (!fighterMounted) return { observed: false, mounted: false, evidence: "not-mounted" };
+      const sequenceAttack = actor && (epochActor
+        ? Number(actor.attackSequence) > Number(actorBaseline?.baselineAttackSequence)
+        : Number(actor.attackSequence) > 0);
       const stateAttack = actor && (Number(actor.attack) > 0
         || Number(actor.attackWindup) > 0
-        || Number(actor.attackSequence) > 0
+        || sequenceAttack
         || actor.enemyVfx?.attacking === true
         || actor.enemyVfx?.attackWindup === true
         || ["attack", "warning"].includes(actor.enemyVfx?.phase));
-      const audioAttack = expectedCueId
-        && window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === expectedCueId);
-      const historicalAudioAttack = expectedCueId && (activity.audioCues ?? []).includes(expectedCueId);
+      const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? allAudioRequests.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+        : allAudioRequests;
+      const audioAttack = expectedCueId && proofAudioRequests.some((request) => request?.cueId === expectedCueId);
+      const historicalAudioAttack = expectedCueId && (epochActor
+        ? epochActor.audioObserved === true
+        : (activity.audioCues ?? []).includes(expectedCueId));
       // The runtime observer retains fleeting attack states after a sprite
       // leaves the live fighter list. Use that production history so a short
       // WebKit frame cannot erase a real attack that already occurred.
-      const historicalAttack = (activity.attackingActors ?? []).includes(actorKey);
+      const historicalAttack = epochActor
+        ? epochActor.observedAttackSequence !== null
+        : (activity.attackingActors ?? []).includes(actorKey);
       const observed = historicalAttack || stateAttack === true || audioAttack === true || historicalAudioAttack === true;
       if (observed) {
+        if (epochActor) {
+          epochActor.observedPostEpochAttack = true;
+          epochActor.observedAtBattleTime ??= Number(snapshot?.time);
+          if (sequenceAttack) {
+            epochActor.observedFighterId ??= actor.id;
+            epochActor.observedAttackSequence ??= Number(actor.attackSequence);
+          }
+          const target = actor?.targetId === null || actor?.targetId === undefined
+            ? null
+            : snapshot?.fighters?.find((fighter) => String(fighter.id) === String(actor.targetId)) ?? null;
+          epochActor.targetId ??= target?.id ?? actor?.targetId ?? null;
+          epochActor.targetSide ??= target?.side ?? null;
+          epochActor.targetKind ??= target?.kind ?? null;
+          epochActor.targetAlive ??= target ? Number(target.hp) > 0 : null;
+          if (audioAttack || historicalAudioAttack) {
+            epochActor.audioObserved = true;
+            epochActor.audioObservedAtBattleTime ??= Number(snapshot?.time);
+          }
+        }
         const fighterActors = new Set(activity.fighterActors ?? []);
         const attackingActors = new Set(activity.attackingActors ?? []);
         fighterActors.add(actorKey);
@@ -4043,7 +4273,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       return {
         observed,
         mounted: true,
-        evidence: historicalAttack ? "historical-runtime-state" : audioAttack || historicalAudioAttack ? "audio-cue" : stateAttack ? "live-runtime-state" : "unobserved",
+        evidence: epochActor
+          ? historicalAttack ? "post-quiescence-attack-sequence" : audioAttack || historicalAudioAttack ? "post-quiescence-audio-cue" : stateAttack ? "post-quiescence-live-runtime-state" : "unobserved"
+          : historicalAttack ? "historical-runtime-state" : audioAttack || historicalAudioAttack ? "audio-cue" : stateAttack ? "live-runtime-state" : "unobserved",
       };
     }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }).catch(() => false);
     if (observation?.mounted === true) recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
@@ -4056,8 +4288,28 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     const state = await page.evaluate((expectedKind) => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const fighters = snapshot?.fighters ?? [];
-      const actor = fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+      const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
+        : null;
+      const epochFighterIds = new Set((epochActor?.fighterBaselines ?? []).map((baseline) => String(baseline.fighterId)));
+      const actorCandidates = fighters.filter((fighter) => (
+        fighter.side === "zombie"
+        && fighter.kind === expectedKind
+        && (!epochActor || epochFighterIds.has(String(fighter.id)))
+      ));
+      const liveHumanTargetFor = (fighter) => {
+        const target = fighter?.targetId === null || fighter?.targetId === undefined
+          ? null
+          : fighters.find((candidate) => String(candidate.id) === String(fighter.targetId)) ?? null;
+        return target?.side === "human" && Number.isFinite(Number(target.hp)) && Number(target.hp) > 0;
+      };
+      const actor = actorCandidates.find((fighter) => (
+        epochActor?.observedFighterId !== null
+        && epochActor?.observedFighterId !== undefined
+        && String(fighter.id) === String(epochActor.observedFighterId)
+      )) ?? actorCandidates.find(liveHumanTargetFor) ?? actorCandidates[0] ?? null;
       const actorKey = `zombie:${expectedKind}`;
       const target = actor?.targetId === null || actor?.targetId === undefined
         ? null
@@ -4066,6 +4318,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const historicalTarget = window.__PHASE_G_PROOF_ACTOR_HUMAN_TARGET_FROM_HISTORY__?.(
         activity.targetOwnershipHistory ?? [],
         expectedKind,
+        epochActor?.observedFighterId ?? null,
       ) ?? null;
       const evidence = liveHumanTarget ? {
         evidence: "live-target",
@@ -4085,7 +4338,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         targetSide: historicalTarget.targetSide ?? null,
       } : null;
       return {
-        mounted: Boolean(actor) || (activity.fighterActors ?? []).includes(actorKey),
+        mounted: Boolean(actor) || Boolean(epochActor) || (activity.fighterActors ?? []).includes(actorKey),
         hasLiveHumanTarget: liveHumanTarget,
         hasHumanTarget: evidence !== null,
         actorX: actor?.x ?? null,
@@ -4125,29 +4378,74 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   };
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
-    const observation = await page.evaluate((expectedKind) => {
+    const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
-      const actor = snapshot?.fighters?.find((fighter) => (
+      const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? proofEpoch.actors?.find((candidate) => candidate.side === "human" && candidate.kind === expectedKind) ?? null
+        : null;
+      const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
+        String(baseline.fighterId) === String(fighter?.id)
+      )) ?? null;
+      const matchingActors = (snapshot?.fighters ?? []).filter((fighter) => (
         fighter.side === "human"
         && fighter.kind === expectedKind
         && Number(fighter.hp) > 0
       ));
+      const actor = matchingActors.find((fighter) => (
+        (!epochActor || Boolean(epochBaselineFor(fighter)))
+        && (Number(fighter.attackSequence) > Number(epochBaselineFor(fighter)?.baselineAttackSequence)
+          || Number(fighter.attack) > 0
+          || Number(fighter.attackWindup) > 0)
+      )) ?? matchingActors.find((fighter) => !epochActor || Boolean(epochBaselineFor(fighter))) ?? null;
+      const actorBaseline = epochBaselineFor(actor);
       const actorKey = `human:${expectedKind}`;
       const fighterMounted = Boolean(actor)
+        || Boolean(epochActor)
         || (activity.fighterActors ?? []).includes(actorKey);
       if (!fighterMounted) return null;
+      const sequenceAttack = actor && (epochActor
+        ? Number(actor.attackSequence) > Number(actorBaseline?.baselineAttackSequence)
+        : Number(actor.attackSequence) > 0);
       const stateAttack = Number(actor?.attack) > 0
         || Number(actor?.attackWindup) > 0
-        || Number(actor?.attackSequence) > 0
+        || sequenceAttack
         || actor?.manualAbility?.phase === "active"
         || (snapshot?.manualAbilityReceipts ?? []).some((receipt) => receipt?.kind === expectedKind && receipt?.eventType === "impact");
       // A proof unit can complete a real production attack and then be
       // defeated before the polling frame that checks its live fighter. Keep
       // the same observer history used for enemy proof actors so that a
       // fleeting but genuine player attack is not erased by defeat.
-      const historicalAttack = (activity.attackingActors ?? []).includes(actorKey);
-      const observedAttack = historicalAttack || stateAttack === true;
+      const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        ? allAudioRequests.slice(Number(proofEpoch.audioCueRequestBaseline) || 0)
+        : allAudioRequests;
+      const audioAttack = expectedCueId && (proofAudioRequests.some((request) => request?.cueId === expectedCueId)
+        || epochActor?.audioObserved === true);
+      const historicalAttack = epochActor
+        ? epochActor.observedAttackSequence !== null
+        : (activity.attackingActors ?? []).includes(actorKey);
+      const observedAttack = historicalAttack || stateAttack === true || audioAttack === true;
+      if (observedAttack && epochActor) {
+        epochActor.observedPostEpochAttack = true;
+        epochActor.observedAtBattleTime ??= Number(snapshot?.time);
+        if (sequenceAttack) {
+          epochActor.observedFighterId ??= actor.id;
+          epochActor.observedAttackSequence ??= Number(actor.attackSequence);
+        }
+        const target = actor?.targetId === null || actor?.targetId === undefined
+          ? null
+          : snapshot?.fighters?.find((fighter) => String(fighter.id) === String(actor.targetId)) ?? null;
+        epochActor.targetId ??= target?.id ?? actor?.targetId ?? null;
+        epochActor.targetSide ??= target?.side ?? null;
+        epochActor.targetKind ??= target?.kind ?? null;
+        epochActor.targetAlive ??= target ? Number(target.hp) > 0 : null;
+        if (audioAttack) {
+          epochActor.audioObserved = true;
+          epochActor.audioObservedAtBattleTime ??= Number(snapshot?.time);
+        }
+      }
       const fighterActors = new Set(activity.fighterActors ?? []);
       const attackingActors = new Set(activity.attackingActors ?? []);
       fighterActors.add(actorKey);
@@ -4158,7 +4456,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         ...(observedAttack ? { attackingActors: [...attackingActors] } : {}),
       };
       return { deployed: true, attacking: observedAttack };
-    }, proofUnitKind).catch(() => false);
+    }, { expectedKind: proofUnitKind, expectedCueId: proofUnitAttackCueId }).catch(() => false);
     if (observation?.deployed === true) proofUnitDeployed = true;
     proofUnitAttackObserved = observation?.attacking === true;
     if (proofUnitAttackObserved) recorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", { unitKind: proofUnitKind, evidence: "live-or-historical-runtime-state" });
@@ -4520,9 +4818,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         expectedStageId: V100_STAGES.find((entry) => entry.displayName === stageName)?.id ?? V100_STAGE_IDS[0],
         proofActor,
         proofActorAttackCueId,
+        proofUnitKind,
+        proofUnitAttackCueId,
         untilBattleTime: presentationQuiescenceBattleTime,
         recorder,
       });
+      // Hidden simulation is allowed to complete a real attack.  Acceptance,
+      // however, begins at the restored production-frame epoch and therefore
+      // requires both exact proof actors to attack again after that boundary.
+      proofActorAttackObserved = proofActor === null;
+      proofUnitAttackObserved = proofUnitKind === null;
     }
     if (proofActor) {
       if (proofActorRequiresContactFirst) {
@@ -4547,34 +4852,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
       if (!proofActorAttackObserved) {
         recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
-        await page.waitForFunction(({ expectedKind, expectedCueId }) => {
-          const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
-          const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
-          const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
-          const actorKey = `zombie:${expectedKind}`;
-          const fighterMounted = Boolean(actor)
-            || (activity.fighterActors ?? []).includes(actorKey);
-          if (!fighterMounted) return false;
-          const stateAttack = actor && (Number(actor.attack) > 0
-            || Number(actor.attackWindup) > 0
-            || Number(actor.attackSequence) > 0
-            || actor.enemyVfx?.attacking === true
-            || actor.enemyVfx?.attackWindup === true
-            || ["attack", "warning"].includes(actor.enemyVfx?.phase));
-          const audioAttack = expectedCueId
-            && window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === expectedCueId);
-          const historicalAttack = (activity.attackingActors ?? []).includes(actorKey);
-          const observed = historicalAttack || stateAttack === true || audioAttack === true;
-          if (observed) {
-            window.__PHASE_G_COMBAT_ACTIVITY__ = {
-              ...activity,
-              fighterActors: [...new Set([...(activity.fighterActors ?? []), actorKey])],
-              attackingActors: [...new Set([...(activity.attackingActors ?? []), actorKey])],
-            };
-          }
-          return observed;
-        }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000), polling: 100 });
-        proofActorAttackObserved = true;
+        const proofActorDeadline = Date.now() + Math.min(battleTimeout, 45_000);
+        while (!proofActorAttackObserved && Date.now() < proofActorDeadline) {
+          await observeProofActorAttack();
+          if (!proofActorAttackObserved) await page.waitForTimeout(100);
+        }
+        invariant(proofActorAttackObserved, `proof enemy actor did not attack: ${proofActor}`);
       }
       if (proofActorRequiresContactFirst) {
         const finalContactState = await readProofActorContactState();
@@ -4609,6 +4892,22 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       invariant(proofUnitAttackObserved, `proof human actor did not attack: ${proofUnitKind}`);
       recorder?.clearAwaiting();
       recorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", { unitKind: proofUnitKind, evidence: "live-or-historical-runtime-state" });
+    }
+    if (presentationQuiescence) {
+      const finalPostQuiescenceProofEpoch = await page.evaluate(() => (
+        window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null
+      ));
+      const expectedPostEpochActors = [
+        proofActor ? `zombie:${proofActor}` : null,
+        proofUnitKind ? `human:${proofUnitKind}` : null,
+      ].filter(Boolean);
+      const observedPostEpochActors = (finalPostQuiescenceProofEpoch?.actors ?? [])
+        .filter((actor) => actor.observedPostEpochAttack === true)
+        .map((actor) => `${actor.side}:${actor.kind}`);
+      invariant(finalPostQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v1"
+        && expectedPostEpochActors.every((actorKey) => observedPostEpochActors.includes(actorKey)),
+      `post-quiescence proof did not observe fresh exact attacks: ${JSON.stringify({ expectedPostEpochActors, observedPostEpochActors, finalPostQuiescenceProofEpoch })}`);
+      presentationQuiescence.postReleaseProofEpochFinal = finalPostQuiescenceProofEpoch;
     }
     if (manualAbilityKind) {
       recorder?.setAwaiting("manual-ability-action", { abilityKind: manualAbilityKind, predicate: "manual ability impact marker or receipt" });
