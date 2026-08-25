@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r48`
+- Revision: `r59`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -3777,3 +3777,503 @@ Actual r48 source/static acceptance: final-loop preflight checked 37 sources wit
 - `NEXT_OWNER`: `SOL_REMEDIATION`
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r46 immutable narrative, mutable cursor fields, r47 owner separation, unchanged P5 evidence, and fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint boundary. Revision r48 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 65. Revision r49 — simulation-preserving QA presentation quiescence
+
+This section consumes the complete first automatic run of the r48 iteration-19 candidate and supersedes Section 64 only for the new terminal evidence, the resulting bounded QA-presentation correction, and the current cursor. The r48 P5 correction is green and immutable. Every product, story, visual, combat, balance, AI, timing, viewport, causal-proof, pixel, audio, save, PWA, acceptance, fixed-HEAD `SOL_FINAL_REVIEW`, single final Producer checkpoint, and approval-only release contract remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 65.1 Live candidate and independent terminal evidence
+
+The authoritative Draft PR #171 candidate is HEAD `6526437a566caeebcc89af3149a9564aba5bc006`, tree `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`, parent `246d2cce8086a14ff8a5139f0eded45376aea822`. It is one commit ahead with the exact six r48 paths. Automatic CI run `32786876867` is terminal failure and was not retried or rerun. PR Verify `97620491934`, all six enemy-runtime shards, Hosted `97623458323`, all three bounded Stage 3 jobs, and deployment viewports 667x375, 844x390, 932x430, and 1280x720 are green. Exactly three independent required jobs are red:
+
+1. Phase G job `97624683487`, artifact `9542291513`: sequence `remote-trio-1`, Stage 6 `stage06-spitter-seal`, WebKit 667x375. Three real production deployments were accepted and live action state advanced, then the page crashed at about 70.54 seconds while waiting for the naturally authored spitter proof. The host record has 141 samples, 18 WebContent D-state samples from elapsed 42,054-53,060 ms, `anon_pipe_write`, about 4.760 GB `wchar` growth, full I/O-pressure avg10 peak 34.77, aggregate RSS peak about 2.058 GB, no cgroup OOM/high/max event, and clean console/page/request/HTTP diagnostics. Local r36 exact controls reached the real spitter target at battle time about 33.27, attack about 39.87, causal 4/4, and completed in about 45 seconds.
+2. Deployment job `97626796130`, artifact `9542607225`: WebKit 736x414, Kumaverson `first-visible`. Its fully-inside production-canvas PNG, hash, validation, and exact pause state completed before checkpoint advance. The page then crashed at elapsed 29,059 ms. The host record has 16 D-state samples from 7,520-17,524 ms, predominantly `anon_pipe_write`, about 4.273 GB `wchar` growth, full I/O-pressure avg10 peak 32.31, no cgroup OOM/high/max event, and clean browser diagnostics. The four earlier unit processes in that viewport have zero D-state samples and are green.
+3. Deployment job `97626796136`, artifact `9542748916`: WebKit 844x340, Crazy King first-frame queue/readback. Asset readiness and fixture preparation completed, then the page crashed at elapsed 22,978 ms before the first fighter readback. The host record has 16 D-state samples from 381-17,016 ms, predominantly `anon_pipe_write`, about 6.996 GB `wchar` growth, full I/O-pressure avg10 peak 37.64, no cgroup OOM/high/max event, and clean browser diagnostics. Its four sibling unit controls have zero D-state samples and are green.
+
+The Stage 6 wait, deployment first-frame wait, and deployment checkpoint wait are different product states and are not treated as one gameplay failure. Their common evidenced owner is the continuously painted headless WebKit presentation transport: the WebContent process blocks writing compositor/presentation output through an anonymous pipe until the page is terminated. There is no product JavaScript exception, asset/network failure, OOM kill, gameplay-state rejection, missing semantic checkpoint, or acceptance timeout preceding those terminations. Classification: `QA_PRESENTATION_TRANSPORT_BACKPRESSURE / CONTINUOUS_HEADLESS_WEBKIT_CANVAS_COMPOSITING + ANON_PIPE_WRITE_D_STATE + CLEAN_WEBCONTENT_TERMINATION / DESIGN_CHANGE_REQUIRED`. Remediation class: `LOCALHOST_QA_PRESENTATION_QUIESCENCE / SIMULATION_CONTINUES + EXACT_SEMANTIC_BOUNDARY + THREE_VISIBLE_PRODUCTION_FRAMES_BEFORE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`.
+
+### 65.2 One coherent bounded implementation contract
+
+The exact r49 material topology relative to r48 is nine paths:
+
+1. `app/AshfallGame.tsx`
+2. `scripts/v100-phase-g-production-matrix.mjs`
+3. `tests/v100-phase-g-checkpoint.test.mjs`
+4. `scripts/v099-final-remediation-browser-smoke.mjs`
+5. `tests/v0995-runtime-evidence-contract.test.mjs`
+6. `docs/design/v1.0.0/DESIGN_LOCK.md`
+7. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+8. `docs/PROJECT_STATE.md`
+9. `tests/v100-design-lock.test.mjs`
+
+`app/AshfallGame.tsx` owns one localhost-only, fail-closed `v100-qa-presentation-quiescence/v1` bridge and one render-loop gate. The bridge accepts only exact route/owner pairs: local `phase-g=1` with `phase-g-pre-proof`, or local `qa=mission&qaHudFiniteAssets=1` with `deployment-first-frame` or `deployment-checkpoint-advance`. Entering requires a live, running, unpaused production battle. It pauses only running CSS animations under the battle root and suppresses scheduled canvas/HUD presentation frames while the unchanged simulation loop continues. The receipt records owner, route, generation, battle time, simulation ticks, render frames, suppressed frames, and animation pause/resume counts. Release requires the same owner and route, resumes only animations owned by that receipt, and removes the QA dataset. The public Pages route cannot arm this bridge.
+
+For Stage 6 only, after the existing three real player-pointer deployments are accepted and before waiting for the spitter proof, the Phase G owner may quiesce presentation until natural production battle time reaches 34 seconds. It must then release, prove no production render escaped, prove simulation ticks advanced, prove the spitter had not attacked before release, restore at least three visible production canvas frames, and only then accept the unchanged real spitter attack, identity-bound causal 4/4 chain, screenshot, overflow, and fatal-zero evidence. Stage ID, timeline, fighter list, HP, target, speed, event index, graphics profile, time, balance, AI, hitbox, cue, timeout, pointer, and causal thresholds are immutable.
+
+For canonical deployment evidence only, the host wraps the existing first-frame queue/readback and each later semantic-checkpoint advance in the same presentation owner. The existing runtime same-simulation-tick freeze receipt remains the sole position/checkpoint owner. The host releases presentation only after that exact production pause is observed, proves zero escaped renders plus advancing simulation, restores at least three visible production canvas frames while the exact semantic state remains paused, and then uses the unchanged audit, six checkpoint PNGs, hashes, contact sheet, geometry, and pixel thresholds. Each checkpoint summary persists a `v100-deployment-presentation-quiescence-receipt/v1`. No position, progress, minimum, movement, `dt`, pause receipt, timeout, retry, unit, viewport, or pixel contract changes.
+
+Forbidden: public-route activation; `requestAnimationFrame` replacement; simulation pause during the quiesced interval; time/event/fighter/HP/speed/target mutation; synthetic attack or checkpoint; screenshot while presentation is quiesced; stale canvas acceptance; force action; timeout extension; retry/rerun; browser flag/workflow/container change; acceptance weakening; and any unrelated product or repository change. Missing bridge, wrong owner/route, zero suppressed frames, nonadvancing simulation, escaped render, pre-release spitter attack, missing semantic pause, fewer than three restored frames, hidden/zero-size canvas, or any changed existing proof is a hard failure.
+
+### 65.3 Validation and promotion
+
+On the final nine-path bytes, SOL runs once and stops on the first failure:
+
+1. syntax/load plus `tests/v100-design-lock.test.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, `tests/v0995-runtime-evidence-contract.test.mjs`, `tests/ci-contract.test.mjs`, `tests/p5-story-audio-contract.test.mjs`, and `tests/stage3-final-bounded.test.mjs`;
+2. content validation, full tests, lint, build, `git diff --check`, exact topology, UTF-8/BOM/EOL, forbidden-negative, P5 byte-preservation, and untracked-evidence preservation;
+3. three fresh local WebKit Stage 6 standalone processes, each 1/1 on its first attempt, followed by one ordered Stage 6 -> 24 -> 25 process requiring 3/3;
+4. fresh local bounded WebKit deployment processes for 736x414 and 844x340, all six canonical units and all 36 checkpoints per viewport on first attempt, plus unchanged-green 844x390 as a regression control;
+5. one normal, non-amended r49 iteration-20 candidate commit and normal exact-tree transport. Consume one automatic run only. It must make PR Verify, Phase G ordered trio 3/3, all six deployment viewports, every required dependency, and the complete workflow green. Any first local, transport, or remote failure returns to `SOL_DESIGN` with no retry, rerun, second patch, promotion, or stale-evidence substitution;
+6. complete automatic green alone authorizes workflow-only iteration 21 restoring the unfiltered Phase G 54/54 invocation. The same-HEAD full local 54/54, validator, all regressions, unfiltered remote complete green, actual production runtime/human audit, evidence freeze, separate read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` remain mandatory before approval-only integration/release.
+
+### 65.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R49_QA_PRESENTATION_REMEDIATION_READY`
+- `LOOP_ITERATION`: r48 iteration 19 is terminal red; r49 coherent remediation is iteration 20; workflow-only unfiltered restoration is iteration 21 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `10` for required remote Phase G
+- `R48_REMOTE_PHASE_G_PRESENTATION_TERMINATION_COUNT`: `1`
+- `R48_REMOTE_DEPLOYMENT_PRESENTATION_TERMINATION_COUNT`: `2` of six viewports
+- `R48_REMOTE_DEPLOYMENT_GREEN_COUNT`: `4` of six viewports
+- `R48_REMOTE_TERMINAL_WPE_D_STATE_SAMPLE_COUNT`: `50` across the three terminal processes
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: automatic CI `32786876867`: Phase G `97624683487`, deployment 736x414 `97626796130`, and deployment 844x340 `97626796136`; no retry/rerun
+- `LAST_GREEN_GATE`: r48 PR Verify, six enemy shards, Hosted, three Stage 3 jobs, deployment 667x375/844x390/932x430/1280x720, and all preexisting r48 local gates
+- `CLASSIFICATION`: `QA_PRESENTATION_TRANSPORT_BACKPRESSURE / CONTINUOUS_HEADLESS_WEBKIT_CANVAS_COMPOSITING + ANON_PIPE_WRITE_D_STATE + CLEAN_WEBCONTENT_TERMINATION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `LOCALHOST_QA_PRESENTATION_QUIESCENCE / SIMULATION_CONTINUES + EXACT_SEMANTIC_BOUNDARY + THREE_VISIBLE_PRODUCTION_FRAMES_BEFORE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact r48 tree -> r49 nine-path correction -> source/full/static -> Stage 6 standalone 3/3 -> ordered 6/24/25 3/3 -> deployment 736x414/844x340 plus 844x390 control -> iteration-20 commit/normal transport -> one automatic run -> complete green only -> workflow-only iteration 21 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against all three raw artifacts, lifecycle logs, host summaries/JSONL, sibling controls, source owners, the completed automatic dependency graph, current PR HEAD/tree, unchanged product contracts, and the release state machine. Revision r49 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 66. Revision r50 — optional presentation-boundary normalization
+
+This section consumes the first r49 ordered local process and supersedes Section 65 only for that terminal local evidence, the optional-boundary activation defect, its bounded source correction, and the current cursor. The r49 localhost QA presentation-quiescence design and implementation remain authoritative. Product behavior, gameplay, balance, AI, authored timing, Stage 6 boundary 34, causal proof, viewport, pixel, audio, save, PWA, release acceptance, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail are unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 66.1 Terminal evidence and independent classification
+
+On the final r49 semantic draft, syntax/load and the six-file focused suite passed 54/54, Design Lock passed 19/19, content validation passed, full tests plus production build passed 1,196/1,196, lint passed with zero errors and nine existing warnings, and diff/allowlist/UTF-8/BOM/EOL/P5/untracked-evidence audits passed. Three fresh Stage 6 standalone WebKit processes then passed 1/1 on their first attempts. Their production receipts entered quiescence at battle time 12.05-12.13, released naturally at 34.05-34.10, advanced simulation from ticks 723-728 to 2,043-2,046, leaked zero render frames, and suppressed 795-852 scheduled presentation frames before restoring production rendering.
+
+The one fresh ordered `r49-ordered` process passed Stage 6 at ordered position 1, then stopped at Stage 24 ordered position 2 after 84,408 ms. Stage 24 had accepted six real pointer deployments and completed `frontline-deployment-sequence-completed`. Its immutable checkpoint contract records `presentationQuiescenceUntilBattleTime: null`; console, page, request, and HTTP diagnostics are all zero. The host threw `presentation quiescence requires a finite positive battle-time boundary` before causal proof and screenshot. Stage 25, every deployment viewport, commit, transport, and CI were not run. There was no retry, rerun, or second correction.
+
+The failure is deterministic source ownership, not browser transport, product simulation, Stage 24 gameplay, causal proof, or timing. `battlePage` correctly receives absent optional value `null`, but both the not-required checkpoint predicate and the activation predicate use `Number.isFinite(Number(presentationQuiescenceUntilBattleTime))`. JavaScript coerces `Number(null)` to zero, so the finite-only predicate incorrectly activates the Stage 6-only helper; that helper then correctly rejects zero through its positive-boundary invariant. Classification: `QA_HARNESS_OPTIONAL_BOUNDARY_NULL_COERCION / NUMBER_NULL_TO_ZERO_ACTIVATES_STAGE6_ONLY_PATH_ON_STAGE24 / DESIGN_CHANGE_REQUIRED`. Remediation class: `SINGLE_NORMALIZED_OPTIONAL_BOUNDARY / NULL_OR_UNDEFINED_NOT_REQUIRED + PRESENT_VALUE_POSITIVE_FINITE_OR_HARD_FAIL / DESIGN_CHANGE_REQUIRED`.
+
+### 66.2 Exact bounded correction
+
+Preserve the complete r49 nine-path draft and all green evidence. Change no path outside that existing nine-path topology. Under `SOL_REMEDIATION`, change only `scripts/v100-phase-g-production-matrix.mjs` and its existing `tests/v100-phase-g-checkpoint.test.mjs` contract, plus the four SOL-owned revision/cursor surfaces.
+
+In the Phase G script, add one pure source owner `normalizePhaseGPresentationQuiescenceBoundary(value)`. It returns `null` only when `value` is exactly `null` or `undefined`; otherwise it converts once and requires a finite number greater than zero, throwing the existing positive-boundary error for zero, negative, empty-string, NaN, or infinity. `battlePage` resolves this once. The recorder marks `presentation-quiescence-released-or-not-required` as `not-required` only when the normalized value is `null`; the helper call occurs only when it is non-null and receives that normalized positive value. Remove both finite-only raw-value predicates. Stage 6 remains the sole contract containing `presentationQuiescenceUntilBattleTime: 34`; Stage 24 and Stage 25 remain absent/null and must never arm the bridge. The helper's own positive invariant remains defense in depth.
+
+The source contract must prove: one normalizer; exact null/undefined absence semantics; present-invalid hard failure; one Stage 6 value; no finite-only raw optional predicates; one normalized owner reused by both recorder and call; Stage 24/25 not-required behavior; unchanged 15 checkpoints; unchanged Stage 6 receipt and every product/acceptance negative. No `app/**`, deployment harness, workflow, browser flag, timeout, retry, game time, fighter, HP, target, speed, AI, balance, hitbox, cue, screenshot, viewport, or pixel change is authorized.
+
+### 66.3 Validation, continuation, and stop rule
+
+On final r50 source bytes, run syntax/load, Design Lock, the six-file focused suite, content validation, full tests/build, lint, diff/allowlist/UTF-8/BOM/EOL/P5/untracked-evidence audits once. Do not repeat the already-green three r49 Stage 6 standalone processes. Then run one fresh ordered WebKit Stage 6 -> 24 -> 25 process and require 3/3 on its first attempt; this revalidates the positive Stage 6 branch and proves Stage 24/25 do not arm it. Only ordered 3/3 authorizes fresh bounded WebKit deployment processes for 736x414, 844x340, and 844x390, each all six canonical units and all 36 checkpoints on its first attempt.
+
+Complete local green authorizes one normal non-amended exact-nine-path iteration-21 candidate commit and normal exact-tree transport, followed by exactly one automatic focused run. Any first source, local runtime, transport, or remote failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, skipped case, promotion, or stale-evidence substitution is authorized. Complete automatic focused green alone authorizes workflow-only iteration 22 restoring unfiltered Phase G 54/54, followed by the unchanged same-HEAD full local/unfiltered remote, runtime/human, freeze, fixed-HEAD final-review, and one-checkpoint route.
+
+### 66.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R50_OPTIONAL_BOUNDARY_REMEDIATION_READY`
+- `LOOP_ITERATION`: r49 iteration 20 is terminal local red; r50 bounded correction is iteration 21; workflow-only unfiltered restoration is iteration 22 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `10` for required remote Phase G; unchanged because r49 stopped locally
+- `R49_LOCAL_STAGE6_STANDALONE_GREEN_COUNT`: `3` of 3 first attempts
+- `R49_LOCAL_ORDERED_STAGE6_GREEN_COUNT`: `1` at ordered position 1
+- `R49_LOCAL_ORDERED_OPTIONAL_BOUNDARY_FAILURE_COUNT`: `1` at Stage 24 ordered position 2
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r49 ordered local WebKit process, Stage 24 position 2, after Stage 6 position 1 green; exact optional-null coercion error, no retry/rerun
+- `LAST_GREEN_GATE`: r49 source/full/static green, three Stage 6 standalone first-attempt passes, and ordered Stage 6 position 1 pass
+- `CLASSIFICATION`: `QA_HARNESS_OPTIONAL_BOUNDARY_NULL_COERCION / NUMBER_NULL_TO_ZERO_ACTIVATES_STAGE6_ONLY_PATH_ON_STAGE24 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_NORMALIZED_OPTIONAL_BOUNDARY / NULL_OR_UNDEFINED_NOT_REQUIRED + PRESENT_VALUE_POSITIVE_FINITE_OR_HARD_FAIL / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact preserved r49 nine-path draft and green standalone evidence -> r50 two-source optional-boundary correction plus governance cursor -> source/full/static -> one fresh ordered 6/24/25 process 3/3 -> deployment 736x414/844x340/844x390 -> iteration-21 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 22 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw Stage 24 failure receipt, completed Stage 6 receipts, exact JavaScript coercion semantics, both inconsistent predicates, one-owner correction, preserved evidence, current remote HEAD/tree, stop rule, and unchanged release state machine. Revision r50 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 67. Revision r51 — Stage 25 contact-first proof lifecycle ownership
+
+This section consumes the first and only r50 ordered process. It supersedes Section 66 only for the Stage 25 terminal evidence, proof-deadline ownership, checkpoint-recorder amplification, bounded correction, and current cursor. The r50 optional-boundary normalizer is correct and retained: Stage 6 passed at ordered position 1 and Stage 24 passed at position 2. Every r49 presentation-quiescence invariant, r26 real-card survival path, exact actor/target identity rule, 15-checkpoint contract, product behavior, gameplay, balance, AI, authored timing, viewport, pixel, audio, save, PWA, release acceptance, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 67.1 Actual evidence and independent classification
+
+Final r50 source bytes passed syntax/load and focused 54/54, Design Lock 19/19, content validation, full tests plus production build 1,196/1,196, lint with zero errors and nine existing warnings, and diff/allowlist/UTF-8/BOM/EOL/P5/untracked-evidence audits. The one fresh ordered WebKit process then passed Stage 6 position 1 and Stage 24 position 2, proving both the positive presentation boundary and absent optional boundary. It stopped only at Stage 25 position 3. No deployment process, commit, transport, or remote CI followed; there was no retry or rerun.
+
+The immutable Stage 25 receipt records six accepted real-pointer opening deployments at elapsed 5,366-82,059 ms and accepted medic sustain deployments at 94,022, 109,265, and 122,311 ms. The final proof timer began at 86,213 ms. The exact proof actor first acquired an exact living human target only at elapsed 123,983 ms / battle time 117.93: 37,770 ms after that timer began and with about 7.2 seconds left in the one 45-second attack deadline. A second exact shield-to-medic target followed. At timeout the page and production battle were live, battle time was 125.15, one human medic was living, both shields and the president were active, and console/page/request/HTTP diagnostics were all zero. The exact actor had not yet produced attack identity/audio, so attack, causal, and screenshot remained unresolved. `failureState` was null.
+
+This is not the r25 zero-human-target defect: r26's real-card survival correction worked and must remain unchanged. Historical first-attempt r36 ordered Stage 25 processes passed the same product contract after the proof actor attacked around elapsed 67.9-68.0 seconds. Comparing actual receipts shows a harness deadline-ownership gap: the attack-only timer consumed 37.77 seconds before its prerequisite exact live target existed. Separately, the same r50 receipt contains 1,454 mounted-checkpoint marks, 1,453 duplicates, while its raw histories remain valid; the monotonic poll recorder rewrites already-proved checkpoint observations and inflates the artifact. Neither fact authorizes gameplay or deployment-policy changes.
+
+Classification: `QA_HARNESS_CONTACT_FIRST_DEADLINE_OWNERSHIP_GAP / ATTACK_TIMER_STARTS_37_770MS_BEFORE_LIVE_TARGET + MONOTONIC_CHECKPOINT_RELOG_AMPLIFICATION / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class: `TWO_PHASE_CONTACT_FIRST_PROOF_LIFECYCLE / LIVE_TARGET_45S_THEN_AUTHORED_ATTACK_45S + MARK_ONCE_CHECKPOINTS / DESIGN_CHANGE_REQUIRED`.
+
+### 67.2 Exact coherent correction
+
+Preserve the exact r50 nine-path draft, r50 source/static green, r49 Stage 6 standalone 3/3, and the r50 ordered Stage 6/24 passes. Change only `scripts/v100-phase-g-production-matrix.mjs` and `tests/v100-phase-g-checkpoint.test.mjs`, plus the four SOL-owned revision/cursor surfaces already in the nine-path topology.
+
+For a `proofActorRequiresContactFirst` contract only, divide final proof into two explicitly owned phases:
+
+1. If the exact actor attack is not already observed, wait at most 45,000 ms for either the unchanged exact actor attack predicate or the exact current target to be a living human. The recorder's awaiting label is `proof-actor-live-human-target`. A generic target, dead human, different actor, ally attack, combat-ready flag, movement, proximity, visual-only cue, or stale non-exact event is not acceptance.
+2. After phase 1 succeeds by exact live-human target, wait at most a fresh 45,000 ms for the unchanged authored exact-actor attack predicate. The recorder's awaiting label is `proof-actor-attack`. If phase 1 already observed the exact attack, validate the unchanged historical exact living-human target evidence and do not wait again.
+
+The two deadlines are sequential prerequisite and behavior budgets, not a retry and not a 90-second blind attack timeout. The unchanged outer battle timeout remains authoritative. No attempt may redeploy, alter formation, change the r26 decision/deploy path, reset battle time, reload, or repeat a failed phase.
+
+Change all writers of the already-monotonic `proof-actor-mounted-or-absent` and exact living-human-target checkpoint observations from repeated `mark` calls to `markOnce`, retaining the first exact detail and every raw history used for identity/causal proof. Do not weaken or deduplicate raw attack, target, damage, reaction, audio, receipt, or diagnostic histories. Keep the same 15 required checkpoints.
+
+The source contract must prove the two awaiting labels occur in prerequisite order, each phase owns an explicit 45,000 ms bound, the prerequisite applies only to contact-first actors, exact living-human identity remains mandatory, the attack predicate is unchanged, every mounted/target checkpoint writer is mark-once, and the r26 real-card survival/deployment path plus all product/acceptance negatives remain intact. No `app/**`, deployment harness, workflow, browser flag, product timeout, gameplay timer, fighter, HP, target selection, speed, AI, balance, hitbox, cue, screenshot, viewport, pixel, or audio change is authorized.
+
+### 67.3 Validation, continuation, and stop rule
+
+On final r51 source bytes, run syntax/load, Design Lock, focused 54/54, content validation, full tests/build, lint, and diff/allowlist/UTF-8/BOM/EOL/P5/untracked-evidence audits once. Then run three fresh independent Stage 25 standalone WebKit processes, one attempt each, stopping on the first failure. Only 3/3 authorizes one fresh ordered WebKit Stage 6 -> Stage 24 -> Stage 25 process; require 3/3 on its first attempt. Only ordered 3/3 authorizes fresh bounded WebKit deployment processes for 736x414, 844x340, and 844x390, each requiring all six canonical units and all 36 checkpoints on its first attempt.
+
+Do not rerun the already-green r49 Stage 6 standalone processes or reuse any runtime result as final-freeze evidence. Complete local green authorizes one normal non-amended exact-nine-path iteration-22 candidate commit and normal exact-tree transport, followed by exactly one automatic focused run. Any first source, local runtime, transport, or remote failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, skipped case, promotion, or stale-evidence substitution is authorized. Complete automatic focused green alone authorizes workflow-only iteration 23 restoring unfiltered Phase G 54/54, followed by the unchanged same-HEAD full local/unfiltered remote, runtime/human, evidence-freeze, fixed-HEAD final-review, and single Producer-checkpoint route.
+
+### 67.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R51_CONTACT_FIRST_PROOF_REMEDIATION_READY`
+- `LOOP_ITERATION`: r50 iteration 21 is terminal local red; r51 correction is iteration 22; workflow-only unfiltered restoration is iteration 23 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `10` for required remote Phase G; unchanged because r50 stopped locally
+- `R50_LOCAL_ORDERED_STAGE6_GREEN_COUNT`: `1` at ordered position 1
+- `R50_LOCAL_ORDERED_STAGE24_GREEN_COUNT`: `1` at ordered position 2
+- `R50_LOCAL_STAGE25_CONTACT_FIRST_FAILURE_COUNT`: `1` at ordered position 3
+- `R50_STAGE25_TARGET_PREREQUISITE_DELAY_MS`: `37770`
+- `R50_STAGE25_MOUNTED_CHECKPOINT_DUPLICATE_COUNT`: `1453`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r50 ordered local WebKit process, Stage 25 position 3 after Stage 6 and Stage 24 green; exact living-human target appeared 37,770 ms into the attack-only 45-second deadline, leaving insufficient authored contact-first attack opportunity; no retry/rerun
+- `LAST_GREEN_GATE`: final r50 source/full/static, ordered Stage 6 position 1, and ordered Stage 24 position 2
+- `CLASSIFICATION`: `QA_HARNESS_CONTACT_FIRST_DEADLINE_OWNERSHIP_GAP / ATTACK_TIMER_STARTS_37_770MS_BEFORE_LIVE_TARGET + MONOTONIC_CHECKPOINT_RELOG_AMPLIFICATION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `TWO_PHASE_CONTACT_FIRST_PROOF_LIFECYCLE / LIVE_TARGET_45S_THEN_AUTHORED_ATTACK_45S + MARK_ONCE_CHECKPOINTS / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: exact preserved r50 nine-path draft and green Stage 6/24 evidence -> r51 two-source contact-first lifecycle plus mark-once source contract -> source/full/static -> Stage 25 standalone 3/3 -> one fresh ordered 6/24/25 process 3/3 -> deployment 736x414/844x340/844x390 -> iteration-22 commit/normal transport -> one automatic run -> complete green only -> workflow-only iteration 23 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw 17,786,356-byte Stage 25 receipt, accepted pointer-deployment times, exact target histories, first-target timestamp, final live state, historical green controls, checkpoint duplication, r26 source path, exact identity predicates, candidate topology, one-attempt stop rule, current remote HEAD/tree, and unchanged release state machine. Revision r51 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 68. Revision r52 — region-scoped contact assertion ownership
+
+This section consumes the first r51 source attempt and supersedes Section 67 only for its single SOL-owned source-contract failure, exact assertion correction, and current cursor. The r51 Phase G implementation is accepted as the locked correction draft and must remain byte-identical at 239,016 bytes / SHA-256 `6bd9c298437ae7b2d777b18baeafa6b9cff55b994e4a26000804dee1aa50eb9f`. Every r51 two-phase lifecycle, mark-once writer, r50 normalizer, r49 presentation bridge, r26 deployment/survival path, product contract, validation sequence, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remains authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 68.1 Terminal source evidence and classification
+
+Both r51 syntax checks passed. The first focused Phase G source test ran 12 tests and stopped at 11 pass / 1 fail; no content/full/build/lint/browser/runtime/commit/transport/CI step followed and there was no retry. The sole reached failure was an old r26 global assertion requiring exactly two source-wide occurrences of `contactState?.hasLiveHumanTarget === true`; the r51 script correctly contains four: two unchanged boss-deployment continuity decisions and two new final-proof prerequisite checks. Static continuation audit also found the adjacent old source-wide assertion requiring zero `contactState?.hasHumanTarget === true`, while r51 correctly adds exactly one final-proof historical-target validation. The new r51 final-proof assertions preceding this failure all passed.
+
+The implementation is not the failing owner. The test aliases two semantically distinct regions into one source-wide count: r26 boss-deployment continuation must accept live target only, while r51 final proof must accept live target as its prerequisite and historical exact target only after authored attack observation. Raising global counts would preserve the alias and weaken future diagnostics; changing the script would violate r51.
+
+Classification: `SOL_OWNED_SOURCE_ASSERTION_SCOPE_ALIAS / R26_GLOBAL_CONTACT_STATE_COUNT_INCLUDES_R51_FINAL_PROOF_REGION / REMEDIATION_LOCAL`.
+
+Remediation class: `REGION_SCOPED_CONTACT_ASSERTION / BOSS_DEPLOYMENT_LIVE_ONLY_2_AND_HISTORY_0 + R51_FINAL_PROOF_OWN_ASSERTIONS / REMEDIATION_LOCAL`.
+
+### 68.2 Exact local correction
+
+Change no byte in `scripts/v100-phase-g-production-matrix.mjs`. In `tests/v100-phase-g-checkpoint.test.mjs` only, replace the two old source-wide occurrence assertions with a bounded region extracted from the boss-frontline deployment/contact continuation block before the final proof phase. Within that region require exactly two `contactState?.hasLiveHumanTarget === true` occurrences and zero `contactState?.hasHumanTarget === true` occurrences. Within the already-bounded r51 `finalProofRegion`, require exactly two live-target occurrences and exactly one historical-target occurrence, in addition to its existing two awaiting-label order, two separate 45,000 ms owners, exact identity, mark-once, and unchanged attack-predicate assertions.
+
+The region bounds themselves must hard-fail when absent or reversed. Do not replace the regional assertions with source-wide totals, permissive lower bounds, generic target tokens, snapshots, or stage-specific exceptions. Change no product, app, harness behavior, r26 decision/deployment path, timeout, retry, checkpoint, history, acceptance, workflow, or release contract.
+
+### 68.3 Validation and current cursor
+
+Run both syntax checks and the focused Phase G source test once. Require 12/12. Then run the unchanged final r51 source/full/static sequence: Design Lock 19/19, six-file focused 54/54, content, full 1,196/1,196 plus build, lint, and byte/topology/preservation audits. Only complete green authorizes the unexecuted r51 runtime sequence: three fresh Stage 25 standalone processes 3/3, one fresh ordered 6/24/25 process 3/3, and deployment 736x414/844x340/844x390. Do not rerun any r51 source command before this r52 correction and do not run browser/runtime until source/full/static is complete.
+
+Any first r52 source, static, or runtime failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, skipped case, or stale-evidence substitution is authorized. Complete local green retains iteration 22 candidate transport and one automatic focused run; complete automatic green alone authorizes workflow-only iteration 23.
+
+- `STATUS`: `DESIGN_LOCKED / R52_SOURCE_ASSERTION_REMEDIATION_READY`
+- `LOOP_ITERATION`: r51 iteration 22 is terminal source red; r52 correction remains iteration 22; workflow-only restoration remains iteration 23 after complete automatic green only
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r51 focused Phase G source test 11/12; old source-wide r26 live-target count expected 2 but r51 correctly produces 4 across two owned regions; no runtime executed
+- `LAST_GREEN_GATE`: r51 script/test syntax and the first five plus final six focused test cases; r50 source/full/static and ordered Stage 6/24 remain prior continuity evidence
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_ASSERTION_SCOPE_ALIAS / R26_GLOBAL_CONTACT_STATE_COUNT_INCLUDES_R51_FINAL_PROOF_REGION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `REGION_SCOPED_CONTACT_ASSERTION / BOSS_DEPLOYMENT_LIVE_ONLY_2_AND_HISTORY_0 + R51_FINAL_PROOF_OWN_ASSERTIONS / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact byte-preserved r51 script -> one region-scoped test correction -> syntax/focused 12/12 -> Design Lock plus six-file 54/54/full/static -> Stage 25 standalone 3/3 -> ordered 6/24/25 3/3 -> three deployment viewports -> iteration-22 commit/transport -> one automatic run -> complete green only -> workflow-only iteration 23 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failing line, all four live-target and one historical-target occurrences, their enclosing source regions, r51 script hash, absence of runtime execution, candidate topology, stop rule, and unchanged release state machine. Revision r52 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 69. Revision r53 — deployment quiescence semantic-boundary ownership
+
+This section consumes the first r52 deployment process and supersedes Section 68 only for that terminal runtime evidence, one source-proven latent checkpoint stop, their coherent harness correction, and the current cursor. The r52 source/full/static result, three fresh Stage 25 standalone results, and fresh ordered Stage 6 -> 24 -> 25 result are accepted as continuity evidence. The Phase G script remains byte-identical at 239,016 bytes / SHA-256 `6bd9c298437ae7b2d777b18baeafa6b9cff55b994e4a26000804dee1aa50eb9f`. Every product, gameplay, balance, AI, timing, viewport, causal, pixel, audio, save, PWA, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release contract remains unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 69.1 Terminal evidence, independent causes, and classification
+
+The complete r52 source/static sequence was green: both syntax checks, Phase G source 12/12, Design Lock 19/19, six-file focused 54/54, content validation, full 1,196/1,196 plus build, lint with 0 errors / 9 existing warnings, and exact nine-path/byte/EOL/BOM/P5/untracked-evidence audits. Three fresh independent Stage 25 WebKit processes passed 3/3 on their first attempts. One fresh ordered WebKit process passed Stage 6, Stage 24, and Stage 25 3/3 on its first attempt. Those outputs are not final evidence freeze.
+
+The first deployment process then stopped, without retry, at WebKit 736x414 / scout / first-frame queue readback. `outputs/r52-deployment-736x414/scout/attempt-1/summary.json` reports one attempted case, 0 pass / 1 fail and `first deployment frame for scout timed out`. The cooperative trace has 160 samples: the exact scout fighter ID 4 appears at elapsed 896 ms at door x=96, y=322, computed progress 0, `gateEntering: true`, `combatReady: false`, `entryRampCleared: false`, and remains at that intentional QA freeze while battle time advances to 54.366. Console, page, request, HTTP, pending-request, asset, and crash diagnostics are clean; assets are generation 3, 30/30 ready; page close is normal cleanup only. The failure screenshot is taken after the battle naturally reaches the event screen, not at a product deployment rejection. The historical r26 WebKit 736x414 scout axis passed 1/1 with all six checkpoints before the r49 presentation wrapper existed.
+
+The exact actual cause is source-proven. `queueCrawlerDefenseUnit` intentionally marks the next fighter for the progress-zero QA freeze; `spawnHuman` writes `g.banner = <unit> // 移動拠点から出撃`; and `getCrawlerDeploymentProofSnapshot` exposes that internal banner. However, the r52 host waits on the React DOM `.battle-banner`. While r49 quiescence is active, the render loop returns before both `drawWorld` and the periodic `setHud`, so the internal banner changes but its DOM projection cannot change. The operation cannot pause, the wrapper cannot release until the operation returns, and the battle eventually ends. This is a QA readback ownership cycle, not a product simulation failure.
+
+SOURCE and EXECUTION audits also prove a separate next-step stop that the failed first frame masked: every later checkpoint starts with the battle paused; `armCrawlerDeploymentCheckpoint` is the sole function that clears that pause; but r52 calls the presentation wrapper first, whose bridge rejects any paused battle, and only its nested operation attempts the checkpoint arm. This has not been claimed as a runtime failure. It is a deterministic source-level precondition cycle and must be corrected in the same packet rather than consuming another loop.
+
+Classification: `QA_HARNESS_QUIESCENCE_SEMANTIC_BOUNDARY_ORDERING_ALIAS / FIRST_FRAME_DOM_BANNER_STALE_UNDER_RENDER_SUPPRESSION + CHECKPOINT_ARM_HIDDEN_BEHIND_UNPAUSED_PRECONDITION / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class: `INTERNAL_STATE_FIRST_FRAME_READBACK + ATOMIC_CHECKPOINT_ARM_THEN_QUIESCENCE / PRODUCTION_SNAPSHOT_BANNER + SAME_PAGE_TASK_PRECONDITION_TRANSITION / DESIGN_CHANGE_REQUIRED`.
+
+### 69.2 One coherent harness-only correction
+
+Allowed material change is limited to the existing nine-path topology. Within product/runtime paths, `app/AshfallGame.tsx` and both Phase G files are byte-preserved. Change `scripts/v099-final-remediation-browser-smoke.mjs` only as follows, with matching strict assertions in `tests/v0995-runtime-evidence-contract.test.mjs` and governance identity/cursor updates in the four SOL-owned design/source paths:
+
+1. In `queueAndPauseAtFirstDeploymentFrame`, replace only the DOM banner readiness predicate with the exact `v099-crawler-deployment-snapshot/v1` internal state. Require `screen === "battle"`, `running === true`, `paused !== true`, `over !== true`, `snapshot.banner` containing `移動拠点から出撃`, the exact requested fighter, and computed progress exactly zero before calling the unchanged semantic pause. A non-live battle after the fighter exists is an immediate hard failure. DOM text, canvas pixels, stale HUD state, elapsed time, or a generic fighter-presence predicate cannot substitute for this state.
+2. Extend `withDeploymentPresentationQuiescence` with an optional exact checkpoint-arm request. When present, one synchronous `page.evaluate` task must validate and call `armCrawlerDeploymentCheckpoint(fighterId, checkpoint)` first, validate its canonical receipt including minimum progress, and then call `setQaPresentationQuiesced(true, "deployment-checkpoint-advance")` before the browser can run another simulation/render task. Persist the arm receipt inside the existing presentation receipt.
+3. Let `pauseAtDeploymentCheckpoint` accept that exact prearm receipt and skip its legacy second arm. Preserve its direct-call fallback for the two noncanonical callers. The canonical deployment path must pass the prearm receipt and exact `{ fighterId, checkpoint, minimumProgress }` request. All existing same-tick runtime freeze, receipt identity, six checkpoint positions, restored three frames, audit, canvas PNG, hash, contact-sheet, geometry, pixel, timeout, and first-attempt rules remain unchanged.
+
+The corrected harness draft is 144,418 bytes / SHA-256 `b6eabfb431a899e84e1cac2ba42d91551d1c7ffcafaf53b743f85b956ac1e145` before governance-only edits. Any later change to that file requires a new byte identity in the Issue ledger before runtime.
+
+Forbidden: product/app change; Phase G change; movement/progress/pause/door/timing/timeout/retry change; synthetic banner, fighter, checkpoint, receipt, canvas, or screenshot; DOM fallback; arm in two host tasks; quiescence release before semantic pause; acceptance weakening; stale r26/r52 artifact substitution; browser/workflow/container change; repository cleanup; or any modification outside the existing nine tracked paths. The three protected forensic directories and both P5 hashes remain untouched.
+
+### 69.3 Focused validation, regression, and promotion
+
+On final r53 bytes, SOL runs once and stops on the first failure:
+
+1. syntax/load, the focused runtime-evidence contract containing the new internal-banner/atomic-order assertions, Design Lock 19/19, and the unchanged six-file focused suite requiring 54/54;
+2. content validation, full 1,196/1,196 tests, lint, build, `git diff --check`, exact nine-path topology, UTF-8/BOM/EOL, forbidden-negative, P5 byte preservation, and all three untracked forensic-directory preservation checks;
+3. one fresh bounded WebKit deployment 736x414 process. Its first scout process must pass first-frame plus all six exact checkpoints, and the runner must continue through all six canonical units / 36 checkpoints on first attempts. Then run fresh 844x340 and unchanged-green 844x390 axes, each all six units / 36 checkpoints on first attempts. No retry, rerun, skipped unit, partial axis, or stale screenshot is allowed;
+4. do not rerun r52 Stage 25 standalone or ordered Phase G solely for this deployment-harness-only change. Their 3/3 and 3/3 results remain local continuity evidence but cannot be reused in final evidence freeze. `app/AshfallGame.tsx`, Phase G script, and Phase G source test must remain byte-identical to the r52 accepted bytes;
+5. complete local green authorizes one normal non-amended iteration-22 candidate commit/normal transport and exactly one automatic focused run. That run must make PR Verify, ordered Phase G, all six deployment viewports, every required dependency, and the complete workflow green. Any first local, transport, or remote failure returns to `SOL_DESIGN` without retry, rerun, same-revision edit, promotion, or evidence substitution;
+6. complete automatic focused green alone authorizes workflow-only iteration 23 restoring unfiltered Phase G 54/54. Same-HEAD full local 54/54, validator/regressions, unfiltered remote complete green, actual production runtime/human audit, evidence freeze, separate read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` remain mandatory before the explicit-approval-only release tail.
+
+### 69.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R53_DEPLOYMENT_SEMANTIC_BOUNDARY_REMEDIATION_READY`
+- `LOOP_ITERATION`: r52 first deployment process is terminal red; r53 coherent correction remains iteration 22; workflow-only restoration remains iteration 23 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged because no new required remote run occurred
+- `R52_LOCAL_STAGE25_STANDALONE_GREEN_COUNT`: `3` of 3 first attempts
+- `R52_LOCAL_ORDERED_PHASE_G_GREEN_COUNT`: `3` of 3 stages on the first ordered attempt
+- `R52_LOCAL_DEPLOYMENT_FIRST_FRAME_READBACK_FAILURE_COUNT`: `1` at WebKit 736x414 / scout; no retry
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r52 deployment process, WebKit 736x414 / scout, first-frame queue/readback timeout caused by DOM banner staleness under intentional presentation suppression; 844x340 and 844x390 not run; no retry
+- `LAST_GREEN_GATE`: complete r52 source/full/static, three fresh Stage 25 standalone 3/3, and one fresh ordered Stage 6/24/25 3/3
+- `CLASSIFICATION`: `QA_HARNESS_QUIESCENCE_SEMANTIC_BOUNDARY_ORDERING_ALIAS / FIRST_FRAME_DOM_BANNER_STALE_UNDER_RENDER_SUPPRESSION + CHECKPOINT_ARM_HIDDEN_BEHIND_UNPAUSED_PRECONDITION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `INTERNAL_STATE_FIRST_FRAME_READBACK + ATOMIC_CHECKPOINT_ARM_THEN_QUIESCENCE / PRODUCTION_SNAPSHOT_BANNER + SAME_PAGE_TASK_PRECONDITION_TRANSITION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: r53 source/full/static -> fresh deployment 736x414 all 6/36 -> fresh 844x340 all 6/36 -> fresh 844x390 all 6/36 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact r52 artifact, 160-sample trace, failure screenshot, clean lifecycle, historical green control, React HUD/render ordering, app pause/checkpoint preconditions, current nine-path bytes, one-run budget, and unchanged release state machine. Revision r53 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 70. Revision r54 — exact checkpoint-arm assertion ownership
+
+This section consumes the first r53 source test and supersedes Section 69 only for its single SOL-owned source-contract failure, exact assertion correction, and current cursor. The r53 harness implementation is accepted as the locked correction draft and must remain byte-identical at 144,418 bytes / SHA-256 `b6eabfb431a899e84e1cac2ba42d91551d1c7ffcafaf53b743f85b956ac1e145`. The app, both Phase G files, r53 semantic-boundary design, r52 green continuity evidence, existing nine-path topology, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 70.1 Terminal source evidence and classification
+
+Both r53 syntax checks passed. The first `tests/v0995-runtime-evidence-contract.test.mjs` execution ran three tests and stopped at 2 pass / 1 fail; no Design Lock, six-file, content, full, build, lint, browser, runtime, commit, transport, or CI step followed. The sole failure is line 417's old r6 `runDeploymentCase` negative regex. It forbids a raw `checkpointReceipt: evidence.checkpointReceipt`, diagnostic `readableSnapshot`/`getSnapshot`, `requestAnimationFrame`, `page.waitForTimeout`, and also every occurrence of the unqualified token `checkpointArm`. The first five bans remain correct. The bare token is now an ownership alias: r53 intentionally names the exact, schema-validated, same-page-task `checkpointArm` receipt and has new positive assertions for its order, identity, minimum progress, and handoff. Removing the required receipt or renaming it to evade the regex would violate r53; keeping the global token ban would make the locked design untestable.
+
+Classification: `SOL_OWNED_SOURCE_NEGATIVE_SCOPE_ALIAS / R6_GLOBAL_CHECKPOINTARM_TOKEN_FORBIDS_R53_EXACT_PRECONDITION_RECEIPT / REMEDIATION_LOCAL`.
+
+Remediation class: `EXACT_FORBIDDEN_SERIALIZATION_ONLY / KEEP_RAW_EVIDENCE_RECEIPT_AND_DIAGNOSTIC_BANS + R53_POSITIVE_ATOMIC_ARM_ASSERTIONS / REMEDIATION_LOCAL`.
+
+### 70.2 Exact correction and validation
+
+Change no byte in the r53 harness or any other product/runtime path. In `tests/v0995-runtime-evidence-contract.test.mjs` only, remove the bare `checkpointArm` alternative from line 417's old negative regex. Retain every other negative alternative unchanged. Retain the new r53 positive assertions that require `requestedCheckpointArm`, exact `armCrawlerDeploymentCheckpoint` before `setQaPresentationQuiesced`, persistence as `checkpointArm: armEnvelope.checkpointArm`, canonical invocation arguments, internal snapshot banner, live battle, and absence of DOM banner readback. Do not replace those positives with source-wide counts, permissive matching, a different name, or a generic object.
+
+Run both syntax checks, then the focused runtime-evidence test once and require 3/3. Only then run Design Lock 19/19, six-file focused 54/54, content, full 1,196/1,196, build, lint, and all static/byte/topology/preservation gates. Only complete source/full/static green authorizes the still-unexecuted r53 deployment sequence: fresh 736x414, then 844x340, then 844x390, each all six units / 36 checkpoints on first attempts. Any first failure returns to `SOL_DESIGN` without retry, rerun, same-revision edit, or stale evidence. Complete local green retains iteration-22 commit/normal transport and one automatic focused run; complete automatic green alone authorizes workflow-only iteration 23.
+
+- `STATUS`: `DESIGN_LOCKED / R54_SOURCE_ASSERTION_REMEDIATION_READY`
+- `LOOP_ITERATION`: r53 terminal source red and r54 assertion correction both remain iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r53 runtime-evidence source test 2/3; old r6 unqualified `checkpointArm` negative matched the exact r53 receipt; no runtime executed
+- `LAST_GREEN_GATE`: both r53 syntax checks and two of three focused runtime-evidence tests; prior r52 source/full/static, Stage 25 3/3, and ordered 6/24/25 3/3 remain continuity evidence
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_NEGATIVE_SCOPE_ALIAS / R6_GLOBAL_CHECKPOINTARM_TOKEN_FORBIDS_R53_EXACT_PRECONDITION_RECEIPT / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EXACT_FORBIDDEN_SERIALIZATION_ONLY / KEEP_RAW_EVIDENCE_RECEIPT_AND_DIAGNOSTIC_BANS + R53_POSITIVE_ATOMIC_ARM_ASSERTIONS / REMEDIATION_LOCAL`
+- `RESUME_FROM`: byte-preserved r53 harness -> one negative-regex correction -> syntax/focused 3/3 -> Design Lock/six-file/full/static -> fresh deployment 736x414 -> 844x340 -> 844x390 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failing assertion, its six alternatives, all new r53 positive assertions, the locked harness hash, absence of runtime execution, candidate topology, stop rule, and unchanged release state machine. Revision r54 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 71. Revision r55 — canonical same-page-task literal assertion
+
+This section consumes the first r54 Design Lock test and supersedes Section 70 only for its single SOL-owned literal mismatch, exact correction, and current cursor. The r53 harness remains byte-identical at 144,418 bytes / SHA-256 `b6eabfb431a899e84e1cac2ba42d91551d1c7ffcafaf53b743f85b956ac1e145`; the r54 runtime-evidence source correction passed 3/3 and is accepted. Product/app, both Phase G files, all runtime acceptance, nine-path topology, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+Both r54 syntax checks and the focused runtime-evidence test passed 3/3. The first Design Lock run executed 19 tests and stopped at 18 pass / 1 fail. No six-file, content, full, build, lint, browser, runtime, commit, transport, or CI step followed. The sole failure is a newly added r53 narrative assertion in `tests/v100-design-lock.test.mjs` that expects unhyphenated `same page task`, while the authoritative r53 text deliberately uses `same-page-task` and the exact remediation token uses `SAME_PAGE_TASK`. The design and implementation are coherent; the test literal is not.
+
+Classification: `SOL_OWNED_SOURCE_LITERAL_HYPHENATION_MISMATCH / R53_CANONICAL_SAME_PAGE_TASK_TOKEN_REJECTED_BY_UNHYPHENATED_TEST_LITERAL / REMEDIATION_LOCAL`.
+
+Remediation class: `CANONICAL_LITERAL_ASSERTION_ALIGNMENT / SAME_PAGE_TASK_TOKEN_OR_HYPHENATED_NARRATIVE + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`.
+
+Change only that one r53 narrative assertion to require either the exact token `SAME_PAGE_TASK` or the narrative `same-page-task`; do not change r53 prose, classification, implementation, runtime-evidence test, or acceptance. Run `tests/v100-design-lock.test.mjs` once and require 19/19, then the unchanged six-file 54/54 and remaining r54 source/full/static sequence. Only complete source/full/static green authorizes fresh deployment 736x414 -> 844x340 -> 844x390. Any first failure returns to `SOL_DESIGN` without retry, rerun, same-revision edit, or stale evidence. Complete local green retains iteration-22 transport and one automatic focused run; complete automatic green alone authorizes workflow-only iteration 23.
+
+- `STATUS`: `DESIGN_LOCKED / R55_LITERAL_ASSERTION_REMEDIATION_READY`
+- `LOOP_ITERATION`: r54 Design Lock source red and r55 literal correction both remain iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r54 Design Lock test 18/19; new r53 test expected unhyphenated `same page task` but canonical r53 uses `same-page-task` / `SAME_PAGE_TASK`; no runtime executed
+- `LAST_GREEN_GATE`: r54 syntax and runtime-evidence focused 3/3 plus 18 Design Lock cases; prior r52 runtime continuity unchanged
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_LITERAL_HYPHENATION_MISMATCH / R53_CANONICAL_SAME_PAGE_TASK_TOKEN_REJECTED_BY_UNHYPHENATED_TEST_LITERAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CANONICAL_LITERAL_ASSERTION_ALIGNMENT / SAME_PAGE_TASK_TOKEN_OR_HYPHENATED_NARRATIVE + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: one r53 literal assertion correction -> Design Lock 19/19 -> six-file 54/54 -> content/full/static -> fresh deployment 736x414 -> 844x340 -> 844x390 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> unchanged final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the failing regex and canonical r53 spellings, all r54 green evidence, locked harness bytes, absence of runtime execution, topology, stop rule, and unchanged release state machine. Revision r55 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 72. Revision r56 — canonical deployment inventory cardinality
+
+This section consumes the post-r55 SOURCE/EXECUTION audit before any r55 browser process and supersedes Section 71 only for the active deployment inventory cardinality, its source binding, and the current cursor. The r53 harness remains byte-identical at 144,418 bytes / SHA-256 `b6eabfb431a899e84e1cac2ba42d91551d1c7ffcafaf53b743f85b956ac1e145`; the Phase G script remains byte-identical at 239,016 bytes / SHA-256 `6bd9c298437ae7b2d777b18baeafa6b9cff55b994e4a26000804dee1aa50eb9f`. Product/app, both Phase G files, deployment runner/harness behavior, every checkpoint and pixel threshold, nine-path topology, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 72.1 Source finding and classification
+
+The complete r55 source/full/static sequence is green: both syntax checks, runtime-evidence 3/3, Design Lock 19/19, six-file focused 54/54, content validation, full 1,196/1,196 plus build, lint with 0 errors / 9 existing warnings, `git diff --check`, exact nine tracked paths, UTF-8/BOM/EOL, P5 hashes, and all three protected forensic directories. Before browser execution, the required static readback found that Sections 69-71 and their current Handoff/Project State cursors say `all six canonical units / 36 checkpoints` or omit the cardinality. The executable bounded runner instead exports exactly eight canonical kinds in this order: `scout`, `ranger`, `brawler`, `crazy-king`, `kumaverson`, `mayo-chan`, `brute`, `medic`. Each kind has six unchanged checkpoints, so one viewport is exactly eight units / 48 checkpoints. Historical Sections 33 and 41 and the existing bounded-runner contract already bind the same eight-unit inventory; the later six-unit wording is a SOL-owned active-cursor regression, not a runtime or product failure.
+
+Classification: `SOL_OWNED_ACCEPTANCE_CARDINALITY_DRIFT / ACTIVE_6_UNIT_36_CHECKPOINT_CURSOR_CONTRADICTS_CANONICAL_8_UNIT_48_CHECKPOINT_RUNNER / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class: `CANONICAL_DEPLOYMENT_INVENTORY_ALIGNMENT / EXACT_8_KIND_LIST + 48_CHECKPOINTS_PER_VIEWPORT + NO_RUNTIME_BYTE_CHANGE / DESIGN_CHANGE_REQUIRED`.
+
+### 72.2 Exact correction and acceptance
+
+Change only the four SOL-owned design/source paths: this Design Lock, `LUNA_HANDOFF.md`, `PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. Bind the active r56 contract directly to `scripts/run-v099-deployment-units-bounded.mjs`, require its exact ordered eight-kind export, and require 8 units / 48 checkpoints at each of 736x414, 844x340, and 844x390. Preserve the historical r49 wording as immutable evidence of the superseded error; it is not executable. Change no app, Phase G, deployment runner, deployment harness, runtime-evidence test, gameplay, timing, viewport, timeout, retry, pixel, receipt, screenshot, artifact, package, workflow, or release byte.
+
+Run Design Lock 19/19, the six-file focused suite 54/54, content, full 1,196/1,196 plus build, lint, and static/byte/topology/preservation checks once on final r56 bytes. Only complete green authorizes three fresh bounded WebKit processes in order: 736x414, 844x340, then 844x390. Each process must execute the exact ordered eight kinds, each kind must pass all six checkpoints on its first and only attempt, and the viewport summary must prove 8/8 units, 48/48 unique checkpoint PNGs, 8 contact sheets, exact receipt/pixel/hash integrity, and fatal diagnostics zero. No retry, rerun, skipped kind, partial viewport, stale evidence, or six-unit substitution is allowed.
+
+Any first r56 source, static, or runtime failure returns to `SOL_DESIGN` without same-revision edit. Complete local green retains the iteration-22 normal non-amended commit/transport and exactly one automatic focused run; complete automatic green alone authorizes workflow-only iteration 23 and the unchanged exact-HEAD final route.
+
+### 72.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R56_DEPLOYMENT_INVENTORY_ALIGNMENT_READY`
+- `LOOP_ITERATION`: r55 correction and r56 canonical inventory alignment remain iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged because no new required remote run occurred
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: post-r55 source/static execution audit before browser runtime; active 6-unit / 36-checkpoint wording contradicted the executable exact eight-kind bounded runner and its 48-checkpoint viewport contract; no runtime executed
+- `LAST_GREEN_GATE`: complete r55 source/full/static; prior r52 Stage 25 standalone 3/3 and ordered 6/24/25 3/3 remain continuity evidence
+- `CLASSIFICATION`: `SOL_OWNED_ACCEPTANCE_CARDINALITY_DRIFT / ACTIVE_6_UNIT_36_CHECKPOINT_CURSOR_CONTRADICTS_CANONICAL_8_UNIT_48_CHECKPOINT_RUNNER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `CANONICAL_DEPLOYMENT_INVENTORY_ALIGNMENT / EXACT_8_KIND_LIST + 48_CHECKPOINTS_PER_VIEWPORT + NO_RUNTIME_BYTE_CHANGE / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: four-path r56 source binding -> final source/full/static -> fresh deployment 736x414 all 8/48 -> fresh 844x340 all 8/48 -> fresh 844x390 all 8/48 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> same-HEAD full local/unfiltered remote -> production runtime/human audit -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one final Producer checkpoint -> approval-only integration/release/Pages/public-QA/recovery/closure
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual exported runner inventory, all eight exact kinds, six checkpoints per kind, historical eight-unit controls, the active six-unit regression, locked app/harness/Phase G bytes, one-run budget, and unchanged release state machine. Revision r56 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 73. Revision r57 — post-restoration production snapshot ownership
+
+This section consumes the first and only r56 WebKit 736x414 deployment process and supersedes Section 72 only for the terminal `scout` / `fully-inside` failure, the post-restoration readback owner, the six-path correction packet, and the current cursor. Section 72's exact ordered eight-kind / 48-checkpoint acceptance remains authoritative. Product/app, both Phase G files, the bounded runner, gameplay, simulation, timing, pause/checkpoint semantics, pixel thresholds, screenshots, three viewports, retry budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and the approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 73.1 Terminal evidence and independent classification
+
+The complete r56 source/full/static sequence is green: syntax, runtime-evidence 3/3, Design Lock 19/19, six-file focused 54/54, content validation, full 1,196/1,196 plus build, lint with 0 errors / 9 existing warnings, `git diff --check`, exact nine tracked paths, UTF-8/BOM/EOL, P5 hashes, and all three protected forensic directories. SOL then started exactly one fresh bounded WebKit 736x414 process at `outputs/r56-deployment-736x414`. It stopped on its first `scout` / `hachi` / `fully-inside` checkpoint with `live fighter render remained translucent`; no retry occurred and neither 844x340 nor 844x390 was started.
+
+The actual same-attempt evidence disproves product translucency. The production screenshot visibly shows the scout at the CRAWLER door. The direct six-pass unit-layer audit reports actual and opaque alpha mass `1008.8313725490198`, `1096` nonzero pixels, mask IoU `1`, normalized alpha L1 `0`, `alphaOneFromFirstVisibleFrame: true`, final-canvas pass, `fractionalForegroundPixels: 0`, `finalCanvasKeepsUnitOpaque: true`, and exposed opaque match ratio `1`. Fatal console/page/request/HTTP diagnostics are zero. Presentation quiescence entered at render frame 14, suppressed 29 scheduled frames while simulation advanced to the semantic pause, released at frame 14, and proved three restored production frames at frame 17 with the canvas visible at opacity `1`.
+
+The failing `fighter` object was captured inside the quiesced operation before those restored frames and contains `renderAudit: null`. `withDeploymentPresentationQuiescence` subsequently proves the three production frames but returns the already captured object unchanged. `getCrawlerDeploymentProofSnapshot` reads `fighterRenderAudit` written by the production draw path, so the restored frames own the missing render record. The same stale-object flow exists for the first frame and each of the five armed checkpoint paths. This is a QA-harness evidence ownership gap, not an app opacity, WebKit rendering, checkpoint, timing, asset, or gameplay failure.
+
+Classification: `QA_HARNESS_POST_RESTORATION_READBACK_GAP / QUIESCED_FIGHTER_SNAPSHOT_RETAINED_NULL_RENDER_AUDIT_AFTER_THREE_RESTORED_PRODUCTION_FRAMES / DESIGN_CHANGE_REQUIRED`.
+
+Remediation class: `POST_RESTORATION_PRODUCTION_SNAPSHOT_REFRESH / EXACT_FROZEN_FIGHTER_AND_CHECKPOINT_CONTINUITY + OPAQUE_RENDER_AUDIT_READBACK / DESIGN_CHANGE_REQUIRED`.
+
+### 73.2 Exact bounded correction
+
+Change only these six paths inside the existing exact nine-path candidate topology: `scripts/v099-final-remediation-browser-smoke.mjs`, `tests/v0995-runtime-evidence-contract.test.mjs`, this Design Lock, `LUNA_HANDOFF.md`, `PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. Preserve `app/AshfallGame.tsx`, both Phase G files, the bounded runner, P5 files, and all protected forensic directories byte-for-byte from their r56 accepted bytes.
+
+In the deployment harness, add one common post-restoration helper used by both the initial `fully-inside` path and every later armed checkpoint. It runs only after the existing quiescence receipt proves at least three restored production render frames. It performs exactly one lightweight `getCrawlerDeploymentProofSnapshot({ fighterId })` read from the existing localhost bridge; it must not call `auditFighterUnitLayer`, add a timer, `requestAnimationFrame`, `waitForFunction`, `page.waitForTimeout`, host delay, DOM/banner readback, checkpoint arm, pause toggle, simulation mutation, or product hook.
+
+Fail closed unless that refreshed snapshot is the same live frozen battle and the same fighter ID, kind, x, y, gate-entering state, combat-ready state, ramp-cleared state, and computed progress as the already accepted semantic-pause evidence. At `fully-inside`, progress must remain exactly zero and the checkpoint receipt must remain null. At every later checkpoint, require the exact schema, fighter ID, kind, checkpoint, x, y, computed progress, and canonical minimum from the existing production receipt. The refreshed production render audit must have a positive draw count and render sequence, exact fighter coordinates, the requested deployment checkpoint, pose opacity `1`, effective opacity `1`, and animation-pose opacity `1`.
+
+Retain the original direct six-pass pixel audit, checkpoint receipt, and quiescence receipt. Do not re-run or replace the pixel audit. On exact continuity only, replace the stale returned `fighter`, `observedProgress`, and `checkpointReceipt` with the refreshed production values, attach a bounded post-restoration receipt, and run the existing `validateDeploymentCheckpoint` unchanged. No missing audit fallback, opacity assertion removal, threshold relaxation, synthetic receipt, coordinate coercion, extra frame budget, retry, or screenshot substitution is allowed.
+
+### 73.3 Focused validation, runtime order, and stop conditions
+
+Run both relevant syntax checks, then `tests/v0995-runtime-evidence-contract.test.mjs` once and require 3/3. The source contract must prove one snapshot read in the helper, the three-restored-frame prerequisite, exact semantic/receipt continuity, opaque production render audit, both caller sites, serialized bounded readback, absence of a second pixel audit or wait/mutation, and retention of the original opacity validation. Then require Design Lock 19/19, six-file focused 54/54, content validation, full 1,196/1,196 plus build, lint, and all diff/byte/EOL/BOM/topology/P5/protected-directory gates once on final r57 bytes.
+
+Only complete source/full/static green authorizes three fresh r57 bounded WebKit processes in order: 736x414 all 8/48, then 844x340 all 8/48, then 844x390 all 8/48. The terminal r56 process is diagnostic evidence and must not be retried or counted. Each r57 kind/checkpoint has one first attempt, exact receipt/pixel/hash integrity, eight contact sheets per viewport, and fatal diagnostics zero. Any first source, static, local runtime, transport, or remote failure returns to `SOL_DESIGN` without retry, rerun, same-revision edit, skipped kind, partial acceptance, or stale evidence.
+
+Complete local green retains the iteration-22 normal non-amended candidate commit/normal transport and exactly one automatic focused run. Complete automatic focused green alone authorizes workflow-only iteration 23 restoring unfiltered Phase G 54/54. The unchanged tail remains same-HEAD full local/unfiltered remote green, production runtime/human audit, evidence freeze, separate read-only/adversarial fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration, tag, GitHub Release, official Pages, published-SHA QA, recovery, and closure.
+
+### 73.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R57_POST_RESTORATION_SNAPSHOT_REFRESH_READY`
+- `LOOP_ITERATION`: r57 remains iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged because no new required remote run occurred
+- `R56_LOCAL_DEPLOYMENT_POST_RESTORATION_READBACK_FAILURE_COUNT`: `1`; WebKit 736x414 / scout / fully-inside, first attempt, no retry
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first fresh r56 WebKit 736x414 deployment process, scout / hachi / fully-inside; quiesced snapshot retained `renderAudit: null` after the wrapper separately proved three restored production frames; no retry and later viewports not run
+- `LAST_GREEN_GATE`: complete r56 source/full/static; the terminal runtime's direct pixel/final-canvas audit and diagnostics are valid root-cause evidence but not an accepted checkpoint
+- `CLASSIFICATION`: `QA_HARNESS_POST_RESTORATION_READBACK_GAP / QUIESCED_FIGHTER_SNAPSHOT_RETAINED_NULL_RENDER_AUDIT_AFTER_THREE_RESTORED_PRODUCTION_FRAMES / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `POST_RESTORATION_PRODUCTION_SNAPSHOT_REFRESH / EXACT_FROZEN_FIGHTER_AND_CHECKPOINT_CONTINUITY + OPAQUE_RENDER_AUDIT_READBACK / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: six-path r57 correction inside exact nine-path topology -> syntax/runtime-evidence 3/3 -> Design Lock 19/19 -> six-file 54/54 -> content/full/build/lint/static -> fresh r57 WebKit 736x414 all 8/48 -> 844x340 all 8/48 -> 844x390 all 8/48 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> unchanged exact-HEAD final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r56 summary, screenshot, direct alpha/final-canvas audit, quiescence render/simulation counters, stale fighter payload, app snapshot/render-audit ownership, both harness call sites, exact six-path allowlist, one-run budget, and unchanged release state machine. Revision r57 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 74. Revision r58 — r56 Project State history preservation
+
+This section consumes the first r57 Design Lock test and supersedes Section 73 only for one SOL-owned Project State history omission, the four-path source correction, and the current cursor. The r57 deployment harness is accepted and locked at 149,470 bytes / SHA-256 `815be0ea928655577bbb339b78bb310462ea789db2b8be1688f50a1d50e1c83b`; its runtime-evidence source test is accepted and locked at 37,450 bytes / SHA-256 `64af1ed34cea7641dcffbd250fa06c7c0d26e77abf3035b556813c9db4b7be20`. Section 73's runtime design, exact eight-kind / 48-checkpoint acceptance, product/app and Phase G byte locks, existing nine-path topology, one-run budget, fixed-HEAD `SOL_FINAL_REVIEW`, one final Producer checkpoint, and approval-only release tail remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 74.1 Terminal source evidence and classification
+
+Both r57 syntax checks and `tests/v0995-runtime-evidence-contract.test.mjs` passed 3/3. The first Design Lock run executed 19 tests and stopped at 18 pass / 1 fail; no six-file, content, full, build, lint, static, browser, runtime, commit, transport, or CI step followed. The sole failure is the long-standing positive contract that Project State preserve the exact r56 cardinality-drift classification and remediation after r56 becomes historical. r57 replaced the active r56 cursor with the new runtime failure but did not add an `Actual r56` history entry. Design Lock Section 72 and Handoff Section 65 retain the exact r56 record; the deployment harness and r57 correction are coherent.
+
+Classification: `SOL_OWNED_PROJECT_STATE_HISTORY_GAP / R57_PROMOTION_REPLACED_ACTIVE_R56_CURSOR_WITHOUT_PRESERVING_R56_CLASSIFICATION_RECORD / REMEDIATION_LOCAL`.
+
+Remediation class: `R56_HISTORICAL_CURSOR_PRESERVATION / ADD_EXACT_R56_CLASSIFICATION_AND_REMEDIATION_TO_PROJECT_STATE + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`.
+
+### 74.2 Exact correction and validation
+
+Change only the four SOL-owned source/governance paths required by the new revision: this Design Lock, `LUNA_HANDOFF.md`, `PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. In Project State's historical execution record, add one `Actual r56` entry that preserves the completed r56 source/full/static green, the source-only cardinality finding before runtime, the exact r56 classification, the exact r56 remediation class, and the fact that r56 subsequently ran only one terminal 736x414 process under Section 73. Do not restore r56 as the active cursor or duplicate its old `NEXT_OWNER`.
+
+Update only the current revision/section extraction and new r58 positive assertions in the Design Lock test. Retain the failing r56 historical assertion unchanged so the added Project State record, rather than weakened coverage, closes the gate. Change no r57 harness or runtime-evidence byte, app, Phase G file, bounded runner, product behavior, gameplay, timing, checkpoint, pixel, viewport, retry, screenshot, artifact, package, workflow, or release contract.
+
+Do not rerun the already green r57 syntax or focused runtime-evidence test solely for this four-path docs/test correction. Run the Design Lock test once and require 19/19, then run the unchanged six-file focused 54/54 and remaining content/full/build/lint/static/byte/topology/preservation sequence once. Only complete green authorizes fresh r58 WebKit deployment processes in order: 736x414 all 8/48, 844x340 all 8/48, then 844x390 all 8/48. Any first source, static, local runtime, transport, or remote failure returns to `SOL_DESIGN` without retry, rerun, or same-revision edit.
+
+Complete local green retains iteration-22 normal non-amended candidate commit/transport and exactly one automatic focused run. Complete automatic focused green alone authorizes workflow-only iteration 23 and the unchanged exact-HEAD final route.
+
+### 74.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R58_PROJECT_STATE_HISTORY_REMEDIATION_READY`
+- `LOOP_ITERATION`: r58 remains iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged because no new required remote run occurred
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r57 Design Lock source run, 18/19; Project State omitted the exact historical r56 classification/remediation when the active cursor advanced to r57; no runtime executed
+- `LAST_GREEN_GATE`: both r57 syntax checks, runtime-evidence 3/3, and 18 Design Lock cases; complete r56 source/full/static remains prior continuity evidence
+- `CLASSIFICATION`: `SOL_OWNED_PROJECT_STATE_HISTORY_GAP / R57_PROMOTION_REPLACED_ACTIVE_R56_CURSOR_WITHOUT_PRESERVING_R56_CLASSIFICATION_RECORD / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `R56_HISTORICAL_CURSOR_PRESERVATION / ADD_EXACT_R56_CLASSIFICATION_AND_REMEDIATION_TO_PROJECT_STATE + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: add exact Actual r56 Project State history + r58 source declarations/assertions -> Design Lock 19/19 -> unchanged six-file 54/54 -> content/full/build/lint/static -> fresh r58 WebKit 736x414 all 8/48 -> 844x340 all 8/48 -> 844x390 all 8/48 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> unchanged exact-HEAD final route
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failed assertion, Project State history topology, r56/r57 retained records, locked r57 harness/test hashes, absence of runtime execution, one-run budget, and unchanged release state machine. Revision r58 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 75. Revision r59 — canonical final-review token restoration
+
+This section consumes the first r58 Design Lock test and supersedes Section 74 only for one canonical release-route literal, the four-path source correction, and the current cursor. The accepted r57 deployment harness remains 149,470 bytes / SHA-256 `815be0ea928655577bbb339b78bb310462ea789db2b8be1688f50a1d50e1c83b`; its runtime-evidence source test remains 37,450 bytes / SHA-256 `64af1ed34cea7641dcffbd250fa06c7c0d26e77abf3035b556813c9db4b7be20`. All r57 runtime semantics, r58 Project State history correction, exact eight-kind / 48-checkpoint acceptance, product/app and Phase G bytes, existing nine-path topology, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and approval-only release tail remain authoritative. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 75.1 Terminal source evidence and classification
+
+The first r58 Design Lock run executed 19 tests and stopped at 18 pass / 1 fail. The r56 Project State history assertion that failed under r57 is green. The sole new failure is the global release-route guard applied to every revision: Section 74 says semantically equivalent `fixed-HEAD final review` but omits the exact canonical token `SOL_FINAL_REVIEW`. No six-file, content, full, build, lint, static, browser, runtime, commit, transport, or CI step followed.
+
+Classification: `SOL_OWNED_RELEASE_ROUTE_LITERAL_OMISSION / R58_CURRENT_SECTION_USED_GENERIC_FIXED_HEAD_FINAL_REVIEW_WITHOUT_CANONICAL_SOL_FINAL_REVIEW_TOKEN / REMEDIATION_LOCAL`.
+
+Remediation class: `CANONICAL_RELEASE_ROUTE_TOKEN_RESTORATION / ADD_EXACT_SOL_FINAL_REVIEW_LITERAL + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`.
+
+### 75.2 Exact correction and validation
+
+Change only the same four SOL-owned governance/test paths: this Design Lock, `LUNA_HANDOFF.md`, `PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. In Section 74's first paragraph, change only `fixed-HEAD final review` to `fixed-HEAD SOL_FINAL_REVIEW`; do not change its meaning, route, gate order, status evidence, or any other historical wording. Add the exact r58 terminal source record to Project State and the r59 current declarations/assertions. Retain the existing global assertion requiring `SOL_FINAL_REVIEW` across every active historical revision; do not remove r58 from the loop or accept a looser synonym.
+
+Change no deployment harness, runtime-evidence test, app, Phase G file, bounded runner, gameplay, timing, checkpoint, pixel, viewport, retry, screenshot, artifact, package, workflow, or release behavior. Do not rerun the already green r57 syntax/runtime-evidence 3/3. Run the Design Lock test once and require 19/19, then the unchanged six-file 54/54 and remaining content/full/build/lint/static/byte/topology/preservation sequence once.
+
+Only complete source/full/static green authorizes fresh r59 WebKit deployment processes in order: 736x414 all 8/48, 844x340 all 8/48, then 844x390 all 8/48. Any first source, static, local runtime, transport, or remote failure returns to `SOL_DESIGN` without retry, rerun, or same-revision edit. Complete local green retains iteration-22 normal non-amended candidate transport and one automatic focused run; complete automatic focused green alone authorizes workflow-only iteration 23 and the unchanged exact-HEAD final route.
+
+### 75.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R59_FINAL_REVIEW_LITERAL_REMEDIATION_READY`
+- `LOOP_ITERATION`: r59 remains iteration 22; workflow-only restoration remains iteration 23
+- `SAME_GATE_REPEAT_COUNT`: `10`; unchanged because no new required remote run occurred
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first failure returns to `SOL_DESIGN`
+- `LAST_AUDITED_HEAD`: `6526437a566caeebcc89af3149a9564aba5bc006`
+- `LAST_AUDITED_TREE`: `9fc1b6f8a8fdf01eab9e1011a2db8311c39a3b33`
+- `FAILED_GATE`: first r58 Design Lock source run, 18/19; Section 74 omitted the exact `SOL_FINAL_REVIEW` token while retaining only a generic fixed-HEAD final-review phrase; no runtime executed
+- `LAST_GREEN_GATE`: r57 syntax/runtime-evidence 3/3, corrected r56 Project State history, and 18 r58 Design Lock cases; complete r56 source/full/static continuity unchanged
+- `CLASSIFICATION`: `SOL_OWNED_RELEASE_ROUTE_LITERAL_OMISSION / R58_CURRENT_SECTION_USED_GENERIC_FIXED_HEAD_FINAL_REVIEW_WITHOUT_CANONICAL_SOL_FINAL_REVIEW_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CANONICAL_RELEASE_ROUTE_TOKEN_RESTORATION / ADD_EXACT_SOL_FINAL_REVIEW_LITERAL + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: restore exact SOL_FINAL_REVIEW literal in Section 74 + r59 source declarations/assertions -> Design Lock 19/19 -> unchanged six-file 54/54 -> content/full/build/lint/static -> fresh r59 WebKit 736x414 all 8/48 -> 844x340 all 8/48 -> 844x390 all 8/48 -> iteration-22 commit/normal transport -> one automatic focused run -> complete green only -> workflow-only iteration 23 -> same-HEAD full/unfiltered/runtime/freeze/SOL_FINAL_REVIEW -> one final Producer checkpoint -> approval-only release tail
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failing global assertion, every r12-r59 final-review token, r58 source correction, locked r57 runtime hashes, absence of runtime execution, one-run budget, and unchanged release state machine. Revision r59 has `High ambiguity: 0` and `Medium ambiguity: 0`.

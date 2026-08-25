@@ -2285,9 +2285,248 @@ function validDeploymentAuditScratchReceipt(audit) {
     && audit.scratchSurface.passCount === 6;
 }
 
-async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label, captureTrace = null) {
+async function withDeploymentPresentationQuiescence(
+  page,
+  owner,
+  label,
+  captureTrace,
+  operation,
+  checkpointArmRequest = null,
+) {
+  const armEnvelope = await page.evaluate(({ requestedOwner, requestedCheckpointArm }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (typeof bridge?.setQaPresentationQuiesced !== "function"
+      || typeof bridge?.getQaPresentationQuiescence !== "function") {
+      throw new Error("deployment presentation quiescence bridge is unavailable");
+    }
+    let checkpointArm = null;
+    if (requestedCheckpointArm !== null) {
+      if (typeof bridge.armCrawlerDeploymentCheckpoint !== "function") {
+        throw new Error("deployment checkpoint arm bridge is unavailable");
+      }
+      checkpointArm = bridge.armCrawlerDeploymentCheckpoint(
+        requestedCheckpointArm.fighterId,
+        requestedCheckpointArm.checkpoint,
+      );
+      if (!(checkpointArm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+        && checkpointArm.armed === true
+        && checkpointArm.fighterId === requestedCheckpointArm.fighterId
+        && checkpointArm.checkpoint === requestedCheckpointArm.checkpoint
+        && Math.abs(checkpointArm.minimumProgress - requestedCheckpointArm.minimumProgress) <= 1e-6)) {
+        throw new Error(`deployment checkpoint arm rejected or changed the canonical minimum ${JSON.stringify(checkpointArm)}`);
+      }
+    }
+    return {
+      checkpointArm,
+      presentation: bridge.setQaPresentationQuiesced(true, requestedOwner),
+    };
+  }, { requestedOwner: owner, requestedCheckpointArm: checkpointArmRequest });
+  const arm = armEnvelope.presentation;
+  if (captureTrace) await captureTrace();
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "deployment"
+    && arm.datasetActive === true
+    && arm.running === true
+    && arm.paused !== true
+    && arm.over !== true,
+  `${label}: deployment presentation quiescence did not arm ${JSON.stringify(arm)}`);
+
+  let value;
+  let operationError = null;
   try {
-    const arm = await page.evaluate(({ id, expectedCheckpoint }) => (
+    value = await operation(armEnvelope.checkpointArm);
+  } catch (error) {
+    operationError = error;
+  }
+
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      release = await page.evaluate((requestedOwner) => (
+        window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
+      ), owner);
+      if (captureTrace) await captureTrace();
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) {
+      throw new Error(`${String(operationError)}; presentation release also failed: ${String(releaseError)}`);
+    }
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "v100-qa-presentation-quiescence/v1"
+    && release.active === false
+    && release.owner === owner
+    && release.route === "deployment"
+    && release.datasetActive === false
+    && release.running === true
+    && release.paused === true
+    && release.over !== true,
+  `${label}: deployment presentation quiescence did not release at the semantic pause ${JSON.stringify(release)}`);
+  invariant(Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames),
+    `${label}: a production render escaped the deployment quiescence window ${JSON.stringify(release)}`);
+  invariant(Number(release.releasedAtSimulationTicks) > Number(release.enteredAtSimulationTicks),
+    `${label}: deployment simulation did not advance while presentation was quiesced ${JSON.stringify(release)}`);
+  invariant(Number(release.suppressedRenderFrames) > 0,
+    `${label}: deployment quiescence suppressed no scheduled render ${JSON.stringify(release)}`);
+
+  const restoredHandle = await page.waitForFunction(({ requestedOwner, releasedRenderFrames }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const quiescence = bridge?.getQaPresentationQuiescence?.();
+    const canvas = document.querySelector("canvas.battlefield");
+    if (!canvas) return false;
+    const rect = canvas.getBoundingClientRect();
+    const style = getComputedStyle(canvas);
+    const restored = quiescence?.schema === "v100-qa-presentation-quiescence/v1"
+      && quiescence.active === false
+      && quiescence.owner === requestedOwner
+      && quiescence.route === "deployment"
+      && quiescence.datasetActive === false
+      && quiescence.running === true
+      && quiescence.paused === true
+      && quiescence.over !== true
+      && Number(quiescence.renderFrames) >= Number(releasedRenderFrames) + 3
+      && style.display !== "none"
+      && style.visibility !== "hidden"
+      && Number(style.opacity) > 0
+      && rect.width > 0
+      && rect.height > 0;
+    return restored ? {
+      quiescence,
+      canvas: {
+        width: rect.width,
+        height: rect.height,
+        display: style.display,
+        visibility: style.visibility,
+        opacity: style.opacity,
+      },
+    } : false;
+  }, { requestedOwner: owner, releasedRenderFrames: release.releasedAtRenderFrames }, {
+    timeout: Math.min(timeout, 10_000),
+    polling: 50,
+  });
+  const restored = await restoredHandle.jsonValue();
+  await restoredHandle.dispose();
+  if (captureTrace) await captureTrace();
+  return {
+    value,
+    presentationQuiescence: {
+      schema: "v100-deployment-presentation-quiescence-receipt/v1",
+      owner,
+      checkpointArm: armEnvelope.checkpointArm,
+      arm,
+      release,
+      restored,
+    },
+  };
+}
+
+async function refreshDeploymentEvidenceAfterRestoredFrames(
+  page,
+  evidence,
+  fighterId,
+  unitKind,
+  expectedCheckpoint,
+  expectedProgress,
+  label,
+) {
+  const presentation = evidence?.presentationQuiescence;
+  invariant(presentation?.schema === "v100-deployment-presentation-quiescence-receipt/v1"
+    && Number(presentation.restored?.quiescence?.renderFrames)
+      >= Number(presentation.release?.releasedAtRenderFrames) + 3,
+  `${label}: post-restoration readback started before three production frames`);
+  const refreshed = await page.evaluate(({ id }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const snapshot = bridge?.getCrawlerDeploymentProofSnapshot?.({ fighterId: id }) ?? null;
+    return {
+      schema: snapshot?.schema ?? null,
+      screen: snapshot?.screen ?? null,
+      running: snapshot?.running ?? null,
+      paused: snapshot?.paused ?? null,
+      over: snapshot?.over ?? null,
+      computedProgress: snapshot?.computedProgress ?? null,
+      checkpointReceipt: snapshot?.checkpointReceipt ?? null,
+      fighter: snapshot?.fighter ?? null,
+    };
+  }, { id: fighterId });
+  const previousFighter = evidence?.fighter;
+  const fighter = refreshed.fighter;
+  invariant(refreshed.schema === "v099-crawler-deployment-snapshot/v1"
+    && refreshed.screen === "battle"
+    && refreshed.running === true
+    && refreshed.paused === true
+    && refreshed.over !== true,
+  `${label}: post-restoration production snapshot is not the frozen live battle`);
+  invariant(fighter?.id === fighterId
+    && fighter.kind === unitKind
+    && fighter.x === previousFighter?.x
+    && fighter.y === previousFighter?.y
+    && fighter.gateEntering === previousFighter?.gateEntering
+    && fighter.combatReady === previousFighter?.combatReady
+    && fighter.entryRampCleared === previousFighter?.entryRampCleared
+    && refreshed.computedProgress === evidence?.observedProgress,
+  `${label}: post-restoration production snapshot drifted from the accepted semantic pause`);
+  if (expectedCheckpoint === "fully-inside") {
+    invariant(expectedProgress === 0
+      && refreshed.computedProgress === 0
+      && refreshed.checkpointReceipt === null,
+    `${label}: fully-inside post-restoration readback acquired a noncanonical receipt`);
+  } else {
+    const receipt = refreshed.checkpointReceipt;
+    invariant(receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+      && receipt.fighterId === fighterId
+      && receipt.kind === unitKind
+      && receipt.checkpoint === expectedCheckpoint
+      && receipt.x === fighter.x
+      && receipt.y === fighter.y
+      && receipt.computedProgress === refreshed.computedProgress
+      && receipt.computedProgress + 1e-6 >= expectedProgress,
+    `${label}: post-restoration checkpoint receipt lost exact semantic ownership`);
+  }
+  invariant(fighter.renderAudit?.drawCount >= 1
+    && fighter.renderAudit?.renderSequence >= 1
+    && fighter.renderAudit?.x === fighter.x
+    && fighter.renderAudit?.y === fighter.y
+    && fighter.renderAudit?.deploymentPlan?.checkpoint === expectedCheckpoint
+    && fighter.renderAudit?.poseOpacity === 1
+    && fighter.renderAudit?.effectiveOpacity === 1
+    && fighter.animationPose?.opacity === 1,
+  `${label}: restored production frames did not record an opaque fighter render`);
+  return {
+    ...evidence,
+    fighter,
+    observedProgress: refreshed.computedProgress,
+    checkpointReceipt: refreshed.checkpointReceipt,
+    postRestorationReadback: {
+      schema: "v100-deployment-post-restoration-readback/v1",
+      restoredRenderFrames: presentation.restored.quiescence.renderFrames,
+      releasedAtRenderFrames: presentation.release.releasedAtRenderFrames,
+      fighterId,
+      unitKind,
+      checkpoint: expectedCheckpoint,
+      computedProgress: refreshed.computedProgress,
+      renderSequence: fighter.renderAudit.renderSequence,
+    },
+  };
+}
+
+async function pauseAtDeploymentCheckpoint(
+  page,
+  fighterId,
+  checkpoint,
+  minimumProgress,
+  label,
+  captureTrace = null,
+  prearmedCheckpoint = null,
+) {
+  try {
+    const arm = prearmedCheckpoint ?? await page.evaluate(({ id, expectedCheckpoint }) => (
       window.__ASHFALL_BATTLE_QA__.armCrawlerDeploymentCheckpoint(id, expectedCheckpoint)
     ), { id: fighterId, expectedCheckpoint: checkpoint });
     if (captureTrace) await captureTrace();
@@ -2376,14 +2615,33 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label, captur
         const snapshot = qa.getCrawlerDeploymentProofSnapshot({ kind });
         const fighter = snapshot?.fighter ?? null;
         if (!fighter) return null;
-        const bannerReady = document.querySelector(".battle-banner")?.textContent
-          ?.includes("移動拠点から出撃") === true;
+        const battleLive = snapshot?.schema === "v099-crawler-deployment-snapshot/v1"
+          && snapshot.screen === "battle"
+          && snapshot.running === true
+          && snapshot.paused !== true
+          && snapshot.over !== true;
+        if (!battleLive) {
+          return {
+            ready: false,
+            terminal: true,
+            state: snapshot ? {
+              screen: snapshot.screen,
+              running: snapshot.running,
+              paused: snapshot.paused,
+              over: snapshot.over,
+            } : null,
+          };
+        }
+        const bannerReady = snapshot.banner?.includes("移動拠点から出撃") === true;
         const progress = snapshot.computedProgress;
-        if (!(bannerReady && progress === 0)) return { ready: false };
+        if (!(fighter.kind === kind && bannerReady && progress === 0)) return { ready: false };
         qa.setRepresentativeSixProofPaused(true);
         return { ready: true, fighterId: fighter.id, fighterX: fighter.x, observedProgress: progress };
       }, unitKind);
       if (captureTrace) await captureTrace();
+      if (candidate?.terminal === true) {
+        throw new Error(`production battle ended before the first deployment frame ${JSON.stringify(candidate.state)}`);
+      }
       if (candidate?.ready === true) {
         await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
         const frozen = await page.evaluate(({ fighterId, expectedX }) => {
@@ -2661,15 +2919,43 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         `${name}/${unit.kind}: deployment fixture is unavailable`);
       activeQueueResult = { requested: true, result: null };
       activeDeploymentTrace.setQueueResult(activeQueueResult);
-      const firstFrame = await withDeploymentDiagnosticOperation(
+      const firstFrameEnvelope = await withDeploymentDiagnosticOperation(
         lifecycle,
         "deployment/first-frame-queue-readback",
         unitDetails,
-        () => queueAndPauseAtFirstDeploymentFrame(
+        () => withDeploymentPresentationQuiescence(
           page,
-          unit.kind,
-          `${name}/${unit.kind}`,
+          "deployment-first-frame",
+          `${name}/${unit.kind}/fully-inside`,
           activeDeploymentTrace.capture,
+          () => queueAndPauseAtFirstDeploymentFrame(
+            page,
+            unit.kind,
+            `${name}/${unit.kind}`,
+            activeDeploymentTrace.capture,
+          ),
+        ),
+      );
+      const firstFrameBeforeProductionReadback = {
+        ...firstFrameEnvelope.value,
+        presentationQuiescence: firstFrameEnvelope.presentationQuiescence,
+      };
+      const firstFrame = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/post-restoration-readback",
+        {
+          ...unitDetails,
+          requestedCheckpoint: "fully-inside",
+          requestedProgress: 0,
+        },
+        () => refreshDeploymentEvidenceAfterRestoredFrames(
+          page,
+          firstFrameBeforeProductionReadback,
+          firstFrameBeforeProductionReadback.fighter?.id ?? null,
+          unit.kind,
+          "fully-inside",
+          0,
+          `${name}/${unit.family}/fully-inside`,
         ),
       );
       activeQueueResult = { requested: true, result: firstFrame };
@@ -2696,17 +2982,47 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           requestedProgress: checkpoint.progress,
         });
         if (checkpointIndex > 0) {
-          evidence = await withDeploymentDiagnosticOperation(
+          const checkpointEnvelope = await withDeploymentDiagnosticOperation(
             lifecycle,
             "deployment/checkpoint-advance",
             checkpointDetails,
-            () => pauseAtDeploymentCheckpoint(
+            () => withDeploymentPresentationQuiescence(
               page,
+              "deployment-checkpoint-advance",
+              label,
+              activeDeploymentTrace.capture,
+              (checkpointArm) => pauseAtDeploymentCheckpoint(
+                page,
+                fighterId,
+                checkpoint.id,
+                checkpoint.progress,
+                label,
+                activeDeploymentTrace.capture,
+                checkpointArm,
+              ),
+              {
+                fighterId,
+                checkpoint: checkpoint.id,
+                minimumProgress: checkpoint.progress,
+              },
+            ),
+          );
+          const checkpointBeforeProductionReadback = {
+            ...checkpointEnvelope.value,
+            presentationQuiescence: checkpointEnvelope.presentationQuiescence,
+          };
+          evidence = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/post-restoration-readback",
+            checkpointDetails,
+            () => refreshDeploymentEvidenceAfterRestoredFrames(
+              page,
+              checkpointBeforeProductionReadback,
               fighterId,
+              unit.kind,
               checkpoint.id,
               checkpoint.progress,
               label,
-              activeDeploymentTrace.capture,
             ),
           );
         }
@@ -2772,6 +3088,8 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           fighter: evidence.fighter,
           audit: evidence.audit,
           checkpointReceipt: serializedCheckpointReceipt,
+          presentationQuiescence: evidence.presentationQuiescence ?? null,
+          postRestorationReadback: evidence.postRestorationReadback ?? null,
           screenshot: screenshotPath,
           screenshotSha256,
           canvasCapture,

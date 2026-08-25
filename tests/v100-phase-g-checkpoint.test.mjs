@@ -264,7 +264,7 @@ test("Phase G rejects full queues and terminal battle state before any candidate
   assert.match(JSON.stringify(terminal.sample), /runtime-not-live/u);
 });
 
-test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fourteen checkpoints", async () => {
+test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fifteen checkpoints", async () => {
   const [source, appSource, hostTelemetrySource] = await Promise.all([
     readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8"),
     readFile(path.join(repositoryRoot, "app/AshfallGame.tsx"), "utf8"),
@@ -321,6 +321,52 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal((source.match(/window\.__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/gu) ?? []).length, 2);
   assert.ok((source.match(/window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/gu) ?? []).length >= 20);
   assert.ok((source.match(/polling: 100/gu) ?? []).length >= 6);
+  const presentationBridgeBlock = appSource.match(/const qaPresentationQuiescenceSnapshot = \(\) => \{([\s\S]*?)\r?\n    const bridge = \{/u)?.[1] ?? "";
+  assert.ok(presentationBridgeBlock.length > 0, "missing localhost-only QA presentation quiescence bridge");
+  assert.ok(
+    appSource.indexOf('if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;')
+      < appSource.indexOf("const qaPresentationQuiescenceSnapshot"),
+    "presentation quiescence must remain inside the localhost bridge guard",
+  );
+  assert.match(presentationBridgeBlock, /parameters\.get\("phase-g"\) === "1"/u);
+  assert.match(presentationBridgeBlock, /"phase-g-pre-proof"/u);
+  assert.match(presentationBridgeBlock, /schema: "v100-qa-presentation-quiescence\/v1"/u);
+  assert.match(presentationBridgeBlock, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
+  assert.match(presentationBridgeBlock, /state\.enteredAtBattleTime = g\.time/u);
+  assert.match(presentationBridgeBlock, /state\.releasedAtBattleTime = g\.time/u);
+  assert.match(presentationBridgeBlock, /delete document\.documentElement\.dataset\.qaPresentationQuiesced/u);
+  assert.doesNotMatch(presentationBridgeBlock, /g\.time\s*=|g\.fighters\s*=|\.hp\s*=|\.timeline\s*=|\.speed\s*=/u);
+  const presentationLoopBlock = appSource.match(/const qaPresentationQuiescence = qaPresentationQuiescenceRef\.current;([\s\S]*?)\r?\n      ctx\.imageSmoothingEnabled/u)?.[1] ?? "";
+  assert.match(presentationLoopBlock, /!cadence\.shouldRender \|\| qaPresentationQuiescence\.active/u);
+  assert.match(presentationLoopBlock, /qaPresentationQuiescence\.suppressedRenderFrames \+= 1/u);
+  const presentationBoundaryNormalizer = source.match(/function normalizePhaseGPresentationQuiescenceBoundary\(value\) \{([\s\S]*?)(?=\nasync function runPhaseGPresentationQuiescence)/u)?.[1] ?? "";
+  assert.ok(presentationBoundaryNormalizer.length > 0, "missing single optional presentation-boundary normalizer");
+  assert.match(presentationBoundaryNormalizer, /value === null \|\| value === undefined/u);
+  assert.match(presentationBoundaryNormalizer, /const normalized = Number\(value\)/u);
+  assert.match(presentationBoundaryNormalizer, /!Number\.isFinite\(normalized\) \|\| normalized <= 0/u);
+  assert.match(presentationBoundaryNormalizer, /presentation quiescence requires a finite positive battle-time boundary/u);
+  assert.equal((source.match(/normalizePhaseGPresentationQuiescenceBoundary/gu) ?? []).length, 2);
+  const presentationHarnessBlock = source.match(/async function runPhaseGPresentationQuiescence([\s\S]*?)(?=\nasync function battlePage)/u)?.[1] ?? "";
+  assert.ok(presentationHarnessBlock.length > 0, "missing bounded presentation quiescence harness");
+  assert.match(source, /presentationQuiescenceUntilBattleTime: 34/u);
+  assert.equal((source.match(/presentationQuiescenceUntilBattleTime: 34/gu) ?? []).length, 1);
+  assert.match(source, /const presentationQuiescenceBattleTime = normalizePhaseGPresentationQuiescenceBoundary\(presentationQuiescenceUntilBattleTime\)/u);
+  assert.match(source, /if \(presentationQuiescenceBattleTime === null\) recorder\.mark\("presentation-quiescence-released-or-not-required", "not-required"/u);
+  assert.match(source, /if \(presentationQuiescenceBattleTime !== null\) \{[\s\S]*?untilBattleTime: presentationQuiescenceBattleTime/u);
+  assert.doesNotMatch(source, /Number\.isFinite\(Number\(presentationQuiescenceUntilBattleTime\)\)/u);
+  assert.match(presentationHarnessBlock, /setQaPresentationQuiesced\?\.\(false, "phase-g-pre-proof"\)/u);
+  assert.match(presentationHarnessBlock, /actorAttackObservedBeforeRelease/u);
+  assert.match(presentationHarnessBlock, /releasedAtRenderFrames\) === Number\(release\.enteredAtRenderFrames/u);
+  assert.match(presentationHarnessBlock, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
+  assert.match(presentationHarnessBlock, /Number\(quiescence\?\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
+  assert.match(presentationHarnessBlock, /style\.visibility !== "hidden"/u);
+  assert.doesNotMatch(presentationHarnessBlock, /\.time\s*=|eventIndex\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|setGraphicsQuality|accelerateBossFoundationEntry/u);
+  const battleRegionStart = source.indexOf("async function battlePage");
+  const quiescenceCallIndex = source.indexOf("presentationQuiescence = await runPhaseGPresentationQuiescence", battleRegionStart);
+  const frontlineCheckpointIndex = source.indexOf('recorder?.mark("frontline-deployment-sequence-completed"', battleRegionStart);
+  const proofActorTargetWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-live-human-target"', battleRegionStart);
+  const proofActorWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-attack"', proofActorTargetWaitIndex);
+  assert.ok(frontlineCheckpointIndex < quiescenceCallIndex && quiescenceCallIndex < proofActorTargetWaitIndex && proofActorTargetWaitIndex < proofActorWaitIndex, "presentation must restore after real deployments, before the contact-first prerequisite and authored attack phases");
   const causalCollector = source.match(/async function collectCombatCausalProof[\s\S]+?(?=\nasync function capture)/u)?.[0] ?? "";
   assert.match(causalCollector, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.doesNotMatch(causalCollector, /__PHASE_G_READ_COMBAT_SNAPSHOT__\(\)/u);
@@ -589,17 +635,41 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.doesNotMatch(battleRegion, /scrollIntoViewIfNeeded|force\s*:\s*true|dispatchEvent\([^)]*unit-card/u);
   assert.doesNotMatch(source, /JSON\.stringify\(\{ \.\.\.failurePayload, \.\.\.snapshot\(\) \}/u);
   const checkpointBlock = source.match(/const BATTLE_EXTRA_CHECKPOINTS = Object\.freeze\(\[([\s\S]*?)\]\);/u)?.[1] ?? "";
-  assert.equal((checkpointBlock.match(/"[^"]+"/gu) ?? []).length, 14);
+  assert.equal((checkpointBlock.match(/"[^"]+"/gu) ?? []).length, 15);
+  assert.match(checkpointBlock, /"presentation-quiescence-released-or-not-required"/u);
   assert.equal((source.match(/const targetOwnershipHistory = \[\.\.\.\(previous\.targetOwnershipHistory \?\? \[\]\)\];/gu) ?? []).length, 2);
   assert.match(source, /function proofActorHumanTargetFromHistory\(history = \[\], expectedKind = null\)/u);
   assert.match(source, /const proofActorHumanTargetFromHistory = \(history = \[\], expectedKind = null\) =>/u);
   assert.match(source, /activityTargetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
   assert.match(source, /targetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
-  assert.match(source, /proofActorAttackObserved = true;\s*if \(proofActorRequiresContactFirst\) await readProofActorContactState\(\);/u);
+  const finalProofStart = source.indexOf('recorder?.setAwaiting("proof-actor-live-human-target"');
+  const finalProofEnd = source.indexOf("if (proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();", finalProofStart);
+  const finalProofRegion = source.slice(finalProofStart, finalProofEnd);
+  assert.ok(finalProofStart >= 0 && finalProofEnd > finalProofStart);
+  assert.match(finalProofRegion, /if \(proofActorRequiresContactFirst\)/u);
+  assert.match(finalProofRegion, /const contactDeadline = Date\.now\(\) \+ Math\.min\(battleTimeout, 45_000\)/u);
+  assert.match(finalProofRegion, /contactState\?\.hasLiveHumanTarget !== true/u);
+  assert.match(finalProofRegion, /proofActorAttackObserved \|\| contactState\?\.hasLiveHumanTarget === true/u);
+  assert.match(finalProofRegion, /proofActorAttackObserved[\s\S]+contactState\?\.hasHumanTarget === true/u);
+  assert.match(finalProofRegion, /if \(!proofActorAttackObserved\)[\s\S]+setAwaiting\("proof-actor-attack"/u);
+  assert.match(finalProofRegion, /timeout: Math\.min\(battleTimeout, 45_000\), polling: 100/u);
+  assert.equal((finalProofRegion.match(/Math\.min\(battleTimeout, 45_000\)/gu) ?? []).length, 2);
+  assert.match(finalProofRegion, /finalContactState\?\.hasHumanTarget === true/u);
+  assert.match(finalProofRegion, /proofActorAttackObserved = true;/u);
+  assert.equal((finalProofRegion.match(/contactState\?\.hasLiveHumanTarget === true/gu) ?? []).length, 2);
+  assert.equal((finalProofRegion.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 1);
+  assert.equal((source.match(/(?:recorder|recorder\?)\.markOnce\("proof-actor-mounted-or-absent"/gu) ?? []).length, 4);
+  assert.equal((source.match(/(?:recorder|recorder\?)\.markOnce\("living-human-target-acquired-or-not-required"/gu) ?? []).length, 2);
+  assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("proof-actor-mounted-or-absent"/u);
+  assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("living-human-target-acquired-or-not-required"/u);
   assert.match(source, /function proofActorTargetContinuityDecision\(\{/u);
   assert.match(source, /hasLiveHumanTarget: liveHumanTarget/u);
-  assert.equal((source.match(/contactState\?\.hasLiveHumanTarget === true/gu) ?? []).length, 2);
-  assert.equal((source.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 0);
+  const bossContactRegionStart = source.indexOf('recorder?.setAwaiting("boss-frontline-deployment"');
+  const bossContactRegionEnd = source.indexOf("bossDeploymentFinished = true;", bossContactRegionStart);
+  assert.ok(bossContactRegionStart >= 0 && bossContactRegionEnd > bossContactRegionStart);
+  const bossContactRegion = source.slice(bossContactRegionStart, bossContactRegionEnd);
+  assert.equal((bossContactRegion.match(/contactState\?\.hasLiveHumanTarget === true/gu) ?? []).length, 2);
+  assert.equal((bossContactRegion.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 0);
   assert.match(source, /targetContinuity\.allowSustainRedeploy/u);
   assert.match(source, /targetContinuity\.targetSurvivalPlanPending/u);
   const continuityHelper = source.match(/function proofActorTargetContinuityDecision\(\{([\s\S]+?)\n\}\n\nfunction combatCausalConvergenceDecision/u)?.[1] ?? "";

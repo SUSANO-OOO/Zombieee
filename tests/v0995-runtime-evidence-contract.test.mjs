@@ -245,6 +245,47 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
     "deployment/trace-capture",
     "deployment/contact-sheet",
   ]) assert.match(finalRemediationHarness, new RegExp(operation.replaceAll("/", "\\/"), "u"));
+  const presentationBridge = gameSource.match(/const qaPresentationQuiescenceSnapshot = \(\) => \{([\s\S]*?)\r?\n    const bridge = \{/u)?.[1] ?? "";
+  assert.ok(presentationBridge.length > 0, "missing shared localhost QA presentation quiescence bridge");
+  assert.match(presentationBridge, /parameters\.get\("qa"\) === "mission" && parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
+  assert.match(presentationBridge, /"deployment-first-frame", "deployment-checkpoint-advance"/u);
+  assert.match(presentationBridge, /schema: "v100-qa-presentation-quiescence\/v1"/u);
+  assert.match(presentationBridge, /state\.owner !== requestedOwner \|\| state\.route !== route/u);
+  assert.match(presentationBridge, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
+  assert.doesNotMatch(presentationBridge, /g\.time\s*=|g\.fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=/u);
+  const presentationHarness = finalRemediationHarness.match(/async function withDeploymentPresentationQuiescence[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
+  assert.ok(presentationHarness.length > 0, "missing deployment presentation quiescence owner");
+  assert.match(presentationHarness, /setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(presentationHarness, /setQaPresentationQuiesced\?\.\(false, requestedOwner\)/u);
+  assert.match(presentationHarness, /requestedCheckpointArm/u);
+  assert.match(presentationHarness, /armCrawlerDeploymentCheckpoint\([\s\S]*setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(presentationHarness, /checkpointArm: armEnvelope\.checkpointArm/u);
+  assert.match(presentationHarness, /release\.paused === true/u);
+  assert.match(presentationHarness, /releasedAtRenderFrames\) === Number\(release\.enteredAtRenderFrames/u);
+  assert.match(presentationHarness, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
+  assert.match(presentationHarness, /Number\(quiescence\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
+  assert.match(presentationHarness, /v100-deployment-presentation-quiescence-receipt\/v1/u);
+  assert.doesNotMatch(presentationHarness, /\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=|setGraphicsQuality|force\s*:/u);
+  const postRestorationReadback = finalRemediationHarness.match(/async function refreshDeploymentEvidenceAfterRestoredFrames[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
+  assert.ok(postRestorationReadback.length > 0, "missing post-restoration production snapshot readback");
+  assert.equal((postRestorationReadback.match(/getCrawlerDeploymentProofSnapshot/gu) ?? []).length, 1);
+  assert.match(postRestorationReadback, /renderFrames\)\s*>= Number\(presentation\.release\?\.releasedAtRenderFrames\) \+ 3/u);
+  assert.match(postRestorationReadback, /refreshed\.screen === "battle"[\s\S]*refreshed\.running === true[\s\S]*refreshed\.paused === true[\s\S]*refreshed\.over !== true/u);
+  assert.match(postRestorationReadback, /fighter\.x === previousFighter\?\.x[\s\S]*fighter\.y === previousFighter\?\.y[\s\S]*refreshed\.computedProgress === evidence\?\.observedProgress/u);
+  assert.match(postRestorationReadback, /refreshed\.checkpointReceipt === null/u);
+  assert.match(postRestorationReadback, /receipt\.fighterId === fighterId[\s\S]*receipt\.kind === unitKind[\s\S]*receipt\.checkpoint === expectedCheckpoint[\s\S]*receipt\.computedProgress === refreshed\.computedProgress/u);
+  assert.match(postRestorationReadback, /fighter\.renderAudit\?\.deploymentPlan\?\.checkpoint === expectedCheckpoint[\s\S]*fighter\.renderAudit\?\.poseOpacity === 1[\s\S]*fighter\.renderAudit\?\.effectiveOpacity === 1[\s\S]*fighter\.animationPose\?\.opacity === 1/u);
+  assert.match(postRestorationReadback, /v100-deployment-post-restoration-readback\/v1/u);
+  assert.doesNotMatch(postRestorationReadback, /auditFighterUnitLayer|requestAnimationFrame|waitForFunction|page\.waitForTimeout|hostTurn|document\.querySelector|setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint/u);
+  const presentationDeploymentCase = finalRemediationHarness.match(/async function runDeploymentCase[\s\S]+?(?=\nconst buildIdentityAtStart)/u)?.[0] ?? "";
+  assert.match(presentationDeploymentCase, /withDeploymentPresentationQuiescence\([\s\S]*"deployment-first-frame"[\s\S]*queueAndPauseAtFirstDeploymentFrame/u);
+  assert.match(presentationDeploymentCase, /withDeploymentPresentationQuiescence\([\s\S]*"deployment-checkpoint-advance"[\s\S]*pauseAtDeploymentCheckpoint/u);
+  assert.match(presentationDeploymentCase, /\(checkpointArm\) => pauseAtDeploymentCheckpoint\([\s\S]*checkpointArm,[\s\S]*fighterId,[\s\S]*checkpoint: checkpoint\.id,[\s\S]*minimumProgress: checkpoint\.progress/u);
+  assert.match(presentationDeploymentCase, /presentationQuiescence: evidence\.presentationQuiescence \?\? null/u);
+  assert.equal((presentationDeploymentCase.match(/refreshDeploymentEvidenceAfterRestoredFrames\(/gu) ?? []).length, 2);
+  assert.match(presentationDeploymentCase, /firstFrameBeforeProductionReadback[\s\S]*refreshDeploymentEvidenceAfterRestoredFrames\([\s\S]*"fully-inside",[\s\S]*0,/u);
+  assert.match(presentationDeploymentCase, /checkpointBeforeProductionReadback[\s\S]*refreshDeploymentEvidenceAfterRestoredFrames\([\s\S]*checkpoint\.id,[\s\S]*checkpoint\.progress/u);
+  assert.match(presentationDeploymentCase, /postRestorationReadback: evidence\.postRestorationReadback \?\? null/u);
   for (const operation of [
     "hosted/asset-boundary",
     "hosted/fault-start",
@@ -310,11 +351,13 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(finalRemediationHarness, /DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS = 100/u);
   assert.match(firstFrame, /hostTurn\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/u);
   assert.match(firstFrame, /getCrawlerDeploymentProofSnapshot/u);
+  assert.match(firstFrame, /snapshot\?\.schema === "v099-crawler-deployment-snapshot\/v1"/u);
+  assert.match(firstFrame, /snapshot\.banner\?\.includes\("移動拠点から出撃"\) === true/u);
   assert.match(firstFrame, /progress === 0/u);
   assert.match(firstFrame, /captureTrace = null/u);
   assert.ok((firstFrame.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length >= 3);
   assert.equal((firstFrame.match(/auditFighterUnitLayer/gu) ?? []).length, 1);
-  assert.doesNotMatch(firstFrame, /requestAnimationFrame|getSnapshot|page\.waitForTimeout/u);
+  assert.doesNotMatch(firstFrame, /document\.querySelector\("\.battle-banner"\)|requestAnimationFrame|getSnapshot|page\.waitForTimeout/u);
   const checkpoint = finalRemediationHarness.match(/async function pauseAtDeploymentCheckpoint[\s\S]+?(?=\nasync function queueAndPauseAtFirstDeploymentFrame)/u)?.[0] ?? "";
   assert.equal((checkpoint.match(/armCrawlerDeploymentCheckpoint/gu) ?? []).length, 1);
   assert.match(checkpoint, /getCrawlerDeploymentProofSnapshot/u);
@@ -322,6 +365,8 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(checkpoint, /checkpointReceipt/u);
   assert.match(checkpoint, /hostTurn\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/u);
   assert.match(checkpoint, /captureTrace = null/u);
+  assert.match(checkpoint, /prearmedCheckpoint = null/u);
+  assert.match(checkpoint, /prearmedCheckpoint \?\? await page\.evaluate/u);
   assert.equal((checkpoint.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length, 3);
   assert.equal((checkpoint.match(/auditFighterUnitLayer/gu) ?? []).length, 1);
   assert.match(finalRemediationHarness, /function validDeploymentAuditScratchReceipt\(audit\)/u);
@@ -384,7 +429,7 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(deploymentCase, /deploymentRuntimeContactSheet\([\s\S]*name,[\s\S]*unit\.family,[\s\S]*unit\.kind,[\s\S]*viewport/u);
   assert.doesNotMatch(deploymentCase, /\$\{name\}-deployment-\$\{unit\.family\}-\$\{checkpointIndex\}/u);
   assert.match(deploymentCase, /schema: receipt\.schema[\s\S]*fighterId: receipt\.fighterId[\s\S]*kind: receipt\.kind[\s\S]*checkpoint: receipt\.checkpoint[\s\S]*x: receipt\.x[\s\S]*y: receipt\.y[\s\S]*computedProgress: receipt\.computedProgress[\s\S]*battleTime: receipt\.battleTime[\s\S]*gateEntering: receipt\.gateEntering[\s\S]*combatReady: receipt\.combatReady[\s\S]*entryRampCleared: receipt\.entryRampCleared/u);
-  assert.doesNotMatch(deploymentCase, /checkpointReceipt:\s*evidence\.checkpointReceipt|checkpointArm|readableSnapshot|getSnapshot|requestAnimationFrame|page\.waitForTimeout/u);
+  assert.doesNotMatch(deploymentCase, /checkpointReceipt:\s*evidence\.checkpointReceipt|readableSnapshot|getSnapshot|requestAnimationFrame|page\.waitForTimeout/u);
   assert.match(gameSource, /getCrawlerDeploymentProofSnapshot:[\s\S]*schema: "v099-crawler-deployment-snapshot\/v1"/u);
   const deploymentArm = gameSource.match(/armCrawlerDeploymentCheckpoint:[\s\S]+?(?=\r?\n      armRepresentativeSixPhasePause:)/u)?.[0] ?? "";
   assert.match(deploymentArm, /CRAWLER_DEPLOYMENT_CHECKPOINTS\.find/u);

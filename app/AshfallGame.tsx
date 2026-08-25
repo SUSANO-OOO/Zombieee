@@ -7934,6 +7934,37 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // movement loop advances it. The hook is armed only through the localhost
   // battle bridge and is released with the same proof pause control.
   const qaFreezeNextCrawlerDeploymentKindRef = useRef<UnitKind | null>(null);
+  const qaPresentationQuiescenceRef = useRef<{
+    active: boolean;
+    owner: string | null;
+    route: "phase-g" | "deployment" | null;
+    generation: number;
+    enteredAtBattleTime: number | null;
+    releasedAtBattleTime: number | null;
+    enteredAtRenderFrames: number | null;
+    releasedAtRenderFrames: number | null;
+    enteredAtSimulationTicks: number | null;
+    releasedAtSimulationTicks: number | null;
+    suppressedRenderFrames: number;
+    pausedAnimationCount: number;
+    resumedAnimationCount: number;
+    pausedAnimations: Animation[];
+  }>({
+    active: false,
+    owner: null,
+    route: null,
+    generation: 0,
+    enteredAtBattleTime: null,
+    releasedAtBattleTime: null,
+    enteredAtRenderFrames: null,
+    releasedAtRenderFrames: null,
+    enteredAtSimulationTicks: null,
+    releasedAtSimulationTicks: null,
+    suppressedRenderFrames: 0,
+    pausedAnimationCount: 0,
+    resumedAnimationCount: 0,
+    pausedAnimations: [],
+  });
   const qaFrozenCrawlerDeploymentFighterIdRef = useRef<number | null>(null);
   const qaArmedCrawlerDeploymentCheckpointRef = useRef<{
     fighterId: number;
@@ -8773,7 +8804,110 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       __ASHFALL_BATTLE_QA__?: unknown;
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
+    const qaPresentationQuiescenceSnapshot = () => {
+      const state = qaPresentationQuiescenceRef.current;
+      const g = gameRef.current;
+      return {
+        schema: "v100-qa-presentation-quiescence/v1" as const,
+        active: state.active,
+        owner: state.owner,
+        route: state.route,
+        generation: state.generation,
+        stageId: g.definition.stageId,
+        battleTime: g.time,
+        running: g.running,
+        paused: g.paused,
+        over: g.over,
+        enteredAtBattleTime: state.enteredAtBattleTime,
+        releasedAtBattleTime: state.releasedAtBattleTime,
+        enteredAtRenderFrames: state.enteredAtRenderFrames,
+        releasedAtRenderFrames: state.releasedAtRenderFrames,
+        enteredAtSimulationTicks: state.enteredAtSimulationTicks,
+        releasedAtSimulationTicks: state.releasedAtSimulationTicks,
+        suppressedRenderFrames: state.suppressedRenderFrames,
+        pausedAnimationCount: state.pausedAnimationCount,
+        resumedAnimationCount: state.resumedAnimationCount,
+        renderFrames: runtimePerformanceRef.current.renderFrames,
+        simulationTicks: runtimePerformanceRef.current.simulationTicks,
+        datasetActive: document.documentElement.dataset.qaPresentationQuiesced === "true",
+      };
+    };
+    const setQaPresentationQuiesced = (requestedActive: boolean, requestedOwner: string) => {
+      const parameters = new URLSearchParams(window.location.search);
+      const route = parameters.get("phase-g") === "1"
+        ? "phase-g"
+        : parameters.get("qa") === "mission" && parameters.get("qaHudFiniteAssets") === "1"
+          ? "deployment"
+          : null;
+      const allowedOwners = route === "phase-g"
+        ? ["phase-g-pre-proof"]
+        : route === "deployment"
+          ? ["deployment-first-frame", "deployment-checkpoint-advance"]
+          : [];
+      if (!allowedOwners.includes(requestedOwner)) {
+        throw new Error("QA presentation quiescence owner is unavailable on this local route");
+      }
+      const nextActive = Boolean(requestedActive);
+      const state = qaPresentationQuiescenceRef.current;
+      const g = gameRef.current;
+      if (nextActive === state.active) {
+        if (state.owner !== requestedOwner || state.route !== route) {
+          throw new Error("QA presentation quiescence ownership changed while active state was unchanged");
+        }
+        return qaPresentationQuiescenceSnapshot();
+      }
+      if (nextActive) {
+        if (screen !== "battle" || !g.running || g.paused || g.over) {
+          throw new Error("QA presentation quiescence requires a live production battle");
+        }
+        const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
+        const runningAnimations = typeof battleRoot?.getAnimations === "function"
+          ? battleRoot.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running")
+          : [];
+        for (const animation of runningAnimations) animation.pause();
+        state.active = true;
+        state.owner = requestedOwner;
+        state.route = route;
+        state.generation += 1;
+        state.enteredAtBattleTime = g.time;
+        state.releasedAtBattleTime = null;
+        state.enteredAtRenderFrames = runtimePerformanceRef.current.renderFrames;
+        state.releasedAtRenderFrames = null;
+        state.enteredAtSimulationTicks = runtimePerformanceRef.current.simulationTicks;
+        state.releasedAtSimulationTicks = null;
+        state.suppressedRenderFrames = 0;
+        state.pausedAnimationCount = runningAnimations.length;
+        state.resumedAnimationCount = 0;
+        state.pausedAnimations = runningAnimations;
+        document.documentElement.dataset.qaPresentationQuiesced = "true";
+        return qaPresentationQuiescenceSnapshot();
+      }
+      if (state.owner !== requestedOwner || state.route !== route) {
+        throw new Error("QA presentation quiescence release owner does not match the active owner");
+      }
+      state.active = false;
+      let resumedAnimationCount = 0;
+      for (const animation of state.pausedAnimations) {
+        try {
+          if (animation.playState === "paused") {
+            animation.play();
+            resumedAnimationCount += 1;
+          }
+        } catch {
+          // A detached CSS animation cannot affect the restored production surface.
+        }
+      }
+      state.pausedAnimations = [];
+      state.resumedAnimationCount = resumedAnimationCount;
+      state.releasedAtBattleTime = g.time;
+      state.releasedAtRenderFrames = runtimePerformanceRef.current.renderFrames;
+      state.releasedAtSimulationTicks = runtimePerformanceRef.current.simulationTicks;
+      delete document.documentElement.dataset.qaPresentationQuiesced;
+      return qaPresentationQuiescenceSnapshot();
+    };
     const bridge = {
+      getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,
+      setQaPresentationQuiesced,
       setSaveBoundaryPending: (pending: boolean) => {
         const next = Boolean(pending);
         qaBattleSaveBoundaryPendingRef.current = next;
@@ -21781,7 +21915,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         }
       }
       }
-      if (!cadence.shouldRender) {
+      const qaPresentationQuiescence = qaPresentationQuiescenceRef.current;
+      if (!cadence.shouldRender || qaPresentationQuiescence.active) {
+        if (cadence.shouldRender && qaPresentationQuiescence.active) {
+          qaPresentationQuiescence.suppressedRenderFrames += 1;
+        }
         requestFrame();
         return;
       }
