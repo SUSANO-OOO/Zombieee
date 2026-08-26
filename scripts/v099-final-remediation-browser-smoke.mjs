@@ -2961,70 +2961,73 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         () => deploymentLifecyclePhase,
       );
       const unitDetails = { caseIdentity: name, unitFamily: unit.family, unitKind: unit.kind };
-      const unitAsset = await withDeploymentDiagnosticOperation(
-        lifecycle,
-        "deployment/unit-asset-proof",
-        unitDetails,
-        () => page.evaluate(
-          (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
-          unit.kind,
-        ),
-      );
-      await withDeploymentDiagnosticOperation(
-        lifecycle,
-        "deployment/trace-capture",
-        { ...unitDetails, traceBoundary: "unit-asset-proof" },
-        () => activeDeploymentTrace.capture(),
-      );
-      invariant(unitAsset?.kind === unit.kind
-        && typeof unitAsset.path === "string"
-        && unitAsset.width > 0
-        && unitAsset.height > 0,
-      `${name}/${unit.kind}: strict unit asset decode failed ${JSON.stringify(unitAsset)}`);
-      unitResult.asset = unitAsset;
-      const prepared = await withDeploymentDiagnosticOperation(
-        lifecycle,
-        "deployment/fixture-preparation",
-        unitDetails,
-        () => page.evaluate((kind) => (
-          window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
-            attackerKind: kind === "crazy-king" ? "crusher" : "walker",
-            lane: 1,
-            existingClaim: false,
-          })
-        ), unit.kind),
-      );
-      activeFixtureResult = prepared;
-      activeDeploymentTrace.setFixtureResult(prepared);
-      await withDeploymentDiagnosticOperation(
-        lifecycle,
-        "deployment/trace-capture",
-        { ...unitDetails, traceBoundary: "fixture-preparation" },
-        () => activeDeploymentTrace.capture(),
-      );
-      invariant(Number.isInteger(prepared?.attackerId),
-        `${name}/${unit.kind}: deployment fixture is unavailable`);
-      activeQueueResult = { requested: true, result: null };
-      activeDeploymentTrace.setQueueResult(activeQueueResult);
-      const firstFrameEnvelope = await withDeploymentDiagnosticOperation(
-        lifecycle,
-        "deployment/first-frame-queue-readback",
-        unitDetails,
-        () => withDeploymentPresentationQuiescence(
-          page,
-          "deployment-first-frame",
-          `${name}/${unit.kind}/fully-inside`,
-          activeDeploymentTrace.capture,
-          () => queueAndPauseAtFirstDeploymentFrame(
-            page,
-            unit.kind,
-            `${name}/${unit.kind}`,
-            activeDeploymentTrace.capture,
-          ),
-        ),
+      const firstFrameEnvelope = await withDeploymentPresentationQuiescence(
+        page,
+        "deployment-first-frame",
+        `${name}/${unit.kind}/fully-inside`,
+        activeDeploymentTrace.capture,
+        async () => {
+          const unitAsset = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/unit-asset-proof",
+            unitDetails,
+            () => page.evaluate(
+              (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
+              unit.kind,
+            ),
+          );
+          await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/trace-capture",
+            { ...unitDetails, traceBoundary: "unit-asset-proof" },
+            () => activeDeploymentTrace.capture(),
+          );
+          invariant(unitAsset?.kind === unit.kind
+            && typeof unitAsset.path === "string"
+            && unitAsset.width > 0
+            && unitAsset.height > 0,
+          `${name}/${unit.kind}: strict unit asset decode failed ${JSON.stringify(unitAsset)}`);
+          unitResult.asset = unitAsset;
+          const prepared = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/fixture-preparation",
+            unitDetails,
+            () => page.evaluate((kind) => (
+              window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
+                attackerKind: kind === "crazy-king" ? "crusher" : "walker",
+                lane: 1,
+                existingClaim: false,
+              })
+            ), unit.kind),
+          );
+          activeFixtureResult = prepared;
+          activeDeploymentTrace.setFixtureResult(prepared);
+          await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/trace-capture",
+            { ...unitDetails, traceBoundary: "fixture-preparation" },
+            () => activeDeploymentTrace.capture(),
+          );
+          invariant(Number.isInteger(prepared?.attackerId),
+            `${name}/${unit.kind}: deployment fixture is unavailable`);
+          activeQueueResult = { requested: true, result: null };
+          activeDeploymentTrace.setQueueResult(activeQueueResult);
+          const firstFrame = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/first-frame-queue-readback",
+            unitDetails,
+            () => queueAndPauseAtFirstDeploymentFrame(
+              page,
+              unit.kind,
+              `${name}/${unit.kind}`,
+              activeDeploymentTrace.capture,
+            ),
+          );
+          return { unitAsset, prepared, firstFrame };
+        },
       );
       const firstFrameBeforeProductionReadback = {
-        ...firstFrameEnvelope.value,
+        ...firstFrameEnvelope.value.firstFrame,
         presentationQuiescence: firstFrameEnvelope.presentationQuiescence,
       };
       const firstFrame = await withDeploymentDiagnosticOperation(

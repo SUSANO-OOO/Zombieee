@@ -293,7 +293,38 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(postRestorationReadback, /v100-deployment-post-restoration-readback\/v1/u);
   assert.doesNotMatch(postRestorationReadback, /auditFighterUnitLayer|requestAnimationFrame|waitForFunction|page\.waitForTimeout|hostTurn|document\.querySelector|setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint/u);
   const presentationDeploymentCase = finalRemediationHarness.match(/async function runDeploymentCase[\s\S]+?(?=\nconst buildIdentityAtStart)/u)?.[0] ?? "";
-  assert.match(presentationDeploymentCase, /withDeploymentPresentationQuiescence\([\s\S]*"deployment-first-frame"[\s\S]*queueAndPauseAtFirstDeploymentFrame/u);
+  assert.match(presentationDeploymentCase, /const firstFrameEnvelope = await withDeploymentPresentationQuiescence\([\s\S]*"deployment-first-frame"[\s\S]*queueAndPauseAtFirstDeploymentFrame/u);
+  const firstFrameQuiescenceIndex = presentationDeploymentCase.indexOf("const firstFrameEnvelope = await withDeploymentPresentationQuiescence(");
+  const firstFrameOwnerIndex = presentationDeploymentCase.indexOf('"deployment-first-frame"', firstFrameQuiescenceIndex);
+  const unitAssetProofIndex = presentationDeploymentCase.indexOf('"deployment/unit-asset-proof"', firstFrameOwnerIndex);
+  const unitAssetTraceIndex = presentationDeploymentCase.indexOf('traceBoundary: "unit-asset-proof"', unitAssetProofIndex);
+  const fixturePreparationIndex = presentationDeploymentCase.indexOf('"deployment/fixture-preparation"', unitAssetTraceIndex);
+  const fixtureTraceIndex = presentationDeploymentCase.indexOf('traceBoundary: "fixture-preparation"', fixturePreparationIndex);
+  const firstFrameDiagnosticIndex = presentationDeploymentCase.indexOf('"deployment/first-frame-queue-readback"', fixtureTraceIndex);
+  const firstFrameQueueIndex = presentationDeploymentCase.indexOf("queueAndPauseAtFirstDeploymentFrame(", firstFrameDiagnosticIndex);
+  const firstFrameQuiescenceEnd = presentationDeploymentCase.indexOf("const firstFrameBeforeProductionReadback", firstFrameQueueIndex);
+  assert.ok(firstFrameQuiescenceIndex >= 0
+    && firstFrameQuiescenceIndex < firstFrameOwnerIndex
+    && firstFrameOwnerIndex < unitAssetProofIndex
+    && unitAssetProofIndex < unitAssetTraceIndex
+    && unitAssetTraceIndex < fixturePreparationIndex
+    && fixturePreparationIndex < fixtureTraceIndex
+    && fixtureTraceIndex < firstFrameDiagnosticIndex
+    && firstFrameDiagnosticIndex < firstFrameQueueIndex
+    && firstFrameQueueIndex < firstFrameQuiescenceEnd,
+  "deployment presentation quiescence must own exactly five serial diagnostic operations through the first-frame queue");
+  const firstFrameQuiescenceRegion = presentationDeploymentCase.slice(firstFrameQuiescenceIndex, firstFrameQuiescenceEnd);
+  assert.match(firstFrameQuiescenceRegion, /traceBoundary: "unit-asset-proof"[\s\S]*traceBoundary: "fixture-preparation"/u);
+  assert.equal((firstFrameQuiescenceRegion.match(/withDeploymentDiagnosticOperation\(/gu) ?? []).length, 5);
+  assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/unit-asset-proof"/gu) ?? []).length, 1);
+  assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/trace-capture"/gu) ?? []).length, 2);
+  assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/fixture-preparation"/gu) ?? []).length, 1);
+  assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/first-frame-queue-readback"/gu) ?? []).length, 1);
+  assert.equal((firstFrameQuiescenceRegion.match(/queueAndPauseAtFirstDeploymentFrame\(/gu) ?? []).length, 1);
+  assert.match(firstFrameQuiescenceRegion, /const firstFrame = await withDeploymentDiagnosticOperation\(\s*lifecycle,\s*"deployment\/first-frame-queue-readback",\s*unitDetails,\s*\(\) => queueAndPauseAtFirstDeploymentFrame\(/u);
+  assert.doesNotMatch(firstFrameQuiescenceRegion, /withDeploymentDiagnosticOperation\(\s*lifecycle,\s*"deployment\/first-frame-queue-readback",[\s\S]+?\(\) => withDeploymentPresentationQuiescence\(/u);
+  assert.doesNotMatch(firstFrameQuiescenceRegion, /\(\) => withDeploymentDiagnosticOperation\([\s\S]+?withDeploymentDiagnosticOperation\(/u);
+  assert.doesNotMatch(presentationDeploymentCase.slice(0, firstFrameQuiescenceIndex), /deployment\/unit-asset-proof|deployment\/fixture-preparation/u);
   assert.match(presentationDeploymentCase, /withDeploymentPresentationQuiescence\([\s\S]*"deployment-checkpoint-advance"[\s\S]*pauseAtDeploymentCheckpoint/u);
   assert.match(presentationDeploymentCase, /\(checkpointArm\) => pauseAtDeploymentCheckpoint\([\s\S]*checkpointArm,[\s\S]*fighterId,[\s\S]*checkpoint: checkpoint\.id,[\s\S]*minimumProgress: checkpoint\.progress/u);
   assert.match(presentationDeploymentCase, /presentationQuiescence: evidence\.presentationQuiescence \?\? null/u);

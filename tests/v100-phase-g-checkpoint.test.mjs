@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import path from "node:path";
+import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
@@ -89,6 +90,21 @@ function runCausalConvergenceProbe(input) {
       ...process.env,
       V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE: "1",
       V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE_INPUT: JSON.stringify(input),
+    },
+    encoding: "utf8",
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  return JSON.parse(result.stdout.trim());
+}
+
+function runExactActorProbe(input) {
+  const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      V100_PHASE_G_EXACT_ACTOR_PROBE: "1",
+      V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT: JSON.stringify(input),
     },
     encoding: "utf8",
   });
@@ -270,6 +286,10 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     readFile(path.join(repositoryRoot, "app/AshfallGame.tsx"), "utf8"),
     readFile(path.join(repositoryRoot, "scripts/webkit-host-resource-telemetry.mjs"), "utf8"),
   ]);
+  assert.equal(weaponCueForUnit("ranger"), "weapon-rifle", "exact ally proof must use the production unit-weapon cue owner");
+  assert.equal(enemyCombatCueFor("spitter", "attack"), "enemy-spitter-attack", "exact enemy proof must use the production combat-cue owner");
+  assert.match(source, /import \{ enemyCombatCueFor, weaponCueForUnit \} from "\.\.\/app\/productionAudio\.js"/u);
+  assert.doesNotMatch(source, /V100_COMBAT_FX_INVENTORY/u);
   const leanSnapshotBlock = appSource.match(/getPhaseGCombatSnapshot: \(\) => \{([\s\S]*?)\r?\n      \},\r?\n      getSnapshot: \(\) => \{/u)?.[1] ?? "";
   assert.ok(leanSnapshotBlock.length > 0, "missing localhost-only Phase G combat snapshot method");
   assert.equal((appSource.match(/getPhaseGCombatSnapshot:/gu) ?? []).length, 1);
@@ -359,20 +379,49 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /if \(presentationQuiescenceEnabled\) \{[\s\S]*?presentationQuiescenceArm = await armPhaseGPresentationQuiescence/u);
   assert.match(source, /if \(presentationQuiescenceArm\) \{[\s\S]*?presentationQuiescence = await releasePhaseGPresentationQuiescence[\s\S]*?untilBattleTime: presentationQuiescenceBattleTime/u);
   assert.doesNotMatch(source, /Number\.isFinite\(Number\(presentationQuiescenceUntilBattleTime\)\)/u);
-  assert.match(presentationHarnessBlock, /setQaPresentationQuiesced\?\.\(false, "phase-g-pre-proof"\)/u);
+  assert.match(presentationHarnessBlock, /const receipt = bridge\.setQaPresentationQuiesced\(false, "phase-g-pre-proof"\)/u);
   assert.match(presentationHarnessBlock, /actorAttackObservedBeforeRelease/u);
   assert.doesNotMatch(presentationHarnessBlock, /proof actor attacked while presentation evidence was quiesced/u);
   assert.match(presentationHarnessBlock, /releasedAtRenderFrames\) === Number\(release\.enteredAtRenderFrames/u);
   assert.match(presentationHarnessBlock, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
   assert.match(presentationHarnessBlock, /Number\(quiescence\?\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
   assert.match(presentationHarnessBlock, /style\.visibility !== "hidden"/u);
-  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v2/u);
-  assert.match(presentationHarnessBlock, /fighterBaselines: fighters\.map\(\(fighter\) => \(\{/u);
-  assert.match(presentationHarnessBlock, /fighterId: fighter\.id,[\s\S]*baselineAttackSequence: Number\(fighter\.attackSequence\) \|\| 0/u);
+  assert.match(presentationHarnessBlock, /v100-phase-g-pre-release-readiness\/v1/u);
+  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v3/u);
+  assert.match(presentationHarnessBlock, /selectedFighterId: readyActor\.selectedFighterId/u);
+  assert.match(presentationHarnessBlock, /fighterBaselines: \[\{[\s\S]*fighterId: readyActor\.selectedFighterId,[\s\S]*baselineAttackSequence: Number\(fighter\?\.attackSequence\) \|\| 0/u);
   assert.match(presentationHarnessBlock, /observedFighterId: null/u);
-  assert.match(presentationHarnessBlock, /const audioCueRequestCutoffAt = performance\.now\(\)/u);
-  assert.match(presentationHarnessBlock, /audioCueRequestBaselineCount: audioCueRequestsAtArm\.length/u);
+  assert.match(presentationHarnessBlock, /observedAtPageTime: null/u);
+  assert.match(presentationHarnessBlock, /sourceAliveAtObservation: null/u);
+  assert.match(presentationHarnessBlock, /audioObservedAtPageTime: null/u);
+  assert.match(presentationHarnessBlock, /const visibleProofStartedAt = performance\.now\(\)/u);
+  assert.match(presentationHarnessBlock, /visibleProofDeadlineAt: visibleProofStartedAt \+ Number\(proofDurationMs\)/u);
+  assert.match(presentationHarnessBlock, /audioCueRequestBaselineCount: audioCueRequestBaseline\.length/u);
   assert.match(presentationHarnessBlock, /excludedQuiescedAttackObserved/u);
+  const battlePageBlock = source.match(/async function battlePage([\s\S]*?)(?=\nfor \(const viewport of requiredViewports\))/u)?.[1] ?? "";
+  assert.match(battlePageBlock, /const proofActorAttackCueId = proofActor\s*\? enemyCombatCueFor\(proofActor, "attack"\)\s*: null/u);
+  assert.match(battlePageBlock, /const proofUnitAttackCueId = proofUnitKind\s*\? weaponCueForUnit\(proofUnitKind\)\s*: null/u);
+  assert.doesNotMatch(battlePageBlock, /\.find\(\(entry\) => entry\?\.actor === proof(?:Actor|UnitKind)\)\?\.soundCue/u);
+  const failureReadbackBlock = source.match(/const failureState = await page\.evaluate\(\(battleState\) => \(\{([\s\S]*?)\}\), state\.startsWith\("battle"\)\)\.catch/u)?.[1] ?? "";
+  assert.ok(failureReadbackBlock.length > 0, "missing bounded Phase G failure-state readback");
+  assert.match(failureReadbackBlock, /preReleaseReadiness: \(\(\) => \{/u);
+  assert.match(failureReadbackBlock, /readiness\?\.schema !== "v100-phase-g-pre-release-readiness\/v1"/u);
+  assert.match(failureReadbackBlock, /actorKeys: \[\.\.\.\(readiness\.actorKeys \?\? \[\]\)\]\.slice\(0, 4\)/u);
+  assert.match(failureReadbackBlock, /actors: \(readiness\.actors \?\? \[\]\)\.slice\(0, 4\)\.map/u);
+  assert.match(failureReadbackBlock, /fighterBaselines: \(actor\.fighterBaselines \?\? \[\]\)\.slice\(0, 16\)\.map/u);
+  for (const field of ["cueObserved", "selectedFighterId", "selectedAttackSequence", "selectedTargetId", "selectedTargetSide", "selectedTargetKind", "selectedTargetAlive", "readyAtBattleTime"]) {
+    assert.match(failureReadbackBlock, new RegExp(`${field}: actor\\.${field}`, "u"));
+  }
+  const readinessFailureReceipt = failureReadbackBlock.match(/preReleaseReadiness: \(\(\) => \{([\s\S]*?)\n          \}\)\(\),/u)?.[1] ?? "";
+  assert.ok(readinessFailureReceipt.length > 0, "missing bounded pre-release readiness receipt region");
+  assert.doesNotMatch(readinessFailureReceipt, /getCueRequests|document\.|querySelector|innerHTML|outerHTML|PHASE_G_LAST_COMBAT_SNAPSHOT/u);
+  const postQuiescenceFailureReceipt = failureReadbackBlock.match(/postQuiescenceProof: \(\(\) => \{([\s\S]*?)\n          \}\)\(\),/u)?.[1] ?? "";
+  assert.ok(postQuiescenceFailureReceipt.length > 0, "missing bounded post-quiescence proof receipt region");
+  assert.match(postQuiescenceFailureReceipt, /\(epoch\.actors \?\? \[\]\)\.slice\(0, 4\)\.map/u);
+  for (const field of ["observedAtBattleTime", "observedAtPageTime", "sourceAliveAtObservation", "audioObservedAtPageTime", "proofCompletedAtPageTime", "eventTimeWithinDeadline", "currentActorAlive"]) {
+    assert.match(postQuiescenceFailureReceipt, new RegExp(`${field}`, "u"));
+  }
+  assert.doesNotMatch(postQuiescenceFailureReceipt, /getCueRequests|document\.|querySelector|innerHTML|outerHTML|PHASE_G_LAST_COMBAT_SNAPSHOT|fighterBaselines/u);
   assert.match(presentationHarnessBlock, /attackIdentity: \[\][\s\S]*sourceToTargetEdges: \[\][\s\S]*reactionHistory: \[\]/u);
   assert.doesNotMatch(presentationHarnessBlock, /\.time\s*=|eventIndex\s*=|(?:snapshot|game|g)\.fighters\s*=|\.hp\s*=|\.speed\s*=|setGraphicsQuality|accelerateBossFoundationEntry/u);
   const battleRegionStart = source.indexOf("async function battlePage");
@@ -380,9 +429,13 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   const sustainTaskIndex = source.indexOf("const sustainTask = bossKind", battleRegionStart);
   const quiescenceReleaseIndex = source.indexOf("presentationQuiescence = await releasePhaseGPresentationQuiescence", battleRegionStart);
   const frontlineCheckpointIndex = source.indexOf('recorder?.mark("frontline-deployment-sequence-completed"', battleRegionStart);
+  const sustainDrainIndex = source.indexOf("sustainActive = false;", frontlineCheckpointIndex);
   const proofActorTargetWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-live-human-target"', battleRegionStart);
   const proofActorWaitIndex = source.indexOf('recorder?.setAwaiting("proof-actor-attack"', proofActorTargetWaitIndex);
-  assert.ok(quiescenceArmIndex < sustainTaskIndex && sustainTaskIndex < frontlineCheckpointIndex && frontlineCheckpointIndex < quiescenceReleaseIndex && quiescenceReleaseIndex < proofActorTargetWaitIndex && proofActorTargetWaitIndex < proofActorWaitIndex, "presentation must quiesce before sustain/deployment setup and restore before the contact-first prerequisite and authored attack phases");
+  assert.ok(quiescenceArmIndex < sustainTaskIndex && sustainTaskIndex < frontlineCheckpointIndex && frontlineCheckpointIndex < sustainDrainIndex && sustainDrainIndex < quiescenceReleaseIndex && quiescenceReleaseIndex < proofActorTargetWaitIndex && proofActorTargetWaitIndex < proofActorWaitIndex, "presentation must quiesce before sustain/deployment setup, drain host actions before the release deadline, and keep legacy serial proof waits after the bounded release path");
+  assert.match(source, /if \(!presentationQuiescence && proofActor\) \{/u);
+  assert.match(source, /if \(!presentationQuiescence && proofUnitKind && !proofUnitAttackObserved\) \{/u);
+  assert.match(source, /if \(!presentationQuiescence\) \{[\s\S]*?await page\.waitForFunction\(\(\) => window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__[\s\S]*?await waitForCombatActivity/u);
   assert.match(source, /if \(presentationQuiescenceArm && !presentationQuiescence && !page\.isClosed\(\)\)[\s\S]*?setQaPresentationQuiesced\?\.\(false, "phase-g-pre-proof"\)/u);
   const causalCollector = source.match(/async function collectCombatCausalProof[\s\S]+?(?=\nasync function capture)/u)?.[0] ?? "";
   assert.match(causalCollector, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
@@ -403,18 +456,24 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     "the monotonic page-clock cutoff must retain the new request after ring rotation",
   );
   assert.match(causalCollector, /attackSequenceAdvanced/u);
-  assert.match(causalCollector, /await page\.waitForTimeout\(120\)/u);
+  assert.match(causalCollector, /await page\.waitForTimeout\(Math\.min\(120, remainingMs\)\)/u);
   assert.match(source, /const combatProofDurationMs = Math\.max\(2_400, Number\(process\.env\.V100_PHASE_G_COMBAT_PROOF_MS\) \|\| 12_000\)/u);
   assert.match(source, /const COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS = 2_400/u);
   assert.match(source, /const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8/u);
   assert.match(source, /combatProofDurationMs: 4_800/u);
-  assert.match(causalCollector, /combatCausalConvergenceDecision\([\s\S]*buildCombatCausalProof\(samples\)[\s\S]*if \(convergenceDecision\.accepted\) break/u);
+  assert.match(causalCollector, /combatCausalConvergenceDecision\([\s\S]*buildCombatCausalProof\(samples\)[\s\S]*if \(convergenceDecision\.accepted && exactActorDecision\.accepted\) break/u);
   assert.match(causalCollector, /const proof = buildCombatCausalProof\(samples, stableHistory\)/u);
   assert.match(causalCollector, /v100-phase-g-causal-collection\/v1/u);
+  assert.match(causalCollector, /effectiveDurationMs = Math\.max\(0, Math\.min\([\s\S]*visibleProofDeadlineAt/u);
+  assert.match(causalCollector, /postQuiescenceExactActorDecision/u);
+  assert.match(causalCollector, /withinReleaseDeadline = requiredActorKeys\.length === 0[\s\S]*finalExactActorDecision\.withinReleaseDeadline === true/u);
+  assert.match(causalCollector, /proofCompletedAtPageTime: finalExactActorDecision\.proofCompletedAtPageTime \?\? null/u);
+  assert.match(causalCollector, /finalPageNow: stableHistory\.pageNow \?\? null/u);
+  assert.doesNotMatch(causalCollector, /Number\(stableHistory\.pageNow\) <= Number\(stableHistory\.proofEpoch\?\.visibleProofDeadlineAt\)/u);
   assert.match(causalCollector, /attemptedSampleCount: samples\.length/u);
   assert.match(causalCollector, /validSampleCount: proof\.sampleCount/u);
-  assert.match(causalCollector, /causal-contract-satisfied-after-minimum-observation/u);
-  assert.match(causalCollector, /duration-budget-exhausted/u);
+  assert.match(causalCollector, /causal-and-exact-actor-contract-satisfied-after-minimum-observation/u);
+  assert.match(causalCollector, /release-origin-duration-budget-exhausted-or-proof-incomplete/u);
   const completeCausalProof = {
     ok: true,
     sampleCount: 8,
@@ -428,6 +487,69 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     options: { elapsedMs: 12_000 },
   }).accepted, false);
   assert.equal(runCausalConvergenceProbe({ proof: { ...completeCausalProof, ok: false }, options: { elapsedMs: 12_000 } }).accepted, false);
+  const exactEpoch = {
+    schema: "v100-phase-g-post-quiescence-proof/v3",
+    visibleProofStartedAt: 100,
+    visibleProofDeadlineAt: 500,
+    finalPageNow: 9_999,
+    actors: [{
+      side: "zombie",
+      kind: "spitter",
+      cueId: "enemy-spitter-attack",
+      selectedFighterId: 6,
+      fighterBaselines: [{ fighterId: 6, baselineAttackSequence: 4 }],
+      observedPostEpochAttack: true,
+      actorAlive: false,
+      sourceAliveAtObservation: true,
+      observedFighterId: 6,
+      observedAttackSequence: 5,
+      observedAtBattleTime: 41.4,
+      observedAtPageTime: 240,
+      targetId: 1,
+      targetSide: "human",
+      targetAlive: true,
+      audioObserved: true,
+      audioObservedAtPageTime: 260,
+    }],
+  };
+  const exactOptions = { requiredActorKeys: ["zombie:spitter"] };
+  const acceptedAfterLaterDeath = runExactActorProbe({ proofEpoch: exactEpoch, options: exactOptions });
+  assert.equal(acceptedAfterLaterDeath.accepted, true);
+  assert.equal(acceptedAfterLaterDeath.actors[0].actorAlive, false);
+  assert.equal(acceptedAfterLaterDeath.actors[0].sourceAliveAtObservation, true);
+  assert.equal(acceptedAfterLaterDeath.proofCompletedAtPageTime, 260);
+  assert.equal(acceptedAfterLaterDeath.withinReleaseDeadline, true);
+  const audioOnlyEpoch = structuredClone(exactEpoch);
+  audioOnlyEpoch.actors[0].observedPostEpochAttack = false;
+  audioOnlyEpoch.actors[0].observedFighterId = null;
+  audioOnlyEpoch.actors[0].observedAttackSequence = null;
+  assert.equal(runExactActorProbe({ proofEpoch: audioOnlyEpoch, options: exactOptions }).accepted, false);
+  const staleSequenceEpoch = structuredClone(exactEpoch);
+  staleSequenceEpoch.actors[0].observedAttackSequence = 4;
+  assert.equal(runExactActorProbe({ proofEpoch: staleSequenceEpoch, options: exactOptions }).accepted, false);
+  const wrongFighterEpoch = structuredClone(exactEpoch);
+  wrongFighterEpoch.actors[0].observedFighterId = 7;
+  assert.equal(runExactActorProbe({ proofEpoch: wrongFighterEpoch, options: exactOptions }).accepted, false);
+  const invalidTargetEpoch = structuredClone(exactEpoch);
+  invalidTargetEpoch.actors[0].targetSide = "zombie";
+  assert.equal(runExactActorProbe({ proofEpoch: invalidTargetEpoch, options: exactOptions }).accepted, false);
+  const sourceDeadAtObservationEpoch = structuredClone(exactEpoch);
+  sourceDeadAtObservationEpoch.actors[0].sourceAliveAtObservation = false;
+  assert.equal(runExactActorProbe({ proofEpoch: sourceDeadAtObservationEpoch, options: exactOptions }).accepted, false);
+  const observationAfterDeadlineEpoch = structuredClone(exactEpoch);
+  observationAfterDeadlineEpoch.actors[0].observedAtPageTime = 501;
+  assert.equal(runExactActorProbe({ proofEpoch: observationAfterDeadlineEpoch, options: exactOptions }).accepted, false);
+  const audioAfterDeadlineEpoch = structuredClone(exactEpoch);
+  audioAfterDeadlineEpoch.actors[0].audioObservedAtPageTime = 501;
+  assert.equal(runExactActorProbe({ proofEpoch: audioAfterDeadlineEpoch, options: exactOptions }).accepted, false);
+  const missingAudioTimeEpoch = structuredClone(exactEpoch);
+  missingAudioTimeEpoch.actors[0].audioObservedAtPageTime = null;
+  assert.equal(runExactActorProbe({ proofEpoch: missingAudioTimeEpoch, options: exactOptions }).accepted, false);
+  assert.equal((source.match(/epochActor\.observedPostEpochAttack !== true/gu) ?? []).length, 3);
+  assert.equal((source.match(/Object\.assign\(epochActor, \{/gu) ?? []).length, 3);
+  assert.match(source, /observedAtPageTime: performance\.now\(\)[\s\S]*sourceAliveAtObservation: Number\(fighter\.hp\) > 0/u);
+  assert.equal((source.match(/audioObservedAtPageTime \?\?= Number\(matchingAudioRequest\.at\)/gu) ?? []).length, 2);
+  assert.match(source, /epochActor\.audioObservedAtPageTime = Number\(request\.at\)/u);
   const moduleHistoryMerge = source.match(/function mergeCombatActivityHistory[\s\S]+?(?=\nfunction proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   const pageHistoryMerge = source.match(/const mergeCombatActivityHistory = \(previous = \{\}, snapshot = \{\}\) => \{[\s\S]+?(?=\n    const proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   for (const historyOwner of [moduleHistoryMerge, pageHistoryMerge]) {
@@ -506,6 +628,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.ok(source.indexOf("V100_PHASE_G_DEPLOYMENT_POINTER_PROBE") < source.indexOf("await mkdir(evidenceDir"));
   assert.ok(source.indexOf("V100_PHASE_G_BROWSER_LIFECYCLE_PROBE") < source.indexOf("await mkdir(evidenceDir"));
   assert.ok(source.indexOf("V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE") < source.indexOf("await mkdir(evidenceDir"));
+  assert.ok(source.indexOf("V100_PHASE_G_EXACT_ACTOR_PROBE") < source.indexOf("await mkdir(evidenceDir"));
   assert.deepEqual(runBrowserLifecycleProbe({ engineName: "webkit", state: "battle-extra" }), {
     engineName: "webkit",
     state: "battle-extra",
@@ -536,7 +659,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
   assert.match(captureState, /browserSession, hostResourceTelemetry \}\)/u);
   assert.match(captureState, /reactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
-  assert.match(captureState, /let combatCausalProof = null;\s*try \{[\s\S]*combatCausalProof = await runPhaseGTelemetryOperation\([\s\S]*collectCombatCausalProof\([\s\S]*\}\s*finally \{[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
+  assert.match(captureState, /let combatCausalProof = null;[\s\S]*?try \{[\s\S]*combatCausalProof = await runPhaseGTelemetryOperation\([\s\S]*collectCombatCausalProof\([\s\S]*\}\s*finally \{[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
+  assert.match(captureState, /requiredPostEpochActorKeys,[\s\S]*postQuiescenceExactActorProof\?\.accepted === true[\s\S]*collection\?\.converged === true/u);
+  assert.match(captureState, /"phase-g\/observer-stop"[\s\S]*"phase-g\/production-screenshot"[\s\S]*v100-phase-g-release-deadline-receipt\/v1[\s\S]*withinReleaseDeadline === true/u);
   assert.equal((captureState.match(/window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/gu) ?? []).length, 1);
   assert.ok(captureState.indexOf("combatCausalProof = await runPhaseGTelemetryOperation")
     < captureState.indexOf("window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()"));
@@ -674,7 +799,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /activityTargetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
   assert.match(source, /targetOwnershipHistory: observedCombatActivity\.targetOwnershipHistory \?\? \[\]/u);
   const finalProofStart = source.indexOf('recorder?.setAwaiting("proof-actor-live-human-target"');
-  const finalProofEnd = source.indexOf("if (proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();", finalProofStart);
+  const finalProofEnd = source.indexOf("if (!presentationQuiescence && proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();", finalProofStart);
   const finalProofRegion = source.slice(finalProofStart, finalProofEnd);
   assert.ok(finalProofStart >= 0 && finalProofEnd > finalProofStart);
   assert.match(finalProofRegion, /if \(proofActorRequiresContactFirst\)/u);
@@ -693,9 +818,10 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal((finalProofRegion.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 1);
   assert.equal((source.match(/(?:recorder|recorder\?)\.markOnce\("proof-actor-mounted-or-absent"/gu) ?? []).length, 4);
   assert.equal((source.match(/(?:recorder|recorder\?)\.markOnce\("living-human-target-acquired-or-not-required"/gu) ?? []).length, 2);
+  assert.match(captureState, /checkpointRecorder\?\.markOnce\("proof-actor-mounted-or-absent"[\s\S]*checkpointRecorder\?\.markOnce\("living-human-target-acquired-or-not-required"/u);
   assert.match(source, /proofActorAttackObserved = proofActor === null;[\s\S]*proofUnitAttackObserved = proofUnitKind === null;/u);
   assert.match(source, /observedPostEpochAttack === true/u);
-  assert.match(source, /post-quiescence proof did not observe fresh exact attacks/u);
+  assert.match(source, /exact post-quiescence actor proof failed inside the single release deadline/u);
   assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("proof-actor-mounted-or-absent"/u);
   assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("living-human-target-acquired-or-not-required"/u);
   assert.match(source, /function proofActorTargetContinuityDecision\(\{/u);

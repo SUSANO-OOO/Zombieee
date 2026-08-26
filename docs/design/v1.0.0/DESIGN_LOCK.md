@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r65`
+- Revision: `r71`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -4608,3 +4608,385 @@ This read-back changes governance text/test only after the final product/harness
 - `RESUME_FROM`: repeat governance/static read-back only -> material iteration-24 normal non-amended six-path commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 25 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r64 diagnostic JSON, final r65 source bytes, the one ordered report and screenshots, production 128-entry request retention, all post-epoch consumers, synchronous page-task ordering, exact six-path topology, no-retry boundary, and approval-only release tail. Revision r65 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 82. Revision r66 — bounded WebKit presentation windows for Phase G and deployment preparation
+
+### 82.1 r65 remote return and independent classification
+
+The immutable r65 candidate is remote HEAD `0235da77bbc22d2b7b95740366b05089fc593884`, tree `650e07b9e74fd3913013c61d51a181dfe4d3426a`, parent `e2f8056ff9ac8e454606a3efafcf42d886957a93`. Automatic CI run `32817481135` reached required Phase G job `97712613534` once and failed at ordered position 1, Stage 6 WebKit 667x375. The uploaded artifact is `v100-phase-g-webkit-battle-extra-focused`, ID `9552439709`, 186,086 bytes; the downloaded ZIP SHA-256 is `2c29904c07a785ff34a961d601f1298f9949cfb74268d961c6f69353e97b3a9c`.
+
+The actual diagnostic shows three real pointer deployments accepted and presentation quiescence held through battle time 34.0833 with 2,019 suppressed render schedules and 2,045 simulation ticks. Release occurred at elapsed 45,907 ms, three production frames were restored by battle time 34.2666, and schema v2 armed with page-clock cutoff 45,421. Exact spitter fighter 6 was alive but neutral with `targetId: null`; exact ranger fighter 1 had baseline attack sequence 4. The host then remained in the serial post-release proof-actor wait until a clean page crash at elapsed 88,801/88,827 ms. Proof actor attack, proof unit attack, causal proof, and screenshot were unresolved; product failure state, console, page, request, and HTTP failure channels were all empty.
+
+Supported Linux host telemetry recorded 13 WebContent D-state samples from elapsed 62,051 through 72,555 ms: 12 `anon_pipe_write` and one zero channel. WebContent `wchar` increased from 2,958,422,579 to 7,471,510,067 and `syscw` from 779,263 to 1,881,091; IO-pressure full avg10 peaked at 34.7. Aggregate RSS peaked near 1.987 GB, while cgroup memory current peaked near 5.545 GB and every memory high/max/OOM/kill delta stayed zero. The same r65 Stage 6 bytes passed locally because the visible path happened to reach its old boolean actor/unit predicates and then causal 4/4 before this pipe state; that local causal collector itself converged in 2,560 ms.
+
+Source call-order proves the owner. After release, `battlePage` can serially wait up to 45,000 ms for the proof actor and another 120 x 250 ms for the proof unit, then `captureStateImpl` starts a separate causal collector of up to 12,000 ms (4,800 ms for Stage 24) before the production screenshot. These waits resume normal canvas presentation throughout. r65 bounded pre-proof presentation but left this post-release presentation interval unbounded as one evidence transaction. Additionally, r65's `observedPostEpochAttack` boolean may be set by an owned cue or transient attack state without requiring the exact selected fighter's monotonic attack sequence, opposite-side target ownership, and cue together.
+
+Classification is `QA_HARNESS_POST_RELEASE_PRESENTATION_WINDOW_UNBOUNDED / SERIAL_45S_ACTOR + 30S_UNIT + SEPARATE_CAUSAL_WAIT_REOPENED_WEBKIT_ANON_PIPE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`. Remediation is `QUIESCED_EXACT_ATTACK_READINESS + SINGLE_RELEASE_DEADLINE_PROOF_WINDOW / PRE_RELEASE_EXACT_SEQUENCE_TARGET_AUDIO_PRIME + CONCURRENT_EXACT_EPOCH_AND_CAUSAL_ACCEPTANCE + IMMEDIATE_SCREENSHOT / DESIGN_CHANGE_REQUIRED`.
+
+The same run later became fully terminal and exposed a second, independent required failure. WebKit Deployment Viewport Evidence 1280x720 job `97714727514` ran the canonical units in one-attempt order: scout passed all six checkpoints and seven-file artifact integrity in 12.200 seconds, then the fresh ranger child failed. Its asset boundary and `deployment/unit-asset-proof` completed by elapsed 3,184 ms, but the first cooperative `deployment/trace-capture` before fixture preparation returned no sample and the page crashed at elapsed 43,320 ms. Artifact `issue156-webkit-deployment-1280x720`, ID `9553171122`, is 9,493,146 bytes with ZIP SHA-256 `58d29650b9019ce5dca62ca888b57822f35bc851dfdb1e6b951d0d85092da6ec`. Fatal, console, page, request, HTTP, cgroup OOM/high/max/kill, and retry channels are zero.
+
+The ranger host receipt is valid and records 49 WebContent D-state samples: 41 `anon_pipe_write`, three `call_usermodehelper_exec`, and five zero-channel samples. WebContent `wchar` increased from 144,500 to 7,060,534,388 and `syscw` from 14,435 to 1,741,569; IO-pressure full avg10 peaked at 60.14. The preceding scout control recorded no D-state and completed normally. Source order independently assigns ownership: `runDeploymentCase` starts production presentation, completes unit asset proof, then calls `activeDeploymentTrace.capture()` before `withDeploymentPresentationQuiescence` is armed around fixture/first-frame progression. Thus this is not the Phase G semantic failure, ranger asset failure, or product failure. It is `QA_HARNESS_DEPLOYMENT_PREPARATION_PRESENTATION_WINDOW_UNBOUNDED / FIRST_COOPERATIVE_TRACE_CAPTURE_PRECEDED_QUIESCENCE_AND_HIT_WEBKIT_ANON_PIPE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`. Its remediation is `EARLY_DEPLOYMENT_PREPARATION_PRESENTATION_QUIESCENCE / ARM_BEFORE_UNIT_ASSET_PROOF_AND_KEEP_THROUGH_FIXTURE_PLUS_FIRST_FRAME / DESIGN_CHANGE_REQUIRED`.
+
+The coherent r66 packet closes both presentation-lifetime gaps without sharing their acceptance predicates. Its aggregate class is `COMMON_WEBKIT_PRESENTATION_LIFETIME_CLOSURE / PHASE_G_SINGLE_RELEASE_DEADLINE_PLUS_DEPLOYMENT_EARLY_PREPARATION_HOLD / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`. The Pages observation run `32817481137` completed successfully with build only and deploy/report skipped; official deployment count remains zero. PR Verify, all six enemy-runtime shards, Hosted, all three Stage 3 axes, and five other deployment viewports are green. The 48-case canonical HUD matrix aggregate `97719669931` is skipped only because it needs every deployment viewport and the 1280x720 dependency is red. No r65 job remains pending, so the former terminal barrier is satisfied and both red paths are now incorporated before r66 implementation or transport.
+
+### 82.2 Exact coherent correction
+
+Relative to r65 remote HEAD/tree, r66 changes exactly these eight tracked paths and no ninth path:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`
+2. `tests/v100-phase-g-checkpoint.test.mjs`
+3. `docs/design/v1.0.0/DESIGN_LOCK.md`
+4. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+5. `docs/PROJECT_STATE.md`
+6. `tests/v100-design-lock.test.mjs`
+7. `scripts/v099-final-remediation-browser-smoke.mjs`
+8. `tests/v0995-runtime-evidence-contract.test.mjs`
+
+The Phase G target runtime functions are `armPhaseGPresentationQuiescence`, a new bounded pre-release readiness helper owned by `releasePhaseGPresentationQuiescence`, the same-task release/epoch arm, `startCombatRuntimeObserver`, `collectCombatCausalProof`, the presentation branch in `battlePage`, and the causal/screenshot sequence in `captureStateImpl`. The deployment target is only the preparation/first-frame order inside `runDeploymentCase`; the existing `withDeploymentPresentationQuiescence` bridge and all product bridge semantics stay unchanged.
+
+While the existing presentation hold is still active and after real setup plus the existing optional minimum battle boundary, create `v100-phase-g-pre-release-readiness/v1`. Its page-clock cutoff and per-fighter attack-sequence baselines are armed in one page task. For every exact required kind, accept only a real living selected fighter that subsequently advances its own production `attackSequence`, owns a living opposite-side target through current state or monotonic post-arm ownership history, emits its owned production cue after the cutoff when a cue is specified, returns to a neutral state, and still owns a current living opposite-side target. A selected fighter that dies or loses the live target cannot satisfy readiness; another real fighter of the same required kind may take ownership inside the same finite wait. The existing 45,000 ms semantic budget remains the maximum and presentation stays held throughout. Hidden readiness is a prerequisite only and never final visible evidence.
+
+Release and fresh proof-epoch arm become one indivisible page task. Advance the epoch to `v100-phase-g-post-quiescence-proof/v3`, bind each actor to the exact living fighter selected by readiness, snapshot its current attack sequence, clear hidden causal histories, record a fresh page-clock audio cutoff, and set a release-origin `visibleProofDeadlineAt`. No simulation tick, animation frame, or audio request may interleave between release and the v3 baseline/cutoff. Then require at least three new production render frames as before.
+
+For the three presentation-quiesced variants only, `battlePage` must return after this release/restoration receipt. The old post-release 45-second actor loop, 30-second unit loop, and generic combat wait remain available only to non-quiesced contracts and must not execute on Stage 6, 24, or 25. A source invariant rejects any future presentation-quiesced contract that also requests a manual ability or vehicle action, so no acceptance can be silently skipped.
+
+`captureStateImpl` passes the exact required actor keys to one `collectCombatCausalProof` call. That collector may terminate only when both conditions are simultaneously true: the unchanged causal source/travel-or-contact/target-reaction/audio 4/4 contract has met the unchanged minimum 2,400 ms and eight valid samples, and every required v3 actor has a selected-fighter sequence advance beyond its release baseline, living opposite-side target ownership, and its post-cutoff owned cue. Audio alone, transient state alone, wrong fighter ID, stale hidden history, same-side/dead/missing target, or general causal activity from another actor cannot satisfy the exact-actor receipt.
+
+The release-origin visible deadline is exactly the existing configured causal budget: 12,000 ms normally and 4,800 ms for Stage 24. Production-contract readback, exact actor proof, causal 4/4, observer stop, and production screenshot all consume that single deadline. The screenshot is taken immediately after convergence and its post-capture page-clock receipt must still be at or before the deadline. There is no timeout increase, extra visible retry, second collector, screenshot substitution, or stale proof reuse.
+
+`tests/v100-phase-g-checkpoint.test.mjs` retains exactly 12 tests. It must bind readiness-before-release, same-task release/v3 arm, exact selected-fighter semantics, old serial waits behind the non-quiesced branch, one release-origin deadline, concurrent exact-plus-causal convergence, immediate screenshot, and negative probes for audio-only, stale-sequence, wrong-fighter, and invalid-target evidence. Preserve the r65 saturated-ring regression and every pointer, stage/viewport, causal threshold, screenshot, artifact, checkpoint, failure-finalization, and fatal-zero assertion.
+
+For deployment, move the existing unit asset proof, its cooperative trace capture, fixture preparation, its cooperative trace capture, and `queueAndPauseAtFirstDeploymentFrame` into one existing `withDeploymentPresentationQuiescence` operation. Arm presentation before the first unit asset proof and keep it held continuously through the production first-frame pause; release only at that same semantic pause, preserve the existing positive simulation/suppressed-render and three-restored-frame receipts, then continue the unchanged post-restoration readback, six checkpoints, six canvas PNGs, hashes, contact sheet, and artifact integrity. Do not delete, delay past acceptance, fake, or downgrade either diagnostic trace capture. `tests/v0995-runtime-evidence-contract.test.mjs` must bind this source order inside its existing deployment contract test without adding a product predicate or changing the canonical eight-unit inventory.
+
+Forbidden changes: `app/**`, workflow, package/lock, public assets, product audio or VFX, gameplay, balance, AI, content, save, story, formation, damage/HP, target selection, attack interval, simulation time, timeout extension, retry/rerun count, viewport/stage mapping, pointer action, causal threshold, screenshot/pixel acceptance, evidence filtering, test removal, release state, or any product behavior. The presentation bridge remains QA-route-only and may suppress only scheduled rendering; simulation and production action ownership remain unchanged.
+
+### 82.3 Acceptance, promotion, and stop contract
+
+After run `32817481135` is fully terminal and additional-red count is zero or separately closed, execute final r66 bytes once in this order and stop on the first red:
+
+1. syntax for both changed harness scripts and both changed source-contract tests; new exact-actor decision positive/negative probes; Phase G checkpoint exactly 12/12; the existing v0.9.9.5 runtime-evidence contract green;
+2. Design Lock exactly 19/19 and canonical six-file exactly 55/55, with fail/cancelled/skipped/todo zero;
+3. exact eight-path topology relative to r65, forbidden diff zero, UTF-8/BOM/EOL, protected forensic directories, and `git diff --check`;
+4. one fresh production build;
+5. one fresh 1280x720 WebKit canonical deployment process using `scripts/run-v099-deployment-units-bounded.mjs`, the pinned local browser runtime, and a new evidence root. Require all eight canonical unit children in fixed order, each once, with six checkpoints, positive preparation/first-frame quiescence and restoration receipts, six PNGs, one contact sheet, artifact hashes/integrity, fatal zero, and retry/rerun zero;
+6. one fresh filtered ordered WebKit Phase G process, `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, no variant filter, new sequence and evidence root. Require Stage 6 -> Stage 24 -> Stage 25 exactly 3/3 on the first r66 process. Every stage must show pre-release readiness, schema v3, exact selected-fighter sequence/target/cue receipts, release-origin deadline, three restored frames, causal 4/4, production screenshot within deadline, all checkpoints, unresolved zero, and fatal zero;
+7. content validation, complete tests, lint, final production build, and repeated exact static integrity.
+
+Do not rerun r65 local ordered evidence, r63 Stage 3, the five green r65 deployment viewports, enemy-runtime, Hosted, or other reached-green r65 jobs solely for r66. They are comparison/continuity evidence, not r66 release evidence. The one fresh 1280x720 eight-unit deployment run is required because that exact gate and source contract changed. Any first r66 source/static/build/deployment/ordered/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, timeout extension, viewport/unit substitution, cue injection, product correction, or stale evidence substitution is authorized.
+
+Complete local green authorizes one normal non-amended material-iteration-25 commit with the exact eight paths and one non-force immutable transport. Observe its one automatic focused CI. Any job red, unexpected skip, wrong trio or canonical-unit order, missing artifact, or dependency ambiguity returns to `SOL_DESIGN` without rerun. Complete automatic focused green alone authorizes workflow-only iteration 26 and the unchanged unfiltered required CI/full Phase G 54/54, same-HEAD runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Ready, merge, tag, GitHub Release, official Pages deployment, or final checkpoint remains forbidden early.
+
+### 82.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R66_COHERENT_WEBKIT_PRESENTATION_LIFETIME_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: automatic CI `32817481135`: (1) required Phase G job `97712613534`, ordered Stage 6 WebKit 667x375 position 1, page crash after 42.9 seconds of post-release serial proof wait, artifact `9552439709`; (2) deployment job `97714727514`, WebKit 1280x720 ranger after scout control, page crash inside first pre-fixture trace capture, artifact `9553171122`; canonical HUD aggregate `97719669931` dependency-skipped
+- `LAST_GREEN_GATE`: complete r65 local acceptance; remote r65 PR Verify, six enemy-runtime shards, Hosted, three Stage 3 axes, five deployment viewports plus 1280x720 scout control; Pages build green/deploy skipped; the whole r65 run is terminal and every red/skip is classified
+- `CLASSIFICATION`: `COMMON_WEBKIT_PRESENTATION_LIFETIME_CLOSURE / PHASE_G_SINGLE_RELEASE_DEADLINE_PLUS_DEPLOYMENT_EARLY_PREPARATION_HOLD / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `QUIESCED_EXACT_ATTACK_READINESS + SINGLE_RELEASE_DEADLINE_PROOF_WINDOW / PRE_RELEASE_EXACT_SEQUENCE_TARGET_AUDIO_PRIME + CONCURRENT_EXACT_EPOCH_AND_CAUSAL_ACCEPTANCE + IMMEDIATE_SCREENSHOT / DESIGN_CHANGE_REQUIRED`; and `EARLY_DEPLOYMENT_PREPARATION_PRESENTATION_QUIESCENCE / ARM_BEFORE_UNIT_ASSET_PROOF_AND_KEEP_THROUGH_FIXTURE_PLUS_FIRST_FRAME / DESIGN_CHANGE_REQUIRED`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r65 remote candidate is material iteration 24 terminal Phase G red; r66 is material iteration 25; workflow-only unfiltered restoration is iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required Phase G; r65 remote Stage 6 post-release presentation crash count `1`; r65 remote 1280x720 deployment pre-fixture presentation crash count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: implement exact r66 eight-path coherent correction -> syntax/probes/checkpoint 12/12/v0.9.9.5 contract -> Design Lock 19/19 -> canonical 55/55 -> exact static/build -> one fresh WebKit 1280x720 canonical deployment eight-unit process -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one iteration-25 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against both r65 failed-job logs and artifact bytes, successful scout/ranger comparison, local/remote Stage 6 comparison, both host D-state and IO receipts, both source call orders, v2 false-positive surface, exact eight-path topology, both focused acceptance axes, release-origin deadline, no-retry boundary, terminal dependency graph, and approval-only release tail. Revision r66 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 83. Revision r67 — non-nested deployment diagnostic ownership inside the early presentation hold
+
+### 83.1 First r66 local return and independent classification
+
+The final r66 draft first passed both changed-script syntax checks, the exact-actor positive/negative probes, Phase G checkpoint 12/12, the v0.9.9.5 runtime-evidence contract 3/3, Design Lock 19/19, canonical six-file 55/55, exact eight-path/forbidden/EOL/BOM/protected-directory/static integrity, `git diff --check`, and one fresh production build. The r66 Phase G script is 271,140 bytes with SHA-256 `a14b0938da749dfdfc9d4b2ffe49c8347d40371b053b735b1181bdf246bc7af3`; its checkpoint test is 66,978 bytes with SHA-256 `acb64e9b36e2721945865fa3bf4e5a1fcbcc7341bbb8b1697e3600587a5ab461`. Those two stopped-draft files are accepted r66 source and are byte-locked by r67.
+
+The first and only fresh r66 WebKit 1280x720 deployment process used evidence root `zombieee-r66-deployment-01a00a4c-fcfa-7f61`. It stopped in the first canonical child, scout, before any acceptance screenshot. Its fresh/stable production build identity was SHA-256 `34f1e5b28cdfc52c3fc5f89cf288af09026f2eee09e74b7e0fed0b97ce6078af`. The unit asset decoded, both required cooperative traces completed, fixture attacker 2 was prepared, scout fighter 3 was queued and paused at the production first frame, and the readable battle remained live with `failureState` absent. Console, page, request, HTTP, unexpected-close, crash, OOM, and product-fatal channels were zero. The terminal error was exactly `deployment telemetry operation mismatch none/deployment/first-frame-queue-readback`; normal cleanup then closed the page. The other seven units, ordered Phase G, full gates, commit, transport, and remote CI did not run. No retry or rerun occurred.
+
+The lifecycle JSONL proves deterministic source ownership. `deployment/first-frame-queue-readback` began as an outer `withDeploymentDiagnosticOperation`. While it remained logically open, the callback began and ended `deployment/unit-asset-proof`, `deployment/trace-capture` for `unit-asset-proof`, `deployment/fixture-preparation`, and `deployment/trace-capture` for `fixture-preparation`. `createDeploymentLifecycleRecorder` owns only one `currentOperation` slot. Each inner begin replaced the outer slot and each inner end cleared it; when the outer end executed, the slot was `null`, producing the exact `none/deployment/first-frame-queue-readback` mismatch. This is independent of WebKit presentation backpressure, Phase G exact-actor semantics, product deployment, asset decode, gameplay, or browser lifecycle.
+
+Classification is `QA_HARNESS_DIAGNOSTIC_OPERATION_OWNERSHIP_COLLISION / OUTER_FIRST_FRAME_OPERATION_ENCAPSULATED_SERIAL_INNER_OPERATIONS_AGAINST_SINGLE_SLOT_LIFECYCLE / DESIGN_CHANGE_REQUIRED`. Remediation is `EARLY_QUIESCENCE_WITH_SERIAL_DIAGNOSTIC_OWNERSHIP / PRESENTATION_OWNER_OUTSIDE_DIAGNOSTIC_WRAPPERS + FIVE_NON_NESTED_OPERATIONS_IN_EXISTING_ORDER / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 83.2 Exact bounded correction and source contract
+
+Keep the r66 topology at exactly the same eight tracked paths relative to remote r65 HEAD/tree; do not add or remove a path. Preserve `scripts/v100-phase-g-production-matrix.mjs` and `tests/v100-phase-g-checkpoint.test.mjs` byte-for-byte at the hashes in Section 83.1. Preserve every r66 Phase G readiness, schema-v3 epoch, exact actor, release-origin deadline, causal, screenshot, pointer, failure, and acceptance rule. The only runtime-harness correction is inside the first-frame preparation region of `runDeploymentCase` in `scripts/v099-final-remediation-browser-smoke.mjs`; the only corresponding source assertion correction is in the existing deployment contract test in `tests/v0995-runtime-evidence-contract.test.mjs`. Design Lock, Handoff, Project State, and this Design Lock test bind r67 governance. No ninth path is authorized.
+
+Call `withDeploymentPresentationQuiescence` directly to produce `firstFrameEnvelope`; it is the presentation owner, not a diagnostic operation and not the callback of one. Presentation must arm before any of the following operations and remain held through all of them. Inside its callback execute exactly five non-nested diagnostic operations, serially and in this order:
+
+1. `deployment/unit-asset-proof`, owning only `ensureUnitRenderProofAsset`;
+2. `deployment/trace-capture` with boundary `unit-asset-proof`, owning only the first trace capture;
+3. `deployment/fixture-preparation`, owning only `prepareCrawlerDefenseProof`;
+4. `deployment/trace-capture` with boundary `fixture-preparation`, owning only the second trace capture;
+5. `deployment/first-frame-queue-readback`, owning only `queueAndPauseAtFirstDeploymentFrame`.
+
+Every diagnostic operation must finish before the next begins. No `withDeploymentDiagnosticOperation` may wrap `withDeploymentPresentationQuiescence`, another diagnostic operation, or the entire five-operation sequence. Do not add a diagnostic stack, make the lifecycle recorder reentrant, weaken its single-slot mismatch check, remove operation receipts, or rename the five existing operation identities. After operation five returns the production first-frame pause, the presentation helper releases at the same semantic boundary and retains the unchanged positive simulation/suppressed-render and three-restored-frame proof. Post-restoration readback, six checkpoints, six PNGs, contact sheet, hashes, artifact integrity, failure finalization, and one-attempt canonical order remain unchanged.
+
+The existing v0.9.9.5 runtime-evidence test must statically prove: direct presentation ownership; presentation arm before the first diagnostic operation; exactly five diagnostic wrapper calls in the early window; the exact serial operation/boundary order above; operation five directly owns `queueAndPauseAtFirstDeploymentFrame`; no diagnostic wrapper encloses the presentation helper; no diagnostic wrapper encloses another diagnostic wrapper; and the existing post-restoration/checkpoint/canvas evidence remains bound. Add no test block and change no canonical unit inventory or acceptance predicate.
+
+Forbidden changes remain: `createDeploymentLifecycleRecorder`, `withDeploymentDiagnosticOperation`, `withDeploymentPresentationQuiescence`, `queueAndPauseAtFirstDeploymentFrame`, `app/**`, workflows, package/lock, public/assets, product audio/VFX, gameplay, balance, AI, content, save, story, timeout, retry/rerun, viewport/unit order, checkpoint, pixel, screenshot, causal, evidence filtering, or release state. Repository-wide normalization and reuse of the failed r66 browser result as acceptance are forbidden.
+
+### 83.3 Acceptance, promotion, and stop contract
+
+Execute final r67 bytes once in this order and stop on the first red:
+
+1. syntax for the deployment harness and runtime-evidence test, then the existing runtime-evidence contract exactly 3/3;
+2. Design Lock exactly 19/19 and canonical six-file exactly 55/55, with fail/cancelled/skipped/todo zero;
+3. exact eight-path topology relative to r65, forbidden diff zero, the two Phase G byte locks from Section 83.1, prescribed UTF-8/BOM/EOL, protected forensic directories, and `git diff --check`;
+4. one fresh production build after final normalization;
+5. one new uniquely named fresh WebKit 1280x720 canonical deployment process exactly once. Require scout, ranger, brawler, crazy-king, kumaverson, mayo-chan, brute, and medic in fixed order, all eight children green, 48 checkpoints, early presentation receipts, exactly the five serial non-nested operations per child, six PNGs per child, eight contact sheets, artifact hashes/integrity, build identity stable, fatal zero, and retry/rerun zero;
+6. one new uniquely named filtered ordered WebKit Phase G process exactly once with Stage 6 667x375 -> Stage 24 736x414 -> Stage 25 932x430 exactly 3/3 and every unchanged r66 Section 82 acceptance receipt;
+7. content validation, complete tests, lint, final production build, and repeat exact static integrity.
+
+Do not rerun the failed r66 deployment process or any reached-green r66 source/build gate as acceptance; r67 executes its final source sequence once because the source contract changes. Do not rerun r65 local ordered evidence, r63 Stage 3, the five green remote deployment viewports, enemy-runtime, or Hosted solely for r67. Any first r67 source/static/build/deployment/ordered/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, timeout extension, viewport/unit substitution, product correction, or stale evidence reuse is allowed.
+
+Complete local green still authorizes one normal non-amended material-iteration-25 commit containing exactly the eight paths and one non-force immutable transport, followed by its one automatic focused CI. r66 stopped before commit or transport, so r67 does not create another material iteration. Any remote red, unexpected skip, wrong order, missing artifact, or unresolved dependency returns to `SOL_DESIGN` without rerun. Complete automatic focused green alone authorizes workflow-only iteration 26, unfiltered required CI/full Phase G 54/54, same-HEAD runtime/human audit, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and the one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. No Ready, merge, tag, GitHub Release, official Pages deployment, or final checkpoint is authorized early.
+
+### 83.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R67_SERIAL_DEPLOYMENT_DIAGNOSTIC_OWNERSHIP_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: first and only r66 fresh local WebKit 1280x720 canonical deployment process, scout child; terminal source-owned lifecycle error `deployment telemetry operation mismatch none/deployment/first-frame-queue-readback`; no crash/fatal/product diagnostic; remaining seven units and ordered Phase G not run
+- `LAST_GREEN_GATE`: final r66 syntax/probes/checkpoint 12/12/runtime-evidence 3/3, Design Lock 19/19, canonical 55/55, exact static integrity, and one fresh production build; within the stopped scout child, asset decode, two traces, fixture preparation, and first-frame queue/pause completed before telemetry close failed
+- `CLASSIFICATION`: `QA_HARNESS_DIAGNOSTIC_OPERATION_OWNERSHIP_COLLISION / OUTER_FIRST_FRAME_OPERATION_ENCAPSULATED_SERIAL_INNER_OPERATIONS_AGAINST_SINGLE_SLOT_LIFECYCLE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `EARLY_QUIESCENCE_WITH_SERIAL_DIAGNOSTIC_OWNERSHIP / PRESENTATION_OWNER_OUTSIDE_DIAGNOSTIC_WRAPPERS + FIVE_NON_NESTED_OPERATIONS_IN_EXISTING_ORDER / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r65 remote candidate remains material iteration 24 terminal Phase G red; r66/r67 coherent uncommitted correction remains material iteration 25; workflow-only unfiltered restoration remains iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required Phase G; r66 local deployment diagnostic-operation ownership failure count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: apply only r67 serial non-nested deployment ownership correction while byte-locking both r66 Phase G files -> deployment syntax/runtime-evidence 3/3 -> Design Lock 19/19 -> canonical 55/55 -> exact eight-path/byte/EOL/BOM/protected/static -> fresh build -> one fresh WebKit 1280x720 canonical deployment eight-unit process -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one iteration-25 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r66 summary, lifecycle JSONL, runner log, exact source nesting, single-slot lifecycle implementation, stopped draft hashes, exact-eight topology, one-attempt policy, and approval-only release tail. Revision r67 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 84. Revision r68 — early-window-scoped non-nesting source assertion
+
+### 84.1 First r67 source return and independent classification
+
+The exact r67 deployment implementation was applied without touching either byte-locked Phase G file. Both syntax checks passed. The first and only r67 runtime-evidence source run executed exactly three tests and stopped at 2 pass / 1 fail in the existing `r6 deployment diagnostics are bounded and preserve the existing acceptance contract` block. No Design Lock rerun, canonical six-file command, static/build, browser/runtime, full gate, commit, transport, or remote CI followed.
+
+Every new positive r67 assertion before the failure passed: `withDeploymentPresentationQuiescence` is the direct `firstFrameEnvelope` owner; the early region contains exactly five diagnostic calls; their identities and source order are unit asset, unit-asset trace, fixture, fixture trace, and first-frame queue; and operation five directly owns `queueAndPauseAtFirstDeploymentFrame`. The sole failed negative ran against the entire `presentationDeploymentCase` string:
+
+`withDeploymentDiagnosticOperation(first-frame ... [unbounded source span] ... () => withDeploymentPresentationQuiescence(`
+
+The regex correctly started at the inner first-frame diagnostic operation, then crossed the end of the early window and matched the later, contractually unchanged `deployment/checkpoint-advance` diagnostic callback that legitimately calls `withDeploymentPresentationQuiescence`. It therefore reported the forbidden r66 nesting even though the direct outer presentation assignment and early region were correct. This is a source-test scope alias, not a deployment implementation, lifecycle, presentation, WebKit, product, or acceptance failure.
+
+Classification is `SOL_OWNED_SOURCE_NEGATIVE_SCOPE_ALIAS / R67_RUNDEPLOYMENTCASE_WIDE_REGEX_SPANNED_FIRST_FRAME_OPERATION_TO_LATER_CHECKPOINT_PRESENTATION_CALLBACK / REMEDIATION_LOCAL`. Remediation is `EARLY_WINDOW_REGION_SCOPED_NON_NESTING_ASSERTION / BOUND_NEGATIVE_TO_FIRST_FRAME_QUIESCENCE_REGION + RETAIN_EXACT_DIRECT_OWNER_AND_FIVE_OPERATION_POSITIVES / REMEDIATION_LOCAL`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 84.2 Exact correction and byte locks
+
+Keep the aggregate exact-eight-path topology relative to remote r65 unchanged. Preserve `scripts/v099-final-remediation-browser-smoke.mjs` byte-for-byte at 153,348 bytes / SHA-256 `a8a5dfc19a2687aab20632e155558f2789b65b8189c208823d20f96cbf64e3fe`. Preserve the two r66 Phase G byte locks from Section 83.1. Do not change any runtime harness, lifecycle helper, presentation helper, operation identity, operation order, acceptance predicate, or product file.
+
+In the existing deployment contract test only, replace the one unbounded whole-`runDeploymentCase` negative input with the already computed `firstFrameQuiescenceRegion`, whose upper bound is the source index immediately before `const firstFrameBeforeProductionReadback`. Keep the forbidden-pattern expression itself strict. The region-scoped negative must prove that operation five does not own a presentation helper inside the early window, while remaining unable to inspect or reject the later checkpoint-advance contract. Retain unchanged: the direct `const firstFrameEnvelope = await withDeploymentPresentationQuiescence` positive; exactly five diagnostic calls; exact label counts; exact serial indices; direct operation-five queue ownership; the no-diagnostic-callback-containing-another-diagnostic assertion; all post-restoration/checkpoint/PNG/contact-sheet/hash/fatal-zero/one-attempt assertions; and the three-test inventory.
+
+Only `tests/v0995-runtime-evidence-contract.test.mjs` may receive a source-assertion correction under this revision. Design Lock, Handoff, Project State, and the Design Lock test bind r68 governance. The deployment harness, both Phase G files, `app/**`, workflows, package/lock, public/assets, gameplay, balance, AI, content, save, story, product audio/VFX, timeout, retry/rerun, viewport/unit/stage, pointer, causal, screenshot/pixel, evidence, and release state are forbidden. Repository-wide normalization is forbidden.
+
+### 84.3 Acceptance, promotion, and stop contract
+
+On final r68 bytes, execute once in this order and stop on the first red:
+
+1. deployment harness/test syntax and the runtime-evidence source contract exactly 3/3;
+2. Design Lock exactly 19/19 and canonical six-file exactly 55/55, with fail/cancelled/skipped/todo zero;
+3. exact eight-path topology, forbidden diff zero, all three runtime byte locks, prescribed UTF-8/BOM/EOL, protected forensic directories, and `git diff --check`;
+4. one fresh production build after final normalization;
+5. one new uniquely named fresh WebKit 1280x720 canonical deployment process exactly once, all eight units / 48 checkpoints / evidence integrity green;
+6. one new uniquely named ordered WebKit Stage 6 -> 24 -> 25 Phase G process exactly once, 3/3 under unchanged r66 acceptance;
+7. content validation, complete tests, lint, final build, and repeated exact static integrity.
+
+Do not rerun the failed r67 source command; the r68 command is the first execution of the corrected source assertion. Do not rerun any r66 browser result or stale evidence. Any first r68 source/static/build/deployment/ordered/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, timeout extension, substitution, or product correction is authorized.
+
+Complete local green still authorizes one normal non-amended material-iteration-25 exact-eight-path commit and one non-force immutable transport, followed by one automatic focused CI. Complete automatic focused green alone authorizes workflow-only iteration 26 and the unchanged full/unfiltered/same-HEAD final route. No Ready, merge, tag, GitHub Release, official Pages deployment, evidence freeze, `SOL_FINAL_REVIEW`, or Producer checkpoint is authorized early.
+
+### 84.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R68_REGION_SCOPED_SOURCE_ASSERTION_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: first r67 runtime-evidence source run, 2/3; one whole-function negative regex crossed from the correct first-frame operation into the later checkpoint-advance presentation callback; no runtime executed
+- `LAST_GREEN_GATE`: both r67 syntax checks plus every r67 direct-owner, five-operation count/order, and direct queue-ownership assertion reached before the sole negative scope alias
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_NEGATIVE_SCOPE_ALIAS / R67_RUNDEPLOYMENTCASE_WIDE_REGEX_SPANNED_FIRST_FRAME_OPERATION_TO_LATER_CHECKPOINT_PRESENTATION_CALLBACK / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EARLY_WINDOW_REGION_SCOPED_NON_NESTING_ASSERTION / BOUND_NEGATIVE_TO_FIRST_FRAME_QUIESCENCE_REGION + RETAIN_EXACT_DIRECT_OWNER_AND_FIVE_OPERATION_POSITIVES / REMEDIATION_LOCAL`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r66-r68 remains one uncommitted material iteration 25; workflow-only restoration remains iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required Phase G; r67 local source negative-scope alias count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: change only the one r67 whole-function negative input to the bounded early-window region while byte-locking the deployment harness and both Phase G files -> deployment syntax/runtime-evidence 3/3 -> Design Lock 19/19 -> canonical 55/55 -> exact eight-path/byte/EOL/BOM/protected/static -> fresh build -> one fresh WebKit 1280x720 canonical deployment eight-unit process -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one iteration-25 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact assertion failure, the matched whole-function source, the already bounded early-region indices, the r67 script bytes, exact-eight topology, stop policy, and approval-only release tail. Revision r68 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 85. Revision r69 — active-handoff canonical release-tail literal restoration
+
+### 85.1 First r68 Design source return and classification
+
+The first and only r68 Design Lock run executed 19 tests and stopped at 18 pass / 1 fail. All r68 failure classification, source-region, byte-lock, owner, cursor, and iteration assertions passed. The sole failure was the unchanged global release-loop guard: active Handoff Section 77 abbreviated its `RESUME_FROM` after workflow-only iteration 26 as `unchanged fixed-HEAD final route`, and therefore did not contain the exact `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` token required in every current owner surface. The same Handoff section did contain `SOL_FINAL_REVIEW` in a prohibition sentence, but an abbreviated route is not the executable approval boundary. No r68 runtime-evidence correction, canonical six-file run, static/build, browser/runtime, full gate, commit, transport, or remote CI followed.
+
+Classification is `SOL_OWNED_RELEASE_ROUTE_LITERAL_OMISSION / R68_ACTIVE_HANDOFF_RESUME_FROM_ABBREVIATED_FIXED_HEAD_ROUTE_WITHOUT_FINAL_PRODUCER_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`. Remediation is `CANONICAL_RELEASE_TAIL_LITERAL_RESTORATION / EXPAND_ACTIVE_HANDOFF_RESUME_FROM_WITH_SOL_FINAL_REVIEW_AND_FINAL_PRODUCER_CHECKPOINT + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 85.2 Exact correction and retained r68 implementation contract
+
+Change only Design Lock, Handoff, Project State, and the Design Lock test for the r69 governance binding. In active Handoff Section 78, spell out the route after workflow-only iteration 26 exactly as: unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail. Do not use `unchanged route`, `fixed-HEAD final route`, `Producer checkpoint`, or another abbreviation as the executable cursor.
+
+After Design Lock 19/19, carry forward Section 84's still-unexecuted correction: change only the one runtime-evidence negative input from whole `presentationDeploymentCase` to `firstFrameQuiescenceRegion`. Preserve the accepted deployment harness at 153,348 bytes / SHA-256 `a8a5dfc19a2687aab20632e155558f2789b65b8189c208823d20f96cbf64e3fe` and both r66 Phase G byte locks. The aggregate topology remains exactly eight paths relative to remote r65. No runtime, product, lifecycle, presentation, acceptance, test-inventory, timeout, retry, or release-state change is authorized.
+
+### 85.3 Acceptance and current cursor
+
+Run once, stopping on the first red: Design Lock 19/19; apply the one Section 84 region-scoped source assertion; deployment syntax/runtime-evidence 3/3; canonical six-file 55/55; exact eight-path/three-byte-lock/EOL/BOM/protected/static; fresh build; one fresh 1280x720 canonical eight-unit deployment process; one fresh ordered Stage 6/24/25 process 3/3; content/full/lint/final build/static. Any failure returns to `SOL_DESIGN` without same-revision edit or retry. Complete local green retains the one material-iteration-25 normal commit/non-force transport and one automatic focused CI. Complete automatic focused green alone unlocks workflow-only iteration 26 and the exact final route stated above.
+
+- `STATUS`: `DESIGN_LOCKED / R69_RELEASE_TAIL_AND_REGION_ASSERTION_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: first r68 Design Lock run 18/19; active Handoff route omitted the exact final Producer checkpoint token; no runtime correction executed
+- `LAST_GREEN_GATE`: 18 reached-green Design Lock tests including all r68 classification, region, byte-lock, cursor, and owner assertions
+- `CLASSIFICATION`: `SOL_OWNED_RELEASE_ROUTE_LITERAL_OMISSION / R68_ACTIVE_HANDOFF_RESUME_FROM_ABBREVIATED_FIXED_HEAD_ROUTE_WITHOUT_FINAL_PRODUCER_CHECKPOINT_TOKEN / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CANONICAL_RELEASE_TAIL_LITERAL_RESTORATION / EXPAND_ACTIVE_HANDOFF_RESUME_FROM_WITH_SOL_FINAL_REVIEW_AND_FINAL_PRODUCER_CHECKPOINT + NO_RUNTIME_CHANGE / REMEDIATION_LOCAL`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r66-r69 remains one uncommitted material iteration 25; workflow-only restoration remains iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required Phase G; r68 active release-token omission count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: Design Lock 19/19 -> apply only the bounded first-frame-region negative assertion -> deployment syntax/runtime-evidence 3/3 -> canonical 55/55 -> exact eight-path/byte/EOL/BOM/protected/static -> fresh build -> one fresh WebKit 1280x720 canonical deployment eight-unit process -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one iteration-25 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the sole r68 failure, every active owner route, the retained r68 bounded assertion correction, three runtime byte locks, exact-eight topology, stop policy, and approval-only release boundary. Revision r69 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 86. Revision r70 — production-owned exact audio cue resolution before presentation release
+
+### 86.1 First r69 ordered return and independent classification
+
+The r69 governance/source/static sequence completed: Design Lock 19/19, deployment syntax, runtime-evidence 3/3, canonical six-file 55/55, exact-eight topology, prescribed bytes/EOL/BOM, protected forensic directories, `git diff --check`, and a fresh production build were green. The first and only fresh WebKit 1280x720 canonical deployment process then passed all eight units, all 48 checkpoints, all 56 artifact-integrity entries, and fatal diagnostics zero. Its accepted deployment harness remains 153,348 bytes / SHA-256 `a8a5dfc19a2687aab20632e155558f2789b65b8189c208823d20f96cbf64e3fe`; its accepted runtime-evidence test remains 42,651 bytes / SHA-256 `28798c45e5eed78337aa57caa1bfd7851ce80d7c9f5430362ac1a7553e15ed0a`. That deployment process is complete independent evidence and was not rerun.
+
+The first and only r69 ordered process used sequence `r69-local-ordered-1`, a new evidence root, `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, and no variant filter. It stopped at ordered position 1, `stage06-spitter-seal`, actual stage `stage-nishijin-station-tunnel-seal`, WebKit 667x375, browser session `webkit-1`, after 81,893 ms. Stage 24 and Stage 25 were not launched. Three real pointer deployments and `frontline-deployment-sequence-completed` were green. The terminal failure was `page.waitForFunction: Timeout 45000ms exceeded` while awaiting `presentation-quiescence`; release, schema-v3 epoch, exact actor/unit proof, causal proof, and screenshot remained unresolved. The page was still a live campaign battle at battle time 79.0666 / wave 4, `failureState` was not a product failure, and console/page/request/HTTP failures were all zero. There was no page crash, retry, rerun, edit, or evidence substitution.
+
+The 3,411,947-byte checkpoint diagnostic has SHA-256 `88a39e2133625f25f1603eba66a4f1d8b32723113fda1f541771eadc960408a9`; the 424,159-byte diagnostic PNG has SHA-256 `b4abf96386b0931954527b17414e79eda92427e0c7671820932be5b990c9079d`. Windows host telemetry is truthfully `supported: false / linux-proc-cgroup-unavailable`; it cannot be used as Linux resource evidence, but the live final page and clean browser diagnostics exclude a local page-crash classification.
+
+Actual combat evidence after the battle-time-34 readiness boundary contains identity-bound ranger attacks with living zombie targets at battle times 37.50, 40.08, 57.40, and 64.12, and identity-bound spitter attacks with living human targets at 39.85, 59.77, and 63.38. The retained audio set contains `weapon-rifle` and `enemy-spitter-attack`, and does not contain `weapon-ranger-attack`. Static production-source execution confirms `weaponCueForUnit("ranger") === "weapon-rifle"` and `enemyCombatCueFor("spitter", "attack") === "enemy-spitter-attack"`. The r66 readiness instead derived both expected cues from `V100_COMBAT_FX_INVENTORY[*].soundCue`; that presentation inventory returns `weapon-ranger-attack` for ranger. The token has no production runtime emitter, while `app/productionAudio.js` is the actual unit-weapon owner. Therefore ranger readiness can never set `cueObserved`, even after a real exact sequence and living target, and the release predicate deterministically remains false.
+
+Classification is `QA_HARNESS_AUDIO_CONTRACT_OWNER_ALIAS / PRESENTATION_INVENTORY_SEMANTIC_RANGER_CUE_USED_AS_PRODUCTION_RUNTIME_CUE / DESIGN_CHANGE_REQUIRED`. Remediation is `PRODUCTION_AUDIO_CUE_OWNER_RESOLUTION / ENEMY_COMBAT_CUE_FOR_ATTACK + WEAPON_CUE_FOR_UNIT + BOUNDED_READINESS_FAILURE_RECEIPT / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 86.2 Exact remediation and diagnostic contract
+
+Keep the aggregate topology at exactly the same eight tracked paths relative to remote r65 HEAD/tree. Under `SOL_REMEDIATION`, change only `scripts/v100-phase-g-production-matrix.mjs` and the existing `tests/v100-phase-g-checkpoint.test.mjs` source contract in addition to the four r70 governance paths. Preserve the r69 deployment harness and runtime-evidence test byte-for-byte at the hashes above. No ninth path is authorized.
+
+In the Phase G harness, stop importing or consulting `V100_COMBAT_FX_INVENTORY` for runtime audio proof. Import `enemyCombatCueFor` and `weaponCueForUnit` from `app/productionAudio.js`, and resolve exactly:
+
+- `proofActorAttackCueId = proofActor ? enemyCombatCueFor(proofActor, "attack") : null`;
+- `proofUnitAttackCueId = proofUnitKind ? weaponCueForUnit(proofUnitKind) : null`.
+
+The resolved production cue remains mandatory whenever non-null. Do not replace it with `null`, an OR over semantic aliases, any-audio acceptance, substring matching, or a synthetic cue. Preserve exact selected fighter identity, attack-sequence advancement, current living opposite-side target, cue-after-cutoff, neutral readiness, same-page-task release plus schema-v3 arm, the single release-origin deadline, concurrent exact-plus-causal convergence, immediate screenshot, and all four negative exact-actor probes.
+
+Strengthen failure evidence without changing success behavior. In the existing battle failure-state readback, add a bounded `preReleaseReadiness` receipt copied from `window.__PHASE_G_PRE_RELEASE_READINESS__` only when its schema is `v100-phase-g-pre-release-readiness/v1`. Persist only schema, stage, arm times, audio cutoff, at most four actor keys, and at most four actors. Per actor persist side, kind, cue ID, `cueObserved`, at most 16 `{fighterId, baselineAttackSequence}` entries, selected fighter/sequence/target identity and target-alive fields, and ready battle time. Do not serialize the page, bridge, full snapshot, unbounded cue history, DOM, or product state through this receipt. A future first red must therefore identify which exact readiness dimension remained false.
+
+Do not change `app/**`, product audio/VFX, the presentation inventory, gameplay, balance, AI, stage/formation, save, content, product timing, timeout, retry/rerun policy, browser/viewports, pointer interaction, causal thresholds, screenshot/pixel acceptance, workflow, package/lock, public/assets, release state, or test inventory. The apparent presentation-inventory discrepancy is not authorization to repair product data in this packet; the harness must observe the production audio owner already used by runtime.
+
+### 86.3 Source and runtime acceptance
+
+Keep `tests/v100-phase-g-checkpoint.test.mjs` at exactly 12 tests. In its existing comprehensive source test, bind the two production resolver outputs for ranger and spitter; bind the exact import and assignments above; reject any Phase G runtime-cue lookup through `V100_COMBAT_FX_INVENTORY`; and bind the bounded readiness failure receipt, limits, and fields. Retain every r66/r65 pointer, readiness, schema-v3, actor, target, cue cutoff, causal, screenshot, checkpoint, saturated-ring, failure-finalization, fatal-zero, and negative-probe assertion.
+
+Execute once in this order and stop at the first red:
+
+1. Phase G script/test syntax, checkpoint exactly 12/12, Design Lock exactly 19/19, and canonical six-file exactly 55/55 with fail/cancelled/skipped/todo zero;
+2. deployment runtime-evidence exactly 3/3 and byte verification of the two accepted r69 deployment files; do not run the deployment browser process again;
+3. exact eight-path topology, forbidden diff zero, UTF-8/BOM/EOL, protected forensic-directory manifests, `git diff --check`, and a fresh production build;
+4. one new uniquely named fresh filtered ordered WebKit Phase G process, exactly Stage 6 -> Stage 24 -> Stage 25 on sessions `webkit-1/2/3`, 3/3 under all unchanged r66 acceptance and the production-owned cue IDs;
+5. content validation, complete tests, lint, final build, and repeated exact static integrity.
+
+The r69 deployment result remains valid for this local candidate because both deployment source files, all `app/**`, workflow, package/lock, and runtime assets remain byte-identical. It is not final evidence freeze and cannot replace later exact-HEAD deployment/runtime/human review. The failed r69 ordered process is diagnostic-only and is never rerun or promoted. Any first r70 source/static/build/ordered/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, timeout extension, alias fallback, product correction, or evidence substitution is authorized.
+
+Complete local green authorizes one normal non-amended material-iteration-25 exact-eight-path commit and one non-force immutable transport, followed by one automatic focused CI. Complete automatic focused green alone authorizes workflow-only iteration 26. The remaining route is exactly: unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+### 86.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R70_PRODUCTION_AUDIO_CUE_OWNER_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: first and only r69 fresh ordered process, Stage 6 ordered position 1; 45-second pre-release readiness timeout because the harness required non-emitted ranger cue `weapon-ranger-attack`; Stage 24/25 not run; page live and fatal diagnostics zero
+- `LAST_GREEN_GATE`: complete r69 source/static/fresh-build sequence plus first-attempt WebKit 1280x720 canonical deployment eight units / 48 checkpoints / 56 integrity entries, fatal zero
+- `CLASSIFICATION`: `QA_HARNESS_AUDIO_CONTRACT_OWNER_ALIAS / PRESENTATION_INVENTORY_SEMANTIC_RANGER_CUE_USED_AS_PRODUCTION_RUNTIME_CUE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PRODUCTION_AUDIO_CUE_OWNER_RESOLUTION / ENEMY_COMBAT_CUE_FOR_ATTACK + WEAPON_CUE_FOR_UNIT + BOUNDED_READINESS_FAILURE_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r66-r70 remains one uncommitted material iteration 25; workflow-only restoration remains iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required remote Phase G; r69 local Stage 6 production-cue owner alias count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: implement only the production-owned cue resolvers and bounded readiness failure receipt while preserving r69 deployment bytes -> syntax/checkpoint 12/12 -> Design Lock 19/19 -> canonical 55/55 -> deployment source 3/3 plus byte locks, without deployment browser rerun -> exact static/fresh build -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one iteration-25 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw r69 diagnostic and PNG, post-boundary identity-bound attack/target history, actual retained cue IDs, production audio resolvers, presentation inventory, current eight-path draft, successful deployment hashes, no-retry boundary, and approval-only release tail. Revision r70 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 87. Revision r71 — immutable first qualifying exact attack witness and event-time deadline ownership
+
+### 87.1 First r70 ordered return and independent classification
+
+The r70 source and static sequence completed before runtime: Phase G checkpoint 12/12, Design Lock 19/19, canonical six-file 55/55, runtime-evidence 3/3, exact eight-path topology, accepted deployment byte locks, UTF-8/BOM/EOL, protected forensic-directory manifests, `git diff --check`, and a fresh production build were green. The accepted r69 WebKit 1280x720 deployment evidence remains valid local continuity because the deployment harness, runtime-evidence test, all `app/**`, workflows, package/lock, and runtime assets remained byte-identical; the deployment browser process was not rerun.
+
+The first and only r70 ordered process used sequence `r70-local-ordered-1`, evidence root `zombieee-r70-phaseg-01a00a4c-fcfa-7f61`, `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, and no variant filter. It stopped at ordered position 1, Stage 6 WebKit 667x375, browser session `webkit-1`; Stage 24 and Stage 25 were not launched. The page remained a live normal battle, the diagnostic PNG showed intact production UI, and console/page/request/HTTP/page-crash counts were zero. Windows host telemetry was truthfully unsupported (`linux-proc-cgroup-unavailable`) with 109 samples and zero collection errors; it is not Linux resource evidence. No retry, rerun, edit, or evidence substitution occurred under r70.
+
+The immutable evidence files are: host summary 2,123 bytes / SHA-256 `3af8d69f3ec7beb860c755e0c828614d062ba0f0205d153bfff90e25a7042825`; host JSONL 111,867 bytes / `8e6d7bc94be42c064645b30de3fcf1884529ad3c49369c9f7d5fef8251917f4c`; checkpoint diagnostic 3,472,232 bytes / `9f25a9ab0f4e8f44fc92480c891c62721e8b422e32dc0a3aaa532b6cd8d2d737`; PNG 438,640 bytes / `829be2c2a60c7c6c627547357bface9fbbfaa0c2068795075fb497647bceeeb5`.
+
+Pre-release readiness was green for the exact selected spitter and ranger using production cues `enemy-spitter-attack` and `weapon-rifle`. Presentation release completed at page time 43,126 with deadline 54,927 and three restored frames. Concurrent causal proof was 4/4 with 85 samples. The first identity-bound post-release attacks were ranger fighter 1, sequence 4 -> source 1 targeting living turned 8 at battle time about 40.9, and spitter fighter 3, sequence 1 -> source 3 targeting living ranger 1 at battle time about 41.4. Later history independently shows ranger targeting that spitter while it was still alive at battle time about 42.58. Thus both exact attacks completed with living sources and living opposite-side targets inside the proof epoch.
+
+The observer nevertheless overwrote each actor's `observedFighterId`, `observedAttackSequence`, observation time, and target receipt on every later sequence advance, and continuously replaced `actorAlive` with the latest frame. The final actor decision then required `actorAlive === true`. The spitter's already completed attack was rejected only because the same source died later; the ranger witness drifted to a later attack. The collector consequently kept waiting and performed its final read at page time 54,945, eighteen milliseconds after the deadline. This final-read delay is an effect of the mutable witness, not proof that the first qualifying causal attack occurred late.
+
+Classification is `QA_HARNESS_EXACT_WITNESS_MUTABILITY / FIRST_POST_RELEASE_ATTACK_RECEIPT_OVERWRITTEN_BY_LATER_FRAMES + FINAL_STATE_SOURCE_LIVENESS_INVALIDATES_COMPLETED_CAUSAL_PROOF / DESIGN_CHANGE_REQUIRED`. Remediation is `IMMUTABLE_FIRST_QUALIFYING_EXACT_WITNESS / FREEZE_ATTACK_IDENTITY_SEQUENCE_TARGET_SOURCE_LIVENESS_AND_PAGE_TIME + EVENT_TIME_DEADLINE_OWNERSHIP / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 87.2 Exact remediation contract
+
+Keep the aggregate topology at exactly the same eight tracked paths relative to remote r65 HEAD/tree. Under `SOL_REMEDIATION`, change only `scripts/v100-phase-g-production-matrix.mjs` and the existing comprehensive source assertions in `tests/v100-phase-g-checkpoint.test.mjs`, in addition to the four r71 governance paths. Preserve `scripts/v099-final-remediation-browser-smoke.mjs` at 153,348 bytes / SHA-256 `a8a5dfc19a2687aab20632e155558f2789b65b8189c208823d20f96cbf64e3fe` and `tests/v0995-runtime-evidence-contract.test.mjs` at 42,651 bytes / `28798c45e5eed78337aa57caa1bfd7851ce80d7c9f5430362ac1a7553e15ed0a`. No ninth path is authorized and the deployment browser process must not run again.
+
+For each schema-v3 epoch actor, retain current `actorAlive` only as final-state diagnostics and add exact frozen evidence fields `sourceAliveAtObservation`, `observedAtPageTime`, and `audioObservedAtPageTime`. On the first selected-fighter attack-sequence advance after its baseline, and only while `observedPostEpochAttack !== true`, atomically freeze all of the following and never overwrite them in any later observer frame or attack:
+
+- selected observed fighter ID and first advanced attack sequence;
+- observation battle time and page time;
+- source alive at observation;
+- target fighter ID, side, kind, and alive at observation.
+
+Every actor/unit observer path and result merge must use first-write or nullish-assignment semantics for this witness. A later attack, target change, source death, target death, wave transition, or final collector snapshot must not replace the frozen receipt. Current/final liveness can remain separately visible for diagnostics but is not a completed-attack acceptance input.
+
+The exact production audio cue remains mandatory and must still be requested strictly after `audioCueRequestCutoffAt`. Freeze the first matching cue's page time as `audioObservedAtPageTime`; later matching cues must not overwrite it. Preserve `enemyCombatCueFor(proofActor, "attack")`, `weaponCueForUnit(proofUnitKind)`, the saturated-ring cutoff semantics, and exact cue equality. No alias, substring, any-audio, synthetic cue, or null fallback is allowed.
+
+`postQuiescenceExactActorDecision` must require the existing schema, selected identity, baseline sequence advancement, exact first witness, `sourceAliveAtObservation === true`, a living opposite-side target at observation, and the exact production cue. It must not require that the source or target remain alive at final collection. Compute each actor's `proofCompletedAtPageTime` as the maximum of finite `observedAtPageTime` and required finite `audioObservedAtPageTime`; when the resolved production cue is null by the unchanged product contract, use `observedAtPageTime`. Require the completion time to be at or after `visibleProofStartedAt` and at or before the single `visibleProofDeadlineAt`.
+
+The overall exact decision owns `proofCompletedAtPageTime` as the maximum of its accepted actor/unit completion times and owns `withinReleaseDeadline` from those frozen event times. `collection.withinReleaseDeadline` must derive from this exact event-time decision. Preserve final collector `pageNow` as diagnostics only; it must neither rescue a late event nor invalidate an on-time frozen event. Preserve the separate screenshot receipt and its unchanged rule that the actual post-capture page time itself is at or before the same deadline. Preserve concurrent causal 4/4, minimum visible dwell 2,400 ms, minimum eight samples, 12,000 ms normal / 4,800 ms Stage 24 deadline, same release origin, exact selected fighters/targets/cues, immediate screenshot, and fatal-zero contracts.
+
+Extend the bounded post-quiescence failure receipt only with `sourceAliveAtObservation`, observed battle/page time, audio observed page time, proof completion page time, and event-time deadline decision for the already bounded actors. Do not serialize full history, page state, DOM, bridge, snapshots, or unbounded arrays.
+
+Do not change `app/**`, product audio/VFX, gameplay, damage, hitbox, balance, AI, formation, target selection, stage setup, save/content, product timing, browser/viewports, timeout, retry/rerun policy, causal thresholds, screenshot/pixel acceptance, artifact requirements, P5/deployment contracts, workflow, package/lock, public/assets, release state, or test inventory.
+
+### 87.3 Source and runtime acceptance
+
+Keep `tests/v100-phase-g-checkpoint.test.mjs` at exactly 12 tests. In the existing comprehensive source test, retain every r70 assertion and add exact source bindings for atomic first-write witness capture, all frozen fields, first matching audio page time, event-time proof completion, and final collector time as diagnostic-only. The negative probes must reject source dead at observation, an observation or required cue after deadline, stale sequence, wrong fighter, invalid/dead/same-side target, and audio-only proof. Positive probes must prove that a source alive at observation remains accepted after a later final-state death, that the first witness cannot be overwritten by later attacks/frames, and that an on-time event remains accepted even if final diagnostic `pageNow` is later. The screenshot deadline assertion remains independently unchanged.
+
+Execute once in this order and stop at the first red:
+
+1. Phase G script/test syntax, checkpoint exactly 12/12, Design Lock exactly 19/19, and canonical six-file exactly 55/55 with fail/cancelled/skipped/todo zero;
+2. deployment runtime-evidence exactly 3/3 and byte verification of the two accepted deployment files; do not run the deployment browser process again;
+3. exact eight-path topology, forbidden diff zero, UTF-8/BOM/EOL, protected forensic-directory manifests, `git diff --check`, and a fresh production build;
+4. one new uniquely named fresh filtered ordered WebKit Phase G process, exactly Stage 6 -> Stage 24 -> Stage 25 on sessions `webkit-1/2/3`, 3/3 under all unchanged acceptance and the immutable event-time witness;
+5. content validation, complete tests, lint, final build, and repeated exact static integrity.
+
+The failed r70 ordered process is diagnostic-only and is never rerun or promoted. Any first r71 source/static/build/ordered/full failure returns to `SOL_DESIGN`; no same-revision edit, retry, rerun, timeout extension, product correction, acceptance weakening, or evidence substitution is authorized. Complete local green authorizes one normal non-amended material-iteration-25 exact-eight-path commit and one non-force immutable transport, followed by one automatic focused CI. Complete automatic focused green alone authorizes workflow-only iteration 26. The remaining route is exactly: unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+### 87.4 Local acceptance read-back
+
+The first and only r71 filtered ordered WebKit process used sequence `r71-local-ordered-1`, evidence root `zombieee-r71-phaseg-01a00a4c-fcfa-7f61`, `V100_PHASE_G_ONLY=battle-extra`, `V100_PHASE_G_ONLY_ENGINE=webkit`, and no variant filter. It passed Stage 6 WebKit 667x375, Stage 24 WebKit 736x414, and Stage 25 WebKit 932x430 exactly 3/3 on fresh sessions `webkit-1`, `webkit-2`, and `webkit-3`. It produced exactly three distinct production screenshots. Each stage resolved all 15 checkpoint keys, ended at `screenshot-saved`, converged 19 causal samples to 4/4, accepted the immutable exact event-time witness inside its release deadline, retained the separate actual post-capture screenshot deadline, and recorded console/page/request/HTTP/product-fatal/page-crash counts as zero. Visual inspection confirmed three live, intact production battle surfaces with no empty canvas or layout collapse. Windows host telemetry was truthfully unsupported and is not Linux evidence. No retry, rerun, edit, variant substitution, or stale evidence reuse occurred.
+
+The merged report is 11,838,902 bytes / SHA-256 `e6540b092c1bc10b6410cef3f149e35c7239616a49fcc909243b814e9c25cc1b`. Stage 6's 436,642-byte PNG is `8394fcd42057cc21630b7cc9510506d7a0ba182be94e55cc79338ccdfc614a1c`; Stage 24's 499,177-byte PNG is `75cffb801a9d89c52e5bf98a94387891f6218f277353259f542471a95af0d0a0`; Stage 25's 692,910-byte PNG is `71411099f20bb8ef1c6f3a06b2d95050835ea7e086a98ce3642b822cad983b96`. Stage 6 completed exact proof at page time 44,015 and captured at 45,806 before deadline 54,983; its later-dead spitter remained correctly accepted because `sourceAliveAtObservation` was true. Stage 24 completed at 87,427 and captured at 89,040 before deadline 90,945. Stage 25 completed at 57,366 and captured at 59,169 before deadline 68,253.
+
+Final Phase G source bytes are `scripts/v100-phase-g-production-matrix.mjs` 279,177 bytes / SHA-256 `9e3cce2e9f7bcd5572eeb1b88715c9ca65228b570e0045ac525b04e817768262` and `tests/v100-phase-g-checkpoint.test.mjs` 73,071 bytes / `f2b52db3cf1410b2558ea95f08ee67552a9afcbf8691c289baff99e3f43c3a9d`. Syntax/checkpoint 12/12, Design Lock 19/19, canonical six-file 55/55, deployment runtime-evidence 3/3, accepted deployment byte locks, exact eight-path/forbidden/EOL/BOM/protected-directory/`git diff --check` integrity, content validation, complete tests 1,197/1,197, lint with zero errors and nine existing warnings, and final production build all passed. Protected manifests remained 377 / 51 / 3 files with SHA-256 `501993f79eb1591b74c898506c7d538a5db684c8fb7d94848d881febb97edaad`, `71968d16a88175957ab8129b8fa0aa004a27301edf8037caceb8bb690037c6fc`, and `be8122206df63cdcd8dc1a6983a4842795e9efe0b2edf50379e0c7b9cc41db10`.
+
+This read-back changes governance text/test only after final harness bytes were accepted. It does not invalidate or authorize repetition of deployment, ordered Phase G, content, full tests, lint, or build. Re-run only Design Lock, canonical six-file, exact eight-path byte/EOL/BOM/protected/static integrity, and `git diff --check`; their green result authorizes the already specified one material-iteration-25 commit and immutable transport.
+
+### 87.5 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R71_LOCAL_ACCEPTANCE_GREEN / ITERATION_25_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `0235da77bbc22d2b7b95740366b05089fc593884`
+- `LAST_AUDITED_TREE`: `650e07b9e74fd3913013c61d51a181dfe4d3426a`
+- `FAILED_GATE`: none in r71 local acceptance; the next unexecuted gate is the material-iteration-25 commit/immutable transport and its one resulting automatic focused CI run
+- `LAST_GREEN_GATE`: first and only r71 ordered Stage 6/24/25 exactly 3/3 with immutable event-time proof, causal 4/4, production screenshots, and fatal zero; checkpoint 12/12; Design Lock 19/19; canonical 55/55; deployment source 3/3 and byte locks; content; full 1,197/1,197; lint zero errors/nine existing warnings; final build; exact integrity
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_WITNESS_MUTABILITY / FIRST_POST_RELEASE_ATTACK_RECEIPT_OVERWRITTEN_BY_LATER_FRAMES + FINAL_STATE_SOURCE_LIVENESS_INVALIDATES_COMPLETED_CAUSAL_PROOF / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `IMMUTABLE_FIRST_QUALIFYING_EXACT_WITNESS / FREEZE_ATTACK_IDENTITY_SEQUENCE_TARGET_SOURCE_LIVENESS_AND_PAGE_TIME + EVENT_TIME_DEADLINE_OWNERSHIP / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r66-r71 remains one uncommitted material iteration 25; workflow-only restoration remains iteration 26 after complete automatic focused green only
+- `SAME_GATE_REPEAT_COUNT`: `13` for required remote Phase G; r70 local exact-witness mutability count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: repeat governance/static read-back only -> one iteration-25 normal non-amended exact-eight-path commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw r70 diagnostic/JSONL/PNG, final r71 source bytes, the one ordered report and three production screenshots, immutable first-witness/event-time decisions, exact eight-path topology, accepted deployment hashes, protected manifests, no-retry boundary, and approval-only release tail. Revision r71 has `High ambiguity: 0` and `Medium ambiguity: 0`.
