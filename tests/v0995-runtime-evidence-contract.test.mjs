@@ -93,6 +93,16 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /queueCrawlerDefenseUnit\("engineer", 1\)/);
   assert.match(visualHarness, /Monkey approved atlas was not consumed by the production renderer/);
   assert.match(visualHarness, /finalCompositePixels\?\.singleUnitSilhouette === true/);
+  assert.doesNotMatch(visualHarness, /qa\.auditFighterUnitLayer/u);
+  assert.match(visualHarness, /runFighterUnitLayerAuditSession\([\s\S]*preparedProof\.fighter\.id/u);
+  assert.match(visualHarness, /beginFighterUnitLayerAuditSession/u);
+  assert.match(visualHarness, /advanceFighterUnitLayerAuditSession/u);
+  assert.match(visualHarness, /finalizeFighterUnitLayerAuditSession/u);
+  assert.match(visualHarness, /FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS = 2_000/u);
+  assert.match(visualHarness, /FIGHTER_UNIT_LAYER_AUDIT_HOST_TURN_MS = 100/u);
+  assert.match(visualHarness, /v100-fighter-unit-layer-audit-session\/v1/u);
+  assert.match(visualHarness, /visual-integrity-evidence-capture/u);
+  assert.match(visualHarness, /v100-visual-integrity-unit-layer-quiescence\/v1/u);
   assert.doesNotMatch(visualHarness, /campaign-primary/);
   assert.match(gameSource, /screen !== "battle" \|\| !assetsReady \|\| assetError/);
   assert.match(visualHarness, /import \{ createWebKitHostResourceTelemetry \} from "\.\/webkit-host-resource-telemetry\.mjs"/u);
@@ -110,6 +120,19 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /for \(const faultViewport of faultViewports\) \{[\s\S]*?await launchCaseBrowser\(caseDetails\);[\s\S]*?await closeCaseBrowser\(caseDetails\);/u);
   assert.doesNotMatch(visualHarness, /try \{\r?\n\s*browser = await browserType\.launch/u);
   assert.doesNotMatch(visualHarness, /attempt < 2|retrying .* transient browser closure|isTransientBrowserClosure/u);
+  const visualScreenshotQuiescence = visualHarness.match(/async function withVisualIntegrityScreenshotQuiescence[\s\S]+?(?=\nconst diagnostics)/u)?.[0] ?? "";
+  assert.match(gameSource, /route: "phase-g" \| "deployment" \| "visual-integrity" \| null/u);
+  assert.match(gameSource, /parameters\.get\("qa"\) === "mission" && parameters\.get\("qaVisualIntegrity"\) === "1"[\s\S]*"visual-integrity"/u);
+  assert.match(gameSource, /route === "visual-integrity"[\s\S]*\["visual-integrity-evidence-capture"\]/u);
+  assert.match(gameSource, /visualIntegrityCapture \? g\.paused/u);
+  assert.match(visualScreenshotQuiescence, /arm\.paused === false/u);
+  assert.match(visualHarness, /Number\(receipt\.suppressedRenderFrames\) > 0/u);
+  assert.match(visualHarness, /Number\(receipt\.renderFrames\) >= Number\(releasedAtRenderFrames\) \+ 3/u);
+  assert.match(visualScreenshotQuiescence, /v100-visual-integrity-screenshot-quiescence\/v1/u);
+  assert.match(visualHarness, /page\.screenshot\(\{ path: screenshot, timeout: VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS \}\)/u);
+  assert.match(visualHarness, /screenshotQuiescence: screenshotEnvelope\.receipt/u);
+  assert.match(visualHarness, /VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS = 10_000/u);
+  assert.equal((visualHarness.match(/page\.screenshot\(\{ path: screenshot, fullPage: true \}\)/gu) ?? []).length, 1);
 });
 
 test("r6 deployment diagnostics are bounded and preserve the existing acceptance contract", () => {
@@ -404,8 +427,8 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryValid/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryInvalidReason/u);
   assert.match(boundedDeploymentHarness, /failed at \$\{failedAt\}/u);
-  const fighterAuditScratch = gameSource.match(/type FighterUnitLayerAuditScratchSurface[\s\S]+?(?=\r?\nfunction fighterUnitLayerPixelAudit)/u)?.[0] ?? "";
-  const fighterAudit = gameSource.match(/function fighterUnitLayerPixelAudit[\s\S]+?(?=\r?\nfunction drawEnemyCombatReadabilityVfx)/u)?.[0] ?? "";
+  const fighterAuditScratch = gameSource.match(/type FighterUnitLayerAuditScratchSurface[\s\S]+?(?=\r?\nfunction fighterUnitLayerAuditRegion)/u)?.[0] ?? "";
+  const fighterAudit = gameSource.match(/function fighterUnitLayerAuditRegion[\s\S]+?(?=\r?\nfunction drawEnemyCombatReadabilityVfx)/u)?.[0] ?? "";
   assert.equal((fighterAuditScratch.match(/document\.createElement\("canvas"\)/gu) ?? []).length, 1);
   assert.equal((fighterAuditScratch.match(/getContext\("2d", \{ willReadFrequently: true \}\)/gu) ?? []).length, 1);
   assert.match(fighterAuditScratch, /if \(canvas\.width !== width\) canvas\.width = width/u);
@@ -418,12 +441,22 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(fighterAudit, /ctx\.translate\(-left, -top\);[\s\S]*drawCrawlerForegroundMask\(ctx/u);
   assert.match(fighterAudit, /ctx\.translate\(-left, -top\);[\s\S]*drawCrawler\(ctx/u);
   assert.match(fighterAudit, /ctx\.getImageData\(0, 0, width, height\)/u);
-  assert.match(fighterAudit, /renderedForegroundRgba = captureForeground\(false\)/u);
-  assert.match(fighterAudit, /expectedForegroundRgba = captureForeground\(true\)/u);
-  assert.match(fighterAudit, /visibleFinalRgba: finalRgba/u);
+  assert.match(fighterAudit, /session\.renderedForegroundRgba = captureForeground\(false\)/u);
+  assert.match(fighterAudit, /session\.expectedForegroundRgba = captureForeground\(true\)/u);
+  assert.match(fighterAudit, /visibleFinalRgba: session\.finalRgba/u);
   assert.match(fighterAudit, /schema: "v100-fighter-unit-layer-audit-scratch\/v1"/u);
   assert.match(fighterAudit, /kind: "detached-dom-canvas"/u);
   assert.match(fighterAudit, /surfaceCount: 1,[\s\S]*contextCount: 1,[\s\S]*passCount: 6/u);
+  assert.match(fighterAudit, /schema: "v100-fighter-unit-layer-audit-session\/v1"/u);
+  assert.match(gameSource, /FIGHTER_UNIT_LAYER_AUDIT_PASSES = \[/u);
+  for (const pass of ["actual-unit", "forced-opaque-unit", "rendered-foreground", "expected-foreground", "final-production-canvas", "authored-composite"]) {
+    assert.match(fighterAudit, new RegExp(`"${pass}"`, "u"));
+  }
+  assert.match(fighterAudit, /function beginFighterUnitLayerPixelAuditSession/u);
+  assert.match(fighterAudit, /function advanceFighterUnitLayerPixelAuditSession/u);
+  assert.match(fighterAudit, /function finalizeFighterUnitLayerPixelAuditSession/u);
+  assert.match(fighterAudit, /finalizedWithoutCanvasDraw: true/u);
+  assert.doesNotMatch(fighterAudit, /OffscreenCanvas/u);
   assert.doesNotMatch(fighterAudit, /foregroundCanvas|foregroundContext|finalAuditCanvas|finalAuditContext|compositeCanvas|compositeContext/u);
   assert.match(finalRemediationHarness, /WEBKIT_HOST_TELEMETRY_INVALID/u);
   assert.match(finalRemediationHarness, /priorFailure\.hostResourceTelemetryFailure/u);
@@ -461,7 +494,8 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(firstFrame, /progress === 0/u);
   assert.match(firstFrame, /captureTrace = null/u);
   assert.ok((firstFrame.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length >= 3);
-  assert.equal((firstFrame.match(/auditFighterUnitLayer/gu) ?? []).length, 1);
+  assert.equal((firstFrame.match(/auditFighterUnitLayer/gu) ?? []).length, 0);
+  assert.equal((firstFrame.match(/runFighterUnitLayerAuditSession/gu) ?? []).length, 1);
   assert.doesNotMatch(firstFrame, /document\.querySelector\("\.battle-banner"\)|requestAnimationFrame|getSnapshot|page\.waitForTimeout/u);
   const checkpoint = finalRemediationHarness.match(/async function pauseAtDeploymentCheckpoint[\s\S]+?(?=\nasync function queueAndPauseAtFirstDeploymentFrame)/u)?.[0] ?? "";
   assert.equal((checkpoint.match(/armCrawlerDeploymentCheckpoint/gu) ?? []).length, 1);
@@ -473,13 +507,18 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(checkpoint, /prearmedCheckpoint = null/u);
   assert.match(checkpoint, /prearmedCheckpoint \?\? await page\.evaluate/u);
   assert.equal((checkpoint.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length, 3);
-  assert.equal((checkpoint.match(/auditFighterUnitLayer/gu) ?? []).length, 1);
+  assert.equal((checkpoint.match(/auditFighterUnitLayer/gu) ?? []).length, 0);
+  assert.equal((checkpoint.match(/runFighterUnitLayerAuditSession/gu) ?? []).length, 1);
   assert.match(finalRemediationHarness, /function validDeploymentAuditScratchReceipt\(audit\)/u);
   assert.match(finalRemediationHarness, /audit\?\.scratchSurface\?\.schema === "v100-fighter-unit-layer-audit-scratch\/v1"/u);
   assert.match(finalRemediationHarness, /audit\.scratchSurface\.surfaceCount === 1/u);
   assert.match(finalRemediationHarness, /audit\.scratchSurface\.contextCount === 1/u);
   assert.match(finalRemediationHarness, /audit\.scratchSurface\.passCount === 6/u);
-  assert.equal((finalRemediationHarness.match(/validDeploymentAuditScratchReceipt\(frozen\.audit\)/gu) ?? []).length, 2);
+  assert.match(finalRemediationHarness, /audit\.transportSession\?\.schema === "v100-fighter-unit-layer-audit-session\/v1"/u);
+  assert.match(finalRemediationHarness, /FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS = 2_000/u);
+  assert.match(finalRemediationHarness, /FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS = 10_000/u);
+  assert.match(finalRemediationHarness, /page\.evaluate\(\(token\) => window\.__ASHFALL_BATTLE_QA__\.advanceFighterUnitLayerAuditSession\(token\)/u);
+  assert.equal((finalRemediationHarness.match(/validDeploymentAuditScratchReceipt\(audit\)/gu) ?? []).length, 4);
   assert.doesNotMatch(checkpoint, /setRepresentativeSixProofPaused\(true\)|requiredProgress|requestAnimationFrame|getSnapshot|waitForFunction|page\.waitForTimeout/u);
   const canvasCapture = finalRemediationHarness.match(/async function deploymentCanvasPng[\s\S]+?(?=\nasync function crawlerRuntimeContactSheet)/u)?.[0] ?? "";
   assert.match(canvasCapture, /canvas\.battlefield\.active/u);

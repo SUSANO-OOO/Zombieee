@@ -28,6 +28,7 @@ const battleTimeout = Math.max(60_000, Number(process.env.V100_PHASE_G_BATTLE_TI
 const combatProofDurationMs = Math.max(2_400, Number(process.env.V100_PHASE_G_COMBAT_PROOF_MS) || 12_000);
 const COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS = 2_400;
 const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8;
+const COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS = 2_000;
 const requiredViewports = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
@@ -555,7 +556,7 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
     await writeFile(failureFilePath, `${JSON.stringify(failurePayload, null, 2)}\n`).catch(() => {});
   }
 
-  const persistFailure = async ({ label, error, failureState, diagnostics }) => {
+  const persistFailure = async ({ label, error, failureState, diagnostics, allowPageRpc = true }) => {
     const safeLabel = `${contract.variant}-${engineName}-${viewportLabel(viewport)}`;
     const diagnosticsDir = path.join(evidenceDir, "diagnostics");
     const structuredError = error && typeof error === "object" ? {
@@ -572,7 +573,8 @@ function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, c
     setLatestReadableState(failureState);
     finalizeFailure({ label, error: String(error), structuredError, diagnostics });
     try {
-      if (!page.isClosed()) await page.screenshot({ path: failureScreenshotPath, animations: "disabled" });
+      if (allowPageRpc && !page.isClosed()) await page.screenshot({ path: failureScreenshotPath, animations: "disabled" });
+      else failureScreenshotPath = null;
     } catch {
       failureScreenshotPath = null;
     }
@@ -3092,10 +3094,27 @@ async function collectCombatCausalProof(page, {
   requiredPostEpochActorKeys = [],
 } = {}) {
   const requiredActorKeys = [...new Set(requiredPostEpochActorKeys)];
-  const deadlineEnvelope = await page.evaluate(() => ({
+  const deadlineReadStartedAt = Date.now();
+  const deadlineRead = await observePromiseWithin(page.evaluate(() => ({
     pageNow: performance.now(),
     proofEpoch: window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null,
-  }));
+  })), COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS);
+  if (deadlineRead.status !== "fulfilled") {
+    const error = new Error(`PHASE_G_CAUSAL_TRANSACTION_${deadlineRead.status === "timeout" ? "TIMEOUT" : "REJECTED"}: initial release-deadline envelope`);
+    error.code = deadlineRead.status === "timeout"
+      ? "PHASE_G_CAUSAL_TRANSACTION_TIMEOUT"
+      : "PHASE_G_CAUSAL_TRANSACTION_REJECTED";
+    error.phaseGCausalNoFurtherPageRpc = true;
+    error.phaseGCausalTransaction = {
+      schema: "v100-phase-g-causal-transaction-failure/v1",
+      phase: "deadline-envelope",
+      status: deadlineRead.status,
+      lastAtomicReceipt: null,
+      noFurtherPageRpc: true,
+    };
+    throw error;
+  }
+  const deadlineEnvelope = deadlineRead.value;
   let effectiveDurationMs = durationMs;
   if (requiredActorKeys.length > 0) {
     invariant(deadlineEnvelope.proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
@@ -3108,10 +3127,37 @@ async function collectCombatCausalProof(page, {
   }
   const samples = [];
   const startedAt = Date.now();
+  const hostDeadlineAt = deadlineReadStartedAt + effectiveDurationMs;
+  let lastAtomicReceipt = null;
+  let pageTransactionCount = 0;
+  let postConvergencePageSampleCount = 0;
+  let finalStableHistoryReadbackCount = 0;
   let convergenceDecision = null;
   let exactActorDecision = postQuiescenceExactActorDecision(deadlineEnvelope.proofEpoch, { requiredActorKeys });
-  while (Date.now() - startedAt < effectiveDurationMs) {
-    samples.push(await page.evaluate(() => {
+  const causalTransactionFailure = (status, phase, timeoutMs, detail = null) => {
+    const error = new Error(`PHASE_G_CAUSAL_TRANSACTION_${status === "timeout" ? "TIMEOUT" : "REJECTED"}: ${phase}`);
+    error.code = status === "timeout"
+      ? "PHASE_G_CAUSAL_TRANSACTION_TIMEOUT"
+      : "PHASE_G_CAUSAL_TRANSACTION_REJECTED";
+    error.phaseGCausalNoFurtherPageRpc = true;
+    error.phaseGCausalTransaction = {
+      schema: "v100-phase-g-causal-transaction-failure/v1",
+      phase,
+      status,
+      timeoutMs,
+      detail,
+      pageTransactionCount,
+      hostDeadlineAt,
+      lastAtomicReceipt,
+      noFurtherPageRpc: true,
+    };
+    return error;
+  };
+  while (Date.now() < hostDeadlineAt) {
+    const remainingHostMs = hostDeadlineAt - Date.now();
+    const transactionTimeoutMs = Math.min(COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS, remainingHostMs);
+    if (transactionTimeoutMs <= 0) break;
+    const transaction = await observePromiseWithin(page.evaluate(() => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
       const allAudio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
@@ -3123,6 +3169,7 @@ async function collectCombatCausalProof(page, {
         : allAudio;
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
+        schema: "v100-phase-g-causal-atomic-receipt/v1",
         pageNow: performance.now(),
         battleTime: snapshot?.time ?? null,
         stageId: snapshot?.stageId ?? null,
@@ -3211,7 +3258,22 @@ async function collectCombatCausalProof(page, {
         audioCueRequests: audio,
         postQuiescenceProofEpoch: proofEpoch ?? null,
       };
-    }).catch(() => null));
+    }), transactionTimeoutMs);
+    pageTransactionCount += 1;
+    if (transaction.status !== "fulfilled") {
+      throw causalTransactionFailure(
+        transaction.status,
+        "causal-sample",
+        transactionTimeoutMs,
+        transaction.error ?? null,
+      );
+    }
+    const atomicReceipt = transaction.value;
+    if (atomicReceipt?.schema !== "v100-phase-g-causal-atomic-receipt/v1") {
+      throw causalTransactionFailure("rejected", "causal-sample-schema", transactionTimeoutMs, atomicReceipt ?? null);
+    }
+    samples.push(atomicReceipt);
+    lastAtomicReceipt = atomicReceipt;
     const elapsedMs = Date.now() - startedAt;
     convergenceDecision = combatCausalConvergenceDecision(
       buildCombatCausalProof(samples),
@@ -3221,22 +3283,35 @@ async function collectCombatCausalProof(page, {
       samples.at(-1)?.postQuiescenceProofEpoch ?? null,
       { requiredActorKeys },
     );
-    if (convergenceDecision.accepted && exactActorDecision.accepted) break;
-    const remainingMs = effectiveDurationMs - (Date.now() - startedAt);
-    if (remainingMs > 0) await page.waitForTimeout(Math.min(120, remainingMs));
+    const proofAndSamplesComplete = convergenceDecision.proofOk === true
+      && convergenceDecision.allStagesComplete === true
+      && convergenceDecision.samplesComplete === true
+      && exactActorDecision.accepted === true;
+    if (proofAndSamplesComplete) {
+      const residualDwellMs = Math.max(0, COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS - elapsedMs);
+      if (residualDwellMs > 0) {
+        const remainingAfterSampleMs = hostDeadlineAt - Date.now();
+        if (residualDwellMs > remainingAfterSampleMs) break;
+        await new Promise((resolve) => setTimeout(resolve, residualDwellMs));
+      }
+      convergenceDecision = combatCausalConvergenceDecision(
+        buildCombatCausalProof(samples),
+        { elapsedMs: Date.now() - startedAt },
+      );
+      break;
+    }
+    const remainingMs = hostDeadlineAt - Date.now();
+    if (remainingMs > 0) await new Promise((resolve) => setTimeout(resolve, Math.min(120, remainingMs)));
   }
-  const stableHistory = await page.evaluate(() => {
-    const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
-    return {
-      pageNow: performance.now(),
-      proofEpoch: window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null,
-      sourceToTargetEdges: activity.sourceToTargetEdges ?? [],
-      sourceAttribution: activity.sourceAttribution ?? [],
-      targetOwnershipHistory: activity.targetOwnershipHistory ?? [],
-      reactionHistory: activity.reactionHistory ?? [],
-      battlePresentationEffects: activity.battlePresentationEffects ?? [],
-    };
-  }).catch(() => ({}));
+  const stableHistory = lastAtomicReceipt ? {
+    pageNow: lastAtomicReceipt.pageNow,
+    proofEpoch: lastAtomicReceipt.postQuiescenceProofEpoch ?? null,
+    sourceToTargetEdges: lastAtomicReceipt.activitySourceToTargetEdges ?? [],
+    sourceAttribution: lastAtomicReceipt.activitySourceAttribution ?? [],
+    targetOwnershipHistory: lastAtomicReceipt.activityTargetOwnershipHistory ?? [],
+    reactionHistory: lastAtomicReceipt.activityReactionHistory ?? [],
+    battlePresentationEffects: lastAtomicReceipt.battlePresentationEffects ?? [],
+  } : {};
   const proof = buildCombatCausalProof(samples, stableHistory);
   const elapsedMs = Date.now() - startedAt;
   const finalConvergence = combatCausalConvergenceDecision(proof, { elapsedMs });
@@ -3263,6 +3338,12 @@ async function collectCombatCausalProof(page, {
       elapsedMs,
       attemptedSampleCount: samples.length,
       validSampleCount: proof.sampleCount,
+      atomicReceiptSchema: lastAtomicReceipt?.schema ?? null,
+      pageTransactionCount,
+      pageTransactionTimeoutMs: COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS,
+      hostDeadlineAt,
+      postConvergencePageSampleCount,
+      finalStableHistoryReadbackCount,
       minimumDwellMs: COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS,
       minimumSamples: COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES,
       converged,
@@ -3426,6 +3507,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
     const requiredPostEpochActorKeys = Array.isArray(captureMeta.requiredPostEpochActorKeys)
       ? [...new Set(captureMeta.requiredPostEpochActorKeys)]
       : [];
+    let causalPageRpcSealed = false;
     try {
       if (state.startsWith("battle")) {
         combatCausalProof = await runPhaseGTelemetryOperation(
@@ -3437,8 +3519,11 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
           }),
         );
       }
+    } catch (error) {
+      causalPageRpcSealed = error?.phaseGCausalNoFurtherPageRpc === true;
+      throw error;
     } finally {
-      if (state.startsWith("battle")) {
+      if (state.startsWith("battle") && !causalPageRpcSealed) {
         await runPhaseGTelemetryOperation(
           "phase-g/observer-stop",
           { state },
@@ -3585,6 +3670,23 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       "phase-g/final-diagnostics",
       { state, diagnosticOutcome: "failure" },
       async () => {
+        if (primaryError?.phaseGCausalNoFurtherPageRpc === true) {
+          const failureState = {
+            schema: "v100-phase-g-causal-no-further-page-rpc/v1",
+            causalTransaction: cloneDiagnosticValue(primaryError.phaseGCausalTransaction ?? null),
+            pageRpcSealed: true,
+          };
+          const checkpointFailure = checkpointRecorder
+            ? await checkpointRecorder.persistFailure({
+              label,
+              error: primaryError,
+              failureState,
+              diagnostics,
+              allowPageRpc: false,
+            })
+            : null;
+          return { failureState, checkpointFailure };
+        }
         const failureState = await page.evaluate((battleState) => ({
           url: location.href,
           phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
@@ -3631,8 +3733,10 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
               audioCueRequestCutoffAt: readiness.audioCueRequestCutoffAt ?? null,
               actorKeys: [...(readiness.actorKeys ?? [])].slice(0, 4),
               releaseAnchorKey: readiness.releaseAnchorKey ?? null,
-              lastSnapshotObservedAtPageTime: readiness.lastSnapshotObservedAtPageTime ?? null,
-              lastSnapshotAgeMs: readiness.lastSnapshotAgeMs ?? null,
+              selectionSnapshotObservedAtPageTime: readiness.selectionSnapshotObservedAtPageTime ?? null,
+              selectionSnapshotBattleTime: readiness.selectionSnapshotBattleTime ?? null,
+              sameTaskSnapshotReadCount: readiness.sameTaskSnapshotReadCount ?? null,
+              cachedObserverSnapshotUsedForHandoff: readiness.cachedObserverSnapshotUsedForHandoff ?? null,
               actors: (readiness.actors ?? []).slice(0, 4).map((actor) => ({
                 side: actor.side ?? null,
                 kind: actor.kind ?? null,
@@ -3681,6 +3785,11 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
                 handoffAtBattleTime: epoch.releaseAnchor.handoffAtBattleTime ?? null,
                 handoffAtPageTime: epoch.releaseAnchor.handoffAtPageTime ?? null,
                 handoffValid: epoch.releaseAnchor.handoffValid ?? null,
+                selectionSnapshotObservedAtPageTime: epoch.releaseAnchor.selectionSnapshotObservedAtPageTime ?? null,
+                selectionSnapshotBattleTime: epoch.releaseAnchor.selectionSnapshotBattleTime ?? null,
+                sameTaskSnapshotReadCount: epoch.releaseAnchor.sameTaskSnapshotReadCount ?? null,
+                cachedObserverSnapshotUsedForHandoff: epoch.releaseAnchor.cachedObserverSnapshotUsedForHandoff ?? null,
+                releaseReceiptMatchesSelectionSnapshot: epoch.releaseAnchor.releaseReceiptMatchesSelectionSnapshot ?? null,
               } : null,
               actors: (epoch.actors ?? []).slice(0, 4).map((actor) => {
                 const observedAtPageTime = actor.observedAtPageTime ?? null;
@@ -3720,7 +3829,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
           phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
         }), state.startsWith("battle")).catch(() => null);
         const checkpointFailure = checkpointRecorder
-          ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics })
+          ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics, allowPageRpc: true })
           : null;
         return { failureState, checkpointFailure };
       },
@@ -4351,7 +4460,7 @@ async function releasePhaseGPresentationQuiescence(page, {
     expectedStageId,
     proofActor,
     untilBattleTime: normalizedUntilBattleTime,
-    predicate: "player setup, supporting hidden qualification, and an unconsumed exact release-anchor windup converge before same-task release and v4 proof arm",
+    predicate: "player setup, supporting hidden qualification, and an unconsumed exact release-anchor windup converge before same-task release and v5 proof arm",
   });
   if (normalizedUntilBattleTime !== null) {
     invariant(Number(arm.battleTime) < normalizedUntilBattleTime, `presentation quiescence armed after its release boundary: ${JSON.stringify({ arm, normalizedUntilBattleTime })}`);
@@ -4377,16 +4486,23 @@ async function releasePhaseGPresentationQuiescence(page, {
     proofActor ? { side: "zombie", kind: proofActor, cueId: proofActorAttackCueId ?? null } : null,
     proofUnitKind ? { side: "human", kind: proofUnitKind, cueId: proofUnitAttackCueId ?? null } : null,
   ].filter(Boolean);
-  const releaseHandle = await page.waitForFunction(({ stageId, actorSpecs, proofDurationMs }) => {
+  const releaseHandle = await page.waitForFunction(({ stageId, actorSpecs, proofDurationMs, armGeneration }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
     const quiescence = bridge?.getQaPresentationQuiescence?.();
-    const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
     if (quiescence?.schema !== "v100-qa-presentation-quiescence/v1"
       || quiescence.active !== true
       || quiescence.datasetActive !== true
       || quiescence.owner !== "phase-g-pre-proof"
       || quiescence.route !== "phase-g"
+      || Number(quiescence.generation) !== Number(armGeneration)
       || quiescence.stageId !== stageId
+      || quiescence.running !== true
+      || quiescence.paused === true
+      || quiescence.over === true
+      || typeof bridge?.getPhaseGCombatSnapshot !== "function") return false;
+    const snapshot = bridge.getPhaseGCombatSnapshot();
+    const selectionSnapshotObservedAtPageTime = performance.now();
+    if (snapshot?.schema !== "v100-phase-g-combat-snapshot/v1"
       || snapshot?.stageId !== stageId
       || snapshot?.screen !== "battle"
       || snapshot?.running !== true
@@ -4408,8 +4524,10 @@ async function releasePhaseGPresentationQuiescence(page, {
         audioCueRequestCutoffAt: armedAtPageTime,
         actorKeys: actorSpecs.map(actorKey),
         releaseAnchorKey,
-        lastSnapshotObservedAtPageTime: null,
-        lastSnapshotAgeMs: null,
+        selectionSnapshotObservedAtPageTime,
+        selectionSnapshotBattleTime: Number(snapshot.time),
+        sameTaskSnapshotReadCount: 1,
+        cachedObserverSnapshotUsedForHandoff: false,
         actors: actorSpecs.map((spec, index) => ({
           side: spec.side,
           kind: spec.kind,
@@ -4437,10 +4555,10 @@ async function releasePhaseGPresentationQuiescence(page, {
       window.__PHASE_G_PRE_RELEASE_READINESS__ = readiness;
     }
 
-    const snapshotObservedAtPageTime = Number(window.__PHASE_G_LAST_COMBAT_SNAPSHOT_AT__);
-    const snapshotAgeMs = performance.now() - snapshotObservedAtPageTime;
-    readiness.lastSnapshotObservedAtPageTime = Number.isFinite(snapshotObservedAtPageTime) ? snapshotObservedAtPageTime : null;
-    readiness.lastSnapshotAgeMs = Number.isFinite(snapshotAgeMs) ? snapshotAgeMs : null;
+    readiness.selectionSnapshotObservedAtPageTime = selectionSnapshotObservedAtPageTime;
+    readiness.selectionSnapshotBattleTime = Number(snapshot.time);
+    readiness.sameTaskSnapshotReadCount = 1;
+    readiness.cachedObserverSnapshotUsedForHandoff = false;
     const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
     const postArmAudio = allAudioRequests.filter((request) => (
       Number.isFinite(Number(request?.at))
@@ -4495,12 +4613,8 @@ async function releasePhaseGPresentationQuiescence(page, {
           const target = fighterById.get(String(fighter.attackWindupTargetId)) ?? null;
           const expectedTargetSide = actorReadiness.side === "human" ? "zombie" : "human";
           const attackWindupSeconds = Number(fighter.attackWindup);
-          return Number.isFinite(snapshotAgeMs)
-            && snapshotAgeMs >= 0
-            && snapshotAgeMs <= 120
-            && Number.isFinite(attackWindupSeconds)
+          return Number.isFinite(attackWindupSeconds)
             && attackWindupSeconds > 0
-            && attackWindupSeconds * 1_000 > snapshotAgeMs + 80
             && Number(fighter.attack) <= 0
             && Number(fighter.abilityWindup) <= 0
             && fighter.combatReady === true
@@ -4562,7 +4676,33 @@ async function releasePhaseGPresentationQuiescence(page, {
     if (!readiness.actors.every(readinessFor)) return false;
 
     const receipt = bridge.setQaPresentationQuiesced(false, "phase-g-pre-proof");
-    const releaseSnapshot = bridge.getPhaseGCombatSnapshot?.() ?? snapshot;
+    const releaseSnapshot = snapshot;
+    const releaseReceiptMatchesSelectionSnapshot = receipt?.schema === "v100-qa-presentation-quiescence/v1"
+      && receipt.active === false
+      && receipt.datasetActive === false
+      && receipt.owner === quiescence.owner
+      && receipt.route === quiescence.route
+      && Number(receipt.generation) === Number(quiescence.generation)
+      && receipt.stageId === releaseSnapshot.stageId
+      && receipt.running === releaseSnapshot.running
+      && receipt.paused === releaseSnapshot.paused
+      && receipt.over === releaseSnapshot.over
+      && Number(receipt.battleTime) === Number(releaseSnapshot.time);
+    if (!releaseReceiptMatchesSelectionSnapshot) {
+      throw new Error(`release receipt did not match the atomic live selection snapshot: ${JSON.stringify({
+        quiescence,
+        receipt,
+        selectionSnapshot: {
+          schema: releaseSnapshot.schema,
+          stageId: releaseSnapshot.stageId,
+          screen: releaseSnapshot.screen,
+          running: releaseSnapshot.running,
+          paused: releaseSnapshot.paused,
+          over: releaseSnapshot.over,
+          time: releaseSnapshot.time,
+        },
+      })}`);
+    }
     const releaseAnchorReadiness = readiness.actors.find((actor) => (
       actor.releaseRole === "release-anchor"
       && actorKey(actor) === readiness.releaseAnchorKey
@@ -4614,6 +4754,11 @@ async function releasePhaseGPresentationQuiescence(page, {
       handoffAtBattleTime: Number(releaseSnapshot.time),
       handoffAtPageTime: visibleProofStartedAt,
       handoffValid: releaseAnchorHandoffValid,
+      selectionSnapshotObservedAtPageTime: readiness.selectionSnapshotObservedAtPageTime,
+      selectionSnapshotBattleTime: readiness.selectionSnapshotBattleTime,
+      sameTaskSnapshotReadCount: readiness.sameTaskSnapshotReadCount,
+      cachedObserverSnapshotUsedForHandoff: readiness.cachedObserverSnapshotUsedForHandoff,
+      releaseReceiptMatchesSelectionSnapshot,
     } : null;
     const epoch = {
       schema: "v100-phase-g-post-quiescence-proof/v5",
@@ -4701,11 +4846,16 @@ async function releasePhaseGPresentationQuiescence(page, {
     stageId: expectedStageId,
     actorSpecs: specs,
     proofDurationMs: Number(visibleProofDurationMs),
+    armGeneration: Number(arm.generation),
   }, { timeout: Math.min(battleTimeout, 45_000), polling: 40 });
   const releaseEnvelope = await releaseHandle.jsonValue();
   await releaseHandle.dispose();
 
   invariant(releaseEnvelope?.readiness?.schema === "v100-phase-g-pre-release-readiness/v2"
+    && Number.isFinite(Number(releaseEnvelope.readiness.selectionSnapshotObservedAtPageTime))
+    && Number.isFinite(Number(releaseEnvelope.readiness.selectionSnapshotBattleTime))
+    && Number(releaseEnvelope.readiness.sameTaskSnapshotReadCount) === 1
+    && releaseEnvelope.readiness.cachedObserverSnapshotUsedForHandoff === false
     && releaseEnvelope.readiness.actors?.every((actor) => actor.selectedFighterId !== null && actor.selectedTargetAlive === true),
   `pre-release exact actor readiness did not converge: ${JSON.stringify(releaseEnvelope)}`);
   invariant(releaseEnvelope?.receipt?.schema === "v100-qa-presentation-quiescence/v1", `presentation quiescence release receipt missing: ${JSON.stringify(releaseEnvelope)}`);
@@ -4732,6 +4882,11 @@ async function releasePhaseGPresentationQuiescence(page, {
       && releaseAnchor.releaseMode === "unconsumed-production-windup"
       && Number(releaseAnchor.attackWindupSeconds) > 0
       && releaseAnchor.targetAlive === true
+      && Number.isFinite(Number(releaseAnchor.selectionSnapshotObservedAtPageTime))
+      && Number(releaseAnchor.selectionSnapshotBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
+      && Number(releaseAnchor.sameTaskSnapshotReadCount) === 1
+      && releaseAnchor.cachedObserverSnapshotUsedForHandoff === false
+      && releaseAnchor.releaseReceiptMatchesSelectionSnapshot === true
       && String(releaseAnchor.fighterId) === String(anchorActor?.selectedFighterId)
       && Number(releaseAnchor.baselineAttackSequence) === Number(anchorActor?.fighterBaselines?.[0]?.baselineAttackSequence),
     `post-quiescence release anchor did not preserve an unconsumed exact production attack: ${JSON.stringify({ expectedReleaseAnchorKey, releaseAnchor, anchorActor })}`);
@@ -4776,7 +4931,9 @@ async function releasePhaseGPresentationQuiescence(page, {
   await restoredHandle.dispose();
   invariant(Number(restored.pageNow) <= Number(postReleaseProofEpoch.visibleProofDeadlineAt),
     `production restoration exceeded the single release-origin deadline: ${JSON.stringify({ restored, postReleaseProofEpoch })}`);
-  invariant(postReleaseProofEpoch.stageId === expectedStageId && Number(postReleaseProofEpoch.armedAtBattleTime) >= Number(release.battleTime), `post-quiescence proof epoch armed before release: ${JSON.stringify({ release, postReleaseProofEpoch })}`);
+  invariant(postReleaseProofEpoch.stageId === expectedStageId
+    && Number(postReleaseProofEpoch.armedAtBattleTime) === Number(release.battleTime),
+  `post-quiescence proof epoch did not share the exact atomic release battle time: ${JSON.stringify({ release, postReleaseProofEpoch })}`);
   recorder?.clearAwaiting();
   recorder?.mark("presentation-quiescence-released-or-not-required", "completed", {
     untilBattleTime: normalizedUntilBattleTime,

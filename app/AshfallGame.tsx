@@ -4125,6 +4125,62 @@ type FighterUnitLayerAuditScratchSurface = {
 
 let fighterUnitLayerAuditScratchSurface: FighterUnitLayerAuditScratchSurface | null = null;
 
+const FIGHTER_UNIT_LAYER_AUDIT_PASSES = [
+  "actual-unit",
+  "forced-opaque-unit",
+  "rendered-foreground",
+  "expected-foreground",
+  "final-production-canvas",
+  "authored-composite",
+] as const;
+
+type FighterUnitLayerAuditPass = typeof FIGHTER_UNIT_LAYER_AUDIT_PASSES[number];
+type FighterUnitLayerAuditQuiescence = {
+  active: boolean;
+  owner: string | null;
+  route: string | null;
+  generation: number;
+};
+type FighterUnitLayerAuditCapture = {
+  data: Uint8ClampedArray;
+  clipRect: unknown;
+  deploymentPlan: ReturnType<typeof crawlerDeploymentPlanForFighter> | null;
+};
+type FighterUnitLayerAuditSession = {
+  token: string;
+  fighter: Fighter;
+  sprites: SpriteMap;
+  finalCanvas: HTMLCanvasElement;
+  game: Game;
+  graphicsProfile: GraphicsProfile;
+  finalTransformSource: { scale: number; offsetX: number; offsetY: number };
+  finalTransform: { scale: number; offsetX: number; offsetY: number };
+  stageId: string;
+  fighterId: number;
+  fighterKind: string;
+  fighterX: number;
+  fighterY: number;
+  checkpoint: string | null;
+  checkpointReceipt: unknown;
+  quiescence: FighterUnitLayerAuditQuiescence | null;
+  region: { x: number; y: number; w: number; h: number };
+  canvasWidth: number;
+  canvasHeight: number;
+  canvasDpr: number;
+  nextPassIndex: number;
+  completedPasses: FighterUnitLayerAuditPass[];
+  actual: FighterUnitLayerAuditCapture | null;
+  opaque: FighterUnitLayerAuditCapture | null;
+  renderedForegroundRgba: Uint8ClampedArray | null;
+  expectedForegroundRgba: Uint8ClampedArray | null;
+  finalRgba: Uint8ClampedArray | null;
+  compositeRgba: Uint8ClampedArray | null;
+  startedAtPageTime: number;
+};
+
+let fighterUnitLayerAuditSession: FighterUnitLayerAuditSession | null = null;
+let fighterUnitLayerAuditSessionOrdinal = 0;
+
 function reusableFighterUnitLayerAuditScratchSurface(width: number, height: number) {
   if (!fighterUnitLayerAuditScratchSurface) {
     const canvas = document.createElement("canvas");
@@ -4138,14 +4194,7 @@ function reusableFighterUnitLayerAuditScratchSurface(width: number, height: numb
   return { canvas, context };
 }
 
-function fighterUnitLayerPixelAudit(
-  fighter: Fighter,
-  sprites: SpriteMap,
-  finalCanvas: HTMLCanvasElement,
-  g: Game,
-  graphicsProfile: GraphicsProfile,
-  finalTransform: { scale: number; offsetX: number; offsetY: number },
-) {
+function fighterUnitLayerAuditRegion(fighter: Fighter) {
   const left = Math.max(0, Math.floor(Math.min(
     fighter.x - 120,
     WORLD_GEOMETRY.crawler.doorX - 48,
@@ -4156,17 +4205,139 @@ function fighterUnitLayerPixelAudit(
     WORLD_GEOMETRY.crawler.doorX + 96,
   )));
   const bottom = Math.min(H, Math.ceil(fighter.y + 36));
-  const width = Math.max(1, right - left);
-  const height = Math.max(1, bottom - top);
+  return {
+    x: left,
+    y: top,
+    w: Math.max(1, right - left),
+    h: Math.max(1, bottom - top),
+  };
+}
+
+function beginFighterUnitLayerPixelAuditSession(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+  checkpointReceipt: unknown,
+) {
+  if (fighterUnitLayerAuditSession) throw new Error("Unit-layer audit session is already active");
+  if (quiescence && quiescence.active !== true) throw new Error("Unit-layer audit requires active presentation quiescence");
+  const region = fighterUnitLayerAuditRegion(fighter);
+  reusableFighterUnitLayerAuditScratchSurface(region.w, region.h);
+  const deploymentPlan = crawlerDeploymentPlanForFighter(fighter);
+  const token = `fighter-unit-layer-${++fighterUnitLayerAuditSessionOrdinal}-${Math.round(performance.now() * 1000)}`;
+  fighterUnitLayerAuditSession = {
+    token,
+    fighter,
+    sprites,
+    finalCanvas,
+    game: g,
+    graphicsProfile,
+    finalTransformSource: finalTransform,
+    finalTransform: { ...finalTransform },
+    stageId: g.definition.stageId,
+    fighterId: fighter.id,
+    fighterKind: fighter.kind,
+    fighterX: fighter.x,
+    fighterY: fighter.y,
+    checkpoint: deploymentPlan?.checkpoint ?? null,
+    checkpointReceipt,
+    quiescence: quiescence ? { ...quiescence } : null,
+    region,
+    canvasWidth: finalCanvas.width,
+    canvasHeight: finalCanvas.height,
+    canvasDpr: Math.max(1, Number(finalCanvas.dataset.dpr) || 1),
+    nextPassIndex: 0,
+    completedPasses: [],
+    actual: null,
+    opaque: null,
+    renderedForegroundRgba: null,
+    expectedForegroundRgba: null,
+    finalRgba: null,
+    compositeRgba: null,
+    startedAtPageTime: performance.now(),
+  };
+  return {
+    schema: "v100-fighter-unit-layer-audit-session/v1" as const,
+    token,
+    stageId: g.definition.stageId,
+    fighterId: fighter.id,
+    fighterKind: fighter.kind,
+    fighterPosition: { x: fighter.x, y: fighter.y },
+    checkpoint: deploymentPlan?.checkpoint ?? null,
+    checkpointReceipt,
+    dimensions: { ...region, canvasWidth: finalCanvas.width, canvasHeight: finalCanvas.height },
+    transform: { ...finalTransform },
+    quiescence: quiescence ? { ...quiescence } : null,
+    passCount: FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+    nextPass: FIGHTER_UNIT_LAYER_AUDIT_PASSES[0],
+  };
+}
+
+function requireFighterUnitLayerAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = fighterUnitLayerAuditSession;
+  if (!session || session.token !== token) throw new Error("Unknown unit-layer audit session token");
+  const currentFighter = session.game.fighters.find(({ id }) => id === session.fighterId) ?? null;
+  const currentTransform = session.finalTransformSource;
+  const currentPlan = currentFighter ? crawlerDeploymentPlanForFighter(currentFighter) : null;
+  if (currentFighter !== session.fighter
+    || currentFighter?.kind !== session.fighterKind
+    || currentFighter?.x !== session.fighterX
+    || currentFighter?.y !== session.fighterY
+    || session.game.definition.stageId !== session.stageId
+    || (currentPlan?.checkpoint ?? null) !== session.checkpoint
+    || session.finalCanvas.width !== session.canvasWidth
+    || session.finalCanvas.height !== session.canvasHeight
+    || Math.max(1, Number(session.finalCanvas.dataset.dpr) || 1) !== session.canvasDpr
+    || currentTransform.scale !== session.finalTransform.scale
+    || currentTransform.offsetX !== session.finalTransform.offsetX
+    || currentTransform.offsetY !== session.finalTransform.offsetY) {
+    throw new Error("Unit-layer audit identity/checkpoint/render binding drifted");
+  }
+  if (session.quiescence) {
+    if (!quiescence?.active
+      || quiescence.owner !== session.quiescence.owner
+      || quiescence.route !== session.quiescence.route
+      || quiescence.generation !== session.quiescence.generation) {
+      throw new Error("Unit-layer audit presentation generation drifted");
+    }
+  } else if (quiescence) {
+    throw new Error("Legacy unit-layer audit unexpectedly acquired presentation ownership");
+  }
+  return session;
+}
+
+function prepareFighterUnitLayerAuditScratchPass(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) {
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
+  context.globalCompositeOperation = "source-over";
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.clearRect(0, 0, width, height);
+}
+
+function advanceFighterUnitLayerPixelAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = requireFighterUnitLayerAuditSession(token, quiescence);
+  const pass = FIGHTER_UNIT_LAYER_AUDIT_PASSES[session.nextPassIndex];
+  if (!pass) throw new Error("Unit-layer audit session has no remaining pass");
+  const { x: left, y: top, w: width, h: height } = session.region;
   const { context: ctx } = reusableFighterUnitLayerAuditScratchSurface(width, height);
 
   const prepareScratchPass = () => {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.clearRect(0, 0, width, height);
+    prepareFighterUnitLayerAuditScratchPass(ctx, width, height);
   };
   const copiedPixels = () => new Uint8ClampedArray(
     ctx.getImageData(0, 0, width, height).data,
@@ -4176,7 +4347,7 @@ function fighterUnitLayerPixelAudit(
     prepareScratchPass();
     ctx.save();
     ctx.translate(-left, -top);
-    const drawResult = drawSpriteFighter(ctx, fighter, sprites, {
+    const drawResult = drawSpriteFighter(ctx, session.fighter, session.sprites, {
       ...options,
       includeGroundShadow: false,
       recordAudit: false,
@@ -4188,55 +4359,91 @@ function fighterUnitLayerPixelAudit(
       deploymentPlan: drawResult?.deploymentPlan ?? null,
     };
   };
-  const actual = capture({});
-  const opaque = capture({ forceOpaque: true });
   const captureForeground = (forceOpaque: boolean) => {
     prepareScratchPass();
     ctx.save();
     ctx.translate(-left, -top);
-    drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile, forceOpaque);
+    drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile, forceOpaque);
     ctx.restore();
     return copiedPixels();
   };
-  const renderedForegroundRgba = captureForeground(false);
-  const expectedForegroundRgba = captureForeground(true);
-  prepareScratchPass();
-  const dpr = Math.max(1, Number(finalCanvas.dataset.dpr) || 1);
-  ctx.drawImage(
-    finalCanvas,
-    (finalTransform.offsetX + left * finalTransform.scale) * dpr,
-    (finalTransform.offsetY + top * finalTransform.scale) * dpr,
-    width * finalTransform.scale * dpr,
-    height * finalTransform.scale * dpr,
-    0,
-    0,
-    width,
-    height,
-  );
-  const finalRgba = copiedPixels();
-  prepareScratchPass();
-  ctx.save();
-  ctx.translate(-left, -top);
-  drawCrawler(ctx, g, sprites, graphicsProfile);
-  if (actual.deploymentPlan?.active
-    && actual.deploymentPlan.unitPass === "before-foreground-mask") {
-    drawSpriteFighter(ctx, fighter, sprites, { recordAudit: false });
-    drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile);
-  } else {
-    drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile);
-    drawSpriteFighter(ctx, fighter, sprites, { recordAudit: false });
+
+  if (pass === "actual-unit") session.actual = capture({});
+  else if (pass === "forced-opaque-unit") session.opaque = capture({ forceOpaque: true });
+  else if (pass === "rendered-foreground") session.renderedForegroundRgba = captureForeground(false);
+  else if (pass === "expected-foreground") session.expectedForegroundRgba = captureForeground(true);
+  else if (pass === "final-production-canvas") {
+    prepareScratchPass();
+    ctx.drawImage(
+      session.finalCanvas,
+      (session.finalTransform.offsetX + left * session.finalTransform.scale) * session.canvasDpr,
+      (session.finalTransform.offsetY + top * session.finalTransform.scale) * session.canvasDpr,
+      width * session.finalTransform.scale * session.canvasDpr,
+      height * session.finalTransform.scale * session.canvasDpr,
+      0,
+      0,
+      width,
+      height,
+    );
+    session.finalRgba = copiedPixels();
+  } else if (pass === "authored-composite") {
+    if (!session.actual) throw new Error("Unit-layer audit composite pass lacks the ordered actual-unit pass");
+    prepareScratchPass();
+    ctx.save();
+    ctx.translate(-left, -top);
+    drawCrawler(ctx, session.game, session.sprites, session.graphicsProfile);
+    if (session.actual.deploymentPlan?.active
+      && session.actual.deploymentPlan.unitPass === "before-foreground-mask") {
+      drawSpriteFighter(ctx, session.fighter, session.sprites, { recordAudit: false });
+      drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile);
+    } else {
+      drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile);
+      drawSpriteFighter(ctx, session.fighter, session.sprites, { recordAudit: false });
+    }
+    ctx.restore();
+    session.compositeRgba = copiedPixels();
   }
-  ctx.restore();
-  const compositeRgba = copiedPixels();
+
+  session.completedPasses.push(pass);
+  session.nextPassIndex += 1;
+  return {
+    schema: "v100-fighter-unit-layer-audit-session-step/v1" as const,
+    token,
+    step: session.nextPassIndex,
+    pass,
+    storedPixelLength: width * height * 4,
+    complete: session.nextPassIndex === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+    nextPass: FIGHTER_UNIT_LAYER_AUDIT_PASSES[session.nextPassIndex] ?? null,
+  };
+}
+
+function finalizeFighterUnitLayerPixelAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = requireFighterUnitLayerAuditSession(token, quiescence);
+  if (session.nextPassIndex !== FIGHTER_UNIT_LAYER_AUDIT_PASSES.length
+    || !session.actual
+    || !session.opaque
+    || !session.renderedForegroundRgba
+    || !session.expectedForegroundRgba
+    || !session.finalRgba
+    || !session.compositeRgba) {
+    throw new Error("Unit-layer audit finalization requires all six ordered pixel passes");
+  }
+  fighterUnitLayerAuditSession = null;
+  const { x: left, y: top, w: width, h: height } = session.region;
+  const actual = session.actual;
+  const opaque = session.opaque;
   const compositePixels = analyzeDeploymentCompositePixels({
-    finalRgba: compositeRgba,
+    finalRgba: session.compositeRgba,
     renderedUnitRgba: actual.data,
     expectedUnitRgba: opaque.data,
-    renderedForegroundRgba,
-    expectedForegroundRgba,
+    renderedForegroundRgba: session.renderedForegroundRgba,
+    expectedForegroundRgba: session.expectedForegroundRgba,
     unitDrawCount: actual.deploymentPlan?.unitDrawCount ?? 1,
     width,
-    visibleFinalRgba: finalRgba,
+    visibleFinalRgba: session.finalRgba,
   });
 
   const metrics = (rgba: Uint8ClampedArray) => {
@@ -4312,7 +4519,53 @@ function fighterUnitLayerPixelAudit(
     finalCompositePixels: compositePixels,
     alphaOneFromFirstVisibleFrame: opacityComparison.maskIoU >= .999
       && opacityComparison.normalizedAlphaL1 <= .001,
+    transportSession: {
+      schema: "v100-fighter-unit-layer-audit-session/v1" as const,
+      token,
+      stageId: session.stageId,
+      fighterId: session.fighterId,
+      fighterKind: session.fighterKind,
+      fighterPosition: { x: session.fighterX, y: session.fighterY },
+      checkpoint: session.checkpoint,
+      checkpointReceipt: session.checkpointReceipt,
+      dimensions: {
+        ...session.region,
+        canvasWidth: session.canvasWidth,
+        canvasHeight: session.canvasHeight,
+      },
+      transform: { ...session.finalTransform },
+      quiescence: session.quiescence ? { ...session.quiescence } : null,
+      completedPasses: [...session.completedPasses],
+      passCount: session.completedPasses.length,
+      startedAtPageTime: session.startedAtPageTime,
+      finalizedAtPageTime: performance.now(),
+      finalizedWithoutCanvasDraw: true,
+    },
   };
+}
+
+function fighterUnitLayerPixelAudit(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+) {
+  const begin = beginFighterUnitLayerPixelAuditSession(
+    fighter,
+    sprites,
+    finalCanvas,
+    g,
+    graphicsProfile,
+    finalTransform,
+    null,
+    null,
+  );
+  for (const _pass of FIGHTER_UNIT_LAYER_AUDIT_PASSES) {
+    advanceFighterUnitLayerPixelAuditSession(begin.token, null);
+  }
+  return finalizeFighterUnitLayerPixelAuditSession(begin.token, null);
 }
 
 function drawEnemyCombatReadabilityVfx(
@@ -7937,7 +8190,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const qaPresentationQuiescenceRef = useRef<{
     active: boolean;
     owner: string | null;
-    route: "phase-g" | "deployment" | null;
+    route: "phase-g" | "deployment" | "visual-integrity" | null;
     generation: number;
     enteredAtBattleTime: number | null;
     releasedAtBattleTime: number | null;
@@ -8836,6 +9089,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       const parameters = new URLSearchParams(window.location.search);
       const route = parameters.get("phase-g") === "1"
         ? "phase-g"
+        : parameters.get("qa") === "mission" && parameters.get("qaVisualIntegrity") === "1"
+          ? "visual-integrity"
         : parameters.get("qa") === "mission" && parameters.get("qaHudFiniteAssets") === "1"
           ? "deployment"
           : parameters.get("qa") === "endgame" && parameters.get("qaHudFiniteAssets") === "1"
@@ -8843,6 +9098,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           : null;
       const allowedOwners = route === "phase-g"
         ? ["phase-g-pre-proof"]
+        : route === "visual-integrity"
+          ? ["visual-integrity-evidence-capture"]
         : route === "deployment"
           ? ["deployment-first-frame", "deployment-checkpoint-advance", "deployment-evidence-capture"]
           : route === "stage3-final"
@@ -8862,10 +9119,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       }
       if (nextActive) {
         const pausedEvidenceCapture = route === "deployment" && requestedOwner === "deployment-evidence-capture";
+        const visualIntegrityCapture = route === "visual-integrity" && requestedOwner === "visual-integrity-evidence-capture";
         if (screen !== "battle"
           || !g.running
           || g.over
-          || (pausedEvidenceCapture ? !g.paused : g.paused)) {
+          || (visualIntegrityCapture ? g.paused : pausedEvidenceCapture ? !g.paused : g.paused)) {
           throw new Error("QA presentation quiescence requires a live production battle");
         }
         const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
@@ -12085,6 +12343,50 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           graphicsProfileRef.current,
           canvasTransformRef.current,
         );
+      },
+      beginFighterUnitLayerAuditSession: (fighterId: number) => {
+        const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
+        if (!fighter) throw new Error(`Unknown fighter for unit-layer audit session: ${fighterId}`);
+        const canvas = canvasRef.current;
+        if (!canvas) throw new Error("Final battle canvas unavailable for unit-layer audit session");
+        const presentation = qaPresentationQuiescenceSnapshot();
+        if (presentation.active !== true || presentation.owner === null || presentation.route === null) {
+          throw new Error("Unit-layer audit session requires active presentation ownership");
+        }
+        const checkpointReceipt = qaCrawlerDeploymentCheckpointReceiptRef.current;
+        return beginFighterUnitLayerPixelAuditSession(
+          fighter,
+          spriteRefs.current,
+          canvas,
+          gameRef.current,
+          graphicsProfileRef.current,
+          canvasTransformRef.current,
+          {
+            active: true,
+            owner: presentation.owner,
+            route: presentation.route,
+            generation: presentation.generation,
+          },
+          checkpointReceipt?.fighterId === fighterId ? { ...checkpointReceipt } : null,
+        );
+      },
+      advanceFighterUnitLayerAuditSession: (token: string) => {
+        const presentation = qaPresentationQuiescenceSnapshot();
+        return advanceFighterUnitLayerPixelAuditSession(token, {
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+        });
+      },
+      finalizeFighterUnitLayerAuditSession: (token: string) => {
+        const presentation = qaPresentationQuiescenceSnapshot();
+        return finalizeFighterUnitLayerPixelAuditSession(token, {
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+        });
       },
       getCrawlerDeploymentProofSnapshot: ({
         fighterId = null,

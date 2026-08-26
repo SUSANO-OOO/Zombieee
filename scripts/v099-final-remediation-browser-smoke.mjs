@@ -123,6 +123,16 @@ const timeout = Math.max(
 const DIAGNOSTIC_TRACE_INTERVAL_MS = 250;
 const DIAGNOSTIC_TRACE_MAX_SAMPLES = 160;
 const DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS = 100;
+const FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS = 10_000;
+const FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS = 2_000;
+const FIGHTER_UNIT_LAYER_AUDIT_PASSES = Object.freeze([
+  "actual-unit",
+  "forced-opaque-unit",
+  "rendered-foreground",
+  "expected-foreground",
+  "final-production-canvas",
+  "authored-composite",
+]);
 const evidenceDir = path.resolve(
   process.env.V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR
     ?? "docs/qa/v099/final-remediation/browser",
@@ -2317,7 +2327,84 @@ function validDeploymentAuditScratchReceipt(audit) {
     && audit.scratchSurface.kind === "detached-dom-canvas"
     && audit.scratchSurface.surfaceCount === 1
     && audit.scratchSurface.contextCount === 1
-    && audit.scratchSurface.passCount === 6;
+    && audit.scratchSurface.passCount === 6
+    && audit.transportSession?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && audit.transportSession.passCount === 6
+    && JSON.stringify(audit.transportSession.completedPasses) === JSON.stringify(FIGHTER_UNIT_LAYER_AUDIT_PASSES)
+    && audit.transportSession.finalizedWithoutCanvasDraw === true;
+}
+
+async function boundedFighterUnitLayerAuditTransaction(operation, deadlineAt, label) {
+  const remainingMs = deadlineAt - Date.now();
+  const transactionTimeoutMs = Math.min(
+    FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS,
+    remainingMs,
+  );
+  if (transactionTimeoutMs <= 0) {
+    throw new Error(`${label}: unit-layer audit exhausted its existing 10000 ms checkpoint budget`);
+  }
+  let timeoutId;
+  try {
+    const result = await Promise.race([
+      operation.then(
+        (value) => ({ status: "fulfilled", value }),
+        (error) => ({ status: "rejected", error }),
+      ),
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve({ status: "timeout" }), transactionTimeoutMs);
+      }),
+    ]);
+    if (result.status === "fulfilled") return result.value;
+    if (result.status === "rejected") throw result.error;
+    throw new Error(`${label}: unit-layer audit page transaction exceeded ${transactionTimeoutMs} ms`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function runFighterUnitLayerAuditSession(page, fighterId, label) {
+  const deadlineAt = Date.now() + FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS;
+  const begin = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((id) => window.__ASHFALL_BATTLE_QA__.beginFighterUnitLayerAuditSession(id), fighterId),
+    deadlineAt,
+    `${label}/begin`,
+  );
+  invariant(begin?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && typeof begin.token === "string"
+    && begin.fighterId === fighterId
+    && begin.passCount === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+  `${label}: unit-layer audit session did not bind exact fighter ownership ${JSON.stringify(begin)}`);
+  const steps = [];
+  for (const [index, expectedPass] of FIGHTER_UNIT_LAYER_AUDIT_PASSES.entries()) {
+    const step = await boundedFighterUnitLayerAuditTransaction(
+      page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.advanceFighterUnitLayerAuditSession(token), begin.token),
+      deadlineAt,
+      `${label}/${expectedPass}`,
+    );
+    invariant(step?.schema === "v100-fighter-unit-layer-audit-session-step/v1"
+      && step.token === begin.token
+      && step.step === index + 1
+      && step.pass === expectedPass
+      && step.complete === (index === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1),
+    `${label}: unit-layer audit step order drifted ${JSON.stringify(step)}`);
+    steps.push(step);
+    if (index < FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1) {
+      const remainingMs = deadlineAt - Date.now();
+      invariant(remainingMs > DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS,
+        `${label}: unit-layer audit lacks the existing host-turn budget after ${expectedPass}`);
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+    }
+  }
+  const audit = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.finalizeFighterUnitLayerAuditSession(token), begin.token),
+    deadlineAt,
+    `${label}/finalize`,
+  );
+  invariant(validDeploymentAuditScratchReceipt(audit)
+    && audit.transportSession.token === begin.token
+    && Date.now() <= deadlineAt,
+  `${label}: unit-layer audit final receipt is incomplete ${JSON.stringify(audit?.transportSession)}`);
+  return { ...audit, transportSteps: steps };
 }
 
 async function resumeDeploymentBattleForNextUnit(page, previousUnit, nextUnit, label) {
@@ -2831,10 +2918,8 @@ async function pauseAtDeploymentCheckpoint(
         const frozen = await page.evaluate(({ id, expectedCheckpoint }) => {
           const qa = window.__ASHFALL_BATTLE_QA__;
           const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId: id });
-          const audit = snapshot?.fighter ? qa.auditFighterUnitLayer(id) : null;
           return {
             fighter: snapshot?.fighter ?? null,
-            audit,
             observedProgress: snapshot?.computedProgress ?? null,
             checkpointReceipt: snapshot?.checkpointReceipt ?? null,
             paused: snapshot?.paused === true,
@@ -2843,20 +2928,21 @@ async function pauseAtDeploymentCheckpoint(
               && snapshot.checkpointReceipt.checkpoint === expectedCheckpoint,
           };
         }, { id: fighterId, expectedCheckpoint: checkpoint });
-        if (captureTrace) await captureTrace();
         const receipt = frozen.checkpointReceipt;
-        if (frozen.paused === true
+        invariant(frozen.paused === true
           && frozen.exactReceipt === true
           && frozen.fighter?.id === receipt?.fighterId
           && frozen.fighter?.x === receipt?.x
           && frozen.fighter?.y === receipt?.y
           && frozen.observedProgress === receipt?.computedProgress
-          && frozen.audit?.deploymentPlan?.checkpoint === checkpoint
-          && validDeploymentAuditScratchReceipt(frozen.audit)
-          && frozen.observedProgress + 1e-6 >= minimumProgress) {
-          return frozen;
-        }
-        throw new Error(`deployment checkpoint receipt was not stable ${JSON.stringify(frozen)}`);
+          && frozen.observedProgress + 1e-6 >= minimumProgress,
+        `deployment checkpoint receipt was not stable ${JSON.stringify(frozen)}`);
+        const audit = await runFighterUnitLayerAuditSession(page, fighterId, `${label}/pixel-audit`);
+        if (captureTrace) await captureTrace();
+        invariant(audit?.deploymentPlan?.checkpoint === checkpoint
+          && validDeploymentAuditScratchReceipt(audit),
+        `${label}: deployment checkpoint pixel audit did not preserve the exact checkpoint`);
+        return { ...frozen, audit };
       }
     }
     throw new Error(`deployment checkpoint ${checkpoint} timed out; last=${JSON.stringify(lastSnapshot)}`);
@@ -2914,19 +3000,23 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label, captur
           const qa = window.__ASHFALL_BATTLE_QA__;
           const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId });
           const fighter = snapshot?.fighter ?? null;
-          const audit = fighter ? qa.auditFighterUnitLayer(fighterId) : null;
           return {
             fighter,
-            audit,
             observedProgress: snapshot?.computedProgress ?? null,
             frozen: fighter?.x === expectedX,
           };
         }, { fighterId: candidate.fighterId, expectedX: candidate.fighterX });
-        if (captureTrace) await captureTrace();
-        if (frozen.frozen === true
-          && frozen.audit?.deploymentPlan?.checkpoint === "fully-inside"
-          && validDeploymentAuditScratchReceipt(frozen.audit)) {
-          return frozen;
+        if (frozen.frozen === true && frozen.fighter?.id === candidate.fighterId) {
+          const audit = await runFighterUnitLayerAuditSession(
+            page,
+            candidate.fighterId,
+            `${label}/fully-inside/pixel-audit`,
+          );
+          if (captureTrace) await captureTrace();
+          invariant(audit?.deploymentPlan?.checkpoint === "fully-inside"
+            && validDeploymentAuditScratchReceipt(audit),
+          `${label}: first deployment-frame pixel audit did not preserve the exact checkpoint`);
+          return { ...frozen, audit };
         }
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
         if (captureTrace) await captureTrace();

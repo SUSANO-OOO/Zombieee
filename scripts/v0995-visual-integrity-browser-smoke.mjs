@@ -25,10 +25,212 @@ const viewports = (process.env.V0995_VISUAL_QA_VIEWPORTS ?? "844x340,844x390,128
   });
 const evidenceDir = path.resolve(process.env.V0995_VISUAL_QA_EVIDENCE_DIR ?? "outputs/v0995-visual-integrity");
 const compactDir = path.resolve(process.env.V0995_VISUAL_QA_COMPACT_DIR ?? "docs/qa/v0995/visual-integrity");
+const VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS = 10_000;
+const VISUAL_INTEGRITY_PRESENTATION_TIMEOUT_MS = 2_000;
+const FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS = 10_000;
+const FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS = 2_000;
+const FIGHTER_UNIT_LAYER_AUDIT_HOST_TURN_MS = 100;
+const FIGHTER_UNIT_LAYER_AUDIT_PASSES = Object.freeze([
+  "actual-unit",
+  "forced-opaque-unit",
+  "rendered-foreground",
+  "expected-foreground",
+  "final-production-canvas",
+  "authored-composite",
+]);
 await mkdir(evidenceDir, { recursive: true });
 await mkdir(compactDir, { recursive: true });
 
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const hostTurn = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function boundedFighterUnitLayerAuditTransaction(operation, deadlineAt, label) {
+  const transactionTimeoutMs = Math.min(
+    FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS,
+    deadlineAt - Date.now(),
+  );
+  if (transactionTimeoutMs <= 0) throw new Error(`${label}: unit-layer audit exhausted its existing 10000 ms budget`);
+  let timeoutId;
+  try {
+    const result = await Promise.race([
+      operation.then(
+        (value) => ({ status: "fulfilled", value }),
+        (error) => ({ status: "rejected", error }),
+      ),
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve({ status: "timeout" }), transactionTimeoutMs);
+      }),
+    ]);
+    if (result.status === "fulfilled") return result.value;
+    if (result.status === "rejected") throw result.error;
+    throw new Error(`${label}: unit-layer audit page transaction exceeded ${transactionTimeoutMs} ms`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function runFighterUnitLayerAuditSession(page, fighterId, label) {
+  const deadlineAt = Date.now() + FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS;
+  const begin = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((id) => window.__ASHFALL_BATTLE_QA__.beginFighterUnitLayerAuditSession(id), fighterId),
+    deadlineAt,
+    `${label}/begin`,
+  );
+  invariant(begin?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && typeof begin.token === "string"
+    && begin.fighterId === fighterId
+    && begin.passCount === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+  `${label}: unit-layer audit session did not bind exact fighter ownership ${JSON.stringify(begin)}`);
+  const steps = [];
+  for (const [index, expectedPass] of FIGHTER_UNIT_LAYER_AUDIT_PASSES.entries()) {
+    const step = await boundedFighterUnitLayerAuditTransaction(
+      page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.advanceFighterUnitLayerAuditSession(token), begin.token),
+      deadlineAt,
+      `${label}/${expectedPass}`,
+    );
+    invariant(step?.schema === "v100-fighter-unit-layer-audit-session-step/v1"
+      && step.token === begin.token
+      && step.step === index + 1
+      && step.pass === expectedPass
+      && step.complete === (index === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1),
+    `${label}: unit-layer audit step order drifted ${JSON.stringify(step)}`);
+    steps.push(step);
+    if (index < FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1) {
+      invariant(deadlineAt - Date.now() > FIGHTER_UNIT_LAYER_AUDIT_HOST_TURN_MS,
+        `${label}: unit-layer audit lacks its existing host-turn budget`);
+      await hostTurn(FIGHTER_UNIT_LAYER_AUDIT_HOST_TURN_MS);
+    }
+  }
+  const audit = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.finalizeFighterUnitLayerAuditSession(token), begin.token),
+    deadlineAt,
+    `${label}/finalize`,
+  );
+  invariant(audit?.scratchSurface?.schema === "v100-fighter-unit-layer-audit-scratch/v1"
+    && audit.scratchSurface.surfaceCount === 1
+    && audit.scratchSurface.contextCount === 1
+    && audit.scratchSurface.passCount === 6
+    && audit.transportSession?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && audit.transportSession.token === begin.token
+    && audit.transportSession.passCount === 6
+    && JSON.stringify(audit.transportSession.completedPasses) === JSON.stringify(FIGHTER_UNIT_LAYER_AUDIT_PASSES)
+    && audit.transportSession.finalizedWithoutCanvasDraw === true
+    && Date.now() <= deadlineAt,
+  `${label}: unit-layer audit final receipt is incomplete ${JSON.stringify(audit?.transportSession)}`);
+  return { ...audit, transportSteps: steps };
+}
+
+async function awaitVisualIntegrityPresentationSuppression(page, owner, generation, label) {
+  const handle = await page.waitForFunction(({ requestedOwner, requestedGeneration }) => {
+    const receipt = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.() ?? null;
+    return receipt?.schema === "v100-qa-presentation-quiescence/v1"
+      && receipt.active === true
+      && receipt.owner === requestedOwner
+      && receipt.route === "visual-integrity"
+      && receipt.generation === requestedGeneration
+      && receipt.datasetActive === true
+      && receipt.running === true
+      && receipt.over !== true
+      && Number(receipt.suppressedRenderFrames) > 0
+      ? receipt
+      : false;
+  }, { requestedOwner: owner, requestedGeneration: generation }, {
+    timeout: VISUAL_INTEGRITY_PRESENTATION_TIMEOUT_MS,
+    polling: 16,
+  });
+  const receipt = await handle.jsonValue();
+  await handle.dispose();
+  invariant(receipt?.owner === owner && receipt.generation === generation,
+    `${label}: visual-integrity presentation suppression ownership drifted`);
+  return receipt;
+}
+
+async function releaseVisualIntegrityPresentation(page, arm, label) {
+  const owner = "visual-integrity-evidence-capture";
+  const release = await page.evaluate((requestedOwner) => (
+    window.__ASHFALL_BATTLE_QA__.setQaPresentationQuiesced(false, requestedOwner)
+  ), owner);
+  invariant(release?.schema === "v100-qa-presentation-quiescence/v1"
+    && release.active === false
+    && release.owner === owner
+    && release.route === "visual-integrity"
+    && release.generation === arm.generation
+    && release.datasetActive === false
+    && release.running === true
+    && release.over !== true
+    && Number(release.suppressedRenderFrames) > 0,
+  `${label}: visual-integrity presentation release drifted ${JSON.stringify(release)}`);
+  const handle = await page.waitForFunction(({ requestedOwner, requestedGeneration, releasedAtRenderFrames }) => {
+    const receipt = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.() ?? null;
+    return receipt?.schema === "v100-qa-presentation-quiescence/v1"
+      && receipt.active === false
+      && receipt.owner === requestedOwner
+      && receipt.route === "visual-integrity"
+      && receipt.generation === requestedGeneration
+      && receipt.datasetActive === false
+      && receipt.running === true
+      && receipt.over !== true
+      && Number(receipt.renderFrames) >= Number(releasedAtRenderFrames) + 3
+      ? receipt
+      : false;
+  }, {
+    requestedOwner: owner,
+    requestedGeneration: arm.generation,
+    releasedAtRenderFrames: release.releasedAtRenderFrames,
+  }, { timeout: VISUAL_INTEGRITY_PRESENTATION_TIMEOUT_MS, polling: 16 });
+  const restored = await handle.jsonValue();
+  await handle.dispose();
+  return { release, restored };
+}
+
+async function withVisualIntegrityScreenshotQuiescence(page, label, operation) {
+  const owner = "visual-integrity-evidence-capture";
+  const arm = await page.evaluate((requestedOwner) => (
+    window.__ASHFALL_BATTLE_QA__.setQaPresentationQuiesced(true, requestedOwner)
+  ), owner);
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "visual-integrity"
+    && arm.datasetActive === true
+    && arm.running === true
+    && arm.paused === false
+    && arm.over !== true,
+  `${label}: visual-integrity screenshot quiescence did not arm ${JSON.stringify(arm)}`);
+  const suppressed = await awaitVisualIntegrityPresentationSuppression(page, owner, arm.generation, label);
+  let value;
+  let operationError = null;
+  try {
+    value = await operation();
+  } catch (error) {
+    operationError = error;
+  }
+  let restoration = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      restoration = await releaseVisualIntegrityPresentation(page, arm, label);
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) throw new Error(`${String(operationError)}; visual-integrity release also failed: ${String(releaseError)}`);
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  return {
+    value,
+    receipt: {
+      schema: "v100-visual-integrity-screenshot-quiescence/v1",
+      owner,
+      arm,
+      suppressed,
+      release: restoration.release,
+      restored: restoration.restored,
+    },
+  };
+}
 const diagnostics = [];
 const faultDiagnostics = [];
 const transportRetries = [];
@@ -178,39 +380,95 @@ const runEngine = async (engineName, browserType) => {
         monkeyRenderProof = await runHostTelemetryOperation(
           "hosted/final-canvas-audit",
           { caseKind: "ready", auditKind: "engineer-render" },
-          () => page.evaluate(async () => {
-          const qa = window.__ASHFALL_BATTLE_QA__;
-          const asset = await qa.ensureUnitRenderProofAsset("engineer");
-          const prepared = qa.prepareCrawlerDefenseProof({ attackerKind: "walker", lane: 1, existingClaim: false });
-          if (!Number.isInteger(prepared?.attackerId) || qa.queueCrawlerDefenseUnit("engineer", 1) !== true) {
-            throw new Error("Monkey production deployment fixture is unavailable");
-          }
-          const startedAt = performance.now();
-          let released = false;
-          let lastObservation = null;
-          while (performance.now() - startedAt < 20_000) {
-            const fighter = qa.getSnapshot().fighters.find((candidate) => (
-              candidate.kind === "engineer"
-              && candidate.side === "human"
-              && candidate.spawnPortalId === "crawler-door"
-            ));
-            lastObservation = fighter ? { id: fighter.id, renderAudit: fighter.renderAudit } : null;
-            if (fighter && !released) {
-              qa.setRepresentativeSixProofPaused(false);
-              released = true;
+          async () => {
+            const preparedProof = await page.evaluate(async () => {
+              const qa = window.__ASHFALL_BATTLE_QA__;
+              const asset = await qa.ensureUnitRenderProofAsset("engineer");
+              const prepared = qa.prepareCrawlerDefenseProof({ attackerKind: "walker", lane: 1, existingClaim: false });
+              if (!Number.isInteger(prepared?.attackerId) || qa.queueCrawlerDefenseUnit("engineer", 1) !== true) {
+                throw new Error("Monkey production deployment fixture is unavailable");
+              }
+              const startedAt = performance.now();
+              let released = false;
+              let lastObservation = null;
+              while (performance.now() - startedAt < 20_000) {
+                const fighter = qa.getSnapshot().fighters.find((candidate) => (
+                  candidate.kind === "engineer"
+                  && candidate.side === "human"
+                  && candidate.spawnPortalId === "crawler-door"
+                ));
+                lastObservation = fighter ? { id: fighter.id, renderAudit: fighter.renderAudit } : null;
+                if (fighter && !released) {
+                  qa.setRepresentativeSixProofPaused(false);
+                  released = true;
+                }
+                if (fighter?.renderAudit?.assetReady === true
+                  && fighter.renderAudit.spriteState
+                  && fighter.renderAudit.effectiveOpacity === 1) {
+                  const presentationArm = qa.setQaPresentationQuiesced(
+                    true,
+                    "visual-integrity-evidence-capture",
+                  );
+                  qa.setRepresentativeSixProofPaused(true);
+                  const frozen = qa.getSnapshot().fighters.find((candidate) => candidate.id === fighter.id);
+                  return { asset, fighter: frozen, presentationArm };
+                }
+                await new Promise((resolve) => requestAnimationFrame(resolve));
+              }
+              throw new Error(`Monkey never reached the production battle renderer ${JSON.stringify(lastObservation)}`);
+            });
+            const arm = preparedProof.presentationArm;
+            invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+              && arm.active === true
+              && arm.owner === "visual-integrity-evidence-capture"
+              && arm.route === "visual-integrity"
+              && arm.paused === false,
+            `${engineName}: Monkey presentation quiescence did not arm ${JSON.stringify(arm)}`);
+            let unitLayer = null;
+            let suppression = null;
+            let operationError = null;
+            try {
+              suppression = await awaitVisualIntegrityPresentationSuppression(
+                page,
+                arm.owner,
+                arm.generation,
+                `${engineName}/Monkey`,
+              );
+              unitLayer = await runFighterUnitLayerAuditSession(
+                page,
+                preparedProof.fighter.id,
+                `${engineName}/Monkey`,
+              );
+            } catch (error) {
+              operationError = error;
             }
-            if (fighter?.renderAudit?.assetReady === true
-              && fighter.renderAudit.spriteState
-              && fighter.renderAudit.effectiveOpacity === 1) {
-              qa.setRepresentativeSixProofPaused(true);
-              await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-              const frozen = qa.getSnapshot().fighters.find((candidate) => candidate.id === fighter.id);
-              return { asset, fighter: frozen, unitLayer: qa.auditFighterUnitLayer(fighter.id) };
+            let restoration = null;
+            let releaseError = null;
+            if (!page.isClosed()) {
+              try {
+                restoration = await releaseVisualIntegrityPresentation(page, arm, `${engineName}/Monkey`);
+              } catch (error) {
+                releaseError = error;
+              }
             }
-            await new Promise((resolve) => requestAnimationFrame(resolve));
-          }
-          throw new Error(`Monkey never reached the production battle renderer ${JSON.stringify(lastObservation)}`);
-          }),
+            if (operationError) {
+              if (releaseError) throw new Error(`${String(operationError)}; Monkey presentation release also failed: ${String(releaseError)}`);
+              throw operationError;
+            }
+            if (releaseError) throw releaseError;
+            return {
+              asset: preparedProof.asset,
+              fighter: preparedProof.fighter,
+              unitLayer,
+              presentationQuiescence: {
+                schema: "v100-visual-integrity-unit-layer-quiescence/v1",
+                arm,
+                suppression,
+                release: restoration.release,
+                restored: restoration.restored,
+              },
+            };
+          },
         );
         invariant(monkeyRenderProof.asset?.path === "/art/v070/characters/engineer-battle-v1.png",
           `${engineName}: Monkey renderer resolved ${monkeyRenderProof.asset?.path}`);
@@ -406,12 +664,21 @@ const runEngine = async (engineName, browserType) => {
             );
             invariant(pixelAudit.pass === true, `${engineName}/${mode}/${state}: authored state missing from final canvas ${JSON.stringify(pixelAudit)}`);
             const screenshot = path.join(evidenceDir, `${engineName}-${faultViewport.width}x${faultViewport.height}-${mode}-${state}.png`);
-            await runHostTelemetryOperation(
+            const screenshotEnvelope = await runHostTelemetryOperation(
               "hosted/page-screenshot",
               { ...faultOperationDetails, mutableState: state },
-              () => page.screenshot({ path: screenshot }),
+              () => withVisualIntegrityScreenshotQuiescence(
+                page,
+                `${engineName}/${mode}/${state}`,
+                () => page.screenshot({ path: screenshot, timeout: VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS }),
+              ),
             );
-            mutableMissionStates.push({ state, pixelAudit, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
+            mutableMissionStates.push({
+              state,
+              pixelAudit,
+              screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/"),
+              screenshotQuiescence: screenshotEnvelope.receipt,
+            });
           }
           invariant(new Set(mutableMissionStates.map(({ pixelAudit }) => pixelAudit.authoredStateSignature)).size === mutableMissionStates.length,
             `${engineName}/${mode}: mutable mission states collapsed to the same authored pixels`);
