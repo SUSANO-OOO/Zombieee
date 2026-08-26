@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`、tree `365099e0055536887c03324f6a609dd1de7bf810`。これはr96が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
-- production implementation／runtime asset integration：Draft candidate上に実装済み。r95 authenticated GitHub object fast-forwardはremote material iteration 31を閉じた。automatic focused CI #944／`33002403217`は17 jobs green、Phase G Stage 24 sequence-2とStage 3 exact-baseだけred、retry／rerun 0。r96はこの二つを独立したQA presentation-lifetime gapとして分類し、exact actor setup handoffとpre-dispatch-to-first-final-cut ownerをexact eight-path material iteration 32で閉じる。`app/**`／product／gameplay／workflow／timeout／attempt／evidence変更なし
-- current Design Lock：`V100-SOL-DL-001 r96` Sections 28-112。全product／gameplay／causal／pixel／screenshot／viewport／duration／attempt／workflow／release境界、immutable local r93/r94/r95 forensic history、protected manifestsを維持する。r96 exact eight-path correctionと一度のnormal non-force transport／automatic focused CIだけを許可する。`PRODUCT_DESIGN_CHANGE: 0`
+- LAST_AUDITED_HEAD：`1ca4572b3898fa6f43e9f94eed52ab69660052a0`、tree `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de`。これはr97が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- production implementation／runtime asset integration：Draft candidate上に実装済み。r96 authenticated GitHub object fast-forwardはremote material iteration 32を閉じた。automatic focused CI #945／`33012551716`は12 jobs green、Hosted／Phase G Stage 25／deployment 667x375の三required jobs red、二dependency jobs skip、retry／rerun 0。r97は三件を独立したQA evidence-transaction gapとして分類し、same-page successor suppression、lean-then-bounded pixel session、distinct-frame late-windup continuity＋full-budget-only causal RPCをexact nine-path material iteration 33で閉じる。`app/**`／product／gameplay／workflow／timeout／duration／attempt／evidence threshold変更なし
+- current Design Lock：`V100-SOL-DL-001 r97` Sections 28-113。全product／gameplay／causal／pixel／screenshot／viewport／duration／attempt／workflow／release境界、immutable forensic history、protected manifestsを維持する。r97 exact nine-path correctionと一度のnormal non-force transport／automatic focused CIだけを許可する。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -186,32 +186,28 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r49-r52 iteration history：r49 correctionはiteration 20、r50 correctionはiteration 21、r51／r52 correctionはiteration 22、complete automatic green後のworkflow-only restorationはiteration 23。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r96 Section 112
+## 6. Version 1.0.0 execution cursor — r97 Section 113
 
-- `STATUS`: `DESIGN_LOCKED / R96_DUAL_PRESENTATION_OWNERSHIP_PACKET_ACTIVE`
+- `STATUS`: `DESIGN_LOCKED / R97_THREE_QA_EVIDENCE_TRANSACTION_PACKET_ACTIVE`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`
-- `LAST_AUDITED_TREE`: `365099e0055536887c03324f6a609dd1de7bf810`
-- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
-- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
-- `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
-- `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
-- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
-- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
-- `LOCAL_R94_GOVERNANCE_COMMIT`: `7763763403546c00eeba4640dff83b18282b9ba8`
-- `LOCAL_R94_GOVERNANCE_TREE`: `8dc9503c0f398c91286481fce630b69bed448f29`
-- `FAILED_GATE`: automatic focused CI #944／`33002403217`；Phase G job `98295009478` Stage 24 sequence-2 exact-actor setup handoff red＋Stage 3 job `98296302174` exact-base first-canvas presentation-owner red；17 other jobs green、retry／rerun 0
-- `LAST_GREEN_GATE`: r96 source 12/12＋9/9＋3/3＋19/19＋55/55、Stage 24 independent 3/3＋ordered Stage 6/24/25 9/9 first-attempt green、Stage 3 Chromium candidate／exact-base first-attempt green、content validation、complete 1,197/1,197、lint 0 errors／12 existing warnings、final build、exact static／EOL／BOM／diff green、#944 nonfailed 17 jobs green
-- `CLASSIFICATION`: `DUAL_QA_PRESENTATION_LIFETIME_GAPS / STAGE24_NON_CONTACT_FIRST_EXACT_ACTOR_SETUP_HANDOFF + STAGE3_PRE_DISPATCH_TO_FIRST_FINAL_CUT_OWNER / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `COHERENT_QA_PRESENTATION_OWNERSHIP_PACKET / GENERALIZED_EXACT_ACTOR_TERMINAL_HANDOFF + CONTINUOUS_STAGE3_FINAL_ENTRY_GUARD / QA_HARNESS_ONLY`
+- `LAST_AUDITED_HEAD`: `1ca4572b3898fa6f43e9f94eed52ab69660052a0`
+- `LAST_AUDITED_TREE`: `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de`
+- `LOCAL_R96_MATERIAL_COMMIT`: `cdcdea35eeb227375705f6d415dc88659df196c3`
+- `LOCAL_R96_MATERIAL_TREE`: `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de`
+- `FAILED_GATE`: automatic focused CI #945／`33012551716`；Hosted `98327087386`、Phase G `98328484702`、deployment 667x375 `98329161546` red；12 jobs green＋2 dependency-skipped、retry／rerun 0
+- `LAST_GREEN_GATE`: r97 syntax／source 15/15、Hosted focused 1/1、medic deployment focused 1/1＋six checkpoints＋7/7 artifacts、Stage 25 standalone＋three fresh ordered Stage 6/24/25 processes green、nine screenshots globally unique、exact continuity／actor／target／causal／checkpoint／fatal contracts green。Section 113.6 final full local gatesはimmutable transport preconditionであり、live resultをtransport前にIssue #172へ記録する；未実行結果をここで先取りしない。
+- `CLASSIFICATION`: `THREE INDEPENDENT QA EVIDENCE-TRANSACTION GAPS / HOSTED SUCCESSOR SUPPRESSION SPLIT + DEPLOYMENT HEAVY AUDIT BEGIN IN READY POLL + PHASE_G EARLY SINGLE-SNAPSHOT WINDUP AND PARTIAL RESIDUAL RPC / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT QA TRANSACTION-OWNERSHIP PACKET / SAME-PAGE SUCCESSOR SUPPRESSION + LEAN-THEN-BOUNDED PIXEL SESSION + DISTINCT-FRAME LATE-WINDUP CONTINUITY AND FULL-BUDGET-ONLY CAUSAL RPC / QA_HARNESS_ONLY`
 - `PRODUCT_DESIGN_CHANGE`: `0`
-- `LOOP_ITERATION`: remote r95 tree-equivalent governance commitがmaterial iteration 31を閉じた；r96はmaterial iteration 32；complete automatic focused green後だけworkflow-only iteration 33
-- `SAME_GATE_REPEAT_COUNT`: `19` for executed required remote Phase G
+- `LOOP_ITERATION`: r96 remote tree-equivalent commitがmaterial iteration 32を閉じた；r97はmaterial iteration 33；complete automatic focused green後だけworkflow-only iteration 34
+- `SAME_GATE_REPEAT_COUNT`: `20` for executed required remote Phase G
 - `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
 - `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command；ref update 0／retry 0
 - `TRANSPORT_WRITE_NONTERMINATION_COUNT`: `1` OpenSSL authenticated push；5分超後interrupt、ref update 0／retry 0
 - `OFFICIAL_ACTIONS_RECOVERY`: overall `All Systems Operational`、Actions `operational`、incident `y1t7p9fzrlj2` `resolved_at 2026-08-26T18:01:30.665Z`、bounded read-back `2026-08-26T18:15:12Z`
-- `RESUME_FROM`: final exact eight-path integrity -> one normal local material-iteration-32 commit -> one authenticated-admin eight-blob/tree/commit object fast-forward with exactly one `force: false` ref update -> exact remote tree/parent/message/eight-path read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 33 -> unfiltered local／remote full Phase G 54/54 -> same-HEAD production／runtime／SOL human-player audits -> final evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+- `RESUME_FROM`: final exact-nine full local acceptance -> one normal local material-iteration-33 commit -> one authenticated-admin nine-blob/tree/commit object fast-forward with exactly one `force: false` ref update -> exact remote tree/parent/message/nine-path read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 34 -> unfiltered local／remote full Phase G 54/54 -> same-HEAD production／runtime／SOL human-player audits -> final evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+- Actual r96 transport / CI #945 return / r97 design: local preserved r96 commit `cdcdea35eeb227375705f6d415dc88659df196c3` and remote commit `1ca4572b3898fa6f43e9f94eed52ab69660052a0` share exact tree `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de`、direct parent `f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`、message `test: close r96 presentation ownership gaps`、exact eight-path diff。automatic CI #945は17 jobs中12 green／3 required red／2 dependency skip。Hosted artifact `9623902786`はreal successor arm後のfirst suppressed-renderだけをsecond host transactionでtimeout。deployment artifact `9624041421`はmedic fully-outsideのready poll内heavy audit beginでWebContent `anon_pipe_write` 28 samples、OOM event 0、wchar／syscw増加後page crash。Phase G artifact `9623971981`はStage 6／24 green後、Stage 25 shield 4 -> guardian 5 sequence 0をwindup 0.22でreleaseし、normal target reaction後にsame exact sequence 1を1.183333秒後commitしてlocked 0.883333秒window外、さらにremaining 3msのpartial causal transactionを開始。r97はsame-page successor suppression、lean receipt後dedicated bounded six-pass begin、same fighter／target／sequenceのdistinct-frame decreasing windup >=2＋final <=1/12、full 2000ms残量時だけのcausal RPCをexact nine pathsへ固定した。focused Hosted 1/1、medic deployment 1/1 six checkpoints／7/7 artifacts、Stage 25 standalone、ordered Stage 6/24/25三process／九captureはgreen。product／app／workflow／timeout／duration／attempt／evidence threshold変更なし。
 
 - Actual r95 transport / CI #944 return / r96 design: authenticated GitHub object sequenceはremote r95 tree-equivalent commit `f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`／tree `365099e0055536887c03324f6a609dd1de7bf810`／parent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`を一度だけnon-force更新し、exact read-backとautomatic CI因果を閉じた。#944は19 jobs中17 green／2 red。Phase G `98295009478`／artifact `9620322394`はordered sequence 1全green、sequence 2 Stage 6 green後のStage 24だけred。raw evidenceはexact commander attack/current targetをopening中に観測済みだが、contact-first限定latchのためsetupがsix deploymentまで継続し、survival drain後にfresh windupを待てなかった。Stage 3 `98296302174`／artifact `9620435208`はexact-base loadout／assets／single dispatch green後、first battle canvasからsetup pauseまでpresentation owner不在で`anon_pipe_write` D-state／target close。r96はgeneralized exact-actor terminal handoffとfinal-only pre-dispatch entry guardをsame coherent exact-eight-path QA packetとして閉じる。final-byte local acceptanceはStage 24 independent 3/3、ordered WebKit Stage 6/24/25三process合計9/9、15 checkpoint×9、causal 4/4、exact proof、fatal 0、nine screenshot hashes uniqueを実証し、source 12/12＋9/9＋3/3＋19/19＋55/55、content、complete 1,197/1,197、lint 0 errors／12 existing warnings、final buildをgreenにした。Windows WebKit comparisonのfailed audio-unlock overlayによるpause interceptionはpage-aliveのlocal capability差としてretryせず、authoritative automatic Linux WebKitへ委ねる。known host Git authenticated-write failureを再試行せず、r95で成立したauthenticated-admin object fast-forwardをexact eight blobsへ限定して一度だけ再利用する。product／app／workflow／timeout／attempt／evidence変更なし。
 

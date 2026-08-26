@@ -361,6 +361,36 @@ async function transitionVisualIntegrityMutablePresentation(page, {
       && Number(nextArm.enteredAtRenderFrames) === Number(restored.quiescence.renderFrames))) {
       throw new Error(`visual-integrity mutable successor owner did not atomically acquire the rendered state ${JSON.stringify(nextArm)}`);
     }
+    const successorSuppression = await new Promise((resolve, reject) => {
+      const startedAt = performance.now();
+      const timer = setTimeout(() => {
+        reject(new Error(`visual-integrity mutable successor suppression exceeded ${transitionTimeoutMs} ms`));
+      }, transitionTimeoutMs);
+      const observe = () => {
+        const receipt = bridge.getQaPresentationQuiescence();
+        const ready = receipt?.schema === "v100-qa-presentation-quiescence/v1"
+          && receipt.active === true
+          && receipt.owner === requestedOwner
+          && receipt.route === "visual-integrity"
+          && Number(receipt.generation) === Number(nextArm.generation)
+          && receipt.datasetActive === true
+          && receipt.running === true
+          && receipt.paused === false
+          && receipt.over !== true
+          && Number(receipt.suppressedRenderFrames) > 0;
+        if (ready) {
+          clearTimeout(timer);
+          resolve({
+            ...receipt,
+            suppressionObservedAtPageTime: performance.now(),
+            suppressionElapsedMs: performance.now() - startedAt,
+          });
+          return;
+        }
+        requestAnimationFrame(observe);
+      };
+      requestAnimationFrame(observe);
+    });
     return {
       schema: "v100-visual-integrity-mutable-state-owner-handoff/v1",
       transitionPhase,
@@ -370,6 +400,7 @@ async function transitionVisualIntegrityMutablePresentation(page, {
       release,
       restored,
       nextArm,
+      successorSuppression,
     };
   }, {
     requestedOwner: owner,
@@ -393,12 +424,18 @@ async function transitionVisualIntegrityMutablePresentation(page, {
     `${label}: final mutable presentation owner did not restore exactly three frames`);
     return transition;
   }
-  const suppressed = await awaitVisualIntegrityPresentationSuppression(
-    page,
-    owner,
-    transition.nextArm.generation,
-    label,
-  );
+  const suppressed = transition.successorSuppression;
+  invariant(suppressed?.schema === "v100-qa-presentation-quiescence/v1"
+    && suppressed.active === true
+    && suppressed.owner === owner
+    && suppressed.route === "visual-integrity"
+    && suppressed.generation === transition.nextArm.generation
+    && suppressed.datasetActive === true
+    && suppressed.running === true
+    && suppressed.paused === false
+    && suppressed.over !== true
+    && Number(suppressed.suppressedRenderFrames) > 0,
+  `${label}: mutable successor suppression did not complete in its atomic owner handoff ${JSON.stringify(suppressed)}`);
   return { ...transition, suppressed };
 }
 

@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r96`
+- Canonical Design Lock: `V100-SOL-DL-001 r97`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-104 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 105 is the sole current execution handoff.
+Sections 1-105 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 106 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -3026,3 +3026,29 @@ Stage 24 may terminate opening setup only after presentation quiescence and only
 Use three separately named fresh processes for the ordered WebKit Stage 6 -> 24 -> 25 acceptance; require all nine captures green first attempt. Retain the already green first-attempt Chromium Stage 3 bridge/fallback continuity. Do not retry the non-authoritative Windows WebKit comparison whose failed local audio-unlock control intercepted the later pause pointer; require the one automatic Linux WebKit run to close entrance-candidate, final-candidate, and final-base on first attempt with artifacts. Then run complete source/content/test/lint/build/integrity gates once.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r96 Section 112. Preserve product, workflow, timeout, attempt, evidence, protected manifests, and forensic history. Local source/runtime/full acceptance is complete. Recheck exact eight-path integrity, create one normal local commit with message `test: close r96 presentation ownership gaps`, then use only the authenticated-admin eight-blob/one-tree/one-direct-parent-commit object sequence and one `force: false` ref update; do not invoke host Git push. Read back exact remote tree/parent/message/eight paths and observe only its one automatic focused CI. Any transport, read-back, red/skip/dependency/artifact result returns to SOL_DESIGN without retry, second ref update, micro-patch, rerun, dispatch, or release action. Complete green alone unlocks workflow-only iteration 33.**
+
+## 106. Revision r97 — no active Luna handoff / three QA evidence-transaction corrections
+
+Design Lock Section 113 and Issue #172's latest explicitly labeled r97 entry are the sole active cursor. Sections 1-105 remain history. Automatic focused CI #945 / run `33012551716` ran on exact HEAD/tree `1ca4572b3898fa6f43e9f94eed52ab69660052a0` / `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de` and ended with 12 green jobs, three independent required QA-harness reds, and two dependency skips. Hosted `98327087386` split real successor arm from first suppressed render; deployment 667x375 `98329161546` began the heavy pixel session inside the checkpoint-ready poll and drove WebKit `anon_pipe_write` backpressure; Phase G `98328484702` released Stage 25 from a single early `0.22` windup before a normal target reaction, then started a final three-millisecond residual causal transaction. Retry, rerun, dispatch, second push, product change, and release mutation remain zero. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R97_THREE_QA_EVIDENCE_TRANSACTION_PACKET_ACTIVE`
+- `LAST_AUDITED_HEAD`: `1ca4572b3898fa6f43e9f94eed52ab69660052a0`
+- `LAST_AUDITED_TREE`: `315caa0a60745bc13e8f04c4b7e36bf1ac0e22de`
+- `FAILED_GATE`: CI #945 Hosted, Phase G Stage 25, and deployment 667x375; 12 green, two dependency-skipped, retry/rerun 0
+- `LAST_GREEN_GATE`: r97 syntax/source `15/15`; exact Hosted focused `1/1`; exact medic deployment focused `1/1`, six checkpoints and `7/7` artifacts; one Stage 25 standalone plus three fresh ordered Stage 6/24/25 processes green with nine unique screenshots, exact continuity/actor/target/causal/checkpoint/fatal contracts. Section 113.6 final full local gates are an immutable transport precondition; their live result must be recorded in Issue #172 before transport and is not pre-asserted here.
+- `CLASSIFICATION`: `THREE INDEPENDENT QA EVIDENCE-TRANSACTION GAPS / HOSTED SUCCESSOR SUPPRESSION SPLIT + DEPLOYMENT HEAVY AUDIT BEGIN IN READY POLL + PHASE_G EARLY SINGLE-SNAPSHOT WINDUP AND PARTIAL RESIDUAL RPC / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT QA TRANSACTION-OWNERSHIP PACKET / SAME-PAGE SUCCESSOR SUPPRESSION + LEAN-THEN-BOUNDED PIXEL SESSION + DISTINCT-FRAME LATE-WINDUP CONTINUITY AND FULL-BUDGET-ONLY CAUSAL RPC / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r97 final-local/commit/transport/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r97 is material iteration 33; complete automatic focused green alone unlocks workflow-only iteration 34
+- `SAME_GATE_REPEAT_COUNT`: `20` for executed required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: final exact-nine full local acceptance -> one normal local material-iteration-33 commit -> one authenticated-admin nine-blob/tree/commit object fast-forward with one `force: false` ref update -> exact remote read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 34 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/SOL human-player audits -> final evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+The exact tracked allowlist is the three QA scripts, their two existing source-contract tests, Design Lock, this handoff, Project State, and the Design Lock test named in Section 113.2. No tenth path, `app/**`, workflow, package/lock, product, gameplay, balance, AI, combat timing, timeout, duration, attempt, viewport, evidence threshold, public/PWA/asset, or release change is allowed. All `tmp-r97-*` evidence stays untracked; preserve the three original protected manifests and the historical local/remote commit chain.
+
+Hosted must observe the exact successor generation's first real suppressed production render inside the same page transaction as its real arm under the existing 2,000 ms bound. Deployment polls return only a lean exact checkpoint receipt; the existing bounded audit runner then begins a dedicated session and proves exact fighter/checkpoint/receipt/owner/route/generation before all six unchanged pixel passes. Phase G requires at least two distinct production frames of strictly decreasing same-fighter/same-target/same-sequence windup, final windup at most `RUNTIME_SIMULATION_STEP_SECONDS * RUNTIME_MAX_CATCH_UP_STEPS` (`1 / 12`), same-task release, and only full 2,000 ms causal page transactions. All existing durations, timeouts, causal/pixel/screenshot/checkpoint thresholds, competing attacks, and product behavior remain unchanged.
+
+Run the exact Section 113.6 final-byte sequence once. Complete full Hosted WebKit and all-eight-unit bounded deployment 667x375 before content/full/lint/build/static gates. Create exactly one normal nine-path commit with message `test: close r97 evidence transaction boundaries`; transport it only through the authenticated-admin nine-blob/one-tree/one-direct-parent-commit sequence and one `force: false` ref update. Any first local, object, ref, read-back, automatic-CI, dependency, or artifact red returns to `SOL_DESIGN` without retry, second trigger, micro-patch, rerun, dispatch, or release action.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — execute only Design Lock r97 Section 113. Finish the one ordered final-byte local sequence across the exact nine paths; preserve product, workflow, timing, thresholds, attempts, protected manifests, and untracked evidence. Commit once as `test: close r97 evidence transaction boundaries`, perform one authenticated-admin nine-blob/tree/direct-parent object fast-forward with `force: false`, read back exact tree/parent/message/nine paths, and observe only its one automatic focused CI. Any red or uncertainty returns to SOL_DESIGN without retry or second trigger. Complete green alone unlocks workflow-only iteration 34.**

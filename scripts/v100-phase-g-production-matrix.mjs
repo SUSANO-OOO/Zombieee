@@ -32,6 +32,7 @@ const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8;
 const COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS = 2_000;
 const RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS = RUNTIME_SIMULATION_STEP_SECONDS
   * RUNTIME_MAX_CATCH_UP_STEPS;
+const RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS = RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS;
 
 function releaseAnchorCommitWindowSecondsFor(releaseAnchor) {
   const attackWindupSeconds = Number(releaseAnchor?.attackWindupSeconds);
@@ -769,6 +770,12 @@ function postQuiescenceExactActorDecision(proofEpoch, {
     && releaseAnchor.targetId !== undefined
     && releaseAnchor.targetAlive === true
     && Number(releaseAnchor.attackWindupSeconds) > 0
+    && Number(releaseAnchor.attackWindupSeconds) <= RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+    && Number(releaseAnchor.lateWindupMaxSeconds) === RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+    && Number(releaseAnchor.continuitySampleCount) >= 2
+    && Number(releaseAnchor.continuityFirstWindup) > Number(releaseAnchor.continuityLastWindup)
+    && Number(releaseAnchor.continuityLastWindup) === Number(releaseAnchor.attackWindupSeconds)
+    && Number(releaseAnchor.continuityLastBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
     && Number.isFinite(Number(releaseAnchor.handoffAtBattleTime))
     && Number.isFinite(Number(releaseAnchor.handoffAtPageTime))
     && Number(releaseAnchor.handoffAtPageTime) === Number(proofEpoch.visibleProofStartedAt);
@@ -3178,8 +3185,8 @@ async function collectCombatCausalProof(page, {
   };
   while (Date.now() < hostDeadlineAt) {
     const remainingHostMs = hostDeadlineAt - Date.now();
-    const transactionTimeoutMs = Math.min(COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS, remainingHostMs);
-    if (transactionTimeoutMs <= 0) break;
+    if (remainingHostMs < COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS) break;
+    const transactionTimeoutMs = COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS;
     const transaction = await observePromiseWithin(page.evaluate(() => {
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
@@ -3781,6 +3788,21 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
                 selectedTargetSide: actor.selectedTargetSide ?? null,
                 selectedTargetKind: actor.selectedTargetKind ?? null,
                 selectedTargetAlive: actor.selectedTargetAlive ?? null,
+                windupContinuity: (actor.windupContinuity ?? []).slice(0, 16).map((entry) => ({
+                  fighterId: entry.fighterId ?? null,
+                  targetId: entry.targetId ?? null,
+                  attackSequence: entry.attackSequence ?? null,
+                  sampleCount: entry.sampleCount ?? null,
+                  firstWindup: entry.firstWindup ?? null,
+                  lastWindup: entry.lastWindup ?? null,
+                  firstBattleTime: entry.firstBattleTime ?? null,
+                  lastBattleTime: entry.lastBattleTime ?? null,
+                })),
+                selectedContinuitySampleCount: actor.selectedContinuitySampleCount ?? null,
+                selectedContinuityFirstWindup: actor.selectedContinuityFirstWindup ?? null,
+                selectedContinuityLastWindup: actor.selectedContinuityLastWindup ?? null,
+                selectedContinuityFirstBattleTime: actor.selectedContinuityFirstBattleTime ?? null,
+                selectedContinuityLastBattleTime: actor.selectedContinuityLastBattleTime ?? null,
                 readyAtPageTime: actor.readyAtPageTime ?? null,
                 readyAtBattleTime: actor.readyAtBattleTime ?? null,
               })),
@@ -3805,6 +3827,12 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
                 targetKind: epoch.releaseAnchor.targetKind ?? null,
                 targetAlive: epoch.releaseAnchor.targetAlive ?? null,
                 attackWindupSeconds: epoch.releaseAnchor.attackWindupSeconds ?? null,
+                lateWindupMaxSeconds: epoch.releaseAnchor.lateWindupMaxSeconds ?? null,
+                continuitySampleCount: epoch.releaseAnchor.continuitySampleCount ?? null,
+                continuityFirstWindup: epoch.releaseAnchor.continuityFirstWindup ?? null,
+                continuityLastWindup: epoch.releaseAnchor.continuityLastWindup ?? null,
+                continuityFirstBattleTime: epoch.releaseAnchor.continuityFirstBattleTime ?? null,
+                continuityLastBattleTime: epoch.releaseAnchor.continuityLastBattleTime ?? null,
                 handoffAtBattleTime: epoch.releaseAnchor.handoffAtBattleTime ?? null,
                 handoffAtPageTime: epoch.releaseAnchor.handoffAtPageTime ?? null,
                 handoffValid: epoch.releaseAnchor.handoffValid ?? null,
@@ -4509,7 +4537,13 @@ async function releasePhaseGPresentationQuiescence(page, {
     proofActor ? { side: "zombie", kind: proofActor, cueId: proofActorAttackCueId ?? null } : null,
     proofUnitKind ? { side: "human", kind: proofUnitKind, cueId: proofUnitAttackCueId ?? null } : null,
   ].filter(Boolean);
-  const releaseHandle = await page.waitForFunction(({ stageId, actorSpecs, proofDurationMs, armGeneration }) => {
+  const releaseHandle = await page.waitForFunction(({
+    stageId,
+    actorSpecs,
+    proofDurationMs,
+    armGeneration,
+    releaseAnchorLateWindupMaxSeconds,
+  }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
     const quiescence = bridge?.getQaPresentationQuiescence?.();
     if (quiescence?.schema !== "v100-qa-presentation-quiescence/v1"
@@ -4571,6 +4605,12 @@ async function releasePhaseGPresentationQuiescence(page, {
           selectedTargetSide: null,
           selectedTargetKind: null,
           selectedTargetAlive: null,
+          windupContinuity: [],
+          selectedContinuitySampleCount: null,
+          selectedContinuityFirstWindup: null,
+          selectedContinuityLastWindup: null,
+          selectedContinuityFirstBattleTime: null,
+          selectedContinuityLastBattleTime: null,
           readyAtPageTime: null,
           readyAtBattleTime: null,
         })),
@@ -4608,6 +4648,11 @@ async function releasePhaseGPresentationQuiescence(page, {
       actorReadiness.selectedTargetSide = null;
       actorReadiness.selectedTargetKind = null;
       actorReadiness.selectedTargetAlive = null;
+      actorReadiness.selectedContinuitySampleCount = null;
+      actorReadiness.selectedContinuityFirstWindup = null;
+      actorReadiness.selectedContinuityLastWindup = null;
+      actorReadiness.selectedContinuityFirstBattleTime = null;
+      actorReadiness.selectedContinuityLastBattleTime = null;
       actorReadiness.readyAtPageTime = null;
       actorReadiness.readyAtBattleTime = null;
     };
@@ -4631,7 +4676,7 @@ async function releasePhaseGPresentationQuiescence(page, {
         }
       }
       if (releaseAnchor) {
-        const acceptedCandidate = candidates.find((fighter) => {
+        const windupCandidates = candidates.filter((fighter) => {
           if (fighter.attackWindupTargetId === null || fighter.attackWindupTargetId === undefined) return false;
           const target = fighterById.get(String(fighter.attackWindupTargetId)) ?? null;
           const expectedTargetSide = actorReadiness.side === "human" ? "zombie" : "human";
@@ -4645,12 +4690,65 @@ async function releasePhaseGPresentationQuiescence(page, {
             && String(fighter.targetId) === String(fighter.attackWindupTargetId)
             && target?.side === expectedTargetSide
             && Number(target.hp) > 0;
+        });
+        const previousContinuity = Array.isArray(actorReadiness.windupContinuity)
+          ? actorReadiness.windupContinuity
+          : [];
+        actorReadiness.windupContinuity = windupCandidates.map((fighter) => {
+          const attackSequence = Number(fighter.attackSequence);
+          const targetId = fighter.attackWindupTargetId;
+          const windup = Number(fighter.attackWindup);
+          const previous = previousContinuity.find((entry) => (
+            String(entry.fighterId) === String(fighter.id)
+            && String(entry.targetId) === String(targetId)
+            && Number(entry.attackSequence) === attackSequence
+          )) ?? null;
+          const newProductionSnapshot = previous
+            && Number(snapshot.time) > Number(previous.lastBattleTime);
+          const monotonicallyDecreased = newProductionSnapshot
+            && windup < Number(previous.lastWindup);
+          if (!previous || (newProductionSnapshot && !monotonicallyDecreased)) {
+            return {
+              fighterId: fighter.id,
+              targetId,
+              attackSequence,
+              sampleCount: 1,
+              firstWindup: windup,
+              lastWindup: windup,
+              firstBattleTime: Number(snapshot.time),
+              lastBattleTime: Number(snapshot.time),
+            };
+          }
+          if (!newProductionSnapshot) return previous;
+          return {
+            ...previous,
+            sampleCount: Number(previous.sampleCount) + 1,
+            lastWindup: windup,
+            lastBattleTime: Number(snapshot.time),
+          };
+        });
+        const acceptedCandidate = windupCandidates.find((fighter) => {
+          const continuity = actorReadiness.windupContinuity.find((entry) => (
+            String(entry.fighterId) === String(fighter.id)
+            && String(entry.targetId) === String(fighter.attackWindupTargetId)
+            && Number(entry.attackSequence) === Number(fighter.attackSequence)
+          ));
+          return Number(continuity?.sampleCount) >= 2
+            && Number(continuity?.firstWindup) > Number(continuity?.lastWindup)
+            && Number(continuity?.lastWindup) === Number(fighter.attackWindup)
+            && Number(continuity?.lastBattleTime) === Number(snapshot.time)
+            && Number(fighter.attackWindup) <= releaseAnchorLateWindupMaxSeconds;
         }) ?? null;
         if (!acceptedCandidate) {
           clearSelection(actorReadiness);
           return false;
         }
         const target = fighterById.get(String(acceptedCandidate.attackWindupTargetId));
+        const continuity = actorReadiness.windupContinuity.find((entry) => (
+          String(entry.fighterId) === String(acceptedCandidate.id)
+          && String(entry.targetId) === String(acceptedCandidate.attackWindupTargetId)
+          && Number(entry.attackSequence) === Number(acceptedCandidate.attackSequence)
+        ));
         actorReadiness.hiddenQualificationObserved = false;
         actorReadiness.windupObserved = true;
         actorReadiness.selectedFighterId = acceptedCandidate.id;
@@ -4661,6 +4759,11 @@ async function releasePhaseGPresentationQuiescence(page, {
         actorReadiness.selectedTargetSide = target?.side ?? null;
         actorReadiness.selectedTargetKind = target?.kind ?? null;
         actorReadiness.selectedTargetAlive = Number(target?.hp) > 0;
+        actorReadiness.selectedContinuitySampleCount = Number(continuity?.sampleCount);
+        actorReadiness.selectedContinuityFirstWindup = Number(continuity?.firstWindup);
+        actorReadiness.selectedContinuityLastWindup = Number(continuity?.lastWindup);
+        actorReadiness.selectedContinuityFirstBattleTime = Number(continuity?.firstBattleTime);
+        actorReadiness.selectedContinuityLastBattleTime = Number(continuity?.lastBattleTime);
         actorReadiness.readyAtPageTime = performance.now();
         actorReadiness.readyAtBattleTime = Number(snapshot.time);
         return true;
@@ -4746,6 +4849,7 @@ async function releasePhaseGPresentationQuiescence(page, {
       && releaseAnchorFighter?.gateEntering !== true
       && Number(releaseAnchorFighter?.attack) <= 0
       && Number(releaseAnchorFighter?.attackWindup) > 0
+      && Number(releaseAnchorFighter?.attackWindup) <= releaseAnchorLateWindupMaxSeconds
       && Number(releaseAnchorFighter?.abilityWindup) <= 0
       && Number(releaseAnchorFighter?.attackSequence) === Number(releaseAnchorReadiness.selectedAttackSequence)
       && String(releaseAnchorFighter?.targetId) === String(releaseAnchorReadiness.selectedTargetId)
@@ -4753,6 +4857,10 @@ async function releasePhaseGPresentationQuiescence(page, {
       && String(releaseAnchorTarget?.id) === String(releaseAnchorReadiness.selectedTargetId)
       && releaseAnchorTarget?.side === releaseAnchorExpectedTargetSide
       && Number(releaseAnchorTarget?.hp) > 0
+      && Number(releaseAnchorReadiness.selectedContinuitySampleCount) >= 2
+      && Number(releaseAnchorReadiness.selectedContinuityFirstWindup) > Number(releaseAnchorReadiness.selectedContinuityLastWindup)
+      && Number(releaseAnchorReadiness.selectedContinuityLastWindup) === Number(releaseAnchorFighter?.attackWindup)
+      && Number(releaseAnchorReadiness.selectedContinuityLastBattleTime) === Number(releaseSnapshot.time)
     );
     if (!releaseAnchorHandoffValid) {
       throw new Error(`release-anchor windup was consumed before the atomic visible epoch handoff: ${JSON.stringify({
@@ -4774,6 +4882,12 @@ async function releasePhaseGPresentationQuiescence(page, {
       targetKind: releaseAnchorTarget?.kind ?? null,
       targetAlive: Number(releaseAnchorTarget?.hp) > 0,
       attackWindupSeconds: Number(releaseAnchorFighter?.attackWindup),
+      lateWindupMaxSeconds: releaseAnchorLateWindupMaxSeconds,
+      continuitySampleCount: Number(releaseAnchorReadiness.selectedContinuitySampleCount),
+      continuityFirstWindup: Number(releaseAnchorReadiness.selectedContinuityFirstWindup),
+      continuityLastWindup: Number(releaseAnchorReadiness.selectedContinuityLastWindup),
+      continuityFirstBattleTime: Number(releaseAnchorReadiness.selectedContinuityFirstBattleTime),
+      continuityLastBattleTime: Number(releaseAnchorReadiness.selectedContinuityLastBattleTime),
       handoffAtBattleTime: Number(releaseSnapshot.time),
       handoffAtPageTime: visibleProofStartedAt,
       handoffValid: releaseAnchorHandoffValid,
@@ -4870,7 +4984,8 @@ async function releasePhaseGPresentationQuiescence(page, {
     actorSpecs: specs,
     proofDurationMs: Number(visibleProofDurationMs),
     armGeneration: Number(arm.generation),
-  }, { timeout: Math.min(battleTimeout, 45_000), polling: 40 });
+    releaseAnchorLateWindupMaxSeconds: RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS,
+  }, { timeout: Math.min(battleTimeout, 45_000), polling: "raf" });
   const releaseEnvelope = await releaseHandle.jsonValue();
   await releaseHandle.dispose();
 
@@ -4904,6 +5019,12 @@ async function releasePhaseGPresentationQuiescence(page, {
       && releaseAnchor.actorKey === expectedReleaseAnchorKey
       && releaseAnchor.releaseMode === "unconsumed-production-windup"
       && Number(releaseAnchor.attackWindupSeconds) > 0
+      && Number(releaseAnchor.attackWindupSeconds) <= RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+      && Number(releaseAnchor.lateWindupMaxSeconds) === RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+      && Number(releaseAnchor.continuitySampleCount) >= 2
+      && Number(releaseAnchor.continuityFirstWindup) > Number(releaseAnchor.continuityLastWindup)
+      && Number(releaseAnchor.continuityLastWindup) === Number(releaseAnchor.attackWindupSeconds)
+      && Number(releaseAnchor.continuityLastBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
       && releaseAnchor.targetAlive === true
       && Number.isFinite(Number(releaseAnchor.selectionSnapshotObservedAtPageTime))
       && Number(releaseAnchor.selectionSnapshotBattleTime) === Number(releaseAnchor.handoffAtBattleTime)

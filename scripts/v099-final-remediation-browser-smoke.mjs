@@ -2438,9 +2438,9 @@ async function boundedFighterUnitLayerAuditTransaction(operation, deadlineAt, la
   }
 }
 
-async function runFighterUnitLayerAuditSession(page, fighterId, label, preboundSession = null) {
+async function runFighterUnitLayerAuditSession(page, fighterId, label, expectedBinding = null) {
   const deadlineAt = Date.now() + FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS;
-  const begin = preboundSession ?? await boundedFighterUnitLayerAuditTransaction(
+  const begin = await boundedFighterUnitLayerAuditTransaction(
     page.evaluate((id) => window.__ASHFALL_BATTLE_QA__.beginFighterUnitLayerAuditSession(id), fighterId),
     deadlineAt,
     `${label}/begin`,
@@ -2450,6 +2450,25 @@ async function runFighterUnitLayerAuditSession(page, fighterId, label, preboundS
     && begin.fighterId === fighterId
     && begin.passCount === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
   `${label}: unit-layer audit session did not bind exact fighter ownership ${JSON.stringify(begin)}`);
+  if (expectedBinding) {
+    const expectedReceipt = expectedBinding.checkpointReceipt ?? null;
+    const actualReceipt = begin.checkpointReceipt ?? null;
+    const receiptMatches = expectedReceipt === null
+      ? actualReceipt === null
+      : actualReceipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+        && String(actualReceipt.fighterId) === String(expectedReceipt.fighterId)
+        && actualReceipt.kind === expectedReceipt.kind
+        && actualReceipt.checkpoint === expectedReceipt.checkpoint
+        && Number(actualReceipt.computedProgress) === Number(expectedReceipt.computedProgress);
+    invariant(begin.fighterKind === expectedBinding.fighterKind
+      && begin.checkpoint === expectedBinding.checkpoint
+      && receiptMatches
+      && begin.quiescence?.active === true
+      && begin.quiescence.owner === expectedBinding.presentation?.owner
+      && begin.quiescence.route === expectedBinding.presentation?.route
+      && Number(begin.quiescence.generation) === Number(expectedBinding.presentation?.generation),
+    `${label}: dedicated unit-layer audit begin drifted from the accepted lean checkpoint ${JSON.stringify({ begin, expectedBinding })}`);
+  }
   const steps = [];
   for (const [index, expectedPass] of FIGHTER_UNIT_LAYER_AUDIT_PASSES.entries()) {
     const step = await boundedFighterUnitLayerAuditTransaction(
@@ -3221,18 +3240,8 @@ async function pauseAtDeploymentCheckpoint(
           || Number(presentation.generation) !== Number(expectedPresentationGeneration)) {
           throw new Error(`deployment checkpoint receipt-to-owner handoff drifted ${JSON.stringify(leanState)}`);
         }
-        const auditSession = qa.beginFighterUnitLayerAuditSession(id);
-        if (!(auditSession?.schema === "v100-fighter-unit-layer-audit-session/v1"
-          && typeof auditSession.token === "string"
-          && auditSession.fighterId === id
-          && auditSession.fighterKind === fighter.kind
-          && auditSession.checkpoint === expectedCheckpoint
-          && auditSession.checkpointReceipt?.fighterId === id
-          && auditSession.checkpointReceipt?.checkpoint === expectedCheckpoint)) {
-          throw new Error(`deployment checkpoint audit session did not bind the exact receipt ${JSON.stringify(auditSession)}`);
-        }
         return {
-          schema: "v100-deployment-checkpoint-audit-handoff/v1",
+          schema: "v100-deployment-checkpoint-audit-ready/v1",
           ready: true,
           fighter: {
             id: fighter.id,
@@ -3251,7 +3260,6 @@ async function pauseAtDeploymentCheckpoint(
             route: presentation.route,
             generation: presentation.generation,
           },
-          auditSession,
         };
       }, {
         id: fighterId,
@@ -3265,7 +3273,7 @@ async function pauseAtDeploymentCheckpoint(
         if (captureTrace) await captureTrace();
         continue;
       }
-      invariant(candidate.schema === "v100-deployment-checkpoint-audit-handoff/v1"
+      invariant(candidate.schema === "v100-deployment-checkpoint-audit-ready/v1"
         && candidate.fighter?.id === fighterId
         && candidate.checkpointReceiptFrozen === true
         && candidate.checkpointReceipt?.checkpoint === checkpoint
@@ -3276,7 +3284,12 @@ async function pauseAtDeploymentCheckpoint(
         page,
         fighterId,
         `${label}/pixel-audit`,
-        candidate.auditSession,
+        {
+          fighterKind: candidate.fighter.kind,
+          checkpoint,
+          checkpointReceipt: candidate.checkpointReceipt,
+          presentation: candidate.presentation,
+        },
       );
       if (captureTrace) await captureTrace();
       invariant(audit?.deploymentPlan?.checkpoint === checkpoint
@@ -3387,17 +3400,8 @@ async function queueAndPauseAtFirstDeploymentFrame(
           && Number(presentation.generation) === Number(expectedPresentationGeneration))) {
           throw new Error(`first deployment frame receipt-to-owner handoff drifted ${JSON.stringify({ pausedSnapshot, presentation })}`);
         }
-        const auditSession = qa.beginFighterUnitLayerAuditSession(fighter.id);
-        if (!(auditSession?.schema === "v100-fighter-unit-layer-audit-session/v1"
-          && typeof auditSession.token === "string"
-          && auditSession.fighterId === fighter.id
-          && auditSession.fighterKind === kind
-          && auditSession.checkpoint === "fully-inside"
-          && auditSession.checkpointReceipt === null)) {
-          throw new Error(`first deployment frame audit session did not bind the exact pause ${JSON.stringify(auditSession)}`);
-        }
         return {
-          schema: "v100-deployment-checkpoint-audit-handoff/v1",
+          schema: "v100-deployment-checkpoint-audit-ready/v1",
           ready: true,
           fighter: {
             id: pausedFighter.id,
@@ -3416,7 +3420,6 @@ async function queueAndPauseAtFirstDeploymentFrame(
             route: presentation.route,
             generation: presentation.generation,
           },
-          auditSession,
         };
       }, {
         kind: unitKind,
@@ -3427,7 +3430,7 @@ async function queueAndPauseAtFirstDeploymentFrame(
         throw new Error(`production battle ended before the first deployment frame ${JSON.stringify(candidate.state)}`);
       }
       if (candidate?.ready === true) {
-        invariant(candidate.schema === "v100-deployment-checkpoint-audit-handoff/v1"
+        invariant(candidate.schema === "v100-deployment-checkpoint-audit-ready/v1"
           && candidate.fighter?.kind === unitKind
           && candidate.observedProgress === 0
           && candidate.checkpointReceipt === null
@@ -3438,7 +3441,12 @@ async function queueAndPauseAtFirstDeploymentFrame(
           page,
           candidate.fighter.id,
           `${label}/fully-inside/pixel-audit`,
-          candidate.auditSession,
+          {
+            fighterKind: candidate.fighter.kind,
+            checkpoint: "fully-inside",
+            checkpointReceipt: null,
+            presentation: candidate.presentation,
+          },
         );
         if (captureTrace) await captureTrace();
         invariant(audit?.deploymentPlan?.checkpoint === "fully-inside"
