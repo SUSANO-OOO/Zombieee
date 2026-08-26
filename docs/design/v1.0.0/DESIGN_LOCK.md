@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r85`
+- Revision: `r87`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -5689,3 +5689,79 @@ Any first r85 governance/static/transport/automatic-CI red, unexpected skip, dep
 - `RESUME_FROM`: governance/static read-back only -> live PR #171 unchanged at audited HEAD/tree and compatible base -> one normal non-amended exact-eight-path material-iteration-30 commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> local unfiltered full Phase G 54/54 + validators/full regressions -> one workflow-only transport -> remote unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the final four runtime/source hashes, all fresh Stage 3/HUD/deployment raw summaries and artifacts, exact eight-path topology, mixed EOL contract, protected evidence, no-retry boundary, workflow-only successor boundary, and approval-only release tail. Revision r85 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 102. Revision r86 — credential-bearing transport recovery with existing commit preservation
+
+### 102.1 r85 transport return and classification
+
+SOL created the accepted exact-eight-path material-iteration-30 commit `e256d5616eec58f44b62a5098223eaa45a6e70b6`, tree `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`, parent `e8f5fb152acca9124fceead899734c5d368053ba`. The commit contains exactly the eight Section 99.2 paths and leaves only the three protected untracked forensic directories. It is not amended, rebased, recreated, cherry-picked, or discarded.
+
+The one r85 non-force HTTPS push attempt exited 1 before any remote ref update with `schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`. The isolated process ran as the restricted sandbox identity and had no usable Windows HTTPS credential. This is not a ref rejection, non-fast-forward, branch drift, commit defect, source failure, CI result, or product failure. Live GitHub after the failure remained Draft/open/unmerged/mergeable at HEAD/tree `e8f5fb152acca9124fceead899734c5d368053ba` / `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`, base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`; automatic CI for material iteration 30 was not created.
+
+Classification is `TRANSPORT_AUTHENTICATION_PRECONDITION / SANDBOX_HTTPS_SCHANNEL_SEC_E_NO_CREDENTIALS_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`. Remediation is `EXISTING_COMMIT_PRESERVATION + HOST_CREDENTIAL_CONTEXT_ONE_SHOT_NON_FORCE_PUSH / DIRECT_GITHUB_REMOTE + NO_SECRET_OUTPUT / GOVERNANCE_ONLY`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 102.2 Exact bounded remediation and pre-push integrity
+
+Revision r86 may change only `docs/design/v1.0.0/DESIGN_LOCK.md`, `docs/design/v1.0.0/LUNA_HANDOFF.md`, `docs/PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs` in one normal governance commit whose direct parent is the preserved `e256d5616eec58f44b62a5098223eaa45a6e70b6`. No source, harness, app, workflow, package/lock, public/asset, evidence, product, gameplay, balance, AI, timing, acceptance, retry, release, or fifth path may change. The resulting two-commit fast-forward range from remote r82 still changes exactly the same eight tracked paths. Do not amend, squash, rebase, reset, recommit, or rebuild `e256d5616eec58f44b62a5098223eaa45a6e70b6`.
+
+The r84 accepted Stage 3, HUD, deployment, content, complete-test, lint, and build evidence remains valid because r86 changes governance bytes only. Do not repeat it. Run only Design Lock 19/19, canonical six-file 55/55, exact eight-path mixed-EOL/deployment-byte/protected integrity, staged and committed four-path topology for the governance commit, and `git diff --check`.
+
+Immediately before transport, re-fetch PR #171 and require Draft/open/unmerged/mergeable, live HEAD `e8f5fb152acca9124fceead899734c5d368053ba`, live tree `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`, and base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`. Require local ancestry `remote-r82 -> e256d561 -> r86-governance`, exact commit/tree/path read-back, staged/unstaged tracked zero, and only the three protected untracked directories.
+
+Then use one explicitly approved host credential context, not the credential-less sandbox context, to execute exactly one normal non-force ref update from current local HEAD to `refs/heads/codex/v1.0.0-luna-implementation` at `https://github.com/SUSANO-OOO/Zombieee.git`. Set credential interaction fail-closed; never print, query, copy, persist, or log a token/password; do not modify Git global/system/local credential, remote, or `safe.directory` configuration; do not use a wildcard; do not push through the ownership-blocked parent repository; and do not use `--force`, lease force, retry, or a second transport mechanism.
+
+After success, re-fetch GitHub and require the remote HEAD to equal the exact local r86 commit and its tree, with `e256d5616eec58f44b62a5098223eaa45a6e70b6` retained as direct parent. Observe only the one automatic focused CI caused by that single ref update. Any host-context denial, authentication failure, ref drift/rejection, remote SHA/tree mismatch, missing automatic run, first remote red, unexpected skip, dependency/order defect, or missing artifact returns to `SOL_DESIGN` without edit, retry, rerun, dispatch, alternate transport, or promotion.
+
+### 102.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R86_EXISTING_COMMIT_HOST_CREDENTIAL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `FAILED_GATE`: first r85 transport attempt; HTTPS Schannel credential acquisition failed before remote ref update; automatic focused CI not created
+- `LAST_GREEN_GATE`: complete r84 local acceptance, r85 governance/static read-back, exact-eight-path commit creation and commit/path/tree integrity; remote still unchanged
+- `CLASSIFICATION`: `TRANSPORT_AUTHENTICATION_PRECONDITION / SANDBOX_HTTPS_SCHANNEL_SEC_E_NO_CREDENTIALS_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EXISTING_COMMIT_PRESERVATION + HOST_CREDENTIAL_CONTEXT_ONE_SHOT_NON_FORCE_PUSH / DIRECT_GITHUB_REMOTE + NO_SECRET_OUTPUT / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r86 governance/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: `e256d561` plus the r86 governance commit remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r86 governance/static only -> one four-path governance commit directly after preserved `e256d561` -> unchanged live-ref preflight -> one host-credential normal non-force push of the two-commit fast-forward chain -> exact remote SHA/tree read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> unchanged full/unfiltered/runtime/human/review/checkpoint/release tail
+
+The release tail is unchanged: complete automatic focused green alone unlocks workflow-only iteration 31; then local unfiltered full Phase G 54/54 plus validators/full regressions, one workflow-only non-force transport, remote unfiltered required CI/full Phase G 54/54, same-HEAD production runtime and SOL human-player audits, final evidence freeze, fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact local commit object, live unchanged GitHub ref, failed Schannel boundary, credential separation, no-secret rule, one-shot transport, accepted-gate preservation, automatic-CI causality, and approval-only release tail. Revision r86 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 103. Revision r87 — active transport handoff release-tail literal closure
+
+### 103.1 r86 source return and classification
+
+The first r86 Design Lock source run executed 19 tests and stopped at 18 pass / 1 fail, with cancelled/skipped/todo zero. Every r86 identity, local commit/tree, transport classification, existing-commit preservation, host credential, one-shot non-force, no-secret, no-retry, owner, and cursor assertion passed. The sole failure was the final all-revisions release-loop guard: active Handoff Section 95 prohibited release action but omitted the literal `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. No canonical suite, staging, governance commit, host transport, remote CI, product gate, retry, or alternate transport followed. Live remote remains the audited r82 ref.
+
+Classification is `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_TOKEN_OMISSION / R86_SECTION95_LACKS_FINAL_PRODUCER_CHECKPOINT_LITERAL / REMEDIATION_LOCAL`. Remediation is `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / GOVERNANCE_ONLY`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 103.2 Exact correction and execution
+
+Preserve material commit `e256d5616eec58f44b62a5098223eaa45a6e70b6` and every r86 transport rule exactly. Change only the same four uncommitted governance paths. In the new active Handoff Section 96, state the unchanged tail explicitly: complete automatic focused green alone unlocks workflow-only iteration 31, local/remote unfiltered full Phase G 54/54, same-HEAD runtime and SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release actions. Do not change source/harness/app/workflow/package/public/evidence bytes or any acceptance, transport, credential, retry, release, or product behavior.
+
+Run Design Lock 19/19 first, then canonical six-file 55/55 and exact four-path-governance/eight-path-range mixed-EOL/deployment-byte/protected/static integrity. Create one normal four-path r87 governance commit directly after `e256d561`; no separate r86 commit exists. Then resume Section 102.2 at live-ref preflight and one host-credential normal non-force push of the two-commit fast-forward chain. Any first r87 source/static/commit/transport/remote red returns to `SOL_DESIGN` without same-revision edit, retry, rerun, alternate transport, or promotion.
+
+### 103.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R87_EXISTING_COMMIT_HOST_CREDENTIAL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `FAILED_GATE`: first r86 Design Lock source run 18/19; sole failure was active Handoff Section 95 release-tail token omission; later gates not run
+- `LAST_GREEN_GATE`: all first 18 r86 Design assertions including the entire transport packet; complete r84 local acceptance and r85 material commit remain accepted
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_TOKEN_OMISSION / R86_SECTION95_LACKS_FINAL_PRODUCER_CHECKPOINT_LITERAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r87 source/static/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: preserved material commit plus one r87 governance child remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one active-Handoff release-tail literal closure -> Design 19/19 -> canonical 55/55 -> static/protected -> one four-path governance commit after preserved `e256d561` -> unchanged live-ref preflight -> one host-credential normal non-force push -> exact remote read-back -> one automatic focused CI -> unchanged tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual 18/19 TAP output, active Handoff extraction, preserved local commit, r86 one-shot transport, no-gate-repetition rule, and complete approval-only release tail. Revision r87 has `High ambiguity: 0` and `Medium ambiguity: 0`.

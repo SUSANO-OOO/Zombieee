@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r85`
+- Canonical Design Lock: `V100-SOL-DL-001 r87`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-93 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 94 is the sole current execution handoff.
+Sections 1-95 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 96 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2752,3 +2752,49 @@ Design Lock Section 101 and the latest explicitly labeled Issue #172 r85 lock ar
 Do not repeat the accepted r84 Stage 3, HUD, deployment, content, full-test, lint, or build gates. Re-run only Design Lock 19/19, canonical six-file 55/55, exact eight-path BOM/EOL/deployment-byte/protected/static integrity, and `git diff --check`; then perform the immutable live-ref preflight, one normal commit, one non-force push, and observe only the resulting automatic focused CI. Do not rerun or dispatch a failed remote job. Do not edit the workflow before complete automatic focused green. Do not Ready, merge, tag, create a Release, or deploy official Pages.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r84 local acceptance is complete. Run governance/static read-back only, require live PR #171 still at `e8f5fb152acca9124fceead899734c5d368053ba` / `f58ccc5bc0e8a070cf002f13689e19c02920fe0b` with the fixed base, create the one exact-eight-path material-iteration-30 commit, push non-force once, and observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; complete green alone unlocks workflow-only iteration 31.**
+
+## 95. Revision r86 — no active Luna handoff / existing-commit credential transport
+
+Design Lock Section 102 and the latest explicitly labeled Issue #172 r86 lock are the sole active cursor. Sections 1-94 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R86_EXISTING_COMMIT_HOST_CREDENTIAL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `FAILED_GATE`: first r85 HTTPS push exited before ref update with Schannel `SEC_E_NO_CREDENTIALS`; automatic focused CI not created
+- `LAST_GREEN_GATE`: complete r84 local acceptance, r85 governance/static, exact-eight-path material commit and read-back; remote unchanged
+- `CLASSIFICATION`: `TRANSPORT_AUTHENTICATION_PRECONDITION / SANDBOX_HTTPS_SCHANNEL_SEC_E_NO_CREDENTIALS_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EXISTING_COMMIT_PRESERVATION + HOST_CREDENTIAL_CONTEXT_ONE_SHOT_NON_FORCE_PUSH / DIRECT_GITHUB_REMOTE + NO_SECRET_OUTPUT / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r86 governance/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: `e256d561` plus one r86 governance commit remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r86 governance/static only -> one four-path governance commit directly after preserved `e256d561` -> unchanged live-ref preflight -> one host-credential normal non-force push of the two-commit fast-forward chain -> exact remote SHA/tree read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> unchanged tail
+
+Do not amend, rebase, recreate, recommit, cherry-pick, reset, or discard `e256d5616eec58f44b62a5098223eaa45a6e70b6`. Do not repeat accepted r84 browser/content/full/lint/build gates. Change and commit only the four r86 governance paths, run Design Lock 19/19, canonical 55/55, exact static/protected integrity and `git diff --check`, then require live GitHub still at the audited r82 ref/base. Use one approved host credential context for one direct GitHub non-force push with interaction disabled and no secret output or credential/config mutation. Any denial/failure/ref mismatch/remote red returns to SOL_DESIGN without retry or alternate transport.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve material commit `e256d5616eec58f44b62a5098223eaa45a6e70b6` exactly. Commit only this r86 four-path governance packet as its direct child, verify the unchanged remote r82 cursor, then use one credential-bearing host-context normal non-force push of the two-commit fast-forward chain. Read back the exact remote SHA/tree and observe only its automatic focused CI. No retry, alternate transport, product gate repetition, workflow edit, or release action.**
+
+## 96. Revision r87 — no active Luna handoff / release-tail-complete credential transport
+
+Design Lock Section 103 and the latest explicitly labeled Issue #172 r87 lock are the sole active cursor. Sections 1-95 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R87_EXISTING_COMMIT_HOST_CREDENTIAL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `FAILED_GATE`: first r86 Design source run 18/19; active Handoff Section 95 omitted the required final Producer checkpoint token; no later gate ran
+- `LAST_GREEN_GATE`: first 18 r86 Design assertions including all credential-transport assertions; complete r84 local acceptance and r85 material commit remain accepted
+- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_TOKEN_OMISSION / R86_SECTION95_LACKS_FINAL_PRODUCER_CHECKPOINT_LITERAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r87 source/static/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: preserved material commit plus one r87 governance child remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: Design 19/19 -> canonical 55/55 -> exact governance/static read-back -> one four-path governance commit after preserved `e256d561` -> unchanged live-ref preflight -> one host-credential normal non-force push -> exact remote SHA/tree read-back -> one automatic focused CI -> unchanged tail
+
+Preserve `e256d5616eec58f44b62a5098223eaa45a6e70b6` exactly and apply all Section 102.2 credential/no-secret/no-config/no-force/no-retry rules. Do not repeat accepted r84 browser/content/full/lint/build gates. Complete automatic focused green alone unlocks workflow-only iteration 31, then local and remote unfiltered full Phase G 54/54, same-HEAD production runtime and SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit Producer approval only before Ready/integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — close only the r86 active-Handoff release-tail token omission, pass governance/static gates, commit these four governance paths as the direct child of preserved `e256d561`, then perform the one approved host-credential normal non-force push and exact remote read-back. Observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; no product gate repetition, alternate transport, workflow edit, or release action.**
