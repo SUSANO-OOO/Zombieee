@@ -22,7 +22,7 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
 - LAST_AUDITED_HEAD：`e8f5fb152acca9124fceead899734c5d368053ba`、tree `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`。これはr87が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。r83-r84 exact eight-path material iteration 30は全local acceptance greenとなり、r85 material commit `e256d5616eec58f44b62a5098223eaa45a6e70b6`／tree `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`を作成済み。最初のHTTPS pushはsandbox identityにcredentialがなくref更新前に停止し、remoteはr82のまま。r86は既存commitを作り直さず、四path governance childとcredential-bearing host contextのone-shot transportだけを許可する
-- current Design Lock：`V100-SOL-DL-001 r87` Sections 28-103。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界とr84 accepted source/runtime bytes、r85 material commit、r86 credential transport contractを維持し、active Handoff release-tail literalを閉じたmaterial iteration 30 transportへcursorを固定する。`PRODUCT_DESIGN_CHANGE: 0`
+- current Design Lock：`V100-SOL-DL-001 r88` Sections 28-104。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界とr84 accepted source/runtime bytes、r85 material commit、r87 governance commitを維持し、exact command-scoped ownership trustだけを許可したmaterial iteration 30 transportへcursorを固定する。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -186,22 +186,26 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r49-r52 iteration history：r49 correctionはiteration 20、r50 correctionはiteration 21、r51／r52 correctionはiteration 22、complete automatic green後のworkflow-only restorationはiteration 23。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r87 Section 103
+## 6. Version 1.0.0 execution cursor — r88 Section 104
 
-- `STATUS`: `DESIGN_LOCKED / R87_EXISTING_COMMIT_HOST_CREDENTIAL_TRANSPORT_READY`
+- `STATUS`: `DESIGN_LOCKED / R88_COMMAND_SCOPED_SAFE_DIRECTORY_TRANSPORT_READY`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
 - `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
 - `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
 - `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
 - `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
-- `FAILED_GATE`: first r86 Design source 18/19；sole failureはactive Handoff Section 95のfinal Producer checkpoint token omission；canonical／static／governance commit／transport未実行
-- `LAST_GREEN_GATE`: first 18 r86 Design assertions including entire credential transport packet；complete r84 local acceptanceとr85 material commitはacceptedのまま
-- `CLASSIFICATION`: `SOL_OWNED_ACTIVE_HANDOFF_RELEASE_TAIL_TOKEN_OMISSION / R86_SECTION95_LACKS_FINAL_PRODUCER_CHECKPOINT_LITERAL / REMEDIATION_LOCAL`
-- `REMEDIATION_CLASS`: `ACTIVE_HANDOFF_RELEASE_TAIL_LITERAL_CLOSURE / SOL_FINAL_REVIEW + ONE_FINAL_PRODUCER_CHECKPOINT_SENTENCE / GOVERNANCE_ONLY`
+- `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
+- `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
+- `FAILED_GATE`: first and only r87 host-context push；Git dubious-ownership guardがexact isolated worktreeをnetwork／authentication／ref update前に拒否；automatic focused CI未生成
+- `LAST_GREEN_GATE`: r87 Design 19/19、canonical 55/55、exact static/protected integrity、normal four-path governance commitとancestry/path read-back；remote unchanged
+- `CLASSIFICATION`: `HOST_CREDENTIAL_REPOSITORY_OWNERSHIP_PRECONDITION / EXACT_ISOLATED_WORKTREE_OWNED_BY_CODEXSANDBOXONLINE + HOST_USER_OKAITO_REJECTED_BEFORE_NETWORK / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_EXACT_SAFE_DIRECTORY + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_HOST_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
 - `PRODUCT_DESIGN_CHANGE`: `0`
-- `LOOP_ITERATION`: r82 transportはterminal material iteration 29；`e256d561`＋r87 governance childはmaterial iteration 30；complete automatic focused green後だけworkflow-only iteration 31
+- `LOOP_ITERATION`: r82 transportはterminal material iteration 29；`e256d561`＋`e1ba367`＋r88 governance childはmaterial iteration 30；complete automatic focused green後だけworkflow-only iteration 31
 - `SAME_GATE_REPEAT_COUNT`: `17`（CI #941 Phase Gはdependency-skippedのためexecuted-gate countは増やさない）
-- `RESUME_FROM`: active-Handoff release-tail literal closure -> Design 19/19 -> canonical 55/55 -> exact governance/static read-back -> one four-path r87 governance commit directly after preserved `e256d561` -> live PR #171 unchanged preflight -> one host-credential normal non-force push -> exact remote SHA/tree read-back -> one automatic focused CI -> complete green only -> unchanged tail
+- `RESUME_FROM`: r88 four-path governance/static -> one governance commit directly after preserved `e1ba367` -> live PR #171 unchanged preflight -> one host-context normal non-force push with exact command-scoped safe-directory only -> exact remote SHA/tree/parent read-back -> one automatic focused CI -> complete green only -> unchanged tail
+
+- Actual r87 transport return / r88 design: r87 Design 19/19、canonical 55/55、exact four-path／eight-path mixed-EOL・fixed-byte・protected-manifest・`git diff --check`はgreen。normal governance commit `e1ba3677b62520fe5d7dd829999e61586b484c71`／tree `5e7f0523db939be39a71468a279a8249fd420c74`／parent `e256d5616eec58f44b62a5098223eaa45a6e70b6`を作成し、tracked/index clean、protected三directoryだけを保持。live PRはpush直前もremote HEAD/tree `e8f5fb152acca9124fceead899734c5d368053ba`／`f58ccc5bc0e8a070cf002f13689e19c02920fe0b`、base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`。first and only host-context pushはrepo owner `CodexSandboxOnline`とhost user `okaito`の差をGit dubious-ownership guardが拒否し、network／authentication／ref update前に停止。直後のlive refもunchanged、CI 0、same-revision retry／alternate transport／persistent config 0。r88はexact worktree pathへのcommand-scoped `-c safe.directory=...`だけを許可し、`--global`／`--system`／`--local`／wildcard／credential output／forceを禁止する。既存`e256d561`／`e1ba367`は作り直さない。
 
 - Actual r86 source return / r87 design: first Design Lock runは19 total／18 pass／1 fail／cancelled／skipped／todo 0。r86 identity、commit/tree、classification、existing-commit preservation、host credential、one-shot non-force、no-secret、no-retry、owner/cursor assertionは全てgreen。sole failureはfinal all-revision guardがactive Handoff Section 95へ`FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` literalを要求した点。canonical／static／stage／commit／transport／remote 0。r87はsame four governance paths内でactive Handoff release-tail一文だけを閉じ、`e256d561`とr86 transport contractを変更しない。
 

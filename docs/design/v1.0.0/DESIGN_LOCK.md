@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r87`
+- Revision: `r88`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -5765,3 +5765,46 @@ Run Design Lock 19/19 first, then canonical six-file 55/55 and exact four-path-g
 - `RESUME_FROM`: one active-Handoff release-tail literal closure -> Design 19/19 -> canonical 55/55 -> static/protected -> one four-path governance commit after preserved `e256d561` -> unchanged live-ref preflight -> one host-credential normal non-force push -> exact remote read-back -> one automatic focused CI -> unchanged tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual 18/19 TAP output, active Handoff extraction, preserved local commit, r86 one-shot transport, no-gate-repetition rule, and complete approval-only release tail. Revision r87 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 104. Revision r88 — exact command-scoped repository ownership precondition
+
+### 104.1 r87 transport return and independent classification
+
+SOL completed the r87 governance/static sequence and created normal governance commit `e1ba3677b62520fe5d7dd829999e61586b484c71`, tree `5e7f0523db939be39a71468a279a8249fd420c74`, direct parent `e256d5616eec58f44b62a5098223eaa45a6e70b6`. The commit changes exactly the four governance paths. The complete range from remote r82 remains exactly the eight Section 99.2 paths; staged and unstaged tracked state is empty and the three protected forensic directories are the only untracked paths.
+
+Immediately before transport, live PR #171 was still Draft/open/unmerged/mergeable at HEAD `e8f5fb152acca9124fceead899734c5d368053ba`, tree `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`, base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`. The one r87 host-context push command exited before network authentication or remote ref update because Git rejected the exact isolated repository as dubious ownership: the repository is owned by `DESKTOP-9PR47JG/CodexSandboxOnline` while the approved credential-bearing host process runs as `DESKTOP-9PR47JG/okaito`. The command did not reach GitHub, no automatic CI was created, live GitHub remained unchanged after the failure, and SOL performed no same-revision retry, alternate transport, edit, credential mutation, or persistent `safe.directory` change.
+
+Classification is `HOST_CREDENTIAL_REPOSITORY_OWNERSHIP_PRECONDITION / EXACT_ISOLATED_WORKTREE_OWNED_BY_CODEXSANDBOXONLINE + HOST_USER_OKAITO_REJECTED_BEFORE_NETWORK / REMEDIATION_LOCAL`. Remediation is `COMMAND_SCOPED_EXACT_SAFE_DIRECTORY + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_HOST_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`. This is not authentication failure, ref rejection, non-fast-forward, commit/source/product failure, or CI evidence. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 104.2 Exact bounded remediation and execution
+
+Preserve material commit `e256d5616eec58f44b62a5098223eaa45a6e70b6` and governance commit `e1ba3677b62520fe5d7dd829999e61586b484c71` exactly. Revision r88 may change only `docs/design/v1.0.0/DESIGN_LOCK.md`, `docs/design/v1.0.0/LUNA_HANDOFF.md`, `docs/PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs` in one normal governance commit whose direct parent is `e1ba3677b62520fe5d7dd829999e61586b484c71`. Do not amend, squash, rebase, reset, recreate, cherry-pick, discard, or recommit either existing commit. No source, harness, app, workflow, package/lock, public/asset, evidence, product, gameplay, balance, AI, timing, acceptance, retry, release, or fifth path may change. The resulting three-commit fast-forward range from remote r82 must still change exactly the same eight paths.
+
+Do not repeat accepted r84 Stage 3, HUD, deployment, content, complete-test, lint, or build gates. Run only Design Lock 19/19, canonical six-file 55/55, exact four-path-governance/eight-path-range mixed-EOL/deployment-byte/P5-byte/protected integrity, committed ancestry and path topology, and `git diff --check`. Before transport, re-fetch live PR #171 and require the exact unchanged remote r82 HEAD/tree/base plus Draft/open/unmerged/mergeable state; require local ancestry `e8f5fb152 -> e256d561 -> e1ba367 -> r88-governance`, staged/unstaged tracked zero, and only the three protected untracked directories.
+
+Use one explicitly approved host credential context for exactly one normal non-force push. The only ownership exception is the exact command-scoped option `-c safe.directory=C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-sol-r9-3a40`; it applies only to that Git invocation and must not write Git configuration. The complete command is `git -c safe.directory=C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-sol-r9-3a40 -c credential.interactive=never push https://github.com/SUSANO-OOO/Zombieee.git HEAD:refs/heads/codex/v1.0.0-luna-implementation`. No `--global`, `--system`, `--local`, wildcard trust, parent-repository transport, remote mutation, credential query/output/persistence, force/force-with-lease, interactive credential fallback, alternate URL, second mechanism, or same-revision retry is permitted.
+
+After success, re-fetch GitHub and require the remote HEAD/tree to equal the exact r88 local commit/tree, with `e1ba3677b62520fe5d7dd829999e61586b484c71` as direct parent and `e256d5616eec58f44b62a5098223eaa45a6e70b6` as grandparent. Observe only the one automatic focused CI caused by that ref update. Any command denial, ownership mismatch, authentication failure, ref drift/rejection, remote SHA/tree mismatch, missing automatic run, first remote red, unexpected skip, dependency/order defect, or missing artifact returns to `SOL_DESIGN` without edit, retry, rerun, dispatch, alternate transport, or promotion.
+
+### 104.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R88_COMMAND_SCOPED_SAFE_DIRECTORY_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
+- `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
+- `FAILED_GATE`: first and only r87 host-context push; exact isolated repository rejected by Git dubious-ownership guard before network/auth/ref update; automatic CI not created
+- `LAST_GREEN_GATE`: r87 Design 19/19, canonical 55/55, exact static/protected integrity, normal four-path governance commit and ancestry/path read-back; remote remains unchanged
+- `CLASSIFICATION`: `HOST_CREDENTIAL_REPOSITORY_OWNERSHIP_PRECONDITION / EXACT_ISOLATED_WORKTREE_OWNED_BY_CODEXSANDBOXONLINE + HOST_USER_OKAITO_REJECTED_BEFORE_NETWORK / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_EXACT_SAFE_DIRECTORY + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_HOST_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r88 source/static/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: `e256d561`, `e1ba367`, and one r88 governance child remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r88 four-path governance/static -> one governance commit directly after preserved `e1ba367` -> unchanged live-ref preflight -> exact command-scoped-safe-directory host normal non-force push -> exact remote SHA/tree/parent read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> unchanged full/unfiltered/runtime/human/review/checkpoint/release tail
+
+The release tail remains unchanged: complete automatic focused green alone unlocks workflow-only iteration 31; then local unfiltered full Phase G 54/54 plus validators/full regressions, one workflow-only non-force transport, remote unfiltered required CI/full Phase G 54/54, same-HEAD production runtime and SOL human-player audits, final evidence freeze, fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual ownership-guard output, immutable local commit chain, unchanged live GitHub ref, exact command-scoped trust, no-persistent-config/no-secret/no-retry boundaries, accepted-gate preservation, automatic-CI causality, and approval-only release tail. Revision r88 has `High ambiguity: 0` and `Medium ambiguity: 0`.

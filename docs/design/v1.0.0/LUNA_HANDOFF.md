@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r87`
+- Canonical Design Lock: `V100-SOL-DL-001 r88`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-95 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 96 is the sole current execution handoff.
+Sections 1-96 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 97 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2798,3 +2798,28 @@ Design Lock Section 103 and the latest explicitly labeled Issue #172 r87 lock ar
 Preserve `e256d5616eec58f44b62a5098223eaa45a6e70b6` exactly and apply all Section 102.2 credential/no-secret/no-config/no-force/no-retry rules. Do not repeat accepted r84 browser/content/full/lint/build gates. Complete automatic focused green alone unlocks workflow-only iteration 31, then local and remote unfiltered full Phase G 54/54, same-HEAD production runtime and SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit Producer approval only before Ready/integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — close only the r86 active-Handoff release-tail token omission, pass governance/static gates, commit these four governance paths as the direct child of preserved `e256d561`, then perform the one approved host-credential normal non-force push and exact remote read-back. Observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; no product gate repetition, alternate transport, workflow edit, or release action.**
+
+## 97. Revision r88 — no active Luna handoff / exact command-scoped ownership trust
+
+Design Lock Section 104 and the latest explicitly labeled Issue #172 r88 lock are the sole active cursor. Sections 1-96 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R88_COMMAND_SCOPED_SAFE_DIRECTORY_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
+- `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
+- `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
+- `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
+- `FAILED_GATE`: first and only r87 host-context push; Git rejected exact isolated-worktree ownership before network/auth/ref update; automatic focused CI not created
+- `LAST_GREEN_GATE`: r87 Design 19/19, canonical 55/55, exact static/protected integrity, normal four-path governance commit, and ancestry/path read-back; remote unchanged
+- `CLASSIFICATION`: `HOST_CREDENTIAL_REPOSITORY_OWNERSHIP_PRECONDITION / EXACT_ISOLATED_WORKTREE_OWNED_BY_CODEXSANDBOXONLINE + HOST_USER_OKAITO_REJECTED_BEFORE_NETWORK / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_EXACT_SAFE_DIRECTORY + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_HOST_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r88 source/static/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: `e256d561`, `e1ba367`, and one r88 governance child remain material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r88 governance/static only -> one four-path governance commit directly after preserved `e1ba367` -> unchanged live-ref preflight -> one host-context normal non-force push using only the exact command-scoped safe-directory option -> exact remote SHA/tree/parent read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> local/remote unfiltered full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Preserve commits `e256d5616eec58f44b62a5098223eaa45a6e70b6` and `e1ba3677b62520fe5d7dd829999e61586b484c71` exactly. Change and commit only the four r88 governance paths. Do not repeat accepted r84 browser/content/full/lint/build gates. Run Design Lock 19/19, canonical 55/55, exact four-path/eight-path static and protected integrity, then require live GitHub still at the audited remote r82 ref/base. Execute exactly once: `git -c safe.directory=C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-sol-r9-3a40 -c credential.interactive=never push https://github.com/SUSANO-OOO/Zombieee.git HEAD:refs/heads/codex/v1.0.0-luna-implementation`. This command-scoped exact trust must not persist configuration. No global/system/local config write, wildcard, secret output, force, alternate URL/mechanism, or same-revision retry.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve `e256d561` and `e1ba367`, commit only this r88 four-path governance packet, re-fetch the unchanged remote r82 cursor, then perform the one exact command-scoped-safe-directory host normal non-force push and exact remote read-back. Observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; no product-gate repetition, persistent Git config, alternate transport, workflow edit, or release action.**
