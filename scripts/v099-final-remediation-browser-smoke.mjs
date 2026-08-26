@@ -1023,6 +1023,7 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   setPhase("navigation");
   lifecycle?.event("navigation start", { page });
   const viewport = page.viewportSize();
+  let deploymentSetupPresentationQuiescenceArm = null;
   try {
     const response = await page.goto(caseUrl(qaMode, {
       ...options,
@@ -1042,6 +1043,31 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
     lifecycle?.event("battle readiness start", { page });
     await waitForBattleReadiness(page, `${qaMode}/${viewport.width}x${viewport.height}`);
     lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
+    if (options.earlyDeploymentPresentationQuiescence === true) {
+      invariant(qaMode === "mission",
+        `${qaMode}: early deployment presentation quiescence is restricted to deployment QA`);
+      setPhase("deployment setup presentation quiescence");
+      deploymentSetupPresentationQuiescenceArm = await armDeploymentPresentationQuiescence(
+        page,
+        "deployment-first-frame",
+      );
+      const earlyArm = deploymentSetupPresentationQuiescenceArm.presentation;
+      invariant(earlyArm?.schema === "v100-qa-presentation-quiescence/v1"
+        && earlyArm.active === true
+        && earlyArm.owner === "deployment-first-frame"
+        && earlyArm.route === "deployment"
+        && earlyArm.datasetActive === true
+        && earlyArm.running === true
+        && earlyArm.paused !== true
+        && earlyArm.over !== true,
+      `${qaMode}/${viewport.width}x${viewport.height}: early deployment presentation quiescence did not arm ${JSON.stringify(earlyArm)}`);
+      lifecycle?.event("deployment setup presentation quiescence armed", {
+        page,
+        owner: earlyArm.owner,
+        armedAtPageTime: deploymentSetupPresentationQuiescenceArm.armedAtPageTime,
+        milestone: "deployment setup presentation quiescence armed",
+      });
+    }
     setPhase("post-readiness settling");
     try {
       await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
@@ -1065,8 +1091,17 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
     );
     await setupTrace?.capture();
     const setupTraceResult = setupTrace ? await setupTrace.stop() : null;
-    return { page, ...diagnosticControl, assetSetupBoundary, setupTrace: setupTraceResult };
+    return {
+      page,
+      ...diagnosticControl,
+      assetSetupBoundary,
+      setupTrace: setupTraceResult,
+      deploymentSetupPresentationQuiescenceArm,
+    };
   } catch (error) {
+    if (deploymentSetupPresentationQuiescenceArm) {
+      Object.assign(error, { deploymentSetupPresentationQuiescenceArm });
+    }
     if (setupTrace) {
       setupTrace.setPhase("failure");
       let failureScreenshot = null;
@@ -2416,15 +2451,8 @@ async function resumeDeploymentBattleForNextUnit(page, previousUnit, nextUnit, l
   }
 }
 
-async function withDeploymentPresentationQuiescence(
-  page,
-  owner,
-  label,
-  captureTrace,
-  operation,
-  checkpointArmRequest = null,
-) {
-  const armEnvelope = await page.evaluate(({ requestedOwner, requestedCheckpointArm }) => {
+async function armDeploymentPresentationQuiescence(page, owner, checkpointArmRequest = null) {
+  return page.evaluate(({ requestedOwner, requestedCheckpointArm }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
     if (typeof bridge?.setQaPresentationQuiesced !== "function"
       || typeof bridge?.getQaPresentationQuiescence !== "function") {
@@ -2450,8 +2478,27 @@ async function withDeploymentPresentationQuiescence(
     return {
       checkpointArm,
       presentation: bridge.setQaPresentationQuiesced(true, requestedOwner),
+      armedAtPageTime: Date.now(),
     };
   }, { requestedOwner: owner, requestedCheckpointArm: checkpointArmRequest });
+}
+
+async function withDeploymentPresentationQuiescence(
+  page,
+  owner,
+  label,
+  captureTrace,
+  operation,
+  checkpointArmRequest = null,
+  preArmedEnvelope = null,
+) {
+  invariant(preArmedEnvelope === null || checkpointArmRequest === null,
+    `${label}: pre-armed deployment presentation cannot add a checkpoint arm`);
+  const armEnvelope = preArmedEnvelope ?? await armDeploymentPresentationQuiescence(
+    page,
+    owner,
+    checkpointArmRequest,
+  );
   const arm = armEnvelope.presentation;
   if (captureTrace) await captureTrace();
   invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
@@ -2551,6 +2598,7 @@ async function withDeploymentPresentationQuiescence(
       schema: "v100-deployment-presentation-quiescence-receipt/v1",
       owner,
       checkpointArm: armEnvelope.checkpointArm,
+      armedAtPageTime: armEnvelope.armedAtPageTime,
       arm,
       release,
       restored,
@@ -3049,6 +3097,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   });
   let setupTrace = null;
   let assetSetupBoundary = null;
+  let deploymentSetupPresentationQuiescenceArm = null;
   let deploymentLifecyclePhase = "deployment setup";
   let activeDeploymentTrace = null;
   let activeUnitResult = null;
@@ -3066,14 +3115,35 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       "deployment/navigation-readiness-asset-boundary",
       { caseIdentity: name },
       async () => {
-        ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace, assetSetupBoundary } = await openBattlePage(
+        ({
+          page,
+          stop: stopDiagnostics,
+          diagnostics,
+          traceCounts,
+          setupTrace,
+          assetSetupBoundary,
+          deploymentSetupPresentationQuiescenceArm,
+        } = await openBattlePage(
           context,
           "mission",
-          { setupTrace: engine === "chromium", finiteAssets: true },
+          {
+            setupTrace: engine === "chromium",
+            finiteAssets: true,
+            earlyDeploymentPresentationQuiescence: true,
+          },
           lifecycle,
         ));
         if (setupTrace) result.setupTrace = setupTrace;
         result.assetSetupBoundary = assetSetupBoundary;
+        result.deploymentSetupPresentationQuiescenceArm = deploymentSetupPresentationQuiescenceArm;
+        invariant(deploymentSetupPresentationQuiescenceArm?.presentation?.active === true
+          && deploymentSetupPresentationQuiescenceArm.presentation.owner === "deployment-first-frame"
+          && Number.isFinite(deploymentSetupPresentationQuiescenceArm.armedAtPageTime)
+          && deploymentSetupPresentationQuiescenceArm.armedAtPageTime <= assetSetupBoundary.boundaryAt,
+        `${name}: deployment presentation was not armed before the asset boundary ${JSON.stringify({
+          deploymentSetupPresentationQuiescenceArm,
+          assetSetupBoundary,
+        })}`);
         await loadedCrawlerAssets(page, name);
       },
     );
@@ -3179,6 +3249,8 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           );
           return { unitAsset, prepared, firstFrame };
         },
+        null,
+        unitIndex === 0 ? deploymentSetupPresentationQuiescenceArm : null,
       );
       const firstFrameBeforeProductionReadback = {
         ...firstFrameEnvelope.value.firstFrame,
@@ -3418,6 +3490,9 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
     result.status = "passed";
   } catch (error) {
     result.error = String(error);
+    if (error?.deploymentSetupPresentationQuiescenceArm) {
+      result.deploymentSetupPresentationQuiescenceArm = error.deploymentSetupPresentationQuiescenceArm;
+    }
     if (error?.setupTrace) result.setupTrace = error.setupTrace;
     if (error?.setupTracePageSignals) result.setupTracePageSignals = error.setupTracePageSignals;
     if (error?.setupTraceLastReadableSnapshot) {

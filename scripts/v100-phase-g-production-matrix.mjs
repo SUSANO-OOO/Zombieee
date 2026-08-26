@@ -5091,6 +5091,28 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     return state;
   };
+  let bossFrontlineContactLatch = null;
+  const latchBossFrontlineContact = (contactState, observationPhase) => {
+    if (bossFrontlineContactLatch || !proofActorRequiresContactFirst) return bossFrontlineContactLatch;
+    const exactAttackObserved = proofActorAttackObserved === true;
+    const liveHumanTargetObserved = contactState?.hasLiveHumanTarget === true;
+    if (!exactAttackObserved && !liveHumanTargetObserved) return null;
+    bossFrontlineContactLatch = Object.freeze({
+      reason: exactAttackObserved
+        ? "exact-proof-actor-attack-observed"
+        : "current-live-human-target-observed",
+      observationPhase,
+      actor: proofActor,
+      exactAttackObserved,
+      liveHumanTargetObserved,
+      sourceId: contactState?.sourceId ?? null,
+      targetId: contactState?.targetId ?? null,
+      targetKind: contactState?.targetKind ?? null,
+      productionTime: contactState?.productionTime ?? null,
+    });
+    recorder?.clearAwaiting();
+    return bossFrontlineContactLatch;
+  };
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
     const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
@@ -5452,6 +5474,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
     } else {
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
+        if (proofActorRequiresContactFirst) {
+          await observeProofActorAttack();
+          const contactState = proofActorAttackObserved
+            ? null
+            : await readProofActorContactState();
+          latchBossFrontlineContact(contactState, "before-next-slot");
+          if (bossFrontlineContactLatch) break;
+        }
         let deployed = false;
         recorder?.setAwaiting("boss-frontline-deployment", { slot: deployment + 1, predicate: "a real ready boss-frontline card is accepted by production runtime" });
         for (let attempt = 0; attempt < 180; attempt += 1) {
@@ -5459,11 +5489,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
-          if (proofActorRequiresContactFirst && !proofActorAttackObserved) {
+          if (proofActorRequiresContactFirst) {
             const contactState = await waitForProofActorContact();
-            if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) {
-              break;
-            }
+            latchBossFrontlineContact(contactState, "before-candidate-sample");
+            if (bossFrontlineContactLatch) break;
           }
           const candidateSample = await readBattleDeploymentDiagnostics(page, {
             requestedSlot: deployment + 1,
@@ -5505,20 +5534,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               deployed = true;
               if (kind) deployedKinds.add(kind);
               if (kind === proofUnitKind) proofUnitDeployed = true;
-              if (proofActorRequiresContactFirst && !proofActorAttackObserved) {
+              if (proofActorRequiresContactFirst) {
                 const contactState = await waitForProofActorContact();
-                if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) break;
+                latchBossFrontlineContact(contactState, "after-accepted-pointer");
+                if (bossFrontlineContactLatch) break;
               }
               break;
             }
           }
           await page.waitForTimeout(400);
         }
-        // A proof actor's first contact is only the opening condition. Keep
-        // using the real ready cards until the authored boss is live so the
-        // production target set remains populated through the boss attack
-        // window; stopping at contact alone can leave a live boss without a
-        // human target after the opening three units are defeated.
+        // Contact-first setup is terminal once the exact proof actor has
+        // genuinely attacked or currently owns a living human target.  Do not
+        // let an already-observed attack skip the guard and start a later real
+        // pointer; the completed production formation is the release input.
+        if (bossFrontlineContactLatch) break;
         if (await bossIsLive()) break;
         if (!deployed) {
           const proofActorState = await readProofActorContactState();
@@ -5540,6 +5570,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     recorder?.mark("frontline-deployment-sequence-completed", "completed", {
       attemptedSlots: [...new Set(deploymentTrace.map((entry) => entry.slot))],
       terminalCardStates: deploymentTrace.filter((entry) => entry.accepted === true).map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
+      contactFirstTerminalHandoff: bossFrontlineContactLatch,
     });
     if (presentationQuiescenceArm) {
       // Drain every host-side player action while presentation is still held.

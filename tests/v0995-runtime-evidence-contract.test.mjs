@@ -255,7 +255,7 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(presentationBridge, /state\.owner !== requestedOwner \|\| state\.route !== route/u);
   assert.match(presentationBridge, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
   assert.doesNotMatch(presentationBridge, /g\.time\s*=|g\.fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=/u);
-  const crossUnitResumeHarness = finalRemediationHarness.match(/async function resumeDeploymentBattleForNextUnit[\s\S]+?(?=\nasync function withDeploymentPresentationQuiescence)/u)?.[0] ?? "";
+  const crossUnitResumeHarness = finalRemediationHarness.match(/async function resumeDeploymentBattleForNextUnit[\s\S]+?(?=\nasync function armDeploymentPresentationQuiescence)/u)?.[0] ?? "";
   assert.ok(crossUnitResumeHarness.length > 0, "missing bounded cross-unit live-battle resume owner");
   assert.match(crossUnitResumeHarness, /getCrawlerDeploymentProofSnapshot\(\{ kind: previousKind \}\)/u);
   assert.match(crossUnitResumeHarness, /getQaPresentationQuiescence\(\)/u);
@@ -272,13 +272,21 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(crossUnitResumeHarness, /schema: "v100-deployment-cross-unit-live-resume\/v1"/u);
   assert.match(crossUnitResumeHarness, /previousUnit: \{ family: previousUnit\.family, kind: previousUnit\.kind \}[\s\S]*nextUnit: \{ family: nextUnit\.family, kind: nextUnit\.kind \}/u);
   assert.doesNotMatch(crossUnitResumeHarness, /waitForFunction|waitForTimeout|newPage|newContext|browser\.new|queueCrawlerDefenseUnit|prepareCrawlerDefenseProof|\.(?:paused|running|over)\s*=(?!=)/u);
-  const presentationHarness = finalRemediationHarness.match(/async function withDeploymentPresentationQuiescence[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
+  const presentationArmHarness = finalRemediationHarness.match(/async function armDeploymentPresentationQuiescence[\s\S]+?(?=\nasync function withDeploymentPresentationQuiescence)/u)?.[0] ?? "";
+  assert.ok(presentationArmHarness.length > 0, "missing deployment presentation quiescence arm owner");
+  assert.match(presentationArmHarness, /setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(presentationArmHarness, /requestedCheckpointArm/u);
+  assert.match(presentationArmHarness, /armCrawlerDeploymentCheckpoint\([\s\S]*setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(presentationArmHarness, /armedAtPageTime: Date\.now\(\)/u);
+  assert.doesNotMatch(presentationArmHarness, /setQaPresentationQuiesced\?\.\(false|waitForFunction|waitForTimeout|\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=/u);
+  const presentationHarness = finalRemediationHarness.match(/async function withDeploymentPresentationQuiescence[\s\S]+?(?=\nasync function withDeploymentCanvasCaptureQuiescence)/u)?.[0] ?? "";
   assert.ok(presentationHarness.length > 0, "missing deployment presentation quiescence owner");
-  assert.match(presentationHarness, /setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(presentationHarness, /preArmedEnvelope = null/u);
+  assert.match(presentationHarness, /preArmedEnvelope === null \|\| checkpointArmRequest === null/u);
+  assert.match(presentationHarness, /preArmedEnvelope \?\? await armDeploymentPresentationQuiescence\([\s\S]*checkpointArmRequest/u);
   assert.match(presentationHarness, /setQaPresentationQuiesced\?\.\(false, requestedOwner\)/u);
-  assert.match(presentationHarness, /requestedCheckpointArm/u);
-  assert.match(presentationHarness, /armCrawlerDeploymentCheckpoint\([\s\S]*setQaPresentationQuiesced\(true, requestedOwner\)/u);
   assert.match(presentationHarness, /checkpointArm: armEnvelope\.checkpointArm/u);
+  assert.match(presentationHarness, /armedAtPageTime: armEnvelope\.armedAtPageTime/u);
   assert.match(presentationHarness, /release\.paused === true/u);
   assert.match(presentationHarness, /releasedAtRenderFrames\) === Number\(release\.enteredAtRenderFrames/u);
   assert.match(presentationHarness, /releasedAtSimulationTicks\) > Number\(release\.enteredAtSimulationTicks/u);
@@ -298,6 +306,21 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(evidenceCaptureHarness, /preCapture,/u);
   assert.doesNotMatch(evidenceCaptureHarness, /setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint|auditFighterUnitLayer|\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=/u);
   assert.doesNotMatch(presentationHarness, /\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=|setGraphicsQuality|force\s*:/u);
+  const openBattlePageHarness = finalRemediationHarness.match(/async function openBattlePage[\s\S]+?(?=\nasync function clientPointForWorld)/u)?.[0] ?? "";
+  assert.ok(openBattlePageHarness.length > 0, "missing battle setup owner");
+  const battleReadinessCompleteIndex = openBattlePageHarness.indexOf('"battle readiness complete"');
+  const earlyDeploymentGuardIndex = openBattlePageHarness.indexOf("options.earlyDeploymentPresentationQuiescence === true");
+  const earlyDeploymentArmIndex = openBattlePageHarness.indexOf("await armDeploymentPresentationQuiescence(", earlyDeploymentGuardIndex);
+  const postReadinessIndex = openBattlePageHarness.indexOf('setPhase("post-readiness settling")');
+  const assetBoundaryIndex = openBattlePageHarness.indexOf("await sealAssetSetupBoundary(");
+  assert.ok(battleReadinessCompleteIndex >= 0
+    && battleReadinessCompleteIndex < earlyDeploymentGuardIndex
+    && earlyDeploymentGuardIndex < earlyDeploymentArmIndex
+    && earlyDeploymentArmIndex < postReadinessIndex
+    && postReadinessIndex < assetBoundaryIndex,
+  "deployment presentation must arm immediately after battle readiness and before settling/asset sealing");
+  assert.match(openBattlePageHarness, /qaMode === "mission"[\s\S]*"deployment-first-frame"/u);
+  assert.match(openBattlePageHarness, /deploymentSetupPresentationQuiescenceArm,[\s\S]*catch \(error\)[\s\S]*Object\.assign\(error, \{ deploymentSetupPresentationQuiescenceArm \}\)/u);
   const postRestorationReadback = finalRemediationHarness.match(/async function refreshDeploymentEvidenceAfterRestoredFrames[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
   assert.ok(postRestorationReadback.length > 0, "missing post-restoration production snapshot readback");
   assert.equal((postRestorationReadback.match(/getCrawlerDeploymentProofSnapshot/gu) ?? []).length, 1);
@@ -310,6 +333,9 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(postRestorationReadback, /v100-deployment-post-restoration-readback\/v1/u);
   assert.doesNotMatch(postRestorationReadback, /auditFighterUnitLayer|requestAnimationFrame|waitForFunction|page\.waitForTimeout|hostTurn|document\.querySelector|setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint/u);
   const presentationDeploymentCase = finalRemediationHarness.match(/async function runDeploymentCase[\s\S]+?(?=\nconst buildIdentityAtStart)/u)?.[0] ?? "";
+  assert.match(presentationDeploymentCase, /earlyDeploymentPresentationQuiescence: true/u);
+  assert.match(presentationDeploymentCase, /deploymentSetupPresentationQuiescenceArm\.armedAtPageTime <= assetSetupBoundary\.boundaryAt/u);
+  assert.match(presentationDeploymentCase, /result\.deploymentSetupPresentationQuiescenceArm = deploymentSetupPresentationQuiescenceArm/u);
   assert.match(presentationDeploymentCase, /for \(const \[unitIndex, unit\] of deploymentUnits\.entries\(\)\)/u);
   assert.match(presentationDeploymentCase, /crossUnitLiveResume: null/u);
   assert.match(presentationDeploymentCase, /if \(unitIndex > 0\)[\s\S]*previousUnit\?\.status === "passed"[\s\S]*previousUnit\.checkpoints\.at\(-1\)\?\.checkpoint === "fully-outside"/u);
@@ -351,6 +377,7 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/fixture-preparation"/gu) ?? []).length, 1);
   assert.equal((firstFrameQuiescenceRegion.match(/"deployment\/first-frame-queue-readback"/gu) ?? []).length, 1);
   assert.equal((firstFrameQuiescenceRegion.match(/queueAndPauseAtFirstDeploymentFrame\(/gu) ?? []).length, 1);
+  assert.match(firstFrameQuiescenceRegion, /null,[\s\S]*unitIndex === 0 \? deploymentSetupPresentationQuiescenceArm : null/u);
   assert.match(firstFrameQuiescenceRegion, /const firstFrame = await withDeploymentDiagnosticOperation\(\s*lifecycle,\s*"deployment\/first-frame-queue-readback",\s*unitDetails,\s*\(\) => queueAndPauseAtFirstDeploymentFrame\(/u);
   assert.doesNotMatch(firstFrameQuiescenceRegion, /withDeploymentDiagnosticOperation\(\s*lifecycle,\s*"deployment\/first-frame-queue-readback",[\s\S]+?\(\) => withDeploymentPresentationQuiescence\(/u);
   assert.doesNotMatch(firstFrameQuiescenceRegion, /\(\) => withDeploymentDiagnosticOperation\([\s\S]+?withDeploymentDiagnosticOperation\(/u);
