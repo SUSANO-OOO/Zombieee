@@ -120,9 +120,94 @@ async function waitForFinalCutPredicateFromNode({ page, cueFragment, expectedSce
   }
 }
 
-async function withStage3FinalPresentationSuppression({ page, label, operation }) {
+async function waitForFinalFifoFromNode({
+  page,
+  finalLines,
+  cueFragment,
+  expectedSceneId,
+  requireActiveBgm,
+  label,
+  timeoutMs = timeout,
+}) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({
+      finalLines: expectedLines,
+      cueFragment: expectedCueFragment,
+      expectedSceneId: expectedAudioScene,
+      requireActiveBgm: mustHaveActiveBgm,
+    }) => {
+      const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
+      const observedLines = expectedLines.map((line) => ({
+        ...line,
+        matched: samples.some((sample) => (
+          sample.snapshot?.bossDefeated === false
+          && sample.audioScene === expectedAudioScene
+          && (!mustHaveActiveBgm || sample.audioSceneState?.bgmAssetId === "music-boss")
+          && sample.snapshot?.battleBarks?.active?.some((bark) => (
+            bark.scripted === true
+            && bark.scriptedCueId?.includes(expectedCueFragment)
+            && bark.speaker === line.speaker
+            && bark.text === line.text
+          ))
+        )),
+      }));
+      return {
+        sampleCount: samples.length,
+        observedLines,
+        matched: observedLines.every((line) => line.matched),
+      };
+    }, { finalLines, cueFragment, expectedSceneId, requireActiveBgm });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.matched) return lastEvidence;
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(`${label} remaining final FIFO timed out after ${timeoutMs}ms`, lastEvidence);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
+async function withStage3FinalPresentationSuppression({
+  page,
+  label,
+  operation,
+  resumeButton = null,
+}) {
   const owner = "p5-stage3-final-cut";
-  const arm = await page.evaluate(({ requestedOwner }) => {
+  const resumeButtonHandle = resumeButton ? await resumeButton.elementHandle() : null;
+  invariant(resumeButton === null || resumeButtonHandle !== null,
+    `${label} real resume button handle is unavailable`);
+  let arm;
+  try {
+    arm = await page.evaluate(({ requestedOwner, resumeElement }) => {
+    let resumeBoundary = null;
+    if (resumeElement !== null) {
+      if (!(resumeElement instanceof HTMLButtonElement)
+        || resumeElement.disabled
+        || resumeElement.getAttribute("aria-disabled") === "true"
+        || resumeElement.textContent?.trim() !== "作戦を再開") {
+        throw new Error("P5_STAGE3_FINAL_REAL_RESUME_BUTTON_INVALID");
+      }
+      resumeElement.click();
+      const resumedSnapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      if (resumedSnapshot?.paused !== false) {
+        throw new Error("P5_STAGE3_FINAL_REAL_RESUME_NOT_ACCEPTED");
+      }
+      resumeBoundary = {
+        schema: "p5-stage3-final-real-resume-boundary/v1",
+        pageNow: performance.now(),
+        snapshot: resumedSnapshot,
+      };
+    }
     const parameters = new URLSearchParams(location.search);
     const localRoute = ["localhost", "127.0.0.1"].includes(location.hostname)
       && parameters.get("qa") === "endgame"
@@ -150,6 +235,7 @@ async function withStage3FinalPresentationSuppression({ page, label, operation }
         owner: requestedOwner,
         mode: "app-bridge",
         enteredAtBattleTime: Number(snapshot.time),
+        resumeBoundary,
         bridgeArm: receipt,
       };
       window.__P5_STAGE3_FINAL_PRESENTATION_STATE__ = state;
@@ -174,6 +260,7 @@ async function withStage3FinalPresentationSuppression({ page, label, operation }
       owner: requestedOwner,
       mode: "base-dom-suppression",
       enteredAtBattleTime: Number(snapshot.time),
+      resumeBoundary,
       battleRoot,
       battleRootStyle: battleRoot.getAttribute("style"),
       pausedAnimations: runningAnimations,
@@ -188,10 +275,18 @@ async function withStage3FinalPresentationSuppression({ page, label, operation }
       owner: state.owner,
       mode: state.mode,
       enteredAtBattleTime: state.enteredAtBattleTime,
+      resumeBoundary: state.resumeBoundary,
       pausedAnimationCount: state.pausedAnimationCount,
       entryCanvas: state.entryCanvas,
     };
-  }, { requestedOwner: owner });
+    }, { requestedOwner: owner, resumeElement: resumeButtonHandle });
+  } finally {
+    await resumeButtonHandle?.dispose();
+  }
+  invariant(resumeButton === null || (
+    arm?.resumeBoundary?.schema === "p5-stage3-final-real-resume-boundary/v1"
+    && arm.resumeBoundary.snapshot?.paused === false
+  ), `${label} did not atomically bind the real resume boundary to presentation ownership`);
 
   let value;
   let operationError = null;
@@ -233,6 +328,7 @@ async function withStage3FinalPresentationSuppression({ page, label, operation }
             mode: state.mode,
             enteredAtBattleTime: state.enteredAtBattleTime,
             releasedAtBattleTime: Number(snapshot?.time),
+            resumeBoundary: state.resumeBoundary,
             bridgeArm: state.bridgeArm,
             bridgeRelease: receipt,
             resumedAnimationCount: receipt.resumedAnimationCount,
@@ -262,6 +358,7 @@ async function withStage3FinalPresentationSuppression({ page, label, operation }
           mode: state.mode,
           enteredAtBattleTime: state.enteredAtBattleTime,
           releasedAtBattleTime: Number(snapshot?.time),
+          resumeBoundary: state.resumeBoundary,
           pausedAnimationCount: state.pausedAnimationCount,
           resumedAnimationCount,
           entryCanvas: state.entryCanvas,
@@ -1983,6 +2080,7 @@ async function pauseAndVerifyFrozenScriptedBark({
   cueFragment,
   label,
   whilePaused = null,
+  deferResume = false,
 }) {
   await page.waitForFunction(
     ({ cueFragment }) => {
@@ -2021,6 +2119,17 @@ async function pauseAndVerifyFrozenScriptedBark({
 
   const resumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
   await resumeButton.waitFor({ state: "visible", timeout });
+  if (deferResume) {
+    return {
+      before,
+      paused,
+      held,
+      resumeButton,
+      resumed: null,
+      resumeBoundary: null,
+      scriptedLineId: beforeBark.id,
+    };
+  }
   // Sample the resume boundary in the same page task that dispatches the real
   // button handler.  A Node-side click followed by a second IPC round-trip can
   // miss several live simulation ticks on a loaded hosted runner and must not
@@ -2323,30 +2432,39 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     });
     result.finalCutPredicate = finalCutPresentation.value;
     result.finalCutPresentationSuppression = finalCutPresentation.receipt;
-    const pauseEvidence = await pauseAndVerifyFrozenScriptedBark({
+    const deferredPauseEvidence = await pauseAndVerifyFrozenScriptedBark({
       page,
       cueFragment: "stage-takuya-final-v070",
       label: `${label}/pause`,
+      deferResume: true,
     });
     const finalLines = STORY_EVENTS["stage-takuya-final-v070"].lines.map(({ speaker, text }) => ({ speaker, text }));
-    await page.waitForFunction(
-      ({ finalLines, expectedSceneId, requireActiveBgm }) => {
-        const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
-        return finalLines.every((line) => samples.some((sample) => (
-          sample.snapshot?.bossDefeated === false
-          && sample.audioScene === expectedSceneId
-          && (!requireActiveBgm || sample.audioSceneState?.bgmAssetId === "music-boss")
-          && sample.snapshot?.battleBarks?.active?.some((bark) => (
-            bark.scripted === true
-            && bark.scriptedCueId?.includes("stage-takuya-final-v070")
-            && bark.speaker === line.speaker
-            && bark.text === line.text
-          ))
-        )));
-      },
-      { finalLines, expectedSceneId: expectedTakuyaBossSceneId, requireActiveBgm: !audioBlocked },
-      { timeout, polling: 50 },
-    );
+    const finalFifoPresentation = await withStage3FinalPresentationSuppression({
+      page,
+      label: `${label}/remaining-final-fifo`,
+      resumeButton: deferredPauseEvidence.resumeButton,
+      operation: () => waitForFinalFifoFromNode({
+        page,
+        finalLines,
+        cueFragment: "stage-takuya-final-v070",
+        expectedSceneId: expectedTakuyaBossSceneId,
+        requireActiveBgm: !audioBlocked,
+        label: `${label}/remaining-final-fifo`,
+        timeoutMs: timeout,
+      }),
+    });
+    const resumeBoundary = finalFifoPresentation.receipt.arm.resumeBoundary;
+    const resumed = resumeBoundary.snapshot;
+    const resumedBark = activeScriptedBark(resumed, "stage-takuya-final-v070");
+    invariant(resumedBark?.id === deferredPauseEvidence.scriptedLineId,
+      `${label} did not restore the frozen scripted line under the second presentation owner`);
+    const { resumeButton: _resumeButton, ...pauseEvidenceBeforeResume } = deferredPauseEvidence;
+    const pauseEvidence = {
+      ...pauseEvidenceBeforeResume,
+      resumed,
+      resumeBoundary,
+    };
+    result.finalFifoPresentationSuppression = finalFifoPresentation.receipt;
     const defeatProofSetup = await page.evaluate(() => (
       window.__ASHFALL_BATTLE_QA__?.prepareTakuyaBossDefeatAudioProof?.() ?? null
     ));

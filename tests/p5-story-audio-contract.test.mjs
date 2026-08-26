@@ -733,9 +733,26 @@ test("P5 final-cut keeps simulation and audio live while bounding WebKit present
   const suppression = browserSmokeSource.match(
     /async function withStage3FinalPresentationSuppression[\s\S]+?(?=\nasync function closePlaywrightResource)/u,
   )?.[0] ?? "";
+  const remainingFifoWaiter = browserSmokeSource.match(
+    /async function waitForFinalFifoFromNode[\s\S]+?(?=\nasync function withStage3FinalPresentationSuppression)/u,
+  )?.[0] ?? "";
   assert.ok(suppression.length > 0, "missing bounded Stage 3 final-cut presentation owner");
+  assert.ok(remainingFifoWaiter.length > 0, "missing Node-owned remaining final FIFO wait");
+  assert.match(remainingFifoWaiter, /await page\.evaluate/u);
+  assert.match(remainingFifoWaiter, /const observedLines = expectedLines\.map/u);
+  assert.match(remainingFifoWaiter, /sample\.snapshot\?\.bossDefeated === false/u);
+  assert.match(remainingFifoWaiter, /sample\.audioScene === expectedAudioScene/u);
+  assert.match(remainingFifoWaiter, /sample\.audioSceneState\?\.bgmAssetId === "music-boss"/u);
+  assert.match(remainingFifoWaiter, /observedLines\.every\(\(line\) => line\.matched\)/u);
+  assert.match(remainingFifoWaiter, /setTimeout\(resolve, Math\.min\(50, remainingMs\)\)/u);
+  assert.match(remainingFifoWaiter, /timeoutMs = timeout/u);
+  assert.match(remainingFifoWaiter, /new TimeoutError/u);
+  assert.doesNotMatch(remainingFifoWaiter, /page\.waitForFunction|Promise\.all|setInterval/u);
   assert.match(suppression, /parameters\.get\("qa"\) === "endgame"[\s\S]*parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
   assert.match(suppression, /const owner = "p5-stage3-final-cut"/u);
+  assert.match(suppression, /const resumeButtonHandle = resumeButton \? await resumeButton\.elementHandle\(\) : null/u);
+  assert.match(suppression, /resumeElement\.click\(\);[\s\S]*resumedSnapshot\?\.paused !== false[\s\S]*setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(suppression, /p5-stage3-final-real-resume-boundary\/v1/u);
   assert.match(suppression, /snapshot\.running !== true \|\| snapshot\.paused === true \|\| snapshot\.over === true/u);
   assert.match(suppression, /typeof bridge\?\.setQaPresentationQuiesced === "function"/u);
   assert.match(suppression, /receipt\.route === "stage3-final"/u);
@@ -755,10 +772,24 @@ test("P5 final-cut keeps simulation and audio live while bounding WebKit present
   const finalAuditStart = browserSmokeSource.indexOf("async function auditTakuyaFinalAudio");
   const suppressionCall = browserSmokeSource.indexOf("const finalCutPresentation = await withStage3FinalPresentationSuppression", finalAuditStart);
   const exactPredicateCall = browserSmokeSource.indexOf("operation: () => waitForFinalCutPredicateFromNode", suppressionCall);
-  const pauseCall = browserSmokeSource.indexOf("const pauseEvidence = await pauseAndVerifyFrozenScriptedBark", exactPredicateCall);
-  assert.ok(finalAuditStart >= 0 && finalAuditStart < suppressionCall && suppressionCall < exactPredicateCall && exactPredicateCall < pauseCall);
+  const pauseCall = browserSmokeSource.indexOf("const deferredPauseEvidence = await pauseAndVerifyFrozenScriptedBark", exactPredicateCall);
+  const deferredResume = browserSmokeSource.indexOf("deferResume: true", pauseCall);
+  const finalFifoCall = browserSmokeSource.indexOf("const finalFifoPresentation = await withStage3FinalPresentationSuppression", deferredResume);
+  const realResumeOwner = browserSmokeSource.indexOf("resumeButton: deferredPauseEvidence.resumeButton", finalFifoCall);
+  const remainingFifoWait = browserSmokeSource.indexOf("operation: () => waitForFinalFifoFromNode", realResumeOwner);
+  assert.ok(finalAuditStart >= 0
+    && finalAuditStart < suppressionCall
+    && suppressionCall < exactPredicateCall
+    && exactPredicateCall < pauseCall
+    && pauseCall < deferredResume
+    && deferredResume < finalFifoCall
+    && finalFifoCall < realResumeOwner
+    && realResumeOwner < remainingFifoWait);
   assert.match(browserSmokeSource, /activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches/u);
-  assert.equal((browserSmokeSource.match(/await withStage3FinalPresentationSuppression\(\{/gu) ?? []).length, 1);
+  assert.equal((browserSmokeSource.match(/await withStage3FinalPresentationSuppression\(\{/gu) ?? []).length, 2);
+  assert.match(browserSmokeSource, /if \(deferResume\)[\s\S]*resumeButton,[\s\S]*resumed: null/u);
+  assert.match(browserSmokeSource, /finalFifoPresentation\.receipt\.arm\.resumeBoundary[\s\S]*did not restore the frozen scripted line under the second presentation owner/u);
+  assert.match(browserSmokeSource, /result\.finalFifoPresentationSuppression = finalFifoPresentation\.receipt/u);
 });
 
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {

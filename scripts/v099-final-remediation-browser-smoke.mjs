@@ -1640,6 +1640,86 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
   };
 }
 
+async function captureDeploymentBannerHudState({
+  page,
+  viewport,
+  axisName,
+  stateId,
+  label,
+  lifecycle,
+  resumeAfterCapture,
+}) {
+  const firstFrameEnvelope = await withDeploymentPresentationQuiescence(
+    page,
+    "deployment-first-frame",
+    `${label}/fully-inside`,
+    null,
+    () => queueAndPauseAtFirstDeploymentFrame(page, "kumaverson", label),
+  );
+  const start = firstFrameEnvelope.value;
+  invariant(start.audit?.deploymentPlan?.checkpoint === "fully-inside",
+    `${label}: deployment banner did not freeze the production progress-0 frame`);
+  const fighterId = start.fighter?.id ?? null;
+  invariant(Number.isInteger(fighterId), `${label}: deployment banner fighter identity is unavailable`);
+
+  const firstVisibleCheckpoint = CRAWLER_DEPLOYMENT_CHECKPOINTS[1];
+  const firstFrameHandoff = await withDeploymentCanvasCaptureQuiescence(
+    page,
+    `${label}/fully-inside-handoff`,
+    async () => ({ schema: "v100-deployment-hud-owner-transition/v1" }),
+    firstFrameEnvelope.preArmedEvidenceCapture,
+    {
+      type: "checkpoint",
+      fighterId,
+      checkpoint: firstVisibleCheckpoint.id,
+      minimumProgress: firstVisibleCheckpoint.progress,
+    },
+  );
+  invariant(firstFrameHandoff.value?.schema === "v100-deployment-hud-owner-transition/v1"
+    && firstFrameHandoff.nextPresentationEnvelope?.checkpointArm?.fighterId === fighterId,
+  `${label}: deployment HUD did not hand off to the first-visible owner`);
+
+  const firstVisibleEnvelope = await withDeploymentPresentationQuiescence(
+    page,
+    "deployment-checkpoint-advance",
+    `${label}/first-visible`,
+    null,
+    (checkpointArm) => pauseAtDeploymentCheckpoint(
+      page,
+      fighterId,
+      firstVisibleCheckpoint.id,
+      firstVisibleCheckpoint.progress,
+      `${label}/first-visible`,
+      null,
+      checkpointArm,
+    ),
+    null,
+    firstFrameHandoff.nextPresentationEnvelope,
+  );
+  const visible = firstVisibleEnvelope.value;
+  invariant(visible.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
+    `${label}: the first visible Kumaverson frame is still hidden behind the vehicle`);
+
+  const captureEnvelope = await withDeploymentCanvasCaptureQuiescence(
+    page,
+    `${label}/hud-capture`,
+    () => captureHudState(page, viewport, axisName, stateId, lifecycle),
+    firstVisibleEnvelope.preArmedEvidenceCapture,
+    resumeAfterCapture ? { type: "resume" } : null,
+  );
+  return {
+    ...captureEnvelope.value,
+    deploymentPresentationOwnership: {
+      schema: "v100-deployment-hud-presentation-ownership/v1",
+      firstFrame: firstFrameEnvelope.presentationQuiescence,
+      firstFrameEvidence: firstFrameHandoff.receipt,
+      firstVisible: firstVisibleEnvelope.presentationQuiescence,
+      capture: captureEnvelope.receipt,
+      resumeAfterCapture,
+    },
+  };
+}
+
 async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = await page.evaluate(() => (
@@ -1750,16 +1830,15 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
         attackerKind: "walker", lane: 1, existingClaim: false,
       }));
       invariant(Number.isInteger(prepared?.attackerId), `${name}: deployment fixture is unavailable`);
-      const start = await queueAndPauseAtFirstDeploymentFrame(page, "kumaverson", name);
-      invariant(start.audit?.deploymentPlan?.checkpoint === "fully-inside",
-        `${name}: deployment banner did not freeze the production progress-0 frame`);
-      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-      const visible = await pauseAtDeploymentCheckpoint(
-        page, start.fighter.id, "first-visible", CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress, name,
-      );
-      invariant(visible.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
-        `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
-      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      const state = await captureDeploymentBannerHudState({
+        page,
+        viewport,
+        axisName,
+        stateId,
+        label: name,
+        lifecycle,
+        resumeAfterCapture: false,
+      });
       invariant(state.semantic.bannerText.includes("移動拠点から出撃"),
         `${name}: deployment banner copy is missing`);
       result.states.push(state);
@@ -1939,28 +2018,18 @@ async function runFullHudCase(browserType, engine, viewport) {
     ));
     invariant(Number.isInteger(deploymentPrepared?.attackerId),
       `${name}: deployment-banner fixture is unavailable`);
-    const deploymentStart = await queueAndPauseAtFirstDeploymentFrame(
+    const deploymentBanner = await captureDeploymentBannerHudState({
       page,
-      "kumaverson",
-      `${name}/deployment-banner`,
-    );
-    invariant(deploymentStart.audit?.deploymentPlan?.checkpoint === "fully-inside",
-      `${name}: deployment banner did not freeze the production progress-0 frame`);
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-    const deploymentFrame = await pauseAtDeploymentCheckpoint(
-      page,
-      deploymentStart.fighter.id,
-      "first-visible",
-      CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress,
-      `${name}/deployment-banner-visible`,
-    );
-    invariant(deploymentFrame.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
-      `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
-    const deploymentBanner = await captureHudState(page, viewport, name, "deployment-banner", lifecycle);
+      viewport,
+      axisName: name,
+      stateId: "deployment-banner",
+      label: `${name}/deployment-banner`,
+      lifecycle,
+      resumeAfterCapture: true,
+    });
     invariant(deploymentBanner.semantic.bannerText.includes("移動拠点から出撃"),
       `${name}: deployment banner copy is missing`);
     result.states.push(deploymentBanner);
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
 
     const abilityProof = await page.evaluate(() => (
       window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof("medic")
@@ -2606,13 +2675,120 @@ async function withDeploymentPresentationQuiescence(
     operationError = error;
   }
 
+  let transition = null;
   let release = null;
   let releaseError = null;
   if (!page.isClosed()) {
     try {
-      release = await page.evaluate((requestedOwner) => (
-        window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
-      ), owner);
+      if (operationError) {
+        release = await page.evaluate((requestedOwner) => (
+          window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
+        ), owner);
+      } else {
+        transition = await page.evaluate(async ({
+          requestedOwner,
+          evidenceOwner,
+          restorationTimeoutMs,
+        }) => {
+          const bridge = window.__ASHFALL_BATTLE_QA__;
+          if (typeof bridge?.setQaPresentationQuiesced !== "function"
+            || typeof bridge?.getQaPresentationQuiescence !== "function") {
+            throw new Error("deployment presentation restoration bridge is unavailable");
+          }
+          const releaseReceipt = bridge.setQaPresentationQuiesced(false, requestedOwner);
+          if (!(releaseReceipt?.schema === "v100-qa-presentation-quiescence/v1"
+            && releaseReceipt.active === false
+            && releaseReceipt.owner === requestedOwner
+            && releaseReceipt.route === "deployment"
+            && releaseReceipt.datasetActive === false
+            && releaseReceipt.running === true
+            && releaseReceipt.paused === true
+            && releaseReceipt.over !== true)) {
+            throw new Error(`deployment presentation release is invalid ${JSON.stringify(releaseReceipt)}`);
+          }
+          const restored = await new Promise((resolve, reject) => {
+            const startedAt = performance.now();
+            const timer = setTimeout(() => {
+              reject(new Error(`deployment three-frame restoration exceeded ${restorationTimeoutMs} ms`));
+            }, restorationTimeoutMs);
+            const observe = () => {
+              const quiescence = bridge.getQaPresentationQuiescence();
+              const canvas = document.querySelector("canvas.battlefield");
+              const rect = canvas?.getBoundingClientRect?.() ?? null;
+              const style = canvas ? getComputedStyle(canvas) : null;
+              const renderFrameDelta = Number(quiescence?.renderFrames)
+                - Number(releaseReceipt.releasedAtRenderFrames);
+              if (renderFrameDelta > 3) {
+                clearTimeout(timer);
+                reject(new Error(`deployment restoration exceeded exactly three production frames: ${renderFrameDelta}`));
+                return;
+              }
+              const ready = quiescence?.schema === "v100-qa-presentation-quiescence/v1"
+                && quiescence.active === false
+                && quiescence.owner === requestedOwner
+                && quiescence.route === "deployment"
+                && quiescence.datasetActive === false
+                && quiescence.running === true
+                && quiescence.paused === true
+                && quiescence.over !== true
+                && renderFrameDelta === 3
+                && rect?.width > 0
+                && rect?.height > 0
+                && style?.display !== "none"
+                && style?.visibility !== "hidden"
+                && Number(style?.opacity) > 0;
+              if (ready) {
+                clearTimeout(timer);
+                resolve({
+                  quiescence,
+                  renderFrameDelta,
+                  elapsedMs: performance.now() - startedAt,
+                  canvas: {
+                    width: rect.width,
+                    height: rect.height,
+                    display: style.display,
+                    visibility: style.visibility,
+                    opacity: style.opacity,
+                  },
+                });
+                return;
+              }
+              requestAnimationFrame(observe);
+            };
+            requestAnimationFrame(observe);
+          });
+          const evidencePresentation = bridge.setQaPresentationQuiesced(true, evidenceOwner);
+          if (!(evidencePresentation?.schema === "v100-qa-presentation-quiescence/v1"
+            && evidencePresentation.active === true
+            && evidencePresentation.owner === evidenceOwner
+            && evidencePresentation.route === "deployment"
+            && evidencePresentation.datasetActive === true
+            && evidencePresentation.running === true
+            && evidencePresentation.paused === true
+            && evidencePresentation.over !== true
+            && Number(evidencePresentation.enteredAtRenderFrames)
+              === Number(restored.quiescence.renderFrames))) {
+            throw new Error(`deployment evidence owner did not atomically acquire restoration ${JSON.stringify(evidencePresentation)}`);
+          }
+          return {
+            schema: "v100-deployment-restoration-evidence-handoff/v1",
+            release: releaseReceipt,
+            restored,
+            evidenceCaptureEnvelope: {
+              schema: "v100-deployment-prearmed-presentation-envelope/v1",
+              checkpointArm: null,
+              presentation: evidencePresentation,
+              armedAtPageTime: Date.now(),
+              sourceOwner: requestedOwner,
+            },
+          };
+        }, {
+          requestedOwner: owner,
+          evidenceOwner: "deployment-evidence-capture",
+          restorationTimeoutMs: Math.min(timeout, 10_000),
+        });
+        release = transition.release;
+      }
       if (captureTrace) await captureTrace();
     } catch (error) {
       releaseError = error;
@@ -2640,47 +2816,16 @@ async function withDeploymentPresentationQuiescence(
     `${label}: deployment simulation did not advance while presentation was quiesced ${JSON.stringify(release)}`);
   invariant(Number(release.suppressedRenderFrames) > 0,
     `${label}: deployment quiescence suppressed no scheduled render ${JSON.stringify(release)}`);
-
-  const restoredHandle = await page.waitForFunction(({ requestedOwner, releasedRenderFrames }) => {
-    const bridge = window.__ASHFALL_BATTLE_QA__;
-    const quiescence = bridge?.getQaPresentationQuiescence?.();
-    const canvas = document.querySelector("canvas.battlefield");
-    if (!canvas) return false;
-    const rect = canvas.getBoundingClientRect();
-    const style = getComputedStyle(canvas);
-    const restored = quiescence?.schema === "v100-qa-presentation-quiescence/v1"
-      && quiescence.active === false
-      && quiescence.owner === requestedOwner
-      && quiescence.route === "deployment"
-      && quiescence.datasetActive === false
-      && quiescence.running === true
-      && quiescence.paused === true
-      && quiescence.over !== true
-      && Number(quiescence.renderFrames) >= Number(releasedRenderFrames) + 3
-      && style.display !== "none"
-      && style.visibility !== "hidden"
-      && Number(style.opacity) > 0
-      && rect.width > 0
-      && rect.height > 0;
-    return restored ? {
-      quiescence,
-      canvas: {
-        width: rect.width,
-        height: rect.height,
-        display: style.display,
-        visibility: style.visibility,
-        opacity: style.opacity,
-      },
-    } : false;
-  }, { requestedOwner: owner, releasedRenderFrames: release.releasedAtRenderFrames }, {
-    timeout: Math.min(timeout, 10_000),
-    polling: 50,
-  });
-  const restored = await restoredHandle.jsonValue();
-  await restoredHandle.dispose();
-  if (captureTrace) await captureTrace();
+  const restored = transition?.restored;
+  const evidenceCaptureEnvelope = transition?.evidenceCaptureEnvelope;
+  invariant(transition?.schema === "v100-deployment-restoration-evidence-handoff/v1"
+    && restored?.renderFrameDelta === 3
+    && evidenceCaptureEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1"
+    && evidenceCaptureEnvelope.presentation?.owner === "deployment-evidence-capture",
+  `${label}: deployment restoration did not atomically hand off to evidence ownership ${JSON.stringify(transition)}`);
   return {
     value,
+    preArmedEvidenceCapture: evidenceCaptureEnvelope,
     presentationQuiescence: {
       schema: "v100-deployment-presentation-quiescence-receipt/v1",
       owner,
@@ -2689,20 +2834,22 @@ async function withDeploymentPresentationQuiescence(
       arm,
       release,
       restored,
+      evidenceCaptureArm: evidenceCaptureEnvelope.presentation,
     },
   };
 }
 
-async function withDeploymentCanvasCaptureQuiescence(page, label, operation) {
+async function withDeploymentCanvasCaptureQuiescence(
+  page,
+  label,
+  operation,
+  preArmedEnvelope,
+  successorRequest = null,
+) {
   const owner = "deployment-evidence-capture";
-  const arm = await page.evaluate((requestedOwner) => {
-    const bridge = window.__ASHFALL_BATTLE_QA__;
-    if (typeof bridge?.setQaPresentationQuiesced !== "function"
-      || typeof bridge?.getQaPresentationQuiescence !== "function") {
-      throw new Error("deployment evidence-capture presentation bridge is unavailable");
-    }
-    return bridge.setQaPresentationQuiesced(true, requestedOwner);
-  }, owner);
+  invariant(preArmedEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1",
+    `${label}: deployment evidence-capture requires the atomic pre-armed envelope`);
+  const arm = preArmedEnvelope.presentation;
   invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
     && arm.active === true
     && arm.owner === owner
@@ -2740,13 +2887,67 @@ async function withDeploymentCanvasCaptureQuiescence(page, label, operation) {
     operationError = error;
   }
 
+  let transition = null;
   let release = null;
   let releaseError = null;
   if (!page.isClosed()) {
     try {
-      release = await page.evaluate((requestedOwner) => (
-        window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
-      ), owner);
+      transition = await page.evaluate(({ requestedOwner, requestedSuccessor }) => {
+        const bridge = window.__ASHFALL_BATTLE_QA__;
+        if (typeof bridge?.setQaPresentationQuiesced !== "function") {
+          throw new Error("deployment evidence-capture release bridge is unavailable");
+        }
+        const releaseReceipt = bridge.setQaPresentationQuiesced(false, requestedOwner);
+        let nextPresentationEnvelope = null;
+        let resumeResult = null;
+        if (requestedSuccessor?.type === "checkpoint") {
+          if (typeof bridge.armCrawlerDeploymentCheckpoint !== "function") {
+            throw new Error("deployment successor checkpoint bridge is unavailable");
+          }
+          const checkpointArm = bridge.armCrawlerDeploymentCheckpoint(
+            requestedSuccessor.fighterId,
+            requestedSuccessor.checkpoint,
+          );
+          if (!(checkpointArm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+            && checkpointArm.armed === true
+            && checkpointArm.fighterId === requestedSuccessor.fighterId
+            && checkpointArm.checkpoint === requestedSuccessor.checkpoint
+            && Math.abs(checkpointArm.minimumProgress - requestedSuccessor.minimumProgress) <= 1e-6)) {
+            throw new Error(`deployment successor checkpoint arm rejected ${JSON.stringify(checkpointArm)}`);
+          }
+          const presentation = bridge.setQaPresentationQuiesced(
+            true,
+            "deployment-checkpoint-advance",
+          );
+          nextPresentationEnvelope = {
+            schema: "v100-deployment-prearmed-presentation-envelope/v1",
+            checkpointArm,
+            presentation,
+            armedAtPageTime: Date.now(),
+            sourceOwner: requestedOwner,
+          };
+        } else if (requestedSuccessor?.type === "resume") {
+          if (typeof bridge.setRepresentativeSixProofPaused !== "function") {
+            throw new Error("deployment successor resume bridge is unavailable");
+          }
+          resumeResult = bridge.setRepresentativeSixProofPaused(false);
+          if (resumeResult !== false) {
+            throw new Error(`deployment successor resume command was rejected ${JSON.stringify(resumeResult)}`);
+          }
+        } else if (requestedSuccessor !== null) {
+          throw new Error(`unknown deployment evidence successor ${JSON.stringify(requestedSuccessor)}`);
+        }
+        return {
+          schema: "v100-deployment-evidence-successor-handoff/v1",
+          release: releaseReceipt,
+          nextPresentationEnvelope,
+          resumeResult,
+        };
+      }, {
+        requestedOwner: owner,
+        requestedSuccessor: operationError ? null : successorRequest,
+      });
+      release = transition.release;
     } catch (error) {
       releaseError = error;
     }
@@ -2768,14 +2969,42 @@ async function withDeploymentCanvasCaptureQuiescence(page, label, operation) {
     && Number(release.releasedAtSimulationTicks) === Number(release.enteredAtSimulationTicks)
     && Number(release.suppressedRenderFrames) > 0,
   `${label}: deployment evidence-capture quiescence did not preserve the restored frozen frame ${JSON.stringify(release)}`);
+  const nextPresentationEnvelope = transition?.nextPresentationEnvelope ?? null;
+  if (successorRequest?.type === "checkpoint") {
+    invariant(nextPresentationEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1"
+      && nextPresentationEnvelope.checkpointArm?.fighterId === successorRequest.fighterId
+      && nextPresentationEnvelope.checkpointArm?.checkpoint === successorRequest.checkpoint
+      && nextPresentationEnvelope.presentation?.active === true
+      && nextPresentationEnvelope.presentation.owner === "deployment-checkpoint-advance"
+      && nextPresentationEnvelope.presentation.paused !== true,
+    `${label}: deployment evidence did not atomically hand off to the next checkpoint owner`);
+  } else {
+    invariant(nextPresentationEnvelope === null,
+      `${label}: deployment evidence created an unexpected successor owner`);
+  }
+  if (successorRequest?.type === "resume") {
+    invariant(transition?.resumeResult === false,
+      `${label}: deployment evidence did not atomically resume the production battle`);
+  }
   return {
     value,
+    nextPresentationEnvelope,
+    resumeResult: transition?.resumeResult ?? null,
     receipt: {
       schema: "v100-deployment-evidence-capture-quiescence/v1",
       owner,
+      preArmedEnvelope: {
+        schema: preArmedEnvelope.schema,
+        checkpointArm: preArmedEnvelope.checkpointArm,
+        armedAtPageTime: preArmedEnvelope.armedAtPageTime,
+        sourceOwner: preArmedEnvelope.sourceOwner,
+      },
       arm,
       preCapture,
       release,
+      successor: successorRequest,
+      nextPresentationEnvelope,
+      resumeResult: transition?.resumeResult ?? null,
     },
   };
 }
@@ -2791,12 +3020,19 @@ async function refreshDeploymentEvidenceAfterRestoredFrames(
 ) {
   const presentation = evidence?.presentationQuiescence;
   invariant(presentation?.schema === "v100-deployment-presentation-quiescence-receipt/v1"
+    && presentation.restored?.renderFrameDelta === 3
     && Number(presentation.restored?.quiescence?.renderFrames)
-      >= Number(presentation.release?.releasedAtRenderFrames) + 3,
+      === Number(presentation.release?.releasedAtRenderFrames) + 3
+    && presentation.evidenceCaptureArm?.schema === "v100-qa-presentation-quiescence/v1"
+    && presentation.evidenceCaptureArm.active === true
+    && presentation.evidenceCaptureArm.owner === "deployment-evidence-capture"
+    && Number(presentation.evidenceCaptureArm.enteredAtRenderFrames)
+      === Number(presentation.restored.quiescence.renderFrames),
   `${label}: post-restoration readback started before three production frames`);
   const refreshed = await page.evaluate(({ id }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
     const snapshot = bridge?.getCrawlerDeploymentProofSnapshot?.({ fighterId: id }) ?? null;
+    const presentationState = bridge?.getQaPresentationQuiescence?.() ?? null;
     return {
       schema: snapshot?.schema ?? null,
       screen: snapshot?.screen ?? null,
@@ -2806,6 +3042,7 @@ async function refreshDeploymentEvidenceAfterRestoredFrames(
       computedProgress: snapshot?.computedProgress ?? null,
       checkpointReceipt: snapshot?.checkpointReceipt ?? null,
       fighter: snapshot?.fighter ?? null,
+      presentation: presentationState,
     };
   }, { id: fighterId });
   const previousFighter = evidence?.fighter;
@@ -2814,7 +3051,11 @@ async function refreshDeploymentEvidenceAfterRestoredFrames(
     && refreshed.screen === "battle"
     && refreshed.running === true
     && refreshed.paused === true
-    && refreshed.over !== true,
+    && refreshed.over !== true
+    && refreshed.presentation?.active === true
+    && refreshed.presentation.owner === "deployment-evidence-capture"
+    && refreshed.presentation.route === "deployment"
+    && refreshed.presentation.paused === true,
   `${label}: post-restoration production snapshot is not the frozen live battle`);
   invariant(fighter?.id === fighterId
     && fighter.kind === unitKind
@@ -3346,6 +3587,8 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         ...firstFrameEnvelope.value.firstFrame,
         presentationQuiescence: firstFrameEnvelope.presentationQuiescence,
       };
+      let evidenceCaptureEnvelope = firstFrameEnvelope.preArmedEvidenceCapture;
+      let nextCheckpointPresentationEnvelope = null;
       const firstFrame = await withDeploymentDiagnosticOperation(
         lifecycle,
         "deployment/post-restoration-readback",
@@ -3406,13 +3649,12 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
                 activeDeploymentTrace.capture,
                 checkpointArm,
               ),
-              {
-                fighterId,
-                checkpoint: checkpoint.id,
-                minimumProgress: checkpoint.progress,
-              },
+              null,
+              nextCheckpointPresentationEnvelope,
             ),
           );
+          nextCheckpointPresentationEnvelope = null;
+          evidenceCaptureEnvelope = checkpointEnvelope.preArmedEvidenceCapture;
           const checkpointBeforeProductionReadback = {
             ...checkpointEnvelope.value,
             presentationQuiescence: checkpointEnvelope.presentationQuiescence,
@@ -3463,16 +3705,30 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           combatReady: receipt.combatReady,
           entryRampCleared: receipt.entryRampCleared,
         } : null;
+        const successorCheckpoint = CRAWLER_DEPLOYMENT_CHECKPOINTS[checkpointIndex + 1] ?? null;
         const canvasCaptureEnvelope = await withDeploymentDiagnosticOperation(
           lifecycle,
           "deployment/final-canvas-png",
           checkpointDetails,
-          () => withDeploymentCanvasCaptureQuiescence(page, label, () => deploymentCanvasPng(
+          () => withDeploymentCanvasCaptureQuiescence(
             page,
-            `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
             label,
-          )),
+            () => deploymentCanvasPng(
+              page,
+              `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
+              label,
+            ),
+            evidenceCaptureEnvelope,
+            successorCheckpoint ? {
+              type: "checkpoint",
+              fighterId,
+              checkpoint: successorCheckpoint.id,
+              minimumProgress: successorCheckpoint.progress,
+            } : null,
+          ),
         );
+        evidenceCaptureEnvelope = null;
+        nextCheckpointPresentationEnvelope = canvasCaptureEnvelope.nextPresentationEnvelope;
         const canvasCapture = canvasCaptureEnvelope.value;
         await withDeploymentDiagnosticOperation(
           lifecycle,
@@ -3509,6 +3765,8 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           milestone: `${unit.family}/${checkpoint.id} deployment checkpoint complete`,
         });
       }
+      invariant(nextCheckpointPresentationEnvelope === null,
+        `${name}/${unit.kind}: final deployment checkpoint retained an unexpected successor owner`);
       const fullyInside = unitResult.checkpoints[0];
       const firstVisible = unitResult.checkpoints[1];
       invariant(fullyInside.observedCheckpoint === "fully-inside"

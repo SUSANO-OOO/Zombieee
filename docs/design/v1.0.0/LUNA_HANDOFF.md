@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r82`
+- Canonical Design Lock: `V100-SOL-DL-001 r85`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-90 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 91 is the sole current execution handoff.
+Sections 1-93 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 94 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2685,3 +2685,70 @@ Design Lock Section 98 and the latest explicitly labeled Issue #172 r82 lock are
 Accepted immutable continuity evidence: the three Stage 25 report hashes are `17061faf0c07f688d8cc4924a158349dab8fccc339cb817b0069fdd0980d29a2`, `dbec98d88c59cde96c39b7b2b6b42671549b4134a5af15ae77df41f4302a5960`, and `5ab71f9445496d97632bf3a1f145918b51f632c8f413916ff5ff239656eae7a6`; ordered Phase G is `86536210c5f3dadb34f251b8dc809ed7a4d074d5d011b12356ab6cb5876ae910`; Hosted is `47382a4138e982c52cb9986218719abfb02f0d94cbf896cd812c8854501d9f61`; deployment is `4b1ed7996b1d05c0637dc95816bb492cd772aa226dfa593773bc305b80df68e0`. No retry or rerun occurred. Do not repeat accepted runtime/full gates solely for this governance read-back.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r81 local acceptance is green. Re-run governance/static read-back only, re-fetch PR #171 and require the unchanged audited HEAD/tree and compatible base, create one normal non-amended exact-ten-path material-iteration-29 commit, transport it non-force once, and observe only its one automatic focused CI. Any red, unexpected skip, dependency/order defect, missing artifact, transport mismatch, or ref drift returns to SOL_DESIGN without edit, retry, rerun, or dispatch; complete automatic focused green alone unlocks workflow-only iteration 30.**
+
+## 92. Revision r83 — no active Luna handoff / atomic presentation-lifetime packet
+
+Design Lock Section 99 and the latest explicitly labeled Issue #172 r83 lock are the sole active cursor. Sections 1-91 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R83_PRESENTATION_LIFETIME_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `FAILED_GATE`: automatic focused CI `32959415035`: PR Verify `98148224524` Chromium 667x375 HUD deployment-banner owner omission; Stage 3 final-candidate `98153678760` post-pause FIFO clean crash; deployment `98155831440` WebKit 1280x720 brawler-quarter restoration host poll; Phase G and Canonical HUD aggregate dependency-skipped
+- `LAST_GREEN_GATE`: complete r81 local acceptance; remote static/build/full/PWA, six enemy-runtime shards, Hosted, Stage 3 entrance/exact-base, five deployment viewports, and 1280 scout/ranger plus brawler semantic/pixel evidence
+- `CLASSIFICATION`: `QA_HARNESS_PRESENTATION_OWNERSHIP_GAPS / HUD_OWNER_OMISSION + STAGE3_POST_PAUSE_FIFO_GAP + DEPLOYMENT_POST_CHECKPOINT_RESTORATION_HOST_POLL / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `ATOMIC_PRESENTATION_LIFETIME_HANDOFF / REAL_RESUME_TO_STAGE3_OWNER + DEPLOYMENT_PROGRESS_OWNER_TO_THREE_FRAMES_TO_EVIDENCE_OWNER + EVIDENCE_OWNER_TO_NEXT_CHECKPOINT_OWNER / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r83 local/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact r83 four-source correction -> source/static/build -> bounded Stage 3/HUD/deployment controls -> full local gates -> one normal non-amended exact-eight-path material-iteration-30 commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> local/remote unfiltered full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Change only `scripts/p5-browser-smoke.mjs`, `tests/p5-story-audio-contract.test.mjs`, `scripts/v099-final-remediation-browser-smoke.mjs`, `tests/v0995-runtime-evidence-contract.test.mjs`, and the four governance/source-contract paths. Stage 3 must click the real resume button and arm its second final FIFO owner in one page task. Deployment progression release must observe three frames and arm evidence capture before returning; evidence release must arm the next real checkpoint and progression owner before returning. Both HUD deployment-banner paths use the same sequence. Preserve every product, timing, checkpoint, pass, pixel, screenshot, viewport, attempt, timeout, artifact, and release contract.
+
+Run Design Lock Section 99.3 once in order. First red returns to `SOL_DESIGN` without edit, retry, rerun, dispatch, or micro-patch. Complete automatic focused green alone unlocks workflow-only iteration 31.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — implement only Design Lock Section 99's exact four-source atomic presentation-lifetime correction inside the eight-path r83 packet. Bind real Stage 3 resume to its second FIFO owner; bind deployment progression release to three production frames and evidence ownership; bind evidence release to the next exact checkpoint owner; reuse that sequence for both HUD deployment-banner paths. Run the prescribed first-attempt local gates once, then one normal material-iteration-30 transport and its one automatic focused CI. First red returns to SOL_DESIGN without retry; complete remote green alone unlocks workflow-only iteration 31.**
+
+## 93. Revision r84 — no active Luna handoff / Node-owned second-FIFO source alignment
+
+Design Lock Section 100 and the latest explicitly labeled Issue #172 r84 lock are the sole active cursor. Sections 1-92 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R84_NODE_OWNED_SECOND_FIFO_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `FAILED_GATE`: first r83 local canonical six-file source run; 54/55 pass, sole failure in the unchanged Stage 3 bounded Node-owned final-cut contract; static/build/browser/full/commit/transport/remote gates not run
+- `LAST_GREEN_GATE`: r83 syntax, P5 source 9/9, deployment source 3/3, and Design Lock 19/19; prior accepted evidence remains continuity only
+- `CLASSIFICATION`: `SOL_OWNED_STAGE3_SOURCE_CONTRACT_REGRESSION / SECOND_PRESENTATION_OWNER_REINTRODUCED_PAGE_WAITFORFUNCTION_INSIDE_NODE_OWNED_FINAL_CUT_BLOCK / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `NODE_OWNED_SECOND_FIFO_WAIT / SINGLE_PAGE_EVALUATE_SAMPLE_PER_50MS_HOST_TURN + UNCHANGED_FINAL_LINE_PREDICATE_AND_DEADLINE / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r84 local/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r83-r84 are one uncommitted material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact r84 Node-owned second-FIFO correction inside retained eight-path draft -> source/static/build -> bounded Stage 3/HUD/deployment controls -> full local gates -> one normal non-amended material-iteration-30 commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> local/remote unfiltered full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Preserve the completed r83 deployment/HUD files byte-for-byte at 179,408 / `13977fb45119e5c498406939fe3de9f7646fe6498adc9bcb8b01587e25e711a2` and 57,111 / `869e9569ba0267671286c8a60e7b403b7af3360f16e917bb71d604a8739b21b7`. In the P5 harness only, replace the remaining-FIFO `page.waitForFunction` operation with one finite Node-owned helper that reads the same samples once per host iteration, applies the unchanged all-lines/boss-not-defeated/audio-scene/BGM predicate, yields at most 50 ms, and uses the existing timeout/`TimeoutError`. Align the P5 source test; leave the independent Stage 3 bounded test unchanged. Keep all product and r83 acceptance boundaries fixed.
+
+Run Design Lock Section 100.3 once in order. First red returns to `SOL_DESIGN` without same-revision edit, retry, rerun, dispatch, or micro-patch. Complete automatic focused green alone unlocks workflow-only iteration 31.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve the r83 deployment/HUD bytes exactly; replace only the Stage 3 remaining-FIFO `page.waitForFunction` with the Section 100 bounded Node-owned single-sample/50ms helper and align its P5 source assertion. Run the complete r84 first-attempt sequence once. Any red returns to SOL_DESIGN without retry; complete automatic focused green alone unlocks workflow-only iteration 31.**
+
+## 94. Revision r85 — no active Luna handoff / local acceptance read-back
+
+Design Lock Section 101 and the latest explicitly labeled Issue #172 r85 lock are the sole active cursor. Sections 1-93 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R85_LOCAL_ACCEPTANCE_GREEN / ITERATION_30_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
+- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `FAILED_GATE`: none in r84 final-byte local acceptance; next unexecuted gate is the one exact-eight-path material-iteration-30 normal commit/non-force transport and its one automatic focused CI
+- `LAST_GREEN_GATE`: r84 source/static/build, Stage 3 candidate/base, Chromium/WebKit HUD 1280x720, WebKit deployment 8/8 and 48/48 and 56/56, content, complete 1,197/1,197, lint zero errors, final build, repeated integrity
+- `CLASSIFICATION`: `R84_LOCAL_ATOMIC_PRESENTATION_LIFETIME_ACCEPTANCE_COMPLETE / ALL_PRESCRIBED_LOCAL_GATES_GREEN / LOCAL_GREEN`
+- `REMEDIATION_CLASS`: `R84_LOCAL_ACCEPTANCE_READBACK / MATERIAL_ITERATION_30_TRANSPORT_READY / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r85 governance/static/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r83-r85 are one untransported material iteration 30; complete automatic focused green alone unlocks workflow-only iteration 31
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance/static read-back only -> live PR #171 unchanged at audited HEAD/tree and compatible base -> one normal non-amended exact-eight-path material-iteration-30 commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 31 -> local/remote unfiltered full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Do not repeat the accepted r84 Stage 3, HUD, deployment, content, full-test, lint, or build gates. Re-run only Design Lock 19/19, canonical six-file 55/55, exact eight-path BOM/EOL/deployment-byte/protected/static integrity, and `git diff --check`; then perform the immutable live-ref preflight, one normal commit, one non-force push, and observe only the resulting automatic focused CI. Do not rerun or dispatch a failed remote job. Do not edit the workflow before complete automatic focused green. Do not Ready, merge, tag, create a Release, or deploy official Pages.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r84 local acceptance is complete. Run governance/static read-back only, require live PR #171 still at `e8f5fb152acca9124fceead899734c5d368053ba` / `f58ccc5bc0e8a070cf002f13689e19c02920fe0b` with the fixed base, create the one exact-eight-path material-iteration-30 commit, push non-force once, and observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; complete green alone unlocks workflow-only iteration 31.**
