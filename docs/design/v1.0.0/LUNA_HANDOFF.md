@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r95`
+- Canonical Design Lock: `V100-SOL-DL-001 r96`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-103 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 104 is the sole current execution handoff.
+Sections 1-104 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 105 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -3000,3 +3000,29 @@ Preserve local `a899376` and `7763763` unchanged. Change only Design Lock, this 
 Use only the complete Design Lock Section 111.3 object sequence: base64-create exactly four content-addressed blobs and match their local Git blob SHAs; build one exact local-tree-equivalent tree from remote r92; create one direct-parent commit; re-fetch the unchanged ref; update that ref once with `force: false`; read back exact tree/parent/four/nine paths; then observe only its one automatic focused CI. Do not use host Git, contents API, browser UI, force, retry, another trigger, rerun, dispatch, product edit, or release action.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r95 Section 111. Preserve local r93/r94 commits; close the same four governance paths in one local r95 child; require source/static, unchanged r92 remote, official recovery, and authenticated admin; create exactly four matching blobs, one exact matching tree, and one direct-parent commit; perform one non-force ref update; read back exact tree/parent/four-path/nine-path state and observe only its one automatic focused CI. Any object/ref/read-back/run red or uncertainty returns to SOL_DESIGN without retry, host Git, alternate transport, rerun, dispatch, edit, or release action.**
+
+## 105. Revision r96 — no active Luna handoff / dual QA presentation-ownership correction
+
+Design Lock Section 112 and Issue #172's authoritative r96 entry are the sole active cursor. Sections 1-104 remain history. Automatic focused CI #944 / `33002403217` ran on exact HEAD `f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`, tree `365099e0055536887c03324f6a609dd1de7bf810`, and ended with exactly 17 green jobs plus two independent red QA-harness presentation-lifetime jobs. Required Phase G job `98295009478` / artifact `9620322394` stopped at Stage 24 sequence 2 because a genuine exact commander attack/current target observed during opening could not terminate the non-contact-first setup loop. Stage 3 job `98296302174` / artifact `9620435208` stopped because the exact-base first battle canvas had no presentation owner from the real dispatch until the later first final-cut owner. Retry, rerun, correction push, and release mutation remain zero. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R96_DUAL_PRESENTATION_OWNERSHIP_PACKET_ACTIVE`
+- `LAST_AUDITED_HEAD`: `f8df99b8724964ee3e33c4a41d0bbe3e74ba6356`
+- `LAST_AUDITED_TREE`: `365099e0055536887c03324f6a609dd1de7bf810`
+- `FAILED_GATE`: automatic focused CI #944; Phase G Stage 24 sequence-2 terminal-handoff red plus Stage 3 exact-base first-canvas owner red; 17 other jobs green; retry/rerun 0
+- `LAST_GREEN_GATE`: r96 source `12/12 + 9/9 + 3/3 + 19/19 + 55/55`; Stage 24 independent 3/3 plus ordered Stage 6/24/25 9/9 first-attempt exact proofs; first-attempt Stage 3 Chromium candidate bridge and exact-base DOM fallback; content validation, complete suite `1,197/1,197`, lint `0` errors / `12` existing warnings, final build, and exact static/EOL/BOM/diff green; #944's 17 nonfailed jobs
+- `CLASSIFICATION`: `DUAL_QA_PRESENTATION_LIFETIME_GAPS / STAGE24_NON_CONTACT_FIRST_EXACT_ACTOR_SETUP_HANDOFF + STAGE3_PRE_DISPATCH_TO_FIRST_FINAL_CUT_OWNER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT_QA_PRESENTATION_OWNERSHIP_PACKET / GENERALIZED_EXACT_ACTOR_TERMINAL_HANDOFF + CONTINUOUS_STAGE3_FINAL_ENTRY_GUARD / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r96 local/commit/transport/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remote r95 closed material iteration 31; r96 is material iteration 32; complete automatic focused green alone unlocks workflow-only iteration 33
+- `SAME_GATE_REPEAT_COUNT`: `19` for executed required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: final exact eight-path integrity -> one normal local material-iteration-32 commit -> one authenticated-admin eight-blob/tree/commit object fast-forward with exactly one `force: false` ref update -> exact remote tree/parent/message/eight-path read-back -> one automatic focused CI -> complete green only -> workflow-only iteration 33 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/SOL human-player audits -> final evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+The exact tracked allowlist is `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, `scripts/p5-browser-smoke.mjs`, `tests/p5-story-audio-contract.test.mjs`, Design Lock, this Handoff, Project State, and the Design Lock test. No ninth path, `app/**`, workflow, package/lock, public/PWA/asset, timeout, attempt/retry, viewport, evidence threshold, product/gameplay/balance/AI, or release change is authorized. Keep the three original protected manifests and the original local r93/r94/r95 forensic chain unchanged.
+
+Stage 24 may terminate opening setup only after presentation quiescence and only on the exact proof actor's genuine attack observation or current live human target; historical target alone remains forbidden. Final proof still requires a fresh unconsumed exact windup, exact live target/cue, sequence `+1`, causal 4/4, existing samples/window, 15 checkpoints, screenshot, and fatal zero. Stage 3 must arm a final-only CSS/MutationObserver guard in the same page task before its one real dispatch and transfer it atomically, on the original real resume, into the first existing final-cut bridge or exact-base DOM owner. Both later final owners, three restored frames, authored story/audio, screenshot, timeouts, attempt policy, and fatal-zero contract stay unchanged.
+
+Use three separately named fresh processes for the ordered WebKit Stage 6 -> 24 -> 25 acceptance; require all nine captures green first attempt. Retain the already green first-attempt Chromium Stage 3 bridge/fallback continuity. Do not retry the non-authoritative Windows WebKit comparison whose failed local audio-unlock control intercepted the later pause pointer; require the one automatic Linux WebKit run to close entrance-candidate, final-candidate, and final-base on first attempt with artifacts. Then run complete source/content/test/lint/build/integrity gates once.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r96 Section 112. Preserve product, workflow, timeout, attempt, evidence, protected manifests, and forensic history. Local source/runtime/full acceptance is complete. Recheck exact eight-path integrity, create one normal local commit with message `test: close r96 presentation ownership gaps`, then use only the authenticated-admin eight-blob/one-tree/one-direct-parent-commit object sequence and one `force: false` ref update; do not invoke host Git push. Read back exact remote tree/parent/message/eight paths and observe only its one automatic focused CI. Any transport, read-back, red/skip/dependency/artifact result returns to SOL_DESIGN without retry, second ref update, micro-patch, rerun, dispatch, or release action. Complete green alone unlocks workflow-only iteration 33.**

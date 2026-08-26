@@ -5259,25 +5259,15 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     });
     return state;
   };
-  const waitForProofActorContact = async (durationMs = 1_800) => {
-    if (!proofActorRequiresContactFirst || proofActorAttackObserved) return null;
-    const deadline = Date.now() + durationMs;
-    let state = null;
-    while (Date.now() < deadline && !proofActorAttackObserved) {
-      await observeProofActorAttack();
-      state = await readProofActorContactState();
-      if (proofActorAttackObserved || state?.hasHumanTarget === true) break;
-      await page.waitForTimeout(120);
+  let bossFrontlineTerminalHandoff = null;
+  const latchBossFrontlineTerminalHandoff = (contactState, observationPhase) => {
+    if (bossFrontlineTerminalHandoff || !presentationQuiescenceArm || !proofActor) {
+      return bossFrontlineTerminalHandoff;
     }
-    return state;
-  };
-  let bossFrontlineContactLatch = null;
-  const latchBossFrontlineContact = (contactState, observationPhase) => {
-    if (bossFrontlineContactLatch || !proofActorRequiresContactFirst) return bossFrontlineContactLatch;
     const exactAttackObserved = proofActorAttackObserved === true;
     const liveHumanTargetObserved = contactState?.hasLiveHumanTarget === true;
     if (!exactAttackObserved && !liveHumanTargetObserved) return null;
-    bossFrontlineContactLatch = Object.freeze({
+    bossFrontlineTerminalHandoff = Object.freeze({
       reason: exactAttackObserved
         ? "exact-proof-actor-attack-observed"
         : "current-live-human-target-observed",
@@ -5291,7 +5281,24 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       productionTime: contactState?.productionTime ?? null,
     });
     recorder?.clearAwaiting();
-    return bossFrontlineContactLatch;
+    return bossFrontlineTerminalHandoff;
+  };
+  const observeBossFrontlineTerminalHandoff = async (
+    observationPhase,
+    { boundedContactWait = false } = {},
+  ) => {
+    if (bossFrontlineTerminalHandoff || !presentationQuiescenceArm || !proofActor) {
+      return bossFrontlineTerminalHandoff;
+    }
+    const deadline = Date.now() + (boundedContactWait ? 1_800 : 0);
+    do {
+      await observeProofActorAttack();
+      const contactState = await readProofActorContactState();
+      latchBossFrontlineTerminalHandoff(contactState, observationPhase);
+      if (bossFrontlineTerminalHandoff || !boundedContactWait || Date.now() >= deadline) break;
+      await page.waitForTimeout(120);
+    } while (!bossFrontlineTerminalHandoff);
+    return bossFrontlineTerminalHandoff;
   };
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
@@ -5654,14 +5661,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
     } else {
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
-        if (proofActorRequiresContactFirst) {
-          await observeProofActorAttack();
-          const contactState = proofActorAttackObserved
-            ? null
-            : await readProofActorContactState();
-          latchBossFrontlineContact(contactState, "before-next-slot");
-          if (bossFrontlineContactLatch) break;
-        }
+        await observeBossFrontlineTerminalHandoff("before-next-slot");
+        if (bossFrontlineTerminalHandoff) break;
         let deployed = false;
         recorder?.setAwaiting("boss-frontline-deployment", { slot: deployment + 1, predicate: "a real ready boss-frontline card is accepted by production runtime" });
         for (let attempt = 0; attempt < 180; attempt += 1) {
@@ -5669,11 +5670,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
-          if (proofActorRequiresContactFirst) {
-            const contactState = await waitForProofActorContact();
-            latchBossFrontlineContact(contactState, "before-candidate-sample");
-            if (bossFrontlineContactLatch) break;
-          }
+          await observeBossFrontlineTerminalHandoff("before-candidate-sample", {
+            boundedContactWait: proofActorRequiresContactFirst,
+          });
+          if (bossFrontlineTerminalHandoff) break;
           const candidateSample = await readBattleDeploymentDiagnostics(page, {
             requestedSlot: deployment + 1,
             phase: "candidate-sample",
@@ -5694,6 +5694,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           }
           const selectedCandidate = readyCandidates[0] ?? null;
           if (selectedCandidate) {
+            // The exact proof actor can acquire a target or complete an
+            // authored attack between the candidate sample and the next real
+            // pointer. Re-read the current production snapshot immediately
+            // before that action; historical target ownership alone cannot
+            // latch this terminal setup handoff.
+            await observeBossFrontlineTerminalHandoff("before-real-pointer");
+            if (bossFrontlineTerminalHandoff) break;
             const kind = selectedCandidate.kind;
             const pointerResult = await performVerifiedDeploymentPointer(page, {
               requestedKind: kind,
@@ -5714,21 +5721,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               deployed = true;
               if (kind) deployedKinds.add(kind);
               if (kind === proofUnitKind) proofUnitDeployed = true;
-              if (proofActorRequiresContactFirst) {
-                const contactState = await waitForProofActorContact();
-                latchBossFrontlineContact(contactState, "after-accepted-pointer");
-                if (bossFrontlineContactLatch) break;
-              }
+              await observeBossFrontlineTerminalHandoff("after-accepted-pointer", {
+                boundedContactWait: proofActorRequiresContactFirst,
+              });
+              if (bossFrontlineTerminalHandoff) break;
               break;
             }
           }
           await page.waitForTimeout(400);
         }
-        // Contact-first setup is terminal once the exact proof actor has
-        // genuinely attacked or currently owns a living human target.  Do not
-        // let an already-observed attack skip the guard and start a later real
-        // pointer; the completed production formation is the release input.
-        if (bossFrontlineContactLatch) break;
+        // Setup is terminal for every presentation-quiesced boss proof once
+        // the exact actor has genuinely attacked or currently owns a living
+        // human target. Do not let an already-observed attack start a later
+        // real pointer; the completed production formation is the release
+        // input. Contact-first profiles retain their bounded contact wait.
+        if (bossFrontlineTerminalHandoff) break;
         if (await bossIsLive()) break;
         if (!deployed) {
           const proofActorState = await readProofActorContactState();
@@ -5750,7 +5757,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     recorder?.mark("frontline-deployment-sequence-completed", "completed", {
       attemptedSlots: [...new Set(deploymentTrace.map((entry) => entry.slot))],
       terminalCardStates: deploymentTrace.filter((entry) => entry.accepted === true).map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
-      contactFirstTerminalHandoff: bossFrontlineContactLatch,
+      contactFirstTerminalHandoff: proofActorRequiresContactFirst ? bossFrontlineTerminalHandoff : null,
+      proofActorTerminalHandoff: bossFrontlineTerminalHandoff,
     });
     if (presentationQuiescenceArm) {
       // Drain every host-side player action while presentation is still held.

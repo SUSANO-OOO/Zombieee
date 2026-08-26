@@ -948,23 +948,37 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   const bossContactRegion = source.slice(bossContactRegionStart, bossContactRegionEnd);
   assert.equal((bossContactRegion.match(/contactState\?\.hasLiveHumanTarget === true/gu) ?? []).length, 0);
   assert.equal((bossContactRegion.match(/contactState\?\.hasHumanTarget === true/gu) ?? []).length, 0);
-  assert.match(source, /let bossFrontlineContactLatch = null;/u);
-  assert.match(source, /const latchBossFrontlineContact = \(contactState, observationPhase\) => \{/u);
+  assert.match(source, /let bossFrontlineTerminalHandoff = null;/u);
+  assert.match(source, /const latchBossFrontlineTerminalHandoff = \(contactState, observationPhase\) => \{/u);
+  assert.match(source, /!presentationQuiescenceArm \|\| !proofActor/u);
   assert.match(source, /const exactAttackObserved = proofActorAttackObserved === true;/u);
   assert.match(source, /const liveHumanTargetObserved = contactState\?\.hasLiveHumanTarget === true;/u);
   assert.match(source, /if \(!exactAttackObserved && !liveHumanTargetObserved\) return null;/u);
   assert.match(source, /reason: exactAttackObserved[\s\S]*?"exact-proof-actor-attack-observed"[\s\S]*?"current-live-human-target-observed"/u);
-  assert.doesNotMatch(source.match(/const latchBossFrontlineContact[\s\S]+?(?=\n  const observeProofUnitAttack)/u)?.[0] ?? "", /hasHumanTarget|targetOwnershipHistory|monotonic-target-history/u);
+  const terminalHandoffHelper = source.match(/const latchBossFrontlineTerminalHandoff[\s\S]+?(?=\n  const observeProofUnitAttack)/u)?.[0] ?? "";
+  assert.doesNotMatch(terminalHandoffHelper, /hasHumanTarget|targetOwnershipHistory|monotonic-target-history/u);
+  assert.match(terminalHandoffHelper, /const observeBossFrontlineTerminalHandoff/u);
+  assert.match(terminalHandoffHelper, /boundedContactWait = false/u);
+  assert.match(terminalHandoffHelper, /await observeProofActorAttack\(\);[\s\S]*await readProofActorContactState\(\);[\s\S]*latchBossFrontlineTerminalHandoff/u);
+  assert.match(terminalHandoffHelper, /Date\.now\(\) \+ \(boundedContactWait \? 1_800 : 0\)/u);
   const bossOuterLoopIndex = bossContactRegion.indexOf("for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1)");
-  const beforeNextSlotLatchIndex = bossContactRegion.indexOf('latchBossFrontlineContact(contactState, "before-next-slot")');
+  const beforeNextSlotLatchIndex = bossContactRegion.indexOf('observeBossFrontlineTerminalHandoff("before-next-slot")');
   const nextSlotAwaitingIndex = bossContactRegion.indexOf('recorder?.setAwaiting("boss-frontline-deployment"');
   const candidateSampleIndex = bossContactRegion.indexOf('phase: "candidate-sample"');
+  const beforeRealPointerIndex = bossContactRegion.indexOf('observeBossFrontlineTerminalHandoff("before-real-pointer")');
   const pointerIndex = bossContactRegion.indexOf("await performVerifiedDeploymentPointer");
-  assert.ok(bossOuterLoopIndex >= 0 && bossOuterLoopIndex < beforeNextSlotLatchIndex && beforeNextSlotLatchIndex < nextSlotAwaitingIndex && nextSlotAwaitingIndex < candidateSampleIndex && candidateSampleIndex < pointerIndex, "contact-first terminal latch must run before every later slot, candidate sample, and pointer");
-  assert.match(bossContactRegion, /latchBossFrontlineContact\(contactState, "before-candidate-sample"\);[\s\S]*?if \(bossFrontlineContactLatch\) break;/u);
-  assert.match(bossContactRegion, /latchBossFrontlineContact\(contactState, "after-accepted-pointer"\);[\s\S]*?if \(bossFrontlineContactLatch\) break;/u);
-  assert.match(bossContactRegion, /if \(bossFrontlineContactLatch\) break;[\s\S]*?if \(await bossIsLive\(\)\) break;/u);
-  assert.match(source, /contactFirstTerminalHandoff: bossFrontlineContactLatch/u);
+  assert.ok(bossOuterLoopIndex >= 0
+    && bossOuterLoopIndex < beforeNextSlotLatchIndex
+    && beforeNextSlotLatchIndex < nextSlotAwaitingIndex
+    && nextSlotAwaitingIndex < candidateSampleIndex
+    && candidateSampleIndex < beforeRealPointerIndex
+    && beforeRealPointerIndex < pointerIndex,
+  "generalized exact-actor terminal handoff must run before every later slot, candidate sample, and pointer");
+  assert.match(bossContactRegion, /observeBossFrontlineTerminalHandoff\("before-candidate-sample", \{[\s\S]*?boundedContactWait: proofActorRequiresContactFirst[\s\S]*?if \(bossFrontlineTerminalHandoff\) break;/u);
+  assert.match(bossContactRegion, /observeBossFrontlineTerminalHandoff\("after-accepted-pointer", \{[\s\S]*?boundedContactWait: proofActorRequiresContactFirst[\s\S]*?if \(bossFrontlineTerminalHandoff\) break;/u);
+  assert.match(bossContactRegion, /if \(bossFrontlineTerminalHandoff\) break;[\s\S]*?if \(await bossIsLive\(\)\) break;/u);
+  assert.match(source, /contactFirstTerminalHandoff: proofActorRequiresContactFirst \? bossFrontlineTerminalHandoff : null/u);
+  assert.match(source, /proofActorTerminalHandoff: bossFrontlineTerminalHandoff/u);
   assert.match(source, /targetContinuity\.allowSustainRedeploy/u);
   assert.match(source, /targetContinuity\.targetSurvivalPlanPending/u);
   const continuityHelper = source.match(/function proofActorTargetContinuityDecision\(\{([\s\S]+?)\n\}\n\nfunction combatCausalConvergenceDecision/u)?.[1] ?? "";
