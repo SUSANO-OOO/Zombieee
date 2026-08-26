@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r74`
+- Canonical Design Lock: `V100-SOL-DL-001 r77`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-82 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 83 is the sole current execution handoff.
+Sections 1-85 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 86 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2497,3 +2497,77 @@ Design Lock Section 90 and the latest explicitly labeled Issue #172 r74 lock are
 The accepted harness is still 160,696 bytes / `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`; both Phase G locks remain unchanged. The one r73 Chromium process passed all eight units, 48 checkpoints, seven canonical cross-unit receipts, 48 PNGs, eight contact sheets, 56/56 hash records, and fatal diagnostics zero. Its 1,643,182-byte summary is `a77f504d390d7f37d356d0fa5849818ef2f11e39c2039ff6273e94ff4ef3f002`. Content, 1,197/1,197, lint, final build, and repeated static are green. This local evidence is continuity only and is not final evidence freeze.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r74 local acceptance is green. Repeat governance/static read-back only, create one normal non-amended exact-six-path material-iteration-26 commit, transport it non-force once, and observe its one automatic focused CI. Any red, unexpected skip, wrong dependency/order, missing artifact, or head drift returns to SOL_DESIGN without retry; complete automatic focused green alone unlocks workflow-only iteration 27.**
+
+## 84. Revision r75 — no active Luna handoff / atomic unconsumed windup remediation
+
+Design Lock Section 91 and the latest explicitly labeled Issue #172 r75 lock are the sole active cursor. Sections 1-83 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R75_ATOMIC_UNCONSUMED_WINDUP_HANDOFF_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `9c777d61c7863370d99c9112aa59365869b88a2b`
+- `LAST_AUDITED_TREE`: `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`
+- `FAILED_GATE`: automatic focused CI `32930044262`, required Phase G job `98063712912`, ordered Stage 25 position 3 / WebKit 932x430; the selected shield's hidden exact attack was consumed into sequence-1 baseline and no second exact attack occurred before target loss/deadline; artifact `9593380067`
+- `LAST_GREEN_GATE`: r74 local acceptance; remote PR Verify, six enemy-runtime jobs, Hosted, all three Stage 3 axes, required Phase G Stage 6/24, valid host telemetry, and Stage 25 generic causal 4/4
+- `CLASSIFICATION`: `QA_HARNESS_PRE_RELEASE_WITNESS_CONSUMPTION / COMPLETED_HIDDEN_ATTACK_SELECTED_THEN_RELEASE_BASELINE_ADVANCED_TO_ITS_SEQUENCE / UNGUARANTEED_SECOND_EXACT_ATTACK_INSIDE_FIXED_VISIBLE_WINDOW / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `ATOMIC_UNCONSUMED_ATTACK_WINDUP_HANDOFF / EXACT RELEASE_ANCHOR_SELECTED_BEFORE_SEQUENCE_AND_CUE + VISIBLE_FIRST_QUALIFYING_ATTACK / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r74 remote candidate is terminal material iteration 26; r75 is material iteration 27; complete automatic focused green alone unlocks workflow-only iteration 28
+- `SAME_GATE_REPEAT_COUNT`: `14` for required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path r75 correction -> Phase G source 12/12 + Design Lock 19/19 + canonical 55/55 -> exact static/fresh build -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one material-iteration-27 normal non-amended commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 28 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Change exactly these six paths and no others: `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, Design Lock, this Handoff, `docs/PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. Preserve deployment owners exactly at 160,696 bytes / `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85` and 46,516 bytes / `d7a5cc7543143f7d0a8903b2750b5c0f317491497eadc57f97cadd59c540bdce`, plus all `app/**`, workflow, package/lock, public/assets, product, gameplay, timing, target selection, VFX/audio, timeout, acceptance, screenshot, retry, and release bytes/contracts.
+
+Implement Design Lock Section 91.2 literally. `actorSpecs[0]` is the release anchor. Publish the observer snapshot page time, accept only a fresh real production windup with unchanged selected fighter/sequence/live opposite target, release once and re-read the production bridge in the same page task, then arm readiness v2 / proof v4 with a bounded valid anchor receipt. The exact first visible sequence advance and exact post-cutoff cue remain mandatory. Stage 6 ranger remains both the existing hidden supporting prerequisite and an unchanged required post-release exact actor; no evidence may be removed or substituted.
+
+Run the Section 91.3 sequence once. Preserve the accepted r73 deployment browser result by byte continuity and do not rerun it. Run one fresh ordered WebKit Stage 6/24/25 process only after source/static/build green. A first red, unexpected skip, missing artifact, dependency/order mismatch, or scope need returns to `SOL_DESIGN` without edit, retry, rerun, dispatch, timeout change, or alternate process. Complete local green authorizes one material-iteration-27 normal commit/transport; complete automatic focused green alone authorizes workflow-only iteration 28.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — implement only Design Lock Section 91's six-path atomic unconsumed-windup handoff. Preserve product and deployment bytes, keep all exact actor/target/cue and fixed-window acceptance, run the prescribed source/static gates and one fresh ordered Stage 6/24/25 process once, then one normal material-iteration-27 transport and its one automatic focused CI. First red returns to SOL_DESIGN without retry; complete remote green alone unlocks workflow-only iteration 28.**
+
+## 85. Revision r76 — no active Luna handoff / immutable windup-target recovery
+
+Design Lock Section 92 and the latest explicitly labeled Issue #172 r76 lock are the sole active cursor. Sections 1-84 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R76_IMMUTABLE_WINDUP_TARGET_RECOVERY_READY`
+- `LAST_AUDITED_HEAD`: `9c777d61c7863370d99c9112aa59365869b88a2b`
+- `LAST_AUDITED_TREE`: `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`
+- `FAILED_GATE`: first and only `r75-local-ordered-1`, ordered Stage 25 position 3 / WebKit 932x430; selected shield fighter 4 had a valid unconsumed windup target 5, committed exact sequence 0 -> 1 and exact cue within 265 ms, but mutable attacker target was null at the observer read; no retry/rerun/second process
+- `LAST_GREEN_GATE`: r76 Phase G source/checkpoint 12/12; r75 Stage 6 and Stage 24 green plus Stage 25 handoff, selected sequence/cue/event-time, target reaction, and generic causal 4/4; r75 pre-runtime source/static/fresh build green
+- `CLASSIFICATION`: `QA_HARNESS_POST_COMMIT_TARGET_SOURCE_MISMATCH / EXACT_RELEASE_ANCHOR_SEQUENCE_AND_CUE_COMMITTED_BUT_MUTABLE_ATTACKER_TARGET_CLEARED_BEFORE_OBSERVER_READ / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `IMMUTABLE_RELEASE_ANCHOR_TARGET_RECOVERY / FIRST_BASELINE_PLUS_ONE_COMMIT_INSIDE_DERIVED_WINDUP_BOUND + SAME_SNAPSHOT_LIVE_TARGET + EXACT_CUE / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r76 local/transport/remote red returns to `SOL_DESIGN` as a new revision
+- `LOOP_ITERATION`: r75-r76 remain one uncommitted material iteration 27; complete automatic focused green alone unlocks workflow-only iteration 28
+- `SAME_GATE_REPEAT_COUNT`: `14` for required remote Phase G; r75 local post-commit target-source mismatch count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path r76 target-source packet -> Design Lock 19/19 + canonical 55/55 + exact static/fresh build -> one fresh ordered Stage 6/24/25 process 3/3 -> content/full/lint/build/static -> one material-iteration-27 normal non-amended commit/non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 28 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Change no path outside the existing r75 six-path draft. Advance only Phase G post-release proof to v5. Preserve readiness v2 and the valid same-task unconsumed-windup release. If the exact release-anchor fighter's mutable target is null at its first sequence increment, recover only the immutable handoff target and only when sequence is exactly baseline + 1, commit battle time is within `max(0.8 seconds, remaining windup + 0.5 seconds)`, and that target is still an alive opposite-side fighter in the same production snapshot. Mark this source `release-anchor-bound-windup`; direct current targeting remains `live-attacker-target`. Supporting ranger and every non-anchor actor must use direct live targeting and receive no fallback.
+
+Preserve exact fighter/sequence/target/cue, source liveness at observation, event-time deadline, causal 4/4, target reaction, minimum dwell/samples, three restored frames, screenshot, 15/15 checkpoints, fatal zero, all fixed windows, accepted deployment byte locks, `app/**`, workflow, product, gameplay, target selection, VFX/audio, timeout, retry, and release state. Reject sequence jumps, late commits, unknown target source, dead/missing target, audio-only, wrong actor/target, or later/history-only substitution.
+
+Run Design Lock Section 92.3 once. Do not rerun the accepted r73 deployment browser process. One fresh ordered Stage 6/24/25 process is authorized only after source/static/fresh-build green. Any red returns to `SOL_DESIGN` as a new revision without edit, retry, rerun, dispatch, timeout change, or alternate process. Complete local green authorizes one material-iteration-27 normal transport; complete automatic focused green alone authorizes workflow-only iteration 28.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — execute Design Lock Section 92 only. Preserve the r75 unconsumed-windup draft; bind a null mutable attacker target only to the same live immutable handoff target for the exact baseline-plus-one commit inside the derived short boundary, keep all exact cue/causal/target checks, and run one ordered Stage 6/24/25 process once. First red returns to SOL_DESIGN as a new revision; complete remote green alone unlocks workflow-only iteration 28.**
+
+## 86. Revision r77 — no active Luna handoff / local acceptance green and iteration-27 transport
+
+Design Lock Section 93 and the latest explicitly labeled Issue #172 r77 lock are the sole active cursor. Sections 1-85 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R77_LOCAL_ACCEPTANCE_GREEN / ITERATION_27_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `9c777d61c7863370d99c9112aa59365869b88a2b`
+- `LAST_AUDITED_TREE`: `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`
+- `FAILED_GATE`: none in r77 local acceptance; next unexecuted gate is one material-iteration-27 normal commit/non-force immutable transport and its one automatic focused CI
+- `LAST_GREEN_GATE`: first and only `r76-local-ordered-1` Stage 6/24/25 exactly 3/3; v5 actor and causal proofs; 15/15 checkpoints per stage; source 12/12; Design Lock 19/19; canonical 55/55; content; complete 1,197/1,197; lint zero errors/nine existing warnings; final build; repeated integrity
+- `CLASSIFICATION`: `R76_LOCAL_ORDERED_ACCEPTANCE_COMPLETE / IMMUTABLE_WINDUP_TARGET_RECOVERY_VALIDATED / LOCAL_GREEN`
+- `REMEDIATION_CLASS`: `R76_LOCAL_ACCEPTANCE_READBACK / MATERIAL_ITERATION_27_TRANSPORT_READY / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first governance/static, transport, or remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r75-r77 remain one untransported material iteration 27; complete automatic focused green alone unlocks workflow-only iteration 28
+- `SAME_GATE_REPEAT_COUNT`: `14` for required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance/static read-back only -> one normal non-amended exact-six-path material-iteration-27 commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 28 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD production runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+
+The one `r76-local-ordered-1` process passed Stage 6/24/25 exactly 3/3 with fresh WebKit sessions, 15/15 checkpoints per stage, causal 4/4, three production screenshots, release deadlines true, and console/page/request/HTTP/page-closed zero. Its 11,277,382-byte report SHA-256 is `18c0080b62c46cb4deef54e9aeb89b007c4465dd540ee0326397e21ee2d41765`; screenshot hashes are `a127605de03f2c065e9f366be42e4c5ed03991c2de442477baeb4092c3f49018`, `947c7dc482b64a730d0e2995404687f3d3155de1f5eed654454c73fc0dbae5b7`, and `5da948ccf8ae79ab9329d0a7e57a72a1ac790a4beb1b4bae563bc9ca407b40ac`. The successful runtime schedule used direct live targets; fallback acceptance and rejection boundaries remain source-probe evidence, not a claimed runtime fallback. Content, 1,197/1,197, lint, final build, and exact static integrity are green.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r77 local acceptance is green. Repeat governance/static read-back only, create one normal non-amended exact-six-path material-iteration-27 commit, transport it non-force once onto the freshly re-fetched unchanged r74 remote HEAD/tree, and observe its one automatic focused CI. Any red, unexpected skip, wrong dependency/order, missing artifact, or head/tree drift returns to SOL_DESIGN without retry; complete automatic focused green alone unlocks workflow-only iteration 28.**

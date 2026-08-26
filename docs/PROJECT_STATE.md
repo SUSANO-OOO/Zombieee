@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`384bbc108e3aadcec134d842ed4c08f0d730fd29`、tree `a73c933f683a40cdf938aec316b477246cab484c`。これはr74が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
-- production implementation／runtime asset integration：Draft candidate上に実装済み。r72 cross-unit harnessとr73 assignment-only source correctionのlocal acceptanceはgreen。material iteration 26はまだcommit／transportしておらず、automatic focused CIは未実行
-- current Design Lock：`V100-SOL-DL-001 r74` Sections 28-90。r73 material bytesをacceptedとして固定し、governance/static read-back後のone normal exact-six-path iteration-26 transportだけを次工程とする。r71 Phase G bytes、`app/**`、product bridge／gameplay／acceptance／timeout／retry／release境界は不変。`PRODUCT_DESIGN_CHANGE: 0`
+- LAST_AUDITED_HEAD：`9c777d61c7863370d99c9112aa59365869b88a2b`、tree `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`。これはr77が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- production implementation／runtime asset integration：Draft candidate上に実装済み。r74 material iteration 26はremoteへtransport済み。r76 first and only ordered processはStage 6／24／25 exact 3/3、全local gate green。r75-r77 exact six-path material iteration 27はcommit／transport前で、r77 governance/static read-backだけが残る
+- current Design Lock：`V100-SOL-DL-001 r77` Sections 28-93。r76 immutable windup-target recoveryのfirst local acceptanceを固定し、same material iteration 27のnormal commit／non-force transportへ進む。`app/**`、workflow、product bridge／gameplay／acceptance／timeout／retry／release境界は不変。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -62,8 +62,8 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
-- current remote candidateはr71 HEAD `384bbc108e3aadcec134d842ed4c08f0d730fd29`／tree `a73c933f683a40cdf938aec316b477246cab484c`。automatic focused CI `32926247795`のPR Verify job `98049635346`がterminal red。required Phase G job `98050958030`はdependency-skipped。retry／rerun／dispatchなし。
-- latest remote required failureはartifact `9591755756`（ZIP SHA-256 `4118c47ae935386d02ea3646deda44c52a53bbe4bb9d9e4e316a3514fa656ee1`）。そのr71 cross-unit pause handoff gapはr72/r73 local acceptanceで閉じたが、まだremoteへtransportしていない。r74 accepted harnessは160,696 bytes／`cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`で、次のrequired evidenceはiteration-26 transport由来のone automatic focused CIである。
+- current remote candidateはr74 HEAD `9c777d61c7863370d99c9112aa59365869b88a2b`／tree `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`。automatic focused CI `32930044262`はPR Verify、six enemy-runtime、Hosted、Stage 3 three axes、required Phase G Stage 6/24がgreenで、required Phase G job `98063712912`のordered Stage 25だけterminal red。retry／rerun／dispatchなし。
+- latest remote required artifactは`9593380067`、ZIP 1,991,722 bytes／SHA-256 `f2189be0146199326b2f640ece2fe7377955519c93604ed3b7b15bd466e6f329`。Stage 25 exact shieldはhidden attackでsequence 0 -> 1後に選択され、release baseline 1から57/57 samples／10,997 msでadvanceせずtargetを失った。page／production screenshot／host telemetryは健全、generic causal 4/4、fatal diagnostics 0。同一byteのr71 local passはrelease後約1.1秒で偶然sequence 2へ進んだ。classification／remediationはSection 91のatomic unconsumed-windup handoffであり、product correctionではない。
 - r60 classification／remediation：`INDEPENDENT_QA_SEMANTIC_AND_WEBKIT_TRANSPORT_FAILURES / POST_QUIESCENCE_PROOF_EPOCH_GAP + STAGE3_FINAL_AND_DEPLOYMENT_PNG_ANON_PIPE_WRITE_BACKPRESSURE / DESIGN_CHANGE_REQUIRED`；`POST_RESTORATION_PROOF_EPOCH + FINITE_PRESENTATION_TRANSPORT_OWNERS / PRODUCT_SIMULATION_AND_ACCEPTANCE_UNCHANGED / DESIGN_CHANGE_REQUIRED`。Phase Gはhidden-period attackをfresh proofに流用しない。Stage 3 finalとdeployment PNGはsimulation／acceptanceを変えず有限presentation ownerで閉じる。exact eleven-path r60 correctionはlocal bounded preflight済みだが、final normalized-byte acceptance／commit／transport／automatic CIは未実施。
 - r49 historical classification／remediation：`QA_PRESENTATION_TRANSPORT_BACKPRESSURE / CONTINUOUS_HEADLESS_WEBKIT_CANVAS_COMPOSITING + ANON_PIPE_WRITE_D_STATE + CLEAN_WEBCONTENT_TERMINATION / DESIGN_CHANGE_REQUIRED`；`LOCALHOST_QA_PRESENTATION_QUIESCENCE / SIMULATION_CONTINUES + EXACT_SEMANTIC_BOUNDARY + THREE_VISIBLE_PRODUCTION_FRAMES_BEFORE_ACCEPTANCE / DESIGN_CHANGE_REQUIRED`。三failureはproduct stateが異なるが、terminal processはいずれもWebContent `anon_pipe_write` D-state、multi-GB `wchar`、clean diagnostics、OOM event 0。Phase G simulation／proofとdeployment semantic pause／six PNG acceptanceは変更しない。
 - r23 historical candidateはHEAD `97e6bc60a9130c68b8a1cfcd86b7b76b9d769478`／tree `f9ff663dd8e3c36f8553153fe1d4fc3d5b0d4727`。remote compareはparent `4191afe2fe84283125c0e9ec817185c94685630c`からone commit ahead／zero behind／exact seven paths。automatic focused run `32686937760`（#923）はpost-push source audit時点でqueuedかつterminal未受入であり、r24 exact candidateのpromotion proofには使わない。
@@ -181,7 +181,7 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r49-r52 iteration history：r49 correctionはiteration 20、r50 correctionはiteration 21、r51／r52 correctionはiteration 22、complete automatic green後のworkflow-only restorationはiteration 23。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r74 Section 90
+## 6. Version 1.0.0 execution cursor — r77 Section 93
 
 - Actual r42 local acceptance: both P5 syntax checks、focused 39/39、Design Lock 19/19、content validation、full 1,196/1,196、lint 0 errors / 9 existing warnings、production build、diff／byte／EOL／BOM／six-path topology、fresh Chromium entrance 2/2、fresh Chromium full 4/4が各first authorized attemptでgreen。全browser caseは`finite-hud-runtime-qa`、generation 3、total 29、pending 0、failed 0、`dispatchCount: 1`、fatal diagnostics 0。iteration-19 commit／push／automatic CIは未実行。
 - Actual r46 source/static acceptance: final-loop static preflight 35 sources／missing 0、P5 syntax、focused 39/39、content、full 1,196/1,196＋production build、lint 0 errors / 9 existing warnings、diff／byte／EOL／BOM／exact six-path／forbidden／evidence preservationがgreen。r42 P5 hashes `d57b502b...ae790`／`70723ef3...e300c`とChromium 2/2／4/4は不変のlocal continuity evidence。
@@ -234,8 +234,14 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 - Actual r73 local acceptance / r74 read-back: assignment-only negative correction後、syntax、runtime-evidence 3/3、Design Lock 19/19、canonical 55/55、r72 harness 160,696 bytes／`cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`、r71 Phase G byte locks、exact six-path／forbidden／UTF-8 no-BOM／EOL／protected manifests／`git diff --check`、fresh buildがgreen。first and only Chromium 667x375 same-page deployment process `zombieee-r73-deployment-01a00a4c-fcfa-7f61-run1`は8/8 units、48/48 checkpoints、seven canonical cross-unit receipts、48 PNGs、8 sheets、56/56 unique disk-hash records、fatal／console／page／request／HTTP／page-crash 0。summaryは1,643,182 bytes／`a77f504d390d7f37d356d0fa5849818ef2f11e39c2039ff6273e94ff4ef3f002`、process内build identity stable。content、full 1,197/1,197、lint 0 errors／9 existing warnings、final build、repeated exact integrityもgreen。retry／rerun／second browser processなし。r71 ordered Phase Gはsource/app byte continuityにより再実行せず、final freezeへは流用しない。r74 governance read-back後はgovernance/staticだけを再確認する。
 
-- `LOOP_ITERATION`: r65 remote candidateはmaterial iteration 24、r71 remote candidateはmaterial iteration 25でterminal PR Verify red。r72 coherent correctionはmaterial iteration 26。workflow-only unfiltered restorationはcomplete automatic focused green後のiteration 27
-- `SAME_GATE_REPEAT_COUNT`: `13` for required Phase G job
+- Actual r74 remote return / r75 design: material iteration 26はremote HEAD `9c777d61c7863370d99c9112aa59365869b88a2b`／tree `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`へ一度だけ非force transport。automatic focused CI `32930044262`はrequired Phase G job `98063712912`だけred。artifact `9593380067`／1,991,722-byte ZIP／SHA-256 `f2189be0146199326b2f640ece2fe7377955519c93604ed3b7b15bd466e6f329`。Stage 6／24はordered position 1／2 green。Stage 25 position 3 (`stage-mugarian-executive-lab`, WebKit 932x430)はselected shield fighter 4がhidden sequence 0 -> 1後にrelease baseline 1となり、57/57 valid samples／10,997 msでsequence advanceなし、target null。pageとproduction screenshotはintact、generic causal 4/4、fatal／console／page／request／HTTP／host OOM／D-state 0。同一byteのr71 local Stage 25はbaseline 1から約1.1秒で偶然sequence 2へ進んだ。classification `QA_HARNESS_PRE_RELEASE_WITNESS_CONSUMPTION / COMPLETED_HIDDEN_ATTACK_SELECTED_THEN_RELEASE_BASELINE_ADVANCED_TO_ITS_SEQUENCE / UNGUARANTEED_SECOND_EXACT_ATTACK_INSIDE_FIXED_VISIBLE_WINDOW / DESIGN_CHANGE_REQUIRED`、remediation `ATOMIC_UNCONSUMED_ATTACK_WINDUP_HANDOFF / EXACT RELEASE_ANCHOR_SELECTED_BEFORE_SEQUENCE_AND_CUE + VISIBLE_FIRST_QUALIFYING_ATTACK / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`。retry／rerun／dispatchなし。
+
+- Actual r75 local return / r76 design: pre-runtime syntax、Phase G checkpoint 12/12、Design Lock 19/19、canonical 55/55、exact six-path／deployment byte locks／UTF-8 no-BOM／EOL／protected evidence／`git diff --check`、fresh buildはgreen。first and only ordered process `r75-local-ordered-1`はStage 6 WebKit 667x375とStage 24 WebKit 736x414をgreenにし、Stage 25 WebKit 932x430だけで停止。release page time 46,756／battle time 44.0666でshield fighter 4はsequence 0、windup 0.22、live guardian target 5。page time 47,021／battle time 44.35にsame fighter sequence 1、exact cueは47,001、source／event time／generic causal 4/4／target reaction成立。exact decisionだけがmutable `fighter.targetId: null`によりtarget false。checkpoint 4,555,799 bytes／SHA-256 `3f180e6b4a21b8822a2c24eb79438fdbd11f9936b7b0c1371ce75dc8df16c8d7`、failure PNG 684,348 bytes／`adba82d2e644513493f750457efd8ea1b49d513b084b621b4a11b77b88d626fd`。classification `QA_HARNESS_POST_COMMIT_TARGET_SOURCE_MISMATCH / EXACT_RELEASE_ANCHOR_SEQUENCE_AND_CUE_COMMITTED_BUT_MUTABLE_ATTACKER_TARGET_CLEARED_BEFORE_OBSERVER_READ / DESIGN_CHANGE_REQUIRED`、remediation `IMMUTABLE_RELEASE_ANCHOR_TARGET_RECOVERY / FIRST_BASELINE_PLUS_ONE_COMMIT_INSIDE_DERIVED_WINDUP_BOUND + SAME_SNAPSHOT_LIVE_TARGET + EXACT_CUE / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`。r76 Phase G source/checkpoint 12/12はgreen。ordered retry／rerun／second processなし。
+
+- Actual r76 local acceptance / r77 read-back: first and only `r76-local-ordered-1`はfresh `webkit-1/2/3`でStage 6 WebKit 667x375、Stage 24 WebKit 736x414、Stage 25 WebKit 932x430をexact 3/3。各stageは15/15 checkpoints、unresolved 0、causal 4/4／19 valid samples、production screenshot、release deadline true、console／page／request／HTTP／page-closed 0。Stage 6 spitter／ranger、Stage 24 commander、Stage 25 shieldはいずれもfirst baseline-plus-one sequenceとliving opposite-side target、exact cueを満たし、このsuccessful scheduleは全件`targetEvidenceSource: live-attacker-target`。fallbackはruntime使用を主張せず、source probesでpositive／negative boundaryを確認。merged report 11,277,382 bytes／`18c0080b62c46cb4deef54e9aeb89b007c4465dd540ee0326397e21ee2d41765`、PNG hashes `a127605de03f2c065e9f366be42e4c5ed03991c2de442477baeb4092c3f49018`／`947c7dc482b64a730d0e2995404687f3d3155de1f5eed654454c73fc0dbae5b7`／`5da948ccf8ae79ab9329d0a7e57a72a1ac790a4beb1b4bae563bc9ca407b40ac`。checkpoint 12/12、Design Lock 19/19、canonical 55/55、content、full 1,197/1,197、lint 0 errors／9 existing warnings、final build、exact six-path／forbidden／byte／LF／BOM／protected／`git diff --check`はgreen。ordered retry／rerun／second processなし。r77 read-back後はgovernance/staticだけを再確認し、browser／content／full／lint／buildを再実行しない。
+
+- `LOOP_ITERATION`: r65 remote candidateはmaterial iteration 24、r71 remote candidateはmaterial iteration 25、r74 remote candidateはmaterial iteration 26でterminal required Phase G red。r75-r77 coherent correction／read-backは一つの未commit material iteration 27。workflow-only unfiltered restorationはcomplete automatic focused green後のiteration 28
+- `SAME_GATE_REPEAT_COUNT`: `14` for required Phase G job
 - `DEFERRED_STAGE24_REPEAT_COUNT`: `4`
 - `R24_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
 - `R26_REMOTE_DEPLOYMENT_CLEAN_CRASH_COUNT`: `2`
@@ -346,21 +352,33 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - `R73_LOCAL_CROSS_UNIT_RESUME_RECEIPT_GREEN_COUNT`: `7` of 7
 - `R73_LOCAL_DEPLOYMENT_ARTIFACT_INTEGRITY_GREEN_COUNT`: `56` of 56
 - `R73_LOCAL_DEPLOYMENT_RETRY_RERUN_COUNT`: `0`
-- `ROLE_LOCK`: `SOL_REMEDIATION`。next first transport／remote failureは`SOL_DESIGN`へ戻る
-- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
-- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
-- `FAILED_GATE`: none in r74 local acceptance；next unexecuted gate is material iteration-26 normal commit／non-force immutable transport and its one automatic focused CI
-- `LAST_GREEN_GATE`: source 3/3、Design Lock 19/19、canonical 55/55、exact static/build、Chromium 667x375 same-page deployment 8/8／48/48／seven resumes／56/56／diagnostics 0、content、full 1,197/1,197、lint 0 errors／9 warnings、final build、repeated integrity
-- `CLASSIFICATION`: `R72_R73_LOCAL_REMEDIATION_ACCEPTED / CROSS_UNIT_LIVE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_GREEN`
-- `REMEDIATION_CLASS`: `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_ACCEPTANCE_COMPLETE`
-- `RESUME_FROM`: governance/static read-back only -> material iteration-26 normal non-amended exact-six-path commit／non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human visual/event/battle/audio/mobile/save/PWA/asset/release audits -> evidence freeze -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+- `R74_REMOTE_PHASE_G_STAGE6_GREEN_COUNT`: `1` at ordered position 1
+- `R74_REMOTE_PHASE_G_STAGE24_GREEN_COUNT`: `1` at ordered position 2
+- `R74_REMOTE_PHASE_G_STAGE25_EXACT_ACTOR_FAILURE_COUNT`: `1` at ordered position 3
+- `R74_REMOTE_STAGE25_VALID_SAMPLE_COUNT`: `57` of 57 over `10997` ms
+- `R74_REMOTE_STAGE25_GENERIC_CAUSAL_GREEN_COUNT`: `4` of 4 axes
+- `R74_REMOTE_PHASE_G_RETRY_RERUN_COUNT`: `0`
+- `R75_LOCAL_ORDERED_STAGE6_GREEN_COUNT`: `1` at ordered position 1
+- `R75_LOCAL_ORDERED_STAGE24_GREEN_COUNT`: `1` at ordered position 2
+- `R75_LOCAL_STAGE25_POST_COMMIT_TARGET_SOURCE_FAILURE_COUNT`: `1` at ordered position 3
+- `R75_LOCAL_STAGE25_RELEASE_TO_SEQUENCE_COMMIT_MS`: `265`
+- `R75_LOCAL_STAGE25_GENERIC_CAUSAL_GREEN_COUNT`: `4` of 4 axes
+- `R75_LOCAL_PHASE_G_RETRY_RERUN_COUNT`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`。next first local／transport／remote failureは`SOL_DESIGN`へ戻る
+- `LAST_AUDITED_HEAD`: `9c777d61c7863370d99c9112aa59365869b88a2b`
+- `LAST_AUDITED_TREE`: `ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee`
+- `FAILED_GATE`: none in r77 local acceptance；next unexecuted gateはmaterial iteration-27 normal commit／non-force immutable transportとそのone automatic focused CI
+- `LAST_GREEN_GATE`: first and only `r76-local-ordered-1` Stage 6／24／25 exact 3/3、v5 exact actor／causal 4/4、各15/15 checkpoints、source 12/12、Design Lock 19/19、canonical 55/55、content、full 1,197/1,197、lint 0 errors／9 existing warnings、final build、repeated exact integrity
+- `CLASSIFICATION`: `R76_LOCAL_ORDERED_ACCEPTANCE_COMPLETE / IMMUTABLE_WINDUP_TARGET_RECOVERY_VALIDATED / LOCAL_GREEN`
+- `REMEDIATION_CLASS`: `R76_LOCAL_ACCEPTANCE_READBACK / MATERIAL_ITERATION_27_TRANSPORT_READY / GOVERNANCE_ONLY`
+- `RESUME_FROM`: governance/static read-back only -> material iteration-27 normal non-amended commit／non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 28 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human visual/event/battle/audio/mobile/save/PWA/asset/release audits -> evidence freeze -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
 - `NEXT_OWNER`: `SOL_REMEDIATION`
 
-PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25-r71のfresh-process、causal identity、approved material、pinned runtime、bounded proof convergence、atomic P5 dispatch、全source correctionとdiagnostic evidenceを再作成せず保持する。r71 ordered greenとr73 deployment greenはlocal continuity evidenceとして保持し、governance read-backだけを理由に再実行しない。ただしfinal evidence freezeには流用しない。r71 remote deployment failureはdiagnostic-only。automatic focused complete green後だけworkflow-only iteration 27とSection 28のfull/unfiltered/runtime/human audit/`SOL_FINAL_REVIEW`/release routeへ進む。
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。r25-r76のfresh-process、causal identity、approved material、pinned runtime、bounded proof convergence、atomic P5 dispatch、全source correctionとdiagnostic／acceptance evidenceを再作成せず保持する。r71 ordered greenとr73 deployment greenはlocal continuity evidenceとして保持し、final evidence freezeには流用しない。r74 remote Phase G artifactとr75 local ordered evidenceはr76 diagnosis evidenceでありacceptanceへ流用しない。r76 local ordered greenはiteration-27 continuity evidenceでありfinal evidence freezeには流用しない。automatic focused complete green後だけworkflow-only iteration 28とSection 28のfull/unfiltered/runtime/human audit/`SOL_FINAL_REVIEW`/release routeへ進む。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-90のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r74を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-93のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r77を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

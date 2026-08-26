@@ -39,9 +39,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r74`/u);
+  assert.match(design, /Revision: `r77`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r74`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r77`/u);
   assert.match(handoff, /docs\/CODEX_SOL_ROLE\.md/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -303,7 +303,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(causalTest, /sourceToTargetEdges/u);
   assert.match(causalTest, /sourceAttribution/u);
   assert.match(causalTest, /does not substitute attacker, impact, reaction, or audio evidence/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r74`/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r77`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
   for (const source of [sourceConsistency, sourceConsistencyHandoff, projectState]) {
     assert.match(source, /SOL_PACKET_CANONICAL_STATE_CONTRACT \/ R10_REMEDIATION_CLASS_OMITTED_FROM_PROJECT_STATE \/ REMEDIATION_LOCAL/u);
@@ -320,7 +320,7 @@ test("r11 preserves r8-r10 ownership and closes monotonic Stage 24 causal histor
   assert.match(projectState, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
 });
 
-test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal continuity, and one final Producer checkpoint", async () => {
+test("r12-r77 lock SOL actionability, WebKit lifecycle, asset ownership, causal continuity, and one final Producer checkpoint", async () => {
   const [design, handoff, projectState, boundedDeploymentRunner] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
@@ -389,7 +389,10 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   const r71 = design.match(/## 87\. Revision r71([\s\S]+?)(?=## 88\. Revision r72)/u)?.[1] ?? "";
   const r72 = design.match(/## 88\. Revision r72([\s\S]+?)(?=## 89\. Revision r73)/u)?.[1] ?? "";
   const r73 = design.match(/## 89\. Revision r73([\s\S]+?)(?=## 90\. Revision r74)/u)?.[1] ?? "";
-  const r74 = design.match(/## 90\. Revision r74([\s\S]*)$/u)?.[1] ?? "";
+  const r74 = design.match(/## 90\. Revision r74([\s\S]+?)(?=## 91\. Revision r75)/u)?.[1] ?? "";
+  const r75 = design.match(/## 91\. Revision r75([\s\S]+?)(?=## 92\. Revision r76)/u)?.[1] ?? "";
+  const r76 = design.match(/## 92\. Revision r76([\s\S]+?)(?=## 93\. Revision r77)/u)?.[1] ?? "";
+  const r77 = design.match(/## 93\. Revision r77([\s\S]*)$/u)?.[1] ?? "";
   const historicalHandoff = handoff.match(/## 22\. Revision r13([\s\S]+?)(?=## 23\. Revision r14)/u)?.[1] ?? "";
   const r14Handoff = handoff.match(/## 23\. Revision r14([\s\S]+?)(?=## 24\. Revision r15)/u)?.[1] ?? "";
   const r15Handoff = handoff.match(/## 24\. Revision r15([\s\S]+?)(?=## 25\. Revision r16)/u)?.[1] ?? "";
@@ -451,9 +454,12 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   const r71Handoff = handoff.match(/## 80\. Revision r71([\s\S]+?)(?=## 81\. Revision r72)/u)?.[1] ?? "";
   const r72Handoff = handoff.match(/## 81\. Revision r72([\s\S]+?)(?=## 82\. Revision r73)/u)?.[1] ?? "";
   const r73Handoff = handoff.match(/## 82\. Revision r73([\s\S]+?)(?=## 83\. Revision r74)/u)?.[1] ?? "";
-  const activeHandoff = handoff.match(/## 83\. Revision r74([\s\S]*)$/u)?.[1] ?? "";
+  const r74Handoff = handoff.match(/## 83\. Revision r74([\s\S]+?)(?=## 84\. Revision r75)/u)?.[1] ?? "";
+  const r75Handoff = handoff.match(/## 84\. Revision r75([\s\S]+?)(?=## 85\. Revision r76)/u)?.[1] ?? "";
+  const r76Handoff = handoff.match(/## 85\. Revision r76([\s\S]+?)(?=## 86\. Revision r77)/u)?.[1] ?? "";
+  const activeHandoff = handoff.match(/## 86\. Revision r77([\s\S]*)$/u)?.[1] ?? "";
   const currentProcess = projectState.match(/## 4\. 実行体制 — V1 SOL single-owner override([\s\S]+?)## 5\./u)?.[1] ?? "";
-  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r74 Section 90([\s\S]+?)### Post-V1/u)?.[1] ?? "";
+  const currentCursor = projectState.match(/## 6\. Version 1\.0\.0 execution cursor — r77 Section 93([\s\S]+?)### Post-V1/u)?.[1] ?? "";
 
   for (const source of [r12, projectState]) {
     assert.match(source, /0495e95e3bc59fcf546ffa02ee83704a1f63e366/u);
@@ -681,7 +687,7 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   assert.match(r16Handoff, /keep the r15 app\/runner draft unchanged/u);
   assert.match(r16Handoff, /fresh Stage 6 3\/3, Stage 24 3\/3, and ordered trio 3\/3/u);
   assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
-  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `13`/u);
+  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `14`/u);
   assert.match(currentCursor, /DEFERRED_STAGE24_REPEAT_COUNT`: `4`/u);
 
   for (const source of [r17, r17Handoff, projectState]) {
@@ -738,7 +744,7 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   assert.match(r18, /targeted 1\/1; then seven-file load-only 7\/7 and exact focused 60\/60/u);
   assert.match(r18, /material candidate remains 5; workflow-only restoration remains 6/u);
   assert.match(r18Handoff, /edit only the existing deployment-runner assertion region/u);
-  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `13`/u);
+  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `14`/u);
 
   for (const source of [r19, r19Handoff, projectState]) {
     assert.match(source, /SOL_OWNED_BYTE_CONTRACT_MISDECLARATION \/ PREEXISTING_CI_CONTRACT_UTF8_BOM_DECLARED_NO_BOM \/ DESIGN_CHANGE_REQUIRED/u);
@@ -1785,7 +1791,7 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
     assert.match(source, /iteration 26/u);
     assert.match(source, /iteration 27/u);
   }
-  for (const source of [r74, activeHandoff, currentCursor]) {
+  for (const source of [r74, r74Handoff]) {
     assert.match(source, /R72_R73_LOCAL_REMEDIATION_ACCEPTED \/ CROSS_UNIT_LIVE_RESUME \+ ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY \/ LOCAL_GREEN/u);
     assert.match(source, /BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME \+ ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY \/ LOCAL_ACCEPTANCE_COMPLETE/u);
     assert.match(source, /384bbc108e3aadcec134d842ed4c08f0d730fd29/u);
@@ -1793,7 +1799,34 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
     assert.match(source, /iteration 26/u);
     assert.match(source, /iteration 27/u);
   }
-  const currentOwners = [r74, activeHandoff, currentCursor].map((source) => source.match(/NEXT_OWNER`: `(SOL_DESIGN|SOL_REMEDIATION)`/u)?.[1] ?? "");
+  for (const source of [r75, r75Handoff]) {
+    assert.match(source, /QA_HARNESS_PRE_RELEASE_WITNESS_CONSUMPTION \/ COMPLETED_HIDDEN_ATTACK_SELECTED_THEN_RELEASE_BASELINE_ADVANCED_TO_ITS_SEQUENCE \/ UNGUARANTEED_SECOND_EXACT_ATTACK_INSIDE_FIXED_VISIBLE_WINDOW \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /ATOMIC_UNCONSUMED_ATTACK_WINDUP_HANDOFF \/ EXACT RELEASE_ANCHOR_SELECTED_BEFORE_SEQUENCE_AND_CUE \+ VISIBLE_FIRST_QUALIFYING_ATTACK \/ PRODUCT_UNCHANGED \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /9c777d61c7863370d99c9112aa59365869b88a2b/u);
+    assert.match(source, /ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee/u);
+    assert.match(source, /iteration 27/u);
+    assert.match(source, /iteration 28/u);
+    assert.match(source, /SAME_GATE_REPEAT_COUNT`: `14`/u);
+  }
+  for (const source of [r76, r76Handoff]) {
+    assert.match(source, /QA_HARNESS_POST_COMMIT_TARGET_SOURCE_MISMATCH \/ EXACT_RELEASE_ANCHOR_SEQUENCE_AND_CUE_COMMITTED_BUT_MUTABLE_ATTACKER_TARGET_CLEARED_BEFORE_OBSERVER_READ \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /IMMUTABLE_RELEASE_ANCHOR_TARGET_RECOVERY \/ FIRST_BASELINE_PLUS_ONE_COMMIT_INSIDE_DERIVED_WINDUP_BOUND \+ SAME_SNAPSHOT_LIVE_TARGET \+ EXACT_CUE \/ PRODUCT_UNCHANGED \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /9c777d61c7863370d99c9112aa59365869b88a2b/u);
+    assert.match(source, /ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee/u);
+    assert.match(source, /iteration 27/u);
+    assert.match(source, /iteration 28/u);
+    assert.match(source, /SAME_GATE_REPEAT_COUNT`: `14`/u);
+  }
+  for (const source of [r77, activeHandoff, currentCursor]) {
+    assert.match(source, /R76_LOCAL_ORDERED_ACCEPTANCE_COMPLETE \/ IMMUTABLE_WINDUP_TARGET_RECOVERY_VALIDATED \/ LOCAL_GREEN/u);
+    assert.match(source, /R76_LOCAL_ACCEPTANCE_READBACK \/ MATERIAL_ITERATION_27_TRANSPORT_READY \/ GOVERNANCE_ONLY/u);
+    assert.match(source, /9c777d61c7863370d99c9112aa59365869b88a2b/u);
+    assert.match(source, /ac3bb16aabfa28ee19a3dac2137f56a86b4cb9ee/u);
+    assert.match(source, /iteration 27/u);
+    assert.match(source, /iteration 28/u);
+    assert.match(source, /SAME_GATE_REPEAT_COUNT`: `14`/u);
+  }
+  const currentOwners = [r77, activeHandoff, currentCursor].map((source) => source.match(/NEXT_OWNER`: `(SOL_DESIGN|SOL_REMEDIATION)`/u)?.[1] ?? "");
   assert.equal(new Set(currentOwners).size, 1);
   assert.match(currentOwners[0], /^SOL_(?:DESIGN|REMEDIATION)$/u);
   assert.match(r48, /first r47 focused result/u);
@@ -2129,10 +2162,77 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   assert.match(r74, /full 1,197\/1,197/u);
   assert.match(r74, /High ambiguity: 0/u);
   assert.match(r74, /Medium ambiguity: 0/u);
-  assert.match(activeHandoff, /Section 90/u);
+  assert.match(r74Handoff, /Section 90/u);
+  assert.match(r74Handoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(r74Handoff, /R74_LOCAL_ACCEPTANCE_GREEN/u);
+  assert.match(r75, /32930044262/u);
+  assert.match(r75, /98063712912/u);
+  assert.match(r75, /9593380067/u);
+  assert.match(r75, /f2189be0146199326b2f640ece2fe7377955519c93604ed3b7b15bd466e6f329/u);
+  assert.match(r75, /57\/57 valid samples over 10,997 ms/u);
+  assert.match(r75, /about 1\.1 seconds later/u);
+  assert.match(r75, /change exactly six tracked paths/u);
+  assert.match(r75, /cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85/u);
+  assert.match(r75, /d7a5cc7543143f7d0a8903b2750b5c0f317491497eadc57f97cadd59c540bdce/u);
+  assert.match(r75, /actorSpecs\[0\]` is the release anchor/u);
+  assert.match(r75, /v100-phase-g-pre-release-readiness\/v2/u);
+  assert.match(r75, /v100-phase-g-post-quiescence-proof\/v4/u);
+  assert.match(r75, /observed 0-120 ms ago/u);
+  assert.match(r75, /snapshot age plus 80 ms/u);
+  assert.match(r75, /same release-anchor fighter is still alive\/ready\/in the same unconsumed windup/u);
+  assert.match(r75, /Stage 6 the human ranger must still complete/u);
+  assert.match(r75, /Phase G checkpoint tests exactly 12\/12/u);
+  assert.match(r75, /one fresh filtered ordered WebKit Phase G process/u);
+  assert.match(r75, /High ambiguity: 0/u);
+  assert.match(r75, /Medium ambiguity: 0/u);
+  assert.match(r75Handoff, /Section 91/u);
+  assert.match(r75Handoff, /NO ACTIVE LUNA HANDOFF/u);
+  assert.match(r75Handoff, /R75_ATOMIC_UNCONSUMED_WINDUP_HANDOFF_REMEDIATION_READY/u);
+  assert.match(r76, /r75-local-ordered-1/u);
+  assert.match(r76, /3f180e6b4a21b8822a2c24eb79438fdbd11f9936b7b0c1371ce75dc8df16c8d7/u);
+  assert.match(r76, /adba82d2e644513493f750457efd8ea1b49d513b084b621b4a11b77b88d626fd/u);
+  assert.match(r76, /page time 46,756 \/ battle time 44\.0666/u);
+  assert.match(r76, /page time 47,021 \/ battle time 44\.35/u);
+  assert.match(r76, /v100-phase-g-post-quiescence-proof\/v5/u);
+  assert.match(r76, /targetEvidenceSource: release-anchor-bound-windup/u);
+  assert.match(r76, /targetEvidenceSource: live-attacker-target/u);
+  assert.match(r76, /baselineAttackSequence \+ 1/u);
+  assert.match(r76, /max\(0\.8 seconds, attackWindupSeconds \+ 0\.5 seconds\)/u);
+  assert.match(r76, /same production snapshot/u);
+  assert.match(r76, /Supporting Stage 6 ranger[\s\S]*no anchor fallback/u);
+  assert.match(r76, /High ambiguity: 0/u);
+  assert.match(r76, /Medium ambiguity: 0/u);
+  assert.match(r76Handoff, /Section 92/u);
+  assert.match(r76Handoff, /R76_IMMUTABLE_WINDUP_TARGET_RECOVERY_READY/u);
+  assert.match(r77, /r76-local-ordered-1/u);
+  assert.match(r77, /18c0080b62c46cb4deef54e9aeb89b007c4465dd540ee0326397e21ee2d41765/u);
+  assert.match(r77, /a127605de03f2c065e9f366be42e4c5ed03991c2de442477baeb4092c3f49018/u);
+  assert.match(r77, /947c7dc482b64a730d0e2995404687f3d3155de1f5eed654454c73fc0dbae5b7/u);
+  assert.match(r77, /5da948ccf8ae79ab9329d0a7e57a72a1ac790a4beb1b4bae563bc9ca407b40ac/u);
+  assert.match(r77, /targetEvidenceSource: live-attacker-target/u);
+  assert.match(r77, /not selected at runtime and is not claimed as runtime evidence/u);
+  assert.match(r77, /1,197\/1,197/u);
+  assert.match(r77, /High ambiguity: 0/u);
+  assert.match(r77, /Medium ambiguity: 0/u);
+  assert.match(activeHandoff, /Section 93/u);
   assert.match(activeHandoff, /NO ACTIVE LUNA HANDOFF/u);
-  assert.match(activeHandoff, /R74_LOCAL_ACCEPTANCE_GREEN/u);
+  assert.match(activeHandoff, /R77_LOCAL_ACCEPTANCE_GREEN/u);
   assert.match(currentCursor, /Actual r73 local acceptance \/ r74 read-back/u);
+  assert.match(currentCursor, /Actual r74 remote return \/ r75 design/u);
+  assert.match(currentCursor, /Actual r75 local return \/ r76 design/u);
+  assert.match(currentCursor, /Actual r76 local acceptance \/ r77 read-back/u);
+  assert.match(currentCursor, /R74_REMOTE_PHASE_G_STAGE6_GREEN_COUNT`: `1` at ordered position 1/u);
+  assert.match(currentCursor, /R74_REMOTE_PHASE_G_STAGE24_GREEN_COUNT`: `1` at ordered position 2/u);
+  assert.match(currentCursor, /R74_REMOTE_PHASE_G_STAGE25_EXACT_ACTOR_FAILURE_COUNT`: `1` at ordered position 3/u);
+  assert.match(currentCursor, /R74_REMOTE_STAGE25_VALID_SAMPLE_COUNT`: `57` of 57 over `10997` ms/u);
+  assert.match(currentCursor, /R74_REMOTE_STAGE25_GENERIC_CAUSAL_GREEN_COUNT`: `4` of 4 axes/u);
+  assert.match(currentCursor, /R74_REMOTE_PHASE_G_RETRY_RERUN_COUNT`: `0`/u);
+  assert.match(currentCursor, /R75_LOCAL_ORDERED_STAGE6_GREEN_COUNT`: `1` at ordered position 1/u);
+  assert.match(currentCursor, /R75_LOCAL_ORDERED_STAGE24_GREEN_COUNT`: `1` at ordered position 2/u);
+  assert.match(currentCursor, /R75_LOCAL_STAGE25_POST_COMMIT_TARGET_SOURCE_FAILURE_COUNT`: `1` at ordered position 3/u);
+  assert.match(currentCursor, /R75_LOCAL_STAGE25_RELEASE_TO_SEQUENCE_COMMIT_MS`: `265`/u);
+  assert.match(currentCursor, /R75_LOCAL_STAGE25_GENERIC_CAUSAL_GREEN_COUNT`: `4` of 4 axes/u);
+  assert.match(currentCursor, /R75_LOCAL_PHASE_G_RETRY_RERUN_COUNT`: `0`/u);
   assert.match(currentCursor, /R73_LOCAL_CROSS_UNIT_RESUME_RECEIPT_GREEN_COUNT`: `7` of 7/u);
   assert.match(currentCursor, /Actual r65 local acceptance/u);
   assert.match(currentCursor, /Actual r65 remote return/u);
@@ -2171,7 +2271,7 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   );
   assert.match(currentCursor, /R36_REMOTE_PR_VERIFY_P5_ENTRANCE_DISPATCH_FAILURE_COUNT`: `1` job \/ `2` of four P5 cases/u);
   assert.match(currentCursor, /R36_REMOTE_PHASE_G_DEPENDENCY_SKIPPED_COUNT`: `1`/u);
-  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `13`/u);
+  assert.match(currentCursor, /SAME_GATE_REPEAT_COUNT`: `14`/u);
   assert.match(currentCursor, /R63_REMOTE_ORDERED_STAGE6_GREEN_COUNT`: `1` at ordered position 1/u);
   assert.match(currentCursor, /R63_REMOTE_STAGE24_ANON_PIPE_CRASH_COUNT`: `1` at ordered position 2/u);
   assert.match(currentCursor, /R63_REMOTE_STAGE25_NOT_RUN_COUNT`: `1`/u);
@@ -2222,7 +2322,7 @@ test("r12-r74 lock SOL actionability, WebKit lifecycle, asset ownership, causal 
   assert.match(currentCursor, /R26_REMOTE_STAGE24_CLEAN_CRASH_COUNT`: `1`/u);
   assert.match(currentCursor, /R25_LOCAL_STAGE25_PROOF_ATTACK_REPEAT_COUNT`: `1`/u);
 
-  for (const source of [r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r35, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r51, r52, r53, r54, r55, r56, r57, r58, r59, r60, r61, r62, r63, r64, r65, r66, r67, r68, r69, r70, r71, r72, r73, r74, activeHandoff, currentCursor]) {
+  for (const source of [r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r35, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r51, r52, r53, r54, r55, r56, r57, r58, r59, r60, r61, r62, r63, r64, r65, r66, r67, r68, r69, r70, r71, r72, r73, r74, r75, r76, r77, activeHandoff, currentCursor]) {
     assert.match(source, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT|one final Producer checkpoint/u);
     assert.match(source, /SOL_FINAL_REVIEW/u);
   }
