@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r88`
+- Revision: `r92`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -5808,3 +5808,330 @@ After success, re-fetch GitHub and require the remote HEAD/tree to equal the exa
 The release tail remains unchanged: complete automatic focused green alone unlocks workflow-only iteration 31; then local unfiltered full Phase G 54/54 plus validators/full regressions, one workflow-only non-force transport, remote unfiltered required CI/full Phase G 54/54, same-HEAD production runtime and SOL human-player audits, final evidence freeze, fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual ownership-guard output, immutable local commit chain, unchanged live GitHub ref, exact command-scoped trust, no-persistent-config/no-secret/no-retry boundaries, accepted-gate preservation, automatic-CI causality, and approval-only release tail. Revision r88 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 105. Revision r89 — remaining WebKit evidence-transaction ownership closure
+
+### 105.1 Terminal r88 automatic focused return and independent evidence classifications
+
+The exact r88 chain was transported once as PR #171 HEAD `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`, tree `6e820e06d069285c69bfb874b193a3c2e1c33e8b`, parent `e1ba3677b62520fe5d7dd829999e61586b484c71`. Automatic focused CI [#942 / `32971539028`](https://github.com/SUSANO-OOO/Zombieee/actions/runs/32971539028) is terminal failure. PR Verify and all six enemy-runtime shards passed. Deployment WebKit 736x414, 844x390, 844x340, 932x430, and 1280x720 passed; 667x375 alone failed. Stage 3 and Canonical HUD were dependency-skipped and are not evidence. No retry, rerun, manual dispatch, correction, Ready transition, merge, tag, Release, or official Pages deployment occurred.
+
+The three required red jobs are independent at their product semantics and share only a remaining QA evidence-transport ownership boundary:
+
+1. **Phase G Stage 25 fixed-step commit bound.** Job `98191589350`, artifact `9608611517`, ZIP SHA-256 `da04c6f59bf227ea07fdf1163c5356f4cc926f7d696271fac52fef64b616a718`. Ordered Stage 6 667x375 and Stage 24 736x414 passed. Stage 25 932x430 retained a valid 29,377-character last atomic receipt: shield fighter 4, baseline sequence 0 -> observed sequence 1, living Guardian target 5, exact production cue, reaction history, source/target attribution, and generic causal proof 4/4. `pageRpcSealed: true` and `noFurtherPageRpc: true` were already preserved. The exact actor decision alone rejected the real commit because battle-time delta `0.8499999999999517` exceeded the current `0.8` bound by approximately three 60 Hz steps; the current formula omits the production scheduler's permitted one-callback catch-up quantum of `RUNTIME_MAX_CATCH_UP_STEPS * RUNTIME_SIMULATION_STEP_SECONDS = 5 / 60`. Collection therefore continued to page transaction 46 and then hit `PHASE_G_CAUSAL_TRANSACTION_TIMEOUT` with no product failure. Classification: `QA_HARNESS_STAGE25_FIXED_STEP_COMMIT_BOUND_UNDERSPECIFIED / REAL_BASELINE_PLUS_ONE_COMMIT_AT_0.85S_REJECTED_BY_0.8S_BOUND_WITHOUT_ONE_MAX_CATCH_UP_FRAME / DESIGN_CHANGE_REQUIRED`.
+2. **Hosted mutable mission state owner gap.** Job `98190808503`, artifact `9608511917`, ZIP SHA-256 `4bdd87e804eaec19127d0346edc3cc02a9df68219ddd3e6044ab67ad09bf23b1`. The 595,628-byte report SHA-256 is `5cf496c16ad34fde421c2ad236619c3740979df5d42eee6a0f6fbcc567fffd7b`: ready 3/3 and the first 20 fault cases completed. The terminal mission/404/1280x720 case passed the start authored audit and screenshot. The existing helper then released `visual-integrity-evidence-capture`, restored three frames, returned to the host, changed to power-1, and rendered two more frames without an owner. The power-1 audit began at 82,487 ms; the page crashed at 122,810 ms with target-closed. Valid host telemetry has 30 WebContent D-state samples, 24 `anon_pipe_write` for the main identity, `wchar` 115,514 -> 7,103,370,042, IO full avg10 64.14, and no cgroup OOM/high/max/kill. Prior completed states passed their authored audit and quiesced screenshot. Classification: `QA_HOSTED_CROSS_STATE_PRESENTATION_OWNER_GAP / SCREENSHOT_RELEASE_AND_RESTORATION_RETURN_BEFORE_NEXT_MUTABLE_STATE_RENDER_AND_REARM / DESIGN_CHANGE_REQUIRED`.
+3. **Deployment exact receipt to pixel-audit handoff gap.** Job `98192622813`, artifact `9608629248`, ZIP SHA-256 `f6787acd308a0d9c81db7c820d544d96f9ddabe4cc8ea0c1eb2146645ef9f5081`. The downloaded brawler summary is 154,330 bytes / SHA-256 `4f39465614c087659ba70e833d073b61946361fe72e493fa308fc2721d85089f`. Scout and ranger passed all six checkpoints. Brawler passed fully-inside, first-visible, quarter, and half. Its last cooperative trace proves the next three-quarters receipt already immutable in the paused live battle: fighter 4, progress `0.7560245474126744`, battle time `7.0166666666666595`, exact arm cleared, fatal diagnostics zero. The harness then still performs a host turn, a second full `getCrawlerDeploymentProofSnapshot` stability read, and a separately begun six-step audit before it can return the checkpoint. The page crashed inside the outer `deployment/checkpoint-advance` after 16 D-state samples, 15 `anon_pipe_write`, WebContent `wchar` 2,601,882,764 -> 6,873,023,628, and no OOM/high/max/kill. The other five required viewports passed, excluding a deterministic brawler, checkpoint, product, or pixel-threshold defect. Classification: `QA_HARNESS_DEPLOYMENT_POST_RECEIPT_READBACK_HANDOFF_GAP / EXACT_THREE_QUARTERS_RECEIPT_GREEN_THEN_REDUNDANT_FULL_SNAPSHOT_STABILITY_READ_AND_SEPARATE_AUDIT_BEGIN / DESIGN_CHANGE_REQUIRED`.
+
+Aggregate classification: `QA_HARNESS_REMAINING_WEBKIT_EVIDENCE_TRANSACTION_OWNERSHIP / STAGE25_MAX_CATCH_UP_FRAME_OMISSION + HOSTED_CROSS_STATE_OWNER_GAP + DEPLOYMENT_RECEIPT_TO_AUDIT_GAP / DESIGN_CHANGE_REQUIRED`.
+
+Aggregate remediation: `FINITE_ATOMIC_EVIDENCE_HANDOFF_PACKET / SCHEDULER_DERIVED_COMMIT_TOLERANCE + MUTABLE_STATE_RENDER_TO_OWNER_HANDOFF + CHECKPOINT_RECEIPT_TO_PREBOUND_AUDIT_SESSION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 105.2 Exact nine-path correction topology
+
+Relative to audited r88 HEAD/tree, change exactly these nine tracked paths:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`
+2. `tests/v100-phase-g-checkpoint.test.mjs`
+3. `scripts/v0995-visual-integrity-browser-smoke.mjs`
+4. `scripts/v099-final-remediation-browser-smoke.mjs`
+5. `tests/v0995-runtime-evidence-contract.test.mjs`
+6. `docs/design/v1.0.0/DESIGN_LOCK.md`
+7. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+8. `docs/PROJECT_STATE.md`
+9. `tests/v100-design-lock.test.mjs`
+
+No tenth path is authorized. Keep `app/**`, `.github/workflows/**`, package/lock, public/assets, the accepted P5 files, product runtime assets, and all protected untracked forensic directories byte-for-byte unchanged. The protected directories remain 377 / 51 / 3 files with manifest SHA-256 `501993f79eb1591b74c898506c7d538a5db684c8fb7d94848d881febb97edaad`, `71968d16a88175957ab8129b8fa0aa004a27301edf8037caceb8bb690037c6fc`, and `be8122206df63cdcd8dc1a6983a4842795e9efe0b2edf50379e0c7b9cc41db10`.
+
+### 105.3 Phase G scheduler-derived exact-actor commit contract
+
+Import the existing production scheduler constants `RUNTIME_SIMULATION_STEP_SECONDS` and `RUNTIME_MAX_CATCH_UP_STEPS` from `app/renderPerformance.js`; do not duplicate or modify their values. Add one pure helper that derives the exact release-anchor commit window as the existing `Math.max(0.8, attackWindupSeconds + 0.5)` plus exactly one maximum production catch-up callback, `RUNTIME_SIMULATION_STEP_SECONDS * RUNTIME_MAX_CATCH_UP_STEPS` (`5 / 60` seconds). Use that one helper at all three current decision/observer/final-proof sites. Do not add tolerance anywhere else.
+
+The helper must fail closed for a missing/non-finite release anchor. The actual Stage 25 `0.8499999999999517` delta must be inside the scheduler-derived bound; a delta greater than the derived bound by more than numeric epsilon must remain rejected. Preserve baseline-plus-one only, exact fighter and target identity, target liveness, exact cue, source liveness at observation, event-time and screenshot deadlines, causal 4/4, minimum dwell/eight samples, page-RPC sealing, all 15 checkpoints, viewport/stage mapping, and the existing duration/transaction/timeout/one-attempt values. No attack, windup, target, fighter, AI, balance, simulation cadence, product source, timeout, or retry change is allowed.
+
+### 105.4 Hosted mutable-state render-to-owner atomic handoff
+
+Replace only the mutable mission start/power-1/power-3 ownership sequence. One page-side asynchronous transition owns each boundary:
+
+- for the first state, set the existing production pixel-audit state, observe the existing required production render frames, validate the same visible production canvas, and arm `visual-integrity-evidence-capture` before returning to the host;
+- for each successor state, release the preceding state's exact owner, set the successor production state, observe exactly three restored production render frames (which also satisfies the existing two-frame authored-state settle), validate the visible canvas and same live battle, and immediately re-arm the same owner with the next generation before returning to the host;
+- run the unchanged authored final-canvas audit and exactly one unchanged PNG screenshot while that pre-armed owner remains active and positive suppressed-render evidence is observed;
+- after power-3 only, release the final owner and prove exactly three restored production frames before case continuation/cleanup.
+
+Persist a bounded transition receipt that binds previous owner/generation/release/restoration, requested authored state, restored render-frame delta, canvas visibility, next owner/generation/arm, positive suppression, and screenshot. Every existing `v100-visual-integrity-screenshot-quiescence/v1` record must remain complete; no state may be audited or screenshotted without its owner, and no cross-state host-visible unowned interval is allowed. Preserve ready 3, fault 35, mission final-canvas 15, mutable states 45, state signatures, all fault modes/viewports, recovery/decode assertions, PNG count/dimensions, 10,000 ms screenshot ceiling, and one-attempt policy. No downscale, state removal, audit relaxation, global animation disable, retry, or timeout extension is allowed.
+
+### 105.5 Deployment immutable receipt-to-pre-bound audit session handoff
+
+Keep the r83 progression-owner -> exactly three production frames -> evidence-owner and evidence-owner -> real next checkpoint plus progression-owner handoffs unchanged. Correct only the semantic checkpoint and first-frame readback inside that ownership lifetime:
+
+- each polling page transaction returns a bounded lean receipt, not the full mutable deployment snapshot;
+- when the exact first-frame or armed checkpoint predicate becomes true, the same page transaction must validate the paused live battle, exact fighter/kind/position/progress, exact immutable (`Object.isFrozen`) checkpoint receipt where applicable, cleared matching arm, and active expected presentation owner/generation, then call the existing `beginFighterUnitLayerAuditSession` before returning;
+- return one `v100-deployment-checkpoint-audit-handoff/v1` containing only the stable fighter fields, exact checkpoint receipt, presentation identity, and pre-bound six-pass session token/metadata;
+- `runFighterUnitLayerAuditSession` must consume that pre-bound session and must not issue a second full `getCrawlerDeploymentProofSnapshot`, a second audit-begin RPC, or the current post-ready 100 ms stability turn. The unchanged six ordered passes, per-transaction <=2,000 ms ceiling, total 10,000 ms ceiling, host turns between passes, final metrics, post-restoration readback, PNG, contact sheet, and hashes remain mandatory;
+- cooperative trace evidence remains required. It may use the same accepted lean receipt or an existing bounded capture, but it must not reopen a full mutable snapshot between the accepted handoff and audit-session consumption.
+
+The timeout failure diagnostic retains only the last bounded lean state. No full game object, DOM object, pixel array, mutable bridge object, or unbounded snapshot may cross the page boundary. Missing/duplicate token, wrong owner/generation/fighter/checkpoint, non-frozen exact receipt, pass reordering, session drift, or stale post-restoration render audit fails closed without retry. Preserve all eight units, six semantic checkpoints, 48 PNGs, eight sheets, 56 unique disk hashes, all pixel thresholds, exact viewports, child order, and one-attempt policy.
+
+### 105.6 Ordered first-attempt acceptance and stop contract
+
+After Section 105.2-105.5 implementation, execute once in order and stop at the first red:
+
+1. syntax/load for the three changed runtime scripts and both changed source tests; Phase G checkpoint exactly 12/12; runtime-evidence exactly 3/3; Design Lock exactly 19/19; canonical six-file exactly 55/55;
+2. exact nine-path topology relative to r88 HEAD/tree, forbidden diff zero, P5/`app/**`/workflow/package/public byte preservation, UTF-8/no-BOM/LF contracts, protected manifests, `git diff --check`, and one fresh production build;
+3. three separately named fresh Stage 25 WebKit 932x430 standalone processes, then one fresh ordered Stage 6 667x375 -> Stage 24 736x414 -> Stage 25 932x430 process. Every process is first-attempt only and must retain exact actor/target/cue, scheduler-derived bound, causal 4/4, page-RPC seal, 15/15 checkpoints, screenshot, and fatal diagnostics zero;
+4. one full Hosted WebKit process: ready 3/3, fault 35/35, mission final-canvas 15/15, mutable 45/45, complete transition/screenshot ownership receipts, PNGs and diagnostics green;
+5. one exact bounded WebKit 667x375 deployment process through all eight child units: 8/8 units, 48/48 checkpoints, 48 PNGs, eight sheets, 56/56 unique verified artifacts, receipt-to-session handoffs complete, fatal diagnostics zero;
+6. content validator, complete tests, lint with zero errors, final production build, and repeated exact static/byte/protected integrity;
+7. create one normal non-amended material-iteration-31 commit, re-fetch the live PR/base and require no drift, push non-force once, read back exact remote HEAD/tree/parent, and observe only its one automatic focused CI.
+
+Any first local, commit, transport, or automatic remote red; unexpected skip/dependency; missing/corrupt artifact; wrong cardinality; or need for a tenth path returns to `SOL_DESIGN` without retry, rerun, same-revision edit, timeout increase, alternate transport, or manual dispatch. A later-running job in CI #942 is comparison evidence only and cannot cure its three required reds.
+
+Complete automatic focused green alone unlocks workflow-only iteration 32. That workflow-only change may restore only the already locked unfiltered required job graph; it must not alter product, harness, acceptance, timeout, browser/container, or evidence semantics. Then run local unfiltered full Phase G 54/54 plus validator/full regressions, one unfiltered remote required CI/full Phase G, same-HEAD production runtime and SOL human-player visual/event/battle/audio/mobile/save/PWA/asset/release audits, final evidence freeze, fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW`, and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval is required before Ready, stacked integration, tag, GitHub Release, official Pages, published-SHA QA, recovery, state closure, Issue close, or `/goal COMPLETE`.
+
+### 105.7 Current execution cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R89_FINITE_ATOMIC_EVIDENCE_HANDOFF_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: automatic focused CI `32971539028`: Hosted `98190808503`, Phase G `98191589350`, deployment 667x375 `98192622813`; Stage 3 and Canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: r88 immutable transport; remote PR Verify and six enemy-runtime shards; ordered Stage 6/24; Hosted ready 3 plus 20 completed fault controls; five of six deployment viewports and 667 scout/ranger plus brawler through half
+- `CLASSIFICATION`: `QA_HARNESS_REMAINING_WEBKIT_EVIDENCE_TRANSACTION_OWNERSHIP / STAGE25_MAX_CATCH_UP_FRAME_OMISSION + HOSTED_CROSS_STATE_OWNER_GAP + DEPLOYMENT_RECEIPT_TO_AUDIT_GAP / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `FINITE_ATOMIC_EVIDENCE_HANDOFF_PACKET / SCHEDULER_DERIVED_COMMIT_TOLERANCE + MUTABLE_STATE_RENDER_TO_OWNER_HANDOFF + CHECKPOINT_RECEIPT_TO_PREBOUND_AUDIT_SESSION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first Section 105 local/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r88 transport completed material iteration 30; r89 coherent correction is material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact nine-path r89 implementation -> Section 105 ordered local first-attempt acceptance -> one material-iteration-31 normal non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the terminal #942 graph, all three raw artifacts and authoritative digests, Stage 25 last atomic receipt and production scheduler constants, Hosted state/owner source order, deployment exact receipt/trace and page/host lifecycle, five deployment green controls, exact nine-path topology, no-timeout/no-retry boundaries, protected evidence, workflow-only successor gate, and approval-only release tail. Revision r89 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 106. Revision r90 — Hosted bounded render-observation window closure
+
+> **Superseded before implementation by Section 107 / r91.** The r90 +1-frame observation window was not implemented or executed. A source audit proved the initial state predicate, not render observation slack, was the exact defect. Section 106 remains audit history only.
+
+### 106.1 First r89 local acceptance return and independent classification
+
+The r89 source/static/build gates passed. Three separately named Stage 25 WebKit 932x430 processes passed first-attempt; their report SHA-256 values are `41be89714e12317f7abddc9de85e13f93ad8c01404dbb20c05825a1bc7359bb5`, `1b19bd0c2969ef5976b184c9b3635da393159593734faf53c561c7eff0931358`, and `918f9bd6033f5a8e9f0276af691522809602a3c40db3af2ff269ff8773d48a5e`. The one ordered Stage 6 667x375 -> Stage 24 736x414 -> Stage 25 932x430 WebKit process also passed first-attempt with three screenshots, three unique paths, three unique hashes, and report SHA-256 `ed17eae30bc7be0a300c2af4f473a7266fa917c5bf676b4f9975ab73005ca29d`.
+
+The first full Hosted WebKit process then stopped at its first mission case, `mission / delay / 844x340 / start`. Ready 3/3 and the preceding 15 fault controls completed, and host telemetry sequence 365-366 proves the mission final-canvas audit completed. Sequence 367 began `hosted/mutable-state-owner-handoff`; sequence 368 failed 96 ms later with `visual-integrity mutable transition exceeded exactly 2 production frames: 3`. The 320,268-byte report SHA-256 is `1fadc92136a35c5ce5e353cbbc146d449fa995e6a7c95cf5f8e9802f0eb649d2`; the 346,548-byte host log SHA-256 is `3af9157e9ec5ec76410b1b0177d6c0bc51c4bbca29fda2c2e7d53e5e6606107a`. Deployment acceptance did not start. No retry, rerun, timeout change, correction, commit, push, dispatch, or promotion occurred after the red.
+
+The product mission surface, asset fault/recovery controls, and authored final-canvas pixels were green. The r89 page transaction alone required an observer to witness the instantaneous equality `renderFrameDelta === 2` and rejected the next finite observation at 3 before reacquiring its owner. This is not a product, asset, gameplay, browser-crash, or timeout failure.
+
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_RENDER_WINDOW_EXACT_EQUALITY_UNOBSERVABLE / INITIAL_MUTABLE_STATE_FINAL_CANVAS_GREEN_BUT_PAGE_OBSERVER_REACHED_DELTA_3_AFTER_MINIMUM_2 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_RENDER_OBSERVATION_WINDOW / SAME_PAGE_MINIMUM_RENDER_PLUS_ONE_FRAME_MAXIMUM_AND_ATOMIC_OWNER_REACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 106.2 Exact six-path r90 delta and frozen r89 work
+
+The r89 packet remains exactly nine tracked paths relative to audited r88 HEAD/tree. Within that topology, only these six paths may receive an additional r90 delta:
+
+1. `scripts/v0995-visual-integrity-browser-smoke.mjs`
+2. `tests/v0995-runtime-evidence-contract.test.mjs`
+3. `docs/design/v1.0.0/DESIGN_LOCK.md`
+4. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+5. `docs/PROJECT_STATE.md`
+6. `tests/v100-design-lock.test.mjs`
+
+Freeze the accepted r89 Phase G and deployment implementation bytes exactly:
+
+- `scripts/v100-phase-g-production-matrix.mjs`: 305,952 bytes / SHA-256 `b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`
+- `tests/v100-phase-g-checkpoint.test.mjs`: 87,585 bytes / SHA-256 `621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`
+- `scripts/v099-final-remediation-browser-smoke.mjs`: 186,942 bytes / SHA-256 `cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`
+
+Do not change `app/**`, `.github/**`, package/lock, P5, public/generated assets, product runtime, gameplay, balance, AI, save, audio, browser flags/version, timeout, retry, viewport, cardinality, causal/pixel/screenshot acceptance, or any protected forensic directory. A seventh r90 delta path or tenth aggregate path is forbidden.
+
+### 106.3 Bounded same-page render window and owner handoff
+
+Keep `transitionVisualIntegrityMutablePresentation` as the single page-side transaction from exact predecessor release or initial state mutation through the next ownership decision. Replace only the exact-equality observation rule:
+
+1. The initial `start` transition has `minimumRenderFrameDelta = 2`. Every predecessor release -> successor state transition and the final power-3 release has `minimumRenderFrameDelta = 3`.
+2. For every transition, `maximumRenderFrameDelta` is exactly `minimumRenderFrameDelta + 1`. The visible live production canvas and quiescence predicates may be accepted only inside that closed range.
+3. On the first accepted observation, immediately call `setQaPresentationQuiesced(true, requestedOwner)` in the same page task for a successor state. Final release returns without rearming. No host turn, host readback, pixel audit, screenshot, or other page RPC may occur between state render/release and this decision.
+4. The receipt records minimum, maximum, actual `renderFrameDelta`, and `observationSlackFrames = renderFrameDelta - minimumRenderFrameDelta`; slack must be exactly 0 or 1. A successor arm's `enteredAtRenderFrames` must equal the accepted live render counter.
+5. Retain at most eight lean observation records. Each contains only ordinal, render delta, active/route/dataset/running/paused/over booleans, and canvas-visible booleans. A delta above the maximum, ninth observation, wrong owner/generation/route/state, non-finite counter, missing/hidden canvas, or timeout fails closed and reports that bounded diagnostic. An unbounded `>= minimum` acceptance is forbidden.
+
+Preserve the exact state sequence `start -> power-1 -> power-3`, authored final-canvas audit, three screenshots for each mission case, screenshot quiescence and positive suppression proof, predecessor/successor generation receipts, 10,000 ms screenshot ceiling, ready 3/3, fault 35/35, mission final-canvas 15/15, mutable 45/45, all classes/modes/viewports, decode/recovery assertions, PNG contracts, fatal diagnostics, and one-attempt policy. The new one-frame maximum is observation slack inside the already atomic page transaction; it does not weaken the required minimum render proof or reopen the r88 host-visible owner gap.
+
+### 106.4 Ordered r90 acceptance and stop contract
+
+Do not repeat the accepted r89 Stage 25 standalone 3/3 or ordered trio. The Phase G script/test, product build inputs, app, workflow, browser runtime, and acceptance bytes they exercised are frozen above. These runs remain local remediation continuity evidence and are not final evidence-freeze substitutes.
+
+Execute once in order and stop at the first red:
+
+1. syntax/load for the three r89 runtime scripts and two source tests; runtime-evidence exactly 3/3; Phase G checkpoint exactly 12/12; Design Lock exactly 19/19; canonical six-file exactly 55/55;
+2. exact nine-path topology plus exact six-path r90 delta, forbidden diff zero, frozen three-file hashes, P5/`app/**`/workflow/package/public bytes, UTF-8/BOM/EOL, protected manifests, `git diff --check`, and one fresh production build;
+3. one fresh full Hosted WebKit process: ready 3/3, fault 35/35, mission final-canvas 15/15, mutable 45/45, every render window and owner receipt valid, all PNGs and fatal diagnostics green;
+4. one fresh exact bounded WebKit 667x375 deployment process: 8/8 units, 48/48 checkpoints, 48 PNGs, eight sheets, 56/56 unique verified artifacts, every receipt-to-session handoff complete, fatal diagnostics zero;
+5. content validator, complete tests, lint with zero errors, final production build, and repeated exact static/byte/protected integrity;
+6. create one normal non-amended material-iteration-31 commit, re-fetch and require unchanged live PR/base, push non-force once, read back exact remote HEAD/tree/parent, and observe only its one automatic focused CI.
+
+Any first r90 local, commit, transport, or automatic remote red; unexpected skip/dependency; missing/corrupt artifact; wrong cardinality; maximum-window breach; or need outside the six-path r90 delta returns to `SOL_DESIGN` without retry, rerun, same-revision edit, timeout increase, alternate transport, or manual dispatch. Complete automatic focused green alone unlocks workflow-only iteration 32. The unfiltered local/remote full Phase G 54/54, same-HEAD runtime/human audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged.
+
+### 106.5 Current execution cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R90_BOUNDED_RENDER_OBSERVATION_WINDOW_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: local r89 full Hosted WebKit first attempt; `mission / delay / 844x340 / start` exact-two observer rejected actual delta 3
+- `LAST_GREEN_GATE`: r89 source/static/build; Stage 25 standalone 3/3; ordered Stage 6/24/25 3/3; Hosted ready 3/3, fault 15, and mission final-canvas audit
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_RENDER_WINDOW_EXACT_EQUALITY_UNOBSERVABLE / INITIAL_MUTABLE_STATE_FINAL_CANVAS_GREEN_BUT_PAGE_OBSERVER_REACHED_DELTA_3_AFTER_MINIMUM_2 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_RENDER_OBSERVATION_WINDOW / SAME_PAGE_MINIMUM_RENDER_PLUS_ONE_FRAME_MAXIMUM_AND_ATOMIC_OWNER_REACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first Section 106 local/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 remains uncommitted and untransported; r90 supersedes r89 inside that same material packet; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged by this local Hosted stop
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path r90 delta -> locked source/static gates -> one full Hosted WebKit -> one bounded deployment WebKit 667x375 -> full local gates -> one material-iteration-31 normal non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the first r89 Hosted output, exact report/log hashes, telemetry sequence 365-370, the green final-canvas audit, exact-equality source ordering, finite 2-3 / 3-4 render windows, same-page owner acquisition, bounded diagnostics, frozen Phase G/deployment bytes and accepted runs, no-retry boundary, exact topology, and approval-only release tail. Revision r90 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 107. Revision r91 — initial pre-arm and released-predecessor predicate separation
+
+### 107.1 Pre-implementation r90 source-audit return
+
+No r90 runtime or source correction was implemented. The only Hosted runtime remains the first r89 attempt recorded in Section 106.1. Before applying the r90 window, SOL inspected the product bridge initialization and transition order:
+
+1. Every fresh fault-case page initializes `qaPresentationQuiescenceRef` with `active:false`, `owner:null`, `route:null`, `generation:0`, and no active dataset marker.
+2. The first mutable `start` transition has `previousGeneration === null`; it does not release an owner because no owner exists.
+3. `setStationMissionPixelAuditState("start")` changes only the real mission state and does not change presentation owner, route, or generation.
+4. The r89 observer nevertheless requires `quiescence.route === "visual-integrity"` for both the initial pre-arm state and every released-predecessor state.
+5. At exact render delta 2 the initial route is necessarily null, so that predicate cannot pass. The observer schedules again, then the unchanged overshoot guard reports delta 3.
+
+The trace therefore proves the exact delta-2 observation was rejected by a phase-alias predicate; it does not justify widening the render count. The r90 +1 proposal would unnecessarily relax evidence and is forbidden.
+
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_INITIAL_PREARM_STATE_PREDICATE_ALIAS / FIRST_MUTABLE_TRANSITION_REQUIRES_PREDECESSOR_RELEASED_ROUTE_OWNER_THAT_CANNOT_EXIST_BEFORE_GENERATION_1 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_TYPED_INITIAL_PREARM_AND_PREDECESSOR_RELEASED_PREDICATES / EXACT_2_AND_3_RENDER_COUNTS + SAME_PAGE_OWNER_ACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 107.2 Exact topology and immutable bytes
+
+The aggregate material candidate remains the exact nine paths in Section 105.2. The additional r91 delta remains the same six paths listed by Section 106.2. Freeze the three accepted runtime/source files at Section 106.2 hashes and retain the three Stage 25 standalone reports plus ordered-trio report at Section 106.1 hashes. No seventh r91 delta path or tenth aggregate path is authorized.
+
+The r91 correction may change only `scripts/v0995-visual-integrity-browser-smoke.mjs`, its existing assertion region in `tests/v0995-runtime-evidence-contract.test.mjs`, and the four SOL governance/source paths. All `app/**`, workflow, package/lock, P5, public/generated, product, timeout, attempt, retry, viewport, cardinality, causal/pixel/screenshot threshold, and protected forensic bytes remain immutable.
+
+### 107.3 Phase-typed exact render and owner contract
+
+Preserve `requiredRenderFrameDelta = previousGeneration === null ? 2 : 3` and exact equality. Do not implement a minimum/maximum window or +1 tolerance.
+
+For `transitionPhase: initial-prearm`:
+
+- before mutation require schema v1, inactive state, `owner === null`, `route === null`, generation 0, dataset false, live running/unpaused/non-over battle, and a finite render baseline;
+- set the real requested mission state, observe exactly two production render frames, and require the same inactive owner-null/route-null/generation-0 identity plus visible production canvas;
+- in that same page task, arm `visual-integrity-evidence-capture`; require active owner, route `visual-integrity`, dataset true, generation 1, and `enteredAtRenderFrames` equal to the exact accepted live counter.
+
+For `transitionPhase: predecessor-released`:
+
+- before release require the active exact `visual-integrity-evidence-capture` owner, route, and prior generation supplied by the preceding transition;
+- release that generation, require the inactive released receipt to retain the same owner/route/generation with dataset false, mutate the successor state unless this is final release, and observe exactly three production render frames;
+- at exact delta 3 require that same released-predecessor identity plus visible production canvas; a successor arms the next exact generation in the same page task, while final release returns with no next arm.
+
+Persist the existing schema plus `transitionPhase`, `requiredRenderFrameDelta`, actual delta, before/release/restored/next-arm receipts, and one compact terminal observation in an error. Any wrong initial null identity, wrong predecessor identity/generation, non-finite count, delta above exact requirement, hidden canvas, timeout, or arm mismatch fails closed. Do not synthesize route/owner metadata before the real initial arm.
+
+Preserve `start -> power-1 -> power-3`, 3/3 ready, 35/35 fault, 15/15 final-canvas, 45/45 mutable, authored pixel/state signatures, all screenshots, suppression, full predecessor/successor screenshot receipts, PNGs, diagnostics, 10,000 ms screenshot and 2,000 ms presentation ceilings, and first-attempt policy.
+
+### 107.4 Source acceptance and ordered execution
+
+The existing runtime-evidence test block must prove both mutually exclusive phase predicates, initial generation 0 -> 1, successor generation continuity, exact two/three render equality, same-page arm order, and the absence of `minimum + 1`, 2-3, or 3-4 range acceptance. No new test block or path is allowed.
+
+Do not repeat accepted r89 Stage 25 standalone 3/3 or ordered trio. Execute once in order and stop at the first red:
+
+1. syntax/load; Phase G source exactly 12/12; runtime evidence exactly 3/3; Design Lock exactly 19/19; canonical six-file exactly 55/55;
+2. exact topology/frozen hashes, forbidden diff zero, P5/`app/**`/workflow/package/public bytes, UTF-8/BOM/EOL, protected manifests, `git diff --check`, and one fresh build;
+3. one fresh full Hosted WebKit process requiring ready 3/3, fault 35/35, final-canvas 15/15, mutable 45/45, exact initial two-frame and successor/final three-frame receipts, screenshots and fatal diagnostics green;
+4. one fresh exact bounded WebKit 667x375 deployment requiring 8/8 units, 48/48 checkpoints, 48 PNGs, eight sheets, 56/56 unique verified artifacts, all receipt-to-session handoffs, and fatal diagnostics zero;
+5. content validator, complete tests, lint with zero errors, final build, and repeated integrity;
+6. one normal non-amended material-iteration-31 commit, unchanged-live-ref preflight, one normal non-force transport, exact remote readback, and only its one automatic focused CI.
+
+Any first r91 local/commit/transport/remote red, unexpected skip, wrong cardinality, corrupt evidence, or need outside the exact r91 correction returns to `SOL_DESIGN` without retry, rerun, same-revision edit, timeout change, alternate transport, or manual dispatch.
+
+### 107.5 Current execution cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R91_INITIAL_PREARM_PREDICATE_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: local r89 Hosted first attempt; the initial owner-null/route-null/generation-0 state was tested as a released visual-integrity predecessor
+- `LAST_GREEN_GATE`: r89 source/static/build; Stage 25 standalone 3/3; ordered Stage 6/24/25 3/3; Hosted ready 3/3, fault 15, and final-canvas audit
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_INITIAL_PREARM_STATE_PREDICATE_ALIAS / FIRST_MUTABLE_TRANSITION_REQUIRES_PREDECESSOR_RELEASED_ROUTE_OWNER_THAT_CANNOT_EXIST_BEFORE_GENERATION_1 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_TYPED_INITIAL_PREARM_AND_PREDECESSOR_RELEASED_PREDICATES / EXACT_2_AND_3_RENDER_COUNTS + SAME_PAGE_OWNER_ACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first Section 107 local/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 remains uncommitted/untransported; r91 supersedes unimplemented r90 inside the same packet; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact initial/predecessor predicate correction across the same six-path delta -> source/static -> one full Hosted -> one bounded deployment WebKit 667x375 -> full local -> material-iteration-31 transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the product bridge initializer, exact first-transition call graph, route/owner mutation ownership, the r89 error ordering, telemetry sequence 365-370, immutable accepted Phase G/deployment bytes and local evidence, exact two/three-frame equality, mutually exclusive initial/predecessor predicates, no-tolerance boundary, exact topology, and approval-only release tail. Revision r91 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 108. Revision r92 — r91 local acceptance green and material-iteration-31 transport
+
+### 108.1 Classification and immutable candidate
+
+The exact r91 phase-typed correction passed every prescribed local gate on its first authorized execution. No product, gameplay, balance, AI, app bridge, workflow, package/lock, timeout, attempt, retry, viewport, causal/pixel/screenshot threshold, P5, public/generated, or release behavior changed. Revision r92 is governance read-back only; it does not authorize another runtime correction or repetition of an accepted local gate.
+
+- `CLASSIFICATION`: `LOCAL_ACCEPTANCE_GREEN / R91_PHASE_TYPED_HOSTED_AND_DEPLOYMENT_PACKET_CLOSED / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_READBACK_AND_IMMUTABLE_TRANSPORT / RUNTIME_BYTES_FROZEN + ONE_MATERIAL_ITERATION_31_COMMIT / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+The aggregate candidate remains exactly these nine tracked paths and no others:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`
+2. `tests/v100-phase-g-checkpoint.test.mjs`
+3. `scripts/v0995-visual-integrity-browser-smoke.mjs`
+4. `scripts/v099-final-remediation-browser-smoke.mjs`
+5. `tests/v0995-runtime-evidence-contract.test.mjs`
+6. `docs/design/v1.0.0/DESIGN_LOCK.md`
+7. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+8. `docs/PROJECT_STATE.md`
+9. `tests/v100-design-lock.test.mjs`
+
+Revision r92 may change only the last four governance/source paths. Freeze the five runtime/source paths at these exact bytes before staging, commit, transport, and remote read-back:
+
+- Phase G runner: 305,952 bytes / SHA-256 `b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`
+- Phase G source test: 87,585 bytes / SHA-256 `621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`
+- Hosted visual-integrity runner: 55,216 bytes / SHA-256 `e78cef388c18bb9b0d89a173095674a8430c7c2a987afd8feb84e11de658060d`
+- deployment runner: 186,942 bytes / SHA-256 `cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`
+- runtime-evidence source test: 61,915 bytes / SHA-256 `3a8bf4fe7848f044aa91ed3e20b67dbdf5d664285788c854eea62d0dc7f2dd61`
+
+Keep `tmp-r35-deploy-compare/`, `tmp-r35-hosted/`, and `tmp-r35-phaseg/` untracked, unmodified, unstaged, and uncommitted. Their exact manifests remain respectively 377 files / `501993f79eb1591b74c898506c7d538a5db684c8fb7d94848d881febb97edaad`, 51 files / `71968d16a88175957ab8129b8fa0aa004a27301edf8037caceb8bb690037c6fc`, and 3 files / `be8122206df63cdcd8dc1a6983a4842795e9efe0b2edf50379e0c7b9cc41db10`.
+
+### 108.2 Accepted local evidence
+
+The following r91 evidence is accepted and must not be repeated merely because r92 records it:
+
+- syntax/load green; Phase G source 12/12; runtime-evidence source 3/3; Design Lock 19/19; canonical six-file 55/55;
+- exact nine-path topology, forbidden diff zero, no staged files, LF/no-BOM for all nine, protected manifests unchanged, `git diff --check` green, and fresh build green;
+- one full Hosted WebKit first attempt green at `outputs/v100-r91/hosted-webkit-full/evidence`: ready 3/3, fault 35/35, final-canvas 15/15, mutable 45/45, 45 unique PNGs, 15 initial exact-two receipts, 45 successor/final exact-three receipts, retry 0, terminal failure null. Report 1,322,893 bytes / `800c5ddb52ee116073be0a97b4f0824aba4229c97821b00232fa9738d229bc98`; host JSONL 1,108,840 bytes / `5cf984669bbc5afe7c165be5d67af8cfadf25f1dafab25bcaf4510d70f48e1cc`; summary 1,878 bytes / `60fddf9ed48c81dac6a545fc8352160bbf386abe5edc81bd624b17c2a6427a95`;
+- one bounded deployment WebKit 667x375 first bounded parent green at `outputs/v100-r91/deployment-webkit-667x375`: 8/8 units, 48/48 checkpoints, 48 PNGs, eight sheets, 56/56 unique verified paths and hashes, 48 unique audit-session tokens, all six-step sessions complete, diagnostics zero. Summary 3,015,906 bytes / `5139546496b8d57161ff150df550a72069d4a046346cc42a0406c3ac6ccbce90`;
+- content validator green; complete suite 1,197/1,197 with fail/cancelled/skipped/todo zero; lint zero errors and 12 unchanged warnings; final build green; repeated topology, frozen-byte, EOL/BOM, protected-manifest, and diff-check integrity green.
+
+The accepted r89 Stage 25 standalone 3/3 and ordered Stage 6 -> 24 -> 25 3/3 remain continuity evidence, not final evidence-freeze material, and are not repeated.
+
+### 108.3 Exact transport and stop contract
+
+Run governance source/static only: Design Lock exactly 19/19, canonical six-file exactly 55/55, exact nine-path topology, all five frozen runtime/source bytes, all nine LF/no-BOM, protected manifests, forbidden diff zero, and `git diff --check`. Do not repeat Hosted, deployment, content, complete tests, lint, or build.
+
+If and only if those checks are green:
+
+1. create one normal, non-amended material-iteration-31 commit containing exactly the nine tracked paths;
+2. re-fetch PR #171 live head/tree/base/Draft state and require the fixed remote cursor below to be unchanged;
+3. use the Section 104 exact command-scoped safe-directory precondition, preserve the new commit and its parent, and perform one normal non-force transport with no retry or alternate mechanism;
+4. read back the exact remote commit/tree/diff and wait only for the one automatically triggered focused CI; do not dispatch, rerun, or retry it.
+
+Any governance check, staging, commit, live-ref, transport, remote read-back, or automatic focused CI red returns to `SOL_DESIGN` immediately. A complete automatic focused green alone unlocks the separately committed workflow-only iteration 32. It does not authorize Ready, merge, tag, Release, official Pages, evidence freeze, or Producer presentation.
+
+### 108.4 Current execution cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R92_LOCAL_ACCEPTANCE_GREEN / MATERIAL_ITERATION_31_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: none in r91 local acceptance; material-iteration-31 commit, transport, remote read-back, and automatic focused CI are unexecuted
+- `LAST_GREEN_GATE`: all r91 local source/static/runtime/full gates in Section 108.2
+- `CLASSIFICATION`: `LOCAL_ACCEPTANCE_GREEN / R91_PHASE_TYPED_HOSTED_AND_DEPLOYMENT_PACKET_CLOSED / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_READBACK_AND_IMMUTABLE_TRANSPORT / RUNTIME_BYTES_FROZEN + ONE_MATERIAL_ITERATION_31_COMMIT / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first Section 108 governance/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 is locally accepted and remains uncommitted/untransported; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance source/static only -> one normal non-amended exact-nine material-iteration-31 commit -> unchanged-live-ref preflight -> one normal non-force transport -> exact remote read-back -> only one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual r91 evidence, exact candidate topology and hashes, accepted-gate non-repetition rule, command-scoped transport precondition, single automatic focused run, workflow-only separation, unfiltered Phase G, fixed-HEAD final review, one final Producer checkpoint, and explicit-approval-only integration/release tail. Revision r92 has `High ambiguity: 0` and `Medium ambiguity: 0`.

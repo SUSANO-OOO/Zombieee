@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import path from "node:path";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
+import { RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS } from "../app/renderPerformance.js";
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
@@ -516,7 +517,12 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /const releaseAnchorOk = releaseAnchor\?\.handoffValid === true/u);
   assert.match(source, /Number\(releaseAnchor\.handoffAtPageTime\) === Number\(proofEpoch\.visibleProofStartedAt\)/u);
   assert.match(source, /releaseAnchorIdentityValid[\s\S]*String\(actor\?\.selectedFighterId\) === String\(releaseAnchor\.fighterId\)[\s\S]*Number\(actor\?\.observedAttackSequence\) === Number\(releaseAnchor\.baselineAttackSequence\) \+ 1[\s\S]*String\(actor\?\.targetId\) === String\(releaseAnchor\.targetId\)/u);
-  assert.match(source, /releaseAnchorCommitWindowSeconds[\s\S]*Math\.max\(0\.8, Number\(releaseAnchor\.attackWindupSeconds\) \+ 0\.5\)/u);
+  assert.match(source, /import \{ RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS \} from "\.\.\/app\/renderPerformance\.js"/u);
+  assert.match(source, /RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS = RUNTIME_SIMULATION_STEP_SECONDS[\s\S]*\* RUNTIME_MAX_CATCH_UP_STEPS/u);
+  assert.match(source, /function releaseAnchorCommitWindowSecondsFor\(releaseAnchor\)[\s\S]*Math\.max\(0\.8, attackWindupSeconds \+ 0\.5\)[\s\S]*RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS/u);
+  assert.match(source, /window\.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__ = releaseAnchorCommitWindowSecondsFor/u);
+  assert.match(source, /window\.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__\?\.\(releaseAnchor\) \?\? null/u);
+  assert.doesNotMatch(source, /Math\.max\(0\.8, Number\(releaseAnchor\.attackWindupSeconds\) \+ 0\.5\)/u);
   assert.match(source, /targetEvidenceSourceValid[\s\S]*"live-attacker-target", "release-anchor-bound-windup"/u);
   assert.equal((source.match(/const releaseAnchorBindingValid = releaseAnchor\?\.handoffValid === true/gu) ?? []).length, 2);
   assert.match(source, /const targetId = directTargetId \?\? \(releaseAnchorBindingValid \? releaseAnchor\.targetId : null\)/u);
@@ -592,6 +598,20 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal(acceptedAfterLaterDeath.releaseAnchorOk, true);
   assert.equal(acceptedAfterLaterDeath.actors[0].targetEvidenceSourceValid, true);
   assert.equal(acceptedAfterLaterDeath.actors[0].releaseAnchorCommitBoundValid, true);
+  const schedulerCatchUpEpoch = structuredClone(exactEpoch);
+  schedulerCatchUpEpoch.actors[0].observedAtBattleTime = 40.95;
+  const schedulerCatchUpDecision = runExactActorProbe({ proofEpoch: schedulerCatchUpEpoch, options: exactOptions });
+  assert.equal(schedulerCatchUpDecision.accepted, true);
+  assert.equal(schedulerCatchUpDecision.actors[0].releaseAnchorCommitBoundValid, true);
+  assert.ok(schedulerCatchUpDecision.actors[0].releaseAnchorCommitDeltaSeconds <= schedulerCatchUpDecision.actors[0].releaseAnchorCommitWindowSeconds);
+  const outsideSchedulerBoundEpoch = structuredClone(exactEpoch);
+  outsideSchedulerBoundEpoch.actors[0].observedAtBattleTime = exactEpoch.releaseAnchor.handoffAtBattleTime
+    + Math.max(0.8, exactEpoch.releaseAnchor.attackWindupSeconds + 0.5)
+    + RUNTIME_SIMULATION_STEP_SECONDS * RUNTIME_MAX_CATCH_UP_STEPS
+    + 1e-6;
+  const outsideSchedulerBoundDecision = runExactActorProbe({ proofEpoch: outsideSchedulerBoundEpoch, options: exactOptions });
+  assert.equal(outsideSchedulerBoundDecision.accepted, false);
+  assert.equal(outsideSchedulerBoundDecision.actors[0].releaseAnchorCommitBoundValid, false);
   const liveTargetSourceEpoch = structuredClone(exactEpoch);
   liveTargetSourceEpoch.actors[0].targetEvidenceSource = "live-attacker-target";
   assert.equal(runExactActorProbe({ proofEpoch: liveTargetSourceEpoch, options: exactOptions }).accepted, true);

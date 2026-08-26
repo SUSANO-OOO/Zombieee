@@ -133,6 +133,24 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /screenshotQuiescence: screenshotEnvelope\.receipt/u);
   assert.match(visualHarness, /VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS = 10_000/u);
   assert.equal((visualHarness.match(/page\.screenshot\(\{ path: screenshot, fullPage: true \}\)/gu) ?? []).length, 1);
+  const mutableOwnerTransition = visualHarness.match(/async function transitionVisualIntegrityMutablePresentation[\s\S]+?(?=\nasync function withPrearmedVisualIntegrityScreenshotQuiescence)/u)?.[0] ?? "";
+  assert.match(mutableOwnerTransition, /v100-visual-integrity-mutable-state-owner-handoff\/v1/u);
+  assert.match(mutableOwnerTransition, /bridge\.setQaPresentationQuiesced\(false, requestedOwner\)[\s\S]*bridge\.setStationMissionPixelAuditState\(requestedState\)[\s\S]*renderFrameDelta === requiredRenderFrameDelta[\s\S]*bridge\.setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(mutableOwnerTransition, /initialPrearm = previousGeneration === null/u);
+  assert.match(mutableOwnerTransition, /transitionPhase = initialPrearm \? "initial-prearm" : "predecessor-released"/u);
+  assert.match(mutableOwnerTransition, /before\.active === false[\s\S]*before\.owner === null[\s\S]*before\.route === null[\s\S]*Number\(before\.generation\) === 0/u);
+  assert.match(mutableOwnerTransition, /release\.active === false[\s\S]*release\.owner === requestedOwner[\s\S]*release\.route === "visual-integrity"[\s\S]*Number\(release\.generation\) === Number\(previousGeneration\)/u);
+  assert.match(mutableOwnerTransition, /phaseIdentityReady = initialPrearm[\s\S]*quiescence\?\.owner === null[\s\S]*quiescence\?\.route === null[\s\S]*Number\(quiescence\?\.generation\) === 0[\s\S]*quiescence\?\.owner === requestedOwner[\s\S]*quiescence\?\.route === "visual-integrity"[\s\S]*Number\(quiescence\?\.generation\) === Number\(previousGeneration\)/u);
+  assert.match(mutableOwnerTransition, /requiredRenderFrameDelta = previousGeneration === null \? 2 : 3/u);
+  assert.match(mutableOwnerTransition, /transitionPhase,[\s\S]*requiredRenderFrameDelta,[\s\S]*actualRenderFrameDelta: renderFrameDelta/u);
+  assert.match(mutableOwnerTransition, /Number\(nextArm\.generation\) === Number\(before\.generation\) \+ 1/u);
+  assert.match(mutableOwnerTransition, /Number\(nextArm\.enteredAtRenderFrames\) === Number\(restored\.quiescence\.renderFrames\)/u);
+  assert.doesNotMatch(mutableOwnerTransition, /minimumRenderFrameDelta|maximumRenderFrameDelta|requiredRenderFrameDelta \+ 1|renderFrameDelta <= requiredRenderFrameDelta/u);
+  assert.match(visualHarness, /withPrearmedVisualIntegrityScreenshotQuiescence\([\s\S]*Number\(suppressed\?\.suppressedRenderFrames\) > 0/u);
+  assert.match(visualHarness, /completeVisualIntegrityScreenshotReceipt\([\s\S]*receipt\.release = successorTransition\.release[\s\S]*receipt\.restored = successorTransition\.restored/u);
+  assert.match(visualHarness, /let previousMutableTransition = null[\s\S]*stateTransition = await runHostTelemetryOperation\([\s\S]*"hosted\/mutable-state-owner-handoff"[\s\S]*withPrearmedVisualIntegrityScreenshotQuiescence/u);
+  assert.match(visualHarness, /"hosted\/mutable-final-owner-release"[\s\S]*finalRelease: true/u);
+  assert.doesNotMatch(visualHarness, /setStationMissionPixelAuditState\(nextState\)[\s\S]*requestAnimationFrame\(\(\) => requestAnimationFrame\(resolve\)\)[\s\S]*withVisualIntegrityScreenshotQuiescence/u);
 });
 
 test("r6 deployment diagnostics are bounded and preserve the existing acceptance contract", () => {
@@ -423,7 +441,7 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.doesNotMatch(firstFrameQuiescenceRegion, /\(\) => withDeploymentDiagnosticOperation\([\s\S]+?withDeploymentDiagnosticOperation\(/u);
   assert.doesNotMatch(presentationDeploymentCase.slice(0, firstFrameQuiescenceIndex), /deployment\/unit-asset-proof|deployment\/fixture-preparation/u);
   assert.match(presentationDeploymentCase, /withDeploymentPresentationQuiescence\([\s\S]*"deployment-checkpoint-advance"[\s\S]*pauseAtDeploymentCheckpoint/u);
-  assert.match(presentationDeploymentCase, /\(checkpointArm\) => pauseAtDeploymentCheckpoint\([\s\S]*checkpointArm,[\s\S]*null,[\s\S]*nextCheckpointPresentationEnvelope/u);
+  assert.match(presentationDeploymentCase, /\(checkpointArm, presentationArm\) => pauseAtDeploymentCheckpoint\([\s\S]*checkpointArm,[\s\S]*presentationArm,[\s\S]*null,[\s\S]*nextCheckpointPresentationEnvelope/u);
   assert.match(presentationDeploymentCase, /let evidenceCaptureEnvelope = firstFrameEnvelope\.preArmedEvidenceCapture/u);
   assert.match(presentationDeploymentCase, /let nextCheckpointPresentationEnvelope = null/u);
   assert.match(presentationDeploymentCase, /evidenceCaptureEnvelope = checkpointEnvelope\.preArmedEvidenceCapture/u);
@@ -456,8 +474,10 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
     "hosted/blocked-state-readback",
     "hosted/same-screen-recovery",
     "hosted/final-canvas-audit",
+    "hosted/mutable-state-owner-handoff",
     "hosted/mutable-canvas-audit",
     "hosted/page-screenshot",
+    "hosted/mutable-final-owner-release",
   ]) assert.match(visualHarness, new RegExp(operation.replaceAll("/", "\\/"), "u"));
   assert.match(finalRemediationHarness, /requestedCheckpoint: checkpoint\.id[\s\S]*withDeploymentDiagnosticOperation\([\s\S]*"deployment\/checkpoint-advance"/u);
   assert.match(boundedDeploymentHarness, /hostResourceTelemetryValid/u);
@@ -529,9 +549,15 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(firstFrame, /snapshot\.banner\?\.includes\("移動拠点から出撃"\) === true/u);
   assert.match(firstFrame, /progress === 0/u);
   assert.match(firstFrame, /captureTrace = null/u);
+  assert.match(firstFrame, /expectedPresentationArm = null/u);
   assert.ok((firstFrame.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length >= 3);
   assert.equal((firstFrame.match(/auditFighterUnitLayer/gu) ?? []).length, 0);
   assert.equal((firstFrame.match(/runFighterUnitLayerAuditSession/gu) ?? []).length, 1);
+  assert.match(firstFrame, /v100-deployment-checkpoint-audit-handoff\/v1/u);
+  assert.match(firstFrame, /auditSession = qa\.beginFighterUnitLayerAuditSession\(fighter\.id\)/u);
+  assert.match(firstFrame, /candidate\.auditSession/u);
+  const firstFrameReadyBranch = firstFrame.match(/if \(candidate\?\.ready === true\) \{[\s\S]+?(?=\n      if \(captureTrace\))/u)?.[0] ?? "";
+  assert.doesNotMatch(firstFrameReadyBranch, /hostTurn\(|getCrawlerDeploymentProofSnapshot|page\.evaluate/u);
   assert.doesNotMatch(firstFrame, /document\.querySelector\("\.battle-banner"\)|requestAnimationFrame|getSnapshot|page\.waitForTimeout/u);
   const checkpoint = finalRemediationHarness.match(/async function pauseAtDeploymentCheckpoint[\s\S]+?(?=\nasync function queueAndPauseAtFirstDeploymentFrame)/u)?.[0] ?? "";
   assert.equal((checkpoint.match(/armCrawlerDeploymentCheckpoint/gu) ?? []).length, 1);
@@ -541,10 +567,21 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(checkpoint, /hostTurn\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/u);
   assert.match(checkpoint, /captureTrace = null/u);
   assert.match(checkpoint, /prearmedCheckpoint = null/u);
+  assert.match(checkpoint, /expectedPresentationArm = null/u);
   assert.match(checkpoint, /prearmedCheckpoint \?\? await page\.evaluate/u);
   assert.equal((checkpoint.match(/if \(captureTrace\) await captureTrace\(\)/gu) ?? []).length, 3);
   assert.equal((checkpoint.match(/auditFighterUnitLayer/gu) ?? []).length, 0);
   assert.equal((checkpoint.match(/runFighterUnitLayerAuditSession/gu) ?? []).length, 1);
+  assert.match(checkpoint, /Object\.isFrozen\(receipt\)/u);
+  assert.match(checkpoint, /snapshot\.checkpointArm !== null/u);
+  assert.match(checkpoint, /v100-deployment-checkpoint-audit-handoff\/v1/u);
+  assert.match(checkpoint, /auditSession = qa\.beginFighterUnitLayerAuditSession\(id\)/u);
+  assert.match(checkpoint, /candidate\.auditSession/u);
+  const checkpointAcceptedHandoff = checkpoint.match(/invariant\(candidate\.schema === "v100-deployment-checkpoint-audit-handoff\/v1"[\s\S]+?(?=\n      return \{)/u)?.[0] ?? "";
+  assert.doesNotMatch(checkpointAcceptedHandoff, /hostTurn\(|getCrawlerDeploymentProofSnapshot|page\.evaluate/u);
+  const auditRunner = finalRemediationHarness.match(/async function runFighterUnitLayerAuditSession[\s\S]+?(?=\nasync function resumeDeploymentBattleForNextUnit)/u)?.[0] ?? "";
+  assert.match(auditRunner, /preboundSession = null/u);
+  assert.match(auditRunner, /const begin = preboundSession \?\? await boundedFighterUnitLayerAuditTransaction/u);
   assert.match(finalRemediationHarness, /function validDeploymentAuditScratchReceipt\(audit\)/u);
   assert.match(finalRemediationHarness, /audit\?\.scratchSurface\?\.schema === "v100-fighter-unit-layer-audit-scratch\/v1"/u);
   assert.match(finalRemediationHarness, /audit\.scratchSurface\.surfaceCount === 1/u);

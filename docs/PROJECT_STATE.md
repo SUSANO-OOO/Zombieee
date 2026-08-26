@@ -1,6 +1,6 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-08-26
+更新日：2026-08-27
 
 ## 1. 現在の正式公開
 
@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`e8f5fb152acca9124fceead899734c5d368053ba`、tree `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`。これはr87が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
-- production implementation／runtime asset integration：Draft candidate上に実装済み。r83-r84 exact eight-path material iteration 30は全local acceptance greenとなり、r85 material commit `e256d5616eec58f44b62a5098223eaa45a6e70b6`／tree `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`を作成済み。最初のHTTPS pushはsandbox identityにcredentialがなくref更新前に停止し、remoteはr82のまま。r86は既存commitを作り直さず、四path governance childとcredential-bearing host contextのone-shot transportだけを許可する
-- current Design Lock：`V100-SOL-DL-001 r88` Sections 28-104。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界とr84 accepted source/runtime bytes、r85 material commit、r87 governance commitを維持し、exact command-scoped ownership trustだけを許可したmaterial iteration 30 transportへcursorを固定する。`PRODUCT_DESIGN_CHANGE: 0`
+- LAST_AUDITED_HEAD：`ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`、tree `6e820e06d069285c69bfb874b193a3c2e1c33e8b`。これはr92が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- production implementation／runtime asset integration：Draft candidate上に実装済み。r91 phase-typed correctionはsource/static、first-attempt Hosted 3/35/15/45、first bounded deployment 8/8・48/48、content、complete tests 1,197/1,197、lint zero errors、build、integrityを全local greenで完了した。r92はこのexact candidateを再実行せずimmutable transportへ進めるgovernance read-backである
+- current Design Lock：`V100-SOL-DL-001 r92` Sections 28-108。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界を維持し、r91 local-green exact-nine candidate、five runtime/source hashes、protected manifests、material iteration 31 single transportを固定する。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -186,24 +186,32 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r49-r52 iteration history：r49 correctionはiteration 20、r50 correctionはiteration 21、r51／r52 correctionはiteration 22、complete automatic green後のworkflow-only restorationはiteration 23。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r88 Section 104
+## 6. Version 1.0.0 execution cursor — r92 Section 108
 
-- `STATUS`: `DESIGN_LOCKED / R88_COMMAND_SCOPED_SAFE_DIRECTORY_TRANSPORT_READY`
+- `STATUS`: `DESIGN_LOCKED / R92_LOCAL_ACCEPTANCE_GREEN / MATERIAL_ITERATION_31_CANDIDATE_READY`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `e8f5fb152acca9124fceead899734c5d368053ba`
-- `LAST_AUDITED_TREE`: `f58ccc5bc0e8a070cf002f13689e19c02920fe0b`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
 - `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
 - `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
 - `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
 - `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
-- `FAILED_GATE`: first and only r87 host-context push；Git dubious-ownership guardがexact isolated worktreeをnetwork／authentication／ref update前に拒否；automatic focused CI未生成
-- `LAST_GREEN_GATE`: r87 Design 19/19、canonical 55/55、exact static/protected integrity、normal four-path governance commitとancestry/path read-back；remote unchanged
-- `CLASSIFICATION`: `HOST_CREDENTIAL_REPOSITORY_OWNERSHIP_PRECONDITION / EXACT_ISOLATED_WORKTREE_OWNED_BY_CODEXSANDBOXONLINE + HOST_USER_OKAITO_REJECTED_BEFORE_NETWORK / REMEDIATION_LOCAL`
-- `REMEDIATION_CLASS`: `COMMAND_SCOPED_EXACT_SAFE_DIRECTORY + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_HOST_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `FAILED_GATE`: none in r91 local acceptance；material-iteration-31 commit／transport／remote read-back／automatic focused CIは未実行
+- `LAST_GREEN_GATE`: r91 source 12/12＋3/3＋Design 19/19＋canonical 55/55、exact static／fresh build、Hosted 3/35/15/45 first attempt、deployment 8/8・48/48 first bounded parent、content、complete tests 1,197/1,197、lint zero errors、final build、repeated integrity
+- `CLASSIFICATION`: `LOCAL_ACCEPTANCE_GREEN / R91_PHASE_TYPED_HOSTED_AND_DEPLOYMENT_PACKET_CLOSED / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_READBACK_AND_IMMUTABLE_TRANSPORT / RUNTIME_BYTES_FROZEN + ONE_MATERIAL_ITERATION_31_COMMIT / GOVERNANCE_ONLY`
 - `PRODUCT_DESIGN_CHANGE`: `0`
-- `LOOP_ITERATION`: r82 transportはterminal material iteration 29；`e256d561`＋`e1ba367`＋r88 governance childはmaterial iteration 30；complete automatic focused green後だけworkflow-only iteration 31
-- `SAME_GATE_REPEAT_COUNT`: `17`（CI #941 Phase Gはdependency-skippedのためexecuted-gate countは増やさない）
-- `RESUME_FROM`: r88 four-path governance/static -> one governance commit directly after preserved `e1ba367` -> live PR #171 unchanged preflight -> one host-context normal non-force push with exact command-scoped safe-directory only -> exact remote SHA/tree/parent read-back -> one automatic focused CI -> complete green only -> unchanged tail
+- `LOOP_ITERATION`: r88 transportはmaterial iteration 30；r91 local acceptanceでmaterial iteration 31 candidateを閉じた；complete automatic focused green後だけworkflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G；local acceptanceでは不変
+- `RESUME_FROM`: governance source/static only -> one normal non-amended exact-nine material-iteration-31 commit -> unchanged-live-ref preflight -> one normal non-force transport -> exact remote read-back -> only one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+- Actual r91 local acceptance / r92 read-back: r91 exact phase-typed correctionはsyntax、Phase G source 12/12、runtime evidence 3/3、Design 19/19、canonical 55/55、exact topology／LF／no-BOM／protected manifests／diff-check、fresh buildをgreen。full Hosted WebKit first attemptはready 3/3、fault 35/35、final-canvas 15/15、mutable 45/45、45 unique PNG、initial exact-two 15、successor/final exact-three 45、retry 0、terminal failure null。report `800c5ddb52ee116073be0a97b4f0824aba4229c97821b00232fa9738d229bc98`、host JSONL `5cf984669bbc5afe7c165be5d67af8cfadf25f1dafab25bcaf4510d70f48e1cc`、summary `60fddf9ed48c81dac6a545fc8352160bbf386abe5edc81bd624b17c2a6427a95`。bounded deployment WebKit 667x375 first parentは8/8、48/48、48 PNG、eight sheets、56/56 unique artifacts、48 unique audit sessions、全six-step complete、diagnostics 0、summary `5139546496b8d57161ff150df550a72069d4a046346cc42a0406c3ac6ccbce90`。content green、complete suite 1,197/1,197、lint 0 errors／12 warnings、final build、repeated integrity green。five frozen hashesは`b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`／`621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`／`e78cef388c18bb9b0d89a173095674a8430c7c2a987afd8feb84e11de658060d`／`cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`／`3a8bf4fe7848f044aa91ed3e20b67dbdf5d664285788c854eea62d0dc7f2dd61`。r92はgovernance source/staticだけを再確認し、accepted runtime/full gateを繰り返さずexact-nine material iteration 31 transportへ進む。
+
+- Actual r90 pre-implementation source return / r91 design: r90 +1 render windowはsource/runtimeへ未実装。`qaPresentationQuiescenceRef` fresh initializerは`active:false`／`owner:null`／`route:null`／`generation:0`。initial transitionはpredecessor releaseを行わず、`setStationMissionPixelAuditState`もmission state以外を変更しない。それにもかかわらずr89 ready predicateはinitialにも`route === "visual-integrity"`を要求した。exact delta 2でこのpredicateは構造上false、次観測delta 3でovershootとなる。classification `QA_HARNESS_HOSTED_INITIAL_PREARM_STATE_PREDICATE_ALIAS / FIRST_MUTABLE_TRANSITION_REQUIRES_PREDECESSOR_RELEASED_ROUTE_OWNER_THAT_CANNOT_EXIST_BEFORE_GENERATION_1 / DESIGN_CHANGE_REQUIRED`。r91はinitial inactive/null/null/generation-0＋exact two rendersと、released predecessor inactive/exact owner/visual-integrity/exact generation＋exact three rendersを分離し、same-page real armだけを許可する。+1 tolerance／app bridge変更／synthetic metadataは禁止。
+
+- Actual r89 local return / r90 design: r89 syntax／source／Design／canonical／static／fresh buildはgreen。Stage 25 WebKit 932x430 standalone三processは3/3 first-attempt greenでreport SHA-256 `41be89714e12317f7abddc9de85e13f93ad8c01404dbb20c05825a1bc7359bb5`／`1b19bd0c2969ef5976b184c9b3635da393159593734faf53c561c7eff0931358`／`918f9bd6033f5a8e9f0276af691522809602a3c40db3af2ff269ff8773d48a5e`。ordered Stage 6 -> 24 -> 25もfirst-attempt 3/3、report SHA-256 `ed17eae30bc7be0a300c2af4f473a7266fa917c5bf676b4f9975ab73005ca29d`。続くfirst full Hosted WebKitはready 3/3、fault 15、mission／delay／844x340 final-canvas auditまでgreen後、sequence 367-368のinitial mutable handoffが96 msで`exactly 2 production frames: 3`を返した。report 320,268 bytes／`1fadc92136a35c5ce5e353cbbc146d449fa995e6a7c95cf5f8e9802f0eb649d2`、host log 346,548 bytes／`3af9157e9ec5ec76410b1b0177d6c0bc51c4bbca29fda2c2e7d53e5e6606107a`。deployment未実行、retry／rerun／timeout変更／correction／commit／push 0。r90はPhase G／deployment三fileをbyte固定し、Hosted initial minimum 2・maximum 3、successor/final minimum 3・maximum 4、same-page owner reacquisition、最大八lean observationだけをexact six-path deltaへ固定する。
+
+- Actual r88 automatic focused return / r89 design: live PR HEAD/tree `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`／`6e820e06d069285c69bfb874b193a3c2e1c33e8b`、run `32971539028` terminal red。PR Verifyと六enemy shardはgreen。Phase GはStage 6／24 green後、Stage 25 exact shield sequence 0 -> 1、living Guardian target、exact cue、generic causal 4/4のlast atomic receiptを得たが、production scheduler最大catch-up `5/60`を含まない0.8秒boundがactual 0.85秒commitだけをrejectし、46th page transactionでtimeout。Hostedはready 3／fault 20 complete後、mission／404／1280 start screenshot releaseからpower-1 state renderまでhost-visible owner gapを開き`anon_pipe_write` crash。deployment 667x375はscout／ranger 6/6、brawler halfまでgreen、three-quarters exact immutable receiptもprogress 0.756で成立した後、redundant full snapshot stability read／separate six-pass begin boundaryでcrash。他五viewportはgreen。三processともOOM／fatal product diagnostics 0、retry／rerun／dispatch 0。r89はexact nine pathsでscheduler-derived one-max-catch-up-frame tolerance、Hosted state-render-to-owner atomic handoff、deployment immutable-receipt-to-prebound-audit-session handoffを一つのfinite packetへ固定する。
 
 - Actual r87 transport return / r88 design: r87 Design 19/19、canonical 55/55、exact four-path／eight-path mixed-EOL・fixed-byte・protected-manifest・`git diff --check`はgreen。normal governance commit `e1ba3677b62520fe5d7dd829999e61586b484c71`／tree `5e7f0523db939be39a71468a279a8249fd420c74`／parent `e256d5616eec58f44b62a5098223eaa45a6e70b6`を作成し、tracked/index clean、protected三directoryだけを保持。live PRはpush直前もremote HEAD/tree `e8f5fb152acca9124fceead899734c5d368053ba`／`f58ccc5bc0e8a070cf002f13689e19c02920fe0b`、base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`。first and only host-context pushはrepo owner `CodexSandboxOnline`とhost user `okaito`の差をGit dubious-ownership guardが拒否し、network／authentication／ref update前に停止。直後のlive refもunchanged、CI 0、same-revision retry／alternate transport／persistent config 0。r88はexact worktree pathへのcommand-scoped `-c safe.directory=...`だけを許可し、`--global`／`--system`／`--local`／wildcard／credential output／forceを禁止する。既存`e256d561`／`e1ba367`は作り直さない。
 
@@ -452,7 +460,7 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-103のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r87を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-108のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r92を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 

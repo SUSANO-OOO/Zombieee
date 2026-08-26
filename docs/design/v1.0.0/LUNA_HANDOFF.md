@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r88`
+- Canonical Design Lock: `V100-SOL-DL-001 r92`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-96 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 97 is the sole current execution handoff.
+Sections 1-100 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 101 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2823,3 +2823,97 @@ Design Lock Section 104 and the latest explicitly labeled Issue #172 r88 lock ar
 Preserve commits `e256d5616eec58f44b62a5098223eaa45a6e70b6` and `e1ba3677b62520fe5d7dd829999e61586b484c71` exactly. Change and commit only the four r88 governance paths. Do not repeat accepted r84 browser/content/full/lint/build gates. Run Design Lock 19/19, canonical 55/55, exact four-path/eight-path static and protected integrity, then require live GitHub still at the audited remote r82 ref/base. Execute exactly once: `git -c safe.directory=C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-sol-r9-3a40 -c credential.interactive=never push https://github.com/SUSANO-OOO/Zombieee.git HEAD:refs/heads/codex/v1.0.0-luna-implementation`. This command-scoped exact trust must not persist configuration. No global/system/local config write, wildcard, secret output, force, alternate URL/mechanism, or same-revision retry.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — preserve `e256d561` and `e1ba367`, commit only this r88 four-path governance packet, re-fetch the unchanged remote r82 cursor, then perform the one exact command-scoped-safe-directory host normal non-force push and exact remote read-back. Observe only its automatic focused CI. Any red returns to SOL_DESIGN without retry; no product-gate repetition, persistent Git config, alternate transport, workflow edit, or release action.**
+
+## 98. Revision r89 — no active Luna handoff / finite atomic evidence handoff packet
+
+Design Lock Section 105 and the latest explicitly labeled Issue #172 r89 lock are the sole active cursor. Sections 1-97 remain immutable history. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R89_FINITE_ATOMIC_EVIDENCE_HANDOFF_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: automatic focused CI `32971539028`: Hosted `98190808503`, Phase G `98191589350`, deployment WebKit 667x375 `98192622813`; Stage 3 and Canonical HUD dependency-skipped
+- `LAST_GREEN_GATE`: r88 transport; PR Verify; six enemy shards; Stage 6/24 ordered Phase G; Hosted ready 3 plus 20 fault controls; five deployment viewports and the 667x375 exact semantic controls before the terminal handoff
+- `CLASSIFICATION`: `QA_HARNESS_REMAINING_WEBKIT_EVIDENCE_TRANSACTION_OWNERSHIP / STAGE25_MAX_CATCH_UP_FRAME_OMISSION + HOSTED_CROSS_STATE_OWNER_GAP + DEPLOYMENT_RECEIPT_TO_AUDIT_GAP / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `FINITE_ATOMIC_EVIDENCE_HANDOFF_PACKET / SCHEDULER_DERIVED_COMMIT_TOLERANCE + MUTABLE_STATE_RENDER_TO_OWNER_HANDOFF + CHECKPOINT_RECEIPT_TO_PREBOUND_AUDIT_SESSION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r89 local/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact nine-path Section 105 implementation -> source 12/12 + 3/3 + Design Lock 19/19 + canonical 55/55 -> exact static/fresh build -> Stage 25 standalone 3/3 and ordered trio -> full Hosted WebKit -> bounded WebKit 667x375 deployment 8/8 and 48/48 -> content/full/lint/build/static -> one normal material-iteration-31 commit and one non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Change exactly the nine paths named by Section 105.2. Runtime implementation is limited to the two Phase G files, Hosted visual-integrity harness, deployment harness, and their existing runtime-evidence source test. `app/**`, workflows, package/lock, public/assets, accepted P5 bytes, product/gameplay/balance/AI/cadence/timing, timeout/retry/attempt counts, screenshot/checkpoint/pixel/causal thresholds, and the three protected forensic directories are immutable.
+
+Phase G must derive one exact actor commit tolerance from the existing 60 Hz scheduler's maximum five-step catch-up callback and use one helper at all three existing sites. Hosted must render each real mutable state and atomically arm its evidence owner before host audit/screenshot, carrying the prior release/restoration into the next state and releasing the last state only after power-3. Deployment must atomically bind the immutable semantic receipt and existing six-pass session in the same page task, return only a lean handoff, and remove the redundant post-ready full snapshot/host turn/separate audit-begin gap while retaining all six passes and all evidence.
+
+No retry, rerun, same-revision micro-patch, timeout increase, alternate transport, workflow edit, or release mutation is authorized. Any first red returns to `SOL_DESIGN`. Complete automatic focused green alone unlocks workflow-only iteration 32 and the unchanged unfiltered/full/runtime/human/fixed-HEAD route.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL implements only Design Lock r89 Section 105 across its exact nine paths. Add one scheduler-derived five-step commit tolerance, atomically hand Hosted state render to the screenshot owner, and atomically hand each deployment receipt to a pre-bound six-pass audit session. Preserve product bytes, thresholds, timeouts, attempts, P5, workflows, and protected evidence. Execute the locked first-attempt sequence once; any red returns to SOL_DESIGN without retry.**
+
+## 99. Revision r90 — no active Luna handoff / bounded Hosted render-observation window
+
+Design Lock Section 106 and the explicitly labeled Issue #172 r90 lock [#5426798455](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5426798455) are the sole active cursor. Sections 1-98 remain immutable history. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R90_BOUNDED_RENDER_OBSERVATION_WINDOW_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: local r89 full Hosted WebKit first attempt; `mission / delay / 844x340 / start` completed its final-canvas audit, then the exact-two mutable observer rejected actual render delta 3
+- `LAST_GREEN_GATE`: r89 source/static/build; Stage 25 standalone 3/3; ordered Stage 6/24/25 3/3; Hosted ready 3/3, fault 15, and mission final-canvas audit
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_RENDER_WINDOW_EXACT_EQUALITY_UNOBSERVABLE / INITIAL_MUTABLE_STATE_FINAL_CANVAS_GREEN_BUT_PAGE_OBSERVER_REACHED_DELTA_3_AFTER_MINIMUM_2 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_RENDER_OBSERVATION_WINDOW / SAME_PAGE_MINIMUM_RENDER_PLUS_ONE_FRAME_MAXIMUM_AND_ATOMIC_OWNER_REACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r90 source/local/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 remains uncommitted/untransported; r90 supersedes r89 inside that packet; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged by this local Hosted stop
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact six-path r90 delta -> source/static gates -> one full Hosted WebKit -> one bounded deployment WebKit 667x375 -> full local gates -> one material-iteration-31 normal non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Keep the aggregate r89 topology at exactly nine paths. Only the Hosted script, its existing runtime-evidence source test, and the four SOL governance/source paths may receive an r90 delta. The accepted r89 Phase G/deployment files are frozen at the hashes in Section 106.2. Do not repeat the accepted Stage 25 standalone 3/3 or ordered trio.
+
+In the one Hosted page transaction, require minimum render delta 2 for the initial state and 3 for successor/final transitions, maximum exactly minimum + 1, visible live canvas predicates, and successor owner acquisition at the accepted live counter before returning. Persist actual/minimum/maximum/slack plus at most eight lean observations. Preserve all 3/35/15/45 cardinalities, state/audit/screenshot/suppression/generation receipts, PNGs, diagnostics, timeout, and one attempt. Any over-maximum or ownership drift is red and returns to SOL_DESIGN without retry.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r90 Section 106. Keep r89 Phase G/deployment bytes and their accepted local runs fixed. Replace Hosted exact render equality with the closed 2-3 initial / 3-4 successor-and-final window, record bounded diagnostics, and acquire the successor owner in the same page task. Run source/static once, then one full Hosted WebKit and one bounded deployment 667x375; any red returns to SOL_DESIGN without retry. No product, timeout, workflow, transport, or release change.**
+
+## 100. Revision r91 — no active Luna handoff / initial pre-arm predicate separation
+
+Design Lock Section 107 and Issue #172 [r91 #5426901510](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5426901510) are the sole active cursor. Sections 1-99 remain history. Section 99/r90 was superseded before implementation; its +1 render-frame window is forbidden. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R91_INITIAL_PREARM_PREDICATE_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: local r89 Hosted first attempt; initial owner-null/route-null/generation-0 state was tested as a released visual-integrity predecessor
+- `LAST_GREEN_GATE`: r89 source/static/build; Stage 25 standalone 3/3; ordered Stage 6/24/25 3/3; Hosted ready 3/3, fault 15, and final-canvas audit
+- `CLASSIFICATION`: `QA_HARNESS_HOSTED_INITIAL_PREARM_STATE_PREDICATE_ALIAS / FIRST_MUTABLE_TRANSITION_REQUIRES_PREDECESSOR_RELEASED_ROUTE_OWNER_THAT_CANNOT_EXIST_BEFORE_GENERATION_1 / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `PHASE_TYPED_INITIAL_PREARM_AND_PREDECESSOR_RELEASED_PREDICATES / EXACT_2_AND_3_RENDER_COUNTS + SAME_PAGE_OWNER_ACQUISITION / PRODUCT_UNCHANGED / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r91 source/local/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 remains uncommitted/untransported; r91 supersedes unimplemented r90 inside the same packet; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact initial/predecessor predicate correction across the same six-path delta -> source/static -> one full Hosted -> one bounded deployment WebKit 667x375 -> full local -> material-iteration-31 transport -> one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Keep exact render equality: initial pre-arm is two production frames; every released predecessor successor/final transition is three. The initial state must remain inactive with null owner/route and generation 0 until the same page task performs the first real arm. Only released predecessors retain owner/route/generation while inactive. Do not create a +1 window, synthesize pre-arm metadata, change the app bridge, or weaken evidence. Preserve the exact r89 nine-path topology, frozen Phase G/deployment hashes and accepted runs, all 3/35/15/45 Hosted cardinalities, and one attempt.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r91 Section 107. In the Hosted page transaction, separate the fresh initial pre-arm predicate (inactive/null/null/generation 0, exact two renders) from the released-predecessor predicate (inactive/exact owner/visual-integrity/exact generation, exact three renders), then acquire the successor owner in the same task. Keep r89 Phase G/deployment bytes and accepted runs fixed. Run source/static once, one full Hosted, then one bounded deployment 667x375. Any red returns to SOL_DESIGN without retry; no +1 tolerance, product, timeout, workflow, transport, or release change.**
+
+## 101. Revision r92 — no active Luna handoff / local acceptance green transport
+
+Design Lock Section 108 and Issue #172's authoritative r92 entry are the sole active cursor. Sections 1-100 remain history. r91 local acceptance is complete and immutable; `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R92_LOCAL_ACCEPTANCE_GREEN / MATERIAL_ITERATION_31_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
+- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `FAILED_GATE`: none in r91 local acceptance; material-iteration-31 commit, transport, remote read-back, and automatic focused CI are unexecuted
+- `LAST_GREEN_GATE`: r91 syntax/source 12/12 + 3/3 + 19/19 + canonical 55/55; exact static/fresh build; Hosted 3/35/15/45 first attempt; deployment 8/8 and 48/48 first bounded parent; content validator; complete suite 1,197/1,197; lint zero errors; final build; repeated integrity
+- `CLASSIFICATION`: `LOCAL_ACCEPTANCE_GREEN / R91_PHASE_TYPED_HOSTED_AND_DEPLOYMENT_PACKET_CLOSED / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_READBACK_AND_IMMUTABLE_TRANSPORT / RUNTIME_BYTES_FROZEN + ONE_MATERIAL_ITERATION_31_COMMIT / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r92 governance/commit/transport/remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 31 is locally accepted and remains uncommitted/untransported; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance source/static only -> one normal non-amended exact-nine material-iteration-31 commit -> unchanged-live-ref preflight -> one normal non-force transport -> exact remote read-back -> only one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Freeze the five runtime/source files at Section 108 SHA-256 values `b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`, `621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`, `e78cef388c18bb9b0d89a173095674a8430c7c2a987afd8feb84e11de658060d`, `cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`, and `3a8bf4fe7848f044aa91ed3e20b67dbdf5d664285788c854eea62d0dc7f2dd61`. Preserve the exact nine-path aggregate and protected manifests. Do not repeat Hosted, deployment, content, complete tests, lint, or build. No Ready, merge, tag, Release, official Pages, or Producer checkpoint is authorized.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r92 Section 108. Recheck governance/source/static and frozen bytes only, create one normal non-amended exact-nine material-iteration-31 commit, require the unchanged live PR cursor, then perform one command-scoped-safe-directory normal non-force transport and exact read-back. Wait only for its one automatic focused CI. Any red returns to SOL_DESIGN without retry, rerun, alternate transport, or manual dispatch. Complete green alone unlocks workflow-only iteration 32; all release actions remain forbidden.**

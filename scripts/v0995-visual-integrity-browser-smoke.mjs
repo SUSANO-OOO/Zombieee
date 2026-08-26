@@ -183,6 +183,264 @@ async function releaseVisualIntegrityPresentation(page, arm, label) {
   return { release, restored };
 }
 
+async function transitionVisualIntegrityMutablePresentation(page, {
+  state = null,
+  previousArm = null,
+  finalRelease = false,
+  label,
+}) {
+  const owner = "visual-integrity-evidence-capture";
+  invariant(finalRelease === (state === null),
+    `${label}: mutable presentation transition must request exactly one state or the final release`);
+  const transition = await page.evaluate(async ({
+    requestedOwner,
+    requestedState,
+    previousGeneration,
+    releaseOnly,
+    transitionTimeoutMs,
+  }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (typeof bridge?.setStationMissionPixelAuditState !== "function"
+      || typeof bridge?.setQaPresentationQuiesced !== "function"
+      || typeof bridge?.getQaPresentationQuiescence !== "function") {
+      throw new Error("visual-integrity mutable presentation bridge is unavailable");
+    }
+    const before = bridge.getQaPresentationQuiescence();
+    const initialPrearm = previousGeneration === null;
+    const transitionPhase = initialPrearm ? "initial-prearm" : "predecessor-released";
+    let release = null;
+    if (initialPrearm) {
+      if (releaseOnly) {
+        throw new Error("visual-integrity final mutable release lacks its exact predecessor generation");
+      }
+      if (!(before?.schema === "v100-qa-presentation-quiescence/v1"
+        && before.active === false
+        && before.owner === null
+        && before.route === null
+        && before.datasetActive === false
+        && before.running === true
+        && before.paused === false
+        && before.over !== true
+        && Number(before.generation) === 0)) {
+        throw new Error(`visual-integrity initial prearm state drifted ${JSON.stringify(before)}`);
+      }
+    } else {
+      if (!(before?.schema === "v100-qa-presentation-quiescence/v1"
+        && before.active === true
+        && before.owner === requestedOwner
+        && before.route === "visual-integrity"
+        && before.datasetActive === true
+        && before.running === true
+        && before.paused === false
+        && before.over !== true
+        && Number(before.generation) === Number(previousGeneration))) {
+        throw new Error(`visual-integrity mutable predecessor ownership drifted ${JSON.stringify(before)}`);
+      }
+      release = bridge.setQaPresentationQuiesced(false, requestedOwner);
+      if (!(release?.schema === "v100-qa-presentation-quiescence/v1"
+        && release.active === false
+        && release.owner === requestedOwner
+        && release.route === "visual-integrity"
+        && release.datasetActive === false
+        && release.running === true
+        && release.paused === false
+        && release.over !== true
+        && Number(release.generation) === Number(previousGeneration))) {
+        throw new Error(`visual-integrity mutable predecessor release drifted ${JSON.stringify(release)}`);
+      }
+    }
+
+    const baselineRenderFrames = Number(release?.releasedAtRenderFrames ?? before?.renderFrames);
+    if (!Number.isFinite(baselineRenderFrames)) {
+      throw new Error("visual-integrity mutable transition lacks a finite render baseline");
+    }
+    if (!releaseOnly) bridge.setStationMissionPixelAuditState(requestedState);
+    const requiredRenderFrameDelta = previousGeneration === null ? 2 : 3;
+    const restored = await new Promise((resolve, reject) => {
+      const startedAt = performance.now();
+      const timer = setTimeout(() => {
+        reject(new Error(`visual-integrity mutable transition exceeded ${transitionTimeoutMs} ms`));
+      }, transitionTimeoutMs);
+      const observe = () => {
+        const quiescence = bridge.getQaPresentationQuiescence();
+        const renderFrameDelta = Number(quiescence?.renderFrames) - baselineRenderFrames;
+        const canvas = document.querySelector("canvas.battlefield.active");
+        const rect = canvas?.getBoundingClientRect?.() ?? null;
+        const style = canvas ? getComputedStyle(canvas) : null;
+        const inactivePresentationReady = quiescence?.schema === "v100-qa-presentation-quiescence/v1"
+          && quiescence.active === false
+          && quiescence.datasetActive === false
+          && quiescence.running === true
+          && quiescence.paused === false
+          && quiescence.over !== true;
+        const phaseIdentityReady = initialPrearm
+          ? quiescence?.owner === null
+            && quiescence?.route === null
+            && Number(quiescence?.generation) === 0
+          : quiescence?.owner === requestedOwner
+            && quiescence?.route === "visual-integrity"
+            && Number(quiescence?.generation) === Number(previousGeneration);
+        const canvasReady = rect?.width > 0
+          && rect?.height > 0
+          && style?.display !== "none"
+          && style?.visibility !== "hidden"
+          && Number(style?.opacity) > 0;
+        if (renderFrameDelta > requiredRenderFrameDelta) {
+          clearTimeout(timer);
+          const terminalObservation = {
+            transitionPhase,
+            requiredRenderFrameDelta,
+            actualRenderFrameDelta: renderFrameDelta,
+            quiescence: {
+              schema: quiescence?.schema ?? null,
+              active: quiescence?.active ?? null,
+              owner: quiescence?.owner ?? null,
+              route: quiescence?.route ?? null,
+              datasetActive: quiescence?.datasetActive ?? null,
+              generation: quiescence?.generation ?? null,
+              running: quiescence?.running ?? null,
+              paused: quiescence?.paused ?? null,
+              over: quiescence?.over ?? null,
+              renderFrames: quiescence?.renderFrames ?? null,
+            },
+            phaseIdentityReady,
+            inactivePresentationReady,
+            canvasReady,
+          };
+          reject(new Error(`visual-integrity mutable transition missed its exact production-frame checkpoint ${JSON.stringify(terminalObservation)}`));
+          return;
+        }
+        const ready = inactivePresentationReady
+          && phaseIdentityReady
+          && renderFrameDelta === requiredRenderFrameDelta
+          && canvasReady;
+        if (ready) {
+          clearTimeout(timer);
+          resolve({
+            transitionPhase,
+            quiescence,
+            renderFrameDelta,
+            requiredRenderFrameDelta,
+            elapsedMs: performance.now() - startedAt,
+            canvas: {
+              width: rect.width,
+              height: rect.height,
+              display: style.display,
+              visibility: style.visibility,
+              opacity: style.opacity,
+            },
+          });
+          return;
+        }
+        requestAnimationFrame(observe);
+      };
+      requestAnimationFrame(observe);
+    });
+    if (releaseOnly) {
+      return {
+        schema: "v100-visual-integrity-mutable-state-owner-handoff/v1",
+        transitionPhase,
+        requestedState: null,
+        previousOwner: requestedOwner,
+        previousGeneration,
+        release,
+        restored,
+        nextArm: null,
+      };
+    }
+    const nextArm = bridge.setQaPresentationQuiesced(true, requestedOwner);
+    if (!(nextArm?.schema === "v100-qa-presentation-quiescence/v1"
+      && nextArm.active === true
+      && nextArm.owner === requestedOwner
+      && nextArm.route === "visual-integrity"
+      && nextArm.datasetActive === true
+      && nextArm.running === true
+      && nextArm.paused === false
+      && nextArm.over !== true
+      && Number(nextArm.generation) === Number(before.generation) + 1
+      && Number(nextArm.enteredAtRenderFrames) === Number(restored.quiescence.renderFrames))) {
+      throw new Error(`visual-integrity mutable successor owner did not atomically acquire the rendered state ${JSON.stringify(nextArm)}`);
+    }
+    return {
+      schema: "v100-visual-integrity-mutable-state-owner-handoff/v1",
+      transitionPhase,
+      requestedState,
+      previousOwner: previousGeneration === null ? null : requestedOwner,
+      previousGeneration,
+      release,
+      restored,
+      nextArm,
+    };
+  }, {
+    requestedOwner: owner,
+    requestedState: state,
+    previousGeneration: previousArm?.generation ?? null,
+    releaseOnly: finalRelease,
+    transitionTimeoutMs: VISUAL_INTEGRITY_PRESENTATION_TIMEOUT_MS,
+  });
+  const expectedTransitionPhase = previousArm ? "predecessor-released" : "initial-prearm";
+  invariant(transition?.schema === "v100-visual-integrity-mutable-state-owner-handoff/v1"
+    && transition.transitionPhase === expectedTransitionPhase
+    && transition.requestedState === state
+    && transition.previousGeneration === (previousArm?.generation ?? null)
+    && transition.restored?.transitionPhase === expectedTransitionPhase
+    && transition.restored?.requiredRenderFrameDelta === (previousArm ? 3 : 2)
+    && transition.restored?.renderFrameDelta === transition.restored.requiredRenderFrameDelta,
+  `${label}: mutable presentation transition receipt drifted ${JSON.stringify(transition)}`);
+  if (finalRelease) {
+    invariant(transition.release?.generation === previousArm.generation
+      && transition.nextArm === null,
+    `${label}: final mutable presentation owner did not restore exactly three frames`);
+    return transition;
+  }
+  const suppressed = await awaitVisualIntegrityPresentationSuppression(
+    page,
+    owner,
+    transition.nextArm.generation,
+    label,
+  );
+  return { ...transition, suppressed };
+}
+
+async function withPrearmedVisualIntegrityScreenshotQuiescence(page, label, transition, operation) {
+  const owner = "visual-integrity-evidence-capture";
+  const arm = transition?.nextArm;
+  const suppressed = transition?.suppressed;
+  invariant(transition?.schema === "v100-visual-integrity-mutable-state-owner-handoff/v1"
+    && arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "visual-integrity"
+    && suppressed?.generation === arm.generation
+    && Number(suppressed?.suppressedRenderFrames) > 0,
+  `${label}: mutable screenshot lacks its pre-armed presentation owner`);
+  const value = await operation();
+  return {
+    value,
+    receipt: {
+      schema: "v100-visual-integrity-screenshot-quiescence/v1",
+      owner,
+      arm,
+      suppressed,
+      release: null,
+      restored: null,
+    },
+  };
+}
+
+function completeVisualIntegrityScreenshotReceipt(receipt, successorTransition, label) {
+  invariant(receipt?.schema === "v100-visual-integrity-screenshot-quiescence/v1"
+    && successorTransition?.schema === "v100-visual-integrity-mutable-state-owner-handoff/v1"
+    && successorTransition.previousOwner === receipt.owner
+    && successorTransition.previousGeneration === receipt.arm.generation
+    && successorTransition.release?.generation === receipt.arm.generation
+    && successorTransition.restored?.renderFrameDelta === 3,
+  `${label}: mutable screenshot release/restoration receipt is incomplete`);
+  receipt.release = successorTransition.release;
+  receipt.restored = successorTransition.restored;
+  return receipt;
+}
+
 async function withVisualIntegrityScreenshotQuiescence(page, label, operation) {
   const owner = "visual-integrity-evidence-capture";
   const arm = await page.evaluate((requestedOwner) => (
@@ -652,34 +910,72 @@ const runEngine = async (engineName, browserType) => {
         const mutableMissionStates = [];
         if (finalCanvas) {
           invariant(finalCanvas.pass === true, `${engineName}/${mode}/${faultViewport.width}x${faultViewport.height}: final mission canvas did not contain authored pixels ${JSON.stringify(finalCanvas)}`);
+          let previousMutableTransition = null;
+          let previousMutableState = null;
           for (const state of ["start", "power-1", "power-3"]) {
+            const stateTransition = await runHostTelemetryOperation(
+              "hosted/mutable-state-owner-handoff",
+              { ...faultOperationDetails, mutableState: state },
+              () => transitionVisualIntegrityMutablePresentation(page, {
+                state,
+                previousArm: previousMutableTransition?.nextArm ?? null,
+                label: `${engineName}/${mode}/${state}`,
+              }),
+            );
+            if (previousMutableState) {
+              completeVisualIntegrityScreenshotReceipt(
+                previousMutableState.screenshotQuiescence,
+                stateTransition,
+                `${engineName}/${mode}/${previousMutableState.state}`,
+              );
+              previousMutableState.successorTransition = stateTransition;
+            }
             const pixelAudit = await runHostTelemetryOperation(
               "hosted/mutable-canvas-audit",
               { ...faultOperationDetails, mutableState: state },
-              async () => {
-                await page.evaluate((nextState) => window.__ASHFALL_BATTLE_QA__.setStationMissionPixelAuditState(nextState), state);
-                await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-                return page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit());
-              },
+              () => page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getStationMissionFinalCanvasAudit()),
             );
             invariant(pixelAudit.pass === true, `${engineName}/${mode}/${state}: authored state missing from final canvas ${JSON.stringify(pixelAudit)}`);
             const screenshot = path.join(evidenceDir, `${engineName}-${faultViewport.width}x${faultViewport.height}-${mode}-${state}.png`);
             const screenshotEnvelope = await runHostTelemetryOperation(
               "hosted/page-screenshot",
               { ...faultOperationDetails, mutableState: state },
-              () => withVisualIntegrityScreenshotQuiescence(
+              () => withPrearmedVisualIntegrityScreenshotQuiescence(
                 page,
                 `${engineName}/${mode}/${state}`,
+                stateTransition,
                 () => page.screenshot({ path: screenshot, timeout: VISUAL_INTEGRITY_SCREENSHOT_TIMEOUT_MS }),
               ),
             );
-            mutableMissionStates.push({
+            stateTransition.screenshot = path.relative(process.cwd(), screenshot).replaceAll("\\", "/");
+            const mutableState = {
               state,
               pixelAudit,
               screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/"),
               screenshotQuiescence: screenshotEnvelope.receipt,
-            });
+              stateTransition,
+              successorTransition: null,
+              finalRelease: null,
+            };
+            mutableMissionStates.push(mutableState);
+            previousMutableTransition = stateTransition;
+            previousMutableState = mutableState;
           }
+          const finalMutableRelease = await runHostTelemetryOperation(
+            "hosted/mutable-final-owner-release",
+            { ...faultOperationDetails, mutableState: "power-3" },
+            () => transitionVisualIntegrityMutablePresentation(page, {
+              previousArm: previousMutableTransition?.nextArm ?? null,
+              finalRelease: true,
+              label: `${engineName}/${mode}/power-3/final-release`,
+            }),
+          );
+          completeVisualIntegrityScreenshotReceipt(
+            previousMutableState?.screenshotQuiescence,
+            finalMutableRelease,
+            `${engineName}/${mode}/power-3`,
+          );
+          previousMutableState.finalRelease = finalMutableRelease;
           invariant(new Set(mutableMissionStates.map(({ pixelAudit }) => pixelAudit.authoredStateSignature)).size === mutableMissionStates.length,
             `${engineName}/${mode}: mutable mission states collapsed to the same authored pixels`);
         }

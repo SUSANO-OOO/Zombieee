@@ -13,6 +13,7 @@ import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
 import { unitContentFor } from "../app/content/unitCatalog.js";
+import { RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS } from "../app/renderPerformance.js";
 import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
@@ -29,6 +30,15 @@ const combatProofDurationMs = Math.max(2_400, Number(process.env.V100_PHASE_G_CO
 const COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS = 2_400;
 const COMBAT_CAUSAL_CONVERGENCE_MIN_SAMPLES = 8;
 const COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS = 2_000;
+const RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS = RUNTIME_SIMULATION_STEP_SECONDS
+  * RUNTIME_MAX_CATCH_UP_STEPS;
+
+function releaseAnchorCommitWindowSecondsFor(releaseAnchor) {
+  const attackWindupSeconds = Number(releaseAnchor?.attackWindupSeconds);
+  if (!Number.isFinite(attackWindupSeconds) || attackWindupSeconds <= 0) return null;
+  return Math.max(0.8, attackWindupSeconds + 0.5)
+    + RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS;
+}
 const requiredViewports = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
@@ -806,7 +816,7 @@ function postQuiescenceExactActorDecision(proofEpoch, {
       && String(actor?.targetId) === String(releaseAnchor.targetId)
     );
     const releaseAnchorCommitWindowSeconds = releaseAnchorOk
-      ? Math.max(0.8, Number(releaseAnchor.attackWindupSeconds) + 0.5)
+      ? releaseAnchorCommitWindowSecondsFor(releaseAnchor)
       : null;
     const releaseAnchorCommitDeltaSeconds = actorKey === releaseAnchorExpectedKey
       && releaseAnchorOk
@@ -2513,12 +2523,22 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
 }
 
 async function startCombatRuntimeObserver(page) {
-  const phaseGCombatSnapshotProfile = await page.evaluate(() => {
+  const phaseGCombatSnapshotProfile = await page.evaluate(({
+    runtimeSimulationStepSeconds,
+    runtimeMaxCatchUpSteps,
+  }) => {
     window.__PHASE_G_COMBAT_OBSERVER__?.stop?.();
     const bridge = window.__ASHFALL_BATTLE_QA__;
     if (!bridge || typeof bridge.getPhaseGCombatSnapshot !== "function") {
       throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_METHOD_MISSING");
     }
+    const releaseAnchorCommitWindowSecondsFor = (releaseAnchor) => {
+      const attackWindupSeconds = Number(releaseAnchor?.attackWindupSeconds);
+      if (!Number.isFinite(attackWindupSeconds) || attackWindupSeconds <= 0) return null;
+      return Math.max(0.8, attackWindupSeconds + 0.5)
+        + runtimeSimulationStepSeconds * runtimeMaxCatchUpSteps;
+    };
+    window.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__ = releaseAnchorCommitWindowSecondsFor;
     const forbiddenFields = new Set([
       "renderAudit",
       "renderAuditHistory",
@@ -2788,7 +2808,7 @@ async function startCombatRuntimeObserver(page) {
         if (epochActor && attackSequenceAdvanced && epochActor.observedPostEpochAttack !== true) {
           const releaseAnchor = postQuiescenceProofEpoch.releaseAnchor ?? null;
           const releaseAnchorCommitWindowSeconds = releaseAnchor
-            ? Math.max(0.8, Number(releaseAnchor.attackWindupSeconds) + 0.5)
+            ? releaseAnchorCommitWindowSecondsFor(releaseAnchor)
             : null;
           const releaseAnchorCommitDeltaSeconds = releaseAnchor
             && Number.isFinite(Number(snapshot.time))
@@ -2907,6 +2927,9 @@ async function startCombatRuntimeObserver(page) {
     };
     observe();
     return profile;
+  }, {
+    runtimeSimulationStepSeconds: RUNTIME_SIMULATION_STEP_SECONDS,
+    runtimeMaxCatchUpSteps: RUNTIME_MAX_CATCH_UP_STEPS,
   });
   const recorder = checkpointRecorderFor(page);
   recorder?.setPhaseGCombatSnapshotProfile(phaseGCombatSnapshotProfile);
@@ -5084,7 +5107,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const releaseAnchor = proofEpoch.releaseAnchor ?? null;
           const actorBaselineSequence = Number(actorBaseline?.baselineAttackSequence);
           const releaseAnchorCommitWindowSeconds = releaseAnchor
-            ? Math.max(0.8, Number(releaseAnchor.attackWindupSeconds) + 0.5)
+            ? window.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__?.(releaseAnchor) ?? null
             : null;
           const releaseAnchorCommitDeltaSeconds = releaseAnchor
             && Number.isFinite(Number(snapshot?.time))
