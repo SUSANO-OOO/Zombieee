@@ -2285,6 +2285,137 @@ function validDeploymentAuditScratchReceipt(audit) {
     && audit.scratchSurface.passCount === 6;
 }
 
+async function resumeDeploymentBattleForNextUnit(page, previousUnit, nextUnit, label) {
+  try {
+    const readBoundary = (resume) => page.evaluate(({ requestedResume, previousKind }) => {
+      const bridge = window.__ASHFALL_BATTLE_QA__;
+      if (typeof bridge?.getCrawlerDeploymentProofSnapshot !== "function"
+        || typeof bridge?.getQaPresentationQuiescence !== "function"
+        || typeof bridge?.setRepresentativeSixProofPaused !== "function") {
+        throw new Error("deployment cross-unit live-battle bridge is unavailable");
+      }
+      const commandResult = requestedResume
+        ? bridge.setRepresentativeSixProofPaused(false)
+        : null;
+      const snapshot = bridge.getCrawlerDeploymentProofSnapshot({ kind: previousKind });
+      const presentation = bridge.getQaPresentationQuiescence();
+      const canvas = document.querySelector("canvas.battlefield.active");
+      const rect = canvas?.getBoundingClientRect?.() ?? null;
+      const style = canvas ? getComputedStyle(canvas) : null;
+      const checkpointReceipt = snapshot?.checkpointReceipt ?? null;
+      return {
+        schema: "v100-deployment-cross-unit-live-boundary/v1",
+        commandResult,
+        screen: snapshot?.screen ?? null,
+        running: snapshot?.running ?? null,
+        paused: snapshot?.paused ?? null,
+        over: snapshot?.over ?? null,
+        battleTime: snapshot?.time ?? null,
+        fighter: snapshot?.fighter ? {
+          id: snapshot.fighter.id,
+          kind: snapshot.fighter.kind,
+          gateEntering: snapshot.fighter.gateEntering,
+          combatReady: snapshot.fighter.combatReady,
+          entryRampCleared: snapshot.fighter.entryRampCleared,
+        } : null,
+        checkpointArm: snapshot?.checkpointArm === null ? null : "present",
+        checkpointReceipt: checkpointReceipt ? {
+          schema: checkpointReceipt.schema,
+          fighterId: checkpointReceipt.fighterId,
+          kind: checkpointReceipt.kind,
+          checkpoint: checkpointReceipt.checkpoint,
+          computedProgress: checkpointReceipt.computedProgress,
+        } : null,
+        presentation: presentation ? {
+          schema: presentation.schema,
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+          stageId: presentation.stageId,
+          datasetActive: presentation.datasetActive,
+        } : null,
+        documentDatasetActive: document.documentElement.dataset.qaPresentationQuiesced === "true",
+        canvas: canvas ? {
+          connected: canvas.isConnected,
+          width: canvas.width,
+          height: canvas.height,
+          display: style?.display ?? null,
+          visibility: style?.visibility ?? null,
+          opacity: style?.opacity ?? null,
+          rectWidth: rect?.width ?? null,
+          rectHeight: rect?.height ?? null,
+        } : null,
+      };
+    }, { requestedResume: resume, previousKind: previousUnit.kind });
+
+    const validCanvas = (state) => state?.canvas?.connected === true
+      && state.canvas.width > 0
+      && state.canvas.height > 0
+      && state.canvas.display !== "none"
+      && state.canvas.visibility !== "hidden"
+      && Number(state.canvas.opacity) > 0
+      && state.canvas.rectWidth > 0
+      && state.canvas.rectHeight > 0;
+    const validInactivePresentation = (state) => (
+      state?.presentation?.schema === "v100-qa-presentation-quiescence/v1"
+      && state.presentation.active === false
+      && state.presentation.route === "deployment"
+      && state.presentation.datasetActive === false
+      && state.documentDatasetActive === false
+    );
+
+    const before = await readBoundary(false);
+    invariant(before?.schema === "v100-deployment-cross-unit-live-boundary/v1"
+      && before.screen === "battle"
+      && before.running === true
+      && before.paused === true
+      && before.over !== true
+      && before.fighter?.kind === previousUnit.kind
+      && before.fighter.gateEntering === false
+      && before.fighter.combatReady === true
+      && before.fighter.entryRampCleared === true
+      && before.checkpointReceipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+      && before.checkpointReceipt.kind === previousUnit.kind
+      && before.checkpointReceipt.checkpoint === "fully-outside"
+      && before.checkpointReceipt.computedProgress === 1
+      && validInactivePresentation(before)
+      && validCanvas(before),
+    `${label}: previous deployment did not end at the accepted semantic pause ${JSON.stringify(before)}`);
+
+    const command = await readBoundary(true);
+    invariant(command?.commandResult === false,
+      `${label}: production battle resume command was not accepted ${JSON.stringify(command)}`);
+    await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+    const after = await readBoundary(false);
+    invariant(after?.schema === "v100-deployment-cross-unit-live-boundary/v1"
+      && after.screen === "battle"
+      && after.running === true
+      && after.paused !== true
+      && after.over !== true
+      && after.fighter?.kind === previousUnit.kind
+      && after.checkpointArm === null
+      && after.checkpointReceipt === null
+      && Number.isFinite(after.battleTime)
+      && after.battleTime >= before.battleTime
+      && after.presentation.stageId === before.presentation.stageId
+      && validInactivePresentation(after)
+      && validCanvas(after),
+    `${label}: production battle did not remain live after the cross-unit resume ${JSON.stringify(after)}`);
+
+    return {
+      schema: "v100-deployment-cross-unit-live-resume/v1",
+      previousUnit: { family: previousUnit.family, kind: previousUnit.kind },
+      nextUnit: { family: nextUnit.family, kind: nextUnit.kind },
+      before,
+      commandResult: command.commandResult,
+      after,
+    };
+  } catch (error) {
+    throw new Error(`${label}: ${String(error)}`);
+  }
+}
+
 async function withDeploymentPresentationQuiescence(
   page,
   owner,
@@ -2946,13 +3077,37 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         await loadedCrawlerAssets(page, name);
       },
     );
-    for (const unit of deploymentUnits) {
+    for (const [unitIndex, unit] of deploymentUnits.entries()) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
         `${name}/${unit.kind}: static deployment family mapping drifted`);
-      const unitResult = { ...unit, checkpoints: [], status: "failed" };
+      const unitResult = { ...unit, checkpoints: [], crossUnitLiveResume: null, status: "failed" };
       activeUnitResult = unitResult;
       activeFixtureResult = null;
       activeQueueResult = null;
+      const unitDetails = { caseIdentity: name, unitFamily: unit.family, unitKind: unit.kind };
+      if (unitIndex > 0) {
+        const previousUnit = result.units.at(-1);
+        invariant(previousUnit?.status === "passed"
+          && previousUnit.checkpoints?.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length
+          && previousUnit.checkpoints.at(-1)?.checkpoint === "fully-outside",
+        `${name}/${unit.kind}: previous deployment unit is not fully accepted`);
+        setDeploymentPhase(`deployment/${unit.family}/cross-unit-live-resume`);
+        unitResult.crossUnitLiveResume = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/cross-unit-live-resume",
+          {
+            ...unitDetails,
+            previousUnitFamily: previousUnit.family,
+            previousUnitKind: previousUnit.kind,
+          },
+          () => resumeDeploymentBattleForNextUnit(
+            page,
+            previousUnit,
+            unit,
+            `${name}/${previousUnit.kind}->${unit.kind}`,
+          ),
+        );
+      }
       setDeploymentPhase(`deployment/${unit.family}/fixture`);
       activeDeploymentTrace = createDeploymentTrace(
         page,
@@ -2960,7 +3115,6 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         unit,
         () => deploymentLifecyclePhase,
       );
-      const unitDetails = { caseIdentity: name, unitFamily: unit.family, unitKind: unit.kind };
       const firstFrameEnvelope = await withDeploymentPresentationQuiescence(
         page,
         "deployment-first-frame",
@@ -3254,6 +3408,13 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       && result.units.every(({ status, checkpoints }) => (
         status === "passed" && checkpoints.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length
       )), `${name}: deployment matrix is incomplete`);
+    const crossUnitLiveResumes = result.units
+      .slice(1)
+      .map(({ crossUnitLiveResume }) => crossUnitLiveResume)
+      .filter((receipt) => receipt?.schema === "v100-deployment-cross-unit-live-resume/v1");
+    invariant(result.units[0]?.crossUnitLiveResume === null
+      && crossUnitLiveResumes.length === deploymentUnits.length - 1,
+    `${name}: cross-unit live-battle resume receipt matrix is incomplete`);
     result.status = "passed";
   } catch (error) {
     result.error = String(error);

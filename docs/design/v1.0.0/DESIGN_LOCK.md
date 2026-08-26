@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r71`
+- Revision: `r74`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -4990,3 +4990,125 @@ This read-back changes governance text/test only after final harness bytes were 
 - `RESUME_FROM`: repeat governance/static read-back only -> one iteration-25 normal non-amended exact-eight-path commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 26 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the raw r70 diagnostic/JSONL/PNG, final r71 source bytes, the one ordered report and three production screenshots, immutable first-witness/event-time decisions, exact eight-path topology, accepted deployment hashes, protected manifests, no-retry boundary, and approval-only release tail. Revision r71 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 88. Revision r72 — explicit cross-unit live-battle handoff for sequential deployment evidence
+
+### 88.1 First r71 automatic focused return and independent classification
+
+Material iteration 25 was transported once, non-force, as remote HEAD `384bbc108e3aadcec134d842ed4c08f0d730fd29`, tree `a73c933f683a40cdf938aec316b477246cab484c`, parent `0235da77bbc22d2b7b95740366b05089fc593884`. Automatic focused CI run `32926247795` / #937 reached a required red in PR Verify job `98049635346`, step `Capture Issue 156 final-canvas deployment evidence (Chromium)`. PR provenance, whitespace, dependency install, lint, content validation, production build, all 1,197 tests, browser installation, PWA partial-update recovery, and canonical Chromium HUD evidence were green first. Required Phase G job `98050958030` was dependency-skipped and is not evidence. No retry, rerun, dispatch, second correction, or promotion occurred.
+
+The uploaded `issue156-remediation-evidence-chromium` artifact is ID `9591755756`. Its 68,572,218-byte ZIP has SHA-256 `4118c47ae935386d02ea3646deda44c52a53bbe4bb9d9e4e316a3514fa656ee1`; extracted `deployment/chromium/summary.json` is 1,309,497 bytes. All six required Chromium viewports — 667x375, 736x414, 844x390, 844x340, 932x430, and 1280x720 — have the same deterministic boundary:
+
+- Hachi/scout completes all six production checkpoints through `fully-outside`; 36/36 checkpoint PNGs, six contact sheets, and all 42 unique/disk-hash-verified artifact records remain valid;
+- the final scout receipt is `fully-outside`, progress 1, `gateEntering: false`, `combatReady: true`, and `entryRampCleared: true`; its presentation arm sees `running: true / paused: false / over: false`, while the semantic checkpoint release intentionally sees `running: true / paused: true / over: false`;
+- the next Mizuchi/ranger has zero checkpoints, zero cooperative trace samples, no fixture result, and no queue result. Its first-frame presentation arm fails immediately with `QA presentation quiescence requires a live production battle`;
+- console, page, request, HTTP, product-fatal, and page-crash diagnostics are zero. The failure screenshot is a connected, intact production battle paused at the accepted Hachi deployment frame, not an empty canvas or product defeat.
+
+The product bridge is fail-closed and correct: `setQaPresentationQuiesced(true, "deployment-first-frame")` requires screen `battle`, `running === true`, `paused !== true`, and `over !== true`. Every later checkpoint deliberately ends at a production semantic pause. `runDeploymentCase` validates and serializes `fully-outside`, then starts the next unit without releasing that previous unit's pause. The existing localhost QA bridge `setRepresentativeSixProofPaused(false)` is the owned resume operation; no product change is needed. Earlier r69 WebKit deployment continuity used bounded one-unit child processes and therefore did not exercise this all-eight-units-in-one-page transition. The remote PR Verify command does, and the six matching results prove a cross-unit harness lifecycle gap rather than a viewport, unit asset, pixel, gameplay, or product-bridge defect.
+
+Classification is `QA_HARNESS_CROSS_UNIT_PAUSE_HANDOFF_GAP / PREVIOUS_FULLY_OUTSIDE_CHECKPOINT_LEAVES_PRODUCTION_PAUSED + NEXT_UNIT_FIRST_FRAME_QUIESCENCE_REQUIRES_LIVE_UNPAUSED_BATTLE / DESIGN_CHANGE_REQUIRED`. Remediation is `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME / RELEASE_PREVIOUS_SEMANTIC_PAUSE_ONCE + PROVE_LIVE_BATTLE_BEFORE_NEXT_UNIT_PRESENTATION_ARM / DESIGN_CHANGE_REQUIRED`. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 88.2 Exact coherent remediation contract
+
+Relative to r71 HEAD/tree, change exactly six tracked paths: `scripts/v099-final-remediation-browser-smoke.mjs`, `tests/v0995-runtime-evidence-contract.test.mjs`, this Design Lock, `docs/design/v1.0.0/LUNA_HANDOFF.md`, `docs/PROJECT_STATE.md`, and `tests/v100-design-lock.test.mjs`. Keep both r71 Phase G files byte-for-byte at 279,177 bytes / SHA-256 `9e3cce2e9f7bcd5572eeb1b88715c9ca65228b570e0045ac525b04e817768262` and 73,071 bytes / `f2b52db3cf1410b2558ea95f08ee67552a9afcbf8691c289baff99e3f43c3a9d`. No seventh path is authorized.
+
+In the deployment harness, add exactly one bounded helper, `resumeDeploymentBattleForNextUnit`, and one serial diagnostic operation name, `deployment/cross-unit-live-resume`. Call it only for unit index greater than zero, after the previous unit has passed all six checkpoints/contact-sheet/trace validation and before the next unit creates its trace or arms `deployment-first-frame` presentation quiescence. Do not call it before the first unit or after the final unit.
+
+The helper must fail closed unless the pre-resume readback is the same production battle with `screen === "battle"`, `running === true`, `paused === true`, `over !== true`, inactive QA presentation quiescence, no `qaPresentationQuiesced` dataset flag, and a connected visible production battlefield canvas. It then calls the existing localhost-only `setRepresentativeSixProofPaused(false)` exactly once. The command result must be `false`. After one existing 100 ms host turn, a second readback must prove the same battle remains `running === true`, `paused !== true`, `over !== true`, presentation quiescence inactive, dataset inactive, and the production canvas connected/visible. No polling retry, new page, new context, new browser, fixture reset, queue action, direct game-state assignment, timeout extension, or catch-and-continue fallback is allowed.
+
+Serialize the bounded result on the next unit as `crossUnitLiveResume` with schema `v100-deployment-cross-unit-live-resume/v1`, exact previous/next family and kind, the pre-resume lifecycle state, command result, and post-host-turn live state. The first unit must have no receipt; every later canonical unit must have exactly one. At case completion require exactly `deploymentUnits.length - 1` schema-valid receipts. Do not store DOM, canvas pixels, unbounded snapshots, full game state, or mutable bridge objects in the receipt.
+
+The existing 30-second timeout, six checkpoint definitions, semantic pause ownership, production pixel audit, PNG capture, artifact identity/hash integrity, unit ordering, canonical viewports, all diagnostics, and one-attempt/no-retry rule remain unchanged. Do not change `app/**`, `.github/workflows/**`, package/lock, public/assets, product gameplay, balance, AI, combat, VFX, audio, movement, timing, stage, formation, save, PWA, product bridge semantics, acceptance thresholds, release state, or test inventory.
+
+### 88.3 Source, focused runtime, and remote acceptance
+
+Strengthen the existing three-test runtime-evidence source contract without adding a fourth test. Bind the helper name, diagnostic operation, exact before/after lifecycle predicates, exactly-one existing resume call, one 100 ms host turn, pre-trace/pre-quiescence ordering, seven-receipt canonical cardinality, serialized schema, and forbidden retry/new-page/direct-state paths. Preserve every r69-r71 checkpoint, quiescence, cooperative trace, production-canvas, scratch-surface, artifact-integrity, and negative nesting assertion.
+
+Execute once in this order, stopping on the first red:
+
+1. syntax for the deployment harness/test; runtime-evidence exactly 3/3; Design Lock exactly 19/19; canonical six-file exactly 55/55;
+2. exact six-path topology relative to `384bbc108e3aadcec134d842ed4c08f0d730fd29`, forbidden diff zero, r71 Phase G byte locks, UTF-8/BOM/EOL, protected forensic-directory manifests, `git diff --check`, and a fresh production build;
+3. one fresh Chromium 667x375 `deployment` process using all eight canonical units in one page. Require 8/8 units, 48/48 checkpoints, exactly seven schema-valid cross-unit live-resume receipts in canonical order, 48 unique/disk-hash-verified checkpoint PNGs, eight unique/disk-hash-verified contact sheets, and fatal/console/page/request/HTTP/page-crash zero;
+4. content validation, complete tests, lint, final build, and repeated exact static integrity. Do not repeat the accepted r71 ordered Phase G process locally because both Phase G source files and all `app/**` bytes are locked; it remains local continuity only and never final evidence freeze;
+5. create one normal non-amended exact-six-path material-iteration-26 commit and transport it non-force once. Re-fetch exact remote HEAD/tree/parent/compare, then accept only its resulting automatic focused CI attempt. PR Verify must pass all six Chromium deployment viewports and every later required job, including the ordered Phase G trio and artifacts. Any red, unexpected skip, missing artifact, wrong dependency, or out-of-scope need returns to `SOL_DESIGN` without retry/rerun/dispatch or immediate micro-patch.
+
+Complete automatic focused green alone authorizes the workflow-only unfiltered restoration as iteration 27. It does not authorize Ready, merge, tag, GitHub Release, official Pages, evidence freeze, final review, or Producer checkpoint. The remaining route is exactly: workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human visual/event/battle/audio/mobile/save/PWA/asset/release audits -> evidence freeze -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure.
+
+### 88.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R72_CROSS_UNIT_LIVE_RESUME_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: automatic focused CI `32926247795`, PR Verify job `98049635346`, Chromium deployment step; six of six viewports pass scout 6/6 then reject ranger before trace/fixture/queue because the previous semantic pause was not released; required Phase G dependency-skipped
+- `LAST_GREEN_GATE`: r71 local acceptance plus remote PR Verify steps through canonical HUD; within the failed deployment artifact, six scout units / 36 checkpoints / six contact sheets / 42 unique verified artifacts and all fatal diagnostics zero
+- `CLASSIFICATION`: `QA_HARNESS_CROSS_UNIT_PAUSE_HANDOFF_GAP / PREVIOUS_FULLY_OUTSIDE_CHECKPOINT_LEAVES_PRODUCTION_PAUSED + NEXT_UNIT_FIRST_FRAME_QUIESCENCE_REQUIRES_LIVE_UNPAUSED_BATTLE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME / RELEASE_PREVIOUS_SEMANTIC_PAUSE_ONCE + PROVE_LIVE_BATTLE_BEFORE_NEXT_UNIT_PRESENTATION_ARM / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r71 remote candidate is material iteration 25 and terminal red; r72 coherent correction is material iteration 26; complete automatic focused green alone unlocks workflow-only iteration 27
+- `SAME_GATE_REPEAT_COUNT`: `13` for required remote Phase G, unchanged because Phase G did not execute; r71 remote PR Verify cross-unit pause-handoff count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: implement only the two-path cross-unit live-resume packet -> source 3/3 + Design Lock 19/19 + canonical 55/55 -> exact six-path/static/build -> one fresh Chromium 667x375 all-eight-unit same-page deployment process -> content/full/lint/build/static -> one iteration-26 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the immutable r71 remote HEAD/tree, PR Verify steps/logs, artifact ZIP/summary/36 PNGs/six contact sheets/six failure screenshots, the product bridge and harness source, earlier one-unit-child coverage, exact six-path topology, byte locks, one-attempt boundary, and approval-only release tail. Revision r72 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 89. Revision r73 — assignment-only negative source boundary
+
+### 89.1 First r72 source return and classification
+
+SOL implemented the locked r72 cross-unit lifecycle harness. Both changed files pass `node --check`. The first and only runtime-evidence source run completed 2/3: the pre-existing F3/F4 tests passed, and the deployment contract test reached every new positive assertion before failing only its new forbidden-direct-state-assignment regular expression. Browser/runtime, build, full tests, lint, commit, transport, and automatic CI were not executed.
+
+The r72 harness is 160,696 bytes / SHA-256 `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`. Source inspection proves it calls `setRepresentativeSixProofPaused(false)` exactly once and contains no direct assignment to `paused`, `running`, or `over`. The failing negative used `\.paused\s*=|\.running\s*=|\.over\s*=`; this necessarily matches the first equals sign of legitimate strict comparisons such as `before.paused === true` and `after.paused !== true`. The failure is therefore an assertion-operator boundary alias, not a harness or product defect.
+
+Classification is `SOL_OWNED_SOURCE_NEGATIVE_ASSIGNMENT_REGEX_ALIAS / R72_FORBIDDEN_DIRECT_STATE_ASSIGNMENT_REGEX_MATCHES_STRICT_EQUALITY_COMPARISONS / REMEDIATION_LOCAL`. Remediation is `ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / REQUIRE_SINGLE_EQUALS_NOT_EQUALITY_OPERATOR + PRESERVE_R72_HARNESS_BYTES / REMEDIATION_LOCAL`. No product or runtime design change is created. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 89.2 Exact correction, acceptance, and cursor
+
+Preserve the r72 harness byte-for-byte at the hash above. In only `tests/v0995-runtime-evidence-contract.test.mjs`, replace the three comparison-alias alternatives with one assignment-only negative that rejects `\.(?:paused|running|over)\s*=(?!=)` while allowing `===`, `!==`, and read-only serialization. Keep every other positive/negative assertion and exactly three tests unchanged. The aggregate material-iteration-26 topology remains the same six paths from Section 88; no seventh path and no new material iteration are authorized.
+
+Run once: test syntax, runtime-evidence 3/3, Design Lock 19/19, canonical 55/55, r72 harness byte lock, both r71 Phase G byte locks, exact six paths/forbidden/EOL/BOM/protected manifests/`git diff --check`, fresh build, then resume Section 88.3 at the one fresh Chromium 667x375 all-eight-unit same-page deployment process. Do not repeat any already green r72 syntax check merely for this source correction beyond the required final load/readback. Any new red returns to `SOL_DESIGN` without retry.
+
+- `STATUS`: `DESIGN_LOCKED / R73_ASSIGNMENT_ONLY_SOURCE_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: first r72 runtime-evidence source run 2/3; new negative regex matched strict comparisons as assignments; browser/runtime unstarted
+- `LAST_GREEN_GATE`: both changed-file syntax checks plus F3/F4 and all reached r72 positive deployment source assertions
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_NEGATIVE_ASSIGNMENT_REGEX_ALIAS / R72_FORBIDDEN_DIRECT_STATE_ASSIGNMENT_REGEX_MATCHES_STRICT_EQUALITY_COMPARISONS / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / REQUIRE_SINGLE_EQUALS_NOT_EQUALITY_OPERATOR + PRESERVE_R72_HARNESS_BYTES / REMEDIATION_LOCAL`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any next red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remains untransported material iteration 26; workflow-only restoration remains iteration 27 after complete automatic focused green
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one assignment-only source regex correction -> runtime-evidence 3/3 + Design Lock 19/19 + canonical 55/55 -> r72/r71 byte and exact-six-path static gates -> one Chromium 667x375 all-eight-unit same-page process -> content/full/lint/build/static -> one iteration-26 transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> full/unfiltered/runtime/human/evidence-freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact failing assertion, the r72 helper/loop bytes, the unexecuted-gate boundary, unchanged topology, and release tail. Revision r73 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 90. Revision r74 — local cross-unit acceptance read-back and iteration-26 candidate
+
+### 90.1 Actual r73 source, runtime, and full acceptance
+
+SOL applied only Section 89's assignment-only negative boundary. Both changed-file syntax checks, runtime-evidence exactly 3/3, Design Lock exactly 19/19, and canonical six-file exactly 55/55 passed with fail/cancelled/skipped/todo zero. The deployment harness remained exactly 160,696 bytes / SHA-256 `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`; the r71 Phase G script and checkpoint test remained exactly `9e3cce2e9f7bcd5572eeb1b88715c9ca65228b570e0045ac525b04e817768262` and `f2b52db3cf1410b2558ea95f08ee67552a9afcbf8691c289baff99e3f43c3a9d`. Exact six-path topology relative to remote HEAD/tree `384bbc108e3aadcec134d842ed4c08f0d730fd29` / `a73c933f683a40cdf938aec316b477246cab484c`, forbidden diff zero, prescribed UTF-8 no-BOM EOL, `git diff --check`, fresh build, and all three protected forensic manifests passed. The protected manifests remained 377 / 51 / 3 files with SHA-256 `501993f79eb1591b74c898506c7d538a5db684c8fb7d94848d881febb97edaad`, `71968d16a88175957ab8129b8fa0aa004a27301edf8037caceb8bb690037c6fc`, and `be8122206df63cdcd8dc1a6983a4842795e9efe0b2edf50379e0c7b9cc41db10`.
+
+The first and only fresh Chromium 667x375 same-page deployment process used evidence root `zombieee-r73-deployment-01a00a4c-fcfa-7f61-run1` and passed 1/1. All eight canonical units passed in order with 48/48 checkpoints. Unit one has no resume receipt; units two through eight have exactly seven schema-valid `v100-deployment-cross-unit-live-resume/v1` receipts in canonical edge order `scout -> ranger -> brawler -> crazy-king -> kumaverson -> mayo-chan -> brute -> medic`. Every receipt proves the preceding accepted unit at running/paused/not-over, command result `false`, then the same live battle at running/unpaused/not-over with inactive presentation/dataset and connected visible production canvas. Artifact integrity is exactly 48 checkpoint PNGs plus eight contact sheets, 56/56 unique paths and disk SHA matches. Console, page, request, HTTP, product-fatal, and page-crash diagnostics are zero; endpoint contact-sheet inspection shows intact production battle pixels and continuous six-checkpoint deployment. The 1,643,182-byte summary SHA-256 is `a77f504d390d7f37d356d0fa5849818ef2f11e39c2039ff6273e94ff4ef3f002`, with stable build identity `4c2bbaa937d7cadc95560e6ac410e6323b555eb00ac91ba4cd999607252f98b3` during the process. No retry, rerun, second browser process, variant substitution, or stale evidence reuse occurred.
+
+Content validation passed. The complete suite passed exactly 1,197/1,197 with fail/cancelled/skipped/todo zero. Lint passed with zero errors and the same nine existing `<img>` warnings. Final production build and repeated exact six-path/byte/EOL/BOM/protected/static integrity passed. The accepted r71 ordered Phase G process was not rerun because both Phase G source files and all `app/**` bytes remained locked; it is continuity only and is not final evidence freeze.
+
+### 90.2 Transport cursor and unchanged release tail
+
+This r74 read-back changes governance text/test only after every r73 material byte and required local gate was accepted. Do not repeat deployment, content, the complete suite, lint, or build for this read-back. Re-run only Design Lock, canonical six-file, exact six-path byte/EOL/BOM/protected/static integrity, and `git diff --check`, then create one normal non-amended exact-six-path material-iteration-26 commit and transport it non-force once. Re-fetch the mutable PR #171 ref immediately before transport and require its current remote HEAD/tree to remain the audited pair above. Accept only the one automatic focused CI caused by that transport. Any red, unexpected skip, wrong dependency/order, missing artifact, head drift, or out-of-scope need returns to `SOL_DESIGN` without retry/rerun/dispatch or immediate edit.
+
+- `STATUS`: `DESIGN_LOCKED / R74_LOCAL_ACCEPTANCE_GREEN / ITERATION_26_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: none in r74 local acceptance; the next unexecuted gate is the material-iteration-26 commit/non-force immutable transport and its one resulting automatic focused CI run
+- `LAST_GREEN_GATE`: r73 source 3/3, Design Lock 19/19, canonical 55/55, exact static/fresh build, first and only Chromium 667x375 same-page deployment 8/8 with 48/48 checkpoints, seven cross-unit receipts, 56/56 artifacts, diagnostics zero, content, full 1,197/1,197, lint zero errors/nine existing warnings, final build, repeated exact integrity
+- `CLASSIFICATION`: `R72_R73_LOCAL_REMEDIATION_ACCEPTED / CROSS_UNIT_LIVE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_GREEN`
+- `REMEDIATION_CLASS`: `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_ACCEPTANCE_COMPLETE`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first transport or remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r74 remains untransported material iteration 26; complete automatic focused green alone unlocks workflow-only unfiltered restoration iteration 27
+- `SAME_GATE_REPEAT_COUNT`: `13` for required remote Phase G, unchanged because r71 Phase G remains the last remote execution; r71 remote cross-unit pause-handoff count remains `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance/static read-back only -> one normal non-amended exact-six-path iteration-26 commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human visual/event/battle/audio/mobile/save/PWA/asset/release audits -> evidence freeze -> fixed-HEAD read-only/adversarial `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the accepted r72 harness bytes, r73 assignment-only assertion, raw deployment summary and contact sheets, exact gate counts, immutable r71 Phase G locks, six-path topology, protected manifests, one-attempt boundary, and approval-only release tail. Revision r74 has `High ambiguity: 0` and `Medium ambiguity: 0`.

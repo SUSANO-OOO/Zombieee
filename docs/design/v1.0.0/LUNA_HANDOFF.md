@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r71`
+- Canonical Design Lock: `V100-SOL-DL-001 r74`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-79 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 80 is the sole current execution handoff.
+Sections 1-82 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 83 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2431,3 +2431,69 @@ Keep exact eight-path topology. Preserve the deployment harness at 153,348 bytes
 Local execution is complete. The first and only `r71-local-ordered-1` process passed Stage 6/24/25 exactly 3/3 with fresh sessions, 15/15 checkpoints per stage, causal 4/4, immutable exact event-time proof, three distinct production screenshots, and fatal/console/page/request/HTTP/page-crash zero. The 11,838,902-byte merged report SHA-256 is `e6540b092c1bc10b6410cef3f149e35c7239616a49fcc909243b814e9c25cc1b`; screenshot hashes are `8394fcd42057cc21630b7cc9510506d7a0ba182be94e55cc79338ccdfc614a1c`, `75cffb801a9d89c52e5bf98a94387891f6218f277353259f542471a95af0d0a0`, and `71411099f20bb8ef1c6f3a06b2d95050835ea7e086a98ce3642b822cad983b96`. Checkpoint 12/12, Design Lock 19/19, canonical 55/55, deployment source 3/3/byte locks, content, full 1,197/1,197, lint zero errors/nine existing warnings, final build, and exact integrity are green. Result read-back changes governance text/test only; repeat governance/static checks, not browser/runtime/full gates, before transport.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r71 local acceptance is green. SOL must repeat governance/static read-back only, create one normal non-amended exact-eight-path material-iteration-25 commit, transport it non-force once, and observe the one resulting automatic focused CI. Any red, unexpected skip, wrong order, missing artifact, or unresolved dependency returns to SOL_DESIGN without retry; only complete automatic focused green unlocks workflow-only iteration 26.**
+
+## 81. Revision r72 — no active Luna handoff / cross-unit live-battle resume
+
+Design Lock Section 88 and the latest explicitly labeled Issue #172 r72 lock are the sole active cursor. Sections 1-80 remain immutable audit history. `NO ACTIVE LUNA HANDOFF`; Producer's SOL single-owner override remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R72_CROSS_UNIT_LIVE_RESUME_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: automatic focused CI `32926247795`, PR Verify job `98049635346`, Chromium deployment step; all six viewports passed scout 6/6 then rejected ranger before trace/fixture/queue because the prior semantic pause remained active; Phase G dependency-skipped
+- `LAST_GREEN_GATE`: r71 local acceptance, remote PR Verify through canonical HUD, and six scout units / 36 checkpoints / six sheets / 42 unique verified deployment artifacts with fatal diagnostics zero
+- `CLASSIFICATION`: `QA_HARNESS_CROSS_UNIT_PAUSE_HANDOFF_GAP / PREVIOUS_FULLY_OUTSIDE_CHECKPOINT_LEAVES_PRODUCTION_PAUSED + NEXT_UNIT_FIRST_FRAME_QUIESCENCE_REQUIRES_LIVE_UNPAUSED_BATTLE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME / RELEASE_PREVIOUS_SEMANTIC_PAUSE_ONCE + PROVE_LIVE_BATTLE_BEFORE_NEXT_UNIT_PRESENTATION_ARM / DESIGN_CHANGE_REQUIRED`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first local/transport/remote failure returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r71 transport is material iteration 25 and terminal red; r72 is material iteration 26; complete automatic focused green alone unlocks workflow-only iteration 27
+- `SAME_GATE_REPEAT_COUNT`: `13` for required remote Phase G, unchanged because it did not execute; r71 remote cross-unit pause-handoff count `1`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: two-path cross-unit live-resume implementation -> source 3/3 + Design Lock 19/19 + canonical 55/55 -> exact six-path/static/build -> one fresh Chromium 667x375 all-eight-unit same-page deployment process -> content/full/lint/build/static -> one iteration-26 normal commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+In `scripts/v099-final-remediation-browser-smoke.mjs`, add `resumeDeploymentBattleForNextUnit` and diagnostic owner `deployment/cross-unit-live-resume`. For canonical unit indexes 1-7 only, after the previous unit is fully accepted and before the next trace/quiescence arm, prove same battle / running / paused / not over / inactive presentation owner / visible connected canvas, call existing `setRepresentativeSixProofPaused(false)` exactly once, wait one existing 100 ms host turn, and prove same battle / running / unpaused / not over / inactive presentation owner / visible connected canvas. Persist one bounded `v100-deployment-cross-unit-live-resume/v1` receipt on each later unit and require exactly seven receipts. First and final boundaries, checkpoint pauses, pixels, artifacts, and all diagnostics remain unchanged.
+
+Change only the deployment harness, its existing three-test runtime-evidence source contract, and the four governance paths. Preserve both r71 Phase G files at their locked hashes. Do not change `app/**`, workflow, package/lock, public/assets, product bridge, gameplay, balance, AI, VFX, audio, timing, timeout, retry, viewports, acceptance, release state, or test inventory.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — implement Design Lock Section 88 only. Add one fail-closed cross-unit resume before units 2-8, serialize exactly seven receipts, and change no product code. Run source/static and one fresh Chromium 667x375 all-eight-unit same-page deployment process once; first red returns to SOL_DESIGN without retry. Complete local green authorizes one iteration-26 non-force transport and one automatic focused CI; complete remote green alone unlocks workflow-only iteration 27.**
+
+## 82. Revision r73 — no active Luna handoff / assignment-only source correction
+
+Design Lock Section 89 and the latest explicitly labeled Issue #172 r73 lock are the sole active cursor. Sections 1-81 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R73_ASSIGNMENT_ONLY_SOURCE_REMEDIATION_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: first r72 runtime-evidence source run 2/3; new forbidden-assignment regex matched strict equality comparisons; browser/runtime unstarted
+- `LAST_GREEN_GATE`: changed-file syntax plus F3/F4 and all reached r72 positive source assertions
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_NEGATIVE_ASSIGNMENT_REGEX_ALIAS / R72_FORBIDDEN_DIRECT_STATE_ASSIGNMENT_REGEX_MATCHES_STRICT_EQUALITY_COMPARISONS / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / REQUIRE_SINGLE_EQUALS_NOT_EQUALITY_OPERATOR + PRESERVE_R72_HARNESS_BYTES / REMEDIATION_LOCAL`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any next red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remains material iteration 26; workflow-only restoration remains iteration 27 after complete automatic focused green
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one assignment-only negative regex correction -> runtime-evidence 3/3 + Design Lock 19/19 + canonical 55/55 -> exact static/build -> one fresh Chromium 667x375 all-eight-unit same-page deployment process -> content/full/lint/build/static -> one iteration-26 non-force transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> full/unfiltered/runtime/human/evidence-freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> approval-only release tail
+
+Preserve `scripts/v099-final-remediation-browser-smoke.mjs` exactly at 160,696 bytes / `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`. Change only the test negative from three broad field-equals alternatives to `\.(?:paused|running|over)\s*=(?!=)`. Do not change any runtime positive, app/workflow/product byte, timeout, retry, acceptance, topology, or release boundary.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — correct only the comparison-alias source regex, prove 3/3, preserve the r72 harness hash, and resume Section 88.3. Any next red returns to SOL_DESIGN without retry.**
+
+## 83. Revision r74 — no active Luna handoff / local acceptance green and iteration-26 transport
+
+Design Lock Section 90 and the latest explicitly labeled Issue #172 r74 lock are the sole active cursor. Sections 1-82 remain immutable history. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R74_LOCAL_ACCEPTANCE_GREEN / ITERATION_26_CANDIDATE_READY`
+- `LAST_AUDITED_HEAD`: `384bbc108e3aadcec134d842ed4c08f0d730fd29`
+- `LAST_AUDITED_TREE`: `a73c933f683a40cdf938aec316b477246cab484c`
+- `FAILED_GATE`: none in r74 local acceptance; next unexecuted gate is one material-iteration-26 normal commit/non-force immutable transport and its one automatic focused CI run
+- `LAST_GREEN_GATE`: source 3/3, Design Lock 19/19, canonical 55/55, exact static/build, first and only Chromium 667x375 same-page deployment 8/8 / 48/48 / seven resumes / 56/56 artifacts / diagnostics zero, content, full 1,197/1,197, lint zero errors/nine existing warnings, final build, repeated integrity
+- `CLASSIFICATION`: `R72_R73_LOCAL_REMEDIATION_ACCEPTED / CROSS_UNIT_LIVE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_GREEN`
+- `REMEDIATION_CLASS`: `BOUNDED_CROSS_UNIT_LIVE_BATTLE_RESUME + ASSIGNMENT_ONLY_NEGATIVE_BOUNDARY / LOCAL_ACCEPTANCE_COMPLETE`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first transport or remote red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 26 remains untransported; complete automatic focused green alone unlocks workflow-only iteration 27
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: governance/static read-back only -> one normal non-amended exact-six-path iteration-26 commit/non-force immutable transport -> one automatic focused CI -> complete green only -> workflow-only iteration 27 -> unfiltered required CI/full Phase G 54/54 -> same-HEAD runtime/human audit/evidence freeze/`SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only stacked integration/tag/GitHub Release/official Pages/published-SHA QA/recovery/closure
+
+The accepted harness is still 160,696 bytes / `cca517d48097f1cf041738991f05716df98ed2e77fa4344b55bef24004352f85`; both Phase G locks remain unchanged. The one r73 Chromium process passed all eight units, 48 checkpoints, seven canonical cross-unit receipts, 48 PNGs, eight contact sheets, 56/56 hash records, and fatal diagnostics zero. Its 1,643,182-byte summary is `a77f504d390d7f37d356d0fa5849818ef2f11e39c2039ff6273e94ff4ef3f002`. Content, 1,197/1,197, lint, final build, and repeated static are green. This local evidence is continuity only and is not final evidence freeze.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — r74 local acceptance is green. Repeat governance/static read-back only, create one normal non-amended exact-six-path material-iteration-26 commit, transport it non-force once, and observe its one automatic focused CI. Any red, unexpected skip, wrong dependency/order, missing artifact, or head drift returns to SOL_DESIGN without retry; complete automatic focused green alone unlocks workflow-only iteration 27.**

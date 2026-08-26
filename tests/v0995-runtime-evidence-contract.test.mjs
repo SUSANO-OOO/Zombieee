@@ -255,6 +255,23 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(presentationBridge, /state\.owner !== requestedOwner \|\| state\.route !== route/u);
   assert.match(presentationBridge, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
   assert.doesNotMatch(presentationBridge, /g\.time\s*=|g\.fighters\s*=|\.hp\s*=|\.speed\s*=|eventIndex\s*=/u);
+  const crossUnitResumeHarness = finalRemediationHarness.match(/async function resumeDeploymentBattleForNextUnit[\s\S]+?(?=\nasync function withDeploymentPresentationQuiescence)/u)?.[0] ?? "";
+  assert.ok(crossUnitResumeHarness.length > 0, "missing bounded cross-unit live-battle resume owner");
+  assert.match(crossUnitResumeHarness, /getCrawlerDeploymentProofSnapshot\(\{ kind: previousKind \}\)/u);
+  assert.match(crossUnitResumeHarness, /getQaPresentationQuiescence\(\)/u);
+  assert.equal((crossUnitResumeHarness.match(/setRepresentativeSixProofPaused\(false\)/gu) ?? []).length, 1);
+  assert.equal((crossUnitResumeHarness.match(/hostTurn\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/gu) ?? []).length, 1);
+  assert.match(crossUnitResumeHarness, /before\.screen === "battle"[\s\S]*before\.running === true[\s\S]*before\.paused === true[\s\S]*before\.over !== true/u);
+  assert.match(crossUnitResumeHarness, /before\.fighter\.gateEntering === false[\s\S]*before\.fighter\.combatReady === true[\s\S]*before\.fighter\.entryRampCleared === true/u);
+  assert.match(crossUnitResumeHarness, /before\.checkpointReceipt\.checkpoint === "fully-outside"[\s\S]*before\.checkpointReceipt\.computedProgress === 1/u);
+  assert.match(crossUnitResumeHarness, /state\.presentation\.active === false[\s\S]*state\.presentation\.route === "deployment"[\s\S]*state\.presentation\.datasetActive === false[\s\S]*state\.documentDatasetActive === false/u);
+  assert.match(crossUnitResumeHarness, /state\?\.canvas\?\.connected === true[\s\S]*state\.canvas\.rectWidth > 0[\s\S]*state\.canvas\.rectHeight > 0/u);
+  assert.match(crossUnitResumeHarness, /command\?\.commandResult === false/u);
+  assert.match(crossUnitResumeHarness, /after\.screen === "battle"[\s\S]*after\.running === true[\s\S]*after\.paused !== true[\s\S]*after\.over !== true/u);
+  assert.match(crossUnitResumeHarness, /after\.checkpointArm === null[\s\S]*after\.checkpointReceipt === null/u);
+  assert.match(crossUnitResumeHarness, /schema: "v100-deployment-cross-unit-live-resume\/v1"/u);
+  assert.match(crossUnitResumeHarness, /previousUnit: \{ family: previousUnit\.family, kind: previousUnit\.kind \}[\s\S]*nextUnit: \{ family: nextUnit\.family, kind: nextUnit\.kind \}/u);
+  assert.doesNotMatch(crossUnitResumeHarness, /waitForFunction|waitForTimeout|newPage|newContext|browser\.new|queueCrawlerDefenseUnit|prepareCrawlerDefenseProof|\.(?:paused|running|over)\s*=(?!=)/u);
   const presentationHarness = finalRemediationHarness.match(/async function withDeploymentPresentationQuiescence[\s\S]+?(?=\nasync function pauseAtDeploymentCheckpoint)/u)?.[0] ?? "";
   assert.ok(presentationHarness.length > 0, "missing deployment presentation quiescence owner");
   assert.match(presentationHarness, /setQaPresentationQuiesced\(true, requestedOwner\)/u);
@@ -293,6 +310,19 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(postRestorationReadback, /v100-deployment-post-restoration-readback\/v1/u);
   assert.doesNotMatch(postRestorationReadback, /auditFighterUnitLayer|requestAnimationFrame|waitForFunction|page\.waitForTimeout|hostTurn|document\.querySelector|setRepresentativeSixProofPaused|armCrawlerDeploymentCheckpoint/u);
   const presentationDeploymentCase = finalRemediationHarness.match(/async function runDeploymentCase[\s\S]+?(?=\nconst buildIdentityAtStart)/u)?.[0] ?? "";
+  assert.match(presentationDeploymentCase, /for \(const \[unitIndex, unit\] of deploymentUnits\.entries\(\)\)/u);
+  assert.match(presentationDeploymentCase, /crossUnitLiveResume: null/u);
+  assert.match(presentationDeploymentCase, /if \(unitIndex > 0\)[\s\S]*previousUnit\?\.status === "passed"[\s\S]*previousUnit\.checkpoints\.at\(-1\)\?\.checkpoint === "fully-outside"/u);
+  assert.match(presentationDeploymentCase, /"deployment\/cross-unit-live-resume"[\s\S]*resumeDeploymentBattleForNextUnit\(/u);
+  const crossUnitResumeIndex = presentationDeploymentCase.indexOf('"deployment/cross-unit-live-resume"');
+  const deploymentTraceCreateIndex = presentationDeploymentCase.indexOf("activeDeploymentTrace = createDeploymentTrace(", crossUnitResumeIndex);
+  const nextPresentationArmIndex = presentationDeploymentCase.indexOf("const firstFrameEnvelope = await withDeploymentPresentationQuiescence(", crossUnitResumeIndex);
+  assert.ok(crossUnitResumeIndex >= 0
+    && crossUnitResumeIndex < deploymentTraceCreateIndex
+    && deploymentTraceCreateIndex < nextPresentationArmIndex,
+  "cross-unit resume must finish before the next unit trace and presentation arm");
+  assert.match(presentationDeploymentCase, /result\.units\[0\]\?\.crossUnitLiveResume === null[\s\S]*crossUnitLiveResumes\.length === deploymentUnits\.length - 1/u);
+  assert.match(presentationDeploymentCase, /receipt\?\.schema === "v100-deployment-cross-unit-live-resume\/v1"/u);
   assert.match(presentationDeploymentCase, /const firstFrameEnvelope = await withDeploymentPresentationQuiescence\([\s\S]*"deployment-first-frame"[\s\S]*queueAndPauseAtFirstDeploymentFrame/u);
   const firstFrameQuiescenceIndex = presentationDeploymentCase.indexOf("const firstFrameEnvelope = await withDeploymentPresentationQuiescence(");
   const firstFrameOwnerIndex = presentationDeploymentCase.indexOf('"deployment-first-frame"', firstFrameQuiescenceIndex);
