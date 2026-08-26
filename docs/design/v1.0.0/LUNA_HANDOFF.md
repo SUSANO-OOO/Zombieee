@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r92`
+- Canonical Design Lock: `V100-SOL-DL-001 r95`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-100 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 101 is the sole current execution handoff.
+Sections 1-103 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 104 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -2917,3 +2917,86 @@ Design Lock Section 108 and Issue #172's authoritative r92 entry are the sole ac
 Freeze the five runtime/source files at Section 108 SHA-256 values `b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`, `621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`, `e78cef388c18bb9b0d89a173095674a8430c7c2a987afd8feb84e11de658060d`, `cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`, and `3a8bf4fe7848f044aa91ed3e20b67dbdf5d664285788c854eea62d0dc7f2dd61`. Preserve the exact nine-path aggregate and protected manifests. Do not repeat Hosted, deployment, content, complete tests, lint, or build. No Ready, merge, tag, Release, official Pages, or Producer checkpoint is authorized.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r92 Section 108. Recheck governance/source/static and frozen bytes only, create one normal non-amended exact-nine material-iteration-31 commit, require the unchanged live PR cursor, then perform one command-scoped-safe-directory normal non-force transport and exact read-back. Wait only for its one automatic focused CI. Any red returns to SOL_DESIGN without retry, rerun, alternate transport, or manual dispatch. Complete green alone unlocks workflow-only iteration 32; all release actions remain forbidden.**
+
+## 102. Revision r93 — no active Luna handoff / official Actions outage recovery re-entry
+
+Design Lock Section 109 and Issue #172's authoritative r93 entry are the sole active cursor. Sections 1-101 remain history. Automatic CI #943 ended `completed/failure`: PR Verify, all six enemy shards, and all six deployment viewports were cancelled with zero workflow steps; Phase G, Hosted, Stage 3, and canonical viewport were dependency-skipped. GitHub officially declared an Actions incident beginning two minutes before this run and still exposed `Actions: Major Outage` at the terminal audit. The bounded 2026-08-26 18:15:12 UTC read-back then confirmed overall `All Systems Operational`, Actions `operational`, and incident `y1t7p9fzrlj2` `resolved` at `2026-08-26T18:01:30.665Z`. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R93_OFFICIAL_ACTIONS_RECOVERY_CONFIRMED / EXACT_HEAD_REENTRY_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `FAILED_GATE`: automatic focused CI #943 / `32984411634`; 13 zero-step cancellations and four zero-step dependency skips during the official Actions incident
+- `LAST_GREEN_GATE`: exact material-iteration-31 local acceptance, one normal transport, exact remote commit/tree/parent/nine-path read-back, official recovery read-back, and r93 Design 19/19 + canonical 55/55 + exact static integrity
+- `CLASSIFICATION`: `GITHUB_ACTIONS_DECLARED_MAJOR_OUTAGE / ZERO_STEP_HOSTED_RUNNER_ACQUISITION_CANCELLATION_WAVES_DURING_OFFICIAL_INCIDENT / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_RECORDED_OFFICIAL_OUTAGE_RECOVERY_REENTRY / RUNTIME_BYTES_AND_ACCEPTED_LOCAL_EVIDENCE_PRESERVED + ONE_POST_RECOVERY_AUTOMATIC_FOCUSED_RUN / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` after official recovery and r93 governance/source/static/live-ref green; any first r93 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r92 material commit plus one r93 governance child remain material iteration 31; complete new automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; #943 did not execute Phase G
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `OFFICIAL_ACTIONS_RECOVERY`: overall `All Systems Operational`; Actions `operational`; incident `y1t7p9fzrlj2` `resolved` at `2026-08-26T18:01:30.665Z`; bounded read-back `2026-08-26T18:15:12Z`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: recovery-confirmed r93 governance/source/static + unchanged-live-ref preflight -> one normal four-path governance child -> one normal non-force transport -> exact read-back -> exactly one post-recovery automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Freeze the r92 runtime/source hashes, exact cumulative nine-path topology, accepted local evidence, and protected manifests. Change only the four governance/source paths. Do not repeat Hosted, deployment, Phase G, content, complete tests, lint, or build. Do not call rerun, failed-job rerun, workflow dispatch, or manual UI actions. Official recovery is confirmed; the one non-empty r93 governance child may now cause exactly one new pull-request synchronize run after the remaining exact source/static/live-ref checks pass.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r93 Section 109. Official recovery is confirmed. Recheck Design 19/19, canonical 55/55, exact four-path child/cumulative nine paths, five frozen hashes, LF/BOM, protected manifests, diff-check, and unchanged live ref only; create and transport one normal four-path r93 governance child and observe exactly one post-recovery automatic focused CI. Any repeated acquisition cancellation, red, skip, missing artifact, or drift returns to SOL_DESIGN without another trigger, rerun, dispatch, edit, or release action.**
+
+## 103. Revision r94 — no active Luna handoff / command-scoped OpenSSL transport
+
+Design Lock Section 110 and Issue #172's authoritative r94 entry are the sole active cursor. Sections 1-102 remain history. The first and only r93 push stopped before ref update with Schannel `AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`; remote HEAD/tree and automatic run list remained unchanged. A command-scoped OpenSSL read-only `ls-remote` returned the exact remote ref, separating the system Schannel backend from repository authentication/state. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R94_COMMAND_SCOPED_OPENSSL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
+- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
+- `FAILED_GATE`: first and only r93 transport; system Schannel returned `SEC_E_NO_CREDENTIALS` before HTTP ref update; remote and CI unchanged
+- `LAST_GREEN_GATE`: official recovery; r93 Design 19/19 + canonical 55/55 + exact static; normal four-path commit/read-back; command-scoped OpenSSL read-only exact-ref loadability
+- `CLASSIFICATION`: `WINDOWS_SCHANNEL_TLS_CREDENTIAL_ACQUISITION_FAILURE / SYSTEM_HTTP_SSLBACKEND_SCHANNEL_RETURNS_SEC_E_NO_CREDENTIALS_BEFORE_GIT_HTTP_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_OPENSSL_BACKEND + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r94 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remote r92 plus local r93/r94 governance children remain material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command; no ref update and no retry
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r94 governance/source/static only -> one normal four-path governance child after preserved `a899376` -> unchanged-live-ref/official-recovery preflight -> one command-scoped OpenSSL normal non-force transport -> exact remote read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Preserve `a899376b2276b7299c7dab03f4967851ccfaeefc` exactly. Change only Design Lock, this Handoff, Project State, and the Design Lock test in one normal r94 child. Run only Design 19/19, canonical 55/55, exact four/nine-path topology, five frozen hashes, LF/no-BOM, protected manifests, persistent-config absence, and diff-check. Do not repeat runtime/full gates.
+
+The only authorized transport is the complete Design Lock Section 110.3 command with command-scoped `http.sslBackend=openssl`. Do not persist config, disable TLS verification, modify credentials/remotes/trust, force, retry, or use an alternate transport. Any first red returns to SOL_DESIGN. Complete automatic focused green alone unlocks workflow-only iteration 32; every release action remains forbidden before the fixed final checkpoint and explicit Producer approval.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r94 Section 110. Preserve local r93 commit `a899376` unchanged; close the same four governance paths in one normal r94 child; require source/static and unchanged remote/official recovery; use the exact one-shot command-scoped OpenSSL normal non-force push; read back the exact two-child fast-forward and observe only its one automatic focused CI. Any push/red/skip/artifact/acquisition/drift failure returns to SOL_DESIGN without retry, alternate transport, rerun, dispatch, edit, or release action.**
+
+## 104. Revision r95 — no active Luna handoff / authenticated object fast-forward
+
+Design Lock Section 111 and Issue #172's authoritative r95 entry are the sole active cursor. Sections 1-103 remain history. The first and only r94 command-scoped OpenSSL push stayed silent and non-terminal for more than five minutes; throughout the bound, remote HEAD remained `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c` and the local r94 head had no workflow run. SOL interrupted the process once; exit 1, helper cleanup complete, ref update 0, retry 0. `NO ACTIVE LUNA HANDOFF`; Producer-directed SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R95_AUTHENTICATED_OBJECT_FAST_FORWARD_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
+- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
+- `LOCAL_R94_GOVERNANCE_COMMIT`: `7763763403546c00eeba4640dff83b18282b9ba8`
+- `LOCAL_R94_GOVERNANCE_TREE`: `8dc9503c0f398c91286481fce630b69bed448f29`
+- `FAILED_GATE`: first and only r94 transport; command-scoped OpenSSL authenticated push stayed silent/non-terminal beyond five minutes before ref update; interrupted once, exit 1; remote/CI unchanged
+- `LAST_GREEN_GATE`: r94 Design 19/19 + canonical 55/55 + exact static/commit read-back; process cleanup; unchanged remote/run proof; GitHub connector identity `SUSANO-OOO` with repository `admin`
+- `CLASSIFICATION`: `GIT_HTTPS_AUTHENTICATED_WRITE_PATH_NONTERMINATION / COMMAND_SCOPED_OPENSSL_READ_PATH_GREEN_BUT_CREDENTIAL_HELPER_PUSH_REMAINED_SILENT_OVER_FIVE_MINUTES_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `AUTHENTICATED_GITHUB_GIT_OBJECT_FAST_FORWARD / EXACT_LOCAL_R95_TREE_REMATERIALIZATION_FROM_REMOTE_R92_BASE + ONE_NON_FORCE_REF_UPDATE / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r95 source/object/ref/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remote r92 plus immutable local forensic r93/r94/r95 history and one remote tree-equivalent r95 commit remain material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command; ref update 0/retry 0
+- `TRANSPORT_WRITE_NONTERMINATION_COUNT`: `1` OpenSSL authenticated push; interrupted after more than five minutes; ref update 0/retry 0
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r95 governance/source/static only -> one normal local four-path governance child -> unchanged-live-ref/official-recovery/authenticated-admin preflight -> one four-blob/one-tree/one-commit GitHub object sequence -> one non-force ref update -> exact tree/parent/four-path/nine-path read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+Preserve local `a899376` and `7763763` unchanged. Change only Design Lock, this Handoff, Project State, and the Design Lock test in one normal local r95 child. Run only Design 19/19, canonical 55/55, exact four/nine-path topology, five frozen hashes, LF/no-BOM, protected manifests, no persistent transport/config drift, and diff-check. Do not repeat runtime/full gates.
+
+Use only the complete Design Lock Section 111.3 object sequence: base64-create exactly four content-addressed blobs and match their local Git blob SHAs; build one exact local-tree-equivalent tree from remote r92; create one direct-parent commit; re-fetch the unchanged ref; update that ref once with `force: false`; read back exact tree/parent/four/nine paths; then observe only its one automatic focused CI. Do not use host Git, contents API, browser UI, force, retry, another trigger, rerun, dispatch, product edit, or release action.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — apply only Design Lock r95 Section 111. Preserve local r93/r94 commits; close the same four governance paths in one local r95 child; require source/static, unchanged r92 remote, official recovery, and authenticated admin; create exactly four matching blobs, one exact matching tree, and one direct-parent commit; perform one non-force ref update; read back exact tree/parent/four-path/nine-path state and observe only its one automatic focused CI. Any object/ref/read-back/run red or uncertainty returns to SOL_DESIGN without retry, host Git, alternate transport, rerun, dispatch, edit, or release action.**

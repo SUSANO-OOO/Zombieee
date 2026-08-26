@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r92`
+- Revision: `r95`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -6135,3 +6135,203 @@ Any governance check, staging, commit, live-ref, transport, remote read-back, or
 - `RESUME_FROM`: governance source/static only -> one normal non-amended exact-nine material-iteration-31 commit -> unchanged-live-ref preflight -> one normal non-force transport -> exact remote read-back -> only one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual r91 evidence, exact candidate topology and hashes, accepted-gate non-repetition rule, command-scoped transport precondition, single automatic focused run, workflow-only separation, unfiltered Phase G, fixed-HEAD final review, one final Producer checkpoint, and explicit-approval-only integration/release tail. Revision r92 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 109. Revision r93 — declared GitHub Actions outage return and recovery gate
+
+### 109.1 Independent failure classification
+
+SOL transported material iteration 31 once as commit `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`, tree `b159a0ea5cb4258202a906469775ea9a0fc62363`, direct parent `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`. GitHub remote compare is one ahead, zero behind, exactly the nine Section 108.1 paths. PR #171 remained Draft/open/unmerged with the expected base. Automatic CI [#943 / `32984411634`](https://github.com/SUSANO-OOO/Zombieee/actions/runs/32984411634) was created once from the pull-request synchronize event; no manual dispatch, rerun, retry, second push, or ref drift occurred.
+
+Run #943 is terminal `completed/failure` with 17/17 jobs terminal, queued/in-progress zero. Thirteen jobs completed `cancelled` with zero workflow steps: PR Verify `98228373814`, all six enemy-runtime shards `98228374065` / `98228374039` / `98228374037` / `98228373906` / `98228373999` / `98228373925`, and all six deployment viewports `98234106347` / `98234106318` / `98234106358` / `98234106349` / `98234106333` / `98234106309`. Four dependency jobs completed `skipped` with zero steps: Phase G `98230329966`, Hosted `98234106674`, Stage 3 `98234106486`, and canonical viewport `98262003402`. The visible GitHub annotation on sampled cancelled jobs is exactly `The job was not acquired by Runner of type hosted even after multiple attempts`; the complete zero-step cancellation waves and dependent skips contain no executed acceptance evidence.
+
+GitHub's official status surface declares `Incident with Actions`: investigation began at 2026-08-26 15:11 UTC, two minutes before #943 started at 15:13 UTC. At the r93 terminal audit, GitHub reported delayed queues burning down but still exposed `Actions: Major Outage`; the component was not operational. This exact temporal and layer match supersedes the earlier provisional per-run-only reading. It is a declared external infrastructure outage, not a product, repository, workflow-source, test, browser, or harness failure.
+
+At the bounded recovery read-back on 2026-08-26 at 18:15:12 UTC, GitHub's official APIs reported overall `All Systems Operational`, Actions `operational`, and incident `y1t7p9fzrlj2` `resolved`; its `resolved_at` is `2026-08-26T18:01:30.665Z`. This satisfies only the external infrastructure recovery precondition. It does not turn #943 green, substitute for any required job, or authorize a rerun, dispatch, product/workflow edit, or release action.
+
+There is no checkout, dependency install, source, build, test, browser, product, harness, artifact, acceptance, timeout, or gameplay observation in the cancelled jobs. Do not classify the zero-step cancellation as a source/product failure and do not reuse any later job as a substitute.
+
+- `CLASSIFICATION`: `GITHUB_ACTIONS_DECLARED_MAJOR_OUTAGE / ZERO_STEP_HOSTED_RUNNER_ACQUISITION_CANCELLATION_WAVES_DURING_OFFICIAL_INCIDENT / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_RECORDED_OFFICIAL_OUTAGE_RECOVERY_REENTRY / RUNTIME_BYTES_AND_ACCEPTED_LOCAL_EVIDENCE_PRESERVED + ONE_POST_RECOVERY_AUTOMATIC_FOCUSED_RUN / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 109.2 Exact immutable scope and preflight
+
+Preserve the r92 commit, tree, direct parent, exact-nine cumulative topology, five runtime/source bytes and hashes, accepted r91 local evidence, and three protected forensic manifests exactly. Revision r93 changes only:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+3. `docs/PROJECT_STATE.md`
+4. `tests/v100-design-lock.test.mjs`
+
+No fifth r93 path, runtime/harness/app/workflow/package/lock/P5/public/asset/evidence change, repository normalization, timeout/attempt/retry alteration, gameplay/product change, or API/UI workflow rerun is authorized. The four-path governance child remains part of material iteration 31; workflow-only unfiltered restoration remains iteration 32.
+
+Run only Design Lock 19/19, canonical six-file 55/55, exact four-path child and cumulative nine-path topology, the Section 108 five frozen hashes, LF/no-BOM, protected manifests, forbidden diff zero, and `git diff --check`. Do not repeat Hosted, deployment, Phase G, content, complete tests, lint, or build.
+
+The #943 terminal table above must also be recorded in Issue #172. While GitHub's official Actions component is not `Operational`, remain in `SOL_DESIGN`, do not stage, commit, transport, rerun, dispatch, or create another synchronize event, and recheck the official component only at bounded intervals. Recovery requires the official incident to be resolved and Actions to report `Operational`; a narrative recovery update without component recovery is insufficient.
+
+After official recovery, re-fetch and require PR #171 still Draft/open/unmerged/mergeable at live HEAD/tree `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c` / `b159a0ea5cb4258202a906469775ea9a0fc62363`, expected base `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and no newer automatic run. Re-run only the prescribed governance source/static checks immediately before staging. The official Actions recovery is an external infrastructure precondition, not a test result and not permission to weaken any gate.
+
+### 109.3 One evidence-driven automatic re-entry
+
+If and only if the official incident is resolved, Actions is `Operational`, and every Section 109.2 check is green, create one normal non-amended four-path r93 governance child, use the exact Section 104 command-scoped safe-directory transport once, and read back its exact remote SHA/tree/parent and cumulative nine paths. The new commit records a material external failure and recovery boundary and is not an empty or state-less commit. Its pull-request synchronize event may create exactly one new automatic focused CI run. Do not call a rerun-job, rerun-failed-jobs, workflow-dispatch, or manual UI action.
+
+Require the new run itself—not #943—to acquire hosted runners, execute PR Verify, all six enemy-runtime shards, Hosted, focused ordered Phase G, all Stage 3 routes, six deployment viewports, and canonical HUD in the existing dependency graph, then finish completely green with all mandatory artifacts. Only that complete green resets this infrastructure return and unlocks workflow-only iteration 32.
+
+Any r93 source/static/commit/live-ref/transport/read-back red, missing new automatic run, repeated hosted-runner acquisition cancellation, workflow red, unexpected skip, dependency defect, or artifact defect returns immediately to `SOL_DESIGN`. Do not repeat the r93 push, add another trigger commit, rerun, dispatch, change timeout, or advance. A second zero-step acquisition failure is an external-capacity repeat and must remain visible while the same `/goal` waits for a new externally verified capacity state; it is not permission for a micro-patch.
+
+### 109.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R93_OFFICIAL_ACTIONS_RECOVERY_CONFIRMED / EXACT_HEAD_REENTRY_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `FAILED_GATE`: automatic focused CI #943 completed failure; 13 required jobs were zero-step cancelled during the declared Actions incident and four dependent jobs were zero-step skipped
+- `LAST_GREEN_GATE`: exact material-iteration-31 local acceptance, one normal transport, exact remote commit/tree/parent/nine-path read-back, official recovery read-back, and r93 Design 19/19 + canonical 55/55 + exact static integrity
+- `CLASSIFICATION`: `GITHUB_ACTIONS_DECLARED_MAJOR_OUTAGE / ZERO_STEP_HOSTED_RUNNER_ACQUISITION_CANCELLATION_WAVES_DURING_OFFICIAL_INCIDENT / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `GOVERNANCE_RECORDED_OFFICIAL_OUTAGE_RECOVERY_REENTRY / RUNTIME_BYTES_AND_ACCEPTED_LOCAL_EVIDENCE_PRESERVED + ONE_POST_RECOVERY_AUTOMATIC_FOCUSED_RUN / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` after the official recovery read-back and Section 109.2 source/static/live-ref preflight; any first r93 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r92 material commit plus one r93 governance child remain material iteration 31; complete new automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; #943 did not execute Phase G and does not increment it
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run; repeated zero-step acquisition at the r93 run stops without another trigger
+- `OFFICIAL_ACTIONS_RECOVERY`: overall `All Systems Operational`; Actions `operational`; incident `y1t7p9fzrlj2` `resolved` at `2026-08-26T18:01:30.665Z`; bounded read-back `2026-08-26T18:15:12Z`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: recovery-confirmed r93 governance/source/static + unchanged-live-ref preflight -> one normal four-path governance child -> one normal non-force transport -> exact read-back -> exactly one post-recovery automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live PR, the complete 17-job terminal table, zero-step records, exact sampled GitHub annotation, official incident timing, exact resolved/operational recovery read-back, unchanged SHA/tree, immutable runtime evidence, recovery-before-trigger boundary, non-empty governance trigger, no-rerun rule, one post-recovery automatic run, workflow-only separation, and approval-only release tail. Revision r93 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 110. Revision r94 — command-scoped OpenSSL transport after Schannel credential failure
+
+### 110.1 First r93 transport return and bounded diagnosis
+
+SOL preserved r92 remote HEAD/tree `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c` / `b159a0ea5cb4258202a906469775ea9a0fc62363` and created the normal r93 four-path governance child `a899376b2276b7299c7dab03f4967851ccfaeefc`, tree `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`, direct parent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`. Its commit topology is exactly the four Section 109.2 governance paths and the cumulative range from `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0` remains exactly the nine r92 material paths. The r93 source/static gates were Design Lock 19/19, canonical six-file 55/55, exact frozen hashes/EOL/BOM/protected manifests/diff-check green.
+
+The first and only r93 transport command used the exact Section 104 command-scoped safe directory and `credential.interactive=never`, then stopped with:
+
+`fatal: unable to access 'https://github.com/SUSANO-OOO/Zombieee.git/': schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e)`
+
+No HTTP ref update occurred. Immediate GitHub read-back kept PR #171 Draft/open/unmerged/mergeable at the exact remote r92 HEAD/tree/base; same-HEAD automatic runs remained #943 only, so no synchronize event or new CI was created. There was no retry, second push, alternate ref update, rerun, dispatch, amend, recreation, or release mutation.
+
+Bounded read-only diagnosis established Git `2.55.0.windows.2`, system `http.sslBackend=schannel`, and system `credential.helper=manager`. The same host's Schannel-backed public `curl.exe` also returned `SEC_E_NO_CREDENTIALS`, while the official-status Node client and GitHub connector remained reachable. One command-scoped `http.sslBackend=openssl` read-only `ls-remote` succeeded and returned exact remote ref `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`. No persistent Git config, credential, remote, trust store, verification setting, or repository byte changed. This independently separates TLS backend credential acquisition from repository authentication, ref state, GitHub availability, product, source, workflow, and acceptance.
+
+- `CLASSIFICATION`: `WINDOWS_SCHANNEL_TLS_CREDENTIAL_ACQUISITION_FAILURE / SYSTEM_HTTP_SSLBACKEND_SCHANNEL_RETURNS_SEC_E_NO_CREDENTIALS_BEFORE_GIT_HTTP_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_OPENSSL_BACKEND + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 110.2 Immutable scope and source/static acceptance
+
+Preserve r93 commit `a899376b2276b7299c7dab03f4967851ccfaeefc` and tree `7cbbaf50d6381d073b5ec74d65e4ac603837fc17` exactly. Do not amend, reset, recreate, squash, rebase, cherry-pick, discard, or recommit it. Revision r94 changes only these same four governance/source paths in one normal child whose direct parent is `a899376b2276b7299c7dab03f4967851ccfaeefc`:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+3. `docs/PROJECT_STATE.md`
+4. `tests/v100-design-lock.test.mjs`
+
+No fifth path, runtime/harness/app/workflow/package/lock/P5/public/asset/evidence byte, repository-wide normalization, browser/runtime/full-gate repetition, timeout/attempt/retry change, gameplay/product change, credential query/output, or release mutation is authorized. The remote r92 commit plus local r93 and r94 governance children remain one material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32.
+
+Run only Design Lock 19/19, canonical six-file 55/55, exact r94 four-path child and cumulative nine-path range, the five Section 108 frozen hashes, nine LF/no-BOM contracts, protected manifests 377/51/3, staged/unstaged topology, persistent-config absence, and `git diff --check`. Do not repeat Hosted, deployment, Phase G, content, complete tests, lint, or build. Before transport, require official overall status operational, Actions operational, the incident resolved, PR #171 still at the exact r92 remote HEAD/tree/base and Draft/open/unmerged/mergeable, and no automatic run newer than #943.
+
+### 110.3 Exact one-shot transport and stop rule
+
+After all Section 110.2 checks are green, create one normal non-amended four-path r94 governance commit directly after preserved `a899376`. Require tracked/index clean afterward with only the three protected untracked forensic directories. Then perform exactly one ref update with this complete command:
+
+`git -c safe.directory=C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-sol-r9-3a40 -c http.sslBackend=openssl -c credential.interactive=never push https://github.com/SUSANO-OOO/Zombieee.git HEAD:refs/heads/codex/v1.0.0-luna-implementation`
+
+The OpenSSL selection is command-scoped to this invocation only. Do not write `--global`, `--system`, or `--local` config; do not change the system Schannel default, credential helper, CA/trust store, `http.sslVerify`, proxy, remote, or safe-directory configuration; do not expose/query/copy/persist credentials; do not use a wildcard, force, force-with-lease, alternate URL, alternate transport, interactive fallback, retry, or second push.
+
+On success, re-fetch GitHub and require remote HEAD/tree equal the exact r94 local commit/tree, direct parent `a899376b2276b7299c7dab03f4967851ccfaeefc`, grandparent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`, and cumulative nine paths. Observe only the one automatic focused CI caused by that push. The new run itself must acquire runners, execute the complete existing focused graph, preserve mandatory artifacts, and finish completely green before workflow-only iteration 32.
+
+Any source/static/commit/live-ref/transport/read-back red, persistent-config drift, missing new automatic run, acquisition repeat, workflow red, unexpected skip, dependency or artifact defect returns immediately to `SOL_DESIGN`. Do not retry the push, add another trigger commit, use another TLS/transport mechanism, rerun, dispatch, edit, or advance.
+
+### 110.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R94_COMMAND_SCOPED_OPENSSL_TRANSPORT_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
+- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
+- `FAILED_GATE`: first and only r93 transport; Schannel `AcquireCredentialsHandle` returned `SEC_E_NO_CREDENTIALS` before HTTP ref update; remote and CI unchanged
+- `LAST_GREEN_GATE`: official recovery; r93 Design 19/19 + canonical 55/55 + exact static; normal four-path commit/read-back; command-scoped OpenSSL read-only exact-ref loadability
+- `CLASSIFICATION`: `WINDOWS_SCHANNEL_TLS_CREDENTIAL_ACQUISITION_FAILURE / SYSTEM_HTTP_SSLBACKEND_SCHANNEL_RETURNS_SEC_E_NO_CREDENTIALS_BEFORE_GIT_HTTP_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `COMMAND_SCOPED_OPENSSL_BACKEND + EXISTING_COMMIT_CHAIN_PRESERVATION / NO_PERSISTENT_CONFIG + ONE_NORMAL_NON_FORCE_PUSH / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r94 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r92 material commit + preserved r93 governance child + one r94 governance child remain material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; transport failure did not execute a gate
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command; no ref update and no retry
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r94 governance/source/static only -> one normal four-path governance child after preserved `a899376` -> unchanged-live-ref/official-recovery preflight -> one command-scoped OpenSSL normal non-force transport -> exact remote read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact Schannel error, no-ref-update proof, unchanged remote/run list, preserved commit chain, command-scoped OpenSSL read-only success, no-persistent-config/no-verification-bypass boundary, one-shot transport, frozen accepted gates, automatic-CI causality, and approval-only release tail. Revision r94 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 111. Revision r95 — authenticated GitHub object fast-forward after OpenSSL write-path nontermination
+
+### 111.1 Independent r94 transport return
+
+SOL created the normal r94 four-path governance child `7763763403546c00eeba4640dff83b18282b9ba8`, tree `8dc9503c0f398c91286481fce630b69bed448f29`, direct parent `a899376b2276b7299c7dab03f4967851ccfaeefc`. Design Lock 19/19, canonical six-file 55/55, exact four-path child and cumulative nine-path topology, five frozen runtime/source hashes, LF/no-BOM, protected manifests, persistent-config absence, and `git diff --check` were green. No runtime, full, browser, product, workflow, package, or release gate was repeated.
+
+The first and only Section 110.3 command-scoped OpenSSL push produced no output and remained non-terminal for more than five minutes. During that bounded observation, GitHub repeatedly kept PR #171 Draft/open/unmerged at remote HEAD `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`, no run existed for local head `7763763403546c00eeba4640dff83b18282b9ba8`, Git and `git-remote-https` helper processes remained alive, and the inspected helper PIDs exposed no established TCP connection. SOL interrupted that one process with Ctrl+C; it exited 1 with no ref-update receipt. All Git transport processes then terminated. Final independent read-back again found the remote ref unchanged and no new automatic run. There was no retry, second push, alternate ref mutation, rerun, dispatch, edit, or release action.
+
+The command-scoped OpenSSL `ls-remote` success established only anonymous/read-path TLS loadability. A push additionally enters the authenticated write path through the configured credential helper. Because that path remained silent beyond the finite five-minute bound while the remote ref and run list stayed unchanged, r94 is not a second Schannel failure and not a source, repository, workflow, CI, product, browser, or gameplay failure. Its owner is repository transport/governance.
+
+- `CLASSIFICATION`: `GIT_HTTPS_AUTHENTICATED_WRITE_PATH_NONTERMINATION / COMMAND_SCOPED_OPENSSL_READ_PATH_GREEN_BUT_CREDENTIAL_HELPER_PUSH_REMAINED_SILENT_OVER_FIVE_MINUTES_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `AUTHENTICATED_GITHUB_GIT_OBJECT_FAST_FORWARD / EXACT_LOCAL_R95_TREE_REMATERIALIZATION_FROM_REMOTE_R92_BASE + ONE_NON_FORCE_REF_UPDATE / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 111.2 Immutable local evidence and authenticated transport authority
+
+Preserve local commits `a899376b2276b7299c7dab03f4967851ccfaeefc` and `7763763403546c00eeba4640dff83b18282b9ba8` and their trees exactly as forensic transport history. Do not amend, reset, recreate, squash, rebase, cherry-pick, discard, or delete them. Revision r95 changes only these same four governance/source paths in one normal local child whose direct parent is `7763763403546c00eeba4640dff83b18282b9ba8`:
+
+1. `docs/design/v1.0.0/DESIGN_LOCK.md`
+2. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+3. `docs/PROJECT_STATE.md`
+4. `tests/v100-design-lock.test.mjs`
+
+No fifth path, runtime/harness/app/workflow/package/lock/P5/public/asset/evidence byte, repository-wide normalization, browser/runtime/full-gate repetition, timeout/attempt/retry change, product/gameplay/balance/AI change, credential query/output, persistent Git configuration, TLS verification bypass, or release mutation is authorized. Keep the five Section 108 runtime/source hashes and all three protected manifests unchanged.
+
+The authenticated GitHub connector identity is `SUSANO-OOO` and its live repository permission is `admin`. It can create content-addressed Git blobs/trees/commits and perform a non-force branch-ref update without using the failed host Git credential path. This authority is limited to the exact object sequence in Section 111.3. It does not authorize a contents-API multi-commit rewrite, browser edit, force update, merge, Ready conversion, tag, Release, Pages, rerun, or dispatch.
+
+The GitHub commit API controls commit identity metadata, so the remote commit SHA is not required to equal any untransported local governance commit SHA. This is not an amend or rewrite of shared history: remote HEAD never advanced beyond r92. The acceptance invariant is stronger at the repository-content boundary: the created remote commit must have direct parent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`, exact tree equal to the r95 local HEAD tree, an exact four-path diff from that parent, and the cumulative range from `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0` must remain exactly the nine Section 108.1 paths. The local r93/r94/r95 commits remain immutable forensic objects even though the remote canonical branch receives one tree-equivalent governance commit.
+
+Run only Design Lock 19/19, canonical six-file 55/55, exact r95 four-path child and cumulative nine-path topology, the five frozen hashes, nine LF/no-BOM contracts, protected manifests 377/51/3, tracked/index cleanliness, no persistent transport/config drift, and `git diff --check`. Do not repeat Hosted, deployment, Phase G, content, complete tests, lint, or build.
+
+### 111.3 One authenticated object sequence and one non-force ref update
+
+After Section 111.2 is green, create one normal non-amended local r95 governance child. Read back its HEAD, tree, parent, four changed paths, cumulative nine paths, four path blob SHAs, five frozen hashes, EOL/BOM, and protected manifests. Before any GitHub object creation, require official overall status and Actions operational, incident `y1t7p9fzrlj2` resolved, authenticated identity `SUSANO-OOO` with repository permission `admin`, and PR #171 still Draft/open/unmerged/mergeable at remote HEAD/tree/base `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c` / `b159a0ea5cb4258202a906469775ea9a0fc62363` / `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, with no run for the untransported r95 local head.
+
+Execute exactly one content-addressed sequence:
+
+1. create one GitHub blob from the exact bytes of each of the four r95 governance paths, using base64 transport so LF/no-BOM bytes are preserved; require every returned blob SHA to equal `git rev-parse HEAD:<path>`;
+2. create one tree from base tree `b159a0ea5cb4258202a906469775ea9a0fc62363` by replacing only those four paths with mode `100644`, type `blob`, and the verified SHAs; require the returned tree SHA to equal the local r95 HEAD tree;
+3. create one commit with exact message `docs: close post-outage transport re-entry`, direct parent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`, and the verified r95 tree; fetch it and require exact parent/tree/message before any ref update;
+4. re-fetch the branch immediately before mutation and require the same exact r92 head; then call the GitHub ref update once for branch `codex/v1.0.0-luna-implementation`, the verified new commit SHA, and `force: false`;
+5. read back PR head/tree/parent/base/Draft state and both diff topologies; require exact r95 tree, direct parent r92, exact four-path parent diff, cumulative nine paths, and no unexpected ref movement.
+
+Blob/tree/commit objects created before the ref update are unreachable preparation objects and do not create a synchronize event. Do not call any object/ref operation a second time after an error or ambiguous response. On blob SHA mismatch, tree mismatch, commit mismatch, live-ref drift, ref-update red/uncertain result, or post-update read-back mismatch, stop at `SOL_DESIGN`; do not use host Git, retry, force, contents API, browser UI, another transport, another trigger commit, rerun, or dispatch. The only branch mutation is the single non-force ref update in step 4.
+
+If and only if the read-back is exact, observe the one automatic focused CI caused by that ref update. Require the run itself to acquire hosted runners, execute the complete focused graph, preserve mandatory artifacts, and finish completely green. A missing run after a bounded observation, any red/cancel/skip/dependency/artifact defect, or another infrastructure failure returns to `SOL_DESIGN` without another ref update or trigger. Complete focused green alone unlocks workflow-only iteration 32.
+
+### 111.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R95_AUTHENTICATED_OBJECT_FAST_FORWARD_READY`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
+- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
+- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
+- `LOCAL_R94_GOVERNANCE_COMMIT`: `7763763403546c00eeba4640dff83b18282b9ba8`
+- `LOCAL_R94_GOVERNANCE_TREE`: `8dc9503c0f398c91286481fce630b69bed448f29`
+- `FAILED_GATE`: first and only r94 transport; command-scoped OpenSSL authenticated push stayed silent and non-terminal beyond five minutes before any ref update; SOL interrupted it once, exit 1; remote and CI unchanged
+- `LAST_GREEN_GATE`: r94 Design 19/19 + canonical 55/55 + exact static and commit read-back; post-interrupt process cleanup; unchanged remote/run read-back; authenticated connector identity `SUSANO-OOO` with repository `admin`
+- `CLASSIFICATION`: `GIT_HTTPS_AUTHENTICATED_WRITE_PATH_NONTERMINATION / COMMAND_SCOPED_OPENSSL_READ_PATH_GREEN_BUT_CREDENTIAL_HELPER_PUSH_REMAINED_SILENT_OVER_FIVE_MINUTES_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `AUTHENTICATED_GITHUB_GIT_OBJECT_FAST_FORWARD / EXACT_LOCAL_R95_TREE_REMATERIALIZATION_FROM_REMOTE_R92_BASE + ONE_NON_FORCE_REF_UPDATE / GOVERNANCE_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r95 source/object/ref/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: remote r92 plus local forensic r93/r94/r95 governance history and one remote tree-equivalent r95 commit remain material iteration 31; complete automatic focused green alone unlocks workflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G; transport failure did not execute a gate
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command; no ref update and no retry
+- `TRANSPORT_WRITE_NONTERMINATION_COUNT`: `1` OpenSSL authenticated push; interrupted after more than five minutes; no ref update and no retry
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: r95 governance/source/static only -> one normal local four-path governance child -> unchanged-live-ref/official-recovery/authenticated-admin preflight -> one four-blob/one-tree/one-commit GitHub object sequence -> one non-force ref update -> exact tree/parent/four-path/nine-path read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the observed five-minute nontermination, interrupt exit, no-ref/no-run proof, process cleanup, read-path/write-path distinction, connector identity/permission, exact content-addressed blob/tree equality, server-generated commit-identity boundary, non-force fast-forward atomicity, one-ref-update/no-retry rule, frozen accepted gates, automatic-CI causality, and approval-only release tail. Revision r95 has `High ambiguity: 0` and `Medium ambiguity: 0`.

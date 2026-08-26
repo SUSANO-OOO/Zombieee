@@ -20,9 +20,9 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、historical branch name `codex/v1.0.0-luna-implementation`（branch名はcurrent ownerを決めない）
-- LAST_AUDITED_HEAD：`ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`、tree `6e820e06d069285c69bfb874b193a3c2e1c33e8b`。これはr92が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
-- production implementation／runtime asset integration：Draft candidate上に実装済み。r91 phase-typed correctionはsource/static、first-attempt Hosted 3/35/15/45、first bounded deployment 8/8・48/48、content、complete tests 1,197/1,197、lint zero errors、build、integrityを全local greenで完了した。r92はこのexact candidateを再実行せずimmutable transportへ進めるgovernance read-backである
-- current Design Lock：`V100-SOL-DL-001 r92` Sections 28-108。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界を維持し、r91 local-green exact-nine candidate、five runtime/source hashes、protected manifests、material iteration 31 single transportを固定する。`PRODUCT_DESIGN_CHANGE: 0`
+- LAST_AUDITED_HEAD：`124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`、tree `b159a0ea5cb4258202a906469775ea9a0fc62363`。これはr93が監査した固定remote cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- production implementation／runtime asset integration：Draft candidate上に実装済み。r91 local acceptanceは全green、r92 exact-nine material iteration 31は一度のnormal pushでremoteへtransport済み。automatic CI #943は公式GitHub Actions incident中に13 required jobsをcheckout前のrunner acquisitionでzero-step cancelし、Phase G等4 jobsをdependency-skipしてterminal failure。公式recovery後のlocal r93 `a899376b`／r94 `77637634` governance commitsは固定済み。r93 host pushはsystem Schannel `SEC_E_NO_CREDENTIALS`でref更新前に停止し、r94 command-scoped OpenSSL pushは認証付きwrite pathで5分超無出力／非終端となったため一度だけinterruptした。両方ともremote／CI unchanged、retry 0。r95は認証済みGitHub object APIでexact local treeをremote r92 baseへ一度だけnon-force fast-forwardする
+- current Design Lock：`V100-SOL-DL-001 r95` Sections 28-111。全product／gameplay／causal／pixel／screenshot／viewport／duration／one-attempt／workflow／release境界、r91 local evidence、r92 exact-nine remote commit、immutable local r93/r94 forensic commits、five runtime/source hashes、protected manifestsを維持する。exact four blobs／one tree／one commit／one non-force ref update以外のtransportを許可しない。`PRODUCT_DESIGN_CHANGE: 0`
 - execution ledger：Issue #172。Producer Master `5386346594`、`/goal` lock `5386372849`、Loop Audits `5386391321`／`5386349725`、role/counter `5386314197`を使用し、`5386320133`はinitial SOL cursorとして保持する。current role/cursorはIssue #172の最新explicit loop-ledger entryから読む。旧Luna/push/Visual/Final Acceptance cursorは履歴でありcurrent authorityではない
 - main merge／tag／Release／Pages公開：未実施
 
@@ -186,24 +186,38 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 - r49-r52 iteration history：r49 correctionはiteration 20、r50 correctionはiteration 21、r51／r52 correctionはiteration 22、complete automatic green後のworkflow-only restorationはiteration 23。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r92 Section 108
+## 6. Version 1.0.0 execution cursor — r95 Section 111
 
-- `STATUS`: `DESIGN_LOCKED / R92_LOCAL_ACCEPTANCE_GREEN / MATERIAL_ITERATION_31_CANDIDATE_READY`
+- `STATUS`: `DESIGN_LOCKED / R95_AUTHENTICATED_OBJECT_FAST_FORWARD_READY`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`
-- `LAST_AUDITED_TREE`: `6e820e06d069285c69bfb874b193a3c2e1c33e8b`
+- `LAST_AUDITED_HEAD`: `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`
+- `LAST_AUDITED_TREE`: `b159a0ea5cb4258202a906469775ea9a0fc62363`
 - `LOCAL_MATERIAL_COMMIT`: `e256d5616eec58f44b62a5098223eaa45a6e70b6`
 - `LOCAL_MATERIAL_TREE`: `d6bc566912a9ad98bc99ed15f767cfe3fe3923ac`
 - `LOCAL_R87_GOVERNANCE_COMMIT`: `e1ba3677b62520fe5d7dd829999e61586b484c71`
 - `LOCAL_R87_GOVERNANCE_TREE`: `5e7f0523db939be39a71468a279a8249fd420c74`
-- `FAILED_GATE`: none in r91 local acceptance；material-iteration-31 commit／transport／remote read-back／automatic focused CIは未実行
-- `LAST_GREEN_GATE`: r91 source 12/12＋3/3＋Design 19/19＋canonical 55/55、exact static／fresh build、Hosted 3/35/15/45 first attempt、deployment 8/8・48/48 first bounded parent、content、complete tests 1,197/1,197、lint zero errors、final build、repeated integrity
-- `CLASSIFICATION`: `LOCAL_ACCEPTANCE_GREEN / R91_PHASE_TYPED_HOSTED_AND_DEPLOYMENT_PACKET_CLOSED / REMEDIATION_LOCAL`
-- `REMEDIATION_CLASS`: `GOVERNANCE_READBACK_AND_IMMUTABLE_TRANSPORT / RUNTIME_BYTES_FROZEN + ONE_MATERIAL_ITERATION_31_COMMIT / GOVERNANCE_ONLY`
+- `LOCAL_R93_GOVERNANCE_COMMIT`: `a899376b2276b7299c7dab03f4967851ccfaeefc`
+- `LOCAL_R93_GOVERNANCE_TREE`: `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`
+- `LOCAL_R94_GOVERNANCE_COMMIT`: `7763763403546c00eeba4640dff83b18282b9ba8`
+- `LOCAL_R94_GOVERNANCE_TREE`: `8dc9503c0f398c91286481fce630b69bed448f29`
+- `FAILED_GATE`: first and only r94 transport；command-scoped OpenSSL authenticated pushが5分超silent／non-terminalのままref update 0；一度だけinterruptしてexit 1、remote／CI unchanged
+- `LAST_GREEN_GATE`: r94 Design 19/19＋canonical 55/55＋exact static／commit read-back、post-interrupt process cleanup、unchanged remote/run proof、GitHub connector identity `SUSANO-OOO`／repository `admin`
+- `CLASSIFICATION`: `GIT_HTTPS_AUTHENTICATED_WRITE_PATH_NONTERMINATION / COMMAND_SCOPED_OPENSSL_READ_PATH_GREEN_BUT_CREDENTIAL_HELPER_PUSH_REMAINED_SILENT_OVER_FIVE_MINUTES_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `AUTHENTICATED_GITHUB_GIT_OBJECT_FAST_FORWARD / EXACT_LOCAL_R95_TREE_REMATERIALIZATION_FROM_REMOTE_R92_BASE + ONE_NON_FORCE_REF_UPDATE / GOVERNANCE_ONLY`
 - `PRODUCT_DESIGN_CHANGE`: `0`
-- `LOOP_ITERATION`: r88 transportはmaterial iteration 30；r91 local acceptanceでmaterial iteration 31 candidateを閉じた；complete automatic focused green後だけworkflow-only iteration 32
-- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G；local acceptanceでは不変
-- `RESUME_FROM`: governance source/static only -> one normal non-amended exact-nine material-iteration-31 commit -> unchanged-live-ref preflight -> one normal non-force transport -> exact remote read-back -> only one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+- `LOOP_ITERATION`: remote r92＋immutable local forensic r93/r94/r95 history＋one remote tree-equivalent r95 commitは同じmaterial iteration 31；complete new automatic focused green後だけworkflow-only iteration 32
+- `SAME_GATE_REPEAT_COUNT`: `18` for executed required remote Phase G；#943 Phase Gは未実行のため不変
+- `HOSTED_RUNNER_ACQUISITION_FAILURE_COUNT`: `1` automatic run
+- `TRANSPORT_TLS_FAILURE_COUNT`: `1` Schannel command；ref update 0／retry 0
+- `TRANSPORT_WRITE_NONTERMINATION_COUNT`: `1` OpenSSL authenticated push；5分超後interrupt、ref update 0／retry 0
+- `OFFICIAL_ACTIONS_RECOVERY`: overall `All Systems Operational`、Actions `operational`、incident `y1t7p9fzrlj2` `resolved_at 2026-08-26T18:01:30.665Z`、bounded read-back `2026-08-26T18:15:12Z`
+- `RESUME_FROM`: r95 governance/source/static only -> one normal local four-path governance child -> unchanged-live-ref/official-recovery/authenticated-admin preflight -> one four-blob/one-tree/one-commit GitHub object sequence -> one non-force ref update -> exact tree/parent/four-path/nine-path read-back -> exactly one automatic focused CI -> complete green only -> workflow-only iteration 32 -> unfiltered local/remote full Phase G 54/54 -> same-HEAD production/runtime/human audits -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release tail
+
+- Actual r94 transport return / r95 design: local r94 source/staticとnormal four-path child `7763763403546c00eeba4640dff83b18282b9ba8`／tree `8dc9503c0f398c91286481fce630b69bed448f29`／parent `a899376b2276b7299c7dab03f4967851ccfaeefc`はgreen。first and only command-scoped OpenSSL pushは5分超output 0／non-terminalで、観測中remote HEAD `124e7d0`／new-head run 0、helper PIDsにestablished TCP 0。SOLが一度だけCtrl+C、exit 1、全helper cleanup。final remote／run read-backもunchanged、retry／alternate mutation 0。classification `GIT_HTTPS_AUTHENTICATED_WRITE_PATH_NONTERMINATION / COMMAND_SCOPED_OPENSSL_READ_PATH_GREEN_BUT_CREDENTIAL_HELPER_PUSH_REMAINED_SILENT_OVER_FIVE_MINUTES_BEFORE_REF_UPDATE / REMEDIATION_LOCAL`。connector identity `SUSANO-OOO`／repository permission `admin`をread-only確認。r95はlocal forensic chainを変更せず、remote r92 treeをbaseにexact four blobでlocal r95 treeを再構成し、one direct-parent commitとone `force: false` ref updateだけを許可する。server-generated commit SHAはlocal SHA同一性ではなくexact tree／parent／four-path／cumulative nine-pathで監査する。runtime／full／product／workflow／release変更なし。
+
+- Actual r93 transport return / r94 design: official recovery確認後、r93 Design 19/19、canonical 55/55、four-path child／cumulative nine-path、five frozen hashes、LF／no-BOM、protected manifests、diff-check、live-refはgreen。normal commit `a899376b2276b7299c7dab03f4967851ccfaeefc`／tree `7cbbaf50d6381d073b5ec74d65e4ac603837fc17`／parent `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`を作成した。first and only exact Section 104 pushは`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`でHTTP ref update前に停止。remote HEAD/treeは`124e7d0`／`b159a0e`、automatic runは#943だけで不変。Git 2.55.0.windows.2、system `http.sslBackend=schannel`、credential helper managerを確認し、command-scoped `http.sslBackend=openssl`のread-only `ls-remote`はexact remote refを返した。classification `WINDOWS_SCHANNEL_TLS_CREDENTIAL_ACQUISITION_FAILURE / SYSTEM_HTTP_SSLBACKEND_SCHANNEL_RETURNS_SEC_E_NO_CREDENTIALS_BEFORE_GIT_HTTP_REF_UPDATE / REMEDIATION_LOCAL`。r94は既存commitを作り直さず、same four governance pathsとone command-scoped OpenSSL pushだけを許可する。runtime／full gate再実行、persistent config、TLS verification無効化、credential変更／出力、alternate transport／retryは禁止。
+
+- Actual r92 transport / CI #943 official-outage return / r93 design: r92 governance source/static、exact nine staging、normal commit `124e7d0bad61ca3ee9bd92b3a08b137543b86b6c`／tree `b159a0ea5cb4258202a906469775ea9a0fc62363`／parent `ba31c9e8e6b1c44e0a4376edcaedb3c30e6010c0`、one command-scoped-safe-directory normal non-force push、remote one-ahead／zero-behind／nine-path read-backはgreen。automatic CI #943／`32984411634`はterminal completed/failure、17 jobs total。PR Verify、six enemy shards、six deployment viewportsの13 jobsがworkflow step 0でcancel、Phase G／Hosted／Stage 3／canonical viewportの4 jobsがstep 0でskip。sampled visible annotationは`The job was not acquired by Runner of type hosted even after multiple attempts`。公式GitHub Statusは#943開始2分前の15:11 UTCから`Incident with Actions`を宣言し、terminal audit時も`Actions: Major Outage`。live PR HEAD/base drift 0、second run/push/rerun 0。classification `GITHUB_ACTIONS_DECLARED_MAJOR_OUTAGE / ZERO_STEP_HOSTED_RUNNER_ACQUISITION_CANCELLATION_WAVES_DURING_OFFICIAL_INCIDENT / REMEDIATION_LOCAL`。公式APIのbounded read-backは2026-08-26 18:15:12 UTCにoverall `All Systems Operational`、Actions `operational`、incident `resolved`（`resolved_at 2026-08-26T18:01:30.665Z`）を確認した。r93はfour-path governance/source staticとone post-recovery automatic focused runだけを許可し、runtime／workflow／product変更とAPI/UI rerunを禁止する。
 
 - Actual r91 local acceptance / r92 read-back: r91 exact phase-typed correctionはsyntax、Phase G source 12/12、runtime evidence 3/3、Design 19/19、canonical 55/55、exact topology／LF／no-BOM／protected manifests／diff-check、fresh buildをgreen。full Hosted WebKit first attemptはready 3/3、fault 35/35、final-canvas 15/15、mutable 45/45、45 unique PNG、initial exact-two 15、successor/final exact-three 45、retry 0、terminal failure null。report `800c5ddb52ee116073be0a97b4f0824aba4229c97821b00232fa9738d229bc98`、host JSONL `5cf984669bbc5afe7c165be5d67af8cfadf25f1dafab25bcaf4510d70f48e1cc`、summary `60fddf9ed48c81dac6a545fc8352160bbf386abe5edc81bd624b17c2a6427a95`。bounded deployment WebKit 667x375 first parentは8/8、48/48、48 PNG、eight sheets、56/56 unique artifacts、48 unique audit sessions、全six-step complete、diagnostics 0、summary `5139546496b8d57161ff150df550a72069d4a046346cc42a0406c3ac6ccbce90`。content green、complete suite 1,197/1,197、lint 0 errors／12 warnings、final build、repeated integrity green。five frozen hashesは`b3c746e88a99d37ad5b0106162712d1141d6bec28d4796fa231c8209a408148e`／`621f997b81403fa505de814e1dc0b4790a03e1317b085899a3c5b9da29db9b91`／`e78cef388c18bb9b0d89a173095674a8430c7c2a987afd8feb84e11de658060d`／`cbbe51df8c1f4b8c0ebfde1bc30874b9199cd421628da9005f6cfb22b38349da`／`3a8bf4fe7848f044aa91ed3e20b67dbdf5d664285788c854eea62d0dc7f2dd61`。r92はgovernance source/staticだけを再確認し、accepted runtime/full gateを繰り返さずexact-nine material iteration 31 transportへ進む。
 
@@ -460,7 +474,7 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-108のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r92を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric two-thread／Completion Packet経路と、Version 1.0.0 Design Lock Sections 28-110のSOL single-owner／single final checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r94を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書を整合する。
 
 ## 7. Release gate
 
