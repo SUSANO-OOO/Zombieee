@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r104`
+- Canonical Design Lock: `V100-SOL-DL-001 r105`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-112 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 113 is the sole current execution handoff.
+Sections 1-113 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 114 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -3266,3 +3266,30 @@ Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only 
 The one-shot source gate is exact: syntax `4/4`; focused runtime-evidence `3/3` + Phase G checkpoint `12/12` + r11 causal history `4/4` + proof-machine `13/13` = `32/32`; Design Lock `19/19`; the unchanged canonical six-file command `55/55`; then exact-thirteen/BOM/EOL/untracked/protected-manifest integrity. These are separate receipts even where a file is intentionally exercised twice.
 
 Complete automatic focused green alone resumes workflow-only iteration 35, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 114. Revision r105 — static probe transport ownership
+
+Canonical design is `V100-SOL-DL-001 r105` Section 121. The r104 remote candidate passed all local production/runtime gates, exact commit and non-force read-back, then automatic focused CI #947 stopped at PR Verify complete tests `1209/1210`. The only red serialized 240 full proof epochs into a `1,382,576`-byte environment value; Linux failed the static child spawn before stdout/stderr, while the wrapper hid `result.error`. The production-owned pure proof machine rejects all 240 invalid receipts. Required Phase G was dependency-skipped and no retry, rerun, edit, or next ordinal occurred.
+
+- `STATUS`: `DESIGN_LOCKED / R105_STATIC_PROBE_TRANSPORT_OWNERSHIP_ACTIVE`
+- `FAILED_GATE`: automatic focused CI #947 PR Verify job `98419272424`, sole strict numeric-domain subprocess transport red
+- `LAST_GREEN_GATE`: r104 remote HEAD/tree/path/blob read-back plus CI #947 provenance, whitespace, lint, content, and build
+- `CLASSIFICATION`: `QA_HARNESS_STATIC_PROBE_PROCESS_TRANSPORT / UNBOUNDED COMBINATORIAL JSON ENVIRONMENT PAYLOAD + SPAWNSYNC ERROR ELISION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL STATIC_PROBE_SIMPLIFICATION / IN_PROCESS SINGLE_SOURCE COMBINATORIAL REDUCER + BOUNDED PRODUCTION_PROCESS PARITY PROBES + TRANSPARENT SPAWN FAILURE / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r104 production causal event machine and accepted runtime order are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `2c9df5892503deb3ce5652ef2adfce34e4353e1c`
+- `LAST_AUDITED_TREE`: `fefb661a224452e081fce91b12553ed4d3da12ad`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r105 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r104 material iteration 34 is remote; r105 exact-five QA/docs correction is material iteration 35
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-five static-probe simplification -> focused/Design/canonical/full/lint/build/static -> one exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+The exact correction changes only `tests/v100-phase-g-checkpoint.test.mjs`, `tests/v100-design-lock.test.mjs`, this handoff, Design Lock, and Project State. Keep the 40 x 6 strict numeric matrix intact but execute it directly through `createV100PhaseGProofMachine`. Keep individually bounded valid/invalid production-script subprocess parity probes; require JSON-normalized child/in-process equality; reject `cases` arrays at the subprocess helper; and expose structured child error/status/signal/stdout/stderr on failure.
+
+Do not change `scripts/v100-phase-g-proof-machine.mjs`, `scripts/v100-phase-g-production-matrix.mjs`, any browser harness, `app/**`, workflow, package/lock, asset, product/gameplay/AI/balance/attack timing, timeout/duration/attempt/retry, viewport, threshold, screenshot, evidence, or release contract. Do not rerun r104 browser gates because their bytes are identical; retain them only as continuity evidence, not final freeze.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r105 Section 121 on the exact five paths. Run the exhaustive 240-case matrix in-process through the shared production reducer, retain bounded production-child parity, expose every spawn error, then run the one-shot source/full/static, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without rerun, retry, edit, micro-patch, or next revision.**
+
+Automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.

@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r104`
+- Revision: `r105`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -7057,3 +7057,73 @@ The first red or uncertainty returns immediately to `SOL_DESIGN` without rerun, 
 - `RESUME_FROM`: implement the shared v7 reducer on the preserved r103 packet -> one-shot source/static -> Stage 24 standalone `3/3` -> ordered Stage 6/24/25 three processes `9/9` -> full local acceptance -> exact-thirteen commit/non-force transport/one automatic focused CI -> focused green only -> unchanged release tail
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the sealed r103 transaction, actual source/pending-impact/reaction chronology, three preceding Stage 24 controls, all nine subsystem axes, the single reducer source, exact thirteen paths, one-shot stop, and final Producer checkpoint. The recurrent reducer ownership split is removed rather than patched in a second realm, exact acceptance is strengthened through explicit transport identity, and no product decision is delegated. Revision r104 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 121. Revision r105 — static probe process-transport ownership
+
+Section 121 consumes automatic focused CI #947's first required red and supersedes Section 120 only for static exact-actor probe transport, subprocess failure observability, the five-path correction boundary, and the current cursor. The r104 shared production causal-event machine, page/host state ownership, r99 screenshot/deadline/cleanup order, every accepted browser/runtime receipt, and all product, timing, acceptance, evidence, and release contracts remain authoritative and byte-frozen.
+
+### 121.1 Actual evidence and nine-axis subsystem audit
+
+The exact r104 candidate was committed locally as `638598aabecaf98aa7758d4da21cbe714793d68a`, transported once to remote direct-parent commit `2c9df5892503deb3ce5652ef2adfce34e4353e1c`, and read back at tree `fefb661a224452e081fce91b12553ed4d3da12ad`. Automatic CI #947 / run `33042577041` passed PR Verify provenance, whitespace, lint, content, and build. The complete test step returned `1209/1210`; the sole red was `tests/v100-phase-g-checkpoint.test.mjs` strict numeric-domain batch execution. Required Phase G job `98419636126` was dependency-skipped, and there was no retry, rerun, edit, or next ordinal.
+
+The failing test serialized all 40 required numeric paths multiplied by six invalid values into 240 complete v7 proof epochs and passed the result through one `V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT` environment value. Direct measurement on the exact candidate produced `1,382,576` input bytes and `664,333` decision-output bytes. Direct invocation of the shared `createV100PhaseGProofMachine` rejected all 240 cases. On Linux CI, the child failed before stdout or stderr and returned null status; the wrapper did not expose `result.error`, so the visible failure was only `undefined`, `undefined`, and `null !== 0`. The Windows Node 24 green control did not exercise Linux process-environment limits.
+
+The subsystem audit fixes ownership:
+
+1. state ownership remains the single shared proof-machine factory and is green;
+2. observer lifecycle was not entered by this static-process red and remains frozen by r104 runtime evidence;
+3. presentation quiescence was not entered and remains green;
+4. checkpoint ownership reached every preceding assertion; the child transport wrapper owns this red;
+5. causal witness acceptance is green because the pure reducer rejected 240 of 240 invalid receipts;
+6. screenshot ordering remains accepted proof -> production screenshot -> after-screenshot deadline receipt;
+7. cleanup ordering remains observer-stop/finally cleanup after the deadline receipt;
+8. evidence persistence is incomplete only at the child-spawn diagnostic surface because `result.error` was elided;
+9. browser/process lifecycle did not launch WebKit; the Linux static child environment boundary is the only process owner.
+
+- `CLASSIFICATION`: `QA_HARNESS_STATIC_PROBE_PROCESS_TRANSPORT / UNBOUNDED COMBINATORIAL JSON ENVIRONMENT PAYLOAD + SPAWNSYNC ERROR ELISION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL STATIC_PROBE_SIMPLIFICATION / IN_PROCESS SINGLE_SOURCE COMBINATORIAL REDUCER + BOUNDED PRODUCTION_PROCESS PARITY PROBES + TRANSPARENT SPAWN FAILURE / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+A max-buffer increase, timeout extension, retry, case deletion, or another product/runtime reducer is forbidden because each would retain the ownership split or weaken acceptance. The finite closure is structural: execute the exhaustive matrix in-process through the same production-owned pure reducer; use the production-matrix child only for individually bounded integration/parity probes; and expose child error, status, signal, stdout, and stderr on every static subprocess failure.
+
+### 121.2 Exact implementation and acceptance contract
+
+`tests/v100-phase-g-checkpoint.test.mjs` imports `createV100PhaseGProofMachine` directly. The 240-case matrix remains exactly 40 required paths times `null`, numeric string, boolean, `NaN`, positive infinity, and negative infinity. It maps every case through `postQuiescenceExactActorDecision` in-process and requires `accepted: false` for all 240. The existing valid epoch remains accepted.
+
+The production-script subprocess contract remains independently proven with small valid and invalid exact-actor probes. Each corresponding in-process decision must deep-equal its JSON-normalized child decision. The child helper must reject a `cases` array, so a combinatorial payload cannot silently re-enter the environment boundary. Every subprocess helper in the checkpoint suite must report structured `result.error` name/message/code/errno/syscall/path/spawnargs together with status, signal, stdout, and stderr before asserting success. No process buffer, timeout, duration, retry, attempt count, product threshold, or semantic acceptance value changes.
+
+Only these five paths may change relative to the r104 remote tree:
+
+1. `tests/v100-phase-g-checkpoint.test.mjs`
+2. `tests/v100-design-lock.test.mjs`
+3. `docs/design/v1.0.0/DESIGN_LOCK.md`
+4. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+5. `docs/PROJECT_STATE.md`
+
+`scripts/v100-phase-g-proof-machine.mjs`, `scripts/v100-phase-g-production-matrix.mjs`, all three accepted browser harnesses, their source tests other than the two listed above, `app/**`, workflows, packages/lockfiles, public/PWA/assets, and generated output are byte-frozen. Product, gameplay, AI, balance, attack timing, timeout, duration, attempts, retries, viewport/stage mapping, causal/sample/dwell/pixel/screenshot threshold, screenshot criteria/inventory, audio, save, evidence, and release contracts cannot change.
+
+Required local acceptance is: checkpoint syntax; focused source `32/32`; Design Lock `19/19`; unchanged canonical six-file command `55/55`; complete suite with fail/cancelled/skipped/todo zero; lint zero errors; production build; and exact-five topology, UTF-8/LF/no-BOM, forbidden-path zero, protected manifests, locked r104 runtime hashes, `git diff --check`, and worktree/index integrity. Because all production and browser-harness bytes are identical to r104, do not rerun Stage 24, ordered Stage 6/24/25, Hosted, or deployment merely for this test/docs correction. Preserve their exact r104 receipts as continuity evidence only, never as final evidence freeze.
+
+After local green, create one non-amended exact-five commit with message `test: close r105 static probe transport ownership`; perform one authenticated-admin non-force object fast-forward with exactly one `force: false` ref update; verify exact remote tree/parent/message/five-path/blob/Draft/base read-back; then observe exactly one automatic focused CI. The first red or uncertainty returns to `SOL_DESIGN` without rerun, retry, edit, micro-patch, next revision, next ordinal, second transport, or CI rerun.
+
+Complete automatic focused green alone closes this source-transport owner and unlocks the existing workflow-only restoration followed by unfiltered local/remote Phase G 54/54. Only the complete required green then unlocks same-HEAD product/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 121.3 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R105_STATIC_PROBE_TRANSPORT_OWNERSHIP_ACTIVE`
+- `LAST_AUDITED_HEAD`: `2c9df5892503deb3ce5652ef2adfce34e4353e1c`
+- `LAST_AUDITED_TREE`: `fefb661a224452e081fce91b12553ed4d3da12ad`
+- `FAILED_GATE`: automatic focused CI #947 PR Verify job `98419272424`, complete tests `1209/1210`; sole 240-case exact-actor child transport failure
+- `LAST_GREEN_GATE`: r104 exact remote read-back plus CI #947 provenance, whitespace, lint, content, and build
+- `CLASSIFICATION`: `QA_HARNESS_STATIC_PROBE_PROCESS_TRANSPORT / UNBOUNDED COMBINATORIAL JSON ENVIRONMENT PAYLOAD + SPAWNSYNC ERROR ELISION / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL STATIC_PROBE_SIMPLIFICATION / IN_PROCESS SINGLE_SOURCE COMBINATORIAL REDUCER + BOUNDED PRODUCTION_PROCESS PARITY PROBES + TRANSPARENT SPAWN FAILURE / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r104 production causal event machine and accepted runtime order are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r105 local/commit/transport/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r104 material iteration 34 is remote; r105 exact-five QA/docs correction is material iteration 35; workflow-only restoration follows only after automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `21`; PR Verify source transport return does not increment executed required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-five in-process matrix plus bounded parity/error receipts -> source/full/static acceptance -> exact commit/non-force transport/read-back -> one automatic focused CI -> focused green only -> workflow restoration and unchanged release route
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual CI log, direct byte measurement, pure-reducer 240/240 rejection, every subprocess callsite, all nine subsystem axes, the frozen r104 runtime bytes, exact five-path boundary, one-shot stop, and final Producer checkpoint. The oversized cross-process combinatorial owner is removed rather than enlarged, all semantic cases remain mandatory, and no product decision is delegated. Revision r105 has `High ambiguity: 0` and `Medium ambiguity: 0`.

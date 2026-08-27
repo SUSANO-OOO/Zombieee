@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import path from "node:path";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
+import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-machine.mjs";
 import {
   V100_PHASE_G_V7_REQUIRED_NUMERIC_PATHS,
   attachValidV100PhaseGScreenshotReceipt,
@@ -14,6 +15,35 @@ import {
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const failFastAssert = assert;
+const exactActorProofMachine = createV100PhaseGProofMachine();
+
+function assertProbeProcessSucceeded(result) {
+  const receipt = JSON.stringify({
+    error: result.error
+      ? {
+          name: result.error.name ?? null,
+          message: result.error.message ?? String(result.error),
+          code: result.error.code ?? null,
+          errno: result.error.errno ?? null,
+          syscall: result.error.syscall ?? null,
+          path: result.error.path ?? null,
+          spawnargs: result.error.spawnargs ?? null,
+        }
+      : null,
+    status: result.status ?? null,
+    signal: result.signal ?? null,
+    stdout: result.stdout ?? null,
+    stderr: result.stderr ?? null,
+  });
+  assert.equal(result.error, undefined, receipt);
+  assert.equal(result.status, 0, receipt);
+}
+
+function directExactActorDecision(proofEpoch, options) {
+  return JSON.parse(JSON.stringify(
+    exactActorProofMachine.postQuiescenceExactActorDecision(proofEpoch, options),
+  ));
+}
 
 function createCompleteStaticContractAssertionAudit() {
   const failures = [];
@@ -64,8 +94,7 @@ function runContractProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -79,8 +108,7 @@ function runPointerProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -94,8 +122,7 @@ function runCheckpointFinalizationProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -109,8 +136,7 @@ function runHistoryProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -124,8 +150,7 @@ function runBrowserLifecycleProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -139,12 +164,12 @@ function runCausalConvergenceProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
 function runExactActorProbe(input) {
+  assert.equal(Array.isArray(input?.cases), false, "exact-actor subprocess probes must be individually bounded");
   const encodedInput = JSON.stringify(input, (_key, value) => {
     if (typeof value !== "number" || Number.isFinite(value)) return value;
     return {
@@ -164,8 +189,7 @@ function runExactActorProbe(input) {
     },
     encoding: "utf8",
   });
-  const output = `${result.stdout}\n${result.stderr}`;
-  assert.equal(result.status, 0, output);
+  assertProbeProcessSucceeded(result);
   return JSON.parse(result.stdout.trim());
 }
 
@@ -620,6 +644,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   const exactEpoch = createV100PhaseGV7ExactContactEpoch();
   const exactOptions = { requiredActorKeys: ["zombie:spitter"] };
   const acceptedAfterLaterDeath = runExactActorProbe({ proofEpoch: exactEpoch, options: exactOptions });
+  assert.deepEqual(acceptedAfterLaterDeath, directExactActorDecision(exactEpoch, exactOptions));
   assert.equal(acceptedAfterLaterDeath.accepted, true);
   assert.equal(acceptedAfterLaterDeath.actors[0].actorAlive, false);
   assert.equal(acceptedAfterLaterDeath.actors[0].sourceAliveAtObservation, true);
@@ -708,7 +733,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal(runExactActorProbe({ proofEpoch: audioAfterDeadlineEpoch, options: exactOptions }).accepted, false);
   const missingAudioTimeEpoch = structuredClone(exactEpoch);
   missingAudioTimeEpoch.acceptedWitnesses[0].audioReceipt.observedAtPageTime = null;
-  assert.equal(runExactActorProbe({ proofEpoch: missingAudioTimeEpoch, options: exactOptions }).accepted, false);
+  const missingAudioTimeDecision = runExactActorProbe({ proofEpoch: missingAudioTimeEpoch, options: exactOptions });
+  assert.equal(missingAudioTimeDecision.accepted, false);
+  assert.deepEqual(missingAudioTimeDecision, directExactActorDecision(missingAudioTimeEpoch, exactOptions));
   const exactScreenshotEpoch = structuredClone(exactEpoch);
   attachValidV100PhaseGScreenshotReceipt(exactScreenshotEpoch);
   assert.equal(runExactActorProbe({ proofEpoch: exactScreenshotEpoch, options: exactOptions }).accepted, true);
@@ -732,7 +759,10 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
       });
     }
   }
-  const strictNumericDomainResults = runExactActorProbe({ cases: strictNumericDomainCases });
+  const strictNumericDomainResults = strictNumericDomainCases.map(({ label, proofEpoch, options }) => ({
+    label,
+    decision: directExactActorDecision(proofEpoch, options),
+  }));
   assert.equal(strictNumericDomainResults.length, V100_PHASE_G_V7_REQUIRED_NUMERIC_PATHS.length * invalidReceiptNumbers.length);
   for (const { label, decision } of strictNumericDomainResults) {
     assert.equal(decision.accepted, false, `${label} crossed the strict v7 numeric receipt boundary`);
