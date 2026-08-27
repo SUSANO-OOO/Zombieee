@@ -2765,6 +2765,19 @@ async function withDeploymentPresentationQuiescence(
                 && Number(style?.opacity) > 0;
               if (ready) {
                 clearTimeout(timer);
+                const evidencePresentation = bridge.setQaPresentationQuiesced(true, evidenceOwner);
+                if (!(evidencePresentation?.schema === "v100-qa-presentation-quiescence/v1"
+                  && evidencePresentation.active === true
+                  && evidencePresentation.owner === evidenceOwner
+                  && evidencePresentation.route === "deployment"
+                  && evidencePresentation.datasetActive === true
+                  && evidencePresentation.running === true
+                  && evidencePresentation.paused === true
+                  && evidencePresentation.over !== true
+                  && Number(evidencePresentation.enteredAtRenderFrames) === Number(quiescence.renderFrames))) {
+                  reject(new Error(`deployment evidence owner did not acquire the exact restored frame ${JSON.stringify(evidencePresentation)}`));
+                  return;
+                }
                 resolve({
                   quiescence,
                   renderFrameDelta,
@@ -2776,6 +2789,7 @@ async function withDeploymentPresentationQuiescence(
                     visibility: style.visibility,
                     opacity: style.opacity,
                   },
+                  evidencePresentation,
                 });
                 return;
               }
@@ -2783,7 +2797,7 @@ async function withDeploymentPresentationQuiescence(
             };
             requestAnimationFrame(observe);
           });
-          const evidencePresentation = bridge.setQaPresentationQuiesced(true, evidenceOwner);
+          const evidencePresentation = restored.evidencePresentation;
           if (!(evidencePresentation?.schema === "v100-qa-presentation-quiescence/v1"
             && evidencePresentation.active === true
             && evidencePresentation.owner === evidenceOwner

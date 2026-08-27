@@ -316,6 +316,23 @@ async function transitionVisualIntegrityMutablePresentation(page, {
           && canvasReady;
         if (ready) {
           clearTimeout(timer);
+          let nextArm = null;
+          if (!releaseOnly) {
+            nextArm = bridge.setQaPresentationQuiesced(true, requestedOwner);
+            if (!(nextArm?.schema === "v100-qa-presentation-quiescence/v1"
+              && nextArm.active === true
+              && nextArm.owner === requestedOwner
+              && nextArm.route === "visual-integrity"
+              && nextArm.datasetActive === true
+              && nextArm.running === true
+              && nextArm.paused === false
+              && nextArm.over !== true
+              && Number(nextArm.generation) === Number(before.generation) + 1
+              && Number(nextArm.enteredAtRenderFrames) === Number(quiescence.renderFrames))) {
+              reject(new Error(`visual-integrity mutable successor owner did not acquire the exact restored frame ${JSON.stringify(nextArm)}`));
+              return;
+            }
+          }
           resolve({
             transitionPhase,
             quiescence,
@@ -329,6 +346,7 @@ async function transitionVisualIntegrityMutablePresentation(page, {
               visibility: style.visibility,
               opacity: style.opacity,
             },
+            nextArm,
           });
           return;
         }
@@ -348,7 +366,7 @@ async function transitionVisualIntegrityMutablePresentation(page, {
         nextArm: null,
       };
     }
-    const nextArm = bridge.setQaPresentationQuiesced(true, requestedOwner);
+    const nextArm = restored.nextArm;
     if (!(nextArm?.schema === "v100-qa-presentation-quiescence/v1"
       && nextArm.active === true
       && nextArm.owner === requestedOwner

@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import test from "node:test";
+import { createV100PhaseGV7ExactContactEpoch } from "./fixtures/v100-phase-g-v6-contract.mjs";
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
@@ -137,6 +138,77 @@ test("r11 does not substitute attacker, impact, reaction, or audio evidence for 
   assert.deepEqual(result.proof.targetReactionHistory, []);
   assert.equal(result.proof.stages.audio, true);
   assert.equal(result.proof.ok, false);
+
+  const directEpoch = createV100PhaseGV7ExactContactEpoch({
+    actorKey: "zombie:red-panther-commander",
+    sourceId: 4,
+    sourceKind: "red-panther-commander",
+    currentSourceAlive: true,
+    targetId: 2,
+    targetKind: "medic",
+    cueId: "enemy-red-panther-commander-attack",
+    baselineAttackSequence: 0,
+    observedAttackSequence: 1,
+    observedAtBattleTime: 19.5,
+    observedAtPageTime: 120,
+    audioObservedAtPageTime: 110,
+    proofCompletedAtPageTime: 120,
+    continuitySampleCount: 3,
+    continuityFirstWindup: 0.12,
+    continuityFirstBattleTime: 19.3,
+    continuityLastBattleTime: 19.4,
+  });
+  const runDirectProbe = (epoch) => runHistoryProbe({
+    observerFrames: [],
+    waitSnapshot: {},
+    requiredActorKeys: ["zombie:red-panther-commander"],
+    proofSamples: [{
+      postQuiescenceProofEpoch: epoch,
+      audioCueRequests: [{ cueId: "enemy-red-panther-commander-attack" }],
+    }],
+  });
+  const direct = runDirectProbe(directEpoch);
+  assert.deepEqual(direct.proof.sourceToTargetEdges, ["4->2"]);
+  assert.deepEqual(direct.proof.sourceAttribution, [{
+    edge: "4->2",
+    sourceId: 4,
+    targetId: 2,
+    channel: "exact-actor-direct-contact",
+  }]);
+  assert.deepEqual(direct.proof.visualEvents, ["exact-actor-direct-contact"]);
+  assert.equal(direct.proof.targetReactionHistory.every(({ targetId }) => targetId === 2), true);
+  assert.deepEqual(direct.proof.stages, { source: true, travelOrContact: true, targetReaction: true, audio: true });
+  assert.equal(direct.proof.exactActorDirectContact.integrityOk, true);
+  assert.deepEqual(direct.proof.exactActorDirectContact.acceptedActorKeys, ["zombie:red-panther-commander"]);
+  assert.equal(direct.proof.ok, true);
+
+  const missingPresentation = structuredClone(directEpoch);
+  missingPresentation.acceptedWitnesses[0].contactReceipt.presentation = {
+    attack: 0,
+    animationState: "idle",
+    enemyVfxAttacking: false,
+    enemyVfxPhase: "idle",
+  };
+  const missingReaction = structuredClone(directEpoch);
+  missingReaction.acceptedWitnesses[0].contactReceipt.reaction = { flash: 0, knock: 0, animationState: "idle" };
+  const fallbackTarget = structuredClone(directEpoch);
+  fallbackTarget.acceptedWitnesses[0].targetEvidenceSource = "release-anchor-bound-windup";
+  fallbackTarget.acceptedWitnesses[0].contactReceipt.targetEvidenceSource = "release-anchor-bound-windup";
+  const sequenceMismatch = structuredClone(directEpoch);
+  sequenceMismatch.acceptedWitnesses[0].contactReceipt.observedAttackSequence = 2;
+  const identityMismatch = structuredClone(directEpoch);
+  identityMismatch.acceptedWitnesses[0].contactReceipt.targetId = 99;
+  identityMismatch.acceptedWitnesses[0].contactReceipt.sourceTargetEdge = "4->99";
+  const timeMismatch = structuredClone(directEpoch);
+  timeMismatch.acceptedWitnesses[0].contactReceipt.observedAtPageTime = 121;
+  for (const invalidEpoch of [missingPresentation, missingReaction, fallbackTarget, sequenceMismatch, identityMismatch, timeMismatch]) {
+    const invalid = runDirectProbe(invalidEpoch);
+    assert.equal(invalid.proof.stages.source, false);
+    assert.equal(invalid.proof.stages.travelOrContact, false);
+    assert.equal(invalid.proof.stages.targetReaction, false);
+    assert.equal(invalid.proof.exactActorDirectContact.integrityOk, false);
+    assert.equal(invalid.proof.ok, false);
+  }
 
   const noReactionSubstitution = runHistoryProbe({
     observerFrames: [{

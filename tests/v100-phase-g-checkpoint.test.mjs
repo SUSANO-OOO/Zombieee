@@ -5,9 +5,54 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import path from "node:path";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
-import { RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS } from "../app/renderPerformance.js";
+import {
+  V100_PHASE_G_V7_REQUIRED_NUMERIC_PATHS,
+  attachValidV100PhaseGScreenshotReceipt,
+  createV100PhaseGV7ExactContactEpoch,
+  setV100PhaseGV7NumericPath,
+} from "./fixtures/v100-phase-g-v6-contract.mjs";
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+const failFastAssert = assert;
+
+function createCompleteStaticContractAssertionAudit() {
+  const failures = [];
+  const summarize = (value) => {
+    if (value instanceof RegExp) return value.toString();
+    if (typeof value === "string") {
+      return { type: "string", length: value.length, preview: value.slice(0, 160) };
+    }
+    if (Array.isArray(value)) return { type: "array", length: value.length };
+    if (value && typeof value === "object") return { type: value.constructor?.name ?? "object" };
+    return value;
+  };
+  const audited = {};
+  for (const method of ["match", "doesNotMatch", "equal", "deepEqual", "ok"]) {
+    audited[method] = (...args) => {
+      try {
+        failFastAssert[method](...args);
+      } catch (error) {
+        const localFrames = String(error?.stack ?? "")
+          .split(/\r?\n/u)
+          .filter((line) => line.includes("v100-phase-g-checkpoint.test.mjs"));
+        failures.push({
+          method,
+          callsite: localFrames.at(-1)?.trim() ?? null,
+          operator: error?.operator ?? null,
+          expected: summarize(error?.expected),
+          actual: summarize(error?.actual),
+          message: String(error?.message ?? error).split(/\r?\n/u)[0],
+        });
+      }
+    };
+  }
+  audited.complete = () => {
+    if (failures.length > 0) {
+      failFastAssert.fail(`PHASE_G_STATIC_CONTRACT_AUDIT_FAILED:${JSON.stringify(failures, null, 2)}`);
+    }
+  };
+  return Object.freeze(audited);
+}
 
 function runContractProbe(input) {
   const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
@@ -100,12 +145,22 @@ function runCausalConvergenceProbe(input) {
 }
 
 function runExactActorProbe(input) {
+  const encodedInput = JSON.stringify(input, (_key, value) => {
+    if (typeof value !== "number" || Number.isFinite(value)) return value;
+    return {
+      __phaseGNonFiniteNumber__: Number.isNaN(value)
+        ? "NaN"
+        : value === Number.POSITIVE_INFINITY
+          ? "Infinity"
+          : "-Infinity",
+    };
+  });
   const result = spawnSync(process.execPath, ["scripts/v100-phase-g-production-matrix.mjs"], {
     cwd: repositoryRoot,
     env: {
       ...process.env,
       V100_PHASE_G_EXACT_ACTOR_PROBE: "1",
-      V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT: JSON.stringify(input),
+      V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT: encodedInput,
     },
     encoding: "utf8",
   });
@@ -282,10 +337,12 @@ test("Phase G rejects full queues and terminal battle state before any candidate
 });
 
 test("Phase G statically owns all deployment pointers, overlap locks, cursor freeze, and fifteen checkpoints", async () => {
-  const [source, appSource, hostTelemetrySource] = await Promise.all([
+  const assert = createCompleteStaticContractAssertionAudit();
+  const [source, appSource, hostTelemetrySource, proofMachineSource] = await Promise.all([
     readFile(path.join(repositoryRoot, "scripts/v100-phase-g-production-matrix.mjs"), "utf8"),
     readFile(path.join(repositoryRoot, "app/AshfallGame.tsx"), "utf8"),
     readFile(path.join(repositoryRoot, "scripts/webkit-host-resource-telemetry.mjs"), "utf8"),
+    readFile(path.join(repositoryRoot, "scripts/v100-phase-g-proof-machine.mjs"), "utf8"),
   ]);
   assert.equal(weaponCueForUnit("ranger"), "weapon-rifle", "exact ally proof must use the production unit-weapon cue owner");
   assert.equal(enemyCombatCueFor("spitter", "attack"), "enemy-spitter-attack", "exact enemy proof must use the production combat-cue owner");
@@ -389,7 +446,8 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(presentationHarnessBlock, /Number\(quiescence\?\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
   assert.match(presentationHarnessBlock, /style\.visibility !== "hidden"/u);
   assert.match(presentationHarnessBlock, /v100-phase-g-pre-release-readiness\/v2/u);
-  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v5/u);
+  assert.doesNotMatch(presentationHarnessBlock, /v100-phase-g-release-interruption-guard\/v1/u);
+  assert.match(presentationHarnessBlock, /v100-phase-g-post-quiescence-proof\/v7/u);
   assert.match(presentationHarnessBlock, /const releaseAnchorKey = actorSpecs\.length > 0 \? actorKey\(actorSpecs\[0\]\) : null/u);
   assert.match(presentationHarnessBlock, /releaseRole: index === 0 \? "release-anchor" : "supporting-prerequisite"/u);
   assert.match(presentationHarnessBlock, /releaseMode: index === 0 \? "unconsumed-production-windup" : "completed-hidden-attack"/u);
@@ -403,35 +461,36 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(releasePredicateBlock, /String\(fighter\.targetId\) === String\(fighter\.attackWindupTargetId\)[\s\S]*target\?\.side === expectedTargetSide[\s\S]*Number\(target\.hp\) > 0/u);
   assert.match(releasePredicateBlock, /windupContinuity: \[\]/u);
   assert.match(releasePredicateBlock, /const previousContinuity = Array\.isArray\(actorReadiness\.windupContinuity\)[\s\S]*const newProductionSnapshot = previous[\s\S]*const monotonicallyDecreased = newProductionSnapshot/u);
-  assert.match(releasePredicateBlock, /sampleCount: Number\(previous\.sampleCount\) \+ 1[\s\S]*lastWindup: windup[\s\S]*lastBattleTime: Number\(snapshot\.time\)/u);
-  assert.match(releasePredicateBlock, /Number\(continuity\?\.sampleCount\) >= 2[\s\S]*Number\(continuity\?\.firstWindup\) > Number\(continuity\?\.lastWindup\)[\s\S]*Number\(fighter\.attackWindup\) <= releaseAnchorLateWindupMaxSeconds/u);
+  assert.match(releasePredicateBlock, /sampleCount: previous\.sampleCount \+ 1[\s\S]*lastWindup: windup[\s\S]*lastBattleTime: snapshot\.time/u);
+  assert.match(releasePredicateBlock, /continuity\.sampleCount >= 2[\s\S]*continuity\.firstWindup > continuity\.lastWindup[\s\S]*fighter\.attackWindup <= releaseAnchorLateWindupMaxSeconds/u);
   assert.match(releasePredicateBlock, /const receipt = bridge\.setQaPresentationQuiesced\(false, "phase-g-pre-proof"\)[\s\S]*const releaseSnapshot = snapshot/u);
-  assert.match(releasePredicateBlock, /receipt\.owner === quiescence\.owner[\s\S]*receipt\.route === quiescence\.route[\s\S]*Number\(receipt\.generation\) === Number\(quiescence\.generation\)[\s\S]*receipt\.stageId === releaseSnapshot\.stageId[\s\S]*receipt\.running === releaseSnapshot\.running[\s\S]*receipt\.paused === releaseSnapshot\.paused[\s\S]*receipt\.over === releaseSnapshot\.over[\s\S]*Number\(receipt\.battleTime\) === Number\(releaseSnapshot\.time\)/u);
+  assert.match(releasePredicateBlock, /receipt\.owner === quiescence\.owner[\s\S]*receipt\.route === quiescence\.route[\s\S]*Number\(receipt\.generation\) === Number\(quiescence\.generation\)[\s\S]*receipt\.stageId === releaseSnapshot\.stageId[\s\S]*receipt\.running === releaseSnapshot\.running[\s\S]*receipt\.paused === releaseSnapshot\.paused[\s\S]*receipt\.over === releaseSnapshot\.over[\s\S]*receipt\.battleTime === releaseSnapshot\.time/u);
   const releaseSelectionCompleteIndex = releasePredicateBlock.indexOf("if (!readiness.actors.every(readinessFor)) return false;");
   const releaseCallIndex = releasePredicateBlock.indexOf('bridge.setQaPresentationQuiesced(false, "phase-g-pre-proof")');
   const releaseReceiptValidatedIndex = releasePredicateBlock.indexOf("if (!releaseReceiptMatchesSelectionSnapshot)");
-  const releaseEpochIndex = releasePredicateBlock.indexOf('schema: "v100-phase-g-post-quiescence-proof/v5"');
+  const releaseEpochIndex = releasePredicateBlock.indexOf('schema: "v100-phase-g-post-quiescence-proof/v7"');
   assert.ok(releaseSelectionCompleteIndex >= 0
     && releaseSelectionCompleteIndex < releaseCallIndex
     && releaseCallIndex < releaseReceiptValidatedIndex
     && releaseReceiptValidatedIndex < releaseEpochIndex,
-  "selection, same-task release, exact receipt validation, and v5 epoch must remain ordered");
+  "selection, same-task release, exact receipt validation, and v7 transaction must remain ordered");
   assert.match(presentationHarnessBlock, /armGeneration: Number\(arm\.generation\)/u);
   assert.match(presentationHarnessBlock, /releaseAnchorLateWindupMaxSeconds: RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS/u);
   assert.match(presentationHarnessBlock, /timeout: Math\.min\(battleTimeout, 45_000\), polling: "raf"/u);
-  assert.match(presentationHarnessBlock, /releaseAnchorHandoffValid[\s\S]*Number\(releaseAnchorFighter\?\.attackWindup\) > 0[\s\S]*String\(releaseAnchorFighter\?\.attackWindupTargetId\) === String\(releaseAnchorReadiness\.selectedAttackWindupTargetId\)/u);
-  assert.match(presentationHarnessBlock, /lateWindupMaxSeconds: releaseAnchorLateWindupMaxSeconds[\s\S]*continuitySampleCount: Number\(releaseAnchorReadiness\.selectedContinuitySampleCount\)[\s\S]*continuityLastBattleTime: Number\(releaseAnchorReadiness\.selectedContinuityLastBattleTime\)/u);
+  assert.match(presentationHarnessBlock, /releaseAnchorHandoffValid[\s\S]*releaseAnchorFighter\.attackWindup > 0[\s\S]*String\(releaseAnchorFighter\?\.attackWindupTargetId\) === String\(releaseAnchorReadiness\.selectedAttackWindupTargetId\)/u);
+  assert.match(presentationHarnessBlock, /lateWindupMaxSeconds: releaseAnchorLateWindupMaxSeconds[\s\S]*continuitySampleCount: releaseAnchorReadiness\.selectedContinuitySampleCount[\s\S]*continuityLastBattleTime: releaseAnchorReadiness\.selectedContinuityLastBattleTime/u);
   assert.match(presentationHarnessBlock, /sameTaskSnapshotReadCount: readiness\.sameTaskSnapshotReadCount[\s\S]*cachedObserverSnapshotUsedForHandoff: readiness\.cachedObserverSnapshotUsedForHandoff[\s\S]*releaseReceiptMatchesSelectionSnapshot/u);
-  assert.match(presentationHarnessBlock, /releaseAnchor,[\s\S]*preReleaseReadiness: readiness/u);
+  assert.match(presentationHarnessBlock, /releaseAnchor,[\s\S]*preReleaseReadiness: structuredClone\(readiness\)/u);
   assert.match(presentationHarnessBlock, /post-quiescence release anchor did not preserve an unconsumed exact production attack/u);
   assert.match(presentationHarnessBlock, /selectedFighterId: readyActor\.selectedFighterId/u);
-  assert.match(presentationHarnessBlock, /fighterBaselines: \[\{[\s\S]*fighterId: readyActor\.selectedFighterId,[\s\S]*baselineAttackSequence: Number\(fighter\?\.attackSequence\) \|\| 0/u);
-  assert.match(presentationHarnessBlock, /observedFighterId: null/u);
-  assert.match(presentationHarnessBlock, /observedAtPageTime: null/u);
-  assert.match(presentationHarnessBlock, /sourceAliveAtObservation: null/u);
-  assert.match(presentationHarnessBlock, /audioObservedAtPageTime: null/u);
+  assert.match(presentationHarnessBlock, /baselineAttackSequence,[\s\S]*state: readyActor\.releaseRole === "release-anchor" \? "TRACKING_CANDIDATE" : "WAITING_SEQUENCE"/u);
+  assert.match(presentationHarnessBlock, /activeCandidate: releaseCandidate/u);
+  assert.match(presentationHarnessBlock, /candidateHistory: releaseCandidate/u);
+  assert.match(presentationHarnessBlock, /contactReceipt: null/u);
+  assert.match(presentationHarnessBlock, /audioReceipt: null/u);
+  assert.match(presentationHarnessBlock, /acceptedWitnesses: \[\]/u);
   assert.match(presentationHarnessBlock, /const visibleProofStartedAt = performance\.now\(\)/u);
-  assert.match(presentationHarnessBlock, /visibleProofDeadlineAt: visibleProofStartedAt \+ Number\(proofDurationMs\)/u);
+  assert.match(presentationHarnessBlock, /visibleProofDeadlineAt: visibleProofStartedAt \+ proofDurationMs/u);
   assert.match(presentationHarnessBlock, /audioCueRequestBaselineCount: audioCueRequestBaseline\.length/u);
   assert.match(presentationHarnessBlock, /excludedQuiescedAttackObserved/u);
   const battlePageBlock = source.match(/async function battlePage([\s\S]*?)(?=\nfor \(const viewport of requiredViewports\))/u)?.[1] ?? "";
@@ -457,15 +516,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.doesNotMatch(readinessFailureReceipt, /getCueRequests|document\.|querySelector|innerHTML|outerHTML|PHASE_G_LAST_COMBAT_SNAPSHOT/u);
   const postQuiescenceFailureReceipt = failureReadbackBlock.match(/postQuiescenceProof: \(\(\) => \{([\s\S]*?)\n          \}\)\(\),/u)?.[1] ?? "";
   assert.ok(postQuiescenceFailureReceipt.length > 0, "missing bounded post-quiescence proof receipt region");
-  assert.match(postQuiescenceFailureReceipt, /releaseAnchor: epoch\.releaseAnchor \? \{/u);
-  for (const field of ["actorKey", "releaseMode", "fighterId", "baselineAttackSequence", "targetId", "targetAlive", "attackWindupSeconds", "lateWindupMaxSeconds", "continuitySampleCount", "continuityFirstWindup", "continuityLastWindup", "continuityFirstBattleTime", "continuityLastBattleTime", "handoffAtBattleTime", "handoffAtPageTime", "handoffValid", "selectionSnapshotObservedAtPageTime", "selectionSnapshotBattleTime", "sameTaskSnapshotReadCount", "cachedObserverSnapshotUsedForHandoff", "releaseReceiptMatchesSelectionSnapshot"]) {
-    assert.match(postQuiescenceFailureReceipt, new RegExp(`${field}: epoch\\.releaseAnchor\\.${field}`, "u"));
-  }
-  assert.match(postQuiescenceFailureReceipt, /\(epoch\.actors \?\? \[\]\)\.slice\(0, 4\)\.map/u);
-  for (const field of ["observedAtBattleTime", "observedAtPageTime", "sourceAliveAtObservation", "targetEvidenceSource", "audioObservedAtPageTime", "proofCompletedAtPageTime", "eventTimeWithinDeadline", "currentActorAlive"]) {
-    assert.match(postQuiescenceFailureReceipt, new RegExp(`${field}`, "u"));
-  }
-  assert.doesNotMatch(postQuiescenceFailureReceipt, /getCueRequests|document\.|querySelector|innerHTML|outerHTML|PHASE_G_LAST_COMBAT_SNAPSHOT|fighterBaselines/u);
+  assert.match(postQuiescenceFailureReceipt, /epoch\?\.schema === "v100-phase-g-post-quiescence-proof\/v7"/u);
+  assert.match(postQuiescenceFailureReceipt, /return structuredClone\(epoch\)/u);
+  assert.doesNotMatch(postQuiescenceFailureReceipt, /getCueRequests|document\.|querySelector|innerHTML|outerHTML|PHASE_G_LAST_COMBAT_SNAPSHOT|observedPostEpochAttack/u);
   assert.match(presentationHarnessBlock, /attackIdentity: \[\][\s\S]*sourceToTargetEdges: \[\][\s\S]*reactionHistory: \[\]/u);
   assert.doesNotMatch(presentationHarnessBlock, /\.time\s*=|eventIndex\s*=|(?:snapshot|game|g)\.fighters\s*=|\.hp\s*=|\.speed\s*=|setGraphicsQuality|accelerateBossFoundationEntry/u);
   const battleRegionStart = source.indexOf("async function battlePage");
@@ -488,7 +541,9 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(causalCollector, /activityReactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
   assert.match(causalCollector, /schema: "v100-phase-g-causal-atomic-receipt\/v1"/u);
   assert.match(causalCollector, /reactionHistory: lastAtomicReceipt\.activityReactionHistory \?\? \[\]/u);
-  assert.match(causalCollector, /allAudio\.filter\(\(request\) => \([\s\S]*Number\(request\.at\) > Number\(proofEpoch\.audioCueRequestCutoffAt\)/u);
+  assert.match(causalCollector, /const isFiniteReceiptNumber = window\.__PHASE_G_IS_FINITE_RECEIPT_NUMBER__/u);
+  assert.match(causalCollector, /allAudio\.filter\(\(request\) => \([\s\S]*typeof isFiniteReceiptNumber === "function"[\s\S]*isFiniteReceiptNumber\(request\?\.at\)[\s\S]*isFiniteReceiptNumber\(proofEpoch\.audioCueRequestCutoffAt\)[\s\S]*request\.at > proofEpoch\.audioCueRequestCutoffAt/u);
+  assert.doesNotMatch(causalCollector, /Number\(request\.at\) > Number\(proofEpoch\.audioCueRequestCutoffAt\)/u);
   assert.doesNotMatch(causalCollector, /audioCueRequestBaseline|allAudio\.slice\(/u);
   const saturatedAudioRing = Array.from({ length: 128 }, (_, index) => ({ cueId: `old-${index}`, at: index + 1 }));
   const audioCutoffAt = 128.5;
@@ -511,7 +566,8 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(source, /combatProofDurationMs: 4_800/u);
   assert.match(causalCollector, /const proofAndSamplesComplete = convergenceDecision\.proofOk === true[\s\S]*convergenceDecision\.samplesComplete === true[\s\S]*exactActorDecision\.accepted === true/u);
   assert.match(causalCollector, /const residualDwellMs = Math\.max\(0, COMBAT_CAUSAL_CONVERGENCE_MIN_DWELL_MS - elapsedMs\)[\s\S]*await new Promise\(\(resolve\) => setTimeout\(resolve, residualDwellMs\)\)[\s\S]*break/u);
-  assert.match(causalCollector, /const proof = buildCombatCausalProof\(samples, stableHistory\)/u);
+  assert.match(causalCollector, /const proof = buildCombatCausalProof\(samples, stableHistory, \{ requiredActorKeys \}\)/u);
+  assert.equal((causalCollector.match(/buildCombatCausalProof\(samples, \{\}, \{ requiredActorKeys \}\)/gu) ?? []).length, 2);
   assert.match(causalCollector, /const stableHistory = lastAtomicReceipt \? \{/u);
   assert.doesNotMatch(causalCollector, /const stableHistory = await page\.evaluate/u);
   assert.match(causalCollector, /v100-phase-g-causal-collection\/v1/u);
@@ -524,21 +580,21 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(causalCollector, /phaseGCausalNoFurtherPageRpc = true/u);
   assert.match(causalCollector, /lastAtomicReceipt,[\s\S]*noFurtherPageRpc: true/u);
   assert.match(causalCollector, /postQuiescenceExactActorDecision/u);
-  assert.match(source, /const releaseAnchorExpectedKey = required\[0\] \?\? null/u);
-  assert.match(source, /const releaseAnchorOk = releaseAnchor\?\.handoffValid === true/u);
-  assert.match(source, /Number\(releaseAnchor\.handoffAtPageTime\) === Number\(proofEpoch\.visibleProofStartedAt\)/u);
-  assert.match(source, /releaseAnchorIdentityValid[\s\S]*String\(actor\?\.selectedFighterId\) === String\(releaseAnchor\.fighterId\)[\s\S]*Number\(actor\?\.observedAttackSequence\) === Number\(releaseAnchor\.baselineAttackSequence\) \+ 1[\s\S]*String\(actor\?\.targetId\) === String\(releaseAnchor\.targetId\)/u);
+  assert.match(proofMachineSource, /const releaseAnchorExpectedKey = required\[0\] \?\? null/u);
+  assert.match(proofMachineSource, /const releaseAnchorOk = releaseAnchorNumericDomainOk/u);
+  assert.match(proofMachineSource, /releaseAnchor\.handoffAtPageTime === proofEpoch\.visibleProofStartedAt/u);
+  assert.match(proofMachineSource, /releaseAnchorIdentityValid[\s\S]*String\(witness\?\.selectedFighterId\) === String\(releaseAnchor\.fighterId\)[\s\S]*witness\?\.baselineAttackSequence === releaseAnchor\.baselineAttackSequence[\s\S]*String\(witness\?\.targetId\) === String\(releaseAnchor\.targetId\)/u);
   assert.match(source, /import \{ RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS \} from "\.\.\/app\/renderPerformance\.js"/u);
   assert.match(source, /RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS = RUNTIME_SIMULATION_STEP_SECONDS[\s\S]*\* RUNTIME_MAX_CATCH_UP_STEPS/u);
-  assert.match(source, /function releaseAnchorCommitWindowSecondsFor\(releaseAnchor\)[\s\S]*Math\.max\(0\.8, attackWindupSeconds \+ 0\.5\)[\s\S]*RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS/u);
-  assert.match(source, /window\.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__ = releaseAnchorCommitWindowSecondsFor/u);
+  assert.match(proofMachineSource, /const releaseAnchorCommitWindowSecondsFor = \(releaseAnchor\) =>[\s\S]*Math\.max\(0\.8, attackWindupSeconds \+ 0\.5\) \+ schedulerToleranceSeconds/u);
+  assert.match(proofMachineSource, /target\.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__ = releaseAnchorCommitWindowSecondsFor/u);
   assert.match(source, /window\.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__\?\.\(releaseAnchor\) \?\? null/u);
   assert.doesNotMatch(source, /Math\.max\(0\.8, Number\(releaseAnchor\.attackWindupSeconds\) \+ 0\.5\)/u);
-  assert.match(source, /targetEvidenceSourceValid[\s\S]*"live-attacker-target", "release-anchor-bound-windup"/u);
-  assert.equal((source.match(/const releaseAnchorBindingValid = releaseAnchor\?\.handoffValid === true/gu) ?? []).length, 2);
-  assert.match(source, /const targetId = directTargetId \?\? \(releaseAnchorBindingValid \? releaseAnchor\.targetId : null\)/u);
-  assert.equal((source.match(/"release-anchor-bound-windup"/gu) ?? []).length, 3);
-  assert.match(source, /accepted: schemaOk && releaseAnchorOk && observedActorKeys\.length === required\.length/u);
+  assert.match(proofMachineSource, /targetEvidenceSourceValid: witness\?\.targetEvidenceSource === "live-attacker-target"/u);
+  assert.doesNotMatch(source, /release-anchor-bound-windup/u);
+  assert.match(proofMachineSource, /proofEpoch\?\.genericEvidence\?\.allRequirementsGreen === true/u);
+  assert.match(proofMachineSource, /proofEpoch\.acceptedWitnesses\?\.find/u);
+  assert.doesNotMatch(source, /proofEpoch\.actors\?\.find\([\s\S]*observedPostEpochAttack/u);
   assert.match(causalCollector, /withinReleaseDeadline = requiredActorKeys\.length === 0[\s\S]*finalExactActorDecision\.withinReleaseDeadline === true/u);
   assert.match(causalCollector, /proofCompletedAtPageTime: finalExactActorDecision\.proofCompletedAtPageTime \?\? null/u);
   assert.match(causalCollector, /finalPageNow: stableHistory\.pageNow \?\? null/u);
@@ -561,50 +617,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     options: { elapsedMs: 12_000 },
   }).accepted, false);
   assert.equal(runCausalConvergenceProbe({ proof: { ...completeCausalProof, ok: false }, options: { elapsedMs: 12_000 } }).accepted, false);
-  const exactEpoch = {
-    schema: "v100-phase-g-post-quiescence-proof/v5",
-    visibleProofStartedAt: 100,
-    visibleProofDeadlineAt: 500,
-    finalPageNow: 9_999,
-    releaseAnchor: {
-      actorKey: "zombie:spitter",
-      releaseMode: "unconsumed-production-windup",
-      fighterId: 6,
-      baselineAttackSequence: 4,
-      targetId: 1,
-      targetAlive: true,
-      attackWindupSeconds: 0.07,
-      lateWindupMaxSeconds: 1 / 12,
-      continuitySampleCount: 4,
-      continuityFirstWindup: 0.20333333333333334,
-      continuityLastWindup: 0.07,
-      continuityFirstBattleTime: 39.96666666666667,
-      continuityLastBattleTime: 40.1,
-      handoffAtBattleTime: 40.1,
-      handoffAtPageTime: 100,
-      handoffValid: true,
-    },
-    actors: [{
-      side: "zombie",
-      kind: "spitter",
-      cueId: "enemy-spitter-attack",
-      selectedFighterId: 6,
-      fighterBaselines: [{ fighterId: 6, baselineAttackSequence: 4 }],
-      observedPostEpochAttack: true,
-      actorAlive: false,
-      sourceAliveAtObservation: true,
-      observedFighterId: 6,
-      observedAttackSequence: 5,
-      observedAtBattleTime: 40.4,
-      observedAtPageTime: 240,
-      targetId: 1,
-      targetSide: "human",
-      targetAlive: true,
-      targetEvidenceSource: "release-anchor-bound-windup",
-      audioObserved: true,
-      audioObservedAtPageTime: 260,
-    }],
-  };
+  const exactEpoch = createV100PhaseGV7ExactContactEpoch();
   const exactOptions = { requiredActorKeys: ["zombie:spitter"] };
   const acceptedAfterLaterDeath = runExactActorProbe({ proofEpoch: exactEpoch, options: exactOptions });
   assert.equal(acceptedAfterLaterDeath.accepted, true);
@@ -616,22 +629,27 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal(acceptedAfterLaterDeath.actors[0].targetEvidenceSourceValid, true);
   assert.equal(acceptedAfterLaterDeath.actors[0].releaseAnchorCommitBoundValid, true);
   const schedulerCatchUpEpoch = structuredClone(exactEpoch);
-  schedulerCatchUpEpoch.actors[0].observedAtBattleTime = 40.95;
+  schedulerCatchUpEpoch.acceptedWitnesses[0].sourceObservedAtBattleTime = 40.95;
+  schedulerCatchUpEpoch.acceptedWitnesses[0].observedAtBattleTime = 40.95;
+  schedulerCatchUpEpoch.acceptedWitnesses[0].contactReceipt.sourceObservedAtBattleTime = 40.95;
+  schedulerCatchUpEpoch.acceptedWitnesses[0].contactReceipt.observedAtBattleTime = 40.95;
+  schedulerCatchUpEpoch.acceptedWitnesses[0].candidateCommitDeltaSeconds = 40.95 - 40.1;
   const schedulerCatchUpDecision = runExactActorProbe({ proofEpoch: schedulerCatchUpEpoch, options: exactOptions });
   assert.equal(schedulerCatchUpDecision.accepted, true);
   assert.equal(schedulerCatchUpDecision.actors[0].releaseAnchorCommitBoundValid, true);
   assert.ok(schedulerCatchUpDecision.actors[0].releaseAnchorCommitDeltaSeconds <= schedulerCatchUpDecision.actors[0].releaseAnchorCommitWindowSeconds);
   const outsideSchedulerBoundEpoch = structuredClone(exactEpoch);
-  outsideSchedulerBoundEpoch.actors[0].observedAtBattleTime = exactEpoch.releaseAnchor.handoffAtBattleTime
-    + Math.max(0.8, exactEpoch.releaseAnchor.attackWindupSeconds + 0.5)
-    + RUNTIME_SIMULATION_STEP_SECONDS * RUNTIME_MAX_CATCH_UP_STEPS
-    + 1e-6;
+  outsideSchedulerBoundEpoch.acceptedWitnesses[0].sourceObservedAtBattleTime = 40.1 + 0.8833333333333334 + 1e-6;
+  outsideSchedulerBoundEpoch.acceptedWitnesses[0].observedAtBattleTime = 40.1 + 0.8833333333333334 + 1e-6;
+  outsideSchedulerBoundEpoch.acceptedWitnesses[0].contactReceipt.sourceObservedAtBattleTime = 40.1 + 0.8833333333333334 + 1e-6;
+  outsideSchedulerBoundEpoch.acceptedWitnesses[0].contactReceipt.observedAtBattleTime = 40.1 + 0.8833333333333334 + 1e-6;
+  outsideSchedulerBoundEpoch.acceptedWitnesses[0].candidateCommitDeltaSeconds = 0.8833333333333334 + 1e-6;
   const outsideSchedulerBoundDecision = runExactActorProbe({ proofEpoch: outsideSchedulerBoundEpoch, options: exactOptions });
   assert.equal(outsideSchedulerBoundDecision.accepted, false);
   assert.equal(outsideSchedulerBoundDecision.actors[0].releaseAnchorCommitBoundValid, false);
-  const liveTargetSourceEpoch = structuredClone(exactEpoch);
-  liveTargetSourceEpoch.actors[0].targetEvidenceSource = "live-attacker-target";
-  assert.equal(runExactActorProbe({ proofEpoch: liveTargetSourceEpoch, options: exactOptions }).accepted, true);
+  const fallbackTargetSourceEpoch = structuredClone(exactEpoch);
+  fallbackTargetSourceEpoch.acceptedWitnesses[0].targetEvidenceSource = "release-anchor-bound-windup";
+  assert.equal(runExactActorProbe({ proofEpoch: fallbackTargetSourceEpoch, options: exactOptions }).accepted, false);
   const consumedAnchorEpoch = structuredClone(exactEpoch);
   consumedAnchorEpoch.releaseAnchor.handoffValid = false;
   assert.equal(runExactActorProbe({ proofEpoch: consumedAnchorEpoch, options: exactOptions }).accepted, false);
@@ -651,45 +669,126 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   wrongAnchorTargetEpoch.releaseAnchor.targetId = 2;
   assert.equal(runExactActorProbe({ proofEpoch: wrongAnchorTargetEpoch, options: exactOptions }).accepted, false);
   const audioOnlyEpoch = structuredClone(exactEpoch);
-  audioOnlyEpoch.actors[0].observedPostEpochAttack = false;
-  audioOnlyEpoch.actors[0].observedFighterId = null;
-  audioOnlyEpoch.actors[0].observedAttackSequence = null;
+  audioOnlyEpoch.acceptedWitnesses = [];
   assert.equal(runExactActorProbe({ proofEpoch: audioOnlyEpoch, options: exactOptions }).accepted, false);
+  const duplicateWitnessEpoch = structuredClone(exactEpoch);
+  duplicateWitnessEpoch.acceptedWitnesses.push(structuredClone(duplicateWitnessEpoch.acceptedWitnesses[0]));
+  assert.equal(runExactActorProbe({ proofEpoch: duplicateWitnessEpoch, options: exactOptions }).accepted, false);
   const staleSequenceEpoch = structuredClone(exactEpoch);
-  staleSequenceEpoch.actors[0].observedAttackSequence = 4;
+  staleSequenceEpoch.acceptedWitnesses[0].observedAttackSequence = 4;
   assert.equal(runExactActorProbe({ proofEpoch: staleSequenceEpoch, options: exactOptions }).accepted, false);
   const skippedFirstSequenceEpoch = structuredClone(exactEpoch);
-  skippedFirstSequenceEpoch.actors[0].observedAttackSequence = 6;
+  skippedFirstSequenceEpoch.acceptedWitnesses[0].observedAttackSequence = 6;
   assert.equal(runExactActorProbe({ proofEpoch: skippedFirstSequenceEpoch, options: exactOptions }).accepted, false);
   const invalidTargetSourceEpoch = structuredClone(exactEpoch);
-  invalidTargetSourceEpoch.actors[0].targetEvidenceSource = null;
+  invalidTargetSourceEpoch.acceptedWitnesses[0].targetEvidenceSource = null;
   assert.equal(runExactActorProbe({ proofEpoch: invalidTargetSourceEpoch, options: exactOptions }).accepted, false);
   const lateBoundCommitEpoch = structuredClone(exactEpoch);
-  lateBoundCommitEpoch.actors[0].observedAtBattleTime = 41;
+  lateBoundCommitEpoch.acceptedWitnesses[0].sourceObservedAtBattleTime = 41;
+  lateBoundCommitEpoch.acceptedWitnesses[0].observedAtBattleTime = 41;
+  lateBoundCommitEpoch.acceptedWitnesses[0].contactReceipt.sourceObservedAtBattleTime = 41;
+  lateBoundCommitEpoch.acceptedWitnesses[0].contactReceipt.observedAtBattleTime = 41;
+  lateBoundCommitEpoch.acceptedWitnesses[0].candidateCommitDeltaSeconds = 41 - 40.1;
   assert.equal(runExactActorProbe({ proofEpoch: lateBoundCommitEpoch, options: exactOptions }).accepted, false);
   const wrongFighterEpoch = structuredClone(exactEpoch);
-  wrongFighterEpoch.actors[0].observedFighterId = 7;
+  wrongFighterEpoch.acceptedWitnesses[0].sourceId = 7;
   assert.equal(runExactActorProbe({ proofEpoch: wrongFighterEpoch, options: exactOptions }).accepted, false);
   const invalidTargetEpoch = structuredClone(exactEpoch);
-  invalidTargetEpoch.actors[0].targetSide = "zombie";
+  invalidTargetEpoch.acceptedWitnesses[0].targetSide = "zombie";
   assert.equal(runExactActorProbe({ proofEpoch: invalidTargetEpoch, options: exactOptions }).accepted, false);
   const sourceDeadAtObservationEpoch = structuredClone(exactEpoch);
-  sourceDeadAtObservationEpoch.actors[0].sourceAliveAtObservation = false;
+  sourceDeadAtObservationEpoch.acceptedWitnesses[0].sourceAliveAtObservation = false;
   assert.equal(runExactActorProbe({ proofEpoch: sourceDeadAtObservationEpoch, options: exactOptions }).accepted, false);
   const observationAfterDeadlineEpoch = structuredClone(exactEpoch);
-  observationAfterDeadlineEpoch.actors[0].observedAtPageTime = 501;
+  observationAfterDeadlineEpoch.acceptedWitnesses[0].observedAtPageTime = 501;
   assert.equal(runExactActorProbe({ proofEpoch: observationAfterDeadlineEpoch, options: exactOptions }).accepted, false);
   const audioAfterDeadlineEpoch = structuredClone(exactEpoch);
-  audioAfterDeadlineEpoch.actors[0].audioObservedAtPageTime = 501;
+  audioAfterDeadlineEpoch.acceptedWitnesses[0].audioReceipt.observedAtPageTime = 501;
+  audioAfterDeadlineEpoch.acceptedWitnesses[0].proofCompletedAtPageTime = 501;
   assert.equal(runExactActorProbe({ proofEpoch: audioAfterDeadlineEpoch, options: exactOptions }).accepted, false);
   const missingAudioTimeEpoch = structuredClone(exactEpoch);
-  missingAudioTimeEpoch.actors[0].audioObservedAtPageTime = null;
+  missingAudioTimeEpoch.acceptedWitnesses[0].audioReceipt.observedAtPageTime = null;
   assert.equal(runExactActorProbe({ proofEpoch: missingAudioTimeEpoch, options: exactOptions }).accepted, false);
-  assert.equal((source.match(/epochActor\.observedPostEpochAttack !== true/gu) ?? []).length, 3);
-  assert.equal((source.match(/Object\.assign\(epochActor, \{/gu) ?? []).length, 3);
-  assert.match(source, /observedAtPageTime: performance\.now\(\)[\s\S]*sourceAliveAtObservation: Number\(fighter\.hp\) > 0/u);
-  assert.equal((source.match(/audioObservedAtPageTime \?\?= Number\(matchingAudioRequest\.at\)/gu) ?? []).length, 2);
-  assert.match(source, /epochActor\.audioObservedAtPageTime = Number\(request\.at\)/u);
+  const exactScreenshotEpoch = structuredClone(exactEpoch);
+  attachValidV100PhaseGScreenshotReceipt(exactScreenshotEpoch);
+  assert.equal(runExactActorProbe({ proofEpoch: exactScreenshotEpoch, options: exactOptions }).accepted, true);
+  const invalidReceiptNumbers = [
+    ["null", null],
+    ["numeric-string", "260"],
+    ["boolean", true],
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["-Infinity", Number.NEGATIVE_INFINITY],
+  ];
+  const strictNumericDomainCases = [];
+  for (const fieldLabel of V100_PHASE_G_V7_REQUIRED_NUMERIC_PATHS) {
+    for (const [invalidLabel, invalidValue] of invalidReceiptNumbers) {
+      const proofEpoch = structuredClone(exactEpoch);
+      setV100PhaseGV7NumericPath(proofEpoch, fieldLabel, invalidValue);
+      strictNumericDomainCases.push({
+        label: `${fieldLabel}:${invalidLabel}`,
+        proofEpoch,
+        options: exactOptions,
+      });
+    }
+  }
+  const strictNumericDomainResults = runExactActorProbe({ cases: strictNumericDomainCases });
+  assert.equal(strictNumericDomainResults.length, V100_PHASE_G_V7_REQUIRED_NUMERIC_PATHS.length * invalidReceiptNumbers.length);
+  for (const { label, decision } of strictNumericDomainResults) {
+    assert.equal(decision.accepted, false, `${label} crossed the strict v7 numeric receipt boundary`);
+  }
+  const observingEpoch = structuredClone(exactEpoch);
+  observingEpoch.state = "OBSERVING";
+  assert.equal(runExactActorProbe({ proofEpoch: observingEpoch, options: exactOptions }).accepted, false);
+  const genericEvidenceRedEpoch = structuredClone(exactEpoch);
+  genericEvidenceRedEpoch.genericEvidence.allRequirementsGreen = false;
+  assert.equal(runExactActorProbe({ proofEpoch: genericEvidenceRedEpoch, options: exactOptions }).accepted, false);
+  const legacyActorOnlyEpoch = structuredClone(exactEpoch);
+  legacyActorOnlyEpoch.acceptedWitnesses = [];
+  legacyActorOnlyEpoch.actors[0].observedPostEpochAttack = true;
+  legacyActorOnlyEpoch.actors[0].observedAttackSequence = 5;
+  assert.equal(runExactActorProbe({ proofEpoch: legacyActorOnlyEpoch, options: exactOptions }).accepted, false);
+  const causalTransactionSources = `${source}\n${proofMachineSource}`;
+  assert.equal((causalTransactionSources.match(/Object\.assign\(epochActor, \{/gu) ?? []).length, 0);
+  assert.doesNotMatch(causalTransactionSources, /v100-phase-g-post-quiescence-proof\/v5/u);
+  assert.doesNotMatch(source, /v100-phase-g-post-quiescence-proof\/v6/u);
+  assert.match(source, /import \{ createV100PhaseGProofMachine \} from "\.\/v100-phase-g-proof-machine\.mjs"/u);
+  assert.match(source, /const phaseGProofMachineFactorySource = createV100PhaseGProofMachine\.toString\(\)/u);
+  assert.match(source, /const createProofMachine = \(0, eval\)\(`\(\$\{proofMachineFactorySource\}\)`\)[\s\S]*proofMachine\.installGlobals\(window\)/u);
+  assert.match(source, /return phaseGProofMachine\.postQuiescenceExactActorDecision\(proofEpoch, options\)/u);
+  assert.match(source, /return phaseGProofMachine\.exactActorDirectContactCausalDecision\(proofEpoch, options\)/u);
+  assert.match(proofMachineSource, /const isFiniteReceiptNumber = \(value\) => typeof value === "number" && Number\.isFinite\(value\)/u);
+  assert.match(proofMachineSource, /target\.__PHASE_G_IS_FINITE_RECEIPT_NUMBER__ = isFiniteReceiptNumber/u);
+  assert.match(proofMachineSource, /PHASE_G_V7_EPOCH_INSTALL_SCHEMA_OR_DOMAIN_INVALID/u);
+  assert.match(proofMachineSource, /PHASE_G_SCREENSHOT_DEADLINE_RECEIPT_INVALID/u);
+  const strictHostDecision = source.match(/function postQuiescenceExactActorDecision[\s\S]+?(?=\nfunction exactActorDirectContactCausalDecision)/u)?.[0] ?? "";
+  const strictDirectContactDecision = source.match(/function exactActorDirectContactCausalDecision[\s\S]+?(?=\nif \(process\.env\.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE)/u)?.[0] ?? "";
+  assert.doesNotMatch(strictHostDecision, /Number\.isFinite\(Number\(/u);
+  assert.doesNotMatch(strictDirectContactDecision, /Number\.isFinite\(Number\(/u);
+  assert.doesNotMatch(source, /const advanceProofEpoch = \(snapshot\) =>/u);
+  assert.match(proofMachineSource, /const advanceEpoch = \(epoch, \{[\s\S]*snapshot,[\s\S]*audioRequests = \[\],[\s\S]*pageNow,[\s\S]*\} = \{\}\) =>/u);
+  assert.match(proofMachineSource, /event: "INVALIDATED"[\s\S]*WINDUP_RESTARTED_BEFORE_CONTACT[\s\S]*WINDUP_CLEARED_BEFORE_CONTACT[\s\S]*WINDUP_TARGET_CHANGED_BEFORE_CONTACT/u);
+  assert.match(proofMachineSource, /state: "WAITING_SUCCESSOR"[\s\S]*activeCandidate: null[\s\S]*successorContinuity: \[\]/u);
+  assert.match(proofMachineSource, /continuity\.length >= 2[\s\S]*continuity\[0\]\.windup > continuity\.at\(-1\)\.windup[\s\S]*lateWindupMaxSeconds/u);
+  assert.match(proofMachineSource, /origin: "same-epoch-successor"/u);
+  assert.match(proofMachineSource, /RELEASE_ANCHOR_SEQUENCE_WITHOUT_ACTIVE_CANDIDATE/u);
+  assert.match(proofMachineSource, /EXACT_ATTACK_SEQUENCE_INVALID/u);
+  assert.match(proofMachineSource, /RELEASE_ANCHOR_CONTACT_TARGET_MISMATCH/u);
+  assert.match(proofMachineSource, /RELEASE_ANCHOR_CANDIDATE_COMMIT_WINDOW_EXCEEDED/u);
+  assert.match(proofMachineSource, /state: "SOURCE_COMMITTED"[\s\S]*state: "IMPACT_PENDING"/u);
+  assert.match(proofMachineSource, /EXACT_PENDING_IMPACT_REACTION_ACCEPTED/u);
+  assert.match(proofMachineSource, /acceptedWitnesses = actors\.map\(\(actor\) => actor\.witness\)\.filter\(Boolean\)/u);
+  assert.match(proofMachineSource, /acceptedWitnessesCardinalityOk[\s\S]*acceptedWitnesses\.length === required\.length[\s\S]*\.filter\(\(witness\) => witness\?\.actorKey === actorKey\)\.length === 1/u);
+  assert.match(proofMachineSource, /"WITNESS_ACCEPTED", "ALL_EXACT_AND_GENERIC_WITNESSES_ACCEPTED"/u);
+  const directContactCapture = proofMachineSource.match(/const contactReceiptFor = \(actor, sourceCommit, target, snapshot, pageNow, causalMode\) => \{[\s\S]+?\n  \};/u)?.[0] ?? "";
+  assert.ok(directContactCapture.length > 0, "missing exact-actor direct-contact capture");
+  assert.match(directContactCapture, /String\(target\?\.id\) === String\(sourceCommit\?\.targetId\)[\s\S]*target\?\.side === sourceCommit\?\.targetSide[\s\S]*targetHpAtContact > 0/u);
+  assert.match(proofMachineSource, /const sourceCommitFor[\s\S]*authored\.observed[\s\S]*const contactReceiptFor[\s\S]*reaction\.observed/u);
+  assert.match(proofMachineSource, /const CONTACT_SCHEMA = "v100-phase-g-exact-actor-direct-contact\/v2"/u);
+  assert.match(directContactCapture, /targetEvidenceSource: sourceCommit\.targetEvidenceSource/u);
+  assert.match(proofMachineSource, /targetEvidenceSource: "live-attacker-target"/u);
+  assert.match(proofMachineSource, /const exactAudioReceiptFor = \(actor, epoch, requests, pageNow\) =>/u);
+  assert.match(proofMachineSource, /v100-phase-g-exact-audio-receipt\/v1/u);
   const moduleHistoryMerge = source.match(/function mergeCombatActivityHistory[\s\S]+?(?=\nfunction proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   const pageHistoryMerge = source.match(/const mergeCombatActivityHistory = \(previous = \{\}, snapshot = \{\}\) => \{[\s\S]+?(?=\n    const proofActorHumanTargetFromHistory)/u)?.[0] ?? "";
   for (const historyOwner of [moduleHistoryMerge, pageHistoryMerge]) {
@@ -707,6 +806,14 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     assert.doesNotMatch(historyOwner, /channel: "damage-text"|snapshot\.damageTexts/u);
   }
   const causalProofBuilder = source.match(/function buildCombatCausalProof[\s\S]+?(?=\nasync function startCombatRuntimeObserver)/u)?.[0] ?? "";
+  const directContactDecision = proofMachineSource.match(/const exactActorDirectContactCausalDecision = \(proofEpoch,[\s\S]+?(?=\n\n  const installGlobals)/u)?.[0] ?? "";
+  assert.ok(directContactDecision.length > 0, "missing strict exact-actor direct-contact validator");
+  assert.match(directContactDecision, /receipt\.schema === CONTACT_SCHEMA/u);
+  assert.match(directContactDecision, /receipt\.targetEvidenceSource === "live-attacker-target"/u);
+  assert.match(directContactDecision, /receipt\.observedAttackSequence === receipt\.baselineAttackSequence \+ 1/u);
+  assert.match(directContactDecision, /receipt\.sourceObservedAtBattleTime === witness\.sourceObservedAtBattleTime[\s\S]*receipt\.observedAtBattleTime === witness\.observedAtBattleTime[\s\S]*receipt\.observedAtPageTime === witness\.observedAtPageTime/u);
+  assert.match(directContactDecision, /authoredPresentationValid[\s\S]*reactionValid/u);
+  assert.match(directContactDecision, /rejectedActorKeys[\s\S]*integrityOk: rejectedActorKeys\.length === 0/u);
   assert.match(causalProofBuilder, /const hasTargetReactionIdentity = \(observation\) =>/u);
   assert.match(causalProofBuilder, /const isAllowedFighterReaction = \(observation\) =>/u);
   assert.match(causalProofBuilder, /if \(!isAllowedFighterReaction\(observation\) \|\| reactionHistory\.length >= 96\) return/u);
@@ -718,10 +825,15 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(causalProofBuilder, /const targetReactionKeys = new Set\(targetReactionHistory\.map\(reactionHistoryKey\)\)/u);
   assert.match(causalProofBuilder, /reactionHistory,/u);
   assert.match(causalProofBuilder, /targetReactionHistory,/u);
+  assert.match(causalProofBuilder, /exactActorDirectContactCausalDecision\(directContactProofEpoch,[\s\S]*requiredActorKeys/u);
+  assert.match(causalProofBuilder, /channel: "exact-actor-direct-contact"/u);
+  assert.match(causalProofBuilder, /visualEvents\.add\("exact-actor-direct-contact"\)/u);
+  assert.match(causalProofBuilder, /for \(const reaction of actor\.reactionObservations\) addReactionHistory\(reaction\)/u);
+  assert.match(causalProofBuilder, /exactActorDirectContact\.integrityOk/u);
   assert.match(causalProofBuilder, /targetReaction: targetReactionKeys\.size > 0/u);
   assert.doesNotMatch(causalProofBuilder, /channel: "damage-text"/u);
   assert.doesNotMatch(causalProofBuilder, /attackWindup[^\n]*reactionKeys|pendingWeaponHits[^\n]*reactionKeys|audioCueIds[^\n]*reactionKeys/u);
-  const captureFailure = source.match(/const \{ failureState, checkpointFailure \} = await runPhaseGTelemetryOperation[\s\S]+?(?=\n    const failure = new Error)/u)?.[0] ?? "";
+  const captureFailure = source.match(/let failureState = null;[\s\S]+?(?=\n    const failure = new Error)/u)?.[0] ?? "";
   assert.match(captureFailure, /window\.__PHASE_G_LAST_COMBAT_SNAPSHOT__/u);
   assert.match(captureFailure, /v100-phase-g-causal-no-further-page-rpc\/v1/u);
   assert.match(captureFailure, /allowPageRpc: false/u);
@@ -801,10 +913,11 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.match(captureState, /phaseGBrowserSessionForCapture\(browser, browserPolicy\)/u);
   assert.match(captureState, /browserSession, hostResourceTelemetry \}\)/u);
   assert.match(captureState, /reactionHistory: observedCombatActivity\.reactionHistory \?\? \[\]/u);
-  assert.match(captureState, /let combatCausalProof = null;[\s\S]*let causalPageRpcSealed = false;[\s\S]*?try \{[\s\S]*combatCausalProof = await runPhaseGTelemetryOperation\([\s\S]*collectCombatCausalProof\([\s\S]*catch \(error\) \{[\s\S]*phaseGCausalNoFurtherPageRpc[\s\S]*finally \{[\s\S]*!causalPageRpcSealed[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
+  assert.match(captureState, /let phaseGCaptureTransaction = null;[\s\S]*let screenshot = null/u);
+  assert.match(captureState, /let combatCausalProof = null;[\s\S]*let causalPageRpcSealed = false;[\s\S]*?try \{[\s\S]*combatCausalProof = await runPhaseGTelemetryOperation\([\s\S]*collectCombatCausalProof\([\s\S]*catch \(error\) \{[\s\S]*phaseGCausalNoFurtherPageRpc[\s\S]*throw error;[\s\S]*finally \{[\s\S]*!causalPageRpcSealed[\s\S]*window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/u);
   assert.match(captureState, /requiredPostEpochActorKeys,[\s\S]*postQuiescenceExactActorProof\?\.accepted === true[\s\S]*collection\?\.converged === true/u);
-  assert.match(captureState, /"phase-g\/observer-stop"[\s\S]*"phase-g\/production-screenshot"[\s\S]*v100-phase-g-release-deadline-receipt\/v1[\s\S]*withinReleaseDeadline === true/u);
-  assert.equal((captureState.match(/window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/gu) ?? []).length, 1);
+  assert.match(captureState, /"phase-g\/production-screenshot"[\s\S]*v100-phase-g-release-deadline-receipt\/v1[\s\S]*__PHASE_G_ATTACH_SCREENSHOT_RECEIPT__[\s\S]*withinReleaseDeadline === true[\s\S]*SCREENSHOT_RECEIPT_ACCEPTED[\s\S]*"phase-g\/observer-stop"/u);
+  assert.equal((captureState.match(/window\.__PHASE_G_COMBAT_OBSERVER__\?\.stop\?\.\(\)/gu) ?? []).length, 2);
   assert.ok(captureState.indexOf("combatCausalProof = await runPhaseGTelemetryOperation")
     < captureState.indexOf("window.__PHASE_G_COMBAT_OBSERVER__?.stop?.()"));
   assert.match(captureState, /if \(browserPolicy\.closeAfterCapture\) \{[\s\S]*await resetPhaseGBrowser\(engineName\)[\s\S]*\}/u);
@@ -828,10 +941,26 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
     "phase-g/final-diagnostics",
   ]) assert.match(captureState, new RegExp(operation.replaceAll("/", "\\/"), "u"));
   assert.ok(captureState.indexOf('"phase-g/configure"') < captureState.indexOf('"phase-g/production-contract-readback"'));
-  assert.ok(captureState.indexOf('"phase-g/causal-proof"') < captureState.indexOf('"phase-g/observer-stop"'));
-  assert.ok(captureState.indexOf('"phase-g/observer-stop"') < captureState.indexOf('"phase-g/production-screenshot"'));
+  assert.ok(captureState.indexOf('"phase-g/causal-proof"') < captureState.indexOf('"phase-g/production-screenshot"'));
+  assert.ok(captureState.indexOf('"phase-g/production-screenshot"') < captureState.indexOf('"phase-g/observer-stop"'));
+  assert.ok(captureState.indexOf("screenshot.releaseDeadlineReceipt = releaseDeadlineReceipt")
+    < captureState.indexOf('"phase-g/observer-stop"'));
   assert.ok(captureState.indexOf('"phase-g/production-screenshot"') < captureState.indexOf('"phase-g/overflow-audit"'));
+  assert.ok(captureState.indexOf('"phase-g/observer-stop"') < captureState.indexOf('"phase-g/overflow-audit"'));
   assert.ok(captureState.indexOf('"phase-g/overflow-audit"') < captureState.indexOf('"phase-g/runtime-readback"'));
+  const captureTransactionWriter = source.match(/async function writePhaseGCaptureTransaction[\s\S]+?(?=\nasync function phaseGBrowser)/u)?.[0] ?? "";
+  assert.match(captureTransactionWriter, /v100-phase-g-capture-transaction\/v1/u);
+  assert.match(captureTransactionWriter, /proofEpoch: cloneDiagnosticValue\(proofEpoch\)/u);
+  assert.match(captureTransactionWriter, /screenshot: cloneDiagnosticValue\(screenshot\)/u);
+  assert.match(captureTransactionWriter, /browserSession: cloneDiagnosticValue\(browserSession\)/u);
+  assert.match(captureTransactionWriter, /cleanupOutcome/u);
+  assert.equal((captureState.match(/writePhaseGCaptureTransaction\(\{/gu) ?? []).length, 2);
+  assert.match(captureState, /proofEpoch\.state === "CLEANED"[\s\S]*proofEpoch\.cleanupReceipt\.outcome === "success"/u);
+  assert.match(captureState, /__PHASE_G_FAIL_PROOF_TRANSACTION__[\s\S]*__PHASE_G_COMBAT_OBSERVER__\?\.stop[\s\S]*__PHASE_G_CLEAN_PROOF_TRANSACTION__/u);
+  assert.match(captureState, /PHASE_G_CAPTURE_TRANSACTION_PAGE_RPC_SEALED/u);
+  assert.match(captureState, /failureProofEpoch\?\.state !== "CLEANED_AFTER_FAILURE"/u);
+  assert.match(captureState, /PHASE_G_FAILURE_DIAGNOSTICS_PERSISTENCE_FAILED[\s\S]*v100-phase-g-failure-diagnostics-unavailable\/v1[\s\S]*allowPageRpc: false/u);
+  assert.match(source, /stop: \(\) => \{[\s\S]*window\.clearInterval\(timer\);[\s\S]*try \{[\s\S]*observe\(\);[\s\S]*finally \{[\s\S]*__PHASE_G_CLEAN_PROOF_TRANSACTION__[\s\S]*__PHASE_G_COMBAT_OBSERVER__ = null/u);
   for (const event of ["page-created", "page-crash", "page-close", "context-close", "browser-disconnect", "context-cleanup-begin", "browser-cleanup-begin"]) {
     assert.match(captureState, new RegExp(`hostResourceTelemetry\\?\\.event\\("${event}"`, "u"));
   }
@@ -962,7 +1091,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal((source.match(/(?:recorder|recorder\?)\.markOnce\("living-human-target-acquired-or-not-required"/gu) ?? []).length, 2);
   assert.match(captureState, /checkpointRecorder\?\.markOnce\("proof-actor-mounted-or-absent"[\s\S]*checkpointRecorder\?\.markOnce\("living-human-target-acquired-or-not-required"/u);
   assert.match(source, /proofActorAttackObserved = proofActor === null;[\s\S]*proofUnitAttackObserved = proofUnitKind === null;/u);
-  assert.match(source, /observedPostEpochAttack === true/u);
+  assert.match(source, /postQuiescenceExactActorProof\?\.accepted === true/u);
   assert.match(source, /exact post-quiescence actor proof failed inside the single release deadline/u);
   assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("proof-actor-mounted-or-absent"/u);
   assert.doesNotMatch(source, /(?:recorder|recorder\?)\.mark\("living-human-target-acquired-or-not-required"/u);
@@ -1176,6 +1305,7 @@ test("Phase G statically owns all deployment pointers, overlap locks, cursor fre
   assert.equal(boundedHistory.history.targetOwnershipHistory[0].targetId, "human-0");
   assert.equal(boundedHistory.history.targetOwnershipHistory[95].targetId, "human-95");
   assert.equal(boundedHistory.humanTarget.targetId, "human-0");
+  assert.complete();
 });
 
 test("r14 pointer precondition accepts scheduler-independent samples with pending or observed rAF and an immediate terminal recheck", () => {

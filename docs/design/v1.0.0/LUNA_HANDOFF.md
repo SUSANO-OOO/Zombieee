@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r97`
+- Canonical Design Lock: `V100-SOL-DL-001 r104`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-105 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 106 is the sole current execution handoff.
+Sections 1-112 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 113 is the sole current execution handoff.
 
 ## 1. Branch and PR contract
 
@@ -3052,3 +3052,217 @@ Hosted must observe the exact successor generation's first real suppressed produ
 Run the exact Section 113.6 final-byte sequence once. Complete full Hosted WebKit and all-eight-unit bounded deployment 667x375 before content/full/lint/build/static gates. Create exactly one normal nine-path commit with message `test: close r97 evidence transaction boundaries`; transport it only through the authenticated-admin nine-blob/one-tree/one-direct-parent-commit sequence and one `force: false` ref update. Any first local, object, ref, read-back, automatic-CI, dependency, or artifact red returns to `SOL_DESIGN` without retry, second trigger, micro-patch, rerun, dispatch, or release action.
 
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — execute only Design Lock r97 Section 113. Finish the one ordered final-byte local sequence across the exact nine paths; preserve product, workflow, timing, thresholds, attempts, protected manifests, and untracked evidence. Commit once as `test: close r97 evidence transaction boundaries`, perform one authenticated-admin nine-blob/tree/direct-parent object fast-forward with `force: false`, read back exact tree/parent/message/nine paths, and observe only its one automatic focused CI. Any red or uncertainty returns to SOL_DESIGN without retry or second trigger. Complete green alone unlocks workflow-only iteration 34.**
+
+## 107. Revision r98 — exact-frame successor ownership and strict direct-contact causal join
+
+Design Lock Section 114 and Issue #172's explicitly labeled r98 entry are the sole active cursor. Sections 1-106 remain history. PR #171 is Draft/open/unmerged at audited HEAD/tree `955bf287fa305d3d940a56a15bdb203f062ca27c` / `4b678ec0e503afaaef25ea92efe5ed61ee70333a`. Automatic focused CI #946 / `33021840645` is terminal: 12 jobs green, Hosted `98356728084`, Phase G `98358338163`, and deployment 844x340 `98357986177` red, with Stage 3 and canonical viewport dependency-skipped. Retry, rerun, dispatch, second push, and release mutation are zero. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R98_COHERENT_QA_EVIDENCE_JOIN_PACKET_ACTIVE`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `FAILED_GATE`: automatic focused CI #946 / `33021840645`; three required QA jobs red, 12 green, two dependency-skipped, retry/rerun 0
+- `LAST_GREEN_GATE`: r97 final local acceptance plus remote PR Verify, six enemy-runtime shards, and five deployment viewports green
+- `CLASSIFICATION`: `THREE INDEPENDENT QA EVIDENCE JOIN GAPS / HOSTED EXACT-FRAME SUCCESSOR ARM + DEPLOYMENT EXACT-FRAME EVIDENCE ARM + PHASE_G DIRECT-CONTACT OBSERVABLE JOIN / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT QA EVIDENCE JOIN PACKET / SAME_RAF EXACT-FRAME SUCCESSOR ARM FOR HOSTED+DEPLOYMENT + STRICT ATOMIC EXACT-ACTOR DIRECT-CONTACT RECEIPT / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r98 local/commit/transport/read-back/automatic-CI red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r97 material iteration 33 closed; r98 is material iteration 34; complete automatic focused green alone unlocks exact-two-path workflow-only iteration 35
+- `SAME_GATE_REPEAT_COUNT`: `21`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-ten r98 implementation and ordered first-attempt acceptance -> one exact-ten local commit and one authenticated-admin non-force object fast-forward -> observe only one automatic focused CI -> focused green only -> exact-two-path unfiltered restoration -> unfiltered local/remote Phase G 54/54 -> same-HEAD audits/freeze/fixed-HEAD SOL_FINAL_REVIEW -> one FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT -> explicit-approval-only release tail
+
+The exact material-iteration-34 allowlist is:
+
+1. `scripts/v0995-visual-integrity-browser-smoke.mjs`
+2. `scripts/v099-final-remediation-browser-smoke.mjs`
+3. `scripts/v100-phase-g-production-matrix.mjs`
+4. `tests/v0995-runtime-evidence-contract.test.mjs`
+5. `tests/v100-phase-g-checkpoint.test.mjs`
+6. `tests/v100-r11-combat-causal-history.test.mjs`
+7. `docs/design/v1.0.0/DESIGN_LOCK.md`
+8. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+9. `docs/PROJECT_STATE.md`
+10. `tests/v100-design-lock.test.mjs`
+
+No eleventh path, `app/**`, workflow, `tests/ci-contract.test.mjs`, package/lock, product/gameplay/balance/AI/combat timing, timeout, duration, attempt, viewport, acceptance threshold, asset/public/PWA, evidence output, or release byte is allowed. Keep every `tmp-r97-*` and `tmp-r98-*` directory untracked and preserve the original protected manifests.
+
+Within the exact ready rAF, Hosted and deployment arm their next real owner before resolving the restored-frame Promise, return that arm in the restored receipt, and host-validate owner/route/generation/exact entered frame. Hosted retains same-page real suppression observation; final release arms no successor. Deployment retains exact three frames, evidence suppression/readback, all six audits, six PNGs, one sheet, hashes, and all predicates.
+
+Phase G may add only `v100-phase-g-exact-actor-direct-contact/v1` and channel `exact-actor-direct-contact`, requiring the first exact baseline-to-baseline+1 sequence, exact alive source, direct opposite-side live target with no fallback, actual authored source presentation, same-snapshot identity-bound target reaction, finite in-deadline times, and exact v5 target/sequence/time equality. Generic source, target ownership, cue/audio, damage text, stale/mismatched reaction, fallback target, or fabricated identity stays red. The r11 causal-history suite remains four tests and includes the valid 4/4 fixture plus every locked negative substitution.
+
+Run the Section 114.5 final-byte order once: source/static/integrity; Hosted mission/delay 844x340 power-3; Mayo-chan deployment 844x340; three fresh Stage 24 standalone plus three fresh ordered Stage 6/24/25 processes; then full Hosted, all-eight-unit bounded deployment 844x340, content, complete tests, lint, build, and repeat integrity. A first red returns to `SOL_DESIGN` without retry or commit.
+
+Full green alone permits the preserved local r97 parent `3acf1b2761cb82312b870768bd68db829a62e142`, one exact-ten-path commit named `test: close r98 exact-frame and direct-contact joins`, and one ten-blob/tree/direct-parent object fast-forward onto unchanged remote parent `955bf287fa305d3d940a56a15bdb203f062ca27c` with exactly one `force: false` ref update. Read back exact tree/parent/message/ten paths and observe only its one automatic run. Any red or uncertainty stops.
+
+Focused green alone unlocks workflow-only iteration 35 with exactly `.github/workflows/ci.yml` and `tests/ci-contract.test.mjs`, restoring and asserting unfiltered `npm run qa:v100-phase-g`, validator, artifact, and absence of focused env/loop. Then require unfiltered local/remote Phase G 54/54, same-HEAD production/runtime/human audits, evidence freeze, and fixed-HEAD `SOL_FINAL_REVIEW`. Stop exactly once at `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit approval alone unlocks the release tail.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION owns Design Lock r98 Section 114. Apply only the exact ten-path QA evidence-join packet: same-rAF exact-frame successor arm in Hosted and deployment, plus strict atomic exact-actor direct-contact receipt in Phase G. Keep every product, timing, timeout, attempt, viewport, threshold, workflow, protected-manifest, and release byte fixed. Run the ordered first-attempt acceptance once; any red returns to SOL_DESIGN without retry. Green alone permits one exact-ten commit and one non-force object fast-forward, then observe only its automatic focused CI.**
+
+## 108. Revision r99 — accepted proof screenshot before observer cleanup
+
+Design Lock Section 115 and Issue #172's explicitly labeled r99 entry are the sole active cursor. Section 107 is completed design history. PR #171 remains Draft/open/unmerged at audited remote HEAD/tree `955bf287fa305d3d940a56a15bdb203f062ca27c` / `4b678ec0e503afaaef25ea92efe5ed61ee70333a`; r98 was not committed or transported. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R99_ACCEPTED_PROOF_SCREENSHOT_ORDER_PACKET_ACTIVE`
+- `FAILED_GATE`: first r98 local Stage 24 WebKit 736x414 standalone; exact actor/direct-contact and causal 4/4 green, screenshot receipt late only after observer-stop consumed 3,305 ms; retry/rerun 0
+- `LAST_GREEN_GATE`: final r98 source/static plus first focused Hosted power-3 and deployment Mayo-chan exact routes; Stage 24 proof through `causal-proof-complete`
+- `CLASSIFICATION`: `QA_HARNESS_ACCEPTED_PROOF_TO_SCREENSHOT_ORDERING / 3305MS FINAL_OBSERVER_STOP PRECEDED 351MS PRODUCTION SCREENSHOT AND EXHAUSTED THE UNCHANGED RELEASE DEADLINE / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `IMMEDIATE ACCEPTED_PROOF SCREENSHOT + RELEASE_DEADLINE RECEIPT BEFORE OBSERVER_STOP FINALLY CLEANUP / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r99 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: uncommitted r98/r99 cumulative packet remains material iteration 34; complete automatic focused green alone unlocks exact-two-path workflow-only iteration 35
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: final source/static -> fresh Stage 24 standalone 3/3 -> three fresh ordered Stage 6/24/25 sequences 9/9 -> full Hosted/deployment/content/full/lint/build/static -> one exact-ten commit and one non-force object fast-forward -> one automatic focused CI
+
+Keep the observer live through every unchanged causal sample, eight-sample/2,400-ms minimum, exact actor/direct-contact decision, causal acceptance, and checkpoint construction. After acceptance, take the existing production screenshot immediately, read and attach the actual after-screenshot `v100-phase-g-release-deadline-receipt/v1`, require it green, and mark `screenshot-saved`; only then stop the observer in `finally`, still before overflow/runtime/final diagnostics. Preserve the sealed-RPC guard and normal failure cleanup. Do not move the deadline, extend duration/timeout, remove the final observe, change screenshot count, accept the proof time as screenshot time, alter product code, or weaken any causal/evidence predicate.
+
+The exact ten-path allowlist is unchanged from r98. Hosted/deployment focused scripts and their accepted source/runtime bytes remain untouched, so do not repeat the focused power-3 or Mayo route; later full Hosted and all-eight-unit deployment remain mandatory. Run Phase G source and all static contracts, then Stage 24 three fresh first-attempt processes and three fresh ordered trio processes. Any first red stops without retry or commit. Full green alone permits one exact-ten local commit named `test: close r99 accepted-proof screenshot ordering`, one ten-blob/direct-parent commit and exactly one `force: false` ref update onto unchanged remote `955bf287fa305d3d940a56a15bdb203f062ca27c`, exact read-back, and observation of only its automatic focused CI.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION executes only Design Lock r99 Section 115. Preserve the accepted r98 Hosted/deployment bytes and strict direct-contact proof. Put the one production screenshot and its real deadline receipt immediately after accepted proof and before observer-stop cleanup; change no product, deadline, duration, timeout, attempt, viewport, threshold, screenshot, workflow, or release byte. Run the locked first-attempt Phase G sequence once. Any red returns to SOL_DESIGN; full green alone permits the one exact-ten transport and automatic focused CI.**
+
+Complete focused green alone resumes the unchanged workflow-only restoration, unfiltered local/remote Phase G 54/54, same-HEAD runtime/human audits, final evidence freeze, and fixed-HEAD `SOL_FINAL_REVIEW`. Stop exactly once at `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; no Ready, stacked integration, merge, tag, GitHub Release, official Pages, public QA mutation, closure, or `/goal COMPLETE` is allowed before explicit Producer approval.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 109. Revision r100 — no active Luna handoff / structural Phase G evidence state machine
+
+Design Lock Section 116 and Issue #172's explicitly labeled r100 entry are the sole active cursor. Section 108 is completed r99 history. PR #171 remains Draft/open/unmerged at audited remote HEAD/tree `955bf287fa305d3d940a56a15bdb203f062ca27c` / `4b678ec0e503afaaef25ea92efe5ed61ee70333a`; r98-r100 remain one uncommitted cumulative material iteration. `NO ACTIVE LUNA HANDOFF`; SOL single-owner remains active.
+
+- `STATUS`: `DESIGN_LOCKED / R100_PAGE_OWNED_PHASE_G_EVIDENCE_STATE_MACHINE_PACKET_ACTIVE`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `FAILED_GATE`: first r99 ordered WebKit process, Stage 25 only, after Stage 6 and Stage 24 green; normal release-candidate invalidation was unmodeled and a later real same-sequence shield contact was rebound to the canceled candidate; retry/rerun 0
+- `LAST_GREEN_GATE`: r99 source/static; fresh Stage 24 standalone 3/3 with accepted proof -> screenshot -> actual deadline receipt -> cleanup; ordered process 1 Stage 6 and Stage 24 green
+- `CLASSIFICATION`: `QA_HARNESS_DISTRIBUTED_MUTABLE_EVIDENCE_STATE / NORMAL_RELEASE_CANDIDATE_INVALIDATION_UNMODELED + LATER_SAME_SEQUENCE_CONTACT_MISBOUND / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL_PAGE_OWNED_PHASE_G_EVIDENCE_STATE_MACHINE / EXPLICIT_CANDIDATE_INVALIDATION + IMMUTABLE_ACCEPTED_WITNESS + SEALED_CAPTURE_TRANSACTION / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r100 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: cumulative r98/r99/r100 remains material iteration 34; complete automatic focused green alone unlocks workflow-only iteration 35
+- `SAME_GATE_REPEAT_COUNT`: `21`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: implement Section 116 v6 on the preserved r99 draft -> source/static -> Stage 24 standalone 3/3 -> ordered Stage 6/24/25 three fresh processes 9/9 -> full Hosted/deployment/content/full/lint/build/static -> one exact-ten commit and non-force object fast-forward -> one automatic focused CI
+
+Implement only the page-owned `v100-phase-g-post-quiescence-proof/v6` transaction in `scripts/v100-phase-g-production-matrix.mjs` and its two existing Phase G source tests. The v2 release readiness is preparation-only. v6 is the sole exact-evidence owner and has monotonic success states `OBSERVING -> WITNESS_ACCEPTED -> SCREENSHOT_RECEIPT_ACCEPTED -> CLEANED`; before `CLEANED`, any active state has exactly one failure edge to `FAILED -> CLEANED_AFTER_FAILURE`, preserving already-frozen witness/screenshot receipts. Host samples, generic history, checkpoints, and diagnostics are read-only snapshots and cannot mutate or select an exact witness.
+
+Freeze the first configured actor as the sole same-task `release-anchor` candidate. If its unchanged-sequence production windup clears or retargets before contact, freeze an `INVALIDATED` receipt and wait inside the same epoch/deadline. At unchanged sequence/target, a positive windup strictly greater than the frozen late-windup anchor proves an inter-sample clear/restart; invalidate the old candidate and use that snapshot only as successor sample 1. Its successor is eligible only for the same alive fighter, same baseline sequence, same original living direct target, and the unchanged two-distinct-frame strictly decreasing positive windup ending at most `1 / 12`; contact remains baseline+1 inside the unchanged `0.8833333333333334` candidate-relative window. A later `supporting-prerequisite` actor instead starts in `WAITING_SEQUENCE` with its already qualified selected fighter, baseline, and cue cutoff frozen at release; its release-time target is diagnostic only, and its first post-release baseline+1 exact contact uses the current living opposite-side direct target plus the existing deadline and strict presentation/reaction/cue rules, without a new target lock, windup, or release-anchor commit-window requirement. No actor may switch fighter; null/fallback/dead/same-side contact, missing release-anchor candidate, sequence jump, deadline/window overrun, or invalid identity fails closed. Once accepted, the witness is immutable.
+
+Preserve the r99 order exactly: accepted proof -> one production screenshot -> actual after-screenshot deadline receipt and `SCREENSHOT_RECEIPT_ACCEPTED` -> observer-stop/finally cleanup -> overflow/runtime/final diagnostics. Before browser close, persist one `v100-phase-g-capture-transaction/v1` JSON containing the sealed v6 snapshot, screenshot metadata/receipt when present, checkpoints, cleanup, browser identity, and all fatal diagnostics. It is not a new screenshot or retry surface.
+
+Relative to the r99 draft, change only the Phase G script, Phase G checkpoint test, r11 causal-history test, and four governance files. Keep the accepted Hosted/deployment script/runtime-test bytes fixed and the cumulative diff exactly the existing ten paths. No eleventh path, `app/**`, workflow, package/lock, asset, product/gameplay/AI/balance/attack timing, timeout, duration, attempt/retry, viewport, threshold, screenshot inventory, or release change is permitted. Keep all evidence directories untracked and all protected manifests unchanged.
+
+Run the Section 116.7 order once. At the first red or uncertainty, stop immediately at `SOL_DESIGN`; do not rerun, retry, dispatch, micro-patch, advance revision, or execute the next ordinal. Full green alone permits one exact-ten commit named `test: close r100 page-owned Phase G evidence state machine`, one authenticated-admin ten-blob/tree/direct-parent object fast-forward with exactly one `force: false` ref update, exact remote read-back, and observation of only its automatic focused CI.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION executes only Design Lock r100 Section 116. Replace distributed mutable Phase G witness ownership with the single page-owned v6 transaction; model normal same-sequence candidate invalidation without weakening the exact contact; preserve the r99 screenshot-before-cleanup order and seal one capture transaction before browser close. Keep product, workflow, timing, attempts, viewports, thresholds, screenshots, accepted Hosted/deployment bytes, protected manifests, and release bytes fixed. Run the exact first-attempt sequence once. Any red returns to SOL_DESIGN with no retry or micro-patch.**
+
+Complete automatic focused green alone resumes the unchanged exact-two workflow restoration, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, and fixed-HEAD `SOL_FINAL_REVIEW`. Stop exactly once at `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; no Ready, stacked integration, merge, tag, GitHub Release, official Pages, public QA mutation, closure, or `/goal COMPLETE` is allowed before explicit Producer approval.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 110. Revision r101 — strict v6 numeric receipt domain
+
+Canonical design is `V100-SOL-DL-001 r101` Section 117. The first formal r100 source gate stopped at `18/19` because the negative exact-audio fixture set `observedAtPageTime` to `null` and the host validator accepted JavaScript's `Number(null) === 0` coercion. No browser, rerun, correction, commit, transport, or CI followed. Issue #172 comments `5433664869` and `5433678534` own the stop and design decision.
+
+- `STATUS`: `DESIGN_LOCKED / R101_STRICT_V6_RECEIPT_DOMAIN_ACTIVE`
+- `FAILED_GATE`: r100 formal focused source `18/19`, `tests/v100-phase-g-checkpoint.test.mjs:743`
+- `LAST_GREEN_GATE`: r100 formal syntax `3/3`; eighteen focused cases before suite red
+- `CLASSIFICATION`: `QA_HARNESS_V6_NUMERIC_RECEIPT_DOMAIN_FAIL_OPEN / JAVASCRIPT_NUMBER_COERCION_ACCEPTS_NULL_AS_ZERO / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRICT_FINITE_NUMBER_RECEIPT_DOMAIN / HOST_AND_PAGE_SCHEMA_BOUNDARY_VALIDATION + EXHAUSTIVE_NEGATIVE_SUBSTITUTION_MATRIX / QA_HARNESS_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r101 red returns to `SOL_DESIGN`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact r101 strict numeric receipt-domain correction on the preserved r100 draft, then restart the one-shot M3 source/static sequence
+
+Change no product byte. In `scripts/v100-phase-g-production-matrix.mjs`, create exactly one host helper and one page-owned global helper with identical `typeof value === "number" && Number.isFinite(value)` semantics. Apply them to all required v6 epoch/release-anchor/witness/audio/candidate/direct-contact/screenshot-deadline numeric fields listed in Section 117.2. Preserve every existing range, equality, sequence, target, deadline, threshold, candidate window, screenshot, cleanup, timeout, duration, viewport, and attempt rule. Optional presentation/reaction numbers may be absent only when the unchanged animation/VFX branch proves the same authored presentation or identity-bound reaction.
+
+In `tests/v100-phase-g-checkpoint.test.mjs`, add one table-driven negative substitution matrix for every required numeric field family using `null`, numeric string, boolean, `NaN`, `Infinity`, and `-Infinity`; retain all current negatives and the valid fixture. Lock identical host/page predicates and fail-closed epoch-install/screenshot-attachment checks. Keep `tests/v100-r11-combat-causal-history.test.mjs` exactly four cases and byte-identical to the stopped r100 draft.
+
+The cumulative candidate remains exact ten paths and material iteration 34. Relative to r100, only the Phase G script/test and the four canonical design/cursor paths may change. The three r98 byte locks, untracked evidence, protected manifests, `app/**`, workflow/CI contract, package/lock, product/gameplay/AI/balance/timing, timeout/duration/attempt/retry, viewport, threshold, screenshot, asset, evidence, and release contracts are frozen.
+
+After correction, execute once from source/static, then Stage 24 standalone `3/3`, ordered Stage 6 -> Stage 24 -> Stage 25 three processes `9/9`, full Hosted/deployment/content/full/lint/build/static, one exact-ten commit `test: close r101 strict v6 receipt domain`, one non-force object fast-forward, exact read-back, and one automatic focused CI. First red returns to `SOL_DESIGN` without rerun/edit/next ordinal. Complete focused green alone unlocks workflow-only iteration 35 and the unchanged single final Producer checkpoint release tail.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — execute V100-SOL-DL-001 r101 Section 117 only. Close the entire strict finite-number v6 receipt domain with the exact host/page predicates and exhaustive negative matrix; preserve the r100 state machine and every product/acceptance/timing byte; then restart the prescribed one-shot M3 gates. First red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone resumes the unchanged workflow restoration, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, and fixed-HEAD `SOL_FINAL_REVIEW`. Stop exactly once at `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail.
+
+## 111. Revision r102 — shared v6 test-contract owner
+
+Canonical design is `V100-SOL-DL-001 r102` Section 118. The first formal r101 source run stopped at `17/19`: one checkpoint assertion still required the removed coercive audio-filter literal, and the byte-frozen r11 positive exact-contact fixture lacked newly required numeric receipt fields. No browser, rerun, edit, commit, transport, or CI followed. Issue #172 comments `5433869574` and `5433884179` own the stop, subsystem audit, and structural decision.
+
+- `STATUS`: `DESIGN_LOCKED / R102_SHARED_V6_TEST_CONTRACT_ACTIVE`
+- `FAILED_GATE`: r101 first formal focused source `17/19`
+- `LAST_GREEN_GATE`: r101 final-byte syntax `3/3`
+- `CLASSIFICATION`: `QA_HARNESS_V6_CONTRACT_OWNERSHIP_SPLIT / STATIC_LITERAL_ASSERTION_STALE + CROSS_SUITE_VALID_FIXTURE_SCHEMA_DRIFT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SHARED_V6_TEST_CONTRACT_OWNER / SEMANTIC_SOURCE_ASSERTION + CANONICAL_VALID_FIXTURE_FACTORY + REQUIRED_NUMERIC_PATH_CATALOG / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NOT_YET_FORMALLY_PROVEN`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r102 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 34 remains uncommitted; complete automatic focused green alone unlocks workflow-only iteration 35
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: add the shared pure v6 test-contract owner while keeping the stopped r101 runtime script byte-identical, then restart the one-shot M3 sequence
+
+Add only `tests/fixtures/v100-phase-g-v6-contract.mjs` as the single pure owner of the parameterized valid v6 exact-contact epoch, required numeric path catalog, screenshot/deadline receipt attachment, and mutation setter. Migrate both Phase G checkpoint and r11 causal-history tests to that owner. Keep Phase G at twelve tests, r11 at exactly four semantic tests, all positive/negative acceptance unchanged, and replace only the stale coercive source literal with a semantic strict-helper/filter assertion.
+
+During implementation, `scripts/v100-phase-g-production-matrix.mjs` must remain exactly `354897` bytes with SHA-256 `c3c1fffd7bba54a3243a8463db390e4b8c0354a0b9bbf66925de49334076e9eb`. The cumulative candidate is exact eleven paths. No product, workflow, timing, timeout, attempt, viewport, threshold, screenshot, asset, evidence, protected-manifest, or release byte may change.
+
+After correction, run once in the Section 118.3 order through source/static, Stage 24 `3/3`, ordered trio `9/9`, full local acceptance, one exact-eleven commit `test: close r102 shared v6 contract ownership`, one non-force object fast-forward, exact read-back, and one automatic focused CI. First red stops without retry or edit.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r102. Introduce the one shared pure v6 fixture/path owner, migrate both source suites without changing semantic acceptance, keep the stopped r101 runtime script byte-identical, and restart the prescribed one-shot M3 gates. Any red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone resumes the unchanged workflow restoration, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks the release tail.
+
+## 112. Revision r103 — complete Phase G static-contract audit
+
+Canonical design is `V100-SOL-DL-001 r103` Section 119. The first formal r102 focused run stopped at `18/19` after syntax `3/3`: runtime-evidence `3/3`, Phase G `11/12`, and r11 `4/4`. The sole red was an empty failure-diagnostics source region anchored to removed pre-r100 destructuring. Issue #172 comments `5433979974` and `5434004186` own the stop, subsystem audit, and structural decision.
+
+- `STATUS`: `DESIGN_LOCKED / R103_COMPLETE_STATIC_CONTRACT_AUDIT_ACTIVE`
+- `FAILED_GATE`: r102 first formal focused source `18/19`
+- `LAST_GREEN_GATE`: r102 final-byte syntax `3/3`
+- `CLASSIFICATION`: `QA_HARNESS_PHASE_G_STATIC_CONTRACT_OBSERVABILITY_FAILURE / MONOLITHIC_FAIL_FAST_MASKING + STALE_FAILURE_REGION_ANCHOR / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COMPLETE_STATIC_CONTRACT_AUDIT / COLLECT_ALL_ASSERTION_RECEIPTS + STABLE_FAILURE_STATE_REGION_OWNER / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `R102_INTENDED_FIXES_GREEN / M3_NOT_YET_FORMALLY_PROVEN`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r103 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 34 remains uncommitted; complete automatic focused green alone unlocks workflow-only iteration 35
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: add the complete static assertion receipt and unique current failure-state region boundary while keeping the r102 shared fixture packet and stopped runtime byte-identical, then restart the one-shot M3 sequence
+
+Change only the existing Phase G checkpoint test beyond the four canonical design/cursor paths. Add a local collector for its existing five assertion methods, shadow it only inside the 951-line static case, preserve every assertion, and require an empty aggregate receipt. Replace only the stale failure-region start with `let failureState = null;`; retain the terminal error boundary and all diagnostic assertions. All other tests and subprocess/runtime gates remain fail-fast.
+
+During implementation, `scripts/v100-phase-g-production-matrix.mjs` must remain exactly `354897` bytes with SHA-256 `c3c1fffd7bba54a3243a8463db390e4b8c0354a0b9bbf66925de49334076e9eb`. Retain the r102 shared module and r11 file unchanged. The cumulative candidate remains exact eleven paths. No product, workflow, timing, timeout, attempt, viewport, threshold, screenshot, asset, evidence, protected-manifest, or release byte may change.
+
+After correction, run once in the Section 119.3 order through source/static, Stage 24 `3/3`, ordered trio `9/9`, full local acceptance, one exact-eleven commit `test: close r103 complete static contract audit`, one non-force object fast-forward, exact read-back, and one automatic focused CI. First red stops without retry or edit.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r103. Add the complete static-contract receipt and current failure-state region owner, retain the r102 shared fixture packet and every runtime/acceptance byte, then restart the prescribed one-shot M3 gates. Any red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone resumes the unchanged workflow restoration, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 113. Revision r104 — single-source v7 causal event machine
+
+Canonical design is `V100-SOL-DL-001 r104` Section 120. r103 passed its complete source/static sequence and Stage 24 standalone `3/3`, then the first ordered process stopped at Stage 6 position 1. The production spitter committed exact sequence `0 -> 1`, emitted matching pending impact, requested the exact cue, and produced later same-target HP loss plus fresh reaction inside the fixed deadline. The v6 QA reducer alone rejected it because source commit and target reaction did not share one 40 ms snapshot.
+
+- `STATUS`: `DESIGN_LOCKED / R104_SINGLE_SOURCE_CAUSAL_EVENT_MACHINE_ACTIVE`
+- `FAILED_GATE`: r103 first ordered process, Stage 6 WebKit 667x375 at position 1
+- `LAST_GREEN_GATE`: r103 full source/static/Design/canonical/integrity and Stage 24 standalone `3/3`
+- `CLASSIFICATION`: `QA_HARNESS_PHASE_G_CAUSAL_EVENT_STATE_COLLAPSE / SOURCE_COMMIT + AUTHORED_TRAVEL + TARGET_CONTACT_REACTION_FORCED_IN_ONE_40MS_OBSERVER_SNAPSHOT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_SOURCE_V7_CAUSAL_EVENT_MACHINE / EXPLICIT SOURCE_COMMITTED -> IMPACT_PENDING -> WITNESS_ACCEPTED + IDENTICAL NODE/PAGE REDUCER / QA_HARNESS_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `R103_STATIC_CONTRACT_AND_STAGE24_DIRECT_PATH_GREEN / M3_NOT_YET_FORMALLY_PROVEN`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `955bf287fa305d3d940a56a15bdb203f062ca27c`
+- `LAST_AUDITED_TREE`: `4b678ec0e503afaaef25ea92efe5ed61ee70333a`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r104 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 34 remains uncommitted; complete automatic focused green alone unlocks workflow-only iteration 35
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: finish the Section 120 exact-thirteen shared v7 packet, then run the one-shot source/static -> Stage 24 `3/3` -> ordered Stage 6/24/25 `9/9` -> full local acceptance -> exact commit/non-force transport/one automatic focused CI sequence
+
+The only causal reducer source is `scripts/v100-phase-g-proof-machine.mjs`. The host imports it and the page evaluates that same factory source. Preserve strict `same-snapshot-direct`; allow `pending-impact` only through exact source/target/sequence transport, later HP decrease, fresh exact-target reaction, exact cue, no second sequence, and the original deadline. Preserve accepted-proof -> production screenshot -> deadline receipt -> observer-stop/finally cleanup. Do not change product/gameplay/AI/balance/attack timing, timeout/duration/attempt, viewport, threshold, screenshot, asset, package, evidence, workflow, or release contracts.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r104 Section 120. Finish the shared Node/page v7 causal event machine on the exact thirteen paths, preserve every product and acceptance boundary, then run the prescribed one-shot M3 sequence. Any first red returns to SOL_DESIGN without rerun, retry, edit, or next revision.**
+
+The one-shot source gate is exact: syntax `4/4`; focused runtime-evidence `3/3` + Phase G checkpoint `12/12` + r11 causal history `4/4` + proof-machine `13/13` = `32/32`; Design Lock `19/19`; the unchanged canonical six-file command `55/55`; then exact-thirteen/BOM/EOL/untracked/protected-manifest integrity. These are separate receipts even where a file is intentionally exercised twice.
+
+Complete automatic focused green alone resumes workflow-only iteration 35, unfiltered local/remote Phase G 54/54, same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.

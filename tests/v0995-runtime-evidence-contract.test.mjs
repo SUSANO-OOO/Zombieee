@@ -143,6 +143,9 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(mutableOwnerTransition, /phaseIdentityReady = initialPrearm[\s\S]*quiescence\?\.owner === null[\s\S]*quiescence\?\.route === null[\s\S]*Number\(quiescence\?\.generation\) === 0[\s\S]*quiescence\?\.owner === requestedOwner[\s\S]*quiescence\?\.route === "visual-integrity"[\s\S]*Number\(quiescence\?\.generation\) === Number\(previousGeneration\)/u);
   assert.match(mutableOwnerTransition, /requiredRenderFrameDelta = previousGeneration === null \? 2 : 3/u);
   assert.match(mutableOwnerTransition, /transitionPhase,[\s\S]*requiredRenderFrameDelta,[\s\S]*actualRenderFrameDelta: renderFrameDelta/u);
+  assert.equal((mutableOwnerTransition.match(/bridge\.setQaPresentationQuiesced\(true, requestedOwner\)/gu) ?? []).length, 1);
+  assert.match(mutableOwnerTransition, /if \(ready\) \{[\s\S]*let nextArm = null[\s\S]*nextArm = bridge\.setQaPresentationQuiesced\(true, requestedOwner\)[\s\S]*resolve\(\{[\s\S]*nextArm,[\s\S]*\}\)/u);
+  assert.match(mutableOwnerTransition, /const nextArm = restored\.nextArm/u);
   assert.match(mutableOwnerTransition, /Number\(nextArm\.generation\) === Number\(before\.generation\) \+ 1/u);
   assert.match(mutableOwnerTransition, /Number\(nextArm\.enteredAtRenderFrames\) === Number\(restored\.quiescence\.renderFrames\)/u);
   assert.match(mutableOwnerTransition, /const successorSuppression = await new Promise/u);
@@ -340,6 +343,9 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(presentationHarness, /requestAnimationFrame\(observe\)/u);
   assert.match(presentationHarness, /renderFrameDelta === 3/u);
   assert.match(presentationHarness, /renderFrameDelta > 3[\s\S]*deployment restoration exceeded exactly three production frames/u);
+  assert.equal((presentationHarness.match(/bridge\.setQaPresentationQuiesced\(true, evidenceOwner\)/gu) ?? []).length, 1);
+  assert.match(presentationHarness, /if \(ready\) \{[\s\S]*const evidencePresentation = bridge\.setQaPresentationQuiesced\(true, evidenceOwner\)[\s\S]*resolve\(\{[\s\S]*evidencePresentation,[\s\S]*\}\)/u);
+  assert.match(presentationHarness, /const evidencePresentation = restored\.evidencePresentation/u);
   assert.match(presentationHarness, /const evidencePresentation = bridge\.setQaPresentationQuiesced\(true, evidenceOwner\)/u);
   assert.match(presentationHarness, /Number\(evidencePresentation\.enteredAtRenderFrames\)[\s\S]*=== Number\(restored\.quiescence\.renderFrames\)/u);
   assert.match(presentationHarness, /v100-deployment-restoration-evidence-handoff\/v1/u);

@@ -17,6 +17,7 @@ import { RUNTIME_MAX_CATCH_UP_STEPS, RUNTIME_SIMULATION_STEP_SECONDS } from "../
 import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
+import { createV100PhaseGProofMachine } from "./v100-phase-g-proof-machine.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 matrix is local-only; refusing ${baseUrl}`);
@@ -33,13 +34,13 @@ const COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS = 2_000;
 const RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS = RUNTIME_SIMULATION_STEP_SECONDS
   * RUNTIME_MAX_CATCH_UP_STEPS;
 const RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS = RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS;
-
-function releaseAnchorCommitWindowSecondsFor(releaseAnchor) {
-  const attackWindupSeconds = Number(releaseAnchor?.attackWindupSeconds);
-  if (!Number.isFinite(attackWindupSeconds) || attackWindupSeconds <= 0) return null;
-  return Math.max(0.8, attackWindupSeconds + 0.5)
-    + RELEASE_ANCHOR_COMMIT_SCHEDULER_TOLERANCE_SECONDS;
-}
+const phaseGProofMachine = createV100PhaseGProofMachine({
+  runtimeSimulationStepSeconds: RUNTIME_SIMULATION_STEP_SECONDS,
+  runtimeMaxCatchUpSteps: RUNTIME_MAX_CATCH_UP_STEPS,
+});
+const phaseGProofMachineFactorySource = createV100PhaseGProofMachine.toString();
+const isFiniteReceiptNumber = phaseGProofMachine.isFiniteReceiptNumber;
+const releaseAnchorCommitWindowSecondsFor = phaseGProofMachine.releaseAnchorCommitWindowSecondsFor;
 const requiredViewports = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
@@ -741,188 +742,13 @@ function combatCausalConvergenceDecision(proof, {
   });
 }
 
-function postQuiescenceExactActorDecision(proofEpoch, {
-  requiredActorKeys = [],
-} = {}) {
-  const required = [...new Set(requiredActorKeys.filter((key) => typeof key === "string" && key.includes(":")))];
-  if (required.length === 0) {
-    return Object.freeze({
-      accepted: true,
-      schemaOk: proofEpoch === null || proofEpoch === undefined || proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5",
-      proofCompletedAtPageTime: null,
-      withinReleaseDeadline: true,
-      requiredActorKeys: [],
-      observedActorKeys: [],
-      missingActorKeys: [],
-      actors: [],
-    });
-  }
-  const schemaOk = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5";
-  const releaseAnchorExpectedKey = required[0] ?? null;
-  const releaseAnchor = schemaOk ? proofEpoch.releaseAnchor ?? null : null;
-  const releaseAnchorOk = releaseAnchor?.handoffValid === true
-    && releaseAnchor.actorKey === releaseAnchorExpectedKey
-    && releaseAnchor.releaseMode === "unconsumed-production-windup"
-    && releaseAnchor.fighterId !== null
-    && releaseAnchor.fighterId !== undefined
-    && Number.isFinite(Number(releaseAnchor.baselineAttackSequence))
-    && releaseAnchor.targetId !== null
-    && releaseAnchor.targetId !== undefined
-    && releaseAnchor.targetAlive === true
-    && Number(releaseAnchor.attackWindupSeconds) > 0
-    && Number(releaseAnchor.attackWindupSeconds) <= RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
-    && Number(releaseAnchor.lateWindupMaxSeconds) === RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
-    && Number(releaseAnchor.continuitySampleCount) >= 2
-    && Number(releaseAnchor.continuityFirstWindup) > Number(releaseAnchor.continuityLastWindup)
-    && Number(releaseAnchor.continuityLastWindup) === Number(releaseAnchor.attackWindupSeconds)
-    && Number(releaseAnchor.continuityLastBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
-    && Number.isFinite(Number(releaseAnchor.handoffAtBattleTime))
-    && Number.isFinite(Number(releaseAnchor.handoffAtPageTime))
-    && Number(releaseAnchor.handoffAtPageTime) === Number(proofEpoch.visibleProofStartedAt);
-  const actors = required.map((actorKey) => {
-    const splitAt = actorKey.indexOf(":");
-    const side = actorKey.slice(0, splitAt);
-    const kind = actorKey.slice(splitAt + 1);
-    const actor = schemaOk
-      ? proofEpoch.actors?.find((candidate) => candidate?.side === side && candidate?.kind === kind) ?? null
-      : null;
-    const baseline = actor?.fighterBaselines?.find((candidate) => (
-      String(candidate?.fighterId) === String(actor?.selectedFighterId)
-    )) ?? null;
-    const selectedIdentity = actor?.selectedFighterId !== null
-      && actor?.selectedFighterId !== undefined
-      && String(actor?.observedFighterId) === String(actor.selectedFighterId)
-      && String(baseline?.fighterId) === String(actor.selectedFighterId);
-    const sequenceAdvanced = Number.isFinite(Number(actor?.observedAttackSequence))
-      && Number.isFinite(Number(baseline?.baselineAttackSequence))
-      && Number(actor.observedAttackSequence) > Number(baseline.baselineAttackSequence);
-    const expectedTargetSide = side === "human" ? "zombie" : side === "zombie" ? "human" : null;
-    const targetValid = actor?.targetId !== null
-      && actor?.targetId !== undefined
-      && expectedTargetSide !== null
-      && actor?.targetSide === expectedTargetSide
-      && actor?.targetAlive === true;
-    const targetEvidenceSourceValid = actorKey === releaseAnchorExpectedKey
-      ? ["live-attacker-target", "release-anchor-bound-windup"].includes(actor?.targetEvidenceSource)
-      : actor?.targetEvidenceSource === "live-attacker-target";
-    const sourceAliveAtObservation = actor?.sourceAliveAtObservation === true;
-    const observedAtPageTime = actor?.observedAtPageTime ?? null;
-    const audioObservedAtPageTime = actor?.audioObservedAtPageTime ?? null;
-    const observedAtPageTimeFinite = observedAtPageTime !== null
-      && Number.isFinite(Number(observedAtPageTime));
-    const audioObservedAtPageTimeFinite = audioObservedAtPageTime !== null
-      && Number.isFinite(Number(audioObservedAtPageTime));
-    const cueValid = actor?.cueId
-      ? actor?.audioObserved === true && audioObservedAtPageTimeFinite
-      : true;
-    const releaseAnchorIdentityValid = actorKey !== releaseAnchorExpectedKey || (
-      releaseAnchorOk
-      && String(actor?.selectedFighterId) === String(releaseAnchor.fighterId)
-      && Number(baseline?.baselineAttackSequence) === Number(releaseAnchor.baselineAttackSequence)
-      && Number(actor?.observedAttackSequence) === Number(releaseAnchor.baselineAttackSequence) + 1
-      && String(actor?.targetId) === String(releaseAnchor.targetId)
-    );
-    const releaseAnchorCommitWindowSeconds = releaseAnchorOk
-      ? releaseAnchorCommitWindowSecondsFor(releaseAnchor)
-      : null;
-    const releaseAnchorCommitDeltaSeconds = actorKey === releaseAnchorExpectedKey
-      && releaseAnchorOk
-      && Number.isFinite(Number(actor?.observedAtBattleTime))
-      ? Number(actor.observedAtBattleTime) - Number(releaseAnchor.handoffAtBattleTime)
-      : null;
-    const releaseAnchorCommitBoundValid = actorKey !== releaseAnchorExpectedKey || (
-      Number.isFinite(Number(releaseAnchorCommitDeltaSeconds))
-      && Number(releaseAnchorCommitDeltaSeconds) >= 0
-      && Number(releaseAnchorCommitDeltaSeconds) <= Number(releaseAnchorCommitWindowSeconds)
-    );
-    const proofCompletedAtPageTime = observedAtPageTimeFinite
-      && (actor?.cueId ? audioObservedAtPageTimeFinite : true)
-      ? Math.max(Number(observedAtPageTime), actor?.cueId ? Number(audioObservedAtPageTime) : Number(observedAtPageTime))
-      : null;
-    const visibleProofStartedAtFinite = proofEpoch?.visibleProofStartedAt !== null
-      && proofEpoch?.visibleProofStartedAt !== undefined
-      && Number.isFinite(Number(proofEpoch.visibleProofStartedAt));
-    const visibleProofDeadlineAtFinite = proofEpoch?.visibleProofDeadlineAt !== null
-      && proofEpoch?.visibleProofDeadlineAt !== undefined
-      && Number.isFinite(Number(proofEpoch.visibleProofDeadlineAt));
-    const eventTimeValid = proofCompletedAtPageTime !== null
-      && Number.isFinite(Number(proofCompletedAtPageTime))
-      && visibleProofStartedAtFinite
-      && visibleProofDeadlineAtFinite
-      && Number(proofCompletedAtPageTime) >= Number(proofEpoch.visibleProofStartedAt)
-      && Number(proofCompletedAtPageTime) <= Number(proofEpoch.visibleProofDeadlineAt);
-    const accepted = actor?.observedPostEpochAttack === true
-      && sourceAliveAtObservation
-      && selectedIdentity
-      && sequenceAdvanced
-      && targetValid
-      && targetEvidenceSourceValid
-      && cueValid
-      && releaseAnchorIdentityValid
-      && releaseAnchorCommitBoundValid
-      && eventTimeValid;
-    return Object.freeze({
-      actorKey,
-      accepted,
-      actorPresent: Boolean(actor),
-      actorAlive: actor?.actorAlive === true,
-      sourceAliveAtObservation,
-      selectedIdentity,
-      sequenceAdvanced,
-      targetValid,
-      targetEvidenceSourceValid,
-      cueValid,
-      releaseAnchorIdentityValid,
-      releaseAnchorCommitBoundValid,
-      releaseAnchorCommitDeltaSeconds,
-      releaseAnchorCommitWindowSeconds,
-      eventTimeValid,
-      selectedFighterId: actor?.selectedFighterId ?? null,
-      observedFighterId: actor?.observedFighterId ?? null,
-      baselineAttackSequence: baseline?.baselineAttackSequence ?? null,
-      observedAttackSequence: actor?.observedAttackSequence ?? null,
-      observedAtBattleTime: actor?.observedAtBattleTime ?? null,
-      observedAtPageTime: actor?.observedAtPageTime ?? null,
-      targetId: actor?.targetId ?? null,
-      targetSide: actor?.targetSide ?? null,
-      targetAlive: actor?.targetAlive ?? null,
-      targetEvidenceSource: actor?.targetEvidenceSource ?? null,
-      cueId: actor?.cueId ?? null,
-      audioObserved: actor?.audioObserved ?? null,
-      audioObservedAtPageTime: actor?.audioObservedAtPageTime ?? null,
-      proofCompletedAtPageTime,
-    });
-  });
-  const observedActorKeys = actors.filter((actor) => actor.accepted).map((actor) => actor.actorKey);
-  const proofCompletionTimes = actors.map((actor) => actor.proofCompletedAtPageTime ?? null);
-  const proofCompletedAtPageTime = proofCompletionTimes.length === actors.length
-    && proofCompletionTimes.every((time) => time !== null && Number.isFinite(Number(time)))
-    ? Math.max(...proofCompletionTimes.map(Number))
-    : null;
-  const withinReleaseDeadline = proofCompletedAtPageTime !== null
-    && Number.isFinite(Number(proofCompletedAtPageTime))
-    && proofEpoch?.visibleProofStartedAt !== null
-    && proofEpoch?.visibleProofStartedAt !== undefined
-    && Number.isFinite(Number(proofEpoch.visibleProofStartedAt))
-    && proofEpoch?.visibleProofDeadlineAt !== null
-    && proofEpoch?.visibleProofDeadlineAt !== undefined
-    && Number.isFinite(Number(proofEpoch.visibleProofDeadlineAt))
-    && Number(proofCompletedAtPageTime) >= Number(proofEpoch.visibleProofStartedAt)
-    && Number(proofCompletedAtPageTime) <= Number(proofEpoch.visibleProofDeadlineAt);
-  return Object.freeze({
-    accepted: schemaOk && releaseAnchorOk && observedActorKeys.length === required.length && withinReleaseDeadline,
-    schemaOk,
-    releaseAnchorOk,
-    releaseAnchor,
-    proofCompletedAtPageTime,
-    withinReleaseDeadline,
-    requiredActorKeys: required,
-    observedActorKeys,
-    missingActorKeys: required.filter((key) => !observedActorKeys.includes(key)),
-    actors,
-  });
+function postQuiescenceExactActorDecision(proofEpoch, options = {}) {
+  return phaseGProofMachine.postQuiescenceExactActorDecision(proofEpoch, options);
 }
 
+function exactActorDirectContactCausalDecision(proofEpoch, options = {}) {
+  return phaseGProofMachine.exactActorDirectContactCausalDecision(proofEpoch, options);
+}
 if (process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE === "1") {
   const input = JSON.parse(process.env.V100_PHASE_G_BROWSER_LIFECYCLE_PROBE_INPUT ?? "{}");
   console.log(JSON.stringify(phaseGBrowserLifecyclePolicy(input.engineName, input.state)));
@@ -936,8 +762,20 @@ if (process.env.V100_PHASE_G_CAUSAL_CONVERGENCE_PROBE === "1") {
 }
 
 if (process.env.V100_PHASE_G_EXACT_ACTOR_PROBE === "1") {
-  const input = JSON.parse(process.env.V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT ?? "{}");
-  console.log(JSON.stringify(postQuiescenceExactActorDecision(input.proofEpoch, input.options)));
+  const input = JSON.parse(process.env.V100_PHASE_G_EXACT_ACTOR_PROBE_INPUT ?? "{}", (_key, value) => {
+    if (!value || typeof value !== "object" || !("__phaseGNonFiniteNumber__" in value)) return value;
+    if (value.__phaseGNonFiniteNumber__ === "NaN") return Number.NaN;
+    if (value.__phaseGNonFiniteNumber__ === "Infinity") return Number.POSITIVE_INFINITY;
+    if (value.__phaseGNonFiniteNumber__ === "-Infinity") return Number.NEGATIVE_INFINITY;
+    throw new Error("PHASE_G_EXACT_ACTOR_PROBE_NON_FINITE_TAG_INVALID");
+  });
+  const output = Array.isArray(input.cases)
+    ? input.cases.map((entry) => ({
+      label: entry.label,
+      decision: postQuiescenceExactActorDecision(entry.proofEpoch, entry.options),
+    }))
+    : postQuiescenceExactActorDecision(input.proofEpoch, input.options);
+  console.log(JSON.stringify(output));
   process.exit(0);
 }
 
@@ -1017,7 +855,9 @@ if (process.env.V100_PHASE_G_CAUSAL_HISTORY_PROBE === "1") {
   let history = {};
   for (const frame of input.observerFrames ?? []) history = mergeCombatActivityHistory(history, frame);
   history = mergeCombatActivityHistory(history, input.waitSnapshot ?? {});
-  const proof = buildCombatCausalProof(input.proofSamples ?? [], history);
+  const proof = buildCombatCausalProof(input.proofSamples ?? [], history, {
+    requiredActorKeys: input.requiredActorKeys ?? [],
+  });
   const humanTarget = proofActorHumanTargetFromHistory(history.targetOwnershipHistory, input.proofActor);
   const targetContinuity = proofActorTargetContinuityDecision(input.targetContinuity ?? {});
   console.log(JSON.stringify({ history, proof, humanTarget, targetContinuity }));
@@ -2300,7 +2140,9 @@ function proofActorHumanTargetFromHistory(history = [], expectedKind = null, exp
   )) ?? null;
 }
 
-function buildCombatCausalProof(samples, stableHistory = {}) {
+function buildCombatCausalProof(samples, stableHistory = {}, {
+  requiredActorKeys = [],
+} = {}) {
   const valid = samples.filter(Boolean);
   const edges = new Set(stableHistory.sourceToTargetEdges ?? []);
   const sourceAttribution = [];
@@ -2487,6 +2329,40 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     if (sample.researchContainer || sample.stageMission?.missionType === "sequential-seal") missionSignals.add("station-mission-runtime");
     if ((sample.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) statusMarkers.add("status-mission-target");
   }
+  const directContactProofEpoch = [
+    stableHistory.proofEpoch ?? null,
+    ...valid.map((sample) => sample.postQuiescenceProofEpoch ?? null),
+  ].filter((epoch) => epoch?.schema === "v100-phase-g-post-quiescence-proof/v7").at(-1) ?? null;
+  const exactActorDirectContact = exactActorDirectContactCausalDecision(directContactProofEpoch, {
+    requiredActorKeys,
+  });
+  for (const actor of exactActorDirectContact.actors.filter((candidate) => candidate.accepted)) {
+    const receipt = actor.receipt;
+    const edge = receipt.sourceTargetEdge;
+    edges.add(edge);
+    addAttribution({
+      edge,
+      sourceId: receipt.sourceId,
+      targetId: receipt.targetId,
+      channel: "exact-actor-direct-contact",
+    });
+    addTargetOwnership({
+      channel: "exact-actor-direct-contact",
+      battleTime: receipt.observedAtBattleTime,
+      sourceId: receipt.sourceId,
+      sourceSide: receipt.sourceSide,
+      sourceKind: receipt.sourceKind,
+      targetId: receipt.targetId,
+      targetSide: receipt.targetSide,
+      targetKind: receipt.targetKind,
+      targetAlive: receipt.targetAlive,
+    });
+    for (const reaction of actor.reactionObservations) addReactionHistory(reaction);
+    visualEvents.add("exact-actor-direct-contact");
+    actorKinds.add(receipt.sourceKind);
+    fighterActors.add(actor.actorKey);
+    attackingActors.add(actor.actorKey);
+  }
   const sourceEdgeTargetIds = new Set(sourceAttribution
     .filter((attribution) => edges.has(attribution.edge) && attribution.targetId !== undefined && attribution.targetId !== null)
     .map((attribution) => String(attribution.targetId)));
@@ -2503,6 +2379,7 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
     targetReactionEvents: [...targetReactionKeys],
     targetReactionHistory,
     audioCueIds: [...audioCueIds],
+    exactActorDirectContact,
     observed: {
       actorKinds: [...actorKinds],
       fighterActors: [...fighterActors],
@@ -2525,7 +2402,12 @@ function buildCombatCausalProof(samples, stableHistory = {}) {
       audio: audioCueIds.size > 0,
     },
   };
-  causalProof.ok = causalProof.sampleCount > 0 && causalProof.stages.source && causalProof.stages.travelOrContact && causalProof.stages.targetReaction && causalProof.stages.audio;
+  causalProof.ok = causalProof.sampleCount > 0
+    && exactActorDirectContact.integrityOk
+    && causalProof.stages.source
+    && causalProof.stages.travelOrContact
+    && causalProof.stages.targetReaction
+    && causalProof.stages.audio;
   return causalProof;
 }
 
@@ -2533,19 +2415,20 @@ async function startCombatRuntimeObserver(page) {
   const phaseGCombatSnapshotProfile = await page.evaluate(({
     runtimeSimulationStepSeconds,
     runtimeMaxCatchUpSteps,
+    proofMachineFactorySource,
   }) => {
     window.__PHASE_G_COMBAT_OBSERVER__?.stop?.();
     const bridge = window.__ASHFALL_BATTLE_QA__;
     if (!bridge || typeof bridge.getPhaseGCombatSnapshot !== "function") {
       throw new Error("PHASE_G_LEAN_COMBAT_SNAPSHOT_METHOD_MISSING");
     }
-    const releaseAnchorCommitWindowSecondsFor = (releaseAnchor) => {
-      const attackWindupSeconds = Number(releaseAnchor?.attackWindupSeconds);
-      if (!Number.isFinite(attackWindupSeconds) || attackWindupSeconds <= 0) return null;
-      return Math.max(0.8, attackWindupSeconds + 0.5)
-        + runtimeSimulationStepSeconds * runtimeMaxCatchUpSteps;
-    };
-    window.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__ = releaseAnchorCommitWindowSecondsFor;
+    const createProofMachine = (0, eval)(`(${proofMachineFactorySource})`);
+    const proofMachine = createProofMachine({
+      runtimeSimulationStepSeconds,
+      runtimeMaxCatchUpSteps,
+    });
+    proofMachine.installGlobals(window);
+    const isFiniteReceiptNumber = proofMachine.isFiniteReceiptNumber;
     const forbiddenFields = new Set([
       "renderAudit",
       "renderAuditHistory",
@@ -2776,16 +2659,8 @@ async function startCombatRuntimeObserver(page) {
       const audioCues = new Set(activity.audioCues ?? []);
       const bossLifecycle = [...(activity.bossLifecycle ?? [])];
       const actorById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
-      const postQuiescenceProofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActorFor = (fighter) => (
-        postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
-          ? postQuiescenceProofEpoch.actors?.find((candidate) => (
-            candidate.side === fighter?.side
-            && candidate.kind === fighter?.kind
-            && String(candidate.selectedFighterId) === String(fighter?.id)
-          )) ?? null
-          : null
-      );
+      const postQuiescenceProofEpoch = window.__PHASE_G_ADVANCE_POST_QUIESCENCE_PROOF_EPOCH__?.(snapshot)
+        ?? window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
       for (const fighter of snapshot.fighters ?? []) {
         if (!fighter.side || !fighter.kind) continue;
         const actorKey = `${fighter.side}:${fighter.kind}`;
@@ -2795,13 +2670,7 @@ async function startCombatRuntimeObserver(page) {
           fighterActors.add(actorKey);
         }
         const animationState = String(fighter.animationPresentation?.state ?? "");
-        const epochActor = epochActorFor(fighter);
-        const epochFighterBaseline = epochActor?.fighterBaselines?.find((baseline) => (
-          String(baseline.fighterId) === String(fighter.id)
-        )) ?? null;
-        const attackSequenceAdvanced = epochActor
-          ? Number(fighter.attackSequence) > Number(epochFighterBaseline?.baselineAttackSequence)
-          : Number(fighter.attackSequence) > 0;
+        const attackSequenceAdvanced = Number(fighter.attackSequence) > 0;
         const attacking = Number(fighter.attack) > 0
           || Number(fighter.attackWindup) > 0
           || Number(fighter.abilityWindup) > 0
@@ -2811,49 +2680,6 @@ async function startCombatRuntimeObserver(page) {
           || ["attack", "warning"].includes(fighter.enemyVfx?.phase)
           || /attack|windup|ability/u.test(animationState);
         if (attacking) attackingActors.add(actorKey);
-        if (epochActor) epochActor.actorAlive = Number(fighter.hp) > 0;
-        if (epochActor && attackSequenceAdvanced && epochActor.observedPostEpochAttack !== true) {
-          const releaseAnchor = postQuiescenceProofEpoch.releaseAnchor ?? null;
-          const releaseAnchorCommitWindowSeconds = releaseAnchor
-            ? releaseAnchorCommitWindowSecondsFor(releaseAnchor)
-            : null;
-          const releaseAnchorCommitDeltaSeconds = releaseAnchor
-            && Number.isFinite(Number(snapshot.time))
-            ? Number(snapshot.time) - Number(releaseAnchor.handoffAtBattleTime)
-            : null;
-          const releaseAnchorBindingValid = releaseAnchor?.handoffValid === true
-            && releaseAnchor.actorKey === actorKey
-            && String(releaseAnchor.fighterId) === String(fighter.id)
-            && Number(epochFighterBaseline?.baselineAttackSequence) === Number(releaseAnchor.baselineAttackSequence)
-            && Number(fighter.attackSequence) === Number(releaseAnchor.baselineAttackSequence) + 1
-            && Number.isFinite(Number(releaseAnchorCommitDeltaSeconds))
-            && Number(releaseAnchorCommitDeltaSeconds) >= 0
-            && Number(releaseAnchorCommitDeltaSeconds) <= Number(releaseAnchorCommitWindowSeconds);
-          const directTargetId = fighter.targetId === null || fighter.targetId === undefined
-            ? null
-            : fighter.targetId;
-          const targetId = directTargetId ?? (releaseAnchorBindingValid ? releaseAnchor.targetId : null);
-          const target = targetId === null || targetId === undefined
-            ? null
-            : actorById.get(String(targetId)) ?? null;
-          Object.assign(epochActor, {
-            observedPostEpochAttack: true,
-            observedFighterId: fighter.id,
-            observedAttackSequence: Number(fighter.attackSequence),
-            observedAtBattleTime: Number(snapshot.time),
-            observedAtPageTime: performance.now(),
-            sourceAliveAtObservation: Number(fighter.hp) > 0,
-            targetId: target?.id ?? targetId ?? null,
-            targetSide: target?.side ?? null,
-            targetKind: target?.kind ?? null,
-            targetAlive: target ? Number(target.hp) > 0 : null,
-            targetEvidenceSource: directTargetId !== null
-              ? "live-attacker-target"
-              : releaseAnchorBindingValid
-                ? "release-anchor-bound-windup"
-                : null,
-          });
-        }
         if (Number(fighter.marked) > 0) statusMarkers.add(`${actorKey}:marked`);
         if (fighter.gateEntering === true || /president|takuya|futago|gate-eater|kurome|mother|ooguchi|gairen/u.test(String(fighter.kind))) {
           bossLifecycle.push({
@@ -2877,12 +2703,6 @@ async function startCombatRuntimeObserver(page) {
           });
         }
       }
-      if (postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5") {
-        for (const epochActor of postQuiescenceProofEpoch.actors ?? []) {
-          const selectedFighter = actorById.get(String(epochActor.selectedFighterId)) ?? null;
-          epochActor.actorAlive = Number(selectedFighter?.hp) > 0;
-        }
-      }
       for (const attack of [...(snapshot.attackIdentity ?? []), ...(snapshot.pendingWeaponHits ?? [])]) {
         if (attack?.sourceId === undefined || attack?.sourceId === null) continue;
         const source = actorById.get(String(attack.sourceId));
@@ -2893,21 +2713,15 @@ async function startCombatRuntimeObserver(page) {
         }
       }
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const proofAudioRequests = postQuiescenceProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? allAudioRequests.filter((request) => (
-          Number.isFinite(Number(request?.at))
-          && Number(request.at) > Number(postQuiescenceProofEpoch.audioCueRequestCutoffAt)
+          isFiniteReceiptNumber(request?.at)
+          && isFiniteReceiptNumber(postQuiescenceProofEpoch.audioCueRequestCutoffAt)
+          && request.at > postQuiescenceProofEpoch.audioCueRequestCutoffAt
         ))
         : allAudioRequests;
       for (const request of proofAudioRequests) {
         if (request?.cueId) audioCues.add(String(request.cueId));
-        for (const epochActor of postQuiescenceProofEpoch?.actors ?? []) {
-          if (epochActor.cueId && request?.cueId === epochActor.cueId && epochActor.audioObserved !== true) {
-            epochActor.audioObserved = true;
-            epochActor.audioObservedAtBattleTime = Number(snapshot.time);
-            epochActor.audioObservedAtPageTime = Number(request.at);
-          }
-        }
       }
       if ((snapshot.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) {
         statusMarkers.add("status-mission-target");
@@ -2928,8 +2742,15 @@ async function startCombatRuntimeObserver(page) {
     window.__PHASE_G_COMBAT_OBSERVER__ = {
       stop: () => {
         window.clearInterval(timer);
-        observe();
-        window.__PHASE_G_COMBAT_OBSERVER__ = null;
+        try {
+          observe();
+        } finally {
+          try {
+            window.__PHASE_G_CLEAN_PROOF_TRANSACTION__?.("OBSERVER_STOP_FINALLY_CLEANUP");
+          } finally {
+            window.__PHASE_G_COMBAT_OBSERVER__ = null;
+          }
+        }
       },
     };
     observe();
@@ -2937,6 +2758,7 @@ async function startCombatRuntimeObserver(page) {
   }, {
     runtimeSimulationStepSeconds: RUNTIME_SIMULATION_STEP_SECONDS,
     runtimeMaxCatchUpSteps: RUNTIME_MAX_CATCH_UP_STEPS,
+    proofMachineFactorySource: phaseGProofMachineFactorySource,
   });
   const recorder = checkpointRecorderFor(page);
   recorder?.setPhaseGCombatSnapshotProfile(phaseGCombatSnapshotProfile);
@@ -3147,12 +2969,12 @@ async function collectCombatCausalProof(page, {
   const deadlineEnvelope = deadlineRead.value;
   let effectiveDurationMs = durationMs;
   if (requiredActorKeys.length > 0) {
-    invariant(deadlineEnvelope.proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
-      && Number.isFinite(Number(deadlineEnvelope.proofEpoch.visibleProofDeadlineAt)),
-    `exact actor collection lacks a finite v4 release deadline: ${JSON.stringify(deadlineEnvelope)}`);
+    invariant(deadlineEnvelope.proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
+      && [deadlineEnvelope.pageNow, deadlineEnvelope.proofEpoch.visibleProofDeadlineAt].every(isFiniteReceiptNumber),
+    `exact actor collection lacks a finite v7 release deadline: ${JSON.stringify(deadlineEnvelope)}`);
     effectiveDurationMs = Math.max(0, Math.min(
       durationMs,
-      Number(deadlineEnvelope.proofEpoch.visibleProofDeadlineAt) - Number(deadlineEnvelope.pageNow),
+      deadlineEnvelope.proofEpoch.visibleProofDeadlineAt - deadlineEnvelope.pageNow,
     ));
   }
   const samples = [];
@@ -3188,13 +3010,16 @@ async function collectCombatCausalProof(page, {
     if (remainingHostMs < COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS) break;
     const transactionTimeoutMs = COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS;
     const transaction = await observePromiseWithin(page.evaluate(() => {
+      const isFiniteReceiptNumber = window.__PHASE_G_IS_FINITE_RECEIPT_NUMBER__;
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
       const allAudio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const audio = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const audio = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? allAudio.filter((request) => (
-          Number.isFinite(Number(request?.at))
-          && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
+          typeof isFiniteReceiptNumber === "function"
+          && isFiniteReceiptNumber(request?.at)
+          && isFiniteReceiptNumber(proofEpoch.audioCueRequestCutoffAt)
+          && request.at > proofEpoch.audioCueRequestCutoffAt
         ))
         : allAudio;
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -3227,16 +3052,17 @@ async function collectCombatCausalProof(page, {
         activityStatusMarkers: observedCombatActivity.statusMarkers ?? [],
         activityVehicleActions: observedCombatActivity.vehicleActions ?? [],
         fighters: snapshot?.fighters?.map((fighter) => {
-          const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+          const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
             ? proofEpoch.actors?.find((candidate) => (
               candidate.side === fighter.side
               && candidate.kind === fighter.kind
               && String(candidate.selectedFighterId) === String(fighter.id)
             )) ?? null
             : null;
-          const epochFighterBaseline = epochActor?.fighterBaselines?.find((baseline) => (
-            String(baseline.fighterId) === String(fighter.id)
-          )) ?? null;
+          const epochFighterBaseline = epochActor
+            && String(epochActor.selectedFighterId) === String(fighter.id)
+            ? { baselineAttackSequence: epochActor.baselineAttackSequence }
+            : null;
           return {
             id: fighter.id,
             side: fighter.side,
@@ -3306,7 +3132,7 @@ async function collectCombatCausalProof(page, {
     lastAtomicReceipt = atomicReceipt;
     const elapsedMs = Date.now() - startedAt;
     convergenceDecision = combatCausalConvergenceDecision(
-      buildCombatCausalProof(samples),
+      buildCombatCausalProof(samples, {}, { requiredActorKeys }),
       { elapsedMs },
     );
     exactActorDecision = postQuiescenceExactActorDecision(
@@ -3325,7 +3151,7 @@ async function collectCombatCausalProof(page, {
         await new Promise((resolve) => setTimeout(resolve, residualDwellMs));
       }
       convergenceDecision = combatCausalConvergenceDecision(
-        buildCombatCausalProof(samples),
+        buildCombatCausalProof(samples, {}, { requiredActorKeys }),
         { elapsedMs: Date.now() - startedAt },
       );
       break;
@@ -3342,7 +3168,7 @@ async function collectCombatCausalProof(page, {
     reactionHistory: lastAtomicReceipt.activityReactionHistory ?? [],
     battlePresentationEffects: lastAtomicReceipt.battlePresentationEffects ?? [],
   } : {};
-  const proof = buildCombatCausalProof(samples, stableHistory);
+  const proof = buildCombatCausalProof(samples, stableHistory, { requiredActorKeys });
   const elapsedMs = Date.now() - startedAt;
   const finalConvergence = combatCausalConvergenceDecision(proof, { elapsedMs });
   const finalExactActorDecision = postQuiescenceExactActorDecision(stableHistory.proofEpoch ?? null, { requiredActorKeys });
@@ -3390,6 +3216,51 @@ async function saveScreenshot(page, filePath, label) {
   const metadata = await stat(filePath);
   invariant(metadata.size > 1000 && bytes.slice(0, 8).toString("hex") === "89504e470d0a1a0a", `${label} is not a valid PNG`);
   return { path: relativeEvidence(filePath), sha256: createHash("sha256").update(bytes).digest("hex"), bytes: metadata.size };
+}
+
+async function writePhaseGCaptureTransaction({
+  label,
+  outcome,
+  proofEpoch,
+  screenshot = null,
+  checkpointEvidence = null,
+  failureState = null,
+  diagnostics = null,
+  overflow = null,
+  runtime = null,
+  browserSession = null,
+  hostResourceTelemetry = null,
+  terminalPersistenceError = null,
+}) {
+  const receiptPath = path.join(evidenceDir, `${label}.capture-transaction.json`);
+  const receipt = {
+    schema: "v100-phase-g-capture-transaction/v1",
+    label,
+    outcome,
+    persistedAt: new Date().toISOString(),
+    proofEpoch: cloneDiagnosticValue(proofEpoch),
+    screenshot: cloneDiagnosticValue(screenshot),
+    checkpointEvidence: cloneDiagnosticValue(checkpointEvidence),
+    failureState: cloneDiagnosticValue(failureState),
+    diagnostics: cloneDiagnosticValue(diagnostics),
+    overflow: cloneDiagnosticValue(overflow),
+    runtime: cloneDiagnosticValue(runtime),
+    browserSession: cloneDiagnosticValue(browserSession),
+    hostResourceTelemetry: cloneDiagnosticValue(hostResourceTelemetry),
+    cleanupOutcome: proofEpoch?.cleanupReceipt?.outcome ?? null,
+    terminalPersistenceError: cloneDiagnosticValue(terminalPersistenceError),
+  };
+  await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+  const bytes = await readFile(receiptPath);
+  return Object.freeze({
+    schema: receipt.schema,
+    path: relativeEvidence(receiptPath),
+    bytes: bytes.byteLength,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    outcome,
+    proofState: proofEpoch?.state ?? null,
+    cleanupOutcome: proofEpoch?.cleanupReceipt?.outcome ?? null,
+  });
 }
 
 async function phaseGBrowser(engineName, isolation = "shared-per-engine") {
@@ -3448,6 +3319,9 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
   const captureStartedAt = Date.now();
   let pageCrashPrimary = null;
   let capturePrimaryFailure = null;
+  let phaseGCaptureTransaction = null;
+  let phaseGCaptureTransactionPersistenceError = null;
+  let screenshot = null;
   const hostResourceTelemetry = engineName === "webkit" && state === "battle-extra" && checkpointContract
     ? await createWebKitHostResourceTelemetry({
       evidenceDir: path.join(evidenceDir, "diagnostics"),
@@ -3539,19 +3413,110 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       : [];
     let causalPageRpcSealed = false;
     try {
-      if (state.startsWith("battle")) {
-        combatCausalProof = await runPhaseGTelemetryOperation(
-          "phase-g/causal-proof",
-          { state, durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs },
-          () => collectCombatCausalProof(page, {
-            durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs,
-            requiredPostEpochActorKeys,
-          }),
-        );
+      try {
+        if (state.startsWith("battle")) {
+          combatCausalProof = await runPhaseGTelemetryOperation(
+            "phase-g/causal-proof",
+            { state, durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs },
+            () => collectCombatCausalProof(page, {
+              durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs,
+              requiredPostEpochActorKeys,
+            }),
+          );
+        }
+      } catch (error) {
+        causalPageRpcSealed = error?.phaseGCausalNoFurtherPageRpc === true;
+        throw error;
       }
-    } catch (error) {
-      causalPageRpcSealed = error?.phaseGCausalNoFurtherPageRpc === true;
-      throw error;
+      if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
+      if (requiredPostEpochActorKeys.length > 0) {
+        invariant(combatCausalProof?.postQuiescenceExactActorProof?.accepted === true
+          && combatCausalProof?.collection?.converged === true
+          && combatCausalProof?.collection?.withinReleaseDeadline === true,
+        `${label} exact post-quiescence actor proof failed inside the single release deadline: ${JSON.stringify(combatCausalProof)}`);
+        if (captureMeta.presentationQuiescence) {
+          captureMeta.presentationQuiescence.postReleaseProofEpochFinal = combatCausalProof.postQuiescenceProofEpoch;
+        }
+        for (const actor of combatCausalProof.postQuiescenceExactActorProof.actors) {
+          const [side, kind] = actor.actorKey.split(":", 2);
+          if (side === "zombie") {
+            checkpointRecorder?.markOnce("proof-actor-mounted-or-absent", "observed", {
+              actor: kind,
+              source: "post-quiescence-exact-sequence",
+              fighterId: actor.observedFighterId,
+            });
+            checkpointRecorder?.markOnce("living-human-target-acquired-or-not-required", "observed", {
+              actor: kind,
+              evidence: "post-quiescence-exact-live-target",
+              sourceId: actor.observedFighterId,
+              targetId: actor.targetId,
+              targetSide: actor.targetSide,
+            });
+            checkpointRecorder?.mark("proof-actor-attack-observed-or-not-required", "observed", {
+              actor: kind,
+              evidence: "post-quiescence-exact-sequence-target-cue",
+            });
+          } else if (side === "human") {
+            checkpointRecorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", {
+              unitKind: kind,
+              evidence: "post-quiescence-exact-sequence-target-cue",
+            });
+          }
+        }
+      }
+      if (checkpointRecorder) {
+        checkpointRecorder.clearAwaiting();
+        checkpointRecorder.mark("causal-proof-complete", "completed", {
+          sampleCount: combatCausalProof?.sampleCount ?? 0,
+          stages: combatCausalProof?.stages ?? null,
+          exactActorProof: combatCausalProof?.postQuiescenceExactActorProof ?? null,
+          collection: combatCausalProof?.collection ?? null,
+        });
+      }
+      screenshot = await runPhaseGTelemetryOperation(
+        "phase-g/production-screenshot",
+        { state, output: relativeEvidence(imagePath(label)) },
+        () => saveScreenshot(page, imagePath(label), label),
+      );
+      if (requiredPostEpochActorKeys.length > 0) {
+        const screenshotReceiptEnvelope = await page.evaluate((screenshotMetadata) => {
+          const epoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null;
+          const isFiniteReceiptNumber = window.__PHASE_G_IS_FINITE_RECEIPT_NUMBER__;
+          const pageNow = performance.now();
+          const numericDomainOk = typeof isFiniteReceiptNumber === "function"
+            && [pageNow, epoch?.visibleProofStartedAt, epoch?.visibleProofDeadlineAt, epoch?.proofCompletedAtPageTime]
+              .every(isFiniteReceiptNumber);
+          const releaseDeadlineReceipt = {
+            schema: "v100-phase-g-release-deadline-receipt/v1",
+            pageNow,
+            visibleProofStartedAt: epoch?.visibleProofStartedAt ?? null,
+            visibleProofDeadlineAt: epoch?.visibleProofDeadlineAt ?? null,
+            withinReleaseDeadline: numericDomainOk
+              && pageNow >= epoch.visibleProofStartedAt
+              && pageNow <= epoch.visibleProofDeadlineAt,
+          };
+          const proofEpoch = window.__PHASE_G_ATTACH_SCREENSHOT_RECEIPT__?.({
+            screenshot: screenshotMetadata,
+            releaseDeadlineReceipt,
+          }) ?? null;
+          return { releaseDeadlineReceipt, proofEpoch };
+        }, screenshot);
+        const releaseDeadlineReceipt = screenshotReceiptEnvelope.releaseDeadlineReceipt;
+        invariant(releaseDeadlineReceipt.withinReleaseDeadline === true
+          && [
+            releaseDeadlineReceipt.pageNow,
+            releaseDeadlineReceipt.visibleProofStartedAt,
+            releaseDeadlineReceipt.visibleProofDeadlineAt,
+          ].every(isFiniteReceiptNumber)
+          && releaseDeadlineReceipt.visibleProofStartedAt === combatCausalProof.postQuiescenceProofEpoch.visibleProofStartedAt
+          && releaseDeadlineReceipt.visibleProofDeadlineAt === combatCausalProof.postQuiescenceProofEpoch.visibleProofDeadlineAt,
+          `${label} production screenshot exceeded the single release-origin deadline: ${JSON.stringify(releaseDeadlineReceipt)}`);
+        invariant(screenshotReceiptEnvelope.proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
+          && screenshotReceiptEnvelope.proofEpoch.state === "SCREENSHOT_RECEIPT_ACCEPTED",
+        `${label} screenshot/deadline receipt did not enter the v7 page-owned state: ${JSON.stringify(screenshotReceiptEnvelope)}`);
+        screenshot.releaseDeadlineReceipt = releaseDeadlineReceipt;
+      }
+      checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
     } finally {
       if (state.startsWith("battle") && !causalPageRpcSealed) {
         await runPhaseGTelemetryOperation(
@@ -3561,73 +3526,6 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         );
       }
     }
-    if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
-    if (requiredPostEpochActorKeys.length > 0) {
-      invariant(combatCausalProof?.postQuiescenceExactActorProof?.accepted === true
-        && combatCausalProof?.collection?.converged === true
-        && combatCausalProof?.collection?.withinReleaseDeadline === true,
-      `${label} exact post-quiescence actor proof failed inside the single release deadline: ${JSON.stringify(combatCausalProof)}`);
-      if (captureMeta.presentationQuiescence) {
-        captureMeta.presentationQuiescence.postReleaseProofEpochFinal = combatCausalProof.postQuiescenceProofEpoch;
-      }
-      for (const actor of combatCausalProof.postQuiescenceExactActorProof.actors) {
-        const [side, kind] = actor.actorKey.split(":", 2);
-        if (side === "zombie") {
-          checkpointRecorder?.markOnce("proof-actor-mounted-or-absent", "observed", {
-            actor: kind,
-            source: "post-quiescence-exact-sequence",
-            fighterId: actor.observedFighterId,
-          });
-          checkpointRecorder?.markOnce("living-human-target-acquired-or-not-required", "observed", {
-            actor: kind,
-            evidence: "post-quiescence-exact-live-target",
-            sourceId: actor.observedFighterId,
-            targetId: actor.targetId,
-            targetSide: actor.targetSide,
-          });
-          checkpointRecorder?.mark("proof-actor-attack-observed-or-not-required", "observed", {
-            actor: kind,
-            evidence: "post-quiescence-exact-sequence-target-cue",
-          });
-        } else if (side === "human") {
-          checkpointRecorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", {
-            unitKind: kind,
-            evidence: "post-quiescence-exact-sequence-target-cue",
-          });
-        }
-      }
-    }
-    if (checkpointRecorder) {
-      checkpointRecorder.clearAwaiting();
-      checkpointRecorder.mark("causal-proof-complete", "completed", {
-        sampleCount: combatCausalProof?.sampleCount ?? 0,
-        stages: combatCausalProof?.stages ?? null,
-        exactActorProof: combatCausalProof?.postQuiescenceExactActorProof ?? null,
-        collection: combatCausalProof?.collection ?? null,
-      });
-    }
-    const screenshot = await runPhaseGTelemetryOperation(
-      "phase-g/production-screenshot",
-      { state, output: relativeEvidence(imagePath(label)) },
-      () => saveScreenshot(page, imagePath(label), label),
-    );
-    if (requiredPostEpochActorKeys.length > 0) {
-      const releaseDeadlineReceipt = await page.evaluate(() => {
-        const epoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null;
-        const pageNow = performance.now();
-        return {
-          schema: "v100-phase-g-release-deadline-receipt/v1",
-          pageNow,
-          visibleProofStartedAt: epoch?.visibleProofStartedAt ?? null,
-          visibleProofDeadlineAt: epoch?.visibleProofDeadlineAt ?? null,
-          withinReleaseDeadline: Number(pageNow) <= Number(epoch?.visibleProofDeadlineAt),
-        };
-      });
-      invariant(releaseDeadlineReceipt.withinReleaseDeadline === true,
-        `${label} production screenshot exceeded the single release-origin deadline: ${JSON.stringify(releaseDeadlineReceipt)}`);
-      screenshot.releaseDeadlineReceipt = releaseDeadlineReceipt;
-    }
-    checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
     const overflow = await runPhaseGTelemetryOperation(
       "phase-g/overflow-audit",
       { state },
@@ -3685,7 +3583,30 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       },
     );
     const { checkpointEvidence, pwaOfferShown } = finalDiagnostics;
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown, evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
+    if (requiredPostEpochActorKeys.length > 0) {
+      const proofEpoch = await page.evaluate(() => window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null);
+      invariant(proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
+        && proofEpoch.state === "CLEANED"
+        && proofEpoch.cleanupReceipt?.schema === "v100-phase-g-proof-cleanup-receipt/v1"
+        && proofEpoch.cleanupReceipt.outcome === "success",
+      `${label} v7 proof transaction did not reach successful cleanup: ${JSON.stringify(proofEpoch)}`);
+      phaseGCaptureTransaction = await writePhaseGCaptureTransaction({
+        label,
+        outcome: "success",
+        proofEpoch,
+        screenshot,
+        checkpointEvidence,
+        diagnostics,
+        overflow,
+        runtime,
+        browserSession,
+        hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
+      });
+      invariant(phaseGCaptureTransaction.proofState === "CLEANED"
+        && phaseGCaptureTransaction.cleanupOutcome === "success",
+      `${label} sealed capture transaction did not preserve successful cleanup: ${JSON.stringify(phaseGCaptureTransaction)}`);
+    }
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown, evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, phaseGCaptureTransaction, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
     return screenshot;
   } catch (error) {
     const primaryError = pageCrashPrimary
@@ -3696,28 +3617,32 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
         cause: error,
       })
       : error;
-    const { failureState, checkpointFailure } = await runPhaseGTelemetryOperation(
-      "phase-g/final-diagnostics",
-      { state, diagnosticOutcome: "failure" },
-      async () => {
-        if (primaryError?.phaseGCausalNoFurtherPageRpc === true) {
-          const failureState = {
-            schema: "v100-phase-g-causal-no-further-page-rpc/v1",
-            causalTransaction: cloneDiagnosticValue(primaryError.phaseGCausalTransaction ?? null),
-            pageRpcSealed: true,
-          };
-          const checkpointFailure = checkpointRecorder
-            ? await checkpointRecorder.persistFailure({
-              label,
-              error: primaryError,
-              failureState,
-              diagnostics,
-              allowPageRpc: false,
-            })
-            : null;
-          return { failureState, checkpointFailure };
-        }
-        const failureState = await page.evaluate((battleState) => ({
+    let failureState = null;
+    let checkpointFailure = null;
+    let failureDiagnosticsPersistenceError = null;
+    try {
+      const failureReadback = await runPhaseGTelemetryOperation(
+        "phase-g/final-diagnostics",
+        { state, diagnosticOutcome: "failure" },
+        async () => {
+          if (primaryError?.phaseGCausalNoFurtherPageRpc === true) {
+            const failureState = {
+              schema: "v100-phase-g-causal-no-further-page-rpc/v1",
+              causalTransaction: cloneDiagnosticValue(primaryError.phaseGCausalTransaction ?? null),
+              pageRpcSealed: true,
+            };
+            const checkpointFailure = checkpointRecorder
+              ? await checkpointRecorder.persistFailure({
+                label,
+                error: primaryError,
+                failureState,
+                diagnostics,
+                allowPageRpc: false,
+              })
+              : null;
+            return { failureState, checkpointFailure };
+          }
+          const failureState = await page.evaluate((battleState) => ({
           url: location.href,
           phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
           surface: document.querySelector(".v100-shell")?.getAttribute("data-v100-surface") ?? null,
@@ -3810,81 +3735,99 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
           })(),
           postQuiescenceProof: (() => {
             const epoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-            if (epoch?.schema !== "v100-phase-g-post-quiescence-proof/v5") return null;
-            return {
-              schema: epoch.schema,
-              stageId: epoch.stageId ?? null,
-              visibleProofStartedAt: epoch.visibleProofStartedAt ?? null,
-              visibleProofDeadlineAt: epoch.visibleProofDeadlineAt ?? null,
-              audioCueRequestCutoffAt: epoch.audioCueRequestCutoffAt ?? null,
-              releaseAnchor: epoch.releaseAnchor ? {
-                actorKey: epoch.releaseAnchor.actorKey ?? null,
-                releaseMode: epoch.releaseAnchor.releaseMode ?? null,
-                fighterId: epoch.releaseAnchor.fighterId ?? null,
-                baselineAttackSequence: epoch.releaseAnchor.baselineAttackSequence ?? null,
-                targetId: epoch.releaseAnchor.targetId ?? null,
-                targetSide: epoch.releaseAnchor.targetSide ?? null,
-                targetKind: epoch.releaseAnchor.targetKind ?? null,
-                targetAlive: epoch.releaseAnchor.targetAlive ?? null,
-                attackWindupSeconds: epoch.releaseAnchor.attackWindupSeconds ?? null,
-                lateWindupMaxSeconds: epoch.releaseAnchor.lateWindupMaxSeconds ?? null,
-                continuitySampleCount: epoch.releaseAnchor.continuitySampleCount ?? null,
-                continuityFirstWindup: epoch.releaseAnchor.continuityFirstWindup ?? null,
-                continuityLastWindup: epoch.releaseAnchor.continuityLastWindup ?? null,
-                continuityFirstBattleTime: epoch.releaseAnchor.continuityFirstBattleTime ?? null,
-                continuityLastBattleTime: epoch.releaseAnchor.continuityLastBattleTime ?? null,
-                handoffAtBattleTime: epoch.releaseAnchor.handoffAtBattleTime ?? null,
-                handoffAtPageTime: epoch.releaseAnchor.handoffAtPageTime ?? null,
-                handoffValid: epoch.releaseAnchor.handoffValid ?? null,
-                selectionSnapshotObservedAtPageTime: epoch.releaseAnchor.selectionSnapshotObservedAtPageTime ?? null,
-                selectionSnapshotBattleTime: epoch.releaseAnchor.selectionSnapshotBattleTime ?? null,
-                sameTaskSnapshotReadCount: epoch.releaseAnchor.sameTaskSnapshotReadCount ?? null,
-                cachedObserverSnapshotUsedForHandoff: epoch.releaseAnchor.cachedObserverSnapshotUsedForHandoff ?? null,
-                releaseReceiptMatchesSelectionSnapshot: epoch.releaseAnchor.releaseReceiptMatchesSelectionSnapshot ?? null,
-              } : null,
-              actors: (epoch.actors ?? []).slice(0, 4).map((actor) => {
-                const observedAtPageTime = actor.observedAtPageTime ?? null;
-                const audioObservedAtPageTime = actor.audioObservedAtPageTime ?? null;
-                const proofCompletedAtPageTime = observedAtPageTime !== null
-                  && Number.isFinite(Number(observedAtPageTime))
-                  && (!actor.cueId || audioObservedAtPageTime !== null && Number.isFinite(Number(audioObservedAtPageTime)))
-                  ? Math.max(Number(observedAtPageTime), actor.cueId ? Number(audioObservedAtPageTime) : Number(observedAtPageTime))
-                  : null;
-                return {
-                  side: actor.side ?? null,
-                  kind: actor.kind ?? null,
-                  cueId: actor.cueId ?? null,
-                  selectedFighterId: actor.selectedFighterId ?? null,
-                  observedPostEpochAttack: actor.observedPostEpochAttack ?? null,
-                  observedFighterId: actor.observedFighterId ?? null,
-                  observedAttackSequence: actor.observedAttackSequence ?? null,
-                  observedAtBattleTime: actor.observedAtBattleTime ?? null,
-                  observedAtPageTime,
-                  sourceAliveAtObservation: actor.sourceAliveAtObservation ?? null,
-                  targetId: actor.targetId ?? null,
-                  targetSide: actor.targetSide ?? null,
-                  targetKind: actor.targetKind ?? null,
-                  targetAlive: actor.targetAlive ?? null,
-                  targetEvidenceSource: actor.targetEvidenceSource ?? null,
-                  audioObserved: actor.audioObserved ?? null,
-                  audioObservedAtPageTime,
-                  proofCompletedAtPageTime,
-                  eventTimeWithinDeadline: proofCompletedAtPageTime !== null
-                    && Number(proofCompletedAtPageTime) >= Number(epoch.visibleProofStartedAt)
-                    && Number(proofCompletedAtPageTime) <= Number(epoch.visibleProofDeadlineAt),
-                  currentActorAlive: actor.actorAlive ?? null,
-                };
-              }),
-            };
+            if (epoch?.schema === "v100-phase-g-post-quiescence-proof/v7") return structuredClone(epoch);
+            return null;
           })(),
           phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
-        }), state.startsWith("battle")).catch(() => null);
-        const checkpointFailure = checkpointRecorder
-          ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics, allowPageRpc: true })
-          : null;
-        return { failureState, checkpointFailure };
-      },
-    );
+          }), state.startsWith("battle")).catch(() => null);
+          const checkpointFailure = checkpointRecorder
+            ? await checkpointRecorder.persistFailure({ label, error: primaryError, failureState, diagnostics, allowPageRpc: true })
+            : null;
+          return { failureState, checkpointFailure };
+        },
+      );
+      failureState = failureReadback.failureState;
+      checkpointFailure = failureReadback.checkpointFailure;
+    } catch (diagnosticError) {
+      failureDiagnosticsPersistenceError = {
+        code: "PHASE_G_FAILURE_DIAGNOSTICS_PERSISTENCE_FAILED",
+        error: String(diagnosticError),
+      };
+      failureState = {
+        schema: "v100-phase-g-failure-diagnostics-unavailable/v1",
+        primaryCode: primaryError?.code ?? null,
+        pageCrash: cloneDiagnosticValue(pageCrashPrimary),
+        persistenceError: cloneDiagnosticValue(failureDiagnosticsPersistenceError),
+      };
+      if (checkpointRecorder) {
+        checkpointFailure = await checkpointRecorder.persistFailure({
+          label,
+          error: primaryError,
+          failureState,
+          diagnostics,
+          allowPageRpc: false,
+        }).catch((checkpointError) => {
+          failureDiagnosticsPersistenceError = {
+            ...failureDiagnosticsPersistenceError,
+            checkpointPersistenceError: String(checkpointError),
+          };
+          return null;
+        });
+      }
+    }
+    if (checkpointContract?.presentationQuiescence === true && !phaseGCaptureTransaction) {
+      let failureProofEpoch = primaryError?.phaseGCausalNoFurtherPageRpc === true
+        ? primaryError.phaseGCausalTransaction?.lastAtomicReceipt?.postQuiescenceProofEpoch ?? null
+        : null;
+      let terminalPersistenceError = primaryError?.phaseGCausalNoFurtherPageRpc === true ? {
+        code: "PHASE_G_CAPTURE_TRANSACTION_PAGE_RPC_SEALED",
+        phase: primaryError.phaseGCausalTransaction?.phase ?? null,
+      } : failureDiagnosticsPersistenceError;
+      if (primaryError?.phaseGCausalNoFurtherPageRpc !== true) {
+        failureProofEpoch = await page.evaluate(({ code, detail }) => {
+          window.__PHASE_G_FAIL_PROOF_TRANSACTION__?.(code, detail);
+          window.__PHASE_G_COMBAT_OBSERVER__?.stop?.();
+          window.__PHASE_G_CLEAN_PROOF_TRANSACTION__?.("CAPTURE_FAILURE_FINALLY_CLEANUP");
+          return window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ ?? null;
+        }, {
+          code: primaryError?.code ?? "PHASE_G_CAPTURE_FAILED",
+          detail: { error: String(primaryError) },
+        }).catch((persistenceError) => {
+          terminalPersistenceError = {
+            code: "PHASE_G_CAPTURE_TRANSACTION_TERMINAL_READBACK_FAILED",
+            error: String(persistenceError),
+            priorPersistenceError: cloneDiagnosticValue(terminalPersistenceError),
+          };
+          return failureState?.postQuiescenceProof ?? null;
+        });
+      }
+      if (!terminalPersistenceError && failureProofEpoch?.state !== "CLEANED_AFTER_FAILURE") {
+        terminalPersistenceError = {
+          code: "PHASE_G_CAPTURE_TRANSACTION_FAILURE_TERMINAL_INVALID",
+          proofState: failureProofEpoch?.state ?? null,
+        };
+      }
+      try {
+        phaseGCaptureTransaction = await writePhaseGCaptureTransaction({
+          label,
+          outcome: "failure",
+          proofEpoch: failureProofEpoch,
+          screenshot,
+          checkpointEvidence: checkpointFailure,
+          failureState,
+          diagnostics,
+          browserSession,
+          hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
+          terminalPersistenceError,
+        });
+      } catch (persistenceError) {
+        terminalPersistenceError = {
+          code: "PHASE_G_CAPTURE_TRANSACTION_PERSISTENCE_FAILED",
+          error: String(persistenceError),
+        };
+      }
+      phaseGCaptureTransactionPersistenceError = terminalPersistenceError;
+    }
     const failure = new Error(`${label} failed: ${String(primaryError)} secondary=${pageCrashPrimary ? String(error) : "none"} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)} checkpointEvidence=${JSON.stringify(checkpointFailure)}`);
     failure.cause = primaryError;
     failure.phaseGFailure = {
@@ -3895,6 +3838,8 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       failureState,
       diagnostics,
       checkpointEvidence: checkpointFailure,
+      phaseGCaptureTransaction,
+      phaseGCaptureTransactionPersistenceError,
     };
     capturePrimaryFailure = failure;
     throw failure;
@@ -4511,7 +4456,7 @@ async function releasePhaseGPresentationQuiescence(page, {
     expectedStageId,
     proofActor,
     untilBattleTime: normalizedUntilBattleTime,
-    predicate: "player setup, supporting hidden qualification, and an unconsumed exact release-anchor windup converge before same-task release and v5 proof arm",
+    predicate: "player setup, supporting hidden qualification, and an unconsumed exact release-anchor windup converge before same-task release and v7 proof transaction arm",
   });
   if (normalizedUntilBattleTime !== null) {
     invariant(Number(arm.battleTime) < normalizedUntilBattleTime, `presentation quiescence armed after its release boundary: ${JSON.stringify({ arm, normalizedUntilBattleTime })}`);
@@ -4545,6 +4490,7 @@ async function releasePhaseGPresentationQuiescence(page, {
     releaseAnchorLateWindupMaxSeconds,
   }) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
+    const isFiniteReceiptNumber = window.__PHASE_G_IS_FINITE_RECEIPT_NUMBER__;
     const quiescence = bridge?.getQaPresentationQuiescence?.();
     if (quiescence?.schema !== "v100-qa-presentation-quiescence/v1"
       || quiescence.active !== true
@@ -4556,7 +4502,8 @@ async function releasePhaseGPresentationQuiescence(page, {
       || quiescence.running !== true
       || quiescence.paused === true
       || quiescence.over === true
-      || typeof bridge?.getPhaseGCombatSnapshot !== "function") return false;
+      || typeof bridge?.getPhaseGCombatSnapshot !== "function"
+      || typeof isFiniteReceiptNumber !== "function") return false;
     const snapshot = bridge.getPhaseGCombatSnapshot();
     const selectionSnapshotObservedAtPageTime = performance.now();
     if (snapshot?.schema !== "v100-phase-g-combat-snapshot/v1"
@@ -4577,12 +4524,12 @@ async function releasePhaseGPresentationQuiescence(page, {
         schema: "v100-phase-g-pre-release-readiness/v2",
         stageId,
         armedAtPageTime,
-        armedAtBattleTime: Number(snapshot.time),
+        armedAtBattleTime: snapshot.time,
         audioCueRequestCutoffAt: armedAtPageTime,
         actorKeys: actorSpecs.map(actorKey),
         releaseAnchorKey,
         selectionSnapshotObservedAtPageTime,
-        selectionSnapshotBattleTime: Number(snapshot.time),
+        selectionSnapshotBattleTime: snapshot.time,
         sameTaskSnapshotReadCount: 1,
         cachedObserverSnapshotUsedForHandoff: false,
         actors: actorSpecs.map((spec, index) => ({
@@ -4593,7 +4540,8 @@ async function releasePhaseGPresentationQuiescence(page, {
           releaseMode: index === 0 ? "unconsumed-production-windup" : "completed-hidden-attack",
           fighterBaselines: (snapshot.fighters ?? [])
             .filter((fighter) => fighter.side === spec.side && fighter.kind === spec.kind && Number(fighter.hp) > 0)
-            .map((fighter) => ({ fighterId: fighter.id, baselineAttackSequence: Number(fighter.attackSequence) || 0 })),
+            .filter((fighter) => isFiniteReceiptNumber(fighter.attackSequence))
+            .map((fighter) => ({ fighterId: fighter.id, baselineAttackSequence: fighter.attackSequence })),
           cueObserved: index === 0 ? null : spec.cueId ? false : null,
           hiddenQualificationObserved: false,
           windupObserved: false,
@@ -4619,13 +4567,14 @@ async function releasePhaseGPresentationQuiescence(page, {
     }
 
     readiness.selectionSnapshotObservedAtPageTime = selectionSnapshotObservedAtPageTime;
-    readiness.selectionSnapshotBattleTime = Number(snapshot.time);
+    readiness.selectionSnapshotBattleTime = snapshot.time;
     readiness.sameTaskSnapshotReadCount = 1;
     readiness.cachedObserverSnapshotUsedForHandoff = false;
     const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
     const postArmAudio = allAudioRequests.filter((request) => (
-      Number.isFinite(Number(request?.at))
-      && Number(request.at) > Number(readiness.audioCueRequestCutoffAt)
+      isFiniteReceiptNumber(request?.at)
+      && isFiniteReceiptNumber(readiness.audioCueRequestCutoffAt)
+      && request.at > readiness.audioCueRequestCutoffAt
     ));
     const fighterById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
     const actorIsNeutral = (fighter) => (
@@ -4680,8 +4629,8 @@ async function releasePhaseGPresentationQuiescence(page, {
           if (fighter.attackWindupTargetId === null || fighter.attackWindupTargetId === undefined) return false;
           const target = fighterById.get(String(fighter.attackWindupTargetId)) ?? null;
           const expectedTargetSide = actorReadiness.side === "human" ? "zombie" : "human";
-          const attackWindupSeconds = Number(fighter.attackWindup);
-          return Number.isFinite(attackWindupSeconds)
+          const attackWindupSeconds = fighter.attackWindup;
+          return isFiniteReceiptNumber(attackWindupSeconds)
             && attackWindupSeconds > 0
             && Number(fighter.attack) <= 0
             && Number(fighter.abilityWindup) <= 0
@@ -4695,18 +4644,21 @@ async function releasePhaseGPresentationQuiescence(page, {
           ? actorReadiness.windupContinuity
           : [];
         actorReadiness.windupContinuity = windupCandidates.map((fighter) => {
-          const attackSequence = Number(fighter.attackSequence);
+          const attackSequence = fighter.attackSequence;
           const targetId = fighter.attackWindupTargetId;
-          const windup = Number(fighter.attackWindup);
+          const windup = fighter.attackWindup;
           const previous = previousContinuity.find((entry) => (
             String(entry.fighterId) === String(fighter.id)
             && String(entry.targetId) === String(targetId)
-            && Number(entry.attackSequence) === attackSequence
+            && entry.attackSequence === attackSequence
           )) ?? null;
           const newProductionSnapshot = previous
-            && Number(snapshot.time) > Number(previous.lastBattleTime);
+            && isFiniteReceiptNumber(snapshot.time)
+            && isFiniteReceiptNumber(previous.lastBattleTime)
+            && snapshot.time > previous.lastBattleTime;
           const monotonicallyDecreased = newProductionSnapshot
-            && windup < Number(previous.lastWindup);
+            && isFiniteReceiptNumber(previous.lastWindup)
+            && windup < previous.lastWindup;
           if (!previous || (newProductionSnapshot && !monotonicallyDecreased)) {
             return {
               fighterId: fighter.id,
@@ -4715,29 +4667,37 @@ async function releasePhaseGPresentationQuiescence(page, {
               sampleCount: 1,
               firstWindup: windup,
               lastWindup: windup,
-              firstBattleTime: Number(snapshot.time),
-              lastBattleTime: Number(snapshot.time),
+              firstBattleTime: snapshot.time,
+              lastBattleTime: snapshot.time,
             };
           }
           if (!newProductionSnapshot) return previous;
           return {
             ...previous,
-            sampleCount: Number(previous.sampleCount) + 1,
+            sampleCount: previous.sampleCount + 1,
             lastWindup: windup,
-            lastBattleTime: Number(snapshot.time),
+            lastBattleTime: snapshot.time,
           };
         });
         const acceptedCandidate = windupCandidates.find((fighter) => {
           const continuity = actorReadiness.windupContinuity.find((entry) => (
             String(entry.fighterId) === String(fighter.id)
             && String(entry.targetId) === String(fighter.attackWindupTargetId)
-            && Number(entry.attackSequence) === Number(fighter.attackSequence)
+            && entry.attackSequence === fighter.attackSequence
           ));
-          return Number(continuity?.sampleCount) >= 2
-            && Number(continuity?.firstWindup) > Number(continuity?.lastWindup)
-            && Number(continuity?.lastWindup) === Number(fighter.attackWindup)
-            && Number(continuity?.lastBattleTime) === Number(snapshot.time)
-            && Number(fighter.attackWindup) <= releaseAnchorLateWindupMaxSeconds;
+          return [
+            continuity?.sampleCount,
+            continuity?.firstWindup,
+            continuity?.lastWindup,
+            continuity?.lastBattleTime,
+            fighter.attackWindup,
+            snapshot.time,
+          ].every(isFiniteReceiptNumber)
+            && continuity.sampleCount >= 2
+            && continuity.firstWindup > continuity.lastWindup
+            && continuity.lastWindup === fighter.attackWindup
+            && continuity.lastBattleTime === snapshot.time
+            && fighter.attackWindup <= releaseAnchorLateWindupMaxSeconds;
         }) ?? null;
         if (!acceptedCandidate) {
           clearSelection(actorReadiness);
@@ -4747,25 +4707,25 @@ async function releasePhaseGPresentationQuiescence(page, {
         const continuity = actorReadiness.windupContinuity.find((entry) => (
           String(entry.fighterId) === String(acceptedCandidate.id)
           && String(entry.targetId) === String(acceptedCandidate.attackWindupTargetId)
-          && Number(entry.attackSequence) === Number(acceptedCandidate.attackSequence)
+          && entry.attackSequence === acceptedCandidate.attackSequence
         ));
         actorReadiness.hiddenQualificationObserved = false;
         actorReadiness.windupObserved = true;
         actorReadiness.selectedFighterId = acceptedCandidate.id;
-        actorReadiness.selectedAttackSequence = Number(acceptedCandidate.attackSequence);
-        actorReadiness.selectedAttackWindup = Number(acceptedCandidate.attackWindup);
+        actorReadiness.selectedAttackSequence = acceptedCandidate.attackSequence;
+        actorReadiness.selectedAttackWindup = acceptedCandidate.attackWindup;
         actorReadiness.selectedAttackWindupTargetId = acceptedCandidate.attackWindupTargetId;
         actorReadiness.selectedTargetId = target?.id ?? null;
         actorReadiness.selectedTargetSide = target?.side ?? null;
         actorReadiness.selectedTargetKind = target?.kind ?? null;
         actorReadiness.selectedTargetAlive = Number(target?.hp) > 0;
-        actorReadiness.selectedContinuitySampleCount = Number(continuity?.sampleCount);
-        actorReadiness.selectedContinuityFirstWindup = Number(continuity?.firstWindup);
-        actorReadiness.selectedContinuityLastWindup = Number(continuity?.lastWindup);
-        actorReadiness.selectedContinuityFirstBattleTime = Number(continuity?.firstBattleTime);
-        actorReadiness.selectedContinuityLastBattleTime = Number(continuity?.lastBattleTime);
+        actorReadiness.selectedContinuitySampleCount = continuity?.sampleCount;
+        actorReadiness.selectedContinuityFirstWindup = continuity?.firstWindup;
+        actorReadiness.selectedContinuityLastWindup = continuity?.lastWindup;
+        actorReadiness.selectedContinuityFirstBattleTime = continuity?.firstBattleTime;
+        actorReadiness.selectedContinuityLastBattleTime = continuity?.lastBattleTime;
         actorReadiness.readyAtPageTime = performance.now();
-        actorReadiness.readyAtBattleTime = Number(snapshot.time);
+        actorReadiness.readyAtBattleTime = snapshot.time;
         return true;
       }
       const acceptedCandidate = candidates.find((fighter) => {
@@ -4788,7 +4748,7 @@ async function releasePhaseGPresentationQuiescence(page, {
       actorReadiness.hiddenQualificationObserved = true;
       actorReadiness.windupObserved = false;
       actorReadiness.selectedFighterId = acceptedCandidate.id;
-      actorReadiness.selectedAttackSequence = Number(acceptedCandidate.attackSequence);
+      actorReadiness.selectedAttackSequence = acceptedCandidate.attackSequence;
       actorReadiness.selectedAttackWindup = null;
       actorReadiness.selectedAttackWindupTargetId = null;
       actorReadiness.selectedTargetId = target?.id ?? null;
@@ -4796,7 +4756,7 @@ async function releasePhaseGPresentationQuiescence(page, {
       actorReadiness.selectedTargetKind = target?.kind ?? null;
       actorReadiness.selectedTargetAlive = Number(target?.hp) > 0;
       actorReadiness.readyAtPageTime = performance.now();
-      actorReadiness.readyAtBattleTime = Number(snapshot.time);
+      actorReadiness.readyAtBattleTime = snapshot.time;
       return true;
     };
     if (!readiness.actors.every(readinessFor)) return false;
@@ -4813,7 +4773,8 @@ async function releasePhaseGPresentationQuiescence(page, {
       && receipt.running === releaseSnapshot.running
       && receipt.paused === releaseSnapshot.paused
       && receipt.over === releaseSnapshot.over
-      && Number(receipt.battleTime) === Number(releaseSnapshot.time);
+      && [receipt.battleTime, releaseSnapshot.time].every(isFiniteReceiptNumber)
+      && receipt.battleTime === releaseSnapshot.time;
     if (!releaseReceiptMatchesSelectionSnapshot) {
       throw new Error(`release receipt did not match the atomic live selection snapshot: ${JSON.stringify({
         quiescence,
@@ -4848,19 +4809,31 @@ async function releasePhaseGPresentationQuiescence(page, {
       && releaseAnchorFighter?.combatReady === true
       && releaseAnchorFighter?.gateEntering !== true
       && Number(releaseAnchorFighter?.attack) <= 0
-      && Number(releaseAnchorFighter?.attackWindup) > 0
-      && Number(releaseAnchorFighter?.attackWindup) <= releaseAnchorLateWindupMaxSeconds
+      && [
+        releaseAnchorFighter?.attackWindup,
+        releaseAnchorFighter?.attackSequence,
+        releaseAnchorReadiness.selectedAttackSequence,
+        releaseAnchorReadiness.selectedContinuitySampleCount,
+        releaseAnchorReadiness.selectedContinuityFirstWindup,
+        releaseAnchorReadiness.selectedContinuityLastWindup,
+        releaseAnchorReadiness.selectedContinuityFirstBattleTime,
+        releaseAnchorReadiness.selectedContinuityLastBattleTime,
+        releaseSnapshot.time,
+      ].every(isFiniteReceiptNumber)
+      && releaseAnchorFighter.attackWindup > 0
+      && releaseAnchorFighter.attackWindup <= releaseAnchorLateWindupMaxSeconds
       && Number(releaseAnchorFighter?.abilityWindup) <= 0
-      && Number(releaseAnchorFighter?.attackSequence) === Number(releaseAnchorReadiness.selectedAttackSequence)
+      && releaseAnchorFighter.attackSequence === releaseAnchorReadiness.selectedAttackSequence
       && String(releaseAnchorFighter?.targetId) === String(releaseAnchorReadiness.selectedTargetId)
       && String(releaseAnchorFighter?.attackWindupTargetId) === String(releaseAnchorReadiness.selectedAttackWindupTargetId)
       && String(releaseAnchorTarget?.id) === String(releaseAnchorReadiness.selectedTargetId)
       && releaseAnchorTarget?.side === releaseAnchorExpectedTargetSide
       && Number(releaseAnchorTarget?.hp) > 0
-      && Number(releaseAnchorReadiness.selectedContinuitySampleCount) >= 2
-      && Number(releaseAnchorReadiness.selectedContinuityFirstWindup) > Number(releaseAnchorReadiness.selectedContinuityLastWindup)
-      && Number(releaseAnchorReadiness.selectedContinuityLastWindup) === Number(releaseAnchorFighter?.attackWindup)
-      && Number(releaseAnchorReadiness.selectedContinuityLastBattleTime) === Number(releaseSnapshot.time)
+      && releaseAnchorReadiness.selectedContinuitySampleCount >= 2
+      && releaseAnchorReadiness.selectedContinuityFirstWindup > releaseAnchorReadiness.selectedContinuityLastWindup
+      && releaseAnchorReadiness.selectedContinuityLastWindup === releaseAnchorFighter.attackWindup
+      && releaseAnchorReadiness.selectedContinuityFirstBattleTime < releaseAnchorReadiness.selectedContinuityLastBattleTime
+      && releaseAnchorReadiness.selectedContinuityLastBattleTime === releaseSnapshot.time
     );
     if (!releaseAnchorHandoffValid) {
       throw new Error(`release-anchor windup was consumed before the atomic visible epoch handoff: ${JSON.stringify({
@@ -4876,19 +4849,19 @@ async function releasePhaseGPresentationQuiescence(page, {
       actorKey: readiness.releaseAnchorKey,
       releaseMode: releaseAnchorReadiness.releaseMode,
       fighterId: releaseAnchorReadiness.selectedFighterId,
-      baselineAttackSequence: Number(releaseAnchorFighter?.attackSequence) || 0,
+      baselineAttackSequence: releaseAnchorFighter?.attackSequence,
       targetId: releaseAnchorTarget?.id ?? null,
       targetSide: releaseAnchorTarget?.side ?? null,
       targetKind: releaseAnchorTarget?.kind ?? null,
       targetAlive: Number(releaseAnchorTarget?.hp) > 0,
-      attackWindupSeconds: Number(releaseAnchorFighter?.attackWindup),
+      attackWindupSeconds: releaseAnchorFighter?.attackWindup,
       lateWindupMaxSeconds: releaseAnchorLateWindupMaxSeconds,
-      continuitySampleCount: Number(releaseAnchorReadiness.selectedContinuitySampleCount),
-      continuityFirstWindup: Number(releaseAnchorReadiness.selectedContinuityFirstWindup),
-      continuityLastWindup: Number(releaseAnchorReadiness.selectedContinuityLastWindup),
-      continuityFirstBattleTime: Number(releaseAnchorReadiness.selectedContinuityFirstBattleTime),
-      continuityLastBattleTime: Number(releaseAnchorReadiness.selectedContinuityLastBattleTime),
-      handoffAtBattleTime: Number(releaseSnapshot.time),
+      continuitySampleCount: releaseAnchorReadiness.selectedContinuitySampleCount,
+      continuityFirstWindup: releaseAnchorReadiness.selectedContinuityFirstWindup,
+      continuityLastWindup: releaseAnchorReadiness.selectedContinuityLastWindup,
+      continuityFirstBattleTime: releaseAnchorReadiness.selectedContinuityFirstBattleTime,
+      continuityLastBattleTime: releaseAnchorReadiness.selectedContinuityLastBattleTime,
+      handoffAtBattleTime: releaseSnapshot.time,
       handoffAtPageTime: visibleProofStartedAt,
       handoffValid: releaseAnchorHandoffValid,
       selectionSnapshotObservedAtPageTime: readiness.selectionSnapshotObservedAtPageTime,
@@ -4897,51 +4870,122 @@ async function releasePhaseGPresentationQuiescence(page, {
       cachedObserverSnapshotUsedForHandoff: readiness.cachedObserverSnapshotUsedForHandoff,
       releaseReceiptMatchesSelectionSnapshot,
     } : null;
-    const epoch = {
-      schema: "v100-phase-g-post-quiescence-proof/v5",
+    const epochActors = readiness.actors.map((readyActor) => {
+      const fighter = releaseSnapshot.fighters?.find((candidate) => String(candidate.id) === String(readyActor.selectedFighterId));
+      const actorKeyValue = `${readyActor.side}:${readyActor.kind}`;
+      const baselineAttackSequence = fighter?.attackSequence;
+      const releaseCandidate = readyActor.releaseRole === "release-anchor" ? {
+        schema: "v100-phase-g-release-candidate/v1",
+        ordinal: 1,
+        origin: "release-anchor",
+        fighterId: readyActor.selectedFighterId,
+        targetId: releaseAnchor?.targetId ?? null,
+        baselineAttackSequence,
+        attackWindupSeconds: releaseAnchor?.attackWindupSeconds ?? null,
+        anchorBattleTime: releaseAnchor?.handoffAtBattleTime ?? null,
+        anchorPageTime: visibleProofStartedAt,
+        commitWindowSeconds: window.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__?.(releaseAnchor) ?? null,
+        continuity: [
+          {
+            battleTime: releaseAnchor?.continuityFirstBattleTime ?? null,
+            pageTime: null,
+            windup: releaseAnchor?.continuityFirstWindup ?? null,
+          },
+          {
+            battleTime: releaseAnchor?.continuityLastBattleTime ?? null,
+            pageTime: visibleProofStartedAt,
+            windup: releaseAnchor?.continuityLastWindup ?? null,
+          },
+        ],
+      } : null;
+      return {
+        schema: "v100-phase-g-proof-actor-state/v1",
+        actorKey: actorKeyValue,
+        side: readyActor.side,
+        kind: readyActor.kind,
+        cueId: readyActor.cueId ?? null,
+        releaseRole: readyActor.releaseRole,
+        releaseMode: readyActor.releaseMode,
+        selectedFighterId: readyActor.selectedFighterId,
+        baselineAttackSequence,
+        originalTargetId: readyActor.releaseRole === "release-anchor" ? releaseAnchor?.targetId ?? null : null,
+        originalTargetSide: readyActor.releaseRole === "release-anchor" ? releaseAnchor?.targetSide ?? null : null,
+        releaseTargetDiagnostic: readyActor.releaseRole === "supporting-prerequisite" ? {
+          targetId: readyActor.selectedTargetId ?? null,
+          targetSide: readyActor.selectedTargetSide ?? null,
+          targetKind: readyActor.selectedTargetKind ?? null,
+          targetAlive: readyActor.selectedTargetAlive === true,
+        } : null,
+        state: readyActor.releaseRole === "release-anchor" ? "TRACKING_CANDIDATE" : "WAITING_SEQUENCE",
+        candidateOrdinal: releaseCandidate ? 1 : 0,
+        activeCandidate: releaseCandidate,
+        candidateHistory: releaseCandidate ? [{
+          schema: "v100-phase-g-candidate-event/v1",
+          event: "CREATED",
+          candidate: releaseCandidate,
+        }] : [],
+        successorContinuity: [],
+        actorTransitionLog: [{
+          from: null,
+          to: readyActor.releaseRole === "release-anchor" ? "TRACKING_CANDIDATE" : "WAITING_SEQUENCE",
+          reason: "ATOMIC_SAME_TASK_RELEASE",
+          atPageTime: visibleProofStartedAt,
+        }],
+        sourceCommitReceipt: null,
+        contactReceipt: null,
+        audioReceipt: null,
+        witness: null,
+      };
+    });
+    const epochDraft = {
+      schema: "v100-phase-g-post-quiescence-proof/v7",
+      state: "OBSERVING",
       stageId,
-      armedAtBattleTime: Number(releaseSnapshot.time),
+      armedAtBattleTime: releaseSnapshot.time,
       visibleProofStartedAt,
-      visibleProofDeadlineAt: visibleProofStartedAt + Number(proofDurationMs),
-      visibleProofDurationMs: Number(proofDurationMs),
+      visibleProofDeadlineAt: visibleProofStartedAt + proofDurationMs,
+      visibleProofDurationMs: proofDurationMs,
       audioCueRequestCutoffAt: visibleProofStartedAt,
       audioCueRequestBaselineCount: audioCueRequestBaseline.length,
       excludedQuiescedAttackObserved: readiness.actors.some((actor) => actor.hiddenQualificationObserved === true),
       releaseAnchor,
-      preReleaseReadiness: readiness,
-      actors: readiness.actors.map((readyActor) => {
-        const fighter = releaseSnapshot.fighters?.find((candidate) => String(candidate.id) === String(readyActor.selectedFighterId));
-        return {
-          side: readyActor.side,
-          kind: readyActor.kind,
-          cueId: readyActor.cueId ?? null,
-          releaseRole: readyActor.releaseRole,
-          releaseMode: readyActor.releaseMode,
-          selectedFighterId: readyActor.selectedFighterId,
-          fighterIds: [readyActor.selectedFighterId],
-          fighterBaselines: [{
-            fighterId: readyActor.selectedFighterId,
-            baselineAttackSequence: Number(fighter?.attackSequence) || 0,
-          }],
-          observedPostEpochAttack: false,
-          actorAlive: Number(fighter?.hp) > 0,
-          observedFighterId: null,
-          observedAttackSequence: null,
-          observedAtBattleTime: null,
-          observedAtPageTime: null,
-          sourceAliveAtObservation: null,
-          targetId: null,
-          targetSide: null,
-          targetKind: null,
-          targetAlive: null,
-          targetEvidenceSource: null,
-          audioObserved: readyActor.cueId ? false : null,
-          audioObservedAtBattleTime: null,
-          audioObservedAtPageTime: null,
-        };
-      }),
+      preReleaseReadiness: structuredClone(readiness),
+      actors: epochActors,
+      acceptedWitnesses: [],
+      genericEvidence: {
+        schema: "v100-phase-g-generic-causal-evidence/v1",
+        source: false,
+        travelOrContact: false,
+        targetReaction: false,
+        audio: false,
+        allRequirementsGreen: false,
+      },
+      transitionLog: [{
+        schema: "v100-phase-g-proof-transition/v1",
+        from: null,
+        to: "OBSERVING",
+        reason: "ATOMIC_SAME_TASK_RELEASE",
+        atPageTime: visibleProofStartedAt,
+      }],
+      proofCompletedAtPageTime: null,
+      screenshotReceipt: null,
+      cleanupReceipt: null,
+      terminalFailure: null,
+      currentActorStates: Object.fromEntries(epochActors.map((actor) => {
+        const fighter = releaseSnapshot.fighters?.find((candidate) => String(candidate.id) === String(actor.selectedFighterId));
+        return [actor.actorKey, {
+          fighterId: actor.selectedFighterId,
+          alive: Number(fighter?.hp) > 0,
+          attackSequence: fighter?.attackSequence,
+          observedAtBattleTime: releaseSnapshot.time,
+          observedAtPageTime: visibleProofStartedAt,
+        }];
+      })),
     };
-    window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__ = epoch;
+    const epoch = window.__PHASE_G_INSTALL_POST_QUIESCENCE_PROOF_EPOCH__?.(epochDraft);
+    if (epoch?.schema !== "v100-phase-g-post-quiescence-proof/v7") {
+      throw new Error("page-owned v7 proof transaction installer is unavailable");
+    }
     const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
     window.__PHASE_G_COMBAT_ACTIVITY__ = {
       ...activity,
@@ -4971,7 +5015,7 @@ async function releasePhaseGPresentationQuiescence(page, {
       actorStateAtRelease: proofActorState ? {
         id: proofActorState.selectedFighterId,
         kind: proofActorState.kind,
-        attackSequence: proofActorState.fighterBaselines[0]?.baselineAttackSequence ?? null,
+        attackSequence: proofActorState.baselineAttackSequence ?? null,
         targetId: readiness.actors.find((actor) => actor.side === "zombie")?.selectedTargetId ?? null,
         attackWindup: releaseAnchor?.actorKey === `zombie:${proofActorState.kind}` ? releaseAnchor.attackWindupSeconds : null,
         releaseRole: proofActorState.releaseRole,
@@ -5007,9 +5051,15 @@ async function releasePhaseGPresentationQuiescence(page, {
   invariant(Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames), `a production render escaped the quiescence window: ${JSON.stringify(release)}`);
   invariant(Number(release.releasedAtSimulationTicks) > Number(release.enteredAtSimulationTicks), `simulation did not advance through presentation quiescence: ${JSON.stringify(release)}`);
   invariant(Number(release.suppressedRenderFrames) > 0, `presentation quiescence suppressed no scheduled render: ${JSON.stringify(release)}`);
-  invariant(postReleaseProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
-    && Number.isFinite(Number(postReleaseProofEpoch.audioCueRequestCutoffAt))
-    && Number.isFinite(Number(postReleaseProofEpoch.visibleProofDeadlineAt)),
+  invariant(postReleaseProofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
+    && postReleaseProofEpoch.state === "OBSERVING"
+    && [
+      postReleaseProofEpoch.armedAtBattleTime,
+      postReleaseProofEpoch.visibleProofStartedAt,
+      postReleaseProofEpoch.visibleProofDeadlineAt,
+      postReleaseProofEpoch.visibleProofDurationMs,
+      postReleaseProofEpoch.audioCueRequestCutoffAt,
+    ].every(isFiniteReceiptNumber),
   `post-quiescence proof epoch did not arm in the release task: ${JSON.stringify(postReleaseProofEpoch)}`);
   if (specs.length > 0) {
     const expectedReleaseAnchorKey = `${specs[0].side}:${specs[0].kind}`;
@@ -5018,21 +5068,38 @@ async function releasePhaseGPresentationQuiescence(page, {
     invariant(releaseAnchor?.handoffValid === true
       && releaseAnchor.actorKey === expectedReleaseAnchorKey
       && releaseAnchor.releaseMode === "unconsumed-production-windup"
-      && Number(releaseAnchor.attackWindupSeconds) > 0
-      && Number(releaseAnchor.attackWindupSeconds) <= RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
-      && Number(releaseAnchor.lateWindupMaxSeconds) === RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
-      && Number(releaseAnchor.continuitySampleCount) >= 2
-      && Number(releaseAnchor.continuityFirstWindup) > Number(releaseAnchor.continuityLastWindup)
-      && Number(releaseAnchor.continuityLastWindup) === Number(releaseAnchor.attackWindupSeconds)
-      && Number(releaseAnchor.continuityLastBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
+      && [
+        releaseAnchor.baselineAttackSequence,
+        releaseAnchor.attackWindupSeconds,
+        releaseAnchor.lateWindupMaxSeconds,
+        releaseAnchor.continuitySampleCount,
+        releaseAnchor.continuityFirstWindup,
+        releaseAnchor.continuityLastWindup,
+        releaseAnchor.continuityFirstBattleTime,
+        releaseAnchor.continuityLastBattleTime,
+        releaseAnchor.handoffAtBattleTime,
+        releaseAnchor.handoffAtPageTime,
+        releaseAnchor.selectionSnapshotObservedAtPageTime,
+        releaseAnchor.selectionSnapshotBattleTime,
+        releaseAnchor.sameTaskSnapshotReadCount,
+      ].every(isFiniteReceiptNumber)
+      && releaseAnchor.attackWindupSeconds > 0
+      && releaseAnchor.attackWindupSeconds <= RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+      && releaseAnchor.lateWindupMaxSeconds === RELEASE_ANCHOR_LATE_WINDUP_MAX_SECONDS
+      && releaseAnchor.continuitySampleCount >= 2
+      && releaseAnchor.continuityFirstWindup > releaseAnchor.continuityLastWindup
+      && releaseAnchor.continuityFirstBattleTime < releaseAnchor.continuityLastBattleTime
+      && releaseAnchor.continuityLastWindup === releaseAnchor.attackWindupSeconds
+      && releaseAnchor.continuityLastBattleTime === releaseAnchor.handoffAtBattleTime
       && releaseAnchor.targetAlive === true
-      && Number.isFinite(Number(releaseAnchor.selectionSnapshotObservedAtPageTime))
-      && Number(releaseAnchor.selectionSnapshotBattleTime) === Number(releaseAnchor.handoffAtBattleTime)
-      && Number(releaseAnchor.sameTaskSnapshotReadCount) === 1
+      && releaseAnchor.selectionSnapshotBattleTime === releaseAnchor.handoffAtBattleTime
+      && releaseAnchor.sameTaskSnapshotReadCount === 1
       && releaseAnchor.cachedObserverSnapshotUsedForHandoff === false
       && releaseAnchor.releaseReceiptMatchesSelectionSnapshot === true
       && String(releaseAnchor.fighterId) === String(anchorActor?.selectedFighterId)
-      && Number(releaseAnchor.baselineAttackSequence) === Number(anchorActor?.fighterBaselines?.[0]?.baselineAttackSequence),
+      && releaseAnchor.baselineAttackSequence === anchorActor?.baselineAttackSequence
+      && anchorActor?.state === "TRACKING_CANDIDATE"
+      && anchorActor?.activeCandidate?.schema === "v100-phase-g-release-candidate/v1",
     `post-quiescence release anchor did not preserve an unconsumed exact production attack: ${JSON.stringify({ expectedReleaseAnchorKey, releaseAnchor, anchorActor })}`);
   }
   const restoredHandle = await page.waitForFunction(({ stageId, releasedRenderFrames, visibleProofDeadlineAt }) => {
@@ -5073,10 +5140,12 @@ async function releasePhaseGPresentationQuiescence(page, {
   }, { timeout: Math.min(battleTimeout, Number(visibleProofDurationMs), 10_000), polling: 50 });
   const restored = await restoredHandle.jsonValue();
   await restoredHandle.dispose();
-  invariant(Number(restored.pageNow) <= Number(postReleaseProofEpoch.visibleProofDeadlineAt),
+  invariant([restored.pageNow, postReleaseProofEpoch.visibleProofDeadlineAt].every(isFiniteReceiptNumber)
+    && restored.pageNow <= postReleaseProofEpoch.visibleProofDeadlineAt,
     `production restoration exceeded the single release-origin deadline: ${JSON.stringify({ restored, postReleaseProofEpoch })}`);
   invariant(postReleaseProofEpoch.stageId === expectedStageId
-    && Number(postReleaseProofEpoch.armedAtBattleTime) === Number(release.battleTime),
+    && [postReleaseProofEpoch.armedAtBattleTime, release.battleTime].every(isFiniteReceiptNumber)
+    && postReleaseProofEpoch.armedAtBattleTime === release.battleTime,
   `post-quiescence proof epoch did not share the exact atomic release battle time: ${JSON.stringify({ release, postReleaseProofEpoch })}`);
   recorder?.clearAwaiting();
   recorder?.mark("presentation-quiescence-released-or-not-required", "completed", {
@@ -5168,12 +5237,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
         : null;
-      const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
-        String(baseline.fighterId) === String(fighter?.id)
-      )) ?? null;
+      const epochBaselineFor = (fighter) => epochActor
+        && String(epochActor.selectedFighterId) === String(fighter?.id)
+        ? { fighterId: epochActor.selectedFighterId, baselineAttackSequence: epochActor.baselineAttackSequence }
+        : null;
       const matchingActors = (snapshot?.fighters ?? []).filter((fighter) => (
         fighter.side === "zombie"
         && fighter.kind === expectedKind
@@ -5203,7 +5273,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         || actor.enemyVfx?.attackWindup === true
         || ["attack", "warning"].includes(actor.enemyVfx?.phase));
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? allAudioRequests.filter((request) => (
           Number.isFinite(Number(request?.at))
           && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
@@ -5214,68 +5284,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         : null;
       const audioAttack = matchingAudioRequest !== null;
       const historicalAudioAttack = expectedCueId && (epochActor
-        ? epochActor.audioObserved === true
+        ? epochActor.audioReceipt?.cueId === expectedCueId
         : (activity.audioCues ?? []).includes(expectedCueId));
       // The runtime observer retains fleeting attack states after a sprite
       // leaves the live fighter list. Use that production history so a short
       // WebKit frame cannot erase a real attack that already occurred.
       const historicalAttack = epochActor
-        ? epochActor.observedAttackSequence !== null
+        ? epochActor.contactReceipt !== null || epochActor.witness !== null
         : (activity.attackingActors ?? []).includes(actorKey);
       const observed = historicalAttack || stateAttack === true || audioAttack === true || historicalAudioAttack === true;
       if (observed) {
-        if (epochActor) {
-          const releaseAnchor = proofEpoch.releaseAnchor ?? null;
-          const actorBaselineSequence = Number(actorBaseline?.baselineAttackSequence);
-          const releaseAnchorCommitWindowSeconds = releaseAnchor
-            ? window.__PHASE_G_RELEASE_ANCHOR_COMMIT_WINDOW_SECONDS_FOR__?.(releaseAnchor) ?? null
-            : null;
-          const releaseAnchorCommitDeltaSeconds = releaseAnchor
-            && Number.isFinite(Number(snapshot?.time))
-            ? Number(snapshot.time) - Number(releaseAnchor.handoffAtBattleTime)
-            : null;
-          const releaseAnchorBindingValid = releaseAnchor?.handoffValid === true
-            && releaseAnchor.actorKey === actorKey
-            && String(releaseAnchor.fighterId) === String(actor?.id)
-            && actorBaselineSequence === Number(releaseAnchor.baselineAttackSequence)
-            && Number(actor?.attackSequence) === Number(releaseAnchor.baselineAttackSequence) + 1
-            && Number.isFinite(Number(releaseAnchorCommitDeltaSeconds))
-            && Number(releaseAnchorCommitDeltaSeconds) >= 0
-            && Number(releaseAnchorCommitDeltaSeconds) <= Number(releaseAnchorCommitWindowSeconds);
-          const directTargetId = actor?.targetId === null || actor?.targetId === undefined
-            ? null
-            : actor.targetId;
-          const targetId = directTargetId ?? (releaseAnchorBindingValid ? releaseAnchor.targetId : null);
-          const target = targetId === null || targetId === undefined
-            ? null
-            : snapshot?.fighters?.find((fighter) => String(fighter.id) === String(targetId)) ?? null;
-          if (sequenceAttack
-            && String(actor?.id) === String(epochActor.selectedFighterId)
-            && epochActor.observedPostEpochAttack !== true) {
-            Object.assign(epochActor, {
-              observedPostEpochAttack: true,
-              observedAtBattleTime: Number(snapshot?.time),
-              observedAtPageTime: performance.now(),
-              sourceAliveAtObservation: Number(actor?.hp) > 0,
-              observedFighterId: actor.id,
-              observedAttackSequence: Number(actor.attackSequence),
-              targetId: target?.id ?? targetId ?? null,
-              targetSide: target?.side ?? null,
-              targetKind: target?.kind ?? null,
-              targetAlive: target ? Number(target.hp) > 0 : null,
-              targetEvidenceSource: directTargetId !== null
-                ? "live-attacker-target"
-                : releaseAnchorBindingValid
-                  ? "release-anchor-bound-windup"
-                  : null,
-            });
-          }
-          if (audioAttack || historicalAudioAttack) {
-            epochActor.audioObserved = true;
-            epochActor.audioObservedAtBattleTime ??= Number(snapshot?.time);
-            if (matchingAudioRequest) epochActor.audioObservedAtPageTime ??= Number(matchingAudioRequest.at);
-          }
-        }
         const fighterActors = new Set(activity.fighterActors ?? []);
         const attackingActors = new Set(activity.attackingActors ?? []);
         fighterActors.add(actorKey);
@@ -5306,10 +5324,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const fighters = snapshot?.fighters ?? [];
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "zombie" && candidate.kind === expectedKind) ?? null
         : null;
-      const epochFighterIds = new Set((epochActor?.fighterBaselines ?? []).map((baseline) => String(baseline.fighterId)));
+      const epochFighterIds = new Set(epochActor ? [String(epochActor.selectedFighterId)] : []);
+      const acceptedWitness = proofEpoch?.acceptedWitnesses?.find((candidate) => candidate.actorKey === `zombie:${expectedKind}`) ?? null;
       const actorCandidates = fighters.filter((fighter) => (
         fighter.side === "zombie"
         && fighter.kind === expectedKind
@@ -5322,9 +5341,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         return target?.side === "human" && Number.isFinite(Number(target.hp)) && Number(target.hp) > 0;
       };
       const actor = actorCandidates.find((fighter) => (
-        epochActor?.observedFighterId !== null
-        && epochActor?.observedFighterId !== undefined
-        && String(fighter.id) === String(epochActor.observedFighterId)
+        acceptedWitness?.sourceId !== null
+        && acceptedWitness?.sourceId !== undefined
+        && String(fighter.id) === String(acceptedWitness.sourceId)
       )) ?? actorCandidates.find(liveHumanTargetFor) ?? actorCandidates[0] ?? null;
       const actorKey = `zombie:${expectedKind}`;
       const target = actor?.targetId === null || actor?.targetId === undefined
@@ -5334,7 +5353,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const historicalTarget = window.__PHASE_G_PROOF_ACTOR_HUMAN_TARGET_FROM_HISTORY__?.(
         activity.targetOwnershipHistory ?? [],
         expectedKind,
-        epochActor?.observedFighterId ?? null,
+        acceptedWitness?.sourceId ?? epochActor?.selectedFighterId ?? null,
       ) ?? null;
       const evidence = liveHumanTarget ? {
         evidence: "live-target",
@@ -5427,12 +5446,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const snapshot = window.__PHASE_G_LAST_COMBAT_SNAPSHOT__;
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const proofEpoch = window.__PHASE_G_POST_QUIESCENCE_PROOF_EPOCH__;
-      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const epochActor = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? proofEpoch.actors?.find((candidate) => candidate.side === "human" && candidate.kind === expectedKind) ?? null
         : null;
-      const epochBaselineFor = (fighter) => epochActor?.fighterBaselines?.find((baseline) => (
-        String(baseline.fighterId) === String(fighter?.id)
-      )) ?? null;
+      const epochBaselineFor = (fighter) => epochActor
+        && String(epochActor.selectedFighterId) === String(fighter?.id)
+        ? { fighterId: epochActor.selectedFighterId, baselineAttackSequence: epochActor.baselineAttackSequence }
+        : null;
       const matchingActors = (snapshot?.fighters ?? []).filter((fighter) => (
         fighter.side === "human"
         && fighter.kind === expectedKind
@@ -5463,7 +5483,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // the same observer history used for enemy proof actors so that a
       // fleeting but genuine player attack is not erased by defeat.
       const allAudioRequests = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
-      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v5"
+      const proofAudioRequests = proofEpoch?.schema === "v100-phase-g-post-quiescence-proof/v7"
         ? allAudioRequests.filter((request) => (
           Number.isFinite(Number(request?.at))
           && Number(request.at) > Number(proofEpoch.audioCueRequestCutoffAt)
@@ -5472,38 +5492,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const matchingAudioRequest = expectedCueId
         ? proofAudioRequests.find((request) => request?.cueId === expectedCueId) ?? null
         : null;
-      const audioAttack = matchingAudioRequest !== null || epochActor?.audioObserved === true;
+      const audioAttack = matchingAudioRequest !== null || epochActor?.audioReceipt?.cueId === expectedCueId;
       const historicalAttack = epochActor
-        ? epochActor.observedAttackSequence !== null
+        ? epochActor.contactReceipt !== null || epochActor.witness !== null
         : (activity.attackingActors ?? []).includes(actorKey);
       const observedAttack = historicalAttack || stateAttack === true || audioAttack === true;
-      if (observedAttack && epochActor) {
-        const target = actor?.targetId === null || actor?.targetId === undefined
-          ? null
-          : snapshot?.fighters?.find((fighter) => String(fighter.id) === String(actor.targetId)) ?? null;
-        if (sequenceAttack
-          && String(actor?.id) === String(epochActor.selectedFighterId)
-          && epochActor.observedPostEpochAttack !== true) {
-          Object.assign(epochActor, {
-            observedPostEpochAttack: true,
-            observedAtBattleTime: Number(snapshot?.time),
-            observedAtPageTime: performance.now(),
-            sourceAliveAtObservation: Number(actor?.hp) > 0,
-            observedFighterId: actor.id,
-            observedAttackSequence: Number(actor.attackSequence),
-            targetId: target?.id ?? actor?.targetId ?? null,
-            targetSide: target?.side ?? null,
-            targetKind: target?.kind ?? null,
-            targetAlive: target ? Number(target.hp) > 0 : null,
-            targetEvidenceSource: target ? "live-attacker-target" : null,
-          });
-        }
-        if (audioAttack) {
-          epochActor.audioObserved = true;
-          epochActor.audioObservedAtBattleTime ??= Number(snapshot?.time);
-          if (matchingAudioRequest) epochActor.audioObservedAtPageTime ??= Number(matchingAudioRequest.at);
-        }
-      }
       const fighterActors = new Set(activity.fighterActors ?? []);
       const attackingActors = new Set(activity.attackingActors ?? []);
       fighterActors.add(actorKey);
