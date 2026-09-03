@@ -1552,6 +1552,97 @@ export function linkedWeaponTransactionId({
   ].join(":");
 }
 
+export const COMPLETED_ATTACK_IMPACT_SCHEMA = "v100-completed-attack-impact/v1";
+
+export function completedAttackAudioReceiptId({
+  battleGeneration,
+  sourceId,
+  attackSequence,
+} = {}) {
+  const generation = Number(battleGeneration);
+  const source = Number(sourceId);
+  const sequence = Number(attackSequence);
+  if (![generation, source, sequence].every(Number.isInteger)
+    || generation < 1
+    || source < 1
+    || sequence < 1) return null;
+  return `combat-attack:${generation}:${source}:${sequence}`;
+}
+
+export function createCompletedAttackImpactReceipt({
+  battleGeneration,
+  sourceId,
+  sourceSide,
+  sourceKind,
+  attackSequence,
+  targetId,
+  targetSide,
+  targetKind,
+  impactOrdinal = 0,
+  mode,
+  committedAtBattleTime,
+  contactAtBattleTime,
+  reactionOutcome,
+  audioCueId,
+  audioReceiptId,
+  audioRequestObserved,
+} = {}) {
+  const numeric = {
+    battleGeneration: Number(battleGeneration),
+    sourceId: Number(sourceId),
+    attackSequence: Number(attackSequence),
+    targetId: Number(targetId),
+    impactOrdinal: Number(impactOrdinal),
+    committedAtBattleTime: Number(committedAtBattleTime),
+    contactAtBattleTime: Number(contactAtBattleTime),
+  };
+  const valid = Number.isInteger(numeric.battleGeneration)
+    && numeric.battleGeneration >= 1
+    && Number.isInteger(numeric.sourceId)
+    && numeric.sourceId >= 1
+    && Number.isInteger(numeric.attackSequence)
+    && numeric.attackSequence >= 1
+    && Number.isInteger(numeric.targetId)
+    && numeric.targetId >= 1
+    && Number.isInteger(numeric.impactOrdinal)
+    && numeric.impactOrdinal >= 0
+    && Number.isFinite(numeric.committedAtBattleTime)
+    && numeric.committedAtBattleTime >= 0
+    && Number.isFinite(numeric.contactAtBattleTime)
+    && numeric.contactAtBattleTime >= numeric.committedAtBattleTime
+    && ["human", "zombie"].includes(sourceSide)
+    && ["human", "zombie"].includes(targetSide)
+    && sourceSide !== targetSide
+    && typeof sourceKind === "string"
+    && sourceKind.length > 0
+    && typeof targetKind === "string"
+    && targetKind.length > 0
+    && ["direct", "projectile", "delayed"].includes(mode)
+    && ["hit", "defeated"].includes(reactionOutcome)
+    && typeof audioCueId === "string"
+    && audioCueId.length > 0
+    && audioReceiptId === completedAttackAudioReceiptId({
+      battleGeneration: numeric.battleGeneration,
+      sourceId: numeric.sourceId,
+      attackSequence: numeric.attackSequence,
+    })
+    && audioRequestObserved === true;
+  if (!valid) return null;
+  return Object.freeze({
+    schema: COMPLETED_ATTACK_IMPACT_SCHEMA,
+    ...numeric,
+    sourceSide,
+    sourceKind,
+    targetSide,
+    targetKind,
+    mode,
+    reactionOutcome,
+    audioCueId,
+    audioReceiptId,
+    audioRequestObserved,
+  });
+}
+
 export function cancelPendingWeaponTransaction(events = [], transactionId = null) {
   if (!transactionId) return Object.freeze([...(Array.isArray(events) ? events : [])]);
   return Object.freeze((Array.isArray(events) ? events : []).filter(

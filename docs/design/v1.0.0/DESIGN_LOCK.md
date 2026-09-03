@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r105`
+- Revision: `r114`
 - Status: `DESIGN_LOCKED`
 - Execution owner: `SOL`
 - Design publication role: `SOL_DESIGN`; the active execution role is read from Issue #172
@@ -9,6 +9,8 @@
 - Story baseline tree: `4833a1eed29e3901e3dcfca01cf77db6846e5265`
 - Reconstructed story SHA-256: `c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4`
 - Product target: `Version 1.0.0`
+
+Current execution contract: Section 138, with latest active delta 138.10 and the live Issue #172 cursor. Earlier revision-specific execution sections are historical, not alternative resume paths.
 
 This document is the implementation lock for Version 1.0.0. Under the current Producer override, SOL may choose internal algorithms only inside the active revision's boundaries. Historical Luna sections remain audit evidence and are not executable owner assignments. Product behavior, economy, identities, stage order, save semantics, and acceptance thresholds are fixed here.
 
@@ -7127,3 +7129,1344 @@ Complete automatic focused green alone closes this source-transport owner and un
 - `M3_PASSED`: `NO`
 
 SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the actual CI log, direct byte measurement, pure-reducer 240/240 rejection, every subprocess callsite, all nine subsystem axes, the frozen r104 runtime bytes, exact five-path boundary, one-shot stop, and final Producer checkpoint. The oversized cross-process combinatorial owner is removed rather than enlarged, all semantic cases remain mandatory, and no product decision is delegated. Revision r105 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 122. Revision r106 — exact lethal pending-impact causal outcome
+
+Section 122 consumes automatic focused CI #948's first required red and supersedes Section 121 only for the exact lethal pending-impact outcome domain, its versioned contact/witness receipts, the nine-path correction boundary, and the current cursor. The r105 static process-transport correction, the r104 single Node/page proof-machine owner, r99 accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order, every product timing and evidence threshold, and the complete release tail remain authoritative.
+
+### 122.1 Actual control and subsystem ownership
+
+The exact r105 candidate is remote HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. Automatic CI #948 / run `33045760901` passed PR Verify and its completed runtime controls. Phase G job `98433508671` stopped in ordered WebKit remote process 2 at Stage 6 / 667x375. Artifact `v100-phase-g-webkit-battle-extra-focused` id `9636183163` is preserved with zip SHA-256 `c7ee0151b9371e145e812e477290f1c92a69e238f37a8350f75ef14293a6fb3b`. No retry, rerun, edit, or next ordinal followed the first red.
+
+The same-candidate remote process 1 completed Stage 6 -> Stage 24 -> Stage 25. Its three capture transactions are `CLEANED`; Stage 6 accepted both exact pending-impact witnesses, then production screenshot SHA-256 `efe3bd8648cae29513ccfee53cfc77308faa581f914399e94221ae294fc25718`, after-screenshot deadline receipt, and success cleanup.
+
+Remote process 2 had zero console, page, request, and HTTP errors and valid host-resource telemetry. The spitter witness was accepted. Ranger then committed exact sequence `6 -> 7` against spitter id 3: source page/battle time `52149` / `48.783333333331846`, target HP `15`, exact transaction `1:6:fighter:3:0`, damage `20`, impact delay `0.12`, remaining-at-commit `0.08666666666666667`, and exact rifle cue page `52089`. At the next proof sample, page/battle time `52304` / `48.949999999998504`, the scheduled exact lethal impact had removed the target. The v7 reducer unconditionally mapped an absent/dead pending target to `EXACT_PENDING_IMPACT_TARGET_INVALID` although the product battle continued normally.
+
+The nine-axis audit is conclusive:
+
+1. state ownership remains the one shared proof-machine factory; its lethal terminal domain is incomplete;
+2. observer lifecycle has correct success and failure cleanup receipts and is not owner;
+3. presentation quiescence has valid atomic release/handoff in both controls and is not owner;
+4. checkpoint ownership reaches causal proof and is not owner;
+5. causal witness is the sole owner because a unique exact lethal impact is misclassified;
+6. screenshot ordering is green in process 1 and was never reached after the process-2 causal red;
+7. cleanup ordering is correct in both success and failure transactions;
+8. evidence persistence preserves source, transport, audio, frozen actor, failure, telemetry, and artifact receipts;
+9. browser/process lifecycle uses the same candidate and fresh process-per-capture with clean telemetry, excluding WebKit/GitHub infrastructure.
+
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_LETHAL_PENDING_IMPACT_DOMAIN_OMISSION / UNIQUE LETHAL TRANSPORT TARGET REMOVAL MISCLASSIFIED AS INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_SOURCE_V7_LETHAL_OUTCOME_STATE_EXTENSION / V3 CONTACT_AND_WITNESS_OUTCOME_RECEIPTS + EXACT_DUE_WINDOW_FAIL_CLOSED_MATRIX / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 122.2 Single-source state transition and fail-closed boundary
+
+Retain top-level proof schema `v100-phase-g-post-quiescence-proof/v7`, the one `createV100PhaseGProofMachine` owner, and the existing Node/page factory serialization. Version only the changed child semantics to direct-contact receipt `v3` and witness `v3`, and add immutable receipt `v100-phase-g-exact-lethal-target-removal/v1`.
+
+`advancePendingImpact` may transition an absent/dead exact target to `CONTACT_ACCEPTED` with causal mode `pending-impact-lethal` only when every condition is true:
+
+1. source commit already froze exactly one `applyDamage: true` pending impact for the same actor, source, target, edge, and committed sequence;
+2. the target was alive with strict finite positive HP at source commit;
+3. frozen damage is a strict finite number and `damage >= targetHpBefore`;
+4. `expectedImpactAtBattleTime` equals source battle time plus `remainingSecondsAtCommit` exactly;
+5. first absence/death observation is at or after that expected time and at or before expected time plus the existing `schedulerToleranceSeconds`;
+6. source identity remains valid and its committed attack sequence has not advanced;
+7. exact post-cutoff attacker cue remains mandatory and within the original proof deadline;
+8. contact/removal page and battle times are strict finite numbers inside the original release epoch.
+
+The lethal contact freezes source/target/edge/sequence, target HP before, damage, impact delay, remaining-at-commit, expected and observed impact times, page time, target observation (`absent` or `dead-present`), and the exact transport receipt. It records `targetAlive: false`, `targetOutcome: defeated-by-exact-pending-impact`, and never fabricates a live target HP or animation. Generic target disappearance does not qualify.
+
+The existing nonlethal `pending-impact` path continues to require later same-target finite positive HP decrease and fresh identity-bound reaction. The existing `same-snapshot-direct` path remains byte-semantically unchanged. Both record `targetOutcome: damaged-alive` and no lethal receipt. Generic causal evidence treats only a validated live reaction or the new exact lethal-removal receipt as target reaction.
+
+Fail closed with distinct diagnostic ownership for nonlethal target disappearance, removal before due time, removal after the existing scheduler tolerance, wrong live identity, invalid transport/numeric domain, source sequence advance, or missing/late cue. No timeout, duration, attempt, retry, viewport, threshold, damage, hitbox, AI, or gameplay value may absorb these failures.
+
+`postQuiescenceExactActorDecision` and `exactActorDirectContactCausalDecision` accept exactly the two target outcomes above. The latter emits an identity-bound `exact-pending-impact-lethal-removal` reaction observation only from the immutable lethal receipt. `buildCombatCausalProof` permits that one exact channel in addition to existing live fighter reaction channels; it does not infer defeat from missing fighters or damage text.
+
+### 122.3 Exact path and acceptance contract
+
+Only these nine paths may change relative to remote tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-proof-machine.mjs`
+5. `scripts/v100-phase-g-production-matrix.mjs`
+6. `tests/fixtures/v100-phase-g-v6-contract.mjs`
+7. `tests/v100-design-lock.test.mjs`
+8. `tests/v100-phase-g-checkpoint.test.mjs`
+9. `tests/v100-phase-g-proof-machine.test.mjs`
+
+The historical fixture filename remains stable. `tests/v100-r11-combat-causal-history.test.mjs` consumes its existing exported factory and remains byte-identical. All browser harnesses other than the production-matrix owner, `app/**`, workflows, packages/lockfiles, public/PWA/assets, generated output, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, sample/dwell/pixel/screenshot threshold, screenshot order/criteria/inventory, audio, save, evidence strength, and release contracts are byte-frozen.
+
+Source acceptance must include the exact CI #948 ranger fixture and require acceptance at the original times, plus unchanged live pending-impact and Stage 24 same-snapshot controls. Negative coverage must independently reject damage below frozen HP, disappearance before due time, disappearance after scheduler tolerance, wrong target/source/edge/sequence, malformed/ambiguous transport, invalid lethal receipt numeric fields, and missing/late cue. The exhaustive strict numeric matrix remains in-process and gains every lethal timing/damage field; no acceptance case is deleted or moved to an oversized child payload.
+
+Execute exactly once and stop at the first red:
+
+1. syntax and focused source/static/Design/canonical integrity, including Node/page reducer parity, the exact CI #948 replay, all live/direct controls, and the full negative matrix;
+2. Stage 24 standalone in three fresh WebKit processes, `3/3`;
+3. ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, `9/9` total;
+4. full Hosted, full bounded deployment, content validators, complete tests, lint zero errors, final production build, and repeated exact-nine/BOM/EOL/protected-manifest/diff integrity;
+5. one non-amended exact-nine commit with message `test: close r106 exact lethal causal outcome`;
+6. one unchanged-ref authenticated-admin non-force transport, exact remote tree/parent/message/path/blob/Draft/base read-back, and exactly one automatic focused CI.
+
+The first red or uncertainty returns immediately to `SOL_DESIGN` without rerun, retry, edit, micro-patch, next revision, next ordinal, second commit, second transport, or CI rerun. Complete automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 122.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R106_EXACT_LETHAL_CAUSAL_OUTCOME_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: automatic focused CI #948 Phase G job `98433508671`, ordered remote process 2 Stage 6 exact lethal target removal
+- `LAST_GREEN_GATE`: same-run remote process 1 ordered Stage 6/24/25 `3/3`, PR Verify, and completed runtime controls
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_LETHAL_PENDING_IMPACT_DOMAIN_OMISSION / UNIQUE LETHAL TRANSPORT TARGET REMOVAL MISCLASSIFIED AS INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_SOURCE_V7_LETHAL_OUTCOME_STATE_EXTENSION / V3 CONTACT_AND_WITNESS_OUTCOME_RECEIPTS + EXACT_DUE_WINDOW_FAIL_CLOSED_MATRIX / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r105 process transport and exact remote transport are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r106 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r105 material iteration 35 is remote; r106 exact-nine QA-harness correction is material iteration 36; workflow-only restoration follows only after automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: implement exact-nine lethal outcome -> one-shot source/static -> Stage 24 `3/3` -> ordered Stage 6/24/25 `9/9` -> full local acceptance -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against both same-candidate remote controls, the exact source/transport/HP/timing/cue receipts, the terminal artifact and clean telemetry, every proof-machine branch and downstream causal builder, all nine subsystem axes, the finite exact-nine topology, the one-shot stop, and the final Producer boundary. Revision r106 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 123. Revision r107 — capture-release liveness state machine
+
+Section 123 consumes the first local r106 browser red and supersedes Section 122 only for pre-release target-continuity ownership, the outer capture transaction, failure persistence before a page proof epoch exists, the six-path delta inside the cumulative nine-path candidate, and the current cursor. The r106 exact lethal pending-impact outcome remains source/static-green and byte-frozen while r107 is designed and executed. The r105 in-process static reducer, r104 single Node/page proof-machine owner, r99 accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order, all product timing and evidence thresholds, and the complete release tail remain authoritative.
+
+### 123.1 Actual first-red evidence and controls
+
+The fixed remote parent remains HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. On the uncommitted r106 material-iteration-36 candidate, syntax `4/4`, focused source `35/35`, Design Lock `19/19`, canonical six-file `55/55`, exact-nine byte/static integrity, and Stage 24 standalone fresh WebKit `3/3` were green. Ordered fresh process 1 then completed Stage 6 and Stage 24 before Stage 25 produced the first red. No ordered process 2 or 3, rerun, retry, edit, commit, transport, CI, or next ordinal followed before this design decision.
+
+The two green ordered captures were sealed and clean:
+
+- Stage 6 transaction SHA-256 `4e2d3ee611b37e37cbf112873927e4bea7f9fd90f56c3fc486f8897cbfcd8c55`, state `CLEANED`, diagnostics/overflow `0`;
+- Stage 24 transaction SHA-256 `4acf306bde4ee47972df599ceb7d2aa43d1cadc5d474116f08c7113fce0bd2c1`, state `CLEANED`, diagnostics/overflow `0`.
+
+Stage 25 timed out at presentation-quiescence after the unchanged `45000` ms wait. Its failure transaction is `6,009,475` bytes, SHA-256 `867c520240987a3999deedd5a9ab3b737b51277b6bcada1ce975865f00a15c11`. Five real player-facing deployments were accepted: medic at page `6411`, guardian `10408`, ranger `26178`, babayaga `44088`, and brawler `61964`. Pre-release readiness armed at page/battle `80846` / `77.2`; the terminal selection was page/battle `125829` / `122.19999999999435`, wave 4. At that time only infected fighters were alive, the exact shield actor was alive and ready, but shield baselines id `15` / `22` remained sequence `0`, no wind-up or selected target existed, and no human target remained. The page was alive with console/page/request/HTTP failures `0`.
+
+The page proof epoch had not armed, so `proofState` was `null`; the capture transaction then recorded `PHASE_G_CAPTURE_TRANSACTION_FAILURE_TERMINAL_INVALID`. This is a second QA-harness contract gap, not evidence that the page or product crashed.
+
+The actual same-candidate source proves the ownership cycle. `proofActorTargetContinuityDecision` permits sustain redeployment only while `bossDeploymentFinished === true`; the presentation-quiesced boss path sets `bossDeploymentFinished = true` and synchronously sets `sustainActive = false` before its first await, so the background sustain loop can never observe both values true. The page quiescence wait nevertheless requires a current live human target while host redeployment is disabled. r106 changes only downstream `buildCombatCausalProof`; the setup, sustain, readiness, and release regions are byte-identical to the r104/r105 controls.
+
+The immediate green Stage 25 controls show the intended production proof rather than a weakened substitute:
+
+- r104 ordered process 1: shield id 4 selected guardian id 5 at battle `43.6666`, wind-up `0.07`, continuity `7`;
+- r104 ordered process 2: shield id 4 selected guardian id 5 at battle `43.6833`, wind-up `0.0533`, continuity `8`;
+- r104 ordered process 3: shield id 8 selected guardian id 5 at battle `64.25`, wind-up `0.07`, continuity `2`.
+
+The nine-axis subsystem audit is conclusive:
+
+1. state ownership fails before page proof because pre-release target liveness has two mutually exclusive host owners and no outer terminal owner;
+2. observer lifecycle is clean in prior successful captures, but failure before page epoch lacks a valid outer terminal;
+3. presentation quiescence is the visible red because its live-target prerequisite cannot be satisfied after the unreachable handoff;
+4. checkpoint ownership is unchanged and green through five accepted real deployments;
+5. causal witness was never reached and r106 lethal semantics are not owner;
+6. screenshot ordering was never reached and r99 ordering remains authoritative;
+7. cleanup ordering runs, but its pre-epoch failure transition is not representable by the current transaction schema;
+8. evidence persistence is sufficient to prove both gaps and must retain a valid failure terminal even with `proofState: null`;
+9. browser/process lifecycle is healthy, excluding WebKit/GitHub infrastructure and product ownership.
+
+- `CLASSIFICATION`: `QA_HARNESS_PHASE_G_PRE_RELEASE_LIVENESS_OWNERSHIP_CYCLE / TARGET_CONTINUITY_REDEPLOY_UNREACHABLE_BEFORE_HOST_STOP + PAGE_QUIESCENCE_REQUIRES_LIVE_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_CAPTURE_TRANSACTION_PRE_EPOCH_STATE_GAP / READINESS_TIMEOUT_HAS_NULL_PROOF_STATE + FAILURE_TERMINAL_INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_OUTER_CAPTURE_LIFECYCLE + EXCLUSIVE_PRE_RELEASE_TARGET_CONTINUITY_OWNER + ONE_SHARED_45000MS_ABSOLUTE_BUDGET / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 123.2 One outer lifecycle and terminal validity
+
+Add one host-owned schema `v100-phase-g-capture-lifecycle/v1` and advance the capture transaction schema to `v2`. This outer lifecycle owns setup, release readiness, page-proof handoff, accepted proof, screenshot receipt, and cleanup. The page-owned `v100-phase-g-post-quiescence-proof/v7` remains the sole causal state machine and does not acquire setup or deployment ownership.
+
+Success has exactly these forward transitions:
+
+`SETUP_ACTIVE -> RELEASE_READINESS -> PROOF_OBSERVING -> WITNESS_ACCEPTED -> SCREENSHOT_RECEIPT_ACCEPTED -> CLEANED`
+
+Failure from any active state has exactly these transitions:
+
+`<active> -> FAILED -> CLEANED_AFTER_FAILURE`
+
+No state may be skipped, repeated, visited backward, or mutated after `CLEANED` / `CLEANED_AFTER_FAILURE`. When a page v7 epoch exists, the outer transaction must freeze its epoch ID, current/terminal state, and cleanup receipt and prove monotonic correspondence. When failure originates in `SETUP_ACTIVE` or `RELEASE_READINESS`, a null page proof epoch is valid evidence because causal observation has not begun; the capture remains red, but the outer transaction must finish at `CLEANED_AFTER_FAILURE` and must not emit `PHASE_G_CAPTURE_TRANSACTION_FAILURE_TERMINAL_INVALID`. A null page epoch is forbidden after `PROOF_OBSERVING`.
+
+Every success still requires a validated v7 witness, the existing production screenshot and criteria, an after-screenshot deadline receipt, then observer stop and finally cleanup in the r99 order. The outer lifecycle must not manufacture page proof, reclassify a timeout as success, or accept cleanup as causal evidence.
+
+### 123.3 Exclusive pre-release target-continuity owner
+
+For boss contact-first proof only, replace the unreachable background/host ownership overlap with this one sequential host owner:
+
+1. finish the existing primary real deployment setup without changing its actions or receipts;
+2. set `bossDeploymentFinished = true`;
+3. stop and await the background sustain task so no concurrent pointer input remains;
+4. create one absolute deadline of `min(existing battleTimeout, 45000 ms)`; this is the only pre-release readiness budget;
+5. sample the exact authored proof actor through the existing production snapshot and require current `hasLiveHumanTarget === true`; historical target ownership, attack-only history, damage text, or a generic human count cannot satisfy it;
+6. only while that current predicate is false, if the boss is live and fewer than two humans are live, select an eligible existing real deployment card through the already verified player-facing pointer/receipt/acceptance path; accepted deployments remain bounded by the existing formation capacity and all current card eligibility rules;
+7. after every accepted action, resample in the same sequential owner; pointer failure, production rejection, missing eligibility, boss death, deadline exhaustion, or malformed snapshot is a distinct hard failure;
+8. once current exact-actor target continuity is true, freeze immutable receipt `v100-phase-g-pre-release-target-continuity/v1` with actor identity, live target identity, current continuity receipt, accepted deployment receipts, page/battle times, and remaining budget;
+9. atomically release the existing page v7 observer with only the remaining time from that same absolute deadline.
+
+The release path cannot restart the `45000` ms budget, add an attempt, wait for a historical target, or run concurrent pointer producers. If the initial primary setup already has a current live target, it freezes the receipt without an extra deployment. This retains contact-first strictness and makes the existing production proof deterministic without changing product AI, attack timing, target selection, health, damage, duration, or screenshot acceptance.
+
+### 123.4 Exact path, byte freeze, and acceptance
+
+The cumulative r107 candidate remains the exact nine paths from Section 122. Relative to the current r106 draft, only these six paths may change:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-production-matrix.mjs`
+5. `tests/v100-design-lock.test.mjs`
+6. `tests/v100-phase-g-checkpoint.test.mjs`
+
+The r106 proof-machine packet remains byte-frozen:
+
+- `scripts/v100-phase-g-proof-machine.mjs`: SHA-256 `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `tests/fixtures/v100-phase-g-v6-contract.mjs`: SHA-256 `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `tests/v100-phase-g-proof-machine.test.mjs`: SHA-256 `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+All `app/**`, other harnesses, workflows, package/lock/browser/assets/public/PWA/generated bytes, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, thresholds, screenshot order/criteria/inventory, audio, save, and release contracts remain byte-frozen. There is no new checkpoint, screenshot, browser attempt, retry, or standalone Stage 25 gate.
+
+Extend existing source tests without increasing test counts. Required source totals remain syntax `4/4`, focused `35/35` (runtime evidence `3/3`, checkpoint `12/12`, r11 causal `4/4`, proof machine `16/16`), Design Lock `19/19`, and canonical six-file `55/55`. Static coverage must prove every valid/invalid outer transition, null-page-epoch validity only before `PROOF_OBSERVING`, shared deadline non-restart, background sustain fully stopped before host input, one pointer owner, current exact-actor live-target requirement, no historical/attack-only substitution, bounded formation/eligibility, remaining-budget release, r99 success ordering, and first-red stop.
+
+Execute exactly once and stop at the first red:
+
+1. source/static/Design/canonical integrity on final bytes;
+2. Stage 24 standalone in three fresh WebKit processes, `3/3`;
+3. ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, `9/9` total;
+4. full Hosted, bounded deployment, content validators, complete tests, lint zero errors, production build, and repeated exact-nine/BOM/EOL/protected-manifest/diff integrity;
+5. one non-amended exact-nine commit with message `test: close r107 capture release liveness ownership`;
+6. one authenticated-admin non-force transport whose direct parent is the then-current PR head, exact remote read-back, and exactly one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without rerun, retry, edit, micro-patch, next revision, next ordinal, commit, transport, or CI rerun. Complete automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 123.5 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R107_CAPTURE_RELEASE_LIVENESS_STATE_MACHINE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r106 local ordered fresh process 1, position 3 Stage 25 presentation-quiescence after Stage 6 and Stage 24 green
+- `LAST_GREEN_GATE`: r106 source/static/Design/canonical integrity, Stage 24 standalone `3/3`, and ordered process 1 Stage 6 plus Stage 24 `2/3`
+- `CLASSIFICATION`: `QA_HARNESS_PHASE_G_PRE_RELEASE_LIVENESS_OWNERSHIP_CYCLE / TARGET_CONTINUITY_REDEPLOY_UNREACHABLE_BEFORE_HOST_STOP + PAGE_QUIESCENCE_REQUIRES_LIVE_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_CAPTURE_TRANSACTION_PRE_EPOCH_STATE_GAP / READINESS_TIMEOUT_HAS_NULL_PROOF_STATE + FAILURE_TERMINAL_INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_OUTER_CAPTURE_LIFECYCLE + EXCLUSIVE_PRE_RELEASE_TARGET_CONTINUITY_OWNER + ONE_SHARED_45000MS_ABSOLUTE_BUDGET / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r106 lethal pending-impact outcome is source/static-green and Stage 24/ordered Stage 6 are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r107 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 36 remains uncommitted; r107 replaces only six paths inside the same cumulative exact-nine candidate; workflow-only restoration follows only after automatic focused green
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this local design return does not increment it
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r107 delta on preserved r106 draft -> one-shot source/static -> Stage 24 `3/3` -> ordered Stage 6/24/25 `9/9` -> full local acceptance -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the r106 failure transaction, production screenshot, exact five-deployment timeline, source ownership cycle, three r104 Stage 25 green controls, r106 downstream-only diff, null-epoch terminal gap, all nine subsystem axes, the finite six-path delta/cumulative nine-path topology, byte freezes, shared one-shot deadline, first-red stop, and final Producer boundary. Revision r107 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 124. Revision r108 — r107 source-contract alignment
+
+Section 124 consumes the first formal r107 source red and supersedes Section 123 only for its SOL-owned static-test migration, three byte-freeze receipts, five-path design/source-test delta, and current cursor. The r107 outer capture lifecycle, exclusive sequential pre-release target-continuity owner, one shared unchanged `45000` ms absolute deadline, matrix runtime bytes, cumulative exact-nine topology, product/evidence/release boundaries, and all earlier accepted contracts remain authoritative.
+
+### 124.1 Actual first-red evidence and finite classification
+
+The fixed remote parent remains HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. The uncommitted r107 material-iteration-36 source gate ran exactly once. Syntax was `4/4`; focused source was `34/35`. The single aggregate checkpoint audit completed all of its assertions and returned exactly two mismatches:
+
+1. one historical assertion still required `timeout: Math.min(battleTimeout, 45_000), polling: "raf"`, although the locked r107 matrix correctly uses `timeout: releaseReadinessTimeoutMs(), polling: "raf"` under the one shared absolute deadline;
+2. one historical cardinality assertion still required six total `performVerifiedDeploymentPointer` symbol occurrences, although the locked r107 matrix has exactly seven: one function definition plus six authorized awaited call sites for `sustain-proof`, `sustain-redeploy`, `non-boss-primary`, `boss-primary`, `pre-release-target-continuity`, and `proof-fallback`.
+
+No Design/canonical/static browser, Stage 24, ordered, full, commit, transport, CI, retry, rerun, edit, or next ordinal followed the first red. Exhaustive source enumeration found no third failing assertion and no unauthorized pointer site. The matrix is syntax-green and its r107 implementation is byte-frozen at `322471` bytes, SHA-256 `f2e371960b376ad99039875b97f8c60597df17a7dc09002fdad58c31c833e44b`.
+
+The same-stop byte read-back found three documentation/test receipt transcription errors. The preserved r106 files themselves are unchanged and authoritative:
+
+- `scripts/v100-phase-g-proof-machine.mjs`: SHA-256 `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `tests/fixtures/v100-phase-g-v6-contract.mjs`: SHA-256 `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `tests/v100-phase-g-proof-machine.test.mjs`: SHA-256 `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+- `CLASSIFICATION`: `SOL_OWNED_R107_STATIC_CONTRACT_MIGRATION_OMISSION / LEGACY_FIXED_TIMEOUT_LITERAL_ASSERTION + AUTHORIZED_POINTER_CALLSITE_CARDINALITY_NOT_ADVANCED / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `SOL_OWNED_R107_BYTE_FREEZE_RECEIPT_DRIFT / THREE_PRESERVED_R106_HASHES_MISTRANSCRIBED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT_R107_SOURCE_CONTRACT_ALIGNMENT / SHARED_DEADLINE_ASSERTION + EXACT_SEVEN_SYMBOL_OCCURRENCES_SIX_CALLSITES + ACTUAL_THREE_BLOB_HASH_READBACK / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 124.2 Exact five-path correction
+
+Relative to the stopped r107 draft, change only these five paths:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `tests/v100-design-lock.test.mjs`
+5. `tests/v100-phase-g-checkpoint.test.mjs`
+
+The checkpoint test correction is exact and strengthening-only:
+
+- replace the one superseded fixed-timeout positive assertion with `timeout: releaseReadinessTimeoutMs(), polling: "raf"` while retaining the existing exact count of two shared-deadline consumers and the prohibition on fixed-timeout restart;
+- require exactly seven total helper-symbol occurrences and exactly six awaited `performVerifiedDeploymentPointer(page, ...)` call sites;
+- add only `pre-release-target-continuity` to the five existing authorized phase owners and continue to require every phase to be owned by the helper;
+- retain all existing source assertions, aggregate audit behavior, test counts, fail-closed predicates, and runtime/evidence acceptance.
+
+The three canonical docs/test sources must use the actual byte receipts above. `scripts/v100-phase-g-production-matrix.mjs`, `scripts/v100-phase-g-proof-machine.mjs`, `tests/fixtures/v100-phase-g-v6-contract.mjs`, and `tests/v100-phase-g-proof-machine.test.mjs` are byte-frozen. All `app/**`, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, threshold, screenshot order/criteria/inventory, audio, workflow, package/lock/browser/asset/public/PWA/generated, protected-manifest, and release bytes remain frozen.
+
+### 124.3 Acceptance, restart, and stop
+
+After the exact five-path correction, run the Design Lock source test once in SOL_DESIGN and require `19/19`. Then SOL_REMEDIATION restarts the one-shot source gate from its beginning because the prior focused gate was red:
+
+1. syntax `4/4` for the matrix, proof machine, checkpoint test, and proof-machine test;
+2. focused `35/35`: runtime evidence `3/3`, checkpoint `12/12`, r11 causal `4/4`, proof machine `16/16`;
+3. Design Lock `19/19`;
+4. canonical six-file `55/55`;
+5. exact-nine topology, exact frozen bytes, BOM/EOL/protected manifests, and `git diff --check`;
+6. unchanged Stage 24 standalone fresh WebKit `3/3`;
+7. unchanged ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, `9/9`;
+8. full Hosted, bounded deployment, content, complete tests, lint zero errors, production build, and repeated integrity;
+9. one non-amended exact-nine commit with message `test: close r108 source contract alignment`;
+10. one authenticated-admin non-force direct-parent object transport, exact remote read-back, and exactly one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without rerun, retry, edit, micro-patch, next revision, next ordinal, commit, transport, or CI rerun. Complete automatic focused green alone unlocks the unchanged workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 124.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R108_R107_SOURCE_CONTRACT_ALIGNMENT_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r107 formal focused source `34/35`; the one aggregate checkpoint test reported exactly two stale assertion mismatches
+- `LAST_GREEN_GATE`: r107 syntax `4/4` plus 34 passing focused cases; r107 runtime source implementation is syntax-green
+- `CLASSIFICATION`: `SOL_OWNED_R107_STATIC_CONTRACT_MIGRATION_OMISSION / LEGACY_FIXED_TIMEOUT_LITERAL_ASSERTION + AUTHORIZED_POINTER_CALLSITE_CARDINALITY_NOT_ADVANCED / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `SOL_OWNED_R107_BYTE_FREEZE_RECEIPT_DRIFT / THREE_PRESERVED_R106_HASHES_MISTRANSCRIBED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT_R107_SOURCE_CONTRACT_ALIGNMENT / SHARED_DEADLINE_ASSERTION + EXACT_SEVEN_SYMBOL_OCCURRENCES_SIX_CALLSITES + ACTUAL_THREE_BLOB_HASH_READBACK / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r107 runtime correction is syntax-green; browser acceptance remains deliberately unexecuted until source contracts are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r108 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 36 remains uncommitted; r108 changes exactly five paths inside the same cumulative exact-nine candidate
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this local source return does not increment it
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-five r108 source/docs correction -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static integrity -> Stage 24 `3/3` -> ordered `9/9` -> full local acceptance -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the complete r107 aggregate failure receipt, exact source cardinalities, shared deadline ownership, the actual four frozen byte hashes, unchanged cumulative nine-path topology, first-red stop, full downstream gate order, and final Producer boundary. Revision r108 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 125. Revision r109 — exact proof-actor target-lease state machine
+
+Section 125 consumes the first r108 browser red and supersedes Sections 123-124 only for the pre-release target-continuity subpolicy, its bounded decision receipts, the six-path correction boundary, and the current cursor. The proven outer capture lifecycle, capture transaction v2, page proof v7, accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order, fresh WebKit browser/process owner, all product behavior, and every downstream release boundary remain authoritative.
+
+### 125.1 Actual first-red evidence and independent classification
+
+The remote parent remains HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. The r108 candidate passed syntax `4/4`, focused `35/35`, Design `19/19`, canonical `55/55`, exact-nine/static integrity, and fresh Stage 24 standalone WebKit `3/3`. Ordered process 1 passed Stage 6 and Stage 24, then stopped at Stage 25. Ordered processes 2/3, full local, commit, transport, and CI were not run; no edit, retry, rerun, or next ordinal followed.
+
+The Stage 25 failure was `proof actor red-panther-shield never acquired a current live human target inside the shared release budget` with `preReleaseTargetContinuity: null`, no accepted continuity deployment, and no `failureState` page/lifecycle fault. Exact immutable evidence:
+
+- failure capture transaction: `4,857,575` bytes / SHA-256 `44ec45ed015fa90ec11273ceb259c34abe5c403f840995e33b5b81e0d93a01eb`;
+- diagnostic JSON: `4,487,743` bytes / SHA-256 `dd5cb335f12ba3fd5744c01d9c82899d44807b4e14546bf319c7d42d601f2c6b`;
+- diagnostic production PNG: `703,353` bytes / SHA-256 `271b664aadf996f74361680c64c090dc251e6a054b9b3461ead774f47203584d`;
+- ordered Stage 6 success transaction / screenshot: `bf77c6ac326f42739f4c4de789f5192ef3a2a9769af0a5f3633e9b43fc2bae57` / `cef2a87c2a7b5423637a25d5102973a7cc6ad43fdbf486affcf36fb212deb598`;
+- ordered Stage 24 success transaction / screenshot: `36109b5f425739ceb576d60512e1674a22e9bf5e5911b59d34e1ae8d5ba4679d` / `978e763509b44a4ae9727c00f19335eb45dff242452055752300b57c06579f9e`.
+
+The exact outer lifecycle is valid: `SETUP_ACTIVE -> RELEASE_READINESS -> FAILED -> CLEANED_AFTER_FAILURE`. The shared deadline was exactly `45000` ms. Console, page, request, and HTTP failures were zero; the production battle remained live. Four primary player-facing deployments were accepted, and shield id 4 owned a current live guardian id 5 target at battle time `39.916666` before the primary terminal handoff froze. Release readiness began in wave 2. Stage 25 maps the later story boss to `mugarian-president-mutated`, but maps the required proof actor to `red-panther-shield`. The r107 policy incorrectly required the later story boss to be live both before accepting the shield target and before deploying continuity, and separately required generic live-human count below two. When the story boss became live in wave 4, less than the unchanged `12000` ms verified-pointer envelope remained, so the helper was never called.
+
+The direct green control is three independent r104 ordered Stage 25 successes on unchanged production semantics. Two accepted shield id 4 -> guardian id 5 near battle time `43.67`; one accepted shield id 8 -> guardian id 5 near `64.25`. Every control had clean proof/capture cleanup and zero diagnostics. Product can produce the required contact; the failure is the harness release-readiness owner alias.
+
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_STATE_OWNER_ALIAS / EXACT_PROOF_ACTOR_TARGET_LEASE_GATED_BY_LATER_STORY_BOSS_LIVENESS + GENERIC_LIVE_HUMAN_COUNT / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_TERMINAL_OBSERVABILITY_GAP / POINTER_NONACCEPTANCE_CAN_SPIN + NO_BOUNDED_DECISION_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL_EXACT_PROOF_ACTOR_TARGET_LEASE_MACHINE / STORY_BOSS_DIAGNOSTIC_ONLY + CURRENT_EXACT_TARGET_OR_FAIL_CLOSED_VERIFIED_DEPLOYMENT + BOUNDED_TRANSACTION_RECEIPTS / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `PARTIAL — r107 outer capture lifecycle and cleanup are closed; r107 target-continuity convergence is disproven`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 125.2 Producer Loop-Breaker subsystem audit
+
+This is a subsystem correction, not a one-condition micro-patch. The required axes resolve as follows:
+
+1. `state ownership`: failed only inside release readiness; story-boss liveness owns story progression, while the exact proof actor alone must own its target lease;
+2. `observer lifecycle`: green; the pre-release check is host-owned before the page v7 observer epoch and no observer is leaked;
+3. `presentation quiescence`: green as an outer surface; the battle continued hidden and release was never attempted after the prerequisite failed;
+4. `checkpoint ownership`: primary deployment and exact terminal handoff were green; the release subpolicy alone lost convergence;
+5. `causal witness`: not reached in the failing capture and remains unchanged;
+6. `screenshot ordering`: not reached and remains the accepted r99 order;
+7. `cleanup ordering`: green at `CLEANED_AFTER_FAILURE` and remains unchanged;
+8. `evidence persistence`: outer transaction is green, but the release subpolicy lacks a bounded decision trail and silently ignores a nonaccepted pointer result;
+9. `browser/process lifecycle`: green; fresh WebKit process, live page, intact production PNG, clean diagnostics, and clean host sampling make WebKit/GitHub infrastructure nonowners.
+
+The outer Phase G architecture is therefore retained. Only the release-readiness subpolicy becomes a simpler finite machine.
+
+### 125.3 Exact target-lease state machine
+
+Create one host-owned `v100-phase-g-proof-actor-target-lease/v1` machine with the only legal states:
+
+`TARGET_CHECK -> ACTOR_WAITING | DEPLOYMENT_REQUIRED -> POINTER_IN_FLIGHT -> TARGET_CHECK -> TARGET_ACCEPTED | FAILED`
+
+Rules are exact:
+
+- one existing absolute `releaseReadinessDeadlineAt = start + min(existing battleTimeout, 45000 ms)` owns every state; no restart, extension, nested deadline, retry, or additional attempt;
+- the exact `proofActor` current production fighter owns acceptance. A current live/combat-ready/non-entering actor with a current living-human `targetId` accepts immediately, regardless of the later story boss state or generic live-human count;
+- the later `bossKind` remains diagnostic and may retain the existing progression-only foundation-entry acceleration, but it never authorizes or rejects the proof actor's target lease;
+- generic live-human count is diagnostic only. If the exact actor is current/live and has no current living-human target, enter `DEPLOYMENT_REQUIRED` independent of that count;
+- use only the existing `performVerifiedDeploymentPointer` player-facing path, exact eligibility/card identity/pointer receipts, unchanged `5000 + 2000 + 5000 = 12000` ms pointer envelope, unchanged formation-derived `bossDeploymentLimit`, and unchanged Stage 25 formation;
+- a verified accepted pointer returns to `TARGET_CHECK`. A thrown pointer, `accepted !== true`, shared-deadline overrun, insufficient remaining pointer envelope, deployment-limit exhaustion, expected-battle/stage loss, or deadline exhaustion enters `FAILED` immediately with one explicit reason. Silent spinning or retry is forbidden;
+- historical target ownership, generic attack history, story-boss liveness, color/visual evidence, and target count cannot substitute for the current exact actor/target relation;
+- every state change is an immutable `v100-phase-g-proof-actor-target-lease-transition/v1` receipt. Persist at most 64 transition-only receipts, not frame samples or DOM/full snapshots, in the checkpoint evidence embedded in both success and failure capture transaction v2. Include exact actor/stage, story-boss diagnostic, live-human diagnostic, shared remaining budget, pointer result, and terminal reason;
+- the success `v100-phase-g-pre-release-target-continuity/v1` embeds the terminal lease receipt. A failure error embeds the same receipt as structured evidence before outer `FAILED -> CLEANED_AFTER_FAILURE` cleanup.
+
+The current `readProofActorContactState` may expose only bounded current actor identity/liveness fields needed by this machine. It may not mutate production state or widen accepted proof identity.
+
+### 125.4 Exact six-path boundary and byte contract
+
+Relative to the stopped r108 draft, change only:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-production-matrix.mjs`
+5. `tests/v100-design-lock.test.mjs`
+6. `tests/v100-phase-g-checkpoint.test.mjs`
+
+The cumulative candidate remains the same exact nine tracked paths. The r109 matrix is `334769` bytes / SHA-256 `f03e38b42a25cb1df9a04482a7d7e8bd97b0418596209e7691e349530d9f3039`, LF-only, no BOM. Freeze unchanged:
+
+- `scripts/v100-phase-g-proof-machine.mjs`: `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `tests/fixtures/v100-phase-g-v6-contract.mjs`: `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `tests/v100-phase-g-proof-machine.test.mjs`: `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+All `app/**`, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, thresholds, screenshot order/criteria/inventory, audio, workflow, package/lock/browser/assets/public/PWA/generated/protected manifests, and release contracts are frozen. Do not add a Stage 25 standalone gate or change the prescribed number/order of browser attempts.
+
+### 125.5 Source acceptance, one-shot restart, and stop
+
+Before any browser run, require:
+
+1. syntax `4/4`;
+2. focused `35/35`: runtime evidence `3/3`, checkpoint `12/12`, r11 causal `4/4`, proof machine `16/16`;
+3. Design Lock `19/19`;
+4. canonical six-file `55/55`;
+5. exact-nine topology, exact four byte receipts, LF/no-BOM, protected manifests, and `git diff --check`.
+
+The checkpoint suite must exercise, in one bounded production-process probe packet, story-boss-not-live acceptance, story-boss-not-live/two-human deployment, actor waiting, accepted-pointer resample, nonaccepted-pointer hard failure, insufficient-envelope failure, deployment-limit failure, and live-battle loss. Existing assertions may not be deleted or weakened; test totals remain unchanged.
+
+Then run the unchanged browser/full route:
+
+1. fresh Stage 24 standalone WebKit `3/3`;
+2. ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, `9/9`;
+3. full Hosted/deployment/content/complete/lint/build/static integrity;
+4. one non-amended exact-nine commit `test: close r109 exact proof actor target lease`;
+5. one authenticated-admin, direct-parent, non-force object transport/read-back and exactly one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without retry, rerun, edit, micro-patch, next revision, next ordinal, commit, transport, or CI rerun. Complete automatic focused green alone unlocks workflow-only restoration and unfiltered Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 125.6 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R109_EXACT_PROOF_ACTOR_TARGET_LEASE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r108 ordered process 1 Stage 25, after Stage 6 and Stage 24 green; target lease timed out without invoking the verified continuity pointer
+- `LAST_GREEN_GATE`: r108 Stage 24 standalone `3/3`; ordered process 1 Stage 6 and Stage 24 were green before the Stage 25 first red
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_STATE_OWNER_ALIAS / EXACT_PROOF_ACTOR_TARGET_LEASE_GATED_BY_LATER_STORY_BOSS_LIVENESS + GENERIC_LIVE_HUMAN_COUNT / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_TERMINAL_OBSERVABILITY_GAP / POINTER_NONACCEPTANCE_CAN_SPIN + NO_BOUNDED_DECISION_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL_EXACT_PROOF_ACTOR_TARGET_LEASE_MACHINE / STORY_BOSS_DIAGNOSTIC_ONLY + CURRENT_EXACT_TARGET_OR_FAIL_CLOSED_VERIFIED_DEPLOYMENT + BOUNDED_TRANSACTION_RECEIPTS / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `PARTIAL — outer lifecycle/cleanup closed; target-continuity convergence not closed`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r109 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 37 remains uncommitted; r109 changes exact six paths inside the preserved cumulative exact-nine candidate
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this local ordered return does not increment it
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r109 source/docs packet -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static integrity -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the complete r108 transaction/JSON/PNG, exact lifecycle and deadline timestamps, source trigger predicates, four production deployments, direct r104 green controls, all nine subsystem axes, the finite six-path/cumulative-nine topology, fail-closed pointer outcomes, unchanged attempt/deadline route, one-shot stop, and final Producer boundary. Revision r109 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 126. Revision r110 — atomic release-candidate acquisition coordinator
+
+Section 126 consumes the first r109 browser red and supersedes Section 125 only for release-readiness ownership between target continuity and the atomic page release. The r109 exact-actor correction remains proven: story-boss liveness and generic live-human count no longer gate the proof actor. The accepted outer capture lifecycle, capture transaction v2, page proof v7 reducer, strict late-windup predicate, accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order, and all product and release boundaries remain authoritative.
+
+### 126.1 Actual r109 first-red evidence and owner classification
+
+The remote parent remains HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. The r109 candidate passed syntax `4/4`, focused `35/35`, Design `19/19`, canonical `55/55`, corrected exact-nine/static integrity, and fresh Stage 24 standalone WebKit `3/3`. Ordered process 1 passed Stage 6 and Stage 24, then stopped at Stage 25. Ordered processes 2/3, full local, commit, transport, and CI were not run; no edit, retry, rerun, or next ordinal followed.
+
+The stopped Stage 25 evidence is immutable:
+
+- capture transaction: `4,898,946` bytes / SHA-256 `3aee82de0179b14b1e4f5b46b8ef0cc64083e37bb36d94ebf769bad67c3c1854`;
+- diagnostic JSON: `4,514,565` bytes / SHA-256 `72d9f957fa63dfec8d2c5703a7d6aac3ed8ec62f25997c52ce8e38140856c035`;
+- diagnostic production PNG: `684,616` bytes / SHA-256 `6c4d40b026fa14a51776ff1264aa676146d68c364babce645fce6996886a8dc3`;
+- host summary / JSONL: SHA-256 `6fe3659529c5468bdade96dd595e4eb82079acf2ef821b927dd72fda6eeaf967` / `78eba292756a6d3a900122aa0b446bdb301ec486052c9f9ba8e134edcc2fb658`;
+- ordered Stage 6 transaction / PNG: `5c926e9e7f3e246522dbbd0792384da0295103ce33c38304c2ce8753a0dafc06` / `b8ad2eb71ef4efe5e9ff3c5a96011e6a900b5d197de54b71c63a7e45caee282e`;
+- ordered Stage 24 transaction / PNG: `df965ee26bb6cc54d59ad48979cce4de0661bdf910bb3b468d72ad94531aa1b4` / `23d2e6145fe6e8eadc31ceded7a4a782c790805b0a66038c34abdfcfa1448072`.
+
+The exact lifecycle was `SETUP_ACTIVE -> RELEASE_READINESS -> FAILED -> CLEANED_AFTER_FAILURE`; failure origin was `RELEASE_READINESS`, the outstanding operation was `presentation-quiescence`, and the page wait failed with `TimeoutError: page.waitForFunction: Timeout 44364ms exceeded`. Console, page, request, and HTTP failures were zero and `failureState` was null.
+
+The r109 target-lease machine began with 44,369 ms remaining and immediately accepted exact shield id 4 -> guardian id 5. It treated that point-in-time relation as terminal `TARGET_ACCEPTED`. Six milliseconds later the separate page readiness wait armed with shield ids 4/8/15/19 all at attack sequence 0. For the remaining 44,364 ms it found no strict unconsumed late shield wind-up. The accepted guardian and shield disappeared and no human target survived, while the page-only wait had no host owner able to deploy a replacement. Thus a target point sample did not lease a viable actor/target pair through the only terminal event that matters: atomic release-candidate acceptance.
+
+The direct green control remains three independent r104 ordered Stage 25 successes on unchanged product semantics. Two caught shield id 4 -> guardian id 5 near battle time 43.53-43.78 and one caught shield id 8 -> guardian id 5 near 64.216-64.35. Each accepted at least two distinct monotonically decreasing wind-up samples, final wind-up at or below `1/12` second, the same live opposite target, atomic release, and clean capture. Product can produce the strict causal candidate and the existing page v7 reducer is valid when a viable target survives.
+
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_SERIAL_OWNER_HANDOFF / TARGET_ACCEPTED_POINT_SAMPLE_TERMINATES_BEFORE_ATOMIC_RELEASE_CANDIDATE + DOWNSTREAM_PAGE_WAIT_CANNOT_REPLENISH_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_TARGET_LEASE_SEMANTIC_MISMATCH / LEASE_DOES_NOT_SURVIVE_TARGET_OR_ACTOR_LOSS UNTIL UNCONSUMED_WINDUP / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `ATOMIC_RELEASE_CANDIDATE_ACQUISITION_COORDINATOR / HOST_RESAMPLE_AND_VERIFIED_DEPLOYMENT + SAME_TASK_STRICT_PAGE_RELEASE / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r109 removed the story-boss/generic-count alias and exercised the exact actor; the serial owner handoff is a new independent defect`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 126.2 Producer Loop-Breaker subsystem audit
+
+This is one coherent release-readiness state-machine redesign, not a point-condition patch:
+
+1. `state ownership`: owner failure. Terminal ownership was split between a host point-sample target machine and a page-only atomic-release wait;
+2. `observer lifecycle`: outer lifecycle green. The failure occurred before proof observer acceptance and cleanup reached `CLEANED_AFTER_FAILURE`;
+3. `presentation quiescence`: predicate strength green, orchestration owner failed. The strict page predicate remained valid but could not request target replenishment;
+4. `checkpoint ownership`: primary deployments and terminal handoff green; release readiness alone lost the host action owner;
+5. `causal witness`: existing v7 predicate and three r104 controls green; the r109 failure never produced a candidate;
+6. `screenshot ordering`: failure screenshot and diagnostics green; success ordering was not reached and remains unchanged;
+7. `cleanup ordering`: green, including failure transition and awaited cleanup;
+8. `evidence persistence`: transaction and host telemetry green, but the terminal target receipt falsely represented a lease and was not tied to the eventual release envelope;
+9. `browser/process lifecycle`: green; fresh WebKit, live battle, intact PNG, null page failure state, and zero diagnostics exclude infrastructure.
+
+The outer Phase G architecture is retained. The finite correction merges only the two serial release-readiness owners into one host-owned coordinator with one atomic page decision function.
+
+### 126.3 Exact atomic release-candidate coordinator
+
+Create one host-owned `v100-phase-g-atomic-release-acquisition/v1` coordinator under the existing absolute `releaseReadinessDeadlineAt`. Its legal transition graph is:
+
+`READINESS_CHECK -> ACTOR_WAITING | TARGET_HELD | DEPLOYMENT_REQUIRED -> POINTER_IN_FLIGHT -> READINESS_CHECK | RELEASE_CANDIDATE_ACCEPTED | FAILED`
+
+Ownership and transitions are exact:
+
+- `TARGET_HELD` is nonterminal. A current proof actor and current living-human target authorize only continued `READINESS_CHECK`; they never complete continuity by themselves;
+- every `READINESS_CHECK` performs one bounded same-task page evaluation. It reads one exact production snapshot, updates the same page-owned `__PHASE_G_PRE_RELEASE_READINESS__` window, and applies the unchanged strict late-windup rules: at least two distinct production samples, monotonically decreasing positive wind-up, final value at or below `1/12` second, exact actor kind/id, unchanged living opposite-side target, and unconsumed attack sequence;
+- only when that same page task finds the strict candidate may it call `setQaPresentationQuiesced(false)` and arm the existing proof v7 epoch atomically. The returned `v100-phase-g-atomic-release-candidate/v1` receipt is the sole success transition `RELEASE_CANDIDATE_ACCEPTED`;
+- if the page attempt is not ready, it returns a bounded nonterminal receipt to the host. The host samples the exact current proof actor. Actor absent/not live is `ACTOR_WAITING`; actor live with a current living-human target is `TARGET_HELD`; actor live without one is `DEPLOYMENT_REQUIRED`;
+- `DEPLOYMENT_REQUIRED` uses only the existing `performVerifiedDeploymentPointer`, unchanged eligibility/card/pointer/production acceptance, unchanged `5000 + 2000 + 5000 = 12000` ms envelope, unchanged formation-derived `bossDeploymentLimit`, and unchanged Stage 25 formation. Accepted pointer enters `READINESS_CHECK`, never terminal success;
+- target death, actor death/disappearance, target-id change, or actor-id change invalidates the incomplete readiness window and returns through `READINESS_CHECK`; it is not an accepted historical lease and not immediate product failure;
+- story-boss liveness and generic live-human count remain diagnostic only. They neither accept nor reject the strict actor/target candidate;
+- pointer throw, `accepted !== true`, insufficient remaining 12,000 ms envelope, exhausted deployment limit, live battle/stage loss, shared deadline exhaustion, mismatched release actor/target/attack sequence, malformed page receipt, or transition bound exhaustion enters `FAILED` immediately with a stable reason;
+- preserve at most 64 immutable transition-only receipts. Repeated identical states do not append. Actor/target/attack-sequence identity change may append one bounded same-state change receipt. Bound exhaustion returns an explicit terminal receipt; it may not escape as an unstructured invariant throw;
+- the final `RELEASE_CANDIDATE_ACCEPTED` receipt must match the actor id/kind, target id, attack sequence, continuity samples, release epoch, and v7 envelope selected by the atomic page task. `preReleaseTargetContinuity` is derived from this final receipt and coordinator history; no earlier terminal target point sample exists;
+- embed complete bounded coordinator evidence in both success and failure capture transaction v2. The accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order remains byte-semantic unchanged outside the new receipt source.
+
+The page evaluation may be an extracted helper or equivalent one-shot page function, but it must run as one same-task atomic decision; a new long-running page wait, parallel waiter, observer, deadline, retry, or attempt is forbidden.
+
+### 126.4 Exact six-path boundary and frozen contracts
+
+Relative to the stopped r109 draft, change only:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-production-matrix.mjs`
+5. `tests/v100-design-lock.test.mjs`
+6. `tests/v100-phase-g-checkpoint.test.mjs`
+
+The cumulative candidate remains the same exact nine tracked paths. At design publication the r109 matrix was frozen at `334769` bytes / SHA-256 `f03e38b42a25cb1df9a04482a7d7e8bd97b0418596209e7691e349530d9f3039`. The sealed r110 implementation matrix is `344809` bytes / SHA-256 `4f787fb8b5b0438b25d8de068d6061624494e06052a9a5d7c30a538c748471c7`, LF-only, no BOM. Freeze unchanged throughout r110 source/static and browser execution:
+
+- `scripts/v100-phase-g-proof-machine.mjs`: `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `tests/fixtures/v100-phase-g-v6-contract.mjs`: `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `tests/v100-phase-g-proof-machine.test.mjs`: `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+All `app/**`, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, thresholds, screenshot order/criteria/inventory, audio, workflow, package/lock/browser/assets/public/PWA/generated/protected manifests, and release contracts are frozen. Do not add a Stage 25 standalone gate, change the number/order of browser processes, extend the deadline, or green by retry.
+
+### 126.5 Focused acceptance and one-shot route
+
+The checkpoint source packet must retain every current assertion and cover the coordinator as bounded behavior, including:
+
+1. current exact actor/target enters nonterminal `TARGET_HELD`;
+2. target or actor loss invalidates the incomplete window and returns to resampling/deployment;
+3. accepted verified pointer returns to `READINESS_CHECK` and is never terminal success;
+4. only exact atomic page release candidate is terminal success;
+5. release actor/target/attack-sequence mismatch fails closed;
+6. pointer nonacceptance/throw fails closed;
+7. insufficient pointer envelope fails closed;
+8. formation-derived deployment maximum fails closed;
+9. expected battle/stage loss and shared deadline fail closed;
+10. transition-cap exhaustion returns an explicit terminal failure;
+11. story boss false and generic live-human count greater than one do not block an otherwise exact candidate.
+
+Before browser execution require the unchanged source route: syntax `4/4`; focused runtime evidence `3/3`, checkpoint `12/12`, r11 causal `4/4`, proof machine `16/16`, total `35/35`; Design Lock `19/19`; canonical six-file `55/55`; exact-nine topology; final four byte receipts; all-nine LF/no-BOM; protected manifests; and `git diff --check`.
+
+The r109 Stage 24 standalone `3/3` and ordered process-1 Stage 6/24 successes remain immutable diagnostic evidence only and are forbidden as final freeze evidence. After final bytes, run exactly:
+
+1. fresh Stage 24 standalone WebKit `3/3`;
+2. ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, total `9/9`;
+3. full Hosted, bounded deployment, content, complete tests, lint zero errors, production build, and repeated static integrity;
+4. one non-amended exact-nine commit with message `test: close r110 atomic release candidate acquisition`;
+5. one authenticated-admin direct-parent, non-force object transport, exact remote HEAD/tree/blob read-back, and exactly one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without retry, rerun, edit, micro-patch, next revision, next ordinal, commit, transport, or CI rerun. Complete automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 126.6 Current execution cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R110_ATOMIC_RELEASE_CANDIDATE_ACQUISITION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r109 ordered process 1 Stage 25 presentation-quiescence after Stage 6 and Stage 24 green; the serial point-sample target owner terminated before an atomic release candidate
+- `LAST_GREEN_GATE`: r109 Stage 24 standalone `3/3`; ordered process 1 Stage 6 and Stage 24 green
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_SERIAL_OWNER_HANDOFF / TARGET_ACCEPTED_POINT_SAMPLE_TERMINATES_BEFORE_ATOMIC_RELEASE_CANDIDATE + DOWNSTREAM_PAGE_WAIT_CANNOT_REPLENISH_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_TARGET_LEASE_SEMANTIC_MISMATCH / LEASE_DOES_NOT_SURVIVE_TARGET_OR_ACTOR_LOSS UNTIL UNCONSUMED_WINDUP / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `ATOMIC_RELEASE_CANDIDATE_ACQUISITION_COORDINATOR / HOST_RESAMPLE_AND_VERIFIED_DEPLOYMENT + SAME_TASK_STRICT_PAGE_RELEASE / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r109 exact-actor alias correction worked; the serial owner handoff is independent`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r110 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 38 remains uncommitted; r110 changes exact six paths inside the preserved cumulative exact-nine candidate
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this local ordered return does not increment it
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r110 source/docs packet -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static integrity -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the complete r109 transaction/diagnostic/PNG/host telemetry, direct r104 green controls, exact deadline and lifecycle, all nine subsystem axes, one host/page atomic ownership boundary, bounded fail-closed transitions, unchanged acceptance strength, exact-six/cumulative-nine topology, first-red stop, full downstream gate order, and final Producer boundary. Revision r110 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 127. Revision r111 — semantic-transition ledger and bounded dwell evidence
+
+Section 127 consumes the first and only r110 browser red. It supersedes Section 126 only for how the host-owned atomic coordinator distinguishes a semantic transition from a repeated observation and how that distinction is persisted. The r110 single host owner, same-task atomic page decision, strict release candidate, target replenishment route, page proof v7 reducer, outer capture lifecycle, capture transaction v2, and accepted-proof -> production screenshot -> after-screenshot deadline receipt -> observer-stop/finally cleanup order remain authoritative.
+
+### 127.1 Frozen r110 evidence and independent owner classification
+
+The live remote parent was re-fetched before recording the return and remains HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`. The r110 candidate passed syntax `4/4`, focused `35/35`, Design Lock `19/19`, canonical `55/55`, exact-nine/static integrity, and fresh Stage 24 standalone WebKit `3/3`. Ordered processes 1 and 2 each passed Stage 6 -> Stage 24 -> Stage 25. Ordered process 3 passed Stage 6 and Stage 24, then Stage 25 was the first red. The total ordered result is `8/9`; no retry, rerun, edit, next gate, commit, transport, or CI dispatch followed.
+
+The stopped process-3 Stage 25 evidence is immutable:
+
+- diagnostic JSON: `4,675,141` bytes / SHA-256 `0358131366f30459fb98d6bf3a4ae7a03101108414b28b32dd0e06075af020ab`;
+- diagnostic production PNG: `661,535` bytes / SHA-256 `723b806a0f44ecbebcd4c408c5bbacff88c97a0b90eba860f1e4b1e95a658b6a`;
+- capture transaction: `5,081,801` bytes / SHA-256 `5bb41b0b2f7af91d710cfdd48eb9db8bdf8d65d03c3999c09f14ac1d5255da81`;
+- host summary / JSONL: SHA-256 `2cd7b5e7ab05695d5b3437491c7246326d9d3be757b4b39fd545f919d98caef3` / `5a758d487775a09d44d80d8d244454d03db60c0e6fc275e92d15fadbc0445287`;
+- lifecycle: `SETUP_ACTIVE -> RELEASE_READINESS -> FAILED -> CLEANED_AFTER_FAILURE`;
+- console, page, request, and HTTP failures: `0 / 0 / 0 / 0`.
+
+The exact `v100-phase-g-atomic-release-acquisition/v1` failure receipt contains 64 ledger entries: 63 `CURRENT_EXACT_ACTOR_TARGET_HELD` observations followed by `TRANSITION_LIMIT_EXHAUSTED`. The first held sample had 44,106 ms remaining. The terminal entry occurred 8,692 ms later with 35,414 ms still remaining. Every nonterminal entry kept actor id `4` and target id `5`; only observation clocks and diagnostic values advanced. No pointer attempt, deadline exhaustion, battle/stage loss, page exception, product fatal channel, or release candidate occurred.
+
+Source establishes the exact mechanism. `appendTransition` suppresses a same-state entry only when a JSON identity signature is unchanged, but the `TARGET_HELD` identity includes `targetProductionTime`. That production clock changes on every poll, so a stable actor/target dwell is misclassified as a new semantic transition approximately every 120 ms. The separate `recordReleaseReadinessDecision` then faithfully persists the incorrect transition stream until its 64-entry cap. The initialization call is also suppressed because initial state `READINESS_CHECK` and initial null identity equal the requested `MACHINE_STARTED` no-op, proving the ledger currently conflates event, state, identity, and sample diagnostics.
+
+The immediately preceding same-byte Stage 25 controls are decisive. Ordered process 1 and process 2 passed production, causal, and release-deadline acceptance with fatal diagnostics zero. Their accepted acquisition receipts used 33 and 28 entries respectively, including 32 and 27 miscounted held polls; they happened to find the strict candidate before the same cap. The red/green difference is therefore when the valid production wind-up occurred relative to a harness observation-count budget, not whether production can produce the attack.
+
+- `CLASSIFICATION`: `QA_HARNESS_STATE_TRANSITION_ACCOUNTING / TIME_VARYING_SAMPLE_INCLUDED_IN_SEMANTIC_IDENTITY + POLL_OBSERVATIONS_CONSUME_FINITE_TRANSITION_BUDGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_EVIDENCE_MODEL_ALIAS / EVENT_STATE_IDENTITY_AND_DIAGNOSTIC_DWELL_COLLAPSED_INTO_ONE_LEDGER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SEMANTIC_TRANSITION_LEDGER + BOUNDED_DWELL_COMPRESSION / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r110 retained one host owner, continued same-task page decisions, and kept target hold nonterminal; transition accounting is a new independent defect`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 127.2 Producer Loop-Breaker subsystem reconstruction
+
+This is a subsystem-level state/evidence-model correction, not a one-field micro-patch:
+
+1. `state ownership`: the r110 one-host-owner architecture is correct. The defect is inside that owner: a sample clock is treated as transition identity;
+2. `observer lifecycle`: correct. Proof v7 is never accepted on the red path and no parallel observer or waiter exists;
+3. `presentation quiescence`: correct. The page remains quiesced until the unchanged strict same-task candidate; no acceptance predicate is weakened;
+4. `checkpoint ownership`: correct except for release-readiness accounting. Primary deployment and terminal checkpoint ownership remain single and ordered;
+5. `causal witness`: correct. Two immediate r110 Stage 25 controls plus the earlier r104 controls prove the unchanged strict wind-up/contact witness;
+6. `screenshot ordering`: correct. Success ordering was not reached; failure PNG was persisted. The r99 accepted-proof/screenshot/deadline order remains unchanged;
+7. `cleanup ordering`: correct. The failure reached `CLEANED_AFTER_FAILURE` and retained transaction evidence;
+8. `evidence persistence`: owner defect. Poll samples must remain available as bounded dwell diagnostics but must not consume semantic-transition capacity;
+9. `browser/process lifecycle`: correct. Fresh WebKit, live production battle, intact PNG/transaction, and zero fatal channels exclude WebKit/GitHub infrastructure.
+
+The convergent architecture is therefore the existing r110 coordinator with two explicit evidence planes: a finite semantic-transition ledger and a bounded dwell accumulator. No second coordinator, page waiter, retry loop, deadline, attempt, or product bridge is added.
+
+### 127.3 Exact semantic-transition and dwell contract
+
+Keep the r110 legal state graph unchanged:
+
+`READINESS_CHECK -> ACTOR_WAITING | TARGET_HELD | DEPLOYMENT_REQUIRED -> POINTER_IN_FLIGHT -> READINESS_CHECK | RELEASE_CANDIDATE_ACCEPTED | FAILED`
+
+Implement one explicit semantic event key builder owned by `createAtomicReleaseAcquisitionCoordinator`. A ledger entry is appended only when `(event, nextState, semantic identity)` differs from the current ledger identity, or when a terminal event must be recorded. Exact semantic identities are:
+
+- `MACHINE_STARTED`: forced initial entry with actor key and stage id; it may not be suppressed by the initial in-memory state;
+- `ACTOR_WAITING`: actor key plus current actor id or null;
+- `TARGET_HELD`: actor key/id plus target id/kind/side;
+- `DEPLOYMENT_REQUIRED`: actor key/id plus missing/current target id;
+- `POINTER_IN_FLIGHT`: deployment ordinal and accepted pointer attempt id when available;
+- pointer-accepted `READINESS_CHECK`: deployment ordinal and accepted attempt id;
+- `RELEASE_CANDIDATE_ACCEPTED`: actor id, target id, and attack sequence from the exact page receipt;
+- `FAILED`: stable terminal reason plus the semantic event that triggered it.
+
+The following are diagnostic sample fields and are forbidden from every semantic identity: `hostTimeMs`, `remainingBudgetMs`, `pageNow`, `battleTime`, `targetProductionTime`, `liveHumanTargetCount`, story-boss liveness/id, and changing presentation or telemetry values. They remain recorded in bounded evidence and remain available for root-cause audit; they do not define a state change.
+
+Repeated observations with the same semantic event/state/identity update one coordinator-owned `v100-phase-g-atomic-release-dwell/v1` accumulator instead of appending a ledger entry. A dwell contains exactly: event, state, semantic identity, observation count, first/latest host time, first/latest remaining budget, and bounded first/latest diagnostics. On a genuine transition the completed dwell is frozen into the coordinator snapshot and a new dwell begins. The snapshot may retain at most one completed dwell per ledger entry plus the current dwell; it never stores an unbounded per-poll array. `recordReleaseReadinessDecision` receives only immutable semantic ledger entries, never dwell updates.
+
+The transition safety bound remains exactly 64 total ledger entries, including one terminal entry. Repeated polls cannot consume it. At most 63 nonterminal semantic entries may exist; if another nonterminal semantic change would consume the terminal slot, entry 64 must be the structured `TRANSITION_LIMIT_EXHAUSTED` failure. An exact accepted candidate or another genuine terminal failure may use the available terminal slot. No bound path may throw an unstructured invariant or omit the final receipt.
+
+Every host cycle retains the exact r110 order: same-task page decision first; if not accepted, current liveness/contact sample; coordinator decision; optional existing verified pointer; existing bounded wait. `TARGET_HELD` remains nonterminal. The unchanged page task remains the sole authority that releases quiescence and arms proof v7. The unchanged absolute 45,000 ms deadline, 12,000 ms pointer envelope, formation-derived deployment limit, 120 ms bounded host wait, viewport/stage mapping, strict late-windup samples, attack-sequence coherence, causal thresholds, screenshot contract, and one-attempt route remain exact.
+
+Success and failure capture transaction v2 must embed the semantic ledger, completed/current dwell summaries, accepted deployments, accepted release candidate, terminal reason, and deadline. The final `preReleaseTargetContinuity` remains derived only from the accepted same-task candidate. A dwell, target hold, pointer acceptance, or diagnostic sample can never be terminal success.
+
+### 127.4 Exact file boundary and frozen bytes
+
+Relative to the stopped r110 draft, change only:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-production-matrix.mjs`
+5. `tests/v100-design-lock.test.mjs`
+6. `tests/v100-phase-g-checkpoint.test.mjs`
+
+The cumulative candidate remains the same exact nine tracked paths. The stopped r110 matrix is frozen as the pre-r111 source at `344809` bytes / SHA-256 `4f787fb8b5b0438b25d8de068d6061624494e06052a9a5d7c30a538c748471c7`, LF-only, no BOM. The sealed final r111 receipts are `scripts/v100-phase-g-production-matrix.mjs` at `347702` bytes / SHA-256 `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40` and `tests/v100-phase-g-checkpoint.test.mjs` at `129949` bytes / SHA-256 `5ab2f239bd07110882a23931d01def8b0cab83f9bf00fe55d65aba937388f29f`, both LF-only and without BOM. These bytes are frozen before every browser gate. Keep these three other files byte-exact throughout r111:
+
+- `scripts/v100-phase-g-proof-machine.mjs`: `75,884` bytes / `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `tests/fixtures/v100-phase-g-v6-contract.mjs`: `18,820` bytes / `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `tests/v100-phase-g-proof-machine.test.mjs`: `31,769` bytes / `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+All `app/**`, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, threshold, screenshot order/criteria/inventory, audio, workflow, package/lock/browser/assets/public/PWA/generated output, protected manifests, and release contracts are forbidden. Do not add a Stage 25 standalone gate, change the number/order of browser processes, extend a timeout, or green by retry.
+
+### 127.5 Focused acceptance and one-shot route
+
+Retain every r110 checkpoint assertion and add bounded behavior inside the existing test topology:
+
+1. `MACHINE_STARTED` is recorded exactly once;
+2. at least 512 repeated `TARGET_HELD` polls with the same actor/target but changing `hostTimeMs`, `pageNow`, `battleTime`, `targetProductionTime`, counts, and story-boss diagnostics remain nonterminal, consume one held semantic entry, and update one bounded dwell;
+3. actor-id or target-id/kind/side change records exactly one new semantic entry and resets the dwell;
+4. actor/target loss, verified deployment, pointer failure, envelope, deployment maximum, battle/stage loss, and deadline retain all r110 fail-closed behavior;
+5. 63 genuine nonterminal semantic changes followed by another nonterminal change produce entry 64 `TRANSITION_LIMIT_EXHAUSTED` with a structured receipt;
+6. only the unchanged exact atomic page candidate is terminal success, with actor/target/attack-sequence coherence;
+7. success and failure snapshots contain bounded ledger plus completed/current dwell evidence and no per-poll transition array;
+8. story-boss false and generic live-human count changes remain diagnostic only.
+
+Before browser execution run the unchanged one-shot source route: syntax `4/4`; focused runtime evidence `3/3`, checkpoint `12/12`, r11 causal `4/4`, proof machine `16/16`, total `35/35`; Design Lock `19/19`; canonical six-file `55/55`; exact-nine topology; sealed final receipts; all-nine LF/no-BOM; protected manifests; and `git diff --check`.
+
+All r110 runtime results remain immutable diagnostic controls and are forbidden as final freeze evidence. Preserve the Producer-locked browser order exactly:
+
+1. fresh Stage 24 standalone WebKit `3/3`;
+2. ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes, total `9/9`;
+3. full Hosted, bounded deployment, content, complete tests, lint zero errors, production build, and repeated static integrity;
+4. one non-amended exact-nine commit with message `test: close r111 semantic transition ledger`;
+5. one authenticated-admin direct-parent, non-force object transport, exact remote HEAD/tree/blob read-back, and exactly one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without retry, rerun, edit, micro-patch, next revision, next ordinal, commit, transport, or CI rerun. Complete automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 127.6 Current cursor and six audits
+
+- `STATUS`: `DESIGN_LOCKED / R111_SEMANTIC_TRANSITION_LEDGER_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r110 ordered process 3 Stage 25; 63 stable actor/target poll samples consumed 63 transition entries and entry 64 failed with 35,414 ms remaining
+- `LAST_GREEN_GATE`: r110 ordered process 3 Stage 24; cumulative ordered `8/9`
+- `CLASSIFICATION`: `QA_HARNESS_STATE_TRANSITION_ACCOUNTING / TIME_VARYING_SAMPLE_INCLUDED_IN_SEMANTIC_IDENTITY + POLL_OBSERVATIONS_CONSUME_FINITE_TRANSITION_BUDGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_EVIDENCE_MODEL_ALIAS / EVENT_STATE_IDENTITY_AND_DIAGNOSTIC_DWELL_COLLAPSED_INTO_ONE_LEDGER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SEMANTIC_TRANSITION_LEDGER + BOUNDED_DWELL_COMPRESSION / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r110 single-owner target replenishment and atomic page authority are retained; semantic accounting is independent`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; r111 implementation begins only after this Design Lock is green
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; exact-six r111 delta remains inside the cumulative exact-nine candidate
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this local return does not increment it
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r111 semantic-ledger packet -> one-shot source/static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the complete r110 transaction/diagnostic/PNG/host telemetry, two immediate same-byte Stage 25 green controls, exact source identity construction, all nine subsystem axes, semantic-key/dwell separation, terminal-cap math, unchanged acceptance/timing/process order, exact-six/cumulative-nine topology, first-red stop, and final Producer boundary. Revision r111 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 128. Revision r111 same-revision packet — strict-assert API correction
+
+Section 128 consumes the first and only r111 source red without advancing the Design revision. It supersedes Section 127 only for the stopped source cursor and the exact test-API correction below. The semantic-transition ledger, bounded dwell evidence, sealed matrix bytes, acceptance strength, browser order, and every product/release boundary in Section 127 remain authoritative.
+
+### 128.1 Actual first-red and independent classification
+
+The sealed r111 bytes passed syntax `4/4`. The first focused command then completed `34/35`; its sole red was the aggregate checkpoint case at `tests/v100-phase-g-checkpoint.test.mjs:858`, where Node threw `TypeError: assert.notEqual is not a function`. The file imports `{ strict as assert }` from `node:assert`. The exact two newly added inequality assertions use `assert.notEqual`, while the strict API exposes the intended identity comparison as `assert.notStrictEqual`. All assertions before the first bad call passed, including stable held state, nonterminal result, two-entry semantic ledger, one completed dwell, `v100-phase-g-atomic-release-dwell/v1`, and exact `observationCount: 512`. Every other focused test passed: runtime evidence `3/3`, the other checkpoint cases, r11 causal `4/4`, and proof machine `16/16`.
+
+This is independently classified as `SOL_OWNED_SOURCE_TEST_ASSERT_API_MISMATCH / NODE_ASSERT_STRICT_EXPOSES_NOT_STRICT_EQUAL_NOT_NOT_EQUAL / REMEDIATION_LOCAL`. It is not a product, gameplay, browser, WebKit/GitHub infrastructure, semantic-ledger implementation, acceptance, or evidence failure. The coherent remediation is `EXACT_ASSERTION_API_TOKEN_CORRECTION / TWO NOT_EQUAL TO NOT_STRICT_EQUAL + NO_HARNESS_SEMANTIC_CHANGE / QA_TEST_ONLY`.
+
+The stopped checkpoint-test receipt is `129949` bytes / SHA-256 `5ab2f239bd07110882a23931d01def8b0cab83f9bf00fe55d65aba937388f29f`. The exact two-token correction produces the final sealed checkpoint-test receipt `129961` bytes / SHA-256 `c1046c772da826acd684a01bdb0e4c37a1efaae49ea5c448cb5be21f5c7cc4d2`, LF-only and without BOM. The matrix remains sealed at `347702` bytes / SHA-256 `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. No focused rerun, browser process, full gate, commit, transport, automatic CI, retry, next ordinal, or release action followed the red before this Design-locked correction. Stop comments are Issue #172 `5438104902` and PR #171 `5438105056`.
+
+### 128.2 Exact correction and preservation boundary
+
+Keep Design ID/revision `V100-SOL-DL-001 r111`; an r112 migration is neither necessary nor authorized because Section 127's design and implementation contract do not change. Relative to the stopped r111 packet, the complete same-revision correction may change only:
+
+1. `docs/PROJECT_STATE.md`;
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `tests/v100-phase-g-checkpoint.test.mjs`.
+
+Inside the checkpoint test, replace exactly the two Section 127 additions `assert.notEqual(` with `assert.notStrictEqual(`. No third token, assertion operand, expected value, probe input, case count, action, timeout, loop bound, matrix byte, proof-machine byte, fixture byte, product byte, or acceptance behavior may change. After those two token replacements, compute the final checkpoint size/SHA and seal the same receipt into Project State, Design Lock, Handoff, and Design assertions before any source gate. Keep the matrix and the other three frozen Phase G paths byte-exact. The cumulative candidate remains exactly the same nine tracked paths.
+
+All `app/**`, `.github/workflows/**`, package/lock/browser/assets/public/PWA/generated output, product/gameplay/balance/AI/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, causal/pixel/screenshot thresholds and order, pointer/deployment rules, evidence contracts, protected artifacts, and release state are forbidden. No repository normalization, retry-green, assertion weakening, test skip, or browser substitution is allowed.
+
+### 128.3 Exact resume, stop, and downstream route
+
+Because three of four r111 syntax checks and all 23 focused tests outside the changed checkpoint source are byte-identical and green, resume once as follows:
+
+1. apply only the two exact assertion-method token corrections and seal the final checkpoint receipt in all four canonical owners;
+2. run `node --check tests/v100-phase-g-checkpoint.test.mjs` once;
+3. run the exact focused four-file command once and require `35/35` with fail/cancelled/skipped/todo zero;
+4. run Design Lock once and require `19/19`, then the canonical six-file command once and require `55/55`;
+5. run exact-nine topology, sealed matrix/checkpoint and three frozen proof-path receipts, all-nine LF/no-BOM, forbidden-diff, staged-zero, protected-manifest, and `git diff --check` integrity;
+6. only complete green resumes Section 127.5 at fresh Stage 24 standalone `3/3`, then ordered Stage 6 -> 24 -> 25 in three processes `9/9`, full local gates, one exact non-amended commit `test: close r111 semantic transition ledger`, one direct-parent non-force transport/read-back, and one automatic focused CI.
+
+Any first red or uncertainty returns immediately to `SOL_DESIGN` without same-revision edit, retry, rerun, next revision, next ordinal, browser continuation, commit, transport, or CI. The workflow-restoration, unfiltered required CI/Phase G, same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain exactly Section 127.
+
+### 128.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R111_SOURCE_ASSERT_API_CORRECTION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: first r111 focused command, `34/35`; sole red `TypeError: assert.notEqual is not a function` at checkpoint line 858
+- `LAST_GREEN_GATE`: r111 sealed-byte syntax `4/4`; within focused, 34 tests green and all semantic-ledger assertions before the unavailable assert method green
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_TEST_ASSERT_API_MISMATCH / NODE_ASSERT_STRICT_EXPOSES_NOT_STRICT_EQUAL_NOT_NOT_EQUAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EXACT_ASSERTION_API_TOKEN_CORRECTION / TWO NOT_EQUAL TO NOT_STRICT_EQUAL + NO_HARNESS_SEMANTIC_CHANGE / QA_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NOT YET ACCEPTED — bounded compression reached the expected 512-count receipt, but full focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` only after this same-revision Design source gate is green
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; same exact-nine cumulative candidate
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-five same-revision packet -> checkpoint syntax -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Stage 24 `3/3` -> ordered `9/9` -> unchanged full/transport/automatic route
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact Node exception, import/API surface, two call sites and operands, passing assertions before the exception, all 34 green sibling tests, frozen matrix/proof/product bytes, exact-five/cumulative-nine topology, one-run resume boundary, first-red stop, and final Producer/release gates. This same-revision packet has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 129. Revision r112 — complete static-audit shadow surface
+
+Section 129 consumes the first and only Section 128 remediation red and supersedes Section 128's root-cause statement and correction only. Section 127's semantic-transition ledger, bounded dwell, matrix bytes, acceptance strength, browser order, exact-nine topology, and release state machine remain authoritative.
+
+### 129.1 Actual evidence and corrected classification
+
+The Section 128 checkpoint syntax gate passed. The exact focused command again stopped at `34/35`; the same aggregate checkpoint case now threw `TypeError: assert.notStrictEqual is not a function` at line 858. No further correction or gate followed.
+
+Direct process inspection proves the imported `{ strict as assert }` object exposes both `notEqual` and `notStrictEqual` as functions. Complete lexical-source inspection proves the aggregate test shadows that import at line 367 with `const assert = createCompleteStaticContractAssertionAudit()`. The local audit factory constructs wrappers only for `match`, `doesNotMatch`, `equal`, `deepEqual`, and `ok`, plus its separate `complete` method. The bounded aggregate region contains exactly 679 audited assertion calls: 433 `match`, 59 `doesNotMatch`, 125 `equal`, 18 `deepEqual`, 42 `ok`, and the two new `notStrictEqual` calls. Therefore those two calls are the sole methods absent from the local audit surface; the imported Node API is not the owner.
+
+Classification is `SOL_OWNED_STATIC_AUDIT_SHADOW_API_MISMATCH / TEST_LOCAL_ASSERT_SHADOW_EXPOSES_NO_INEQUALITY_METHOD / DESIGN_CHANGE_REQUIRED`. Secondary classification is `SOL_DESIGN_SOURCE_AUDIT_INCOMPLETE / PRIOR IMPORT_API CLASSIFICATION MISSED TEST_SCOPE_LEXICAL_SHADOW / GOVERNANCE_CORRECTION_REQUIRED`. The coherent remediation is `COMPLETE_STATIC_AUDIT_METHOD_INVENTORY / ADD NOT_STRICT_EQUAL WRAPPER THROUGH EXISTING FAIL_AGGREGATION / QA_TEST_ONLY`.
+
+The stopped checkpoint receipt is `129961` bytes / SHA-256 `c1046c772da826acd684a01bdb0e4c37a1efaae49ea5c448cb5be21f5c7cc4d2`. The exact one-token correction produces the final sealed checkpoint receipt `129979` bytes / SHA-256 `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117`, LF-only and without BOM. The matrix remains `347702` bytes / SHA-256 `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. Stop comments are Issue #172 `5438189876` and PR #171 `5438189680`. Browser/full/commit/transport/CI/release execution remains zero after the red and before this Design-locked correction.
+
+### 129.2 Exact finite correction and forbidden alternatives
+
+Advance the authoritative revision to `V100-SOL-DL-001 r112` because Section 128's owner classification was disproved by actual lexical scope. Relative to the stopped Section 128 packet, change only:
+
+1. `docs/PROJECT_STATE.md`;
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`;
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`;
+4. `tests/v100-design-lock.test.mjs`;
+5. `tests/v100-phase-g-checkpoint.test.mjs`.
+
+Inside `createCompleteStaticContractAssertionAudit`, add exactly one string member, `"notStrictEqual"`, to the existing wrapper-method inventory. The existing factory loop must continue to dispatch through `failFastAssert[method](...args)` and aggregate failures; the two line-858/859 assertions, their operands, and every other checkpoint-test token remain unchanged. Do not rewrite them to `ok`, bypass the aggregate wrapper, add another assertion API, alter the probe, add/remove/skip a test, or change any matrix/runtime behavior. After this one-token correction, compute and seal the final checkpoint size/SHA in Project State, Design Lock, Handoff, and Design assertions before validation.
+
+Freeze the matrix and all three proof paths at their Section 127 receipts. The cumulative candidate remains exactly nine tracked paths. All `app/**`, workflows, package/lock/browser/assets/public/PWA/generated output, product/gameplay/balance/AI/timing, timeout/duration/attempt/retry, viewport/stage mapping, pointer/deployment rules, evidence thresholds/order, screenshots, protected artifacts, and release state are forbidden. Repository normalization and retry-green are forbidden.
+
+The correction is finite because the aggregate region's complete method census has exactly one absent callable method, `notStrictEqual`; direct runtime inspection proves its backing `failFastAssert.notStrictEqual` is callable; the existing factory loop supplies the identical aggregation behavior used by all other methods. No second audit surface or general assertion redesign is authorized.
+
+### 129.3 Resume, acceptance, and stop
+
+After the exact one-token correction and four-owner receipt seal, execute once in order:
+
+1. `node --check tests/v100-phase-g-checkpoint.test.mjs`;
+2. the exact four-file focused command, requiring `35/35` and fail/cancelled/skipped/todo zero;
+3. Design Lock `19/19`;
+4. canonical six-file `55/55`;
+5. exact-nine topology, sealed matrix/checkpoint and three proof-path receipts, all-nine LF/no-BOM, forbidden diff zero, staged zero, protected manifests, and `git diff --check`;
+6. only complete green resumes Section 127.5 at Stage 24 standalone `3/3`, ordered `9/9`, full local gates, exact non-amended commit `test: close r111 semantic transition ledger`, direct-parent non-force transport/read-back, and one automatic focused CI.
+
+Any first red or uncertainty returns to `SOL_DESIGN` without edit, retry, rerun, micro-patch, next revision, next ordinal, browser continuation, commit, transport, or CI. All gates after automatic focused green remain exactly Section 127: workflow restoration, unfiltered required green, same-HEAD audits and freeze, fixed-HEAD `SOL_FINAL_REVIEW`, then one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks release.
+
+### 129.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R112_STATIC_AUDIT_SHADOW_SURFACE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: Section 128 resumed focused `34/35`; sole red `TypeError: assert.notStrictEqual is not a function` inside the local aggregate audit object
+- `LAST_GREEN_GATE`: corrected checkpoint syntax; 34 focused tests and all aggregate assertions before line 858
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_AUDIT_SHADOW_API_MISMATCH / TEST_LOCAL_ASSERT_SHADOW_EXPOSES_NO_INEQUALITY_METHOD / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `SOL_DESIGN_SOURCE_AUDIT_INCOMPLETE / PRIOR IMPORT_API CLASSIFICATION MISSED TEST_SCOPE_LEXICAL_SHADOW / GOVERNANCE_CORRECTION_REQUIRED`
+- `REMEDIATION_CLASS`: `COMPLETE_STATIC_AUDIT_METHOD_INVENTORY / ADD NOT_STRICT_EQUAL WRAPPER THROUGH EXISTING FAIL_AGGREGATION / QA_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NOT YET ACCEPTED — r111 bounded compression reached the expected receipt, but focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` only after this r112 Design source gate is green
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; cumulative exact-nine unchanged
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-five r112 packet -> one audit-inventory token + final receipt seal -> checkpoint syntax -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against both TypeErrors, direct imported-API introspection, lexical shadowing, the complete 679-call method census, the factory dispatch/aggregation path, exact one-token correction, frozen runtime/product bytes, exact-five/cumulative-nine topology, first-red stop, and final Producer/release gates. Revision r112 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 130. Revision r112 same-candidate packet — focused execution-cursor recovery
+
+Section 130 consumes the first r112 focused execution uncertainty without advancing the Design revision and supersedes Section 129 only for the execution cursor and the one permitted same-candidate focused revalidation. Section 129's corrected checkpoint bytes, Section 127's semantic-transition ledger and bounded dwell, the cumulative exact-nine topology, acceptance strength, browser order, first-red rule, and release state machine remain authoritative.
+
+### 130.1 Actual execution evidence and classification
+
+The final r112 checkpoint source is sealed at `129979` bytes / SHA-256 `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117`, LF-only and without BOM. The matrix remains sealed at `347702` bytes / SHA-256 `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. Checkpoint syntax passed on those exact bytes. SOL then launched the exact four-file focused command once. Its attached PTY yielded after 30 seconds with the first eight tests visible as green, but the orchestration layer printed only elapsed/output fields and failed to retain the returned `session_id`. The process later terminated; its remaining output and terminal exit code are unrecoverable. No second process, correction, browser, full gate, commit, transport, CI, or release action followed. Stop comments are Issue #172 `5438286850` and PR #171 `5438286655`.
+
+This is `SOL_EXECUTION_EVIDENCE_CAPTURE_INVALID / ONGOING_PTY_SESSION_ID_NOT_RETAINED + TERMINAL_RESULT_UNRECOVERABLE / INFRA_INVALID`. It is not a source, product, QA-harness, WebKit, GitHub Actions, acceptance, or test failure. The partial eight-test output is neither green acceptance nor red evidence and cannot promote or condemn the candidate. The candidate matrix, proof paths, fixture, checkpoint implementation/assertions, and product bytes did not change after launch.
+
+### 130.2 One permitted same-candidate recovery
+
+Keep authoritative Design `V100-SOL-DL-001 r112`. This packet changes only the three canonical governance documents and `tests/v100-design-lock.test.mjs`; it changes no matrix, proof-machine, fixture, checkpoint, product, workflow, package, browser, asset, timeout, duration, attempt, viewport, threshold, screenshot, or acceptance byte. The r112 material candidate being revalidated is identified by the two sealed receipts above and the three frozen Section 127 proof-path receipts.
+
+One same-candidate focused revalidation is authorized because the prior execution has no terminal verdict and the loss is independently attributable to SOL's process-cursor capture. This is not a retry around a red result. No second revalidation is authorized.
+
+The executor must:
+
+1. retain the complete `exec_command` return, including `exit_code`, `session_id`, and output;
+2. if `exit_code` is terminal, accept only that terminal result and never launch another command;
+3. if `session_id` is present, continue only that exact process with `write_stdin` using the same identifier until a terminal `exit_code` is returned;
+4. never launch a second focused process while the first process is ongoing or after it terminates;
+5. require the terminal TAP receipt `35/35` with fail/cancelled/skipped/todo zero;
+6. treat any red, timeout, missing cursor, lost terminal receipt, or other uncertainty as an immediate return to `SOL_DESIGN` without edit or rerun.
+
+The already green checkpoint syntax result remains valid because the checkpoint bytes are identical and need not be repeated. Before focused revalidation, run only the revised Design Lock source test and require `19/19`; this proves the recovery contract itself. After terminal focused `35/35`, resume at Design `19/19`, canonical `55/55`, and exact static integrity. Only their complete green resumes Section 127.5 at fresh Stage 24 standalone `3/3`, ordered Stage 6 -> Stage 24 -> Stage 25 in three fresh processes `9/9`, full local gates, exact non-amended commit, direct-parent non-force transport/read-back, and one automatic focused CI.
+
+### 130.3 Forbidden alternatives and downstream stop
+
+Do not alter candidate source bytes to improve the result, extend timeout, add an attempt, rerun checkpoint syntax, weaken assertions, split or substitute the focused command, infer the missing terminal result from the first eight tests, or reuse the lost process as acceptance. Any first terminal red or renewed uncertainty returns to `SOL_DESIGN`; no micro-patch, next revision, next ordinal, browser continuation, commit, transport, or manual/automatic rerun is permitted.
+
+Complete automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration, tag, GitHub Release, official Pages deployment, published-SHA QA, recovery, and closure.
+
+### 130.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R112_FOCUSED_CURSOR_RECOVERY_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 focused terminal receipt unavailable; first eight tests were visible green but the PTY `session_id` and terminal result were not retained
+- `LAST_GREEN_GATE`: final r112 checkpoint syntax on sealed `129979` / `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117` bytes
+- `CLASSIFICATION`: `SOL_EXECUTION_EVIDENCE_CAPTURE_INVALID / ONGOING_PTY_SESSION_ID_NOT_RETAINED + TERMINAL_RESULT_UNRECOVERABLE / INFRA_INVALID`
+- `REMEDIATION_CLASS`: `SAME_CANDIDATE_SINGLE_REVALIDATION / RETAIN_EXEC_SESSION_CURSOR + POLL_ONLY_EXISTING_PROCESS_TO_TERMINAL / EXECUTION_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `UNKNOWN — full focused 35/35 terminal receipt remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` only after this Section 130 Design source gate is `19/19`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; cumulative exact-nine runtime/source candidate unchanged
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: Section 130 Design `19/19` -> exact same-candidate four-file focused command once with retained session cursor until terminal `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact sealed receipts, partial output boundary, missing PTY cursor, process termination, unchanged candidate bytes, single-process continuation rule, no-red/no-green distinction, one permitted revalidation, first-red stop, and final Producer/release gates. Revision r112 Section 130 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 131. Revision r112 same-candidate packet — current/history source-owner separation
+
+Section 131 consumes the first Section 130 Design source red without advancing the Design revision. It supersedes Section 130 only for the SOL-owned Design-test owner lists and current execution cursor. The same-candidate focused authorization remains unconsumed; every Section 129 correction, Section 130 process-cursor rule, frozen candidate receipt, acceptance boundary, browser order, and release gate remains authoritative.
+
+### 131.1 Actual first red and root owner
+
+The first and only Section 130 Design Lock source run completed `18/19`. All other Design tests passed. The sole failure was at `tests/v100-design-lock.test.mjs:3489`: the Section 129 historical packet loop still enumerated `[r112, r112Handoff, currentCursor]` and therefore required the superseded status `R112_STATIC_AUDIT_SHADOW_SURFACE_ACTIVE` on the Section 130 current cursor. Section 130 correctly made `R112_FOCUSED_CURSOR_RECOVERY_ACTIVE` the sole current status. The Section 129 Design and Handoff sections still own the historical status and classification, while Project State retains an explicit `Actual Section 128 source return / r112 lexical-shadow audit` history entry.
+
+No focused revalidation, browser, full gate, commit, transport, CI, retry, rerun, edit, or next ordinal followed the red. Stop comments are Issue #172 `5438355182` and PR #171 `5438355385`.
+
+Classification is `SOL_OWNED_CURRENT_HISTORY_STATUS_ALIAS / SECTION_129_HISTORICAL_STATUS_ASSERTED_ON_SECTION_130_CURRENT_CURSOR / REMEDIATION_LOCAL`. Remediation is `HISTORICAL_PACKET_OWNER_SEPARATION / PRIOR_DESIGN_HANDOFF_STATUS_OWNERS + EXPLICIT_PROJECT_HISTORY_MARKERS + CURRENT_CURSOR_ONLY_CURRENT_STATUS / GOVERNANCE_TEST_ONLY`.
+
+### 131.2 Exact finite correction
+
+Change only `docs/PROJECT_STATE.md`, `docs/design/v1.0.0/DESIGN_LOCK.md`, `docs/design/v1.0.0/LUNA_HANDOFF.md`, and `tests/v100-design-lock.test.mjs`. In the Design test:
+
+1. remove only `currentCursor` from the Section 129 `[r112, r112Handoff, currentCursor]` historical-owner list;
+2. remove only `currentCursor` from the Section 130 `[r112Recovery, r112RecoveryHandoff, currentCursor]` historical-owner list as Section 131 becomes current;
+3. retain the explicit Project State history assertions for `Actual Section 128 source return / r112 lexical-shadow audit` and `Actual r112 execution-evidence return / same-candidate cursor recovery`;
+4. assert Section 131 Design, Handoff, and the current cursor independently carry the new classification, remediation, receipts, owner, resume point, and M3 state.
+
+Do not change the checkpoint, matrix, proof machine, fixture, proof test, product, workflow, package, browser, asset, timeout, duration, attempt, viewport, threshold, screenshot, acceptance, or release byte. Do not add a status alias to Project State merely to satisfy a historical loop. This correction is finite because the failed assertion identifies one mutable current cursor incorrectly shared by two immutable historical packet loops; the owner separation removes that topology rather than copying stale statuses forward.
+
+### 131.3 Resume and stop
+
+Run the corrected Design Lock source test once and require `19/19`. Only complete green resumes Section 130's one permitted same-candidate four-file focused revalidation. The executor must retain the launch `session_id`, poll only the same process to a terminal result, and require `35/35` with fail/cancelled/skipped/todo zero. Any Design red, focused red, timeout, lost cursor, or uncertainty returns to `SOL_DESIGN` without edit, retry, rerun, next revision, next ordinal, browser continuation, commit, transport, or CI.
+
+After focused `35/35`, run Design `19/19`, canonical `55/55`, and exact static integrity once, then follow Section 127's Stage 24 `3/3`, ordered `9/9`, full local, exact commit, non-force direct-parent transport/read-back, and one automatic focused CI. Complete required green alone unlocks same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks release.
+
+### 131.4 Current cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R112_CURRENT_HISTORY_ASSERTION_SEPARATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: first Section 130 Design Lock source run `18/19`; sole red was Section 129 historical status asserted on the Section 130 current cursor
+- `LAST_GREEN_GATE`: final r112 checkpoint syntax plus 18 sibling Design tests
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_HISTORY_STATUS_ALIAS / SECTION_129_HISTORICAL_STATUS_ASSERTED_ON_SECTION_130_CURRENT_CURSOR / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_PACKET_OWNER_SEPARATION / PRIOR_DESIGN_HANDOFF_STATUS_OWNERS + EXPLICIT_PROJECT_HISTORY_MARKERS + CURRENT_CURSOR_ONLY_CURRENT_STATUS / GOVERNANCE_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `UNKNOWN — full focused 35/35 terminal receipt remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION` only after Section 131 Design source `19/19`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; cumulative exact-nine runtime/source candidate unchanged
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact two historical-owner list separations -> Section 131 Design `19/19` -> Section 130 exact same-candidate focused process once to terminal `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+SOL repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the exact `18/19` output, failing line and input, immutable Section 129/130 packet regions, mutable current cursor, explicit Project history markers, two finite owner-list removals, frozen candidate receipts, unconsumed single revalidation, first-red stop, and final Producer/release gates. Revision r112 Section 131 has `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 132. Revision r113 — exact actor-kind lease state machine
+
+Canonical design is `V100-SOL-DL-001 r113`. r112 source/focused/static acceptance completed at Design `19/19`, focused `35/35`, canonical `55/55`, and exact-nine LF/no-BOM/static integrity. Stage 24 standalone then passed in three fresh WebKit processes. Ordered process 1 passed Stage 6 and Stage 24, then its Stage 25 ordinal was the first red and stopped every later gate.
+
+### 132.1 Actual evidence and independent classification
+
+The failed Stage 25 transaction is `tmp-r112-local-ordered-1/webkit-932x430-battle-extra.capture-transaction.json`, 5,114,001 bytes, SHA-256 `eb5a9a1611185177154fe89f8c4cd2cb725f8e35743b9e8aa72c107e8509219f`. Its atomic release receipt selected production `zombie:red-panther-shield` fighter 4 -> live guardian 5 at battle time `47.64999999999858`, baseline sequence 1, and decreasing windup `0.22 -> 0.07`. The first post-release snapshot at battle time `47.68333333333191` retained fighter 4, target 5, and sequence 1 but cleared `attackWindupTargetId`; v7 correctly invalidated candidate 1 as `WINDUP_TARGET_CHANGED_BEFORE_CONTACT` and entered `WAITING_SUCCESSOR`. Fighter 4 later died. v7 then failed immediately as `EXACT_SOURCE_IDENTITY_INVALID`, although shield fighter 8 was live/combat-ready and shield fighter 16 was entering the same live production battle. Console, page, request, and HTTP failures were zero; no product failure state or browser crash occurred; failure evidence and cleanup completed.
+
+The two immediately preceding same-path Stage 25 controls are decisive. r110 ordered process 1 accepted fighter 4's same-epoch successor at battle time `50.233333333331764`; r110 process 2 accepted fighter 4's release candidate at `43.766666666665465`. Each bound one source, one target, one sequence, authored attack presentation, reaction/contact, and post-cutoff audio within the unchanged deadline. The r112 failure therefore does not establish a product/gameplay/AI/balance defect. It establishes that the required actor is owned as content kind before release, but v7 transfers ownership permanently to one ephemeral fighter instance and has no kind-equivalent pre-commit lease recovery after that instance dies.
+
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_ACTOR_LEASE_NONRECOVERY / RELEASE_CANDIDATE_INVALIDATED + SELECTED_FIGHTER_DIES_WHILE_LIVE_SAME_KIND_SUCCESSORS_EXIST / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_PROOF_KIND_INSTANCE_OWNERSHIP_ALIAS / REQUIRED_CONTENT_KIND_ACCEPTANCE_BOUND_TO_ONE_EPHEMERAL_PRECOMMIT_FIGHTER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `EXACT_ACTOR_KIND_LEASE_STATE_MACHINE / SINGLE_EPOCH_PRECOMMIT_REACQUISITION + POSTCOMMIT_IMMUTABILITY / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+
+### 132.2 Producer Loop-Breaker subsystem audit
+
+This is a subsystem revision, not a Stage 25 micro-patch.
+
+| Axis | Finding | r113 ownership |
+| --- | --- | --- |
+| state ownership | **RED**: host release acquisition owns `actorKey`, while page v7 permanently owns `selectedFighterId` after handoff | one page-owned actor-kind state owns a sequence of immutable exact fighter leases inside the original epoch |
+| observer lifecycle | green: one page observer ran from atomic release to failure and was stopped once | unchanged one observer; lease changes do not install/restart observers |
+| presentation quiescence | green: one same-task atomic release receipt, no cached snapshot | initial release anchor remains mandatory and immutable |
+| checkpoint ownership | green: Stage 25 proof checkpoint failed before screenshot/full gates | unchanged first-red stop; no next checkpoint before terminal proof |
+| causal witness | **RED**: an invalidated/dead pre-commit instance prevents another same-kind exact instance from supplying a single coherent witness | a lease may change only before source commit; one accepted witness must come wholly from one lease |
+| screenshot ordering | green/not reached: no screenshot was accepted without a witness | accepted witness -> production screenshot -> deadline receipt remains exact |
+| cleanup ordering | green: failure evidence preceded observer/finally cleanup and ended `CLEANED_AFTER_FAILURE` | unchanged |
+| evidence persistence | green: transaction v2 persisted anchor, candidate history, terminal failure, runtime and overflow diagnostics | add immutable lease events and bounded candidate continuity to the same transaction |
+| browser/process lifecycle | green: live WebKit page/battle, diagnostics zero, clean finally path | unchanged fresh-process/ordered-process contracts |
+
+The seven green axes remain frozen. The two red semantic axes are corrected together; no timeout, retry, screenshot, product, deployment, or process policy is changed.
+
+### 132.3 One simpler proof state machine
+
+Advance the page-owned proof schema once to `v100-phase-g-post-quiescence-proof/v8` and the witness schema once to `v100-phase-g-exact-actor-witness/v4`. Add one immutable child receipt, `v100-phase-g-exact-actor-lease/v1`. Contact v3, pending-impact v1, lethal-removal v1, screenshot/deadline receipts, capture transaction v2, and the outer atomic release coordinator remain unchanged.
+
+For each required `actorKey`, v8 owns exactly one active lease at a time:
+
+`INITIAL_RELEASE_LEASE -> TRACKING_CANDIDATE -> SOURCE_COMMITTED -> IMPACT_PENDING? -> CONTACT_ACCEPTED -> WITNESS_ACCEPTED`
+
+Before `SOURCE_COMMITTED`, natural candidate cancellation, target loss, source removal, or source death closes the current lease and enters `WAITING_KIND_CANDIDATE`. This is a state continuation, not a retry, attempt, rearm, observer restart, deadline reset, redeployment, or product mutation. While waiting, the same observer scans only live production fighters whose `side` and `kind` exactly equal the required actor key. Candidate identity is `(fighterId, targetId, attackSequence)`. Two distinct increasing-battle-time snapshots must show the same identity with a strictly decreasing positive windup; the last windup must satisfy the unchanged late-windup maximum. Deterministic stable fighter/target identity order selects at most one eligible candidate. Opening it creates a new immutable lease and candidate with a fresh exact baseline and target.
+
+The initial lease must match the atomic release anchor byte-for-byte on actor key, fighter, target, baseline, and handoff times. Every successor lease must retain the same actor key/side/kind, open after the original visible epoch starts and before its unchanged deadline, and own its own fighter, target, baseline, candidate, cue cutoff, and receipts. A same-fighter successor and a different-fighter same-kind successor use the same transition; there is no special Stage 25 branch.
+
+At `SOURCE_COMMITTED`, lease succession is permanently disabled. Source, target, sequence, authored presentation, pending transport/direct contact, reaction/lethal receipt, and cue must all bind to that one committed lease. Missing or mismatched post-commit identities, a second sequence, malformed numeric domain, ambiguous pending impact, deadline expiry, screenshot-order violation, or cleanup-order violation still fails closed. No receipt, cue, reaction, candidate sample, or target history from a closed lease may satisfy the accepted lease.
+
+The original `visibleProofStartedAt`, `visibleProofDeadlineAt`, `visibleProofDurationMs`, audio epoch cutoff, host deadline, browser attempt, viewport, stage, and process remain immutable across every lease. The absolute deadline is the finite bound; no new attempt count or duration is introduced. Lease history is diagnostic evidence, not a second acceptance path.
+
+### 132.4 Exact source boundary
+
+The cumulative candidate remains exact-nine and changes only these paths relative to the r112 draft:
+
+1. `docs/PROJECT_STATE.md`
+2. `docs/design/v1.0.0/DESIGN_LOCK.md`
+3. `docs/design/v1.0.0/LUNA_HANDOFF.md`
+4. `scripts/v100-phase-g-proof-machine.mjs`
+5. `scripts/v100-phase-g-production-matrix.mjs`
+6. `tests/fixtures/v100-phase-g-v6-contract.mjs`
+7. `tests/v100-design-lock.test.mjs`
+8. `tests/v100-phase-g-checkpoint.test.mjs`
+9. `tests/v100-phase-g-proof-machine.test.mjs`
+
+Target functions are `createV100PhaseGProofMachine`, `advanceEpoch`, `exactAudioReceiptFor`, `sourceCommitFor`, `witnessFor`, `validateInstallEpoch`, `postQuiescenceExactActorDecision`, and the matrix's `atomicReleaseCandidatePageDecision` epoch construction/schema guards. The historically named fixture exports may remain compatibility aliases, but their emitted canonical schema is v8.
+
+Allowed: the v8 actor-kind/lease state graph, exact lease/candidate receipts, same-kind pre-commit continuity selection, lease-local cue cutoff, v8/v4 guards, transaction diagnostics, and focused tests for these rules. Forbidden: `app/**`; product/gameplay/AI/balance/attack timing; timeout/duration/attempt/retry; viewport/stage mapping; late-windup/causal/screenshot threshold; deployment pointer behavior; package/assets/workflow/release contract; acceptance weakening; using multiple fighters or targets inside one accepted witness; post-commit lease switching; manual rerun.
+
+### 132.5 Focused acceptance
+
+The source packet must prove all of the following before browser execution:
+
+1. Replay the r112 shape: release fighter 4 candidate invalidates, fighter 4 dies, fighter 8 produces two strict continuity samples, and one fighter 8 -> live-human-target exact witness is accepted under the original deadline.
+2. A same-fighter successor still passes through the same generic lease transition; no legacy special path is required.
+3. A successor may own a different live target, but its source, target, baseline, candidate, contact/reaction, audio, and witness all match one lease.
+4. A cue observed before a successor lease opens cannot satisfy that lease; a post-lease/post-epoch cue is required.
+5. Multiple eligible same-kind candidates resolve deterministically; no samples or receipts are combined.
+6. A source or target lost before commit returns to `WAITING_KIND_CANDIDATE`; the same loss after commit remains fail-closed except the already-approved exact pending-impact source-removal rule.
+7. No successor before the original deadline ends in the original structured deadline failure without reset or retry.
+8. v7 install and v3 witness inputs fail the v8/v4 boundary; Node and serialized page factories remain byte-identical.
+9. Existing Stage 6 projectile/lethal, Stage 24 same-snapshot direct contact, pending-impact, screenshot/deadline, cleanup, numeric-domain, and immutable-witness tests remain green.
+
+Then require proof/checkpoint syntax, the exact four-file focused suite, Design `19/19`, canonical six-file suite, exact-nine topology, LF/no-BOM, `git diff --check`, and sealed byte/hash receipts. Any first red stops in `SOL_DESIGN`; no correction, retry, rerun, next revision, browser, or next gate is automatic.
+
+### 132.6 Runtime and promotion route
+
+After all one-shot source/static gates are green, restart runtime evidence because proof/matrix bytes changed: Stage 24 standalone `3/3` in three fresh WebKit processes, then ordered Stage 6 -> 24 -> 25 in three fresh processes for exact `9/9`. The stopped r112 Stage 24/ordered greens are diagnosis only. First red stops. Exact `9/9` alone unlocks full Hosted/deployment/content/complete/lint/build/static gates; complete local green alone unlocks one exact non-amended material commit, one non-force direct-parent transport/read-back, and exactly one automatic focused CI run. No manual rerun is authorized.
+
+Automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G `54/54`. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked PR #169/#170/#171 integration, release SHA/tag/GitHub Release/official Pages, published-SHA QA/recovery, Project State update, and closure.
+
+### 132.7 Cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R113_EXACT_ACTOR_KIND_LEASE_MACHINE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 ordered process 1 Stage 25 / selected shield fighter 4 invalidated then died before witness
+- `LAST_GREEN_GATE`: r112 ordered process 1 Stage 24; Stage 24 standalone `3/3`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NO — v8 source and runtime acceptance remain mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 40, still uncommitted
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-nine r113 v8 lease packet -> one-shot source/static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r113 Section 132's page-owned exact actor-kind lease state machine on the cumulative exact-nine candidate. Preserve one immutable deadline/observer/attempt and require one source-target-sequence-contact/reaction/audio witness from one lease. Pre-commit natural loss may reacquire a strict same-kind production candidate; post-commit switching is forbidden. Run the one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact non-amended commit, one non-force direct-parent transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without edit, retry, rerun, next revision, or next gate.**
+
+SOURCE AUDIT: exact evidence/source owner and nine-path boundary complete. DESIGN AUDIT: actor kind, fighter lease, pre/post-commit boundary, and acceptance are unambiguous. ADVERSARIAL AUDIT: no cross-lease receipt mixing, deadline reset, retry, threshold relaxation, or product mutation is possible. EXECUTION AUDIT: one-shot command order and first-red stop are exact. LOOP AUDIT: the repeated harness failure is addressed structurally across the proof subsystem rather than by a Stage 25 branch. RELEASE AUDIT: all Producer/fixed-HEAD/release boundaries remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 133. Revision r113 same-revision packet — Design current/history assertion separation
+
+Canonical design remains `V100-SOL-DL-001 r113`; Section 132's runtime design is unchanged. The first Design source run stopped at `17/19`. Its two reds are SOL-owned governance assertions: line 306 still requires the mutable Project State summary to name r112, and the historical r111 status/classification/material-iteration loop still includes the mutable r113 `currentCursor`. All 17 sibling tests passed. No proof/matrix/fixture/checkpoint runtime correction, browser, commit, transport, or CI followed.
+
+- `STATUS`: `DESIGN_LOCKED / R113_DESIGN_SOURCE_HISTORY_SEPARATION_ACTIVE`
+- `FAILED_GATE`: first Section 132 Design source `17/19`; exact two current/history aliases
+- `LAST_GREEN_GATE`: 17 sibling Design tests
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_HISTORY_ASSERTION_ALIAS / R112_SUMMARY_LITERAL + R111_HISTORICAL_OWNER_LOOP_APPLIED_TO_R113_CURRENT_CURSOR / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CURRENT_HISTORY_ASSERTION_SEPARATION / CURRENT_SUMMARY_TO_R113 + R111_IMMUTABLE_OWNERS_ONLY + R113_CURRENT_CURSOR_ONLY / GOVERNANCE_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NO — Section 132 v8 implementation and acceptance remain mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact two governance assertion corrections -> Design `19/19` -> Section 132 exact-nine v8 lease implementation -> one-shot source/static -> Stage 24 `3/3` -> ordered `9/9`
+- `M3_PASSED`: `NO`
+
+Change only the three canonical docs and `tests/v100-design-lock.test.mjs` relative to the stopped Section 132 design packet. Update line 306's current summary expectation from r112 to r113. Remove only `currentCursor` from the r111 historical owner/status loop; retain its immutable r111 Design/Handoff owners and keep the explicit Project r111 history assertions. Make Section 133 Design/Handoff/current cursor the only owners of the current source-correction status. Do not alter Section 132's actor-kind lease design or any runtime/test candidate byte.
+
+Run Design `19/19` once. Green alone unlocks Section 132 implementation. Any red or uncertainty returns to `SOL_DESIGN` without another edit or rerun.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION applies only the two current/history governance assertion separations in V100-SOL-DL-001 r113 Section 133 and runs Design 19/19 once. Green alone resumes Section 132's exact-nine v8 actor-kind lease implementation. Preserve every proof/matrix/fixture/checkpoint runtime byte until that gate; any red returns to SOL_DESIGN without edit or rerun.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 134. Revision r113 same-revision packet — authoritative acceptance wording alignment
+
+Canonical design remains `V100-SOL-DL-001 r113`; Sections 132-133 are unchanged. Section 133 Design source advanced to `18/19`. Its sole red is a new SOL-owned assertion requiring shorthand `different-target successor` from the Design section, while the authoritative Section 132 acceptance says `A successor may own a different live target`. The Section 133 current/history corrections and all 18 sibling tests passed. Runtime implementation remains unstarted.
+
+- `STATUS`: `DESIGN_LOCKED / R113_ACCEPTANCE_WORDING_ALIGNMENT_ACTIVE`
+- `FAILED_GATE`: Section 133 Design source `18/19`; one test-only shorthand mismatch
+- `LAST_GREEN_GATE`: 18 sibling Design tests including both current/history corrections
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_ASSERTION_LITERAL_ALIAS / AUTHORITATIVE_DIFFERENT_LIVE_TARGET_WORDING_VS_TEST_ONLY_DIFFERENT_TARGET_SUCCESSOR_SHORTHAND / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_ASSERTION_LITERAL_ALIGNMENT / DIFFERENT_TARGET_SUCCESSOR_TO_AUTHORITATIVE_DIFFERENT_LIVE_TARGET / GOVERNANCE_TEST_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one assertion literal alignment -> Design `19/19` -> Section 132 exact-nine v8 actor-kind lease implementation
+- `M3_PASSED`: `NO`
+
+Change only the three canonical docs and `tests/v100-design-lock.test.mjs`. In the Section 132 token list, replace only `different-target successor` with `A successor may own a different live target`. Change no Design acceptance, Handoff meaning, other assertion, runtime candidate, threshold, or execution route. A complete lexical read-through found every other new Section 132-134 assertion literal in its scoped canonical owner.
+
+Run Design `19/19` once. Green alone resumes Section 132. Any red returns to `SOL_DESIGN` without edit or rerun.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION aligns only the one Section 132 Design assertion from test-only `different-target successor` shorthand to authoritative `A successor may own a different live target`, then runs Design 19/19 once. Green alone resumes the locked v8 actor-kind lease implementation; any red returns to SOL_DESIGN.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 135. Revision r113 same-revision packet — authoritative successor-lease cue wording alignment
+
+Canonical design remains `V100-SOL-DL-001 r113`; Sections 132-134 and every runtime candidate byte are unchanged. The Section 134 Design source run stopped at `18/19`. Its sole red is the test-only shorthand `pre-lease cue rejection`, while authoritative Section 132 acceptance says `A cue observed before a successor lease opens cannot satisfy that lease; a post-lease/post-epoch cue is required.` The prior acceptance-wording correction and all 18 sibling tests passed. Runtime implementation, browser execution, commit, transport, CI, retry, and rerun remain zero.
+
+- `STATUS`: `DESIGN_LOCKED / R113_CUE_ASSERTION_WORDING_ALIGNMENT_ACTIVE`
+- `FAILED_GATE`: Section 134 Design source `18/19`; one test-only cue shorthand mismatch
+- `LAST_GREEN_GATE`: 18 sibling Design tests including the Section 134 acceptance-wording alignment
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_ASSERTION_LITERAL_ALIAS / AUTHORITATIVE_PRE_SUCCESSOR_LEASE_CUE_SENTENCE_VS_TEST_ONLY_PRE_LEASE_CUE_REJECTION_SHORTHAND / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_ASSERTION_LITERAL_ALIGNMENT / PRE_LEASE_CUE_REJECTION_TO_AUTHORITATIVE_CUE_BEFORE_SUCCESSOR_LEASE_SENTENCE / GOVERNANCE_TEST_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one cue assertion literal alignment -> Design `19/19` -> Section 132 exact-nine v8 actor-kind lease implementation
+- `M3_PASSED`: `NO`
+
+Change only the three canonical docs and `tests/v100-design-lock.test.mjs`. In the Section 132 token list, replace only `pre-lease cue rejection` with the authoritative sentence prefix `A cue observed before a successor lease opens cannot satisfy that lease`. Change no Design acceptance, Handoff meaning, other assertion, runtime candidate, threshold, or execution route. A complete scoped lexical audit confirms that every other new Section 132-135 token and direct assertion occurs in its intended canonical owner; this exact alias is the only remaining mismatch exposed by the stopped gate.
+
+Run Design `19/19` once. Green alone resumes Section 132. Any red returns to `SOL_DESIGN` without edit or rerun.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION aligns only the one Section 132 Design assertion from test-only `pre-lease cue rejection` shorthand to authoritative `A cue observed before a successor lease opens cannot satisfy that lease`, then runs Design 19/19 once. Green alone resumes the locked v8 actor-kind lease implementation; any red returns to SOL_DESIGN.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 136. Revision r113 same-revision packet — historical release invariant restoration
+
+Canonical design remains `V100-SOL-DL-001 r113`; Sections 132-135 runtime meaning and every runtime candidate byte are unchanged. The Section 135 Design source run stopped at `18/19` because exact regex scoping separated historical Section 133 from later packets and exposed its missing explicit `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` sentence. Before another test run, SOL's exact-scope audit found the same documentation-only omission in newly bounded Design Sections 134 and 135; all three corresponding Handoffs and every current release contract already preserve that boundary. All 18 sibling tests, including the cue wording correction, passed. Runtime implementation, browser execution, commit, transport, CI, retry, and rerun remain zero.
+
+- `STATUS`: `DESIGN_LOCKED / R113_HISTORICAL_RELEASE_INVARIANT_RESTORATION_ACTIVE`
+- `FAILED_GATE`: Section 135 Design source `18/19`; Section 133 was the first exactly scoped Design packet missing the explicit release invariant
+- `LAST_GREEN_GATE`: 18 sibling Design tests including the Section 135 cue-wording alignment
+- `CLASSIFICATION`: `SOL_OWNED_SCOPED_DESIGN_RELEASE_INVARIANT_OMISSION / SECTIONS_133_134_135_DESIGN_PACKETS_MISSING_EXPLICIT_FINAL_PRODUCER_CHECKPOINT_SENTENCE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `THREE_IDENTICAL_RELEASE_INVARIANT_BACKFILLS / SECTIONS_133_134_135_DESIGN_ONLY / GOVERNANCE_DOC_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: three Design-only release-invariant sentences -> Design `19/19` -> Section 132 exact-nine v8 actor-kind lease implementation
+- `M3_PASSED`: `NO`
+
+Add only the identical explicit fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit-approval-only release-tail sentence to Design Sections 133, 134, and 135. The three sentences restore the invariant already held by their Handoffs and every current packet; they change no gate, owner, route, product decision, runtime candidate, acceptance, or release authority. Exact scoping confirms Section 132, Handoffs 125-129, Section 136, and the current Project cursor already carry the invariant.
+
+Run Design `19/19` once. Green alone resumes Section 132. Any red returns to `SOL_DESIGN` without edit or rerun.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION adds only Design Sections 133-135's three identical missing explicit fixed-HEAD SOL final review / one final Producer checkpoint / approval-only release sentences, then runs Design 19/19 once. Preserve every runtime candidate byte. Green alone resumes Section 132; any red returns to SOL_DESIGN.**
+
+## 137. Revision r113 implementation packet — exact actor-kind lease source seal
+
+Canonical design remains `V100-SOL-DL-001 r113`; Section 132 owns the product-neutral proof design and Sections 133-136 retain the complete Design source-return history. Section 136's SOL-owned Design gate is now `19/19` green. SOL then completed the exact-nine r113 implementation without running syntax, focused, canonical, browser, full, commit, transport, or CI gates. This section supersedes Section 136 only for the current execution cursor and immutable five-file material seal.
+
+The implementation uses one page-owned actor-kind state machine and one immutable lease at a time. Initial release leases are structurally bound to their atomic anchor. Any same-kind successor, including a supporting actor successor, owns its own deterministic two-or-more-snapshot candidate, fresh baseline/target, lease-local cue cutoff, commit window, contact/reaction, and witness. Host validation requires an alternating `OPENED -> CLOSED -> ... -> OPENED` lease history ending at the accepted lease, field-for-field OPENED/current-lease identity, strict candidate continuity after serialization, exact contact/source/target/sequence binding, and candidate-origin/lease-origin agreement. Pre-commit natural loss remains a continuation inside the original deadline; post-commit switching remains impossible.
+
+### 137.1 Exact immutable material receipts
+
+All five files are UTF-8, LF-only, and no-BOM. They are the only non-governance material owners inside the cumulative exact-nine candidate:
+
+| path | bytes | SHA-256 | LF / CR / BOM |
+|---|---:|---|---|
+| `scripts/v100-phase-g-proof-machine.mjs` | `100837` | `13fe78c067155272fce43244e04d6a46fd9065c50d46b2d525003bd41a4017b5` | `2084 / 0 / false` |
+| `scripts/v100-phase-g-production-matrix.mjs` | `349591` | `32cf0d3b1a4603a7d082f422f588e5efe2729ca3aa1d8dd5d330045257854a35` | `7021 / 0 / false` |
+| `tests/fixtures/v100-phase-g-v6-contract.mjs` | `23209` | `000ddd9f29a9c86abf6f0108decfd2139620ff4e38db414bdb7101b1912e39a7` | `589 / 0 / false` |
+| `tests/v100-phase-g-checkpoint.test.mjs` | `132565` | `09c7d69c2b76316571fbc59c04fa877423399e5e30bb4fe347a038292887546b` | `2012 / 0 / false` |
+| `tests/v100-phase-g-proof-machine.test.mjs` | `48374` | `c6c4182e2646f0f78635593ece846236a9011d1005514b3d0376a8ffafa843e0` | `1140 / 0 / false` |
+
+The other four exact-nine paths are the three canonical docs and `tests/v100-design-lock.test.mjs`; they own this cursor and receipt assertions only. `app/**`, workflows, package/lock, assets/public, product/gameplay/AI/balance/timing, timeout/duration/attempt/retry, viewport/stage mapping, deployment pointer, screenshot/causal threshold, and release bytes remain forbidden.
+
+### 137.2 One-shot source and runtime route
+
+Run exactly once, in order: syntax `6/6` for the matrix, proof machine, compatibility fixture, checkpoint test, proof-machine test, and Design test; the exact four-file focused suite `42/42` (`3 + 12 + 4 + 23`); Design `19/19`; the unchanged canonical six-file suite `55/55`; exact-nine topology, five receipt hashes, LF/no-BOM, protected evidence, forbidden diff zero, and `git diff --check`. No source/static gate has yet been consumed on these final bytes.
+
+Complete source/static green alone unlocks Stage 24 standalone in three fresh processes `3/3`, followed by ordered Stage 6 -> 24 -> 25 in three fresh processes `9/9`. First red stops immediately in `SOL_DESIGN` without edit, retry, rerun, next revision, next ordinal, next gate, commit, transport, or CI. Complete `9/9` alone unlocks the unchanged full Hosted/deployment/content/complete/lint/build/static route. Complete local green alone unlocks one exact non-amended commit, one non-force direct-parent transport/read-back, and exactly one automatic focused CI.
+
+Complete automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G `54/54`. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, final evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks stacked integration and the release tail.
+
+### 137.3 Cursor and audits
+
+- `STATUS`: `DESIGN_LOCKED / R113_EXACT_ACTOR_KIND_LEASE_SOURCE_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 ordered process 1 Stage 25 exact actor lease nonrecovery; no r113 source gate has run
+- `LAST_GREEN_GATE`: r113 Section 136 Design Lock `19/19`
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_ACTOR_LEASE_NONRECOVERY / RELEASE_CANDIDATE_INVALIDATED + SELECTED_FIGHTER_DIES_WHILE_LIVE_SAME_KIND_SUCCESSORS_EXIST / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `EXACT_ACTOR_KIND_LEASE_STATE_MACHINE / SINGLE_EPOCH_PRECOMMIT_REACQUISITION + POSTCOMMIT_IMMUTABILITY / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NO — final-byte source and runtime acceptance remain mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: syntax `6/6` -> focused `42/42` -> Design `19/19` -> canonical `55/55` -> exact static -> Stage 24 `3/3` -> ordered `9/9`
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION runs only V100-SOL-DL-001 r113 Section 137's final-byte one-shot source/static sequence, then Stage 24 3/3 and ordered 9/9. Preserve the exact five receipts and cumulative exact-nine topology. Any first red returns to SOL_DESIGN without edit, retry, rerun, next revision, or next gate. Complete green follows the unchanged full-local, exact-commit/non-force transport, one automatic focused CI, required-green, same-HEAD audit, fixed-review, one final Producer checkpoint, and approval-only release route.**
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits were repeated against the five sealed bytes, supporting and release-anchor successor paths, lease-history/candidate/contact/cue adversarial substitutions, immutable deadline, one-shot gate order, and release boundary. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 138. Revision r114 — minimum completed-impact observability replacement
+
+This section is the sole current Phase G proof contract and supersedes Section 137 for execution. Sections 1-137 remain immutable audit history; their actor lease, target ownership, candidate, successor, recovery, release-anchor, proof-epoch, compatibility-fixture, and historical regex-test instructions are not executable.
+
+### 138.1 Classification and product boundary
+
+- `STATUS`: `DESIGN_LOCKED / R114_MINIMUM_COMPLETED_IMPACT_REPLACEMENT_ACTIVE`
+- `CLASSIFICATION`: `QA_HARNESS_STATE_EXPLOSION / PREATTACK_INSTANCE_OWNERSHIP_AND_RECOVERY_MACHINE_EXCEEDED_THE_RELEASE_CONTRACT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `MINIMUM_COMPLETED_IMPACT_OBSERVABILITY + SINGLE_RECEIPT_CONSUMER / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `SAME_GATE_REPEAT_COUNT`: `22` for executed required remote Phase G; this historical count is not reset by source green
+- `M3_PASSED`: `NO`
+
+Product damage, HP calculation, target selection, AI, attack cooldown/timing, projectile timing, VFX, animation, reaction, RNG, save, UI, and audio playback behavior are byte/semantic invariants. The only product-side addition is localhost `phase-g=1` battle-local observability over facts the authoritative combat and audio owners already know. It is absent from save and player-visible surfaces and cannot alter combat decisions.
+
+### 138.2 One product receipt and exact identity
+
+The one new product schema is `v100-completed-attack-impact/v1`.
+
+- attack identity: `(battleGeneration, sourceId, attackSequence)`
+- impact identity: `(battleGeneration, sourceId, attackSequence, targetId, impactOrdinal)`
+- immutable payload: exact source side/kind, exact target side/kind, `direct | projectile | delayed`, commit/contact battle times, `hit | defeated`, production cue ID, the deterministic exact attack audio receipt ID, and confirmed exact production cue request
+- retention: current battle generation only, last 64, no save serialization
+- direct contact emits at authoritative damage/reaction ownership; projectile/delayed/multi-hit carry the same identity through `PendingWeaponHit`; lethal contact records `defeated` before target removal
+- cancellation or missing target before contact emits no receipt and keeps observation open until the unchanged deadline
+- audio attribution reuses `playProductionCue` and its existing receipt/owner/activation metadata; cue choice, playback timing, volume, dedupe, decode, mixing, and semantic behavior do not change
+
+The product does not own deadline, screenshot, cleanup, lease, ownership transfer, successor, candidate, recovery, or render-proof state.
+
+### 138.3 Replacement harness
+
+`scripts/v100-phase-g-proof-machine.mjs` consumes only current `completedAttackImpacts`. Its lifecycle is `OBSERVING -> ATTACK_ACCEPTED -> SCREENSHOT_BOUND -> COMPLETE`, with terminal `FAILED`. It does not synthesize proof from generic activity, timing proximity, target history, audio-only evidence, render frames, or same-kind substitution.
+
+For each required actor kind, acceptance selects one complete atomic receipt. Every component is already bound to one attack and exact impact; components from different receipts are never merged. Wrong schema/generation/source identity/target side/attack/audio receipt, conflicting duplicate identity, missing reaction/audio, screenshot-before-acceptance, late screenshot, or missing cleanup fails closed. A valid uncompleted/cancelled attempt produces no receipt and does not become terminal before the original finite deadline.
+
+Ordering is fixed: completed receipt acceptance -> actual production screenshot -> screenshot/deadline receipt -> observer stop/finally cleanup -> overflow/runtime diagnostics. The screenshot remains an unchanged real production PNG; no overlay, embedded key, draw-world identity, or render state is added.
+
+Stage 6 requires `zombie:spitter` and `human:ranger`; Stage 24 requires `zombie:red-panther-commander`; Stage 25 requires `zombie:red-panther-shield`. Stage 24 keeps the exact `4_800 ms` proof duration. Viewports, stages, timeout/duration/attempt/retry, screenshot count/criteria, causal strength, and process-isolation contracts remain unchanged.
+
+### 138.4 Deleted and simplified owners
+
+- replace the r113 proof machine with the completed-impact consumer
+- delete `tests/fixtures/v100-phase-g-v6-contract.mjs` and `tests/v100-r11-combat-causal-history.test.mjs`
+- replace the lease-oriented checkpoint and proof tests with current receipt, mixing-rejection, screenshot, cleanup, first-red, and unchanged deployment-pointer coverage
+- reduce `tests/v100-design-lock.test.mjs` to current Section 138 invariants plus all existing product/design/content/asset guard tests; it must not regex historical sections
+- remove proof-only combat activity/history globals, pre-proof presentation pause, actor/target reservation, target hold for completed-impact lanes, ownership transfer, successor continuity, release anchor, recovery branches, old schemas, and generic proof synthesis
+- preserve the Stage 3 736x414 lane unchanged; its existing setup logic is not Phase G acceptance and is a later unique action
+
+Complexity budget after replacement:
+
+- new product lifecycle state: `0`
+- new product schema: `1`
+- new global proof bridge: `0`
+- lease: `0`
+- ownership transfer: `0`
+- successor machine: `0`
+- candidate recovery: `0`
+- render receipt: `0`
+- audio-only state machine: `0`
+
+### 138.5 Validation and loop breaker
+
+Run in this order without high-cost repetition: syntax/static/type; focused completed-receipt and evidence-mixing tests; Stage 6 focused; required battle-extra focused; Stage 24 fresh process `3/3`; ordered Stage 6 -> 24 -> 25 in three fresh processes `9/9`; full Hosted/deployment/content/complete tests/lint/build/static; exact material commit; non-force direct-parent transport/read-back; one automatic focused CI; then unchanged required/unfiltered Phase G `54/54` and release-tail audits.
+
+Approved-architecture coding/type/fixture/mechanical defects may be corrected and revalidated. A requirement for another lease, ownership/recovery machine, acceptance weakening, timeout/attempt increase, viewport/stage reduction, product behavior change, or second large proof bridge stops as `BLOCKED_ARCHITECTURE`. The same required replacement gate failing twice consecutively stops before a third micro-patch as `BLOCKED_LOOP_BREAKER`.
+
+Initial replacement receipts (historical, not the current cursor): focused combat/receipt/proof/checkpoint suite was `54/54` and production build was green. Section138.6 and Issue172 own subsequent runtime failures, corrections and validation.
+
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: none on completed-impact runtime; next unexecuted gate is current Design/product source validation followed by Stage 6 focused
+- `LAST_GREEN_GATE`: focused replacement source `54/54` and production build
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: current Design/product source validation -> focused Stage 6 -> required battle-extra -> Stage 24 `3/3` -> ordered `9/9`
+
+Complete Phase G replacement acceptance stops at `PHASE_G_REPLACEMENT_ACCEPTED`; it does not authorize PR Ready, merge, tag, GitHub Release, official Pages, or Issue closure. The remaining fixed route is same-HEAD production/runtime/human-player audit -> evidence freeze -> fixed-HEAD `SOL_FINAL_REVIEW` -> one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` -> explicit Producer approval only -> stacked PR #169/#170/#171 integration -> release SHA/tag/GitHub Release/official Pages -> published-SHA QA/recovery/closure.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the current Section 138 contract: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+### 138.6 Current execution delta — final-only ownership and contact-emission closure
+
+Producer reaffirmed Master Directive v3 / persistent goal on 2026-09-03. [Issue #172 current authority](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5523572497) supersedes routine technical approval-wait wording. Technical failures return to SOL_DESIGN; after two same-gate failures, SOL performs one read-only subsystem audit, fixes one coherent contract, and autonomously implements/revalidates under SOL_REMEDIATION. Only a genuinely new irreversible product decision can require Producer input before the FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT. Integration, merge, tag, Release and official Pages remain forbidden until approval at that final checkpoint.
+
+The non-reservation engagement correction baselines current generation/impact keys after deployment, waits within the existing 45-second setup boundary for the first new required completed receipt, and starts the unchanged proof duration from that receipt's observation. Stale/baseline receipts cannot satisfy proof. No actor/target reservation, recovery or additional proof state is introduced.
+
+The first corrected Stage 6 run proved ranger impact at battle 37.6333, then failed for missing spitter receipt. Actual contact-dispatch audit found two observation omissions: enemy projectile and delayed grenade primary contact both continued before the existing appender. Direct, human projectile and primary burst already emit. Correct only those two contact call sites; grenade emits only for its original exact primary target after actual eligible contact, never for secondary-only splash. Damage, HP, target selection, AI, timing, RNG, VFX, audio playback, save, UI and balance are unchanged. Receipt schema, retention, proof machine, screenshot and cleanup contracts are unchanged.
+
+Functional integration tests execute the actual TS dispatcher/helper with fixture I/O and compare effects with observability disabled. Normal/lethal contact, missing/dead/contained/out-of-radius primary, secondary-only splash, burst ordinals, cancellation/non-damage, missing/wrong audio and stale generation are covered. Insertion removal must restore exact pre-correction app bytes. No new wording regex is required.
+
+Stage 6 contact emissions and engagement are now closed in actual runtime. The first post-contact run exposed a separately dropped canonical DOM-only `overflowAudit`; the exact HEAD block was restored without old proof machinery. Whole capture dependency checks and actual capture-coordinator success/failure persistence fixtures passed. Corrected Stage 6 reached COMPLETE, valid screenshot, deadline/cleanup and zero overflow/fatal diagnostics. Source/capture gate was 105/105. These are local evidence, not M3 completion.
+
+Current cursor: `NEXT_OWNER: SOL_REMEDIATION`; `FAILED_GATE: Stage25 engagement deadline after ordinary inputs stopped with no durable frontline`; `LAST_GREEN_GATE: source/functional140/140; corrected Stage21 actual marker/all3 rows; latest required-extra first5 captures`; `RESUME_FROM: one corrected Stage25 under engagement/input-boundary contract -> fresh required-extra6/all14 applicable rows -> unchanged Stage24 3/3/ordered9/9/full local/remote sequence`; `M3_PASSED: NO`. Early Stage25 shield-only capture remains rejected because its president was absent. Later actual-boss greens remain local controls, not final freeze. Earlier cursors are historical. Revision remains r114.
+
+[Stage25 whole setup/engagement boundary contract](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524997628): failed baseline83.9833 had only ranger20/medic26; final128.8833 had no humans and shield23 stillattackSequence0. The preceding green retained guardian1 and proved shield23→guardian1 at106.8500. Keep existing ordinary inputs active after actual boss readiness during the unchanged45s wait for a new required receipt. The one collector calls input stop/drain at the first valid completed receipt, with the original observation-time12s/4.8s deadline already running; drain never grants extra time. Complete the same proof, pass that single result to capture without re-baselining/recollection, and require exact configured actor keys. This is an operation boundary, not actor ownership transfer. Failure always drains input and preserves primary failure/setup evidence. Screenshot and observer cleanup retain their original order. When the real formation has guardian but no living guardian, ordinary redeployment waits for its actual card eligibility instead of consuming that budget on cheap cards. Completed-impact setup survival does not depend on a historical proof-actor flag. No specific actor instance/target is reserved; any exact target from a valid atomic receipt remains eligible. No product change, added attempts/slots, proof state/schema/bridge or timeout change. Actual runtime, not source tests, must close the gate.
+
+[Special/marker coverage contract](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524664048): grappler pulling is an authored special, not a normal attackSequence. Preserve its existing stationAbility targetId and require the exact living stunned human victim. For manual marker coverage, a generic impact receipt alone is insufficient: require an actually living marked enemy in the same production snapshot and retain that positive frame. Do not change product damage, target priority or marker lifetime.
+
+[Two-red marker boundary audit](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524805166): input-time HP alone omits already-committed normal projectile damage. Actual Stage21 control selects turned8 atHP95 while Babayaga9 attack1 commits34.1667 and contacts34.3000; authored normal31 plus manual65 can remove the target before visible marker evidence. Reuse the production selector and already exposed pendingWeaponHits; wait inside the existing45s input window until its selected live target hasHP>65 and no pending damaging fighter contact to that exact target. Do not reserve, retarget, mutate or drain anything. One ordinary click only, followed by the unchanged10s actual-marker predicate. Preserve before-input and positive/failure snapshots in existing capture-local setupEvidence; diagnostic failure must not mask the original failure. Test matching/wrong target, pending/muzzle/non-damage, read-only behavior and success/failure persistence. No new proof state/schema/bridge, product behavior, budget or attempt. Fresh actual evidence, not predicted survivability, determines acceptance.
+
+[Stage25 finite diagnostic contract](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5523936908): telemetry shows 45,024 ms of engagement setup, then an expired-budget read mislabeled as an RPC stall. Recheck the unchanged setup deadline after sleep/before RPC and classify expiry distinctly. Preserve baseline/latest already-completed envelopes and actual read timing in the existing error attachment; no extra proof state, bridge, product behavior, budget or attempt. One Stage25 diagnostic supplies missing facts; do not infer product/infra failure from the old null diagnostic. The open subsystem packet must also reconnect actual representative coverage to the unchanged validator and remove legacy automatic capture retries before full acceptance. Neither restoring obsolete observation history nor weakening actor/causal/screenshot criteria is allowed. Routine failures remain SOL-owned and do not block the persistent goal on Producer approval.
+
+The finite diagnostic established ordinary live runtime, successful reads and prior complete shield contact, but the one-each-kind opening exhausted the frontline before proof. [Coherent setup/capture/coverage correction](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524102926) permits recovered eligible cards inside the same opening-slot count, removes automatic capture retries, persists every battle transaction, and derives representative coverage only from actual current-generation runtime facts for the unchanged sixteen-row validator. It does not create a second causal proof or promote old evidence.
+
+[Complete boss presentation boundary](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524252853): opening-slot completion is not boss readiness. With existing ordinary-input sustain still active, require the actual boss alive, entry-complete, combat-ready and in-frame within the existing battle timeout. Preserve the existing per-lane attack requirement: Stage25 true, Stage24 false. Only then stop setup input and start the unchanged non-reservation proof collection. Final capture readback independently rejects a missing/dead/entering required boss. Functional tests cover the actual barrier, ordering and the real false-green shape. No product changes, proof states, leases, reservations, recovery, added attempts or budget increases. A new red returns to SOL_DESIGN with retained evidence; the final-only autonomous loop remains active.
+
+Corrected Stage25 independently passed with live president attackSequence3 and exact shield16→guardian1 attack1, deadline/PNG/cleanup and fatal/overflow0 ([receipt](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524308992)). The following required-extra first capture, Chromium667x375 Stage03, lost its vehicle before required brute deployment. [Input-prerequisite subsystem audit](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524373457) identifies greedy cheap-card spending ahead of the required cost70 unit and a fallback that outlives battle. Preserve the light first responder; after it, only the required unit may consume another opening slot until its genuine deployment succeeds. Do not bypass eligibility or change slot/budget/attempt counts. Stop fallback when battle ends; persist existing trace/flags. This closed brute deployment/attack, but the next run exposed duplicate vehicle observation. No gameplay/balance inference is drawn from automated defeat.
+
+[Two-red setup observation subsystem closure](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5524465213): source/unit/vehicle/support/marker setup observations share one current snapshot reader. Store only first-positive raw facts in the capture-local existing setupEvidence payload, then persist them on success/failure. Remove the redundant sustain-specific unit deployment and unconditional second vehicle wait. Final representative coverage may consume matching stage/generation, non-future observations from that same capture; stale/wrong-stage/malformed evidence fails. This is retained evidence, not a new proof schema/state/global/history bridge or alternative attack acceptance. Atomic impact proof and screenshot deadlines remain unchanged. Manual marker evidence is retained when observed; support uses the shared read without another loop. Functional tests include real expiry, missing evidence, generation/stage/time substitution, persistence and first-red behavior. Product bytes remain unchanged. Required boss presence in final screenshot/runtime remains mandatory.
+
+### 138.7 Current coherent contract — action image and later scene
+
+This current delta supersedes138.6's guardian scheduling, boss-first collection and partial-proof handoff. Classification: QA_HARNESS / ACTION_EVIDENCE_AND_LATE_SCENE_CAPTURE_TEMPORAL_COUPLING. Issue172#5525396785 records the ordered failure; #5525424853 owns the subsystem correction. r114 is maintained, not a new micro-patch revision.
+
+Actual ordered process1 Stage6/24 passed, Stage25 failed. Opening slot7 finished at66.9999; shield8 contacts72.6667/74.3333 preceded the83.7667 boss-ready baseline. Guardian26 genuinely redeployed, then died. Reads worked and fatal0. Requiring that earlier representative action again at the later boss screen is a harness assumption. Old extra6/all14 and Stage24 3/3 are controls, not M3.
+
+One same-battle sequence: unchanged real opening -> single finite collector (45s engagement,12s proof / Stage24 4.8s) -> accepted atomic impact -> immediate full-viewport unmodified action PNG -> original after-PNG deadline -> cleanup -> action overflow/production diagnostics -> original boss entry/attack condition with ordinary inputs -> mandatory primary scene PNG -> final runtime/fatal/overflow -> persisted transaction. Both images mandatory; a later boss failure fails the entire case even when action proof is COMPLETE. No re-collection or clock reset. Input mutex wait consumes the original deadline.
+
+Delete global interval/cache/reader/stop owners, onEngaged partial transfer and guardian-only redeploy policy. Direct awaited native snapshot reads replace them. No app/product, proof-machine state/schema, actor/target reservation, recovery, timeout or attempt changes.
+
+Keep54 primary screenshots,16 representative rows, all engines/viewports/stages and existing image/fatal/causal criteria. Three supplementary action PNGs in a full matrix do not replace primary evidence. Validator additionally checks exact atomic receipt-to-image keys, same generation, original clock/cleanup order, own PNG path/bytes/hash/dimensions/variation and report/runtime-evidence identity. Different source/target/attack/audio/image cannot substitute.
+
+Target paths: matrix, runtime-evidence, manifest validator, focused capture/engagement/checkpoint/runtime-evidence tests, current docs. Functional fixtures execute actual capture order and failures; obsolete lexical helper-location checks are not acceptance. Source tests precede browser.
+
+LAST_AUDITED_HEAD 3d88cf27eb0a97301200fe12f8a2b25b87cb6939 / TREE 3cd47ea1958a3b69154cab34e1a5750ec47af6ea. FAILED_GATE ordered process1 Stage25; LAST_GREEN_GATE old-byte extra6/all14 + Stage24 3/3 controls. NEXT_OWNER SOL_REMEDIATION. RESUME_FROM source/static/functional -> one corrected Stage25 -> fresh extra6/all14 -> fresh Stage24 3/3 -> ordered9/9 -> unchanged full-local/exact-commit/non-force-transport/automatic-focused-CI route. Remote SAME_GATE_REPEAT_COUNT22; M3 NO.
+
+SOURCE/DESIGN/ADVERSARIAL/EXECUTION/LOOP/RELEASE audit ambiguity High0/Medium0; runtime acceptance is unproven. First red returns internally to SOL_DESIGN, not Producer approval. Complete frozen-HEAD machine/remote/PhaseG/runtime/human-player/save/audio/mobile/PWA and SOL_FINAL_REVIEW precede the only FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT. Integration/merge/tag/Release/official Pages require explicit Producer approval there.
+
+Checkpoint registry closure (Issue172#5525687212): remove the two obsolete unregistered released-checkpoint callsites; keep all15 canonical entries unchanged. AST-audit every mark/markOnce callsite, including inactive setup branches, and enforce the actual registry in capture fixtures. Source151/151. Corrected Stage25 entire case passes with exact shield5 attack9/target1 action PNG and live president27 primary PNG, both932x430, original deadline/cleanup, representative2/2 and fatal/overflow0 (Issue172#5525747939). Current RESUME_FROM is fresh extra6/all14 -> fresh Stage24 3/3 -> ordered9/9 -> unchanged full route. No further isolatedStage25 run without a new material cause. M3 NO; human HUD/audio quality remains unapproved.
+
+### 138.8 Current manual-input boundary correction
+
+[Actual return](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5525800702) and [coherent subsystem contract](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5525849609) own this correction. Stage25 action/scene is green locally. Fresh extra stopped at Stage21 after two green cases: pre-input normal windup23ms, pending hits empty; normal31 committed before the trusted click, then manual65 legitimately killed the95HP target. Green control used833ms normal cooldown and another-target projectile. Product is not the failure owner.
+
+Keep45s eligibility, one trusted click/700ms,10s exact living-marker observation, every stage/viewport and damage/timing. Use an actual normal cooldown longer than the unchanged click bound and no normal windup/pending contact to the production-selected target. Immediately retain afterInput in existing manualAction evidence. Verify actual owner/next activation/start receipt, unchanged normal attackSequence, start inside pre-read cooldown, same stage/generation, native manualAbility.target and no pending damage to that exact target. Then require matching owner/activation impact and that same living marked target. Missing/late/foreign dispatch facts fail, never a second click. No app edit, reservation, pause, retarget, new schema/global/proof state or budget.
+
+Source/functional fixtures cover red/green real timing facts, native target shape, delayed dispatch/new normal commit, owner/activation/target/generation substitution, positive-frame/failure persistence and no retry. NEXT_OWNER SOL_REMEDIATION; RESUME_FROM full focused/source/static -> one corrected Stage21 -> fresh extra6/all14 -> fresh Stage24 3/3 -> ordered9/9 -> unchanged full-local/exact transport/remote/final-audit route. M3 NO; remote SAME_GATE_REPEAT_COUNT22. First red returns internally to SOL_DESIGN. Human HUD/audio backlog and the final Producer-only release boundary remain open. No routine technical approval wait. Design ambiguity High0/Medium0; actual acceptance still requires fresh evidence.
+
+Current acceptance delta: independently derive the canonical capture plan before browser creation; reject empty selections and result sets with omitted, duplicate or foreign capture identities. ONLY_VARIANT is extra-only. The misspelled Stage21 zero-case invocation is INVALID, not a runtime attempt or acceptance. Source163/163 and final affected routing/capture34/34 pass. Correct canonical Stage21 subsequently passes once: owner9/activation1/native target10, normal sequence3 unchanged, target alive/marked, all3 representative rows, proof/PNG linkage and fatal0 (Issue172#5526046045). RESUME_FROM is now fresh extra6/all14 -> fresh Stage24 3/3 -> ordered9/9 -> unchanged full-local/remote route. M3 remains NO; no product bytes or gate budgets changed.
+
+### 138.9 Current representative acceptance boundary closure
+
+Issue172#5526165629 records the actual extra run and subsystem audit. Six images were produced, but independent canonical validation rejected the president row: current boss25 sequence0/warning0.45s versus prior green boss27 sequence1. Shield atomic action proof and fatal0 do not substitute for required boss action. Classification QA_HARNESS / SETUP_ACCEPTANCE_AND_CANONICAL_REPRESENTATIVE_PREDICATE_DIVERGENCE. The run is not extra6 acceptance.
+
+Remove warning/audio/ephemeral-phase shortcuts from all boss attack waits. Require the exact-kind living, ready, entered, in-frame boss with attackSequence>0. Production increments this after normal commitment or anomaly activation, not warning. Keep the original per-lane attack requirement and timeout, including Stage24's no-boss-attack lane. Retain the exact winning native snapshot via the awaited handle in existing capture-local observations; dispose the handle and add no global/state/schema/history machine. Existing same-stage/generation/clock checks bind retained evidence to its capture.
+
+Run the unchanged canonical representative validator for every applicable battle capture before successful transaction persistence or results insertion. Apply all16 rows, not just president. Missing/foreign/malformed evidence fails and preserves setup evidence. Core normal has no representative row; unknown variants fail. Do not add warning-only success to the projection or weaken proof/image criteria. Source tests cover actual red/control, all boss kinds and invalid lifecycle states, exact winning-frame retention, all16 row positives/negatives, and capture failure/persistence. The old persistence fixture missing screen/stage is corrected to the native shape and retained as a rejection regression, not a production schema change.
+
+NEXT_OWNER SOL_REMEDIATION. RESUME_FROM full source/static/functional -> one corrected Stage25 -> fresh extra6/all14 -> fresh Stage24 standalone3/3 -> ordered9/9 -> unchanged full-local/exact material commit/non-force transport/automatic focused CI and final-only route. LAST_AUDITED_HEAD/TREE unchanged; remote SAME_GATE_REPEAT_COUNT22, M3 NO. App/product/timing/attempt/viewport/acceptance unchanged. High0/Medium0 design ambiguity; runtime still unproven. No routine Producer approval wait; release requires final explicit Producer acceptance.
+
+### 138.10 Current canonical boss boundary — supersedes the universal sequence requirement
+
+Issue172#5526379991 is the two-red subsystem audit. Corrected Stage25 passed, but the next extra failed first-case legacy TAKUYA at the unchanged150s boss wait (battle ended at145s, fatal0). SOL introduced an invalid universal sequence requirement: legacy slam uses abilityWindup then playCue(takuya-slam), mapped by productionAudio to enemy-takuya-attack, without a sequence increment; V1 anomaly activation increments sequence. Do not change either product path to satisfy a QA assumption.
+
+Remove the independently authored boss acceptance predicate. Direct awaited native reads now use the actual unchanged canonical representative row validator/projection inside the original boss deadline and100ms poll cadence, bounded by the existing promise observation helper. Keep live exact-kind/ready/entry/in-frame presence. Keep the exact winning read in existing setup observations. Battle loss, read rejection or deadline is terminal; unresolved RPC seals further page reads and context cleanup owns teardown. Preserve the latest already-completed read on failure. No new global/state/schema/lease, no product instrumentation, no added budget or attempt.
+
+The canonical rule already accepts numeric native attack/preparation signals and its registered attack cue; a generic stationAbility warning string alone is not accepted. These existing distinctions remain unchanged, not expanded to make a new green. Representative preparation observation is not asserted to be a completed atomic impact. The separate accepted attack proof still requires one exact completed source/attack/target/reaction/audio receipt and its own PNG. All16 final capture validations remain mandatory before success persistence. Functional tests run the actual shared-validator wait on the real warning-only counterexample, legacy preparation/cue, V1 sequence, wrong/dead/unentered actors, no-retry deadlines/read failure, and exact positive-frame retention.
+
+Classification QA_HARNESS / NONCANONICAL_UNIVERSAL_BOSS_SEQUENCE_REQUIREMENT; this was SOL-owned, not a product/balance conclusion. NEXT_OWNER SOL_REMEDIATION. RESUME_FROM full focused/source/static -> one corrected Stage03 -> fresh extra6/all14 -> fresh Stage24 standalone3/3 -> ordered9/9 -> unchanged full-local/exact transport/remote/final-only route. Prior green images are controls only. M3 NO, remote SAME_GATE_REPEAT_COUNT22. Source/design/adversarial/execution/loop/release ambiguity High0/Medium0; fresh runtime acceptance pending. No Producer approval wait or release operation.
+
+Current acceptance cursor (Issue172#5526835460, #5526862814, #5526904761): fresh extra6/all14, Stage24 standalone3/3 and ordered Stage6→24→25 in three processes9/9 pass. Each process independently checked actual PNG/proof identity/original deadline/cleanup/fatal0/overflow0 before the next process. Full Hosted3ready/35fault including15mission-final-canvas cases and bounded deployment8/8 subsequently pass once each. Source171/171, docs15/15, content/full tests1305/1305/lint0errors and production/static preview builds pass. RESUME_FROM exact material tree/commit freeze, canonical EOL/BOM/semantic audit and CI-range whitespace -> non-force direct-parent transport -> one automatic focused CI and unchanged unfiltered remote route. Runtime evidence retains its own build09644497; the later npm-test build has identical client assets/manifest but server/full-dist cfc023ed from per-build output. Never relabel earlier evidence as a later build. Old failed-byte greens remain controls; M3 NO and actual human HUD/audio/release entry/version quality remains open.

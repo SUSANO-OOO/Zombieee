@@ -24,7 +24,10 @@ public/asset-manifest.json -text
 assets/source/v099/crawler/provenance.json text eol=lf
 .github/workflows/ci.yml text eol=lf
 scripts/v100-phase-g-production-matrix.mjs text eol=lf
+scripts/v100-phase-g-proof-machine.mjs text eol=lf
 tests/v100-phase-g-checkpoint.test.mjs text eol=lf
+tests/v100-phase-g-proof-machine.test.mjs text eol=lf
+tests/v100-design-lock.test.mjs text eol=lf
 scripts/p5-browser-smoke.mjs text eol=lf
 scripts/v099-final-remediation-browser-smoke.mjs text eol=lf
 tests/ci-contract.test.mjs text eol=lf
@@ -33,4 +36,3 @@ tests/v0995-runtime-evidence-contract.test.mjs text eol=lf
 .gitattributes text eol=lf
 scripts/run-v099-hud-states-bounded.mjs text eol=lf
 tests/v099-hud-states-bounded.test.mjs text eol=lf
-tests/v100-r11-combat-causal-history.test.mjs text eol=lf

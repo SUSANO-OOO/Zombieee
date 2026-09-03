@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { V100_COMBAT_FX_AUDIT, V100_COMBAT_FX_INVENTORY } from "../app/v100CombatPresentation.js";
 import { deriveV100ProductionEnemyCoverage, validateV100RepresentativeCombatEvidence, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
+import { validateV100ProofImageLink } from "./v100-phase-g-runtime-evidence.mjs";
 
 const manifestPath = path.resolve("docs/qa/v100/phase-g-screenshot-manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -85,6 +86,19 @@ for (const entry of entries) {
       || (causalActivity?.visualEvents?.length ?? 0) > 0,
     `${entry.id} has no combat presentation activity`);
     fail(reportEntry?.combatCausalProof?.ok === true, `${entry.id} causal combat proof is incomplete`);
+    const proofLink = validateV100ProofImageLink(reportEntry?.combatCausalProof, runtime);
+    fail(proofLink.ok, `${entry.id} exact action image linkage: ${proofLink.errors.join(", ")}`);
+    const actionImage = reportEntry?.combatCausalProof?.completedImpactProof?.screenshot;
+    fail(typeof actionImage?.path === "string" && actionImage.path.startsWith(evidencePrefix), `${entry.id} action image outside Phase G output`);
+    try {
+      const bytes = await readFile(path.resolve(actionImage.path));
+      const metadata = await sharp(bytes).metadata();
+      const stats = await sharp(bytes).greyscale().stats();
+      const [width, height] = entry.viewport.split("x").map(Number);
+      fail(metadata.format === "png" && metadata.width === width && metadata.height === height, `${entry.id} action PNG/viewport mismatch`);
+      fail(Number(stats.channels?.[0]?.stdev ?? 0) > 2, `${entry.id} action image lacks visual variation`);
+      fail(bytes.length === actionImage.bytes && createHash("sha256").update(bytes).digest("hex") === actionImage.sha256, `${entry.id} action image byte/hash mismatch`);
+    } catch (error) { errors.push(`${entry.id} action image unreadable: ${String(error)}`); }
     fail((reportEntry?.productionContract?.observed?.canvas?.visiblePixels ?? 0) > 0, `${entry.id} canvas has no visible production pixels`);
     if (entry.state === "battle-boss") fail(runtime?.fighters?.some((fighter) => fighter.side === "zombie" && fighter.kind === "takuya-omega" && fighter.hp > 0), `${entry.id} has no TAKUYA-Ω boss HUD runtime`);
   }
@@ -119,6 +133,9 @@ for (const evidence of combatEvidence) {
     fail(JSON.stringify(runtimeEvidence.checkpoints) === JSON.stringify(requiredSequence), `${evidence.id} runtime checkpoints incomplete`);
     fail(runtimeEvidence.productionContract?.ok === true, `${evidence.id} runtime evidence production contract failed`);
     fail(runtimeEvidence.combatCausalProof?.ok === true, `${evidence.id} runtime evidence causal proof failed`);
+    fail(JSON.stringify(runtimeEvidence.combatCausalProof) === JSON.stringify(linkedReport?.combatCausalProof), `${evidence.id} action proof differs from its capture report`);
+    fail(runtimeEvidence.stageId === linkedReport?.stageId && runtimeEvidence.viewport === linkedReport?.viewport
+      && runtimeEvidence.engine === linkedReport?.engine, `${evidence.id} runtime evidence capture identity mismatch`);
     fail(diagnosticsClean(runtimeEvidence.diagnostics), `${evidence.id} runtime evidence diagnostics`);
     fail(typeof runtimeEvidence.stageId === "string" && runtimeEvidence.stageId.length > 0, `${evidence.id} runtime stage missing`);
   } catch (error) {

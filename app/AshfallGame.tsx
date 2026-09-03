@@ -282,6 +282,8 @@ import {
   capPendingWeaponTransactions,
   combatFacingDirection,
   combatWeaponAnchor,
+  completedAttackAudioReceiptId,
+  createCompletedAttackImpactReceipt,
   createCombatAnimationRuntime,
   linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
@@ -963,6 +965,22 @@ type Shot = {
   hitStopSeconds?: number;
   impactDelaySeconds?: number;
 };
+type CompletedAttackImpactReceipt = NonNullable<ReturnType<typeof createCompletedAttackImpactReceipt>>;
+type PendingAttackObservation = {
+  battleGeneration: number;
+  sourceId: number;
+  sourceSide: "human" | "zombie";
+  sourceKind: string;
+  attackSequence: number;
+  targetId: number;
+  targetSide: "human" | "zombie";
+  targetKind: string;
+  impactOrdinal: number;
+  mode: "direct" | "projectile" | "delayed";
+  committedAtBattleTime: number;
+  audioCueId: string;
+  audioReceiptId: string;
+};
 type PendingWeaponHit = {
   eventKind: "muzzle" | "impact";
   transactionId?: string;
@@ -990,6 +1008,7 @@ type PendingWeaponHit = {
   hitStopSeconds: number;
   impactDelaySeconds: number;
   applyDamage: boolean;
+  attackObservation?: PendingAttackObservation;
 };
 const DEFERRED_HUMAN_PROJECTILE_KINDS = new Set<UnitKind>([
   "ranger",
@@ -1204,6 +1223,7 @@ type Game = {
   particles: Particle[];
   shots: Shot[];
   pendingWeaponHits: PendingWeaponHit[];
+  completedAttackImpacts: CompletedAttackImpactReceipt[];
   damageTexts: DamageText[];
   corpses: Corpse[];
   selectedSupply: SupplyKind;
@@ -1677,6 +1697,7 @@ const initialGame = (
   particles: [],
   shots: [],
   pendingWeaponHits: [],
+  completedAttackImpacts: [],
   damageTexts: [],
   corpses: [],
   selectedSupply,
@@ -2039,6 +2060,64 @@ function attackCooldownAfterCombatWindup(fighter: Fighter, intendedCooldown: num
     0,
     attackCooldownAfterPresentationWindup(fighter.kind, intendedCooldown),
   );
+}
+
+function normalAttackProductionCueId(
+  fighter: Pick<Fighter, "side" | "kind">,
+  mrsLauncherBash = false,
+) {
+  if (fighter.side === "zombie") return enemyVoiceCue(fighter.kind, "attack");
+  if (fighter.kind === "mrs-chiha" && !mrsLauncherBash) {
+    return unitAudioCueFor("mrs-chiha", "weapon", "shot");
+  }
+  const weaponEvent = fighter.kind === "crazy-king"
+    ? "attack"
+    : fighter.kind === "kumaverson"
+      ? "swing"
+      : fighter.kind === "babayaga"
+        ? "shot"
+        : fighter.kind === "mrs-chiha"
+          ? "bash"
+          : fighter.kind === "tky" || fighter.kind === "miyamoto-musashi"
+            ? "attack"
+            : fighter.kind === "mayo-chan"
+              ? "bite"
+              : null;
+  return (weaponEvent && unitAudioCueFor(fighter.kind, "weapon", weaponEvent))
+    || weaponCueForUnit(fighter.kind);
+}
+
+function appendCompletedAttackImpact(
+  g: Game,
+  observation: PendingAttackObservation | null,
+  contactAtBattleTime: number,
+  reactionOutcome: "hit" | "defeated",
+  audioRequests: readonly {
+    cueId: string;
+    receiptId?: string;
+    ownerId?: number | string;
+    activationId?: number;
+  }[],
+) {
+  if (!observation || observation.battleGeneration !== g.battleAudioGeneration) return;
+  const audioRequestObserved = audioRequests.some((request) => (
+    request.cueId === observation.audioCueId
+    && request.receiptId === observation.audioReceiptId
+    && String(request.ownerId) === String(observation.sourceId)
+    && request.activationId === observation.attackSequence
+  ));
+  if (!audioRequestObserved) return;
+  const receipt = createCompletedAttackImpactReceipt({
+    ...observation,
+    contactAtBattleTime,
+    reactionOutcome,
+    audioRequestObserved,
+  });
+  if (!receipt) return;
+  g.completedAttackImpacts = [
+    ...g.completedAttackImpacts.filter((entry) => entry.battleGeneration === g.battleAudioGeneration),
+    receipt,
+  ].slice(-64) as CompletedAttackImpactReceipt[];
 }
 
 function scheduleMrsChihaLauncherAudio(
@@ -8103,6 +8182,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // load, but does not prove that the browser can decode the image.
   const decodedBattleImagesRef = useRef(new WeakSet<HTMLImageElement>());
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
+  const phaseGCombatObservabilityEnabledRef = useRef(
+    typeof window !== "undefined"
+      && ["127.0.0.1", "localhost"].includes(window.location.hostname)
+      && new URLSearchParams(window.location.search).get("phase-g") === "1",
+  );
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
   const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
   const productionCueQaLogRef = useRef<Array<{
@@ -9087,18 +9171,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     };
     const setQaPresentationQuiesced = (requestedActive: boolean, requestedOwner: string) => {
       const parameters = new URLSearchParams(window.location.search);
-      const route = parameters.get("phase-g") === "1"
-        ? "phase-g"
-        : parameters.get("qa") === "mission" && parameters.get("qaVisualIntegrity") === "1"
+      const route = parameters.get("qa") === "mission" && parameters.get("qaVisualIntegrity") === "1"
           ? "visual-integrity"
         : parameters.get("qa") === "mission" && parameters.get("qaHudFiniteAssets") === "1"
           ? "deployment"
           : parameters.get("qa") === "endgame" && parameters.get("qaHudFiniteAssets") === "1"
             ? "stage3-final"
           : null;
-      const allowedOwners = route === "phase-g"
-        ? ["phase-g-pre-proof"]
-        : route === "visual-integrity"
+      const allowedOwners = route === "visual-integrity"
           ? ["visual-integrity-evidence-capture"]
         : route === "deployment"
           ? ["deployment-first-frame", "deployment-checkpoint-advance", "deployment-evidence-capture"]
@@ -12478,6 +12558,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           schema: "v100-phase-g-combat-snapshot/v1",
           screen,
           stageId: g.definition.stageId,
+          battleGeneration: g.battleAudioGeneration,
           time: g.time,
           phase: g.phase,
           objective: objectiveForBattle(g.definition, g),
@@ -12519,6 +12600,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             .filter((shot) => shot.sourceId !== null)
             .map((shot) => ({ ...shot })),
           pendingWeaponHits: g.pendingWeaponHits.map((hit) => ({ ...hit })),
+          completedAttackImpacts: g.completedAttackImpacts
+            .filter((receipt) => receipt.battleGeneration === g.battleAudioGeneration)
+            .map((receipt) => ({ ...receipt })),
           damageTexts: g.damageTexts.map((entry) => ({ ...entry })),
           battlefieldObjects: g.battlefieldObjects.map((object) => ({
             id: object.id,
@@ -17935,6 +18019,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 cooldownMs: 100,
                 maxInstances: 2,
                 fallbackCue: "ranged-shot",
+                ...(hit.attackObservation ? {
+                  receiptId: hit.attackObservation.audioReceiptId,
+                  ownerId: hit.attackObservation.sourceId,
+                  activationId: hit.attackObservation.attackSequence,
+                } : {}),
               });
               playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "flight"), (hit.originX + hit.targetX) / 2, {
                 priority: 70,
@@ -18086,6 +18175,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const presentation = enemyProjectilePresentationFor(hit.weapon);
             addDamageText(g, target.x, target.y - 45, String(Math.round(applied.targetDamage)), .65, "#e98a72");
             addParticles(g, target.x, target.y - 18, presentation?.color ?? "#c06d51", 4);
+            appendCompletedAttackImpact(
+              g,
+              hit.attackObservation ?? null,
+              g.time,
+              target.hp <= 0 ? "defeated" : "hit",
+              productionCueQaLogRef.current,
+            );
             playProductionCue(humanVoiceCueForUnit(target.kind, "hurt"), target.x, {
               priority: 72,
               cooldownMs: 300,
@@ -18162,6 +18258,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
               addDamageText(g, splashTarget.x, splashTarget.y - 43, `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`, .66, "#e4b46c");
+              if (primaryTarget) {
+                appendCompletedAttackImpact(
+                  g,
+                  hit.attackObservation ?? null,
+                  g.time,
+                  splashTarget.hp <= 0 ? "defeated" : "hit",
+                  productionCueQaLogRef.current,
+                );
+              }
             }
             addParticles(g, impactPoint.x, impactPoint.y - 12, "#d7924f", 13);
             playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), impactPoint.x, {
@@ -18249,6 +18354,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           target.knock = Math.max(target.knock, 2 + hit.recoil * 4);
           addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(appliedDamage)), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
           addParticles(g, target.x, target.y - 26, "#e8c56c", 2);
+          appendCompletedAttackImpact(
+            g,
+            hit.attackObservation ?? null,
+            g.time,
+            target.hp <= 0 ? "defeated" : "hit",
+            productionCueQaLogRef.current,
+          );
           if (hit.shotIndex === 0 && Math.random() < .48) {
             playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
               priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
@@ -20620,6 +20732,37 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const deferredEnemyProjectile = f.side === "zombie"
                 && target.side === "human"
                 && ENEMY_PROJECTILE_KINDS.includes(f.kind);
+              const committedAttackSequence = f.attackSequence + 1;
+              const attackAudioCueId = normalAttackProductionCueId(f, mrsLauncherBash);
+              const attackAudioReceiptId = phaseGCombatObservabilityEnabledRef.current
+                ? completedAttackAudioReceiptId({
+                    battleGeneration: g.battleAudioGeneration,
+                    sourceId: f.id,
+                    attackSequence: committedAttackSequence,
+                  })
+                : null;
+              const attackObservationBase: PendingAttackObservation | null = attackAudioCueId
+                && attackAudioReceiptId
+                ? {
+                    battleGeneration: g.battleAudioGeneration,
+                    sourceId: f.id,
+                    sourceSide: f.side,
+                    sourceKind: f.kind,
+                    attackSequence: committedAttackSequence,
+                    targetId: target.id,
+                    targetSide: target.side,
+                    targetKind: target.kind,
+                    impactOrdinal: 0,
+                    mode: f.kind === "mrs-chiha" && !mrsLauncherBash
+                      ? "delayed"
+                      : deferredHumanProjectile || deferredEnemyProjectile || splitMachineGunBurst
+                        ? "projectile"
+                        : "direct",
+                    committedAtBattleTime: g.time,
+                    audioCueId: attackAudioCueId,
+                    audioReceiptId: attackAudioReceiptId,
+                  }
+                : null;
               const immediateAttackDamage = attackDamage;
               let appliedAttack: { targetDamage: number };
               if (splitMachineGunBurst || deferredHumanProjectile || deferredEnemyProjectile) {
@@ -20656,6 +20799,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   hitStopSeconds: grenadeRound.hitStopSeconds,
                   impactDelaySeconds: grenadeRound.travelSeconds,
                   applyDamage: false,
+                  attackObservation: attackObservationBase
+                    ? { ...attackObservationBase, impactOrdinal: grenadeRound.shotIndex }
+                    : undefined,
                 }, {
                   eventKind: "impact",
                   transactionId: grenadeTransactionId,
@@ -20676,6 +20822,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   hitStopSeconds: grenadeRound.hitStopSeconds,
                   impactDelaySeconds: grenadeRound.travelSeconds,
                   applyDamage: true,
+                  attackObservation: attackObservationBase
+                    ? { ...attackObservationBase, impactOrdinal: grenadeRound.shotIndex }
+                    : undefined,
                 });
                 g.pendingWeaponHits = [
                   ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
@@ -20746,6 +20895,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     casing: event.casing,
                     hitStopSeconds: event.hitStopSeconds,
                     impactDelaySeconds: event.travelSeconds,
+                    attackObservation: attackObservationBase
+                      ? { ...attackObservationBase, impactOrdinal: event.shotIndex }
+                      : undefined,
                   };
                   if (event.offsetSeconds <= 0) {
                     addWeaponShot(g, sharedEvent);
@@ -20802,6 +20954,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     casing: event.casing,
                     hitStopSeconds: event.hitStopSeconds,
                     impactDelaySeconds: event.travelSeconds,
+                    attackObservation: attackObservationBase
+                      ? { ...attackObservationBase, impactOrdinal: event.shotIndex }
+                      : undefined,
                   };
                   if (event.offsetSeconds <= 0) {
                     addWeaponShot(g, sharedEvent);
@@ -20846,6 +21001,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   casing: false,
                   hitStopSeconds: .03,
                   impactDelaySeconds,
+                  attackSequence: committedAttackSequence,
+                  attackObservation: attackObservationBase,
                 };
                 addWeaponShot(g, sharedImpact);
                 g.pendingWeaponHits.push({
@@ -21004,23 +21161,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (f.side === "human") {
                 emitBattleBarkOnce(g, `contact:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.CONTACT, f.kind as UnitKind);
                 const targetIsHeavy = ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind);
-                const weaponEvent = f.kind === "crazy-king"
-                  ? "attack"
-                  : f.kind === "kumaverson"
-                    ? "swing"
-                    : f.kind === "babayaga"
-                      ? "shot"
-                      : f.kind === "mrs-chiha"
-                        ? mrsLauncherBash ? "bash" : "shot"
-                        : f.kind === "tky" || f.kind === "miyamoto-musashi"
-                          ? "attack"
-                          : f.kind === "mayo-chan"
-                            ? "bite"
-                          : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
                 const defersMrsLauncherAudio = f.kind === "mrs-chiha" && !mrsLauncherBash;
                 if (!defersMrsLauncherAudio) {
-                  playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
+                  playProductionCue(attackAudioCueId, contactAudioX, {
                     priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 70,
                     volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
@@ -21031,6 +21175,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     dedupeKey: f.kind === "babayaga"
                       ? `babayaga-shot:${f.id}:${f.attackSequence}`
                       : undefined,
+                    ...(attackObservationBase ? {
+                      receiptId: attackObservationBase.audioReceiptId,
+                      ownerId: attackObservationBase.sourceId,
+                      activationId: attackObservationBase.attackSequence,
+                    } : {}),
                   });
                 }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
@@ -21086,11 +21235,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   maxInstances: 3,
                 });
               } else {
-                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                playProductionCue(attackAudioCueId, f.x, {
                   priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 65,
                   cooldownMs: 160,
                   maxInstances: 3,
                   fallbackCue: ENEMY_PROJECTILE_KINDS.includes(f.kind) ? "ranged-shot" : "melee-hit",
+                  ...(attackObservationBase ? {
+                    receiptId: attackObservationBase.audioReceiptId,
+                    ownerId: attackObservationBase.sourceId,
+                    activationId: attackObservationBase.attackSequence,
+                  } : {}),
                 });
                 if (!deferredEnemyProjectile && target.side === "human" && Math.random() < .5) playProductionCue(humanVoiceCueForUnit(target.kind, "hurt"), target.x, {
                   priority: 72,
@@ -21102,6 +21256,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
               if (!splitMachineGunBurst && !deferredHumanProjectile && !deferredEnemyProjectile) {
                 target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
+              }
+              if (attackObservationBase?.mode === "direct") {
+                appendCompletedAttackImpact(
+                  g,
+                  attackObservationBase,
+                  g.time,
+                  target.hp <= 0 ? "defeated" : "hit",
+                  productionCueQaLogRef.current,
+                );
               }
               f.attack = .18;
               f.attackVariant = f.kind === "mrs-chiha" && mrsLauncherBash ? "launcher-bash" : null;

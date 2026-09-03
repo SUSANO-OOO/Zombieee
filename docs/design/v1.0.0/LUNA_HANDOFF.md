@@ -1,13 +1,13 @@
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r105`
+- Canonical Design Lock: `V100-SOL-DL-001 r114`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Active execution owner: `SOL`
 - Active handoff: `NONE`
 - Luna status: `SUPERSEDED_FOR_V1_SOL_SINGLE_OWNER`
 - Design status: `DESIGN_LOCKED`
 
-Sections 1-113 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 114 is the sole current execution handoff.
+Sections 1-130 are retained as audit history. Do not resume Luna or execute a historical `NEXT_OWNER: LUNA_IMPLEMENTATION`, `BLOCKED_RETURN_TO_SOL`, Producer Visual Checkpoint, Completion Packet, or Producer Final Acceptance route while the Producer's SOL single-owner override is active. Section 131 is the sole current execution handoff; Issue #172 owns the transient execution cursor.
 
 ## 1. Branch and PR contract
 
@@ -3293,3 +3293,428 @@ Do not change `scripts/v100-phase-g-proof-machine.mjs`, `scripts/v100-phase-g-pr
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r105 Section 121 on the exact five paths. Run the exhaustive 240-case matrix in-process through the shared production reducer, retain bounded production-child parity, expose every spawn error, then run the one-shot source/full/static, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without rerun, retry, edit, micro-patch, or next revision.**
 
 Automatic focused green alone unlocks workflow-only restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 115. Revision r106 — exact lethal pending-impact causal outcome
+
+Canonical design is `V100-SOL-DL-001 r106` Section 122. Exact remote HEAD `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`, tree `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`, reached automatic CI #948 Phase G job `98433508671`. Remote process 1 completed ordered Stage 6/24/25 `3/3`; process 2 stopped at Stage 6 after an exact ranger pending impact with target HP `15`, damage `20`, transaction `1:6:fighter:3:0`, and exact cue lethally removed the target inside its due window, but v7 classified absence as `EXACT_PENDING_IMPACT_TARGET_INVALID`. Product/runtime/host/browser diagnostics are clean.
+
+- `STATUS`: `DESIGN_LOCKED / R106_EXACT_LETHAL_CAUSAL_OUTCOME_ACTIVE`
+- `FAILED_GATE`: CI #948 Phase G job `98433508671`, ordered process 2 Stage 6
+- `LAST_GREEN_GATE`: same-run ordered process 1 Stage 6/24/25 `3/3`, PR Verify, and completed controls
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_LETHAL_PENDING_IMPACT_DOMAIN_OMISSION / UNIQUE LETHAL TRANSPORT TARGET REMOVAL MISCLASSIFIED AS INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_SOURCE_V7_LETHAL_OUTCOME_STATE_EXTENSION / V3 CONTACT_AND_WITNESS_OUTCOME_RECEIPTS + EXACT_DUE_WINDOW_FAIL_CLOSED_MATRIX / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r105 process transport and exact remote transport are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r106 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: r106 exact-nine material iteration 36; workflow-only restoration follows only after automatic focused green
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-nine lethal outcome implementation -> one-shot source/static -> Stage 24 3/3 -> ordered Stage 6/24/25 9/9 -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Change exactly the nine Section 122 paths. Keep the top-level v7 epoch and one shared proof-machine factory. Add only the strict `pending-impact-lethal` outcome with v3 contact/witness and immutable lethal-removal v1 receipt. Accept it only for an exact unique transport whose finite damage is at least frozen live target HP and whose first absent/dead observation lies from exact due time through the existing scheduler tolerance. Preserve the exact attacker cue, source sequence, original deadline, and all live/direct branches. Reject nonlethal, early, late, mismatched, ambiguous, malformed, or cue-less outcomes.
+
+Do not change `app/**`, gameplay, AI, balance, attack timing, timeout, duration, attempt/retry, viewport, threshold, screenshot order/criteria, package/asset, workflow, save, evidence, or release bytes. Do not infer lethal proof from generic target disappearance or damage text.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r106 Section 122 on the exact nine paths. Close the exact lethal pending-impact outcome with the versioned due-window receipt and complete fail-closed matrix; preserve every product and acceptance boundary; then run the one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without rerun, retry, edit, micro-patch, or next revision.**
+
+Automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 116. Revision r107 — capture-release liveness state machine
+
+Canonical design is `V100-SOL-DL-001 r107` Section 123. The uncommitted r106 exact-nine candidate passed syntax `4/4`, focused `35/35`, Design `19/19`, canonical `55/55`, static integrity, Stage 24 standalone `3/3`, and ordered process 1 Stage 6 plus Stage 24. Its first red was ordered position 3 Stage 25 presentation-quiescence after the unchanged `45000` ms wait. Five real deployments were accepted, but all humans were dead by the final sample; the shield actor remained ready with sequence `0`, no wind-up, and no current target. Browser/product diagnostics were zero. The source makes the background target-continuity owner unreachable after `bossDeploymentFinished`, while the page still requires a live target. Because the page proof epoch never armed, the old capture transaction also produced a null `proofState` and invalid failure terminal.
+
+- `STATUS`: `DESIGN_LOCKED / R107_CAPTURE_RELEASE_LIVENESS_STATE_MACHINE_ACTIVE`
+- `FAILED_GATE`: r106 local ordered process 1, position 3 Stage 25 presentation-quiescence
+- `LAST_GREEN_GATE`: r106 source/static/Design/canonical, Stage 24 standalone `3/3`, ordered Stage 6 plus Stage 24 `2/3`
+- `CLASSIFICATION`: `QA_HARNESS_PHASE_G_PRE_RELEASE_LIVENESS_OWNERSHIP_CYCLE / TARGET_CONTINUITY_REDEPLOY_UNREACHABLE_BEFORE_HOST_STOP + PAGE_QUIESCENCE_REQUIRES_LIVE_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_CAPTURE_TRANSACTION_PRE_EPOCH_STATE_GAP / READINESS_TIMEOUT_HAS_NULL_PROOF_STATE + FAILURE_TERMINAL_INVALID / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SINGLE_OUTER_CAPTURE_LIFECYCLE + EXCLUSIVE_PRE_RELEASE_TARGET_CONTINUITY_OWNER + ONE_SHARED_45000MS_ABSOLUTE_BUDGET / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r106 lethal pending-impact outcome is source/static-green and Stage 24/ordered Stage 6 are green`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r107 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 36 remains uncommitted; r107 replaces six paths inside the same cumulative exact-nine candidate
+- `SAME_GATE_REPEAT_COUNT`: `22`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r107 delta on preserved r106 draft -> source/static -> Stage 24 3/3 -> ordered Stage 6/24/25 9/9 -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Relative to the current r106 draft, change only Project State, Design Lock, this handoff, the Phase G production matrix, the Design Lock source test, and the Phase G checkpoint source test. Preserve the r106 proof machine, shared fixture, and proof-machine test byte-for-byte at the Section 123 hashes; the cumulative candidate remains the same exact nine paths.
+
+Add outer schema `v100-phase-g-capture-lifecycle/v1` and transaction v2. Enforce only the forward success chain `SETUP_ACTIVE -> RELEASE_READINESS -> PROOF_OBSERVING -> WITNESS_ACCEPTED -> SCREENSHOT_RECEIPT_ACCEPTED -> CLEANED`; every active failure must end `<active> -> FAILED -> CLEANED_AFTER_FAILURE`. A null page epoch is valid only for a red originating before `PROOF_OBSERVING`; after that state it is forbidden. Retain the r99 accepted-proof, screenshot, after-screenshot deadline, observer-stop, finally-cleanup ordering.
+
+For boss contact-first target continuity, finish primary setup, set `bossDeploymentFinished`, stop and await the background sustain owner, start one absolute `min(existing battleTimeout, 45000 ms)` budget, and use one sequential host owner. Require the current exact proof actor to have a current live human target; historical/attack-only evidence is forbidden. When false and fewer than two humans are live, use only the existing verified player-facing deployment pointer/receipt path and existing eligibility/formation capacity. Freeze `v100-phase-g-pre-release-target-continuity/v1`, then give the page atomic release only the remaining budget. Never restart the deadline, add an attempt, run concurrent pointer owners, or weaken final exact wind-up/contact proof.
+
+Do not change `app/**`, gameplay, AI, balance, attack timing, timeout/duration/attempt/retry, viewport, threshold, screenshot order/criteria, package/asset/workflow/save/evidence/release bytes. Keep source totals exactly `4/4`, `35/35`, `19/19`, and `55/55`; extend existing tests without adding tests. There is no Stage 25 standalone addition.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r107 Section 123 on the exact six-path delta inside the preserved r106 exact-nine draft. Add the outer capture lifecycle and exclusive sequential pre-release target-continuity owner with one shared unchanged 45000 ms budget; preserve all product, proof, screenshot, and release boundaries; then run the one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without rerun, retry, edit, micro-patch, or next revision.**
+
+Complete automatic focused and required green alone unlock the unchanged fixed-HEAD `SOL_FINAL_REVIEW` and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail.
+
+## 117. Revision r108 — r107 source-contract alignment
+
+Canonical design is `V100-SOL-DL-001 r108` Section 124. The one-shot r107 source gate passed syntax `4/4` and then stopped at focused `34/35`. The one aggregate checkpoint audit reported exactly two stale assertions: one pre-r107 fixed-timeout literal and one pre-r107 deployment-pointer symbol cardinality. No browser, full, commit, transport, CI, retry, rerun, edit, or next ordinal followed. Same-stop byte read-back also found three r106 freeze hashes mistranscribed in the r107 docs/test packet; the preserved files themselves are unchanged.
+
+- `STATUS`: `DESIGN_LOCKED / R108_R107_SOURCE_CONTRACT_ALIGNMENT_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r107 formal focused source `34/35`; one aggregate checkpoint test, exactly two stale assertion mismatches
+- `LAST_GREEN_GATE`: r107 syntax `4/4` plus 34 passing focused cases
+- `CLASSIFICATION`: `SOL_OWNED_R107_STATIC_CONTRACT_MIGRATION_OMISSION / LEGACY_FIXED_TIMEOUT_LITERAL_ASSERTION + AUTHORIZED_POINTER_CALLSITE_CARDINALITY_NOT_ADVANCED / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `SOL_OWNED_R107_BYTE_FREEZE_RECEIPT_DRIFT / THREE_PRESERVED_R106_HASHES_MISTRANSCRIBED / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `COHERENT_R107_SOURCE_CONTRACT_ALIGNMENT / SHARED_DEADLINE_ASSERTION + EXACT_SEVEN_SYMBOL_OCCURRENCES_SIX_CALLSITES + ACTUAL_THREE_BLOB_HASH_READBACK / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r107 runtime correction is syntax-green; browser acceptance was correctly not reached`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r108 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 36 remains uncommitted; r108 changes exactly five paths inside the cumulative exact-nine candidate
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact five-path source/docs correction -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static integrity -> Stage 24 `3/3` -> ordered `9/9` -> full local acceptance -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Relative to the stopped r107 draft, edit only Project State, Design Lock, this handoff, the Design Lock source test, and the Phase G checkpoint source test. Keep the matrix byte-identical at `322471` bytes / SHA-256 `f2e371960b376ad99039875b97f8c60597df17a7dc09002fdad58c31c833e44b`. Keep the proof machine, shared fixture, and proof-machine test byte-identical at:
+
+- `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`;
+- `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`;
+- `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+In the checkpoint test only, require the shared `releaseReadinessTimeoutMs()` rAF consumer, exactly seven helper-symbol occurrences, exactly six awaited helper call sites, and the six authorized phases including `pre-release-target-continuity`. Do not delete or weaken any assertion. Do not change the matrix, product, timing, timeout, attempts, viewport, threshold, screenshot, evidence, workflow, package, asset, protected manifest, or release bytes.
+
+After the exact correction, SOL_DESIGN first requires the Design Lock test `19/19`. SOL_REMEDIATION then restarts the complete one-shot source gate and downstream Section 124.3 order. Any first red or uncertainty returns immediately to `SOL_DESIGN` without rerun, retry, edit, micro-patch, next revision, or next ordinal.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION applies only V100-SOL-DL-001 r108 Section 124's exact five-path source-contract alignment. Keep all four runtime/proof files byte-frozen, align the shared-deadline and exact six-callsite assertions, use the actual three freeze hashes, and restart the prescribed one-shot M3 gate from syntax. Any first red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone resumes the unchanged workflow-only restoration, unfiltered local/remote Phase G 54/54, same-HEAD production/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`. Explicit Producer approval alone unlocks the release tail. High ambiguity: 0. Medium ambiguity: 0.
+
+Automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 118. Revision r109 — exact proof-actor target lease
+
+Canonical design is `V100-SOL-DL-001 r109` Section 125. The r108 source/static gate and Stage 24 standalone `3/3` were green. Ordered process 1 passed Stage 6 and Stage 24, then Stage 25 failed because the pre-release continuity policy gated the required `red-panther-shield` target lease on the later story boss `mugarian-president-mutated` and generic live-human count. The exact outer lifecycle reached `CLEANED_AFTER_FAILURE`; production battle, WebKit page, screenshot, and diagnostics were healthy. Ordered processes 2/3 and every later gate were not run, and no edit/retry/rerun followed that first red.
+
+- `STATUS`: `DESIGN_LOCKED / R109_EXACT_PROOF_ACTOR_TARGET_LEASE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r108 ordered process 1 Stage 25 after Stage 6 and Stage 24 green; exact shield target lease exhausted the shared release budget without a continuity-pointer call
+- `LAST_GREEN_GATE`: r108 Stage 24 standalone `3/3`; ordered process 1 Stage 6 and Stage 24 green
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_STATE_OWNER_ALIAS / EXACT_PROOF_ACTOR_TARGET_LEASE_GATED_BY_LATER_STORY_BOSS_LIVENESS + GENERIC_LIVE_HUMAN_COUNT / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_TERMINAL_OBSERVABILITY_GAP / POINTER_NONACCEPTANCE_CAN_SPIN + NO_BOUNDED_DECISION_RECEIPT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `STRUCTURAL_EXACT_PROOF_ACTOR_TARGET_LEASE_MACHINE / STORY_BOSS_DIAGNOSTIC_ONLY + CURRENT_EXACT_TARGET_OR_FAIL_CLOSED_VERIFIED_DEPLOYMENT + BOUNDED_TRANSACTION_RECEIPTS / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `PARTIAL — r107 outer lifecycle/cleanup closed; target-continuity convergence not closed`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r109 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 37 remains uncommitted; exact-six r109 delta inside the preserved cumulative exact-nine candidate
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r109 packet -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Edit only Project State, Design Lock, this Handoff, the Phase G matrix, Design Lock test, and checkpoint test relative to r108. Keep the cumulative tracked topology exact-nine. The matrix must be `334769` bytes / SHA-256 `f03e38b42a25cb1df9a04482a7d7e8bd97b0418596209e7691e349530d9f3039`, LF-only, no BOM. Keep the proof machine, shared fixture, and proof test frozen at `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`, `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`, and `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+Implement only the Section 125 finite target-lease machine. The exact current proof actor owns acceptance. Story-boss liveness and generic human count are diagnostic only. With a live exact actor and no current live human target, use the existing verified pointer under the same absolute 45000 ms deadline, same 12000 ms envelope, and same formation-derived maximum. Accepted pointer resamples; any nonacceptance, exception, insufficient envelope, exhausted limit, battle/stage loss, or deadline is an immediate reasoned failure. Persist at most 64 immutable transition receipts in both success/failure capture transactions. Do not change `app/**`, product/gameplay/AI/balance/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, threshold, screenshot/evidence, workflow/package/assets, or release bytes. Do not add a Stage 25 standalone gate.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r109 Section 125's bounded exact proof-actor target-lease machine on the exact-six delta. Preserve the outer lifecycle and every product/timing/attempt/evidence/release boundary. Run the unchanged one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 119. Revision r110 — atomic release-candidate acquisition
+
+Canonical design is `V100-SOL-DL-001 r110` Section 126. r109 source/static and fresh Stage 24 standalone WebKit `3/3` were green. Ordered process 1 passed Stage 6 and Stage 24, then Stage 25 failed in presentation readiness. The r109 host target machine accepted shield id 4 -> guardian id 5 as a terminal point sample; the separate page-only wait owned the remaining 44,364 ms and could not replenish a target after actor/target loss. Production battle, WebKit page, PNG, lifecycle cleanup, and diagnostics were healthy, while three direct r104 controls prove the same production shield causal candidate.
+
+- `STATUS`: `DESIGN_LOCKED / R110_ATOMIC_RELEASE_CANDIDATE_ACQUISITION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r109 ordered process 1 Stage 25 presentation-quiescence after Stage 6 and Stage 24 green
+- `LAST_GREEN_GATE`: r109 Stage 24 standalone `3/3`; ordered process 1 Stage 6 and Stage 24 green
+- `CLASSIFICATION`: `QA_HARNESS_RELEASE_READINESS_SERIAL_OWNER_HANDOFF / TARGET_ACCEPTED_POINT_SAMPLE_TERMINATES_BEFORE_ATOMIC_RELEASE_CANDIDATE + DOWNSTREAM_PAGE_WAIT_CANNOT_REPLENISH_TARGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_TARGET_LEASE_SEMANTIC_MISMATCH / LEASE_DOES_NOT_SURVIVE_TARGET_OR_ACTOR_LOSS UNTIL UNCONSUMED_WINDUP / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `ATOMIC_RELEASE_CANDIDATE_ACQUISITION_COORDINATOR / HOST_RESAMPLE_AND_VERIFIED_DEPLOYMENT + SAME_TASK_STRICT_PAGE_RELEASE / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r109 exact-actor alias correction worked; the serial owner handoff is independent`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`; any first r110 red returns to `SOL_DESIGN`
+- `LOOP_ITERATION`: material iteration 38 remains uncommitted; exact-six r110 delta inside the preserved cumulative exact-nine candidate
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r110 packet -> syntax `4/4` -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Edit only Project State, Design Lock, this Handoff, the Phase G matrix, Design Lock test, and checkpoint test relative to r109. Keep cumulative tracked topology exact-nine. The sealed r110 matrix is `344809` bytes / SHA-256 `4f787fb8b5b0438b25d8de068d6061624494e06052a9a5d7c30a538c748471c7`, LF-only, no BOM. Freeze proof machine / fixture / proof test at `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`, `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`, and `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+Implement one host-owned `v100-phase-g-atomic-release-acquisition/v1` coordinator under the unchanged shared 45,000 ms deadline. `TARGET_HELD` is nonterminal. Each bounded host cycle invokes one same-task page readiness decision using the unchanged strict late-windup predicate. Only an exact `v100-phase-g-atomic-release-candidate/v1` receipt that atomically releases quiescence and arms proof v7 is terminal success. Actor/target loss returns to host resampling; a live actor without a target uses the existing verified pointer under the unchanged 12,000 ms envelope and formation maximum. Every malformed/mismatched receipt, pointer failure, insufficient envelope, limit, battle/stage loss, deadline, or 64-transition cap fails closed with transaction evidence.
+
+Do not change `app/**`, product/gameplay/AI/balance/attack timing, timeout/duration/attempt/retry, viewport/stage mapping, threshold, screenshot/evidence, workflow/package/assets, or release bytes. Do not add a Stage 25 standalone gate. Preserve r109 Stage 24 `3/3` and ordered Stage 6/24 only as diagnosis, not final evidence.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r110 Section 126's host-owned atomic release-candidate acquisition coordinator on the exact-six delta. A target point sample is nonterminal; only the unchanged strict same-task page release receipt succeeds. Preserve every product, timing, attempt, evidence, workflow, and release boundary. Run the one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact commit/non-force transport/read-back, and one automatic focused CI sequence. Any first red returns to SOL_DESIGN without retry or edit.**
+
+Complete automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 120. Revision r111 — semantic-transition ledger and bounded dwell evidence
+
+Canonical design is `V100-SOL-DL-001 r111` Section 127. r110 source/static, Stage 24 standalone `3/3`, ordered processes 1/2 `6/6`, and process-3 Stage 6/24 passed. Process-3 Stage 25 was the ninth and first red. Its atomic receipt preserved shield id 4 -> guardian id 5 but recorded 63 stable held polls as 63 transitions because `targetProductionTime` was embedded in the semantic identity. Entry 64 failed with 35,414 ms still inside the unchanged 45-second deadline. Diagnostics were zero, cleanup completed, and the two immediately preceding same-byte Stage 25 controls passed.
+
+- `STATUS`: `DESIGN_LOCKED / R111_SEMANTIC_TRANSITION_LEDGER_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r110 ordered process 3 Stage 25 / `TRANSITION_LIMIT_EXHAUSTED` after 63 stable actor/target polls
+- `LAST_GREEN_GATE`: r110 ordered process 3 Stage 24; cumulative ordered `8/9`
+- `CLASSIFICATION`: `QA_HARNESS_STATE_TRANSITION_ACCOUNTING / TIME_VARYING_SAMPLE_INCLUDED_IN_SEMANTIC_IDENTITY + POLL_OBSERVATIONS_CONSUME_FINITE_TRANSITION_BUDGET / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `QA_HARNESS_EVIDENCE_MODEL_ALIAS / EVENT_STATE_IDENTITY_AND_DIAGNOSTIC_DWELL_COLLAPSED_INTO_ONE_LEDGER / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `SEMANTIC_TRANSITION_LEDGER + BOUNDED_DWELL_COMPRESSION / QA_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `YES — r110 one-owner target replenishment and atomic page authority are retained`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted inside the cumulative exact-nine candidate
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-six r111 semantic-ledger packet -> one-shot source/static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Edit only Project State, Design Lock, this Handoff, the Phase G matrix, Design Lock test, and checkpoint test relative to r110. Keep cumulative topology exact-nine. The r110 matrix is the frozen input receipt at `344809` bytes / `4f787fb8b5b0438b25d8de068d6061624494e06052a9a5d7c30a538c748471c7`. The sealed final r111 matrix is `347702` bytes / `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`; the sealed final r111 checkpoint test is `129949` bytes / `5ab2f239bd07110882a23931d01def8b0cab83f9bf00fe55d65aba937388f29f`; both are LF-only, without BOM, and frozen before browser execution. Preserve proof machine / fixture / proof test at `d089ac61a2a75e5365b528b3a110e52c25ffc07fa2ee4c58ca81af58f5209974`, `887f32b30c9b394467e9a2de9cbf990a814138aa2ea7a1de51ecc2a8f9566e93`, and `a864c3d1f1b88b51f060fd04960c3de12aaa29261abed90b92707f163e24ba50`.
+
+Keep the r110 state graph and single host/page ownership. Replace the mixed event/state/sample signature with one explicit semantic key. `TARGET_HELD` identity is only actor key/id plus target id/kind/side; every clock, count, story-boss field, and telemetry value is diagnostic-only. Repeated stable observations update one bounded `v100-phase-g-atomic-release-dwell/v1` first/latest summary and never consume the 64-entry ledger. Force one `MACHINE_STARTED` entry; keep one terminal entry; fail closed only after genuine semantic changes consume the bound. Persist ledger plus dwell summaries in both success and failure transaction v2.
+
+Retain all r110 behavioral cases and prove: 512 changing-time stable polls remain nonterminal with one held entry; actor/target identity changes produce one real entry; 63 genuine nonterminal changes reserve entry 64 for structured cap failure; exact atomic page candidate remains sole success. No page predicate, timeout, duration, attempt, pointer envelope, deployment limit, viewport, stage mapping, causal threshold, screenshot order, or product byte changes.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r111 Section 127's semantic-transition ledger and bounded dwell evidence inside the existing atomic coordinator. Preserve the exact-six/cumulative-nine boundary and every product/timing/attempt/evidence/release contract. Run one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact non-amended commit, one non-force direct-parent transport/read-back, and one automatic focused CI. Any first red returns to SOL_DESIGN without retry, edit, or next ordinal.**
+
+Complete automatic focused green alone unlocks workflow restoration and unfiltered local/remote Phase G 54/54. Complete required green alone unlocks same-HEAD production/runtime/SOL human-player audits, evidence freeze, fixed-HEAD `SOL_FINAL_REVIEW`, and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 121. Revision r111 same-revision handoff — strict-assert API correction
+
+Canonical design remains `V100-SOL-DL-001 r111`, now Section 128. The sealed r111 syntax gate passed `4/4`; the first focused command stopped at `34/35` solely because the checkpoint test imports `{ strict as assert }` but its two new inequality checks call unavailable `assert.notEqual`. Assertions already proved stable `TARGET_HELD`, nonterminal state, two semantic entries, one completed dwell, schema v1, and `observationCount: 512` before that API exception. No correction, rerun, browser, full gate, commit, transport, or CI followed.
+
+- `STATUS`: `DESIGN_LOCKED / R111_SOURCE_ASSERT_API_CORRECTION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r111 focused `34/35`; sole unavailable strict-assert method at checkpoint line 858
+- `LAST_GREEN_GATE`: sealed-byte syntax `4/4`; 34 focused tests and all semantic-ledger assertions preceding the call
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_TEST_ASSERT_API_MISMATCH / NODE_ASSERT_STRICT_EXPOSES_NOT_STRICT_EQUAL_NOT_NOT_EQUAL / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `EXACT_ASSERTION_API_TOKEN_CORRECTION / TWO NOT_EQUAL TO NOT_STRICT_EQUAL + NO_HARNESS_SEMANTIC_CHANGE / QA_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NOT YET ACCEPTED — full focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: two exact assertion-method tokens + final checkpoint receipt seal -> checkpoint syntax -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+Change only the three canonical docs, Design test, and checkpoint test relative to the stopped r111 packet. In the checkpoint test replace exactly two new `assert.notEqual(` tokens with `assert.notStrictEqual(`; change no operands, expected values, probe, loop, implementation, matrix, acceptance, timeout, browser, product, or workflow byte. The stopped checkpoint receipt is `129949` / `5ab2f239bd07110882a23931d01def8b0cab83f9bf00fe55d65aba937388f29f`; the corrected final receipt is `129961` / `c1046c772da826acd684a01bdb0e4c37a1efaae49ea5c448cb5be21f5c7cc4d2`, LF-only/no-BOM. The matrix remains `347702` / `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. These receipts are sealed in all four owners before validation.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION applies only the two `assert.notEqual` -> `assert.notStrictEqual` method-token corrections required by V100-SOL-DL-001 r111 Section 128, seals the final checkpoint receipt, and resumes once at checkpoint syntax then focused 35/35. Preserve every runtime/product/evidence/timing/browser/release byte and the cumulative exact-nine topology. Any first red returns to SOL_DESIGN without edit, retry, rerun, next revision, or next ordinal.**
+
+The unchanged downstream route includes fixed-HEAD `SOL_FINAL_REVIEW` and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; release remains explicit-Producer-approval-only.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 122. Revision r112 — complete static-audit shadow surface
+
+Canonical design is `V100-SOL-DL-001 r112` Section 129. Section 128 checkpoint syntax passed, then focused stopped at `34/35` because the aggregate test's local `assert` object lacked `notStrictEqual`. Actual Node import inspection proves the backing strict API owns that function; lexical inspection proves the test shadows it with `createCompleteStaticContractAssertionAudit`, whose method inventory omits only the two used `notStrictEqual` calls among 679 audited assertions.
+
+- `STATUS`: `DESIGN_LOCKED / R112_STATIC_AUDIT_SHADOW_SURFACE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: Section 128 focused `34/35`; local aggregate audit lacks `notStrictEqual`
+- `LAST_GREEN_GATE`: checkpoint syntax; 34 focused tests and preceding aggregate assertions
+- `CLASSIFICATION`: `SOL_OWNED_STATIC_AUDIT_SHADOW_API_MISMATCH / TEST_LOCAL_ASSERT_SHADOW_EXPOSES_NO_INEQUALITY_METHOD / DESIGN_CHANGE_REQUIRED`
+- `SECONDARY_CLASSIFICATION`: `SOL_DESIGN_SOURCE_AUDIT_INCOMPLETE / PRIOR IMPORT_API CLASSIFICATION MISSED TEST_SCOPE_LEXICAL_SHADOW / GOVERNANCE_CORRECTION_REQUIRED`
+- `REMEDIATION_CLASS`: `COMPLETE_STATIC_AUDIT_METHOD_INVENTORY / ADD NOT_STRICT_EQUAL WRAPPER THROUGH EXISTING FAIL_AGGREGATION / QA_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `NOT YET ACCEPTED — focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one audit-inventory token + final receipt seal -> checkpoint syntax -> focused `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+Change only Project State, Design Lock, Handoff, Design test, and checkpoint test relative to the stopped Section 128 packet. Add exactly `"notStrictEqual"` to the existing method array in `createCompleteStaticContractAssertionAudit`. Preserve its `failFastAssert[method](...args)` aggregation path and leave the two assertions and every other checkpoint/matrix/product byte unchanged. The stopped checkpoint is `129961` / `c1046c772da826acd684a01bdb0e4c37a1efaae49ea5c448cb5be21f5c7cc4d2`; the final corrected checkpoint is `129979` / `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117`, LF-only/no-BOM. Matrix is frozen at `347702` / `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. These receipts are sealed in all four owners before validation.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION adds only the one `"notStrictEqual"` inventory member required by V100-SOL-DL-001 r112 Section 129, seals the final checkpoint receipt, and resumes once at checkpoint syntax then focused 35/35. Preserve the two inequality assertions, existing aggregation, all runtime/product/timing/evidence/browser/release bytes, and cumulative exact-nine topology. Any first red returns to SOL_DESIGN without edit, retry, rerun, next revision, or next ordinal.**
+
+Complete automatic and required green alone reaches fixed-HEAD `SOL_FINAL_REVIEW` and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; release remains explicit-Producer-approval-only.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 123. Revision r112 same-candidate handoff — focused execution-cursor recovery
+
+Canonical design remains `V100-SOL-DL-001 r112`, now Section 130. The corrected checkpoint is sealed at `129979` / `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117`; the matrix remains `347702` / `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. Checkpoint syntax passed. The first focused process exposed eight green tests, but SOL failed to retain its ongoing PTY `session_id`; the later terminal receipt is unrecoverable. No candidate correction or downstream gate followed.
+
+- `STATUS`: `DESIGN_LOCKED / R112_FOCUSED_CURSOR_RECOVERY_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 focused terminal receipt unavailable after the first eight visible green tests
+- `LAST_GREEN_GATE`: final checkpoint syntax on the exact sealed bytes
+- `CLASSIFICATION`: `SOL_EXECUTION_EVIDENCE_CAPTURE_INVALID / ONGOING_PTY_SESSION_ID_NOT_RETAINED + TERMINAL_RESULT_UNRECOVERABLE / INFRA_INVALID`
+- `REMEDIATION_CLASS`: `SAME_CANDIDATE_SINGLE_REVALIDATION / RETAIN_EXEC_SESSION_CURSOR + POLL_ONLY_EXISTING_PROCESS_TO_TERMINAL / EXECUTION_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `UNKNOWN — terminal focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; cumulative exact-nine runtime/source candidate unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: Section 130 Design `19/19` -> one exact same-candidate focused process with retained `session_id` and same-process polling to terminal `35/35` -> Design `19/19` -> canonical `55/55` -> exact static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION runs the exact four-file focused command once on the unchanged r112 checkpoint/matrix/proof candidate. Retain the complete launch return; if ongoing, poll only its returned `session_id` until terminal. Require 35/35 with fail/cancelled/skipped/todo zero. Never launch a second focused process. Any red, timeout, lost cursor, or uncertainty returns to SOL_DESIGN without edit, retry, rerun, next revision, or next ordinal.**
+
+Complete automatic and required green alone reaches fixed-HEAD `SOL_FINAL_REVIEW` and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks the release tail.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 124. Revision r112 same-candidate handoff — current/history source-owner separation
+
+Canonical design remains `V100-SOL-DL-001 r112`, now Section 131. The first Section 130 Design source run was `18/19`; its sole red was the Section 129 historical status loop incorrectly applying `R112_STATIC_AUDIT_SHADOW_SURFACE_ACTIVE` to the Section 130 current cursor. No focused revalidation or downstream gate followed, so Section 130's one same-candidate authorization remains unconsumed.
+
+- `STATUS`: `DESIGN_LOCKED / R112_CURRENT_HISTORY_ASSERTION_SEPARATION_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: first Section 130 Design source `18/19`; one current/history status-owner alias
+- `LAST_GREEN_GATE`: final checkpoint syntax plus 18 sibling Design tests
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_HISTORY_STATUS_ALIAS / SECTION_129_HISTORICAL_STATUS_ASSERTED_ON_SECTION_130_CURRENT_CURSOR / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `HISTORICAL_PACKET_OWNER_SEPARATION / PRIOR_DESIGN_HANDOFF_STATUS_OWNERS + EXPLICIT_PROJECT_HISTORY_MARKERS + CURRENT_CURSOR_ONLY_CURRENT_STATUS / GOVERNANCE_TEST_ONLY`
+- `PREVIOUS_ROOT_CAUSE_CLOSED`: `UNKNOWN — terminal focused 35/35 remains mandatory`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LOOP_ITERATION`: material iteration 39 remains uncommitted; cumulative exact-nine runtime/source candidate unchanged
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact two historical-owner list separations -> Design `19/19` -> one unchanged-candidate focused process with retained session cursor to terminal `35/35` -> Design/canonical/static -> Section 127 browser/full/transport route
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION removes `currentCursor` only from the two now-historical Section 129 and Section 130 owner lists, preserves their explicit Project history markers and every candidate byte, and runs Design 19/19 once. Green alone consumes Section 130's one focused authorization: launch the exact four-file command once, retain its `session_id`, and poll only that process to terminal 35/35. Any red or uncertainty returns to SOL_DESIGN without edit or rerun.**
+
+The exact checkpoint remains `129979` / `f9a9f43e53f449cb6446b73653959fe12d78d0cd0c3919343a6f5364e19d0117`; the matrix remains `347702` / `928fedb520b6783514f75808f32ee71e8d2140a24638834c606b6b6bc8edfd40`. Complete automatic and required green alone reaches fixed-HEAD `SOL_FINAL_REVIEW` and exactly one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks release.
+
+SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 125. Revision r113 — exact actor-kind lease state machine
+
+Canonical design is `V100-SOL-DL-001 r113` Section 132. r112 source/focused/static gates and Stage 24 standalone `3/3` passed. Ordered process 1 then passed Stage 6 and Stage 24 before the first red at Stage 25. The atomic release anchor was valid for shield fighter 4 -> guardian 5; its candidate was naturally invalidated, fighter 4 later died, and v7 stopped even though shield fighter 8 was live and fighter 16 was entering. Diagnostics were zero, the battle/page stayed live, and cleanup/persistence were correct. Two direct Stage 25 controls accepted exact fighter-4 witnesses.
+
+- `STATUS`: `DESIGN_LOCKED / R113_EXACT_ACTOR_KIND_LEASE_MACHINE_ACTIVE`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 ordered process 1 Stage 25 / pre-commit selected-fighter death after candidate invalidation
+- `LAST_GREEN_GATE`: r112 ordered process 1 Stage 24 and Stage 24 standalone `3/3`
+- `CLASSIFICATION`: `QA_HARNESS_EXACT_ACTOR_LEASE_NONRECOVERY / RELEASE_CANDIDATE_INVALIDATED + SELECTED_FIGHTER_DIES_WHILE_LIVE_SAME_KIND_SUCCESSORS_EXIST / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `EXACT_ACTOR_KIND_LEASE_STATE_MACHINE / SINGLE_EPOCH_PRECOMMIT_REACQUISITION + POSTCOMMIT_IMMUTABILITY / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact-nine v8/v4 lease packet -> one-shot source/static -> Stage 24 `3/3` -> ordered `9/9` -> full local -> exact commit/non-force direct-parent transport/read-back -> one automatic focused CI
+- `M3_PASSED`: `NO`
+
+Change only the cumulative exact-nine paths named in Section 132. Advance the page proof to v8 and witness to v4; add `v100-phase-g-exact-actor-lease/v1`. Keep the original atomic release anchor, observer, 12-second visible epoch, 45-second outer budget, browser attempt, viewport, stage, late-windup rule, screenshot/deadline receipt, cleanup, capture transaction, and evidence thresholds unchanged.
+
+Before source commit only, invalidation/source death/target loss closes one immutable fighter lease and returns the same actor-kind owner to `WAITING_KIND_CANDIDATE`. Two distinct production snapshots with the same fighter/target/sequence, decreasing positive windup, and unchanged late-windup maximum may open one deterministic same-kind successor lease. Once source commits, switching is forbidden. The accepted source, target, sequence, authored presentation, transport/contact, reaction/lethal outcome, and post-lease cue must all come from that single lease; closed-lease evidence is diagnostic-only.
+
+Focused acceptance must replay fighter 4 invalidation/death -> fighter 8 exact witness, same-fighter successor, different-target successor, pre-lease cue rejection, deterministic multi-candidate selection, precommit recovery/postcommit fail-closed separation, original deadline failure, v7/v3 rejection, Node/page parity, and every existing projectile/direct/lethal/screenshot/cleanup/numeric-domain path. First red stops with no edit or rerun.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION implements only V100-SOL-DL-001 r113 Section 132's exact actor-kind lease state machine. Preserve one immutable deadline/observer/attempt and one wholly lease-bound causal witness. Pre-commit natural loss may reacquire one strict same-kind production candidate; post-commit switching is forbidden. Run one-shot source/static, Stage 24 3/3, ordered 9/9, full local, exact non-amended commit, one non-force direct-parent transport/read-back, and one automatic focused CI. Any first red returns to SOL_DESIGN without edit, retry, rerun, next revision, or next gate.**
+
+Complete automatic/required green alone reaches fixed-HEAD `SOL_FINAL_REVIEW` and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks release. SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audit result: `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 126. Revision r113 same-revision handoff — Design current/history assertion separation
+
+Canonical design remains `V100-SOL-DL-001 r113`, now Section 133. The first Section 132 Design source run was `17/19`. One red was the stale current-summary r112 literal; the other was the r111 historical owner loop applying r111 status/classification/material iteration to the r113 current cursor. Runtime implementation did not start.
+
+- `STATUS`: `DESIGN_LOCKED / R113_DESIGN_SOURCE_HISTORY_SEPARATION_ACTIVE`
+- `FAILED_GATE`: first Section 132 Design source `17/19`
+- `LAST_GREEN_GATE`: 17 sibling Design tests
+- `CLASSIFICATION`: `SOL_OWNED_CURRENT_HISTORY_ASSERTION_ALIAS / R112_SUMMARY_LITERAL + R111_HISTORICAL_OWNER_LOOP_APPLIED_TO_R113_CURRENT_CURSOR / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `CURRENT_HISTORY_ASSERTION_SEPARATION / CURRENT_SUMMARY_TO_R113 + R111_IMMUTABLE_OWNERS_ONLY + R113_CURRENT_CURSOR_ONLY / GOVERNANCE_TEST_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: two exact governance assertion corrections -> Design `19/19` -> Section 132 exact-nine v8 lease packet
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION changes only the current-summary r112 expectation to r113 and removes `currentCursor` only from the immutable r111 owner/status loop. Run Design 19/19 once. Green alone resumes Section 132's exact-nine v8 actor-kind lease implementation; any red returns to SOL_DESIGN without edit or rerun.**
+
+The Section 132 actor-kind lease design and every runtime candidate byte remain unchanged. Complete automatic/required green alone reaches fixed-HEAD `SOL_FINAL_REVIEW` and one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit Producer approval alone unlocks release. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 127. Revision r113 same-revision handoff — authoritative acceptance wording alignment
+
+Canonical design remains `V100-SOL-DL-001 r113`, now Section 134. Section 133 Design source is `18/19`; its sole red is the test-only `different-target successor` shorthand versus authoritative Design wording `A successor may own a different live target`. Both current/history corrections and all sibling tests passed; runtime implementation has not started.
+
+- `STATUS`: `DESIGN_LOCKED / R113_ACCEPTANCE_WORDING_ALIGNMENT_ACTIVE`
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_ASSERTION_LITERAL_ALIAS / AUTHORITATIVE_DIFFERENT_LIVE_TARGET_WORDING_VS_TEST_ONLY_DIFFERENT_TARGET_SUCCESSOR_SHORTHAND / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_ASSERTION_LITERAL_ALIGNMENT / DIFFERENT_TARGET_SUCCESSOR_TO_AUTHORITATIVE_DIFFERENT_LIVE_TARGET / GOVERNANCE_TEST_ONLY`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one assertion literal -> Design `19/19` -> Section 132 exact-nine v8 lease implementation
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION changes only the one Section 132 token assertion from `different-target successor` to `A successor may own a different live target`, then runs Design 19/19 once. Preserve every runtime candidate byte. Green alone resumes Section 132; any red returns to SOL_DESIGN without edit or rerun.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 131. Revision r114 current SOL handoff — minimum completed-impact observability replacement
+
+Canonical Design Lock is `V100-SOL-DL-001 r114` Section 138. There is no active Luna handoff. Historical lease/candidate/successor instructions are superseded.
+
+Current contract: Design138.10 / Issue172#5526379991. Replace the noncanonical universal boss sequence requirement with direct use of the unchanged canonical row validator; retain exact positive frames. No product change.
+
+Current Design138.10 candidate passes extra6/all14, Stage24 standalone3/3 and ordered Stage6→24→25 in three processes9/9, each independently validated. Earlier failed-byte greens are controls only. M3 remains unpassed; full local and required remote acceptance remain open under SOL-owned FINAL-ONLY authority.
+
+- `STATUS`: `DESIGN_LOCKED / R114_MINIMUM_COMPLETED_IMPACT_REPLACEMENT_ACTIVE`
+- `CLASSIFICATION`: `QA_HARNESS_STATE_EXPLOSION / PREATTACK_INSTANCE_OWNERSHIP_AND_RECOVERY_MACHINE_EXCEEDED_THE_RELEASE_CONTRACT / DESIGN_CHANGE_REQUIRED`
+- `REMEDIATION_CLASS`: `MINIMUM_COMPLETED_IMPACT_OBSERVABILITY + SINGLE_RECEIPT_CONSUMER / QA_ONLY`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `ROLE_LOCK`: `SOL_REMEDIATION`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: previous local predicate divergences closed; current extra6/all14 PASS, required remote/M3 still pending
+- `LAST_GREEN_GATE`: source171/171 + docs15/15 + extra6/all14 + Stage24 standalone3/3 + ordered9/9 + full Hosted3ready/35fault + bounded deployment8/8 + content/full tests1305/1305/lint0errors/production and static preview build
+- `SAME_GATE_REPEAT_COUNT`: `22`
+- `M3_PASSED`: `NO`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: exact material tree/commit freeze with canonical EOL/BOM/semantic audit -> non-force direct-parent transport -> one automatic focused CI -> unchanged unfiltered remote/release route
+
+The current implementation uses one minimum completed-impact observability schema with attack `(battleGeneration, sourceId, attackSequence)` and impact `(attack, targetId, impactOrdinal)`. It has no lease, ownership transfer, successor recovery, candidate reservation, release anchor, global proof bridge, render proof, or audio-only state machine. Product/gameplay/AI/balance/timing/audio behavior remains unchanged.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION follows Design138.10 exact material freeze/non-force direct-parent transport/one automatic focused CI. First red returns to SOL_DESIGN; coherent corrections remain autonomous. Final Producer checkpoint and explicit-approval-only release boundary stay fixed.**
+
+`PHASE_G_REPLACEMENT_ACCEPTED` completes the replacement milestone, not the persistent goal. Continue to the separate Stage3 736x414 lane and all remaining machine/runtime/human-player/save/audio/mobile/PWA gates, exact-HEAD evidence freeze and fixed-HEAD `SOL_FINAL_REVIEW`. The only normal stop is one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit approval there is required for stacked integration, merge, tag, Release and Pages. Execution scope is fixed; exit-zero without required actual boss evidence is not acceptance.
+
+## 128. Revision r113 same-revision handoff — authoritative successor-lease cue wording alignment
+
+Canonical design remains `V100-SOL-DL-001 r113`, now Section 135. Section 134 Design source is `18/19`; its sole red is the test-only `pre-lease cue rejection` shorthand versus authoritative Design wording `A cue observed before a successor lease opens cannot satisfy that lease`. The prior acceptance-wording correction and all sibling tests passed; runtime implementation has not started.
+
+- `STATUS`: `DESIGN_LOCKED / R113_CUE_ASSERTION_WORDING_ALIGNMENT_ACTIVE`
+- `CLASSIFICATION`: `SOL_OWNED_SOURCE_ASSERTION_LITERAL_ALIAS / AUTHORITATIVE_PRE_SUCCESSOR_LEASE_CUE_SENTENCE_VS_TEST_ONLY_PRE_LEASE_CUE_REJECTION_SHORTHAND / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `ONE_ASSERTION_LITERAL_ALIGNMENT / PRE_LEASE_CUE_REJECTION_TO_AUTHORITATIVE_CUE_BEFORE_SUCCESSOR_LEASE_SENTENCE / GOVERNANCE_TEST_ONLY`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: one cue assertion literal -> Design `19/19` -> Section 132 exact-nine v8 lease implementation
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION changes only the one Section 132 token assertion from `pre-lease cue rejection` to `A cue observed before a successor lease opens cannot satisfy that lease`, then runs Design 19/19 once. Preserve every runtime candidate byte. Green alone resumes Section 132; any red returns to SOL_DESIGN without edit or rerun.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 130. Revision r113 implementation handoff — exact actor-kind lease source seal
+
+Canonical design remains `V100-SOL-DL-001 r113`, now Section 137. Section 136 Design is `19/19` green and the cumulative exact-nine implementation is complete but unvalidated. There is no active Luna handoff.
+
+- `STATUS`: `DESIGN_LOCKED / R113_EXACT_ACTOR_KIND_LEASE_SOURCE_PACKET_READY`
+- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
+- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
+- `FAILED_GATE`: r112 ordered process 1 Stage 25; no r113 final-byte source gate has run
+- `LAST_GREEN_GATE`: r113 Section 136 Design `19/19`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: syntax `6/6` -> focused `42/42` -> Design `19/19` -> canonical `55/55` -> exact static -> Stage 24 `3/3` -> ordered `9/9`
+- `M3_PASSED`: `NO`
+
+Exact five LF/no-BOM material receipts are proof machine `100837 / 13fe78c067155272fce43244e04d6a46fd9065c50d46b2d525003bd41a4017b5`, matrix `349591 / 32cf0d3b1a4603a7d082f422f588e5efe2729ca3aa1d8dd5d330045257854a35`, compatibility fixture `23209 / 000ddd9f29a9c86abf6f0108decfd2139620ff4e38db414bdb7101b1912e39a7`, checkpoint test `132565 / 09c7d69c2b76316571fbc59c04fa877423399e5e30bb4fe347a038292887546b`, and proof-machine test `48374 / c6c4182e2646f0f78635593ece846236a9011d1005514b3d0376a8ffafa843e0`.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION runs the Section 137 one-shot source/static sequence on those exact receipts, then fresh Stage 24 3/3 and ordered Stage 6 -> 24 -> 25 9/9. Do not edit, retry, rerun, advance revision/ordinal, or continue after a first red. Complete green alone resumes the unchanged full-local, one exact commit, one non-force direct-parent transport/read-back, one automatic focused CI, required-green, same-HEAD audit, fixed-HEAD SOL final review, one final Producer checkpoint, and explicit-approval-only release tail.**
+
+Product/gameplay/AI/balance/timing, timeout/duration/attempt/retry, viewport/stage, threshold, screenshot, asset/package/workflow/release contracts remain frozen. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+## 129. Revision r113 same-revision handoff — historical release invariant restoration
+
+Canonical design remains `V100-SOL-DL-001 r113`, now Section 136. Section 135 Design source is `18/19`; its first exactly scoped red is Design Section 133's missing explicit final Producer checkpoint sentence. Pre-run exact-scope audit found the same documentation-only omission in Design Sections 134 and 135. Their Handoffs and all current release contracts already preserve that boundary; all sibling tests passed and runtime implementation has not started.
+
+- `STATUS`: `DESIGN_LOCKED / R113_HISTORICAL_RELEASE_INVARIANT_RESTORATION_ACTIVE`
+- `CLASSIFICATION`: `SOL_OWNED_SCOPED_DESIGN_RELEASE_INVARIANT_OMISSION / SECTIONS_133_134_135_DESIGN_PACKETS_MISSING_EXPLICIT_FINAL_PRODUCER_CHECKPOINT_SENTENCE / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `THREE_IDENTICAL_RELEASE_INVARIANT_BACKFILLS / SECTIONS_133_134_135_DESIGN_ONLY / GOVERNANCE_DOC_ONLY`
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+- `RESUME_FROM`: three Design-only release-invariant sentences -> Design `19/19` -> Section 132 exact-nine v8 lease implementation
+- `M3_PASSED`: `NO`
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION adds only Design Sections 133-135's three identical explicit fixed-HEAD SOL final review / one final Producer checkpoint / approval-only release sentences, then runs Design 19/19 once. Preserve every runtime candidate byte. Green alone resumes Section 132; any red returns to SOL_DESIGN without edit or rerun.**
+
+The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
