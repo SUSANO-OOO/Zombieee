@@ -1,0 +1,62 @@
+name: V100 native boundary diagnostic
+
+on:
+  push:
+    branches: ["codex/v100-native-diagnostic-0f6d"]
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: DIAGNOSTIC ONLY (${{ matrix.lane }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        lane: [enemy, deployment, phase-g]
+    env:
+      IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      LANE: ${{ matrix.lane }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+      - name: Read-only host native baseline
+        run: |
+          mkdir -p outputs/native-host
+          uname -a > outputs/native-host/kernel.txt
+          cat /proc/sys/kernel/core_pattern > outputs/native-host/core-pattern.txt
+          sudo dmesg --time-format iso | grep -E 'WPEWeb|WebKitWeb|segfault|trap|oom-kill' > outputs/native-host/kernel-before.txt || true
+      - name: One pinned-runtime native diagnostic
+        run: |
+          set -euo pipefail
+          NODE_RUNTIME_ROOT="$(dirname "$(dirname "$(command -v node)")")"
+          docker run --rm --init --ipc=host --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v "$NODE_RUNTIME_ROOT:/native-node:ro" -e PATH=/native-node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$GITHUB_WORKSPACE" -e LANE -e V100_PLAYWRIGHT_CONTAINER_IMAGE="$IMAGE" -e V100_PLAYWRIGHT_CONTAINER_ENGINES=webkit "$IMAGE" bash -euo pipefail -c '
+              test "$(node --version)" = v22.13.0
+              apt-get update -qq
+              apt-get install -y --no-install-recommends gdb
+              npm ci
+              node --test tests/native-diagnostic/native-diagnostic.test.mjs
+              node scripts/verify-playwright-container-runtime.mjs
+              npm run build
+              node scripts/native-diagnostic/observe.mjs "$LANE"
+            '
+      - name: Read-only host native result
+        if: always()
+        run: |
+          sudo dmesg --time-format iso | grep -E 'WPEWeb|WebKitWeb|segfault|trap|oom-kill' > outputs/native-host/kernel-after.txt || true
+          sudo chown -R "$(id -u):$(id -g)" outputs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-diagnostic-${{ matrix.lane }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
