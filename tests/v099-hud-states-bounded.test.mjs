@@ -117,49 +117,42 @@ test("HUD state aggregator rejects missing and duplicate inventory", async () =>
   }), /every canonical state exactly once/u);
 });
 
-test("HUD state aggregator retries only exact target-close and still requires a real pass", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-retry-"));
-  let firstCalls = 0;
-  const report = await runCanonicalHudStates({
-    evidenceRoot: root,
-    runAttempt: async ({ stateId, attempt, attemptDir }) => {
-      if (stateId === CANONICAL_HUD_STATES[0] && attempt === 1) {
-        firstCalls += 1;
+for (const canonicalEnvelope of [false, true]) {
+  test(`HUD clean native crash never launches a second attempt (cases=${canonicalEnvelope})`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-no-retry-"));
+    let calls = 0;
+    await assert.rejects(runCanonicalHudStates({
+      evidenceRoot: root,
+      runAttempt: async ({ stateId, attemptDir }) => {
+        calls += 1;
         const lifecycleLog = await writeCleanCrashLifecycle(attemptDir);
-        await writeSummary(attemptDir, failedHudSummary(stateId, lifecycleLog));
-        return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" };
-      }
-      await writeSummary(attemptDir, passedSummary(stateId));
-      return { code: 0, output: "passed\n" };
-    },
+        const summary = failedHudSummary(stateId, lifecycleLog);
+        if (canonicalEnvelope) summary.cases = [{ error: "Error: page.waitForFunction: Target page, context or browser has been closed" }];
+        await writeSummary(attemptDir, summary);
+        return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\\n" };
+      },
+    }), /bounded HUD evidence failed/u);
+    assert.equal(calls, 1);
+    const report = JSON.parse(await readFile(path.join(root, "bounded-summary.json"), "utf8"));
+    assert.equal(report.status, "failed");
+    assert.equal(report.states.length, 1);
+    assert.equal(report.states[0].attempts.length, 1);
   });
-  assert.equal(report.status, "passed");
-  assert.equal(firstCalls, 1);
-  assert.equal(report.states[0].attempts.length, 2);
-});
+}
 
-test("HUD state aggregator classifies target-close errors from the canonical cases envelope", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-cases-retry-"));
+test("isolated HUD clean native crash also stops after its first attempt", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "hud-single-no-retry-"));
   let calls = 0;
-  const report = await runCanonicalHudStates({
-    evidenceRoot: root,
-    runAttempt: async ({ stateId, attempt, attemptDir }) => {
+  await assert.rejects(runOneHudStateBounded({
+    stateId: "stage3-boss", evidenceRoot: root,
+    runAttempt: async ({ stateId, attemptDir }) => {
       calls += 1;
-      if (stateId === CANONICAL_HUD_STATES[0] && attempt === 1) {
-        const lifecycleLog = await writeCleanCrashLifecycle(attemptDir);
-        await writeSummary(attemptDir, {
-          ...failedHudSummary(stateId, lifecycleLog),
-          cases: [{ error: "Error: webkit-667x375/stage3-boss/settle: Error: page.waitForFunction: Target page, context or browser has been closed" }],
-        });
-        return { code: 1, output: "Final-remediation QA failed 1/1 cases\nTarget page, context or browser has been closed\n" };
-      }
-      await writeSummary(attemptDir, passedSummary(stateId));
-      return { code: 0, output: "passed\n" };
+      const lifecycleLog = await writeCleanCrashLifecycle(attemptDir);
+      await writeSummary(attemptDir, failedHudSummary(stateId, lifecycleLog));
+      return { code: 1, output: "Target page, context or browser has been closed" };
     },
-  });
-  assert.equal(report.status, "passed");
-  assert.equal(calls, CANONICAL_HUD_STATES.length + 1);
-  assert.equal(report.states[0].attempts.length, 2);
+  }), /bounded HUD evidence failed/u);
+  assert.equal(calls, 1);
 });
 
 test("HUD state aggregator never retries a product assertion", async () => {

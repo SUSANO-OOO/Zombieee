@@ -3644,33 +3644,24 @@ The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPO
 
 ## 131. Revision r114 current SOL handoff — minimum completed-impact observability replacement
 
-Canonical Design Lock is `V100-SOL-DL-001 r114` Section 138. There is no active Luna handoff. Historical lease/candidate/successor instructions are superseded.
+Canonical Design Lock is `V100-SOL-DL-001 r114` Section138.13 / [Issue172#5535574918](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5535574918). No active Luna handoff. Historical lease/candidate/successor instructions are superseded.
 
-Current contract: Design138.11 / [Issue172#5534537514](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5534537514). Explicit exact Linux CPU-rendering preflight, cached enemy failure evidence, nullable CoreDumping, first-red single enemy attempt. Product and completed-impact proof unchanged.
-
-CI950 candidate failed required PhaseG/enemy06/deployment667+932. Native diagnostic33768940396 established a Skia GPU invariant crash. One CPU comparison33825748268 passes all three diagnostic lanes but is not acceptance. Old local greens are controls only. M3 remains unpassed; fresh local and required remote acceptance remain open under SOL-owned FINAL-ONLY authority.
-
-- `STATUS`: `DESIGN_LOCKED / R114_MINIMUM_COMPLETED_IMPACT_REPLACEMENT_ACTIVE`
-- `CLASSIFICATION`: `QA_HARNESS_STATE_EXPLOSION / PREATTACK_INSTANCE_OWNERSHIP_AND_RECOVERY_MACHINE_EXCEEDED_THE_RELEASE_CONTRACT / DESIGN_CHANGE_REQUIRED`
-- `REMEDIATION_CLASS`: `MINIMUM_COMPLETED_IMPACT_OBSERVABILITY + SINGLE_RECEIPT_CONSUMER / QA_ONLY`
-- `PRODUCT_DESIGN_CHANGE`: `0`
+- `STATUS`: `DESIGN_LOCKED_FOR_BOUNDED_REMEDIATION`
 - `ROLE_LOCK`: `SOL_REMEDIATION`
-- `LAST_AUDITED_HEAD`: `3d88cf27eb0a97301200fe12f8a2b25b87cb6939`
-- `LAST_AUDITED_TREE`: `3cd47ea1958a3b69154cab34e1a5750ec47af6ea`
-- `FAILED_GATE`: previous local predicate divergences closed; current extra6/all14 PASS, required remote/M3 still pending
-- `LAST_GREEN_GATE`: source171/171 + docs15/15 + extra6/all14 + Stage24 standalone3/3 + ordered9/9 + full Hosted3ready/35fault + bounded deployment8/8 + content/full tests1305/1305/lint0errors/production and static preview build
-- `SAME_GATE_REPEAT_COUNT`: `22`
+- `PRODUCT_DESIGN_CHANGE`: `0`
+- `LAST_AUDITED_HEAD`: `0588b5a195137a41faa6b716d7b9c855e3f9cc0e`
+- `LAST_AUDITED_TREE`: `c259aac5d79b315583de8f090532d9dae0a872c2`
+- `FAILED_GATE`: CI951 Linux WPE PhaseG Stage24 / enemy06 native crash; separate diagnostic Mac Stage25 setup/action order failure
+- `LAST_GREEN_GATE`: current-head PRVerify; Mac diagnostic Stage6/24, enemy and deployment actual evidence (DIAGNOSTIC_ONLY)
+- `REMEDIATION_CLASS`: QA_HARNESS_ACTION_CAPTURE_STARTED_AFTER_REPRESENTATIVE_COMBAT + REQUIRED_MAC_WEBKIT_RUNTIME
+- `SAME_GATE_REPEAT_COUNT`: `24`
 - `M3_PASSED`: `NO`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
-- `RESUME_FROM`: exact material tree/commit freeze with canonical EOL/BOM/semantic audit -> non-force direct-parent transport -> one automatic focused CI -> unchanged unfiltered remote/release route
+- `RESUME_FROM`: exact14-path correction -> source/static/functional/CI contracts -> one Stage25 -> required-extra6/all14 -> Stage24 3/3 -> ordered9/9 -> full local Hosted/deployment/content/tests/lint/build/static -> exact material freeze/direct-parent non-force transport -> one automatic required Mac focused CI. Full local54/validator and unfiltered remote54/validator gates remain.
 
-The current implementation uses one minimum completed-impact observability schema with attack `(battleGeneration, sourceId, attackSequence)` and impact `(attack, targetId, impactOrdinal)`. It has no lease, ownership transfer, successor recovery, candidate reservation, release anchor, global proof bridge, render proof, or audio-only state machine. Product/gameplay/AI/balance/timing/audio behavior remains unchanged.
+Exact SOL handoff: follow Design138.13. Observe native completed impacts during ordinary opening, capture first valid action immediately with the unchanged proof/deadline/mutex/cleanup, resume original inputs and mandatory later boss/final scene. No new machine, lease, recovery, bridge or stale receipt promotion. Migrate all six required WebKit jobs to verified macos-15-intel; preserve every axis/dependency, Stage3 original GNU outer bound and one-attempt wrappers. No app/assets/package/budget/acceptance change.
 
-Current execution cursor (supersedes the historical fields above): LAST_AUDITED_HEAD0f6dbad8f8aac90e3b50cdaa2bd233a76d7c173f / TREE7f9c6f97594248ffaef24a1dd3e9af9bffb627b0; FAILED_GATE CI950 PhaseG/enemy06/deployment667+932; LAST_GREEN_GATE current-head PRVerify and CPU diagnostic33825748268 DIAGNOSTIC_ONLY; SAME_GATE_REPEAT_COUNT23; REMEDIATION_CLASS LINUX_WEBKIT_CPU_RENDERING_RUNTIME_AND_FAIL_CLOSED_EVIDENCE; NEXT_OWNER SOL_REMEDIATION; M3NO. The Design test validates counter shape rather than pinning a historical execution count to22; no product acceptance criterion changes.
-
-Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION follows Design138.11 source/static/behavioral checks -> fresh local Stage6/required-extra/Stage24 3/3/ordered9/9/full local -> exact material freeze/non-force direct-parent transport/one automatic focused CI. First red returns to SOL_DESIGN; coherent corrections remain autonomous. Final Producer checkpoint and explicit-approval-only release boundary stay fixed.**
-
-`PHASE_G_REPLACEMENT_ACCEPTED` completes the replacement milestone, not the persistent goal. Continue to the separate Stage3 736x414 lane and all remaining machine/runtime/human-player/save/audio/mobile/PWA gates, exact-HEAD evidence freeze and fixed-HEAD `SOL_FINAL_REVIEW`. The only normal stop is one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit approval there is required for stacked integration, merge, tag, Release and Pages. Execution scope is fixed; exit-zero without required actual boss evidence is not acceptance.
+First red returns internally to SOL_DESIGN, not Producer technical approval wait. CPU-only Linux stability is not established; Mac diagnostic successes are not required acceptance. Old evidence and dirty worktrees remain preserved. Continue all runtime/human-player/HUD/audio/save/mobile/PWA/release-entry gates, exact HEAD/tree freeze and fixed-HEAD adversarial SOL_FINAL_REVIEW. The sole normal stop is FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT; explicit approval there alone authorizes integration/merge/tag/Release/official Pages, followed by published-SHA QA/recovery/closure.
 
 ## 128. Revision r113 same-revision handoff — authoritative successor-lease cue wording alignment
 

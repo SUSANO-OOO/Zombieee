@@ -37,8 +37,32 @@ function navigationFailure(overrides = {}) {
   return { total: 1, failed: 1, results: [failure] };
 }
 
-test("Stage 3 bounded final retries a navigation target-close only from a clean stable battle", () => {
+test("historical Stage 3 classifier recognizes a clean stable navigation target-close", () => {
   assert.equal(isRetryableTargetClosed(navigationFailure()), true);
+});
+
+test("Stage 3 candidate and exact-base never relaunch even a formerly retryable clean crash", async () => {
+  for (const baseRoot of [null, "/fixture/exact-base"]) {
+    const root = await mkdtemp(path.join(os.tmpdir(), "stage3-no-retry-"));
+    let calls = 0;
+    await assert.rejects(runStage3AudioBounded({
+      baseRoot, mode: "final", evidenceRoot: root,
+      executeAttempt: async (_base, attemptDir) => {
+        calls += 1;
+        await writeFile(path.join(attemptDir, "summary.json"), JSON.stringify(navigationFailure()));
+        return { code: 1, signal: null };
+      },
+      createHostResourceTelemetry: async ({ metadata }) => {
+        assert.equal(metadata.maximumAttemptCount, 1);
+        return { event() {}, reference: () => ({ supported: false }), stop: async () => ({ supported: false }) };
+      },
+    }), /failed after 1 attempt/u);
+    assert.equal(calls, 1);
+    const report = JSON.parse(await readFile(path.join(root, "bounded-summary.json"), "utf8"));
+    assert.equal(report.status, "failed");
+    assert.equal(report.attempts.length, 1);
+    assert.equal(report.attempts[0].retryableTargetClosed, true);
+  }
 });
 
 test("Stage 3 bounded final rejects navigation target-close without the exact stable boundary", () => {
@@ -114,8 +138,8 @@ test("r6 final-cut diagnostics are bounded, serialized by the child summary, and
   assert.match(smoke, /await finalCutTrace\.capture\(\)/);
   assert.match(smoke, /result\.finalCutTrace = await finalCutTrace\.stop/);
   assert.match(smoke, /P5_QA_TIMEOUT_MS/);
-  assert.match(runner, /attempt <= 2/);
-  assert.match(runner, /if \(attempt !== 1 \|\| !retryableTargetClosed\) break/);
+  assert.match(runner, /attempt <= 1/);
+  assert.doesNotMatch(runner, /attempt <= 2|Retrying once/);
   assert.match(runner, /attempts\.push\(\{ attempt, attemptDir, \.\.\.execution, retryableTargetClosed, summary \}\)/);
 });
 

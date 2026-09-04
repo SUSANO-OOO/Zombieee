@@ -2176,20 +2176,24 @@ async function productionStateContract(page, state) {
   return { ok: missingSelectors.length === 0 && phaseOk && surfaceOk && battleOk, expected: contract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
 }
 
-async function collectCombatCausalProof(page, {
-  durationMs = 4_800,
-  requiredCompletedImpactActorKeys = [],
-} = {}) {
-  const completedImpactActorKeys = [...new Set(requiredCompletedImpactActorKeys)];
-  // Retain only already-completed reads for failure diagnosis. This record is
-  // not proof state and cannot satisfy an attack or change any deadline.
-  const readEvidence = { requiredActorKeys: completedImpactActorKeys, baseline: null, latest: null, readCount: 0, lastRead: null };
+function createCombatImpactReader(page, requiredActorKeys, expectedStageId = null) {
+  // One capture-local record; only native completed reads can seed the proof.
+  const readEvidence = { requiredActorKeys, baseline: null, latest: null, readCount: 0, lastRead: null };
   const attachReadEvidence = (error) => {
     error.phaseGCausalTransaction = readEvidence;
     error.phaseGCausalNoFurtherPageRpc = true;
     return error;
   };
+  const check = (condition, code, detail) => {
+    if (!condition) {
+      const error = new Error(`${code}: ${JSON.stringify(detail)}`);
+      error.code = code;
+      throw attachReadEvidence(error);
+    }
+  };
   const readSnapshot = async (phase, budgetMs, setupDeadlineAt = null) => {
+    check(!readEvidence.lastRead || readEvidence.lastRead.status === "fulfilled",
+      "PHASE_G_CAUSAL_TRANSACTION_SEALED", { phase });
     const startedAt = Date.now();
     const read = await observePromiseWithin(page.evaluate(() => ({
       pageNow: performance.now(),
@@ -2209,65 +2213,96 @@ async function collectCombatCausalProof(page, {
     readEvidence.latest = read.value;
     return read.value;
   };
-  let initialEnvelope = await readSnapshot("initial snapshot", COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS);
+  const validateEnvelope = (envelope, baseline = envelope) => {
+    const snapshot = envelope?.snapshot;
+    check(Number.isInteger(baseline?.snapshot?.battleGeneration)
+      && baseline.snapshot.battleGeneration > 0
+      && Number.isFinite(baseline.pageNow)
+      && Number.isFinite(baseline.snapshot?.time),
+    "COMBAT_ENGAGEMENT_BASELINE_INVALID", baseline);
+    check(Number.isFinite(envelope?.pageNow) && envelope.pageNow >= baseline.pageNow
+      && snapshot?.schema === "v100-phase-g-combat-snapshot/v1"
+      && snapshot.screen === "battle"
+      && snapshot.battleGeneration === baseline.snapshot.battleGeneration
+      && (expectedStageId === null || snapshot.stageId === expectedStageId)
+      && snapshot.stageId === baseline.snapshot.stageId
+      && Number.isFinite(snapshot.time) && snapshot.time >= baseline.snapshot.time
+      && Array.isArray(snapshot.completedAttackImpacts),
+    "COMBAT_ENGAGEMENT_SNAPSHOT_INVALID", envelope);
+    const values = new Map();
+    const receipts = [];
+    for (const receipt of snapshot.completedAttackImpacts) {
+      if (receipt?.battleGeneration !== baseline.snapshot.battleGeneration) continue;
+      const validation = phaseGProofMachine.receiptValidation(receipt);
+      check(validation.ok, "COMPLETED_IMPACT_RECEIPT_INVALID", validation);
+      const key = phaseGProofMachine.impactKeyFor(receipt);
+      const value = JSON.stringify(receipt, Object.keys(receipt).sort());
+      check(!values.has(key) || values.get(key) === value, "CONFLICTING_IMPACT_IDENTITY", { impactKey: key });
+      values.set(key, value);
+      receipts.push(receipt);
+    }
+    return { ...envelope, snapshot: { ...snapshot, completedAttackImpacts: receipts } };
+  };
+  const delta = (baseline, envelope) => {
+    const baselineKeys = new Set(validateEnvelope(baseline).snapshot.completedAttackImpacts.map(phaseGProofMachine.impactKeyFor));
+    const current = validateEnvelope(envelope, baseline);
+    return { ...current, snapshot: { ...current.snapshot,
+      completedAttackImpacts: current.snapshot.completedAttackImpacts.filter((receipt) => !baselineKeys.has(phaseGProofMachine.impactKeyFor(receipt))) } };
+  };
+  return { readEvidence, readSnapshot, validateEnvelope, delta, check };
+}
+
+async function observeOpeningCombatAction(reader, captureCombatAction, options) {
+  const baseline = reader.readEvidence.latest;
+  const envelope = await reader.readSnapshot("opening snapshot", COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS);
+  reader.validateEnvelope(envelope, baseline ?? envelope);
+  if (!baseline) {
+    reader.readEvidence.baseline = envelope;
+    return null;
+  }
+  const current = reader.delta(baseline, envelope);
+  if (!current.snapshot.completedAttackImpacts.some((receipt) =>
+    options.requiredCompletedImpactActorKeys.includes(phaseGProofMachine.actorKeyFor(receipt)))) return null;
+  reader.readEvidence.baseline = baseline;
+  // The awaited callback is outside any input lock. It alone collects/seals.
+  return await captureCombatAction({ ...options, reader, baselineEnvelope: baseline, engagementEnvelope: envelope });
+}
+
+async function collectCombatCausalProof(page, {
+  durationMs = 4_800,
+  requiredCompletedImpactActorKeys = [],
+  reader = createCombatImpactReader(page, requiredCompletedImpactActorKeys),
+  baselineEnvelope = null,
+  engagementEnvelope = null,
+} = {}) {
+  const completedImpactActorKeys = [...new Set(requiredCompletedImpactActorKeys)];
+  const { readEvidence, readSnapshot, check: engagementInvariant } = reader;
+  if (engagementEnvelope) {
+    engagementInvariant(engagementEnvelope === readEvidence.latest && baselineEnvelope === readEvidence.baseline
+      && readEvidence.lastRead?.status === "fulfilled",
+    "COMBAT_ENGAGEMENT_SEED_INVALID", { reason: "seed must be the current native opening read" });
+  }
+  let initialEnvelope = baselineEnvelope ?? readEvidence.latest
+    ?? await readSnapshot("initial snapshot", COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS);
   readEvidence.baseline = initialEnvelope;
   let engagement = null;
   let postDeploymentEnvelope = (envelope) => envelope;
   let anchorBattleTime = initialEnvelope.snapshot?.time;
   if (completedImpactActorKeys.length > 0) {
-    // Deployment is not combat engagement. Baseline only completed facts, never
-    // reserve a fighter or target while production combat advances naturally.
     const baseline = initialEnvelope;
-    const baselineImpactKeys = new Set();
+    reader.validateEnvelope(baseline);
+    const baselineImpactKeys = new Set(reader.validateEnvelope(baseline).snapshot.completedAttackImpacts.map(phaseGProofMachine.impactKeyFor));
     const setupBudgetMs = Math.min(battleTimeout, 45_000);
     const setupHostDeadlineAt = Date.now() + setupBudgetMs;
-    const setupPageDeadlineAt = baseline.pageNow + setupBudgetMs;
+    const setupPageDeadlineAt = (readEvidence.latest ?? baseline).pageNow + setupBudgetMs;
     readEvidence.setupBudgetMs = setupBudgetMs;
     readEvidence.setupHostDeadlineAt = setupHostDeadlineAt;
     readEvidence.setupPageDeadlineAt = setupPageDeadlineAt;
-    const engagementInvariant = (condition, code, detail) => {
-      if (!condition) {
-        const error = new Error(`${code}: ${JSON.stringify(detail)}`);
-        error.code = code;
-        throw attachReadEvidence(error);
-      }
-    };
-    engagementInvariant(Number.isInteger(baseline.snapshot?.battleGeneration)
-      && baseline.snapshot.battleGeneration > 0
-      && Number.isFinite(baseline.pageNow)
-      && Number.isFinite(baseline.snapshot?.time),
-    "COMBAT_ENGAGEMENT_BASELINE_INVALID", baseline);
-    postDeploymentEnvelope = (envelope) => {
-      const snapshot = envelope?.snapshot;
-      engagementInvariant(Number.isFinite(envelope?.pageNow)
-        && envelope.pageNow >= baseline.pageNow
-        && snapshot?.schema === "v100-phase-g-combat-snapshot/v1"
-        && snapshot.screen === "battle"
-        && snapshot.battleGeneration === baseline.snapshot.battleGeneration
-        && Number.isFinite(snapshot.time)
-        && snapshot.time >= baseline.snapshot.time
-        && Array.isArray(snapshot.completedAttackImpacts),
-      "COMBAT_ENGAGEMENT_SNAPSHOT_INVALID", envelope);
-      const values = new Map();
-      const receipts = [];
-      for (const receipt of snapshot.completedAttackImpacts) {
-        if (receipt?.battleGeneration !== baseline.snapshot.battleGeneration) continue;
-        const validation = phaseGProofMachine.receiptValidation(receipt);
-        engagementInvariant(validation.ok, "COMPLETED_IMPACT_RECEIPT_INVALID", validation);
-        const key = phaseGProofMachine.impactKeyFor(receipt);
-        const value = JSON.stringify(receipt, Object.keys(receipt).sort());
-        engagementInvariant(!values.has(key) || values.get(key) === value,
-          "CONFLICTING_IMPACT_IDENTITY", { impactKey: key });
-        values.set(key, value);
-        if (!baselineImpactKeys.has(key)) receipts.push(receipt);
-      }
-      return { ...envelope, snapshot: { ...snapshot, completedAttackImpacts: receipts } };
-    };
-    for (const receipt of postDeploymentEnvelope(baseline).snapshot.completedAttackImpacts) {
-      baselineImpactKeys.add(phaseGProofMachine.impactKeyFor(receipt));
-    }
-    let anchor = null;
-    let setupSampleCount = 0;
+    postDeploymentEnvelope = (envelope) => reader.delta(baseline, envelope);
+    initialEnvelope = postDeploymentEnvelope(engagementEnvelope ?? baseline);
+    let anchor = initialEnvelope.snapshot.completedAttackImpacts.find((receipt) =>
+      completedImpactActorKeys.includes(phaseGProofMachine.actorKeyFor(receipt))) ?? null;
+    let setupSampleCount = engagementEnvelope ? 1 : 0;
     while (!anchor) {
       const remainingMs = setupHostDeadlineAt - Date.now();
       engagementInvariant(remainingMs > 0, "COMBAT_ENGAGEMENT_DEADLINE_EXCEEDED", {
@@ -2309,7 +2344,7 @@ async function collectCombatCausalProof(page, {
   invariant(completedImpactProof, `completed-impact proof start contract invalid: ${JSON.stringify(initialEnvelope)}`);
   completedImpactProof = phaseGProofMachine.observe(completedImpactProof, initialEnvelope);
   let sampleCount = 1;
-  const hostDeadlineAt = Date.now() + durationMs;
+  const hostDeadlineAt = readEvidence.lastRead.completedAtHostTime + durationMs;
   while (completedImpactProof.state === "OBSERVING" && Date.now() < hostDeadlineAt) {
     const remainingMs = hostDeadlineAt - Date.now();
     if (remainingMs > 0) await new Promise((resolve) => setTimeout(resolve, Math.min(120, remainingMs)));
@@ -3527,6 +3562,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const requiredCompletedImpactActorKeys = completedImpactProofEnabled
     ? [proofActor ? `zombie:${proofActor}` : null, proofUnitKind ? `human:${proofUnitKind}` : null].filter(Boolean)
     : [];
+  const combatImpactReader = completedImpactProofEnabled
+    ? createCombatImpactReader(page, requiredCompletedImpactActorKeys, expectedStageId) : null;
+  const captureOpeningAction = async () => {
+    if (!combatImpactReader || sealedCombatCausalProof) return;
+    invariant(typeof captureCombatAction === "function", "completed-impact capture callback missing");
+    sealedCombatCausalProof = await observeOpeningCombatAction(combatImpactReader, captureCombatAction, {
+      durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
+      requiredCompletedImpactActorKeys,
+    });
+  };
   const readSetupRuntime = async () => {
     const runtime = await readPhaseGSetupRuntime(page);
     if (runtime?.screen === "battle") {
@@ -3641,6 +3686,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
+  // Baseline precedes both main and background ordinary input paths.
+  await captureOpeningAction();
   const sustainTask = bossKind ? (async () => {
     // These are ordinary player-facing controls.  The loop keeps the
     // evidence run alive long enough to reach the authored boss wave without
@@ -3780,6 +3827,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     deploymentTrace.push(entry);
   };
   try {
+    await captureOpeningAction();
     if (!bossKind) {
       // Compact fixtures can reorder the formation and start with less
       // command than an arbitrary third card costs. Select only a real,
@@ -3790,6 +3838,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         let deployed = false;
         recorder?.setAwaiting("formation-deployment", { slot: slot + 1, predicate: "a real ready formation card is accepted by production runtime" });
         while (!deployed && Date.now() < deadline) {
+          await captureOpeningAction();
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
           const candidateSample = await readBattleDeploymentDiagnostics(page, {
             requestedSlot: slot + 1,
@@ -3837,6 +3886,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             diagnostics: pointerResult.diagnostics,
             pointerEvidence: pointerResult.evidence ?? null,
           });
+          await captureOpeningAction();
           if (!pointerResult.accepted) {
             await page.waitForTimeout(120);
             continue;
@@ -3862,6 +3912,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         let deployed = false;
         recorder?.setAwaiting("boss-frontline-deployment", { slot: deployment + 1, predicate: "a real ready boss-frontline card is accepted by production runtime" });
         for (let attempt = 0; attempt < 180; attempt += 1) {
+          await captureOpeningAction();
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during boss unit deployment");
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
@@ -3901,6 +3952,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               diagnostics: pointerResult.diagnostics,
               pointerEvidence: pointerResult.evidence ?? null,
             });
+            await captureOpeningAction();
             if (pointerResult.accepted) {
               recorder?.clearAwaiting();
               deployed = true;
@@ -3910,6 +3962,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             }
           }
           await page.waitForTimeout(400);
+          await captureOpeningAction();
         }
         if (await bossIsLive()) break;
         if (!deployed) {
@@ -3935,9 +3988,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     });
     if (completedImpactProofEnabled) {
       invariant(typeof captureCombatAction === "function", "completed-impact capture callback missing");
-      // Capture the first new real action before waiting for the later scene.
-      // This returns a COMPLETE proof with its own PNG, never a partial lease.
-      sealedCombatCausalProof = await captureCombatAction({
+      // An already sealed opening action is never collected again.
+      // Otherwise retain the one original post-opening engagement boundary.
+      sealedCombatCausalProof ??= await captureCombatAction({
+        reader: combatImpactReader,
         durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
         requiredCompletedImpactActorKeys,
       });

@@ -15,9 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
-env:
-  WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"
-
 jobs:
   verify:
     name: PR Verify
@@ -210,16 +207,10 @@ jobs:
   v100-phase-g-production:
     name: V1 Phase G Production Matrix
     needs: verify
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      options: --init --ipc=host
+    runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
-    env:
-      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      V100_PLAYWRIGHT_CONTAINER_ENGINES: chromium,webkit
     timeout-minutes: 90
 
     steps:
@@ -239,8 +230,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify pinned Playwright container runtime
-        run: node scripts/verify-playwright-container-runtime.mjs
+      - name: Install locked Playwright browsers
+        run: npx playwright install chromium webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Build production application
         run: npm run build
@@ -270,7 +263,7 @@ jobs:
   webkit-hosted:
     name: WebKit Hosted Runner Evidence
     needs: webkit-enemy-runtime-shard
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
 
     steps:
@@ -294,11 +287,11 @@ jobs:
         run: npm run build
 
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
 
-      - name: Verify Linux WebKit rendering runtime
+      - name: Verify pinned macOS WebKit runtime
         id: webkit-runtime
-        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
         if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
@@ -341,7 +334,7 @@ jobs:
 
   webkit-enemy-runtime-shard:
     name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -379,10 +372,10 @@ jobs:
         run: node scripts/v0995-enemy-runtime-shards.mjs --check
 
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
 
-      - name: Verify Linux WebKit rendering runtime
-        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
         env:
@@ -414,7 +407,7 @@ jobs:
     needs:
       - webkit-deployment-viewport
       - webkit-hosted
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -458,10 +451,10 @@ jobs:
         run: npm run build
 
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
 
-      - name: Verify Linux WebKit rendering runtime
-        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture canonical HUD evidence
         env:
@@ -486,16 +479,10 @@ jobs:
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
     needs: webkit-stage3-audio
     if: ${{ always() }}
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      options: --init --ipc=host
+    runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
-    env:
-      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      V100_PLAYWRIGHT_CONTAINER_ENGINES: webkit
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -522,8 +509,10 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Verify pinned Playwright container runtime
-        run: node scripts/verify-playwright-container-runtime.mjs
+      - name: Install locked Playwright browsers
+        run: npx playwright install webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
       - name: Build production application
         run: npm run build
       - name: Capture final-canvas deployment evidence
@@ -546,16 +535,10 @@ jobs:
   webkit-stage3-audio:
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
     needs: webkit-hosted
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      options: --init --ipc=host
+    runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
-    env:
-      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
-      V100_PLAYWRIGHT_CONTAINER_ENGINES: webkit
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -583,8 +566,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify pinned Playwright container runtime
-        run: node scripts/verify-playwright-container-runtime.mjs
+      - name: Install locked Playwright browsers
+        run: npx playwright install webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
+
+      - name: Install and verify GNU timeout
+        run: |
+          brew install coreutils
+          gtimeout --version
+          gtimeout --version | grep -F "GNU coreutils"
 
       - name: Build candidate production application
         if: matrix.audio_case != 'final-base'
@@ -600,7 +591,7 @@ jobs:
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
         run: |
-          timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs
+          gtimeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs
 
       - name: Build exact PR base for the same bounded final fixture
         if: matrix.audio_case == 'final-base'
@@ -627,7 +618,7 @@ jobs:
           P5_QA_BATTLE_AUDIO_CASES: final
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/final-base
-        run: timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs "$RUNNER_TEMP/stage3-final-base"
+        run: gtimeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs "$RUNNER_TEMP/stage3-final-base"
 
       - name: Upload bounded Stage 3 audio evidence
         if: always()

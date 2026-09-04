@@ -152,7 +152,7 @@ export async function runCanonicalHudStates({
   const states = [];
   for (const stateId of stateIds) {
     const attempts = [];
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = 1; attempt <= 1; attempt += 1) {
       const attemptDir = path.join(root, stateId, `attempt-${attempt}`);
       await mkdir(attemptDir, { recursive: true });
       const execution = await (runAttempt ?? runProcess)({ cwd, env, stateId, attempt, attemptDir });
@@ -170,8 +170,8 @@ export async function runCanonicalHudStates({
       });
       attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
       if (passed) break;
-      if (attempt !== 1 || !retryableTargetClosed) break;
-      console.warn(`Retrying HUD state ${stateId} once after an exact hosted-WebKit target-closed incident.`);
+
+      break;
     }
     const passed = attempts.at(-1)?.passed === true;
     states.push({ stateId, passed, attempts });
@@ -197,7 +197,7 @@ export async function runOneHudStateBounded({
   const root = path.resolve(cwd, evidenceRoot);
   await mkdir(root, { recursive: true });
   const attempts = [];
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 1; attempt += 1) {
     const attemptDir = path.join(root, `attempt-${attempt}`);
     await mkdir(attemptDir, { recursive: true });
     const execution = await (runAttempt ?? runProcess)({ cwd, env, stateId, attempt, attemptDir });
@@ -215,8 +215,8 @@ export async function runOneHudStateBounded({
       });
     attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
     if (passed) break;
-    if (attempt !== 1 || !retryableTargetClosed) break;
-    console.warn(`Retrying HUD state ${stateId} once after an exact hosted-WebKit target-closed incident.`);
+
+      break;
   }
   const passed = attempts.at(-1)?.passed === true;
   const report = { status: passed ? "passed" : "failed", stateId, attempts };

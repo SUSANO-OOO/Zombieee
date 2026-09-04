@@ -7,7 +7,34 @@ import {
   parsePlaywrightContainerEngines,
   assertWebKitRenderingSnapshot,
   WEBKIT_CPU_LIBRARY_SHA256,
+  MAC_WEBKIT_FILES,
+  MAC_WEBKIT_FORBIDDEN_ENV,
+  assertMacWebKitSnapshot,
 } from "../scripts/verify-playwright-container-runtime.mjs";
+
+test("required macOS WebKit preflight fails closed for metadata, installation, overrides and capability drift", () => {
+  const exact = {
+    platform: "darwin", arch: "x64", osVersion: "15.7.9", node: "v22.13.0",
+    packageVersion: "1.56.1", revision: "2215", browserVersion: "26.0",
+    env: {}, expectedRoot: "/Users/fixture/Library/Caches/ms-playwright/webkit-2215",
+    executablePath: "/Users/fixture/Library/Caches/ms-playwright/webkit-2215/pw_run.sh",
+    executableExists: true, files: { ...MAC_WEBKIT_FILES },
+    runtimeVersion: "26.0", capabilities: { canvas: true, audioContext: "function" },
+  };
+  assert.equal(assertMacWebKitSnapshot(exact, { requireSmoke: true }), exact);
+  for (const [field, bad] of Object.entries({
+    platform: "linux", arch: "arm64", osVersion: "16.0", node: "v24.0.0", packageVersion: "1.56.2",
+    revision: "2216", browserVersion: "27.0", executablePath: "/other/pw_run.sh", executableExists: false,
+    files: {}, runtimeVersion: "27.0", capabilities: { canvas: false, audioContext: "undefined" },
+  })) assert.throws(() => assertMacWebKitSnapshot({ ...exact, [field]: bad }, { requireSmoke: true }), field);
+  for (const key of MAC_WEBKIT_FORBIDDEN_ENV) {
+    assert.throws(() => assertMacWebKitSnapshot({ ...exact, env: { [key]: "" } }), key);
+  }
+  for (const key of Object.keys(MAC_WEBKIT_FILES)) {
+    assert.throws(() => assertMacWebKitSnapshot({ ...exact, files: { ...exact.files, [key]: "bad" } }));
+  }
+  assert.throws(() => assertMacWebKitSnapshot({ ...exact, capabilities: { canvas: true } }, { requireSmoke: true }));
+});
 
 test("Linux WebKit CPU preflight rejects environment, binary and platform drift before launch", () => {
   const exact = {

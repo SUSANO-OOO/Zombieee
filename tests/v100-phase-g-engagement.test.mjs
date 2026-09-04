@@ -7,7 +7,7 @@ import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-mach
 // Execute the actual collector, not a second model, with only browser I/O and
 // clocks substituted. No browser, production entrypoint, or wording regex runs.
 const source = await readFile(new URL("../scripts/v100-phase-g-production-matrix.mjs", import.meta.url), "utf8");
-const start = source.indexOf("async function collectCombatCausalProof(");
+const start = source.indexOf("function createCombatImpactReader(");
 const end = source.indexOf("async function saveScreenshot(", start);
 assert.ok(start >= 0 && end > start, "actual collector source must be present");
 const collectorSource = source.slice(start, end);
@@ -43,7 +43,7 @@ function fixture(getReceipts, { readStatus = null, readDelayMs = () => 0, snapsh
   let now = 0;
   let reads = 0;
   const rpcBounds = [];
-  const collect = vm.runInNewContext(`${collectorSource}\ncollectCombatCausalProof`, {
+  const api = vm.runInNewContext(`${collectorSource}\n({ collectCombatCausalProof, createCombatImpactReader, observeOpeningCombatAction })`, {
     phaseGProofMachine: machine,
     battleTimeout: 150_000,
     COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS: 2_000,
@@ -74,11 +74,12 @@ function fixture(getReceipts, { readStatus = null, readDelayMs = () => 0, snapsh
     },
   };
   return {
-    run: (options = {}) => collect(page, {
+    run: (options = {}) => api.collectCombatCausalProof(page, {
       durationMs: 12_000,
       requiredCompletedImpactActorKeys: ["zombie:spitter", "human:ranger"],
       ...options,
     }),
+    api, page,
     elapsed: () => now,
     advance: (ms) => { now += ms; },
     reads: () => reads,
@@ -248,4 +249,67 @@ test("lanes without required completed-impact actor keys retain their existing e
   assert.equal(result.collection.engagement, null);
   assert.equal(result.completedImpactProof.startedAtPageTime, 10_000);
   assert.equal(f.reads(), 1);
+});
+
+test("native opening receipt seeds the original collector without a later baseline read", async () => {
+  const shield = receipt({ sourceKind: "red-panther-shield", mode: "direct",
+    committedAtBattleTime: 47.9667, contactAtBattleTime: 47.9667 });
+  const f = fixture((now) => now >= 28083 ? [shield] : []);
+  const keys = ["zombie:red-panther-shield"];
+  const reader = f.api.createCombatImpactReader(f.page, keys);
+  let calls = 0;
+  const capture = async (options) => { calls += 1; return f.run(options); };
+  const options = { requiredCompletedImpactActorKeys: keys, durationMs: 12000 };
+  assert.equal(await f.api.observeOpeningCombatAction(reader, capture, options), null);
+  f.advance(28083);
+  const result = await f.api.observeOpeningCombatAction(reader, capture, options);
+  assert.equal(calls, 1);
+  assert.equal(f.reads(), 2, "triggering live read must not be discarded by a new initial read");
+  assert.equal(result.ok, true);
+  assert.equal(result.completedImpactProof.startedAtPageTime, 38083);
+  assert.equal(result.completedImpactProof.startedAtBattleTime, 47.9667);
+  assert.equal(result.completedImpactProof.screenshot, null, "an atomic receipt alone is not COMPLETE");
+});
+
+test("opening seed cannot substitute a cached artifact, wrong stage or malformed receipt", async () => {
+  const f = fixture((now) => now ? [receipt(), ranger()] : []);
+  const keys = ["zombie:spitter", "human:ranger"];
+  const reader = f.api.createCombatImpactReader(f.page, keys);
+  const baseline = await reader.readSnapshot("baseline", 2000);
+  f.advance(120);
+  const current = await reader.readSnapshot("current", 2000);
+  reader.readEvidence.baseline = baseline;
+  await assert.rejects(f.run({ reader, baselineEnvelope: baseline,
+    engagementEnvelope: structuredClone(current) }), { code: "COMBAT_ENGAGEMENT_SEED_INVALID" });
+  for (const bad of [{ stageId: "different" }, { battleGeneration: 9 }, { screen: "result" }]) {
+    assert.throws(() => reader.delta(baseline, { ...current, snapshot: { ...current.snapshot, ...bad } }),
+      { code: "COMBAT_ENGAGEMENT_SNAPSHOT_INVALID" });
+  }
+  for (const bad of [{ audioRequestObserved: false }, { targetId: 0 }, { reactionOutcome: null }]) {
+    assert.throws(() => reader.delta(baseline, { ...current, snapshot: { ...current.snapshot,
+      completedAttackImpacts: [receipt(bad)] } }), { code: "COMPLETED_IMPACT_RECEIPT_INVALID" });
+  }
+});
+
+test("opening read failure seals the same reader before any input or further RPC", async () => {
+  const f = fixture(() => [], { readStatus: () => ({ status: "timeout" }) });
+  const reader = f.api.createCombatImpactReader(f.page, ["zombie:spitter"]);
+  const options = { requiredCompletedImpactActorKeys: ["zombie:spitter"] };
+  const capture = () => assert.fail("failed read cannot capture");
+  await assert.rejects(f.api.observeOpeningCombatAction(reader, capture, options), { code: "PHASE_G_CAUSAL_TRANSACTION_TIMEOUT" });
+  await assert.rejects(f.api.observeOpeningCombatAction(reader, capture, options), { code: "PHASE_G_CAUSAL_TRANSACTION_SEALED" });
+  assert.equal(f.reads(), 1);
+});
+
+test("opening without engagement retains exactly one original post-opening setup budget", async () => {
+  const f = fixture(() => []);
+  const reader = f.api.createCombatImpactReader(f.page, ["zombie:spitter"]);
+  await f.api.observeOpeningCombatAction(reader, () => assert.fail("no attack"),
+    { requiredCompletedImpactActorKeys: ["zombie:spitter"] });
+  f.advance(67000);
+  await f.api.observeOpeningCombatAction(reader, () => assert.fail("no attack"),
+    { requiredCompletedImpactActorKeys: ["zombie:spitter"] });
+  await assert.rejects(f.run({ reader, requiredCompletedImpactActorKeys: ["zombie:spitter"] }),
+    { code: "COMBAT_ENGAGEMENT_DEADLINE_EXCEEDED" });
+  assert.equal(f.elapsed(), 112000);
 });

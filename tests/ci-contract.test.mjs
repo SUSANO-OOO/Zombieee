@@ -1,6 +1,7 @@
 ﻿import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { load as loadYaml } from "js-yaml";
 
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
 
@@ -98,31 +99,28 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.doesNotMatch(stage3Job, /npm run qa:p5/u);
   assert.equal((stage3Job.match(/node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
-  const pinnedImage = "mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a";
-  const assertPinnedRuntime = (job, engines) => {
-    assert.match(job, new RegExp(`container:\\n\\s+image: ${pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\n\\s+options: --init --ipc=host`, "u"));
-    assert.match(job, /defaults:\n\s+run:\n\s+shell: bash/u);
-    assert.match(job, new RegExp(`V100_PLAYWRIGHT_CONTAINER_IMAGE: ${pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`, "u"));
-    assert.match(job, new RegExp(`V100_PLAYWRIGHT_CONTAINER_ENGINES: ${engines}`, "u"));
-    const install = job.indexOf("run: npm ci");
-    const preflight = job.indexOf("run: node scripts/verify-playwright-container-runtime.mjs");
-    const build = job.indexOf("Build production application") >= 0
-      ? job.indexOf("Build production application")
-      : job.indexOf("Build candidate production application");
-    assert.ok(install >= 0 && install < preflight && preflight < build);
-    assert.doesNotMatch(job, /npx playwright install/u);
+  const assertMacRuntime = (job, engines) => {
+    assert.match(job, /runs-on: macos-15-intel/u);
+    assert.doesNotMatch(job, /container:|V100_PLAYWRIGHT_CONTAINER_|WEBKIT_SKIA/u);
+    const parsedJob = loadYaml(job);
+    assert.equal(parsedJob.steps.find(step => step.uses?.startsWith("actions/setup-node@"))?.with?.["node-version"], "22.13.0");
+    const steps = parsedJob.steps;
+    const install = steps.findIndex(step => step.run === "npm ci");
+    const browsers = steps.findIndex(step => step.run === `npx playwright install ${engines}`);
+    const preflight = steps.findIndex(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos");
+    const build = steps.findIndex(step => step.run === "npm run build");
+    const capture = steps.findIndex(step => step.name.startsWith("Capture "));
+    assert.ok(install >= 0 && install < browsers && browsers < preflight && preflight < capture);
+    assert.ok(build > install && build < capture);
   };
-  assertPinnedRuntime(phaseGJob, "chromium,webkit");
-  assertPinnedRuntime(deploymentJob, "webkit");
-  assertPinnedRuntime(stage3Job, "webkit");
-  assert.equal((workflow.match(new RegExp(pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "gu")) ?? []).length, 6);
-  assert.match(workflow, /^env:\n  WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"$/mu);
-  for (const unchangedHostJob of [enemyJob, hostedJob, hudJob]) {
-    assert.doesNotMatch(unchangedHostJob, /container:\n/u);
-    const install = unchangedHostJob.indexOf("npx playwright install --with-deps webkit");
-    const preflight = unchangedHostJob.indexOf("node scripts/verify-playwright-container-runtime.mjs --webkit-rendering");
-    assert.ok(install >= 0 && preflight > install);
-  }
+  assertMacRuntime(phaseGJob, "chromium webkit");
+  for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 6);
+  assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
+  assert.doesNotMatch(workflow, /WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
+  assert.match(stage3Job, /brew install coreutils/u);
+  assert.match(stage3Job, /gtimeout --version/u);
+  assert.equal((stage3Job.match(/gtimeout --signal=TERM --kill-after=30s 15m node/gu) ?? []).length, 2);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -174,7 +172,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   ]) {
     assert.match(hudBoundedRunner, new RegExp(`"${stateId}"`, "u"));
   }
-  assert.match(hudBoundedRunner, /attempt <= 2/u);
+  assert.match(hudBoundedRunner, /attempt <= 1/u);
   assert.doesNotMatch(hudBoundedRunner, /isRetryableTargetClosedLog/u);
   assert.match(hudBoundedRunner, /cleanUnexpectedHudCrashRetryable/u);
   assert.match(hudBoundedRunner, /evidencePathInside/u);
@@ -189,6 +187,32 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);
+});
+
+test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
+  const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
+  assert.deepEqual(Object.keys(jobs), ["verify", "v100-phase-g-production", "webkit-hosted",
+    "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
+  const dependencies = {
+    "v100-phase-g-production": "verify", "webkit-hosted": "webkit-enemy-runtime-shard",
+    "webkit-enemy-runtime-shard": undefined, "webkit-viewport": ["webkit-deployment-viewport", "webkit-hosted"],
+    "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
+  };
+  assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
+  for (const [id, needs] of Object.entries(dependencies)) {
+    const job = jobs[id];
+    assert.deepEqual(job.needs, needs);
+    assert.equal(job["runs-on"], "macos-15-intel");
+    assert.equal(job["continue-on-error"], undefined);
+    assert.equal(job.container, undefined);
+    assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
+  }
+  const viewports = ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"];
+  assert.deepEqual(jobs["webkit-viewport"].strategy.matrix.viewport, viewports);
+  assert.deepEqual(jobs["webkit-deployment-viewport"].strategy.matrix.viewport, viewports);
+  assert.deepEqual(jobs["webkit-stage3-audio"].strategy.matrix.audio_case, ["entrance-candidate", "final-candidate", "final-base"]);
+  assert.equal(jobs["webkit-enemy-runtime-shard"].strategy.matrix.shard.length, 6);
+  assert.equal(jobs["webkit-viewport"].strategy.matrix.hud_state.length, 8);
 });
 
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
@@ -207,7 +231,7 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.equal((stage3Job.match(/git -c safe\.directory="\$GITHUB_WORKSPACE"/gu) ?? []).length, 2);
   assert.doesNotMatch(stage3Job, /git config|safe\.directory=(?:"?'?\*|\/)/u);
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
-  assert.match(boundedRunner, /attempt <= 2/);
+  assert.match(boundedRunner, /attempt <= 1/);
   assert.match(boundedRunner, /isRetryableTargetClosedLog\(failure\.error/);
   assert.match(boundedRunner, /failure\.phase === "navigation"[\s\S]*setupState/u);
   assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);
@@ -259,7 +283,7 @@ test("r6 diagnostic traces do not alter the CI matrix or bounded runner contract
   assert.match(deploymentSmoke, /DIAGNOSTIC_TRACE_MAX_SAMPLES = 160/);
   assert.match(p5Smoke, /FINAL_CUT_TRACE_INTERVAL_MS = 1_000/);
   assert.match(p5Smoke, /FINAL_CUT_TRACE_MAX_SAMPLES = 75/);
-  assert.match(boundedRunner, /attempt <= 2/);
+  assert.match(boundedRunner, /attempt <= 1/);
   assert.match(boundedRunner, /isRetryableTargetClosed\(summary, mode\)/);
-  assert.doesNotMatch(boundedRunner, /attempt <= 1/);
+  assert.doesNotMatch(boundedRunner, /attempt <= 2|Retrying once/);
 });

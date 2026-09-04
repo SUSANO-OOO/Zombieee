@@ -69,6 +69,91 @@ function checkpointCallAudit(text) {
   visit(ast);
   return { unknown, visited };
 }
+
+test("actual Stage25 opening seals its first attack before slots6/7, then preserves all seven inputs once", async () => {
+  const battle = parsed.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === "battlePage");
+  let opening = null, capture = null;
+  const visit = node => {
+    if (ts.isForStatement(node) && node.initializer?.getText(parsed) === "let deployment = 0") opening = node;
+    if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === "captureOpeningAction") capture = node;
+    ts.forEachChild(node, visit);
+  };
+  visit(battle);
+  assert.ok(opening && capture);
+  const helpers = ["createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof"]
+    .map(name => parsed.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name).getText(parsed)).join("\n");
+  const machine = createV100PhaseGProofMachine();
+  const impacts = [{
+    schema: machine.receiptSchema, battleGeneration: 2, sourceId: 5, sourceSide: "zombie",
+    sourceKind: "red-panther-shield", attackSequence: 1, targetId: 1, targetSide: "human",
+    targetKind: "guardian", impactOrdinal: 0, mode: "direct", committedAtBattleTime: 47.9667,
+    contactAtBattleTime: 47.9667, reactionOutcome: "hit", audioCueId: "enemy-red-panther-shield-attack",
+    audioReceiptId: "combat-attack:2:5:1", audioRequestObserved: true,
+  }];
+  let now = 0, inputs = 0, captured = 0, proof = null;
+  const timeline = [866, 4716, 17300, 29883, 42333, 54716, 66616];
+  const events = [];
+  const page = {
+    evaluate: async () => ({ pageNow: now + 6135, snapshot: {
+      schema: "v100-phase-g-combat-snapshot/v1", screen: "battle", stageId: "stage25",
+      battleGeneration: 2, time: now / 1000, completedAttackImpacts: now >= 48083 ? impacts : [],
+    } }),
+    isClosed: () => false, locator: () => ({ isVisible: async () => true }),
+    waitForTimeout: async ms => { now += ms; },
+  };
+  const scope = {
+    page, phaseGProofMachine: machine, battleTimeout: 150000, COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS: 2000,
+    Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
+    observePromiseWithin: async promise => ({ status: "fulfilled", value: await promise }),
+    invariant: (condition, message) => assert.ok(condition, message),
+    requiredCompletedImpactActorKeys: ["zombie:red-panther-shield"], requestedCombatProofDurationMs: 12000,
+    combatProofDurationMs: 12000, bossDeploymentLimit: 7, recorder: null, bossIsLive: async () => false,
+    deployedKinds: new Set(), completedImpactProofEnabled: true, proofUnitKind: null,
+    proofUnitDeployed: true, proofActorRequiresContactFirst: false, proofActorAttackObserved: false,
+    unitContentFor: () => ({}),
+    readBattleDeploymentDiagnostics: async () => {
+      // Actual first-positive time falls between the fifth and sixth inputs.
+      if (inputs === 5 && now < 48083) now = 48083;
+      return {};
+    },
+    bossOpeningCandidates: () => {
+      if (inputs === 5 && captured === 0) return [];
+      return [{ kind: inputs === 0 ? "guardian" : inputs === 6 ? "ranger" : "medic" }];
+    },
+    performVerifiedDeploymentPointer: async () => {
+      now = timeline[inputs++]; events.push("input" + inputs);
+      return { accepted: true, status: "accepted", pointerCount: 1 };
+    },
+    recordDeployment: () => {}, readProofActorContactState: async () => null,
+    noteCapture: result => {
+      captured += 1; events.push("capture"); proof = result.completedImpactProof;
+      assert.equal(inputs, 5);
+      assert.equal(proof.state, "ATTACK_ACCEPTED");
+      assert.equal(proof.receiptsByActor["zombie:red-panther-shield"].sourceId, 5);
+      const bound = machine.attachScreenshot(proof, {
+        screenshot: { path: "fixture-action.png", sha256: "fixture-only", bytes: 2000 }, pageNow: now + 6136,
+      });
+      result.completedImpactProof = machine.complete(bound, { pageNow: now + 6137, observerStopped: true });
+      assert.equal(result.completedImpactProof.state, "COMPLETE");
+      return result;
+    },
+  };
+  await vm.runInNewContext(`(async () => {
+    ${helpers}
+    const combatImpactReader = createCombatImpactReader(page, requiredCompletedImpactActorKeys, "stage25");
+    let sealedCombatCausalProof = null;
+    const captureCombatAction = async options => noteCapture(await collectCombatCausalProof(page, options));
+    const ${capture.getText(parsed)};
+    await captureOpeningAction();
+    ${opening.getText(parsed)}
+    await captureOpeningAction();
+  })()`, scope);
+  assert.equal(inputs, 7);
+  assert.equal(captured, 1);
+  assert.deepEqual(events, ["input1", "input2", "input3", "input4", "input5", "capture", "input6", "input7"]);
+  assert.equal(proof.startedAtBattleTime, 47.9667);
+  assert.equal(proof.deadlineAtPageTime - proof.startedAtPageTime, 12000);
+});
 test("every checkpoint callsite, including setup branches, belongs to the actual registry", () => {
   const audit = checkpointCallAudit(source);
   assert.deepEqual(audit.unknown, []);

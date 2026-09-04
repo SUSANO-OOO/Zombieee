@@ -86,7 +86,7 @@ export async function runStage3AudioBounded({
       owner: "stage3-audio-bounded-parent",
       mode,
       route: baseRoot ? "exact-base" : "candidate",
-      maximumAttemptCount: 2,
+      maximumAttemptCount: 1,
     },
   });
   const attempts = [];
@@ -95,7 +95,7 @@ export async function runStage3AudioBounded({
   let hostResourceTelemetrySummary = null;
   let hostResourceTelemetryStopError = null;
   try {
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = 1; attempt <= 1; attempt += 1) {
       const attemptDir = path.join(evidenceRoot, `attempt-${attempt}`);
       await mkdir(attemptDir, { recursive: true });
       hostResourceTelemetry.event("attempt-child-start", { attempt, mode });
@@ -120,8 +120,8 @@ export async function runStage3AudioBounded({
         routePassed = true;
         break;
       }
-      if (attempt !== 1 || !retryableTargetClosed) break;
-      console.warn("Retrying once after a clean hosted-WebKit target-closed incident; all product assertions remain required.");
+
+      break;
     }
   } catch (error) {
     primaryError = error;
