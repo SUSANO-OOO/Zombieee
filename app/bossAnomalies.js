@@ -5,6 +5,8 @@ export const BOSS_ANOMALY_KINDS = deepFreeze([
   "ooguchi",
   "gairen",
   "futago",
+  "mugarian-president-mutated",
+  "takuya-omega",
 ]);
 
 export const BOSS_ANOMALY_TUNING = deepFreeze({
@@ -51,6 +53,24 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     crossStrikeHalfWidth: 18,
     crossStrikeAngleRadians: .43,
     splitSpeedMultiplier: 1.42,
+  },
+  "mugarian-president-mutated": {
+    warningSeconds: 1.05,
+    activeSeconds: .86,
+    recoverySeconds: 1.02,
+    cooldownSeconds: 7.4,
+    controlRadius: 150,
+    controlDamage: 46,
+    splitThreshold: .7,
+  },
+  "takuya-omega": {
+    warningSeconds: 1.18,
+    activeSeconds: 1.1,
+    recoverySeconds: 1.08,
+    cooldownSeconds: 6.8,
+    controlRadius: 210,
+    controlDamage: 58,
+    splitThreshold: .45,
   },
 });
 
@@ -233,7 +253,7 @@ export function bossAnomalyAreaTargetIds({
       ? tuning.sweepRadius
       : kind === "futago"
         ? tuning.crossStrikeRadius
-        : 0;
+        : tuning.controlRadius;
   if (!(radius > 0)) return deepFreeze([]);
   return deepFreeze((Array.isArray(candidates) ? candidates : [])
     .filter(livingHuman)

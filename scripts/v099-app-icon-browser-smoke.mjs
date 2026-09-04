@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -30,7 +31,7 @@ page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
 page.on("requestfailed", (request) => diagnostics.requestFailures.push(`${request.url()} :: ${request.failure()?.errorText}`));
 page.on("response", (response) => { if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`); });
 
-await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 30_000 });
+await page.goto(legacyQaUrl(baseUrl), { waitUntil: "networkidle", timeout: 30_000 });
 const result = await page.evaluate(async ({ expectedPaths, identity }) => {
   const scope = new URL("./", location.href);
   const assetManifest = await fetch(new URL("asset-manifest.json", scope), { cache: "no-store" }).then((response) => {

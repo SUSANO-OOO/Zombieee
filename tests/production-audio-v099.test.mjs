@@ -14,6 +14,7 @@ import {
   battleSceneTransitionCrossfadeMs,
   sceneIdForScreen,
 } from "../app/productionAudio.js";
+import { CAMPAIGN_STAGES } from "../app/campaign.js";
 import {
   V099_ABILITY_ROOT_AUDIO_CUES,
   V099_MUSIC_AUDIO_CUES,
@@ -81,10 +82,18 @@ test("the exact 16-unit ready and timeline matrix matches design revision v2", (
 });
 
 test("stage and pressure maps are explicit for every campaign stage", () => {
-  assert.equal(Object.keys(BATTLE_STAGE_SCENE_BY_ID).length, 20);
-  assert.equal(Object.keys(BATTLE_PRESSURE_SCENE_BY_STAGE_ID).length, 20);
-  assert.equal(Object.values(BATTLE_PRESSURE_SCENE_BY_STAGE_ID).filter(Boolean).length, 20);
-  assert.deepEqual([...new Set(Object.values(BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE))].sort(), ["pressure-station", "pressure-surface"].sort());
+  const legacyStageIds = new Set(CAMPAIGN_STAGES.map(({ id }) => id));
+  const legacyStageScenes = Object.fromEntries(Object.entries(BATTLE_STAGE_SCENE_BY_ID)
+    .filter(([stageId]) => legacyStageIds.has(stageId)));
+  const legacyPressureScenes = Object.fromEntries(Object.entries(BATTLE_PRESSURE_SCENE_BY_STAGE_ID)
+    .filter(([stageId]) => legacyStageIds.has(stageId)));
+  const legacyNormalSceneIds = new Set(Object.values(legacyStageScenes));
+  const legacyPressureByNormalScene = Object.fromEntries(Object.entries(BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE)
+    .filter(([normalSceneId]) => legacyNormalSceneIds.has(normalSceneId)));
+  assert.equal(Object.keys(legacyStageScenes).length, 20);
+  assert.equal(Object.keys(legacyPressureScenes).length, 20);
+  assert.equal(Object.values(legacyPressureScenes).filter(Boolean).length, 20);
+  assert.deepEqual([...new Set(Object.values(legacyPressureByNormalScene))].sort(), ["pressure-station", "pressure-surface"].sort());
 });
 
 test("support pod lifecycle has distinct PR2-owned semantic cues", () => {

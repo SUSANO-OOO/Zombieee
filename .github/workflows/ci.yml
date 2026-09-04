@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "integration/**"
+      - "codex/v1.0.0-sol-design"
 
 permissions:
   contents: read
@@ -13,6 +14,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
   verify:
     name: PR Verify
@@ -37,7 +39,7 @@ jobs:
           test -n "$PR_BASE_SHA"
           test -n "$PR_HEAD_SHA"
           case "$PR_BASE_REF" in
-            main|integration/*) ;;
+            main|integration/*|codex/v1.0.0-sol-design) ;;
             *) echo "unsupported PR base ref: $PR_BASE_REF" >&2; exit 1 ;;
           esac
           PR_MERGE_SHA="$(git rev-parse HEAD)"
@@ -117,6 +119,7 @@ jobs:
           cp -a "$old_source/_site" "$old_site"
 
           candidate_version="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({ RELEASE_VERSION }) => process.stdout.write(RELEASE_VERSION))')"
+          printf 'CANDIDATE_RELEASE_VERSION=%s\n' "$candidate_version" >> "$GITHUB_ENV"
           GITHUB_PAGES_BASE_PATH=/Zombieee \
           GITHUB_PAGES_RELEASE_VERSION="$candidate_version" \
           GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
@@ -128,6 +131,7 @@ jobs:
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           PWA_PARTIAL_UPDATE_BROWSER: chromium
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
         run: npm run qa:pwa-partial-update
@@ -136,7 +140,7 @@ jobs:
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_PAGES_EXPECTED_VERSION: 0.9.9.5
+          V099_PAGES_EXPECTED_VERSION: ${{ env.CANDIDATE_RELEASE_VERSION }}
           V099_PAGES_EXPECTED_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720; do
@@ -202,10 +206,66 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v100-phase-g-production:
+    name: V1 Phase G Production Matrix
+    needs: verify
+    runs-on: macos-15-intel
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install locked Playwright browsers
+        run: npx playwright install chromium webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Capture ordered WebKit battle-extra trio (focused)
+        env:
+          DEBUG: pw:browser
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_ENGINE: webkit
+        run: |
+          set -euo pipefail
+          for sequence in 1 2 3; do
+            export V100_PHASE_G_SEQUENCE_ID="remote-trio-${sequence}"
+            export V100_PHASE_G_EVIDENCE_DIR="outputs/v100-phase-g-trio/remote-${sequence}"
+            npm run qa:v100-phase-g
+          done
+
+      - name: Upload Phase G production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-phase-g-webkit-battle-extra-focused
+          path: outputs/v100-phase-g-trio
+          if-no-files-found: error
+          retention-days: 14
+
   webkit-hosted:
     name: WebKit Hosted Runner Evidence
     needs: webkit-enemy-runtime-shard
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
 
     steps:
@@ -229,17 +289,21 @@ jobs:
         run: npm run build
 
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
+
+      - name: Verify pinned macOS WebKit runtime
+        id: webkit-runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
-        if: always()
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           ISSUE156_REMEDIATION_QA_ENGINES: webkit
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation/webkit
         run: npm run qa:issue156-remediation
 
       - name: Capture Issue 156 physical-width records evidence (WebKit)
-        if: always()
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           RECORDS_QA_ENGINES: webkit
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
@@ -247,6 +311,7 @@ jobs:
 
       - name: Capture Version 0.9.9.5 station final-canvas evidence (WebKit)
         env:
+          DEBUG: pw:browser
           V0995_VISUAL_QA_ENGINES: webkit
           V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity/webkit
         run: node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
@@ -271,7 +336,7 @@ jobs:
 
   webkit-enemy-runtime-shard:
     name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -279,17 +344,11 @@ jobs:
       matrix:
         shard:
           - name: "01"
-            kinds: "walker runner spitter crusher"
           - name: "02"
-            kinds: "shade abomination turned takuya"
           - name: "03"
-            kinds: "grappler ooze sprinter gate-eater"
           - name: "04"
-            kinds: "kurome mother ooguchi gairen"
           - name: "05"
-            kinds: "futago resonator cagewalker spindle"
           - name: "06"
-            kinds: "choir-knot pall-manta anchor-bloom"
 
     steps:
       - name: Checkout synthetic PR merge
@@ -311,15 +370,21 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Validate candidate-aware enemy runtime shard contract
+        run: node scripts/v0995-enemy-runtime-shards.mjs --check
+
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
+
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
         env:
           V0995_ENEMY_QA_ENGINES: webkit
-          V0995_ENEMY_QA_SHARD_KINDS: ${{ matrix.shard.kinds }}
         run: |
           set -euo pipefail
+          export V0995_ENEMY_QA_SHARD_KINDS="$(node scripts/v0995-enemy-runtime-shards.mjs --shard "${{ matrix.shard.name }}")"
           viewports=(844x340 844x390 1280x720)
           for kind in $V0995_ENEMY_QA_SHARD_KINDS; do
             for viewport in "${viewports[@]}"; do
@@ -341,8 +406,10 @@ jobs:
 
   webkit-viewport:
     name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }}, ${{ matrix.hud_state }})
-    needs: webkit-deployment-viewport
-    runs-on: ubuntu-latest
+    needs:
+      - webkit-deployment-viewport
+      - webkit-hosted
+    runs-on: macos-15-intel
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -386,7 +453,10 @@ jobs:
         run: npm run build
 
       - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
+        run: npx playwright install webkit
+
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture canonical HUD evidence
         env:
@@ -410,7 +480,11 @@ jobs:
   webkit-deployment-viewport:
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
     needs: webkit-stage3-audio
-    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    runs-on: macos-15-intel
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -437,10 +511,12 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Install locked Playwright browsers
+        run: npx playwright install webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
       - name: Build production application
         run: npm run build
-      - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
       - name: Capture final-canvas deployment evidence
         env:
           DEBUG: pw:browser
@@ -461,7 +537,10 @@ jobs:
   webkit-stage3-audio:
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
     needs: webkit-hosted
-    runs-on: ubuntu-latest
+    runs-on: macos-15-intel
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -489,12 +568,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install locked Playwright browsers
+        run: npx playwright install webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
+
+      - name: Install and verify GNU timeout
+        run: |
+          brew install coreutils
+          gtimeout --version
+          gtimeout --version | grep -F "GNU coreutils"
+
       - name: Build candidate production application
         if: matrix.audio_case != 'final-base'
         run: npm run build
-
-      - name: Install focused browser engine
-        run: npx playwright install --with-deps webkit
 
       - name: Capture bounded candidate Stage 3 audio route
         if: matrix.audio_case != 'final-base'
@@ -506,7 +593,7 @@ jobs:
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
         run: |
-          timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs
+          gtimeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs
 
       - name: Build exact PR base for the same bounded final fixture
         if: matrix.audio_case == 'final-base'
@@ -516,7 +603,8 @@ jobs:
         run: |
           set -euo pipefail
           base_source="$RUNNER_TEMP/stage3-final-base"
-          git worktree add --detach "$base_source" "$PR_BASE_SHA"
+          git -c safe.directory="$GITHUB_WORKSPACE" cat-file -e "$PR_BASE_SHA^{commit}"
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add --detach "$base_source" "$PR_BASE_SHA"
           (
             cd "$base_source"
             npm ci
@@ -532,7 +620,7 @@ jobs:
           P5_QA_BATTLE_AUDIO_CASES: final
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/final-base
-        run: timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs "$RUNNER_TEMP/stage3-final-base"
+        run: gtimeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-audio-bounded.mjs "$RUNNER_TEMP/stage3-final-base"
 
       - name: Upload bounded Stage 3 audio evidence
         if: always()

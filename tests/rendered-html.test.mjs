@@ -129,7 +129,7 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.9.5 release identity and the PWA gate", async () => {
+test("server-renders the 1.0.0 release identity and the PWA gate", async () => {
   // Since 0.9.8.1 the first painted screen is the PWA gate, not the title: a
   // visitor is invited to install before anything decides to fetch the game for
   // them. The game shell therefore mounts on the client once the gate resolves,
@@ -142,10 +142,10 @@ test("server-renders the 0.9.9.5 release identity and the PWA gate", async () =>
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.5<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜Version 1\.0\.0<\/title>/);
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 0\.9\.9\.5。"/);
+  assert.match(html, /content="[^"]*Version 1\.0\.0。"/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -277,9 +277,10 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
     readFile(new URL("../app/storyEvents.js", import.meta.url), "utf8"),
   ]);
   const battleUi = game.slice(game.indexOf("const healthPct"));
-  assert.match(battleUi, />移動拠点</);
+  assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
   assert.match(battleUi, /第\{hud\.phase\}段階/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
+  assert.match(battleUi, /召喚限度 \{hud\.summonedCount\}\/7/);
   assert.match(battleUi, /移動拠点一斉掃射/);
   assert.match(battleUi, />一時停止</);
   assert.doesNotMatch(battleUi, />CRAWLER<|>PAUSED<|>SEC<|aria-label="Survivor units"/);
@@ -578,9 +579,10 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
   assert.match(game, /g\.deployQueue\.length >= 3/);
-  assert.match(game, /格納庫満員 \/\/ 3/);
+  assert.match(game, /召喚限度到達 \/\/ 3/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
-  assert.match(game, /格納庫 \{hud\.deployQueue\}\/3/);
+  assert.match(game, /summonedCount: number/);
+  assert.match(game, /召喚限度 \{hud\.summonedCount\}\/7/);
   assert.match(game, /advanceLimitFor\(g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /支援ゲージ/);
   assert.match(game, /移動拠点一斉掃射/);
@@ -1232,19 +1234,23 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*target\.hp = Math\.max\(0, target\.hp - hit\.damage\)/);
   assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*addParticles\(g, target\.x, target\.y - 22/);
 
-  const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
+  const shotDraw = game.slice(game.indexOf("function drawAuthoredShotVfx"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("function drawAuthoredShotVfx")));
   assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
   assert.match(shotDraw, /const weaponProfile = weaponProfileForUnit\(weapon\)/);
   assert.match(shotDraw, /weaponProfile\.trailColor/);
+  assert.match(shotDraw, /drawCombatRibbon/);
+  assert.match(shotDraw, /drawCombatSplinters/);
+  assert.match(shotDraw, /drawProjectileCore/);
+  assert.match(shotDraw, /hooked-crowbar-arc/);
   assert.match(shotDraw, /const impactDelay =/);
   assert.match(shotDraw, /const hitStopSeconds =/);
   assert.match(shotDraw, /const impactProgress =/);
   assert.match(shotDraw, /const p = elapsed < impactDelay[\s\S]*elapsed \/ impactDelay[\s\S]*: 1/);
-  assert.match(shotDraw, /weaponProfile\.trail === "high-velocity"[\s\S]*weaponProfile\.trail === "burst-tracer"[\s\S]*weaponProfile\.trail === "bolt"/);
-  assert.match(shotDraw, /ctx\.moveTo\(x - ux \* tailLength, y - uy \* tailLength\);\s*ctx\.lineTo\(x, y\)/);
-  assert.match(shotDraw, /if \(p < \.3\)[\s\S]*const muzzle =[\s\S]*ctx\.closePath\(\);\s*ctx\.fill\(\)/);
+  assert.match(shotDraw, /trail === "high-velocity"[\s\S]*trail === "burst-tracer"[\s\S]*trail === "bolt"/);
   assert.match(shotDraw, /if \(shot\.casing && p < \.52\)[\s\S]*ctx\.fillStyle = "#d8a94f"/);
-  assert.match(shotDraw, /if \(impactProgress >= 0\)[\s\S]*weaponProfile\.impactRadius[\s\S]*ctx\.arc\(shot\.tx, shot\.ty/);
+  assert.match(shotDraw, /if \(impactProgress >= 0\)[\s\S]*drawCombatSplinters[\s\S]*weaponProfile\.impactRadius/);
+  assert.doesNotMatch(shotDraw, /ctx\.ellipse\(x, y/);
+  assert.doesNotMatch(shotDraw, /ctx\.ellipse\(shot\.tx, shot\.ty/);
   assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x, shot\.y\);\s*ctx\.lineTo\(shot\.tx, shot\.ty\)/);
   assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x - \d+, shot\.y\);\s*ctx\.lineTo\(shot\.x \+ \d+, shot\.y\)/);
 });

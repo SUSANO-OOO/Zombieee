@@ -1,0 +1,32 @@
+{
+  "contractId": "combat-red-panther-knife",
+  "evidence": {
+    "id": "combat-red-panther-knife",
+    "actor": "red-panther-knife",
+    "action": "knife-footwork",
+    "source": "right-hand-knife",
+    "contactImpact": "weapon-arc-contact",
+    "reaction": "target-flash-knock",
+    "seVfx": ["enemy-red-panther-knife-attack", "melee-hit"],
+    "state": "battle-normal",
+    "captureVariant": "stage21-panther-knife",
+    "runtimeActor": "red-panther-knife",
+    "runtimeSequence": ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"]
+  },
+  "runtimeEvidence": {
+    "id": "combat-red-panther-knife",
+    "captureVariant": "stage21-panther-knife",
+    "combatCausalProof": {
+      "ok": true,
+      "observed": {
+        "fighterActors": ["zombie:red-panther-shield"],
+        "attackingActors": ["zombie:red-panther-shield"],
+        "supportActors": [],
+        "vehicleActions": [],
+        "missionStageIds": ["stage-mugarian-special-operations-armory"],
+        "missionTypes": ["assault"],
+        "statusMarkers": []
+      }
+    }
+  }
+}

@@ -1,367 +1,146 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import assert from "node:assert/strict";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import { chromium } from "playwright";
-import {
-  CAMPAIGN_STAGE_IDS,
-  computeCampaignSaveIntegrity,
-  createDefaultCampaignSave,
-} from "../app/campaign.js";
-import { dismissInstallOffer, readSaveEnvironment } from "./pwa-gate-qa.mjs";
+import { createDefaultCampaignSave, computeCampaignSaveIntegrity, serializeCampaignSave } from "../app/campaign.js";
+import { createDefaultV100Save, serializeV100Save, isEligibleV100LegacyHistory, V100_PRIMARY_STORAGE_KEY as key } from "../app/v100Save.js";
+import { V100_STAGE_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
+import { releaseTitleForVersion } from "../app/releaseIdentity.js";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const publicUrl = process.env.GITHUB_PAGES_PUBLIC_URL?.trim();
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim();
 const expectedReleaseSha = process.env.GITHUB_PAGES_EXPECTED_RELEASE_SHA?.trim();
 const expectedRequestId = process.env.GITHUB_PAGES_EXPECTED_REQUEST_ID?.trim();
 const expectedIssueNumber = process.env.GITHUB_PAGES_EXPECTED_ISSUE_NUMBER?.trim();
-if (!publicUrl) throw new Error("GITHUB_PAGES_PUBLIC_URL is required");
-if (!expectedVersion || !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(expectedVersion)) {
-  throw new Error("GITHUB_PAGES_EXPECTED_VERSION must be an unprefixed release version");
-}
-if (!expectedReleaseSha || !/^[0-9a-f]{40}$/u.test(expectedReleaseSha)) {
-  throw new Error("GITHUB_PAGES_EXPECTED_RELEASE_SHA must be a 40-character lowercase SHA");
-}
-if (!expectedRequestId || !/^[0-9A-Za-z][0-9A-Za-z._-]{7,127}$/u.test(expectedRequestId)) {
-  throw new Error("GITHUB_PAGES_EXPECTED_REQUEST_ID must be a safe release request identifier");
-}
-if (!expectedIssueNumber || !/^[1-9]\d*$/u.test(expectedIssueNumber)) {
-  throw new Error("GITHUB_PAGES_EXPECTED_ISSUE_NUMBER must be a positive integer");
-}
-
-const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence-public");
-await mkdir(evidenceDir, { recursive: true });
-
+const localRehearsal = process.env.GITHUB_PAGES_LOCAL_REHEARSAL === "1";
+assert.ok(publicUrl, "GITHUB_PAGES_PUBLIC_URL is required");
+const base = new URL(publicUrl);
+if (localRehearsal) { assert.ok(["localhost", "127.0.0.1"].includes(base.hostname)); assert.equal(base.protocol, "http:"); }
+else assert.equal(base.href, "https://susano-ooo.github.io/Zombieee/", "Public QA is bound to the official URL");
+assert.match(expectedVersion ?? "", /^[1-9]\d*\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/u);
+assert.match(expectedReleaseSha ?? "", /^[0-9a-f]{40}$/u);
+assert.match(expectedRequestId ?? "", /^[0-9A-Za-z][0-9A-Za-z._-]{7,127}$/u);
+assert.match(expectedIssueNumber ?? "", /^[1-9]\d*$/u);
+const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence-public"); await mkdir(evidenceDir, { recursive: false });
+const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
+const oldKey = "nishijin-campaign-v1", legacyKeys = [oldKey, `${oldKey}::last-known-good`, `${oldKey}::pre-migration`];
+const legacy = createDefaultCampaignSave(); legacy.campaignStarted = true; legacy.caps = 777; legacy.revision = 955; legacy.updatedAt = "2026-08-08T00:00:00.000Z"; legacy.settings = { ...legacy.settings, bgmEnabled: false, sfxEnabled: false };
+const historical = { ...legacy, survival: { ...legacy.survival }, schemaVersion: 13, revision: 900, updatedAt: "2026-07-29T00:00:00.000Z" };
+delete historical.employmentNoticeReceipts; delete historical.seenEmploymentNoticeIds; delete historical.survival.highestReachedWave; historical.integrity = computeCampaignSaveIntegrity(historical);
+const legacyBytes = serializeCampaignSave(legacy), historicalBytes = JSON.stringify(historical);
+assert.ok(isEligibleV100LegacyHistory(legacyBytes)); assert.ok(isEligibleV100LegacyHistory(historicalBytes));
+const current = createDefaultV100Save({ playerName: "公開再開確認", settings: { bgmEnabled: false, sfxEnabled: false } });
+current.campaignStarted = true; current.caps = 37; current.completedStageIds = [V100_STAGE_IDS[0]]; current.availableStageIds = V100_STAGE_IDS.slice(0, 2); current.bestStars = { [V100_STAGE_IDS[0]]: 2 }; current.flowState.phase = "map"; current.flowState.destination = "map";
+const fixtures = [
+  { profile: "fresh", scenario: "normal", width: 1280, height: 720 },
+  { profile: "v0.9.0-schema13", scenario: "normal", width: 844, height: 390 },
+  { profile: "v0.9.9.5", scenario: "normal", width: 844, height: 340 },
+  { profile: "v1-existing", scenario: "normal", width: 844, height: 390 },
+  ...["idb-delay", "idb-blocked", "decode-hang", "slow-network", "critical-image-hold"].map(scenario => ({ profile: "v0.9.9.5", scenario, width: 844, height: 390 })),
+];
+const report = { localRehearsal, url: publicUrl, expectedVersion, expectedReleaseSha, expectedRequestId, expectedIssueNumber,
+  scope: "Anonymous network-origin V1 root/save/Stage entry. Disclosed save and fault fixtures; service workers blocked. Not installed-PWA, natural campaign, native audio or physical-device acceptance.", sources: [], results: [], build: localRehearsal ? await productionBuildIdentity() : null };
+for (const file of ["scripts/github-pages-public-smoke.mjs", "app/campaign.js", "app/campaignStorage.js", "app/v100Save.js", "app/v100CampaignStorage.js", "app/AshfallGame.tsx", "app/globals.css"]) report.sources.push({ file, sha256: sha(await readFile(new URL(`../${file}`, import.meta.url))) });
 const browser = await chromium.launch({ headless: true });
-const results = [];
-const saveKey = "nishijin-campaign-v1";
-const currentFixture = {
-  ...createDefaultCampaignSave(),
-  campaignStarted: true,
-  readStoryEventIds: ["prologue-opening-v070", "prologue-summary-v070"],
-  revision: 951,
-  updatedAt: "2026-07-31T00:00:00.000Z",
-};
-currentFixture.unlockedStageIds = [
-  ...new Set([...currentFixture.unlockedStageIds, CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]),
-];
-currentFixture.integrity = computeCampaignSaveIntegrity(currentFixture);
-const release090Fixture = {
-  ...currentFixture,
-  survival: { ...currentFixture.survival },
-  schemaVersion: 13,
-  revision: 900,
-  updatedAt: "2026-07-29T00:00:00.000Z",
-};
-delete release090Fixture.employmentNoticeReceipts;
-delete release090Fixture.seenEmploymentNoticeIds;
-delete release090Fixture.survival.highestReachedWave;
-release090Fixture.integrity = computeCampaignSaveIntegrity(release090Fixture);
-const publicCases = [
-  { viewport: { width: 1280, height: 720 }, saveProfile: "fresh", scenario: "normal" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.0-schema13", scenario: "normal" },
-  { viewport: { width: 844, height: 340 }, saveProfile: "v0.9.5-schema14", scenario: "normal" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "idb-delay" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "idb-blocked" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "decode-hang" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "slow-network" },
-  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "optional-hang" },
-];
-
-async function advanceToMap(page) {
-  for (let step = 0; step < 12; step += 1) {
-    if (await page.locator(".map-screen").isVisible()) return;
-    if (await page.locator(".event-screen").isVisible()) {
-      await page.getByRole("button", { name: "スキップ", exact: true }).click();
-      await page.getByRole("button", { name: "この会話をスキップ", exact: true }).click();
-      await page.waitForTimeout(100);
-      continue;
-    }
-    await page.waitForTimeout(100);
-  }
-  await page.locator(".map-screen").waitFor({ state: "visible", timeout: 30_000 });
+const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && document.documentElement.dataset.pwaSaveMutationPending === "false", null, { timeout: 30000 });
+const mirror = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), key);
+async function shot(page, record, label) { const file = path.join(evidenceDir, `${record.name}-${label}.png`), bytes = await page.screenshot({ path: file, animations: "disabled" }); record.images.push({ file, sha256: sha(bytes), width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }); }
+async function boot(page, url, reload = false) {
+  const response = reload ? await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 }) : await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+  assert.ok(response?.ok(), `Document HTTP ${response?.status()}`);
+  await page.waitForFunction(() => document.querySelector('.v100-shell, [role=dialog][aria-label="ゲームデータの準備"] button'), null, { timeout: 30000 });
+  const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); if (await offer.isVisible()) await offer.click();
 }
-
-async function advanceToBattle(page) {
-  for (let step = 0; step < 12; step += 1) {
-    if (await page.locator('.game-shell[data-screen="battle"]').isVisible()) return;
-    if (await page.locator(".event-screen").isVisible()) {
-      await page.getByRole("button", { name: "スキップ", exact: true }).click();
-      await page.getByRole("button", { name: "この会話をスキップ", exact: true }).click();
-      await page.waitForTimeout(100);
-      continue;
-    }
-    await page.waitForTimeout(100);
+async function advance(page, selector, max) {
+  for (let i = 0; i < max; i++) {
+    await ready(page); if (await page.locator(selector).isVisible()) return;
+    const skip = page.getByRole("button", { name: "スキップ", exact: true });
+    await (await skip.isVisible() ? skip : page.locator(".v100-event-actions .v100-primary")).click();
   }
-  await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout: 30_000 });
+  throw new Error(`Did not reach ${selector} within ${max} ordinary story transitions`);
 }
-
+async function nativeSave(page) {
+  return page.evaluate(key => new Promise((resolve, reject) => {
+    const request = indexedDB.open(key); request.onerror = () => reject(request.error);
+    request.onsuccess = () => { const db = request.result, tx = db.transaction("saves", "readonly"), get = tx.objectStore("saves").get("current"); let value;
+      get.onsuccess = () => { value = get.result; }; tx.oncomplete = () => { db.close(); resolve({ origin: location.origin, database: db.name, record: value }); }; tx.onabort = () => reject(tx.error); };
+  }), key);
+}
 try {
-  for (const { viewport, saveProfile, scenario } of publicCases) {
-    const context = await browser.newContext({
-      viewport,
-      serviceWorkers: "block",
-    });
-    if (saveProfile !== "fresh") {
-      await context.addInitScript(({ key, serialized }) => {
-        localStorage.setItem(key, serialized);
-      }, {
-        key: saveKey,
-        serialized: JSON.stringify(saveProfile === "v0.9.0-schema13" ? release090Fixture : currentFixture),
-      });
-    }
-    if (scenario === "idb-delay") {
-      await context.addInitScript(() => {
-        Object.defineProperty(window, "indexedDB", {
-          configurable: true,
-          value: { open: () => ({}) },
-        });
-      });
-    }
-    if (scenario === "idb-blocked") {
-      await context.addInitScript(() => {
-        Object.defineProperty(window, "indexedDB", {
-          configurable: true,
-          value: {
-            open() {
-              const request = {};
-              queueMicrotask(() => request.onblocked?.());
-              return request;
-            },
-          },
-        });
-      });
-    }
-    if (scenario === "decode-hang") {
-      await context.addInitScript(() => {
-        HTMLImageElement.prototype.decode = () => new Promise(() => {});
-      });
-    }
-    const page = await context.newPage();
-    await page.setExtraHTTPHeaders({ "cache-control": "no-cache" });
-    if (scenario === "slow-network") {
-      await page.route("**/*.{png,webp}", async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, 350));
-        await route.continue();
-      });
-    }
-    if (scenario === "optional-hang") {
-      await page.route("**/tactical-drop-pod-v1.png", () => {});
-    }
-
-    const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] };
-    page.on("console", (message) => {
-      if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
-      if (message.type() === "warning") diagnostics.warnings.push(message.text());
-    });
-    page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
-    page.on("requestfailed", (request) => {
-      // ERR_ABORTED is a cancellation, not a fault. The game keeps pulling
-      // battle art for as long as the page lives, so against the published
-      // origin there is always something in flight when a scenario ends, and
-      // which asset gets cancelled is pure timing. Excluding it is safe because
-      // the response watcher below catches anything genuinely missing or broken
-      // as an HTTP error, which a cancelled request never becomes.
-      const reason = request.failure()?.errorText ?? "unknown";
-      if (reason.includes("net::ERR_ABORTED")) return;
-      diagnostics.requestFailures.push(`${request.url()} :: ${reason}`);
-    });
-    page.on("response", (response) => {
-      if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
-    });
-
-    const target = new URL(publicUrl);
-    target.searchParams.set("qa_release", expectedReleaseSha);
-    target.searchParams.set("qa_request", expectedRequestId);
-    target.searchParams.set("qa_viewport", `${viewport.width}x${viewport.height}`);
-    target.searchParams.set("qa_scenario", scenario);
-
-    let navigation = null;
-    let lastError = null;
-    for (let attempt = 1; attempt <= 6; attempt += 1) {
-      Object.values(diagnostics).forEach((entries) => { entries.length = 0; });
-      try {
-        navigation = await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 120_000 });
-        if (navigation?.ok()) break;
-        lastError = new Error(`HTTP ${navigation?.status() ?? "unknown"}`);
-      } catch (error) {
-        lastError = error;
+  for (const fixture of fixtures) {
+    const { profile, scenario, width, height } = fixture, oldBytes = profile === "v0.9.0-schema13" ? historicalBytes : profile === "v0.9.9.5" ? legacyBytes : null;
+    const record = { name: `${profile}-${scenario}-${width}x${height}`, fixture, status: "running", images: [], diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] }, teardownDiagnostics: [], legacyWrites: [], criticalRequests: 0 }; report.results.push(record);
+    const context = await browser.newContext({ viewport: { width, height }, hasTouch: width < 1000, serviceWorkers: "block" });
+    await context.addInitScript(({ key, oldKey, oldBytes, currentBytes, profile, scenario, legacyKeys }) => {
+      if (!sessionStorage.getItem("v1-public-fixture")) { if (oldBytes) localStorage.setItem(oldKey, oldBytes); if (profile === "v1-existing") localStorage.setItem(key, currentBytes); sessionStorage.setItem("v1-public-fixture", "yes"); }
+      window.__PUBLIC_LEGACY_WRITES__ = [];
+      for (const method of ["setItem", "removeItem", "clear"]) { const native = Storage.prototype[method]; Storage.prototype[method] = function (...args) { if (this === localStorage && (method === "clear" || legacyKeys.includes(String(args[0])))) window.__PUBLIC_LEGACY_WRITES__.push({ store: "local", method, key: args[0] }); return native.apply(this, args); }; }
+      for (const method of ["put", "add", "delete", "clear"]) { const native = IDBObjectStore.prototype[method]; IDBObjectStore.prototype[method] = function (...args) { if (this.transaction.db.name === "nishijin-campaign-backup") window.__PUBLIC_LEGACY_WRITES__.push({ store: "indexed", method }); return native.apply(this, args); }; }
+      if ((scenario === "idb-delay" || scenario === "idb-blocked") && !sessionStorage.getItem("v1-public-idb-restored")) {
+        const native = IDBFactory.prototype.open; window.__PUBLIC_IDB_OPEN_COUNT__ = 0;
+        IDBFactory.prototype.open = function (...args) { if (args[0] !== key) return native.apply(this, args); window.__PUBLIC_IDB_OPEN_COUNT__++; const request = {}; if (scenario === "idb-blocked") queueMicrotask(() => request.onblocked?.()); return request; };
+        window.__PUBLIC_RESTORE_IDB__ = () => { IDBFactory.prototype.open = native; sessionStorage.setItem("v1-public-idb-restored", "yes"); };
       }
-      await page.waitForTimeout(5_000);
-    }
-    if (!navigation?.ok()) throw new Error(`Published document failed after retries: ${String(lastError)}`);
-
-    // Since 0.9.7 a browser tab meets the install invitation before the title.
-    // These scenarios are about the published game itself, so decline it and
-    // play from the network. This has to happen before the title is awaited,
-    // because the invitation is what stands in its place. The invitation has its
-    // own coverage in the PWA matrix.
-    await dismissInstallOffer(page);
-
-    await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
-    const pageTitle = await page.title();
-    if (!pageTitle.includes(expectedVersion)) {
-      throw new Error(`Published title does not identify Version ${expectedVersion}: ${pageTitle}`);
-    }
-    const versionMeta = await page.locator('meta[name="github-pages-version"]').getAttribute("content");
-    const releaseMeta = await page.locator('meta[name="github-pages-release"]').getAttribute("content");
-    const requestMeta = await page.locator('meta[name="github-pages-request-id"]').getAttribute("content");
-    const issueMeta = await page.locator('meta[name="github-pages-issue"]').getAttribute("content");
-    if (versionMeta !== expectedVersion) {
-      throw new Error(`Published version metadata is ${versionMeta ?? "missing"}, expected ${expectedVersion}`);
-    }
-    if (releaseMeta !== expectedReleaseSha) {
-      throw new Error(`Published release metadata is ${releaseMeta ?? "missing"}, expected ${expectedReleaseSha}`);
-    }
-    if (requestMeta !== expectedRequestId) {
-      throw new Error(`Published request metadata is ${requestMeta ?? "missing"}, expected ${expectedRequestId}`);
-    }
-    if (issueMeta !== expectedIssueNumber) {
-      throw new Error(`Published issue metadata is ${issueMeta ?? "missing"}, expected ${expectedIssueNumber}`);
-    }
-
-    const startButton = page.locator(".title-start");
-    await startButton.waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('.game-shell:not([data-save-persistence="checking"])').waitFor({
-      state: "visible",
-      timeout: 30_000,
-    });
-    // Since 0.9.7 the save environment lives behind データ管理 rather than across
-    // the title. Reading it there keeps this assertion - that the published site
-    // stores under its own origin - exactly as strong as it was.
-    const saveEnvironment = await readSaveEnvironment(page);
-    if (saveEnvironment.kind !== "github-pages" || saveEnvironment.origin !== new URL(publicUrl).origin) {
-      throw new Error(`Published save environment is incorrect: ${JSON.stringify(saveEnvironment)}`);
-    }
-    if (!(await startButton.isEnabled())) {
-      throw new Error("Published title start button stayed disabled after save hydration");
-    }
-    const savePersistence = await page.locator(".game-shell").getAttribute("data-save-persistence");
-    if (scenario === "idb-delay" || scenario === "idb-blocked") {
-      if (savePersistence !== "recovered") {
-        throw new Error(`${scenario} did not settle as recovered: ${savePersistence}`);
+      if (scenario === "decode-hang") { const native = HTMLImageElement.prototype.decode; window.__PUBLIC_DECODE_CALLS__ = 0; window.__PUBLIC_RESTORE_DECODE__ = () => { HTMLImageElement.prototype.decode = native; }; HTMLImageElement.prototype.decode = () => { window.__PUBLIC_DECODE_CALLS__++; return new Promise(() => {}); }; }
+    }, { key, oldKey, oldBytes, currentBytes: serializeV100Save(current), profile, scenario, legacyKeys });
+    const page = await context.newPage(); page.setDefaultTimeout(30000); await page.setExtraHTTPHeaders({ "cache-control": "no-cache" });
+    let teardown = false, releaseCritical = null;
+    const diagnostic = (type, value) => { if (teardown) record.teardownDiagnostics.push({ type, value }); else record.diagnostics[type].push(value); };
+    page.on("console", m => { if (m.type() === "error") diagnostic("consoleErrors", m.text()); if (m.type() === "warning") diagnostic("warnings", m.text()); });
+    page.on("pageerror", e => diagnostic("pageErrors", String(e))); page.on("requestfailed", r => diagnostic("requestFailures", { url: r.url(), failure: r.failure(), phase: record.phase ?? "initial-entry" })); page.on("response", r => { if (r.status() >= 400) diagnostic("httpErrors", { url: r.url(), status: r.status() }); });
+    if (scenario === "slow-network") await page.route("**/*.{png,webp}", async route => { await new Promise(resolve => setTimeout(resolve, 350)); await route.continue(); });
+    if (scenario === "critical-image-hold") { const hold = new Promise(resolve => { releaseCritical = resolve; }); await page.route("**/tactical-drop-pod-v1.png", async route => { record.criticalRequests++; await hold; await route.continue(); }); }
+    try {
+      const target = new URL(publicUrl); target.searchParams.set("qa_release", expectedReleaseSha); target.searchParams.set("qa_request", expectedRequestId); target.searchParams.set("qa_scenario", scenario);
+      await boot(page, target.href);
+      const pageTitle = await page.title(); assert.ok(pageTitle.includes(expectedVersion)); assert.equal(pageTitle, releaseTitleForVersion(expectedVersion));
+      record.metadata = {};
+      for (const [name, expected] of Object.entries({ "github-pages-version": expectedVersion, "github-pages-release": expectedReleaseSha, "github-pages-request-id": expectedRequestId, "github-pages-issue": expectedIssueNumber })) { const value = await page.locator(`meta[name="${name}"]`).getAttribute("content"); assert.equal(value, expected); record.metadata[name] = value; }
+      if (scenario === "idb-delay" || scenario === "idb-blocked") {
+        await page.getByRole("region", { name: "セーブの復旧", exact: true }).waitFor(); assert.equal(await mirror(page), null); assert.equal(await page.evaluate(k => localStorage.getItem(k), oldKey), oldBytes);
+        record.blockedOpens = await page.evaluate(() => window.__PUBLIC_IDB_OPEN_COUNT__); assert.ok(record.blockedOpens > 0); await shot(page, record, "storage-blocked");
+        await page.evaluate(() => window.__PUBLIC_RESTORE_IDB__()); await page.getByRole("button", { name: "もう一度確認する", exact: true }).click();
       }
-      if (!(await page.locator(".save-persistence-warning").isVisible())) {
-        throw new Error(`${scenario} did not expose a player-facing degraded-storage reason`);
+      await ready(page);
+      if (oldBytes) { const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page); }
+      record.initial = await mirror(page); assert.equal(record.initial.caps, oldBytes ? 180 : profile === "v1-existing" ? 37 : 0);
+      assert.deepEqual(record.initial.completedStageIds, profile === "v1-existing" ? current.completedStageIds : []);
+      if (profile !== "v1-existing") { await page.locator("#v100-player-name").fill("公開確認"); await page.getByRole("button", { name: "この名前で作戦を始める", exact: true }).click(); }
+      await advance(page, ".v100-map-layout", 220); await ready(page); record.beforeReload = await mirror(page); record.legacyWrites.push(...await page.evaluate(() => window.__PUBLIC_LEGACY_WRITES__));
+      if (scenario === "slow-network") { record.phase = "slow-map-quiescence"; await page.waitForLoadState("networkidle", { timeout: 30000 }); }
+      record.phase = "intentional-map-reload"; await boot(page, target.href, true); record.phase = "after-map-reload"; await ready(page); record.afterReload = await mirror(page); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.deepEqual(record.afterReload.completedStageIds, record.beforeReload.completedStageIds); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
+      assert.equal(await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+      if (oldBytes) { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); }
+      record.native = await nativeSave(page); assert.equal(record.native.origin, base.origin); assert.equal(record.native.database, key); assert.deepEqual(JSON.parse(record.native.record.serialized), record.afterReload);
+      record.dimensions = await page.evaluate(() => ({ width: innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth })); assert.equal(record.dimensions.documentWidth, width); assert.equal(record.dimensions.bodyWidth, width); await shot(page, record, "map");
+      const stageNumber = profile === "v1-existing" ? 2 : 1;
+      if (stageNumber === 2) { const nodes = page.locator(".v100-map-node.available"); assert.equal(await nodes.count(), 2); await nodes.nth(1).click(); }
+      await page.getByRole("button", { name: "この作戦を編成", exact: true }).click(); await advance(page, ".v100-formation-panel", 40); await shot(page, record, "formation");
+      await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
+      if (scenario === "decode-hang") {
+        await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "error", null, { timeout: 150000 });
+        const recovery = page.getByRole("region", { name: "戦闘データの準備", exact: true }); await recovery.waitFor();
+        assert.equal(await page.locator("canvas.battlefield.active").count(), 0); record.failedImages = Number(await page.locator(".game-shell").getAttribute("data-asset-failed")); assert.ok(record.failedImages > 0);
+        await shot(page, record, "decode-blocked"); await page.evaluate(() => window.__PUBLIC_RESTORE_DECODE__()); await recovery.getByRole("button", { name: "失敗・待機中の画像を再読み込み", exact: true }).click();
       }
-      if (!(await page.getByRole("button", { name: "保存先を再確認", exact: true }).isEnabled())) {
-        throw new Error(`${scenario} did not expose an enabled storage retry control`);
+      if (scenario === "critical-image-hold") {
+        await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "loading");
+        const deadline = Date.now() + 30000; while (record.criticalRequests === 0 && Date.now() < deadline) await page.waitForTimeout(50);
+        assert.ok(record.criticalRequests > 0); assert.notEqual(await page.evaluate(() => document.documentElement.dataset.assetLoadState), "ready"); assert.equal(await page.locator("canvas.battlefield.active").count(), 0); await page.getByRole("region", { name: "戦闘データの準備", exact: true }).waitFor(); await shot(page, record, "critical-held"); releaseCritical();
       }
-    }
-    const migrationNotice = page.locator(".migration-notice");
-    if (await migrationNotice.isVisible()) {
-      await migrationNotice.getByRole("button", { name: "内容を確認", exact: true }).click();
-    }
-
-    const dimensions = await page.evaluate(() => ({
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      documentWidth: document.documentElement.scrollWidth,
-      documentHeight: document.documentElement.scrollHeight,
-      bodyWidth: document.body.scrollWidth,
-      bodyHeight: document.body.scrollHeight,
-    }));
-    if (dimensions.documentWidth !== viewport.width || dimensions.bodyWidth !== viewport.width) {
-      throw new Error(`Horizontal overflow at ${viewport.width}x${viewport.height}: ${JSON.stringify(dimensions)}`);
-    }
-
-    await page.screenshot({
-      path: path.join(evidenceDir, `github-pages-public-title-${viewport.width}x${viewport.height}-${scenario}.png`),
-      fullPage: true,
-    });
-    await startButton.click();
-    await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 60_000 });
-    await advanceToMap(page);
-    const openStageNodes = page.locator(".stage-node.open");
-    const openStageCount = await openStageNodes.count();
-    if (openStageCount === 0) throw new Error("No selectable Stage was available on the published map");
-    if (saveProfile !== "fresh" && openStageCount < 2) {
-      throw new Error(`${saveProfile} fixture did not expose a second Stage for selection-change QA`);
-    }
-    const selectedStageNode = openStageNodes.nth(openStageCount > 1 ? 1 : 0);
-    const selectedStageName = (await selectedStageNode.locator("b").innerText()).trim();
-    await selectedStageNode.click();
-    await page.locator(".stage-detail h2").filter({ hasText: selectedStageName }).waitFor({
-      state: "visible",
-      timeout: 30_000,
-    });
-    const prepareButton = page.getByRole("button", { name: "この作戦を編成", exact: true });
-    if (!(await prepareButton.isEnabled())) throw new Error("Stage prepare button is disabled");
-    await prepareButton.click();
-    await page.locator(".formation-screen").waitFor({ state: "visible", timeout: 30_000 });
-    // Must outlast ASSET_LOAD_SESSION_DEADLINE_MS, or this waits less time than
-    // the app is entitled to take and reports a timeout of its own making. The
-    // critical unit sheets are 14.1MB from the published origin.
-    await page.locator('.game-shell[data-assets-state="ready"], .game-shell[data-assets-state="error"]').waitFor({
-      state: "visible",
-      timeout: 150_000,
-    });
-    const assetState = await page.locator(".game-shell").getAttribute("data-assets-state");
-    if (assetState !== "ready") throw new Error(`Published critical assets did not become ready: ${assetState}`);
-    const deployButton = page.locator(".formation-footer .campaign-primary");
-    // The button enables on the same state change this just awaited, so give
-    // React its render rather than sampling the instant the attribute flips.
-    await page.waitForFunction(() => {
-      const button = document.querySelector(".formation-footer .campaign-primary");
-      return Boolean(button) && !button.disabled;
-    }, null, { timeout: 30_000 }).catch(() => {});
-    if (!(await deployButton.isEnabled())) throw new Error("Published deploy button stayed disabled");
-    await page.screenshot({
-      path: path.join(evidenceDir, `github-pages-public-loadout-${viewport.width}x${viewport.height}-${scenario}.png`),
-      fullPage: true,
-    });
-    await deployButton.click();
-    await advanceToBattle(page);
-    await page.screenshot({
-      path: path.join(evidenceDir, `github-pages-public-battle-${viewport.width}x${viewport.height}-${scenario}.png`),
-      fullPage: true,
-    });
-
-    // This run blocks service workers on purpose (see `serviceWorkers: "block"`
-    // above) so the published game flow is exercised straight from the network
-    // rather than from a worker cache. Since Version 0.9.6 the page registers
-    // one, so Chromium now reports that the harness refused it. That warning is
-    // this harness describing its own setting, not a fault in the site, and the
-    // worker itself is covered by the PWA browser matrix.
-    const ALLOWED_WARNINGS = [
-      "was preloaded using link preload but not used",
-      "Service Worker registration blocked by Playwright",
-    ];
-    const unexpectedWarnings = diagnostics.warnings.filter(
-      (warning) => !ALLOWED_WARNINGS.some((allowed) => warning.includes(allowed)),
-    );
-    if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || diagnostics.httpErrors.length || unexpectedWarnings.length) {
-      throw new Error(`Published browser diagnostics failed: ${JSON.stringify({ ...diagnostics, warnings: unexpectedWarnings })}`);
-    }
-
-    results.push({
-      viewport,
-      saveProfile,
-      scenario,
-      selectedStageName,
-      title: pageTitle,
-      versionMeta,
-      releaseMeta,
-      requestMeta,
-      issueMeta,
-      saveEnvironment,
-      savePersistence,
-      assetState,
-      reachedBattle: true,
-      dimensions,
-      warningCount: diagnostics.warnings.length,
-    });
-    await context.close();
+      await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 150000 });
+      await page.locator('.game-shell[data-screen="battle"]').waitFor(); assert.equal(await page.locator(".v100-shell").getAttribute("data-v100-stage"), String(stageNumber));
+      record.stageNumber = stageNumber; record.assetState = await page.evaluate(() => document.documentElement.dataset.assetLoadState); record.reachedBattle = true;
+      if (scenario === "decode-hang") { record.decodeCalls = await page.evaluate(() => window.__PUBLIC_DECODE_CALLS__); assert.ok(record.decodeCalls > 0); }
+      assert.equal(await page.evaluate(k => localStorage.getItem(k), oldKey), oldBytes); record.legacyWrites.push(...await page.evaluate(() => window.__PUBLIC_LEGACY_WRITES__)); assert.deepEqual(record.legacyWrites, []);
+      await shot(page, record, "battle");
+      for (const name of ["consoleErrors", "pageErrors", "requestFailures", "httpErrors"]) assert.deepEqual(record.diagnostics[name], [], name);
+      assert.deepEqual(record.diagnostics.warnings.filter(w => !w.includes("was preloaded using link preload but not used") && !w.includes("Service Worker registration blocked by Playwright")), []);
+      record.status = "passed"; console.log(JSON.stringify({ name: record.name, status: record.status, images: record.images.length }));
+    } catch (error) { record.status = "failed"; record.error = String(error); record.stack = error.stack; await shot(page, record, "failure").catch(() => {}); throw error; }
+    finally { teardown = true; releaseCritical?.(); await context.close(); await writeFile(path.join(evidenceDir, "summary.json"), JSON.stringify(report, null, 2)); }
   }
-} finally {
-  await browser.close();
-}
-
-const summary = {
-  url: publicUrl,
-  expectedVersion,
-  expectedReleaseSha,
-  expectedRequestId,
-  expectedIssueNumber,
-  results,
-};
-await writeFile(path.join(evidenceDir, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
-console.log(JSON.stringify(summary, null, 2));
+} finally { await browser.close(); await writeFile(path.join(evidenceDir, "summary.json"), JSON.stringify(report, null, 2)); }
+console.log(JSON.stringify({ status: "passed", localRehearsal, cases: report.results.length, summary: path.join(evidenceDir, "summary.json") }));

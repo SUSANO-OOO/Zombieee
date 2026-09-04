@@ -44,8 +44,26 @@ import {
   requestFromServiceWorker,
 } from "./pwaRuntime.js";
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
+import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
+
+function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | "unsupported") {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.pwaManifestState = state;
+}
+
+/**
+ * The manifest is metadata only and boot marks the game usable before this
+ * lookup starts. Do not race it against a synthetic deadline: a slow hosted
+ * WebKit response can turn the losing promise into a browser-level cancelled
+ * request even though the production route mounted correctly. A genuinely
+ * unavailable manifest is handled by the existing catch path without blocking
+ * the title, map, or battle surfaces.
+ */
+async function fetchPublishedManifestBounded(baseUrl: string) {
+  return fetchPublishedManifest({ baseUrl });
+}
 
 function readSafetyFromDocument() {
   if (typeof document === "undefined") return {};
@@ -166,12 +184,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [booted, setBooted] = useState(false);
   // A standalone launch cannot decide whether a fully cached candidate still
   // needs its generation pointer until the published manifest has either
-  // arrived or failed its bounded lookup. This closes the reload-time gap where
+  // arrived or failed its lookup. This closes the reload-time gap where
   // an old active generation could briefly mount before commit recovery ran.
   const [publishedChecked, setPublishedChecked] = useState(false);
 
   const baseUrl = useMemo(
-    () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
+    () => (typeof window === "undefined" ? "/" : resolvePwaBaseUrl(window)),
     [],
   );
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
@@ -201,18 +219,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
    */
   const loadPublishedManifest = useCallback(async () => {
     setError(null);
+    setPublishedManifestState("loading");
     try {
-      // Bounded: the title waits on this during boot, so an unanswered request
-      // must not hold the screen indefinitely.
-      const published = await fetchPublishedManifest({
-        baseUrl,
-        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(10_000) : undefined,
-      });
+      // The shell is already usable while this metadata round trip runs; the
+      // fetch itself is never artificially aborted.
+      const published = await fetchPublishedManifestBounded(baseUrl);
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
+      setPublishedManifestState("ready");
       return true;
     } catch {
       setManifestUnreachable(true);
+      setPublishedManifestState("unreachable");
       return false;
     } finally {
       setPublishedChecked(true);
@@ -225,6 +243,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     (async () => {
       if (!isPwaSupported(window)) {
         setSupported(false);
+        setPublishedManifestState("unsupported");
         return;
       }
       setSupported(true);
@@ -365,6 +384,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
+  const deferAssetNoticeForEvent = String(safety.screen ?? "title") === "event";
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -680,7 +700,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // device is. Without it the very first render is unblocked, the game mounts,
   // and title art and music are fetched before the player has been asked
   // anything - which is precisely what a browser tab must not do here. A
-  // standalone launch also waits for the bounded published-manifest lookup:
+  // standalone launch also waits for the published-manifest lookup:
   // otherwise a complete uncommitted candidate could slip through on reload.
   // If the lookup fails offline, `publishedChecked` still releases the retained
   // active generation rather than treating a network absence as data loss.
@@ -893,14 +913,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Repair and update notices never block play; they sit above the game. */}
-      {!blocking && phase === "repair-required" && installPlan && (
+      {!blocking && phase === "repair-required" && installPlan && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice" role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
           <button type="button" onClick={startInstall}>不足分だけ再取得</button>
         </aside>
       )}
 
-      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && (
+      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice pwa-update" role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
           <p>{updateCopy.downloadLine}</p>

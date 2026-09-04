@@ -70,6 +70,10 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060:public/asset-manifest.json",
   ], { encoding: "utf8" }));
   const current = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+  const v100ApprovedPaths = new Set(current.assets
+    .filter(({ path }) => path.startsWith("/art/v100/"))
+    .map(({ path }) => path));
+  assert.equal(v100ApprovedPaths.size, 44, "V1 adds exactly the approved 44 runtime assets");
   const finalRemediationPaths = new Set([
     "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
     "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
@@ -120,6 +124,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .map(({ path, hash }) => [path, hash]));
   const currentNonIcons = new Map(current.assets
     .filter(({ path }) => !path.startsWith("/icons/"))
+    .filter(({ path }) => !v100ApprovedPaths.has(path))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))
     .map(({ path, hash }) => [path, hash]));

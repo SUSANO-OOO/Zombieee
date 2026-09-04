@@ -19,6 +19,7 @@ import {
   fitSpriteBattleDisplaySize,
   fitSpriteDisplaySize,
   spriteFrameFor,
+  spriteBattleDisplaySizeFor,
   spriteKinds,
   spriteSheetPath,
   spriteStatesFor,
@@ -74,6 +75,27 @@ test("battle display boxes preserve every authored source aspect ratio", () => {
   }
 });
 
+test("TAKUYA-Ω keeps a giant final-form envelope through attack and death", () => {
+  const maximum = spriteBattleDisplaySizeFor("takuya-omega");
+  assert.deepEqual(maximum, { w: 320, h: 260 });
+  const bodyHeight = (state) => {
+    const frame = spriteFrameFor("takuya-omega", state, "left");
+    return fitSpriteBattleDisplaySize("takuya-omega", frame, maximum).h
+      * frame.contentRect.h / frame.sourceRect.h;
+  };
+  const idle = spriteFrameFor("takuya-omega", "idle", "left");
+  const attack = spriteFrameFor("takuya-omega", "attack-a", "left");
+  const death = spriteFrameFor("takuya-omega", "death", "left");
+  const fittedAttack = fitSpriteBattleDisplaySize("takuya-omega", attack, maximum);
+  const fittedDeath = fitSpriteBattleDisplaySize("takuya-omega", death, maximum);
+  assert.ok(bodyHeight("idle") >= 259);
+  assert.ok(fittedAttack.w >= fittedDeath.w - 1e-9);
+  assert.ok(attack.contentRect.w >= idle.contentRect.w);
+  assert.ok(death.contentRect.w >= idle.contentRect.w);
+  assert.equal(attack.flipX, false);
+  assert.equal(death.flipX, false);
+});
+
 test("sprite audit uses the same battle-size fitting path as runtime", async () => {
   const source = await readFile(new URL("../app/SpriteAuditScreen.tsx", import.meta.url), "utf8");
   assert.match(source, /fitSpriteBattleDisplaySize\(selection\.kind, frame, \{ w: battleWidth, h: battleHeight \}\)/);
@@ -95,9 +117,11 @@ test("sprite manifest enumerates all playable units, Mayo's feral atlas, bosses,
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
     "grappler", "ooze", "sprinter", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago",
     "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
+    "red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander",
+    "mugarian-president-mutated", "takuya-omega",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 40);
+  assert.equal(spriteKinds.length, 46);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -337,7 +361,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 43);
+  assert.equal(productionWebps.length, 53);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);

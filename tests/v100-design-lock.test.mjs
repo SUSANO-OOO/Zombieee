@@ -7,6 +7,7 @@ import sharp from "sharp";
 const DESIGN = "docs/design/v1.0.0/DESIGN_LOCK.md";
 const INVENTORY = "docs/design/v1.0.0/ASSET_INVENTORY.md";
 const HANDOFF = "docs/design/v1.0.0/LUNA_HANDOFF.md";
+const PROJECT_STATE = "docs/PROJECT_STATE.md";
 const PROVENANCE = "assets/source/v100/PROVENANCE.md";
 const SPRITE_MANIFEST_SOURCE = "app/spriteManifest.js";
 
@@ -24,24 +25,45 @@ const selectedAssets = Object.freeze([
 
 const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
 
-test("v1.0.0 design documents bind one immutable Design ID and baseline", async () => {
-  const [design, inventory, handoff, provenance] = await Promise.all([
+test("current V1 design lock owns only the r114 completed-impact replacement and release route", async () => {
+  const [design, handoff, projectState, inventory, provenance] = await Promise.all([
     readFile(DESIGN, "utf8"),
-    readFile(INVENTORY, "utf8"),
     readFile(HANDOFF, "utf8"),
+    readFile(PROJECT_STATE, "utf8"),
+    readFile(INVENTORY, "utf8"),
     readFile(PROVENANCE, "utf8"),
   ]);
 
-  for (const source of [design, inventory, handoff, provenance]) {
-    assert.match(source, /V100-SOL-DL-001/u);
+  for (const sourceText of [design, handoff, projectState, inventory, provenance]) {
+    assert.match(sourceText, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r2`/u);
-  assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
-  assert.match(design, /4833a1eed29e3901e3dcfca01cf77db6846e5265/u);
-  assert.match(design, /c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4/u);
-  assert.match(handoff, /STATUS: READY_FOR_SOL_FINAL_REVIEW/u);
-  assert.match(handoff, /No amend, rebase, force push, direct main push/u);
+  assert.match(design, /Revision: .r114./u);
+  assert.match(design, /Status: .DESIGN_LOCKED./u);
+  assert.match(handoff, /Canonical Design Lock: .V100-SOL-DL-001 r114./u);
+  const currentDesign = design.slice(design.indexOf("## 138."));
+  const currentHandoff = handoff.slice(handoff.indexOf("## 131."));
+  const currentCursor = projectState.slice(
+    projectState.indexOf("## 6. Version 1.0.0 execution cursor"),
+    projectState.indexOf("## 7. Release gate"),
+  );
+  for (const current of [currentDesign, currentHandoff, currentCursor]) {
+    assert.match(current, /minimum completed-impact observability/u);
+    assert.match(current, /SOL_REMEDIATION/u);
+    assert.match(current, /PRODUCT_DESIGN_CHANGE.: .0/u);
+    assert.match(current, /SOL_FINAL_REVIEW/u);
+    assert.match(current, /FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT/u);
+  }
+  assert.match(currentDesign, /battleGeneration, sourceId, attackSequence/u);
+  assert.match(currentDesign, /targetId, impactOrdinal/u);
+  assert.match(currentDesign, /^- new product schema: `1`$/mu);
+  assert.match(currentDesign, /^- lease: `0`$/mu);
+  assert.match(currentDesign, /^- ownership transfer: `0`$/mu);
+  assert.match(currentDesign, /^- new global proof bridge: `0`$/mu);
+  assert.match(currentDesign, /historical regex-test instructions are not executable/u);
+  // This is a live execution counter, not a fixed product acceptance value.
+  const repeatCount = currentCursor.match(/`SAME_GATE_REPEAT_COUNT`: `(\d+)`/u)?.[1];
+  assert.ok(repeatCount !== undefined && Number.isSafeInteger(Number(repeatCount)));
+  assert.match(currentCursor, /`M3_PASSED`: `NO`/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {

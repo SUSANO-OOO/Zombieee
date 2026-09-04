@@ -1,4 +1,5 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, CAMPAIGN_STAGES } from "./campaign.js";
+import { V100_STAGE_IDS } from "./v100Registry.js";
 import {
   ENEMY_GATE_SPAWN,
   LANE_Y,
@@ -434,7 +435,15 @@ export function resolveStageViewportProfile(viewport = STAGE_VIEWPORT_IDS.STANDA
 
 export function stageGeometryFor(stageId, viewport = STAGE_VIEWPORT_IDS.STANDARD) {
   const profile = resolveStageViewportProfile(viewport);
-  const geometry = GEOMETRY_BY_STAGE_AND_VIEWPORT[stageId]?.[profile.id];
+  // V1.0 uses new stage ids but intentionally reuses Ashfall's single
+  // battlefield coordinate system. Keep the authored V1 background while
+  // projecting movement/objective math onto the stable station-tunnel floor.
+  const geometryStageId = GEOMETRY_BY_STAGE_AND_VIEWPORT[stageId]
+    ? stageId
+    : V100_STAGE_IDS.includes(stageId)
+      ? CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL
+      : stageId;
+  const geometry = GEOMETRY_BY_STAGE_AND_VIEWPORT[geometryStageId]?.[profile.id];
   if (!geometry) throw new RangeError(`Unknown campaign stage geometry: ${String(stageId)}`);
   return geometry;
 }

@@ -4,13 +4,15 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import sharp from "sharp";
 
+import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
-import { spriteFrameFor } from "../app/spriteManifest.js";
+import { SPRITE_STATES, spriteFrameFor } from "../app/spriteManifest.js";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import {
   classifySupersededAssetRequestFailures,
   reconcilePageClockRequestFailures,
   strictCanvasScreenshotClip,
+  enemyRuntimeFailureRecord,
 } from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -31,14 +33,46 @@ await mkdir(outputDir, { recursive: true });
 await mkdir(compactDir, { recursive: true });
 
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const runtimeContract = productionEnemyRuntimeContract();
 const fullInventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
-invariant(fullInventory.length === 23 && new Set(fullInventory).size === 23, `expected finite 23 production enemies/bosses, got ${fullInventory.length}`);
-const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? fullInventory.join(","))
+const requiredKinds = runtimeContract.requiredEnemyKinds;
+const requiredSet = new Set(requiredKinds);
+const registrySet = new Set(runtimeContract.registryKinds);
+const inventorySet = new Set(fullInventory);
+const missingKinds = requiredKinds.filter((kind) => !inventorySet.has(kind));
+const duplicateCoverage = fullInventory
+  .filter((kind, index) => fullInventory.indexOf(kind) !== index)
+  .filter((kind, index, values) => values.indexOf(kind) === index);
+const unknownInventoryKinds = fullInventory.filter((kind) => !registrySet.has(kind));
+const extraInventoryKinds = fullInventory.filter((kind) => !requiredSet.has(kind));
+const runtimeSpriteStateMissing = runtimeContract.spriteRequirements
+  .filter(({ error, states, sheet }) => (
+    Boolean(error) || !sheet || states.length !== SPRITE_STATES.length
+      || states.some(({ left, right }) => (
+        !left?.path || !right?.path
+        || !left?.sourceRect || !right?.sourceRect
+        || ![left.sourceRect.x, left.sourceRect.y, left.sourceRect.w, left.sourceRect.h,
+          right.sourceRect.x, right.sourceRect.y, right.sourceRect.w, right.sourceRect.h].every(Number.isFinite)
+      ))
+  ))
+  .map(({ kind, error }) => ({ kind, error }));
+invariant(requiredKinds.length > 0, "production enemy runtime contract resolved no required enemies/bosses");
+invariant(runtimeContract.unknownReachableKinds.length === 0,
+  `runtime stage plan contains unregistered kinds: ${runtimeContract.unknownReachableKinds.join(",")}`);
+invariant(runtimeContract.missingBossKinds.length === 0,
+  `runtime stage plan omits registered bosses: ${runtimeContract.missingBossKinds.join(",")}`);
+invariant(missingKinds.length === 0, `production sprite inventory is missing required kinds: ${missingKinds.join(",")}`);
+invariant(duplicateCoverage.length === 0, `production sprite inventory duplicates coverage: ${duplicateCoverage.join(",")}`);
+invariant(unknownInventoryKinds.length === 0, `production sprite inventory has unregistered kinds: ${unknownInventoryKinds.join(",")}`);
+invariant(extraInventoryKinds.length === 0, `production sprite inventory has non-reachable extra kinds: ${extraInventoryKinds.join(",")}`);
+invariant(runtimeSpriteStateMissing.length === 0,
+  `required runtime sprite/state is missing: ${JSON.stringify(runtimeSpriteStateMissing)}`);
+const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? requiredKinds.join(","))
   .split(",").map((value) => value.trim()).filter(Boolean);
 invariant(requestedKinds.length > 0 && new Set(requestedKinds).size === requestedKinds.length,
   "V0995_ENEMY_QA_KINDS must be a non-empty unique subset");
-invariant(requestedKinds.every((kind) => fullInventory.includes(kind)),
-  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !fullInventory.includes(kind)).join(",")}`);
+invariant(requestedKinds.every((kind) => requiredSet.has(kind)),
+  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !requiredSet.has(kind)).join(",")}`);
 const inventory = requestedKinds;
 const phases = ["move", "attack", "hit", "die"];
 const results = [];
@@ -165,6 +199,7 @@ for (const engine of engines) {
   const browserType = playwright[engine];
   invariant(browserType, `unknown browser ${engine}`);
   const browser = await browserType.launch({ headless: true });
+  let primaryError = null;
   try {
     for (const viewport of viewports) {
       for (const kind of inventory) {
@@ -173,9 +208,12 @@ for (const engine of engines) {
         // decoded high-resolution atlas while preserving the same production
         // simulation, renderer, semantic checks and four phase screenshots.
         const context = await browser.newContext({ viewport });
+        let caseError = null;
+        let diagnosticControl = null;
+        let activeEvidence = { engine, viewport, kind, phase: "setup" };
         try {
           const page = await context.newPage();
-          const diagnosticControl = diagnosticsFor(page);
+          diagnosticControl = diagnosticsFor(page);
           const url = new URL(baseUrl);
           url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
           const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
@@ -200,8 +238,10 @@ for (const engine of engines) {
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
           const assetSetupBoundary = await diagnosticControl.sealSetup();
           for (const phase of phases) {
+            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, prepared: null, samples: [], capture: null };
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
-            const samples = [];
+            activeEvidence.prepared = prepared;
+            const samples = activeEvidence.samples;
             const started = performance.now();
             while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
               await page.waitForTimeout(40);
@@ -220,14 +260,19 @@ for (const engine of engines) {
               `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`,
             );
             const clip = canvasObservation.clip;
+            activeEvidence.capture = { status: "pending", screenshotFile, canvasObservation, clip };
             const captureStartedAt = Date.now();
             const preCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.preCapture = preCapture;
+            activeEvidence.capture.startedAt = captureStartedAt;
             await page.screenshot({ path: screenshotFile, clip, timeout });
+            activeEvidence.capture.status = "screenshot-written";
             const postCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.postCapture = postCapture;
             const capture = {
               mode: "strict-page-clip",
               attemptCount: 1,
@@ -251,22 +296,62 @@ for (const engine of engines) {
           }
           const postReady = diagnosticControl.diagnostics;
           invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);
+        } catch (error) {
+          caseError = error;
+          try {
+            await writeFile(path.join(outputDir, "enemy-runtime-failure.json"), `${JSON.stringify(enemyRuntimeFailureRecord({
+              error, active: activeEvidence, results, diagnostics: diagnosticControl?.diagnostics,
+            }), null, 2)}\n`);
+          } catch (persistenceError) {
+            console.error("enemy runtime failure evidence persistence failed", persistenceError);
+          }
+          throw error;
         } finally {
-          await context.close();
+          try { await context.close(); } catch (cleanupError) {
+            if (!caseError) throw cleanupError;
+            console.error("enemy runtime secondary context cleanup failure", cleanupError);
+          }
         }
       }
     }
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await browser.close();
+    try { await browser.close(); } catch (cleanupError) {
+      if (!primaryError) throw cleanupError;
+      console.error("enemy runtime secondary browser cleanup failure", cleanupError);
+    }
   }
 }
 
 const rawFile = path.join(outputDir, "enemy-runtime-report.json");
-await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), fullInventory, inventory, results }, null, 2)}\n`);
+await writeFile(rawFile, `${JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  runtimeContract: {
+    requiredKinds,
+    missingKinds,
+    duplicateCoverage,
+    unknownInventoryKinds,
+    extraInventoryKinds,
+    runtimeSpriteStateMissing,
+    unknownReachableKinds: runtimeContract.unknownReachableKinds,
+    missingBossKinds: runtimeContract.missingBossKinds,
+  },
+  fullInventory,
+  inventory,
+  results,
+}, null, 2)}\n`);
 const compact = {
   generatedAt: new Date().toISOString(),
   fullInventoryCount: fullInventory.length,
   inventoryCount: inventory.length,
+  requiredInventoryCount: requiredKinds.length,
+  missingKinds,
+  duplicateCoverage,
+  unknownInventoryKinds,
+  extraInventoryKinds,
+  runtimeSpriteStateMissing,
   engines,
   viewports,
   phases,

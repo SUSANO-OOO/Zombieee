@@ -522,8 +522,9 @@ test("Stage 1-6 preserve complete story routes while Stage 7-16 remain battle-fi
 
 test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story events use their authored mix", () => {
   const sceneIds = productionAudio.PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id);
-  assert.deepEqual(sceneIds, EXPECTED_AUDIO_SCENE_IDS);
-  assert.equal(new Set(sceneIds).size, EXPECTED_AUDIO_SCENE_IDS.length);
+  const legacySceneIds = sceneIds.filter((sceneId) => !sceneId.startsWith("v100-"));
+  assert.deepEqual(legacySceneIds, EXPECTED_AUDIO_SCENE_IDS);
+  assert.equal(new Set(legacySceneIds).size, EXPECTED_AUDIO_SCENE_IDS.length);
 
   const stageSceneIds = campaign.CAMPAIGN_STAGES.map((stage) => (
     productionAudio.sceneIdForScreen("battle", stage.id, { musicMode: "normal" })
@@ -554,9 +555,12 @@ test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story event
 
   assert.equal(typeof productionAudio.sceneIdForStoryEvent, "function");
   assert.deepEqual(Object.keys(EXPECTED_STORY_AUDIO_SCENES), [...story.STORY_EVENT_IDS]);
-  assert.deepEqual(productionAudio.STORY_AUDIO_EVENT_SCENE_IDS, EXPECTED_STORY_AUDIO_SCENES);
-  assert.equal(productionAudio.STORY_AUDIO_SCENE_RULES.length, EXPECTED_STORY_EVENT_IDS.length);
-  assert.equal(productionAudio.STORY_AUDIO_SCENE_RULES.every(({ match }) => match === "exact"), true);
+  const legacyStoryAudioScenes = Object.fromEntries(Object.entries(productionAudio.STORY_AUDIO_EVENT_SCENE_IDS)
+    .filter(([eventId]) => !eventId.startsWith("v100:")));
+  const legacyStoryAudioRules = productionAudio.STORY_AUDIO_SCENE_RULES.filter(({ value }) => !value.startsWith("v100:"));
+  assert.deepEqual(legacyStoryAudioScenes, EXPECTED_STORY_AUDIO_SCENES);
+  assert.equal(legacyStoryAudioRules.length, EXPECTED_STORY_EVENT_IDS.length);
+  assert.equal(legacyStoryAudioRules.every(({ match }) => match === "exact"), true);
   for (const [eventId, initialSceneId] of Object.entries(EXPECTED_STORY_AUDIO_SCENES)) {
     assert.equal(productionAudio.sceneIdForStoryEvent(eventId), initialSceneId, eventId);
     assert.ok(sceneIds.includes(initialSceneId), `${eventId} resolves production scene ${initialSceneId}`);
@@ -683,6 +687,129 @@ test("TAKUYA entrance starts boss music immediately and composes a 3.4 second tr
   assert.match(browserSmokeSource, /exactRestartRemaining >= TAKUYA_ENTRANCE_AUDIO\.durationSeconds - \.03/u);
   assert.match(browserSmokeSource, /releaseObservedPageNow - pauseEvidence\.resumeBoundary\.pageNow/u);
   assert.doesNotMatch(browserSmokeSource, /expectedRemaining: TAKUYA_ENTRANCE_AUDIO\.durationSeconds - \.15/u);
+});
+
+test("P5 dispatches the Stage 3 loadout once from one atomic player-facing readiness task", async () => {
+  const browserSmokeSource = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const dispatchSource = browserSmokeSource.match(
+    /async function dispatchReadyTakuyaLoadout[\s\S]+?(?=\r?\n\}\r?\n\r?\nasync function enterLegacyQaBattle)/u,
+  )?.[0] ?? "";
+  const entrySource = browserSmokeSource.match(
+    /async function enterLegacyQaBattle[\s\S]+?(?=\r?\n\}\r?\n\r?\nasync function waitForNetworkQuiet)/u,
+  )?.[0] ?? "";
+
+  assert.match(dispatchSource, /const evidence = await page\.evaluate\([\s\S]+deployButton\.click\(\);[\s\S]+dispatchCount: 1[\s\S]+\}, \{ expectedStageId/u);
+  assert.match(dispatchSource, /schema: "p5-stage3-loadout-dispatch\/v1"/u);
+  assert.match(dispatchSource, /screen === "loadout"[\s\S]+stageId === expectedStageId/u);
+  assert.match(dispatchSource, /assetPending === 0[\s\S]+assetFailed === 0[\s\S]+datasetGeneration === assetGeneration/u);
+  assert.match(browserSmokeSource, /function battleQaUrl\(mode\)[\s\S]+qa: mode,[\s\S]+qaHudFiniteAssets: "1"[\s\S]+safe: "iphone-landscape"/u);
+  assert.equal((browserSmokeSource.match(/qaHudFiniteAssets: "1"/gu) ?? []).length, 1);
+  assert.equal((browserSmokeSource.match(/finite-hud-runtime-qa/gu) ?? []).length, 3);
+  assert.equal((browserSmokeSource.match(/all-local-qa/gu) ?? []).length, 0);
+  assert.match(dispatchSource, /residentStageId === expectedStageId[\s\S]+residentScope === "finite-hud-runtime-qa"/u);
+  assert.match(dispatchSource, /selectedFormationCount > 0/u);
+  assert.match(dispatchSource, /buttonText\?\.includes\("この編成で出撃"\) === true/u);
+  assert.match(dispatchSource, /buttonNativeDisabled === false[\s\S]+buttonAriaDisabled !== "true"/u);
+  assert.match(dispatchSource, /throw new TimeoutError\([\s\S]+lastEvidence/u);
+  assert.equal((dispatchSource.match(/deployButton\.click\(\);/gu) ?? []).length, 1);
+  assert.equal((dispatchSource.match(/dispatchCount: 1/gu) ?? []).length, 1);
+  assert.doesNotMatch(dispatchSource, /getByRole|locator|__ASHFALL_BATTLE_QA__|onStartBattle/u);
+  assert.match(dispatchSource, /armFinalEntryPresentationGuard[\s\S]*parameters\.get\("qa"\) === "endgame"[\s\S]*parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
+  assert.match(dispatchSource, /p5-stage3-final-entry-presentation-guard\/v1/u);
+  assert.match(dispatchSource, /canvas\.battlefield \{ display: none !important; \}/u);
+  assert.match(dispatchSource, /new MutationObserver\(activate\)[\s\S]*observer\.observe\(document\.documentElement/u);
+  assert.match(dispatchSource, /battleRoot\.getAnimations\(\{ subtree: true \}\)[\s\S]*animation\.pause\(\)/u);
+  const entryGuardInstallIndex = dispatchSource.indexOf('root.dataset.p5Stage3FinalEntryGuard = "active"');
+  const realDispatchIndex = dispatchSource.indexOf("deployButton.click();");
+  assert.ok(entryGuardInstallIndex >= 0 && entryGuardInstallIndex < realDispatchIndex,
+    "final-only canvas guard must arm in the same page task before the one real dispatch");
+
+  assert.match(entrySource, /"loadout-dispatch-wait"[\s\S]+dispatchReadyTakuyaLoadout[\s\S]+"loadout-dispatched"/u);
+  assert.match(entrySource, /"battle-entry"/u);
+  assert.doesNotMatch(entrySource, /!deploy\.disabled|deployButton\.click\(\{ timeout \}\)|getByRole\("button", \{ name: \/この編成で出撃\//u);
+  assert.equal((browserSmokeSource.match(/result\.deployBoundary = await enterLegacyQaBattle\(/gu) ?? []).length, 2);
+  assert.equal((browserSmokeSource.match(/armFinalEntryPresentationGuard: true/gu) ?? []).length, 1);
+  assert.equal((browserSmokeSource.match(
+    /result\.failureEvidence = error\?\.evidence \?\? null;/gu,
+  ) ?? []).length, 2);
+  assert.match(browserSmokeSource, /const timeout = Math\.max\(5_000, Number\(process\.env\.P5_QA_TIMEOUT_MS\) \|\| 45_000\);/u);
+});
+
+test("P5 final-cut keeps simulation and audio live while bounding WebKit presentation transport", async () => {
+  const browserSmokeSource = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const suppression = browserSmokeSource.match(
+    /async function withStage3FinalPresentationSuppression[\s\S]+?(?=\nasync function closePlaywrightResource)/u,
+  )?.[0] ?? "";
+  const remainingFifoWaiter = browserSmokeSource.match(
+    /async function waitForFinalFifoFromNode[\s\S]+?(?=\nasync function withStage3FinalPresentationSuppression)/u,
+  )?.[0] ?? "";
+  assert.ok(suppression.length > 0, "missing bounded Stage 3 final-cut presentation owner");
+  assert.ok(remainingFifoWaiter.length > 0, "missing Node-owned remaining final FIFO wait");
+  assert.match(remainingFifoWaiter, /await page\.evaluate/u);
+  assert.match(remainingFifoWaiter, /const observedLines = expectedLines\.map/u);
+  assert.match(remainingFifoWaiter, /sample\.snapshot\?\.bossDefeated === false/u);
+  assert.match(remainingFifoWaiter, /sample\.audioScene === expectedAudioScene/u);
+  assert.match(remainingFifoWaiter, /sample\.audioSceneState\?\.bgmAssetId === "music-boss"/u);
+  assert.match(remainingFifoWaiter, /observedLines\.every\(\(line\) => line\.matched\)/u);
+  assert.match(remainingFifoWaiter, /setTimeout\(resolve, Math\.min\(50, remainingMs\)\)/u);
+  assert.match(remainingFifoWaiter, /timeoutMs = timeout/u);
+  assert.match(remainingFifoWaiter, /new TimeoutError/u);
+  assert.doesNotMatch(remainingFifoWaiter, /page\.waitForFunction|Promise\.all|setInterval/u);
+  assert.match(suppression, /parameters\.get\("qa"\) === "endgame"[\s\S]*parameters\.get\("qaHudFiniteAssets"\) === "1"/u);
+  assert.match(suppression, /const owner = "p5-stage3-final-cut"/u);
+  assert.match(suppression, /const resumeButtonHandle = resumeButton \? await resumeButton\.elementHandle\(\) : null/u);
+  assert.match(suppression, /resumeElement\.click\(\);[\s\S]*resumedSnapshot\?\.paused !== false[\s\S]*setQaPresentationQuiesced\(true, requestedOwner\)/u);
+  assert.match(suppression, /requireEntryGuard: adoptEntryGuard/u);
+  assert.match(suppression, /P5_STAGE3_FINAL_ENTRY_GUARD_NOT_ACTIVE/u);
+  assert.match(suppression, /getComputedStyle\(entryGuard\.canvas\)\.display === "none"/u);
+  assert.match(suppression, /p5-stage3-final-entry-presentation-transfer\/v1/u);
+  assert.match(suppression, /entryGuard\.observer\?\.disconnect\(\)[\s\S]*entryGuard\.styleElement\.remove\(\)[\s\S]*delete document\.documentElement\.dataset\.p5Stage3FinalEntryGuard/u);
+  assert.match(suppression, /const transferred = transferEntryGuard\(\);[\s\S]*entryGuardPausedAnimations: transferred\.pausedAnimations/u);
+  assert.match(suppression, /p5-stage3-final-real-resume-boundary\/v1/u);
+  assert.match(suppression, /snapshot\.running !== true \|\| snapshot\.paused === true \|\| snapshot\.over === true/u);
+  assert.match(suppression, /typeof bridge\?\.setQaPresentationQuiesced === "function"/u);
+  assert.match(suppression, /receipt\.route === "stage3-final"/u);
+  assert.match(suppression, /mode: "base-dom-suppression"/u);
+  assert.match(suppression, /battleRoot\.getAnimations\(\{ subtree: true \}\)/u);
+  assert.match(suppression, /battleRoot\.style\.visibility = "hidden"/u);
+  assert.match(suppression, /state\.battleRootStyle === null[\s\S]*removeAttribute\("style"\)[\s\S]*setAttribute\("style", state\.battleRootStyle\)/u);
+  assert.match(suppression, /releasedAtRenderFrames\) === Number\(receipt\.enteredAtRenderFrames/u);
+  assert.match(suppression, /releasedAtSimulationTicks\) > Number\(receipt\.enteredAtSimulationTicks/u);
+  assert.match(suppression, /Number\(quiescence\.renderFrames\) >= Number\(releasedRenderFrames\) \+ 3/u);
+  assert.match(suppression, /frames >= 3/u);
+  assert.match(suppression, /Number\(snapshot\?\.time\) > Number\(releasedBattleTime\)/u);
+  assert.match(suppression, /p5-stage3-final-presentation-suppression\/v1/u);
+  assert.doesNotMatch(suppression, /\.time\s*=|fighters\s*=|\.hp\s*=|\.speed\s*=|bossDefeated\s*=|setGraphicsQuality|prepareTakuyaBossDefeatAudioProof/u);
+  assert.match(gameSource, /parameters\.get\("qa"\) === "endgame" && parameters\.get\("qaHudFiniteAssets"\) === "1"[\s\S]*\? "stage3-final"/u);
+  assert.match(gameSource, /route === "stage3-final"[\s\S]*\? \["p5-stage3-final-cut"\]/u);
+  const finalAuditStart = browserSmokeSource.indexOf("async function auditTakuyaFinalAudio");
+  const finalEntryGuardArm = browserSmokeSource.indexOf("armFinalEntryPresentationGuard: true", finalAuditStart);
+  const suppressionCall = browserSmokeSource.indexOf("const finalCutPresentation = await withStage3FinalPresentationSuppression", finalAuditStart);
+  const firstRealResumeOwner = browserSmokeSource.indexOf("resumeButton: initialResumeButton", suppressionCall);
+  const entryGuardAdoption = browserSmokeSource.indexOf("adoptEntryGuard: true", firstRealResumeOwner);
+  const exactPredicateCall = browserSmokeSource.indexOf("operation: () => waitForFinalCutPredicateFromNode", suppressionCall);
+  const pauseCall = browserSmokeSource.indexOf("const deferredPauseEvidence = await pauseAndVerifyFrozenScriptedBark", exactPredicateCall);
+  const deferredResume = browserSmokeSource.indexOf("deferResume: true", pauseCall);
+  const finalFifoCall = browserSmokeSource.indexOf("const finalFifoPresentation = await withStage3FinalPresentationSuppression", deferredResume);
+  const realResumeOwner = browserSmokeSource.indexOf("resumeButton: deferredPauseEvidence.resumeButton", finalFifoCall);
+  const remainingFifoWait = browserSmokeSource.indexOf("operation: () => waitForFinalFifoFromNode", realResumeOwner);
+  assert.ok(finalAuditStart >= 0
+    && finalAuditStart < finalEntryGuardArm
+    && finalEntryGuardArm < suppressionCall
+    && suppressionCall < firstRealResumeOwner
+    && firstRealResumeOwner < entryGuardAdoption
+    && entryGuardAdoption < exactPredicateCall
+    && exactPredicateCall < pauseCall
+    && pauseCall < deferredResume
+    && deferredResume < finalFifoCall
+    && finalFifoCall < realResumeOwner
+    && realResumeOwner < remainingFifoWait);
+  assert.match(browserSmokeSource, /activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches/u);
+  assert.equal((browserSmokeSource.match(/await withStage3FinalPresentationSuppression\(\{/gu) ?? []).length, 2);
+  assert.match(browserSmokeSource, /if \(deferResume\)[\s\S]*resumeButton,[\s\S]*resumed: null/u);
+  assert.match(browserSmokeSource, /finalFifoPresentation\.receipt\.arm\.resumeBoundary[\s\S]*did not restore the frozen scripted line under the second presentation owner/u);
+  assert.match(browserSmokeSource, /result\.finalFifoPresentationSuppression = finalFifoPresentation\.receipt/u);
 });
 
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {

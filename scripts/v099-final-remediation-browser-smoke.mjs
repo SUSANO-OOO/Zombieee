@@ -25,6 +25,7 @@ import {
 import { AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF } from "../app/gameRules.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import {
   classifySupersededAssetRequestFailures,
   reconcilePageClockRequestFailures,
@@ -119,6 +120,19 @@ const timeout = Math.max(
   10_000,
   Number(process.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS) || 30_000,
 );
+const DIAGNOSTIC_TRACE_INTERVAL_MS = 250;
+const DIAGNOSTIC_TRACE_MAX_SAMPLES = 160;
+const DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS = 100;
+const FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS = 10_000;
+const FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS = 2_000;
+const FIGHTER_UNIT_LAYER_AUDIT_PASSES = Object.freeze([
+  "actual-unit",
+  "forced-opaque-unit",
+  "rendered-foreground",
+  "expected-foreground",
+  "final-production-canvas",
+  "authored-composite",
+]);
 const evidenceDir = path.resolve(
   process.env.V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR
     ?? "docs/qa/v099/final-remediation/browser",
@@ -129,7 +143,10 @@ await mkdir(evidenceDir, { recursive: true });
 function noOpLifecycleDiagnostics() {
   return {
     file: null,
+    hostResourceTelemetry: null,
     setPhase: () => {},
+    beginOperation: () => {},
+    endOperation: () => {},
     event: () => {},
     attachBrowser: () => {},
     attachContext: () => {},
@@ -146,12 +163,26 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
 
   const filePath = path.join(evidenceDir, `${name}-${caseType}-lifecycle.jsonl`);
   await writeFile(filePath, "", "utf8");
+  const hostResourceTelemetry = caseType === "deployment"
+    ? await createWebKitHostResourceTelemetry({
+      evidenceDir,
+      label: `${name}-${caseType}`,
+      referenceRoot: process.cwd(),
+      metadata: {
+        owner: "deployment-child",
+        engine,
+        viewport: `${viewport.width}x${viewport.height}`,
+        caseType,
+      },
+    })
+    : null;
   const startedAt = Date.now();
   const expectedPages = new WeakSet();
   const expectedContexts = new WeakSet();
   const pageDiagnostics = new WeakMap();
   let lastPage = null;
   let currentPhase = "initialization";
+  let currentOperation = null;
   let lastSuccessfulMilestone = null;
   let normalCleanupStarted = false;
   let expectedBrowserClose = false;
@@ -200,11 +231,54 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     writeQueue = writeQueue.then(() => appendFile(filePath, line, "utf8")).catch((error) => {
       writeError ??= error;
     });
+    hostResourceTelemetry?.setContext({
+      owner: "deployment-child",
+      engine,
+      viewport: `${viewport.width}x${viewport.height}`,
+      caseType,
+      phase: currentPhase,
+      operationId: currentOperation?.operationId ?? "deployment-idle",
+      operationStatus: currentOperation?.status ?? "idle",
+      ...(currentOperation?.details ?? {}),
+    });
+    hostResourceTelemetry?.event(event, {
+      phase,
+      currentPhase,
+      milestone,
+      normalCleanupStarted,
+      expected: fields.expected ?? null,
+      unexpected: fields.unexpected ?? null,
+    });
   }
 
   function setPhase(phase, milestone = null) {
     currentPhase = phase;
     record("phase changed", { phase, milestone });
+  }
+
+  function beginOperation(operationId, details = {}) {
+    currentOperation = { operationId, status: "running", details };
+    record("operation-begin", { operationId, operationStatus: "running", ...details });
+  }
+
+  function endOperation(operationId, status, details = {}) {
+    if (currentOperation?.operationId !== operationId) {
+      throw new Error(`deployment telemetry operation mismatch ${currentOperation?.operationId ?? "none"}/${operationId}`);
+    }
+    currentOperation = { ...currentOperation, status };
+    record("operation-end", { operationId, operationStatus: status, ...details });
+    if (status === "completed") {
+      currentOperation = null;
+      hostResourceTelemetry?.setContext({
+        owner: "deployment-child",
+        engine,
+        viewport: `${viewport.width}x${viewport.height}`,
+        caseType,
+        phase: currentPhase,
+        operationId: "deployment-idle",
+        operationStatus: "idle",
+      });
+    }
   }
 
   function attachBrowser(browser) {
@@ -263,7 +337,10 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
   record("case start");
   return {
     file: relativeEvidencePath(filePath),
+    hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
     setPhase,
+    beginOperation,
+    endOperation,
     event: record,
     attachBrowser,
     attachContext,
@@ -274,12 +351,32 @@ async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) 
     flush: async () => {
       await writeQueue;
       if (writeError) throw new Error(`Lifecycle diagnostics could not be written: ${writeError}`);
+      return await hostResourceTelemetry?.stop({
+        event: "deployment-child-cleanup-complete",
+        caseType,
+      }) ?? null;
     },
   };
 }
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function hostTurn(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function withDeploymentDiagnosticOperation(lifecycle, operationId, details, operation) {
+  lifecycle?.beginOperation(operationId, details);
+  try {
+    const result = await operation();
+    lifecycle?.endOperation(operationId, "completed", details);
+    return result;
+  } catch (error) {
+    lifecycle?.endOperation(operationId, "failed", { ...details, error: String(error) });
+    throw error;
+  }
 }
 
 function relativeEvidencePath(filePath) {
@@ -292,12 +389,14 @@ function safeAreaForViewport(viewport) {
     : { top: 0, right: 0, bottom: 0, left: 0, preset: null };
 }
 
-function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
+function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null, finiteAssets = false } = {}) {
   const url = new URL(baseUrl);
   const parameters = { qa: qaMode };
   if (safeAreaPreset) parameters.safe = safeAreaPreset;
   if (qaMode === "mission") Object.assign(parameters, { stage: String(stageNumber), state: "start" });
-  if (caseTypes.length === 1 && caseTypes[0] === "hud") parameters.qaHudFiniteAssets = "1";
+  if (finiteAssets || (caseTypes.length === 1 && caseTypes[0] === "hud")) {
+    parameters.qaHudFiniteAssets = "1";
+  }
   url.search = new URLSearchParams(parameters).toString();
   return String(url);
 }
@@ -307,6 +406,7 @@ function diagnosticsFor(page, lifecycle = null) {
   let phase = "setup";
   const pageClockCalibrations = [];
   const requestStartedAt = new WeakMap();
+  const pendingRequests = new Set();
   const diagnostics = {
     consoleErrors: [],
     pageErrors: [],
@@ -321,9 +421,16 @@ function diagnosticsFor(page, lifecycle = null) {
     if (active) diagnostics.pageErrors.push(String(error));
   });
   page.on("request", (request) => {
-    if (active) requestStartedAt.set(request, Date.now());
+    if (active) {
+      requestStartedAt.set(request, Date.now());
+      pendingRequests.add(request);
+    }
+  });
+  page.on("requestfinished", (request) => {
+    pendingRequests.delete(request);
   });
   page.on("requestfailed", (request) => {
+    pendingRequests.delete(request);
     if (!active) return;
     const detail = {
       url: request.url(),
@@ -372,6 +479,13 @@ function diagnosticsFor(page, lifecycle = null) {
         pageClockCalibrations: reconciled.calibrations,
       };
     },
+    traceCounts: () => ({
+      consoleErrorCount: diagnostics.consoleErrors.length,
+      pageErrorCount: diagnostics.pageErrors.length,
+      requestFailureCount: diagnostics.requestFailures.length,
+      httpErrorCount: diagnostics.httpErrors.length,
+      pendingRequestCount: pendingRequests.size,
+    }),
     stop: () => { active = false; },
   };
 }
@@ -380,12 +494,162 @@ function diagnosticsClean(diagnostics) {
   return Object.values(diagnostics).every((entries) => entries.length === 0);
 }
 
+function createBoundedTrace({ page, readSample, automaticInterval = true }) {
+  const startedAt = Date.now();
+  const samples = [];
+  let active = true;
+  let inFlight = null;
+  let lastAttemptAt = null;
+  let timer = null;
+  let lastSampleError = null;
+  let lastReadableSnapshot = null;
+  let captureAttemptCount = 0;
+  let overlapWaitCount = 0;
+  const pageSignals = {
+    close: false,
+    crash: false,
+    closeAtElapsedMs: null,
+    crashAtElapsedMs: null,
+  };
+
+  const capture = async () => {
+    if (!active || samples.length >= DIAGNOSTIC_TRACE_MAX_SAMPLES) return;
+    captureAttemptCount += 1;
+    if (inFlight) {
+      overlapWaitCount += 1;
+      await inFlight;
+      return;
+    }
+    const attemptAt = Date.now();
+    if (lastAttemptAt !== null && attemptAt - lastAttemptAt < DIAGNOSTIC_TRACE_INTERVAL_MS) return;
+    lastAttemptAt = attemptAt;
+    inFlight = (async () => {
+      try {
+        const sample = await readSample({ elapsedWallMs: attemptAt - startedAt });
+        if (sample) {
+          samples.push(sample);
+          if (sample.readableSnapshot) lastReadableSnapshot = sample.readableSnapshot;
+        }
+      } catch (error) {
+        lastSampleError = String(error);
+      } finally {
+        inFlight = null;
+      }
+    })();
+    await inFlight;
+  };
+
+  page.on("close", () => {
+    pageSignals.close = true;
+    pageSignals.closeAtElapsedMs ??= Date.now() - startedAt;
+  });
+  page.on("crash", () => {
+    pageSignals.crash = true;
+    pageSignals.crashAtElapsedMs ??= Date.now() - startedAt;
+  });
+  if (automaticInterval) {
+    void capture();
+    timer = setInterval(() => { void capture(); }, DIAGNOSTIC_TRACE_INTERVAL_MS);
+  }
+
+  return {
+    async stop() {
+      active = false;
+      if (timer) clearInterval(timer);
+      timer = null;
+      if (inFlight) await inFlight;
+      return {
+        sampleIntervalMs: DIAGNOSTIC_TRACE_INTERVAL_MS,
+        maxSamples: DIAGNOSTIC_TRACE_MAX_SAMPLES,
+        samples,
+        sampleCount: samples.length,
+        lastSample: samples.at(-1) ?? null,
+        lastReadableSnapshot,
+        lastSampleError,
+        pageSignals,
+        captureMode: automaticInterval ? "automatic-interval" : "cooperative-main-flow",
+        captureAttemptCount,
+        overlapWaitCount,
+      };
+    },
+    capture,
+  };
+}
+
+function setupRuntimeState(page) {
+  return page.evaluate(() => {
+    const shell = document.querySelector(".game-shell");
+    const battleApi = window.__ASHFALL_BATTLE_QA__;
+    const assetApi = window.__ASHFALL_ASSET_QA__;
+    const rawSnapshot = battleApi?.getSnapshot?.() ?? null;
+    const rawAssetState = assetApi?.getState?.() ?? null;
+    const snapshot = rawSnapshot ? {
+      screen: rawSnapshot.screen ?? null,
+      running: rawSnapshot.running ?? null,
+      paused: rawSnapshot.paused ?? null,
+      over: rawSnapshot.over ?? null,
+      time: rawSnapshot.time ?? null,
+    } : null;
+    const asset = rawAssetState ? {
+      state: rawAssetState.state ?? null,
+      generation: rawAssetState.generation ?? null,
+      completed: rawAssetState.completed ?? null,
+      total: rawAssetState.total ?? null,
+      pending: rawAssetState.pending ?? null,
+      failed: rawAssetState.failed ?? null,
+      reason: rawAssetState.reason ?? rawAssetState.failureReason ?? null,
+    } : null;
+    const storyLine = document.querySelector(".dialogue-box")?.textContent?.trim() || null;
+    const storyScreen = document.querySelector(".campaign-overlay.event-screen")
+      ? document.querySelector(".campaign-overlay.event-screen")?.getAttribute("data-screen") ?? "event"
+      : (shell?.getAttribute("data-screen") === "event" ? "event" : null);
+    return {
+      url: location.href,
+      documentVisibility: document.visibilityState,
+      screen: shell?.getAttribute("data-screen") ?? null,
+      battleApiPresent: Boolean(battleApi),
+      snapshot,
+      assetApiPresent: Boolean(assetApi),
+      asset,
+      storyLine,
+      storyScreen,
+      readableSnapshot: snapshot,
+    };
+  });
+}
+
+function createSetupTrace(page, diagnosticControl) {
+  let lifecyclePhase = "page creation";
+  const trace = createBoundedTrace({
+    page,
+    readSample: async ({ elapsedWallMs }) => {
+      const runtime = await setupRuntimeState(page);
+      const counts = diagnosticControl.traceCounts();
+      return {
+        elapsedWallMs,
+        lifecyclePhase,
+        ...runtime,
+        ...counts,
+        diagnostics: counts,
+      };
+    },
+  });
+  return {
+    setPhase(phase) {
+      lifecyclePhase = phase;
+    },
+    stop: () => trace.stop(),
+    capture: () => trace.capture(),
+  };
+}
+
 async function sealAssetSetupBoundary(page, diagnosticControl, label) {
   const asset = await page.evaluate(() => ({
     state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-    history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [],
     requiredSprites: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().sprites ?? [],
     loadedSpriteKeys: window.__ASHFALL_ASSET_QA__?.getLoadedSpriteKeys?.() ?? [],
+    failedPaths: window.__ASHFALL_ASSET_QA__?.getFailedPaths?.() ?? [],
+    pendingPaths: window.__ASHFALL_ASSET_QA__?.getPendingPaths?.() ?? [],
   }));
   if (new URL(page.url()).searchParams.get("qaHudFiniteAssets") === "1") {
     for (const requiredKind of ["ranger", "medic"]) {
@@ -396,9 +660,13 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
     }
   }
   const setup = await diagnosticControl.beginPostReadyObservation();
+  const historyRequired = setup.diagnostics.requestFailureDetails.length > 0;
+  const history = historyRequired
+    ? await page.evaluate(() => window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [])
+    : [];
   const classification = classifySupersededAssetRequestFailures({
     failures: setup.diagnostics.requestFailureDetails,
-    history: asset.history,
+    history,
     requiredSprites: asset.requiredSprites,
     loadedSpriteKeys: asset.loadedSpriteKeys,
     terminalState: asset.state,
@@ -412,11 +680,48 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
   return {
     label,
     boundaryAt: setup.boundaryAt,
-    asset,
+    asset: { ...asset, historyRead: historyRequired, historyEntryCount: history.length },
     rawDiagnostics: setup.diagnostics,
     pageClockCalibrations: setup.pageClockCalibrations,
     acceptedSupersededFailures: classification.accepted,
   };
+}
+
+async function waitForBattleReadiness(page, label) {
+  const startedAt = Date.now();
+  let lastState = null;
+  while (Date.now() - startedAt < timeout) {
+    lastState = await page.evaluate(() => {
+      const battle = window.__ASHFALL_BATTLE_QA__;
+      const assets = window.__ASHFALL_ASSET_QA__;
+      const snapshot = battle?.getCrawlerDeploymentProofSnapshot?.() ?? null;
+      const asset = assets?.getState?.() ?? null;
+      return {
+        screen: snapshot?.screen ?? document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+        running: snapshot?.running ?? null,
+        asset: asset ? {
+          state: asset.state ?? null,
+          generation: asset.generation ?? null,
+          completed: asset.completed ?? null,
+          total: asset.total ?? null,
+          pending: asset.pending ?? null,
+          failed: asset.failed ?? null,
+          reason: asset.reason ?? asset.failureReason ?? null,
+        } : null,
+        failedPaths: asset?.state === "error" ? assets?.getFailedPaths?.() ?? [] : [],
+      };
+    });
+    if (lastState.asset?.state === "error") {
+      throw new Error(`${label}: asset readiness failed ${JSON.stringify(lastState)}`);
+    }
+    if (lastState.screen === "battle"
+      && lastState.running === true
+      && ["ready", "degraded-ready"].includes(lastState.asset?.state)) {
+      return lastState;
+    }
+    await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+  }
+  throw new Error(`${label}: battle readiness timed out ${JSON.stringify(lastState)}`);
 }
 
 async function nextRender(page) {
@@ -430,6 +735,42 @@ async function screenshot(page, filename) {
   const screenshotPath = path.join(evidenceDir, filename);
   await page.screenshot({ path: screenshotPath, animations: "allow" });
   return relativeEvidencePath(screenshotPath);
+}
+
+async function deploymentCanvasPng(page, filename, label) {
+  const serialized = await page.evaluate(() => {
+    const canvas = document.querySelector("canvas.battlefield.active");
+    if (!(canvas instanceof HTMLCanvasElement) || !canvas.isConnected) {
+      throw new Error("active production battlefield canvas unavailable");
+    }
+    return {
+      dataUrl: canvas.toDataURL("image/png"),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  });
+  invariant(serialized.dataUrl.startsWith("data:image/png;base64,"),
+    `${label}: production canvas did not serialize PNG data`);
+  const bytes = Buffer.from(serialized.dataUrl.slice("data:image/png;base64,".length), "base64");
+  invariant(bytes.length > 0, `${label}: production canvas PNG is empty`);
+  const metadata = await sharp(bytes, { failOn: "error" }).metadata();
+  invariant(metadata.format === "png",
+    `${label}: production canvas evidence is not PNG (${metadata.format})`);
+  invariant(metadata.width === serialized.width && metadata.height === serialized.height,
+    `${label}: production canvas dimensions drifted ${JSON.stringify({
+      serialized: { width: serialized.width, height: serialized.height },
+      decoded: { width: metadata.width, height: metadata.height },
+    })}`);
+  const screenshotPath = path.join(evidenceDir, filename);
+  await writeFile(screenshotPath, bytes);
+  return {
+    path: relativeEvidencePath(screenshotPath),
+    bytes: bytes.length,
+    width: serialized.width,
+    height: serialized.height,
+    format: metadata.format,
+    source: "canvas.battlefield.active",
+  };
 }
 
 async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
@@ -469,9 +810,9 @@ async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
   };
 }
 
-async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
+async function deploymentRuntimeContactSheet(name, family, kind, viewport, entries) {
   invariant(entries.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length,
-    `${name}/${family}: deployment contact sheet is incomplete`);
+    `${name}/${family}/${kind}: deployment contact sheet is incomplete`);
   const crop = {
     left: 0,
     top: Math.max(0, Math.round(viewport.height * .1)),
@@ -486,7 +827,7 @@ async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
       .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
       .toBuffer());
   }
-  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-contact-sheet.png`);
+  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-${kind}-contact-sheet.png`);
   await sharp({
     create: {
       width: 320 * entries.length,
@@ -511,6 +852,124 @@ async function evidenceSha256(relativePath) {
   return createHash("sha256")
     .update(await readFile(path.resolve(relativePath)))
     .digest("hex");
+}
+
+function collectDeploymentArtifactInventory(resultsToInspect) {
+  const checkpoints = [];
+  const contactSheets = [];
+  for (const result of resultsToInspect) {
+    if (result.type !== "deployment") continue;
+    for (const unit of result.units ?? []) {
+      for (const checkpoint of unit.checkpoints ?? []) {
+        if (typeof checkpoint.screenshot !== "string"
+          || typeof checkpoint.screenshotSha256 !== "string") continue;
+        checkpoints.push({
+          type: "checkpoint",
+          family: unit.family,
+          kind: unit.kind,
+          checkpoint: checkpoint.checkpoint,
+          path: checkpoint.screenshot,
+          recordedSha256: checkpoint.screenshotSha256,
+        });
+      }
+      if (typeof unit.contactSheet?.path === "string"
+        && typeof unit.contactSheet?.sha256 === "string") {
+        contactSheets.push({
+          type: "contact-sheet",
+          family: unit.family,
+          kind: unit.kind,
+          path: unit.contactSheet.path,
+          recordedSha256: unit.contactSheet.sha256,
+        });
+      }
+    }
+  }
+  return { checkpoints, contactSheets };
+}
+
+async function inspectDeploymentArtifactIntegrity(resultsToInspect) {
+  const inventory = collectDeploymentArtifactInventory(resultsToInspect);
+  const combined = [...inventory.checkpoints, ...inventory.contactSheets];
+  const pathOccurrences = new Map();
+  for (const entry of combined) {
+    pathOccurrences.set(entry.path, (pathOccurrences.get(entry.path) ?? 0) + 1);
+  }
+  const duplicatePaths = [...pathOccurrences.entries()]
+    .filter(([, occurrences]) => occurrences > 1)
+    .map(([artifactPath, occurrences]) => ({ path: artifactPath, occurrences }));
+  const invalidFiles = [];
+  const hashMismatches = [];
+  const diskShaVerifiedCount = { checkpoint: 0, "contact-sheet": 0 };
+  for (const entry of combined) {
+    try {
+      const file = await stat(path.resolve(entry.path));
+      if (!file.isFile() || file.size <= 0) {
+        invalidFiles.push({
+          type: entry.type,
+          path: entry.path,
+          reason: file.isFile() ? "empty-file" : "not-regular-file",
+        });
+        continue;
+      }
+      const diskSha256 = await evidenceSha256(entry.path);
+      if (diskSha256 !== entry.recordedSha256) {
+        hashMismatches.push({
+          type: entry.type,
+          path: entry.path,
+          recordedSha256: entry.recordedSha256,
+          diskSha256,
+        });
+        continue;
+      }
+      diskShaVerifiedCount[entry.type] += 1;
+    } catch (error) {
+      invalidFiles.push({
+        type: entry.type,
+        path: entry.path,
+        reason: "unreadable-file",
+        error: String(error),
+      });
+    }
+  }
+  const diagnosticLimit = 64;
+  const checkpointUniquePathCount = new Set(inventory.checkpoints.map(({ path: artifactPath }) => artifactPath)).size;
+  const contactSheetUniquePathCount = new Set(inventory.contactSheets.map(({ path: artifactPath }) => artifactPath)).size;
+  const combinedUniquePathCount = pathOccurrences.size;
+  const rawOk = duplicatePaths.length === 0
+    && invalidFiles.length === 0
+    && hashMismatches.length === 0
+    && diskShaVerifiedCount.checkpoint === inventory.checkpoints.length
+    && diskShaVerifiedCount["contact-sheet"] === inventory.contactSheets.length;
+  return {
+    schema: "v099-deployment-artifact-integrity/v1",
+    ok: rawOk,
+    checkpoint: {
+      logicalCount: inventory.checkpoints.length,
+      uniquePathCount: checkpointUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount.checkpoint,
+    },
+    contactSheet: {
+      logicalCount: inventory.contactSheets.length,
+      uniquePathCount: contactSheetUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount["contact-sheet"],
+    },
+    combined: {
+      logicalCount: combined.length,
+      uniquePathCount: combinedUniquePathCount,
+      diskShaVerifiedCount: diskShaVerifiedCount.checkpoint + diskShaVerifiedCount["contact-sheet"],
+    },
+    diagnostics: {
+      limit: diagnosticLimit,
+      duplicatePaths: duplicatePaths.slice(0, diagnosticLimit),
+      invalidFiles: invalidFiles.slice(0, diagnosticLimit),
+      hashMismatches: hashMismatches.slice(0, diagnosticLimit),
+      omitted: {
+        duplicatePaths: Math.max(0, duplicatePaths.length - diagnosticLimit),
+        invalidFiles: Math.max(0, invalidFiles.length - diagnosticLimit),
+        hashMismatches: Math.max(0, hashMismatches.length - diagnosticLimit),
+      },
+    },
+  };
 }
 
 async function enterLegacyQaBattle(page, qaMode) {
@@ -565,56 +1024,119 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   lifecycle?.setPhase("page creation");
   const page = await context.newPage();
   const diagnosticControl = diagnosticsFor(page, lifecycle);
-  lifecycle?.setPhase("navigation");
+  const setupTrace = options.setupTrace === true ? createSetupTrace(page, diagnosticControl) : null;
+  const setPhase = (phase) => {
+    setupTrace?.setPhase(phase);
+    lifecycle?.setPhase(phase);
+  };
+  setPhase("page creation");
+  setPhase("navigation");
   lifecycle?.event("navigation start", { page });
   const viewport = page.viewportSize();
-  const response = await page.goto(caseUrl(qaMode, {
-    ...options,
-    safeAreaPreset: options.safeAreaPreset ?? safeAreaForViewport(viewport).preset,
-  }), {
-    waitUntil: "domcontentloaded",
-    timeout,
-  });
-  lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
-  invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
-  await diagnosticControl.calibratePageClock("post-navigation");
-  lifecycle?.setPhase("battle setup");
-  await dismissInstallOffer(page, { timeout });
-  await enterLegacyQaBattle(page, qaMode);
-  lifecycle?.setPhase("battle readiness");
-  lifecycle?.event("battle readiness start", { page });
-  await page.waitForFunction(
-    () => {
-      const battle = window.__ASHFALL_BATTLE_QA__;
-      const assets = window.__ASHFALL_ASSET_QA__;
-      return battle?.getSnapshot?.().screen === "battle"
-        && battle.getSnapshot().running === true
-        && ["ready", "degraded-ready"].includes(assets?.getState?.().state);
-    },
-    undefined,
-    { timeout },
-  );
-  lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
+  let deploymentSetupPresentationQuiescenceArm = null;
   try {
-    await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
-  } catch (error) {
-    // Hosted WebKit can keep a decoded audio request alive after the battle,
-    // complete pack, and asset gate are all ready. This boundary is not a
-    // product readiness condition; diagnostics and every later visual/runtime
-    // assertion remain fail-closed. Do not extend this allowance to the
-    // loadout/story waits above, where tearing down a request is causal.
-    if (!String(error).includes("page.waitForLoadState: Timeout")) throw error;
-    lifecycle?.event("post-readiness network idle exceeded", {
-      page,
-      milestone: "battle and asset gate already ready",
+    const response = await page.goto(caseUrl(qaMode, {
+      ...options,
+      safeAreaPreset: options.safeAreaPreset ?? safeAreaForViewport(viewport).preset,
+    }), {
+      waitUntil: "domcontentloaded",
+      timeout,
     });
+    lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
+    invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
+    await diagnosticControl.calibratePageClock("post-navigation");
+    setPhase("battle setup");
+    await dismissInstallOffer(page, { timeout });
+    setPhase("legacy screen advancement");
+    await enterLegacyQaBattle(page, qaMode);
+    setPhase("battle readiness");
+    lifecycle?.event("battle readiness start", { page });
+    await waitForBattleReadiness(page, `${qaMode}/${viewport.width}x${viewport.height}`);
+    lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
+    if (options.earlyDeploymentPresentationQuiescence === true) {
+      invariant(qaMode === "mission",
+        `${qaMode}: early deployment presentation quiescence is restricted to deployment QA`);
+      setPhase("deployment setup presentation quiescence");
+      deploymentSetupPresentationQuiescenceArm = await armDeploymentPresentationQuiescence(
+        page,
+        "deployment-first-frame",
+      );
+      const earlyArm = deploymentSetupPresentationQuiescenceArm.presentation;
+      invariant(earlyArm?.schema === "v100-qa-presentation-quiescence/v1"
+        && earlyArm.active === true
+        && earlyArm.owner === "deployment-first-frame"
+        && earlyArm.route === "deployment"
+        && earlyArm.datasetActive === true
+        && earlyArm.running === true
+        && earlyArm.paused !== true
+        && earlyArm.over !== true,
+      `${qaMode}/${viewport.width}x${viewport.height}: early deployment presentation quiescence did not arm ${JSON.stringify(earlyArm)}`);
+      lifecycle?.event("deployment setup presentation quiescence armed", {
+        page,
+        owner: earlyArm.owner,
+        armedAtPageTime: deploymentSetupPresentationQuiescenceArm.armedAtPageTime,
+        milestone: "deployment setup presentation quiescence armed",
+      });
+    }
+    setPhase("post-readiness settling");
+    try {
+      await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
+    } catch (error) {
+      // Hosted WebKit can keep a decoded audio request alive after the battle,
+      // complete pack, and asset gate are all ready. This boundary is not a
+      // product readiness condition; diagnostics and every later visual/runtime
+      // assertion remain fail-closed. Do not extend this allowance to the
+      // loadout/story waits above, where tearing down a request is causal.
+      if (!String(error).includes("page.waitForLoadState: Timeout")) throw error;
+      lifecycle?.event("post-readiness network idle exceeded", {
+        page,
+        milestone: "battle and asset gate already ready",
+      });
+    }
+    setPhase("asset-boundary sealing");
+    const assetSetupBoundary = await sealAssetSetupBoundary(
+      page,
+      diagnosticControl,
+      `${qaMode}/${viewport.width}x${viewport.height}`,
+    );
+    await setupTrace?.capture();
+    const setupTraceResult = setupTrace ? await setupTrace.stop() : null;
+    return {
+      page,
+      ...diagnosticControl,
+      assetSetupBoundary,
+      setupTrace: setupTraceResult,
+      deploymentSetupPresentationQuiescenceArm,
+    };
+  } catch (error) {
+    if (deploymentSetupPresentationQuiescenceArm) {
+      Object.assign(error, { deploymentSetupPresentationQuiescenceArm });
+    }
+    if (setupTrace) {
+      setupTrace.setPhase("failure");
+      let failureScreenshot = null;
+      try {
+        if (!page.isClosed()) {
+          const screenshotPath = path.join(
+            evidenceDir,
+            `chromium-${viewport.width}x${viewport.height}-${qaMode}-setup-failed.png`,
+          );
+          await page.screenshot({ path: screenshotPath, animations: "allow" });
+          failureScreenshot = relativeEvidencePath(screenshotPath);
+        }
+      } catch {
+        // Preserve the original setup failure and whatever trace was readable.
+      }
+      const setupTraceResult = await setupTrace.stop();
+      Object.assign(error, {
+        setupTrace: setupTraceResult,
+        setupTraceFailureScreenshot: failureScreenshot,
+        setupTraceLastReadableSnapshot: setupTraceResult.lastReadableSnapshot,
+        setupTracePageSignals: setupTraceResult.pageSignals,
+      });
+    }
+    throw error;
   }
-  const assetSetupBoundary = await sealAssetSetupBoundary(
-    page,
-    diagnosticControl,
-    `${qaMode}/${viewport.width}x${viewport.height}`,
-  );
-  return { page, ...diagnosticControl, assetSetupBoundary };
 }
 
 async function clientPointForWorld(page, point) {
@@ -1118,6 +1640,93 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
   };
 }
 
+async function captureDeploymentBannerHudState({
+  page,
+  viewport,
+  axisName,
+  stateId,
+  label,
+  lifecycle,
+  resumeAfterCapture,
+}) {
+  const firstFrameEnvelope = await withDeploymentPresentationQuiescence(
+    page,
+    "deployment-first-frame",
+    `${label}/fully-inside`,
+    null,
+    (_checkpointArm, presentationArm) => queueAndPauseAtFirstDeploymentFrame(
+      page,
+      "kumaverson",
+      label,
+      null,
+      presentationArm,
+    ),
+  );
+  const start = firstFrameEnvelope.value;
+  invariant(start.audit?.deploymentPlan?.checkpoint === "fully-inside",
+    `${label}: deployment banner did not freeze the production progress-0 frame`);
+  const fighterId = start.fighter?.id ?? null;
+  invariant(Number.isInteger(fighterId), `${label}: deployment banner fighter identity is unavailable`);
+
+  const firstVisibleCheckpoint = CRAWLER_DEPLOYMENT_CHECKPOINTS[1];
+  const firstFrameHandoff = await withDeploymentCanvasCaptureQuiescence(
+    page,
+    `${label}/fully-inside-handoff`,
+    async () => ({ schema: "v100-deployment-hud-owner-transition/v1" }),
+    firstFrameEnvelope.preArmedEvidenceCapture,
+    {
+      type: "checkpoint",
+      fighterId,
+      checkpoint: firstVisibleCheckpoint.id,
+      minimumProgress: firstVisibleCheckpoint.progress,
+    },
+  );
+  invariant(firstFrameHandoff.value?.schema === "v100-deployment-hud-owner-transition/v1"
+    && firstFrameHandoff.nextPresentationEnvelope?.checkpointArm?.fighterId === fighterId,
+  `${label}: deployment HUD did not hand off to the first-visible owner`);
+
+  const firstVisibleEnvelope = await withDeploymentPresentationQuiescence(
+    page,
+    "deployment-checkpoint-advance",
+    `${label}/first-visible`,
+    null,
+    (checkpointArm, presentationArm) => pauseAtDeploymentCheckpoint(
+      page,
+      fighterId,
+      firstVisibleCheckpoint.id,
+      firstVisibleCheckpoint.progress,
+      `${label}/first-visible`,
+      null,
+      checkpointArm,
+      presentationArm,
+    ),
+    null,
+    firstFrameHandoff.nextPresentationEnvelope,
+  );
+  const visible = firstVisibleEnvelope.value;
+  invariant(visible.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
+    `${label}: the first visible Kumaverson frame is still hidden behind the vehicle`);
+
+  const captureEnvelope = await withDeploymentCanvasCaptureQuiescence(
+    page,
+    `${label}/hud-capture`,
+    () => captureHudState(page, viewport, axisName, stateId, lifecycle),
+    firstVisibleEnvelope.preArmedEvidenceCapture,
+    resumeAfterCapture ? { type: "resume" } : null,
+  );
+  return {
+    ...captureEnvelope.value,
+    deploymentPresentationOwnership: {
+      schema: "v100-deployment-hud-presentation-ownership/v1",
+      firstFrame: firstFrameEnvelope.presentationQuiescence,
+      firstFrameEvidence: firstFrameHandoff.receipt,
+      firstVisible: firstVisibleEnvelope.presentationQuiescence,
+      capture: captureEnvelope.receipt,
+      resumeAfterCapture,
+    },
+  };
+}
+
 async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = await page.evaluate(() => (
@@ -1202,6 +1811,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
     const battle = await openBattlePage(context, "mission", { stageNumber }, lifecycle);
     diagnosticControls.push(battle);
     page = battle.page;
+    lifecycle?.setPhase("HUD initial message settle");
     await waitForQuietBattleMessages(page, `${name}/settle`);
 
     if (stateId === "stage1-normal") {
@@ -1227,16 +1837,15 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
         attackerKind: "walker", lane: 1, existingClaim: false,
       }));
       invariant(Number.isInteger(prepared?.attackerId), `${name}: deployment fixture is unavailable`);
-      const start = await queueAndPauseAtFirstDeploymentFrame(page, "kumaverson", name);
-      invariant(start.audit?.deploymentPlan?.checkpoint === "fully-inside",
-        `${name}: deployment banner did not freeze the production progress-0 frame`);
-      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-      const visible = await pauseAtDeploymentCheckpoint(
-        page, start.fighter.id, "first-visible", CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress, name,
-      );
-      invariant(visible.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
-        `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
-      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      const state = await captureDeploymentBannerHudState({
+        page,
+        viewport,
+        axisName,
+        stateId,
+        label: name,
+        lifecycle,
+        resumeAfterCapture: false,
+      });
       invariant(state.semantic.bannerText.includes("移動拠点から出撃"),
         `${name}: deployment banner copy is missing`);
       result.states.push(state);
@@ -1275,10 +1884,12 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
         `${name}: disabled unit/support state did not remain visible`);
       result.states.push({ ...state, disabledControls });
     } else {
+      lifecycle?.setPhase("boss fixture preparation");
       const prepared = await page.evaluate(
         () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
       );
       invariant(prepared?.kind === "takuya", `${name}: TAKUYA HUD fixture is unavailable`);
+      lifecycle?.setPhase("boss entrance wait");
       const entry = await page.waitForFunction(
         () => {
           const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
@@ -1289,6 +1900,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
       await page.evaluate(
         (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId), entry.bossId,
       );
+      lifecycle?.setPhase("boss combat-ready wait");
       await page.waitForFunction(
         () => {
           const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
@@ -1302,6 +1914,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
           `${name}: simultaneous banner, bark, and boss HUD state was not rendered`);
         result.states.push(state);
       } else {
+        lifecycle?.setPhase("boss message settle");
         await waitForQuietBattleMessages(page, name);
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
         const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
@@ -1412,28 +2025,18 @@ async function runFullHudCase(browserType, engine, viewport) {
     ));
     invariant(Number.isInteger(deploymentPrepared?.attackerId),
       `${name}: deployment-banner fixture is unavailable`);
-    const deploymentStart = await queueAndPauseAtFirstDeploymentFrame(
+    const deploymentBanner = await captureDeploymentBannerHudState({
       page,
-      "kumaverson",
-      `${name}/deployment-banner`,
-    );
-    invariant(deploymentStart.audit?.deploymentPlan?.checkpoint === "fully-inside",
-      `${name}: deployment banner did not freeze the production progress-0 frame`);
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-    const deploymentFrame = await pauseAtDeploymentCheckpoint(
-      page,
-      deploymentStart.fighter.id,
-      "first-visible",
-      CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress,
-      `${name}/deployment-banner-visible`,
-    );
-    invariant(deploymentFrame.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
-      `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
-    const deploymentBanner = await captureHudState(page, viewport, name, "deployment-banner", lifecycle);
+      viewport,
+      axisName: name,
+      stateId: "deployment-banner",
+      label: `${name}/deployment-banner`,
+      lifecycle,
+      resumeAfterCapture: true,
+    });
     invariant(deploymentBanner.semantic.bannerText.includes("移動拠点から出撃"),
       `${name}: deployment banner copy is missing`);
     result.states.push(deploymentBanner);
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
 
     const abilityProof = await page.evaluate(() => (
       window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof("medic")
@@ -1795,91 +2398,1183 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence, life
   return result;
 }
 
-async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumProgress, label) {
-  return page.evaluate(async ({ id, expected, requiredProgress, maximumMs }) => {
-    const startedAt = performance.now();
-    while (performance.now() - startedAt < maximumMs) {
-      const qa = window.__ASHFALL_BATTLE_QA__;
-      const snapshot = qa.getSnapshot();
-      const fighter = snapshot.fighters.find((candidate) => candidate.id === id);
-      if (fighter) {
-        const audit = qa.auditFighterUnitLayer(id);
-        const doorX = Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x);
-        const rampX = Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1);
-        const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
-        if (audit?.deploymentPlan?.checkpoint === expected && progress + 1e-6 >= requiredProgress) {
-          qa.setRepresentativeSixProofPaused(true);
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          const frozenSnapshot = qa.getSnapshot();
-          const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === id);
-          const frozenAudit = qa.auditFighterUnitLayer(id);
-          if (frozenAudit?.deploymentPlan?.checkpoint === expected) {
-            const frozenDoorX = Number(frozenSnapshot.battleSpace?.crawlerDoor?.x ?? frozenFighter.x);
-            const frozenRampX = Number(frozenFighter.entryRampX ?? frozenFighter.combatReadyX ?? frozenDoorX + 1);
-            const frozenProgress = Math.max(0, Math.min(
-              1,
-              (frozenFighter.x - frozenDoorX) / Math.max(1, frozenRampX - frozenDoorX),
-            ));
-            if (frozenProgress + 1e-6 >= requiredProgress) {
-              return { fighter: frozenFighter, audit: frozenAudit, observedProgress: frozenProgress };
-            }
-          }
-          qa.setRepresentativeSixProofPaused(false);
-        }
-      }
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-    throw new Error(`deployment checkpoint ${expected} timed out`);
-  }, {
-    id: fighterId,
-    expected: checkpoint,
-    requiredProgress: minimumProgress,
-    maximumMs: timeout,
-  }).catch((error) => {
-    throw new Error(`${label}: ${String(error)}`);
-  });
+function validDeploymentAuditScratchReceipt(audit) {
+  return audit?.scratchSurface?.schema === "v100-fighter-unit-layer-audit-scratch/v1"
+    && audit.scratchSurface.kind === "detached-dom-canvas"
+    && audit.scratchSurface.surfaceCount === 1
+    && audit.scratchSurface.contextCount === 1
+    && audit.scratchSurface.passCount === 6
+    && audit.transportSession?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && audit.transportSession.passCount === 6
+    && JSON.stringify(audit.transportSession.completedPasses) === JSON.stringify(FIGHTER_UNIT_LAYER_AUDIT_PASSES)
+    && audit.transportSession.finalizedWithoutCanvasDraw === true;
 }
 
-async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
-  return page.evaluate(async ({ kind, maximumMs }) => {
-    const qa = window.__ASHFALL_BATTLE_QA__;
-    if (qa.queueCrawlerDefenseUnit(kind, 1) !== true) {
-      throw new Error(`CRAWLER queue rejected ${kind}`);
+async function boundedFighterUnitLayerAuditTransaction(operation, deadlineAt, label) {
+  const remainingMs = deadlineAt - Date.now();
+  const transactionTimeoutMs = Math.min(
+    FIGHTER_UNIT_LAYER_AUDIT_TRANSACTION_TIMEOUT_MS,
+    remainingMs,
+  );
+  if (transactionTimeoutMs <= 0) {
+    throw new Error(`${label}: unit-layer audit exhausted its existing 10000 ms checkpoint budget`);
+  }
+  let timeoutId;
+  try {
+    const result = await Promise.race([
+      operation.then(
+        (value) => ({ status: "fulfilled", value }),
+        (error) => ({ status: "rejected", error }),
+      ),
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve({ status: "timeout" }), transactionTimeoutMs);
+      }),
+    ]);
+    if (result.status === "fulfilled") return result.value;
+    if (result.status === "rejected") throw result.error;
+    throw new Error(`${label}: unit-layer audit page transaction exceeded ${transactionTimeoutMs} ms`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function runFighterUnitLayerAuditSession(page, fighterId, label, expectedBinding = null) {
+  const deadlineAt = Date.now() + FIGHTER_UNIT_LAYER_AUDIT_TOTAL_TIMEOUT_MS;
+  const begin = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((id) => window.__ASHFALL_BATTLE_QA__.beginFighterUnitLayerAuditSession(id), fighterId),
+    deadlineAt,
+    `${label}/begin`,
+  );
+  invariant(begin?.schema === "v100-fighter-unit-layer-audit-session/v1"
+    && typeof begin.token === "string"
+    && begin.fighterId === fighterId
+    && begin.passCount === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+  `${label}: unit-layer audit session did not bind exact fighter ownership ${JSON.stringify(begin)}`);
+  if (expectedBinding) {
+    const expectedReceipt = expectedBinding.checkpointReceipt ?? null;
+    const actualReceipt = begin.checkpointReceipt ?? null;
+    const receiptMatches = expectedReceipt === null
+      ? actualReceipt === null
+      : actualReceipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+        && String(actualReceipt.fighterId) === String(expectedReceipt.fighterId)
+        && actualReceipt.kind === expectedReceipt.kind
+        && actualReceipt.checkpoint === expectedReceipt.checkpoint
+        && Number(actualReceipt.computedProgress) === Number(expectedReceipt.computedProgress);
+    invariant(begin.fighterKind === expectedBinding.fighterKind
+      && begin.checkpoint === expectedBinding.checkpoint
+      && receiptMatches
+      && begin.quiescence?.active === true
+      && begin.quiescence.owner === expectedBinding.presentation?.owner
+      && begin.quiescence.route === expectedBinding.presentation?.route
+      && Number(begin.quiescence.generation) === Number(expectedBinding.presentation?.generation),
+    `${label}: dedicated unit-layer audit begin drifted from the accepted lean checkpoint ${JSON.stringify({ begin, expectedBinding })}`);
+  }
+  const steps = [];
+  for (const [index, expectedPass] of FIGHTER_UNIT_LAYER_AUDIT_PASSES.entries()) {
+    const step = await boundedFighterUnitLayerAuditTransaction(
+      page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.advanceFighterUnitLayerAuditSession(token), begin.token),
+      deadlineAt,
+      `${label}/${expectedPass}`,
+    );
+    invariant(step?.schema === "v100-fighter-unit-layer-audit-session-step/v1"
+      && step.token === begin.token
+      && step.step === index + 1
+      && step.pass === expectedPass
+      && step.complete === (index === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1),
+    `${label}: unit-layer audit step order drifted ${JSON.stringify(step)}`);
+    steps.push(step);
+    if (index < FIGHTER_UNIT_LAYER_AUDIT_PASSES.length - 1) {
+      const remainingMs = deadlineAt - Date.now();
+      invariant(remainingMs > DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS,
+        `${label}: unit-layer audit lacks the existing host-turn budget after ${expectedPass}`);
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
     }
-    const startedAt = performance.now();
-    while (performance.now() - startedAt < maximumMs) {
-      const snapshot = qa.getSnapshot();
-      const fighter = snapshot.fighters.find((candidate) => (
-        candidate.side === "human"
-          && candidate.kind === kind
-          && candidate.spawnPortalId === "crawler-door"
-      ));
-      if (fighter) {
-        const audit = qa.auditFighterUnitLayer(fighter.id);
-        const bannerReady = document.querySelector(".battle-banner")?.textContent
-          ?.includes("移動拠点から出撃") === true;
-        const doorX = Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x);
-        const rampX = Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1);
-        const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
-        if (bannerReady && audit?.deploymentPlan?.checkpoint === "fully-inside" && progress === 0) {
-          qa.setRepresentativeSixProofPaused(true);
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          const frozenSnapshot = qa.getSnapshot();
-          const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === fighter.id);
-          const frozenAudit = qa.auditFighterUnitLayer(fighter.id);
-          if (frozenAudit?.deploymentPlan?.checkpoint === "fully-inside"
-            && frozenFighter.x === fighter.x) {
-            return { fighter: frozenFighter, audit: frozenAudit, observedProgress: progress };
-          }
-          qa.setRepresentativeSixProofPaused(false);
-        }
+  }
+  const audit = await boundedFighterUnitLayerAuditTransaction(
+    page.evaluate((token) => window.__ASHFALL_BATTLE_QA__.finalizeFighterUnitLayerAuditSession(token), begin.token),
+    deadlineAt,
+    `${label}/finalize`,
+  );
+  invariant(validDeploymentAuditScratchReceipt(audit)
+    && audit.transportSession.token === begin.token
+    && Date.now() <= deadlineAt,
+  `${label}: unit-layer audit final receipt is incomplete ${JSON.stringify(audit?.transportSession)}`);
+  return { ...audit, transportSteps: steps };
+}
+
+async function resumeDeploymentBattleForNextUnit(page, previousUnit, nextUnit, label) {
+  try {
+    const readBoundary = (resume) => page.evaluate(({ requestedResume, previousKind }) => {
+      const bridge = window.__ASHFALL_BATTLE_QA__;
+      if (typeof bridge?.getCrawlerDeploymentProofSnapshot !== "function"
+        || typeof bridge?.getQaPresentationQuiescence !== "function"
+        || typeof bridge?.setRepresentativeSixProofPaused !== "function") {
+        throw new Error("deployment cross-unit live-battle bridge is unavailable");
       }
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-    throw new Error(`first deployment frame for ${kind} timed out`);
-  }, { kind: unitKind, maximumMs: timeout }).catch((error) => {
+      const commandResult = requestedResume
+        ? bridge.setRepresentativeSixProofPaused(false)
+        : null;
+      const snapshot = bridge.getCrawlerDeploymentProofSnapshot({ kind: previousKind });
+      const presentation = bridge.getQaPresentationQuiescence();
+      const canvas = document.querySelector("canvas.battlefield.active");
+      const rect = canvas?.getBoundingClientRect?.() ?? null;
+      const style = canvas ? getComputedStyle(canvas) : null;
+      const checkpointReceipt = snapshot?.checkpointReceipt ?? null;
+      return {
+        schema: "v100-deployment-cross-unit-live-boundary/v1",
+        commandResult,
+        screen: snapshot?.screen ?? null,
+        running: snapshot?.running ?? null,
+        paused: snapshot?.paused ?? null,
+        over: snapshot?.over ?? null,
+        battleTime: snapshot?.time ?? null,
+        fighter: snapshot?.fighter ? {
+          id: snapshot.fighter.id,
+          kind: snapshot.fighter.kind,
+          gateEntering: snapshot.fighter.gateEntering,
+          combatReady: snapshot.fighter.combatReady,
+          entryRampCleared: snapshot.fighter.entryRampCleared,
+        } : null,
+        checkpointArm: snapshot?.checkpointArm === null ? null : "present",
+        checkpointReceipt: checkpointReceipt ? {
+          schema: checkpointReceipt.schema,
+          fighterId: checkpointReceipt.fighterId,
+          kind: checkpointReceipt.kind,
+          checkpoint: checkpointReceipt.checkpoint,
+          computedProgress: checkpointReceipt.computedProgress,
+        } : null,
+        presentation: presentation ? {
+          schema: presentation.schema,
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+          stageId: presentation.stageId,
+          datasetActive: presentation.datasetActive,
+        } : null,
+        documentDatasetActive: document.documentElement.dataset.qaPresentationQuiesced === "true",
+        canvas: canvas ? {
+          connected: canvas.isConnected,
+          width: canvas.width,
+          height: canvas.height,
+          display: style?.display ?? null,
+          visibility: style?.visibility ?? null,
+          opacity: style?.opacity ?? null,
+          rectWidth: rect?.width ?? null,
+          rectHeight: rect?.height ?? null,
+        } : null,
+      };
+    }, { requestedResume: resume, previousKind: previousUnit.kind });
+
+    const validCanvas = (state) => state?.canvas?.connected === true
+      && state.canvas.width > 0
+      && state.canvas.height > 0
+      && state.canvas.display !== "none"
+      && state.canvas.visibility !== "hidden"
+      && Number(state.canvas.opacity) > 0
+      && state.canvas.rectWidth > 0
+      && state.canvas.rectHeight > 0;
+    const validInactivePresentation = (state) => (
+      state?.presentation?.schema === "v100-qa-presentation-quiescence/v1"
+      && state.presentation.active === false
+      && state.presentation.route === "deployment"
+      && state.presentation.datasetActive === false
+      && state.documentDatasetActive === false
+    );
+
+    const before = await readBoundary(false);
+    invariant(before?.schema === "v100-deployment-cross-unit-live-boundary/v1"
+      && before.screen === "battle"
+      && before.running === true
+      && before.paused === true
+      && before.over !== true
+      && before.fighter?.kind === previousUnit.kind
+      && before.fighter.gateEntering === false
+      && before.fighter.combatReady === true
+      && before.fighter.entryRampCleared === true
+      && before.checkpointReceipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+      && before.checkpointReceipt.kind === previousUnit.kind
+      && before.checkpointReceipt.checkpoint === "fully-outside"
+      && before.checkpointReceipt.computedProgress === 1
+      && validInactivePresentation(before)
+      && validCanvas(before),
+    `${label}: previous deployment did not end at the accepted semantic pause ${JSON.stringify(before)}`);
+
+    const command = await readBoundary(true);
+    invariant(command?.commandResult === false,
+      `${label}: production battle resume command was not accepted ${JSON.stringify(command)}`);
+    await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+    const after = await readBoundary(false);
+    invariant(after?.schema === "v100-deployment-cross-unit-live-boundary/v1"
+      && after.screen === "battle"
+      && after.running === true
+      && after.paused !== true
+      && after.over !== true
+      && after.fighter?.kind === previousUnit.kind
+      && after.checkpointArm === null
+      && after.checkpointReceipt === null
+      && Number.isFinite(after.battleTime)
+      && after.battleTime >= before.battleTime
+      && after.presentation.stageId === before.presentation.stageId
+      && validInactivePresentation(after)
+      && validCanvas(after),
+    `${label}: production battle did not remain live after the cross-unit resume ${JSON.stringify(after)}`);
+
+    return {
+      schema: "v100-deployment-cross-unit-live-resume/v1",
+      previousUnit: { family: previousUnit.family, kind: previousUnit.kind },
+      nextUnit: { family: nextUnit.family, kind: nextUnit.kind },
+      before,
+      commandResult: command.commandResult,
+      after,
+    };
+  } catch (error) {
     throw new Error(`${label}: ${String(error)}`);
+  }
+}
+
+async function armDeploymentPresentationQuiescence(page, owner, checkpointArmRequest = null) {
+  return page.evaluate(({ requestedOwner, requestedCheckpointArm }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    if (typeof bridge?.setQaPresentationQuiesced !== "function"
+      || typeof bridge?.getQaPresentationQuiescence !== "function") {
+      throw new Error("deployment presentation quiescence bridge is unavailable");
+    }
+    let checkpointArm = null;
+    if (requestedCheckpointArm !== null) {
+      if (typeof bridge.armCrawlerDeploymentCheckpoint !== "function") {
+        throw new Error("deployment checkpoint arm bridge is unavailable");
+      }
+      checkpointArm = bridge.armCrawlerDeploymentCheckpoint(
+        requestedCheckpointArm.fighterId,
+        requestedCheckpointArm.checkpoint,
+      );
+      if (!(checkpointArm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+        && checkpointArm.armed === true
+        && checkpointArm.fighterId === requestedCheckpointArm.fighterId
+        && checkpointArm.checkpoint === requestedCheckpointArm.checkpoint
+        && Math.abs(checkpointArm.minimumProgress - requestedCheckpointArm.minimumProgress) <= 1e-6)) {
+        throw new Error(`deployment checkpoint arm rejected or changed the canonical minimum ${JSON.stringify(checkpointArm)}`);
+      }
+    }
+    return {
+      checkpointArm,
+      presentation: bridge.setQaPresentationQuiesced(true, requestedOwner),
+      armedAtPageTime: Date.now(),
+    };
+  }, { requestedOwner: owner, requestedCheckpointArm: checkpointArmRequest });
+}
+
+async function withDeploymentPresentationQuiescence(
+  page,
+  owner,
+  label,
+  captureTrace,
+  operation,
+  checkpointArmRequest = null,
+  preArmedEnvelope = null,
+) {
+  invariant(preArmedEnvelope === null || checkpointArmRequest === null,
+    `${label}: pre-armed deployment presentation cannot add a checkpoint arm`);
+  const armEnvelope = preArmedEnvelope ?? await armDeploymentPresentationQuiescence(
+    page,
+    owner,
+    checkpointArmRequest,
+  );
+  const arm = armEnvelope.presentation;
+  if (captureTrace) await captureTrace();
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "deployment"
+    && arm.datasetActive === true
+    && arm.running === true
+    && arm.paused !== true
+    && arm.over !== true,
+  `${label}: deployment presentation quiescence did not arm ${JSON.stringify(arm)}`);
+
+  let value;
+  let operationError = null;
+  try {
+    value = await operation(armEnvelope.checkpointArm, arm);
+  } catch (error) {
+    operationError = error;
+  }
+
+  let transition = null;
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      if (operationError) {
+        release = await page.evaluate((requestedOwner) => (
+          window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null
+        ), owner);
+      } else {
+        transition = await page.evaluate(async ({
+          requestedOwner,
+          evidenceOwner,
+          restorationTimeoutMs,
+        }) => {
+          const bridge = window.__ASHFALL_BATTLE_QA__;
+          if (typeof bridge?.setQaPresentationQuiesced !== "function"
+            || typeof bridge?.getQaPresentationQuiescence !== "function") {
+            throw new Error("deployment presentation restoration bridge is unavailable");
+          }
+          const releaseReceipt = bridge.setQaPresentationQuiesced(false, requestedOwner);
+          if (!(releaseReceipt?.schema === "v100-qa-presentation-quiescence/v1"
+            && releaseReceipt.active === false
+            && releaseReceipt.owner === requestedOwner
+            && releaseReceipt.route === "deployment"
+            && releaseReceipt.datasetActive === false
+            && releaseReceipt.running === true
+            && releaseReceipt.paused === true
+            && releaseReceipt.over !== true)) {
+            throw new Error(`deployment presentation release is invalid ${JSON.stringify(releaseReceipt)}`);
+          }
+          const restored = await new Promise((resolve, reject) => {
+            const startedAt = performance.now();
+            const timer = setTimeout(() => {
+              reject(new Error(`deployment three-frame restoration exceeded ${restorationTimeoutMs} ms`));
+            }, restorationTimeoutMs);
+            const observe = () => {
+              const quiescence = bridge.getQaPresentationQuiescence();
+              const canvas = document.querySelector("canvas.battlefield");
+              const rect = canvas?.getBoundingClientRect?.() ?? null;
+              const style = canvas ? getComputedStyle(canvas) : null;
+              const renderFrameDelta = Number(quiescence?.renderFrames)
+                - Number(releaseReceipt.releasedAtRenderFrames);
+              if (renderFrameDelta > 3) {
+                clearTimeout(timer);
+                reject(new Error(`deployment restoration exceeded exactly three production frames: ${renderFrameDelta}`));
+                return;
+              }
+              const ready = quiescence?.schema === "v100-qa-presentation-quiescence/v1"
+                && quiescence.active === false
+                && quiescence.owner === requestedOwner
+                && quiescence.route === "deployment"
+                && quiescence.datasetActive === false
+                && quiescence.running === true
+                && quiescence.paused === true
+                && quiescence.over !== true
+                && renderFrameDelta === 3
+                && rect?.width > 0
+                && rect?.height > 0
+                && style?.display !== "none"
+                && style?.visibility !== "hidden"
+                && Number(style?.opacity) > 0;
+              if (ready) {
+                clearTimeout(timer);
+                const evidencePresentation = bridge.setQaPresentationQuiesced(true, evidenceOwner);
+                if (!(evidencePresentation?.schema === "v100-qa-presentation-quiescence/v1"
+                  && evidencePresentation.active === true
+                  && evidencePresentation.owner === evidenceOwner
+                  && evidencePresentation.route === "deployment"
+                  && evidencePresentation.datasetActive === true
+                  && evidencePresentation.running === true
+                  && evidencePresentation.paused === true
+                  && evidencePresentation.over !== true
+                  && Number(evidencePresentation.enteredAtRenderFrames) === Number(quiescence.renderFrames))) {
+                  reject(new Error(`deployment evidence owner did not acquire the exact restored frame ${JSON.stringify(evidencePresentation)}`));
+                  return;
+                }
+                resolve({
+                  quiescence,
+                  renderFrameDelta,
+                  elapsedMs: performance.now() - startedAt,
+                  canvas: {
+                    width: rect.width,
+                    height: rect.height,
+                    display: style.display,
+                    visibility: style.visibility,
+                    opacity: style.opacity,
+                  },
+                  evidencePresentation,
+                });
+                return;
+              }
+              requestAnimationFrame(observe);
+            };
+            requestAnimationFrame(observe);
+          });
+          const evidencePresentation = restored.evidencePresentation;
+          if (!(evidencePresentation?.schema === "v100-qa-presentation-quiescence/v1"
+            && evidencePresentation.active === true
+            && evidencePresentation.owner === evidenceOwner
+            && evidencePresentation.route === "deployment"
+            && evidencePresentation.datasetActive === true
+            && evidencePresentation.running === true
+            && evidencePresentation.paused === true
+            && evidencePresentation.over !== true
+            && Number(evidencePresentation.enteredAtRenderFrames)
+              === Number(restored.quiescence.renderFrames))) {
+            throw new Error(`deployment evidence owner did not atomically acquire restoration ${JSON.stringify(evidencePresentation)}`);
+          }
+          return {
+            schema: "v100-deployment-restoration-evidence-handoff/v1",
+            release: releaseReceipt,
+            restored,
+            evidenceCaptureEnvelope: {
+              schema: "v100-deployment-prearmed-presentation-envelope/v1",
+              checkpointArm: null,
+              presentation: evidencePresentation,
+              armedAtPageTime: Date.now(),
+              sourceOwner: requestedOwner,
+            },
+          };
+        }, {
+          requestedOwner: owner,
+          evidenceOwner: "deployment-evidence-capture",
+          restorationTimeoutMs: Math.min(timeout, 10_000),
+        });
+        release = transition.release;
+      }
+      if (captureTrace) await captureTrace();
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) {
+      throw new Error(`${String(operationError)}; presentation release also failed: ${String(releaseError)}`);
+    }
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "v100-qa-presentation-quiescence/v1"
+    && release.active === false
+    && release.owner === owner
+    && release.route === "deployment"
+    && release.datasetActive === false
+    && release.running === true
+    && release.paused === true
+    && release.over !== true,
+  `${label}: deployment presentation quiescence did not release at the semantic pause ${JSON.stringify(release)}`);
+  invariant(Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames),
+    `${label}: a production render escaped the deployment quiescence window ${JSON.stringify(release)}`);
+  invariant(Number(release.releasedAtSimulationTicks) > Number(release.enteredAtSimulationTicks),
+    `${label}: deployment simulation did not advance while presentation was quiesced ${JSON.stringify(release)}`);
+  invariant(Number(release.suppressedRenderFrames) > 0,
+    `${label}: deployment quiescence suppressed no scheduled render ${JSON.stringify(release)}`);
+  const restored = transition?.restored;
+  const evidenceCaptureEnvelope = transition?.evidenceCaptureEnvelope;
+  invariant(transition?.schema === "v100-deployment-restoration-evidence-handoff/v1"
+    && restored?.renderFrameDelta === 3
+    && evidenceCaptureEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1"
+    && evidenceCaptureEnvelope.presentation?.owner === "deployment-evidence-capture",
+  `${label}: deployment restoration did not atomically hand off to evidence ownership ${JSON.stringify(transition)}`);
+  return {
+    value,
+    preArmedEvidenceCapture: evidenceCaptureEnvelope,
+    presentationQuiescence: {
+      schema: "v100-deployment-presentation-quiescence-receipt/v1",
+      owner,
+      checkpointArm: armEnvelope.checkpointArm,
+      armedAtPageTime: armEnvelope.armedAtPageTime,
+      arm,
+      release,
+      restored,
+      evidenceCaptureArm: evidenceCaptureEnvelope.presentation,
+    },
+  };
+}
+
+async function withDeploymentCanvasCaptureQuiescence(
+  page,
+  label,
+  operation,
+  preArmedEnvelope,
+  successorRequest = null,
+) {
+  const owner = "deployment-evidence-capture";
+  invariant(preArmedEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1",
+    `${label}: deployment evidence-capture requires the atomic pre-armed envelope`);
+  const arm = preArmedEnvelope.presentation;
+  invariant(arm?.schema === "v100-qa-presentation-quiescence/v1"
+    && arm.active === true
+    && arm.owner === owner
+    && arm.route === "deployment"
+    && arm.datasetActive === true
+    && arm.running === true
+    && arm.paused === true
+    && arm.over !== true,
+  `${label}: deployment evidence-capture quiescence did not arm ${JSON.stringify(arm)}`);
+
+  let value;
+  let preCapture = null;
+  let operationError = null;
+  try {
+    const preCaptureHandle = await page.waitForFunction((requestedOwner) => {
+      const receipt = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.() ?? null;
+      return receipt?.schema === "v100-qa-presentation-quiescence/v1"
+        && receipt.active === true
+        && receipt.owner === requestedOwner
+        && receipt.route === "deployment"
+        && receipt.datasetActive === true
+        && receipt.running === true
+        && receipt.paused === true
+        && receipt.over !== true
+        && Number(receipt.renderFrames) === Number(receipt.enteredAtRenderFrames)
+        && Number(receipt.simulationTicks) === Number(receipt.enteredAtSimulationTicks)
+        && Number(receipt.suppressedRenderFrames) > 0
+        ? receipt
+        : false;
+    }, owner, { timeout: Math.min(timeout, 2_000), polling: 16 });
+    preCapture = await preCaptureHandle.jsonValue();
+    await preCaptureHandle.dispose();
+    value = await operation();
+  } catch (error) {
+    operationError = error;
+  }
+
+  let transition = null;
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      transition = await page.evaluate(({ requestedOwner, requestedSuccessor }) => {
+        const bridge = window.__ASHFALL_BATTLE_QA__;
+        if (typeof bridge?.setQaPresentationQuiesced !== "function") {
+          throw new Error("deployment evidence-capture release bridge is unavailable");
+        }
+        const releaseReceipt = bridge.setQaPresentationQuiesced(false, requestedOwner);
+        let nextPresentationEnvelope = null;
+        let resumeResult = null;
+        if (requestedSuccessor?.type === "checkpoint") {
+          if (typeof bridge.armCrawlerDeploymentCheckpoint !== "function") {
+            throw new Error("deployment successor checkpoint bridge is unavailable");
+          }
+          const checkpointArm = bridge.armCrawlerDeploymentCheckpoint(
+            requestedSuccessor.fighterId,
+            requestedSuccessor.checkpoint,
+          );
+          if (!(checkpointArm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+            && checkpointArm.armed === true
+            && checkpointArm.fighterId === requestedSuccessor.fighterId
+            && checkpointArm.checkpoint === requestedSuccessor.checkpoint
+            && Math.abs(checkpointArm.minimumProgress - requestedSuccessor.minimumProgress) <= 1e-6)) {
+            throw new Error(`deployment successor checkpoint arm rejected ${JSON.stringify(checkpointArm)}`);
+          }
+          const presentation = bridge.setQaPresentationQuiesced(
+            true,
+            "deployment-checkpoint-advance",
+          );
+          nextPresentationEnvelope = {
+            schema: "v100-deployment-prearmed-presentation-envelope/v1",
+            checkpointArm,
+            presentation,
+            armedAtPageTime: Date.now(),
+            sourceOwner: requestedOwner,
+          };
+        } else if (requestedSuccessor?.type === "resume") {
+          if (typeof bridge.setRepresentativeSixProofPaused !== "function") {
+            throw new Error("deployment successor resume bridge is unavailable");
+          }
+          resumeResult = bridge.setRepresentativeSixProofPaused(false);
+          if (resumeResult !== false) {
+            throw new Error(`deployment successor resume command was rejected ${JSON.stringify(resumeResult)}`);
+          }
+        } else if (requestedSuccessor !== null) {
+          throw new Error(`unknown deployment evidence successor ${JSON.stringify(requestedSuccessor)}`);
+        }
+        return {
+          schema: "v100-deployment-evidence-successor-handoff/v1",
+          release: releaseReceipt,
+          nextPresentationEnvelope,
+          resumeResult,
+        };
+      }, {
+        requestedOwner: owner,
+        requestedSuccessor: operationError ? null : successorRequest,
+      });
+      release = transition.release;
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) throw new Error(`${String(operationError)}; deployment evidence-capture release also failed: ${String(releaseError)}`);
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "v100-qa-presentation-quiescence/v1"
+    && release.active === false
+    && release.owner === owner
+    && release.route === "deployment"
+    && release.datasetActive === false
+    && release.running === true
+    && release.paused === true
+    && release.over !== true
+    && Number(release.releasedAtRenderFrames) === Number(release.enteredAtRenderFrames)
+    && Number(release.releasedAtSimulationTicks) === Number(release.enteredAtSimulationTicks)
+    && Number(release.suppressedRenderFrames) > 0,
+  `${label}: deployment evidence-capture quiescence did not preserve the restored frozen frame ${JSON.stringify(release)}`);
+  const nextPresentationEnvelope = transition?.nextPresentationEnvelope ?? null;
+  if (successorRequest?.type === "checkpoint") {
+    invariant(nextPresentationEnvelope?.schema === "v100-deployment-prearmed-presentation-envelope/v1"
+      && nextPresentationEnvelope.checkpointArm?.fighterId === successorRequest.fighterId
+      && nextPresentationEnvelope.checkpointArm?.checkpoint === successorRequest.checkpoint
+      && nextPresentationEnvelope.presentation?.active === true
+      && nextPresentationEnvelope.presentation.owner === "deployment-checkpoint-advance"
+      && nextPresentationEnvelope.presentation.paused !== true,
+    `${label}: deployment evidence did not atomically hand off to the next checkpoint owner`);
+  } else {
+    invariant(nextPresentationEnvelope === null,
+      `${label}: deployment evidence created an unexpected successor owner`);
+  }
+  if (successorRequest?.type === "resume") {
+    invariant(transition?.resumeResult === false,
+      `${label}: deployment evidence did not atomically resume the production battle`);
+  }
+  return {
+    value,
+    nextPresentationEnvelope,
+    resumeResult: transition?.resumeResult ?? null,
+    receipt: {
+      schema: "v100-deployment-evidence-capture-quiescence/v1",
+      owner,
+      preArmedEnvelope: {
+        schema: preArmedEnvelope.schema,
+        checkpointArm: preArmedEnvelope.checkpointArm,
+        armedAtPageTime: preArmedEnvelope.armedAtPageTime,
+        sourceOwner: preArmedEnvelope.sourceOwner,
+      },
+      arm,
+      preCapture,
+      release,
+      successor: successorRequest,
+      nextPresentationEnvelope,
+      resumeResult: transition?.resumeResult ?? null,
+    },
+  };
+}
+
+async function refreshDeploymentEvidenceAfterRestoredFrames(
+  page,
+  evidence,
+  fighterId,
+  unitKind,
+  expectedCheckpoint,
+  expectedProgress,
+  label,
+) {
+  const presentation = evidence?.presentationQuiescence;
+  invariant(presentation?.schema === "v100-deployment-presentation-quiescence-receipt/v1"
+    && presentation.restored?.renderFrameDelta === 3
+    && Number(presentation.restored?.quiescence?.renderFrames)
+      === Number(presentation.release?.releasedAtRenderFrames) + 3
+    && presentation.evidenceCaptureArm?.schema === "v100-qa-presentation-quiescence/v1"
+    && presentation.evidenceCaptureArm.active === true
+    && presentation.evidenceCaptureArm.owner === "deployment-evidence-capture"
+    && Number(presentation.evidenceCaptureArm.enteredAtRenderFrames)
+      === Number(presentation.restored.quiescence.renderFrames),
+  `${label}: post-restoration readback started before three production frames`);
+  const refreshed = await page.evaluate(({ id }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const snapshot = bridge?.getCrawlerDeploymentProofSnapshot?.({ fighterId: id }) ?? null;
+    const presentationState = bridge?.getQaPresentationQuiescence?.() ?? null;
+    return {
+      schema: snapshot?.schema ?? null,
+      screen: snapshot?.screen ?? null,
+      running: snapshot?.running ?? null,
+      paused: snapshot?.paused ?? null,
+      over: snapshot?.over ?? null,
+      computedProgress: snapshot?.computedProgress ?? null,
+      checkpointReceipt: snapshot?.checkpointReceipt ?? null,
+      fighter: snapshot?.fighter ?? null,
+      presentation: presentationState,
+    };
+  }, { id: fighterId });
+  const previousFighter = evidence?.fighter;
+  const fighter = refreshed.fighter;
+  invariant(refreshed.schema === "v099-crawler-deployment-snapshot/v1"
+    && refreshed.screen === "battle"
+    && refreshed.running === true
+    && refreshed.paused === true
+    && refreshed.over !== true
+    && refreshed.presentation?.active === true
+    && refreshed.presentation.owner === "deployment-evidence-capture"
+    && refreshed.presentation.route === "deployment"
+    && refreshed.presentation.paused === true,
+  `${label}: post-restoration production snapshot is not the frozen live battle`);
+  invariant(fighter?.id === fighterId
+    && fighter.kind === unitKind
+    && fighter.x === previousFighter?.x
+    && fighter.y === previousFighter?.y
+    && fighter.gateEntering === previousFighter?.gateEntering
+    && fighter.combatReady === previousFighter?.combatReady
+    && fighter.entryRampCleared === previousFighter?.entryRampCleared
+    && refreshed.computedProgress === evidence?.observedProgress,
+  `${label}: post-restoration production snapshot drifted from the accepted semantic pause`);
+  if (expectedCheckpoint === "fully-inside") {
+    invariant(expectedProgress === 0
+      && refreshed.computedProgress === 0
+      && refreshed.checkpointReceipt === null,
+    `${label}: fully-inside post-restoration readback acquired a noncanonical receipt`);
+  } else {
+    const receipt = refreshed.checkpointReceipt;
+    invariant(receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+      && receipt.fighterId === fighterId
+      && receipt.kind === unitKind
+      && receipt.checkpoint === expectedCheckpoint
+      && receipt.x === fighter.x
+      && receipt.y === fighter.y
+      && receipt.computedProgress === refreshed.computedProgress
+      && receipt.computedProgress + 1e-6 >= expectedProgress,
+    `${label}: post-restoration checkpoint receipt lost exact semantic ownership`);
+  }
+  invariant(fighter.renderAudit?.drawCount >= 1
+    && fighter.renderAudit?.renderSequence >= 1
+    && fighter.renderAudit?.x === fighter.x
+    && fighter.renderAudit?.y === fighter.y
+    && fighter.renderAudit?.deploymentPlan?.checkpoint === expectedCheckpoint
+    && fighter.renderAudit?.poseOpacity === 1
+    && fighter.renderAudit?.effectiveOpacity === 1
+    && fighter.animationPose?.opacity === 1,
+  `${label}: restored production frames did not record an opaque fighter render`);
+  return {
+    ...evidence,
+    fighter,
+    observedProgress: refreshed.computedProgress,
+    checkpointReceipt: refreshed.checkpointReceipt,
+    postRestorationReadback: {
+      schema: "v100-deployment-post-restoration-readback/v1",
+      restoredRenderFrames: presentation.restored.quiescence.renderFrames,
+      releasedAtRenderFrames: presentation.release.releasedAtRenderFrames,
+      fighterId,
+      unitKind,
+      checkpoint: expectedCheckpoint,
+      computedProgress: refreshed.computedProgress,
+      renderSequence: fighter.renderAudit.renderSequence,
+    },
+  };
+}
+
+async function pauseAtDeploymentCheckpoint(
+  page,
+  fighterId,
+  checkpoint,
+  minimumProgress,
+  label,
+  captureTrace = null,
+  prearmedCheckpoint = null,
+  expectedPresentationArm = null,
+) {
+  try {
+    invariant(expectedPresentationArm?.schema === "v100-qa-presentation-quiescence/v1"
+      && expectedPresentationArm.active === true
+      && expectedPresentationArm.owner === "deployment-checkpoint-advance"
+      && expectedPresentationArm.route === "deployment",
+    `${label}: deployment checkpoint lacks its exact presentation owner`);
+    const arm = prearmedCheckpoint ?? await page.evaluate(({ id, expectedCheckpoint }) => (
+      window.__ASHFALL_BATTLE_QA__.armCrawlerDeploymentCheckpoint(id, expectedCheckpoint)
+    ), { id: fighterId, expectedCheckpoint: checkpoint });
+    if (captureTrace) await captureTrace();
+    invariant(arm?.schema === "v099-crawler-deployment-checkpoint-arm/v1"
+      && arm.armed === true
+      && arm.fighterId === fighterId
+      && arm.checkpoint === checkpoint
+      && Math.abs(arm.minimumProgress - minimumProgress) <= 1e-6,
+    `${label}: deployment checkpoint arm rejected or changed the canonical minimum`);
+    const startedAt = Date.now();
+    let lastSnapshot = null;
+    while (Date.now() - startedAt < timeout) {
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+      const candidate = await page.evaluate(({
+        id,
+        expectedCheckpoint,
+        expectedMinimumProgress,
+        expectedPresentationOwner,
+        expectedPresentationGeneration,
+      }) => {
+        const qa = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId: id });
+        const fighter = snapshot?.fighter ?? null;
+        const receipt = snapshot?.checkpointReceipt
+          ? Object.freeze({ ...snapshot.checkpointReceipt })
+          : null;
+        const presentation = qa.getQaPresentationQuiescence?.() ?? null;
+        const leanState = {
+          screen: snapshot?.screen ?? null,
+          running: snapshot?.running ?? null,
+          paused: snapshot?.paused ?? null,
+          over: snapshot?.over ?? null,
+          fighterId: fighter?.id ?? null,
+          fighterKind: fighter?.kind ?? null,
+          fighterX: fighter?.x ?? null,
+          fighterY: fighter?.y ?? null,
+          observedProgress: snapshot?.computedProgress ?? null,
+          checkpointArm: snapshot?.checkpointArm ? {
+            fighterId: snapshot.checkpointArm.fighterId,
+            checkpoint: snapshot.checkpointArm.checkpoint,
+            minimumProgress: snapshot.checkpointArm.minimumProgress,
+          } : null,
+          checkpointReceipt: receipt ? {
+            fighterId: receipt.fighterId,
+            kind: receipt.kind,
+            checkpoint: receipt.checkpoint,
+            computedProgress: receipt.computedProgress,
+          } : null,
+          presentation: presentation ? {
+            active: presentation.active,
+            owner: presentation.owner,
+            route: presentation.route,
+            generation: presentation.generation,
+          } : null,
+        };
+        if (receipt && (receipt.fighterId !== id || receipt.checkpoint !== expectedCheckpoint)) {
+          throw new Error(`deployment checkpoint receipt mismatch ${JSON.stringify(receipt)}`);
+        }
+        const ready = snapshot?.schema === "v099-crawler-deployment-snapshot/v1"
+          && snapshot.screen === "battle"
+          && snapshot.running === true
+          && snapshot.paused === true
+          && snapshot.over !== true
+          && fighter?.id === id
+          && receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+          && receipt.fighterId === id
+          && receipt.kind === fighter.kind
+          && receipt.checkpoint === expectedCheckpoint
+          && receipt.x === fighter.x
+          && receipt.y === fighter.y
+          && receipt.computedProgress === snapshot.computedProgress
+          && receipt.computedProgress + 1e-6 >= expectedMinimumProgress;
+        if (!ready) {
+          return {
+            schema: "v100-deployment-checkpoint-audit-poll/v1",
+            ready: false,
+            ...leanState,
+          };
+        }
+        if (!Object.isFrozen(receipt)
+          || snapshot.checkpointArm !== null
+          || presentation?.active !== true
+          || presentation.owner !== expectedPresentationOwner
+          || presentation.route !== "deployment"
+          || Number(presentation.generation) !== Number(expectedPresentationGeneration)) {
+          throw new Error(`deployment checkpoint receipt-to-owner handoff drifted ${JSON.stringify(leanState)}`);
+        }
+        return {
+          schema: "v100-deployment-checkpoint-audit-ready/v1",
+          ready: true,
+          fighter: {
+            id: fighter.id,
+            kind: fighter.kind,
+            x: fighter.x,
+            y: fighter.y,
+            gateEntering: fighter.gateEntering,
+            combatReady: fighter.combatReady,
+            entryRampCleared: fighter.entryRampCleared,
+          },
+          observedProgress: snapshot.computedProgress,
+          checkpointReceipt: receipt,
+          checkpointReceiptFrozen: Object.isFrozen(receipt),
+          presentation: {
+            owner: presentation.owner,
+            route: presentation.route,
+            generation: presentation.generation,
+          },
+        };
+      }, {
+        id: fighterId,
+        expectedCheckpoint: checkpoint,
+        expectedMinimumProgress: minimumProgress,
+        expectedPresentationOwner: expectedPresentationArm.owner,
+        expectedPresentationGeneration: expectedPresentationArm.generation,
+      });
+      lastSnapshot = candidate;
+      if (candidate.ready !== true) {
+        if (captureTrace) await captureTrace();
+        continue;
+      }
+      invariant(candidate.schema === "v100-deployment-checkpoint-audit-ready/v1"
+        && candidate.fighter?.id === fighterId
+        && candidate.checkpointReceiptFrozen === true
+        && candidate.checkpointReceipt?.checkpoint === checkpoint
+        && candidate.presentation?.owner === expectedPresentationArm.owner
+        && candidate.presentation?.generation === expectedPresentationArm.generation,
+      `${label}: deployment checkpoint audit handoff is incomplete ${JSON.stringify(candidate)}`);
+      const audit = await runFighterUnitLayerAuditSession(
+        page,
+        fighterId,
+        `${label}/pixel-audit`,
+        {
+          fighterKind: candidate.fighter.kind,
+          checkpoint,
+          checkpointReceipt: candidate.checkpointReceipt,
+          presentation: candidate.presentation,
+        },
+      );
+      if (captureTrace) await captureTrace();
+      invariant(audit?.deploymentPlan?.checkpoint === checkpoint
+        && validDeploymentAuditScratchReceipt(audit),
+      `${label}: deployment checkpoint pixel audit did not preserve the exact checkpoint`);
+      return {
+        fighter: candidate.fighter,
+        observedProgress: candidate.observedProgress,
+        checkpointReceipt: candidate.checkpointReceipt,
+        paused: true,
+        exactReceipt: true,
+        auditHandoff: candidate,
+        audit,
+      };
+    }
+    throw new Error(`deployment checkpoint ${checkpoint} timed out; last=${JSON.stringify(lastSnapshot)}`);
+  } catch (error) {
+    throw new Error(`${label}: ${String(error)}`);
+  }
+}
+
+async function queueAndPauseAtFirstDeploymentFrame(
+  page,
+  unitKind,
+  label,
+  captureTrace = null,
+  expectedPresentationArm = null,
+) {
+  try {
+    invariant(expectedPresentationArm?.schema === "v100-qa-presentation-quiescence/v1"
+      && expectedPresentationArm.active === true
+      && expectedPresentationArm.owner === "deployment-first-frame"
+      && expectedPresentationArm.route === "deployment",
+    `${label}: first deployment frame lacks its exact presentation owner`);
+    await page.evaluate((kind) => {
+      const qa = window.__ASHFALL_BATTLE_QA__;
+      if (qa.queueCrawlerDefenseUnit(kind, 1) !== true) {
+        throw new Error(`CRAWLER queue rejected ${kind}`);
+      }
+    }, unitKind);
+    if (captureTrace) await captureTrace();
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeout) {
+      const candidate = await page.evaluate(({
+        kind,
+        expectedPresentationOwner,
+        expectedPresentationGeneration,
+      }) => {
+        const qa = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = qa.getCrawlerDeploymentProofSnapshot({ kind });
+        const fighter = snapshot?.fighter ?? null;
+        if (!fighter) {
+          return {
+            schema: "v100-deployment-checkpoint-audit-poll/v1",
+            ready: false,
+            fighterId: null,
+          };
+        }
+        const battleLive = snapshot?.schema === "v099-crawler-deployment-snapshot/v1"
+          && snapshot.screen === "battle"
+          && snapshot.running === true
+          && snapshot.paused !== true
+          && snapshot.over !== true;
+        if (!battleLive) {
+          return {
+            schema: "v100-deployment-checkpoint-audit-poll/v1",
+            ready: false,
+            terminal: true,
+            state: snapshot ? {
+              screen: snapshot.screen,
+              running: snapshot.running,
+              paused: snapshot.paused,
+              over: snapshot.over,
+            } : null,
+          };
+        }
+        const bannerReady = snapshot.banner?.includes("移動拠点から出撃") === true;
+        const progress = snapshot.computedProgress;
+        if (!(fighter.kind === kind && bannerReady && progress === 0)) {
+          return {
+            schema: "v100-deployment-checkpoint-audit-poll/v1",
+            ready: false,
+            fighterId: fighter.id,
+            fighterKind: fighter.kind,
+            fighterX: fighter.x,
+            fighterY: fighter.y,
+            observedProgress: progress,
+          };
+        }
+        qa.setRepresentativeSixProofPaused(true);
+        const pausedSnapshot = qa.getCrawlerDeploymentProofSnapshot({ fighterId: fighter.id });
+        const pausedFighter = pausedSnapshot?.fighter ?? null;
+        const presentation = qa.getQaPresentationQuiescence?.() ?? null;
+        if (!(pausedSnapshot?.schema === "v099-crawler-deployment-snapshot/v1"
+          && pausedSnapshot.screen === "battle"
+          && pausedSnapshot.running === true
+          && pausedSnapshot.paused === true
+          && pausedSnapshot.over !== true
+          && pausedSnapshot.computedProgress === 0
+          && pausedSnapshot.checkpointReceipt === null
+          && pausedFighter?.id === fighter.id
+          && pausedFighter.kind === kind
+          && pausedFighter.x === fighter.x
+          && pausedFighter.y === fighter.y
+          && presentation?.active === true
+          && presentation.owner === expectedPresentationOwner
+          && presentation.route === "deployment"
+          && Number(presentation.generation) === Number(expectedPresentationGeneration))) {
+          throw new Error(`first deployment frame receipt-to-owner handoff drifted ${JSON.stringify({ pausedSnapshot, presentation })}`);
+        }
+        return {
+          schema: "v100-deployment-checkpoint-audit-ready/v1",
+          ready: true,
+          fighter: {
+            id: pausedFighter.id,
+            kind: pausedFighter.kind,
+            x: pausedFighter.x,
+            y: pausedFighter.y,
+            gateEntering: pausedFighter.gateEntering,
+            combatReady: pausedFighter.combatReady,
+            entryRampCleared: pausedFighter.entryRampCleared,
+          },
+          observedProgress: pausedSnapshot.computedProgress,
+          checkpointReceipt: null,
+          checkpointReceiptFrozen: null,
+          presentation: {
+            owner: presentation.owner,
+            route: presentation.route,
+            generation: presentation.generation,
+          },
+        };
+      }, {
+        kind: unitKind,
+        expectedPresentationOwner: expectedPresentationArm.owner,
+        expectedPresentationGeneration: expectedPresentationArm.generation,
+      });
+      if (candidate?.terminal === true) {
+        throw new Error(`production battle ended before the first deployment frame ${JSON.stringify(candidate.state)}`);
+      }
+      if (candidate?.ready === true) {
+        invariant(candidate.schema === "v100-deployment-checkpoint-audit-ready/v1"
+          && candidate.fighter?.kind === unitKind
+          && candidate.observedProgress === 0
+          && candidate.checkpointReceipt === null
+          && candidate.presentation?.owner === expectedPresentationArm.owner
+          && candidate.presentation?.generation === expectedPresentationArm.generation,
+        `${label}: first deployment-frame audit handoff is incomplete ${JSON.stringify(candidate)}`);
+        const audit = await runFighterUnitLayerAuditSession(
+          page,
+          candidate.fighter.id,
+          `${label}/fully-inside/pixel-audit`,
+          {
+            fighterKind: candidate.fighter.kind,
+            checkpoint: "fully-inside",
+            checkpointReceipt: null,
+            presentation: candidate.presentation,
+          },
+        );
+        if (captureTrace) await captureTrace();
+        invariant(audit?.deploymentPlan?.checkpoint === "fully-inside"
+          && validDeploymentAuditScratchReceipt(audit),
+        `${label}: first deployment-frame pixel audit did not preserve the exact checkpoint`);
+        return {
+          fighter: candidate.fighter,
+          observedProgress: candidate.observedProgress,
+          checkpointReceipt: null,
+          frozen: true,
+          auditHandoff: candidate,
+          audit,
+        };
+      }
+      if (captureTrace) await captureTrace();
+      await hostTurn(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS);
+    }
+    throw new Error(`first deployment frame for ${unitKind} timed out`);
+  } catch (error) {
+    throw new Error(`${label}: ${String(error)}`);
+  }
+}
+
+function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase) {
+  let expectedCheckpoint = null;
+  let expectedProgress = null;
+  let fighterId = null;
+  let fixtureResult = null;
+  let queueResult = null;
+  const trace = createBoundedTrace({
+    page,
+    automaticInterval: false,
+    readSample: async ({ elapsedWallMs }) => {
+      const runtime = await page.evaluate(({ kind, id, checkpoint, progress }) => {
+        const battleApi = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = battleApi?.getCrawlerDeploymentProofSnapshot?.({
+          ...(id !== null ? { fighterId: id } : { kind }),
+        }) ?? null;
+        const fighter = snapshot?.fighter ?? null;
+        return {
+          documentVisibility: document.visibilityState,
+          snapshot: snapshot ? {
+            time: snapshot.time ?? null,
+            paused: snapshot.paused ?? null,
+            over: snapshot.over ?? null,
+          } : null,
+          fighterPresent: Boolean(fighter),
+          fighterId: fighter?.id ?? id,
+          fighter: fighter ? { id: fighter.id, x: fighter.x, y: fighter.y } : null,
+          doorX: snapshot?.doorX ?? null,
+          rampX: snapshot?.rampX ?? null,
+          computedProgress: snapshot?.computedProgress ?? null,
+          gateEntering: fighter?.gateEntering ?? null,
+          combatReady: fighter?.combatReady ?? null,
+          entryRampCleared: fighter?.entryRampCleared ?? null,
+          checkpointArm: snapshot?.checkpointArm ?? null,
+          checkpointReceipt: snapshot?.checkpointReceipt ?? null,
+          readableSnapshot: snapshot ? {
+            time: snapshot.time ?? null,
+            paused: snapshot.paused ?? null,
+            over: snapshot.over ?? null,
+            screen: snapshot.screen ?? null,
+          } : null,
+          expectedCheckpoint: checkpoint,
+          expectedProgress: progress,
+        };
+      }, {
+        kind: unit.kind,
+        id: fighterId,
+        checkpoint: expectedCheckpoint,
+        progress: expectedProgress,
+      });
+      const counts = diagnosticControl.traceCounts();
+      return {
+        elapsedWallMs,
+        lifecyclePhase: getLifecyclePhase(),
+        unitKind: unit.kind,
+        unitFamily: unit.family,
+        ...runtime,
+        ...counts,
+        diagnostics: counts,
+      };
+    },
   });
+  return {
+    setExpected(checkpoint, progress) {
+      expectedCheckpoint = checkpoint;
+      expectedProgress = progress;
+    },
+    setFighterId(id) {
+      fighterId = id;
+    },
+    setFixtureResult(result) {
+      fixtureResult = result;
+    },
+    setQueueResult(result) {
+      queueResult = result;
+    },
+    capture: trace.capture,
+    async stop() {
+      const result = await trace.stop();
+      return {
+        ...result,
+        unitKind: unit.kind,
+        unitFamily: unit.family,
+        expectedCheckpoint,
+        expectedProgress,
+        fixtureResult,
+        queueResult,
+        lifecyclePhase: getLifecyclePhase(),
+        diagnostics: diagnosticControl.traceCounts(),
+      };
+    },
+  };
 }
 
 function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoint, label) {
@@ -1914,7 +3609,7 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
     `${label}: final canvas does not retain opaque unit pixels`);
   invariant(fighter?.renderAudit?.poseOpacity === 1
     && fighter?.renderAudit?.effectiveOpacity === 1
-    && fighter?.animationPresentation?.pose?.opacity === 1,
+    && fighter?.animationPose?.opacity === 1,
   `${label}: live fighter render remained translucent`);
   if (expectedCheckpoint === "fully-outside") {
     invariant(audit.deploymentPlan.active === false
@@ -1938,57 +3633,332 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   let page;
   let stopDiagnostics = () => {};
   let diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
+  let traceCounts = () => ({
+    consoleErrorCount: diagnostics.consoleErrors.length,
+    pageErrorCount: diagnostics.pageErrors.length,
+    requestFailureCount: diagnostics.requestFailures.length,
+    httpErrorCount: diagnostics.httpErrors.length,
+    pendingRequestCount: 0,
+  });
+  let setupTrace = null;
+  let assetSetupBoundary = null;
+  let deploymentSetupPresentationQuiescenceArm = null;
+  let deploymentLifecyclePhase = "deployment setup";
+  let activeDeploymentTrace = null;
+  let activeUnitResult = null;
+  let activeFixtureResult = null;
+  let activeQueueResult = null;
+  const setDeploymentPhase = (phase) => {
+    deploymentLifecyclePhase = phase;
+    lifecycle?.setPhase(phase);
+  };
   const result = { type: "deployment", engine, viewport, status: "failed", units: [] };
   try {
-    lifecycle?.setPhase("deployment setup");
-    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission", {}, lifecycle));
-    await loadedCrawlerAssets(page, name);
-    for (const unit of deploymentUnits) {
+    setDeploymentPhase("deployment setup");
+    await withDeploymentDiagnosticOperation(
+      lifecycle,
+      "deployment/navigation-readiness-asset-boundary",
+      { caseIdentity: name },
+      async () => {
+        ({
+          page,
+          stop: stopDiagnostics,
+          diagnostics,
+          traceCounts,
+          setupTrace,
+          assetSetupBoundary,
+          deploymentSetupPresentationQuiescenceArm,
+        } = await openBattlePage(
+          context,
+          "mission",
+          {
+            setupTrace: engine === "chromium",
+            finiteAssets: true,
+            earlyDeploymentPresentationQuiescence: true,
+          },
+          lifecycle,
+        ));
+        if (setupTrace) result.setupTrace = setupTrace;
+        result.assetSetupBoundary = assetSetupBoundary;
+        result.deploymentSetupPresentationQuiescenceArm = deploymentSetupPresentationQuiescenceArm;
+        invariant(deploymentSetupPresentationQuiescenceArm?.presentation?.active === true
+          && deploymentSetupPresentationQuiescenceArm.presentation.owner === "deployment-first-frame"
+          && Number.isFinite(deploymentSetupPresentationQuiescenceArm.armedAtPageTime)
+          && deploymentSetupPresentationQuiescenceArm.armedAtPageTime <= assetSetupBoundary.boundaryAt,
+        `${name}: deployment presentation was not armed before the asset boundary ${JSON.stringify({
+          deploymentSetupPresentationQuiescenceArm,
+          assetSetupBoundary,
+        })}`);
+        await loadedCrawlerAssets(page, name);
+      },
+    );
+    for (const [unitIndex, unit] of deploymentUnits.entries()) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
         `${name}/${unit.kind}: static deployment family mapping drifted`);
-      const unitResult = { ...unit, checkpoints: [], status: "failed" };
-      const prepared = await page.evaluate((kind) => (
-        window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
-          attackerKind: kind === "crazy-king" ? "crusher" : "walker",
-          lane: 1,
-          existingClaim: false,
-        })
-      ), unit.kind);
-      invariant(Number.isInteger(prepared?.attackerId),
-        `${name}/${unit.kind}: deployment fixture is unavailable`);
-      lifecycle?.setPhase(`deployment/${unit.family}/fixture`);
-      const firstFrame = await queueAndPauseAtFirstDeploymentFrame(
+      const unitResult = { ...unit, checkpoints: [], crossUnitLiveResume: null, status: "failed" };
+      activeUnitResult = unitResult;
+      activeFixtureResult = null;
+      activeQueueResult = null;
+      const unitDetails = { caseIdentity: name, unitFamily: unit.family, unitKind: unit.kind };
+      if (unitIndex > 0) {
+        const previousUnit = result.units.at(-1);
+        invariant(previousUnit?.status === "passed"
+          && previousUnit.checkpoints?.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length
+          && previousUnit.checkpoints.at(-1)?.checkpoint === "fully-outside",
+        `${name}/${unit.kind}: previous deployment unit is not fully accepted`);
+        setDeploymentPhase(`deployment/${unit.family}/cross-unit-live-resume`);
+        unitResult.crossUnitLiveResume = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/cross-unit-live-resume",
+          {
+            ...unitDetails,
+            previousUnitFamily: previousUnit.family,
+            previousUnitKind: previousUnit.kind,
+          },
+          () => resumeDeploymentBattleForNextUnit(
+            page,
+            previousUnit,
+            unit,
+            `${name}/${previousUnit.kind}->${unit.kind}`,
+          ),
+        );
+      }
+      setDeploymentPhase(`deployment/${unit.family}/fixture`);
+      activeDeploymentTrace = createDeploymentTrace(
         page,
-        unit.kind,
-        `${name}/${unit.kind}`,
+        { traceCounts },
+        unit,
+        () => deploymentLifecyclePhase,
       );
+      const firstFrameEnvelope = await withDeploymentPresentationQuiescence(
+        page,
+        "deployment-first-frame",
+        `${name}/${unit.kind}/fully-inside`,
+        activeDeploymentTrace.capture,
+        async (_checkpointArm, presentationArm) => {
+          const unitAsset = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/unit-asset-proof",
+            unitDetails,
+            () => page.evaluate(
+              (kind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind),
+              unit.kind,
+            ),
+          );
+          await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/trace-capture",
+            { ...unitDetails, traceBoundary: "unit-asset-proof" },
+            () => activeDeploymentTrace.capture(),
+          );
+          invariant(unitAsset?.kind === unit.kind
+            && typeof unitAsset.path === "string"
+            && unitAsset.width > 0
+            && unitAsset.height > 0,
+          `${name}/${unit.kind}: strict unit asset decode failed ${JSON.stringify(unitAsset)}`);
+          unitResult.asset = unitAsset;
+          const prepared = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/fixture-preparation",
+            unitDetails,
+            () => page.evaluate((kind) => (
+              window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
+                attackerKind: kind === "crazy-king" ? "crusher" : "walker",
+                lane: 1,
+                existingClaim: false,
+              })
+            ), unit.kind),
+          );
+          activeFixtureResult = prepared;
+          activeDeploymentTrace.setFixtureResult(prepared);
+          await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/trace-capture",
+            { ...unitDetails, traceBoundary: "fixture-preparation" },
+            () => activeDeploymentTrace.capture(),
+          );
+          invariant(Number.isInteger(prepared?.attackerId),
+            `${name}/${unit.kind}: deployment fixture is unavailable`);
+          activeQueueResult = { requested: true, result: null };
+          activeDeploymentTrace.setQueueResult(activeQueueResult);
+          const firstFrame = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/first-frame-queue-readback",
+            unitDetails,
+            () => queueAndPauseAtFirstDeploymentFrame(
+              page,
+              unit.kind,
+              `${name}/${unit.kind}`,
+              activeDeploymentTrace.capture,
+              presentationArm,
+            ),
+          );
+          return { unitAsset, prepared, firstFrame };
+        },
+        null,
+        unitIndex === 0 ? deploymentSetupPresentationQuiescenceArm : null,
+      );
+      const firstFrameBeforeProductionReadback = {
+        ...firstFrameEnvelope.value.firstFrame,
+        presentationQuiescence: firstFrameEnvelope.presentationQuiescence,
+      };
+      let evidenceCaptureEnvelope = firstFrameEnvelope.preArmedEvidenceCapture;
+      let nextCheckpointPresentationEnvelope = null;
+      const firstFrame = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/post-restoration-readback",
+        {
+          ...unitDetails,
+          requestedCheckpoint: "fully-inside",
+          requestedProgress: 0,
+        },
+        () => refreshDeploymentEvidenceAfterRestoredFrames(
+          page,
+          firstFrameBeforeProductionReadback,
+          firstFrameBeforeProductionReadback.fighter?.id ?? null,
+          unit.kind,
+          "fully-inside",
+          0,
+          `${name}/${unit.family}/fully-inside`,
+        ),
+      );
+      activeQueueResult = { requested: true, result: firstFrame };
+      activeDeploymentTrace.setQueueResult(activeQueueResult);
       const fighterId = firstFrame.fighter?.id ?? null;
       invariant(Number.isInteger(fighterId), `${name}/${unit.kind}: fighter identity is unavailable`);
+      activeDeploymentTrace.setFighterId(fighterId);
       for (const [checkpointIndex, checkpoint] of CRAWLER_DEPLOYMENT_CHECKPOINTS.entries()) {
         let evidence = firstFrame;
-        if (checkpointIndex > 0) {
-          await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-          evidence = await pauseAtDeploymentCheckpoint(
-            page,
-            fighterId,
-            checkpoint.id,
-            checkpoint.progress,
-            `${name}/${unit.family}/${checkpoint.id}`,
-          );
-        }
         const label = `${name}/${unit.family}/${checkpoint.id}`;
-        lifecycle?.setPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
+        const checkpointDetails = {
+          ...unitDetails,
+          fighterId,
+          requestedCheckpoint: checkpoint.id,
+          requestedProgress: checkpoint.progress,
+        };
+        activeDeploymentTrace.setExpected(checkpoint.id, checkpoint.progress);
+        setDeploymentPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
         lifecycle?.event("deployment checkpoint start", {
           page,
           family: unit.family,
           checkpoint: checkpoint.id,
+          requestedCheckpoint: checkpoint.id,
+          requestedProgress: checkpoint.progress,
         });
-        validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label);
-        const screenshotPath = await screenshot(
-          page,
-          `${name}-deployment-${unit.family}-${checkpointIndex}-${checkpoint.id}.png`,
+        if (checkpointIndex > 0) {
+          const checkpointEnvelope = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/checkpoint-advance",
+            checkpointDetails,
+            () => withDeploymentPresentationQuiescence(
+              page,
+              "deployment-checkpoint-advance",
+              label,
+              activeDeploymentTrace.capture,
+              (checkpointArm, presentationArm) => pauseAtDeploymentCheckpoint(
+                page,
+                fighterId,
+                checkpoint.id,
+                checkpoint.progress,
+                label,
+                activeDeploymentTrace.capture,
+                checkpointArm,
+                presentationArm,
+              ),
+              null,
+              nextCheckpointPresentationEnvelope,
+            ),
+          );
+          nextCheckpointPresentationEnvelope = null;
+          evidenceCaptureEnvelope = checkpointEnvelope.preArmedEvidenceCapture;
+          const checkpointBeforeProductionReadback = {
+            ...checkpointEnvelope.value,
+            presentationQuiescence: checkpointEnvelope.presentationQuiescence,
+          };
+          evidence = await withDeploymentDiagnosticOperation(
+            lifecycle,
+            "deployment/post-restoration-readback",
+            checkpointDetails,
+            () => refreshDeploymentEvidenceAfterRestoredFrames(
+              page,
+              checkpointBeforeProductionReadback,
+              fighterId,
+              unit.kind,
+              checkpoint.id,
+              checkpoint.progress,
+              label,
+            ),
+          );
+        }
+        await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/checkpoint-validation",
+          checkpointDetails,
+          async () => validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label),
         );
-        const screenshotSha256 = await evidenceSha256(screenshotPath);
+        const receipt = checkpointIndex === 0 ? null : evidence.checkpointReceipt;
+        if (checkpointIndex > 0) {
+          invariant(receipt?.schema === "v099-crawler-deployment-checkpoint-receipt/v1"
+            && receipt.fighterId === fighterId
+            && receipt.kind === unit.kind
+            && receipt.checkpoint === checkpoint.id
+            && receipt.x === evidence.fighter?.x
+            && receipt.y === evidence.fighter?.y
+            && receipt.computedProgress === evidence.observedProgress
+            && receipt.computedProgress + 1e-6 >= checkpoint.progress,
+          `${label}: accepted checkpoint receipt was not serializable`);
+        }
+        const serializedCheckpointReceipt = receipt ? {
+          schema: receipt.schema,
+          fighterId: receipt.fighterId,
+          kind: receipt.kind,
+          checkpoint: receipt.checkpoint,
+          x: receipt.x,
+          y: receipt.y,
+          computedProgress: receipt.computedProgress,
+          battleTime: receipt.battleTime,
+          gateEntering: receipt.gateEntering,
+          combatReady: receipt.combatReady,
+          entryRampCleared: receipt.entryRampCleared,
+        } : null;
+        const successorCheckpoint = CRAWLER_DEPLOYMENT_CHECKPOINTS[checkpointIndex + 1] ?? null;
+        const canvasCaptureEnvelope = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/final-canvas-png",
+          checkpointDetails,
+          () => withDeploymentCanvasCaptureQuiescence(
+            page,
+            label,
+            () => deploymentCanvasPng(
+              page,
+              `${name}-deployment-${unit.family}-${unit.kind}-${checkpointIndex}-${checkpoint.id}.png`,
+              label,
+            ),
+            evidenceCaptureEnvelope,
+            successorCheckpoint ? {
+              type: "checkpoint",
+              fighterId,
+              checkpoint: successorCheckpoint.id,
+              minimumProgress: successorCheckpoint.progress,
+            } : null,
+          ),
+        );
+        evidenceCaptureEnvelope = null;
+        nextCheckpointPresentationEnvelope = canvasCaptureEnvelope.nextPresentationEnvelope;
+        const canvasCapture = canvasCaptureEnvelope.value;
+        await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/trace-capture",
+          { ...checkpointDetails, traceBoundary: "final-canvas-png" },
+          () => activeDeploymentTrace.capture(),
+        );
+        const screenshotPath = canvasCapture.path;
+        const screenshotSha256 = await withDeploymentDiagnosticOperation(
+          lifecycle,
+          "deployment/hash-persistence",
+          checkpointDetails,
+          () => evidenceSha256(screenshotPath),
+        );
         unitResult.checkpoints.push({
           checkpoint: checkpoint.id,
           requestedProgress: checkpoint.progress,
@@ -1996,8 +3966,13 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           observedProgress: evidence.observedProgress ?? null,
           fighter: evidence.fighter,
           audit: evidence.audit,
+          checkpointReceipt: serializedCheckpointReceipt,
+          presentationQuiescence: evidence.presentationQuiescence ?? null,
+          postRestorationReadback: evidence.postRestorationReadback ?? null,
+          evidenceCaptureQuiescence: canvasCaptureEnvelope.receipt,
           screenshot: screenshotPath,
           screenshotSha256,
+          canvasCapture,
         });
         lifecycle?.event("deployment checkpoint complete", {
           page,
@@ -2006,6 +3981,8 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           milestone: `${unit.family}/${checkpoint.id} deployment checkpoint complete`,
         });
       }
+      invariant(nextCheckpointPresentationEnvelope === null,
+        `${name}/${unit.kind}: final deployment checkpoint retained an unexpected successor owner`);
       const fullyInside = unitResult.checkpoints[0];
       const firstVisible = unitResult.checkpoints[1];
       invariant(fullyInside.observedCheckpoint === "fully-inside"
@@ -2039,24 +4016,54 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         rampClear,
         combatReady: rampClear,
       };
-      unitResult.contactSheet = await deploymentRuntimeContactSheet(
-        name,
-        unit.family,
-        viewport,
-        unitResult.checkpoints,
+      unitResult.contactSheet = await withDeploymentDiagnosticOperation(
+        lifecycle,
+        "deployment/contact-sheet",
+        unitDetails,
+        () => deploymentRuntimeContactSheet(
+          name,
+          unit.family,
+          unit.kind,
+          viewport,
+          unitResult.checkpoints,
+        ),
       );
+      unitResult.deploymentTrace = await activeDeploymentTrace.stop();
+      invariant(unitResult.deploymentTrace.captureMode === "cooperative-main-flow"
+        && unitResult.deploymentTrace.overlapWaitCount === 0,
+      `${name}/${unit.kind}: deployment trace page I/O was not cooperative`);
+      activeDeploymentTrace = null;
       unitResult.status = "passed";
       unitResult.fighterId = fighterId;
       result.units.push(unitResult);
+      activeUnitResult = null;
+      activeFixtureResult = null;
+      activeQueueResult = null;
     }
     invariant(result.units.length === deploymentUnits.length
       && result.units.every(({ status, checkpoints }) => (
         status === "passed" && checkpoints.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length
       )), `${name}: deployment matrix is incomplete`);
+    const crossUnitLiveResumes = result.units
+      .slice(1)
+      .map(({ crossUnitLiveResume }) => crossUnitLiveResume)
+      .filter((receipt) => receipt?.schema === "v100-deployment-cross-unit-live-resume/v1");
+    invariant(result.units[0]?.crossUnitLiveResume === null
+      && crossUnitLiveResumes.length === deploymentUnits.length - 1,
+    `${name}: cross-unit live-battle resume receipt matrix is incomplete`);
     result.status = "passed";
   } catch (error) {
     result.error = String(error);
-    if (page && !page.isClosed()) {
+    if (error?.deploymentSetupPresentationQuiescenceArm) {
+      result.deploymentSetupPresentationQuiescenceArm = error.deploymentSetupPresentationQuiescenceArm;
+    }
+    if (error?.setupTrace) result.setupTrace = error.setupTrace;
+    if (error?.setupTracePageSignals) result.setupTracePageSignals = error.setupTracePageSignals;
+    if (error?.setupTraceLastReadableSnapshot) {
+      result.setupTraceLastReadableSnapshot = error.setupTraceLastReadableSnapshot;
+    }
+    if (error?.setupTraceFailureScreenshot) result.failureScreenshot = error.setupTraceFailureScreenshot;
+    if (page && !page.isClosed() && !result.failureScreenshot) {
       try {
         result.failureScreenshot = await screenshot(page, `${name}-deployment-failed.png`);
       } catch {
@@ -2064,6 +4071,24 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       }
     }
   } finally {
+    if (activeDeploymentTrace) {
+      const deploymentTrace = await activeDeploymentTrace.stop();
+      result.failedUnit = activeUnitResult ? {
+        ...activeUnitResult,
+        fixtureResult: activeFixtureResult,
+        queueResult: activeQueueResult,
+        deploymentTrace: {
+          ...deploymentTrace,
+          failureScreenshot: result.failureScreenshot ?? null,
+        },
+      } : {
+        deploymentTrace: {
+          ...deploymentTrace,
+          failureScreenshot: result.failureScreenshot ?? null,
+        },
+      };
+      activeDeploymentTrace = null;
+    }
     stopDiagnostics();
     result.diagnostics = diagnostics;
     if (result.status === "passed" && !diagnosticsClean(diagnostics)) {
@@ -2074,6 +4099,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
     lifecycle?.markContextCloseBegin(context);
     await context.close();
     if (lifecycle?.file) result.lifecycleLog = lifecycle.file;
+    if (lifecycle?.hostResourceTelemetry) result.hostResourceTelemetry = lifecycle.hostResourceTelemetry;
   }
   return result;
 }
@@ -2116,34 +4142,84 @@ for (const engine of engines) {
         }
       }
       let browser = null;
+      let primaryFailure = null;
+      const caseResults = new Map();
       try {
         lifecycleByCase.forEach((lifecycle) => lifecycle.setPhase("browser launch"));
         browser = await browserType.launch({ headless: true });
         lifecycleByCase.forEach((lifecycle) => lifecycle.attachBrowser(browser));
         if (caseTypes.includes("crawler-equipment")) {
-          results.push(await runEquipmentCase(
+          const equipmentResult = await runEquipmentCase(
             browser,
             engine,
             viewport,
             runtimeEvidence,
             lifecycleByCase.get("crawler-equipment"),
-          ));
+          );
+          results.push(equipmentResult);
+          caseResults.set("crawler-equipment", equipmentResult);
         }
         if (caseTypes.includes("deployment")) {
-          results.push(await runDeploymentCase(
+          const deploymentResult = await runDeploymentCase(
             browser,
             engine,
             viewport,
             lifecycleByCase.get("deployment"),
-          ));
+          );
+          results.push(deploymentResult);
+          caseResults.set("deployment", deploymentResult);
         }
+      } catch (error) {
+        primaryFailure = error;
+        throw error;
       } finally {
         lifecycleByCase.forEach((lifecycle) => {
           lifecycle.setPhase("browser teardown");
           lifecycle.markBrowserCloseBegin();
         });
-        if (browser) await browser.close();
-        for (const lifecycle of lifecycleByCase.values()) await lifecycle.flush();
+        let browserCleanupFailure = null;
+        try {
+          if (browser) await browser.close();
+        } catch (cleanupError) {
+          browserCleanupFailure = cleanupError;
+          if (primaryFailure) primaryFailure.browserCleanupError = String(cleanupError);
+        }
+        for (const [caseType, lifecycle] of lifecycleByCase) {
+          const caseResult = caseResults.get(caseType) ?? null;
+          let telemetrySummary = null;
+          try {
+            telemetrySummary = await lifecycle.flush();
+          } catch (telemetryError) {
+            const priorFailure = primaryFailure ?? browserCleanupFailure ?? (caseResult?.status === "failed" ? caseResult : null);
+            if (priorFailure) {
+              priorFailure.hostResourceTelemetryFailure = {
+                code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+                error: String(telemetryError),
+              };
+              continue;
+            }
+            throw telemetryError;
+          }
+          if (caseResult && telemetrySummary) {
+            caseResult.hostResourceTelemetryStatus = telemetrySummary.status;
+            caseResult.hostResourceTelemetryValidity = telemetrySummary.valid;
+          }
+          if (telemetrySummary?.supported === true && telemetrySummary.status !== "complete") {
+            const telemetryFailure = {
+              code: "WEBKIT_HOST_TELEMETRY_INVALID",
+              status: telemetrySummary.status,
+              invalidReason: telemetrySummary.invalidReason ?? null,
+            };
+            const priorFailure = primaryFailure ?? browserCleanupFailure ?? (caseResult?.status === "failed" ? caseResult : null);
+            if (priorFailure) priorFailure.hostResourceTelemetryFailure = telemetryFailure;
+            else throw Object.assign(new Error(`deployment host telemetry invalid: ${JSON.stringify(telemetryFailure)}`), telemetryFailure);
+          }
+        }
+        if (browserCleanupFailure && !primaryFailure) {
+          const failedCase = [...caseResults.values()].find(({ status }) => status === "failed");
+          if (failedCase) failedCase.browserCleanupError = String(browserCleanupFailure);
+          else throw browserCleanupFailure;
+        }
       }
     }
   }
@@ -2162,6 +4238,16 @@ const canonicalAxes = engines.length === canonicalEngines.length
   && !hudStateFilterActive
   && caseTypes.length === canonicalCaseTypes.length
   && canonicalCaseTypes.every((caseType) => caseTypes.includes(caseType));
+const deploymentScreenshotCount = results.reduce((total, result) => (
+  result.type === "deployment"
+    ? total + result.units.reduce((sum, unit) => sum + unit.checkpoints.length, 0)
+    : total
+), 0);
+const deploymentContactSheetCount = results.reduce((total, result) => (
+  result.type === "deployment"
+    ? total + result.units.filter(({ contactSheet }) => Boolean(contactSheet)).length
+    : total
+), 0);
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
@@ -2186,6 +4272,8 @@ const summary = {
   total: results.length,
   passed: results.filter(({ status }) => status === "passed").length,
   failed: results.filter(({ status }) => status !== "passed").length,
+  deploymentScreenshotCount,
+  deploymentContactSheetCount,
   screenshotCount: results.reduce((total, result) => {
     if (result.type === "hud") return total + (result.status === "passed" ? result.states.length : 0);
     if (result.type === "crawler-equipment") {
@@ -2205,6 +4293,29 @@ const summary = {
   ), 0),
   results,
 };
+const artifactInventoryIntegrity = await inspectDeploymentArtifactIntegrity(results);
+const deploymentOnly = caseTypes.length === 1 && caseTypes[0] === "deployment";
+const countContract = {
+  checkpointMatchesDeploymentSummary:
+    artifactInventoryIntegrity.checkpoint.logicalCount === summary.deploymentScreenshotCount,
+  contactSheetMatchesDeploymentSummary:
+    artifactInventoryIntegrity.contactSheet.logicalCount === summary.deploymentContactSheetCount,
+  checkpointMatchesRouteScreenshotCount: deploymentOnly
+    ? artifactInventoryIntegrity.checkpoint.logicalCount === summary.screenshotCount
+    : null,
+  contactSheetMatchesRouteContactSheetCount: deploymentOnly
+    ? artifactInventoryIntegrity.contactSheet.logicalCount === summary.contactSheetCount
+    : null,
+};
+summary.deploymentArtifactIntegrity = {
+  ...artifactInventoryIntegrity,
+  ok: artifactInventoryIntegrity.ok
+    && countContract.checkpointMatchesDeploymentSummary
+    && countContract.contactSheetMatchesDeploymentSummary
+    && countContract.checkpointMatchesRouteScreenshotCount !== false
+    && countContract.contactSheetMatchesRouteContactSheetCount !== false,
+  countContract,
+};
 const summaryPath = path.join(evidenceDir, "summary.json");
 await writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
 console.log(JSON.stringify({
@@ -2215,6 +4326,7 @@ console.log(JSON.stringify({
   passed: summary.passed,
   failed: summary.failed,
   screenshotCount: summary.screenshotCount,
+  deploymentArtifactIntegrity: summary.deploymentArtifactIntegrity,
   buildIdentityStable,
   cases: results.map(({ type, engine, viewport, status, error }) => ({
     type,
@@ -2225,6 +4337,8 @@ console.log(JSON.stringify({
   })),
 }, null, 2));
 
+invariant(summary.deploymentArtifactIntegrity.ok,
+  `Deployment artifact integrity failed; see ${relativeEvidencePath(summaryPath)}`);
 invariant(buildIdentityStable, "Production dist changed while final-remediation browser QA was running");
 invariant(results.length === expectedCaseCount,
   `Final-remediation QA produced ${results.length}/${expectedCaseCount} cases`);

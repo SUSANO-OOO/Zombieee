@@ -40,6 +40,23 @@ function publicFileFor(sourcePath) {
   return path.join(repositoryRoot, "public", ...sourcePath.split("/").filter(Boolean));
 }
 
+function legacyProductionAliases() {
+  return PRODUCTION_AUDIO_MANIFEST.aliases.filter(({ id }) => !id.startsWith("enemy-"));
+}
+
+function legacyProductionScenes() {
+  return PRODUCTION_AUDIO_MANIFEST.scenes.filter(({ id }) => !id.startsWith("v100-"));
+}
+
+function legacyStoryAudioSceneIds() {
+  return Object.fromEntries(Object.entries(STORY_AUDIO_EVENT_SCENE_IDS)
+    .filter(([eventId]) => !eventId.startsWith("v100:")));
+}
+
+function legacyStoryAudioSceneRules() {
+  return STORY_AUDIO_SCENE_RULES.filter(({ value }) => !value.startsWith("v100:"));
+}
+
 function inventoryPaths(version, folder, extension) {
   const directory = path.join(repositoryRoot, "public", "audio", version, folder);
   return readdirSync(directory)
@@ -206,7 +223,7 @@ test("all 26 existing newcomer weapon and battle-voice cues remain active", () =
   assert.equal(provenance.version, 1);
   assert.equal(provenance.generator, "scripts/build-v060-audio.py");
   assert.equal(provenance.cues.length, 26);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 6);
+  assert.equal(legacyProductionAliases().length, 6);
   const cueIds = new Set(provenance.cues.map(({ id }) => id));
   assert.equal(cueIds.size, 26);
   for (const record of provenance.cues) {
@@ -410,7 +427,7 @@ test("all 43 battle and authored story scenes resolve with intentional limited s
     "story-station-tunnel-pre", "story-station-tunnel-battle", "silence-station-seal",
     "story-station-return", "story-chapter-ending",
   ];
-  assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id), expectedScenes);
+  assert.deepEqual(legacyProductionScenes().map((scene) => scene.id), expectedScenes);
   assert.deepEqual(Object.values(PRODUCTION_AUDIO_SCENE_IDS), expectedScenes);
   for (const scene of PRODUCTION_AUDIO_MANIFEST.scenes) {
     if (scene.bgm) assert.ok(PRODUCTION_AUDIO_MANIFEST.assetById[scene.bgm], `${scene.id}: ${scene.bgm}`);
@@ -545,7 +562,7 @@ test("all 47 canonical events route to their authored BGM, ambience, defeat, or 
     "chapter-ending-v070": "story-chapter-ending",
   };
   assert.deepEqual(Object.keys(expected), [...STORY_EVENT_IDS]);
-  assert.deepEqual(STORY_AUDIO_EVENT_SCENE_IDS, expected);
+  assert.deepEqual(legacyStoryAudioSceneIds(), expected);
   for (const [eventId, sceneId] of Object.entries(expected)) {
     assert.equal(sceneIdForStoryEvent(eventId), sceneId, eventId);
     assert.equal(sceneIdForScreen("event", null, { eventId }), sceneId, eventId);
@@ -557,8 +574,8 @@ test("all 47 canonical events route to their authored BGM, ambience, defeat, or 
   }
   assert.equal(sceneIdForStoryEvent("unknown-event"), null);
   assert.equal(sceneIdForScreen("event", null, { eventId: "unknown-event" }), "intro");
-  assert.equal(STORY_AUDIO_SCENE_RULES.length, 47);
-  assert.equal(STORY_AUDIO_SCENE_RULES.every(({ match }) => match === "exact"), true);
+  assert.equal(legacyStoryAudioSceneRules().length, 47);
+  assert.equal(legacyStoryAudioSceneRules().every(({ match }) => match === "exact"), true);
   assert.deepEqual(STORY_AUDIO_PHASE_RULES, [
     { eventId: "prologue-kumaya-v070", fromLineIndex: 17, sceneId: "story-kumaya-crisis" },
     { eventId: "prologue-collapse-montage-v070", fromLineIndex: 4, sceneId: "silence-prologue-title", holdMs: 2000 },
@@ -724,7 +741,7 @@ test("deployment never falls back to a generic attack or hurt voice", () => {
 });
 
 test("new-unit contracts resolve to dedicated original production assets and expose stoppable battle loops", () => {
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 6);
+  assert.equal(legacyProductionAliases().length, 6);
   assert.equal(Object.keys(UNIT_AUDIO_CUE_CONTRACTS).length, 4);
   const dedicatedCueIds = Object.values(UNIT_AUDIO_CUE_CONTRACTS).flatMap((contract) => [
     ...Object.values(contract.weaponEvents),

@@ -27,6 +27,8 @@ import {
   planHumanLaneAssignments,
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
+import { applyV100UnitLevelProgression } from "./v100Progression.js";
+import { V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
 import {
   battleAudioRuntimeSnapshot,
   createBattleAudioRuntime,
@@ -46,6 +48,7 @@ import {
   resetPressureLatchRuntime,
 } from "./battleMusicRuntime.js";
 import {
+  CRAWLER_DEPLOYMENT_CHECKPOINTS,
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
   crawlerDeploymentCompositePlan,
@@ -281,6 +284,8 @@ import {
   capPendingWeaponTransactions,
   combatFacingDirection,
   combatWeaponAnchor,
+  completedAttackAudioReceiptId,
+  createCompletedAttackImpactReceipt,
   createCombatAnimationRuntime,
   linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
@@ -372,7 +377,7 @@ import {
   queueSemanticBattlePresentation,
   resetBattlePresentationRuntime,
 } from "./battlePresentationV099.js";
-import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
+import { RELEASE_VERSION } from "./releaseIdentity.js";
 import { publicDisplayText, PUBLIC_CRAWLER_LABEL } from "./publicDisplayNames.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import {
@@ -385,6 +390,8 @@ import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
+  battlefieldSupplyDefinition,
+  vehicleAbilityDefinition,
   BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS,
   CAMERA_SHAKE_EVENTS,
   CRAWLER_BARRAGE_DEF,
@@ -542,6 +549,7 @@ import {
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
+import { MANUAL_ABILITY_SYMBOL_DICTIONARY, manualAbilityVisibleStateFor } from "./manualAbilityUi.js";
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
@@ -551,11 +559,15 @@ import {
 
 const W = 960;
 const H = 540;
+const V100_SURVIVAL_UPGRADE_CATEGORIES: Readonly<Record<string, string>> = {
+  attack: "攻撃", defense: "防御", healing: "回復", range: "射程", redeploy: "再出撃",
+  "crawler-repair": "装甲車両の修理", "boss-damage": "対ボス",
+};
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
-type SupplyKind = "pod" | "drum" | "medical";
+export type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
+export type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom" | "mugarian-president-mutated" | "takuya-omega" | "red-panther-knife" | "red-panther-shield" | "red-panther-smg" | "red-panther-commander";
+export type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "pressure" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
@@ -961,6 +973,22 @@ type Shot = {
   hitStopSeconds?: number;
   impactDelaySeconds?: number;
 };
+type CompletedAttackImpactReceipt = NonNullable<ReturnType<typeof createCompletedAttackImpactReceipt>>;
+type PendingAttackObservation = {
+  battleGeneration: number;
+  sourceId: number;
+  sourceSide: "human" | "zombie";
+  sourceKind: string;
+  attackSequence: number;
+  targetId: number;
+  targetSide: "human" | "zombie";
+  targetKind: string;
+  impactOrdinal: number;
+  mode: "direct" | "projectile" | "delayed";
+  committedAtBattleTime: number;
+  audioCueId: string;
+  audioReceiptId: string;
+};
 type PendingWeaponHit = {
   eventKind: "muzzle" | "impact";
   transactionId?: string;
@@ -988,6 +1016,7 @@ type PendingWeaponHit = {
   hitStopSeconds: number;
   impactDelaySeconds: number;
   applyDamage: boolean;
+  attackObservation?: PendingAttackObservation;
 };
 const DEFERRED_HUMAN_PROJECTILE_KINDS = new Set<UnitKind>([
   "ranger",
@@ -1089,6 +1118,7 @@ type Corpse = {
 };
 type BattlefieldObjectPhase = "dropping" | "impact" | "active" | "detonating" | "destroying" | "expired";
 type BattlefieldObject = {
+  v100SupportId?: string | null;
   id: number;
   kind: SupplyKind;
   lane: Lane;
@@ -1202,9 +1232,11 @@ type Game = {
   particles: Particle[];
   shots: Shot[];
   pendingWeaponHits: PendingWeaponHit[];
+  completedAttackImpacts: CompletedAttackImpactReceipt[];
   damageTexts: DamageText[];
   corpses: Corpse[];
   selectedSupply: SupplyKind;
+  v100SupportId?: string | null;
   battlefieldObjects: BattlefieldObject[];
   areaEffects: AreaEffect[];
   stationHazards: StationHazard[];
@@ -1270,6 +1302,7 @@ type Game = {
 };
 
 type Hud = {
+  v100SupportId?: string | null;
   missionType: BattleDefinition["missionType"];
   energy: number;
   supportGauge: number;
@@ -1285,7 +1318,9 @@ type Hud = {
   barricadeVulnerable: boolean;
   barricadeHitFlash: number;
   deployQueue: number;
+  summonedCount: number;
   airstrikePhase: AirstrikeRuntime["phase"];
+  airstrikeCooldownRemaining?: number;
   crawlerPhase: CrawlerRuntime["phase"];
   crawlerCharge: number;
   combo: number;
@@ -1303,7 +1338,7 @@ type Hud = {
   manualAbilityIcons: ManualAbilityIconView[];
 };
 
-type BattleResult = {
+export type AshfallBattleResult = {
   resultId: string;
   stageId: string;
   won: boolean;
@@ -1322,6 +1357,34 @@ type BattleResult = {
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   missionRuntime?: StageMissionRuntime;
 };
+
+export type AshfallExternalSession = {
+  stageId: string;
+  resultId: string;
+  displayName?: string;
+  formationKinds: readonly UnitKind[];
+  enemyKinds: readonly EnemyKind[];
+  selectedSupply: SupplyKind | null;
+  equippedSupportId: string | null;
+  unitLevels?: Readonly<Record<string, number>>;
+  vehicleMaxHp?: number;
+  initialSupportGauge?: number;
+  equipmentSnapshot?: {
+    personalEquipmentByUnit?: Record<string, readonly (string | null)[]>;
+    tacticalEquipmentIds?: readonly (string | null)[];
+    equipmentEnhancementLevels?: Record<string, number>;
+  };
+  settings?: CampaignSave["settings"] & { autoSkipReadStory?: boolean };
+  onSettingsChange?: (settings: Partial<CampaignSave["settings"]>) => Promise<boolean>;
+  onBattleResult: (result: AshfallBattleResult) => void;
+  onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean | Promise<boolean>;
+  survivalRun?: ReturnType<typeof createSurvivalRun>;
+  onSurvivalCheckpoint?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
+  onSurvivalUpgrade?: (upgradeId: string) => Promise<boolean>;
+  onSurvivalSettlement?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
+};
+
+type BattleResult = AshfallBattleResult;
 
 function preservesAcceptedSupportTempo(game: Game) {
   return Boolean(game.survivalRun)
@@ -1598,8 +1661,9 @@ const initialGame = (
     tacticalEquipmentIds?: readonly (string | null)[];
     equipmentEnhancementLevels?: Record<string, number>;
   } = {},
+  definitionOptions: { v100?: boolean } = {},
 ): Game => {
-  const definition = createBattleDefinition(stageId) as BattleDefinition;
+  const definition = createBattleDefinition(stageId, definitionOptions) as BattleDefinition;
   const campaignUnits = CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[];
   const unitLevelsByKind = Object.fromEntries(campaignUnits
     .map((unit) => [unit.combatKind, unitLevels[unit.id] ?? 1]));
@@ -1654,6 +1718,7 @@ const initialGame = (
   particles: [],
   shots: [],
   pendingWeaponHits: [],
+  completedAttackImpacts: [],
   damageTexts: [],
   corpses: [],
   selectedSupply,
@@ -1696,7 +1761,11 @@ const initialGame = (
   barkFlags: [],
   // Outbreak operations reuse the prerequisite campaign battlefield and its
   // authored battle-bark flow; the operation ID itself is not a story stage.
-  storyFlowState: createBattleStoryFlowState(definition.stageId),
+  // V1 owns its campaign story flow. Keep the existing Ashfall battle loop,
+  // but do not route a V1-only stage id through the legacy story registry.
+  storyFlowState: definitionOptions.v100
+    ? { stageId: definition.stageId, firedEventIds: [] }
+    : createBattleStoryFlowState(definition.stageId),
   storyBattleBarkState: createStoryBattleBarkState(),
   storyBattleReadEventIds: [...storyBattleReadEventIds],
   storyBattleReceiptEventIds: [],
@@ -1737,7 +1806,8 @@ const initialSurvivalGame = ({
   formationKinds: UnitKind[];
   unitLevels: Record<string, number>;
 }): Game => {
-  const stageId = CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
+  const v100 = run.modePolicy === "v100";
+  const stageId = v100 ? V100_STAGE_IDS[0] : CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
   const game = initialGame(
     selectedSupply,
     stageId,
@@ -1746,6 +1816,7 @@ const initialSurvivalGame = ({
     [],
     unitLevels,
     run.formation,
+    v100 ? { v100: true } : undefined,
   );
   game.definition = {
     ...game.definition,
@@ -1758,10 +1829,11 @@ const initialSurvivalGame = ({
     timeline: [],
     defenseEndAt: null,
     phaseSchedule: null,
-    objective: "CRAWLER防衛・無限wave",
+    objective: v100 ? "装甲車両を防衛・無限wave" : "CRAWLER防衛・無限wave",
     missionConfig: {
       spawnProfile: "survival-infection-breach",
       defenseFrontX: 646,
+      ...(v100 ? { v100StageNumber: 1 } : {}),
     },
     rescueCount: 0,
   };
@@ -2012,6 +2084,64 @@ function attackCooldownAfterCombatWindup(fighter: Fighter, intendedCooldown: num
     0,
     attackCooldownAfterPresentationWindup(fighter.kind, intendedCooldown),
   );
+}
+
+function normalAttackProductionCueId(
+  fighter: Pick<Fighter, "side" | "kind">,
+  mrsLauncherBash = false,
+) {
+  if (fighter.side === "zombie") return enemyVoiceCue(fighter.kind, "attack");
+  if (fighter.kind === "mrs-chiha" && !mrsLauncherBash) {
+    return unitAudioCueFor("mrs-chiha", "weapon", "shot");
+  }
+  const weaponEvent = fighter.kind === "crazy-king"
+    ? "attack"
+    : fighter.kind === "kumaverson"
+      ? "swing"
+      : fighter.kind === "babayaga"
+        ? "shot"
+        : fighter.kind === "mrs-chiha"
+          ? "bash"
+          : fighter.kind === "tky" || fighter.kind === "miyamoto-musashi"
+            ? "attack"
+            : fighter.kind === "mayo-chan"
+              ? "bite"
+              : null;
+  return (weaponEvent && unitAudioCueFor(fighter.kind, "weapon", weaponEvent))
+    || weaponCueForUnit(fighter.kind);
+}
+
+function appendCompletedAttackImpact(
+  g: Game,
+  observation: PendingAttackObservation | null,
+  contactAtBattleTime: number,
+  reactionOutcome: "hit" | "defeated",
+  audioRequests: readonly {
+    cueId: string;
+    receiptId?: string;
+    ownerId?: number | string;
+    activationId?: number;
+  }[],
+) {
+  if (!observation || observation.battleGeneration !== g.battleAudioGeneration) return;
+  const audioRequestObserved = audioRequests.some((request) => (
+    request.cueId === observation.audioCueId
+    && request.receiptId === observation.audioReceiptId
+    && String(request.ownerId) === String(observation.sourceId)
+    && request.activationId === observation.attackSequence
+  ));
+  if (!audioRequestObserved) return;
+  const receipt = createCompletedAttackImpactReceipt({
+    ...observation,
+    contactAtBattleTime,
+    reactionOutcome,
+    audioRequestObserved,
+  });
+  if (!receipt) return;
+  g.completedAttackImpacts = [
+    ...g.completedAttackImpacts.filter((entry) => entry.battleGeneration === g.battleAudioGeneration),
+    receipt,
+  ].slice(-64) as CompletedAttackImpactReceipt[];
 }
 
 function scheduleMrsChihaLauncherAudio(
@@ -2558,7 +2688,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
 function equippedCardForGame(g: Game, kind: UnitKind) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
-  const progressedCard = applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1) as UnitCard & { progressionLevel: number; progressionRank: number };
+  const progressedCard = (g.definition.missionConfig?.v100StageNumber
+    ? applyV100UnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1)
+    : applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1)) as UnitCard & { progressionLevel: number; progressionRank: number };
   const equipmentEffects = aggregateEquipmentEffects([
     ...(g.personalEquipmentByKind[kind] ?? []),
     ...g.tacticalEquipmentIds,
@@ -4091,14 +4223,83 @@ function drawSpriteFighter(
   };
 }
 
-function fighterUnitLayerPixelAudit(
-  fighter: Fighter,
-  sprites: SpriteMap,
-  finalCanvas: HTMLCanvasElement,
-  g: Game,
-  graphicsProfile: GraphicsProfile,
-  finalTransform: { scale: number; offsetX: number; offsetY: number },
-) {
+type FighterUnitLayerAuditScratchSurface = {
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+};
+
+let fighterUnitLayerAuditScratchSurface: FighterUnitLayerAuditScratchSurface | null = null;
+
+const FIGHTER_UNIT_LAYER_AUDIT_PASSES = [
+  "actual-unit",
+  "forced-opaque-unit",
+  "rendered-foreground",
+  "expected-foreground",
+  "final-production-canvas",
+  "authored-composite",
+] as const;
+
+type FighterUnitLayerAuditPass = typeof FIGHTER_UNIT_LAYER_AUDIT_PASSES[number];
+type FighterUnitLayerAuditQuiescence = {
+  active: boolean;
+  owner: string | null;
+  route: string | null;
+  generation: number;
+};
+type FighterUnitLayerAuditCapture = {
+  data: Uint8ClampedArray;
+  clipRect: unknown;
+  deploymentPlan: ReturnType<typeof crawlerDeploymentPlanForFighter> | null;
+};
+type FighterUnitLayerAuditSession = {
+  token: string;
+  fighter: Fighter;
+  sprites: SpriteMap;
+  finalCanvas: HTMLCanvasElement;
+  game: Game;
+  graphicsProfile: GraphicsProfile;
+  finalTransformSource: { scale: number; offsetX: number; offsetY: number };
+  finalTransform: { scale: number; offsetX: number; offsetY: number };
+  stageId: string;
+  fighterId: number;
+  fighterKind: string;
+  fighterX: number;
+  fighterY: number;
+  checkpoint: string | null;
+  checkpointReceipt: unknown;
+  quiescence: FighterUnitLayerAuditQuiescence | null;
+  region: { x: number; y: number; w: number; h: number };
+  canvasWidth: number;
+  canvasHeight: number;
+  canvasDpr: number;
+  nextPassIndex: number;
+  completedPasses: FighterUnitLayerAuditPass[];
+  actual: FighterUnitLayerAuditCapture | null;
+  opaque: FighterUnitLayerAuditCapture | null;
+  renderedForegroundRgba: Uint8ClampedArray | null;
+  expectedForegroundRgba: Uint8ClampedArray | null;
+  finalRgba: Uint8ClampedArray | null;
+  compositeRgba: Uint8ClampedArray | null;
+  startedAtPageTime: number;
+};
+
+let fighterUnitLayerAuditSession: FighterUnitLayerAuditSession | null = null;
+let fighterUnitLayerAuditSessionOrdinal = 0;
+
+function reusableFighterUnitLayerAuditScratchSurface(width: number, height: number) {
+  if (!fighterUnitLayerAuditScratchSurface) {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Unit-layer audit scratch canvas unavailable");
+    fighterUnitLayerAuditScratchSurface = { canvas, context };
+  }
+  const { canvas, context } = fighterUnitLayerAuditScratchSurface;
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
+  return { canvas, context };
+}
+
+function fighterUnitLayerAuditRegion(fighter: Fighter) {
   const left = Math.max(0, Math.floor(Math.min(
     fighter.x - 120,
     WORLD_GEOMETRY.crawler.doorX - 48,
@@ -4109,83 +4310,245 @@ function fighterUnitLayerPixelAudit(
     WORLD_GEOMETRY.crawler.doorX + 96,
   )));
   const bottom = Math.min(H, Math.ceil(fighter.y + 36));
-  const width = Math.max(1, right - left);
-  const height = Math.max(1, bottom - top);
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Unit-layer audit canvas unavailable");
+  return {
+    x: left,
+    y: top,
+    w: Math.max(1, right - left),
+    h: Math.max(1, bottom - top),
+  };
+}
+
+function beginFighterUnitLayerPixelAuditSession(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+  checkpointReceipt: unknown,
+) {
+  if (fighterUnitLayerAuditSession) throw new Error("Unit-layer audit session is already active");
+  if (quiescence && quiescence.active !== true) throw new Error("Unit-layer audit requires active presentation quiescence");
+  const region = fighterUnitLayerAuditRegion(fighter);
+  reusableFighterUnitLayerAuditScratchSurface(region.w, region.h);
+  const deploymentPlan = crawlerDeploymentPlanForFighter(fighter);
+  const token = `fighter-unit-layer-${++fighterUnitLayerAuditSessionOrdinal}-${Math.round(performance.now() * 1000)}`;
+  fighterUnitLayerAuditSession = {
+    token,
+    fighter,
+    sprites,
+    finalCanvas,
+    game: g,
+    graphicsProfile,
+    finalTransformSource: finalTransform,
+    finalTransform: { ...finalTransform },
+    stageId: g.definition.stageId,
+    fighterId: fighter.id,
+    fighterKind: fighter.kind,
+    fighterX: fighter.x,
+    fighterY: fighter.y,
+    checkpoint: deploymentPlan?.checkpoint ?? null,
+    checkpointReceipt,
+    quiescence: quiescence ? { ...quiescence } : null,
+    region,
+    canvasWidth: finalCanvas.width,
+    canvasHeight: finalCanvas.height,
+    canvasDpr: Math.max(1, Number(finalCanvas.dataset.dpr) || 1),
+    nextPassIndex: 0,
+    completedPasses: [],
+    actual: null,
+    opaque: null,
+    renderedForegroundRgba: null,
+    expectedForegroundRgba: null,
+    finalRgba: null,
+    compositeRgba: null,
+    startedAtPageTime: performance.now(),
+  };
+  return {
+    schema: "v100-fighter-unit-layer-audit-session/v1" as const,
+    token,
+    stageId: g.definition.stageId,
+    fighterId: fighter.id,
+    fighterKind: fighter.kind,
+    fighterPosition: { x: fighter.x, y: fighter.y },
+    checkpoint: deploymentPlan?.checkpoint ?? null,
+    checkpointReceipt,
+    dimensions: { ...region, canvasWidth: finalCanvas.width, canvasHeight: finalCanvas.height },
+    transform: { ...finalTransform },
+    quiescence: quiescence ? { ...quiescence } : null,
+    passCount: FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+    nextPass: FIGHTER_UNIT_LAYER_AUDIT_PASSES[0],
+  };
+}
+
+function requireFighterUnitLayerAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = fighterUnitLayerAuditSession;
+  if (!session || session.token !== token) throw new Error("Unknown unit-layer audit session token");
+  const currentFighter = session.game.fighters.find(({ id }) => id === session.fighterId) ?? null;
+  const currentTransform = session.finalTransformSource;
+  const currentPlan = currentFighter ? crawlerDeploymentPlanForFighter(currentFighter) : null;
+  if (currentFighter !== session.fighter
+    || currentFighter?.kind !== session.fighterKind
+    || currentFighter?.x !== session.fighterX
+    || currentFighter?.y !== session.fighterY
+    || session.game.definition.stageId !== session.stageId
+    || (currentPlan?.checkpoint ?? null) !== session.checkpoint
+    || session.finalCanvas.width !== session.canvasWidth
+    || session.finalCanvas.height !== session.canvasHeight
+    || Math.max(1, Number(session.finalCanvas.dataset.dpr) || 1) !== session.canvasDpr
+    || currentTransform.scale !== session.finalTransform.scale
+    || currentTransform.offsetX !== session.finalTransform.offsetX
+    || currentTransform.offsetY !== session.finalTransform.offsetY) {
+    throw new Error("Unit-layer audit identity/checkpoint/render binding drifted");
+  }
+  if (session.quiescence) {
+    if (!quiescence?.active
+      || quiescence.owner !== session.quiescence.owner
+      || quiescence.route !== session.quiescence.route
+      || quiescence.generation !== session.quiescence.generation) {
+      throw new Error("Unit-layer audit presentation generation drifted");
+    }
+  } else if (quiescence) {
+    throw new Error("Legacy unit-layer audit unexpectedly acquired presentation ownership");
+  }
+  return session;
+}
+
+function prepareFighterUnitLayerAuditScratchPass(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) {
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
+  context.globalCompositeOperation = "source-over";
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.clearRect(0, 0, width, height);
+}
+
+function advanceFighterUnitLayerPixelAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = requireFighterUnitLayerAuditSession(token, quiescence);
+  const pass = FIGHTER_UNIT_LAYER_AUDIT_PASSES[session.nextPassIndex];
+  if (!pass) throw new Error("Unit-layer audit session has no remaining pass");
+  const { x: left, y: top, w: width, h: height } = session.region;
+  const { context: ctx } = reusableFighterUnitLayerAuditScratchSurface(width, height);
+
+  const prepareScratchPass = () => {
+    prepareFighterUnitLayerAuditScratchPass(ctx, width, height);
+  };
+  const copiedPixels = () => new Uint8ClampedArray(
+    ctx.getImageData(0, 0, width, height).data,
+  );
 
   const capture = (options: FighterDrawOptions) => {
-    ctx.clearRect(0, 0, W, H);
-    const drawResult = drawSpriteFighter(ctx, fighter, sprites, {
+    prepareScratchPass();
+    ctx.save();
+    ctx.translate(-left, -top);
+    const drawResult = drawSpriteFighter(ctx, session.fighter, session.sprites, {
       ...options,
       includeGroundShadow: false,
       recordAudit: false,
     });
+    ctx.restore();
     return {
-      data: ctx.getImageData(left, top, width, height).data,
+      data: copiedPixels(),
       clipRect: drawResult?.clipRect ?? null,
       deploymentPlan: drawResult?.deploymentPlan ?? null,
     };
   };
-  const actual = capture({});
-  const opaque = capture({ forceOpaque: true });
-  const foregroundCanvas = document.createElement("canvas");
-  foregroundCanvas.width = W;
-  foregroundCanvas.height = H;
-  const foregroundContext = foregroundCanvas.getContext("2d", { willReadFrequently: true });
-  if (!foregroundContext) throw new Error("Foreground-layer audit canvas unavailable");
   const captureForeground = (forceOpaque: boolean) => {
-    foregroundContext.clearRect(0, 0, W, H);
-    drawCrawlerForegroundMask(foregroundContext, g, sprites, graphicsProfile, forceOpaque);
-    return foregroundContext.getImageData(left, top, width, height).data;
+    prepareScratchPass();
+    ctx.save();
+    ctx.translate(-left, -top);
+    drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile, forceOpaque);
+    ctx.restore();
+    return copiedPixels();
   };
-  const finalAuditCanvas = document.createElement("canvas");
-  finalAuditCanvas.width = width;
-  finalAuditCanvas.height = height;
-  const finalAuditContext = finalAuditCanvas.getContext("2d", { willReadFrequently: true });
-  if (!finalAuditContext) throw new Error("Final battle canvas audit unavailable");
-  const dpr = Math.max(1, Number(finalCanvas.dataset.dpr) || 1);
-  finalAuditContext.imageSmoothingEnabled = true;
-  finalAuditContext.imageSmoothingQuality = "high";
-  finalAuditContext.drawImage(
-    finalCanvas,
-    (finalTransform.offsetX + left * finalTransform.scale) * dpr,
-    (finalTransform.offsetY + top * finalTransform.scale) * dpr,
-    width * finalTransform.scale * dpr,
-    height * finalTransform.scale * dpr,
-    0,
-    0,
-    width,
-    height,
-  );
-  const finalRgba = finalAuditContext.getImageData(0, 0, width, height).data;
-  const compositeCanvas = document.createElement("canvas");
-  compositeCanvas.width = W;
-  compositeCanvas.height = H;
-  const compositeContext = compositeCanvas.getContext("2d", { willReadFrequently: true });
-  if (!compositeContext) throw new Error("Deployment final composite audit canvas unavailable");
-  drawCrawler(compositeContext, g, sprites, graphicsProfile);
-  if (actual.deploymentPlan?.active
-    && actual.deploymentPlan.unitPass === "before-foreground-mask") {
-    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
-    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
-  } else {
-    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
-    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
+
+  if (pass === "actual-unit") session.actual = capture({});
+  else if (pass === "forced-opaque-unit") session.opaque = capture({ forceOpaque: true });
+  else if (pass === "rendered-foreground") session.renderedForegroundRgba = captureForeground(false);
+  else if (pass === "expected-foreground") session.expectedForegroundRgba = captureForeground(true);
+  else if (pass === "final-production-canvas") {
+    prepareScratchPass();
+    ctx.drawImage(
+      session.finalCanvas,
+      (session.finalTransform.offsetX + left * session.finalTransform.scale) * session.canvasDpr,
+      (session.finalTransform.offsetY + top * session.finalTransform.scale) * session.canvasDpr,
+      width * session.finalTransform.scale * session.canvasDpr,
+      height * session.finalTransform.scale * session.canvasDpr,
+      0,
+      0,
+      width,
+      height,
+    );
+    session.finalRgba = copiedPixels();
+  } else if (pass === "authored-composite") {
+    if (!session.actual) throw new Error("Unit-layer audit composite pass lacks the ordered actual-unit pass");
+    prepareScratchPass();
+    ctx.save();
+    ctx.translate(-left, -top);
+    drawCrawler(ctx, session.game, session.sprites, session.graphicsProfile);
+    if (session.actual.deploymentPlan?.active
+      && session.actual.deploymentPlan.unitPass === "before-foreground-mask") {
+      drawSpriteFighter(ctx, session.fighter, session.sprites, { recordAudit: false });
+      drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile);
+    } else {
+      drawCrawlerForegroundMask(ctx, session.game, session.sprites, session.graphicsProfile);
+      drawSpriteFighter(ctx, session.fighter, session.sprites, { recordAudit: false });
+    }
+    ctx.restore();
+    session.compositeRgba = copiedPixels();
   }
-  const compositeRgba = compositeContext.getImageData(left, top, width, height).data;
+
+  session.completedPasses.push(pass);
+  session.nextPassIndex += 1;
+  return {
+    schema: "v100-fighter-unit-layer-audit-session-step/v1" as const,
+    token,
+    step: session.nextPassIndex,
+    pass,
+    storedPixelLength: width * height * 4,
+    complete: session.nextPassIndex === FIGHTER_UNIT_LAYER_AUDIT_PASSES.length,
+    nextPass: FIGHTER_UNIT_LAYER_AUDIT_PASSES[session.nextPassIndex] ?? null,
+  };
+}
+
+function finalizeFighterUnitLayerPixelAuditSession(
+  token: string,
+  quiescence: FighterUnitLayerAuditQuiescence | null,
+) {
+  const session = requireFighterUnitLayerAuditSession(token, quiescence);
+  if (session.nextPassIndex !== FIGHTER_UNIT_LAYER_AUDIT_PASSES.length
+    || !session.actual
+    || !session.opaque
+    || !session.renderedForegroundRgba
+    || !session.expectedForegroundRgba
+    || !session.finalRgba
+    || !session.compositeRgba) {
+    throw new Error("Unit-layer audit finalization requires all six ordered pixel passes");
+  }
+  fighterUnitLayerAuditSession = null;
+  const { x: left, y: top, w: width, h: height } = session.region;
+  const actual = session.actual;
+  const opaque = session.opaque;
   const compositePixels = analyzeDeploymentCompositePixels({
-    finalRgba: compositeRgba,
+    finalRgba: session.compositeRgba,
     renderedUnitRgba: actual.data,
     expectedUnitRgba: opaque.data,
-    renderedForegroundRgba: captureForeground(false),
-    expectedForegroundRgba: captureForeground(true),
+    renderedForegroundRgba: session.renderedForegroundRgba,
+    expectedForegroundRgba: session.expectedForegroundRgba,
     unitDrawCount: actual.deploymentPlan?.unitDrawCount ?? 1,
     width,
-    visibleFinalRgba: finalRgba,
+    visibleFinalRgba: session.finalRgba,
   });
 
   const metrics = (rgba: Uint8ClampedArray) => {
@@ -4243,6 +4606,13 @@ function fighterUnitLayerPixelAudit(
   const opaqueMetrics = metrics(opaque.data);
   const opacityComparison = compareAlpha(actual.data, opaque.data);
   return {
+    scratchSurface: {
+      schema: "v100-fighter-unit-layer-audit-scratch/v1",
+      kind: "detached-dom-canvas",
+      surfaceCount: 1,
+      contextCount: 1,
+      passCount: 6,
+    },
     region: { x: left, y: top, w: width, h: height },
     deploymentPlan: actual.deploymentPlan,
     clipRect: null,
@@ -4254,7 +4624,53 @@ function fighterUnitLayerPixelAudit(
     finalCompositePixels: compositePixels,
     alphaOneFromFirstVisibleFrame: opacityComparison.maskIoU >= .999
       && opacityComparison.normalizedAlphaL1 <= .001,
+    transportSession: {
+      schema: "v100-fighter-unit-layer-audit-session/v1" as const,
+      token,
+      stageId: session.stageId,
+      fighterId: session.fighterId,
+      fighterKind: session.fighterKind,
+      fighterPosition: { x: session.fighterX, y: session.fighterY },
+      checkpoint: session.checkpoint,
+      checkpointReceipt: session.checkpointReceipt,
+      dimensions: {
+        ...session.region,
+        canvasWidth: session.canvasWidth,
+        canvasHeight: session.canvasHeight,
+      },
+      transform: { ...session.finalTransform },
+      quiescence: session.quiescence ? { ...session.quiescence } : null,
+      completedPasses: [...session.completedPasses],
+      passCount: session.completedPasses.length,
+      startedAtPageTime: session.startedAtPageTime,
+      finalizedAtPageTime: performance.now(),
+      finalizedWithoutCanvasDraw: true,
+    },
   };
+}
+
+function fighterUnitLayerPixelAudit(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+) {
+  const begin = beginFighterUnitLayerPixelAuditSession(
+    fighter,
+    sprites,
+    finalCanvas,
+    g,
+    graphicsProfile,
+    finalTransform,
+    null,
+    null,
+  );
+  for (const _pass of FIGHTER_UNIT_LAYER_AUDIT_PASSES) {
+    advanceFighterUnitLayerPixelAuditSession(begin.token, null);
+  }
+  return finalizeFighterUnitLayerPixelAuditSession(begin.token, null);
 }
 
 function drawEnemyCombatReadabilityVfx(
@@ -4304,29 +4720,34 @@ function drawEnemyCombatReadabilityVfx(
     };
     const anchor = weaponAnchorForTarget(f, target);
     const pulse = 7 + Math.sin(g.time * 24 + f.id) * 2;
-    const organGlow = ctx.createRadialGradient(anchor.x, anchor.y, 1, anchor.x, anchor.y, pulse * 2.4);
-    organGlow.addColorStop(0, snapshot.projectile.coreColor);
-    organGlow.addColorStop(.34, snapshot.projectile.color);
-    organGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = snapshot.phase === "warning" ? .72 : .92;
-    ctx.fillStyle = organGlow;
-    ctx.fillRect(anchor.x - pulse * 2.5, anchor.y - pulse * 2.5, pulse * 5, pulse * 5);
+    const projectileAlpha = snapshot.phase === "warning" ? .58 : .82;
+    ctx.globalCompositeOperation = "lighter";
+    drawCombatRibbon(ctx, f.x, f.y - f.bodyRadius * .8, anchor.x, anchor.y, snapshot.projectile.color, 2.2, projectileAlpha * .64, direction * 16);
+    drawProjectileCore(ctx, anchor.x, anchor.y, direction, 0, snapshot.projectile.coreColor, .9 + pulse * .025);
+    for (let strand = 0; strand < 3; strand += 1) {
+      const offset = (strand - 1) * 5;
+      drawCombatRibbon(ctx, anchor.x - direction * (14 + strand * 4), anchor.y + offset, anchor.x + direction * (5 + strand * 2), anchor.y - offset * .6, strand % 2 ? snapshot.projectile.coreColor : snapshot.projectile.color, 1.2 + strand * .35, projectileAlpha * (.58 - strand * .1), (strand - 1) * 7);
+    }
   }
   if (!snapshot.projectile && snapshot.phase === "warning") {
     const pulse = .5 + .5 * Math.sin(g.time * 18 + f.id);
-    const warningY = f.y - Math.max(24, f.bodyRadius * 2);
-    ctx.globalAlpha = .48 + pulse * .26;
+    const warningY = f.y - Math.max(24, f.bodyRadius * 1.7);
+    const role = snapshot.role;
+    const windupReach = snapshot.boss ? 34 : role === "heavy" ? 26 : role === "pursuer" ? 22 : 17;
+    ctx.globalAlpha = .38 + pulse * .28;
     ctx.strokeStyle = snapshot.accentColor;
-    ctx.lineWidth = snapshot.boss ? 2.8 : 2;
-    ctx.beginPath();
-    ctx.arc(f.x, warningY, 8 + pulse * 3, Math.PI * .18, Math.PI * .82);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(f.x - 8, warningY - 1);
-    ctx.lineTo(f.x - 3, warningY + 6);
-    ctx.moveTo(f.x + 8, warningY - 1);
-    ctx.lineTo(f.x + 3, warningY + 6);
-    ctx.stroke();
+    ctx.lineWidth = snapshot.boss ? 3 : role === "heavy" ? 3.2 : 1.8;
+    if (role === "pursuer" || role === "ambusher") {
+      drawCombatRibbon(ctx, f.x - direction * windupReach, warningY + 10, f.x + direction * 6, warningY - 9, snapshot.accentColor, ctx.lineWidth, .56 + pulse * .18, direction * 12);
+      drawCombatRibbon(ctx, f.x - direction * (windupReach + 8), warningY + 15, f.x - direction * 2, warningY - 2, snapshot.accentColor, 1.1, .34 + pulse * .12, direction * 8);
+    } else if (role === "controller" || role === "support") {
+      for (let tendril = 0; tendril < 3; tendril += 1) {
+        drawCombatRibbon(ctx, f.x + direction * 3, f.y - 12 - tendril * 5, f.x + direction * (windupReach + tendril * 8), warningY + tendril * 6, snapshot.accentColor, 1.6, .46 + pulse * .14, (tendril - 1) * 10);
+      }
+    } else {
+      drawCombatRibbon(ctx, f.x - direction * windupReach, warningY + 9, f.x + direction * windupReach, warningY - 5, snapshot.accentColor, ctx.lineWidth, .52 + pulse * .16, direction * 14);
+      drawCombatRibbon(ctx, f.x - direction * (windupReach - 4), warningY + 14, f.x + direction * 4, warningY + 2, snapshot.accentColor, 1.1, .32 + pulse * .12, -direction * 9);
+    }
   }
 
   if (snapshot.phase === "hit-light" || snapshot.phase === "hit-heavy") {
@@ -4335,78 +4756,51 @@ function drawEnemyCombatReadabilityVfx(
     ctx.strokeStyle = heavy ? "#ffd08a" : snapshot.accentColor;
     ctx.lineWidth = heavy ? 2.4 : 1.5;
     ctx.globalAlpha = .82;
-    for (let index = 0; index < sparkCount; index += 1) {
-      const angle = (index / sparkCount) * Math.PI * 2 + f.id * .37;
-      const inner = heavy ? 7 : 5;
-      const outer = inner + 9 + (index % 3) * 4;
-      const originY = f.y - Math.max(18, f.bodyRadius * 1.4);
-      ctx.beginPath();
-      ctx.moveTo(f.x + Math.cos(angle) * inner, originY + Math.sin(angle) * inner);
-      ctx.lineTo(f.x + Math.cos(angle) * outer, originY + Math.sin(angle) * outer);
-      ctx.stroke();
+    drawCombatSplinters(ctx, f.x, f.y - Math.max(18, f.bodyRadius * 1.4), direction * .2, heavy ? "#ffd08a" : snapshot.accentColor, heavy ? 1.25 : .82, f.id * 13 + sparkCount, sparkCount);
+    if (heavy) {
+      drawCombatRibbon(ctx, f.x - direction * 14, f.y + 1, f.x + direction * 16, f.y - 8, "#d78259", 3.2, .42, direction * 12);
     }
   }
 
   if (snapshot.lowHp && snapshot.boss) {
     const phase = bossPhaseForHp(f.hp, f.maxHp, f.kind);
     const pulse = .5 + .5 * Math.sin(g.time * (5 + phase.phase));
-    ctx.globalAlpha = snapshot.critical ? .32 : .19;
-    ctx.strokeStyle = snapshot.critical ? "#ff8359" : snapshot.accentColor;
-    ctx.lineWidth = snapshot.critical ? 3 : 2;
-    ctx.beginPath();
-    ctx.ellipse(
-      f.x,
-      f.y + 4,
-      f.bodyRadius * (1.45 + pulse * .12),
-      f.bodyRadius * (.42 + pulse * .04),
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
     const vaporCount = Math.max(2, Math.round((snapshot.critical ? 6 : 3) * density));
     for (let index = 0; index < vaporCount; index += 1) {
       const rise = (g.time * (10 + index) + f.id * 3 + index * 13) % 44;
       const x = f.x + Math.sin(g.time * 1.8 + index * 2.4) * f.bodyRadius * .55;
-      ctx.globalAlpha = snapshot.critical ? .16 : .1;
-      ctx.fillStyle = index % 2 ? "#3a2927" : "#6c332b";
+      ctx.globalAlpha = snapshot.critical ? .2 : .12;
+      ctx.strokeStyle = index % 2 ? "#3a2927" : "#6c332b";
+      ctx.lineWidth = 2 + index % 2;
       ctx.beginPath();
-      ctx.ellipse(x, f.y - 20 - rise, 5 + index % 3, 3 + index % 2, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(x, f.y - 16);
+      ctx.bezierCurveTo(x - 7, f.y - 22 - rise * .3, x + 8, f.y - 25 - rise * .65, x + Math.sin(index + g.time) * 5, f.y - 27 - rise);
+      ctx.stroke();
+    }
+    if (snapshot.critical) {
+      ctx.globalAlpha = .3 + pulse * .12;
+      ctx.strokeStyle = "#ff8359";
+      ctx.lineWidth = 2;
+      drawCombatRibbon(ctx, f.x - direction * f.bodyRadius * .65, f.y + 2, f.x + direction * f.bodyRadius * .8, f.y - 10, "#ff8359", 2, .3 + pulse * .12, direction * 12);
     }
   }
   if (snapshot.lowHp && !snapshot.boss) {
     const pulse = .5 + .5 * Math.sin(g.time * 7 + f.id * .7);
-    ctx.globalAlpha = snapshot.critical ? .22 + pulse * .08 : .1 + pulse * .05;
-    ctx.strokeStyle = snapshot.critical ? "#e36a51" : snapshot.accentColor;
-    ctx.lineWidth = snapshot.critical ? 2 : 1.35;
-    ctx.beginPath();
-    ctx.ellipse(
-      f.x,
-      f.y + 3,
-      f.bodyRadius * (1.18 + pulse * .08),
-      Math.max(4, f.bodyRadius * .28),
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
     const vaporCount = Math.max(1, Math.round(2 * density));
     for (let index = 0; index < vaporCount; index += 1) {
       const rise = (g.time * (8 + index) + f.id * 5 + index * 9) % 22;
-      ctx.globalAlpha = snapshot.critical ? .16 : .08;
-      ctx.fillStyle = "#4d2926";
+      const x = f.x + (index ? 6 : -6);
+      ctx.globalAlpha = snapshot.critical ? .18 : .1;
+      ctx.strokeStyle = "#4d2926";
+      ctx.lineWidth = 1.5 + index * .4;
       ctx.beginPath();
-      ctx.ellipse(
-        f.x + (index ? 6 : -6),
-        f.y - 12 - rise,
-        3.5,
-        2.2,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      ctx.moveTo(x, f.y - 10);
+      ctx.quadraticCurveTo(x - 4, f.y - 15 - rise * .35, x + 4, f.y - 18 - rise);
+      ctx.stroke();
+    }
+    if (snapshot.critical) {
+      ctx.globalAlpha = .18 + pulse * .1;
+      drawCombatRibbon(ctx, f.x - direction * f.bodyRadius * .55, f.y + 2, f.x + direction * f.bodyRadius * .6, f.y - 5, "#e36a51", 1.5, .18 + pulse * .1, direction * 8);
     }
   }
   ctx.restore();
@@ -4417,19 +4811,40 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
   ctx.save();
   ctx.translate(effect.x, effect.y);
   if (effect.kind === "healing") {
-    const pulse = effect.radius * (.88 + Math.sin(time * 4) * .035);
-    ctx.strokeStyle = "rgba(105,226,155,.44)"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(0, 0, pulse, pulse * .34, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = "rgba(68,170,113,.08)"; ctx.fill();
+    ctx.globalCompositeOperation = "lighter";
+    const pulse = .72 + Math.sin(time * 4) * .12;
+    for (let strand = 0; strand < 5; strand += 1) {
+      const startX = (strand - 2) * effect.radius * .28;
+      const drift = Math.sin(time * 2.8 + strand * 1.7) * 8;
+      ctx.strokeStyle = strand % 2 ? "#8ce9aa" : "#d3ffe0";
+      ctx.lineWidth = strand === 2 ? 2.5 : 1.4;
+      ctx.globalAlpha = pulse * (.4 - strand * .035);
+      ctx.beginPath();
+      ctx.moveTo(startX, 12);
+      ctx.bezierCurveTo(startX + drift, 3, startX - drift * .6, -10, startX + Math.sin(time * 3 + strand) * 5, -24 - strand * 3);
+      ctx.stroke();
+    }
+    for (let mote = 0; mote < 6; mote += 1) {
+      const angle = mote * 1.04 + time * .7;
+      const distance = effect.radius * (.18 + (mote % 3) * .12);
+      ctx.globalAlpha = pulse * (.55 - mote * .05);
+      ctx.fillStyle = mote % 2 ? "#b8ffd0" : "#5ed995";
+      ctx.beginPath(); ctx.arc(Math.cos(angle) * distance, -4 + Math.sin(angle) * distance * .28, 1.5 + mote % 2, 0, Math.PI * 2); ctx.fill();
+    }
   } else {
     const glow = ctx.createRadialGradient(0, 0, 3, 0, 0, effect.radius);
     glow.addColorStop(0, "rgba(255,207,76,.58)"); glow.addColorStop(.4, "rgba(230,83,35,.35)"); glow.addColorStop(1, "rgba(120,24,13,0)");
-    ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(0, 0, effect.radius, effect.radius * .34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = glow; ctx.fillRect(-effect.radius, -effect.radius * .36, effect.radius * 2, effect.radius * .72);
     for (let i = 0; i < 6; i++) {
       const fx = (i - 2.5) * 15 + Math.sin(time * 8 + i) * 5;
       const fy = -8 - Math.abs(Math.sin(time * 6 + i * 1.7)) * 19;
       ctx.fillStyle = i % 2 ? "#ffb33f" : "#e64e29";
-      ctx.beginPath(); ctx.arc(fx, fy, 4 + (i % 3), 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(fx - 3, fy + 5);
+      ctx.quadraticCurveTo(fx - 1, fy - 5 - i, fx + 3, fy - 9);
+      ctx.quadraticCurveTo(fx + 7, fy - 3, fx + 2, fy + 6);
+      ctx.closePath();
+      ctx.fill();
     }
   }
   ctx.restore();
@@ -4470,16 +4885,9 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     if (impactAge > 0) {
       const tail = Math.max(0, 1 - impactAge / .52);
       ctx.globalAlpha = tail;
-      ctx.translate(effect.targetX, effect.targetY);
       ctx.strokeStyle = "#ffd36d";
       ctx.lineWidth = 3;
-      for (let ray = 0; ray < 10; ray += 1) {
-        const angle = ray / 10 * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
-        ctx.lineTo(Math.cos(angle) * (25 + impactAge * 38), Math.sin(angle) * (16 + impactAge * 22));
-        ctx.stroke();
-      }
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX), "#ffd36d", 1.2, effect.ownerId + 3, 9);
     }
     ctx.restore();
     return;
@@ -4491,27 +4899,52 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
+    // Scout is a fast crowbar intercept.  It should read as a body-and-tool
+    // lunge, not as a radar ring or a targeting glyph around the enemy.
     for (let trail = 0; trail < 4; trail += 1) {
-      ctx.globalAlpha = .7 - trail * .13;
-      ctx.strokeStyle = trail % 2 ? "#9cf4ec" : "#36b8b5";
-      ctx.lineWidth = 5 - trail * .8;
+      const trailProgress = Math.max(0, charge - trail * .055);
+      const trailX = effect.originX + (dashX - effect.originX) * trailProgress;
+      const trailY = effect.originY + (dashY - effect.originY) * trailProgress;
+      const tail = 12 + trail * 8;
+      ctx.globalAlpha = .64 - trail * .12;
+      ctx.strokeStyle = trail % 2 ? "#b7fff3" : "#2caaa8";
+      ctx.lineWidth = trail === 0 ? 3.8 : 2.1;
       ctx.beginPath();
-      ctx.moveTo(dashX - direction * (18 + trail * 14), dashY + trail * 6 - 10);
-      ctx.lineTo(dashX - direction * (2 + trail * 3), dashY - trail * 2);
+      ctx.moveTo(trailX - direction * tail, trailY + trail * 4 - 7);
+      ctx.quadraticCurveTo(trailX - direction * tail * .42, trailY - 13 + trail * 3, trailX, trailY - trail * 2);
       ctx.stroke();
     }
-    ctx.translate(effect.targetX, effect.targetY);
+    const impactFade = Math.max(0, 1 - impactAge / .46);
+    if (impactAge > 0) {
+      ctx.globalAlpha = impactFade;
+      ctx.strokeStyle = "#d7fff6";
+      ctx.lineWidth = 2.4;
+      for (let shard = 0; shard < 6; shard += 1) {
+        const shardAngle = direction * (.22 + shard * .38);
+        const length = 12 + (shard % 3) * 6 + impactAge * 16;
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX + direction * 4, effect.targetY - 4);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(shardAngle) * length * .48,
+          effect.targetY + Math.sin(shardAngle) * length * .32 - 5,
+          effect.targetX + Math.cos(shardAngle) * length,
+          effect.targetY + Math.sin(shardAngle) * length * .52 - 5,
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = .38 + charge * .42;
     ctx.strokeStyle = "#c9fff5";
     ctx.shadowColor = "#42d8d0";
-    ctx.shadowBlur = 10;
-    ctx.lineWidth = 4;
+    ctx.shadowBlur = 7;
+    ctx.lineWidth = 2.4;
     ctx.beginPath();
-    ctx.arc(-direction * 3, -8, 25 + impactAge * 18, direction > 0 ? -1.6 : Math.PI - 1.6, direction > 0 ? .8 : Math.PI + .8);
+    ctx.moveTo(effect.targetX - direction * 16, effect.targetY - 14);
+    ctx.quadraticCurveTo(effect.targetX - direction * 5, effect.targetY - 24, effect.targetX + direction * 8, effect.targetY - 17);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(direction * 16, -26);
-    ctx.lineTo(direction * 29, -12);
-    ctx.lineTo(direction * 20, -4);
+    ctx.moveTo(effect.targetX - direction * 13, effect.targetY + 5);
+    ctx.quadraticCurveTo(effect.targetX - direction * 2, effect.targetY - 3, effect.targetX + direction * 12, effect.targetY + 2);
     ctx.stroke();
     ctx.restore();
     return;
@@ -4520,33 +4953,30 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     const tail = Math.max(0, 1 - impactAge / .5);
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.strokeStyle = "#bdeaff";
     ctx.shadowColor = "#62b9d6";
     ctx.shadowBlur = 9;
-    ctx.lineWidth = 2;
-    const radius = 24 - charge * 8 + impactAge * 26;
     ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .5;
-    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
-    for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * (radius + 5), Math.sin(angle) * (radius + 5));
-      ctx.lineTo(Math.cos(angle) * (radius + 16), Math.sin(angle) * (radius + 16));
-      ctx.stroke();
-    }
+    ctx.lineWidth = 2.6;
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#bdeaff", 2.6, .72 + charge * .2, -12);
+    drawCombatRibbon(ctx, effect.originX, effect.originY + 4, effect.targetX, effect.targetY + 4, "#f7fbff", 1.15, .58 + charge * .2, -8);
     if (impactAge > 0) {
-      ctx.restore();
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = tail;
       ctx.strokeStyle = "#f7fbff";
-      ctx.shadowColor = "#8bd9f0";
-      ctx.shadowBlur = 12;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(effect.originX, effect.originY);
-      ctx.lineTo(effect.targetX, effect.targetY);
-      ctx.stroke();
+      ctx.lineWidth = 2.3;
+      for (let shard = 0; shard < 5; shard += 1) {
+        const shardAngle = -.72 + shard * .36;
+        const length = 12 + (shard % 2) * 8 + impactAge * 25;
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX, effect.targetY);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(shardAngle) * length * .45,
+          effect.targetY + Math.sin(shardAngle) * length * .45,
+          effect.targetX + Math.cos(shardAngle) * length,
+          effect.targetY + Math.sin(shardAngle) * length,
+        );
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -4554,20 +4984,16 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "medic") {
     const tail = Math.max(0, 1 - impactAge / .55);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
     ctx.strokeStyle = "#89efb4";
-    ctx.fillStyle = "rgba(68,181,119,.2)";
     ctx.shadowColor = "#48c485";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    const ring = 18 + (impactAge > 0 ? impactAge * 58 : (1 - charge) * 20);
-    ctx.beginPath(); ctx.ellipse(0, 18, ring, ring * .32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#d7ffe6";
-    ctx.fillRect(-5, -31, 10, 34);
-    ctx.fillRect(-17, -19, 34, 10);
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#89efb4", 2.8, .62 + charge * .25, 13);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 4, effect.targetX, effect.targetY - 4, "#d7ffe6", 1.2, .72 + charge * .18, 8);
     ctx.strokeStyle = "#b1ffd1";
+    ctx.translate(effect.targetX, effect.targetY);
     ctx.beginPath();
     for (let turn = 0; turn <= 22; turn += 1) {
       const angle = turn * .45 + effect.elapsed * 5;
@@ -4576,6 +5002,15 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       if (turn === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
+    for (let mote = 0; mote < 5; mote += 1) {
+      const moteAngle = mote * 1.4 + effect.elapsed * 2;
+      const moteDistance = 6 + impactAge * 28 + mote * 3;
+      ctx.globalAlpha = Math.max(.1, tail * (.72 - mote * .1));
+      ctx.fillStyle = mote % 2 ? "#d7ffe6" : "#5ed995";
+      ctx.beginPath();
+      ctx.arc(Math.cos(moteAngle) * moteDistance, 8 + Math.sin(moteAngle) * moteDistance * .45, 1.8 + mote % 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
     return;
   }
@@ -4587,11 +5022,12 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.strokeStyle = "#e3b477";
     ctx.shadowColor = "#9f653e";
     ctx.shadowBlur = 9;
-    ctx.lineWidth = 5;
     ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .45;
-    ctx.beginPath();
-    ctx.arc(effect.originX, effect.originY, 52, direction > 0 ? -2.4 : -.74, direction > 0 ? .25 : Math.PI + 2.9);
-    ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY + 10, effect.targetX, effect.targetY - 5, "#e3b477", 7, .3 + charge * .34, direction * 30);
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#fff0bd", 3.2, .5 + charge * .38, direction * 24);
+    for (let weight = 0; weight < 3; weight += 1) {
+      drawCombatRibbon(ctx, effect.originX - direction * weight * 7, effect.originY + weight * 4, effect.targetX - direction * weight * 3, effect.targetY + weight * 2, "#bc794a", 1.8, .42 - weight * .08, direction * (20 - weight * 4));
+    }
     if (impactAge > 0) {
       ctx.translate(effect.targetX, effect.targetY);
       ctx.lineWidth = 3;
@@ -4613,22 +5049,21 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "crazy-king") return;
   if (effect.kind === "kumaverson") {
     ctx.save();
-    ctx.translate(effect.originX, effect.originY + 28);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = "#f0bd61";
-    ctx.fillStyle = "rgba(66,90,98,.18)";
     ctx.shadowColor = "#cf8d38";
     ctx.shadowBlur = 10;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, -24, 33, Math.PI, Math.PI * 2);
-    ctx.lineTo(33, 2); ctx.lineTo(-33, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, -24, 20, 7, 0, 0, Math.PI * 2); ctx.stroke();
-    for (const angle of [-.75, -.25, .25, .75]) {
-      ctx.beginPath();
-      ctx.moveTo(Math.sin(angle) * 30, -19);
-      ctx.lineTo(Math.sin(angle) * (47 + Math.sin(effect.elapsed * 7) * 3), 9);
-      ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    const pressure = Math.min(1, charge * 1.25);
+    for (let wave = 0; wave < 4; wave += 1) {
+      const offset = (wave - 1.5) * 7;
+      const reach = 24 + pressure * 44 + wave * 5;
+      drawCombatRibbon(ctx, effect.originX + direction * 8, effect.originY + offset, effect.originX + direction * reach, effect.originY + offset * .55 - 22, wave === 1 ? "#fff0b7" : "#d38d42", wave === 1 ? 3.2 : 1.6, .68 - wave * .1, direction * (13 + wave * 3));
+    }
+    if (impactAge > 0) {
+      ctx.globalAlpha = Math.max(0, 1 - impactAge / .55);
+      ctx.strokeStyle = "#f6d98c";
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .1, "#f6d98c", 1.05, effect.ownerId + 9, 8);
     }
     ctx.restore();
     return;
@@ -4636,25 +5071,17 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "babayaga") {
     const tail = Math.max(0, 1 - impactAge / .5);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
     ctx.strokeStyle = "#f2d46d";
     ctx.shadowColor = "#9d7f27";
     ctx.shadowBlur = 9;
     ctx.lineWidth = 2.5;
-    const size = 31 - charge * 8 + impactAge * 22;
-    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      ctx.beginPath();
-      ctx.moveTo(sx * size, sy * (size - 9));
-      ctx.lineTo(sx * size, sy * size);
-      ctx.lineTo(sx * (size - 9), sy * size);
-      ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#f2d46d", 2.2, .6 + charge * .25, -5);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 3, effect.targetX, effect.targetY - 3, "#fff0a3", 1, .72, -2);
+    if (impactAge > 0) {
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX), "#fff0a3", 1.15, effect.ownerId + 13, 7);
     }
-    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke();
-    ctx.fillStyle = "#fff0a3";
-    for (let row = 0; row < 3; row += 1) ctx.fillRect(20, -15 + row * 8, 13 - row * 3, 2);
     ctx.restore();
     return;
   }
@@ -4687,16 +5114,10 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       ctx.stroke();
       if (round.muzzleFlash > 0) {
         ctx.globalAlpha = round.muzzleFlash;
-        ctx.fillStyle = "#f8c35f";
-        ctx.beginPath();
-        ctx.arc(
-          effect.originX + direction * (6 + round.travelProgress * 18),
-          effect.originY - 3 + offset * .28,
-          1.8 + round.travelProgress * 1.7,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
+        const muzzleX = effect.originX + direction * (6 + round.travelProgress * 18);
+        const muzzleY = effect.originY - 3 + offset * .28;
+        drawCombatRibbon(ctx, muzzleX - direction * 9, muzzleY + 2, muzzleX + direction * 8, muzzleY - 3, "#f8c35f", 2.8, round.muzzleFlash * .8, direction * 4);
+        drawCombatRibbon(ctx, muzzleX - direction * 5, muzzleY - 3, muzzleX + direction * 5, muzzleY + 4, "#fff0aa", 1.1, round.muzzleFlash * .72, -direction * 3);
       }
     }
     ctx.restore();
@@ -4704,47 +5125,46 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   }
   if (effect.kind === "guardian") {
     ctx.save();
-    ctx.translate(effect.originX + 18, effect.originY + 30);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = "#9bc8cf";
-    ctx.fillStyle = "rgba(77,121,132,.2)";
     ctx.shadowColor = "#4f8e9a";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    for (let panel = -1; panel <= 1; panel += 1) {
-      const x = panel * 27;
-      ctx.beginPath();
-      ctx.moveTo(x - 13, -52); ctx.lineTo(x + 13, -52);
-      ctx.lineTo(x + 17, -6); ctx.lineTo(x, 8); ctx.lineTo(x - 17, -6); ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x - 7, -25); ctx.lineTo(x, -34); ctx.lineTo(x + 7, -25);
-      ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    for (let plate = 0; plate < 3; plate += 1) {
+      const offset = (plate - 1) * 15;
+      drawCombatRibbon(ctx, effect.originX + direction * 3, effect.originY - 38 + offset, effect.originX + direction * (35 + plate * 10), effect.originY - 47 + offset * .7, plate === 1 ? "#e2ffff" : "#73aeb6", plate === 1 ? 3.4 : 1.8, .7 - plate * .12, direction * 10);
     }
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 8, effect.targetX, effect.targetY - 8, "#c9f6f6", 1.4, .38 + charge * .35, -8);
     ctx.restore();
     return;
   }
   if (effect.kind === "engineer") {
     const tail = Math.max(0, 1 - impactAge / .55);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY + 8);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .35 + charge * .55;
     ctx.strokeStyle = "#ddc66c";
     ctx.shadowColor = "#9e8735";
     ctx.shadowBlur = 8;
     ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(0, 0, 35 + impactAge * 20, 11 + impactAge * 6, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(-30, 0); ctx.lineTo(-18, -17); ctx.lineTo(-7, -3);
-    ctx.moveTo(30, 0); ctx.lineTo(18, -17); ctx.lineTo(7, -3);
-    ctx.stroke();
-    for (let hook = -2; hook <= 2; hook += 1) {
-      ctx.beginPath();
-      ctx.moveTo(hook * 9 - 4, 0);
-      ctx.lineTo(hook * 9, -11 - Math.abs(hook) * 2);
-      ctx.lineTo(hook * 9 + 4, 0);
-      ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#ddc66c", 2.4, .58 + charge * .25, 10);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 2, effect.targetX, effect.targetY - 2, "#fff0a3", 1.1, .72, 6);
+    if (impactAge > 0) {
+      for (let hook = 0; hook < 5; hook += 1) {
+        const hookAngle = -.8 + hook * .4;
+        const length = 13 + hook * 4 + impactAge * 18;
+        ctx.globalAlpha = Math.max(.08, tail * (.75 - hook * .1));
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX, effect.targetY);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(hookAngle) * length * .4,
+          effect.targetY + Math.sin(hookAngle) * length * .4,
+          effect.targetX + Math.cos(hookAngle) * length,
+          effect.targetY + Math.sin(hookAngle) * length,
+        );
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -4752,24 +5172,18 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "mayo-chan") {
     const pulse = .72 + Math.sin(effect.elapsed * 13) * .16;
     ctx.save();
-    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = `rgba(206,57,92,${pulse})`;
     ctx.shadowColor = "#b11f4c";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 30 + Math.sin(effect.elapsed * 8) * 4, 10, 0, 0, Math.PI * 2);
-    ctx.stroke();
     const direction = effect.targetX >= effect.originX ? 1 : -1;
     for (let index = 0; index < 4; index += 1) {
-      const offset = index * 8;
+      const offset = index * 7;
       ctx.globalAlpha = Math.max(.15, .7 - index * .13);
-      ctx.beginPath();
-      ctx.moveTo(-direction * (10 + offset), -18 + index * 8);
-      ctx.lineTo(-direction * (42 + offset + Math.sin(effect.elapsed * 14 + index) * 7), -18 + index * 8);
-      ctx.stroke();
+      drawCombatRibbon(ctx, effect.originX - direction * (5 + offset), effect.originY - 14 + index * 7, effect.targetX - direction * 8, effect.targetY - 8 + index * 3, index % 2 ? "#e45b72" : "#9d234f", 2.8 - index * .35, .64 - index * .1, direction * (8 + index * 3));
     }
+    if (impactAge > 0) drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .15, "#f28b78", 1.1, effect.ownerId + 19, 7);
     ctx.restore();
     return;
   }
@@ -4778,28 +5192,20 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     const release = Math.max(0, (progress - .38) / .62);
     const direction = effect.targetX >= effect.originX ? 1 : -1;
     ctx.save();
-    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = `rgba(255,83,208,${.36 + charge * .44})`;
     ctx.shadowColor = "#ff42c8";
     ctx.shadowBlur = 14;
     ctx.lineCap = "round";
     ctx.lineWidth = 3 + charge * 5;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(direction * (34 + charge * 52), -9);
-    ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.originX + direction * (34 + charge * 52), effect.originY - 9, "#ff8ce5", 3 + charge * 5, .48 + charge * .42, -8);
     if (release > 0) {
       ctx.globalAlpha = Math.max(.16, .7 - release * .48);
-      const sweepRadius = 52 + release * 26;
-      ctx.strokeStyle = "rgba(255,54,195,.24)";
-      ctx.lineWidth = 17 - release * 7;
-      ctx.beginPath();
-      ctx.arc(0, 8, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(255,239,252,.78)";
-      ctx.lineWidth = 2.4;
-      ctx.stroke();
+      const sweepEndX = effect.originX + direction * (42 + release * 84);
+      const sweepEndY = effect.originY - 12 - release * 22;
+      drawCombatRibbon(ctx, effect.originX + direction * 6, effect.originY + 12, sweepEndX, sweepEndY, "#ff36c3", 15 - release * 6, .24 + (1 - release) * .16, direction * 25);
+      drawCombatRibbon(ctx, effect.originX, effect.originY + 6, sweepEndX, sweepEndY, "#fff0fb", 2.5, .72 - release * .38, direction * 22);
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .1, "#ff86e1", 1.25, effect.ownerId + 23, 8);
     }
     ctx.restore();
     return;
@@ -4829,13 +5235,12 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       ctx.fillStyle = "#d4a45c";
       ctx.shadowColor = "#ffb252";
       ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(x, y, index === points.length - 1 ? 5 : 3.5, 0, Math.PI * 2); ctx.fill();
+      drawProjectileCore(ctx, x, y, point.x - effect.originX, point.y - effect.originY, "#d4a45c", index === points.length - 1 ? 1.1 : .82);
       if (impactAge >= 0) {
         ctx.globalAlpha = Math.max(.08, 1 - impactAge / .24);
         ctx.strokeStyle = index === points.length - 1 ? "#ffd28b" : "#e6a455";
-        ctx.lineWidth = index === points.length - 1 ? 6 : 3;
-        const impactScale = 1 + Math.min(1, impactAge / .18) * .55;
-        ctx.beginPath(); ctx.ellipse(point.x, point.y, (26 + index * 4) * impactScale, (11 + index * 2) * impactScale, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = index === points.length - 1 ? 4 : 2.2;
+        drawCombatSplinters(ctx, point.x, point.y, Math.atan2(point.y - effect.originY, point.x - effect.originX), index === points.length - 1 ? "#ffd28b" : "#e6a455", index === points.length - 1 ? 1.2 : .72, effect.ownerId + index * 7, index === points.length - 1 ? 9 : 5);
         ctx.globalAlpha = 1;
       }
     }
@@ -4854,9 +5259,16 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.lineWidth = 3;
     ctx.translate(effect.originX, effect.originY - 38);
     if (release <= 0) {
-      ctx.beginPath(); ctx.arc(0, 0, 25 + Math.sin(effect.elapsed * 6) * 2, 0, Math.PI * 2); ctx.stroke();
       ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(-19, 19); ctx.lineTo(19, -19); ctx.moveTo(-19, -19); ctx.lineTo(19, 19); ctx.stroke();
+      const readyReach = 20 + Math.sin(effect.elapsed * 6) * 3;
+      ctx.beginPath();
+      ctx.moveTo(-readyReach, 14);
+      ctx.quadraticCurveTo(-5, -readyReach * .8, readyReach, -16);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-readyReach + 5, -13);
+      ctx.quadraticCurveTo(4, 4, readyReach - 5, 17);
+      ctx.stroke();
     } else {
       const direction = effect.targetX >= effect.originX ? 1 : -1;
       const reach = 50 + Math.abs(effect.targetX - effect.originX) * .55;
@@ -4880,7 +5292,22 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   const x = effect.originX + (effect.targetX - effect.originX) * progress;
   const linearY = effect.originY + (effect.targetY - effect.originY) * progress;
   const y = linearY - Math.sin(progress * Math.PI) * 72;
-  const angle = Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX) + progress * Math.PI * 5;
+  const travelAngle = Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX);
+  const angle = travelAngle + progress * Math.PI * 5;
+  const ux = Math.cos(travelAngle);
+  const uy = Math.sin(travelAngle);
+  const px = -uy;
+  const py = ux;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (let trail = 0; trail < 4; trail += 1) {
+    const tail = 16 + trail * 7;
+    const trailX = x - ux * tail;
+    const trailY = y - uy * tail;
+    ctx.globalAlpha = .58 - trail * .11;
+    drawCombatRibbon(ctx, trailX, trailY, x - ux * 4, y - uy * 4, trail % 2 ? "#ffb34d" : "#e76a2d", 3.2 - trail * .45, .58 - trail * .1, (trail - 1.5) * 5);
+  }
+  ctx.restore();
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -4889,34 +5316,52 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   ctx.strokeStyle = "#f2c06d";
   ctx.fillStyle = "#6e3c1e";
   ctx.lineWidth = 2;
+  ctx.globalAlpha = .92;
   ctx.beginPath();
-  ctx.roundRect(-4, -11, 8, 21, 3);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#e7d2a1";
-  ctx.fillRect(-2.5, -15, 5, 6);
-  ctx.fillStyle = "#ff8a35";
-  ctx.beginPath();
-  ctx.moveTo(-4, -15);
-  ctx.quadraticCurveTo(-7, -23, 0, -27);
-  ctx.quadraticCurveTo(7, -22, 3, -14);
+  ctx.moveTo(-5, -12);
+  ctx.lineTo(3, -10);
+  ctx.lineTo(5, 7);
+  ctx.lineTo(1, 13);
+  ctx.lineTo(-5, 9);
   ctx.closePath();
   ctx.fill();
-  ctx.restore();
-  ctx.save();
-  ctx.globalAlpha = .5;
-  ctx.strokeStyle = "#ffae4f";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(effect.originX, effect.originY);
-  ctx.quadraticCurveTo(
-    (effect.originX + effect.targetX) / 2,
-    Math.min(effect.originY, effect.targetY) - 72,
-    x,
-    y,
-  );
   ctx.stroke();
+  ctx.strokeStyle = "#d9ad67";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(-4, -7); ctx.lineTo(3, -5);
+  ctx.moveTo(-3, 0); ctx.lineTo(4, 2);
+  ctx.stroke();
+  ctx.fillStyle = "#ff8a35";
+  ctx.beginPath();
+  ctx.moveTo(-2, -12);
+  ctx.quadraticCurveTo(-7, -19, -1, -27);
+  ctx.quadraticCurveTo(0, -20, 4, -18);
+  ctx.quadraticCurveTo(6, -14, 2, -10);
+  ctx.fill();
   ctx.restore();
+  if (progress > .72) {
+    const impactFade = Math.max(.08, 1 - (progress - .72) / .28);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactFade;
+    drawCombatSplinters(ctx, effect.targetX, effect.targetY, travelAngle, "#ffc66c", 1.2, effect.ownerId + 31, 9);
+    for (let flame = 0; flame < 4; flame += 1) {
+      const offset = (flame - 1.5) * 5;
+      drawCombatRibbon(
+        ctx,
+        effect.targetX - ux * (8 + flame * 3) + px * offset,
+        effect.targetY - uy * (8 + flame * 3) + py * offset,
+        effect.targetX + ux * (7 + flame * 3) + px * offset * .4,
+        effect.targetY + uy * (7 + flame * 3) + py * offset * .4,
+        flame % 2 ? "#ffcf72" : "#e85b2b",
+        2.6 - flame * .3,
+        impactFade * (.72 - flame * .1),
+        (flame - 1.5) * 7,
+      );
+    }
+    ctx.restore();
+  }
 }
 
 function crazyKingAbilityIndicatorVisible(fighter: Fighter) {
@@ -4934,33 +5379,28 @@ function drawCrazyKingAbilityIndicator(
   if (!crazyKingAbilityIndicatorVisible(fighter)) return;
   const active = fighter.manualAbility?.phase === "active";
   const pulse = Math.sin(time * (active ? 15 : 8));
-  const radius = (active ? 34 : 28) + pulse * (active ? 4 : 2);
+  const direction = fighter.aiMoveDirection < -.05 ? -1 : 1;
   ctx.save();
-  ctx.translate(fighter.x, fighter.y);
   ctx.globalCompositeOperation = "lighter";
-  ctx.strokeStyle = active ? "#ff803d" : "#ffd26a";
   ctx.shadowColor = active ? "#d43a20" : "#b66b2f";
   ctx.shadowBlur = active ? 14 : 8;
-  ctx.lineWidth = active ? 4 : 3;
-  ctx.beginPath();
-  for (let tooth = 0; tooth <= 24; tooth += 1) {
-    const angle = tooth / 24 * Math.PI * 2 + time * (active ? 2.4 : 1.2);
-    const toothRadius = radius + (tooth % 2 ? (active ? 9 : 5) : 0);
-    const x = Math.cos(angle) * toothRadius;
-    const y = Math.sin(angle) * toothRadius * .34;
-    if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  const bladeReach = active ? 54 + pulse * 6 : 40 + pulse * 3;
+  for (let blade = 0; blade < 4; blade += 1) {
+    const offset = (blade - 1.5) * 7;
+    drawCombatRibbon(
+      ctx,
+      fighter.x - direction * (24 + blade * 3),
+      fighter.y - 40 + offset,
+      fighter.x + direction * bladeReach,
+      fighter.y - 28 + offset * .48,
+      blade === 1 ? "#fff0ad" : "#ff803d",
+      blade === 1 ? (active ? 4 : 2.8) : 1.6 + (active ? 1 : 0),
+      (active ? .32 : .2) + (3 - blade) * .07,
+      direction * (10 + blade * 3),
+    );
   }
-  ctx.closePath();
-  ctx.stroke();
-  ctx.strokeStyle = "#ffd26a";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-18, -48);
-  ctx.lineTo(-9, -61);
-  ctx.lineTo(0, -48);
-  ctx.lineTo(10, -64);
-  ctx.lineTo(20, -48);
-  ctx.stroke();
+  ctx.globalAlpha = active ? .78 : .45;
+  drawCombatSplinters(ctx, fighter.x + direction * bladeReach, fighter.y - 30, direction * .05, "#ffd26a", active ? 1.15 : .72, fighter.id + 41, active ? 8 : 5);
   ctx.restore();
 }
 
@@ -5171,8 +5611,6 @@ function stationMissionFinalCanvasAudit(
   );
   const finalRgba = finalContext.getImageData(0, 0, W, H).data;
   let authoredPixelCount = 0;
-  let finalPixelMatchCount = 0;
-  let finalPixelNearMatchCount = 0;
   let authoredStateSignature = 2166136261;
   let finalPaintedCount = 0;
   for (let index = 0; index < expectedRgba.length; index += 4) {
@@ -5182,15 +5620,35 @@ function stationMissionFinalCanvasAudit(
     authoredStateSignature ^= expectedRgba[index + 1]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
     authoredStateSignature ^= expectedRgba[index + 2]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
     if (finalRgba[index + 3] > 0) finalPaintedCount += 1;
-    const delta = Math.abs(expectedRgba[index] - finalRgba[index])
-      + Math.abs(expectedRgba[index + 1] - finalRgba[index + 1])
-      + Math.abs(expectedRgba[index + 2] - finalRgba[index + 2]);
+  }
+  // Keep world-space coverage (including clipped authored pixels) above. Color
+  // must compare the same native raster grid: a world/native/world round trip
+  // is lossy on supported WebKit even for a known-correct reference image.
+  // Reuse the existing scratch surface after preserving its coverage readback.
+  finalAudit.width = finalCanvas.width;
+  finalAudit.height = finalCanvas.height;
+  finalContext.setTransform(finalTransform.scale * dpr, 0, 0, finalTransform.scale * dpr,
+    finalTransform.offsetX * dpr, finalTransform.offsetY * dpr);
+  drawStationMission(finalContext, g, stageObjects, false);
+  const nativeExpectedRgba = finalContext.getImageData(0, 0, finalCanvas.width, finalCanvas.height).data;
+  const nativeFinalContext = finalCanvas.getContext("2d");
+  if (!nativeFinalContext) throw new Error("Station mission native final-canvas audit unavailable");
+  const nativeFinalRgba = nativeFinalContext.getImageData(0, 0, finalCanvas.width, finalCanvas.height).data;
+  let nativeAuthoredPixelCount = 0;
+  let finalPixelMatchCount = 0;
+  let finalPixelNearMatchCount = 0;
+  for (let index = 0; index < nativeExpectedRgba.length; index += 4) {
+    if (nativeExpectedRgba[index + 3] < 245) continue;
+    nativeAuthoredPixelCount += 1;
+    const delta = Math.abs(nativeExpectedRgba[index] - nativeFinalRgba[index])
+      + Math.abs(nativeExpectedRgba[index + 1] - nativeFinalRgba[index + 1])
+      + Math.abs(nativeExpectedRgba[index + 2] - nativeFinalRgba[index + 2]);
     if (delta <= 18) finalPixelMatchCount += 1;
     if (delta <= 60) finalPixelNearMatchCount += 1;
   }
   const finalPaintRatio = authoredPixelCount > 0 ? finalPaintedCount / authoredPixelCount : 0;
-  const finalMatchRatio = authoredPixelCount > 0 ? finalPixelMatchCount / authoredPixelCount : 0;
-  const finalNearMatchRatio = authoredPixelCount > 0 ? finalPixelNearMatchCount / authoredPixelCount : 0;
+  const finalMatchRatio = nativeAuthoredPixelCount > 0 ? finalPixelMatchCount / nativeAuthoredPixelCount : 0;
+  const finalNearMatchRatio = nativeAuthoredPixelCount > 0 ? finalPixelNearMatchCount / nativeAuthoredPixelCount : 0;
   return {
     applicable: true,
     // The final canvas is sampled after presentation overlays and the mission
@@ -5205,6 +5663,10 @@ function stationMissionFinalCanvasAudit(
     finalPaintRatio,
     finalMatchRatio,
     finalNearMatchRatio,
+    nativeColorGrid: {
+      width: finalCanvas.width, height: finalCanvas.height, opaquePixelCount: nativeAuthoredPixelCount,
+      scale: finalTransform.scale * dpr, offsetX: finalTransform.offsetX * dpr, offsetY: finalTransform.offsetY * dpr,
+    },
     authoredStateSignature: (authoredStateSignature >>> 0).toString(16).padStart(8, "0"),
     missionState: {
       powerActivated: g.stageMission.powerActivated ?? 0,
@@ -5286,7 +5748,9 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     }
   } else if (telegraph.kind === "shell-sweep") {
     const radius = telegraph.radius ?? 0;
-    const halfHeight = BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
+    const halfHeight = f.kind === "takuya-omega"
+      ? bossDefinitionForEnemyKind(f.kind)?.attackTelegraph.laneHalfHeight ?? 56
+      : BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
     const pulse = .5 + .5 * Math.sin(g.time * 11);
     ctx.setLineDash([]);
     ctx.globalAlpha = .18;
@@ -5448,9 +5912,9 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game)
 }
 
 function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
-  if (!["ooguchi", "gairen", "futago"].includes(f.kind)
+  if (!["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)
     || !["active", "recovery"].includes(f.stationAbility.phase)) return;
-  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago"];
+  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega"];
   const active = f.stationAbility.phase === "active";
   const elapsed = active
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
@@ -5508,7 +5972,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
       );
       ctx.stroke();
     }
-  } else {
+  } else if (f.kind === "futago") {
     const split = f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold;
     const separation = split ? 31 : 18;
     for (const direction of [-1, 1]) {
@@ -5535,6 +5999,39 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
         y + 12 - Math.sin(g.time * 7 + filament) * 6,
         f.x + separation,
         y,
+      );
+      ctx.stroke();
+    }
+  } else {
+    const omega = f.kind === "takuya-omega";
+    const color = omega ? "#e4ad55" : "#d55e4d";
+    const gradient = ctx.createRadialGradient(f.x, f.y - 54, 6, f.x, f.y - 42, omega ? 122 : 104);
+    gradient.addColorStop(0, omega ? `rgba(255,224,139,${.5 * intensity})` : `rgba(255,132,94,${.44 * intensity})`);
+    gradient.addColorStop(.46, omega ? `rgba(198,105,37,${.26 * intensity})` : `rgba(159,48,39,${.28 * intensity})`);
+    gradient.addColorStop(1, "rgba(30,12,12,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y - 42, omega ? 112 : 96, 70, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = .32 + intensity * .5;
+    ctx.lineWidth = omega ? 4 : 3;
+    // The mutated president is the four-rooted-arm boss; TAKUYA-Ω retains
+    // exactly two rooted arms and makes its identity read through the giant
+    // weapon arc instead of borrowing the president silhouette.
+    const armCount = omega ? 2 : 4;
+    for (let arm = 0; arm < armCount; arm += 1) {
+      const angle = omega
+        ? -Math.PI * .72 + arm * Math.PI * .44
+        : -Math.PI * .9 + arm * Math.PI * .6;
+      const reach = (omega ? 92 : 78) + (arm % 2) * 16;
+      ctx.beginPath();
+      ctx.moveTo(f.x + Math.cos(angle) * 18, f.y - 54 + Math.sin(angle) * 12);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .55,
+        f.y - 74 + Math.sin(g.time * 6 + arm) * 12,
+        f.x + Math.cos(angle) * reach,
+        f.y - 30 + Math.sin(angle) * 28,
       );
       ctx.stroke();
     }
@@ -6942,6 +7439,395 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
   }
 }
 
+/*
+ * Combat VFX are authored from the weapon/actor contract, not from one
+ * generic ring or target glyph.  Every normal attack gets a source, a travel
+ * read, a contact shape, and a short aftermath.  The small helpers below are
+ * deliberately path-based: tapered ribbons, uneven splinters, smoke wisps,
+ * and weapon-specific silhouettes survive low-frequency WebKit frames much
+ * better than a stack of perfect circles and rectangles.
+ */
+function drawCombatRibbon(
+  ctx: CanvasRenderingContext2D,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  color: string,
+  width: number,
+  alpha: number,
+  bend = 0,
+) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+  const px = -dy / distance;
+  const py = dx / distance;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.quadraticCurveTo(
+    (fromX + toX) * .5 + px * bend,
+    (fromY + toY) * .5 + py * bend,
+    toX,
+    toY,
+  );
+  ctx.stroke();
+}
+
+function drawCombatSplinters(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  angle: number,
+  color: string,
+  power: number,
+  seed: number,
+  count = 7,
+) {
+  const spread = Math.PI * .86;
+  ctx.strokeStyle = color;
+  ctx.lineCap = "round";
+  for (let index = 0; index < count; index += 1) {
+    const normalized = count <= 1 ? 0 : index / (count - 1) - .5;
+    const jitter = Math.sin(seed * .13 + index * 2.17) * .12;
+    const rayAngle = angle + normalized * spread + jitter;
+    const inner = 3 + (index % 3) * 2;
+    const outer = inner + power * (8 + (index % 4) * 4);
+    const bend = Math.sin(seed * .07 + index * 1.61) * 4;
+    ctx.globalAlpha = Math.max(.08, .78 - index * .055);
+    ctx.lineWidth = Math.max(1.2, 2.7 - index * .18);
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(rayAngle) * inner, y + Math.sin(rayAngle) * inner);
+    ctx.quadraticCurveTo(
+      x + Math.cos(rayAngle) * (inner + outer) * .56 - Math.sin(rayAngle) * bend,
+      y + Math.sin(rayAngle) * (inner + outer) * .56 + Math.cos(rayAngle) * bend,
+      x + Math.cos(rayAngle) * outer,
+      y + Math.sin(rayAngle) * outer,
+    );
+    ctx.stroke();
+  }
+}
+
+function drawProjectileCore(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  ux: number,
+  uy: number,
+  color: string,
+  scale = 1,
+) {
+  const px = -uy;
+  const py = ux;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + ux * 7 * scale, y + uy * 7 * scale);
+  ctx.quadraticCurveTo(
+    x + px * 3.5 * scale,
+    y + py * 3.5 * scale,
+    x - ux * 5 * scale,
+    y - uy * 5 * scale,
+  );
+  ctx.quadraticCurveTo(
+    x - px * 3.5 * scale,
+    y - py * 3.5 * scale,
+    x + ux * 7 * scale,
+    y + uy * 7 * scale,
+  );
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawAuthoredShotVfx(
+  ctx: CanvasRenderingContext2D,
+  shot: Shot,
+  {
+    x,
+    y,
+    p,
+    elapsed,
+    duration,
+    impactProgress,
+    ux,
+    uy,
+    distance,
+    weapon,
+    weaponProfile,
+    enemyProjectile,
+    color,
+  }: {
+    x: number;
+    y: number;
+    p: number;
+    elapsed: number;
+    duration: number;
+    impactProgress: number;
+    ux: number;
+    uy: number;
+    distance: number;
+    weapon: string;
+    weaponProfile: ReturnType<typeof weaponProfileForUnit>;
+    enemyProjectile: ReturnType<typeof enemyProjectilePresentationFor>;
+    color: string;
+  },
+): boolean {
+  const dx = shot.tx - shot.x;
+  const dy = shot.ty - shot.y;
+  const angle = Math.atan2(dy, dx);
+  const seed = (shot.sourceId ?? 0) * 17 + (shot.targetId ?? 0) * 7 + (shot.shotIndex ?? 0) * 31;
+  const strength = Math.max(.12, Math.min(1, shot.life / Math.max(.001, duration)));
+  const impact = Math.max(0, impactProgress);
+  const trail = weaponProfile.trail;
+  const isMelee = shot.style === "melee";
+  const direction = dx >= 0 ? 1 : -1;
+  const px = -uy;
+  const py = ux;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shot.emphasized ? 11 : 6;
+
+  if (isMelee) {
+    const reachX = shot.x + dx * Math.min(1, p * 1.16);
+    const reachY = shot.y + dy * Math.min(1, p * 1.16);
+    const activeAlpha = impactProgress >= 0 ? Math.max(.18, 1 - impact * .72) : .55 + strength * .45;
+    if (trail === "contact-arc") {
+      const fistX = reachX + ux * 4;
+      const fistY = reachY + uy * 4;
+      drawCombatRibbon(ctx, shot.x - px * 6, shot.y - py * 6, fistX, fistY, color, 4.2, activeAlpha * .48, direction * 16);
+      drawCombatRibbon(ctx, shot.x + px * 5, shot.y + py * 5, fistX - px * 4, fistY - py * 4, "#fff0c1", 1.5, activeAlpha * .82, direction * 12);
+      for (let knuckle = 0; knuckle < 3; knuckle += 1) {
+        const offset = (knuckle - 1) * 4;
+        drawCombatRibbon(ctx, fistX + px * offset - ux * 5, fistY + py * offset - uy * 5, fistX + px * offset + ux * 7, fistY + py * offset + uy * 7, "#f5c175", 1.4, activeAlpha * (.7 - knuckle * .12), direction * 4);
+      }
+    } else if (trail === "hooked-crowbar-arc") {
+      const hookX = reachX + ux * 9;
+      const hookY = reachY + uy * 9;
+      drawCombatRibbon(ctx, shot.x - px * 7, shot.y - py * 7, hookX, hookY, "#50cbc9", 6.2, activeAlpha * .34, direction * 24);
+      drawCombatRibbon(ctx, shot.x + px * 3, shot.y + py * 3, hookX - px * 3, hookY - py * 3, "#d9fff4", 2.2, activeAlpha * .9, direction * 18);
+      ctx.globalAlpha = activeAlpha * .86;
+      ctx.strokeStyle = "#b6eee5";
+      ctx.lineWidth = 2.1;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(hookX - ux * 12, hookY - uy * 12);
+      ctx.quadraticCurveTo(hookX + px * 7, hookY + py * 7, hookX + ux * 3, hookY + uy * 3);
+      ctx.quadraticCurveTo(hookX + ux * 12, hookY + uy * 5, hookX + ux * 8 - px * 5, hookY + uy * 8 - py * 5);
+      ctx.stroke();
+      drawCombatRibbon(ctx, hookX - ux * 18 + px * 6, hookY - uy * 18 + py * 6, hookX - ux * 4 + px * 6, hookY - uy * 4 + py * 6, "#e8fff8", 1.1, activeAlpha * .68, -direction * 5);
+    } else if (trail === "weighted-swing") {
+      const headX = reachX + ux * 5;
+      const headY = reachY + uy * 5;
+      drawCombatRibbon(ctx, shot.x - px * 10, shot.y - py * 10, headX + px * 8, headY + py * 8, "#c97a4e", 9, activeAlpha * .28, direction * 28);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, headX - px * 5, headY - py * 5, "#ffe0a0", 3.6, activeAlpha * .9, direction * 22);
+      ctx.globalAlpha = activeAlpha * .74;
+      ctx.strokeStyle = "#fff2c4";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(headX - ux * 10 - px * 7, headY - uy * 10 - py * 7);
+      ctx.lineTo(headX + ux * 8 + px * 7, headY + uy * 8 + py * 7);
+      ctx.stroke();
+    } else if (trail === "toothed-sweep") {
+      drawCombatRibbon(ctx, shot.x, shot.y, reachX, reachY, "#ffb05c", 7, activeAlpha * .34, direction * 22);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, reachX + px * 4, reachY + py * 4, "#fff0b2", 2.8, activeAlpha, direction * 18);
+      for (let tooth = 0; tooth < 7; tooth += 1) {
+        const t = (tooth + .5) / 7;
+        const tx = shot.x + (reachX - shot.x) * t;
+        const ty = shot.y + (reachY - shot.y) * t;
+        const toothLength = 5 + (tooth % 3) * 2;
+        ctx.globalAlpha = activeAlpha * .7;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(tx - ux * 3, ty - uy * 3);
+        ctx.lineTo(tx + px * toothLength + ux * 2, ty + py * toothLength + uy * 2);
+        ctx.stroke();
+      }
+    } else if (trail === "cross-cut") {
+      drawCombatRibbon(ctx, shot.x - px * 10, shot.y - py * 10, reachX + px * 12, reachY + py * 12, "#f3f8ff", 3.2, activeAlpha, direction * 17);
+      drawCombatRibbon(ctx, shot.x + px * 8, shot.y + py * 8, reachX - px * 14, reachY - py * 14, "#9ed8ec", 2.1, activeAlpha * .85, -direction * 14);
+    } else if (trail === "energy-arc") {
+      drawCombatRibbon(ctx, shot.x, shot.y, reachX, reachY, "#ff4dc9", 10, activeAlpha * .22, -direction * 18);
+      drawCombatRibbon(ctx, shot.x - px * 5, shot.y - py * 5, reachX - px * 5, reachY - py * 5, "#ff8ce5", 4.2, activeAlpha, -direction * 22);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, reachX + px * 4, reachY + py * 4, "#fff0fb", 1.6, activeAlpha * .9, -direction * 20);
+    } else if (trail === "bite-lunge") {
+      const jawStart = shot.x + direction * 4;
+      const jawEnd = reachX + direction * 6;
+      drawCombatRibbon(ctx, jawStart, shot.y - 10, jawEnd, reachY - 4, "#f7d788", 3.3, activeAlpha, direction * 12);
+      drawCombatRibbon(ctx, jawStart, shot.y + 9, jawEnd, reachY + 4, "#d8755e", 3.3, activeAlpha * .92, -direction * 10);
+      for (let tooth = 0; tooth < 4; tooth += 1) {
+        const t = (tooth + 1) / 5;
+        const toothX = jawStart + (jawEnd - jawStart) * t;
+        const toothY = shot.y + (reachY - shot.y) * t;
+        ctx.globalAlpha = activeAlpha * .85;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(toothX, toothY - 5);
+        ctx.lineTo(toothX + direction * 2, toothY);
+        ctx.lineTo(toothX, toothY + 5);
+        ctx.stroke();
+      }
+    } else {
+      const heavy = trail === "weighted-swing" || shot.emphasized;
+      drawCombatRibbon(ctx, shot.x - px * (heavy ? 8 : 4), shot.y - py * (heavy ? 8 : 4), reachX + px * (heavy ? 9 : 5), reachY + py * (heavy ? 9 : 5), color, heavy ? 5.5 : 3.2, activeAlpha, direction * (heavy ? 22 : 13));
+      drawCombatRibbon(ctx, shot.x + px * 5, shot.y + py * 5, reachX + px * 5, reachY + py * 5, "#fff0c1", heavy ? 1.8 : 1.15, activeAlpha * .76, direction * 12);
+    }
+    if (impactProgress >= 0) {
+      ctx.globalAlpha = Math.max(.08, 1 - impact * .8);
+      drawCombatSplinters(ctx, shot.tx, shot.ty, angle, color, shot.emphasized ? 1.35 : .82, seed, shot.emphasized ? 9 : 6);
+      if (trail === "flesh-spray" || trail === "bite-lunge") {
+        ctx.fillStyle = trail === "bite-lunge" ? "#a94a3e" : "#d76b4a";
+        for (let drop = 0; drop < 4; drop += 1) {
+          const dropAngle = angle + (drop - 1.5) * .3;
+          const travel = 8 + drop * 5 + impact * 17;
+          ctx.globalAlpha = Math.max(.06, 1 - impact * 1.3);
+          ctx.beginPath();
+          ctx.arc(shot.tx + Math.cos(dropAngle) * travel, shot.ty + Math.sin(dropAngle) * travel, 1.4 + (drop % 2), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+    return true;
+  }
+
+  const distanceScale = Math.max(.78, Math.min(1.24, distance / 240));
+  const tailLength = (weapon === "crawler" ? 46
+    : enemyProjectile ? enemyProjectile.tailLength
+      : trail === "high-velocity" ? 38
+        : trail === "burst-tracer" ? 30
+          : trail === "bolt" ? 22
+            : trail === "ballistic-arc" ? 18
+              : 24) * distanceScale;
+  const trailStartX = x - ux * tailLength;
+  const trailStartY = y - uy * tailLength;
+  const projectileAlpha = enemyProjectile ? .84 : .7;
+  if (enemyProjectile?.trail === "glob") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, color, 3.3, projectileAlpha, Math.sin(seed) * 6);
+    ctx.globalAlpha = .95;
+    ctx.fillStyle = enemyProjectile.coreColor;
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.15);
+    for (let lobe = 0; lobe < 3; lobe += 1) {
+      ctx.globalAlpha = .42 - lobe * .1;
+      drawCombatRibbon(ctx, trailStartX - ux * lobe * 5 + px * (lobe - 1) * 3, trailStartY - uy * lobe * 5 + py * (lobe - 1) * 3, x, y, color, 1.2, .42 - lobe * .1, (lobe - 1) * 5);
+    }
+  } else if (enemyProjectile?.trail === "sonic") {
+    for (let wave = 0; wave < 3; wave += 1) {
+      const waveStartX = x - ux * (10 + wave * 8);
+      const waveStartY = y - uy * (10 + wave * 8);
+      drawCombatRibbon(ctx, waveStartX + px * (wave + 1) * 4, waveStartY + py * (wave + 1) * 4, x + px * (wave + 1) * 2, y + py * (wave + 1) * 2, enemyProjectile.color, 2.2 - wave * .35, .7 - wave * .16, (wave % 2 ? -1 : 1) * 9);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.05);
+  } else if (enemyProjectile?.trail === "chorus") {
+    for (const offset of [-5, 0, 5]) {
+      drawCombatRibbon(ctx, trailStartX + px * offset, trailStartY + py * offset, x + px * offset * .35, y + py * offset * .35, color, offset === 0 ? 2.6 : 1.35, offset === 0 ? .86 : .38, offset * 2);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.08);
+  } else if (trail === "bolt") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, color, 1.5, .46, 4);
+    ctx.globalAlpha = .94;
+    drawProjectileCore(ctx, x, y, ux, uy, color, 1.45);
+    ctx.globalAlpha = .7;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x - ux * 7 + px * 4, y - uy * 7 + py * 4);
+    ctx.lineTo(x - ux * 14, y - uy * 14);
+    ctx.lineTo(x - ux * 7 - px * 4, y - uy * 7 - py * 4);
+    ctx.stroke();
+  } else if (trail === "support-pulse") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, "#79efac", 2.5, .48, 10);
+    for (let mote = 0; mote < 4; mote += 1) {
+      const drift = (elapsed * (14 + mote * 3) + seed + mote * 11) % 18;
+      const moteX = x - ux * drift + px * Math.sin(elapsed * 8 + mote) * 8;
+      const moteY = y - uy * drift + py * Math.sin(elapsed * 8 + mote) * 8 - mote * 3;
+      ctx.globalAlpha = .68 - mote * .1;
+      ctx.fillStyle = mote % 2 ? "#b7ffd0" : "#5ed995";
+      ctx.beginPath();
+      ctx.arc(moteX, moteY, 1.8 + (mote % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (trail === "energy-arc") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, "#ff4dca", 4.5, .32, 9);
+    drawCombatRibbon(ctx, trailStartX + px * 3, trailStartY + py * 3, x + px * 3, y + py * 3, "#ffd2f3", 1.8, .9, -7);
+    drawProjectileCore(ctx, x, y, ux, uy, "#ff8de2", 1.2);
+  } else {
+    const tracerColor = enemyProjectile?.color ?? color;
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, tracerColor, trail === "high-velocity" ? 2.4 : trail === "burst-tracer" ? 2.6 : 1.65, projectileAlpha, trail === "high-velocity" ? 2 : 0);
+    if (trail === "burst-tracer") {
+      drawCombatRibbon(ctx, trailStartX + px * 3, trailStartY + py * 3, x + px * 3, y + py * 3, "#fff0a4", 1.05, .58, -4);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, color, trail === "high-velocity" ? 1.22 : 1);
+  }
+
+  if (p < .32) {
+    const muzzleLength = 7 + (1 - p / .32) * (weapon === "crawler" ? 16 : 8 + (shot.recoil ?? weaponProfile.recoil) * 7);
+    for (let flare = 0; flare < 3; flare += 1) {
+      const flareOffset = (flare - 1) * 2.5;
+      drawCombatRibbon(ctx, shot.x + px * flareOffset, shot.y + py * flareOffset, shot.x + ux * muzzleLength + px * flareOffset * .4, shot.y + uy * muzzleLength + py * flareOffset * .4, flare === 1 ? "#fff0b0" : color, flare === 1 ? 2.6 : 1.2, .72 - flare * .14, (flare - 1) * 3);
+    }
+  }
+  if (shot.casing && p < .52) {
+    const eject = 4 + (shot.shotIndex ?? 0) * 1.8 + p * 12;
+    const casingX = shot.x - ux * 3 - uy * eject;
+    const casingY = shot.y - uy * 3 + ux * eject + p * p * 9;
+    ctx.save();
+    ctx.translate(casingX, casingY);
+    ctx.rotate(angle + p * 8);
+    ctx.globalAlpha = Math.max(0, 1 - p * 1.6);
+    ctx.fillStyle = "#d8a94f";
+    ctx.fillRect(-2.5, -1, 5, 2);
+    ctx.restore();
+  }
+  if (impactProgress >= 0) {
+    const impactAlpha = Math.max(.08, 1 - impact * .8);
+    ctx.globalAlpha = impactAlpha;
+    const impactColor = enemyProjectile?.coreColor ?? color;
+    drawCombatSplinters(ctx, shot.tx, shot.ty, angle, impactColor, weaponProfile.impactRadius / 10, seed + 4, trail === "explosive-burst" ? 11 : 7);
+    if (["explosive-burst", "grenade"].includes(weaponProfile.impact) || trail === "ballistic-arc") {
+      ctx.fillStyle = "#ffb85c";
+      for (let flame = 0; flame < 6; flame += 1) {
+        const flameAngle = angle + (flame - 2.5) * .25;
+        const flameDistance = 5 + (flame % 3) * 6 + impact * 18;
+        ctx.globalAlpha = Math.max(.06, impactAlpha * (.78 - flame * .08));
+        ctx.beginPath();
+        ctx.moveTo(shot.tx + Math.cos(flameAngle) * flameDistance, shot.ty + Math.sin(flameAngle) * flameDistance);
+        ctx.quadraticCurveTo(
+          shot.tx + Math.cos(flameAngle) * (flameDistance + 6),
+          shot.ty + Math.sin(flameAngle) * (flameDistance + 6) - 5,
+          shot.tx + Math.cos(flameAngle) * (flameDistance + 11),
+          shot.ty + Math.sin(flameAngle) * (flameDistance + 11),
+        );
+        ctx.stroke();
+      }
+    }
+    if (trail === "support-pulse" || shot.effect === "medic") {
+      for (let mote = 0; mote < 6; mote += 1) {
+        const moteAngle = mote / 6 * Math.PI * 2 + seed * .01;
+        const moteDistance = 6 + impact * (12 + mote * 2);
+        ctx.globalAlpha = Math.max(.08, impactAlpha * (.78 - mote * .08));
+        ctx.fillStyle = mote % 2 ? "#d3ffe0" : "#6ce7a0";
+        ctx.beginPath();
+        ctx.arc(shot.tx + Math.cos(moteAngle) * moteDistance, shot.ty + Math.sin(moteAngle) * moteDistance, 1.6 + (mote % 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  if (shot.effect === "scout" && p > .45) {
+    const scanAlpha = .42 + .28 * Math.sin(elapsed * 18 + seed);
+    ctx.globalAlpha = Math.max(.12, scanAlpha);
+    ctx.strokeStyle = "#9cf4ec";
+    ctx.lineWidth = 1.8;
+    drawCombatRibbon(ctx, shot.tx - ux * 11 + px * 7, shot.ty - uy * 11 + py * 7, shot.tx + px * 2, shot.ty + py * 2, "#d4fff6", 1.8, scanAlpha, 5);
+    drawCombatRibbon(ctx, shot.tx - ux * 8 - px * 6, shot.ty - uy * 8 - py * 6, shot.tx - ux * 1 - px * 1, shot.ty - uy * 1 - py * 1, "#42d8d0", 1.2, scanAlpha * .72, -4);
+  }
+  ctx.restore();
+  return true;
+}
+
 function drawWorld(
   ctx: CanvasRenderingContext2D,
   g: Game,
@@ -7197,10 +8083,34 @@ function drawWorld(
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
       ctx.translate(f.x, barY - 10);
-      ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = `rgba(255,210,85,${Math.min(1, .45 + f.marked * .18)})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-5, -5, 10, 10);
+      const markPulse = .5 + .5 * Math.sin(g.time * 8 + f.id * .7);
+      const markAlpha = Math.min(1, .48 + f.marked * .16);
+      // The scout mark is an authored "watching eye", not a generic rotated
+      // square. Its upper/lower lids and moving pupil read as a living
+      // reconnaissance lock while keeping the target-marker semantics.
+      ctx.globalAlpha = markAlpha;
+      ctx.strokeStyle = "#f4c866";
+      ctx.fillStyle = "rgba(69,42,22,.82)";
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-11, 1);
+      ctx.quadraticCurveTo(-4, -7 - markPulse * 2, 0, -7);
+      ctx.quadraticCurveTo(5, -7 - markPulse * 2, 11, 1);
+      ctx.quadraticCurveTo(4, 5 + markPulse, 0, 5);
+      ctx.quadraticCurveTo(-5, 5 + markPulse, -11, 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#ffe8a1";
+      ctx.beginPath();
+      ctx.ellipse(markPulse * 3 - 1.5, 0, 2.6, 3.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,231,161,.9)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 15 + markPulse * 2, Math.PI * 1.12, Math.PI * 1.72);
+      ctx.stroke();
       ctx.restore();
     }
   }
@@ -7244,117 +8154,29 @@ function drawWorld(
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = weapon === "crawler" ? 9 : enemyProjectile ? 7 : 5;
-    if (shot.style === "melee") {
-      const strength = Math.max(.15, Math.min(1, shot.life / duration));
-      const reach = shot.emphasized ? 18 : 11;
-      ctx.globalAlpha = strength;
-      ctx.lineWidth = shot.emphasized ? 4 : 2.25;
-      ctx.beginPath(); ctx.arc(shot.tx, shot.ty, reach, -.9, 1.15); ctx.stroke();
-      if (["crazy-king", "kumaverson", "brawler", "brute"].includes(weapon)) {
-        ctx.beginPath(); ctx.moveTo(shot.tx - reach * .7, shot.ty - reach * .35); ctx.lineTo(shot.tx + reach * .65, shot.ty + reach * .4); ctx.stroke();
-      }
-    } else {
-      const tailLength = weapon === "crawler" ? 46
-        : enemyProjectile ? enemyProjectile.tailLength
-          : weaponProfile.trail === "high-velocity" ? 36
-            : weaponProfile.trail === "burst-tracer" ? 28
-              : weaponProfile.trail === "bolt" ? 18
-                : 22;
-      ctx.lineWidth = weapon === "crawler" ? 2.8
-        : enemyProjectile?.trail === "sonic" ? 2.8
-          : enemyProjectile?.trail === "chorus" ? 2.2
-            : enemyProjectile ? 2.4
-              : weaponProfile.trail === "burst-tracer" ? 2.2
-                : weaponProfile.trail === "high-velocity" ? 1.8
-                  : 1.45;
-      ctx.beginPath();
-      ctx.moveTo(x - ux * tailLength, y - uy * tailLength);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      if (enemyProjectile?.trail === "glob") {
-        ctx.globalAlpha = .88;
-        ctx.fillStyle = enemyProjectile.coreColor;
-        ctx.beginPath();
-        ctx.ellipse(x, y, 4.5, 3.2, Math.atan2(dy, dx), 0, Math.PI * 2);
-        ctx.fill();
-      } else if (enemyProjectile?.trail === "sonic") {
-        for (let wave = 0; wave < 2; wave += 1) {
-          const radius = 6 + wave * 6;
-          ctx.globalAlpha = .62 - wave * .2;
-          ctx.beginPath();
-          ctx.arc(x, y, radius, Math.atan2(dy, dx) + 2.2, Math.atan2(dy, dx) + 4.1);
-          ctx.stroke();
-        }
-      } else if (enemyProjectile?.trail === "chorus") {
-        for (const offset of [-4, 4]) {
-          ctx.globalAlpha = .34;
-          ctx.beginPath();
-          ctx.moveTo(x - ux * tailLength * .72 + uy * offset, y - uy * tailLength * .72 - ux * offset);
-          ctx.lineTo(x + uy * offset, y - ux * offset);
-          ctx.stroke();
-        }
-      }
-      if (weapon === "crawler") {
-        ctx.globalAlpha = .45;
-        ctx.beginPath(); ctx.moveTo(x - ux * 30 - uy * 3, y - uy * 30 + ux * 3); ctx.lineTo(x - uy * 3, y + ux * 3); ctx.stroke();
-      }
-      if (p < .3) {
-        const muzzle = 5 + (1 - p / .3) * (weapon === "crawler" ? 10 : 7 + (shot.recoil ?? weaponProfile.recoil) * 4);
-        const flare = muzzle * (weapon === "crawler" ? .42 : .3);
-        ctx.globalAlpha = .9;
-        ctx.beginPath();
-        ctx.moveTo(shot.x - ux * 2, shot.y - uy * 2);
-        ctx.lineTo(shot.x + ux * muzzle + uy * flare, shot.y + uy * muzzle - ux * flare);
-        ctx.lineTo(shot.x + ux * muzzle - uy * flare, shot.y + uy * muzzle + ux * flare);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalAlpha = .45;
-        ctx.beginPath();
-        ctx.arc(shot.x + ux * muzzle * .55, shot.y + uy * muzzle * .55, flare * .72, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (shot.casing && p < .52) {
-        const eject = 4 + (shot.shotIndex ?? 0) * 1.8 + p * 12;
-        const casingX = shot.x - ux * 3 - uy * eject;
-        const casingY = shot.y - uy * 3 + ux * eject + p * p * 9;
-        ctx.save();
-        ctx.translate(casingX, casingY);
-        ctx.rotate(Math.atan2(dy, dx) + p * 8);
-        ctx.globalAlpha = Math.max(0, 1 - p * 1.6);
-        ctx.fillStyle = "#d8a94f";
-        ctx.fillRect(-2.5, -1, 5, 2);
-        ctx.restore();
-      }
-      if (impactProgress >= 0) {
-        const impact = impactProgress;
-        ctx.globalAlpha = 1 - impact * .7;
-        ctx.lineWidth = weapon === "crawler" ? 2.5 : 1.5;
-        const impactRadius = weapon === "crawler"
-          ? 12
-          : enemyProjectile?.impactRadius ?? weaponProfile.impactRadius;
-        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 3 + impact * impactRadius, 0, Math.PI * 2); ctx.stroke();
-        for (let spark = 0; spark < 3; spark += 1) {
-          const angle = spark * Math.PI * 2 / 3 + distance * .01;
-          const length = 5 + impact * 7;
-          ctx.beginPath(); ctx.moveTo(shot.tx, shot.ty); ctx.lineTo(shot.tx + Math.cos(angle) * length, shot.ty + Math.sin(angle) * length); ctx.stroke();
-        }
-      }
-      if (shot.effect === "scout" && p > .45) {
-        ctx.setLineDash([3, 3]); ctx.globalAlpha = .7;
-        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 11, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
-      }
-      if (shot.effect === "medic" && p > .58) {
-        ctx.globalAlpha = .8; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(shot.tx - 7, shot.ty); ctx.lineTo(shot.tx + 7, shot.ty); ctx.moveTo(shot.tx, shot.ty - 7); ctx.lineTo(shot.tx, shot.ty + 7); ctx.stroke();
-      }
-    }
+    drawAuthoredShotVfx(ctx, shot, {
+      x,
+      y,
+      p,
+      elapsed,
+      duration,
+      impactProgress,
+      ux,
+      uy,
+      distance,
+      weapon,
+      weaponProfile,
+      enemyProjectile,
+      color,
+    });
     ctx.restore();
   }
   ctx.shadowBlur = 0;
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
-    ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+    ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
   for (const d of g.damageTexts) {
@@ -7388,7 +8210,7 @@ function drawWorld(
   }
 }
 
-export function AshfallGame() {
+export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
@@ -7408,6 +8230,11 @@ export function AshfallGame() {
   // load, but does not prove that the browser can decode the image.
   const decodedBattleImagesRef = useRef(new WeakSet<HTMLImageElement>());
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
+  const phaseGCombatObservabilityEnabledRef = useRef(
+    typeof window !== "undefined"
+      && ["127.0.0.1", "localhost"].includes(window.location.hostname)
+      && new URLSearchParams(window.location.search).get("phase-g") === "1",
+  );
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
   const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
   const productionCueQaLogRef = useRef<Array<{
@@ -7427,7 +8254,7 @@ export function AshfallGame() {
   const musicRef = useRef<MusicRuntime | null>(null);
   const jingleRef = useRef<JingleRuntime | null>(null);
   const sfxRuntimeRef = useRef<SfxRuntime | null>(null);
-  const sfxMutedRef = useRef(false);
+  const sfxMutedRef = useRef(Boolean(externalSession?.settings && (!externalSession.settings.sfxEnabled || externalSession.settings.sfxVolume <= 0)));
   const musicDuckUntilRef = useRef(0);
   const desiredMusicModeRef = useRef<MusicMode>("normal");
   const pressureLatchRef = useRef(createPressureLatchRuntime());
@@ -7480,6 +8307,9 @@ export function AshfallGame() {
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
+  const externalStartKeyRef = useRef<string | null>(null);
+  const externalSessionRef = useRef(externalSession);
+  const survivalUpgradeSavePendingRef = useRef(false);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementReceiptRef = useRef("");
@@ -7491,7 +8321,56 @@ export function AshfallGame() {
   // movement loop advances it. The hook is armed only through the localhost
   // battle bridge and is released with the same proof pause control.
   const qaFreezeNextCrawlerDeploymentKindRef = useRef<UnitKind | null>(null);
+  const qaPresentationQuiescenceRef = useRef<{
+    active: boolean;
+    owner: string | null;
+    route: "phase-g" | "deployment" | "visual-integrity" | null;
+    generation: number;
+    enteredAtBattleTime: number | null;
+    releasedAtBattleTime: number | null;
+    enteredAtRenderFrames: number | null;
+    releasedAtRenderFrames: number | null;
+    enteredAtSimulationTicks: number | null;
+    releasedAtSimulationTicks: number | null;
+    suppressedRenderFrames: number;
+    pausedAnimationCount: number;
+    resumedAnimationCount: number;
+    pausedAnimations: Animation[];
+  }>({
+    active: false,
+    owner: null,
+    route: null,
+    generation: 0,
+    enteredAtBattleTime: null,
+    releasedAtBattleTime: null,
+    enteredAtRenderFrames: null,
+    releasedAtRenderFrames: null,
+    enteredAtSimulationTicks: null,
+    releasedAtSimulationTicks: null,
+    suppressedRenderFrames: 0,
+    pausedAnimationCount: 0,
+    resumedAnimationCount: 0,
+    pausedAnimations: [],
+  });
   const qaFrozenCrawlerDeploymentFighterIdRef = useRef<number | null>(null);
+  const qaArmedCrawlerDeploymentCheckpointRef = useRef<{
+    fighterId: number;
+    checkpoint: string;
+    minimumProgress: number;
+  } | null>(null);
+  const qaCrawlerDeploymentCheckpointReceiptRef = useRef<{
+    schema: "v099-crawler-deployment-checkpoint-receipt/v1";
+    fighterId: number;
+    kind: UnitKind;
+    checkpoint: string;
+    x: number;
+    y: number;
+    computedProgress: number;
+    battleTime: number;
+    gateEntering: boolean;
+    combatReady: boolean;
+    entryRampCleared: boolean;
+  } | null>(null);
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const navigationRouteReleaseAuditRef = useRef<Array<{
@@ -7564,8 +8443,8 @@ export function AshfallGame() {
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [pauseConfirm, setPauseConfirm] = useState<PauseAction | null>(null);
-  const [bgmMuted, setBgmMuted] = useState(false);
-  const [sfxMuted, setSfxMuted] = useState(false);
+  const [bgmMuted, setBgmMuted] = useState(() => Boolean(externalSession?.settings && (!externalSession.settings.bgmEnabled || externalSession.settings.bgmVolume <= 0)));
+  const [sfxMuted, setSfxMuted] = useState(() => Boolean(externalSession?.settings && (!externalSession.settings.sfxEnabled || externalSession.settings.sfxVolume <= 0)));
   const [musicActive, setMusicActive] = useState(false);
   const [audioUnlockUi, setAudioUnlockUi] = useState<AudioUnlockUiState>("idle");
   const [audioUnlockVisible, setAudioUnlockVisible] = useState(true);
@@ -7611,11 +8490,17 @@ export function AshfallGame() {
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
   const [selectedOutbreakMissionId, setSelectedOutbreakMissionId] = useState<string | null>(null);
-  const activeOperationId = selectedOutbreakMissionId ?? selectedStageId;
-  const activeBattlefieldStageId = selectedOutbreakMissionId
+  const activeOperationId = externalSession?.stageId ?? selectedOutbreakMissionId ?? selectedStageId;
+  const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
-    : selectedStageId;
-  const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
+    : selectedStageId);
+  const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => {
+    const clean = createDefaultCampaignSave() as CampaignSave;
+    return externalSession ? {
+      ...updateCampaignSettings(clean, externalSession.settings ?? {}) as CampaignSave,
+      autoSkipReadStory: externalSession.settings?.autoSkipReadStory === true,
+    } : clean;
+  });
   const campaignSaveRef = useRef(campaignSave);
   const [graphicsProfileView, setGraphicsProfileView] = useState<GraphicsProfile>(() => resolveGraphicsProfile("auto"));
   const [battleHudViewport, setBattleHudViewport] = useState({
@@ -7630,6 +8515,16 @@ export function AshfallGame() {
   useEffect(() => {
     campaignSaveRef.current = campaignSave;
   }, [campaignSave]);
+  const externalStageId = externalSession?.stageId ?? null;
+  const externalSessionActive = Boolean(externalSession);
+  useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
+  const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
+  const externalEnemyKindsKey = externalSession?.enemyKinds.join("|") ?? "";
+  useEffect(() => {
+    if (!externalStageId) return;
+    setSelectedStageId(externalStageId);
+    setSelectedOutbreakMissionId(null);
+  }, [externalStageId]);
   useEffect(() => {
     const updateGraphicsProfile = () => {
       const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
@@ -7657,13 +8552,16 @@ export function AshfallGame() {
       window.removeEventListener("orientationchange", updateGraphicsProfile);
     };
   }, [campaignSave.settings.graphicsQuality]);
-  const [saveHydrated, setSaveHydrated] = useState(false);
+  const [saveHydrated, setSaveHydrated] = useState(Boolean(externalSession));
   const [saveEnvironment, setSaveEnvironment] = useState(() => describeSaveEnvironment(null));
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [savePersistenceMessage, setSavePersistenceMessage] = useState("");
   const [saveHydrationAttempt, setSaveHydrationAttempt] = useState(0);
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
   const [saveMutationPending, setSaveMutationPending] = useState(false);
+  const externalSettingsPendingRef = useRef(false);
+  const [externalSettingsPending, setExternalSettingsPending] = useState(false);
+  const [externalSettingsRetry, setExternalSettingsRetry] = useState<Partial<CampaignSave["settings"]> | null>(null);
   const [pendingResultCommit, setPendingResultCommit] = useState<PendingResultCommit | null>(null);
   const [resultSaveRetrying, setResultSaveRetrying] = useState(false);
   const lastPersistedSerializedRef = useRef("");
@@ -7676,12 +8574,14 @@ export function AshfallGame() {
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
+  const externalFormationKinds = useMemo(() => [...(externalSession?.formationKinds ?? [])] as UnitKind[], [externalSession?.formationKinds]);
+  const activeFormationKinds = externalSession ? externalFormationKinds : formationKinds;
   const battleHudSlots = useMemo(
-    () => mobileBattleHudUnitSlots(cards, formationKinds),
-    [formationKinds],
+    () => mobileBattleHudUnitSlots(cards, activeFormationKinds),
+    [activeFormationKinds],
   );
   const battleHudLayout = useMemo(() => mobileBattleHudLayout(battleHudViewport), [battleHudViewport]);
-  const formationKindKey = formationKinds.join("|");
+  const formationKindKey = activeFormationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
   const [pendingOutbreakSettlement, setPendingOutbreakSettlement] = useState<PendingOutbreakSettlement | null>(null);
@@ -7698,7 +8598,7 @@ export function AshfallGame() {
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
+    deployQueue: 0, summonedCount: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), banner: null, battleBarks: [], manualAbilityIcons: [],
@@ -7712,6 +8612,7 @@ export function AshfallGame() {
   const qaBattleSaveBoundaryPendingRef = useRef(false);
   battleSaveBoundaryRef.current = Boolean(
     saveMutationPendingRef.current
+    || externalSettingsPendingRef.current
     || pendingResultCommit
     || resultSaveRetryingRef.current
     || pendingOutbreakSettlement
@@ -7762,7 +8663,7 @@ export function AshfallGame() {
   }, []);
 
   const persistCampaignSave = useCallback((nextSave: CampaignSave): Promise<CampaignPersistResult> => {
-    if (saveMutationPendingRef.current) {
+    if (externalSessionActive || saveMutationPendingRef.current) {
       return Promise.resolve({ durable: false, localSaved: false, backupSaved: false, skipped: true });
     }
     const serialized = serializeCampaignSave(nextSave);
@@ -7818,7 +8719,7 @@ export function AshfallGame() {
         backupSaved,
       };
     });
-  }, [enqueueCampaignStorageMutation]);
+  }, [enqueueCampaignStorageMutation, externalSessionActive]);
 
   useLayoutEffect(() => {
     const syncEnvironment = () => {
@@ -7832,6 +8733,7 @@ export function AshfallGame() {
   }, []);
 
   useEffect(() => {
+    if (externalSessionActive) return;
     let cancelled = false;
     setSavePersistence("checking");
     setSavePersistenceMessage("");
@@ -7937,7 +8839,7 @@ export function AshfallGame() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [enqueueCampaignStorageMutation, saveHydrationAttempt]);
+  }, [enqueueCampaignStorageMutation, externalSessionActive, saveHydrationAttempt]);
 
   const retrySaveHydration = useCallback(() => {
     if (savePersistence === "checking" || saveMutationPendingRef.current) return;
@@ -7949,7 +8851,7 @@ export function AshfallGame() {
   }, [savePersistence]);
 
   useEffect(() => {
-    if (!saveHydrated) return;
+    if (externalSessionActive || !saveHydrated) return;
     // Local QA can expose every unit and stage, but must never turn those
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
@@ -7960,7 +8862,7 @@ export function AshfallGame() {
     void enqueueCampaignTransaction(async (latestSave) => {
       await persistCampaignSave(latestSave);
     });
-  }, [campaignSave, enqueueCampaignTransaction, persistCampaignSave, saveHydrated]);
+  }, [campaignSave, enqueueCampaignTransaction, externalSessionActive, persistCampaignSave, saveHydrated]);
 
   const updateAudioAvailability = useCallback((
     channel: keyof AudioAvailability,
@@ -7975,12 +8877,20 @@ export function AshfallGame() {
 
   useEffect(() => {
     const sfxRequestGate = sfxRequestGateRef.current;
+    const isLocalAudioQa = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    type AudioFailureEvent = { assetId?: string; category?: string; optional?: boolean; phase?: string; reason?: string; error?: string; at: number; monotonicAt: number; contextGeneration: number; contextState: string | null };
+    const audioFailureEvents: AudioFailureEvent[] = [];
+    let audioFailureOverflow = 0;
     const mixer = createAudioMixer({
       manifest: PRODUCTION_AUDIO_MANIFEST,
       maxVoices: 28,
       maxWarningsTotal: 12,
       maxWarningsPerKey: 1,
-      onAssetFailure: (failure: { category?: string; optional?: boolean }) => {
+      onAssetFailure: (failure: { assetId?: string; category?: string; optional?: boolean; phase?: string; reason?: string; error?: string }) => {
+        if (isLocalAudioQa) {
+          if (audioFailureEvents.length < 64) audioFailureEvents.push({ ...failure, at: Date.now(), monotonicAt: performance.now(), contextGeneration: mixer.contextGeneration, contextState: mixer.context?.state ?? null });
+          else audioFailureOverflow += 1;
+        }
         if (failure.optional) {
           audioAssetFailureRef.current.add("optional");
           updateAudioAvailability("optional", "failed");
@@ -8076,6 +8986,8 @@ export function AshfallGame() {
         return true;
       },
       getDiagnostics: () => mixer.getDiagnostics(),
+      getAudioStatus: () => ({ ...mixer.getAudioStatus() }),
+      getFailureEvents: () => ({ events: audioFailureEvents.map((event) => ({ ...event })), overflow: audioFailureOverflow }),
       getAvailability: () => ({ ...audioAvailabilityRef.current }),
       getSceneState: () => mixer.getSceneState(),
       unlock: () => mixer.unlock(),
@@ -8301,7 +9213,119 @@ export function AshfallGame() {
       __ASHFALL_BATTLE_QA__?: unknown;
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
+    const qaPresentationQuiescenceSnapshot = () => {
+      const state = qaPresentationQuiescenceRef.current;
+      const g = gameRef.current;
+      return {
+        schema: "v100-qa-presentation-quiescence/v1" as const,
+        active: state.active,
+        owner: state.owner,
+        route: state.route,
+        generation: state.generation,
+        stageId: g.definition.stageId,
+        battleTime: g.time,
+        running: g.running,
+        paused: g.paused,
+        over: g.over,
+        enteredAtBattleTime: state.enteredAtBattleTime,
+        releasedAtBattleTime: state.releasedAtBattleTime,
+        enteredAtRenderFrames: state.enteredAtRenderFrames,
+        releasedAtRenderFrames: state.releasedAtRenderFrames,
+        enteredAtSimulationTicks: state.enteredAtSimulationTicks,
+        releasedAtSimulationTicks: state.releasedAtSimulationTicks,
+        suppressedRenderFrames: state.suppressedRenderFrames,
+        pausedAnimationCount: state.pausedAnimationCount,
+        resumedAnimationCount: state.resumedAnimationCount,
+        renderFrames: runtimePerformanceRef.current.renderFrames,
+        simulationTicks: runtimePerformanceRef.current.simulationTicks,
+        datasetActive: document.documentElement.dataset.qaPresentationQuiesced === "true",
+      };
+    };
+    const setQaPresentationQuiesced = (requestedActive: boolean, requestedOwner: string) => {
+      const parameters = new URLSearchParams(window.location.search);
+      const route = parameters.get("qa") === "mission" && parameters.get("qaVisualIntegrity") === "1"
+          ? "visual-integrity"
+        : parameters.get("qa") === "mission" && parameters.get("qaHudFiniteAssets") === "1"
+          ? "deployment"
+          : parameters.get("qa") === "endgame" && parameters.get("qaHudFiniteAssets") === "1"
+            ? "stage3-final"
+          : null;
+      const allowedOwners = route === "visual-integrity"
+          ? ["visual-integrity-evidence-capture"]
+        : route === "deployment"
+          ? ["deployment-first-frame", "deployment-checkpoint-advance", "deployment-evidence-capture"]
+          : route === "stage3-final"
+            ? ["p5-stage3-final-cut"]
+          : [];
+      if (!allowedOwners.includes(requestedOwner)) {
+        throw new Error("QA presentation quiescence owner is unavailable on this local route");
+      }
+      const nextActive = Boolean(requestedActive);
+      const state = qaPresentationQuiescenceRef.current;
+      const g = gameRef.current;
+      if (nextActive === state.active) {
+        if (state.owner !== requestedOwner || state.route !== route) {
+          throw new Error("QA presentation quiescence ownership changed while active state was unchanged");
+        }
+        return qaPresentationQuiescenceSnapshot();
+      }
+      if (nextActive) {
+        const pausedEvidenceCapture = route === "deployment" && requestedOwner === "deployment-evidence-capture";
+        const visualIntegrityCapture = route === "visual-integrity" && requestedOwner === "visual-integrity-evidence-capture";
+        if (screen !== "battle"
+          || !g.running
+          || g.over
+          || (visualIntegrityCapture ? g.paused : pausedEvidenceCapture ? !g.paused : g.paused)) {
+          throw new Error("QA presentation quiescence requires a live production battle");
+        }
+        const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
+        const runningAnimations = typeof battleRoot?.getAnimations === "function"
+          ? battleRoot.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running")
+          : [];
+        for (const animation of runningAnimations) animation.pause();
+        state.active = true;
+        state.owner = requestedOwner;
+        state.route = route;
+        state.generation += 1;
+        state.enteredAtBattleTime = g.time;
+        state.releasedAtBattleTime = null;
+        state.enteredAtRenderFrames = runtimePerformanceRef.current.renderFrames;
+        state.releasedAtRenderFrames = null;
+        state.enteredAtSimulationTicks = runtimePerformanceRef.current.simulationTicks;
+        state.releasedAtSimulationTicks = null;
+        state.suppressedRenderFrames = 0;
+        state.pausedAnimationCount = runningAnimations.length;
+        state.resumedAnimationCount = 0;
+        state.pausedAnimations = runningAnimations;
+        document.documentElement.dataset.qaPresentationQuiesced = "true";
+        return qaPresentationQuiescenceSnapshot();
+      }
+      if (state.owner !== requestedOwner || state.route !== route) {
+        throw new Error("QA presentation quiescence release owner does not match the active owner");
+      }
+      state.active = false;
+      let resumedAnimationCount = 0;
+      for (const animation of state.pausedAnimations) {
+        try {
+          if (animation.playState === "paused") {
+            animation.play();
+            resumedAnimationCount += 1;
+          }
+        } catch {
+          // A detached CSS animation cannot affect the restored production surface.
+        }
+      }
+      state.pausedAnimations = [];
+      state.resumedAnimationCount = resumedAnimationCount;
+      state.releasedAtBattleTime = g.time;
+      state.releasedAtRenderFrames = runtimePerformanceRef.current.renderFrames;
+      state.releasedAtSimulationTicks = runtimePerformanceRef.current.simulationTicks;
+      delete document.documentElement.dataset.qaPresentationQuiesced;
+      return qaPresentationQuiescenceSnapshot();
+    };
     const bridge = {
+      getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,
+      setQaPresentationQuiesced,
       setSaveBoundaryPending: (pending: boolean) => {
         const next = Boolean(pending);
         qaBattleSaveBoundaryPendingRef.current = next;
@@ -8747,10 +9771,51 @@ export function AshfallGame() {
       },
       setRepresentativeSixProofPaused: (requestedPaused = true) => {
         const g = gameRef.current;
-        if (!requestedPaused) qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        if (!requestedPaused) {
+          qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+          qaArmedCrawlerDeploymentCheckpointRef.current = null;
+          qaCrawlerDeploymentCheckpointReceiptRef.current = null;
+        }
         g.last = performance.now();
         g.paused = Boolean(requestedPaused);
         return g.paused;
+      },
+      armCrawlerDeploymentCheckpoint: (fighterId: number, checkpoint: string) => {
+        const g = gameRef.current;
+        const checkpointDefinition = CRAWLER_DEPLOYMENT_CHECKPOINTS.find((candidate) => (
+          candidate.id !== "fully-inside" && candidate.id === checkpoint
+        ));
+        const fighter = g.fighters.find((candidate) => (
+          candidate.id === fighterId
+          && candidate.side === "human"
+          && candidate.spawnPortalId === "crawler-door"
+          && candidate.gateEntering === true
+        ));
+        if (!fighter || !checkpointDefinition) {
+          return {
+            schema: "v099-crawler-deployment-checkpoint-arm/v1",
+            armed: false,
+            fighterId,
+            checkpoint,
+          };
+        }
+        qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        qaCrawlerDeploymentCheckpointReceiptRef.current = null;
+        qaArmedCrawlerDeploymentCheckpointRef.current = {
+          fighterId: fighter.id,
+          checkpoint: checkpointDefinition.id,
+          minimumProgress: checkpointDefinition.progress,
+        };
+        g.last = performance.now();
+        g.paused = false;
+        return {
+          schema: "v099-crawler-deployment-checkpoint-arm/v1",
+          armed: true,
+          fighterId: fighter.id,
+          kind: fighter.kind,
+          checkpoint: checkpointDefinition.id,
+          minimumProgress: checkpointDefinition.progress,
+        };
       },
       armRepresentativeSixPhasePause: (
         ownerId: number,
@@ -8929,6 +9994,7 @@ export function AshfallGame() {
           barricadeMaxHp: fresh.barricadeMaxHp,
           barricadeVulnerable: fresh.barricadeVulnerable,
           deployQueue: fresh.deployQueue.length,
+          summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           deployCooldowns: { ...fresh.deployCooldowns },
           manualAbilityIcons: [],
         }));
@@ -9026,11 +10092,14 @@ export function AshfallGame() {
           },
         });
         for (let wave = 1; wave <= 5; wave += 1) {
-          run = beginSurvivalWave(run);
-          run = completeSurvivalWave(run, {
+          const begun = beginSurvivalWave(run);
+          if (!begun) throw new Error("Manual checkpoint proof lost its Survival run");
+          const completed = completeSurvivalWave(begun, {
             bossKills: wave === 5 ? 1 : 0,
             crawlerHp: run.crawler.hp,
           });
+          if (!completed) throw new Error("Manual checkpoint proof did not complete its Survival wave");
+          run = completed;
         }
         run = {
           ...run,
@@ -9321,11 +10390,10 @@ export function AshfallGame() {
       accelerateBossFoundationEntry: (bossId: number) => {
         const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
         if (!boss || !boss.gateEntering) return false;
-        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 96);
-        boss.speed = 0;
-        boss.laneSpeed = 0;
-        boss.cooldown = 99;
-        boss.abilityCooldown = 99;
+        // Keep the QA-only entry bounded on hosted WebKit. The entry still
+        // traverses the production gate lifecycle; this only prevents a
+        // long-running animation from outliving the browser evidence budget.
+        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 260);
         return true;
       },
       startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
@@ -9531,6 +10599,8 @@ export function AshfallGame() {
         g.qaNextDeploymentLane = null;
         qaFreezeNextCrawlerDeploymentKindRef.current = null;
         qaFrozenCrawlerDeploymentFighterIdRef.current = null;
+        qaArmedCrawlerDeploymentCheckpointRef.current = null;
+        qaCrawlerDeploymentCheckpointReceiptRef.current = null;
         g.crawlerDoor = createCrawlerDoorRuntime();
         g.battlefieldObjects = [];
         g.energy = COMMAND_MAX;
@@ -11429,6 +12499,273 @@ export function AshfallGame() {
           canvasTransformRef.current,
         );
       },
+      beginFighterUnitLayerAuditSession: (fighterId: number) => {
+        const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
+        if (!fighter) throw new Error(`Unknown fighter for unit-layer audit session: ${fighterId}`);
+        const canvas = canvasRef.current;
+        if (!canvas) throw new Error("Final battle canvas unavailable for unit-layer audit session");
+        const presentation = qaPresentationQuiescenceSnapshot();
+        if (presentation.active !== true || presentation.owner === null || presentation.route === null) {
+          throw new Error("Unit-layer audit session requires active presentation ownership");
+        }
+        const checkpointReceipt = qaCrawlerDeploymentCheckpointReceiptRef.current;
+        return beginFighterUnitLayerPixelAuditSession(
+          fighter,
+          spriteRefs.current,
+          canvas,
+          gameRef.current,
+          graphicsProfileRef.current,
+          canvasTransformRef.current,
+          {
+            active: true,
+            owner: presentation.owner,
+            route: presentation.route,
+            generation: presentation.generation,
+          },
+          checkpointReceipt?.fighterId === fighterId ? { ...checkpointReceipt } : null,
+        );
+      },
+      advanceFighterUnitLayerAuditSession: (token: string) => {
+        const presentation = qaPresentationQuiescenceSnapshot();
+        return advanceFighterUnitLayerPixelAuditSession(token, {
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+        });
+      },
+      finalizeFighterUnitLayerAuditSession: (token: string) => {
+        const presentation = qaPresentationQuiescenceSnapshot();
+        return finalizeFighterUnitLayerPixelAuditSession(token, {
+          active: presentation.active,
+          owner: presentation.owner,
+          route: presentation.route,
+          generation: presentation.generation,
+        });
+      },
+      getCrawlerDeploymentProofSnapshot: ({
+        fighterId = null,
+        kind = null,
+      }: { fighterId?: number | null; kind?: UnitKind | null } = {}) => {
+        const g = gameRef.current;
+        const fighter = g.fighters.find((candidate) => (
+          candidate.side === "human"
+          && candidate.spawnPortalId === "crawler-door"
+          && (fighterId !== null
+            ? candidate.id === fighterId
+            : kind !== null ? candidate.kind === kind : true)
+        )) ?? null;
+        const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
+        const doorX = Number(battleSpace.crawler.door.x);
+        const rampX = fighter
+          ? Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1)
+          : Number(battleSpace.crawler.rampFoot.x);
+        const computedProgress = fighter
+          ? Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)))
+          : null;
+        const checkpointArm = qaArmedCrawlerDeploymentCheckpointRef.current;
+        const checkpointReceipt = qaCrawlerDeploymentCheckpointReceiptRef.current;
+        return {
+          schema: "v099-crawler-deployment-snapshot/v1",
+          screen,
+          time: g.time,
+          running: g.running,
+          paused: g.paused,
+          over: g.over,
+          banner: g.banner,
+          doorX,
+          rampX,
+          computedProgress,
+          checkpointArm: fighter && checkpointArm?.fighterId === fighter.id
+            ? { ...checkpointArm }
+            : null,
+          checkpointReceipt: fighter && checkpointReceipt?.fighterId === fighter.id
+            ? { ...checkpointReceipt }
+            : null,
+          fighter: fighter ? {
+            id: fighter.id,
+            side: fighter.side,
+            kind: fighter.kind,
+            x: fighter.x,
+            y: fighter.y,
+            combatReady: fighter.combatReady,
+            gateEntering: fighter.gateEntering,
+            spawnPortalId: fighter.spawnPortalId ?? null,
+            combatReadyX: fighter.combatReadyX,
+            combatReadyY: fighter.combatReadyY ?? fighter.y,
+            entryRampX: fighter.entryRampX ?? null,
+            entryRampY: fighter.entryRampY ?? null,
+            entryRampCleared: fighter.entryRampCleared ?? true,
+            renderAudit: fighterRenderAudit.get(fighter)
+              ? { ...fighterRenderAudit.get(fighter)! }
+              : null,
+            animationPose: {
+              ...sampleAnimationClip(
+                fighter.kind,
+                fighter.animationPresentation.state,
+                fighter.animationPresentation.elapsedSeconds,
+              ).pose,
+            },
+          } : null,
+        };
+      },
+      getPhaseGCombatSnapshot: () => {
+        const g = gameRef.current;
+        const shots = g.shots.map((shot) => ({
+          sourceId: shot.sourceId ?? null,
+          targetId: shot.targetId ?? null,
+          damageTargetId: shot.damageTargetId ?? null,
+          weapon: shot.weapon ?? null,
+          effect: shot.effect ?? null,
+          style: shot.style ?? null,
+          shotIndex: shot.shotIndex ?? null,
+          recoil: shot.recoil ?? null,
+          casing: shot.casing ?? false,
+          hitStopSeconds: shot.hitStopSeconds ?? 0,
+          impactDelaySeconds: shot.impactDelaySeconds ?? 0,
+          x: shot.x,
+          y: shot.y,
+          tx: shot.tx,
+          ty: shot.ty,
+          life: shot.life,
+        }));
+        return {
+          schema: "v100-phase-g-combat-snapshot/v1",
+          screen,
+          stageId: g.definition.stageId,
+          battleGeneration: g.battleAudioGeneration,
+          time: g.time,
+          phase: g.phase,
+          objective: objectiveForBattle(g.definition, g),
+          running: g.running,
+          paused: g.paused,
+          over: g.over,
+          won: g.won,
+          bossDefeated: g.bossDefeated,
+          bossDefeatPending: g.bossDefeatPending,
+          baseHp: g.baseHp,
+          baseMaxHp: g.baseMaxHp,
+          barricadeHp: g.barricadeHp,
+          barricadeMaxHp: g.barricadeMaxHp,
+          wave: g.wave,
+          eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
+          pendingSpawnCount: g.enemySpawn.pending.length,
+          formationKinds: [...g.formationKinds],
+          deployCooldowns: { ...g.deployCooldowns },
+          deployQueue: [...g.deployQueue],
+          energy: g.energy,
+          scrap: g.scrap,
+          supportGauge: g.supportGauge,
+          supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
+          stageMission: {
+            ...g.stageMission,
+            transitions: [...g.stageMission.transitions].slice(-32),
+            returnTargetIds: g.stageMission.returnTargetIds
+              ? [...g.stageMission.returnTargetIds].slice(-16)
+              : g.stageMission.returnTargetIds ?? null,
+            returnedUnitIds: g.stageMission.returnedUnitIds
+              ? [...g.stageMission.returnedUnitIds].slice(-16)
+              : [],
+          },
+          researchContainer: g.researchContainer ? { ...g.researchContainer } : null,
+          crawlerAbility: { ...g.crawlerAbility },
+          shots,
+          attackIdentity: shots
+            .filter((shot) => shot.sourceId !== null)
+            .map((shot) => ({ ...shot })),
+          pendingWeaponHits: g.pendingWeaponHits.map((hit) => ({ ...hit })),
+          completedAttackImpacts: g.completedAttackImpacts
+            .filter((receipt) => receipt.battleGeneration === g.battleAudioGeneration)
+            .map((receipt) => ({ ...receipt })),
+          damageTexts: g.damageTexts.map((entry) => ({ ...entry })),
+          battlefieldObjects: g.battlefieldObjects.map((object) => ({
+            id: object.id,
+            v100SupportId: object.v100SupportId,
+            kind: object.kind,
+            lane: object.lane,
+            x: object.x,
+            y: object.y,
+            phase: object.phase,
+            phaseTime: object.phaseTime,
+            hp: object.hp,
+            maxHp: object.maxHp,
+            hitFlash: object.hitFlash,
+            landingTriggered: object.landingTriggered,
+            detonationTriggered: object.detonationTriggered,
+          })),
+          manualAbilityVfx: g.manualAbilityVfx.slice(-24).map((effect) => ({
+            ...effect,
+            points: effect.points ? effect.points.map((point) => ({ ...point })) : undefined,
+          })),
+          manualAbilityReceipts: g.manualAbilityReceipts.slice(-48).map((receipt) => ({ ...receipt })),
+          battlePresentation: {
+            generation: g.battlePresentation.generation,
+            effects: g.battlePresentation.effects
+              .slice(-24)
+              .map((effect) => battlePresentationSnapshot(effect, graphicsProfileRef.current.effectDensity)),
+          },
+          fighters: g.fighters.map((fighter) => ({
+            id: fighter.id,
+            side: fighter.side,
+            kind: fighter.kind,
+            aiProfile: fighter.aiProfile,
+            lane: fighter.lane,
+            x: fighter.x,
+            y: fighter.y,
+            hp: fighter.hp,
+            maxHp: fighter.maxHp,
+            flash: fighter.flash,
+            knock: fighter.knock,
+            marked: fighter.marked,
+            cooldown: fighter.cooldown,
+            attack: fighter.attack,
+            attackWindup: fighter.attackWindup,
+            abilityWindup: fighter.abilityWindup,
+            abilityCooldown: fighter.abilityCooldown,
+            stunned: fighter.stunned,
+            aiMoveDirection: fighter.aiMoveDirection,
+            aiDestinationX: fighter.aiDestinationX,
+            targetId: fighter.targetId,
+            targetObjectId: fighter.targetObjectId,
+            attackWindupTargetId: fighter.attackWindupTargetId,
+            attackFacingDirection: fighter.attackFacingDirection,
+            attackSequence: fighter.attackSequence,
+            combatReady: fighter.combatReady,
+            gateEntering: fighter.gateEntering,
+            gateEntrySpeed: fighter.gateEntrySpeed,
+            combatReadyX: fighter.combatReadyX,
+            combatReadyY: fighter.combatReadyY ?? fighter.y,
+            stationAbility: {
+              ...fighter.stationAbility,
+              targetIds: fighter.stationAbility.targetIds
+                ? [...fighter.stationAbility.targetIds].slice(-16)
+                : undefined,
+            },
+            manualAbility: fighter.manualAbility ? { ...fighter.manualAbility } : null,
+            animationPresentation: {
+              state: fighter.animationPresentation.state,
+              direction: fighter.animationPresentation.direction,
+              moving: fighter.animationPresentation.moving,
+            },
+            enemyVfx: enemyCombatVfxSnapshot({
+              kind: fighter.kind,
+              side: fighter.side,
+              hp: fighter.hp,
+              maxHp: fighter.maxHp,
+              combatReady: fighter.combatReady,
+              gateEntering: fighter.gateEntering,
+              moving: Math.abs(fighter.aiMoveDirection) > .05,
+              attacking: fighter.attack > 0,
+              attackWindup: fighter.attackWindup > 0 || fighter.abilityWindup > 0,
+              flash: fighter.flash,
+              knock: fighter.knock,
+              abilityPhase: fighter.stationAbility.phase,
+            } as Parameters<typeof enemyCombatVfxSnapshot>[0] & { kind: string }),
+          })),
+        };
+      },
       getSnapshot: () => {
         const g = gameRef.current;
         const currentCampaignSave = campaignSaveRef.current;
@@ -11498,6 +12835,10 @@ export function AshfallGame() {
           operationId: g.definition.operationId,
           operationCategory: g.definition.operationCategory,
           time: g.time,
+          phase: g.phase,
+          objective: objectiveForBattle(g.definition, g),
+          formationKinds: [...g.formationKinds],
+          deployCooldowns: { ...g.deployCooldowns },
           saveBoundaryPending: battleSaveBoundaryRef.current,
           saveBoundaryPersistencePending: qaSavePersistenceHoldRef.current !== null,
           pointerGestures: [...pointerGestureStateRef.current.entries()].map(([pointerId, gesture]) => ({
@@ -11583,6 +12924,7 @@ export function AshfallGame() {
           scrap: g.scrap,
           supportGauge: g.supportGauge,
           supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
           storyBattleReadEventIds: [...g.storyBattleReadEventIds],
           storyBattleReceiptEventIds: [...g.storyBattleReceiptEventIds],
           storyBattleEvaluatedCueKeys: [...g.storyBattleBarkState.evaluatedCueKeys],
@@ -11625,13 +12967,15 @@ export function AshfallGame() {
           },
           battlefieldObjects: g.battlefieldObjects.map((object) => ({
             id: object.id,
+            v100SupportId: object.v100SupportId,
             kind: object.kind,
             lane: object.lane,
             x: object.x,
             y: object.y,
             phase: object.phase,
+            detonationTriggered: object.detonationTriggered,
           })),
-          deployQueue: g.deployQueue.map((entry) => ({ ...entry })),
+          deployQueue: g.deployQueue.map((entry) => entry),
           airstrike: { ...g.airstrike },
           placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
           attackIdentity: g.shots
@@ -11664,6 +13008,7 @@ export function AshfallGame() {
             assignedLane: fighter.anchorLane,
             x: fighter.x,
             y: fighter.y,
+            combatReady: fighter.combatReady,
             renderDepthScale: activeBattlefieldDepthScale(fighter.y),
             hp: fighter.hp,
             maxHp: fighter.maxHp,
@@ -11674,6 +13019,11 @@ export function AshfallGame() {
             cooldown: fighter.cooldown,
             attack: fighter.attack,
             attackWindup: fighter.attackWindup,
+            abilityWindup: fighter.abilityWindup,
+            abilityCooldown: fighter.abilityCooldown,
+            stunned: fighter.stunned,
+            aiMoveDirection: fighter.aiMoveDirection,
+            aiDestinationX: fighter.aiDestinationX,
             attackWindupTargetId: fighter.attackWindupTargetId,
             attackFacingDirection: fighter.attackFacingDirection,
             attackSequence: fighter.attackSequence,
@@ -11929,9 +13279,10 @@ export function AshfallGame() {
     };
   }, [cleanupAllBattlefieldPointerGestures]);
 
-  const survivalAssetMode = screen === "survival" || (screen === "battle" && survivalHud !== null);
+  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
-    campaignSave.survival.activeCheckpoint?.run?.bossPool
+    externalSession?.survivalRun?.bossPool
+    ?? campaignSave.survival.activeCheckpoint?.run?.bossPool
     ?? campaignSave.outbreaks.survivalBossKinds
   ).join("|");
 
@@ -12023,10 +13374,26 @@ export function AshfallGame() {
       image.onerror = null;
       image.removeAttribute("src");
     };
-    const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
+    const selectedFormationKinds = externalSessionActive
+      ? externalFormationKindsKey.split("|").filter(Boolean) as UnitKind[]
+      : formationKindKey.split("|").filter(Boolean) as UnitKind[];
     const selectedVariantKinds = selectedFormationKinds.includes("mayo-chan")
       ? ["mayo-chan-feral" as UnitKind]
       : [];
+    const requestedLocalQaScenario = resolveLocalQaScenario(
+      window.location.hostname,
+      window.location.search,
+    );
+    const requestedLegacyQaMode = resolveLocalQaMode(
+      window.location.hostname,
+      window.location.search,
+    );
+    // Local campaign QA knows its target stage from the URL before the
+    // hydration/save effects publish React state. Use that same stage for the
+    // first asset session so the QA page does not briefly load the default
+    // stage and cancel a second large decode plan.
+    const assetStageId = requestedLocalQaScenario?.stageId
+      ?? (requestedLegacyQaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
     const activeOutbreakEnemyKinds = selectedOutbreakMissionId
       ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
@@ -12034,12 +13401,14 @@ export function AshfallGame() {
     const survivalEnemyKinds = survivalAssetMode
       ? [...new Set([...SURVIVAL_NORMAL_ENEMY_KINDS, ...survivalBossKinds])] as UnitKind[]
       : [];
-    const stageEnemyKinds = survivalEnemyKinds.length > 0
+    const stageEnemyKinds = externalSessionActive
+      ? externalEnemyKindsKey.split("|").filter(Boolean) as UnitKind[]
+      : survivalEnemyKinds.length > 0
       ? survivalEnemyKinds
       : activeOutbreakEnemyKinds.length > 0
       ? activeOutbreakEnemyKinds as UnitKind[]
-      : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
-        ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
+      : Array.isArray(CAMPAIGN_STAGE_BY_ID[assetStageId]?.enemyKinds)
+        ? CAMPAIGN_STAGE_BY_ID[assetStageId].enemyKinds as UnitKind[]
         : [];
     // The finite enemy-facing browser proof walks one production kind at a
     // time through the real simulation and renderer. Loading every atlas into
@@ -12047,25 +13416,38 @@ export function AshfallGame() {
     // decode contention, so this one local-only fixture starts with the normal
     // stage plan and asks the QA bridge to strict-decode each audited kind.
     const localQaParameters = new URLSearchParams(window.location.search);
+    const localQaHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const localQaRequested = Boolean(
+      qaMode || qaScenario || (localQaHost && localQaParameters.has("qa")),
+    );
     const finiteEnemyRuntimeQa = localQaParameters.get("qaEnemyRuntime") === "1";
     const finiteVisualIntegrityQa = localQaParameters.get("qaVisualIntegrity") === "1"
-      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      && Boolean(qaMode || qaScenario);
+      && localQaHost
+      && localQaRequested;
     const finiteHudRuntimeQa = localQaParameters.get("qaHudFiniteAssets") === "1"
-      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      && Boolean(qaMode || qaScenario);
+      && localQaHost
+      && localQaRequested;
+    const exhaustiveLocalQa = localQaRequested
+      && !finiteEnemyRuntimeQa
+      && !finiteVisualIntegrityQa
+      && !finiteHudRuntimeQa;
     // A battle may mount only after every visual source that can be reached by
     // its formation, waves, mission objects, support actions and Crawler has
     // decoded. `turned` is included by the plan because any fallen ally can
     // become one, independent of the authored enemy roster.
     const requiredPlan = requiredBattleAssetPlan({
-      stageId: activeBattlefieldStageId,
+      stageId: assetStageId,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
-      includeAllSprites: Boolean(qaMode || qaScenario)
+      includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
         && !finiteHudRuntimeQa,
+      // Issue 156's exhaustive matrix is the legacy 0.9.9.5 campaign. Keep
+      // its full legacy sprite coverage stable; V1 enemy/boss assets have a
+      // separate canonical reachable-runtime harness and remain in every
+      // production V1 plan through formation/enemy requirements.
+      includeV100Sprites: !exhaustiveLocalQa,
     });
     const requiredSpriteKinds = requiredPlan.sprites.map(({ kind }) => kind as UnitKind);
     const persistentPaths: Record<string, string> = Object.fromEntries(
@@ -12095,12 +13477,12 @@ export function AshfallGame() {
       delete stageObjectRefs.current[id];
     }
     for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
-      if (stageId === activeBattlefieldStageId) continue;
+      if (stageId === assetStageId) continue;
       releaseImage(image);
       delete backgroundCacheRef.current[stageId];
     }
-    if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
-    const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
+    if (!backgroundCacheRef.current[assetStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[assetStageId];
     const loadedImageByPath = new Map<string, HTMLImageElement>();
     const imageJob = (
       path: string,
@@ -12117,7 +13499,7 @@ export function AshfallGame() {
     });
     const allCriticalJobs = [
       imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
-        backgroundCacheRef.current[activeBattlefieldStageId] = image;
+        backgroundCacheRef.current[assetStageId] = image;
         backgroundRef.current = image;
       }),
       imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
@@ -12282,7 +13664,7 @@ export function AshfallGame() {
       window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
 
   const retryAssets = useCallback(() => {
     const retryPaths = new Set([
@@ -12312,12 +13694,13 @@ export function AshfallGame() {
   // these instead of guessing. Kept as plain dataset attributes so the service
   // worker bridge stays decoupled from this component.
   useEffect(() => {
+    if (externalSessionActive) return; // V1 parent owns durable save and activation state.
     const root = document.documentElement;
     root.dataset.pwaScreen = screen;
     root.dataset.pwaBattleActive = String(screen === "battle" || screen === "survival");
     root.dataset.pwaResultSaving = String(screen === "result" || screen === "survival-result");
     root.dataset.pwaSaveMutationPending = String(Boolean(saveMutationPending));
-  }, [saveMutationPending, screen]);
+  }, [externalSessionActive, saveMutationPending, screen]);
 
   // The save environment is a maintenance fact, not a story beat, so it no
   // longer sits across the title screen. Publishing it here lets the data screen
@@ -12378,7 +13761,11 @@ export function AshfallGame() {
             decodedPaths.add(stageVisualFor(stageId));
           }
         }
-        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: activeBattlefieldStageId });
+        const requestedScenario = resolveLocalQaScenario(window.location.hostname, window.location.search);
+        const requestedMode = resolveLocalQaMode(window.location.hostname, window.location.search);
+        const requiredStageId = requestedScenario?.stageId
+          ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
+        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId });
         if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
           decodedPaths.add(activeRequiredPlan.enemyBase.path);
         }
@@ -12399,19 +13786,34 @@ export function AshfallGame() {
         }
         return [...decodedPaths];
       },
-      getRequiredPlan: () => requiredBattleAssetPlan({
-        stageId: activeBattlefieldStageId,
-        formationKinds: formationKindKey.split("|").filter(Boolean),
-        enemyKinds: selectedOutbreakMissionId
-          ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
-          : CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds ?? [],
-        includeAllSprites: Boolean(qaMode || qaScenario)
-          && new URLSearchParams(window.location.search).get("qaEnemyRuntime") !== "1"
-          && !(new URLSearchParams(window.location.search).get("qaVisualIntegrity") === "1"
-            && ["localhost", "127.0.0.1"].includes(window.location.hostname))
-          && !(new URLSearchParams(window.location.search).get("qaHudFiniteAssets") === "1"
-            && ["localhost", "127.0.0.1"].includes(window.location.hostname)),
-      }),
+      getRequiredPlan: () => {
+        const parameters = new URLSearchParams(window.location.search);
+        const localHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        const requestedScenario = resolveLocalQaScenario(window.location.hostname, window.location.search);
+        const requestedMode = resolveLocalQaMode(window.location.hostname, window.location.search);
+        const requestedStageId = requestedScenario?.stageId
+          ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
+        const localRequested = Boolean(
+          qaMode || qaScenario || (localHost && parameters.has("qa")),
+        );
+        const finiteEnemy = parameters.get("qaEnemyRuntime") === "1";
+        const finiteVisual = parameters.get("qaVisualIntegrity") === "1"
+          && localHost
+          && localRequested;
+        const finiteHud = parameters.get("qaHudFiniteAssets") === "1"
+          && localHost
+          && localRequested;
+        const exhaustive = localRequested && !finiteEnemy && !finiteVisual && !finiteHud;
+        return requiredBattleAssetPlan({
+          stageId: requestedStageId,
+          formationKinds: formationKindKey.split("|").filter(Boolean),
+          enemyKinds: selectedOutbreakMissionId
+            ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
+            : CAMPAIGN_STAGE_BY_ID[requestedStageId]?.enemyKinds ?? [],
+          includeAllSprites: exhaustive,
+          includeV100Sprites: !exhaustive,
+        });
+      },
       getRestartCount: () => assetSessionRestartCountRef.current,
       getBattleMountState: () => ({
         screen,
@@ -12894,6 +14296,8 @@ export function AshfallGame() {
     if (selectedActionRef.current === action) return;
     if (action?.startsWith("supply:")) {
       const kind = action.slice("supply:".length) as SupplyKind;
+      const supply = battlefieldSupplyDefinition(kind, g.v100SupportId);
+      if (!supply) { playUiOperationCue("reject", "support:unequipped"); return; }
       const cooldown = g.supportItemCooldowns[kind] ?? 0;
       if (cooldown > 0) {
         g.banner = `戦場物資 // 再準備 ${Math.ceil(cooldown)}秒`;
@@ -12901,14 +14305,14 @@ export function AshfallGame() {
         playUiOperationCue("reject", `support:${kind}:cooldown`);
         return;
       }
-      if (g.scrap < supplyDefs[kind].cost) {
+      if (g.scrap < supply.cost) {
         g.banner = `戦場物資 // スクラップ不足`;
         g.bannerTime = .8;
         playUiOperationCue("reject", `support:${kind}:insufficient-scrap`);
         return;
       }
     }
-    if (action === "airstrike" && (g.supportGauge < AIRSTRIKE_DEF.gaugeCost || g.airstrike.phase !== "idle")) {
+    if (action === "airstrike" && (g.supportGauge < vehicleAbilityDefinition("vehicle-airstrike", g.airstrike.v100).battleCost || g.airstrike.phase !== "idle" || (g.airstrike.cooldownRemaining ?? 0) > 0)) {
       playUiOperationCue("reject", `support:airstrike:unavailable`);
       return;
     }
@@ -13282,7 +14686,7 @@ export function AshfallGame() {
     const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
-      if (g.deployQueue.length >= 3) { g.banner = "格納庫満員 // 3"; g.bannerTime = .9; }
+      if (g.deployQueue.length >= 3) { g.banner = "召喚限度到達 // 3"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
@@ -13312,7 +14716,7 @@ export function AshfallGame() {
       return false;
     }
     const result = resolveBattlefieldSupplyPlacement({
-      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x: target.x, y: target.y,
+      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, v100SupportId: g.v100SupportId, lane, x: target.x, y: target.y,
       cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
       supplies: g.battlefieldObjects, objects: [], supports: [], areaEffects: g.areaEffects,
       nextId: g.nextId, nextAreaEffectId: g.nextAreaEffectId,
@@ -13337,11 +14741,12 @@ export function AshfallGame() {
       g.supportItemCooldowns = beginBattlefieldSupplyCooldown(
         g.supportItemCooldowns,
         kind,
+        g.v100SupportId,
       ) as Record<SupplyKind, number>;
     }
     g.banner = placement.adjusted
-      ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
-      : `${supplyDefs[kind].name} // 戦場配置`;
+      ? `${battlefieldSupplyDefinition(kind, g.v100SupportId).name} // 最寄りの配置可能地点へ補正`
+      : `${battlefieldSupplyDefinition(kind, g.v100SupportId).name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
     if (kind === "pod") {
       const placedPod = (result.supplies as BattlefieldObject[]).find((supply) => supply.id === result.nextId - 1);
@@ -13401,8 +14806,9 @@ export function AshfallGame() {
       return false;
     }
     if (rejectBattleSaveBoundary("crawler-barrage:save-pending")) return false;
-    const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility });
+    const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility, supportGauge: g.supportGauge });
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
+    g.supportGauge = result.supportGauge;
     g.crawlerAbility = result.runtime as CrawlerRuntime;
     g.banner = "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
@@ -13429,7 +14835,7 @@ export function AshfallGame() {
       return false;
     }
     Object.assign(drum, result.supply);
-    g.banner = "爆薬ドラム起爆 // 指定地点"; g.bannerTime = .85; playCue("drum-request");
+    g.banner = `${battlefieldSupplyDefinition(drum.kind, drum.v100SupportId).name}起爆 // 指定地点`; g.bannerTime = .85; playCue("drum-request");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
@@ -13523,7 +14929,7 @@ export function AshfallGame() {
         ? battlefieldSupplyPlacementCheck({
           running: g.running, paused: g.paused, over: g.over, scrap: g.scrap,
           cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
-          supplyKind: kind, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
+          supplyKind: kind, v100SupportId: g.v100SupportId, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
           laneCenters: activeLaneCenters,
           forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZonesForGame(g)),
         })
@@ -13693,7 +15099,28 @@ export function AshfallGame() {
   const selectedOutbreakMissionView = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId)
     ?? outbreakMissionViews.find(({ unlocked }) => unlocked)
     ?? outbreakMissionViews[0];
-  const selectedOperationView = selectedOutbreakMissionId && selectedOutbreakMissionView
+  const compactBattleStageName = (displayName: string) => displayName.split("・")[0] || displayName;
+  const selectedOperationView = externalSession
+    ? {
+      id: externalSession.stageId,
+      stageNumber: 0,
+      regionId: "region-v100",
+      regionLabel: "西新世紀末物語",
+      regionName: "V1.0.0キャンペーン",
+      displayName: compactBattleStageName(externalSession.displayName ?? externalSession.stageId),
+      chapterName: "V1.0.0キャンペーン",
+      objective: "作戦目標を達成",
+      missionLabel: "キャンペーン作戦",
+      threat: "危険度：作戦別",
+      unlocked: true,
+      completed: false,
+      bestStars: 0,
+      baseReward: 0,
+      nextStarReward: 0,
+      mapPosition: { x: 50, y: 50 },
+      starCriteria: [],
+    } satisfies StageScreenView
+    : selectedOutbreakMissionId && selectedOutbreakMissionView
     ? {
       id: selectedOutbreakMissionView.id,
       stageNumber: 0,
@@ -13988,25 +15415,60 @@ export function AshfallGame() {
     resultId: string | null;
   }) => {
     const retrying = gameRef.current.over;
-    const qaAllUnlocked = Boolean(qaMode || qaScenario);
-    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId;
-    const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
-    const permittedFormation = qaAllUnlocked
+    const external = externalSession;
+    const qaAllUnlocked = Boolean(qaMode || qaScenario || external);
+    const battleStageId = external?.stageId
+      ?? (qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId);
+    const requestedFormation = external?.formationKinds
+      ? [...external.formationKinds]
+      : sessionOverride?.formationKinds ?? formationKinds;
+    const permittedFormation = external
+      ? requestedFormation.slice(0, 7)
+      : qaAllUnlocked
       ? requestedFormation.slice(0, 7)
       : requestedFormation.filter((kind) => isUnitOwned(campaignSave, kind)).slice(0, 7);
     const fallbackFormation = getSelectedFormationCombatKinds(campaignSave)
       .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
       .slice(0, 7) as UnitKind[];
-    const battleSupply = sessionOverride?.selectedSupply ?? selectedSupply;
-    const fresh = initialGame(
+    // An unequipped V1 slot may retain an internal enum placeholder; its explicit
+    // null canonical ID rejects all support input and displays an unavailable HUD.
+    const battleSupply = external?.selectedSupply ?? sessionOverride?.selectedSupply ?? selectedSupply;
+    // V1 owns the equipped support choice, while this component owns the
+    // player-facing support button and targeting action. Keep the HUD choice
+    // aligned with the production session before the battle starts; otherwise
+    // the runtime would carry the V1 support but the visible control would
+    // still advertise and place the legacy default pod.
+    if (selectedSupply !== battleSupply) setSelectedSupply(battleSupply);
+    const fresh = external?.survivalRun ? initialSurvivalGame({
+      selectedSupply: battleSupply,
+      run: external.survivalRun,
+      formationKinds: permittedFormation,
+      unitLevels: { ...external.survivalRun.formation.unitLevelsByUnit },
+    }) : initialGame(
       battleSupply,
       battleStageId,
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
-      sessionOverride?.resultId ?? createBattleResultId(battleStageId),
-      campaignSave.readStoryEventIds,
-      campaignSave.unitLevels,
-      getFormationPresetEquipmentSnapshot(campaignSave),
+      external?.resultId ?? sessionOverride?.resultId ?? createBattleResultId(battleStageId),
+      external ? [] : campaignSave.readStoryEventIds,
+      external?.unitLevels ?? campaignSave.unitLevels,
+      external ? external.equipmentSnapshot ?? {} : getFormationPresetEquipmentSnapshot(campaignSave),
+      external ? { v100: true } : undefined,
     );
+    if (external) {
+      const vehicleMaxHp = Math.max(1, Number(external.vehicleMaxHp) || fresh.definition.baseMaxHp);
+      fresh.definition = { ...fresh.definition, baseMaxHp: vehicleMaxHp };
+      fresh.baseMaxHp = vehicleMaxHp;
+      fresh.baseHp = external.survivalRun?.crawler.hp ?? vehicleMaxHp;
+      // V1 owns its campaign entry state, while Ashfall still owns the live
+      // support controls. Seed the production battle with the same useful
+      // opening resources the legacy campaign gives a player.
+      fresh.scrap = Math.max(fresh.scrap, 120);
+      fresh.supportGauge = Math.min(SUPPORT_GAUGE_MAX, Math.max(0, external.initialSupportGauge ?? 85));
+      fresh.supportItemCooldowns = createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>;
+      fresh.v100SupportId = external.equippedSupportId;
+      fresh.airstrike = createEmergencySupportRuntime(true) as AirstrikeRuntime;
+      fresh.crawlerAbility = createCrawlerAbilityRuntime(1, true) as CrawlerRuntime;
+    }
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
     if (qaScenario?.mode === "defense") {
@@ -14035,11 +15497,16 @@ export function AshfallGame() {
     desiredMusicModeRef.current = "normal";
     finalizedEndRef.current = null;
     setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setScreen("battle"); chooseAction(null);
+    if (external?.survivalRun) {
+      fresh.paused = external.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
+      setPaused(fresh.paused);
+      setSurvivalHud(survivalHudSnapshot(external.survivalRun));
+    }
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
       supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
-      deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
+      deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase, airstrikeCooldownRemaining: fresh.airstrike.cooldownRemaining ?? 0,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
@@ -14054,7 +15521,15 @@ export function AshfallGame() {
       playCue("start-low");
       startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
     }
-  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
+  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, externalSession, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
+
+  useEffect(() => {
+    if (!externalSession || !assetsReady || assetError) return;
+    const startKey = `${externalSession.stageId}:${externalSession.resultId}`;
+    if (externalStartKeyRef.current === startKey) return;
+    externalStartKeyRef.current = startKey;
+    startGame();
+  }, [assetError, assetsReady, externalSession, startGame, started]);
 
   const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
     if (!assetsReady || assetError) return;
@@ -14897,7 +16372,7 @@ export function AshfallGame() {
         campaignSaveRef.current = entitlement.save as CampaignSave;
         setCampaignSave(entitlement.save as CampaignSave);
         const liveGame = gameRef.current;
-        if (liveGame.survivalRun?.runId === run.runId
+        if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId
           && liveGame.survivalRun.reachedWave >= waveNumber
           && survivalWaveEntitlementReceiptRef.current === receiptId) {
           liveGame.paused = false;
@@ -14933,6 +16408,27 @@ export function AshfallGame() {
     setSurvivalSavePending(true);
     let cancelled = false;
     void (async () => {
+      if (externalSessionRef.current) {
+        let committed = false;
+        try { committed = await externalSessionRef.current.onSurvivalCheckpoint?.(run) ?? false; }
+        catch { committed = false; }
+        if (cancelled) return;
+        if (!committed) {
+          survivalCheckpointSaveLocksRef.current.delete(checkpointId);
+          setSavePersistence("unavailable");
+          setSurvivalSavePending(false);
+          return;
+        }
+        const liveGame = gameRef.current;
+        if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId && liveGame.survivalCheckpointReceipt === checkpointId) {
+          liveGame.survivalRun = { ...liveGame.survivalRun, manualAbilityCooldownsByKind: {} };
+          setSurvivalHud(survivalHudSnapshot(liveGame.survivalRun));
+        }
+        setSavePersistence("saved");
+        setPendingSurvivalCheckpoint(null);
+        setSurvivalSavePending(false);
+        return;
+      }
       const checkpoint = checkpointSurvivalCampaignSave(campaignSaveRef.current, run, {
         savedAt: new Date().toISOString(),
       });
@@ -14952,7 +16448,7 @@ export function AshfallGame() {
         return;
       }
       const liveGame = gameRef.current;
-      if (liveGame.survivalRun?.runId === run.runId
+      if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId
         && liveGame.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
         && liveGame.survivalCheckpointReceipt === checkpointId) {
         const continuedRun = {
@@ -14981,6 +16477,21 @@ export function AshfallGame() {
     if (survivalSavePending) return;
     setSurvivalSavePending(true);
     void (async () => {
+      if (externalSessionRef.current) {
+        let committed = false;
+        try { committed = await externalSessionRef.current.onSurvivalSettlement?.(pending.run) ?? false; }
+        catch { committed = false; }
+        if (!committed) {
+          setSavePersistence("unavailable");
+          setSurvivalSettlementAwaitingRetry(true);
+          setSurvivalSavePending(false);
+          return;
+        }
+        setPendingSurvivalSettlement(null);
+        setSurvivalSettlementAwaitingRetry(false);
+        setSurvivalSavePending(false);
+        return;
+      }
       const result = await persistSurvivalCampaignSettlement(
         campaignSaveRef.current,
         pending.run,
@@ -15158,6 +16669,14 @@ export function AshfallGame() {
       manualAbilityReadyStateRef.current.clear();
     }
     if (!end || finalizedEndRef.current === end) return;
+    if (externalSession) {
+      const externalTimer = window.setTimeout(() => {
+        if (finalizedEndRef.current === end) return;
+        finalizedEndRef.current = end;
+        externalSession.onBattleResult(end);
+      }, 0);
+      return () => window.clearTimeout(externalTimer);
+    }
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
@@ -15241,7 +16760,7 @@ export function AshfallGame() {
       publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, playUiOperationCue, publishPendingResult]);
+  }, [campaignSave, commitOutbreakSettlement, end, externalSession, persistCampaignSave, playUiOperationCue, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
@@ -15416,19 +16935,30 @@ export function AshfallGame() {
     playUiOperationCue("selection", `speed:${speed}`);
   }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
-  const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
+  const selectSurvivalUpgrade = useCallback(async (upgradeId: string) => {
     const g = gameRef.current;
     if (rejectBattleSaveBoundary(`survival-upgrade:${upgradeId}:save-pending`)) return;
     if (!g.survivalRun
       || !g.survivalRuntime
       || pendingSurvivalCheckpoint
-      || survivalSavePending) return;
+      || survivalSavePending || survivalUpgradeSavePendingRef.current) return;
     const previousCrawlerHp = g.baseHp;
     const previousEffects = survivalUpgradeEffects(g.survivalRun);
     const selection = chooseSurvivalCombatUpgrade(g.survivalRuntime, g.survivalRun, upgradeId);
     if (!selection.selected || !selection.run || !selection.runtime) {
       playUiOperationCue("reject", `survival-upgrade:${upgradeId}:unavailable`);
       return;
+    }
+    if (externalSessionRef.current) {
+      survivalUpgradeSavePendingRef.current = true;
+      setSurvivalSavePending(true);
+      let committed = false;
+      try { committed = await externalSessionRef.current.onSurvivalUpgrade?.(upgradeId) ?? false; }
+      catch { committed = false; }
+      finally { survivalUpgradeSavePendingRef.current = false; setSurvivalSavePending(false); }
+      if (!committed) { setSavePersistence("unavailable"); return; }
+      if (gameRef.current !== g) return;
+      setSavePersistence("saved");
     }
     const nextEffects = survivalUpgradeEffects(selection.run);
     for (const fighter of g.fighters) {
@@ -15486,12 +17016,19 @@ export function AshfallGame() {
     }
   }, [activeOperationId, campaignSave, formationKinds, playUiOperationCue, selectedSupply]);
 
-  const confirmPauseAction = useCallback(() => {
+  const confirmPauseAction = useCallback(async () => {
     const action = pauseConfirm;
     if (!action) return;
     if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
     playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
+    if (externalSession && !activeGame.survivalRun) {
+      if (activeGame.over || !await externalSession.onBattleAction?.(action)) return;
+      disposeBattleRuntime();
+      chooseAction(null);
+      setPauseConfirm(null);
+      return;
+    }
     if (activeGame.survivalRun) {
       if (action !== "withdraw" || activeGame.over) return;
       const endedAt = new Date().toISOString();
@@ -15575,17 +17112,40 @@ export function AshfallGame() {
         selectedSupply: SupplyKind;
       });
     }
-  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, externalSession, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
-  const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
+  const commitExternalSettings = useCallback(async (patch: Partial<CampaignSave["settings"]>) => {
+    if (!externalSession?.onSettingsChange || externalSettingsPendingRef.current || gameRef.current.over) return false;
+    externalSettingsPendingRef.current = true;
+    battleSaveBoundaryRef.current = true;
+    setExternalSettingsPending(true);
+    const next = updateCampaignSettings(campaignSaveRef.current, patch) as CampaignSave;
+    try {
+      if (!await externalSession.onSettingsChange(patch)) { setExternalSettingsRetry(patch); return false; }
+      if (!mountedRef.current) return false;
+      setCampaignSave(next);
+      const bgmOff = !next.settings.bgmEnabled || next.settings.bgmVolume <= 0;
+      const sfxOff = !next.settings.sfxEnabled || next.settings.sfxVolume <= 0;
+      setBgmMuted(bgmOff); setSfxMuted(sfxOff); sfxMutedRef.current = sfxOff;
+      productionMixerRef.current?.setSettings(next.settings);
+      setExternalSettingsRetry(null);
+      return true;
+    } catch { setExternalSettingsRetry(patch); return false; }
+    finally { externalSettingsPendingRef.current = false; setExternalSettingsPending(false); }
+  }, [externalSession]);
+
+  const updateVolume = useCallback(async (kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const normalized = Math.max(0, Math.min(1, value));
     const enabled = normalized > 0;
+    if (externalSessionActive && !await commitExternalSettings(kind === "bgm"
+      ? { bgmEnabled: enabled, bgmVolume: normalized }
+      : { sfxEnabled: enabled, sfxVolume: normalized })) return;
     const mixer = productionMixerRef.current;
     if (kind === "bgm") {
       setBgmMuted(!enabled);
       mixer?.setSettings({ bgmEnabled: enabled, bgmVolume: normalized });
-      setCampaignSave((current) => updateCampaignSettings(current, {
+      if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
         bgmEnabled: enabled,
         bgmVolume: normalized,
       }) as CampaignSave);
@@ -15623,7 +17183,7 @@ export function AshfallGame() {
     sfxMutedRef.current = !enabled;
     setSfxMuted(!enabled);
     mixer?.setSettings({ sfxEnabled: enabled, sfxVolume: normalized });
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       sfxEnabled: enabled,
       sfxVolume: normalized,
     }) as CampaignSave);
@@ -15638,22 +17198,32 @@ export function AshfallGame() {
         dedupeKey: `volume-preview:${Math.round(normalized * 20)}`,
       });
     }
-  }, [end, pendingResultCommit, playProductionCue]);
+  }, [commitExternalSettings, end, externalSessionActive, pendingResultCommit, playProductionCue]);
 
   const setAutoSkipReadStory = useCallback((enabled: boolean) => {
     setCampaignSave((current) => updateStoryPlaybackSettings(current, { autoSkipReadStory: enabled }) as CampaignSave);
   }, []);
 
-  const cycleBattleEventMode = useCallback(() => {
+  const cycleBattleEventMode = useCallback(async () => {
     const modes: CampaignSave["settings"]["battleEventMode"][] = ["first-time", "compact", "all"];
+    if (externalSessionActive) {
+      const mode = modes[(modes.indexOf(campaignSaveRef.current.settings.battleEventMode) + 1) % modes.length];
+      if (await commitExternalSettings({ battleEventMode: mode })) playUiOperationCue("selection", "settings:battle-event-mode");
+      return;
+    }
     setCampaignSave((current) => {
       const nextMode = modes[(modes.indexOf(current.settings.battleEventMode) + 1) % modes.length];
       return updateStoryPlaybackSettings(current, { battleEventMode: nextMode }) as CampaignSave;
     });
     playUiOperationCue("selection", "settings:battle-event-mode");
-  }, [playUiOperationCue]);
+  }, [commitExternalSettings, externalSessionActive, playUiOperationCue]);
 
-  const cycleGraphicsQuality = useCallback(() => {
+  const cycleGraphicsQuality = useCallback(async () => {
+    if (externalSessionActive) {
+      const index = GRAPHICS_QUALITY_ORDER.indexOf(campaignSaveRef.current.settings.graphicsQuality);
+      if (await commitExternalSettings({ graphicsQuality: GRAPHICS_QUALITY_ORDER[(Math.max(0, index) + 1) % GRAPHICS_QUALITY_ORDER.length] })) playUiOperationCue("selection", "settings:graphics-quality");
+      return;
+    }
     setCampaignSave((current) => {
       const currentIndex = GRAPHICS_QUALITY_ORDER.indexOf(current.settings.graphicsQuality);
       const nextMode = GRAPHICS_QUALITY_ORDER[
@@ -15662,34 +17232,37 @@ export function AshfallGame() {
       return updateCampaignSettings(current, { graphicsQuality: nextMode }) as CampaignSave;
     });
     playUiOperationCue("selection", "settings:graphics-quality");
-  }, [playUiOperationCue]);
+  }, [commitExternalSettings, externalSessionActive, playUiOperationCue]);
 
-  const toggleBgm = useCallback(() => {
+  const toggleBgm = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
-    const next = !bgmMuted; setBgmMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    const next = !bgmMuted;
+    if (externalSessionActive && !await commitExternalSettings({ bgmEnabled: !next, bgmVolume: !next && campaignSaveRef.current.settings.bgmVolume <= 0 ? .5 : campaignSaveRef.current.settings.bgmVolume })) return;
+    setBgmMuted(next);
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       bgmEnabled: !next,
       bgmVolume: !next && current.settings.bgmVolume <= 0 ? .5 : current.settings.bgmVolume,
     }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
     playUiOperationCue("selection", `settings:bgm:${next ? "off" : "on"}`);
-  }, [bgmMuted, end, paused, pendingResultCommit, playUiOperationCue, startMusic, started, stopMusic]);
+  }, [bgmMuted, commitExternalSettings, end, externalSessionActive, paused, pendingResultCommit, playUiOperationCue, startMusic, started, stopMusic]);
 
-  const toggleSfx = useCallback(() => {
+  const toggleSfx = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !sfxMutedRef.current;
+    if (externalSessionActive && !await commitExternalSettings({ sfxEnabled: !next, sfxVolume: !next && campaignSaveRef.current.settings.sfxVolume <= 0 ? .6 : campaignSaveRef.current.settings.sfxVolume })) return;
     sfxMutedRef.current = next;
     setSfxMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       sfxEnabled: !next,
       sfxVolume: !next && current.settings.sfxVolume <= 0 ? .6 : current.settings.sfxVolume,
     }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
     playUiOperationCue("selection", `settings:sfx:${next ? "off" : "on"}`);
-  }, [end, pendingResultCommit, playUiOperationCue, resumeBattleAudioLoops, stopJingle, stopSfx]);
+  }, [commitExternalSettings, end, externalSessionActive, pendingResultCommit, playUiOperationCue, resumeBattleAudioLoops, stopJingle, stopSfx]);
 
-  const enableAudio = useCallback(() => {
+  const enableAudio = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) {
       playUiOperationCue("reject", "audio-unlock:blocked");
       return;
@@ -15702,8 +17275,14 @@ export function AshfallGame() {
     playUiOperationCue("confirm", "audio-unlock");
     const restoredBgmVolume = Math.max(.35, campaignSave.settings.bgmVolume);
     const restoredSfxVolume = Math.max(.4, campaignSave.settings.sfxVolume);
-    if (bgmMuted || sfxMutedRef.current
-      || campaignSave.settings.bgmVolume <= 0 || campaignSave.settings.sfxVolume <= 0) {
+    if (externalSessionActive) {
+      // Start the native unlock in the user gesture before awaiting durable storage.
+      const unlock = mixer.unlock();
+      if (!await commitExternalSettings({ bgmEnabled: true, sfxEnabled: true, bgmVolume: restoredBgmVolume, sfxVolume: restoredSfxVolume })) return;
+      await unlock;
+    }
+    if (!externalSessionActive && (bgmMuted || sfxMutedRef.current
+      || campaignSave.settings.bgmVolume <= 0 || campaignSave.settings.sfxVolume <= 0)) {
       setBgmMuted(false);
       sfxMutedRef.current = false;
       setSfxMuted(false);
@@ -15784,13 +17363,20 @@ export function AshfallGame() {
       updateAudioAvailability("testTone", "failed");
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit, playUiOperationCue, updateAudioAvailability]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, commitExternalSettings, end, externalSessionActive, pendingResultCommit, playUiOperationCue, updateAudioAvailability]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
   }, [enableAudio]);
 
   const dispatchBattleStoryEvents = useCallback((g: Game) => {
+    if (g.definition.missionConfig?.v100StageNumber) {
+      if (g.bossDefeatPending) {
+        g.bossDefeatPending = false;
+        g.bossDefeated = true;
+      }
+      return false;
+    }
     const stageId = g.definition.stageId;
     const elapsedBattleSeconds = Math.max(0, g.time - g.definition.prepSeconds);
     if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET
@@ -15869,8 +17455,8 @@ export function AshfallGame() {
       const normalizedKey = event.key.toLowerCase();
       const card = cards.find((item) => item.key === event.key);
       if (card) { deployHuman(card.kind); return; }
-      const supply = supplyDefs[selectedSupply];
-      if (normalizedKey === supply.key.toLowerCase()) {
+      const supply = battlefieldSupplyDefinition(selectedSupply, g.v100SupportId);
+      if (supply && normalizedKey === supply.key.toLowerCase()) {
         const action = `supply:${selectedSupply}` as SelectedAction;
         chooseActionWithCue(selectedActionRef.current === action ? null : action);
         return;
@@ -16263,7 +17849,10 @@ export function AshfallGame() {
                 && candidate.hp > 0
               ));
               if (!target) continue;
-              const healing = Math.min(target.maxHp - target.hp, target.maxHp * definition.healRatio * owner.healingMultiplier);
+              const baseHealing = target.maxHp * definition.healRatio;
+              const levelHealing = g.definition.missionConfig?.v100StageNumber
+                ? v100UnitStatAtLevel(baseHealing, owner.progressionLevel ?? 1, "healing") : baseHealing;
+              const healing = Math.min(target.maxHp - target.hp, levelHealing * owner.healingMultiplier);
               target.hp = Math.min(target.maxHp, target.hp + healing);
               recordUnitHealing(g, owner.kind, healing);
               target.slowMultiplier = 1;
@@ -16632,6 +18221,11 @@ export function AshfallGame() {
                 cooldownMs: 100,
                 maxInstances: 2,
                 fallbackCue: "ranged-shot",
+                ...(hit.attackObservation ? {
+                  receiptId: hit.attackObservation.audioReceiptId,
+                  ownerId: hit.attackObservation.sourceId,
+                  activationId: hit.attackObservation.attackSequence,
+                } : {}),
               });
               playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "flight"), (hit.originX + hit.targetX) / 2, {
                 priority: 70,
@@ -16665,7 +18259,9 @@ export function AshfallGame() {
             } else if (result.supply.phase === "destroying") {
               const source = g.fighters.find((fighter) => fighter.id === hit.sourceId);
               if (source) source.targetObjectId = null;
-              g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`;
+              g.banner = objectTarget.v100SupportId === undefined
+                ? `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`
+                : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`;
               g.bannerTime = 1.25;
               addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
               playBattleSemanticCue("support-explosion", objectTarget.x, {
@@ -16783,6 +18379,13 @@ export function AshfallGame() {
             const presentation = enemyProjectilePresentationFor(hit.weapon);
             addDamageText(g, target.x, target.y - 45, String(Math.round(applied.targetDamage)), .65, "#e98a72");
             addParticles(g, target.x, target.y - 18, presentation?.color ?? "#c06d51", 4);
+            appendCompletedAttackImpact(
+              g,
+              hit.attackObservation ?? null,
+              g.time,
+              target.hp <= 0 ? "defeated" : "hit",
+              productionCueQaLogRef.current,
+            );
             playProductionCue(humanVoiceCueForUnit(target.kind, "hurt"), target.x, {
               priority: 72,
               cooldownMs: 300,
@@ -16859,6 +18462,15 @@ export function AshfallGame() {
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
               addDamageText(g, splashTarget.x, splashTarget.y - 43, `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`, .66, "#e4b46c");
+              if (primaryTarget) {
+                appendCompletedAttackImpact(
+                  g,
+                  hit.attackObservation ?? null,
+                  g.time,
+                  splashTarget.hp <= 0 ? "defeated" : "hit",
+                  productionCueQaLogRef.current,
+                );
+              }
             }
             addParticles(g, impactPoint.x, impactPoint.y - 12, "#d7924f", 13);
             playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), impactPoint.x, {
@@ -16946,6 +18558,13 @@ export function AshfallGame() {
           target.knock = Math.max(target.knock, 2 + hit.recoil * 4);
           addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(appliedDamage)), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
           addParticles(g, target.x, target.y - 26, "#e8c56c", 2);
+          appendCompletedAttackImpact(
+            g,
+            hit.attackObservation ?? null,
+            g.time,
+            target.hp <= 0 ? "defeated" : "hit",
+            productionCueQaLogRef.current,
+          );
           if (hit.shotIndex === 0 && Math.random() < .48) {
             playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
               priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
@@ -17214,7 +18833,7 @@ export function AshfallGame() {
               g.bannerTime = 1.8;
               playCue("wave-contact");
               emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
-              if (event.plan.wave === 20
+              if (g.survivalRun?.modePolicy !== "v100" && event.plan.wave === 20
                 && g.survivalRun?.reachedWave >= 20
                 && campaignSaveRef.current.survival.highestReachedWave < 20) {
                 const receiptId = employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
@@ -17848,6 +19467,36 @@ export function AshfallGame() {
               f.combatReady = true;
               f.cooldown = Math.max(f.cooldown, .18);
             }
+            const armedCheckpoint = qaArmedCrawlerDeploymentCheckpointRef.current;
+            if (armedCheckpoint?.fighterId === f.id) {
+              const semanticCheckpoint = crawlerDeploymentPlanForFighter(f).checkpoint;
+              const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
+              const deploymentDoorX = Number(battleSpace.crawler.door.x);
+              const deploymentRampX = Number(f.entryRampX ?? f.combatReadyX ?? battleSpace.crawler.rampFoot.x);
+              const computedProgress = Math.max(
+                0,
+                Math.min(1, (f.x - deploymentDoorX) / Math.max(1, deploymentRampX - deploymentDoorX)),
+              );
+              if (semanticCheckpoint === armedCheckpoint.checkpoint
+                && computedProgress + 1e-6 >= armedCheckpoint.minimumProgress) {
+                qaFrozenCrawlerDeploymentFighterIdRef.current = f.id;
+                g.paused = true;
+                qaCrawlerDeploymentCheckpointReceiptRef.current = Object.freeze({
+                  schema: "v099-crawler-deployment-checkpoint-receipt/v1",
+                  fighterId: f.id,
+                  kind: f.kind,
+                  checkpoint: semanticCheckpoint,
+                  x: f.x,
+                  y: f.y,
+                  computedProgress,
+                  battleTime: g.time,
+                  gateEntering: f.gateEntering,
+                  combatReady: f.combatReady,
+                  entryRampCleared: f.entryRampCleared === true,
+                });
+                qaArmedCrawlerDeploymentCheckpointRef.current = null;
+              }
+            }
             continue;
           }
 
@@ -18246,8 +19895,8 @@ export function AshfallGame() {
             if (abilityFrame || f.stationAbility.phase !== "idle") continue;
           }
 
-          if (["ooguchi", "gairen", "futago"].includes(f.kind)) {
-            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago";
+          if (["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)) {
+            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega";
             const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
@@ -18330,7 +19979,9 @@ export function AshfallGame() {
                     : 1;
                   const abilityDamage = anomalyKind === "gairen"
                     ? BOSS_ANOMALY_TUNING.gairen.sweepDamage
-                    : BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier;
+                    : anomalyKind === "futago"
+                      ? BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier
+                      : BOSS_ANOMALY_TUNING[anomalyKind].controlDamage;
                   for (const victimId of hitIds) {
                     const victim = g.fighters.find((candidate) => (
                       candidate.side === "human"
@@ -18345,22 +19996,31 @@ export function AshfallGame() {
                     );
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
-                    addDamageText(g, victim.x, victim.y - 58, anomalyKind === "gairen"
-                        ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
-                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d");
+                    const impactLabel = anomalyKind === "gairen"
+                      ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
+                      : anomalyKind === "futago"
+                        ? `融合交差撃 -${Math.round(resolved.targetDamage)}`
+                        : anomalyKind === "mugarian-president-mutated"
+                          ? `四腕制圧 -${Math.round(resolved.targetDamage)}`
+                          : `Ω大剣薙ぎ払い -${Math.round(resolved.targetDamage)}`;
+                    addDamageText(g, victim.x, victim.y - 58, impactLabel, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   }
                   addParticles(
                     g,
                     areaBoss.x,
                     areaBoss.y - 20,
-                    anomalyKind === "gairen" ? "#b79a68" : "#ba777d",
+                    anomalyKind === "gairen" ? "#b79a68" : anomalyKind === "futago" ? "#ba777d" : "#d16c4e",
                     24,
                   );
                   g.banner = anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討・中枢露出"
-                    : f.stationAbility.split
-                      ? "フタゴ // 裂開・融合交差撃"
-                      : "フタゴ // 融合交差撃";
+                    : anomalyKind === "futago"
+                      ? f.stationAbility.split
+                        ? "フタゴ // 裂開・融合交差撃"
+                        : "フタゴ // 融合交差撃"
+                      : anomalyKind === "mugarian-president-mutated"
+                        ? "変異ムガリアン社長 // 四腕制圧"
+                        : "TAKUYA-Ω // Ω大剣薙ぎ払い";
                   playBattleSemanticCue(
                     anomalyKind === "gairen"
                       ? "boss-gairen-shell-sweep"
@@ -18403,14 +20063,20 @@ export function AshfallGame() {
                   ? "オオグチ // 捕食突進予告"
                   : anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討予告"
-                    : "フタゴ // 融合交差撃予告";
+                    : anomalyKind === "futago"
+                      ? "フタゴ // 融合交差撃予告"
+                      : anomalyKind === "mugarian-president-mutated"
+                        ? "変異ムガリアン社長 // 四腕制圧予告"
+                        : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
                 g.bannerTime = .68;
                 playBattleSemanticCue(
-                  anomalyKind === "ooguchi"
-                    ? "boss-ooguchi-charge-warning"
-                    : anomalyKind === "gairen"
-                      ? "boss-gairen-shell-warning"
-                      : "boss-futago-cross-warning",
+                    anomalyKind === "ooguchi"
+                      ? "boss-ooguchi-charge-warning"
+                      : anomalyKind === "gairen"
+                        ? "boss-gairen-shell-warning"
+                        : anomalyKind === "futago"
+                          ? "boss-futago-cross-warning"
+                          : "enemy-takuya-attack",
                   f.x,
                   {
                     semantic: "boss-phase-warning",
@@ -18688,7 +20354,9 @@ export function AshfallGame() {
                 && other.healFocusRemaining > 0).length;
               const healing = resolveNaoHealing({
                 target: wounded,
-                baseHealing: UNIT_ROLE_TUNING.nao.baseHealing * f.healingMultiplier,
+                baseHealing: (g.definition.missionConfig?.v100StageNumber
+                  ? v100UnitStatAtLevel(UNIT_ROLE_TUNING.nao.baseHealing, f.progressionLevel ?? 1, "healing")
+                  : UNIT_ROLE_TUNING.nao.baseHealing) * f.healingMultiplier,
                 healerNumber: concurrentHealers + 1,
                 existingProtectionSeconds: wounded.damageReductionRemaining,
               });
@@ -19175,7 +20843,9 @@ export function AshfallGame() {
                     g.banner = "爆薬ドラム損壊・起爆 // 戦場"; g.bannerTime = 1.05;
                   } else if (result.supply.phase === "destroying") {
                     f.targetObjectId = null;
-                    g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`; g.bannerTime = 1.25;
+                    g.banner = objectTarget.v100SupportId === undefined
+                      ? `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`
+                      : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`; g.bannerTime = 1.25;
                     addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
                     playBattleSemanticCue("support-explosion", objectTarget.x, {
                       semantic: "object-destroy",
@@ -19270,6 +20940,37 @@ export function AshfallGame() {
               const deferredEnemyProjectile = f.side === "zombie"
                 && target.side === "human"
                 && ENEMY_PROJECTILE_KINDS.includes(f.kind);
+              const committedAttackSequence = f.attackSequence + 1;
+              const attackAudioCueId = normalAttackProductionCueId(f, mrsLauncherBash);
+              const attackAudioReceiptId = phaseGCombatObservabilityEnabledRef.current
+                ? completedAttackAudioReceiptId({
+                    battleGeneration: g.battleAudioGeneration,
+                    sourceId: f.id,
+                    attackSequence: committedAttackSequence,
+                  })
+                : null;
+              const attackObservationBase: PendingAttackObservation | null = attackAudioCueId
+                && attackAudioReceiptId
+                ? {
+                    battleGeneration: g.battleAudioGeneration,
+                    sourceId: f.id,
+                    sourceSide: f.side,
+                    sourceKind: f.kind,
+                    attackSequence: committedAttackSequence,
+                    targetId: target.id,
+                    targetSide: target.side,
+                    targetKind: target.kind,
+                    impactOrdinal: 0,
+                    mode: f.kind === "mrs-chiha" && !mrsLauncherBash
+                      ? "delayed"
+                      : deferredHumanProjectile || deferredEnemyProjectile || splitMachineGunBurst
+                        ? "projectile"
+                        : "direct",
+                    committedAtBattleTime: g.time,
+                    audioCueId: attackAudioCueId,
+                    audioReceiptId: attackAudioReceiptId,
+                  }
+                : null;
               const immediateAttackDamage = attackDamage;
               let appliedAttack: { targetDamage: number };
               if (splitMachineGunBurst || deferredHumanProjectile || deferredEnemyProjectile) {
@@ -19306,6 +21007,9 @@ export function AshfallGame() {
                   hitStopSeconds: grenadeRound.hitStopSeconds,
                   impactDelaySeconds: grenadeRound.travelSeconds,
                   applyDamage: false,
+                  attackObservation: attackObservationBase
+                    ? { ...attackObservationBase, impactOrdinal: grenadeRound.shotIndex }
+                    : undefined,
                 }, {
                   eventKind: "impact",
                   transactionId: grenadeTransactionId,
@@ -19326,6 +21030,9 @@ export function AshfallGame() {
                   hitStopSeconds: grenadeRound.hitStopSeconds,
                   impactDelaySeconds: grenadeRound.travelSeconds,
                   applyDamage: true,
+                  attackObservation: attackObservationBase
+                    ? { ...attackObservationBase, impactOrdinal: grenadeRound.shotIndex }
+                    : undefined,
                 });
                 g.pendingWeaponHits = [
                   ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
@@ -19396,6 +21103,9 @@ export function AshfallGame() {
                     casing: event.casing,
                     hitStopSeconds: event.hitStopSeconds,
                     impactDelaySeconds: event.travelSeconds,
+                    attackObservation: attackObservationBase
+                      ? { ...attackObservationBase, impactOrdinal: event.shotIndex }
+                      : undefined,
                   };
                   if (event.offsetSeconds <= 0) {
                     addWeaponShot(g, sharedEvent);
@@ -19452,6 +21162,9 @@ export function AshfallGame() {
                     casing: event.casing,
                     hitStopSeconds: event.hitStopSeconds,
                     impactDelaySeconds: event.travelSeconds,
+                    attackObservation: attackObservationBase
+                      ? { ...attackObservationBase, impactOrdinal: event.shotIndex }
+                      : undefined,
                   };
                   if (event.offsetSeconds <= 0) {
                     addWeaponShot(g, sharedEvent);
@@ -19496,6 +21209,8 @@ export function AshfallGame() {
                   casing: false,
                   hitStopSeconds: .03,
                   impactDelaySeconds,
+                  attackSequence: committedAttackSequence,
+                  attackObservation: attackObservationBase,
                 };
                 addWeaponShot(g, sharedImpact);
                 g.pendingWeaponHits.push({
@@ -19654,23 +21369,10 @@ export function AshfallGame() {
               if (f.side === "human") {
                 emitBattleBarkOnce(g, `contact:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.CONTACT, f.kind as UnitKind);
                 const targetIsHeavy = ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind);
-                const weaponEvent = f.kind === "crazy-king"
-                  ? "attack"
-                  : f.kind === "kumaverson"
-                    ? "swing"
-                    : f.kind === "babayaga"
-                      ? "shot"
-                      : f.kind === "mrs-chiha"
-                        ? mrsLauncherBash ? "bash" : "shot"
-                        : f.kind === "tky" || f.kind === "miyamoto-musashi"
-                          ? "attack"
-                          : f.kind === "mayo-chan"
-                            ? "bite"
-                          : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
                 const defersMrsLauncherAudio = f.kind === "mrs-chiha" && !mrsLauncherBash;
                 if (!defersMrsLauncherAudio) {
-                  playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
+                  playProductionCue(attackAudioCueId, contactAudioX, {
                     priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 70,
                     volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
@@ -19681,6 +21383,11 @@ export function AshfallGame() {
                     dedupeKey: f.kind === "babayaga"
                       ? `babayaga-shot:${f.id}:${f.attackSequence}`
                       : undefined,
+                    ...(attackObservationBase ? {
+                      receiptId: attackObservationBase.audioReceiptId,
+                      ownerId: attackObservationBase.sourceId,
+                      activationId: attackObservationBase.attackSequence,
+                    } : {}),
                   });
                 }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
@@ -19736,11 +21443,16 @@ export function AshfallGame() {
                   maxInstances: 3,
                 });
               } else {
-                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                playProductionCue(attackAudioCueId, f.x, {
                   priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 65,
                   cooldownMs: 160,
                   maxInstances: 3,
                   fallbackCue: ENEMY_PROJECTILE_KINDS.includes(f.kind) ? "ranged-shot" : "melee-hit",
+                  ...(attackObservationBase ? {
+                    receiptId: attackObservationBase.audioReceiptId,
+                    ownerId: attackObservationBase.sourceId,
+                    activationId: attackObservationBase.attackSequence,
+                  } : {}),
                 });
                 if (!deferredEnemyProjectile && target.side === "human" && Math.random() < .5) playProductionCue(humanVoiceCueForUnit(target.kind, "hurt"), target.x, {
                   priority: 72,
@@ -19752,6 +21464,15 @@ export function AshfallGame() {
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
               if (!splitMachineGunBurst && !deferredHumanProjectile && !deferredEnemyProjectile) {
                 target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
+              }
+              if (attackObservationBase?.mode === "direct") {
+                appendCompletedAttackImpact(
+                  g,
+                  attackObservationBase,
+                  g.time,
+                  target.hp <= 0 ? "defeated" : "hit",
+                  productionCueQaLogRef.current,
+                );
               }
               f.attack = .18;
               f.attackVariant = f.kind === "mrs-chiha" && mrsLauncherBash ? "launcher-bash" : null;
@@ -20875,7 +22596,11 @@ export function AshfallGame() {
         }
       }
       }
-      if (!cadence.shouldRender) {
+      const qaPresentationQuiescence = qaPresentationQuiescenceRef.current;
+      if (!cadence.shouldRender || qaPresentationQuiescence.active) {
+        if (cadence.shouldRender && qaPresentationQuiescence.active) {
+          qaPresentationQuiescence.suppressedRenderFrames += 1;
+        }
         requestFrame();
         return;
       }
@@ -20967,10 +22692,12 @@ export function AshfallGame() {
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
           deployQueue: g.deployQueue.length,
-          airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
+          summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+          airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
@@ -21048,6 +22775,9 @@ export function AshfallGame() {
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
   const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
+  const vehicleDisplayLabel = externalSessionActive ? "装甲車両" : PUBLIC_CRAWLER_LABEL;
+  const vehicleBarrageControlLabel = externalSessionActive ? `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";
   const selectedStageBossKind = selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
     : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
@@ -21066,34 +22796,42 @@ export function AshfallGame() {
         : battleSaveBoundaryRef.current
           ? "保存中"
           : null;
-  const selectedSupplyBlockReason = commonBattleActionBlockReason
+  const selectedSupplyDefinition = battlefieldSupplyDefinition(selectedSupply, externalSession ? externalSession.equippedSupportId : undefined);
+  const selectedSupplyCost = externalSessionActive ? selectedSupplyDefinition?.cost ?? 0 : supplyDefs[selectedSupply].cost;
+  const selectedSupplyName = selectedSupplyDefinition ? (externalSessionActive ? selectedSupplyDefinition.name : SUPPORT_DISPLAY_NAMES[selectedSupply]) : "支援未装備";
+  const airstrikeCost = vehicleAbilityDefinition("vehicle-airstrike", externalSessionActive).battleCost;
+  const barrageCost = vehicleAbilityDefinition("vehicle-barrage", externalSessionActive).battleCost;
+  const airstrikeCooldown = hud.airstrikeCooldownRemaining ?? 0;
+  const selectedSupplyBlockReason = (!selectedSupplyDefinition ? "支援未装備" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-      : hud.scrap < supplyDefs[selectedSupply].cost
-        ? `スクラップ不足 ${hud.scrap}/${supplyDefs[selectedSupply].cost}`
+      : hud.scrap < selectedSupplyCost
+        ? `スクラップ不足 ${hud.scrap}/${selectedSupplyCost}`
         : null);
   const airstrikeBlockReason = commonBattleActionBlockReason
+    ?? (airstrikeCooldown > 0 ? `再準備 ${Math.ceil(airstrikeCooldown)}秒` : null)
     ?? (hud.airstrikePhase !== "idle"
       ? "航空支援実行中"
-      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
-        ? `支援不足 ${hud.supportGauge}/${AIRSTRIKE_DEF.gaugeCost}`
+      : hud.supportGauge < airstrikeCost
+        ? `支援不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
   const crawlerBlockReason = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : null);
-  const selectedSupplyCompactDetail = commonBattleActionBlockReason
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援不足 ${hud.supportGauge}/${barrageCost}` : null);
+  const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-      : hud.scrap < supplyDefs[selectedSupply].cost
-        ? `▰不足 ${supplyDefs[selectedSupply].cost}`
-        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ▰${supplyDefs[selectedSupply].cost}`);
+      : hud.scrap < selectedSupplyCost
+        ? `必要 ${selectedSupplyCost}`
+        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ${selectedSupplyCost}`);
   const airstrikeCompactDetail = commonBattleActionBlockReason
+    ?? (airstrikeCooldown > 0 ? `再準備 ${Math.ceil(airstrikeCooldown)}秒` : null)
     ?? (hud.airstrikePhase !== "idle"
       ? "支援実行中"
-      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
-        ? `◆不足 ${AIRSTRIKE_DEF.gaugeCost}`
-        : `照準・着弾 ◆${AIRSTRIKE_DEF.gaugeCost}`);
+      : hud.supportGauge < airstrikeCost
+        ? `必要 ${airstrikeCost}`
+        : `照準・着弾 ${airstrikeCost}`);
   const crawlerCompactDetail = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? "再装填中" : "全域射撃");
+    ?? (hud.crawlerPhase !== "ready" ? "再装填中" : barrageCost > 0 ? `必要 ${barrageCost}支援` : "全域射撃");
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
   const audioCategorySummary = ([
@@ -21150,6 +22888,13 @@ export function AshfallGame() {
         aria-label="西新世紀末物語 ゲーム"
       >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" && assetsReady && !assetError ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle" || !assetsReady || assetError} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
+        {externalSessionActive && (!assetsReady || assetError) && <section className="v100-battle-asset-status" aria-label="戦闘データの準備">
+          <div><h2>{assetError ? "戦闘データを準備できませんでした" : "戦闘データを準備しています"}</h2>
+            <p role={assetError ? "alert" : "status"}>{assetError ? "戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。" : "必要な画像がそろうまで戦闘は始まりません。"}</p>
+            <p>確認済み {assetReadiness.completed} / {assetReadiness.total} 件{assetReadiness.pending > 0 ? `・待機中 ${assetReadiness.pending} 件` : ""}{assetReadiness.failed > 0 ? `・失敗 ${assetReadiness.failed} 件` : ""}</p>
+            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "失敗・待機中の画像を再読み込み"}</button>}
+          </div>
+        </section>}
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
@@ -21166,6 +22911,7 @@ export function AshfallGame() {
             disabled={!icon.available}
             aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
+            title={`${ability.displayName} — ${manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
             onPointerCancel={(event) => event.stopPropagation()}
@@ -21175,8 +22921,10 @@ export function AshfallGame() {
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
+            <span className="manual-ability-label"><b>{ability.displayName}</b><small>{manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>
           </button>;
         })}
+        {screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -21216,7 +22964,7 @@ export function AshfallGame() {
         </> : <>
           <div className="top-hud">
             <div className="battle-brand-zone">
-              <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+              <div className="brand-block"><div><b>{compactBattleStageName(selectedOperationView.displayName)}</b></div></div>
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
@@ -21234,7 +22982,7 @@ export function AshfallGame() {
           {stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{publicDisplayText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{PUBLIC_CRAWLER_LABEL} 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+          {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
@@ -21243,70 +22991,80 @@ export function AshfallGame() {
             <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
             <div className="stats-strip battle-stats">
-              <span>☠ {hud.kills}</span>
-              {!isSurvivalBattle && <span>▰ {hud.scrap}</span>}
+              <span>討伐 {hud.kills}</span>
+              {!isSurvivalBattle && <span>資材 {hud.scrap}</span>}
               {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
-              <span className="bay-status">格納庫 {hud.deployQueue}/3</span>
+              <span className="bay-status">召喚限度 {hud.summonedCount}/7</span>
               {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
             </div>
           </div>
 
           <div className="unit-cards" aria-label="生存者ユニット">
               {battleHudSlots.map((card, slotIndex) => {
-                if (!card) {
-                  return <div
-                    key={`empty-slot-${slotIndex}`}
-                    className="unit-card unit-card-placeholder"
-                    data-slot-index={slotIndex}
-                    aria-hidden="true"
-                  />;
+                 if (!card) {
+                   return <div
+                     key={`empty-slot-${slotIndex}`}
+                     className="unit-card unit-card-placeholder"
+                     data-slot-index={slotIndex}
+                     data-state="empty"
+                     role="status"
+                     aria-label={`未配置の編成枠 ${slotIndex + 1}`}
+                   ><span className="empty-slot-label">空き枠</span><small>編成待ち</small></div>;
                 }
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
                   ?? (hud.deployQueue >= 3
-                    ? "格納庫満員"
+                    ? "召喚限度到達"
                     : cooldown > 0
                       ? `再準備 ${cooldown}秒`
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "召喚限度到達" ? "full" : "blocked") : "ready";
+                 return (
+                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
-                    <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                    {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
+                    <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
+                    {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
+                      <span className="card-state-full">{cardBlockReason}</span>
+                      <span className="card-state-compact" aria-hidden="true">{cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>
+                    </span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
-                    ><small>再準備中</small></span>}
+                    ><small><span className="cooldown-full">再準備 {cooldown}秒</span><span className="cooldown-compact">{cooldown}秒</span></small></span>}
                   </button>
                 );
               })}
           </div>
           <div className="support-zone">
-            <div className="support-row" aria-label="戦場物資・航空支援・移動拠点一斉掃射">
+            <div className="support-row" aria-label="戦場物資・航空支援・車両砲撃">
               <span className="support-label">物資<br />支援</span>
-              <button
-                className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
-                data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
-                aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked || battleSaveBoundaryRef.current}
+               <button
+                 className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
+                 data-category="support"
+                 data-support-id={externalSession?.equippedSupportId ?? (externalSessionActive ? "none" : selectedSupply)}
+                 disabled={!selectedSupplyDefinition}
+                 data-state={hud.supportItemCooldowns[selectedSupply] > 0 ? "cooldown" : selectedSupplyBlockReason ? "insufficient" : selectedAction === `supply:${selectedSupply}` ? "selected" : "ready"}
+                 data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
+                aria-disabled={Boolean(selectedSupplyBlockReason)}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={hud.supportItemCooldowns[selectedSupply] > 0
-                  ? `${supplyDefs[selectedSupply].name} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-                  : `${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
+                  ? `${selectedSupplyName} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+                  : selectedSupplyDefinition ? `${selectedSupplyName} ${selectedSupplyCost}スクラップ` : selectedSupplyName}
               >
-                <span className="support-key">{supplyDefs[selectedSupply].key}</span>
-                <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
+                <span className="support-key">{(selectedSupplyDefinition?.key ?? "—")}</span>
+                <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : selectedSupplyName}</b>
                 <small><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></small>
-                <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
-              </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
-              </button>
-              <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? "戦場全域固定火器"}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>⌁</em>
-              </button>
+                 <em>{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${selectedSupplyCost}`}</em>
+               </button>
+               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-cooldown={Math.ceil(airstrikeCooldown)} data-state={airstrikeCooldown > 0 ? "cooldown" : hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={Boolean(airstrikeBlockReason)} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${airstrikeCost}支援ゲージ`}>
+                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>必要 {airstrikeCost}</em>
+               </button>
+              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : "車両"}</em>
+               </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>
           </div>
@@ -21314,23 +23072,24 @@ export function AshfallGame() {
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
           <h2>3択強化を選択</h2>
-          <p>{pendingSurvivalCheckpoint || survivalSavePending ? "checkpointを保存しています。保存完了後に選択できます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。"}</p>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次waveへ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
               const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
               if (!upgrade) return null;
               const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
               return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
-                <small>{upgrade.category.toUpperCase()}</small>
-                <b>{upgrade.displayName}</b>
+                <small>{externalSessionActive ? V100_SURVIVAL_UPGRADE_CATEGORIES[upgrade.category] ?? "作戦強化" : upgrade.category.toUpperCase()}</small>
+                <b>{externalSessionActive ? upgrade.displayName.replaceAll("移動拠点", "装甲車両") : upgrade.displayName}</b>
                 <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
                 <em>現在 {stack} / 選択後 {stack + 1}</em>
               </button>;
             })}
           </div>
           {pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <div className="survival-save-retry" role="alert">
-            <b>checkpointを保存できませんでした</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
+            <b>{externalSessionActive ? "中間記録を保存できませんでした" : "checkpointを保存できませんでした"}</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
           </div>}
+          {externalSessionActive && !pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <p role="alert">強化を保存できませんでした。もう一度、強化を選択してください。</p>}
         </section></div>}
         {pendingSurvivalWaveEntitlement && <div className="result-save-blocker survival-wave-entitlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival到達記録の保存">
           <section>
@@ -21348,15 +23107,18 @@ export function AshfallGame() {
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
+          {externalSettingsPending && <p role="status">設定を保存しています…</p>}
+          {externalSettingsRetry && !externalSettingsPending && <p role="alert">設定を保存できませんでした。変更前の設定を維持しています。<button onClick={() => void commitExternalSettings(externalSettingsRetry)}>設定の保存を再試行</button></p>}
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
-            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
-            <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
-            <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
+            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
+            <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
+            <div><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
           <section className="pause-graphics" aria-label="描画品質設定">
             <span><b>描画品質</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>
             <button
+              disabled={externalSettingsPending}
               data-graphics-quality-control="true"
               data-graphics-quality-requested={campaignSave.settings.graphicsQuality}
               onClick={cycleGraphicsQuality}
@@ -21371,8 +23133,8 @@ export function AshfallGame() {
               </small>
             </button>
           </section>
-          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "完了済みwaveの未受取報酬を保存して作戦を終了します。" : "完了済みwaveの報酬を一括保存してrunを終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
@@ -21420,7 +23182,7 @@ export function AshfallGame() {
             : <p>今回の装備報酬はありません。</p>}</div>
           <div className="survival-result-actions"><button onClick={openSurvival}>次のrunへ</button><button onClick={() => returnToMap()}>エリアマップへ戻る</button></div>
         </section></div>}
-        {qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
+        {!externalSession && (qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
           screen={screen}
           eventId={eventId}
           stages={stageViews}
@@ -21493,7 +23255,7 @@ export function AshfallGame() {
           onResetSave={resetCampaign}
           onReloadAssets={retryAssets}
           onUiAction={playUiOperationCue}
-        />}
+         />)}
         {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
           <section>
             <small>MIGRATION RECEIPT</small>
@@ -21515,7 +23277,8 @@ export function AshfallGame() {
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
       </div>}
       {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
-        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+        {externalSessionActive ? <section><small>戦果の保存</small><h2>{survivalSavePending ? "防衛継続作戦の結果を保存しています" : "防衛継続作戦の結果を保存できません"}</h2><p>この画面で戦果を保持しています。保存完了後に未受取報酬を受け取れます。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+          : <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>}
       </div>}
       {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">
         <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{outbreakSavePending ? "異常発生任務の結果を保存しています" : "異常発生任務の結果を保存できません"}</h2><p>撃破記録、Survival解放、receipt、キャップ、装備数量、last result、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={outbreakSavePending} onClick={retryOutbreakSettlementSave}>{outbreakSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
