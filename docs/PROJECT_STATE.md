@@ -192,13 +192,13 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 Current authority delta (2026-09-03): [Producer FINAL-ONLY restoration / coherent contact-emission correction](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5523572497), Design Section 138.10. Routine technical failures stay inside SOL_DESIGN -> coherent correction -> SOL_REMEDIATION -> validation; they are not Producer approval blockers. Existing Master Directive v3 and persistent goal remain authoritative. Only the final frozen-candidate Producer checkpoint unlocks integration/merge/tag/Release/official Pages.
 
-Current cursor: Design138.13 / [Issue172#5535574918](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5535574918)。CI951 Linux WPE native crashと、Mac diagnostic33832933015のStage25観測開始遅延は別owner。後者は7入力後のbaselineが既に完了した11攻撃を除外したQA_HARNESSの順序欠陥。Mac Stage6/24・enemy・deployment成功はDIAGNOSTIC_ONLY、M3未達成。minimum completed-impact observabilityは不変。RESUME_FROM exact14-pathのopening中観測・即時action撮影・全6required WebKit系統Mac移行・retry禁止 -> source/static/functional/CI -> one Stage25 -> extra6/all14 -> Stage24 3/3 -> ordered9/9 -> full local -> exact direct-parent non-force candidate -> one automatic required Mac focused CI。full54/validator、全runtime/human/audio/save/PWA/mobile、fixed-HEAD SOL_FINAL_REVIEWは後続必須。FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT前のreleaseは禁止。
+Current cursor: Design138.15 / [Issue172#5536760852](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5536760852)。CI952のrequired Mac focused PhaseG9/9は実PNG18枚・transaction9件まで照合済み。PR Verifyとenemy348画像もgreen。別laneのHosted mission/delay844x340は旧pixel oracleでred。Mac有限診断33844020781/attempt1の12観測・72画像を再計算し、正しく描いた参照画像自身もworld/native/world変換で旧0.72基準を下回る一方、同じnative画素配置のproduction比較は99.8%以上と確認。ownerはQA_HARNESS / PIXEL_ORACLE_COORDINATE_GRID_MISMATCH。diagnosticはacceptanceではない。minimum completed-impact observabilityは不変。RESUME_FROM exact5-pathのQA画素比較補正（元のworld mask/count/signature/paint coverage維持、native色比較、基準不変） -> source/functional/exact-byte -> 既存24観測のoffline replay -> build -> canonical mission/delay844x340 focused Hosted一回 -> full Hosted/tests/content/lint/build/static -> exact direct-parent non-force candidate -> one automatic required focused CI。孤立diagnosticやlocal ordered9/9をこのQA関数だけの変更で無目的に再実行しない。full54/validator、全runtime/human/audio/save/PWA/mobile、fixed-HEAD SOL_FINAL_REVIEWは後続必須。FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT前のreleaseは禁止。
 
-- `LAST_AUDITED_HEAD`: `0588b5a195137a41faa6b716d7b9c855e3f9cc0e`
-- `LAST_AUDITED_TREE`: `c259aac5d79b315583de8f090532d9dae0a872c2`
-- `SAME_GATE_REPEAT_COUNT`: `24`
-- `FAILED_GATE`: CI951 PhaseG Stage24 / enemy06 native failure; diagnostic Stage25 opening/action order
-- `LAST_GREEN_GATE`: current candidate PRVerify; Mac Stage6/24, enemy, deployment are DIAGNOSTIC_ONLY
+- `LAST_AUDITED_HEAD`: `ea6b216daadcc9f98b031acf963f69b2f6f6bb64`
+- `LAST_AUDITED_TREE`: `93420469d9d17f639aac7902deb1ab6daaa37e10`
+- `SAME_GATE_REPEAT_COUNT`: `25`
+- `FAILED_GATE`: CI952 Hosted100924076887 mission/delay844x340 original pixel oracle
+- `LAST_GREEN_GATE`: required Mac focused PhaseG9/9 and PR Verify/enemy348 actual evidence; diagnostic12/72 remains nonacceptance
 - `NEXT_OWNER`: `SOL_REMEDIATION`
 
 The fields below record the completed Section138.10 local packet and are historical, not the current execution cursor.

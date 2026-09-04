@@ -5585,8 +5585,6 @@ function stationMissionFinalCanvasAudit(
   );
   const finalRgba = finalContext.getImageData(0, 0, W, H).data;
   let authoredPixelCount = 0;
-  let finalPixelMatchCount = 0;
-  let finalPixelNearMatchCount = 0;
   let authoredStateSignature = 2166136261;
   let finalPaintedCount = 0;
   for (let index = 0; index < expectedRgba.length; index += 4) {
@@ -5596,15 +5594,35 @@ function stationMissionFinalCanvasAudit(
     authoredStateSignature ^= expectedRgba[index + 1]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
     authoredStateSignature ^= expectedRgba[index + 2]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
     if (finalRgba[index + 3] > 0) finalPaintedCount += 1;
-    const delta = Math.abs(expectedRgba[index] - finalRgba[index])
-      + Math.abs(expectedRgba[index + 1] - finalRgba[index + 1])
-      + Math.abs(expectedRgba[index + 2] - finalRgba[index + 2]);
+  }
+  // Keep world-space coverage (including clipped authored pixels) above. Color
+  // must compare the same native raster grid: a world/native/world round trip
+  // is lossy on supported WebKit even for a known-correct reference image.
+  // Reuse the existing scratch surface after preserving its coverage readback.
+  finalAudit.width = finalCanvas.width;
+  finalAudit.height = finalCanvas.height;
+  finalContext.setTransform(finalTransform.scale * dpr, 0, 0, finalTransform.scale * dpr,
+    finalTransform.offsetX * dpr, finalTransform.offsetY * dpr);
+  drawStationMission(finalContext, g, stageObjects, false);
+  const nativeExpectedRgba = finalContext.getImageData(0, 0, finalCanvas.width, finalCanvas.height).data;
+  const nativeFinalContext = finalCanvas.getContext("2d");
+  if (!nativeFinalContext) throw new Error("Station mission native final-canvas audit unavailable");
+  const nativeFinalRgba = nativeFinalContext.getImageData(0, 0, finalCanvas.width, finalCanvas.height).data;
+  let nativeAuthoredPixelCount = 0;
+  let finalPixelMatchCount = 0;
+  let finalPixelNearMatchCount = 0;
+  for (let index = 0; index < nativeExpectedRgba.length; index += 4) {
+    if (nativeExpectedRgba[index + 3] < 245) continue;
+    nativeAuthoredPixelCount += 1;
+    const delta = Math.abs(nativeExpectedRgba[index] - nativeFinalRgba[index])
+      + Math.abs(nativeExpectedRgba[index + 1] - nativeFinalRgba[index + 1])
+      + Math.abs(nativeExpectedRgba[index + 2] - nativeFinalRgba[index + 2]);
     if (delta <= 18) finalPixelMatchCount += 1;
     if (delta <= 60) finalPixelNearMatchCount += 1;
   }
   const finalPaintRatio = authoredPixelCount > 0 ? finalPaintedCount / authoredPixelCount : 0;
-  const finalMatchRatio = authoredPixelCount > 0 ? finalPixelMatchCount / authoredPixelCount : 0;
-  const finalNearMatchRatio = authoredPixelCount > 0 ? finalPixelNearMatchCount / authoredPixelCount : 0;
+  const finalMatchRatio = nativeAuthoredPixelCount > 0 ? finalPixelMatchCount / nativeAuthoredPixelCount : 0;
+  const finalNearMatchRatio = nativeAuthoredPixelCount > 0 ? finalPixelNearMatchCount / nativeAuthoredPixelCount : 0;
   return {
     applicable: true,
     // The final canvas is sampled after presentation overlays and the mission
@@ -5619,6 +5637,10 @@ function stationMissionFinalCanvasAudit(
     finalPaintRatio,
     finalMatchRatio,
     finalNearMatchRatio,
+    nativeColorGrid: {
+      width: finalCanvas.width, height: finalCanvas.height, opaquePixelCount: nativeAuthoredPixelCount,
+      scale: finalTransform.scale * dpr, offsetX: finalTransform.offsetX * dpr, offsetY: finalTransform.offsetY * dpr,
+    },
     authoredStateSignature: (authoredStateSignature >>> 0).toString(16).padStart(8, "0"),
     missionState: {
       powerActivated: g.stageMission.powerActivated ?? 0,

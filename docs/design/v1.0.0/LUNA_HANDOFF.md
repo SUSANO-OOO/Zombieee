@@ -3644,24 +3644,24 @@ The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPO
 
 ## 131. Revision r114 current SOL handoff — minimum completed-impact observability replacement
 
-Canonical Design Lock is `V100-SOL-DL-001 r114` Section138.13 / [Issue172#5535574918](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5535574918). No active Luna handoff. Historical lease/candidate/successor instructions are superseded.
+Canonical Design Lock is `V100-SOL-DL-001 r114` Section138.15 / [Issue172#5536760852](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5536760852). No active Luna handoff. Historical lease/candidate/successor instructions and completed138.13 execution cursor are superseded; its proof/platform/quality contracts remain.
 
 - `STATUS`: `DESIGN_LOCKED_FOR_BOUNDED_REMEDIATION`
 - `ROLE_LOCK`: `SOL_REMEDIATION`
 - `PRODUCT_DESIGN_CHANGE`: `0`
-- `LAST_AUDITED_HEAD`: `0588b5a195137a41faa6b716d7b9c855e3f9cc0e`
-- `LAST_AUDITED_TREE`: `c259aac5d79b315583de8f090532d9dae0a872c2`
-- `FAILED_GATE`: CI951 Linux WPE PhaseG Stage24 / enemy06 native crash; separate diagnostic Mac Stage25 setup/action order failure
-- `LAST_GREEN_GATE`: current-head PRVerify; Mac diagnostic Stage6/24, enemy and deployment actual evidence (DIAGNOSTIC_ONLY)
-- `REMEDIATION_CLASS`: QA_HARNESS_ACTION_CAPTURE_STARTED_AFTER_REPRESENTATIVE_COMBAT + REQUIRED_MAC_WEBKIT_RUNTIME
-- `SAME_GATE_REPEAT_COUNT`: `24`
+- `LAST_AUDITED_HEAD`: `ea6b216daadcc9f98b031acf963f69b2f6f6bb64`
+- `LAST_AUDITED_TREE`: `93420469d9d17f639aac7902deb1ab6daaa37e10`
+- `FAILED_GATE`: CI952 Hosted100924076887 mission/delay844x340 original pixel oracle
+- `LAST_GREEN_GATE`: current remote PR Verify, Mac enemy348 actual images, focused PhaseG9/9 with exact scene/action/transaction readbacks; separate diagnostic12/72 is NOT acceptance
+- `REMEDIATION_CLASS`: QA_HARNESS / PIXEL_ORACLE_COORDINATE_GRID_MISMATCH
+- `SAME_GATE_REPEAT_COUNT`: `25`
 - `M3_PASSED`: `NO`
 - `NEXT_OWNER`: `SOL_REMEDIATION`
-- `RESUME_FROM`: exact14-path correction -> source/static/functional/CI contracts -> one Stage25 -> required-extra6/all14 -> Stage24 3/3 -> ordered9/9 -> full local Hosted/deployment/content/tests/lint/build/static -> exact material freeze/direct-parent non-force transport -> one automatic required Mac focused CI. Full local54/validator and unfiltered remote54/validator gates remain.
+- `RESUME_FROM`: exact five-path QA pixel correction -> source/functional/exact-byte preflight -> offline actual24-observation replay -> build -> one canonical mission/delay844x340 focused Hosted -> full local Hosted/tests/content/lint/build/static -> exact direct-parent non-force candidate -> one automatic required focused CI. Full local54/validator and unfiltered remote54/all required gates remain.
 
-Exact SOL handoff: follow Design138.13. Observe native completed impacts during ordinary opening, capture first valid action immediately with the unchanged proof/deadline/mutex/cleanup, resume original inputs and mandatory later boss/final scene. No new machine, lease, recovery, bridge or stale receipt promotion. Migrate all six required WebKit jobs to verified macos-15-intel; preserve every axis/dependency, Stage3 original GNU outer bound and one-attempt wrappers. No app/assets/package/budget/acceptance change.
+Exact SOL handoff: follow Design138.15. Preserve the original world authored mask/count/signature and final painted coverage; reuse the existing scratch context for a same-native-grid color reference, with unchanged0.72/0.99/500/alpha245/RGB18/60. Only the existing QA audit function, its new executable unit test and the three canonical docs change. Product renderers/all other app bytes, proof machine, assets/package/workflow, budgets/attempts/axes remain unchanged. No diagnostic branch integration, extra state, lease, recovery or bridge. Prior isolated/ordered diagnostics are not repeated or promoted to new-HEAD acceptance.
 
-First red returns internally to SOL_DESIGN, not Producer technical approval wait. CPU-only Linux stability is not established; Mac diagnostic successes are not required acceptance. Old evidence and dirty worktrees remain preserved. Continue all runtime/human-player/HUD/audio/save/mobile/PWA/release-entry gates, exact HEAD/tree freeze and fixed-HEAD adversarial SOL_FINAL_REVIEW. The sole normal stop is FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT; explicit approval there alone authorizes integration/merge/tag/Release/official Pages, followed by published-SHA QA/recovery/closure.
+First red returns internally to SOL_DESIGN, not Producer technical approval wait. Two same-gate failures invoke subsystem audit before one coherent correction. Historical Linux native repair is not asserted; diagnostic success is never acceptance. Old evidence and dirty worktrees remain preserved. Continue all runtime/human-player/HUD/audio/save/mobile/PWA/release-entry gates, exact HEAD/tree freeze and fixed-HEAD adversarial SOL_FINAL_REVIEW. The sole normal stop is FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT; explicit approval there alone authorizes integration/merge/tag/Release/official Pages, followed by published-SHA QA/recovery/closure.
 
 ## 128. Revision r113 same-revision handoff — authoritative successor-lease cue wording alignment
 
