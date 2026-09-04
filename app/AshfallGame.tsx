@@ -27,6 +27,8 @@ import {
   planHumanLaneAssignments,
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
+import { applyV100UnitLevelProgression } from "./v100Progression.js";
+import { V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
 import {
   battleAudioRuntimeSnapshot,
   createBattleAudioRuntime,
@@ -1801,7 +1803,7 @@ const initialSurvivalGame = ({
   unitLevels: Record<string, number>;
 }): Game => {
   const v100 = run.modePolicy === "v100";
-  const stageId = v100 ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
+  const stageId = v100 ? V100_STAGE_IDS[0] : CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
   const game = initialGame(
     selectedSupply,
     stageId,
@@ -2682,7 +2684,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
 function equippedCardForGame(g: Game, kind: UnitKind) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
-  const progressedCard = applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1) as UnitCard & { progressionLevel: number; progressionRank: number };
+  const progressedCard = (g.definition.missionConfig?.v100StageNumber
+    ? applyV100UnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1)
+    : applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1)) as UnitCard & { progressionLevel: number; progressionRank: number };
   const equipmentEffects = aggregateEquipmentEffects([
     ...(g.personalEquipmentByKind[kind] ?? []),
     ...g.tacticalEquipmentIds,
@@ -17841,7 +17845,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 && candidate.hp > 0
               ));
               if (!target) continue;
-              const healing = Math.min(target.maxHp - target.hp, target.maxHp * definition.healRatio * owner.healingMultiplier);
+              const baseHealing = target.maxHp * definition.healRatio;
+              const levelHealing = g.definition.missionConfig?.v100StageNumber
+                ? v100UnitStatAtLevel(baseHealing, owner.progressionLevel ?? 1, "healing") : baseHealing;
+              const healing = Math.min(target.maxHp - target.hp, levelHealing * owner.healingMultiplier);
               target.hp = Math.min(target.maxHp, target.hp + healing);
               recordUnitHealing(g, owner.kind, healing);
               target.slowMultiplier = 1;
@@ -20343,7 +20350,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 && other.healFocusRemaining > 0).length;
               const healing = resolveNaoHealing({
                 target: wounded,
-                baseHealing: UNIT_ROLE_TUNING.nao.baseHealing * f.healingMultiplier,
+                baseHealing: (g.definition.missionConfig?.v100StageNumber
+                  ? v100UnitStatAtLevel(UNIT_ROLE_TUNING.nao.baseHealing, f.progressionLevel ?? 1, "healing")
+                  : UNIT_ROLE_TUNING.nao.baseHealing) * f.healingMultiplier,
                 healerNumber: concurrentHealers + 1,
                 existingProtectionSeconds: wounded.damageReductionRemaining,
               });

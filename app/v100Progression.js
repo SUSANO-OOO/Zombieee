@@ -62,6 +62,19 @@ export function v100LevelStats(base, level) {
   });
 }
 
+/** @template {object} T @param {T & {hp: number, damage: number}} card @param {number} level */
+export function applyV100UnitLevelProgression(card, level) {
+  const safeLevel = v100UnitLevelFor({ unit: level }, "unit");
+  const stats = v100LevelStats(card, safeLevel);
+  return Object.freeze({
+    ...card,
+    progressionLevel: safeLevel,
+    progressionRank: 0,
+    hp: stats.hp,
+    damage: stats.damage,
+  });
+}
+
 export function v100UnitProgressionSnapshot({ unitId, level = 1, baseStats = {} } = {}) {
   const unit = v100UnitFor(unitId);
   const safeLevel = v100UnitLevelFor({ [unitId]: level }, unitId);
