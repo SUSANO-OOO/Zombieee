@@ -116,8 +116,12 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assertPinnedRuntime(deploymentJob, "webkit");
   assertPinnedRuntime(stage3Job, "webkit");
   assert.equal((workflow.match(new RegExp(pinnedImage.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "gu")) ?? []).length, 6);
+  assert.match(workflow, /^env:\n  WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"$/mu);
   for (const unchangedHostJob of [enemyJob, hostedJob, hudJob]) {
-    assert.doesNotMatch(unchangedHostJob, /verify-playwright-container-runtime|container:\n/u);
+    assert.doesNotMatch(unchangedHostJob, /container:\n/u);
+    const install = unchangedHostJob.indexOf("npx playwright install --with-deps webkit");
+    const preflight = unchangedHostJob.indexOf("node scripts/verify-playwright-container-runtime.mjs --webkit-rendering");
+    assert.ok(install >= 0 && preflight > install);
   }
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
@@ -150,7 +154,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(shardJob, /name: issue165-webkit-enemy-runtime-\$\{\{ matrix\.shard\.name \}\}/u);
   const enemyBoundedRunner = await readFile("scripts/run-v0995-enemy-runtime-bounded.mjs", "utf8");
   assert.match(enemyBoundedRunner, /attempt <= maxAttempts/u);
-  assert.match(enemyBoundedRunner, /maxAttempts !== 2/u);
+  assert.match(enemyBoundedRunner, /maxAttempts !== 1/u);
   assert.match(enemyBoundedRunner, /isRetryableTargetClosedLog/u);
   assert.match(enemyBoundedRunner, /attempt-\$\{attempt\}/u);
   assert.doesNotMatch(enemyBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);

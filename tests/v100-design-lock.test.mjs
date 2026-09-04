@@ -60,7 +60,9 @@ test("current V1 design lock owns only the r114 completed-impact replacement and
   assert.match(currentDesign, /^- ownership transfer: `0`$/mu);
   assert.match(currentDesign, /^- new global proof bridge: `0`$/mu);
   assert.match(currentDesign, /historical regex-test instructions are not executable/u);
-  assert.match(currentCursor, /`SAME_GATE_REPEAT_COUNT`: `22`/u);
+  // This is a live execution counter, not a fixed product acceptance value.
+  const repeatCount = currentCursor.match(/`SAME_GATE_REPEAT_COUNT`: `(\d+)`/u)?.[1];
+  assert.ok(repeatCount !== undefined && Number.isSafeInteger(Number(repeatCount)));
   assert.match(currentCursor, /`M3_PASSED`: `NO`/u);
 });
 

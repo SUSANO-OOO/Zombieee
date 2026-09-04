@@ -192,7 +192,16 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 Current authority delta (2026-09-03): [Producer FINAL-ONLY restoration / coherent contact-emission correction](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5523572497), Design Section 138.10. Routine technical failures stay inside SOL_DESIGN -> coherent correction -> SOL_REMEDIATION -> validation; they are not Producer approval blockers. Existing Master Directive v3 and persistent goal remain authoritative. Only the final frozen-candidate Producer checkpoint unlocks integration/merge/tag/Release/official Pages.
 
-Current cursor: Design138.10 / Issue172#5526379991。旧TAKUYAとV1ボスへ同一sequence条件を強制したSOL-owned不整合を撤去。正式validatorを有限native読取待機から直接使用し、全16行の最終capture判定と統一。M3未達成。
+Current cursor: Design138.11 / [Issue172#5534537514](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5534537514)。PR HEAD0f6dbad8f8aac90e3b50cdaa2bd233a76d7c173f / TREE7f9c6f97594248ffaef24a1dd3e9af9bffb627b0。CI950 required PhaseG/enemy06/deployment667+932は未解消。native diagnostic33768940396はStage24 Skia GPU invariant SIGILLとCoreDumpingを確定。CPU比較33825748268は3lane成功だがDIAGNOSTIC_ONLY、M3未達成。NEXT_OWNER SOL_REMEDIATION。RESUME_FROM exact Linux CPU preflight／既存enemy失敗証拠保存／single-attempt／CoreDumping contractのsource/static/behavioral -> fresh local Stage6/extra/Stage24 3/3/ordered9/9/full local -> exact non-force candidate -> one automatic focused CI。製品・proof・budget変更なし。
+
+- `LAST_AUDITED_HEAD`: `0f6dbad8f8aac90e3b50cdaa2bd233a76d7c173f`
+- `LAST_AUDITED_TREE`: `7f9c6f97594248ffaef24a1dd3e9af9bffb627b0`
+- `SAME_GATE_REPEAT_COUNT`: `23`
+- `FAILED_GATE`: CI950 PhaseG/enemy06/deployment667+932
+- `LAST_GREEN_GATE`: current candidate PRVerify; CPU diagnostic33825748268 is DIAGNOSTIC_ONLY
+- `NEXT_OWNER`: `SOL_REMEDIATION`
+
+The fields below record the completed Section138.10 local packet and are historical, not the current execution cursor.
 
 - `STATUS`: `DESIGN_LOCKED / R114_MINIMUM_COMPLETED_IMPACT_REPLACEMENT_ACTIVE`
 - `NEXT_OWNER`: `SOL_REMEDIATION`

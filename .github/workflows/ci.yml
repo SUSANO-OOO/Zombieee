@@ -14,6 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Linux WPE backend only; no application or Chromium rendering flag changes.
+env:
+  WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"
+
 jobs:
   verify:
     name: PR Verify
@@ -292,15 +296,19 @@ jobs:
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
 
+      - name: Verify Linux WebKit rendering runtime
+        id: webkit-runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
+
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
-        if: always()
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           ISSUE156_REMEDIATION_QA_ENGINES: webkit
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation/webkit
         run: npm run qa:issue156-remediation
 
       - name: Capture Issue 156 physical-width records evidence (WebKit)
-        if: always()
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           RECORDS_QA_ENGINES: webkit
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
@@ -372,6 +380,9 @@ jobs:
 
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
+
+      - name: Verify Linux WebKit rendering runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
         env:
@@ -448,6 +459,9 @@ jobs:
 
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
+
+      - name: Verify Linux WebKit rendering runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --webkit-rendering
 
       - name: Capture canonical HUD evidence
         env:

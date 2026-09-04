@@ -12,6 +12,7 @@ import {
   classifySupersededAssetRequestFailures,
   reconcilePageClockRequestFailures,
   strictCanvasScreenshotClip,
+  enemyRuntimeFailureRecord,
 } from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -198,6 +199,7 @@ for (const engine of engines) {
   const browserType = playwright[engine];
   invariant(browserType, `unknown browser ${engine}`);
   const browser = await browserType.launch({ headless: true });
+  let primaryError = null;
   try {
     for (const viewport of viewports) {
       for (const kind of inventory) {
@@ -206,9 +208,12 @@ for (const engine of engines) {
         // decoded high-resolution atlas while preserving the same production
         // simulation, renderer, semantic checks and four phase screenshots.
         const context = await browser.newContext({ viewport });
+        let caseError = null;
+        let diagnosticControl = null;
+        let activeEvidence = { engine, viewport, kind, phase: "setup" };
         try {
           const page = await context.newPage();
-          const diagnosticControl = diagnosticsFor(page);
+          diagnosticControl = diagnosticsFor(page);
           const url = new URL(baseUrl);
           url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
           const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
@@ -233,8 +238,10 @@ for (const engine of engines) {
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
           const assetSetupBoundary = await diagnosticControl.sealSetup();
           for (const phase of phases) {
+            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, prepared: null, samples: [], capture: null };
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
-            const samples = [];
+            activeEvidence.prepared = prepared;
+            const samples = activeEvidence.samples;
             const started = performance.now();
             while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
               await page.waitForTimeout(40);
@@ -253,14 +260,19 @@ for (const engine of engines) {
               `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`,
             );
             const clip = canvasObservation.clip;
+            activeEvidence.capture = { status: "pending", screenshotFile, canvasObservation, clip };
             const captureStartedAt = Date.now();
             const preCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.preCapture = preCapture;
+            activeEvidence.capture.startedAt = captureStartedAt;
             await page.screenshot({ path: screenshotFile, clip, timeout });
+            activeEvidence.capture.status = "screenshot-written";
             const postCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.postCapture = postCapture;
             const capture = {
               mode: "strict-page-clip",
               attemptCount: 1,
@@ -284,13 +296,32 @@ for (const engine of engines) {
           }
           const postReady = diagnosticControl.diagnostics;
           invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);
+        } catch (error) {
+          caseError = error;
+          try {
+            await writeFile(path.join(outputDir, "enemy-runtime-failure.json"), `${JSON.stringify(enemyRuntimeFailureRecord({
+              error, active: activeEvidence, results, diagnostics: diagnosticControl?.diagnostics,
+            }), null, 2)}\n`);
+          } catch (persistenceError) {
+            console.error("enemy runtime failure evidence persistence failed", persistenceError);
+          }
+          throw error;
         } finally {
-          await context.close();
+          try { await context.close(); } catch (cleanupError) {
+            if (!caseError) throw cleanupError;
+            console.error("enemy runtime secondary context cleanup failure", cleanupError);
+          }
         }
       }
     }
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await browser.close();
+    try { await browser.close(); } catch (cleanupError) {
+      if (!primaryError) throw cleanupError;
+      console.error("enemy runtime secondary browser cleanup failure", cleanupError);
+    }
   }
 }
 

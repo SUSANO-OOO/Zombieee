@@ -1,4 +1,5 @@
-import { existsSync, realpathSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { createReadStream, existsSync, realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -20,6 +21,46 @@ export const PLAYWRIGHT_CONTAINER_RUNTIME_CONTRACT = Object.freeze({
 });
 
 const BROWSER_TYPES = Object.freeze({ chromium, webkit });
+
+export const WEBKIT_CPU_LIBRARY_SHA256 = "daa10258a2161710c7c1d6a3e3f7abe0a100a6f269c00f5843dcd0f7df46ec29";
+
+export function assertWebKitRenderingSnapshot(snapshot) {
+  if (snapshot.platform !== "linux") throw new Error("WebKit CPU rendering contract requires Linux WPE");
+  if (snapshot.cpuRendering !== "1") throw new Error("WEBKIT_SKIA_ENABLE_CPU_RENDERING must be exactly 1");
+  if (snapshot.cpuPaintingThreads !== null || snapshot.gpuPaintingThreads !== null) {
+    throw new Error("WebKit painting-thread overrides are forbidden");
+  }
+  if (snapshot.packageVersion !== "1.56.1" || snapshot.revision !== "2215" || snapshot.browserVersion !== "26.0") {
+    throw new Error("WebKit CPU rendering browser metadata mismatch");
+  }
+  if (snapshot.librarySha256 !== WEBKIT_CPU_LIBRARY_SHA256) throw new Error("WebKit WPE library SHA256 mismatch");
+  return snapshot;
+}
+
+export async function verifyWebKitRenderingRuntime() {
+  const coreRoot = path.dirname(require.resolve("playwright-core/package.json"));
+  const metadata = JSON.parse(await readFile(path.join(coreRoot, "browsers.json"), "utf8"))
+    .browsers.find(({ name }) => name === "webkit");
+  const libraryPath = path.join(path.dirname(webkit.executablePath()), "minibrowser-wpe/lib/libWPEWebKit-2.0.so.1.7.0");
+  const snapshot = {
+    platform: process.platform,
+    cpuRendering: process.env.WEBKIT_SKIA_ENABLE_CPU_RENDERING ?? null,
+    cpuPaintingThreads: process.env.WEBKIT_SKIA_CPU_PAINTING_THREADS ?? null,
+    gpuPaintingThreads: process.env.WEBKIT_SKIA_GPU_PAINTING_THREADS ?? null,
+    packageVersion: require("playwright/package.json").version,
+    revision: metadata?.revision ?? null,
+    browserVersion: metadata?.browserVersion ?? null,
+    libraryPath,
+    librarySha256: null,
+  };
+  if (process.platform === "linux" && existsSync(libraryPath)) {
+    const hash = createHash("sha256");
+    for await (const chunk of createReadStream(libraryPath)) hash.update(chunk);
+    snapshot.librarySha256 = hash.digest("hex");
+  }
+  console.log(JSON.stringify({ webkitRendering: snapshot }, null, 2));
+  return assertWebKitRenderingSnapshot(snapshot);
+}
 
 export function parsePlaywrightContainerEngines(source) {
   if (source !== "webkit" && source !== "chromium,webkit") {
@@ -99,6 +140,7 @@ export async function verifyPlaywrightContainerRuntime() {
   const requestedEngines = parsePlaywrightContainerEngines(process.env.V100_PLAYWRIGHT_CONTAINER_ENGINES);
   const snapshot = await collectMetadataSnapshot(requestedEngines);
   assertPlaywrightContainerSnapshot(snapshot);
+  snapshot.webkitRendering = await verifyWebKitRenderingRuntime();
 
   for (const engine of snapshot.engines) {
     let browser = null;
@@ -119,5 +161,6 @@ export async function verifyPlaywrightContainerRuntime() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await verifyPlaywrightContainerRuntime();
+  if (process.argv[2] === "--webkit-rendering") await verifyWebKitRenderingRuntime();
+  else await verifyPlaywrightContainerRuntime();
 }

@@ -75,6 +75,11 @@ function parseKeyValueLines(source) {
   }));
 }
 
+export function parseWebKitCoreDumping(source) {
+  const value = parseKeyValueLines(source).CoreDumping;
+  return value === 0 || value === 1 ? value : null;
+}
+
 function memoryInfo(source) {
   const values = parseKeyValueLines(source);
   const bytes = (key) => typeof values[key] === "number" ? values[key] * 1024 : null;
@@ -328,6 +333,7 @@ async function readProcess(pid, rootPid) {
     role,
     webKitRole: role.startsWith("webkit-") ? role : null,
     state: stat.state,
+    coreDumping: parseWebKitCoreDumping(statusSource),
     minorFaults: stat.minorFaults,
     majorFaults: stat.majorFaults,
     userTicks: stat.userTicks,

@@ -5,7 +5,24 @@ import {
   PLAYWRIGHT_CONTAINER_RUNTIME_CONTRACT,
   assertPlaywrightContainerSnapshot,
   parsePlaywrightContainerEngines,
+  assertWebKitRenderingSnapshot,
+  WEBKIT_CPU_LIBRARY_SHA256,
 } from "../scripts/verify-playwright-container-runtime.mjs";
+
+test("Linux WebKit CPU preflight rejects environment, binary and platform drift before launch", () => {
+  const exact = {
+    platform: "linux", cpuRendering: "1", cpuPaintingThreads: null, gpuPaintingThreads: null,
+    packageVersion: "1.56.1", revision: "2215", browserVersion: "26.0", librarySha256: WEBKIT_CPU_LIBRARY_SHA256,
+  };
+  assert.deepEqual(assertWebKitRenderingSnapshot(exact), exact);
+  for (const [field, values] of Object.entries({
+    platform: ["win32", "darwin", null], cpuRendering: [null, undefined, "", "0", "true"],
+    cpuPaintingThreads: ["", "0", "1", undefined], gpuPaintingThreads: ["", "0", "1", undefined],
+    packageVersion: ["1.56.2"], revision: ["2216"], browserVersion: ["27.0"], librarySha256: [null, "", "0".repeat(64)],
+  })) {
+    for (const value of values) assert.throws(() => assertWebKitRenderingSnapshot({ ...exact, [field]: value }), field);
+  }
+});
 
 function exactSnapshot() {
   const contract = PLAYWRIGHT_CONTAINER_RUNTIME_CONTRACT;

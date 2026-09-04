@@ -9,11 +9,39 @@ import {
   WEBKIT_WAIT_OWNER_SCHEMA,
   classifyWebKitWaitOwnerReadError,
   parseWebKitHostProcStat,
+  parseWebKitCoreDumping,
   parseWebKitWaitOwnerProcIo,
   sanitizeWebKitWaitOwnerStack,
   webKitHostProcessRole,
   webKitHostTelemetryValidity,
 } from "../scripts/webkit-host-resource-telemetry.mjs";
+import { enemyRuntimeFailureRecord } from "../scripts/v0995-qa-evidence-contract.mjs";
+
+test("native core dumping is distinct from wait channel and unknown status", () => {
+  assert.equal(parseWebKitCoreDumping("Name:\tWPEWebProcess\nCoreDumping:\t1\n"), 1);
+  assert.equal(parseWebKitCoreDumping("CoreDumping:\t0\n"), 0);
+  for (const source of [null, "", "CoreDumping: 2", "State: D", "CoreDumping: unknown"]) assert.equal(parseWebKitCoreDumping(source), null);
+});
+
+test("enemy failure retains cached capture/actor/diagnostics and never promotes a missing screenshot", () => {
+  const active = { engine: "webkit", viewport: { width: 844, height: 340 }, kind: "red-panther-smg", phase: "die",
+    prepared: { fighterId: 7 }, samples: [{ audit: { corpse: { id: 7 } } }],
+    capture: { status: "pending", preCapture: { corpseRenderHistory: [{ id: 7 }] } } };
+  const error = new Error("page.screenshot: Timeout 45000ms exceeded");
+  const diagnostics = { pageErrors: ["native page crash"], consoleErrors: [] };
+  const report = enemyRuntimeFailureRecord({ error, active, results: [{ phase: "move" }], diagnostics });
+  assert.equal(report.status, "failed");
+  assert.equal(report.active.capture.status, "pending");
+  assert.deepEqual(report.active, active);
+  assert.deepEqual(report.diagnostics, diagnostics);
+  assert.equal(report.completedResults.length, 1);
+  assert.match(report.error, /Timeout 45000ms/);
+  active.samples.length = 0;
+  diagnostics.pageErrors.length = 0;
+  assert.equal(report.active.samples.length, 1);
+  assert.equal(report.diagnostics.pageErrors.length, 1);
+  assert.equal(enemyRuntimeFailureRecord({ error, results: [] }).active, null);
+});
 
 const enemyHarness = await readFile(new URL("../scripts/v0995-enemy-runtime-browser-smoke.mjs", import.meta.url), "utf8");
 const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-browser-smoke.mjs", import.meta.url), "utf8");
@@ -21,6 +49,55 @@ const finalRemediationHarness = await readFile(new URL("../scripts/v099-final-re
 const boundedDeploymentHarness = await readFile(new URL("../scripts/run-v099-deployment-units-bounded.mjs", import.meta.url), "utf8");
 const hostTelemetrySource = await readFile(new URL("../scripts/webkit-host-resource-telemetry.mjs", import.meta.url), "utf8");
 const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+
+test("actual enemy harness persists screenshot failure before cleanup and preserves its primary error", async () => {
+  const source = enemyHarness.slice(enemyHarness.indexOf("for (const engine of engines) {"), enemyHarness.indexOf("const rawFile ="));
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+  for (const failPersistence of [false, true]) {
+    const events = [];
+    const primary = new Error("page.screenshot: Timeout 45000ms exceeded");
+    let screenshotFailed = false;
+    let persisted = null;
+    const page = {
+      goto: async () => ({ ok: () => true }), waitForFunction: async () => {}, waitForTimeout: async () => {},
+      evaluate: async (fn) => {
+        assert.equal(screenshotFailed, false, "no failure-time browser query");
+        if (String(fn).includes("ensureEnemyFacingProofAsset")) return { kind: "walker", width: 64, height: 64 };
+        if (String(fn).includes("prepareEnemyFacingRuntimeProof")) return { fighterId: 7 };
+        return { fighter: { id: 7, actualXDelta: -1 }, renderHistory: [1, 2, 3] };
+      },
+      screenshot: async () => { events.push("screenshot"); screenshotFailed = true; throw primary; },
+    };
+    const context = { newPage: async () => page, close: async () => { events.push("context-close"); throw new Error("secondary context error"); } };
+    const browser = { newContext: async () => context, close: async () => { events.push("browser-close"); throw new Error("secondary browser error"); } };
+    const bindings = {
+      engines: ["webkit"], playwright: { webkit: { launch: async () => browser } },
+      invariant: (ok, message) => assert.ok(ok, message), viewports: [{ width: 844, height: 340 }], inventory: ["walker"],
+      diagnosticsFor: () => ({ diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] }, calibrate: async () => {}, sealSetup: async () => ({ ready: true }) }),
+      baseUrl: new URL("http://127.0.0.1/"), timeout: 45000, dismissInstallOffer: async () => {}, phases: ["move"],
+      assertRenderSequence: ({ samples }) => assert.equal(samples.length, 2),
+      observeStrictCanvasClip: async () => ({ clip: { x: 0, y: 0, width: 844, height: 340 } }),
+      outputDir: "evidence", path: { join: (...parts) => parts.join("/") }, results: [], representativeShots: [],
+      enemyRuntimeFailureRecord,
+      writeFile: async (name, payload) => {
+        events.push("persist");
+        assert.equal(name, "evidence/enemy-runtime-failure.json");
+        persisted = JSON.parse(payload);
+        if (failPersistence) throw new Error("disk failure");
+      },
+      console: { log: () => {}, error: () => {} },
+    };
+    const execute = new AsyncFunction(...Object.keys(bindings), source);
+    await assert.rejects(() => execute(...Object.values(bindings)), (error) => error === primary);
+    assert.deepEqual(events, ["screenshot", "persist", "context-close", "browser-close"]);
+    assert.equal(persisted.status, "failed");
+    assert.equal(persisted.active.prepared.fighterId, 7);
+    assert.equal(persisted.active.samples.length, 2);
+    assert.equal(persisted.active.capture.preCapture.fighter.id, 7);
+    assert.equal(persisted.active.capture.status, "pending");
+    assert.equal(persisted.completedResults.length, 0);
+  }
+});
 
 test("F3 runtime evidence is finite, uses production draw/runtime, and observes every semantic state", () => {
   const runtimeContract = productionEnemyRuntimeContract();

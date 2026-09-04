@@ -3646,9 +3646,9 @@ The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPO
 
 Canonical Design Lock is `V100-SOL-DL-001 r114` Section 138. There is no active Luna handoff. Historical lease/candidate/successor instructions are superseded.
 
-Current contract: Design138.10 / Issue172#5526379991. Replace the noncanonical universal boss sequence requirement with direct use of the unchanged canonical row validator; retain exact positive frames. No product change.
+Current contract: Design138.11 / [Issue172#5534537514](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5534537514). Explicit exact Linux CPU-rendering preflight, cached enemy failure evidence, nullable CoreDumping, first-red single enemy attempt. Product and completed-impact proof unchanged.
 
-Current Design138.10 candidate passes extra6/all14, Stage24 standalone3/3 and ordered Stage6→24→25 in three processes9/9, each independently validated. Earlier failed-byte greens are controls only. M3 remains unpassed; full local and required remote acceptance remain open under SOL-owned FINAL-ONLY authority.
+CI950 candidate failed required PhaseG/enemy06/deployment667+932. Native diagnostic33768940396 established a Skia GPU invariant crash. One CPU comparison33825748268 passes all three diagnostic lanes but is not acceptance. Old local greens are controls only. M3 remains unpassed; fresh local and required remote acceptance remain open under SOL-owned FINAL-ONLY authority.
 
 - `STATUS`: `DESIGN_LOCKED / R114_MINIMUM_COMPLETED_IMPACT_REPLACEMENT_ACTIVE`
 - `CLASSIFICATION`: `QA_HARNESS_STATE_EXPLOSION / PREATTACK_INSTANCE_OWNERSHIP_AND_RECOVERY_MACHINE_EXCEEDED_THE_RELEASE_CONTRACT / DESIGN_CHANGE_REQUIRED`
@@ -3666,7 +3666,9 @@ Current Design138.10 candidate passes extra6/all14, Stage24 standalone3/3 and or
 
 The current implementation uses one minimum completed-impact observability schema with attack `(battleGeneration, sourceId, attackSequence)` and impact `(attack, targetId, impactOrdinal)`. It has no lease, ownership transfer, successor recovery, candidate reservation, release anchor, global proof bridge, render proof, or audio-only state machine. Product/gameplay/AI/balance/timing/audio behavior remains unchanged.
 
-Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION follows Design138.10 exact material freeze/non-force direct-parent transport/one automatic focused CI. First red returns to SOL_DESIGN; coherent corrections remain autonomous. Final Producer checkpoint and explicit-approval-only release boundary stay fixed.**
+Current execution cursor (supersedes the historical fields above): LAST_AUDITED_HEAD0f6dbad8f8aac90e3b50cdaa2bd233a76d7c173f / TREE7f9c6f97594248ffaef24a1dd3e9af9bffb627b0; FAILED_GATE CI950 PhaseG/enemy06/deployment667+932; LAST_GREEN_GATE current-head PRVerify and CPU diagnostic33825748268 DIAGNOSTIC_ONLY; SAME_GATE_REPEAT_COUNT23; REMEDIATION_CLASS LINUX_WEBKIT_CPU_RENDERING_RUNTIME_AND_FAIL_CLOSED_EVIDENCE; NEXT_OWNER SOL_REMEDIATION; M3NO. The Design test validates counter shape rather than pinning a historical execution count to22; no product acceptance criterion changes.
+
+Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION follows Design138.11 source/static/behavioral checks -> fresh local Stage6/required-extra/Stage24 3/3/ordered9/9/full local -> exact material freeze/non-force direct-parent transport/one automatic focused CI. First red returns to SOL_DESIGN; coherent corrections remain autonomous. Final Producer checkpoint and explicit-approval-only release boundary stay fixed.**
 
 `PHASE_G_REPLACEMENT_ACCEPTED` completes the replacement milestone, not the persistent goal. Continue to the separate Stage3 736x414 lane and all remaining machine/runtime/human-player/save/audio/mobile/PWA gates, exact-HEAD evidence freeze and fixed-HEAD `SOL_FINAL_REVIEW`. The only normal stop is one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; explicit approval there is required for stacked integration, merge, tag, Release and Pages. Execution scope is fixed; exit-zero without required actual boss evidence is not acceptance.
 
