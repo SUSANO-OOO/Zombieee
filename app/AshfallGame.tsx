@@ -388,6 +388,8 @@ import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
+  battlefieldSupplyDefinition,
+  vehicleAbilityDefinition,
   BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS,
   CAMERA_SHAKE_EVENTS,
   CRAWLER_BARRAGE_DEF,
@@ -1110,6 +1112,7 @@ type Corpse = {
 };
 type BattlefieldObjectPhase = "dropping" | "impact" | "active" | "detonating" | "destroying" | "expired";
 type BattlefieldObject = {
+  v100SupportId?: string | null;
   id: number;
   kind: SupplyKind;
   lane: Lane;
@@ -1227,6 +1230,7 @@ type Game = {
   damageTexts: DamageText[];
   corpses: Corpse[];
   selectedSupply: SupplyKind;
+  v100SupportId?: string | null;
   battlefieldObjects: BattlefieldObject[];
   areaEffects: AreaEffect[];
   stationHazards: StationHazard[];
@@ -1292,6 +1296,7 @@ type Game = {
 };
 
 type Hud = {
+  v100SupportId?: string | null;
   missionType: BattleDefinition["missionType"];
   energy: number;
   supportGauge: number;
@@ -1309,6 +1314,7 @@ type Hud = {
   deployQueue: number;
   summonedCount: number;
   airstrikePhase: AirstrikeRuntime["phase"];
+  airstrikeCooldownRemaining?: number;
   crawlerPhase: CrawlerRuntime["phase"];
   crawlerCharge: number;
   combo: number;
@@ -1352,7 +1358,8 @@ export type AshfallExternalSession = {
   displayName?: string;
   formationKinds: readonly UnitKind[];
   enemyKinds: readonly EnemyKind[];
-  selectedSupply: SupplyKind;
+  selectedSupply: SupplyKind | null;
+  equippedSupportId: string | null;
   unitLevels?: Readonly<Record<string, number>>;
   vehicleMaxHp?: number;
   equipmentSnapshot?: {
@@ -8851,12 +8858,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
   useEffect(() => {
     const sfxRequestGate = sfxRequestGateRef.current;
+    const isLocalAudioQa = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    type AudioFailureEvent = { assetId?: string; category?: string; optional?: boolean; phase?: string; reason?: string; error?: string; at: number; monotonicAt: number; contextGeneration: number; contextState: string | null };
+    const audioFailureEvents: AudioFailureEvent[] = [];
+    let audioFailureOverflow = 0;
     const mixer = createAudioMixer({
       manifest: PRODUCTION_AUDIO_MANIFEST,
       maxVoices: 28,
       maxWarningsTotal: 12,
       maxWarningsPerKey: 1,
-      onAssetFailure: (failure: { category?: string; optional?: boolean }) => {
+      onAssetFailure: (failure: { assetId?: string; category?: string; optional?: boolean; phase?: string; reason?: string; error?: string }) => {
+        if (isLocalAudioQa) {
+          if (audioFailureEvents.length < 64) audioFailureEvents.push({ ...failure, at: Date.now(), monotonicAt: performance.now(), contextGeneration: mixer.contextGeneration, contextState: mixer.context?.state ?? null });
+          else audioFailureOverflow += 1;
+        }
         if (failure.optional) {
           audioAssetFailureRef.current.add("optional");
           updateAudioAvailability("optional", "failed");
@@ -8952,6 +8967,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return true;
       },
       getDiagnostics: () => mixer.getDiagnostics(),
+      getAudioStatus: () => ({ ...mixer.getAudioStatus() }),
+      getFailureEvents: () => ({ events: audioFailureEvents.map((event) => ({ ...event })), overflow: audioFailureOverflow }),
       getAvailability: () => ({ ...audioAvailabilityRef.current }),
       getSceneState: () => mixer.getSceneState(),
       unlock: () => mixer.unlock(),
@@ -12619,6 +12636,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           scrap: g.scrap,
           supportGauge: g.supportGauge,
           supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
           stageMission: {
             ...g.stageMission,
             transitions: [...g.stageMission.transitions].slice(-32),
@@ -12642,6 +12660,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           damageTexts: g.damageTexts.map((entry) => ({ ...entry })),
           battlefieldObjects: g.battlefieldObjects.map((object) => ({
             id: object.id,
+            v100SupportId: object.v100SupportId,
             kind: object.kind,
             lane: object.lane,
             x: object.x,
@@ -12883,6 +12902,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           scrap: g.scrap,
           supportGauge: g.supportGauge,
           supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
           storyBattleReadEventIds: [...g.storyBattleReadEventIds],
           storyBattleReceiptEventIds: [...g.storyBattleReceiptEventIds],
           storyBattleEvaluatedCueKeys: [...g.storyBattleBarkState.evaluatedCueKeys],
@@ -12925,11 +12945,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           },
           battlefieldObjects: g.battlefieldObjects.map((object) => ({
             id: object.id,
+            v100SupportId: object.v100SupportId,
             kind: object.kind,
             lane: object.lane,
             x: object.x,
             y: object.y,
             phase: object.phase,
+            detonationTriggered: object.detonationTriggered,
           })),
           deployQueue: g.deployQueue.map((entry) => entry),
           airstrike: { ...g.airstrike },
@@ -14251,6 +14273,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (selectedActionRef.current === action) return;
     if (action?.startsWith("supply:")) {
       const kind = action.slice("supply:".length) as SupplyKind;
+      const supply = battlefieldSupplyDefinition(kind, g.v100SupportId);
+      if (!supply) { playUiOperationCue("reject", "support:unequipped"); return; }
       const cooldown = g.supportItemCooldowns[kind] ?? 0;
       if (cooldown > 0) {
         g.banner = `戦場物資 // 再準備 ${Math.ceil(cooldown)}秒`;
@@ -14258,14 +14282,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         playUiOperationCue("reject", `support:${kind}:cooldown`);
         return;
       }
-      if (g.scrap < supplyDefs[kind].cost) {
+      if (g.scrap < supply.cost) {
         g.banner = `戦場物資 // スクラップ不足`;
         g.bannerTime = .8;
         playUiOperationCue("reject", `support:${kind}:insufficient-scrap`);
         return;
       }
     }
-    if (action === "airstrike" && (g.supportGauge < AIRSTRIKE_DEF.gaugeCost || g.airstrike.phase !== "idle")) {
+    if (action === "airstrike" && (g.supportGauge < vehicleAbilityDefinition("vehicle-airstrike", g.airstrike.v100).battleCost || g.airstrike.phase !== "idle" || (g.airstrike.cooldownRemaining ?? 0) > 0)) {
       playUiOperationCue("reject", `support:airstrike:unavailable`);
       return;
     }
@@ -14669,7 +14693,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return false;
     }
     const result = resolveBattlefieldSupplyPlacement({
-      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x: target.x, y: target.y,
+      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, v100SupportId: g.v100SupportId, lane, x: target.x, y: target.y,
       cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
       supplies: g.battlefieldObjects, objects: [], supports: [], areaEffects: g.areaEffects,
       nextId: g.nextId, nextAreaEffectId: g.nextAreaEffectId,
@@ -14694,11 +14718,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       g.supportItemCooldowns = beginBattlefieldSupplyCooldown(
         g.supportItemCooldowns,
         kind,
+        g.v100SupportId,
       ) as Record<SupplyKind, number>;
     }
     g.banner = placement.adjusted
-      ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
-      : `${supplyDefs[kind].name} // 戦場配置`;
+      ? `${battlefieldSupplyDefinition(kind, g.v100SupportId).name} // 最寄りの配置可能地点へ補正`
+      : `${battlefieldSupplyDefinition(kind, g.v100SupportId).name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
     if (kind === "pod") {
       const placedPod = (result.supplies as BattlefieldObject[]).find((supply) => supply.id === result.nextId - 1);
@@ -14758,8 +14783,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return false;
     }
     if (rejectBattleSaveBoundary("crawler-barrage:save-pending")) return false;
-    const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility });
+    const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility, supportGauge: g.supportGauge });
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
+    g.supportGauge = result.supportGauge;
     g.crawlerAbility = result.runtime as CrawlerRuntime;
     g.banner = "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
@@ -14786,7 +14812,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return false;
     }
     Object.assign(drum, result.supply);
-    g.banner = "爆薬ドラム起爆 // 指定地点"; g.bannerTime = .85; playCue("drum-request");
+    g.banner = `${battlefieldSupplyDefinition(drum.kind, drum.v100SupportId).name}起爆 // 指定地点`; g.bannerTime = .85; playCue("drum-request");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
@@ -14880,7 +14906,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         ? battlefieldSupplyPlacementCheck({
           running: g.running, paused: g.paused, over: g.over, scrap: g.scrap,
           cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
-          supplyKind: kind, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
+          supplyKind: kind, v100SupportId: g.v100SupportId, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
           laneCenters: activeLaneCenters,
           forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZonesForGame(g)),
         })
@@ -15381,6 +15407,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const fallbackFormation = getSelectedFormationCombatKinds(campaignSave)
       .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
       .slice(0, 7) as UnitKind[];
+    // An unequipped V1 slot may retain an internal enum placeholder; its explicit
+    // null canonical ID rejects all support input and displays an unavailable HUD.
     const battleSupply = external?.selectedSupply ?? sessionOverride?.selectedSupply ?? selectedSupply;
     // V1 owns the equipped support choice, while this component owns the
     // player-facing support button and targeting action. Keep the HUD choice
@@ -15409,7 +15437,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       fresh.scrap = Math.max(fresh.scrap, 120);
       fresh.supportGauge = SUPPORT_GAUGE_MAX;
       fresh.supportItemCooldowns = createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>;
-      fresh.crawlerAbility = createCrawlerAbilityRuntime(1) as CrawlerRuntime;
+      fresh.v100SupportId = external.equippedSupportId;
+      fresh.airstrike = createEmergencySupportRuntime(true) as AirstrikeRuntime;
+      fresh.crawlerAbility = createCrawlerAbilityRuntime(1, true) as CrawlerRuntime;
     }
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -15443,7 +15473,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
-      deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase,
+      deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase, airstrikeCooldownRemaining: fresh.airstrike.cooldownRemaining ?? 0,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
@@ -17339,8 +17369,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       const normalizedKey = event.key.toLowerCase();
       const card = cards.find((item) => item.key === event.key);
       if (card) { deployHuman(card.kind); return; }
-      const supply = supplyDefs[selectedSupply];
-      if (normalizedKey === supply.key.toLowerCase()) {
+      const supply = battlefieldSupplyDefinition(selectedSupply, g.v100SupportId);
+      if (supply && normalizedKey === supply.key.toLowerCase()) {
         const action = `supply:${selectedSupply}` as SelectedAction;
         chooseActionWithCue(selectedActionRef.current === action ? null : action);
         return;
@@ -18140,7 +18170,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             } else if (result.supply.phase === "destroying") {
               const source = g.fighters.find((fighter) => fighter.id === hit.sourceId);
               if (source) source.targetObjectId = null;
-              g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`;
+              g.banner = objectTarget.v100SupportId === undefined
+                ? `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`
+                : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`;
               g.bannerTime = 1.25;
               addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
               playBattleSemanticCue("support-explosion", objectTarget.x, {
@@ -20720,7 +20752,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     g.banner = "爆薬ドラム損壊・起爆 // 戦場"; g.bannerTime = 1.05;
                   } else if (result.supply.phase === "destroying") {
                     f.targetObjectId = null;
-                    g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`; g.bannerTime = 1.25;
+                    g.banner = objectTarget.v100SupportId === undefined
+                      ? `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`
+                      : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`; g.bannerTime = 1.25;
                     addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
                     playBattleSemanticCue("support-explosion", objectTarget.x, {
                       semantic: "object-destroy",
@@ -22567,11 +22601,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           supportItemCooldowns: { ...g.supportItemCooldowns },
+          v100SupportId: g.v100SupportId,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
           deployQueue: g.deployQueue.length,
           summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
-          airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
+          airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
@@ -22670,34 +22705,42 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         : battleSaveBoundaryRef.current
           ? "保存中"
           : null;
-  const selectedSupplyBlockReason = commonBattleActionBlockReason
+  const selectedSupplyDefinition = battlefieldSupplyDefinition(selectedSupply, externalSession ? externalSession.equippedSupportId : undefined);
+  const selectedSupplyCost = externalSessionActive ? selectedSupplyDefinition?.cost ?? 0 : supplyDefs[selectedSupply].cost;
+  const selectedSupplyName = selectedSupplyDefinition ? (externalSessionActive ? selectedSupplyDefinition.name : SUPPORT_DISPLAY_NAMES[selectedSupply]) : "支援未装備";
+  const airstrikeCost = vehicleAbilityDefinition("vehicle-airstrike", externalSessionActive).battleCost;
+  const barrageCost = vehicleAbilityDefinition("vehicle-barrage", externalSessionActive).battleCost;
+  const airstrikeCooldown = hud.airstrikeCooldownRemaining ?? 0;
+  const selectedSupplyBlockReason = (!selectedSupplyDefinition ? "支援未装備" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-      : hud.scrap < supplyDefs[selectedSupply].cost
-        ? `スクラップ不足 ${hud.scrap}/${supplyDefs[selectedSupply].cost}`
+      : hud.scrap < selectedSupplyCost
+        ? `スクラップ不足 ${hud.scrap}/${selectedSupplyCost}`
         : null);
   const airstrikeBlockReason = commonBattleActionBlockReason
+    ?? (airstrikeCooldown > 0 ? `再準備 ${Math.ceil(airstrikeCooldown)}秒` : null)
     ?? (hud.airstrikePhase !== "idle"
       ? "航空支援実行中"
-      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
-        ? `支援不足 ${hud.supportGauge}/${AIRSTRIKE_DEF.gaugeCost}`
+      : hud.supportGauge < airstrikeCost
+        ? `支援不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
   const crawlerBlockReason = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : null);
-  const selectedSupplyCompactDetail = commonBattleActionBlockReason
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援不足 ${hud.supportGauge}/${barrageCost}` : null);
+  const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-      : hud.scrap < supplyDefs[selectedSupply].cost
-        ? `必要 ${supplyDefs[selectedSupply].cost}`
-        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ${supplyDefs[selectedSupply].cost}`);
+      : hud.scrap < selectedSupplyCost
+        ? `必要 ${selectedSupplyCost}`
+        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ${selectedSupplyCost}`);
   const airstrikeCompactDetail = commonBattleActionBlockReason
+    ?? (airstrikeCooldown > 0 ? `再準備 ${Math.ceil(airstrikeCooldown)}秒` : null)
     ?? (hud.airstrikePhase !== "idle"
       ? "支援実行中"
-      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
-        ? `必要 ${AIRSTRIKE_DEF.gaugeCost}`
-        : `照準・着弾 ${AIRSTRIKE_DEF.gaugeCost}`);
+      : hud.supportGauge < airstrikeCost
+        ? `必要 ${airstrikeCost}`
+        : `照準・着弾 ${airstrikeCost}`);
   const crawlerCompactDetail = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? "再装填中" : "全域射撃");
+    ?? (hud.crawlerPhase !== "ready" ? "再装填中" : barrageCost > 0 ? `必要 ${barrageCost}支援` : "全域射撃");
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
   const audioCategorySummary = ([
@@ -22903,24 +22946,26 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                <button
                  className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
                  data-category="support"
+                 data-support-id={externalSession?.equippedSupportId ?? (externalSessionActive ? "none" : selectedSupply)}
+                 disabled={!selectedSupplyDefinition}
                  data-state={hud.supportItemCooldowns[selectedSupply] > 0 ? "cooldown" : selectedSupplyBlockReason ? "insufficient" : selectedAction === `supply:${selectedSupply}` ? "selected" : "ready"}
                  data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
-                aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked || battleSaveBoundaryRef.current}
+                aria-disabled={Boolean(selectedSupplyBlockReason)}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={hud.supportItemCooldowns[selectedSupply] > 0
-                  ? `${supplyDefs[selectedSupply].name} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
-                  : `${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
+                  ? `${selectedSupplyName} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+                  : selectedSupplyDefinition ? `${selectedSupplyName} ${selectedSupplyCost}スクラップ` : selectedSupplyName}
               >
-                <span className="support-key">{supplyDefs[selectedSupply].key}</span>
-                <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
+                <span className="support-key">{(selectedSupplyDefinition?.key ?? "—")}</span>
+                <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : selectedSupplyName}</b>
                 <small><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></small>
-                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${supplyDefs[selectedSupply].cost}`}</em>
+                 <em>{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${selectedSupplyCost}`}</em>
                </button>
-               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-state={hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>必要 {AIRSTRIKE_DEF.gaugeCost}</em>
+               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-cooldown={Math.ceil(airstrikeCooldown)} data-state={airstrikeCooldown > 0 ? "cooldown" : hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={Boolean(airstrikeBlockReason)} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${airstrikeCost}支援ゲージ`}>
+                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>必要 {airstrikeCost}</em>
                </button>
-              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>車両</em>
+              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : "車両"}</em>
                </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>

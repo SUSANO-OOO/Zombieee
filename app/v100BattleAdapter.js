@@ -195,7 +195,7 @@ export function v100FormationCombatKinds(unitIds, { maxSlots = 7 } = {}) {
 
 export function v100SupportSupplyFor(supportId) {
   const support = v100SupportFor(supportId);
-  if (!support) return "pod";
+  if (!support) return null;
   if (support.id === "support-healing") return "medical";
   return "drum";
 }
@@ -205,6 +205,8 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
   const formationKinds = v100FormationCombatKinds(formationUnitIds);
   const definition = v100BattleDefinitionFor(stageId);
   const enemyKinds = [...new Set(definition?.timeline?.flatMap((event) => event.units) ?? [])];
+  const equippedSupportId = v100SupportFor(save?.equippedSupportId)
+    && save?.ownedSupportIds?.includes(save.equippedSupportId) ? save.equippedSupportId : null;
   return freeze({
     stageId,
     resultId: resultId ?? `v100:${stageId}:${Date.now()}`,
@@ -212,7 +214,8 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     formationUnitIds: freeze([...formationUnitIds]),
     formationKinds: freeze([...formationKinds]),
     enemyKinds: freeze([...enemyKinds]),
-    selectedSupply: v100SupportSupplyFor(save?.equippedSupportId),
+    selectedSupply: v100SupportSupplyFor(equippedSupportId),
+    equippedSupportId,
     unitLevels: { ...(save?.unitLevels ?? {}) },
     settings: freeze({ ...(save?.settings ?? {}) }),
     // Equipment from the old campaign is never a V1 fallback.
