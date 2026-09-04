@@ -130,6 +130,7 @@ jobs:
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           PWA_PARTIAL_UPDATE_BROWSER: chromium
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
         run: npm run qa:pwa-partial-update

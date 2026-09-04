@@ -18,6 +18,9 @@ import path from "node:path";
 import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
 import { diffAssetManifests, validateAssetManifest } from "../app/pwaAssetManifest.js";
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
+import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
+import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { chromium, webkit } from "playwright";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
@@ -26,6 +29,7 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_PARTIAL_UPDATE_BROWSER ?? "chromium";
 const oldVersionOverride = process.env.PWA_PARTIAL_UPDATE_OLD_VERSION?.trim() || null;
+const expectedCandidateReleaseSha = process.env.PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
 const stallDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_STALL_MS ?? 31_500);
 const slowDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_SLOW_MS ?? 31_500);
 const evidenceDir = path.resolve(
@@ -37,12 +41,16 @@ const basePath = "/Zombieee";
 const scopePath = `${basePath}/`;
 const bundlePathname = `${basePath}/pwa-bundles/audio-v1.bin`;
 const saveKey = "nishijin-campaign-v1";
+const v100SaveKey = V100_PRIMARY_STORAGE_KEY;
 const commitLogKey = "__qa_pwa_commit_messages__";
 
 if (!oldRootInput || !candidateRootInput) {
   throw new Error("PWA_PARTIAL_UPDATE_OLD_ROOT and PWA_PARTIAL_UPDATE_CANDIDATE_ROOT are required");
 }
 if (!browserType) throw new Error(`Unknown browser: ${browserName}`);
+if (!/^[0-9a-f]{40}$/u.test(expectedCandidateReleaseSha ?? "")) {
+  throw new Error("PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA must be the exact 40-character candidate HEAD");
+}
 if (!(stallDurationMs > 30_000) || !(slowDurationMs > 30_000)) {
   throw new Error("stall and slow durations must both exceed the production 30 second boundary");
 }
@@ -63,9 +71,17 @@ const CONTENT_TYPES = {
 
 const results = [];
 const failures = [];
-const diagnostics = { consoleErrors: [], pageErrors: [], httpErrors: [], requestFailures: [] };
+const diagnostics = {
+  consoleErrors: [],
+  pageErrors: [],
+  httpErrors: [],
+  requestFailures: [],
+  teardown: [],
+};
 const audioRequests = [];
 const candidateTransportRequests = [];
+let diagnosticPhase = "setup";
+let teardown = false;
 
 function record(name, passed, detail = {}) {
   results.push({ name, passed, ...detail });
@@ -306,6 +322,7 @@ record("the exact base and candidate manifests are valid and compared by path pl
   && candidateValidation.valid
   && oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
+  && candidateManifest.releaseSha === expectedCandidateReleaseSha
   && manifestDelta.unchanged.every((asset) => manifestDelta.baseByPath.get(asset.path)?.hash === asset.hash)
   && manifestDelta.changed.every((asset) => manifestDelta.baseByPath.get(asset.path)?.hash !== asset.hash)
   && manifestDelta.missingNew.every((asset) => !manifestDelta.baseByPath.has(asset.path))
@@ -313,6 +330,7 @@ record("the exact base and candidate manifests are valid and compared by path pl
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
+  candidateReleaseSha: candidateManifest.releaseSha,
   oldAssets: oldManifest.assets.length,
   candidateAssets: candidateManifest.assets.length,
   baseValidationErrors: oldValidation.errors,
@@ -389,6 +407,7 @@ record("the candidate update plan derives changed, missing/new, removed, and ret
 });
 
 const save = createDefaultCampaignSave();
+save.campaignStarted = true;
 save.caps = 777;
 save.supplies = 654;
 save.completedStageIds = CAMPAIGN_STAGES.slice(0, 2).map((stage) => stage.id);
@@ -400,7 +419,14 @@ save.unlockedStageIds = CAMPAIGN_STAGES.slice(0, 3).map((stage) => stage.id);
 save.formationPresets = save.formationPresets.map((preset, index) => (
   index === 0 ? { ...preset, unitIds: ["unit-paisen", "unit-hachi", "unit-nao"] } : preset
 ));
-save.settings = { ...save.settings, bgmVolume: 0.42, sfxVolume: 0.37, graphicsQuality: "power-save" };
+save.settings = {
+  ...save.settings,
+  bgmEnabled: false,
+  sfxEnabled: false,
+  bgmVolume: 0.42,
+  sfxVolume: 0.37,
+  graphicsQuality: "power-save",
+};
 save.readStoryEventIds = ["story-prologue-v070", "story-stage1-intro-v070"];
 save.updatedAt = "2026-08-10T00:00:00.000Z";
 const saveFixture = serializeCampaignSave(save);
@@ -412,16 +438,28 @@ const baseUrl = `http://127.0.0.1:${address.port}${scopePath}`;
 
 function attachDiagnostics(page) {
   page.on("console", (message) => {
-    if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
+    if (message.type() === "error") {
+      const entry = { phase: diagnosticPhase, message: message.text() };
+      (teardown ? diagnostics.teardown : diagnostics.consoleErrors).push(entry);
+    }
   });
-  page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
+  page.on("pageerror", (error) => {
+    const entry = { phase: diagnosticPhase, error: String(error) };
+    (teardown ? diagnostics.teardown : diagnostics.pageErrors).push(entry);
+  });
   page.on("response", (response) => {
     if (response.status() >= 400 && response.status() !== 503) {
-      diagnostics.httpErrors.push(`${response.url()} :: HTTP ${response.status()}`);
+      const entry = { phase: diagnosticPhase, url: response.url(), status: response.status() };
+      (teardown ? diagnostics.teardown : diagnostics.httpErrors).push(entry);
     }
   });
   page.on("requestfailed", (request) => {
-    diagnostics.requestFailures.push(`${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`);
+    const entry = {
+      phase: diagnosticPhase,
+      url: request.url(),
+      error: request.failure()?.errorText ?? "unknown",
+    };
+    (teardown ? diagnostics.teardown : diagnostics.requestFailures).push(entry);
   });
 }
 
@@ -432,9 +470,28 @@ async function openPersistent(userDataDir) {
     deviceScaleFactor: 3,
     hasTouch: true,
   });
-  await context.addInitScript(({ key, raw, commitKey }) => {
+  await context.addInitScript(({ key, raw, commitKey, legacyKeys }) => {
     Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
     if (!window.localStorage.getItem(key)) window.localStorage.setItem(key, raw);
+    window.__PWA_PARTIAL_LEGACY_WRITES__ = [];
+    for (const method of ["setItem", "removeItem", "clear"]) {
+      const native = Storage.prototype[method];
+      Storage.prototype[method] = function (...args) {
+        if (this === localStorage && (method === "clear" || legacyKeys.includes(String(args[0])))) {
+          window.__PWA_PARTIAL_LEGACY_WRITES__.push({ store: "local", method, key: args[0] ?? null });
+        }
+        return native.apply(this, args);
+      };
+    }
+    for (const method of ["put", "add", "delete", "clear"]) {
+      const native = IDBObjectStore.prototype[method];
+      IDBObjectStore.prototype[method] = function (...args) {
+        if (this.transaction.db.name === "nishijin-campaign-backup") {
+          window.__PWA_PARTIAL_LEGACY_WRITES__.push({ store: "indexed", method });
+        }
+        return native.apply(this, args);
+      };
+    }
     try {
       const prototype = window.ServiceWorker?.prototype;
       const original = prototype?.postMessage;
@@ -459,7 +516,12 @@ async function openPersistent(userDataDir) {
       // Some engines expose a non-configurable worker prototype. The product
       // flow remains authoritative; this only adds commit-count evidence.
     }
-  }, { key: saveKey, raw: saveFixture, commitKey: commitLogKey });
+  }, {
+    key: saveKey,
+    raw: saveFixture,
+    commitKey: commitLogKey,
+    legacyKeys: [saveKey, `${saveKey}::last-known-good`, `${saveKey}::pre-migration`],
+  });
   const page = await context.newPage();
   attachDiagnostics(page);
   return { context, page };
@@ -522,6 +584,52 @@ async function currentSave(page) {
   return page.evaluate((key) => localStorage.getItem(key), saveKey);
 }
 
+async function v100State(page) {
+  return page.evaluate(async ({ key, oldKey }) => {
+    const raw = localStorage.getItem(key);
+    const mirror = raw ? JSON.parse(raw) : null;
+    const native = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(key);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("saves", "readonly");
+        const get = transaction.objectStore("saves").get("current");
+        let record = null;
+        get.onsuccess = () => { record = get.result ?? null; };
+        transaction.oncomplete = () => {
+          db.close();
+          resolve({ database: db.name, record });
+        };
+        transaction.onabort = () => reject(transaction.error);
+      };
+    });
+    return {
+      raw,
+      mirror,
+      native,
+      oldRaw: localStorage.getItem(oldKey),
+      legacyWrites: [...(window.__PWA_PARTIAL_LEGACY_WRITES__ ?? [])],
+    };
+  }, { key: v100SaveKey, oldKey: saveKey });
+}
+
+async function waitForV100Ready(page) {
+  await page.waitForFunction(() => (
+    document.querySelector(".v100-shell")
+    && document.documentElement.dataset.pwaSaveMutationPending === "false"
+  ), null, { timeout: 60_000 });
+}
+
+async function closeContext(label) {
+  if (!context) return;
+  diagnosticPhase = label;
+  teardown = true;
+  await context.close();
+  context = null;
+  teardown = false;
+}
+
 async function commitMessages(page) {
   return page.evaluate((key) => {
     try {
@@ -556,6 +664,7 @@ const userDataDir = await mkdtemp(path.join(os.tmpdir(), "zombieee-pwa-partial-u
 
 try {
   ({ context, page } = await openPersistent(userDataDir));
+  diagnosticPhase = "old-install-entry";
   await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ダウンロードを開始" }).click();
   await page.getByRole("button", { name: "ゲームを始める" }).waitFor({ state: "visible", timeout: 300_000 });
@@ -596,13 +705,13 @@ try {
     saveHash: sha256(oldSaveRaw ?? ""),
   });
 
-  await context.close();
-  context = null;
+  await closeContext("close-old-partial-fixture");
   currentLabel = "candidate";
   setAudioMode("incident");
 
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
+  diagnosticPhase = "candidate-unqualified-incident-entry";
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   const candidateManifestFromPage = await page.evaluate(async () => (
     await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json()
   ));
@@ -632,6 +741,73 @@ try {
     && (await currentSave(page)) === oldSaveRaw
   ), { candidateVersion: candidateManifestFromPage.version, userDataDir, cache: candidateCacheBefore });
 
+  await waitForV100Ready(page);
+  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+  await gift.waitFor({ state: "visible", timeout: 60_000 });
+  const updateNotice = page.getByRole("button", { name: /^(?:更新をダウンロード|不足分だけ再取得)$/u });
+  const updateControlsDuringGift = await updateNotice.evaluateAll((controls) => controls.map((control) => {
+    const rect = control.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(centerX, centerY);
+    const style = getComputedStyle(control);
+    return {
+      text: control.textContent?.trim() ?? "",
+      disabled: control instanceof HTMLButtonElement ? control.disabled : null,
+      visible: rect.width > 0
+        && rect.height > 0
+        && rect.bottom > 0
+        && rect.right > 0
+        && rect.top < innerHeight
+        && rect.left < innerWidth
+        && style.visibility !== "hidden"
+        && style.display !== "none",
+      hitTest: hit === control || control.contains(hit),
+    };
+  }));
+  const updateDeferredDuringGift = updateControlsDuringGift.every((control) => (
+    !control.visible || control.disabled || !control.hitTest
+  ));
+  const giftConfirmation = gift.getByRole("button", { name: "確認する", exact: true });
+  await page.waitForFunction(() => {
+    const button = [...document.querySelectorAll("button")].find((entry) => entry.textContent?.trim() === "確認する");
+    return button instanceof HTMLButtonElement && !button.disabled;
+  }, null, { timeout: 60_000 });
+  const beforeUpdateV100 = await v100State(page);
+  const nativeBeforeUpdate = beforeUpdateV100.native?.record?.serialized
+    ? JSON.parse(beforeUpdateV100.native.record.serialized)
+    : null;
+  const expectedInitialUnits = [...V100_INITIAL_UNIT_IDS].sort();
+  record("the unqualified V1 incident entry claims one visible legacy gift without importing or writing legacy progression", (
+    updateDeferredDuringGift
+    && beforeUpdateV100.oldRaw === oldSaveRaw
+    && beforeUpdateV100.mirror?.caps === V100_LEGACY_GIFT.amountCaps
+    && beforeUpdateV100.mirror?.campaignStarted === false
+    && beforeUpdateV100.mirror?.completedStageIds?.length === 0
+    && beforeUpdateV100.mirror?.ownedUnitIds?.slice().sort().join("|") === expectedInitialUnits.join("|")
+    && beforeUpdateV100.mirror?.settings?.bgmEnabled === false
+    && beforeUpdateV100.mirror?.settings?.sfxEnabled === false
+    && beforeUpdateV100.mirror?.settings?.bgmVolume === 0.42
+    && beforeUpdateV100.mirror?.settings?.sfxVolume === 0.37
+    && beforeUpdateV100.mirror?.settings?.graphicsQuality === "power-save"
+    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.entitlementReceipt).length === 1
+    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.popupReceipt).length === 1
+    && beforeUpdateV100.mirror?.legacy?.popupAcknowledged === true
+    && beforeUpdateV100.native?.database === v100SaveKey
+    && JSON.stringify(nativeBeforeUpdate) === JSON.stringify(beforeUpdateV100.mirror)
+    && beforeUpdateV100.legacyWrites.length === 0
+  ), {
+    updateDeferredDuringGift,
+    updateControlsDuringGift,
+    oldSavePreserved: beforeUpdateV100.oldRaw === oldSaveRaw,
+    mirror: beforeUpdateV100.mirror,
+    nativeDatabase: beforeUpdateV100.native?.database ?? null,
+    legacyWrites: beforeUpdateV100.legacyWrites,
+  });
+  await giftConfirmation.click();
+  await gift.waitFor({ state: "detached", timeout: 30_000 });
+  await waitForV100Ready(page);
+
   const waiting = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
     try { await registration.update(); } catch { /* state is evidence */ }
@@ -643,6 +819,11 @@ try {
 
   const repairButton = page.getByRole("button", { name: "不足分だけ再取得" });
   await repairButton.waitFor({ state: "visible", timeout: 60_000 });
+  record("the partial repair control is exposed only after the one-time gift is acknowledged", (
+    await repairButton.isEnabled()
+    && await gift.count() === 0
+    && (await v100State(page)).raw === beforeUpdateV100.raw
+  ));
   const incidentTransportStart = candidateTransportRequests.length;
   await repairButton.click();
   // The held fourth request becomes terminal at the production 30 second
@@ -733,29 +914,45 @@ try {
     unchangedStoredAssets.filter((asset) => !asset.bundlePath).map(transportPathFor),
   );
   const cancelledWorker = await workerState(page);
+  const cancelledV100 = await v100State(page);
   record("cancel preserves the old assets plus newly successful assets, old manifest, and save", (
     cancelledCache.logicalSatisfied >= retainedCandidateLogicalCount
     && activeMatchesManifest(cancelledWorker.state?.active, oldManifest, oldVersion)
     && (await currentSave(page)) === oldSaveRaw
+    && cancelledV100.raw === beforeUpdateV100.raw
+    && cancelledV100.oldRaw === oldSaveRaw
+    && cancelledV100.legacyWrites.length === 0
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
     retainedSharedHashes: retainedHashes.size,
     retainedCandidateLogicalCount,
     cancelledCache,
     activeVersion: cancelledWorker.state?.active?.version,
+    v100SavePreserved: cancelledV100.raw === beforeUpdateV100.raw,
+    legacyWrites: cancelledV100.legacyWrites,
   });
 
-  await context.close();
-  context = null;
+  await closeContext("close-cancelled-incident");
   setAudioMode("recovery");
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
+  diagnosticPhase = "candidate-unqualified-recovery-entry";
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await waitForV100Ready(page);
   const relaunchedBefore = await workerState(page);
+  const relaunchedBeforeV100 = await v100State(page);
   record("close/relaunch retains the partial cache, old active manifest, and exact raw save", (
     activeMatchesManifest(relaunchedBefore.state?.active, oldManifest, oldVersion)
     && (await cacheState(page)).logicalSatisfied === cancelledCache.logicalSatisfied
     && (await currentSave(page)) === oldSaveRaw
-  ), { activeVersion: relaunchedBefore.state?.active?.version, cache: await cacheState(page) });
+    && relaunchedBeforeV100.raw === beforeUpdateV100.raw
+    && relaunchedBeforeV100.legacyWrites.length === 0
+    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+  ), {
+    activeVersion: relaunchedBefore.state?.active?.version,
+    cache: await cacheState(page),
+    v100SavePreserved: relaunchedBeforeV100.raw === beforeUpdateV100.raw,
+    legacyWrites: relaunchedBeforeV100.legacyWrites,
+  });
 
   const recoveryTransportStart = candidateTransportRequests.length;
   await page.getByRole("button", { name: "不足分だけ再取得" }).click();
@@ -779,8 +976,13 @@ try {
   ), { requestCountWhilePaused });
 
   const updatedWorker = await waitForActiveGeneration(page, candidateManifest, { timeoutMs: 180_000 });
+  const startUpdatedGame = page.getByRole("button", { name: "ゲームを始める", exact: true });
+  await startUpdatedGame.waitFor({ state: "visible", timeout: 120_000 });
+  await startUpdatedGame.click();
+  await waitForV100Ready(page);
   const finalCache = await cacheState(page);
   const finalSaveRaw = await currentSave(page);
+  const finalV100 = await v100State(page);
   const completedRecoveryRequests = audioRequests.filter((request) => request.mode === "recovery");
   const slow = completedRecoveryRequests[1];
   record("the actual audio-v1.bin retry progresses for over 30 seconds and completes as one shared request", (
@@ -796,11 +998,16 @@ try {
     && activeMatchesManifest(updatedWorker?.state?.active, candidateManifest)
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw
+    && finalV100.raw === beforeUpdateV100.raw
+    && finalV100.oldRaw === oldSaveRaw
+    && finalV100.legacyWrites.length === 0
     && (await commitCountFor(page, candidateManifest)) === 1
   ), {
     finalCache,
     activeVersion: updatedWorker?.state?.active?.version,
     savePreserved: finalSaveRaw === oldSaveRaw,
+    v100SavePreserved: finalV100.raw === beforeUpdateV100.raw,
+    legacyWrites: finalV100.legacyWrites,
     candidateCommitCount: await commitCountFor(page, candidateManifest),
   });
 
@@ -827,25 +1034,44 @@ try {
     unchangedHashRefetches,
   });
 
-  await context.close();
-  context = null;
+  await closeContext("close-candidate-committed");
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
-  await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
+  diagnosticPhase = "candidate-unqualified-committed-relaunch";
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await waitForV100Ready(page);
+  await page.locator(".v100-shell").waitFor({ state: "visible", timeout: 60_000 });
   const committedRelaunch = await workerState(page);
+  const committedRelaunchV100 = await v100State(page);
   record(`relaunch keeps the committed ${RELEASE_VERSION} generation and save`, (
     activeMatchesManifest(committedRelaunch.state?.active, candidateManifest)
     && (await currentSave(page)) === oldSaveRaw
-  ), { activeVersion: committedRelaunch.state?.active?.version });
+    && committedRelaunchV100.raw === beforeUpdateV100.raw
+    && committedRelaunchV100.oldRaw === oldSaveRaw
+    && committedRelaunchV100.legacyWrites.length === 0
+    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+  ), {
+    activeVersion: committedRelaunch.state?.active?.version,
+    v100SavePreserved: committedRelaunchV100.raw === beforeUpdateV100.raw,
+    legacyWrites: committedRelaunchV100.legacyWrites,
+  });
 
   if (browserName === "chromium") {
+    diagnosticPhase = "candidate-offline-relaunch";
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
-    await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
+    await waitForV100Ready(page);
+    await page.locator(".v100-shell").waitFor({ state: "visible", timeout: 60_000 });
+    const offlineV100 = await v100State(page);
     record("offline relaunch uses the committed generation without changing the save", (
       activeMatchesManifest((await workerState(page)).state?.active, candidateManifest)
       && (await currentSave(page)) === oldSaveRaw
-    ));
+      && offlineV100.raw === beforeUpdateV100.raw
+      && offlineV100.oldRaw === oldSaveRaw
+      && offlineV100.legacyWrites.length === 0
+    ), {
+      v100SavePreserved: offlineV100.raw === beforeUpdateV100.raw,
+      legacyWrites: offlineV100.legacyWrites,
+    });
     await context.setOffline(false);
   }
 
@@ -858,31 +1084,42 @@ try {
       registration.active?.postMessage({ type: "pwa:rollback" }, [channel.port2]);
     });
   });
+  diagnosticPhase = "manifest-rollback-reload";
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1_000);
+  const rollbackV100 = await v100State(page);
+  const commitOnlyButton = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
+  await commitOnlyButton.waitFor({ state: "visible", timeout: 60_000 });
   record("rollback restores the old generation without changing the save", (
     rollback?.type === "pwa:rolled-back"
     && activeMatchesManifest((await workerState(page)).state?.active, oldManifest, oldVersion)
     && (await currentSave(page)) === oldSaveRaw
-  ), { rollback });
+    && rollbackV100.raw === beforeUpdateV100.raw
+    && rollbackV100.oldRaw === oldSaveRaw
+    && rollbackV100.legacyWrites.length === 0
+  ), {
+    rollback,
+    v100SavePreserved: rollbackV100.raw === beforeUpdateV100.raw,
+    legacyWrites: rollbackV100.legacyWrites,
+  });
 } catch (error) {
   record("partial-failed update flow completes without an unhandled harness error", false, {
     error: String(error?.stack ?? error),
   });
 } finally {
-  if (context) await context.close().catch(() => {});
+  if (context) await closeContext("final-context-close").catch(() => {});
   await new Promise((resolve) => server.close(resolve));
   const unexpectedRequestFailures = diagnostics.requestFailures.filter((failure) => (
-    !failure.includes("ERR_ABORTED")
-    && !failure.includes("NS_BINDING_ABORTED")
-    && !failure.includes("Load request cancelled")
-    && !failure.includes("ERR_INTERNET_DISCONNECTED")
+    !failure.error.includes("ERR_ABORTED")
+    && !failure.error.includes("NS_BINDING_ABORTED")
+    && !failure.error.includes("Load request cancelled")
+    && !failure.error.includes("ERR_INTERNET_DISCONNECTED")
   ));
-  const expectedInjectedConsoleErrors = diagnostics.consoleErrors.filter((message) => (
-    message === "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  const expectedInjectedConsoleErrors = diagnostics.consoleErrors.filter((entry) => (
+    entry.message === "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
   ));
-  const unexpectedConsoleErrors = diagnostics.consoleErrors.filter((message) => (
-    message !== "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  const unexpectedConsoleErrors = diagnostics.consoleErrors.filter((entry) => (
+    entry.message !== "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
   ));
   record("browser diagnostics contain no console/page/unexpected HTTP/request failure", (
     expectedInjectedConsoleErrors.length === 3
@@ -891,7 +1128,21 @@ try {
     && diagnostics.httpErrors.length === 0
     && unexpectedRequestFailures.length === 0
   ), { ...diagnostics, expectedInjectedConsoleErrors: expectedInjectedConsoleErrors.length, consoleErrors: unexpectedConsoleErrors, requestFailures: unexpectedRequestFailures });
+  record("context teardown has no late diagnostics", diagnostics.teardown.length === 0, {
+    teardown: diagnostics.teardown,
+  });
   await mkdir(evidenceDir, { recursive: true });
+  const sourceFiles = [
+    "scripts/pwa-partial-failed-update-browser-smoke.mjs",
+    "app/PwaGate.tsx",
+    "app/GameEntry.tsx",
+    "app/v100Save.js",
+    "app/v100CampaignStorage.js",
+  ];
+  const sources = [];
+  for (const file of sourceFiles) {
+    sources.push({ file, sha256: sha256(await readFile(new URL(`../${file}`, import.meta.url))) });
+  }
   await writeFile(path.join(evidenceDir, `pwa-partial-failed-update-${browserName}.json`), `${JSON.stringify({
     browser: browserName,
     baseUrl,
@@ -900,6 +1151,9 @@ try {
     oldManifest: { version: oldManifest.version, releaseSha: oldManifest.releaseSha, assets: oldManifest.assets.length },
     candidateManifest: { version: candidateManifest.version, releaseSha: candidateManifest.releaseSha, assets: candidateManifest.assets.length },
     persistentProfile: userDataDir,
+    saveFixtureSha256: saveFixtureHash,
+    sources,
+    build: await productionBuildIdentity(),
     fixture: {
       logicalSatisfied: retainedOldLogicalCount,
       retainedCandidateLogicalCount,

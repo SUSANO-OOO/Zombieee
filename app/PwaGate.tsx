@@ -384,7 +384,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
-  const deferUpdateNoticeForEvent = String(safety.screen ?? "title") === "event";
+  const deferAssetNoticeForEvent = String(safety.screen ?? "title") === "event";
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -913,14 +913,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Repair and update notices never block play; they sit above the game. */}
-      {!blocking && phase === "repair-required" && installPlan && (
+      {!blocking && phase === "repair-required" && installPlan && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice" role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
           <button type="button" onClick={startInstall}>不足分だけ再取得</button>
         </aside>
       )}
 
-      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferUpdateNoticeForEvent && (
+      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice pwa-update" role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
           <p>{updateCopy.downloadLine}</p>
