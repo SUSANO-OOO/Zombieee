@@ -14,6 +14,7 @@ import {
 } from "./v100Registry.js";
 import { inspectCampaignSaveCandidate } from "./campaign.js";
 import { normalizeV100Equipment } from "./v100Equipment.js";
+import { normalizeV100BossProgress } from "./v100BossProgress.js";
 import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
@@ -186,18 +187,7 @@ export function normalizeV100Save(raw, { fallback = null } = {}) {
     maxHp: V100_VEHICLE.baseHp + vehicleLevel * V100_VEHICLE.hpPerUpgrade,
     upgradeReceipts: uniqueStrings(raw.vehicle?.upgradeReceipts).filter((receipt) => receipt.startsWith("v100:vehicle:")),
   };
-  const rawBosses = raw.bosses && typeof raw.bosses === "object" ? raw.bosses : {};
-  const bosses = {
-    discoveredIds: uniqueStrings(rawBosses.discoveredIds).filter((id) => id.startsWith("boss-")),
-    compendiumIds: uniqueStrings(rawBosses.compendiumIds).filter((id) => id.startsWith("compendium:boss-")),
-    outbreakIds: uniqueStrings(rawBosses.outbreakIds).filter((id) => id.startsWith("outbreak:boss-")),
-    survivalIds: uniqueStrings(rawBosses.survivalIds).filter((id) => id.startsWith("survival:boss-")),
-    storyReplayStageNumbers: (Array.isArray(rawBosses.storyReplayStageNumbers) ? rawBosses.storyReplayStageNumbers : [])
-      .map(Number).filter((number) => Number.isInteger(number) && number >= 1 && number <= 30),
-    defeatCounts: Object.fromEntries(Object.entries(rawBosses.defeatCounts && typeof rawBosses.defeatCounts === "object" ? rawBosses.defeatCounts : {})
-      .filter(([id, count]) => id.startsWith("boss-") && Number.isFinite(Number(count)))
-      .map(([id, count]) => [id, integer(count, 0)])),
-  };
+  const bosses = normalizeV100BossProgress(raw.bosses, receipts);
   return {
     ...base,
     schemaVersion: V100_SAVE_SCHEMA_VERSION,

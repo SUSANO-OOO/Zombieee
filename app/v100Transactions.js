@@ -14,6 +14,7 @@ import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
 import { v100EquipmentFor, v100EquipmentQuantityCap, normalizeV100Equipment } from "./v100Equipment.js";
 import { equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCEMENT } from "./equipment.js";
+import { v100DiscoveredBosses } from "./v100BossProgress.js";
 
 export function purchaseV100Equipment(save, equipmentId, { expectedQuantity, now } = {}) {
   const current = normalizeV100Save(save);
@@ -397,10 +398,7 @@ export function releaseV100FormationSlot(battleState, reservationId, { now } = {
 
 export function v100BossVisibleInOtherModes(save, bossId) {
   const current = normalizeV100Save(save);
-  return current.bosses.discoveredIds.includes(bossId)
-    && current.bosses.compendiumIds.includes(`compendium:${bossId}`)
-    && current.bosses.outbreakIds.includes(`outbreak:${bossId}`)
-    && current.bosses.survivalIds.includes(`survival:${bossId}`);
+  return v100DiscoveredBosses(current.receipts).some(boss => boss.id === bossId);
 }
 
 export function v100CampaignReachability(save) {
