@@ -1,0 +1,44 @@
+name: V100 WebKit port comparison
+
+on:
+  push:
+    branches: ["codex/v100-webkit-port-comparison"]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: DIAGNOSTIC ONLY macOS (${{ matrix.lane }})
+    runs-on: macos-15-intel
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        lane: [phase-g, enemy, deployment]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+      - name: Install exact candidate dependencies
+        run: npm ci
+      - name: Validate finite diagnostic contract
+        run: node --test tests/diagnostic-only/webkit-port-diagnostic.test.mjs
+      - name: Install candidate-pinned WebKit
+        run: npx playwright install webkit
+      - name: Build unchanged production candidate
+        run: npm run build
+      - name: One finite unchanged-candidate diagnostic lane
+        run: node scripts/webkit-port-diagnostic.mjs "${{ matrix.lane }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: webkit-port-comparison-${{ matrix.lane }}
+          path: outputs/webkit-port-comparison
+          if-no-files-found: error
+          retention-days: 14
