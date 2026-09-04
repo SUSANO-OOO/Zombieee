@@ -9,6 +9,7 @@ import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js"
 
 const PUBLISHED_V0982_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
 const PUBLISHED_V0993_SHA = "827e1b7942221d24901332bdaa543704fbc730cc";
+const PUBLISHED_V0995_SHA = "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION = 6_309_676;
 const PRE_REPACK_SIZE_SNAPSHOTS = Object.freeze({
   candidateTotalBytes: 110_872_347,
@@ -32,10 +33,25 @@ const publishedV0993Source = JSON.parse(execFileSync("git", [
   `${PUBLISHED_V0993_SHA}:public/asset-manifest.json`,
 ], { encoding: "utf8" }));
 const publishedV0993 = { ...publishedV0993Source, releaseSha: PUBLISHED_V0993_SHA };
+const publishedV0995 = { ...JSON.parse(execFileSync("git", ["show", `${PUBLISHED_V0995_SHA}:public/asset-manifest.json`], { encoding: "utf8" })), releaseSha: PUBLISHED_V0995_SHA };
 const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const v100ApprovedAssets = candidate.assets.filter(({ path }) => path.startsWith("/art/v100/"));
 
-test("the Version 0.9.9.5 release candidate has one immutable identity and complete manifest", () => {
+test("the actual published0.9.9.5 pack reuses415 assets and requires all44 approved V1 additions", () => {
+  assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
+  const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
+  const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
+  assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.0");
+  assert.equal(update.downloadCount, 44); assert.equal(update.downloadBytes, 14_821_106);
+  assert.equal(update.unchangedCount, 415); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 0);
+  assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/")));
+  const incomplete = verifyUpdatePayload({ manifest: candidate, storedHashes: retainedHashes, expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
+  assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, 44);
+  const completed = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...retainedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
+  assert.deepEqual(completed, { verified: true, errors: [], missingPaths: [] });
+});
+
+test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 6_309_676);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
     candidateTotalBytes: 104_562_671,
@@ -43,7 +59,7 @@ test("the Version 0.9.9.5 release candidate has one immutable identity and compl
     updateFromV0982Bytes: 31_511_554,
     updateFromV0993Bytes: 21_136_860,
   });
-  assert.equal(RELEASE_VERSION, "0.9.9.5");
+  assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(v100ApprovedAssets.length, 44);
@@ -69,7 +85,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
-  assert.equal(update.toVersion, "0.9.9.5");
+  assert.equal(update.toVersion, "1.0.0");
   assert.equal(update.downloadCount, 108);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 348);
@@ -89,7 +105,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.deepEqual(verified, { verified: true, errors: [], missingPaths: [] });
 });
 
-test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchanged runtime assets", () => {
+test("the published Version 0.9.9.3 pack updates to 1.0.0 while reusing unchanged runtime assets", () => {
   assert.equal(publishedV0993.version, "0.9.9.3");
   assert.equal(publishedV0993Source.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(publishedV0993.releaseSha, PUBLISHED_V0993_SHA);
@@ -104,7 +120,7 @@ test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchan
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
-  assert.equal(update.toVersion, "0.9.9.5");
+  assert.equal(update.toVersion, "1.0.0");
   assert.equal(update.downloadCount, 59);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 397);

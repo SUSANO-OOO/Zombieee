@@ -559,6 +559,10 @@ import {
 
 const W = 960;
 const H = 540;
+const V100_SURVIVAL_UPGRADE_CATEGORIES: Readonly<Record<string, string>> = {
+  attack: "攻撃", defense: "防御", healing: "回復", range: "射程", redeploy: "再出撃",
+  "crawler-repair": "装甲車両の修理", "boss-damage": "対ボス",
+};
 
 type Lane = 0 | 1 | 2;
 export type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
@@ -23068,8 +23072,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (!upgrade) return null;
               const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
               return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
-                <small>{upgrade.category.toUpperCase()}</small>
-                <b>{upgrade.displayName}</b>
+                <small>{externalSessionActive ? V100_SURVIVAL_UPGRADE_CATEGORIES[upgrade.category] ?? "作戦強化" : upgrade.category.toUpperCase()}</small>
+                <b>{externalSessionActive ? upgrade.displayName.replaceAll("移動拠点", "装甲車両") : upgrade.displayName}</b>
                 <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
                 <em>現在 {stack} / 選択後 {stack + 1}</em>
               </button>;

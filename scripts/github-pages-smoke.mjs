@@ -3,13 +3,14 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { chromium } from "playwright";
+import { releaseTitleForVersion } from "../app/releaseIdentity.js";
 
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
-const expectedTitle = expectedVersion ? `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}` : null;
+const expectedTitle = expectedVersion ? releaseTitleForVersion(expectedVersion) : null;
 const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
