@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { CAMPAIGN_UNITS, INITIAL_STAGE_ID, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
 
 import {
   V100_BOSSES,
@@ -89,12 +90,12 @@ test("fresh V1.0.0 save is isolated from the legacy namespace", () => {
 });
 
 test("legacy eligibility copies only settings and grants one receipt-backed 180 CAPS gift", () => {
-  const legacyRaw = JSON.stringify({
-    namespace: "nishijin-campaign-v1",
+  const legacyRaw = serializeCampaignSave({
+    ...createDefaultCampaignSave(),
     campaignStarted: true,
     caps: 9999,
-    ownedUnitIds: ["unit-tatara"],
-    completedStageIds: ["stage-old"],
+    ownership: [...createDefaultCampaignSave().ownership, CAMPAIGN_UNITS.at(-1).id],
+    completedStageIds: [INITIAL_STAGE_ID],
     settings: { bgmEnabled: false, sfxVolume: 0.25, unrelated: "drop" },
   });
   assert.equal(isEligibleV100LegacyHistory(legacyRaw), true);

@@ -190,7 +190,11 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 ## 6. Version 1.0.0 execution cursor — r114 Section 138
 
-### Current: Section138.16 production lifecycle completion (2026-09-04)
+### Current independent source packet: Section138.18 legacy eligibility/settings (2026-09-04)
+
+Local source validation:42/42 focused and207/207 all V1 tests, targeted lint0 errors/0 warnings and exact diff; [Issue172#5539001635](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5539001635). Preserve the isolated normal source commit; candidate integration/full build/runtime and durable entitlement remain pending.
+
+Section138.18 / [Issue172#5538846335](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5538846335): isolated branch codex/v100-save-boundary-6faa starts at lifecycle commit6faabdf1ee7d9b8a513f451b7f9a9dca2e38a97b. Correct only legacy candidate validation/actual-play evidence and eight safe setting fields, with actual signed fixtures and existing regression gates. The prior support packet138.17 remains uncommitted in v100-r114-candidate-0f6d with its24-case audio gate failed after6 passes. Post-failure host pressure is an observed confound, not an established product root cause; no blind browser rerun or timeout/error relaxation. CI953 on88bea5f has actual six-viewport deployment readback48 cases/336 images; HUD is still pending. No push that cancels it. All storage transaction/entitlement/popup/legacy isolation, integration/runtime and final release gates remain open.
 
 Local lifecycle packet validated: build761eeaa8; focused42/full1333; Chromium/WebKit12/12 and40 actual PNGs; content/static; full source lint0 errors/12 existing warnings. See [Issue172#5537823331](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537823331). Preserve a normal local commit while CI953 completes; no push that cancels the running evidence. Next source work is support/vehicle binding and entry/version/PWA. Final release quality remains unaccepted.
 

@@ -12,6 +12,8 @@ import {
   V100_VEHICLE,
   normalizeV100PlayerName,
 } from "./v100Registry.js";
+import { inspectCampaignSaveCandidate } from "./campaign.js";
+import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
 export const V100_PRIMARY_STORAGE_KEY = V100_CAMPAIGN_NAMESPACE;
@@ -47,7 +49,16 @@ function uniqueStrings(value) {
 
 function normalizeSettings(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  return Object.fromEntries(V100_LEGACY_SETTINGS_WHITELIST.map((key) => [key, source[key] === undefined ? V100_DEFAULT_SETTINGS[key] : source[key]]));
+  const validValue = (key, candidate) => {
+    if (["bgmEnabled", "sfxEnabled", "reducedMotion", "autoSkipReadStory"].includes(key)) return typeof candidate === "boolean";
+    if (["bgmVolume", "sfxVolume"].includes(key)) return typeof candidate === "number" && Number.isFinite(candidate) && candidate >= 0 && candidate <= 1;
+    if (key === "battleEventMode") return ["first-time", "compact", "all"].includes(candidate);
+    if (key === "graphicsQuality") return ["auto", "high", "power-save"].includes(candidate);
+    return false;
+  };
+  return Object.fromEntries(V100_LEGACY_SETTINGS_WHITELIST.map((key) => [key,
+    Object.hasOwn(source, key) && validValue(key, source[key]) ? source[key] : V100_DEFAULT_SETTINGS[key],
+  ]));
 }
 
 function normalizedName(value, fallback = V100_DEFAULT_PLAYER_NAME) {
@@ -272,33 +283,54 @@ export function deserializeV100Save(serialized, options = {}) {
   }
 }
 
-function candidateValue(candidate) {
-  if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) return candidate;
-  if (typeof candidate !== "string") return null;
+function hasForeignLegacyIdentity(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return ["namespace", "saveNamespace"].some(key => Object.hasOwn(value, key) && value[key] !== V100_LEGACY_NAMESPACE)
+    || Object.hasOwn(value, "campaignGeneration")
+    || Boolean(value.qaMode || value.localQa || value.isFixture);
+}
+
+function legacyCandidate(candidate) {
   try {
-    const parsed = JSON.parse(candidate);
-    if (parsed?.format === "nishijin-campaign-save" && typeof parsed.serialized === "string") return JSON.parse(parsed.serialized);
-    return parsed;
+    const text = typeof candidate === "string" ? candidate : JSON.stringify(candidate);
+    if (typeof text !== "string" || text.length > CAMPAIGN_IMPORT_MAX_BYTES) return null;
+    const outer = JSON.parse(text);
+    if (hasForeignLegacyIdentity(outer) || (outer?.format !== undefined && outer.format !== CAMPAIGN_EXPORT_FORMAT)) return null;
+    // The existing bounded import parser verifies envelopes; the strict inspector
+    // verifies actual legacy shape/integrity before any forgiving migration.
+    const imported = parseCampaignManualImport(text, { validate: raw => {
+      const value = JSON.parse(raw);
+      if (hasForeignLegacyIdentity(value) || value?.format !== undefined) return { valid: false, reason: "foreign-or-qa-save" };
+      return inspectCampaignSaveCandidate(raw, { source: "v100-legacy-read-only" });
+    } });
+    return imported.status === "ready" ? { raw: JSON.parse(imported.serialized), save: imported.value } : null;
   } catch {
     return null;
   }
 }
 
+function legacyHasPlayed(history) {
+  if (!history) return false;
+  // Migration can infer campaignStarted from a schema number. Only an explicit
+  // source flag or actual durable gameplay history establishes this entitlement.
+  return history.raw.campaignStarted === true
+    || ["completedStageIds", "processedResultIds", "processedAcquisitionIds", "processedUpgradeIds", "processedEquipmentTransactionIds"]
+      .some(key => Array.isArray(history.save?.[key]) && history.save[key].length > 0);
+}
+
 export function isEligibleV100LegacyHistory(candidate) {
-  const value = candidateValue(candidate);
-  if (!value || value.namespace === V100_CAMPAIGN_NAMESPACE || value.campaignGeneration === V100_CAMPAIGN_GENERATION) return false;
-  if (value.namespace && value.namespace !== V100_LEGACY_NAMESPACE && value.saveNamespace !== V100_LEGACY_NAMESPACE) return false;
-  if (value.qaMode === true || value.localQa === true || value.isFixture === true) return false;
-  return value.campaignStarted === true
-    || (Array.isArray(value.completedStageIds) && value.completedStageIds.length > 0)
-    || (Array.isArray(value.processedResultIds) && value.processedResultIds.length > 0)
-    || (Array.isArray(value.ownedUnitIds) && value.ownedUnitIds.length > 0)
-    || (value.revision !== undefined && Number(value.revision) > 0);
+  return legacyHasPlayed(legacyCandidate(candidate));
 }
 
 export function copyV100LegacySettings(candidate) {
-  const value = candidateValue(candidate);
-  return normalizeSettings(value?.settings);
+  const history = legacyCandidate(candidate);
+  if (!legacyHasPlayed(history)) return normalizeSettings({});
+  const source = history.raw.settings ?? history.raw.options;
+  return normalizeSettings({
+    ...(source && typeof source === "object" && !Array.isArray(source) ? source : {}),
+    // The actual legacy save owns this preference at its top level.
+    ...(typeof history.raw.autoSkipReadStory === "boolean" ? { autoSkipReadStory: history.raw.autoSkipReadStory } : {}),
+  });
 }
 
 export function createV100SaveFromLegacy({ legacyCandidate = null, settings = {}, playerName = V100_DEFAULT_PLAYER_NAME, now } = {}) {
