@@ -5549,6 +5549,7 @@ function stationMissionFinalCanvasAudit(
   finalTransform: { scale: number; offsetX: number; offsetY: number },
   g: Game,
   stageObjects: SpriteMap,
+  includeDiagnostic = false,
 ) {
   if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     return { applicable: false, pass: false, reason: "not-sequential-seal" };
@@ -5605,6 +5606,82 @@ function stationMissionFinalCanvasAudit(
   const finalPaintRatio = authoredPixelCount > 0 ? finalPaintedCount / authoredPixelCount : 0;
   const finalMatchRatio = authoredPixelCount > 0 ? finalPixelMatchCount / authoredPixelCount : 0;
   const finalNearMatchRatio = authoredPixelCount > 0 ? finalPixelNearMatchCount / authoredPixelCount : 0;
+  // DIAGNOSTIC ONLY: disposable read-back/reference surfaces, after original scoring.
+  let diagnostic = null;
+  if (includeDiagnostic) {
+    const makeSurface = (width = finalCanvas.width, height = finalCanvas.height) => {
+      const surface = document.createElement("canvas");
+      surface.width = width; surface.height = height;
+      const context = surface.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("Diagnostic reference context unavailable");
+      return { surface, context };
+    };
+    const score = (reference: Uint8ClampedArray, actual: Uint8ClampedArray) => {
+      let opaque = 0, painted = 0, exact = 0, near = 0;
+      for (let index = 0; index < reference.length; index += 4) {
+        if (reference[index + 3] < 245) continue;
+        opaque++;
+        if (actual[index + 3] > 0) painted++;
+        const delta = Math.abs(reference[index] - actual[index])
+          + Math.abs(reference[index + 1] - actual[index + 1])
+          + Math.abs(reference[index + 2] - actual[index + 2]);
+        if (delta <= 18) exact++;
+        if (delta <= 60) near++;
+      }
+      return { opaque, painted, exact, near, paintRatio: painted / Math.max(1, opaque),
+        matchRatio: exact / Math.max(1, opaque), nearRatio: near / Math.max(1, opaque) };
+    };
+    const direct = makeSurface();
+    direct.context.setTransform(finalTransform.scale * dpr, 0, 0, finalTransform.scale * dpr,
+      finalTransform.offsetX * dpr, finalTransform.offsetY * dpr);
+    drawStationMission(direct.context, g, stageObjects, false);
+    const directRgba = direct.context.getImageData(0, 0, direct.surface.width, direct.surface.height).data;
+    const actualContext = finalCanvas.getContext("2d");
+    if (!actualContext) throw new Error("Diagnostic actual context unavailable");
+    const actualRgba = actualContext.getImageData(0, 0, finalCanvas.width, finalCanvas.height).data;
+    const projected = makeSurface();
+    projected.context.imageSmoothingEnabled = true;
+    projected.context.imageSmoothingQuality = "high";
+    projected.context.drawImage(expected, finalTransform.offsetX * dpr, finalTransform.offsetY * dpr,
+      W * finalTransform.scale * dpr, H * finalTransform.scale * dpr);
+    const roundTrip = makeSurface(W, H);
+    roundTrip.context.imageSmoothingEnabled = true;
+    roundTrip.context.imageSmoothingQuality = "high";
+    roundTrip.context.drawImage(projected.surface, finalTransform.offsetX * dpr, finalTransform.offsetY * dpr,
+      W * finalTransform.scale * dpr, H * finalTransform.scale * dpr, 0, 0, W, H);
+    const shifted = makeSurface();
+    shifted.context.drawImage(direct.surface, 32 * dpr, 0);
+    const wrongState = makeSurface();
+    wrongState.context.setTransform(finalTransform.scale * dpr, 0, 0, finalTransform.scale * dpr,
+      finalTransform.offsetX * dpr, finalTransform.offsetY * dpr);
+    const wrongPower = (g.stageMission.powerActivated ?? 0) === 0 ? 3 : 0;
+    drawStationMission(wrongState.context, {
+      ...g, stageMission: { ...g.stageMission, powerActivated: wrongPower },
+      researchContainer: g.researchContainer ? { ...g.researchContainer, exposed: wrongPower >= 3 } : g.researchContainer,
+    }, stageObjects, false);
+    diagnostic = {
+      diagnosticOnly: true, acceptance: false,
+      stageId: g.definition.stageId, battleTime: g.time, shake: g.shake,
+      laneCenters: [...activeLaneCenters], viewportId: activeStageViewportId,
+      transform: { ...finalTransform }, dpr,
+      canvas: { width: finalCanvas.width, height: finalCanvas.height, css: finalCanvas.getBoundingClientRect().toJSON(),
+        attributes: actualContext.getContextAttributes?.() ?? null,
+        matrix: { a: actualContext.getTransform().a, b: actualContext.getTransform().b,
+          c: actualContext.getTransform().c, d: actualContext.getTransform().d,
+          e: actualContext.getTransform().e, f: actualContext.getTransform().f } },
+      source: { src: source.currentSrc || source.src, width: source.naturalWidth, height: source.naturalHeight },
+      directNative: score(directRgba, actualRgba),
+      expectedOnlyRoundTrip: score(expectedRgba, roundTrip.context.getImageData(0, 0, W, H).data),
+      negativeControls: {
+        blank: score(directRgba, new Uint8ClampedArray(directRgba.length)),
+        shifted32: score(directRgba, shifted.context.getImageData(0, 0, shifted.surface.width, shifted.surface.height).data),
+        wrongState: score(directRgba, wrongState.context.getImageData(0, 0, wrongState.surface.width, wrongState.surface.height).data),
+      },
+      images: { expectedWorld: expected.toDataURL("image/png"), finalBackProjected: finalAudit.toDataURL("image/png"),
+        actualBacking: finalCanvas.toDataURL("image/png"), directNativeReference: direct.surface.toDataURL("image/png"),
+        expectedOnlyRoundTrip: roundTrip.surface.toDataURL("image/png") },
+    };
+  }
   return {
     applicable: true,
     // The final canvas is sampled after presentation overlays and the mission
@@ -5624,6 +5701,7 @@ function stationMissionFinalCanvasAudit(
       powerActivated: g.stageMission.powerActivated ?? 0,
       researchContainerExposed: g.researchContainer?.exposed === true,
     },
+    ...(includeDiagnostic ? { diagnostic } : {}),
   };
 }
 
@@ -11991,7 +12069,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           corpseRenderHistory: (corpseRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
         };
       },
-      getStationMissionFinalCanvasAudit: () => {
+      getStationMissionFinalCanvasAudit: (includeDiagnostic = false) => {
         const canvas = canvasRef.current;
         if (!canvas) return { applicable: false, pass: false, reason: "battle-canvas-unavailable" };
         return stationMissionFinalCanvasAudit(
@@ -11999,6 +12077,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           canvasTransformRef.current,
           gameRef.current,
           stageObjectRefs.current,
+          includeDiagnostic,
         );
       },
       setStationMissionPixelAuditState: (state: "start" | "power-1" | "power-3") => {
