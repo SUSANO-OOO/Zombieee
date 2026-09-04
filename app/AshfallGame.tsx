@@ -1360,6 +1360,8 @@ export type AshfallExternalSession = {
     tacticalEquipmentIds?: readonly (string | null)[];
     equipmentEnhancementLevels?: Record<string, number>;
   };
+  settings?: CampaignSave["settings"] & { autoSkipReadStory?: boolean };
+  onSettingsChange?: (settings: Partial<CampaignSave["settings"]>) => Promise<boolean>;
   onBattleResult: (result: AshfallBattleResult) => void;
   onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean | Promise<boolean>;
 };
@@ -8229,7 +8231,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const musicRef = useRef<MusicRuntime | null>(null);
   const jingleRef = useRef<JingleRuntime | null>(null);
   const sfxRuntimeRef = useRef<SfxRuntime | null>(null);
-  const sfxMutedRef = useRef(false);
+  const sfxMutedRef = useRef(Boolean(externalSession?.settings && (!externalSession.settings.sfxEnabled || externalSession.settings.sfxVolume <= 0)));
   const musicDuckUntilRef = useRef(0);
   const desiredMusicModeRef = useRef<MusicMode>("normal");
   const pressureLatchRef = useRef(createPressureLatchRuntime());
@@ -8416,8 +8418,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [pauseConfirm, setPauseConfirm] = useState<PauseAction | null>(null);
-  const [bgmMuted, setBgmMuted] = useState(false);
-  const [sfxMuted, setSfxMuted] = useState(false);
+  const [bgmMuted, setBgmMuted] = useState(() => Boolean(externalSession?.settings && (!externalSession.settings.bgmEnabled || externalSession.settings.bgmVolume <= 0)));
+  const [sfxMuted, setSfxMuted] = useState(() => Boolean(externalSession?.settings && (!externalSession.settings.sfxEnabled || externalSession.settings.sfxVolume <= 0)));
   const [musicActive, setMusicActive] = useState(false);
   const [audioUnlockUi, setAudioUnlockUi] = useState<AudioUnlockUiState>("idle");
   const [audioUnlockVisible, setAudioUnlockVisible] = useState(true);
@@ -8467,7 +8469,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
     : selectedStageId);
-  const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
+  const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => {
+    const clean = createDefaultCampaignSave() as CampaignSave;
+    return externalSession ? {
+      ...updateCampaignSettings(clean, externalSession.settings ?? {}) as CampaignSave,
+      autoSkipReadStory: externalSession.settings?.autoSkipReadStory === true,
+    } : clean;
+  });
   const campaignSaveRef = useRef(campaignSave);
   const [graphicsProfileView, setGraphicsProfileView] = useState<GraphicsProfile>(() => resolveGraphicsProfile("auto"));
   const [battleHudViewport, setBattleHudViewport] = useState({
@@ -8518,13 +8526,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.removeEventListener("orientationchange", updateGraphicsProfile);
     };
   }, [campaignSave.settings.graphicsQuality]);
-  const [saveHydrated, setSaveHydrated] = useState(false);
+  const [saveHydrated, setSaveHydrated] = useState(Boolean(externalSession));
   const [saveEnvironment, setSaveEnvironment] = useState(() => describeSaveEnvironment(null));
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [savePersistenceMessage, setSavePersistenceMessage] = useState("");
   const [saveHydrationAttempt, setSaveHydrationAttempt] = useState(0);
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
   const [saveMutationPending, setSaveMutationPending] = useState(false);
+  const externalSettingsPendingRef = useRef(false);
+  const [externalSettingsPending, setExternalSettingsPending] = useState(false);
+  const [externalSettingsRetry, setExternalSettingsRetry] = useState<Partial<CampaignSave["settings"]> | null>(null);
   const [pendingResultCommit, setPendingResultCommit] = useState<PendingResultCommit | null>(null);
   const [resultSaveRetrying, setResultSaveRetrying] = useState(false);
   const lastPersistedSerializedRef = useRef("");
@@ -8575,6 +8586,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const qaBattleSaveBoundaryPendingRef = useRef(false);
   battleSaveBoundaryRef.current = Boolean(
     saveMutationPendingRef.current
+    || externalSettingsPendingRef.current
     || pendingResultCommit
     || resultSaveRetryingRef.current
     || pendingOutbreakSettlement
@@ -8625,7 +8637,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, []);
 
   const persistCampaignSave = useCallback((nextSave: CampaignSave): Promise<CampaignPersistResult> => {
-    if (saveMutationPendingRef.current) {
+    if (externalSessionActive || saveMutationPendingRef.current) {
       return Promise.resolve({ durable: false, localSaved: false, backupSaved: false, skipped: true });
     }
     const serialized = serializeCampaignSave(nextSave);
@@ -8681,7 +8693,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         backupSaved,
       };
     });
-  }, [enqueueCampaignStorageMutation]);
+  }, [enqueueCampaignStorageMutation, externalSessionActive]);
 
   useLayoutEffect(() => {
     const syncEnvironment = () => {
@@ -8695,6 +8707,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, []);
 
   useEffect(() => {
+    if (externalSessionActive) return;
     let cancelled = false;
     setSavePersistence("checking");
     setSavePersistenceMessage("");
@@ -8800,7 +8813,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [enqueueCampaignStorageMutation, saveHydrationAttempt]);
+  }, [enqueueCampaignStorageMutation, externalSessionActive, saveHydrationAttempt]);
 
   const retrySaveHydration = useCallback(() => {
     if (savePersistence === "checking" || saveMutationPendingRef.current) return;
@@ -8812,7 +8825,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [savePersistence]);
 
   useEffect(() => {
-    if (!saveHydrated) return;
+    if (externalSessionActive || !saveHydrated) return;
     // Local QA can expose every unit and stage, but must never turn those
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
@@ -8823,7 +8836,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     void enqueueCampaignTransaction(async (latestSave) => {
       await persistCampaignSave(latestSave);
     });
-  }, [campaignSave, enqueueCampaignTransaction, persistCampaignSave, saveHydrated]);
+  }, [campaignSave, enqueueCampaignTransaction, externalSessionActive, persistCampaignSave, saveHydrated]);
 
   const updateAudioAvailability = useCallback((
     channel: keyof AudioAvailability,
@@ -13636,12 +13649,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // these instead of guessing. Kept as plain dataset attributes so the service
   // worker bridge stays decoupled from this component.
   useEffect(() => {
+    if (externalSessionActive) return; // V1 parent owns durable save and activation state.
     const root = document.documentElement;
     root.dataset.pwaScreen = screen;
     root.dataset.pwaBattleActive = String(screen === "battle" || screen === "survival");
     root.dataset.pwaResultSaving = String(screen === "result" || screen === "survival-result");
     root.dataset.pwaSaveMutationPending = String(Boolean(saveMutationPending));
-  }, [saveMutationPending, screen]);
+  }, [externalSessionActive, saveMutationPending, screen]);
 
   // The save environment is a maintenance fact, not a story beat, so it no
   // longer sits across the title screen. Publishing it here lets the data screen
@@ -15381,7 +15395,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       external?.resultId ?? sessionOverride?.resultId ?? createBattleResultId(battleStageId),
       external ? [] : campaignSave.readStoryEventIds,
       external?.unitLevels ?? campaignSave.unitLevels,
-      external?.equipmentSnapshot ?? getFormationPresetEquipmentSnapshot(campaignSave),
+      external ? external.equipmentSnapshot ?? {} : getFormationPresetEquipmentSnapshot(campaignSave),
       external ? { v100: true } : undefined,
     );
     if (external) {
@@ -16990,15 +17004,38 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
   }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, externalSession, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
-  const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
+  const commitExternalSettings = useCallback(async (patch: Partial<CampaignSave["settings"]>) => {
+    if (!externalSession?.onSettingsChange || externalSettingsPendingRef.current || gameRef.current.over) return false;
+    externalSettingsPendingRef.current = true;
+    battleSaveBoundaryRef.current = true;
+    setExternalSettingsPending(true);
+    const next = updateCampaignSettings(campaignSaveRef.current, patch) as CampaignSave;
+    try {
+      if (!await externalSession.onSettingsChange(patch)) { setExternalSettingsRetry(patch); return false; }
+      if (!mountedRef.current) return false;
+      setCampaignSave(next);
+      const bgmOff = !next.settings.bgmEnabled || next.settings.bgmVolume <= 0;
+      const sfxOff = !next.settings.sfxEnabled || next.settings.sfxVolume <= 0;
+      setBgmMuted(bgmOff); setSfxMuted(sfxOff); sfxMutedRef.current = sfxOff;
+      productionMixerRef.current?.setSettings(next.settings);
+      setExternalSettingsRetry(null);
+      return true;
+    } catch { setExternalSettingsRetry(patch); return false; }
+    finally { externalSettingsPendingRef.current = false; setExternalSettingsPending(false); }
+  }, [externalSession]);
+
+  const updateVolume = useCallback(async (kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const normalized = Math.max(0, Math.min(1, value));
     const enabled = normalized > 0;
+    if (externalSessionActive && !await commitExternalSettings(kind === "bgm"
+      ? { bgmEnabled: enabled, bgmVolume: normalized }
+      : { sfxEnabled: enabled, sfxVolume: normalized })) return;
     const mixer = productionMixerRef.current;
     if (kind === "bgm") {
       setBgmMuted(!enabled);
       mixer?.setSettings({ bgmEnabled: enabled, bgmVolume: normalized });
-      setCampaignSave((current) => updateCampaignSettings(current, {
+      if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
         bgmEnabled: enabled,
         bgmVolume: normalized,
       }) as CampaignSave);
@@ -17036,7 +17073,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     sfxMutedRef.current = !enabled;
     setSfxMuted(!enabled);
     mixer?.setSettings({ sfxEnabled: enabled, sfxVolume: normalized });
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       sfxEnabled: enabled,
       sfxVolume: normalized,
     }) as CampaignSave);
@@ -17051,22 +17088,32 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         dedupeKey: `volume-preview:${Math.round(normalized * 20)}`,
       });
     }
-  }, [end, pendingResultCommit, playProductionCue]);
+  }, [commitExternalSettings, end, externalSessionActive, pendingResultCommit, playProductionCue]);
 
   const setAutoSkipReadStory = useCallback((enabled: boolean) => {
     setCampaignSave((current) => updateStoryPlaybackSettings(current, { autoSkipReadStory: enabled }) as CampaignSave);
   }, []);
 
-  const cycleBattleEventMode = useCallback(() => {
+  const cycleBattleEventMode = useCallback(async () => {
     const modes: CampaignSave["settings"]["battleEventMode"][] = ["first-time", "compact", "all"];
+    if (externalSessionActive) {
+      const mode = modes[(modes.indexOf(campaignSaveRef.current.settings.battleEventMode) + 1) % modes.length];
+      if (await commitExternalSettings({ battleEventMode: mode })) playUiOperationCue("selection", "settings:battle-event-mode");
+      return;
+    }
     setCampaignSave((current) => {
       const nextMode = modes[(modes.indexOf(current.settings.battleEventMode) + 1) % modes.length];
       return updateStoryPlaybackSettings(current, { battleEventMode: nextMode }) as CampaignSave;
     });
     playUiOperationCue("selection", "settings:battle-event-mode");
-  }, [playUiOperationCue]);
+  }, [commitExternalSettings, externalSessionActive, playUiOperationCue]);
 
-  const cycleGraphicsQuality = useCallback(() => {
+  const cycleGraphicsQuality = useCallback(async () => {
+    if (externalSessionActive) {
+      const index = GRAPHICS_QUALITY_ORDER.indexOf(campaignSaveRef.current.settings.graphicsQuality);
+      if (await commitExternalSettings({ graphicsQuality: GRAPHICS_QUALITY_ORDER[(Math.max(0, index) + 1) % GRAPHICS_QUALITY_ORDER.length] })) playUiOperationCue("selection", "settings:graphics-quality");
+      return;
+    }
     setCampaignSave((current) => {
       const currentIndex = GRAPHICS_QUALITY_ORDER.indexOf(current.settings.graphicsQuality);
       const nextMode = GRAPHICS_QUALITY_ORDER[
@@ -17075,34 +17122,37 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return updateCampaignSettings(current, { graphicsQuality: nextMode }) as CampaignSave;
     });
     playUiOperationCue("selection", "settings:graphics-quality");
-  }, [playUiOperationCue]);
+  }, [commitExternalSettings, externalSessionActive, playUiOperationCue]);
 
-  const toggleBgm = useCallback(() => {
+  const toggleBgm = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
-    const next = !bgmMuted; setBgmMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    const next = !bgmMuted;
+    if (externalSessionActive && !await commitExternalSettings({ bgmEnabled: !next, bgmVolume: !next && campaignSaveRef.current.settings.bgmVolume <= 0 ? .5 : campaignSaveRef.current.settings.bgmVolume })) return;
+    setBgmMuted(next);
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       bgmEnabled: !next,
       bgmVolume: !next && current.settings.bgmVolume <= 0 ? .5 : current.settings.bgmVolume,
     }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
     playUiOperationCue("selection", `settings:bgm:${next ? "off" : "on"}`);
-  }, [bgmMuted, end, paused, pendingResultCommit, playUiOperationCue, startMusic, started, stopMusic]);
+  }, [bgmMuted, commitExternalSettings, end, externalSessionActive, paused, pendingResultCommit, playUiOperationCue, startMusic, started, stopMusic]);
 
-  const toggleSfx = useCallback(() => {
+  const toggleSfx = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !sfxMutedRef.current;
+    if (externalSessionActive && !await commitExternalSettings({ sfxEnabled: !next, sfxVolume: !next && campaignSaveRef.current.settings.sfxVolume <= 0 ? .6 : campaignSaveRef.current.settings.sfxVolume })) return;
     sfxMutedRef.current = next;
     setSfxMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, {
+    if (!externalSessionActive) setCampaignSave((current) => updateCampaignSettings(current, {
       sfxEnabled: !next,
       sfxVolume: !next && current.settings.sfxVolume <= 0 ? .6 : current.settings.sfxVolume,
     }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
     playUiOperationCue("selection", `settings:sfx:${next ? "off" : "on"}`);
-  }, [end, pendingResultCommit, playUiOperationCue, resumeBattleAudioLoops, stopJingle, stopSfx]);
+  }, [commitExternalSettings, end, externalSessionActive, pendingResultCommit, playUiOperationCue, resumeBattleAudioLoops, stopJingle, stopSfx]);
 
-  const enableAudio = useCallback(() => {
+  const enableAudio = useCallback(async () => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) {
       playUiOperationCue("reject", "audio-unlock:blocked");
       return;
@@ -17115,8 +17165,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     playUiOperationCue("confirm", "audio-unlock");
     const restoredBgmVolume = Math.max(.35, campaignSave.settings.bgmVolume);
     const restoredSfxVolume = Math.max(.4, campaignSave.settings.sfxVolume);
-    if (bgmMuted || sfxMutedRef.current
-      || campaignSave.settings.bgmVolume <= 0 || campaignSave.settings.sfxVolume <= 0) {
+    if (externalSessionActive) {
+      // Start the native unlock in the user gesture before awaiting durable storage.
+      const unlock = mixer.unlock();
+      if (!await commitExternalSettings({ bgmEnabled: true, sfxEnabled: true, bgmVolume: restoredBgmVolume, sfxVolume: restoredSfxVolume })) return;
+      await unlock;
+    }
+    if (!externalSessionActive && (bgmMuted || sfxMutedRef.current
+      || campaignSave.settings.bgmVolume <= 0 || campaignSave.settings.sfxVolume <= 0)) {
       setBgmMuted(false);
       sfxMutedRef.current = false;
       setSfxMuted(false);
@@ -17197,7 +17253,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       updateAudioAvailability("testTone", "failed");
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit, playUiOperationCue, updateAudioAvailability]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, commitExternalSettings, end, externalSessionActive, pendingResultCommit, playUiOperationCue, updateAudioAvailability]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
@@ -22907,15 +22963,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
+          {externalSettingsPending && <p role="status">設定を保存しています…</p>}
+          {externalSettingsRetry && !externalSettingsPending && <p role="alert">設定を保存できませんでした。変更前の設定を維持しています。<button onClick={() => void commitExternalSettings(externalSettingsRetry)}>設定の保存を再試行</button></p>}
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
-            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
-            <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
-            <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
+            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
+            <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
+            <div><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
           <section className="pause-graphics" aria-label="描画品質設定">
             <span><b>描画品質</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>
             <button
+              disabled={externalSettingsPending}
               data-graphics-quality-control="true"
               data-graphics-quality-requested={campaignSave.settings.graphicsQuality}
               onClick={cycleGraphicsQuality}
@@ -22930,7 +22989,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               </small>
             </button>
           </section>
-          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
+          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
           {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}

@@ -271,6 +271,7 @@ export function V100Campaign() {
   const [save, setSave] = useState<Save>(() => createDefaultV100Save());
   const [flow, setFlow] = useState<Flow>(() => createV100StoryFlowState());
   const [storyIndex, setStoryIndex] = useState(0);
+  const [battleRunId, setBattleRunId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState(V100_STAGE_IDS[0]);
   const [nameInput, setNameInput] = useState("");
   const [nameError, setNameError] = useState("");
@@ -321,6 +322,7 @@ export function V100Campaign() {
     });
     setSelectedStageId(next.availableStageIds[0] ?? V100_STAGE_IDS[0]);
     setFlow(restored); setStoryIndex(restored.nodeIndex ?? 0);
+    setBattleRunId(restored.phase === "battle" ? `v100:${restored.stageId}:${next.revision}` : null);
     setSurface("campaign"); setReplayEventId(null); setLogOpen(false);
     setRecovery(null); setLoadFailure(false); setHydrated(true);
   }, [publishSave]);
@@ -506,15 +508,16 @@ export function V100Campaign() {
 
   const updateFlow = useCallback(async (next: Flow, { baseSave = save, nodeIndex = 0 }: { baseSave?: Save; nodeIndex?: number } = {}) => {
     const checkpoint = v100StoryFlowCheckpoint(next, nodeIndex);
-    const persisted = applyV100SaveMutation(baseSave, (draft) => ({
+    const persisted = applyV100SaveMutation(baseSave, (draft: Save) => ({
       ...draft,
       flowState: checkpoint.flowState,
       eventCursor: checkpoint.eventCursor,
       lastResult: next.phase === "result" && next.pendingResult?.won === false ? next.pendingResult : draft.lastResult,
     }));
     if (!persisted.applied) { setNotice(formatReason(persisted.reason)); return null; }
-    return commitSave(persisted.save, () => {
+    return commitSave(persisted.save, (committed) => {
       setFlow(next);
+      setBattleRunId(next.phase === "battle" ? `v100:${next.stageId}:${committed.revision}` : null);
       setStoryIndex(Math.max(0, Math.floor(Number(nodeIndex) || 0)));
       setSurface("campaign");
     });
@@ -537,7 +540,7 @@ export function V100Campaign() {
   }, []);
 
   const handleProductionBattleResult = useCallback(async (raw: AshfallBattleResult) => {
-    if (flow.phase !== "battle" || raw.resultId !== ["v100", flow.stageId, save.revision].join(":")) return;
+    if (flow.phase !== "battle" || raw.resultId !== battleRunId) return;
     const result = createV100BattleResult({
       stageId: raw.stageId,
       battleRunId: raw.resultId,
@@ -573,7 +576,7 @@ export function V100Campaign() {
     } else {
       setUnsavedBattleResult(raw);
     }
-  }, [flow, save, updateFlow]);
+  }, [battleRunId, flow, save, updateFlow]);
 
   const handleProductionBattleAction = useCallback(async (action: "withdraw" | "loadout" | "restart") => {
     if (unsavedBattleResult) return false;
@@ -584,14 +587,22 @@ export function V100Campaign() {
     return accepted;
   }, [flow, unsavedBattleResult, updateFlow]);
 
+  const handleProductionSettingsChange = useCallback(async (settings: Partial<Save["settings"]>) => {
+    if (flow.phase !== "battle" || unsavedBattleResult) return false;
+    const changed = applyV100SaveMutation(save, (draft: Save) => ({ ...draft, settings: { ...draft.settings, ...settings } }));
+    if (!changed.applied) return false;
+    setNotice("");
+    return Boolean(await commitSave(changed.save));
+  }, [commitSave, flow.phase, save, unsavedBattleResult]);
+
   const productionSession = useMemo(() => {
-    if (flow.phase !== "battle" || !flow.stageId) return null;
+    if (flow.phase !== "battle" || !flow.stageId || !battleRunId) return null;
     return v100ProductionSessionFor({
       save,
       stageId: flow.stageId,
-      resultId: `v100:${flow.stageId}:${save.revision}`,
+      resultId: battleRunId,
     });
-  }, [flow.phase, flow.stageId, save]);
+  }, [battleRunId, flow.phase, flow.stageId, save]);
 
   const startCampaign = (eventSubmit: FormEvent<HTMLFormElement>) => {
     eventSubmit.preventDefault();
@@ -828,7 +839,7 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "battle" && productionSession && (
-        <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction }} key={productionSession.resultId} />
+        <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
       )}
 
       {flow.phase === "result" && (

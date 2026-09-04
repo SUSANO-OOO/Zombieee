@@ -13,8 +13,23 @@ import {
   v100StorageContract,
 } from "../app/v100CampaignStorage.js";
 import { createDefaultV100Save } from "../app/v100Save.js";
+import { v100ProductionSessionFor } from "../app/v100BattleAdapter.js";
+import { V100_STAGE_IDS } from "../app/v100Registry.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("external battle takes V1 settings while legacy equipment cannot affect its loadout", () => {
+  const clean = createDefaultV100Save({ settings: { bgmEnabled: false, graphicsQuality: "power-save", autoSkipReadStory: true } });
+  const contaminated = { ...clean, equipmentSnapshot: { tacticalEquipmentIds: ["tactical-supply-cache"] }, equipmentInventory: [{ equipmentId: "field-machete", quantity: 1 }] };
+  const session = v100ProductionSessionFor({ save: contaminated, stageId: V100_STAGE_IDS[0], resultId: "v1-owned-run" });
+  assert.deepEqual(session.settings, clean.settings);
+  assert.deepEqual(session.equipmentSnapshot, { personalEquipmentByUnit: {}, tacticalEquipmentIds: [], equipmentEnhancementLevels: {} });
+  assert.equal(session.resultId, "v1-owned-run");
+  assert.equal(Object.isFrozen(session.settings), true);
+  assert.equal(Object.isFrozen(session.equipmentSnapshot), true);
+  assert.throws(() => { session.equipmentSnapshot.tacticalEquipmentIds.push("tactical-supply-cache"); }, TypeError);
+  assert.equal(contaminated.equipmentSnapshot.tacticalEquipmentIds.length, 1);
+});
 
 test("V1 export round-trip and native storage contract remain namespace-specific", () => {
   const save = createDefaultV100Save({ playerName: "監査指揮官" });

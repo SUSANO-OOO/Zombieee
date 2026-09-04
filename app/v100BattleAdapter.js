@@ -214,6 +214,9 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     enemyKinds: freeze([...enemyKinds]),
     selectedSupply: v100SupportSupplyFor(save?.equippedSupportId),
     unitLevels: { ...(save?.unitLevels ?? {}) },
+    settings: freeze({ ...(save?.settings ?? {}) }),
+    // Equipment from the old campaign is never a V1 fallback.
+    equipmentSnapshot: freeze({ personalEquipmentByUnit: freeze({}), tacticalEquipmentIds: freeze([]), equipmentEnhancementLevels: freeze({}) }),
     vehicleMaxHp: Math.max(V100_VEHICLE.baseHp, Number(save?.vehicle?.maxHp) || V100_VEHICLE.baseHp),
     ...(typeof onBattleResult === "function" ? { onBattleResult } : {}),
   });
