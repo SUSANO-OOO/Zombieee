@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { createWriteStream } from "node:fs";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile, appendFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseWebKitHostProcStat, createWebKitHostResourceTelemetry } from "../webkit-host-resource-telemetry.mjs";
 
 export const SOURCE_HEAD = "0f6dbad8f8aac90e3b50cdaa2bd233a76d7c173f";
+export const WEBKIT_LIBRARY_SHA256 = "daa10258a2161710c7c1d6a3e3f7abe0a100a6f269c00f5843dcd0f7df46ec29";
 export const DIAGNOSTIC_PATHS = Object.freeze([
   ".github/workflows/v100-native-diagnostic.yml",
   "scripts/native-diagnostic/observe.mjs",
@@ -54,6 +56,15 @@ export function assertDiagnosticOnlyDiff(paths) {
     `diagnostic branch modified candidate bytes: ${JSON.stringify(paths)}`);
 }
 
+export function nativeRenderingIdentity(env, librarySha256) {
+  assert.equal(env.WEBKIT_SKIA_ENABLE_CPU_RENDERING, "1", "CPU isolation setting missing; no browser started");
+  assert.equal(librarySha256, WEBKIT_LIBRARY_SHA256, "fixed WebKit library mismatch; no browser started");
+  for (const key of ["WEBKIT_SKIA_GPU_PAINTING_THREADS", "WEBKIT_SKIA_CPU_PAINTING_THREADS"]) {
+    assert.equal(env[key], undefined, `unplanned rendering variable: ${key}`);
+  }
+  return { cpuRendering: "1", librarySha256, intervention: "native-skia-cpu-backend-only" };
+}
+
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 async function descendants(root) {
   // PPid also finds children spawned by a non-main thread; never attach outside
@@ -79,6 +90,8 @@ async function preflight(output) {
   assertDiagnosticOnlyDiff(diff);
   assert.equal(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf8" }).trim(), "",
     "diagnostic checkout has tracked modifications");
+  const library = await readFile("/ms-playwright/webkit-2215/minibrowser-wpe/lib/libWPEWebKit-2.0.so.1.7.0");
+  const rendering = nativeRenderingIdentity(process.env, createHash("sha256").update(library).digest("hex"));
   const caps = (await readFile("/proc/self/status", "utf8")).match(/^CapEff:\s*([a-f0-9]+)$/mu)?.[1];
   assert(caps && (BigInt(`0x${caps}`) & (1n << 19n)) !== 0n, "SYS_PTRACE diagnostic capability missing");
   const probe = spawn("/bin/sleep", ["2"], { stdio: "ignore" });
@@ -90,7 +103,7 @@ async function preflight(output) {
     assert.match(result, /NATIVE_PROCESS_EXITED/u, "native debugger script did not complete benign preflight");
     await writeFile(path.join(output, "native-preflight.txt"), result);
   } finally { probe.kill("SIGTERM"); }
-  return { sourceHead: SOURCE_HEAD,
+  return { sourceHead: SOURCE_HEAD, rendering,
     diagnosticHead: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
     kernel: execFileSync("uname", ["-a"], { encoding: "utf8" }).trim(),
     corePattern: (await readFile("/proc/sys/kernel/core_pattern", "utf8")).trim(),

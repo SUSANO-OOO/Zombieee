@@ -1,7 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { diagnosticCase, coreStatus, assertDiagnosticOnlyDiff, DIAGNOSTIC_PATHS } from "../../scripts/native-diagnostic/observe.mjs";
+import { diagnosticCase, coreStatus, assertDiagnosticOnlyDiff, DIAGNOSTIC_PATHS,
+  nativeRenderingIdentity, WEBKIT_LIBRARY_SHA256 } from "../../scripts/native-diagnostic/observe.mjs";
+
+test("native CPU comparison is explicit, exact-library and single-variable only", async () => {
+  const env = { WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1" };
+  assert.equal(nativeRenderingIdentity(env, WEBKIT_LIBRARY_SHA256).cpuRendering, "1");
+  for (const value of [undefined, "0", "true"]) {
+    assert.throws(() => nativeRenderingIdentity({ WEBKIT_SKIA_ENABLE_CPU_RENDERING: value }, WEBKIT_LIBRARY_SHA256));
+  }
+  assert.throws(() => nativeRenderingIdentity(env, "different-library"));
+  for (const key of ["WEBKIT_SKIA_GPU_PAINTING_THREADS", "WEBKIT_SKIA_CPU_PAINTING_THREADS"]) {
+    assert.throws(() => nativeRenderingIdentity({ ...env, [key]: "0" }, WEBKIT_LIBRARY_SHA256));
+  }
+  const workflow = await readFile(new URL("../../.github/workflows/v100-native-diagnostic.yml", import.meta.url), "utf8");
+  assert(workflow.includes('WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"'));
+  assert(workflow.includes("-e WEBKIT_SKIA_ENABLE_CPU_RENDERING "));
+});
 
 test("diagnostic cannot change candidate sources or harnesses", () => {
   assert.doesNotThrow(() => assertDiagnosticOnlyDiff([...DIAGNOSTIC_PATHS]));
