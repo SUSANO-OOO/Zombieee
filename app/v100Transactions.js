@@ -83,26 +83,64 @@ export function createV100BattleResult({
   });
 }
 
+function storyResultIdentity(result) {
+  const stage = V100_STAGE_IDS.includes(result?.stageId) ? V100_STAGE_BY_ID[result.stageId] : null;
+  const runId = result?.battleRunId;
+  if (!stage || result.stageNumber !== stage.number || typeof runId !== "string"
+    || runId.length === 0 || runId.length > 256 || runId.trim() !== runId || /[\u0000-\u001f]/.test(runId)
+    || (result.resultId !== undefined && result.resultId !== runId)) return null;
+  return { stage, runId, receipt: `v100:s${String(stage.number).padStart(2, "0")}:result:${runId}` };
+}
+
+function isSettledStoryResult(save, identity) {
+  if (!identity) return false;
+  const stagePrefix = `v100:s${String(identity.stage.number).padStart(2, "0")}`;
+  // Pre-fix draft saves retain the latest finalized run and explicit replay IDs.
+  // Earlier unrecorded first-run IDs cannot be reconstructed from a stage receipt.
+  return save.receipts.includes(identity.receipt)
+    || save.receipts.includes(`${stagePrefix}:replay:${identity.runId}`)
+    || (save.lastResult?.won === true && typeof save.lastResult.finalizedAt === "string"
+      && save.lastResult.stageId === identity.stage.id && save.lastResult.battleRunId === identity.runId);
+}
+
+function isValidStoryVictory(result, identity) {
+  return Boolean(identity && result.won === true && result.objectiveComplete === true
+    && Number.isFinite(result.vehicleHp) && result.vehicleHp > 0
+    && Number.isFinite(result.vehicleMaxHp) && result.vehicleMaxHp >= result.vehicleHp
+    && result.stars === v100StarsForVehicle({ won: true, vehicleHp: result.vehicleHp, vehicleMaxHp: result.vehicleMaxHp })
+    && (!bossPayloadForStage(identity.stage.number) || result.bossDefeated === true));
+}
+
+function sameStoryResult(left, right) {
+  return ["stageId", "stageNumber", "battleRunId", "won", "objectiveComplete", "bossDefeated", "vehicleHp", "vehicleMaxHp", "stars", "elapsedSeconds", "unitDeaths"]
+    .every(key => left?.[key] === right?.[key]);
+}
+
 export function recordV100PendingResult(save, result, { now } = {}) {
   const current = normalizeV100Save(save);
-  if (!result || result.stageId !== V100_STAGE_IDS[result.stageNumber - 1]) return { applied: false, reason: "invalid-result", save: current };
-  if (result.won !== true) return { applied: false, reason: "defeat-no-pending-result", save: current };
+  const identity = storyResultIdentity(result);
+  if (!identity || !isValidStoryVictory(result, identity)) return { applied: false, reason: "invalid-result", save: current };
+  if (isSettledStoryResult(current, identity)) return { applied: false, duplicate: true, reason: "duplicate-result", save: current };
   if (current.pendingResult) return { applied: false, reason: "pending-result-exists", save: current };
   return applyV100SaveMutation(current, (next) => ({ ...next, pendingResult: { ...result } }), { now });
 }
 
 export function finalizeV100PendingResult(save, { result = null, now } = {}) {
   const current = normalizeV100Save(save);
-  const pending = result ?? current.pendingResult;
-  if (!pending || !pending.stageId || pending.won !== true) return { applied: false, reason: "pending-result-missing", save: current };
-  const stage = V100_STAGE_BY_ID[pending.stageId];
+  const pending = current.pendingResult;
+  if (!pending) return { applied: false, reason: "pending-result-missing", save: current };
+  const identity = storyResultIdentity(pending);
+  if (!identity || !isValidStoryVictory(pending, identity)) return { applied: false, reason: "invalid-result", save: current };
+  if (result !== null && (!storyResultIdentity(result) || !sameStoryResult(result, pending))) return { applied: false, reason: "pending-result-mismatch", save: current };
+  if (isSettledStoryResult(current, identity)) return { applied: false, duplicate: true, reason: "duplicate-result", save: current };
+  const stage = identity.stage;
   if (!stage || !current.availableStageIds.includes(stage.id)) return { applied: false, reason: "stage-locked", save: current };
   const stageNumber = stage.number;
   const firstClear = !current.completedStageIds.includes(stage.id);
   const priorStars = integer(current.bestStars[stage.id], 0, 3);
   const stars = Math.max(priorStars, integer(pending.stars, 0, 3));
   let reward = 0;
-  let receipts = [...current.receipts];
+  let receipts = appendReceipt([...current.receipts], identity.receipt);
   if (firstClear) {
     const firstReceipt = stage.receipts.firstClear;
     if (!receipts.includes(firstReceipt)) {
@@ -150,9 +188,12 @@ export function finalizeV100PendingResult(save, { result = null, now } = {}) {
           outbreakIds: [...new Set([...updated.bosses.outbreakIds, boss.outbreakId])],
           survivalIds: [...new Set([...updated.bosses.survivalIds, boss.survivalId])],
           storyReplayStageNumbers: [...new Set([...updated.bosses.storyReplayStageNumbers, stageNumber])],
-          defeatCounts: { ...updated.bosses.defeatCounts, [boss.id]: integer(updated.bosses.defeatCounts[boss.id]) + 1 },
         };
       }
+      updated.bosses = {
+        ...updated.bosses,
+        defeatCounts: { ...updated.bosses.defeatCounts, [boss.id]: integer(updated.bosses.defeatCounts[boss.id]) + 1 },
+      };
     }
     if (stageNumber === 30 && firstClear) updated.postGameAvailable = true;
     return updated;

@@ -114,6 +114,11 @@ function formatReason(reason: string | undefined) {
     "upgrade-cap": "この装備は最大強化です。",
     "unknown-unit": "隊員情報を読み込めませんでした。",
     "unknown-support": "支援情報を読み込めませんでした。",
+    "invalid-result": "戦果の内容を確認できませんでした。保存データは保持しています。",
+    "duplicate-result": "この戦果は確定済みです。報酬は重ねて受け取れません。",
+    "pending-result-exists": "先に保存済みの戦果を確定してください。",
+    "pending-result-missing": "確定する戦果が見つかりません。保存データを確認してください。",
+    "pending-result-mismatch": "保存済みの戦果と一致しません。保存データは保持しています。",
   };
   return labels[reason ?? ""] ?? reason ?? "操作を完了できませんでした。";
 }
@@ -631,7 +636,8 @@ export function V100Campaign() {
     workingSave = marked;
     if (flow.phase === "post") {
       const finalized = finalizeV100PendingResult(workingSave);
-      if (finalized.applied) workingSave = finalized.save;
+      if (!finalized.applied) { setNotice(formatReason(finalized.reason)); return; }
+      workingSave = finalized.save;
     }
     const markedFlow = markV100FlowEventRead(flow, flow.eventId);
     const transition = completeV100Event(markedFlow, { skipped });
