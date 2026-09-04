@@ -21,11 +21,11 @@ export const V100_STORAGE_EVENT_KEYS = Object.freeze([
 let ownerSequence = 0;
 
 function storageFor(host) {
-  return host?.localStorage ?? null;
+  try { return host?.localStorage ?? null; } catch { return null; }
 }
 
 function nowFor(host, override = null) {
-  if (Number.isFinite(Number(override))) return Number(override);
+  if (override !== null && override !== undefined && Number.isFinite(Number(override))) return Number(override);
   return typeof host?.Date?.now === "function" ? host.Date.now() : Date.now();
 }
 
@@ -118,7 +118,7 @@ export function readV100BrowserSave(host = globalThis) {
   return {
     save: candidate?.save ?? createDefaultV100Save(),
     source: candidate?.source ?? "default",
-    rawLegacy: storage.getItem(V100_LEGACY_STORAGE_KEY) ?? "",
+    rawLegacy: (() => { try { return storage.getItem(V100_LEGACY_STORAGE_KEY) ?? ""; } catch { return ""; } })(),
     ownership: readOwner(storage),
   };
 }

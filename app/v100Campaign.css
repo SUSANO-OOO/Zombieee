@@ -15,12 +15,12 @@
   isolation: isolate;
 }
 .v100-shell *, .v100-shell *::before, .v100-shell *::after { box-sizing: border-box; }
-.v100-shell button, .v100-shell input { font: inherit; }
-.v100-shell button { min-height: 44px; padding: 9px 14px; border: 1px solid #4c6260; border-radius: 5px; color: #f1ead7; background: linear-gradient(180deg, #213033, #121d1e); cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
-.v100-shell button:hover:not(:disabled), .v100-shell button.selected { border-color: #e0ae5f; background: #2d3c37; }
-.v100-shell button:active:not(:disabled) { transform: translateY(1px); }
-.v100-shell button:focus-visible, .v100-shell input:focus-visible { outline: 2px solid #f2bd68; outline-offset: 2px; }
-.v100-shell button:disabled { opacity: .42; cursor: not-allowed; }
+.v100-shell:not([data-v100-phase="battle"]) button, .v100-shell:not([data-v100-phase="battle"]) input { font: inherit; }
+.v100-shell:not([data-v100-phase="battle"]) button { min-height: 44px; padding: 9px 14px; border: 1px solid #4c6260; border-radius: 5px; color: #f1ead7; background: linear-gradient(180deg, #213033, #121d1e); cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+.v100-shell:not([data-v100-phase="battle"]) button:hover:not(:disabled), .v100-shell:not([data-v100-phase="battle"]) button.selected { border-color: #e0ae5f; background: #2d3c37; }
+.v100-shell:not([data-v100-phase="battle"]) button:active:not(:disabled) { transform: translateY(1px); }
+.v100-shell:not([data-v100-phase="battle"]) button:focus-visible, .v100-shell:not([data-v100-phase="battle"]) input:focus-visible { outline: 2px solid #f2bd68; outline-offset: 2px; }
+.v100-shell:not([data-v100-phase="battle"]) button:disabled { opacity: .42; cursor: not-allowed; }
 .v100-primary { color: #fff8e9 !important; border-color: #efb568 !important; background: linear-gradient(180deg, #b66b35, #713b24) !important; font-weight: 800; letter-spacing: .03em; }
 .v100-topbar, .v100-notice, .v100-map-layout, .v100-formation-panel { max-width: 1440px; margin-left: auto; margin-right: auto; }
 .v100-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
@@ -1179,7 +1179,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .v100-map-node, .v100-roster-card.game-unit-card, .v100-shell button { transition: none; }
+  .v100-map-node, .v100-roster-card.game-unit-card, .v100-shell:not([data-v100-phase="battle"]) button { transition: none; }
 }
 
 /* Event dialogue keeps the proven game-scene grammar: the active speaker
@@ -1253,3 +1253,8 @@
   right: auto;
   left: 8%;
 }
+
+.v100-save-retry { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 20px; background: #071011ed; color: #f1ead7; }
+.v100-save-retry > div { width: min(560px, 100%); padding: 24px; border: 1px solid #e2b666; background: #172526; }
+.v100-save-retry button { min-height: 44px; padding: 9px 14px; font: inherit; cursor: pointer; }
+.v100-shell[data-v100-phase="battle"] > .v100-notice { position: fixed; z-index: 300; left: 12px; right: 12px; top: 10px; }

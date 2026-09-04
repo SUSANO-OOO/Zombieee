@@ -39,6 +39,12 @@ function destinationForPhase(phase, eventId, stageId) {
   return stageId ? "event" : "prologue";
 }
 
+/**
+ * @param {{playerName?: string, completedStageIds?: string[], readStoryEventIds?: string[],
+ * flowState?: {phase?: string, eventId?: string | null, stageId?: string | null, stageNumber?: number | null, nodeIndex?: number, firstClear?: boolean, finalized?: boolean, destination?: string} | null,
+ * eventCursor?: {eventId?: string, nodeIndex?: number} | null,
+ * pendingResult?: Record<string, unknown> | null, lastResult?: Record<string, unknown> | null}} [input]
+ */
 export function createV100StoryFlowState({
   playerName = "",
   completedStageIds = [],
@@ -46,12 +52,14 @@ export function createV100StoryFlowState({
   flowState = null,
   eventCursor = null,
   pendingResult = null,
+  lastResult = null,
 } = {}) {
   const saved = flowState && typeof flowState === "object" ? flowState : {};
   const cursor = eventCursor && typeof eventCursor === "object" ? eventCursor : null;
   const savedPhase = V100_FLOW_PHASES.includes(saved.phase) && !(saved.phase === "name" && playerName) ? saved.phase : null;
   const cursorEventId = typeof cursor?.eventId === "string" && cursor.eventId.startsWith("v100:event:") ? cursor.eventId : null;
   const savedEventId = typeof saved.eventId === "string" && saved.eventId.startsWith("v100:event:") ? saved.eventId : null;
+  const restoredResult = pendingResult ?? (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId ? lastResult : null);
   const restoredEventId = cursorEventId ?? savedEventId;
   const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId);
   const phase = savedPhase
@@ -72,7 +80,7 @@ export function createV100StoryFlowState({
     playerName: playerName || null,
     completedStageIds: [...completedStageIds],
     readStoryEventIds: [...readStoryEventIds],
-    pendingResult: pendingResult && typeof pendingResult === "object" ? { ...pendingResult } : null,
+    pendingResult: restoredResult && typeof restoredResult === "object" ? { ...restoredResult } : null,
     firstClear: saved.firstClear === true,
     canSkip: Boolean(playerName),
     finalized: saved.finalized === true,
@@ -192,9 +200,17 @@ export function finalizeV100Flow(state) {
   return { accepted: true, state: stateWith(state, { phase: "map", eventId: null, destination: "map", completedStageIds: completed, canSkip: false, finalized: true }) };
 }
 
-export function defeatV100Flow(state) {
-  if (state.phase !== "result" || state.pendingResult?.won === true) return { accepted: false, reason: "defeat-result-required", state };
-  return { accepted: true, state: stateWith(state, { phase: "formation", eventId: null, pendingResult: null, destination: "formation", canSkip: false, finalized: true }) };
+export function leaveV100Battle(state, action) {
+  if (state.phase !== "battle" || !state.stageId) return { accepted: false, reason: "battle-not-active", state };
+  if (!["withdraw", "loadout", "restart"].includes(action)) return { accepted: false, reason: "unknown-battle-action", state };
+  const destination = { withdraw: "map", loadout: "formation", restart: "battle" }[action];
+  return { accepted: true, state: stateWith(state, { phase: destination, destination, eventId: null, pendingResult: null, firstClear: false, canSkip: false, finalized: false }) };
+}
+
+export function defeatV100Flow(state, destination = "formation") {
+  if (state.phase !== "result" || state.pendingResult?.won !== false) return { accepted: false, reason: "defeat-result-required", state };
+  if (destination !== "formation" && destination !== "map") return { accepted: false, reason: "invalid-defeat-destination", state };
+  return { accepted: true, state: stateWith(state, { phase: destination, eventId: null, pendingResult: null, destination, canSkip: false, finalized: true }) };
 }
 
 export function skipV100StoryEvent(state) {

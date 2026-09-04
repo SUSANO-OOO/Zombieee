@@ -190,6 +190,18 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 ## 6. Version 1.0.0 execution cursor — r114 Section 138
 
+### Current: Section138.16 production lifecycle completion (2026-09-04)
+
+Local lifecycle packet validated: build761eeaa8; focused42/full1333; Chromium/WebKit12/12 and40 actual PNGs; content/static; full source lint0 errors/12 existing warnings. See [Issue172#5537823331](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537823331). Preserve a normal local commit while CI953 completes; no push that cancels the running evidence. Next source work is support/vehicle binding and entry/version/PWA. Final release quality remains unaccepted.
+
+`PRODUCT_DESIGN_CHANGE`: `0`; `SAME_GATE_REPEAT_COUNT`: `26`; `M3_PASSED`: `NO`. The r114 minimum completed-impact observability and its atomic/deadline/capture requirements remain unchanged.
+
+- ROLE/NEXT_OWNER: SOL_REMEDIATION; exact contract [Issue172#5537485136](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537485136). Current audited base88bea5f0515bffa63b054e27f553cd818be46a9b/tree3bd2e45da551d4d03dab5ff0bf24a491e3534c37.
+- CI953 focused PhaseG9/9, all enemy348 PNGs and Hosted3 ready/35 recoveries/15 mission/45 mutable states/48 PNGs have actual readbacks. Downstream jobs remain separately tracked on GitHub. This is not full54 or release acceptance.
+- Normal player audit reproduced withdrawal restarting battle. Correct parent exit/retry/defeat destinations, persistence failure handling and lease clock, unwired owned-unit level upgrade, authoring labels and CSS scope under the eleven-path contract. Source/runtime gates precede normal transport.
+- Support/vehicle binding, production entry/version/PWA, full local54 and unfiltered required remote54/all gates, human runtime/audio/save/mobile/PWA and fixed-HEAD SOL_FINAL_REVIEW remain open. M3_PASSED:NO. FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT is the sole normal Producer stop; all release actions remain approval-gated.
+- The following138.15 and older cursor entries are historical and do not override this entry.
+
 Current authority delta (2026-09-03): [Producer FINAL-ONLY restoration / coherent contact-emission correction](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5523572497), Design Section 138.10. Routine technical failures stay inside SOL_DESIGN -> coherent correction -> SOL_REMEDIATION -> validation; they are not Producer approval blockers. Existing Master Directive v3 and persistent goal remain authoritative. Only the final frozen-candidate Producer checkpoint unlocks integration/merge/tag/Release/official Pages.
 
 Current cursor: Design138.15 / [Issue172#5536760852](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5536760852)。CI952のrequired Mac focused PhaseG9/9は実PNG18枚・transaction9件まで照合済み。PR Verifyとenemy348画像もgreen。別laneのHosted mission/delay844x340は旧pixel oracleでred。Mac有限診断33844020781/attempt1の12観測・72画像を再計算し、正しく描いた参照画像自身もworld/native/world変換で旧0.72基準を下回る一方、同じnative画素配置のproduction比較は99.8%以上と確認。ownerはQA_HARNESS / PIXEL_ORACLE_COORDINATE_GRID_MISMATCH。diagnosticはacceptanceではない。minimum completed-impact observabilityは不変。RESUME_FROM exact5-pathのQA画素比較補正（元のworld mask/count/signature/paint coverage維持、native色比較、基準不変） -> source/functional/exact-byte -> 既存24観測のoffline replay -> build -> canonical mission/delay844x340 focused Hosted一回 -> full Hosted/tests/content/lint/build/static -> exact direct-parent non-force candidate -> one automatic required focused CI。孤立diagnosticやlocal ordered9/9をこのQA関数だけの変更で無目的に再実行しない。full54/validator、全runtime/human/audio/save/PWA/mobile、fixed-HEAD SOL_FINAL_REVIEWは後続必須。FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT前のreleaseは禁止。
@@ -563,3 +575,5 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 - exact HEAD/treeの12画面を含むfinal release-candidate packageとSOL human-player quality audit未完了
 - read-only／adversarial fixed-HEAD `SOL_FINAL_REVIEW`と一度だけの`FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`未完了
 - High／Medium finding未解消
+
+Section138.16 type diagnostic clarification: [Issue172#5537628336](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537628336) records629 standalone strict diagnostics on the original88bea5f baseline. Required existing build/lint/tests/browser gates remain unchanged; compare newly introduced type diagnostics separately, without claiming strict tsc green or adding suppressions. Victory result exposes the mandatory post-story action; map remains after finalization.

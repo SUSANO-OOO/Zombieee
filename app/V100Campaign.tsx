@@ -30,6 +30,7 @@ import {
   purchaseV100Unit,
   recordV100PendingResult,
   upgradeV100Vehicle,
+  upgradeV100Unit,
 } from "./v100Transactions.js";
 import {
   beginV100StageAttempt,
@@ -39,6 +40,7 @@ import {
   enterV100Battle,
   enterV100PostResult,
   finishV100Battle,
+  leaveV100Battle,
   markV100FlowEventRead,
   v100StoryFlowCheckpoint,
 } from "./v100StoryFlow.js";
@@ -48,6 +50,7 @@ import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 import { campaignUnitIdToCombatKind } from "./campaign.js";
+import { unitContentFor } from "./content/unitCatalog.js";
 import { AshfallGame, type AshfallBattleResult } from "./AshfallGame";
 import { v100StageRuntimeFor } from "./v100StageRuntime.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
@@ -61,13 +64,14 @@ import {
   importV100BrowserSave,
   createV100SaveOwnerId,
   persistV100BrowserSave,
+  releaseV100SaveOwnership,
   readV100BrowserSave,
   V100_STORAGE_EVENT_KEYS,
 } from "./v100CampaignStorage.js";
 import { EVENT_PORTRAIT_PROFILES, V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./v100Campaign.css";
 
-type Save = ReturnType<typeof createDefaultV100Save>;
+type Save = ReturnType<typeof readV100BrowserSave>["save"] & { bestStars: Record<string, number> };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
 type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string };
 type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "data";
@@ -252,6 +256,10 @@ function eventBackdropFor(presentation: ReturnType<typeof v100EventPresentationF
   return fallback;
 }
 
+function unitDescriptionFor(unitId: string) {
+  return unitContentFor(campaignUnitIdToCombatKind(unitId))?.desc ?? "";
+}
+
 function formationCardForUnit(unitId: string) {
   const kind = campaignUnitIdToCombatKind(unitId);
   return kind ? FORMATION_CARD_ART[kind] ?? null : null;
@@ -265,6 +273,7 @@ export function V100Campaign() {
   const [nameInput, setNameInput] = useState("");
   const [nameError, setNameError] = useState("");
   const [notice, setNotice] = useState("");
+  const [unsavedBattleResult, setUnsavedBattleResult] = useState<AshfallBattleResult | null>(null);
   const [giftPopup, setGiftPopup] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [replayEventId, setReplayEventId] = useState<string | null>(null);
@@ -290,11 +299,23 @@ export function V100Campaign() {
     };
   }, []);
 
+  useEffect(() => {
+    const release = () => releaseV100SaveOwnership(globalThis, saveOwnerId);
+    window.addEventListener("pagehide", release);
+    return () => { window.removeEventListener("pagehide", release); release(); };
+  }, [saveOwnerId]);
+
   const commitSave = useCallback((nextSave: Save) => {
-    const result = persistV100BrowserSave(nextSave, globalThis, { ownerId: saveOwnerId });
+    let result;
+    try {
+      result = persistV100BrowserSave(nextSave, globalThis, { ownerId: saveOwnerId });
+    } catch {
+      setNotice("セーブを書き込めませんでした。現在の画面と進行を保持します。");
+      return null;
+    }
     if (!result.ok) {
       setNotice(result.reason === "ownership-conflict" ? "別のタブでセーブを更新中です。画面を再読み込みして続けてください。" : "セーブを書き込めませんでした。現在の進行を保持します。");
-      return result.save;
+      return null;
     }
     const normalized = result.save;
     setSave(normalized);
@@ -318,6 +339,7 @@ export function V100Campaign() {
         flowState: loaded.save.campaignStarted ? loaded.save.flowState : null,
         eventCursor: loaded.save.eventCursor,
         pendingResult: loaded.save.pendingResult,
+        lastResult: loaded.save.lastResult,
       });
       setSave(loaded.save);
       setSelectedStageId(loaded.save.availableStageIds[0] ?? V100_STAGE_IDS[0]);
@@ -351,6 +373,7 @@ export function V100Campaign() {
       flowState: nextSave.campaignStarted ? nextSave.flowState : null,
       eventCursor: nextSave.eventCursor,
       pendingResult: nextSave.pendingResult,
+      lastResult: nextSave.lastResult,
     });
     setFlow(restoredFlow);
     setStoryIndex(restoredFlow.nodeIndex ?? 0);
@@ -364,8 +387,7 @@ export function V100Campaign() {
     // The entitlement transaction is deliberately performed only after the
     // safe map screen is mounted.
     const timer = window.setTimeout(() => {
-      commitSave(result.save);
-      setGiftPopup(true);
+      if (commitSave(result.save)) setGiftPopup(true);
     }, 0);
     return () => window.clearTimeout(timer);
   }, [commitSave, flow.phase, hydrated, save]);
@@ -426,9 +448,11 @@ export function V100Campaign() {
       ...draft,
       flowState: checkpoint.flowState,
       eventCursor: checkpoint.eventCursor,
+      lastResult: next.phase === "result" && next.pendingResult?.won === false ? next.pendingResult : draft.lastResult,
     }));
-    const normalized = persisted.applied ? commitSave(persisted.save) : baseSave;
-    setSave(normalized);
+    if (!persisted.applied) { setNotice(formatReason(persisted.reason)); return null; }
+    const normalized = commitSave(persisted.save);
+    if (!normalized) return null;
     setFlow(next);
     setStoryIndex(Math.max(0, Math.floor(Number(nodeIndex) || 0)));
     setSurface("campaign");
@@ -452,6 +476,7 @@ export function V100Campaign() {
   }, []);
 
   const handleProductionBattleResult = useCallback((raw: AshfallBattleResult) => {
+    if (flow.phase !== "battle" || raw.resultId !== ["v100", flow.stageId, save.revision].join(":")) return;
     const result = createV100BattleResult({
       stageId: raw.stageId,
       battleRunId: raw.resultId,
@@ -481,8 +506,22 @@ export function V100Campaign() {
       }
       nextSave = pending.save;
     }
-    updateFlow(transition.state, { baseSave: nextSave });
+    if (updateFlow(transition.state, { baseSave: nextSave })) {
+      setUnsavedBattleResult(null);
+      setNotice("");
+    } else {
+      setUnsavedBattleResult(raw);
+    }
   }, [flow, save, updateFlow]);
+
+  const handleProductionBattleAction = useCallback((action: "withdraw" | "loadout" | "restart") => {
+    if (unsavedBattleResult) return false;
+    const transition = leaveV100Battle(flow, action);
+    if (!transition.accepted) return false;
+    const accepted = Boolean(updateFlow(transition.state));
+    if (accepted) setNotice("");
+    return accepted;
+  }, [flow, unsavedBattleResult, updateFlow]);
 
   const productionSession = useMemo(() => {
     if (flow.phase !== "battle" || !flow.stageId) return null;
@@ -491,8 +530,8 @@ export function V100Campaign() {
       stageId: flow.stageId,
       resultId: `v100:${flow.stageId}:${save.revision}`,
     });
-    return { ...session, onBattleResult: handleProductionBattleResult };
-  }, [flow.phase, flow.stageId, handleProductionBattleResult, save]);
+    return { ...session, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction };
+  }, [flow.phase, flow.stageId, handleProductionBattleResult, handleProductionBattleAction, save]);
 
   const startCampaign = (eventSubmit: FormEvent<HTMLFormElement>) => {
     eventSubmit.preventDefault();
@@ -563,15 +602,13 @@ export function V100Campaign() {
   };
 
   const continueFromResult = () => {
-    if (flow.pendingResult?.won !== true) {
-      const retry = defeatV100Flow(flow);
-      if (retry.accepted) {
-        updateFlow(retry.state, { baseSave: save });
-      }
-      return;
-    }
     const next = enterV100PostResult(flow);
     if (next.accepted) updateFlow(next.state, { baseSave: save });
+  };
+
+  const leaveDefeatResult = (destination: "formation" | "map") => {
+    const next = defeatV100Flow(flow, destination);
+    if (next.accepted) updateFlow(next.state);
   };
 
   const rename = () => {
@@ -582,14 +619,13 @@ export function V100Campaign() {
       setNotice(formatReason(result.reason));
       return;
     }
-    commitSave(result.save);
-    setNotice("表示名だけを更新しました。イベント・報酬・解放状態は変更していません。");
+    if (commitSave(result.save)) setNotice("表示名を更新しました。");
   };
 
   const acknowledgeGift = () => {
     const result = acknowledgeV100LegacyGiftPopup(save, { screen: "map" });
-    if (result.applied) commitSave(result.save);
-    setGiftPopup(false);
+    if (result.applied && !commitSave(result.save)) return;
+    if (result.applied || ("duplicate" in result && result.duplicate)) setGiftPopup(false);
   };
 
   const downloadBackup = () => {
@@ -607,11 +643,12 @@ export function V100Campaign() {
     const reader = new FileReader();
     reader.onload = () => {
       const result = importV100BrowserSave(String(reader.result ?? ""));
-      if (!result.ok) {
+      if (!result.ok || !result.save) {
         setNotice("作戦セーブとして読み込めませんでした。現在のセーブは保持しています。");
         return;
       }
       const restoredSave = commitSave(result.save);
+      if (!restoredSave) return;
       const restoredFlow = createV100StoryFlowState({
         playerName: restoredSave.campaignStarted ? restoredSave.playerName : "",
         completedStageIds: restoredSave.completedStageIds,
@@ -619,6 +656,7 @@ export function V100Campaign() {
         flowState: restoredSave.flowState,
         eventCursor: restoredSave.eventCursor,
         pendingResult: restoredSave.pendingResult,
+        lastResult: restoredSave.lastResult,
       });
       setSave(restoredSave);
       setFlow(restoredFlow);
@@ -641,6 +679,7 @@ export function V100Campaign() {
       </header>}
 
       {notice && <p className="v100-notice" role="status">{notice}</p>}
+      {unsavedBattleResult && <div className="v100-save-retry" role="alertdialog" aria-modal="true" aria-label="戦闘結果の保存"><div><h2>戦闘結果を保存できませんでした</h2><p>結果はこの画面で保持しています。保存を再試行してください。</p><button type="button" className="v100-primary" onClick={() => handleProductionBattleResult(unsavedBattleResult)}>結果の保存を再試行</button></div></div>}
 
       {flow.phase === "name" && (
         <section className="v100-title-screen" aria-labelledby="v100-name-title" style={{ backgroundImage: `url(${PRODUCTION_VISUALS.title})` }}>
@@ -702,6 +741,7 @@ export function V100Campaign() {
           save={save}
           onBack={() => openSurface("campaign")}
           onPurchase={(unitId) => applySaveTransaction(purchaseV100Unit(save, unitId))}
+          onLevel={(unitId, expectedLevel) => applySaveTransaction(upgradeV100Unit(save, unitId, { expectedLevel }))}
         />
       )}
 
@@ -724,11 +764,11 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "battle" && productionSession && (
-        <AshfallGame externalSession={productionSession} />
+        <AshfallGame externalSession={productionSession} key={productionSession.resultId} />
       )}
 
       {flow.phase === "result" && (
-        <ResultView result={flow.pendingResult} firstClear={flow.firstClear} onContinue={continueFromResult} onRetry={continueFromResult} onMap={continueFromResult} />
+        <ResultView result={flow.pendingResult} firstClear={flow.firstClear} onContinue={continueFromResult} onRetry={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
       )}
 
       {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
@@ -826,12 +866,12 @@ function FormationView({ save, stageId, onSlotChange, onStart }: { save: Save; s
     <div className="v100-panel-heading v100-sortie-heading"><div><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")} / 出撃準備` : "出撃準備 / 7枠"}</span><h2>出撃編成</h2>{stage && <p className="v100-formation-stage-name">{stageDisplayNameFor(stage)}</p>}</div><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length} <small>/ 7 配置</small></strong></div>
     <div className="v100-formation-brief"><strong>今回の部隊</strong><span>枠を選び、隊員を配置</span><em>支援・装甲車両は出撃装備</em></div>
     <div className="v100-slot-rail" aria-label="7枠の編成"><div className="v100-slot-track">{save.formationSlots.map((unitId, index) => { const art = unitId ? formationCardForUnit(unitId) : null; const unit = unitId ? UNIT_BY_ID.get(unitId) : null; return <button type="button" key={`slot-${index}`} className={`v100-slot ${activeSlot === index ? "selected" : ""} ${unitId ? "filled" : "empty"}`} onClick={() => setActiveSlot(index)} aria-pressed={activeSlot === index} aria-label={`編成枠${index + 1}${unit ? ` ${unit.displayName}` : " 空き"}`}><span className="v100-slot-portrait">{art ? <img src={art} alt="" /> : <i aria-hidden="true">＋</i>}</span><span className="v100-slot-meta"><small>枠 {index + 1}</small><strong>{unit ? unit.displayName : "空席"}</strong><em>{unit ? v100RoleLabelFor(unit.role) : "隊員を選択"}</em></span></button>; })}</div></div>
-    <div className="v100-formation-workspace"><div className="v100-roster-heading"><h3>隊員</h3><span>枠 {activeSlot + 1} に配置</span></div><div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => { const art = formationCardForUnit(unit.id); const level = Math.max(1, Number(save.unitLevels[unit.id]) || 1); return <button type="button" className={`v100-roster-card game-unit-card ${activeUnitId === unit.id ? "selected" : ""}`} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={`${unit.displayName}を枠${activeSlot + 1}へ配置`}><span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span><span className="v100-roster-card-copy"><strong>{unit.displayName}</strong><small>{v100RoleLabelFor(unit.role)} / Lv.{level}</small><small>武器・射程・固有能力</small></span></button>; })}</div><aside className="v100-formation-focus" aria-label="選択中の隊員">{activeUnit ? <><span className="v100-kicker">選択中 / 枠 {activeSlot + 1}</span><div className="v100-formation-focus-art">{formationCardForUnit(activeUnit.id) && <img src={formationCardForUnit(activeUnit.id) as string} alt="" />}</div><h3>{activeUnit.displayName}</h3><strong>{v100RoleLabelFor(activeUnit.role)}</strong><p>武器・射程・固有能力</p><button type="button" onClick={() => onSlotChange(activeSlot, activeUnit.id)}>この隊員を配置</button></> : <><span className="v100-kicker">枠 {activeSlot + 1}</span><div className="v100-empty-focus"><i aria-hidden="true">＋</i><span>隊員を選択</span></div></>}</aside></div><div className="v100-formation-loadout"><article><span>支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備で選択</small></article><article><span>装甲車両</span><strong>耐久 {save.vehicle.maxHp}</strong><small>戦場で操作</small></article></div></div>
+    <div className="v100-formation-workspace"><div className="v100-roster-heading"><h3>隊員</h3><span>枠 {activeSlot + 1} に配置</span></div><div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => { const art = formationCardForUnit(unit.id); const level = Math.max(1, Number(save.unitLevels[unit.id]) || 1); return <button type="button" className={`v100-roster-card game-unit-card ${activeUnitId === unit.id ? "selected" : ""}`} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={`${unit.displayName}を枠${activeSlot + 1}へ配置`}><span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span><span className="v100-roster-card-copy"><strong>{unit.displayName}</strong><small>{v100RoleLabelFor(unit.role)} / Lv.{level}</small><small>{unitDescriptionFor(unit.id)}</small></span></button>; })}</div><aside className="v100-formation-focus" aria-label="選択中の隊員">{activeUnit ? <><span className="v100-kicker">選択中 / 枠 {activeSlot + 1}</span><div className="v100-formation-focus-art">{formationCardForUnit(activeUnit.id) && <img src={formationCardForUnit(activeUnit.id) as string} alt="" />}</div><h3>{activeUnit.displayName}</h3><strong>{v100RoleLabelFor(activeUnit.role)}</strong><p>{unitDescriptionFor(activeUnitId ?? "")}</p><button type="button" onClick={() => onSlotChange(activeSlot, activeUnit.id)}>この隊員を配置</button></> : <><span className="v100-kicker">枠 {activeSlot + 1}</span><div className="v100-empty-focus"><i aria-hidden="true">＋</i><span>隊員を選択</span></div></>}</aside></div><div className="v100-formation-loadout"><article><span>支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備で選択</small></article><article><span>装甲車両</span><strong>耐久 {save.vehicle.maxHp}</strong><small>戦場で操作</small></article></div></div>
     <div className="v100-formation-footer"><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label="戦闘へ" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>出撃</button></div>
   </section>;
 }
 
-function PersonnelView({ save, onBack, onPurchase }: { save: Save; onBack: () => void; onPurchase: (unitId: string) => void }) {
+function PersonnelView({ save, onBack, onPurchase, onLevel }: { save: Save; onBack: () => void; onPurchase: (unitId: string) => void; onLevel: (unitId: string, expectedLevel: number) => void }) {
   const [selectedUnitId, setSelectedUnitId] = useState(() => save.ownedUnitIds[0] ?? V100_UNITS[0]?.id ?? "");
   const selectedUnit = UNIT_BY_ID.get(selectedUnitId) ?? V100_UNITS[0];
   const selectedOwned = Boolean(selectedUnit && save.ownedUnitIds.includes(selectedUnit.id));
@@ -847,12 +887,13 @@ function PersonnelView({ save, onBack, onPurchase }: { save: Save; onBack: () =>
       return <button type="button" className={`v100-personnel-card game-unit-card ${selectedUnit?.id === unit.id ? "selected" : ""} ${owned ? "owned" : registered ? "registered" : "locked"}`} key={unit.id} onClick={() => setSelectedUnitId(unit.id)} aria-pressed={selectedUnit?.id === unit.id}>
         <div className="v100-personnel-art">{art && <img src={art} alt="" />}</div><div className="v100-personnel-copy"><h3>{unit.displayName}</h3><span>{v100RoleLabelFor(unit.role)}</span><small>{owned ? `Lv.${Math.max(1, Number(save.unitLevels[unit.id]) || 1)}` : registered ? "配備登録可" : "未解放"}</small></div>
       </button>;
-    })}</div></div><aside className="v100-personnel-focus" aria-label="選択中の隊員">{selectedUnit && <><span className="v100-kicker">選択中の隊員</span><div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={`${selectedUnit.displayName}の立ち絵`} />}</div><div className="v100-personnel-focus-copy"><h3>{selectedUnit.displayName}</h3><strong>{v100RoleLabelFor(selectedUnit.role)}</strong><p>武器・射程・固有能力</p><dl><div><dt>状態</dt><dd>{selectedOwned ? "配備登録済" : selectedRegistered ? "配備登録可" : "未解放"}</dd></div><div><dt>レベル</dt><dd>{selectedOwned ? `Lv.${selectedLevel} / ${save.levelCap}` : "—"}</dd></div></dl>{selectedOwned ? <button type="button" className="v100-primary" disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>強化 {selectedNextCost > 0 ? `${selectedNextCost} CAPS` : "上限"}</button> : selectedRegistered ? <button type="button" className="v100-primary" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>配備登録 {selectedUnit.registrationCostCaps > 0 ? `${selectedUnit.registrationCostCaps} CAPS` : ""}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
+    })}</div></div><aside className="v100-personnel-focus" aria-label="選択中の隊員">{selectedUnit && <><span className="v100-kicker">選択中の隊員</span><div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={`${selectedUnit.displayName}の立ち絵`} />}</div><div className="v100-personnel-focus-copy"><h3>{selectedUnit.displayName}</h3><strong>{v100RoleLabelFor(selectedUnit.role)}</strong><p>{unitDescriptionFor(selectedUnit.id)}</p><dl><div><dt>状態</dt><dd>{selectedOwned ? "配備登録済" : selectedRegistered ? "配備登録可" : "未解放"}</dd></div><div><dt>レベル</dt><dd>{selectedOwned ? `Lv.${selectedLevel} / ${save.levelCap}` : "—"}</dd></div></dl>{selectedOwned ? <button type="button" className="v100-primary" onClick={() => onLevel(selectedUnit.id, selectedLevel)} disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>強化 {selectedNextCost > 0 ? `${selectedNextCost} CAPS` : "上限"}</button> : selectedRegistered ? <button type="button" className="v100-primary" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>配備登録 {selectedUnit.registrationCostCaps > 0 ? `${selectedUnit.registrationCostCaps} CAPS` : ""}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
   </section>;
 }
 
 function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, onUpgradeVehicle }: { save: Save; onBack: () => void; onPurchaseSupport: (supportId: string) => void; onEquipSupport: (supportId: string | null) => void; onUpgradeVehicle: () => void }) {
   const [vehicleUpgradeOpen, setVehicleUpgradeOpen] = useState(false);
+  useEffect(() => { document.querySelector<HTMLElement>(".v100-shell")?.scrollTo({ top: 0, left: 0, behavior: "auto" }); }, [vehicleUpgradeOpen]);
   const vehicleLevel = save.vehicle.upgradeLevel;
   const nextCost = vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? V100_VEHICLE.upgradeCosts[vehicleLevel] : 0;
   const nextHp = vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? save.vehicle.maxHp + V100_VEHICLE.hpPerUpgrade : save.vehicle.maxHp;
@@ -882,10 +923,9 @@ function DataManagementView({ save, onBack, onBackup, onImport }: { save: Save; 
 function ResultView({ result, firstClear, onContinue, onRetry, onMap }: { result: Record<string, unknown> | null; firstClear: boolean; onContinue: () => void; onRetry: () => void; onMap: () => void }) {
   const won = result?.won === true;
   const stageNumber = Number(result?.stageNumber) || 0;
-  const nextStage = V100_STAGES[stageNumber];
   const rewardCaps = won ? Number(result?.rewardCaps ?? 0) || (firstClear ? 80 + stageNumber * 10 : Math.max(20, Math.round((80 + stageNumber * 10) * .2 / 5) * 5)) : 0;
   const unlocks = firstClear ? (V100_STAGE_BY_ID[String(result?.stageId)]?.firstClearPayload ?? []).map((item) => item.startsWith("unit-") ? UNIT_BY_ID.get(item)?.displayName ?? item : item.startsWith("support-") ? V100_SUPPORTS.find((support) => support.id === item)?.displayName ?? item : item.startsWith("level-cap-") ? `Lv.${item.slice(10)}上限` : item) : [];
-  return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="作戦結果"><span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{won ? `装甲車両は作戦区域を離脱。S${String(stageNumber).padStart(2, "0")}の記録を確定します。` : "防衛線を立て直し、編成を整えて再挑戦できます。"}</p><div className="v100-result-highlight"><strong>{won ? `★${String(result?.stars ?? 0)}` : "—"}</strong><span>{won ? "作戦評価" : "再編成可能"}</span></div><dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{String(result?.vehicleHp ?? 0)} / {String(result?.vehicleMaxHp ?? 0)}</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>損耗</dt><dd>{Number(result?.unitDeaths) || 0}名</dd></div></dl>{won && <div className="v100-result-rewards"><article><span>獲得CAPS</span><strong>+{rewardCaps}</strong></article><article><span>{firstClear ? "初回解放" : "追加記録"}</span><strong>{unlocks.length > 0 ? unlocks.join(" / ") : "なし"}</strong></article></div>}<div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "編成へ戻る"}</button>{!won && <button type="button" onClick={onRetry}>再挑戦する</button>}<button type="button" onClick={onMap}>作戦地図へ</button>{won && nextStage && <button type="button" onClick={onMap}>{`次の作戦 S${String(nextStage.number).padStart(2, "0")}`}</button>}</div></section>;
+  return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="作戦結果"><span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{won ? `装甲車両は作戦区域を離脱。S${String(stageNumber).padStart(2, "0")}の記録を確定します。` : "防衛線を立て直し、編成を整えて再挑戦できます。"}</p><div className="v100-result-highlight"><strong>{won ? `★${String(result?.stars ?? 0)}` : "—"}</strong><span>{won ? "作戦評価" : "再編成可能"}</span></div><dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{String(result?.vehicleHp ?? 0)} / {String(result?.vehicleMaxHp ?? 0)}</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>損耗</dt><dd>{Number(result?.unitDeaths) || 0}名</dd></div></dl>{won && <div className="v100-result-rewards"><article><span>獲得CAPS</span><strong>+{rewardCaps}</strong></article><article><span>{firstClear ? "初回解放" : "追加記録"}</span><strong>{unlocks.length > 0 ? unlocks.join(" / ") : "なし"}</strong></article></div>}<div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "編成へ戻る"}</button>{!won && <button type="button" onClick={onRetry}>再挑戦する</button>}{!won && <button type="button" onClick={onMap}>作戦地図へ</button>}</div></section>;
 }
 
 function EventLogView({ save, onReplay, onClose }: { save: Save; onReplay: (eventId: string) => void; onClose: () => void }) {

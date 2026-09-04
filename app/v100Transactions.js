@@ -11,6 +11,7 @@ import {
   v100StarsForVehicle,
 } from "./v100Registry.js";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
+import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
 
 function unique(value) {
   return [...new Set(Array.isArray(value) ? value.filter((entry) => typeof entry === "string" && entry.length > 0) : [])];
@@ -172,6 +173,26 @@ export function purchaseV100Unit(save, unitId, { now } = {}) {
     caps: next.caps - unit.registrationCostCaps,
     ownedUnitIds: [...next.ownedUnitIds, unitId],
     receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+/**
+ * @param {unknown} save
+ * @param {string} unitId
+ * @param {{expectedLevel?: number | null, now?: string}} [options]
+ */
+export function upgradeV100Unit(save, unitId, { expectedLevel = null, now } = {}) {
+  const current = normalizeV100Save(save);
+  if (!V100_UNIT_BY_ID[unitId] || !current.ownedUnitIds.includes(unitId)) return { applied: false, reason: "unit-not-owned", save: current };
+  if (expectedLevel !== null && v100UnitLevelFor(current.unitLevels, unitId) !== expectedLevel) return { applied: false, reason: "stale-level", save: current };
+  const upgrade = applyV100LevelUpgrade({
+    levels: current.unitLevels, unitId, caps: current.caps, receiptIds: current.receipts,
+    clearedStageNumber: Math.max(0, ...current.completedStageIds.map(stageNumberFor)),
+  });
+  if (!upgrade.applied) return { applied: false, duplicate: upgrade.duplicate === true, reason: upgrade.reason, save: current };
+  return applyV100SaveMutation(current, (next) => ({
+    ...next, caps: upgrade.capsAfter, unitLevels: { ...upgrade.levels },
+    receipts: [...next.receipts, upgrade.receipt],
   }), { now });
 }
 

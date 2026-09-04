@@ -3642,26 +3642,19 @@ Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION changes only the
 
 The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
 
-## 131. Revision r114 current SOL handoff — minimum completed-impact observability replacement
+## 131. Revision r114 current SOL handoff — production lifecycle completion
 
-Canonical Design Lock is `V100-SOL-DL-001 r114` Section138.15 / [Issue172#5536760852](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5536760852). No active Luna handoff. Historical lease/candidate/successor instructions and completed138.13 execution cursor are superseded; its proof/platform/quality contracts remain.
+Local correction is validated (build761eeaa8, focused42/full1333, lifecycle12/12 with40 actual PNGs, content/static, lint0 errors/12 existing warnings); [Issue172#5537823331](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537823331) owns the readback and exact local cache exclusion. NEXT: preserve the eleven-path normal local commit and complete CI953 readback without cancelling it. Then continue the open support/vehicle binding and entry/PWA work under SOL_DESIGN. Prior failed documentation/type/environment/bootstrap invocations remain evidence and are not acceptance. No final quality or release-ready claim.
 
-- `STATUS`: `DESIGN_LOCKED_FOR_BOUNDED_REMEDIATION`
-- `ROLE_LOCK`: `SOL_REMEDIATION`
-- `PRODUCT_DESIGN_CHANGE`: `0`
-- `LAST_AUDITED_HEAD`: `ea6b216daadcc9f98b031acf963f69b2f6f6bb64`
-- `LAST_AUDITED_TREE`: `93420469d9d17f639aac7902deb1ab6daaa37e10`
-- `FAILED_GATE`: CI952 Hosted100924076887 mission/delay844x340 original pixel oracle
-- `LAST_GREEN_GATE`: current remote PR Verify, Mac enemy348 actual images, focused PhaseG9/9 with exact scene/action/transaction readbacks; separate diagnostic12/72 is NOT acceptance
-- `REMEDIATION_CLASS`: QA_HARNESS / PIXEL_ORACLE_COORDINATE_GRID_MISMATCH
-- `SAME_GATE_REPEAT_COUNT`: `25`
-- `M3_PASSED`: `NO`
-- `NEXT_OWNER`: `SOL_REMEDIATION`
-- `RESUME_FROM`: exact five-path QA pixel correction -> source/functional/exact-byte preflight -> offline actual24-observation replay -> build -> one canonical mission/delay844x340 focused Hosted -> full local Hosted/tests/content/lint/build/static -> exact direct-parent non-force candidate -> one automatic required focused CI. Full local54/validator and unfiltered remote54/all required gates remain.
+Canonical Design Lock remains V100-SOL-DL-001 r114, current Section138.16 / [Issue172#5537485136](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537485136). NO ACTIVE LUNA HANDOFF. ROLE/NEXT_OWNER SOL_REMEDIATION.
 
-Exact SOL handoff: follow Design138.15. Preserve the original world authored mask/count/signature and final painted coverage; reuse the existing scratch context for a same-native-grid color reference, with unchanged0.72/0.99/500/alpha245/RGB18/60. Only the existing QA audit function, its new executable unit test and the three canonical docs change. Product renderers/all other app bytes, proof machine, assets/package/workflow, budgets/attempts/axes remain unchanged. No diagnostic branch integration, extra state, lease, recovery or bridge. Prior isolated/ordered diagnostics are not repeated or promoted to new-HEAD acceptance.
+The r114 minimum completed-impact observability remains unchanged: one atomic production impact identity, original proof deadline, actor/target/audio generation binding and read-only capture. No removed lease, ownership-transfer or global proof bridge is restored. `PRODUCT_DESIGN_CHANGE`: `0`. `SAME_GATE_REPEAT_COUNT`: `26`. `M3_PASSED`: `NO`.
 
-First red returns internally to SOL_DESIGN, not Producer technical approval wait. Two same-gate failures invoke subsystem audit before one coherent correction. Historical Linux native repair is not asserted; diagnostic success is never acceptance. Old evidence and dirty worktrees remain preserved. Continue all runtime/human-player/HUD/audio/save/mobile/PWA/release-entry gates, exact HEAD/tree freeze and fixed-HEAD adversarial SOL_FINAL_REVIEW. The sole normal stop is FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT; explicit approval there alone authorizes integration/merge/tag/Release/official Pages, followed by published-SHA QA/recovery/closure.
+Base HEAD88bea5f0515bffa63b054e27f553cd818be46a9b / tree3bd2e45da551d4d03dab5ff0bf24a491e3534c37. CI953 focused9/9 and Hosted actual48 images close the pixel packet only; dependent job outcomes are separate. SAME_GATE_REPEAT_COUNT26; M3_PASSED:NO.
+
+RESUME_FROM: exact eleven-path parent lifecycle/save/level/CSS correction -> executable positive/negative and existing source/design tests -> lint/type/static/build -> actual Chromium/WebKit UI/fixture evidence -> diff audit -> direct-parent normal commit/push. Source-bound withdrawal restart, missing upgrade action and failed-save progression are release blockers. Failed persistence keeps the screen/result, with explicit result-save retry; exits/retry award nothing. See138.16 for the full contract.
+
+Support/vehicle binding and release entry/PWA corrections remain open. Final full local54/validator and unfiltered required remote54/all machine gates, actual runtime/human/audio/save/mobile/PWA and fixed-HEAD SOL_FINAL_REVIEW are still mandatory. First red returns internally to SOL_DESIGN; two same-gate reds require subsystem audit; no blind retry/acceptance weakening/Producer technical wait. The sole normal stop is FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT, with explicit approval required for Ready/integration/merge/tag/Release/official Pages and the published-SHA QA/recovery/closure tail.
 
 ## 128. Revision r113 same-revision handoff — authoritative successor-lease cue wording alignment
 
@@ -3711,3 +3704,5 @@ Canonical design remains `V100-SOL-DL-001 r113`, now Section 136. Section 135 De
 Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION adds only Design Sections 133-135's three identical explicit fixed-HEAD SOL final review / one final Producer checkpoint / approval-only release sentences, then runs Design 19/19 once. Preserve every runtime candidate byte. Green alone resumes Section 132; any red returns to SOL_DESIGN without edit or rerun.**
 
 The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
+
+Section138.16 type diagnostic clarification: [Issue172#5537628336](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537628336) records629 standalone strict diagnostics on the original88bea5f baseline. Required existing build/lint/tests/browser gates remain unchanged; compare newly introduced type diagnostics separately, without claiming strict tsc green or adding suppressions. Victory result exposes the mandatory post-story action; map remains after finalization.

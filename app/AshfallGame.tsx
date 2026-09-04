@@ -1361,6 +1361,7 @@ export type AshfallExternalSession = {
     equipmentEnhancementLevels?: Record<string, number>;
   };
   onBattleResult: (result: AshfallBattleResult) => void;
+  onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean;
 };
 
 type BattleResult = AshfallBattleResult;
@@ -15448,11 +15449,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   useEffect(() => {
     if (!externalSession || !assetsReady || assetError) return;
     const startKey = `${externalSession.stageId}:${externalSession.resultId}`;
-    const currentGame = gameRef.current;
-    if (externalStartKeyRef.current === startKey
-      && started
-      && currentGame.definition.stageId === externalSession.stageId
-      && currentGame.running) return;
+    if (externalStartKeyRef.current === startKey) return;
     externalStartKeyRef.current = startKey;
     startGame();
   }, [assetError, assetsReady, externalSession, startGame, started]);
@@ -16560,8 +16557,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
     if (!end || finalizedEndRef.current === end) return;
     if (externalSession) {
-      finalizedEndRef.current = end;
       const externalTimer = window.setTimeout(() => {
+        if (finalizedEndRef.current === end) return;
+        finalizedEndRef.current = end;
         externalSession.onBattleResult(end);
       }, 0);
       return () => window.clearTimeout(externalTimer);
@@ -16900,6 +16898,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
     playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
+    if (externalSession) {
+      if (activeGame.over || !externalSession.onBattleAction?.(action)) return;
+      disposeBattleRuntime();
+      chooseAction(null);
+      setPauseConfirm(null);
+      return;
+    }
     if (activeGame.survivalRun) {
       if (action !== "withdraw" || activeGame.over) return;
       const endedAt = new Date().toISOString();
@@ -16983,7 +16988,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         selectedSupply: SupplyKind;
       });
     }
-  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, externalSession, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
