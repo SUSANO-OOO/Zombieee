@@ -119,6 +119,7 @@ jobs:
           cp -a "$old_source/_site" "$old_site"
 
           candidate_version="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({ RELEASE_VERSION }) => process.stdout.write(RELEASE_VERSION))')"
+          printf 'CANDIDATE_RELEASE_VERSION=%s\n' "$candidate_version" >> "$GITHUB_ENV"
           GITHUB_PAGES_BASE_PATH=/Zombieee \
           GITHUB_PAGES_RELEASE_VERSION="$candidate_version" \
           GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
@@ -139,7 +140,7 @@ jobs:
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_PAGES_EXPECTED_VERSION: 0.9.9.5
+          V099_PAGES_EXPECTED_VERSION: ${{ env.CANDIDATE_RELEASE_VERSION }}
           V099_PAGES_EXPECTED_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720; do

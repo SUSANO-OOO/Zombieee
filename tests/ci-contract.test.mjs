@@ -50,6 +50,9 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_ENEMY_QA_ENGINES: webkit/u);
   assert.match(workflow, /V0995_VISUAL_QA_ENGINES: webkit/u);
   assert.match(workflow, /run-v099-final-bounded-against-pages\.mjs _site/u);
+  assert.match(workflow, /printf 'CANDIDATE_RELEASE_VERSION=%s\\n' "\$candidate_version" >> "\$GITHUB_ENV"/u);
+  assert.match(workflow, /V099_PAGES_EXPECTED_VERSION: \$\{\{ env\.CANDIDATE_RELEASE_VERSION \}\}/u);
+  assert.doesNotMatch(workflow, /V099_PAGES_EXPECTED_VERSION:\s*0\.9\.9\.5/u);
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
   assert.match(workflow, /ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT:/u);
