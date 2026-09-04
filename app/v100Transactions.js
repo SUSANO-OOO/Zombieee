@@ -20,7 +20,7 @@ import { v100OutbreakEncounters, v100OutbreakRunIdValid } from "./v100Outbreak.j
 export function beginV100Outbreak(save, bossId, { runId, now } = {}) {
   const current = normalizeV100Save(save);
   if (!v100OutbreakEncounters(current).some(boss => boss.id === bossId)) return { applied: false, reason: "boss-undiscovered", save: current };
-  if (current.flowState.phase !== "map" || current.pendingResult || current.outbreak.active) return { applied: false, reason: "activity-active", save: current };
+  if (current.flowState.phase !== "map" || current.pendingResult || current.outbreak.active || current.survival.view !== "hub") return { applied: false, reason: "activity-active", save: current };
   if (!current.formationSlots.some(Boolean)) return { applied: false, reason: "formation-empty", save: current };
   const start = `v100:outbreak:${bossId}:start:${runId}`;
   if (!v100OutbreakRunIdValid(runId) || current.receipts.includes(start)) return { applied: false, reason: "invalid-mode-run", save: current };

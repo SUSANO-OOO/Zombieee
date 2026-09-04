@@ -343,7 +343,7 @@ export function V100Campaign() {
     setSelectedStageId(next.availableStageIds[0] ?? V100_STAGE_IDS[0]);
     setFlow(restored); setStoryIndex(restored.nodeIndex ?? 0);
     setBattleRunId(restored.phase === "battle" ? `v100:${restored.stageId}:${next.revision}` : null);
-    setSurface(next.outbreak.view === "hub" ? "campaign" : "modes"); setReplayEventId(null); setLogOpen(false);
+    setSurface(next.outbreak.view === "hub" && next.survival.view === "hub" ? "campaign" : "modes"); setReplayEventId(null); setLogOpen(false);
     setRecovery(null); setLoadFailure(false); setHydrated(true);
   }, [publishSave]);
 
@@ -398,7 +398,7 @@ export function V100Campaign() {
         if (saveBusyRef.current) return;
         const loaded = await readV100BrowserSave();
         if (!active || saveBusyRef.current || !loaded.ok || !loaded.save || loaded.save.revision <= saveRef.current.revision) return;
-        if (flow.phase === "battle" || flow.phase === "result" || saveRef.current.outbreak.view !== "hub") {
+        if (flow.phase === "battle" || flow.phase === "result" || saveRef.current.outbreak.view !== "hub" || saveRef.current.survival.view !== "hub") {
           setNotice("別のタブで新しいセーブを検出しました。現在の戦闘・結果画面を保持しています。再読み込みして確認してください。");
           return;
         }
@@ -482,8 +482,8 @@ export function V100Campaign() {
 
   useLayoutEffect(() => {
     const root = document.documentElement;
-    const battleActive = flow.phase === "battle" || save.outbreak.view === "battle";
-    const resultSaving = flow.phase === "result" || save.outbreak.view === "result";
+    const battleActive = flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle";
+    const resultSaving = flow.phase === "result" || save.outbreak.view === "result" || save.survival.view === "result";
     // Stable V1 preparation screens publish their actual identity. Story nodes
     // remain unsafe so a release cannot interrupt a cursor or first-clear
     // transition; battle/result explicitly block it.
@@ -505,7 +505,7 @@ export function V100Campaign() {
       delete root.dataset.pwaResultSaving;
       delete root.dataset.pwaSaveMutationPending;
     };
-  }, [flow.phase, surface, save.outbreak.view, saveBusy, hydrated, loadFailure, logOpen, replayEventId, giftPopup]);
+  }, [flow.phase, surface, save.outbreak.view, save.survival.view, saveBusy, hydrated, loadFailure, logOpen, replayEventId, giftPopup]);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>(".v100-shell");
@@ -770,11 +770,11 @@ export function V100Campaign() {
     </section>}
   </main>;
 
-  const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle" || save.outbreak.view === "battle";
+  const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle";
   const screenLabel = surface === "personnel" ? "隊員" : (surface === "support-vehicle" || surface === "equipment") ? "出撃装備" : surface === "data" ? "セーブ" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" ? "戦果" : "作戦地図";
 
   return (
-    <main onClickCapture={blockPendingInput} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-phase={save.outbreak.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
+    <main onClickCapture={blockPendingInput} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-phase={save.outbreak.view === "battle" || save.survival.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.survival.active ? "survival" : save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
       {!immersiveFlow && <header className="v100-topbar v100-compact-topbar">
         <div className="v100-topbar-title"><span className="v100-backmark" aria-hidden="true">西新</span><div><span className="v100-kicker">現場指揮</span><h1>{screenLabel}</h1></div></div>
         <div className="v100-save-meta"><span>{save.caps} CAPS</span>{surface === "campaign" && <button type="button" onClick={() => setLogOpen((open) => !open)}>会話記録</button>}</div>

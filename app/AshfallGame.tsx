@@ -1372,6 +1372,10 @@ export type AshfallExternalSession = {
   onSettingsChange?: (settings: Partial<CampaignSave["settings"]>) => Promise<boolean>;
   onBattleResult: (result: AshfallBattleResult) => void;
   onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean | Promise<boolean>;
+  survivalRun?: ReturnType<typeof createSurvivalRun>;
+  onSurvivalCheckpoint?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
+  onSurvivalUpgrade?: (upgradeId: string) => Promise<boolean>;
+  onSurvivalSettlement?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
 };
 
 type BattleResult = AshfallBattleResult;
@@ -1796,7 +1800,8 @@ const initialSurvivalGame = ({
   formationKinds: UnitKind[];
   unitLevels: Record<string, number>;
 }): Game => {
-  const stageId = CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
+  const v100 = run.modePolicy === "v100";
+  const stageId = v100 ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
   const game = initialGame(
     selectedSupply,
     stageId,
@@ -1805,6 +1810,7 @@ const initialSurvivalGame = ({
     [],
     unitLevels,
     run.formation,
+    v100 ? { v100: true } : undefined,
   );
   game.definition = {
     ...game.definition,
@@ -1817,10 +1823,11 @@ const initialSurvivalGame = ({
     timeline: [],
     defenseEndAt: null,
     phaseSchedule: null,
-    objective: "CRAWLER防衛・無限wave",
+    objective: v100 ? "装甲車両を防衛・無限wave" : "CRAWLER防衛・無限wave",
     missionConfig: {
       spawnProfile: "survival-infection-breach",
       defenseFrontX: 646,
+      ...(v100 ? { v100StageNumber: 1 } : {}),
     },
     rescueCount: 0,
   };
@@ -8293,6 +8300,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
   const externalStartKeyRef = useRef<string | null>(null);
+  const externalSessionRef = useRef(externalSession);
+  const survivalUpgradeSavePendingRef = useRef(false);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementReceiptRef = useRef("");
@@ -8500,6 +8509,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [campaignSave]);
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
+  useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
   const externalEnemyKindsKey = externalSession?.enemyKinds.join("|") ?? "";
   useEffect(() => {
@@ -10074,11 +10084,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           },
         });
         for (let wave = 1; wave <= 5; wave += 1) {
-          run = beginSurvivalWave(run);
-          run = completeSurvivalWave(run, {
+          const begun = beginSurvivalWave(run);
+          if (!begun) throw new Error("Manual checkpoint proof lost its Survival run");
+          const completed = completeSurvivalWave(begun, {
             bossKills: wave === 5 ? 1 : 0,
             crawlerHp: run.crawler.hp,
           });
+          if (!completed) throw new Error("Manual checkpoint proof did not complete its Survival wave");
+          run = completed;
         }
         run = {
           ...run,
@@ -13258,9 +13271,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     };
   }, [cleanupAllBattlefieldPointerGestures]);
 
-  const survivalAssetMode = screen === "survival" || (screen === "battle" && survivalHud !== null);
+  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
-    campaignSave.survival.activeCheckpoint?.run?.bossPool
+    externalSession?.survivalRun?.bossPool
+    ?? campaignSave.survival.activeCheckpoint?.run?.bossPool
     ?? campaignSave.outbreaks.survivalBossKinds
   ).join("|");
 
@@ -15417,7 +15431,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // the runtime would carry the V1 support but the visible control would
     // still advertise and place the legacy default pod.
     if (selectedSupply !== battleSupply) setSelectedSupply(battleSupply);
-    const fresh = initialGame(
+    const fresh = external?.survivalRun ? initialSurvivalGame({
+      selectedSupply: battleSupply,
+      run: external.survivalRun,
+      formationKinds: permittedFormation,
+      unitLevels: { ...external.survivalRun.formation.unitLevelsByUnit },
+    }) : initialGame(
       battleSupply,
       battleStageId,
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
@@ -15431,7 +15450,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       const vehicleMaxHp = Math.max(1, Number(external.vehicleMaxHp) || fresh.definition.baseMaxHp);
       fresh.definition = { ...fresh.definition, baseMaxHp: vehicleMaxHp };
       fresh.baseMaxHp = vehicleMaxHp;
-      fresh.baseHp = vehicleMaxHp;
+      fresh.baseHp = external.survivalRun?.crawler.hp ?? vehicleMaxHp;
       // V1 owns its campaign entry state, while Ashfall still owns the live
       // support controls. Seed the production battle with the same useful
       // opening resources the legacy campaign gives a player.
@@ -15470,6 +15489,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     desiredMusicModeRef.current = "normal";
     finalizedEndRef.current = null;
     setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setScreen("battle"); chooseAction(null);
+    if (external?.survivalRun) {
+      fresh.paused = external.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
+      setPaused(fresh.paused);
+      setSurvivalHud(survivalHudSnapshot(external.survivalRun));
+    }
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
       supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
@@ -16340,7 +16364,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         campaignSaveRef.current = entitlement.save as CampaignSave;
         setCampaignSave(entitlement.save as CampaignSave);
         const liveGame = gameRef.current;
-        if (liveGame.survivalRun?.runId === run.runId
+        if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId
           && liveGame.survivalRun.reachedWave >= waveNumber
           && survivalWaveEntitlementReceiptRef.current === receiptId) {
           liveGame.paused = false;
@@ -16376,6 +16400,27 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     setSurvivalSavePending(true);
     let cancelled = false;
     void (async () => {
+      if (externalSessionRef.current) {
+        let committed = false;
+        try { committed = await externalSessionRef.current.onSurvivalCheckpoint?.(run) ?? false; }
+        catch { committed = false; }
+        if (cancelled) return;
+        if (!committed) {
+          survivalCheckpointSaveLocksRef.current.delete(checkpointId);
+          setSavePersistence("unavailable");
+          setSurvivalSavePending(false);
+          return;
+        }
+        const liveGame = gameRef.current;
+        if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId && liveGame.survivalCheckpointReceipt === checkpointId) {
+          liveGame.survivalRun = { ...liveGame.survivalRun, manualAbilityCooldownsByKind: {} };
+          setSurvivalHud(survivalHudSnapshot(liveGame.survivalRun));
+        }
+        setSavePersistence("saved");
+        setPendingSurvivalCheckpoint(null);
+        setSurvivalSavePending(false);
+        return;
+      }
       const checkpoint = checkpointSurvivalCampaignSave(campaignSaveRef.current, run, {
         savedAt: new Date().toISOString(),
       });
@@ -16395,7 +16440,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return;
       }
       const liveGame = gameRef.current;
-      if (liveGame.survivalRun?.runId === run.runId
+      if (liveGame.survivalRun && liveGame.survivalRun.runId === run.runId
         && liveGame.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
         && liveGame.survivalCheckpointReceipt === checkpointId) {
         const continuedRun = {
@@ -16424,6 +16469,21 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (survivalSavePending) return;
     setSurvivalSavePending(true);
     void (async () => {
+      if (externalSessionRef.current) {
+        let committed = false;
+        try { committed = await externalSessionRef.current.onSurvivalSettlement?.(pending.run) ?? false; }
+        catch { committed = false; }
+        if (!committed) {
+          setSavePersistence("unavailable");
+          setSurvivalSettlementAwaitingRetry(true);
+          setSurvivalSavePending(false);
+          return;
+        }
+        setPendingSurvivalSettlement(null);
+        setSurvivalSettlementAwaitingRetry(false);
+        setSurvivalSavePending(false);
+        return;
+      }
       const result = await persistSurvivalCampaignSettlement(
         campaignSaveRef.current,
         pending.run,
@@ -16867,19 +16927,30 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     playUiOperationCue("selection", `speed:${speed}`);
   }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
-  const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
+  const selectSurvivalUpgrade = useCallback(async (upgradeId: string) => {
     const g = gameRef.current;
     if (rejectBattleSaveBoundary(`survival-upgrade:${upgradeId}:save-pending`)) return;
     if (!g.survivalRun
       || !g.survivalRuntime
       || pendingSurvivalCheckpoint
-      || survivalSavePending) return;
+      || survivalSavePending || survivalUpgradeSavePendingRef.current) return;
     const previousCrawlerHp = g.baseHp;
     const previousEffects = survivalUpgradeEffects(g.survivalRun);
     const selection = chooseSurvivalCombatUpgrade(g.survivalRuntime, g.survivalRun, upgradeId);
     if (!selection.selected || !selection.run || !selection.runtime) {
       playUiOperationCue("reject", `survival-upgrade:${upgradeId}:unavailable`);
       return;
+    }
+    if (externalSessionRef.current) {
+      survivalUpgradeSavePendingRef.current = true;
+      setSurvivalSavePending(true);
+      let committed = false;
+      try { committed = await externalSessionRef.current.onSurvivalUpgrade?.(upgradeId) ?? false; }
+      catch { committed = false; }
+      finally { survivalUpgradeSavePendingRef.current = false; setSurvivalSavePending(false); }
+      if (!committed) { setSavePersistence("unavailable"); return; }
+      if (gameRef.current !== g) return;
+      setSavePersistence("saved");
     }
     const nextEffects = survivalUpgradeEffects(selection.run);
     for (const fighter of g.fighters) {
@@ -16943,7 +17014,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
     playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
-    if (externalSession) {
+    if (externalSession && !activeGame.survivalRun) {
       if (activeGame.over || !await externalSession.onBattleAction?.(action)) return;
       disposeBattleRuntime();
       chooseAction(null);
@@ -18751,7 +18822,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.bannerTime = 1.8;
               playCue("wave-contact");
               emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
-              if (event.plan.wave === 20
+              if (g.survivalRun?.modePolicy !== "v100" && event.plan.wave === 20
                 && g.survivalRun?.reachedWave >= 20
                 && campaignSaveRef.current.survival.highestReachedWave < 20) {
                 const receiptId = employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
@@ -22981,7 +23052,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
           <h2>3択強化を選択</h2>
-          <p>{pendingSurvivalCheckpoint || survivalSavePending ? "checkpointを保存しています。保存完了後に選択できます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。"}</p>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次waveへ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
               const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
@@ -22996,8 +23067,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             })}
           </div>
           {pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <div className="survival-save-retry" role="alert">
-            <b>checkpointを保存できませんでした</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
+            <b>{externalSessionActive ? "中間記録を保存できませんでした" : "checkpointを保存できませんでした"}</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
           </div>}
+          {externalSessionActive && !pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <p role="alert">強化を保存できませんでした。もう一度、強化を選択してください。</p>}
         </section></div>}
         {pendingSurvivalWaveEntitlement && <div className="result-save-blocker survival-wave-entitlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival到達記録の保存">
           <section>
@@ -23042,7 +23114,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </button>
           </section>
           {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "完了済みwaveの未受取報酬を保存して作戦を終了します。" : "完了済みwaveの報酬を一括保存してrunを終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
@@ -23185,7 +23257,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
       </div>}
       {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
-        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+        {externalSessionActive ? <section><small>戦果の保存</small><h2>{survivalSavePending ? "防衛継続作戦の結果を保存しています" : "防衛継続作戦の結果を保存できません"}</h2><p>この画面で戦果を保持しています。保存完了後に未受取報酬を受け取れます。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+          : <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>}
       </div>}
       {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">
         <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{outbreakSavePending ? "異常発生任務の結果を保存しています" : "異常発生任務の結果を保存できません"}</h2><p>撃破記録、Survival解放、receipt、キャップ、装備数量、last result、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={outbreakSavePending} onClick={retryOutbreakSettlementSave}>{outbreakSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
