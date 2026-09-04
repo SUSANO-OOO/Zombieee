@@ -1283,3 +1283,11 @@
 .v100-equipment-card h3 { margin: 8px 0; font-size: 18px; }
 .v100-equipment-card p { line-height: 1.6; }
 .v100-equipment-next { color: #c7c7b4; font-size: 13px; }
+
+.v100-modes-entry { min-height: 44px; padding: 10px 18px; margin: 12px auto 20px; display: block; font: inherit; color: #f1ead7; background: #243635; border: 1px solid #a1834e; }
+.v100-modes-screen button, .v100-mode-result button { min-height: 44px; padding: 10px 14px; font: inherit; color: #f1ead7; background: #243635; border: 1px solid #637572; cursor: pointer; }
+.v100-modes-screen button[aria-pressed="true"] { border-color: #e4b768; background: #4b442b; }
+.v100-mode-totals { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+.v100-mode-result dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.v100-mode-result dt { color: #c3c6b4; }
+.v100-mode-result dd { margin: 8px 0; font-size: 22px; }

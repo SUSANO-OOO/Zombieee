@@ -17291,7 +17291,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [enableAudio]);
 
   const dispatchBattleStoryEvents = useCallback((g: Game) => {
-    if (g.definition.missionConfig?.v100StageNumber) return false;
+    if (g.definition.missionConfig?.v100StageNumber) {
+      if (g.bossDefeatPending) {
+        g.bossDefeatPending = false;
+        g.bossDefeated = true;
+      }
+      return false;
+    }
     const stageId = g.definition.stageId;
     const elapsedBattleSeconds = Math.max(0, g.time - g.definition.prepSeconds);
     if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET

@@ -15,6 +15,67 @@ import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
 import { v100EquipmentFor, v100EquipmentQuantityCap, normalizeV100Equipment } from "./v100Equipment.js";
 import { equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCEMENT } from "./equipment.js";
 import { v100DiscoveredBosses } from "./v100BossProgress.js";
+import { v100OutbreakEncounters, v100OutbreakRunIdValid } from "./v100Outbreak.js";
+
+export function beginV100Outbreak(save, bossId, { runId, now } = {}) {
+  const current = normalizeV100Save(save);
+  if (!v100OutbreakEncounters(current).some(boss => boss.id === bossId)) return { applied: false, reason: "boss-undiscovered", save: current };
+  if (current.flowState.phase !== "map" || current.pendingResult || current.outbreak.active) return { applied: false, reason: "activity-active", save: current };
+  if (!current.formationSlots.some(Boolean)) return { applied: false, reason: "formation-empty", save: current };
+  const start = `v100:outbreak:${bossId}:start:${runId}`;
+  if (!v100OutbreakRunIdValid(runId) || current.receipts.includes(start)) return { applied: false, reason: "invalid-mode-run", save: current };
+  return applyV100SaveMutation(current, next => ({ ...next, receipts: [...next.receipts, start],
+    outbreak: { ...next.outbreak, active: { bossId, runId }, view: "battle" },
+  }), { now });
+}
+
+/** @param {object} save @param {{runId?: string, restartRunId?: string | null, now?: string | number}} options */
+export function leaveV100Outbreak(save, { runId, restartRunId = null, now } = {}) {
+  const current = normalizeV100Save(save), active = current.outbreak.active;
+  if (!active || active.runId !== runId) return { applied: false, reason: "invalid-mode-run", save: current };
+  const restart = restartRunId !== null;
+  const start = `v100:outbreak:${active.bossId}:start:${restartRunId}`;
+  if (restart && (!v100OutbreakRunIdValid(restartRunId) || current.receipts.includes(start))) return { applied: false, reason: "invalid-mode-run", save: current };
+  return applyV100SaveMutation(current, next => ({ ...next,
+    receipts: [...next.receipts, `v100:outbreak:${active.bossId}:cancel:${runId}`, ...(restart ? [start] : [])],
+    outbreak: { ...next.outbreak, active: restart ? { bossId: active.bossId, runId: restartRunId } : null, view: restart ? "battle" : "hub" },
+  }), { now });
+}
+
+export function dismissV100OutbreakResult(save, { now } = {}) {
+  const current = normalizeV100Save(save);
+  if (current.outbreak.active || current.outbreak.view !== "result") return { applied: false, reason: "activity-active", save: current };
+  return applyV100SaveMutation(current, next => ({ ...next, outbreak: { ...next.outbreak, view: "hub" } }), { now });
+}
+
+export function settleV100Outbreak(save, result, { now } = {}) {
+  const current = normalizeV100Save(save), active = current.outbreak.active;
+  const boss = active && v100OutbreakEncounters(current).find(entry => entry.id === active.bossId);
+  if (!boss || result?.resultId !== active.runId || result.stageId !== boss.stageId) return { applied: false, reason: "invalid-mode-run", save: current };
+  if (typeof result.won !== "boolean" || !Number.isFinite(result.baseHp) || result.baseHp < 0
+    || result.baseMaxHp !== current.vehicle.maxHp || result.baseHp > result.baseMaxHp
+    || !Number.isFinite(result.time) || result.time < 0 || !Number.isFinite(result.unitsLost) || result.unitsLost < 0
+    || (result.won && (result.baseHp <= 0 || result.bossDefeated !== true))) return { applied: false, reason: "invalid-result", save: current };
+  const receipt = `v100:outbreak:${boss.id}:result:${active.runId}`;
+  if (current.receipts.includes(receipt)) return { applied: false, duplicate: true, reason: "invalid-mode-run", save: current };
+  const firstReceipt = `v100:outbreak:${boss.id}:first-clear`;
+  const first = result.won && !current.receipts.includes(firstReceipt);
+  const item = boss.rewardEquipment;
+  const quantity = item ? current.equipment.inventory[item.id] ?? 0 : 0;
+  const grantedQuantity = first && item && quantity < v100EquipmentQuantityCap(item.id) ? 1 : 0;
+  const rewardCaps = result.won ? boss.rewardCaps : 0;
+  return applyV100SaveMutation(current, next => ({ ...next, caps: next.caps + rewardCaps,
+    receipts: [...next.receipts, receipt, ...(first ? [firstReceipt] : [])],
+    equipment: grantedQuantity ? { ...next.equipment, inventory: { ...next.equipment.inventory, [item.id]: quantity + 1 } } : next.equipment,
+    bosses: result.won ? { ...next.bosses, defeatCounts: { ...next.bosses.defeatCounts, [boss.id]: next.bosses.defeatCounts[boss.id] + 1 } } : next.bosses,
+    outbreak: { ...next.outbreak, active: null, view: "result",
+      clearCounts: result.won ? { ...next.outbreak.clearCounts, [boss.id]: (next.outbreak.clearCounts[boss.id] ?? 0) + 1 } : next.outbreak.clearCounts,
+      lastResult: { bossId: boss.id, runId: active.runId, won: result.won, vehicleHp: result.baseHp, vehicleMaxHp: result.baseMaxHp,
+        elapsedSeconds: result.time, unitDeaths: result.unitsLost, rewardCaps, grantedQuantity, grantedEquipmentId: grantedQuantity ? item.id : null,
+        finishedAt: new Date(now ?? Date.now()).toISOString() },
+    },
+  }), { now });
+}
 
 export function purchaseV100Equipment(save, equipmentId, { expectedQuantity, now } = {}) {
   const current = normalizeV100Save(save);
