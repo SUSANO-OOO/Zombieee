@@ -453,7 +453,7 @@
     repeating-linear-gradient(90deg, transparent 0 29px, #e6c68a0b 29px 30px, transparent 30px 61px);
   mix-blend-mode: screen;
 }
-.v100-shell > *:not(.game-shell) { position: relative; z-index: 1; }
+.v100-shell > *:not(.game-shell):not(.v100-modal-backdrop):not(.v100-save-retry) { position: relative; z-index: 1; }
 .v100-topbar {
   position: relative;
   padding: 9px 12px 12px;
@@ -1258,3 +1258,10 @@
 .v100-save-retry > div { width: min(560px, 100%); padding: 24px; border: 1px solid #e2b666; background: #172526; }
 .v100-save-retry button { min-height: 44px; padding: 9px 14px; font: inherit; cursor: pointer; }
 .v100-shell[data-v100-phase="battle"] > .v100-notice { position: fixed; z-index: 300; left: 12px; right: 12px; top: 10px; }
+
+/* Gift acknowledgement requires both values to be visible before it is saved. */
+.v100-gift-modal { padding: 14px 20px; }
+.v100-gift-modal h2 { margin: 4px 0 8px; font-size: clamp(18px, 3vw, 22px); line-height: 1.25; }
+.v100-gift-modal p { margin: 8px 0; font-size: 15px; line-height: 1.5; }
+.v100-gift-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 8px 12px; margin: 8px 0; }
+.v100-gift-balances p { margin: 0; padding: 8px; border: 1px solid #806a3d; color: #f6e4b7; }

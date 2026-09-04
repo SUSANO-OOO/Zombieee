@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { FormEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import {
   V100_BOSSES,
@@ -16,9 +16,6 @@ import {
 import {
   createDefaultV100Save,
   applyV100SaveMutation,
-  claimV100LegacyGift,
-  acknowledgeV100LegacyGiftPopup,
-  isEligibleV100LegacyHistory,
   markV100EventRead,
   updateV100PlayerName,
 } from "./v100Save.js";
@@ -61,17 +58,22 @@ import { publicDisplayText } from "./publicDisplayNames.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
 import {
   exportV100BrowserSave,
-  importV100BrowserSave,
   createV100SaveOwnerId,
   persistV100BrowserSave,
-  releaseV100SaveOwnership,
   readV100BrowserSave,
-  V100_STORAGE_EVENT_KEYS,
+  claimV100BrowserGift,
+  acknowledgeV100BrowserGift,
+  releaseV100PopupOwnership,
+  registerV100LegacyHistory,
+  restoreV100BrowserSave,
+  subscribeV100SaveChanges,
 } from "./v100CampaignStorage.js";
 import { EVENT_PORTRAIT_PROFILES, V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./v100Campaign.css";
 
-type Save = ReturnType<typeof readV100BrowserSave>["save"] & { bestStars: Record<string, number> };
+type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
+type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
+type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolean };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
 type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string };
 type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "data";
@@ -274,7 +276,16 @@ export function V100Campaign() {
   const [nameError, setNameError] = useState("");
   const [notice, setNotice] = useState("");
   const [unsavedBattleResult, setUnsavedBattleResult] = useState<AshfallBattleResult | null>(null);
-  const [giftPopup, setGiftPopup] = useState(false);
+  const [giftPopup, setGiftPopup] = useState<GiftDisplay | null>(null);
+  const [giftError, setGiftError] = useState(false);
+  const [giftWake, setGiftWake] = useState(0);
+  const giftDialogRef = useRef<HTMLElement | null>(null);
+  const [documentVisible, setDocumentVisible] = useState(true);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const saveBusyRef = useRef(false);
+  const saveRef = useRef(save);
+  const [loadFailure, setLoadFailure] = useState(false);
+  const [recovery, setRecovery] = useState<StorageOutcome["recovery"]>(null);
   const [logOpen, setLogOpen] = useState(false);
   const [replayEventId, setReplayEventId] = useState<string | null>(null);
   const [replayNodeIndex, setReplayNodeIndex] = useState(0);
@@ -299,123 +310,174 @@ export function V100Campaign() {
     };
   }, []);
 
-  useEffect(() => {
-    const release = () => releaseV100SaveOwnership(globalThis, saveOwnerId);
-    window.addEventListener("pagehide", release);
-    return () => { window.removeEventListener("pagehide", release); release(); };
-  }, [saveOwnerId]);
+  const publishSave = useCallback((next: Save) => { saveRef.current = next; setSave(next); }, []);
+  const adoptSave = useCallback((next: Save) => {
+    publishSave(next);
+    const restored = createV100StoryFlowState({
+      playerName: next.campaignStarted ? next.playerName : "",
+      completedStageIds: next.completedStageIds, readStoryEventIds: next.readStoryEventIds,
+      flowState: next.campaignStarted ? next.flowState : null, eventCursor: next.eventCursor,
+      pendingResult: next.pendingResult, lastResult: next.lastResult,
+    });
+    setSelectedStageId(next.availableStageIds[0] ?? V100_STAGE_IDS[0]);
+    setFlow(restored); setStoryIndex(restored.nodeIndex ?? 0);
+    setSurface("campaign"); setReplayEventId(null); setLogOpen(false);
+    setRecovery(null); setLoadFailure(false); setHydrated(true);
+  }, [publishSave]);
 
-  const commitSave = useCallback((nextSave: Save) => {
-    let result;
+  const runStorage = useCallback(async (operation: () => Promise<StorageOutcome>, publish?: (next: Save, outcome: StorageOutcome) => void) => {
+    if (saveBusyRef.current) return null;
+    saveBusyRef.current = true;
+    document.documentElement.dataset.pwaSaveMutationPending = "true";
+    setSaveBusy(true);
     try {
-      result = persistV100BrowserSave(nextSave, globalThis, { ownerId: saveOwnerId });
-    } catch {
-      setNotice("セーブを書き込めませんでした。現在の画面と進行を保持します。");
-      return null;
-    }
-    if (!result.ok) {
-      setNotice(result.reason === "ownership-conflict" ? "別のタブでセーブを更新中です。画面を再読み込みして続けてください。" : "セーブを書き込めませんでした。現在の進行を保持します。");
-      return null;
-    }
-    const normalized = result.save;
-    setSave(normalized);
-    return normalized;
-  }, [saveOwnerId]);
+      const outcome = await operation();
+      if (!outcome.ok || !outcome.save) {
+        setNotice(outcome.reason === "stale-writer" || outcome.reason === "popup-owned-by-another-tab"
+          ? "別のタブでセーブが更新されました。現在の画面を保持しています。再読み込みして確認してください。"
+          : "セーブを書き込めませんでした。現在の画面と進行を保持します。");
+        return null;
+      }
+      publishSave(outcome.save);
+      publish?.(outcome.save, outcome);
+      if (!outcome.mirrorSaved) setNotice("セーブは保存済みです。予備コピーを作れませんでした。データ管理から書き出してください。");
+      return outcome.save;
+    } catch { setNotice("セーブを書き込めませんでした。現在の画面と進行を保持します。"); return null; }
+    finally { saveBusyRef.current = false; setSaveBusy(false); }
+  }, [publishSave]);
+
+  const commitSave = useCallback((next: Save, publish?: (next: Save) => void) => runStorage(
+    () => persistV100BrowserSave(next, globalThis, { expectedRevision: save.revision, ownerId: saveOwnerId }), publish,
+  ), [runStorage, saveOwnerId, save.revision]);
+
+  const loadSave = useCallback(async (isActive: () => boolean = () => true) => {
+    const loaded = await readV100BrowserSave();
+    if (!isActive()) return;
+    if (loaded.ok && loaded.save) { adoptSave(loaded.save); if (!loaded.mirrorSaved) setNotice("セーブは保存済みです。予備コピーを作れませんでした。"); }
+    else { setRecovery(loaded.recovery); setLoadFailure(true); }
+  }, [adoptSave]);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => { void loadSave(() => active); }, 0);
+    return () => { active = false; clearTimeout(timer); };
+  }, [loadSave]);
 
   useEffect(() => {
     if (!hydrated) return undefined;
-    const refreshFromAnotherTab = (event: StorageEvent) => {
-      if (event.key && !V100_STORAGE_EVENT_KEYS.includes(event.key)) return;
-      const loaded = readV100BrowserSave();
-      if (loaded.save.revision <= save.revision) return;
-      if (flow.phase === "battle" || flow.phase === "result") {
-        setNotice("別のタブで新しいセーブを検出しました。現在の戦闘・結果画面を終えてから再読み込みしてください。");
+    let active = true;
+    return (() => {
+      const unsubscribe = subscribeV100SaveChanges(async () => {
+        if (saveBusyRef.current) return;
+        const loaded = await readV100BrowserSave();
+        if (!active || saveBusyRef.current || !loaded.ok || !loaded.save || loaded.save.revision <= saveRef.current.revision) return;
+        if (flow.phase === "battle" || flow.phase === "result") {
+          setNotice("別のタブで新しいセーブを検出しました。現在の戦闘・結果画面を保持しています。再読み込みして確認してください。");
+          return;
+        }
+        adoptSave(loaded.save); setGiftPopup(null); setGiftWake(value => value + 1);
+        setNotice("別のタブのセーブを反映しました。");
+      });
+      return () => { active = false; unsubscribe(); };
+    })();
+  }, [adoptSave, flow.phase, hydrated]);
+
+  useEffect(() => {
+    const release = () => { void releaseV100PopupOwnership(globalThis, saveOwnerId); };
+    const visibility = () => {
+      const visible = document.visibilityState === "visible";
+      setDocumentVisible(visible);
+      if (!visible) { setGiftPopup(null); release(); }
+      else setGiftWake(value => value + 1);
+    };
+    window.addEventListener("pagehide", release);
+    document.addEventListener("visibilitychange", visibility);
+    return () => { window.removeEventListener("pagehide", release); document.removeEventListener("visibilitychange", visibility); release(); };
+  }, [saveOwnerId]);
+
+  const giftScreen = hydrated && documentVisible && surface === "campaign" && !logOpen && !replayEventId && !unsavedBattleResult
+    ? flow.phase === "name" ? "title" : flow.phase === "map" ? "map" : "" : "";
+  useEffect(() => {
+    if (!giftScreen || giftPopup || giftError || save.legacy.popupAcknowledged || !hydrated) return undefined;
+    let active = true;
+    let wakeTimer = 0;
+    const timer = window.setTimeout(async () => {
+      if (saveBusyRef.current) return;
+      const completed = await runStorage(() => claimV100BrowserGift(globalThis, { ownerId: saveOwnerId, screen: giftScreen }), (_next, outcome) => {
+        if (!active) { void releaseV100PopupOwnership(globalThis, saveOwnerId); return; }
+        if (outcome.popup) setGiftPopup({ ...outcome.popup, acknowledged: false });
+        else if (outcome.retryAt) wakeTimer = window.setTimeout(() => setGiftWake(value => value + 1), Math.max(1, outcome.retryAt - Date.now()));
+      });
+      if (!completed && active) setGiftError(true);
+    }, 0);
+    return () => { active = false; clearTimeout(timer); clearTimeout(wakeTimer); };
+  }, [giftScreen, giftPopup, giftError, giftWake, hydrated, runStorage, save.legacy.popupAcknowledged, saveOwnerId]);
+
+  useEffect(() => {
+    if (!giftPopup || giftPopup.acknowledged || giftError || !giftScreen) return undefined;
+    let frame = 0;
+    let active = true;
+    let visibleFrames = 0;
+    const visiblyPainted = (element: HTMLElement | null, container: HTMLElement | null) => {
+      if (!element?.isConnected || !container) return false;
+      const rect = element.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const left = viewport?.offsetLeft ?? 0, top = viewport?.offsetTop ?? 0;
+      const right = left + (viewport?.width ?? innerWidth), bottom = top + (viewport?.height ?? innerHeight);
+      const style = getComputedStyle(element);
+      if (style.visibility !== "visible" || style.display === "none" || Number(style.opacity) === 0 || rect.width <= 0 || rect.height <= 0
+        || rect.left < left || rect.top < top || rect.right > right || rect.bottom > bottom) return false;
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return Boolean(hit && container.contains(hit));
+    };
+    const observePaint = async () => {
+      if (!active) return;
+      if (Date.now() >= giftPopup.expiresAt) {
+        void releaseV100PopupOwnership(globalThis, saveOwnerId);
+        setGiftPopup(null); setGiftWake(value => value + 1);
         return;
       }
-      const restoredFlow = createV100StoryFlowState({
-        playerName: loaded.save.campaignStarted ? loaded.save.playerName : "",
-        completedStageIds: loaded.save.completedStageIds,
-        readStoryEventIds: loaded.save.readStoryEventIds,
-        flowState: loaded.save.campaignStarted ? loaded.save.flowState : null,
-        eventCursor: loaded.save.eventCursor,
-        pendingResult: loaded.save.pendingResult,
-        lastResult: loaded.save.lastResult,
-      });
-      setSave(loaded.save);
-      setSelectedStageId(loaded.save.availableStageIds[0] ?? V100_STAGE_IDS[0]);
-      setFlow(restoredFlow);
-      setStoryIndex(restoredFlow.nodeIndex ?? 0);
-      setNotice("別のタブのセーブを反映しました。");
+      const dialog = giftDialogRef.current;
+      const amount = dialog?.querySelector<HTMLElement>("#v100-gift-amount") ?? null;
+      const balance = dialog?.querySelector<HTMLElement>("#v100-gift-balance") ?? null;
+      const visible = document.visibilityState === "visible" && dialog
+        && visiblyPainted(dialog, dialog) && visiblyPainted(amount, amount) && visiblyPainted(balance, balance);
+      visibleFrames = visible ? visibleFrames + 1 : 0;
+      if (visibleFrames < 2) { frame = requestAnimationFrame(() => { void observePaint(); }); return; }
+      const acknowledged = await runStorage(() => acknowledgeV100BrowserGift(globalThis, {
+        ownerId: saveOwnerId, claimId: giftPopup.claimId, screen: giftScreen, painted: true,
+      }), () => setGiftPopup(current => current?.claimId === giftPopup.claimId ? { ...current, acknowledged: true } : current));
+      if (!acknowledged && active) setGiftError(true);
     };
-    window.addEventListener("storage", refreshFromAnotherTab);
-    return () => window.removeEventListener("storage", refreshFromAnotherTab);
-  }, [flow.phase, hydrated, save.revision]);
+    frame = requestAnimationFrame(() => { void observePaint(); });
+    return () => { active = false; cancelAnimationFrame(frame); };
+  }, [giftPopup, giftScreen, giftError, runStorage, saveOwnerId]);
 
-  useEffect(() => {
-    const loaded = readV100BrowserSave();
-    let nextSave = loaded.save;
-    if (loaded.source === "default" && loaded.rawLegacy) {
-      const eligible = nextSave.legacy.eligible || isEligibleV100LegacyHistory(loaded.rawLegacy);
-      nextSave = applyV100SaveMutation(nextSave, (draft) => ({
-        ...draft,
-        legacy: { ...draft.legacy, eligible },
-      })).save;
-    }
-    // Browser storage is the external source of truth for this client-only
-    // route; hydration necessarily updates the initial SSR placeholder.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSave(nextSave);
-    setSelectedStageId(nextSave.availableStageIds[0] ?? V100_STAGE_IDS[0]);
-    const restoredFlow = createV100StoryFlowState({
-      playerName: nextSave.campaignStarted ? nextSave.playerName : "",
-      completedStageIds: nextSave.completedStageIds,
-      readStoryEventIds: nextSave.readStoryEventIds,
-      flowState: nextSave.campaignStarted ? nextSave.flowState : null,
-      eventCursor: nextSave.eventCursor,
-      pendingResult: nextSave.pendingResult,
-      lastResult: nextSave.lastResult,
-    });
-    setFlow(restoredFlow);
-    setStoryIndex(restoredFlow.nodeIndex ?? 0);
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated || flow.phase !== "map" || !save.legacy.eligible || save.legacy.entitlementClaimed) return;
-    const result = claimV100LegacyGift(save, { legacyCandidate: readV100BrowserSave().rawLegacy });
-    if (!result.applied) return undefined;
-    // The entitlement transaction is deliberately performed only after the
-    // safe map screen is mounted.
-    const timer = window.setTimeout(() => {
-      if (commitSave(result.save)) setGiftPopup(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [commitSave, flow.phase, hydrated, save]);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const battleActive = flow.phase === "battle";
     const resultSaving = flow.phase === "result";
     // Stable V1 preparation screens publish their actual identity. Story nodes
     // remain unsafe so a release cannot interrupt a cursor or first-clear
     // transition; battle/result explicitly block it.
-    const screen = battleActive ? "battle"
+    const screen = !hydrated || loadFailure || logOpen || replayEventId || giftPopup ? "event"
+      : surface === "data" ? "storage"
+      : battleActive ? "battle"
       : resultSaving ? "result"
         : isEventPhase(flow.phase) ? "event"
           : flow.phase === "map"
-            ? surface === "personnel" ? "personnel" : surface === "support-vehicle" ? "loadout" : surface === "data" ? "storage" : "map"
+            ? surface === "personnel" ? "personnel" : surface === "support-vehicle" ? "loadout" : "map"
             : flow.phase === "formation" ? "formation" : "title";
     root.dataset.pwaScreen = screen;
     root.dataset.pwaBattleActive = String(battleActive);
     root.dataset.pwaResultSaving = String(resultSaving);
-    root.dataset.pwaSaveMutationPending = "false";
+    root.dataset.pwaSaveMutationPending = String(saveBusy || !hydrated);
     return () => {
       delete root.dataset.pwaScreen;
       delete root.dataset.pwaBattleActive;
       delete root.dataset.pwaResultSaving;
       delete root.dataset.pwaSaveMutationPending;
     };
-  }, [flow.phase, surface]);
+  }, [flow.phase, surface, saveBusy, hydrated, loadFailure, logOpen, replayEventId, giftPopup]);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>(".v100-shell");
@@ -442,7 +504,7 @@ export function V100Campaign() {
   const replayEvent = useMemo(() => replayEventId ? v100StoryEventView(replayEventId, save.playerName) : null, [replayEventId, save.playerName]);
   const replayNode = (replayEvent?.nodes?.[replayNodeIndex] ?? null) as StoryNode | null;
 
-  const updateFlow = useCallback((next: Flow, { baseSave = save, nodeIndex = 0 }: { baseSave?: Save; nodeIndex?: number } = {}) => {
+  const updateFlow = useCallback(async (next: Flow, { baseSave = save, nodeIndex = 0 }: { baseSave?: Save; nodeIndex?: number } = {}) => {
     const checkpoint = v100StoryFlowCheckpoint(next, nodeIndex);
     const persisted = applyV100SaveMutation(baseSave, (draft) => ({
       ...draft,
@@ -451,12 +513,11 @@ export function V100Campaign() {
       lastResult: next.phase === "result" && next.pendingResult?.won === false ? next.pendingResult : draft.lastResult,
     }));
     if (!persisted.applied) { setNotice(formatReason(persisted.reason)); return null; }
-    const normalized = commitSave(persisted.save);
-    if (!normalized) return null;
-    setFlow(next);
-    setStoryIndex(Math.max(0, Math.floor(Number(nodeIndex) || 0)));
-    setSurface("campaign");
-    return normalized;
+    return commitSave(persisted.save, () => {
+      setFlow(next);
+      setStoryIndex(Math.max(0, Math.floor(Number(nodeIndex) || 0)));
+      setSurface("campaign");
+    });
   }, [commitSave, save]);
 
   const applySaveTransaction = useCallback((result: { applied?: boolean; duplicate?: boolean; unchanged?: boolean; save: Save; reason?: string }) => {
@@ -475,7 +536,7 @@ export function V100Campaign() {
     setNotice("");
   }, []);
 
-  const handleProductionBattleResult = useCallback((raw: AshfallBattleResult) => {
+  const handleProductionBattleResult = useCallback(async (raw: AshfallBattleResult) => {
     if (flow.phase !== "battle" || raw.resultId !== ["v100", flow.stageId, save.revision].join(":")) return;
     const result = createV100BattleResult({
       stageId: raw.stageId,
@@ -506,7 +567,7 @@ export function V100Campaign() {
       }
       nextSave = pending.save;
     }
-    if (updateFlow(transition.state, { baseSave: nextSave })) {
+    if (await updateFlow(transition.state, { baseSave: nextSave })) {
       setUnsavedBattleResult(null);
       setNotice("");
     } else {
@@ -514,24 +575,23 @@ export function V100Campaign() {
     }
   }, [flow, save, updateFlow]);
 
-  const handleProductionBattleAction = useCallback((action: "withdraw" | "loadout" | "restart") => {
+  const handleProductionBattleAction = useCallback(async (action: "withdraw" | "loadout" | "restart") => {
     if (unsavedBattleResult) return false;
     const transition = leaveV100Battle(flow, action);
     if (!transition.accepted) return false;
-    const accepted = Boolean(updateFlow(transition.state));
+    const accepted = Boolean(await updateFlow(transition.state));
     if (accepted) setNotice("");
     return accepted;
   }, [flow, unsavedBattleResult, updateFlow]);
 
   const productionSession = useMemo(() => {
     if (flow.phase !== "battle" || !flow.stageId) return null;
-    const session = v100ProductionSessionFor({
+    return v100ProductionSessionFor({
       save,
       stageId: flow.stageId,
       resultId: `v100:${flow.stageId}:${save.revision}`,
     });
-    return { ...session, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction };
-  }, [flow.phase, flow.stageId, handleProductionBattleResult, handleProductionBattleAction, save]);
+  }, [flow.phase, flow.stageId, save]);
 
   const startCampaign = (eventSubmit: FormEvent<HTMLFormElement>) => {
     eventSubmit.preventDefault();
@@ -611,7 +671,7 @@ export function V100Campaign() {
     if (next.accepted) updateFlow(next.state);
   };
 
-  const rename = () => {
+  const rename = async () => {
     const value = window.prompt("主人公の名前", save.playerName);
     if (value === null) return;
     const result = updateV100PlayerName(save, value);
@@ -619,13 +679,7 @@ export function V100Campaign() {
       setNotice(formatReason(result.reason));
       return;
     }
-    if (commitSave(result.save)) setNotice("表示名を更新しました。");
-  };
-
-  const acknowledgeGift = () => {
-    const result = acknowledgeV100LegacyGiftPopup(save, { screen: "map" });
-    if (result.applied && !commitSave(result.save)) return;
-    if (result.applied || ("duplicate" in result && result.duplicate)) setGiftPopup(false);
+    await commitSave(result.save, () => setNotice("表示名を更新しました。"));
   };
 
   const downloadBackup = () => {
@@ -640,39 +694,49 @@ export function V100Campaign() {
 
   const importBackup = (file: File | undefined) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = importV100BrowserSave(String(reader.result ?? ""));
-      if (!result.ok || !result.save) {
-        setNotice("作戦セーブとして読み込めませんでした。現在のセーブは保持しています。");
-        return;
-      }
-      const restoredSave = commitSave(result.save);
-      if (!restoredSave) return;
-      const restoredFlow = createV100StoryFlowState({
-        playerName: restoredSave.campaignStarted ? restoredSave.playerName : "",
-        completedStageIds: restoredSave.completedStageIds,
-        readStoryEventIds: restoredSave.readStoryEventIds,
-        flowState: restoredSave.flowState,
-        eventCursor: restoredSave.eventCursor,
-        pendingResult: restoredSave.pendingResult,
-        lastResult: restoredSave.lastResult,
-      });
-      setSave(restoredSave);
-      setFlow(restoredFlow);
-      setStoryIndex(restoredFlow.nodeIndex ?? 0);
-      setNotice("セーブを検証して復元しました。");
-    };
-    reader.readAsText(file);
+    void runStorage(async () => restoreV100BrowserSave(await file.text(), globalThis, {
+      expectedRevision: saveRef.current.revision, recoveryToken: recovery?.token ?? null, ownerId: saveOwnerId,
+    }), (restored) => { adoptSave(restored); setNotice("選んだバックアップの残高と進行を復元しました。"); });
+  };
+  const importLegacyHistory = (file: File | undefined) => {
+    if (!file) return;
+    void runStorage(async () => registerV100LegacyHistory(await file.text(), globalThis, {
+      expectedRevision: saveRef.current.revision, ownerId: saveOwnerId,
+    }), () => setNotice("過去のプレイ履歴を確認しました。現在の進行と残高は保持しています。"));
+  };
+  const recoverSnapshot = () => {
+    if (!recovery?.candidate) return;
+    void runStorage(() => restoreV100BrowserSave(exportV100BrowserSave(recovery.candidate), globalThis, {
+      recoveryToken: recovery.token, ownerId: saveOwnerId,
+    }), (restored) => { adoptSave(restored); setNotice("直前の正常なセーブを復元しました。"); });
+  };
+  const exportCorruptData = () => {
+    if (!recovery) return;
+    const url = URL.createObjectURL(new Blob([recovery.raw], { type: "application/json" }));
+    const anchor = document.createElement("a"); anchor.href = url; anchor.download = "nishijin-v100-recovery-data.json"; anchor.click(); URL.revokeObjectURL(url);
+  };
+  const blockPendingInput = (event: FormEvent<HTMLElement>) => {
+    if (saveBusyRef.current || (giftPopup && !(event.target as HTMLElement).closest(".v100-modal"))) {
+      event.preventDefault(); event.stopPropagation();
+    }
   };
 
-  if (!hydrated) return <main className="v100-shell"><p className="v100-loading">作戦セーブを検証しています…</p></main>;
+  if (!hydrated) return <main className="v100-shell" aria-busy={saveBusy}>
+    {!loadFailure ? <p className="v100-loading">作戦セーブを検証しています…</p> : <section className="v100-panel" aria-label="セーブの復旧">
+      <h1>セーブを確認できませんでした</h1><p>新しいセーブで上書きせず、元の記録を保持しています。</p>
+      {notice && <p role="status">{notice}</p>}
+      <button type="button" disabled={saveBusy} onClick={() => void loadSave()}>もう一度確認する</button>
+      {recovery && <><button type="button" disabled={saveBusy} onClick={exportCorruptData}>元のデータを書き出す</button>
+        {recovery.candidate && <button type="button" disabled={saveBusy} onClick={recoverSnapshot}>直前の正常なセーブを復元する</button>}
+        <label>バックアップから復元<input type="file" accept="application/json,.json" disabled={saveBusy} onChange={event => importBackup(event.currentTarget.files?.[0])} /></label></>}
+    </section>}
+  </main>;
 
   const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle";
   const screenLabel = surface === "personnel" ? "隊員" : surface === "support-vehicle" ? "出撃装備" : surface === "data" ? "セーブ" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" ? "戦果" : "作戦地図";
 
   return (
-    <main className={`v100-shell v100-surface-${surface}`} data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
+    <main onClickCapture={blockPendingInput} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
       {!immersiveFlow && <header className="v100-topbar v100-compact-topbar">
         <div className="v100-topbar-title"><span className="v100-backmark" aria-hidden="true">西新</span><div><span className="v100-kicker">現場指揮</span><h1>{screenLabel}</h1></div></div>
         <div className="v100-save-meta"><span>{save.caps} CAPS</span>{surface === "campaign" && <button type="button" onClick={() => setLogOpen((open) => !open)}>会話記録</button>}</div>
@@ -681,7 +745,7 @@ export function V100Campaign() {
       {notice && <p className="v100-notice" role="status">{notice}</p>}
       {unsavedBattleResult && <div className="v100-save-retry" role="alertdialog" aria-modal="true" aria-label="戦闘結果の保存"><div><h2>戦闘結果を保存できませんでした</h2><p>結果はこの画面で保持しています。保存を再試行してください。</p><button type="button" className="v100-primary" onClick={() => handleProductionBattleResult(unsavedBattleResult)}>結果の保存を再試行</button></div></div>}
 
-      {flow.phase === "name" && (
+      {flow.phase === "name" && surface === "campaign" && (
         <section className="v100-title-screen" aria-labelledby="v100-name-title" style={{ backgroundImage: `url(${PRODUCTION_VISUALS.title})` }}>
           <div className="v100-title-wash" />
           <div className="v100-title-copy">
@@ -700,7 +764,7 @@ export function V100Campaign() {
                 {nameError && <small className="v100-error" role="alert">{nameError}</small>}
                 <button className="v100-primary" type="submit" aria-label="この名前で作戦を始める">この名前で始める</button>
               </form>
-              <button className="v100-secondary-data" type="button" onClick={downloadBackup}>データ管理（書き出し）</button>
+              <button className="v100-secondary-data" type="button" onClick={() => openSurface("data")}>データ管理</button>
             </div>
           </div>
         </section>
@@ -755,8 +819,8 @@ export function V100Campaign() {
         />
       )}
 
-      {flow.phase === "map" && surface === "data" && (
-        <DataManagementView save={save} onBack={() => openSurface("campaign")} onBackup={downloadBackup} onImport={importBackup} />
+      {(flow.phase === "map" || flow.phase === "name") && surface === "data" && (
+        <DataManagementView save={save} onBack={() => openSurface("campaign")} onBackup={downloadBackup} onImport={importBackup} onLegacyHistory={importLegacyHistory} />
       )}
 
       {flow.phase === "formation" && (
@@ -764,7 +828,7 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "battle" && productionSession && (
-        <AshfallGame externalSession={productionSession} key={productionSession.resultId} />
+        <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction }} key={productionSession.resultId} />
       )}
 
       {flow.phase === "result" && (
@@ -773,7 +837,8 @@ export function V100Campaign() {
 
       {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
       {replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
-      {giftPopup && <div className="v100-modal-backdrop"><section className="v100-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでの遊び方に感謝を込めて、作戦記録へ180 CAPSを一度だけ届けました。過去の記録はそのまま保管されています。</p><button className="v100-primary" type="button" onClick={acknowledgeGift}>確認する</button></section></div>}
+      {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
+      {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
     </main>
   );
 }
@@ -916,8 +981,8 @@ function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, o
   </section>;
 }
 
-function DataManagementView({ save, onBack, onBackup, onImport }: { save: Save; onBack: () => void; onBackup: () => void; onImport: (file: File | undefined) => void }) {
-  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" role="dialog" aria-modal="true" aria-labelledby="v100-data-title"><div className="v100-panel-heading"><div><span className="v100-kicker">作戦記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div><p>現在の進行はブラウザ内の作戦セーブへ保存されています。書き出し・復元は検証済みの形式だけを受け付けます。</p><dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>到達作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl><div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div><small className="v100-data-note">復元に失敗した場合、現在のセーブは変更されません。</small></section></div>;
+function DataManagementView({ save, onBack, onBackup, onImport, onLegacyHistory }: { save: Save; onBack: () => void; onBackup: () => void; onImport: (file: File | undefined) => void; onLegacyHistory: (file: File | undefined) => void }) {
+  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" role="dialog" aria-modal="true" aria-labelledby="v100-data-title"><div className="v100-panel-heading"><div><span className="v100-kicker">作戦記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div><p>現在の進行はブラウザ内の作戦セーブへ保存されています。書き出し・復元は検証済みの形式だけを受け付けます。</p><dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>到達作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl><div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div><small className="v100-data-note">復元に失敗した場合、現在のセーブは変更されません。</small><article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article></section></div>;
 }
 
 function ResultView({ result, firstClear, onContinue, onRetry, onMap }: { result: Record<string, unknown> | null; firstClear: boolean; onContinue: () => void; onRetry: () => void; onMap: () => void }) {

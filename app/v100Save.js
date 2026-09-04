@@ -21,7 +21,7 @@ export const V100_SAVE_EXPORT_FORMAT = "nishijin-campaign-v100-save";
 export const V100_SAVE_FLOW_PHASES = Object.freeze([
   "name", "event", "formation", "battle", "result", "post", "first-clear-post", "ending", "credits", "epilogue", "map",
 ]);
-export const V100_SAFE_GIFT_SCREENS = Object.freeze(["title", "map", "personnel", "loadout"]);
+export const V100_SAFE_GIFT_SCREENS = Object.freeze(["title", "map"]);
 export const V100_DEFAULT_SETTINGS = Object.freeze({
   bgmEnabled: true,
   sfxEnabled: true,

@@ -10,41 +10,22 @@ import {
   V100_MIRROR_STORAGE_KEY,
   exportV100BrowserSave,
   importV100BrowserSave,
-  persistV100BrowserSave,
-  readV100BrowserSave,
   v100StorageContract,
 } from "../app/v100CampaignStorage.js";
 import { createDefaultV100Save } from "../app/v100Save.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function fakeHost() {
-  const values = new Map();
-  return { localStorage: {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => values.set(key, String(value)),
-  } };
-}
-
-test("V1 browser save uses primary, mirror, and last-known-good without touching legacy bytes", () => {
-  const host = fakeHost();
-  const save = createDefaultV100Save({ playerName: "LUNA" });
-  assert.equal(persistV100BrowserSave(save, host).ok, true);
-  const loaded = readV100BrowserSave(host);
-  assert.equal(loaded.save.playerName, "LUNA");
-  assert.equal(loaded.source, "primary");
-  const exported = exportV100BrowserSave(save);
-  assert.equal(importV100BrowserSave(exported).ok, true);
+test("V1 export round-trip and native storage contract remain namespace-specific", () => {
+  const save = createDefaultV100Save({ playerName: "監査指揮官" });
+  const imported = importV100BrowserSave(exportV100BrowserSave(save));
+  assert.equal(imported.ok, true); assert.deepEqual(imported.save, save);
   assert.deepEqual(v100StorageContract(), {
-    primary: "nishijin-campaign-v100",
-    mirror: V100_MIRROR_STORAGE_KEY,
-    lastKnownGood: V100_BACKUP_STORAGE_KEY,
-    owner: "nishijin-campaign-v100:owner",
-    ownerLeaseMs: 30000,
-    legacyReadOnly: "nishijin-campaign-v1",
-    legacyWriteAllowed: false,
-    importRequires: ["format", "namespace", "serialized-inner-save", "namespace-and-generation-validation"],
-    conflictPolicy: "single-writer-revision-and-owner-lease",
+    primary: "nishijin-campaign-v100", mirror: V100_MIRROR_STORAGE_KEY,
+    lastKnownGood: V100_BACKUP_STORAGE_KEY, database: "nishijin-campaign-v100",
+    version: 1, stores: ["saves", "entitlements"], popupLeaseMs: 30000,
+    legacyReadOnly: "nishijin-campaign-v1", legacyWriteAllowed: false,
+    conflictPolicy: "indexeddb-transaction-expected-revision",
   });
 });
 

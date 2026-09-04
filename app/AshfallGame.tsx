@@ -1361,7 +1361,7 @@ export type AshfallExternalSession = {
     equipmentEnhancementLevels?: Record<string, number>;
   };
   onBattleResult: (result: AshfallBattleResult) => void;
-  onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean;
+  onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean | Promise<boolean>;
 };
 
 type BattleResult = AshfallBattleResult;
@@ -16892,14 +16892,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
   }, [activeOperationId, campaignSave, formationKinds, playUiOperationCue, selectedSupply]);
 
-  const confirmPauseAction = useCallback(() => {
+  const confirmPauseAction = useCallback(async () => {
     const action = pauseConfirm;
     if (!action) return;
     if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
     playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
     if (externalSession) {
-      if (activeGame.over || !externalSession.onBattleAction?.(action)) return;
+      if (activeGame.over || !await externalSession.onBattleAction?.(action)) return;
       disposeBattleRuntime();
       chooseAction(null);
       setPauseConfirm(null);

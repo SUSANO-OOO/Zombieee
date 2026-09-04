@@ -3642,7 +3642,15 @@ Exact SOL handoff: **NO ACTIVE LUNA HANDOFF — SOL_REMEDIATION changes only the
 
 The fixed-HEAD `SOL_FINAL_REVIEW`, one `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`, and explicit-approval-only release tail remain unchanged. `High ambiguity: 0`; `Medium ambiguity: 0`.
 
-## 131. Revision r114 current SOL handoff — validated legacy input boundary
+## 131. Revision r114 current SOL handoff — durable V1 storage integration
+
+Section138.19 current validated packet (13 paths; CSS amendment [Issue172#5539769648](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5539769648)): native IndexedDB owns save/snapshot/unique gift, exact revision conflicts and raw corruption recovery; V1 UI awaits durable completion; gift acknowledgement requires two visible viewport/hit-tested frames; legacy history is read-only and manual import changes eligibility only. Source parent2ed86d8. Full tests1341/1341, current V1 tests208/208, full lint0 errors/12 existing warnings, strict baseline597 ->595 with added[], content validation and production/static builds passed. Production build7fa685c81939a198ee28ff014dfa44f1ce27a7dd9c3c08b2f76eb37290661dcd. Native storage24/24 report b01538322926f0270f734260f222eb2ccf3fa2299a4b50edc80c0a7ed7330c27; actual storage UI12/12 with36 verified PNGs report650fb3af0433b050f56c40c4bd8f216718a9019ac02c5ec387a56e94d3d6f2c3; actual lifecycle12/12 with40 verified PNGs report b56c321cf55e0d27740f602154390b8ff91048168083e0d028f12e39955604a4. Both engines/three viewports; real defeat54.1667s, failed-save retry and reload preserved. Desktop and340px gift images visually checked. Static output is LOCAL only (0.9.9.5/local,459 assets), not release/publication. Native origin-unavailable cached reload is explicitly distinct from retained failed Windows WebKit offline-emulation diagnostics and pending production PWA/device acceptance. First source/native/UI reds and causal corrections remain in Issue172; [verified UI checkpoint](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5539893144).
+
+ROLE_LOCK SOL_REMEDIATION. Preserve the normal local packet commit; its exact SHA is recorded in the Issue checkpoint. No push while CI953 remains active on PR171 head88bea5f. This packet does not close support/audio138.17, legacy child key/gear/settings isolation, modes, entry/version/PWA, full progression, integrated54/unfiltered remote54, complete human/audio/mobile/device or fixed-HEAD SOL_FINAL_REVIEW. M3NO. All final gates remain before the sole FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT; no Ready/merge/tag/Release/official Pages before explicit Producer approval.
+
+CURRENT PACKET Section138.19 / [Issue172#5539205735](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5539205735): base2ed86d8; original12 paths, amended to13 in the current paragraph above. ROLE_LOCK SOL_REMEDIATION. The current validation paragraph above supersedes this original execution cursor. Native save/UI/lifecycle gates have passed; preserve their distinct evidence. Prior fake-localStorage authority checks are replaced with native IDB race/abort/recovery checks; pure flow/economy checks remain. Do not treat this packet as legacy child key/gear/settings isolation or full release acceptance. All full54/runtime/human/final gates remain open.
+
+The following Section138.18 entry records the completed source base.
 
 Source packet validated: focused42/42, all V1 tests207/207, targeted lint clean and exact diff; [Issue172#5539001635](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5539001635). Preserve the normal local source commit. Remaining entitlement/storage/UI integration and full build/runtime gates are not claimed from these tests.
 
@@ -3650,7 +3658,7 @@ CURRENT INDEPENDENT WORKTREE: codex/v100-save-boundary-6faa at lifecycle base6fa
 
 Completed lifecycle base6faabdf is validated (build761eeaa8, focused42/full1333, lifecycle12/12 with40 actual PNGs, content/static, lint0 errors/12 existing warnings); [Issue172#5537823331](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537823331) owns that historical readback. Prior failed documentation/type/environment/bootstrap invocations remain evidence, not acceptance. Do not reimplement this completed base. No final quality or release-ready claim.
 
-Canonical Design Lock remains V100-SOL-DL-001 r114, current independent source packet Section138.18. NO ACTIVE LUNA HANDOFF. ROLE/NEXT_OWNER SOL_REMEDIATION.
+Canonical Design Lock remains V100-SOL-DL-001 r114, current independent source packet Section138.19. NO ACTIVE LUNA HANDOFF. ROLE/NEXT_OWNER SOL_REMEDIATION.
 
 The r114 minimum completed-impact observability remains unchanged: one atomic production impact identity, original proof deadline, actor/target/audio generation binding and read-only capture. No removed lease, ownership-transfer or global proof bridge is restored. `PRODUCT_DESIGN_CHANGE`: `0`. `SAME_GATE_REPEAT_COUNT`: `26`. `M3_PASSED`: `NO`.
 
