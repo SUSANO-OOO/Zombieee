@@ -12,6 +12,64 @@ import {
 } from "./v100Registry.js";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
+import { v100EquipmentFor, v100EquipmentQuantityCap, normalizeV100Equipment } from "./v100Equipment.js";
+import { equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCEMENT } from "./equipment.js";
+
+export function purchaseV100Equipment(save, equipmentId, { expectedQuantity, now } = {}) {
+  const current = normalizeV100Save(save);
+  const item = v100EquipmentFor(equipmentId);
+  if (!item || item.source !== "supply-shop") return { applied: false, reason: "equipment-unavailable", save: current };
+  const quantity = current.equipment.inventory[equipmentId] ?? 0;
+  if (quantity !== expectedQuantity) return { applied: false, reason: "stale-equipment", save: current };
+  if (quantity >= v100EquipmentQuantityCap(equipmentId)) return { applied: false, reason: "equipment-cap", save: current };
+  const receipt = `v100:equipment:${equipmentId}:purchase:${quantity + 1}`;
+  if (current.receipts.includes(receipt)) return { applied: false, duplicate: true, reason: "stale-equipment", save: current };
+  if (current.caps < item.purchaseCaps) return { applied: false, reason: "insufficient-caps", save: current };
+  return applyV100SaveMutation(current, next => ({ ...next, caps: next.caps - item.purchaseCaps,
+    equipment: { ...next.equipment, inventory: { ...next.equipment.inventory, [equipmentId]: quantity + 1 } },
+    receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+export function upgradeV100Equipment(save, equipmentId, { expectedLevel, now } = {}) {
+  const current = normalizeV100Save(save);
+  if (!v100EquipmentFor(equipmentId) || !current.equipment.inventory[equipmentId]) return { applied: false, reason: "equipment-not-owned", save: current };
+  const level = current.equipment.enhancementLevels[equipmentId] ?? 0;
+  if (level !== expectedLevel) return { applied: false, reason: "stale-equipment", save: current };
+  if (level >= EQUIPMENT_MAX_ENHANCEMENT) return { applied: false, reason: "upgrade-cap", save: current };
+  const receipt = `v100:equipment:${equipmentId}:upgrade:${level + 1}`;
+  if (current.receipts.includes(receipt)) return { applied: false, duplicate: true, reason: "stale-equipment", save: current };
+  const cost = equipmentEnhancementCost(equipmentId, level);
+  if (current.caps < cost) return { applied: false, reason: "insufficient-caps", save: current };
+  return applyV100SaveMutation(current, next => ({ ...next, caps: next.caps - cost,
+    equipment: { ...next.equipment, enhancementLevels: { ...next.equipment.enhancementLevels, [equipmentId]: level + 1 } },
+    receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+/**
+ * @param {object} save
+ * @param {{ unitId?: string | null, slot?: number, equipmentId?: string | null, now?: string | number }} options
+ */
+export function equipV100Equipment(save, { unitId = null, slot, equipmentId = null, now } = {}) {
+  const current = normalizeV100Save(save);
+  const fail = reason => ({ applied: false, reason, save: current });
+  if (!Number.isInteger(slot) || slot < 0 || slot > 1) return fail("invalid-equipment-slot");
+  if (unitId !== null && !current.ownedUnitIds.includes(unitId)) return fail("unit-not-owned");
+  const item = equipmentId === null ? null : v100EquipmentFor(equipmentId);
+  if (equipmentId !== null && (!item || !current.equipment.inventory[equipmentId])) return fail("equipment-not-owned");
+  if (item && item.slotType !== (unitId === null ? "tactical" : "personal")) return fail("invalid-equipment-slot");
+  const equipment = structuredClone(current.equipment);
+  const slots = unitId === null ? equipment.tacticalIds : equipment.personalByUnit[unitId] ?? [null, null];
+  if (slots[slot] === equipmentId) return { applied: false, unchanged: true, save: current };
+  slots[slot] = equipmentId;
+  if (unitId !== null) equipment.personalByUnit[unitId] = slots;
+  // Reject excess allocation, rather than silently moving another character's item.
+  const allocated = [...Object.values(equipment.personalByUnit).flat(), ...equipment.tacticalIds];
+  if (equipmentId && (slots.filter(id => id === equipmentId).length > 1
+    || allocated.filter(id => id === equipmentId).length > equipment.inventory[equipmentId])) return fail("equipment-in-use");
+  return applyV100SaveMutation(current, next => ({ ...next, equipment: normalizeV100Equipment(equipment, next.ownedUnitIds) }), { now });
+}
 
 function unique(value) {
   return [...new Set(Array.isArray(value) ? value.filter((entry) => typeof entry === "string" && entry.length > 0) : [])];

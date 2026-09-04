@@ -191,19 +191,19 @@ try {
             if (id === "support-healing") {
               await page.keyboard.press("q"); await clickWorld(page, 650, 350);
               record.vehicleAccepted = await read(page);
-              assert.equal(record.vehicleAccepted.supportGauge, 15); assert.equal(record.vehicleAccepted.airstrike.v100, true);
+              assert.equal(record.vehicleAccepted.supportGauge, 0); assert.equal(record.vehicleAccepted.airstrike.v100, true);
               assert.notEqual(record.vehicleAccepted.airstrike.phase, "idle");
               assert.ok(record.vehicleAccepted.airstrike.cooldownRemaining > 49 && record.vehicleAccepted.airstrike.cooldownRemaining <= 50);
               await page.keyboard.press("q"); await page.keyboard.press("g");
-              const denied = await read(page); assert.equal(denied.supportGauge, 15); assert.equal(denied.crawlerAbility.phase, "ready");
+              const denied = await read(page); assert.equal(denied.supportGauge, 0); assert.equal(denied.crawlerAbility.phase, "ready");
               await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().airstrike.phase === "idle");
               record.vehicleStowed = await read(page); assert.ok(record.vehicleStowed.airstrike.cooldownRemaining > 40);
             } else if (id === "support-explosive-drum") {
               await page.keyboard.press("g"); record.vehicleAccepted = await read(page);
-              assert.equal(record.vehicleAccepted.supportGauge, 30); assert.equal(record.vehicleAccepted.crawlerAbility.v100, true);
+              assert.equal(record.vehicleAccepted.supportGauge, 15); assert.equal(record.vehicleAccepted.crawlerAbility.v100, true);
               assert.ok(["deploying", "firing", "recovering"].includes(record.vehicleAccepted.crawlerAbility.phase));
               await page.keyboard.press("g"); await page.keyboard.press("q");
-              const denied = await read(page); assert.equal(denied.supportGauge, 30); assert.equal(denied.airstrike.phase, "idle");
+              const denied = await read(page); assert.equal(denied.supportGauge, 15); assert.equal(denied.airstrike.phase, "idle");
               await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerAbility.phase === "cooldown");
               record.vehicleReload = await read(page);
               assert.ok(record.vehicleReload.crawlerAbility.cooldownRemaining > 37 && record.vehicleReload.crawlerAbility.cooldownRemaining <= 38);

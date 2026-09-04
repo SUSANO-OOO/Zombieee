@@ -1,5 +1,6 @@
 import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
+import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
   V100_STAGE_BY_ID,
@@ -207,6 +208,7 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
   const enemyKinds = [...new Set(definition?.timeline?.flatMap((event) => event.units) ?? [])];
   const equippedSupportId = v100SupportFor(save?.equippedSupportId)
     && save?.ownedSupportIds?.includes(save.equippedSupportId) ? save.equippedSupportId : null;
+  const equipmentSnapshot = v100EquipmentSnapshot(save);
   return freeze({
     stageId,
     resultId: resultId ?? `v100:${stageId}:${Date.now()}`,
@@ -218,8 +220,9 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     equippedSupportId,
     unitLevels: { ...(save?.unitLevels ?? {}) },
     settings: freeze({ ...(save?.settings ?? {}) }),
-    // Equipment from the old campaign is never a V1 fallback.
-    equipmentSnapshot: freeze({ personalEquipmentByUnit: freeze({}), tacticalEquipmentIds: freeze([]), equipmentEnhancementLevels: freeze({}) }),
+    // Only the owned V1 inventory can affect an external battle.
+    equipmentSnapshot,
+    initialSupportGauge: v100OpeningSupportGauge(equipmentSnapshot),
     vehicleMaxHp: Math.max(V100_VEHICLE.baseHp, Number(save?.vehicle?.maxHp) || V100_VEHICLE.baseHp),
     ...(typeof onBattleResult === "function" ? { onBattleResult } : {}),
   });

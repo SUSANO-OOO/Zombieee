@@ -1362,6 +1362,7 @@ export type AshfallExternalSession = {
   equippedSupportId: string | null;
   unitLevels?: Readonly<Record<string, number>>;
   vehicleMaxHp?: number;
+  initialSupportGauge?: number;
   equipmentSnapshot?: {
     personalEquipmentByUnit?: Record<string, readonly (string | null)[]>;
     tacticalEquipmentIds?: readonly (string | null)[];
@@ -15435,7 +15436,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       // support controls. Seed the production battle with the same useful
       // opening resources the legacy campaign gives a player.
       fresh.scrap = Math.max(fresh.scrap, 120);
-      fresh.supportGauge = SUPPORT_GAUGE_MAX;
+      fresh.supportGauge = Math.min(SUPPORT_GAUGE_MAX, Math.max(0, external.initialSupportGauge ?? 85));
       fresh.supportItemCooldowns = createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>;
       fresh.v100SupportId = external.equippedSupportId;
       fresh.airstrike = createEmergencySupportRuntime(true) as AirstrikeRuntime;

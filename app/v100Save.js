@@ -13,6 +13,7 @@ import {
   normalizeV100PlayerName,
 } from "./v100Registry.js";
 import { inspectCampaignSaveCandidate } from "./campaign.js";
+import { normalizeV100Equipment } from "./v100Equipment.js";
 import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
@@ -98,6 +99,7 @@ export function createDefaultV100Save({ settings = {}, playerName = V100_DEFAULT
     equippedSupportId: null,
     supportPurchaseUnlockedIds: [],
     ownedSupportIds: [],
+    equipment: normalizeV100Equipment(null),
     vehicle: {
       upgradeLevel: 0,
       maxHp: V100_VEHICLE.baseHp,
@@ -216,6 +218,7 @@ export function normalizeV100Save(raw, { fallback = null } = {}) {
     ownedSupportIds: uniqueStrings(raw.ownedSupportIds).filter((supportId) => ["support-healing", "support-explosive-drum", "support-incendiary-drum"].includes(supportId)),
     vehicle,
     bosses,
+    equipment: normalizeV100Equipment(raw.equipment, ownedUnitIds),
     formationSlots: normalizeFormationSlots(raw.formationSlots, ownedUnitIds),
     receipts,
     readStoryEventIds: uniqueStrings(raw.readStoryEventIds).filter((eventId) => eventId.startsWith("v100:event:")),

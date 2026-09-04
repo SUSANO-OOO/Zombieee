@@ -1265,3 +1265,21 @@
 .v100-gift-modal p { margin: 8px 0; font-size: 15px; line-height: 1.5; }
 .v100-gift-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 8px 12px; margin: 8px 0; }
 .v100-gift-balances p { margin: 0; padding: 8px; border: 1px solid #806a3d; color: #f6e4b7; }
+
+.v100-equipment-entry { margin: 8px 0 16px; padding: 12px 18px; min-height: 44px; }
+.v100-equipment-screen { overflow-y: auto; }
+.v100-equipment-heading, .v100-equipment-tabs { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.v100-equipment-heading strong { color: #f2c471; }
+.v100-equipment-screen button, .v100-equipment-screen select { min-height: 44px; padding: 8px 12px; font: inherit; color: #f1ead7; border: 1px solid #637572; background: #243635; border-radius: 4px; }
+.v100-equipment-screen button { cursor: pointer; }
+.v100-equipment-screen button[aria-pressed="true"] { border-color: #e4b768; background: #4b442b; }
+.v100-equipment-screen button:disabled { opacity: .5; cursor: default; }
+.v100-equipment-assignment { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 12px; padding: 14px; background: #142827; margin-bottom: 16px; }
+.v100-equipment-assignment label { display: grid; gap: 6px; min-width: 0; }
+.v100-equipment-assignment select { max-width: 100%; width: 100%; appearance: none; color-scheme: dark; color: #f1ead7; background-color: #243635; padding-right: 32px; background-image: linear-gradient(45deg, transparent 50%, #f1ead7 50%), linear-gradient(135deg, #f1ead7 50%, transparent 50%); background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+.v100-equipment-assignment p { grid-column: 1 / -1; margin: 0; line-height: 1.6; }
+.v100-equipment-catalog { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(275px, 100%), 1fr)); gap: 12px; padding-bottom: 18px; }
+.v100-equipment-card { padding: 16px; border: 1px solid #465d56; background: #102421; }
+.v100-equipment-card h3 { margin: 8px 0; font-size: 18px; }
+.v100-equipment-card p { line-height: 1.6; }
+.v100-equipment-next { color: #c7c7b4; font-size: 13px; }

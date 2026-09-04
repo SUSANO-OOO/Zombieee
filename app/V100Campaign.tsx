@@ -22,6 +22,9 @@ import {
 import {
   createV100BattleResult,
   equipV100Support,
+  equipV100Equipment,
+  purchaseV100Equipment,
+  upgradeV100Equipment,
   finalizeV100PendingResult,
   purchaseV100Support,
   purchaseV100Unit,
@@ -69,6 +72,7 @@ import {
   subscribeV100SaveChanges,
 } from "./v100CampaignStorage.js";
 import { EVENT_PORTRAIT_PROFILES, V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
+import { V100EquipmentView } from "./V100EquipmentView";
 import "./v100Campaign.css";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -76,7 +80,7 @@ type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
 type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolean };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
 type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string };
-type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "data";
+type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "equipment" | "data";
 
 const PORTRAIT_PATHS: Record<string, string> = {
   "unit-kumaverson": V080_UNIT_VISUAL_PROFILES.kumaverson.eventPortrait.path,
@@ -113,6 +117,12 @@ function formatReason(reason: string | undefined) {
     "support-not-owned": "先に支援装備を取得してください。",
     "upgrade-cap": "この装備は最大強化です。",
     "unknown-unit": "隊員情報を読み込めませんでした。",
+    "equipment-unavailable": "この装備は購入できません。",
+    "equipment-not-owned": "先に装備を取得してください。",
+    "equipment-cap": "この装備は所持上限です。",
+    "stale-equipment": "装備情報が更新されました。現在の所持数と強化段階をご確認ください。",
+    "invalid-equipment-slot": "この枠には装備できません。",
+    "equipment-in-use": "同じ装備を重ねて装着できません。別の隊員が使用中の場合は追加購入するか外してください。",
     "unknown-support": "支援情報を読み込めませんでした。",
     "invalid-result": "戦果の内容を確認できませんでした。保存データは保持しています。",
     "duplicate-result": "この戦果は確定済みです。報酬は重ねて受け取れません。",
@@ -472,7 +482,7 @@ export function V100Campaign() {
       : resultSaving ? "result"
         : isEventPhase(flow.phase) ? "event"
           : flow.phase === "map"
-            ? surface === "personnel" ? "personnel" : surface === "support-vehicle" ? "loadout" : "map"
+            ? surface === "personnel" ? "personnel" : (surface === "support-vehicle" || surface === "equipment") ? "loadout" : "map"
             : flow.phase === "formation" ? "formation" : "title";
     root.dataset.pwaScreen = screen;
     root.dataset.pwaBattleActive = String(battleActive);
@@ -750,7 +760,7 @@ export function V100Campaign() {
   </main>;
 
   const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle";
-  const screenLabel = surface === "personnel" ? "隊員" : surface === "support-vehicle" ? "出撃装備" : surface === "data" ? "セーブ" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" ? "戦果" : "作戦地図";
+  const screenLabel = surface === "personnel" ? "隊員" : (surface === "support-vehicle" || surface === "equipment") ? "出撃装備" : surface === "data" ? "セーブ" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" ? "戦果" : "作戦地図";
 
   return (
     <main onClickCapture={blockPendingInput} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
@@ -833,8 +843,16 @@ export function V100Campaign() {
           onPurchaseSupport={(supportId) => applySaveTransaction(purchaseV100Support(save, supportId))}
           onEquipSupport={(supportId) => applySaveTransaction(equipV100Support(save, supportId))}
           onUpgradeVehicle={() => applySaveTransaction(upgradeV100Vehicle(save))}
+          onOpenEquipment={() => openSurface("equipment")}
         />
       )}
+
+      {flow.phase === "map" && surface === "equipment" && <V100EquipmentView save={save}
+        onBack={() => openSurface("support-vehicle")}
+        onPurchase={(id, expectedQuantity) => applySaveTransaction(purchaseV100Equipment(save, id, { expectedQuantity }))}
+        onUpgrade={(id, expectedLevel) => applySaveTransaction(upgradeV100Equipment(save, id, { expectedLevel }))}
+        onEquip={(unitId, slot, equipmentId) => applySaveTransaction(equipV100Equipment(save, { unitId, slot, equipmentId }))}
+      />}
 
       {(flow.phase === "map" || flow.phase === "name") && surface === "data" && (
         <DataManagementView save={save} onBack={() => openSurface("campaign")} onBackup={downloadBackup} onImport={importBackup} onLegacyHistory={importLegacyHistory} />
@@ -973,7 +991,7 @@ function PersonnelView({ save, onBack, onPurchase, onLevel }: { save: Save; onBa
   </section>;
 }
 
-function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, onUpgradeVehicle }: { save: Save; onBack: () => void; onPurchaseSupport: (supportId: string) => void; onEquipSupport: (supportId: string | null) => void; onUpgradeVehicle: () => void }) {
+function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, onUpgradeVehicle, onOpenEquipment }: { save: Save; onBack: () => void; onPurchaseSupport: (supportId: string) => void; onEquipSupport: (supportId: string | null) => void; onUpgradeVehicle: () => void; onOpenEquipment: () => void }) {
   const [vehicleUpgradeOpen, setVehicleUpgradeOpen] = useState(false);
   useEffect(() => { document.querySelector<HTMLElement>(".v100-shell")?.scrollTo({ top: 0, left: 0, behavior: "auto" }); }, [vehicleUpgradeOpen]);
   const vehicleLevel = save.vehicle.upgradeLevel;
@@ -986,6 +1004,7 @@ function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, o
   return <section className="v100-panel v100-management-panel v100-loadout-screen" data-v100-surface="support-vehicle" aria-label="出撃装備">
     <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 出撃装備</span><h2>出撃装備</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
     <div className="v100-management-hero v100-loadout-hero"><div><strong>持ち込む支援を選ぶ</strong><span>支援は1種まで装備可能</span></div><b>{save.equippedSupportId ? "装備中" : "未選択"}</b></div>
+    <button type="button" className="v100-equipment-entry" onClick={onOpenEquipment}>隊員・部隊装備 / 購入・装着・強化</button>
     <div className="v100-support-vehicle-grid">
       <section className="v100-support-section v100-loadout-column" aria-labelledby="v100-support-title"><div className="v100-section-heading"><div><span className="v100-kicker">戦術支援</span><h3 id="v100-support-title">支援</h3></div><span>{save.equippedSupportId ? "装備中" : "未選択"}</span></div><p className="v100-loadout-intro">戦場で使う支援をひとつ選択</p><div className="v100-support-management-list">{V100_SUPPORTS.map((support) => {
         const owned = save.ownedSupportIds.includes(support.id);
