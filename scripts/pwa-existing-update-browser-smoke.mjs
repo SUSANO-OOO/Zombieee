@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Persistent existing-PWA update smoke.
 //
 // This is deliberately a two-release, same-origin test. The server switches
@@ -311,7 +312,7 @@ const userDataDir = await mkdtemp(path.join(os.tmpdir(), "zombieee-pwa-update-")
 
 try {
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const oldPageManifest = await manifestFromPage(page);
   record(`existing profile initially loads the ${oldVersion} manifest`, (
     oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
@@ -360,7 +361,7 @@ try {
     const pathname = new URL(request.url()).pathname;
     if (/\/(?:art|audio|pwa-bundles)\//.test(pathname)) candidateAssetRequests.push(pathname);
   });
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const candidatePageManifest = await manifestFromPage(page);
   record(`the existing profile sees the ${RELEASE_VERSION} manifest without reinstalling`, (
     candidatePageManifest.ok
@@ -447,7 +448,7 @@ try {
   await context.close();
   context = null;
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   const relaunchedWorker = await getWorkerState(page);
   const relaunchedSave = await saveState(page);

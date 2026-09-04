@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Browser proof for the optimized transport used by the complete first-install pack.
 // This is a WebKit/Chromium proxy for Safari decode behavior; it is never a
 // physical iPhone memory or thermal result.
@@ -36,7 +37,7 @@ page.on("response", (response) => {
   if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
 });
 
-await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 const result = await page.evaluate(async () => {
   const manifestResponse = await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" });
   if (!manifestResponse.ok) throw new Error(`asset-manifest.json HTTP ${manifestResponse.status}`);

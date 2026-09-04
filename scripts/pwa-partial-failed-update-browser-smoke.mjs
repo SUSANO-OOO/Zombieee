@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Persistent partial-failed existing-PWA recovery smoke.
 //
 // The old generation is first installed completely. Its content-addressed
@@ -555,7 +556,7 @@ const userDataDir = await mkdtemp(path.join(os.tmpdir(), "zombieee-pwa-partial-u
 
 try {
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ダウンロードを開始" }).click();
   await page.getByRole("button", { name: "ゲームを始める" }).waitFor({ state: "visible", timeout: 300_000 });
   const oldWorker = await waitForActiveGeneration(page, oldManifest, { version: oldVersion, timeoutMs: 30_000 });
@@ -601,7 +602,7 @@ try {
   setAudioMode("incident");
 
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const candidateManifestFromPage = await page.evaluate(async () => (
     await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json()
   ));
@@ -748,7 +749,7 @@ try {
   context = null;
   setAudioMode("recovery");
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const relaunchedBefore = await workerState(page);
   record("close/relaunch retains the partial cache, old active manifest, and exact raw save", (
     activeMatchesManifest(relaunchedBefore.state?.active, oldManifest, oldVersion)
@@ -829,7 +830,7 @@ try {
   await context.close();
   context = null;
   ({ context, page } = await openPersistent(userDataDir));
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   const committedRelaunch = await workerState(page);
   record(`relaunch keeps the committed ${RELEASE_VERSION} generation and save`, (

@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -84,7 +85,7 @@ async function openOutbreakDossier(page) {
     key: saveKey,
     value: serializedSeed,
   });
-  await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
   await page.locator("button.title-start").waitFor({ state: "visible", timeout });
   await page.locator("button.title-start").click();
   await page.locator(".map-screen").waitFor({ state: "visible", timeout });

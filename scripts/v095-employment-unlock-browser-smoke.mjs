@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -212,7 +213,7 @@ for (const engine of engines) {
           key: saveKey,
           value: serializedFixture,
         });
-        await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+        await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
         await dismissInstallOffer(page, { timeout });
         await page.locator("button.title-start").waitFor({ state: "visible", timeout });
         await page.locator("button.title-start").tap();
@@ -439,7 +440,7 @@ for (const engine of engines) {
         key: saveKey,
         value: serializedWaveEntryFixture,
       });
-      await entryPage.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+      await entryPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
       await dismissInstallOffer(entryPage, { timeout });
       await entryPage.locator("button.title-start").waitFor({ state: "visible", timeout });
       await entryPage.locator("button.title-start").tap();

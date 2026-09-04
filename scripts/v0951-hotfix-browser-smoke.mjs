@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -155,7 +156,7 @@ async function runCase(browser, engine, viewport, scenario) {
   }
 
   try {
-    await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+    await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
     await dismissInstallOffer(page, { timeout });
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout });
     const environment = await readSaveEnvironment(page, { timeout });

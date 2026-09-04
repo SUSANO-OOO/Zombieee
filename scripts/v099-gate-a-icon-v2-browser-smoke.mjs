@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -25,7 +26,7 @@ for (const testCase of cases) {
   page.on("requestfailed", (r) => diagnostics.requestFailures.push(`${r.url()} :: ${r.failure()?.errorText}`));
   page.on("response", (r) => { if (r.status() >= 400) diagnostics.httpErrors.push(`${r.status()} ${r.url()}`); });
   try {
-    const response = await page.goto(String(baseUrl), { waitUntil: "networkidle", timeout: 30_000 });
+    const response = await page.goto(legacyQaUrl(baseUrl), { waitUntil: "networkidle", timeout: 30_000 });
     if (!response?.ok()) throw new Error(`navigation ${response?.status()}`);
     if (!await page.getByRole("heading", { name: /Gate A Icon-only Candidate v2/ }).isVisible()) throw new Error("heading missing");
     const evidence = await page.evaluate(async () => {
