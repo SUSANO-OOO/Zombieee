@@ -18,7 +18,7 @@ const engines = (process.env.V100_SURVIVAL_ENGINES ?? "chromium,webkit").split("
 assert.ok(engines.length && engines.every(engine => ["chromium", "webkit"].includes(engine)));
 const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 const report = { host: process.platform, node: process.version, build: await productionBuildIdentity(), engines, fullAcceptance: false,
-  scope: "Advanced isolated fixtures: all units Lv30, vehicleLv5,2000 CAPS, exact TAKUYA Story receipt. Desktop has no receipt. 390px plays real waves1-5;340px starts from a disclosed synthetic paid checkpoint with570HP. Audio disabled. Not natural progression, balance, native audio or physical-device acceptance.", cases: [] };
+  scope: "Advanced isolated fixtures: all units Lv30, vehicleLv5,2000 CAPS, exact TAKUYA Story receipt; ordered Paisen/Nao/Miyamoto/Babayaga roles with duplicate slots. Desktop has no receipt. 390px plays real waves1-5;340px starts from a disclosed synthetic paid checkpoint with570HP. Audio disabled. Not natural progression, balance, native audio or physical-device acceptance.", cases: [] };
 report.sources = await Promise.all(["app/v100Survival.js", "app/v100SurvivalTransactions.js", "app/survival.js", "app/survivalBattleRuntime.js", "app/v100Save.js", "app/V100SurvivalView.tsx", "app/V100ModesView.tsx", "app/V100Campaign.tsx", "app/AshfallGame.tsx", "scripts/v100-survival-browser-smoke.mjs"].map(async file => ({ file, sha256: sha(await fs.readFile(file)) })));
 const boss = V100_BOSSES[0];
 const saved = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), key);
@@ -38,7 +38,7 @@ function fixture(short) {
   seed.receipts = [boss.firstDefeatReceipt]; seed.completedStageIds = V100_STAGE_IDS.slice(0, 3); seed.availableStageIds = V100_STAGE_IDS.slice(0, 4);
   seed.ownedUnitIds = V100_UNITS.map(unit => unit.id); seed.registeredUnitIds = [...seed.ownedUnitIds]; seed.unitLevels = Object.fromEntries(seed.ownedUnitIds.map(id => [id, 30])); seed.levelCap = 30;
   seed.vehicle.upgradeLevel = 5; seed.vehicle.maxHp = 1080;
-  seed.formationSlots = ["unit-miyamoto-musashi", "unit-kumaverson", "unit-paisen", "unit-hachi", "unit-miyamoto-musashi", "unit-kumaverson", "unit-paisen"];
+  seed.formationSlots = ["unit-paisen", "unit-nao", "unit-miyamoto-musashi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-babayaga"];
   if (short) {
     seed = beginV100Survival(seed, { runId: "disclosed-checkpoint-fixture" }).save;
     let run = seed.survival.active.run;
@@ -86,7 +86,7 @@ try {
             assert.equal(record.initial.run.formation.unitIds.length, 7); assert.deepEqual(record.initial.run.bossPool, ["takuya"]);
             if (!short) {
               await fault(page, true); const until = Date.now() + 300000; let clicks = 0;
-              const order = ["miyamoto-musashi", "kumaverson", "miyamoto-musashi", "brawler"];
+              const order = ["brawler", "medic", "miyamoto-musashi", "babayaga"];
               record.deploymentClicksByKind = {};
               while (Date.now() < until && !await page.locator(".survival-save-retry button").isVisible()) {
                 const kind = order[clicks % order.length];
@@ -133,7 +133,7 @@ try {
           record.status = "passed-storage-runtime-audio-disabled"; console.log(JSON.stringify({ name: record.name, status: record.status, images: record.images.length }));
         } catch (error) {
           record.status = "failed"; record.error = String(error); record.stack = error.stack;
-          record.failure = await page.evaluate(() => { const s = window.__ASHFALL_BATTLE_QA__?.getSnapshot(); return { pending: document.documentElement.dataset.pwaSaveMutationPending, busy: document.querySelector('.v100-shell')?.getAttribute('aria-busy'), run: s?.survivalRun, time: s?.time, baseHp: s?.baseHp, paused: s?.paused, over: s?.over, running: s?.running, enemies: s?.fighters?.filter(f => f.side === 'zombie' && f.hp > 0).map(f => ({ kind: f.kind, hp: f.hp })) }; }).catch(() => null);
+          record.failure = await page.evaluate(() => { const s = window.__ASHFALL_BATTLE_QA__?.getSnapshot(); return { pending: document.documentElement.dataset.pwaSaveMutationPending, busy: document.querySelector('.v100-shell')?.getAttribute('aria-busy'), run: s?.survivalRun, time: s?.time, stageId: s?.stageId, unitsLost: s?.unitsLost, naoHealing: s?.roleMetrics?.naoHealing, baseHp: s?.baseHp, paused: s?.paused, over: s?.over, running: s?.running, humans: s?.fighters?.filter(f => f.side === 'human' && f.hp > 0).map(f => ({ kind: f.kind, hp: f.hp, maxHp: f.maxHp, x: f.x, y: f.y, level: f.progressionLevel })), enemies: s?.fighters?.filter(f => f.side === 'zombie' && f.hp > 0).map(f => ({ kind: f.kind, hp: f.hp, x: f.x, y: f.y })) }; }).catch(() => null);
           await shot(page, record, "failure").catch(() => {}); throw error;
         } finally { await context.close(); await fs.writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
       }
