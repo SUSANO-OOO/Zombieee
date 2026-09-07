@@ -36,11 +36,26 @@ function ownerForSpeaker(speaker) {
   return { portraitOwner: "minor-human-shared-event-silhouette", portraitKind: "minor" };
 }
 
-function parseNodes(sectionLines, offset) {
+function parseNodes(sectionLines, offset, { credits = false } = {}) {
   const nodes = [];
   for (let index = 0; index < sectionLines.length; index += 1) {
     const raw = sectionLines[index];
     const sourceLine = offset + index + 1;
+    if (credits) {
+      // These eleven authored shots are Markdown list items, not dialogue.
+      // The italic instruction above them belongs to the authoring document.
+      const shot = raw.match(/^\*\s+\*\*(.+?)：\*\*\s*(.+?)\s*$/u);
+      if (shot) nodes.push({
+        kind: "montage", speaker: null, sceneLabel: clean(shot[1]),
+        text: clean(shot[2]), portraitOwner: null, portraitKind: "stage-direction", sourceLine,
+      });
+      continue;
+    }
+    const title = raw.match(/^\*\*■ TITLE\*\*[ \t　]+(.+)$/u);
+    if (title) {
+      nodes.push({ kind: "title", speaker: null, text: clean(title[1]), portraitOwner: null, portraitKind: "title", sourceLine });
+      continue;
+    }
     let match = raw.match(/^\*\*(.+?)\*\*[ \t　]*(?:「(.*)」|『(.*)』)\s*$/u);
     if (match) {
       const speaker = clean(match[1]);
@@ -152,13 +167,17 @@ for (const [id, heading, kind, musicProfile] of [
 ]) {
   const start = findHeading(heading);
   if (start < 0) throw new Error(`Missing ${id} source heading`);
-  const end = id === "v100:event:credits" ? findHeading(/^# EPILOGUE/u, start) : findNextTopHeading(start);
+  const end = id === "v100:event:ending" ? findHeading(/^## エンドロール/u, start)
+    : id === "v100:event:credits" ? findHeading(/^# EPILOGUE/u, start) : findNextTopHeading(start);
+  if (end <= start) throw new Error(`Missing or inverted ${id} source boundary`);
+  const nodes = parseNodes(lines.slice(start + 1, end), start + 1, { credits: kind === "credits" });
+  if (kind === "credits" && nodes.length !== 11) throw new Error(`Expected all 11 canonical credits shots; got ${nodes.length}`);
   eventEntries.push([id, {
-    id, kind, stageNumber: null, musicProfile, characterVoice: false, nodes: parseNodes(lines.slice(start + 1, end), start + 1),
+    id, kind, stageNumber: null, musicProfile, characterVoice: false, nodes,
     source: { startLine: start + 2, endLine: end },
   }]);
 }
 
 const output = `// Generated from the canonical v10 story source. Do not hand-edit.\nimport { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";\n\nexport const V100_STORY_SOURCE_SHA256 = "${sourceSha}";\nexport const V100_STORY_SOURCE_LINE_COUNT = ${lines.length};\nexport const V100_STORY_SCRIPT_VERSION = "v10-final-release";\n\nexport const V100_STORY_EVENTS = Object.freeze(${JSON.stringify(Object.fromEntries(eventEntries), null, 2)});\n\nconst missing = V100_EVENT_IDS.filter((eventId) => !V100_STORY_EVENTS[eventId]);\nif (missing.length > 0) throw new Error(\`Missing V1.0.0 story event definitions: \${missing.join(", ")}\`);\n\nexport function v100StoryEventFor(eventId) {\n  return V100_STORY_EVENTS[eventId] ?? null;\n}\n\nexport function v100StoryEventIdsForStage(stageNumber) {\n  const stage = String(Number(stageNumber)).padStart(2, "0");\n  return [\`v100:event:s\${stage}:pre\`, \`v100:event:s\${stage}:post\`, \`v100:event:s\${stage}:first-clear-post\`].filter((eventId) => Boolean(V100_STORY_EVENTS[eventId]));\n}\n\nexport function v100StoryNodeText(node, playerName) {\n  return node?.text == null ? "" : renderV100PlayerName(node.text, playerName);\n}\n\nexport function v100StoryEventView(eventId, playerName) {\n  const event = v100StoryEventFor(eventId);\n  if (!event) return null;\n  return { ...event, nodes: event.nodes.map((node) => ({ ...node, text: v100StoryNodeText(node, playerName) })) };\n}\n\nexport function v100StoryContract() {\n  return Object.freeze({\n    eventIds: V100_EVENT_IDS,\n    eventCount: V100_EVENT_IDS.length,\n    prologueFirst: V100_EVENT_IDS[0],\n    endingSequence: ["v100:event:ending", "v100:event:credits", "v100:event:epilogue"],\n    creditsHasDialogue: V100_STORY_EVENTS["v100:event:credits"].nodes.some((node) => node.kind === "dialogue"),\n    creditsMusic: V100_STORY_EVENTS["v100:event:credits"].musicProfile,\n    sourceSha256: V100_STORY_SOURCE_SHA256,\n  });\n}\n\nvoid V100_EVENT_BY_ID;\n`;
-await writeFile(path.join(root, "app", "v100StoryEvents.js"), output, "utf8");
+await writeFile(process.argv[3] ?? path.join(root, "app", "v100StoryEvents.js"), output, "utf8");
 console.log(JSON.stringify({ output: "app/v100StoryEvents.js", sourceSha, lines: lines.length, events: eventEntries.length }));

@@ -1657,6 +1657,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/story/kumaya-before-outbreak-v1.webp",
+      "bytes": 158796,
+      "hash": "sha256-f209eb6b9dfee542e58b2dcd0a9ad32505e49eaff9c9b05d93de8fbe2d7fe9f1",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story/kumaya-reopened-v1.webp",
+      "bytes": 175738,
+      "hash": "sha256-5c388170fb89c3981a262aeaab4715e838d28d3b2cbaf61cc046b2d1d26b8eb8",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/vfx/armory-red-lens-alert-v1.png",
       "bytes": 33350,
       "hash": "sha256-89e2ee64afebae2dfcd689243ee29dfbf27bc1259aa523bc46f35a3779f55e3f",

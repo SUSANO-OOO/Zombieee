@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { V100_RELEASE_ASSET_CONTRACT as assetContract } from "./v100-release-asset-contract.mjs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -47,7 +48,7 @@ try {
           const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); if (await offer.isVisible()) await offer.click(); await ready(page);
           assert.equal(await page.title(), RELEASE_TITLE);
           record.metadata = await page.evaluate(async () => ({ app: await (await fetch("/manifest.webmanifest")).json(), assets: await (await fetch("/asset-manifest.json")).json() }));
-          assert.equal(record.metadata.assets.version, RELEASE_VERSION); assert.equal(record.metadata.assets.assets.length, 459);
+          assert.equal(record.metadata.assets.version, RELEASE_VERSION); assert.equal(record.metadata.assets.assets.length, assetContract.count);
           assert.match(record.metadata.app.description, /装甲車両/u); assert.doesNotMatch(record.metadata.app.description, /CRAWLER|移動拠点/u);
           await page.getByRole("dialog", { name: "ボス撃破強化選択", exact: true }).waitFor();
           const repair = page.locator(".survival-upgrade-choices button").filter({ hasText: "装甲車両応急修理" }); await repair.waitFor();

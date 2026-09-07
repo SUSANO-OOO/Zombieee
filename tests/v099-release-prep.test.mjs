@@ -6,6 +6,7 @@ import test from "node:test";
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { RELEASE_SHA_PLACEHOLDER } from "../app/pwaAssetManifest.js";
 import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js";
+import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_STORY_BACKGROUND_ADDITIONS } from "../scripts/v100-release-asset-contract.mjs";
 
 const PUBLISHED_V0982_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
 const PUBLISHED_V0993_SHA = "827e1b7942221d24901332bdaa543704fbc730cc";
@@ -18,10 +19,10 @@ const PRE_REPACK_SIZE_SNAPSHOTS = Object.freeze({
   updateFromV0993Bytes: 27_446_536,
 });
 const APPROVED_SIZE_SNAPSHOTS = Object.freeze({
-  candidateTotalBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateTotalBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 104_562_671
-  candidateDistinctHashBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateDistinctHashBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 104_022_768
-  updateFromV0982Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0982Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 31_511_554
-  updateFromV0993Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0993Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, // 21_136_860
+  candidateTotalBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateTotalBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION + assetContract.storyBytes,
+  candidateDistinctHashBytes: PRE_REPACK_SIZE_SNAPSHOTS.candidateDistinctHashBytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION + assetContract.storyBytes,
+  updateFromV0982Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0982Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION + assetContract.storyBytes,
+  updateFromV0993Bytes: PRE_REPACK_SIZE_SNAPSHOTS.updateFromV0993Bytes - APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION + assetContract.storyBytes,
 });
 const publishedSource = JSON.parse(execFileSync("git", [
   "show",
@@ -37,16 +38,16 @@ const publishedV0995 = { ...JSON.parse(execFileSync("git", ["show", `${PUBLISHED
 const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const v100ApprovedAssets = candidate.assets.filter(({ path }) => path.startsWith("/art/v100/"));
 
-test("the actual published0.9.9.5 pack reuses415 assets and requires all44 approved V1 additions", () => {
+test("the published0.9.9.5 pack reuses415 assets and requires the complete source-bound V1 additions", () => {
   assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
   const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
   assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.0");
-  assert.equal(update.downloadCount, 44); assert.equal(update.downloadBytes, 14_821_106);
+  assert.equal(update.downloadCount, assetContract.additionsFromV0995); assert.equal(update.downloadBytes, assetContract.bytesFromV0995);
   assert.equal(update.unchangedCount, 415); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 0);
   assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/")));
   const incomplete = verifyUpdatePayload({ manifest: candidate, storedHashes: retainedHashes, expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
-  assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, 44);
+  assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, assetContract.additionsFromV0995);
   const completed = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...retainedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.deepEqual(completed, { verified: true, errors: [], missingPaths: [] });
 });
@@ -54,16 +55,23 @@ test("the actual published0.9.9.5 pack reuses415 assets and requires all44 appro
 test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 6_309_676);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 104_562_671,
-    candidateDistinctHashBytes: 104_022_768,
-    updateFromV0982Bytes: 31_511_554,
-    updateFromV0993Bytes: 21_136_860,
+    candidateTotalBytes: 104_897_205,
+    candidateDistinctHashBytes: 104_357_302,
+    updateFromV0982Bytes: 31_846_088,
+    updateFromV0993Bytes: 21_471_394,
   });
   assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
-  assert.equal(v100ApprovedAssets.length, 44);
-  assert.equal(candidate.assets.length, 459);
+  assert.equal(v100ApprovedAssets.length, assetContract.additionsFromV0995);
+  assert.equal(candidate.assets.length, assetContract.count);
+  for (const expected of V100_STORY_BACKGROUND_ADDITIONS) {
+    const actual = candidate.assets.find(asset => asset.path === expected.path);
+    assert.ok(actual, expected.path);
+    assert.equal(actual.hash, expected.hash);
+    assert.equal(actual.bytes, expected.bytes);
+    assert.equal(actual.criticality, "critical");
+  }
   assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), APPROVED_SIZE_SNAPSHOTS.candidateTotalBytes);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
@@ -86,7 +94,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "1.0.0");
-  assert.equal(update.downloadCount, 108);
+  assert.equal(update.downloadCount, 108 + V100_STORY_BACKGROUND_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 348);
   assert.equal(update.reusedCount, 3);
@@ -121,7 +129,7 @@ test("the published Version 0.9.9.3 pack updates to 1.0.0 while reusing unchange
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
   assert.equal(update.toVersion, "1.0.0");
-  assert.equal(update.downloadCount, 59);
+  assert.equal(update.downloadCount, 59 + V100_STORY_BACKGROUND_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 397);
   assert.equal(update.reusedCount, 3);

@@ -697,6 +697,13 @@ const scenes = [
   { id: "victory", bgm: "music-victory", preload: ["ui-confirm"], crossfadeMs: 320 },
   { id: "defeat", bgm: "music-defeat", preload: ["ui-confirm", "ui-cancel"], crossfadeMs: 320 },
   { id: "silence-prologue-title", preload: [], crossfadeMs: 0 },
+  // Credits reuse location ambience without BGM or character voices.
+  { id: "v100-credits-street", ambience: ["ambience-v070-rain-street-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-room", ambience: ["ambience-v070-crawler-ops-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-station", ambience: ["ambience-v070-station-platform-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-medical", ambience: ["ambience-v070-medical-bay-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-wind", ambience: ["ambience-v070-stage3-wind-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-kumaya", ambience: ["ambience-v070-kumaya-daily-loop"], preload: [], crossfadeMs: 450 },
   { id: "story-kumaya-daily", bgm: "music-v070-kumaya-daily", ambience: ["ambience-v070-kumaya-daily-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 520 },
   { id: "story-kumaya-crisis", ambience: ["ambience-v070-kumaya-crisis-loop"], preload: [], crossfadeMs: 120 },
   { id: "story-collapse-montage", bgm: "music-v070-collapse-montage", ambience: ["ambience-v070-collapse-city-loop"], preload: [], crossfadeMs: 700 },

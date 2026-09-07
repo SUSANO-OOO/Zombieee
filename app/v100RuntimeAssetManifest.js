@@ -16,6 +16,8 @@ const portraits = freezeRecord({
 });
 
 const storyCuts = freezeRecord({
+  kumayaBeforeOutbreak: `${V100_ROOT}/story/kumaya-before-outbreak-v1.webp`,
+  kumayaReopened: `${V100_ROOT}/story/kumaya-reopened-v1.webp`,
   segawaPrivateLab: `${V100_ROOT}/cuts/segawa-private-lab-reveal-v1.webp`,
   mugarianPresidentExecutiveLab: `${V100_ROOT}/cuts/mugarian-president-executive-lab-v1.webp`,
   mutatedPresidentDefeat: `${V100_ROOT}/cuts/mugarian-president-defeat-v1.webp`,

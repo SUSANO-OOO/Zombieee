@@ -1291,3 +1291,20 @@
 .v100-mode-result dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
 .v100-mode-result dt { color: #c3c6b4; }
 .v100-mode-result dd { margin: 8px 0; font-size: 22px; }
+
+/* Story bookends keep the location readable behind the opaque dialogue panel. */
+.v100-event-category-prologue .v100-event-backdrop,
+.v100-event-category-ending .v100-event-backdrop,
+.v100-event-category-epilogue .v100-event-backdrop { filter: brightness(.7) saturate(.9); }
+.v100-event-category-credits .v100-event-backdrop { filter: brightness(.82) saturate(.9); }
+.v100-event-backdrop[data-v100-title-card="true"] { background: #030607; filter: none; }
+.v100-story-node.v100-node-title { display: grid; place-items: center; padding: 48px 10% 80px; text-align: center; }
+.v100-node-title h2 { color: #f5dfab; font-family: serif; font-size: clamp(28px, 5vw, 64px); font-weight: 500; letter-spacing: .1em; }
+.v100-story-node.v100-credits-shot { inset: auto 10% 17%; padding: 20px 28px; border-left: 2px solid #c8a262; background: #071011ed; }
+.v100-credits-shot h2 { margin: 8px 0 12px; color: #f4dfae; font-family: serif; font-size: clamp(24px, 3vw, 38px); }
+.v100-credits-shot p { max-width: 850px; margin: 0; color: #eee7d6; font-size: clamp(14px, 1.6vw, 20px); line-height: 1.7; }
+@media (max-height: 430px) {
+  .v100-story-node.v100-credits-shot { inset: auto 8% 22%; padding: 12px 18px; }
+  .v100-credits-shot h2 { margin: 5px 0 7px; font-size: 22px; }
+  .v100-credits-shot p { font-size: 14px; line-height: 1.45; }
+}

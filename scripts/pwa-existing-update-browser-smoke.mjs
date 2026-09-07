@@ -1,4 +1,5 @@
 import { legacyQaUrl } from "./legacy-qa-url.mjs";
+import { V100_RELEASE_ASSET_CONTRACT as assetContract } from "./v100-release-asset-contract.mjs";
 // Persistent existing-PWA update smoke.
 //
 // This is deliberately a two-release, same-origin test. The server switches
@@ -180,7 +181,7 @@ record("old and candidate static roots are complete", (
   && candidateManifest.version === RELEASE_VERSION
   && candidateManifest.releaseSha === expectedCandidateReleaseSha
   && oldManifest.assets?.length === 415
-  && candidateManifest.assets?.length === 459
+  && candidateManifest.assets?.length === assetContract.count
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -207,11 +208,11 @@ const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset)
 )));
 record("candidate keeps the complete asset set and declares an exact hash delta", (
   oldDistinctHashes.size === 413
-  && candidateDistinctHashes.size === 457
+  && candidateDistinctHashes.size === assetContract.distinctHashes
   && unchangedOldAssets.length === oldManifest.assets.length
-  && candidateManifest.assets.length === 459
-  && candidateNewHashAssets.length === 44
-  && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === 14_821_106
+  && candidateManifest.assets.length === assetContract.count
+  && candidateNewHashAssets.length === assetContract.additionsFromV0995
+  && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
   && candidateNewHashAssets.length === candidateNewHashes.size
   && candidateExpectedNetworkPaths.size === candidateNewHashes.size
 ), {

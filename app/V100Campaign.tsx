@@ -81,7 +81,7 @@ type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, nu
 type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
 type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolean };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
-type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string };
+type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string; sourceLine?: number; sceneLabel?: string };
 type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "equipment" | "modes" | "data";
 
 const PORTRAIT_PATHS: Record<string, string> = {
@@ -273,9 +273,7 @@ function mapNodePosition(index: number, total: number) {
 
 function eventBackdropFor(presentation: ReturnType<typeof v100EventPresentationFor>, fallback: string) {
   if (!presentation) return fallback;
-  if (presentation.category === "ending") return V100_RUNTIME_ASSET_MANIFEST.storyCuts.takuyaOmegaEndingDefeat;
-  if (presentation.category === "credits") return PRODUCTION_VISUALS.command;
-  if (presentation.category === "epilogue") return V100_RUNTIME_ASSET_MANIFEST.storyCuts.mutatedPresidentDefeat;
+  if (presentation.backgroundPath) return presentation.backgroundPath;
   return fallback;
 }
 
@@ -795,7 +793,6 @@ export function V100Campaign() {
             </div>
             <p className="v100-title-synopsis">{V100_PROLOGUE_SYNOPSIS}</p>
             <div className="v100-name-card">
-              <span className="v100-kicker">名前を入力</span>
               <h2 id="v100-name-title">名前を入力</h2>
               <p>この名前は、物語の中で仲間たちがあなたを呼ぶ名前になります。</p>
               <form onSubmit={startCampaign}>
@@ -812,7 +809,7 @@ export function V100Campaign() {
 
       {isEventPhase(flow.phase) && event && (
         <section className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={`${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
-          <div className="v100-event-backdrop" style={{ backgroundImage: `url(${eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")})` }} />
+          <div className="v100-event-backdrop" data-v100-scene={eventPresentation?.sceneLabel ?? undefined} data-v100-title-card={currentNode?.kind === "title" ? "true" : undefined} style={{ backgroundImage: currentNode?.kind === "title" ? "none" : `url(${eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")})` }} />
           <article className="v100-event-panel">
             <div className="v100-event-heading"><span className="v100-kicker">{eventDisplayLabel(flow.eventId)}</span><span>{eventPresentation?.nodeLabel ?? "通信"}{event.nodes.length > 1 ? ` / ${Math.min(storyIndex + 1, event.nodes.length)}` : ""}</span></div>
             {currentNode ? <StoryNodeView node={currentNode} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyIndex} presentation={eventPresentation} /> : <p className="v100-action-node">このイベントを確認して次へ進みます。</p>}
@@ -908,6 +905,8 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
+  if (node.kind === "title") return <div className="v100-story-node v100-node-title" data-v100-node-kind="title"><h2>{playerFacingText}</h2></div>;
+  if (node.kind === "montage") return <div className="v100-story-node v100-credits-shot" data-v100-node-kind="montage" data-v100-credit-scene={node.sceneLabel}><span className="v100-kicker">西新の、その後</span><h2>{node.sceneLabel}</h2><p>{playerFacingText}</p></div>;
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
     {secondaryPortrait && <div className="v100-portrait-frame v100-portrait-frame-secondary" data-portrait-framing="waist-up-common" data-portrait-owner={secondaryNode?.portraitOwner ?? undefined} data-portrait-side={secondaryPortraitSide}><img className="v100-portrait v100-portrait-secondary" src={secondaryPortrait} alt="" aria-hidden="true" /></div>}
     {portrait && <div className="v100-portrait-frame" data-portrait-framing="waist-up-common" data-portrait-owner={node.portraitOwner ?? undefined} data-portrait-side={portraitSide}><img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}の立ち絵`} /></div>}

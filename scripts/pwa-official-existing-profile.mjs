@@ -1,3 +1,4 @@
+import { V100_RELEASE_ASSET_CONTRACT as assetContract } from "./v100-release-asset-contract.mjs";
 // Preserve a real already-installed public profile across the V1 publication.
 //
 // prepare: while official Pages still serves 0.9.9.5, create one fresh named
@@ -471,15 +472,15 @@ async function verify(contract) {
   });
   const newAssets = published.manifest.assets.filter((asset) => !oldHashes.has(asset.hash));
   const expectedPaths = new Set(newAssets.map((asset) => `/Zombieee${asset.bundlePath ?? asset.sourcePath ?? asset.path}`));
-  record("published V1 declares the locked 415-to-459 update delta", (
+  record("published V1 declares the source-bound update delta from all 415 legacy assets", (
     oldManifest.assets.length === 415
     && oldHashes.size === 413
-    && published.manifest.assets.length === 459
-    && candidateHashes.size === 457
+    && published.manifest.assets.length === assetContract.count
+    && candidateHashes.size === assetContract.distinctHashes
     && unchanged.length === 415
-    && newAssets.length === 44
-    && newAssets.reduce((sum, asset) => sum + asset.bytes, 0) === 14_821_106
-    && expectedPaths.size === 44
+    && newAssets.length === assetContract.additionsFromV0995
+    && newAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
+    && expectedPaths.size === assetContract.additionsFromV0995
   ), {
     oldAssets: oldManifest.assets.length,
     oldHashes: oldHashes.size,
@@ -558,7 +559,7 @@ async function verify(contract) {
     && active?.activeState?.active?.releaseSha === candidateReleaseSha
     && active?.activeState?.previous?.version === oldVersion
     && updatedCache.assetEntries === new Set([...oldHashes, ...candidateHashes]).size
-    && updatedCache.logicalSatisfied === 459
+    && updatedCache.logicalSatisfied === assetContract.count
     && afterUpdate.oldRaw === legacySaveRaw
     && afterUpdate.raw === beforeUpdate.raw
     && afterUpdate.legacyWrites.length === 0

@@ -73,7 +73,8 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const v100ApprovedPaths = new Set(current.assets
     .filter(({ path }) => path.startsWith("/art/v100/"))
     .map(({ path }) => path));
-  assert.equal(v100ApprovedPaths.size, 44, "V1 adds exactly the approved 44 runtime assets");
+  const { V100_RELEASE_ASSET_CONTRACT } = await import("../scripts/v100-release-asset-contract.mjs");
+  assert.equal(v100ApprovedPaths.size, V100_RELEASE_ASSET_CONTRACT.additionsFromV0995, "V1 adds exactly the source-bound runtime assets");
   const finalRemediationPaths = new Set([
     "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
     "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",

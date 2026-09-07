@@ -1,6 +1,27 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-09-04
+更新日：2026-09-07
+
+## Version 1.0.0 完成ミッション — 現在の進行記録
+
+2026-09-07のProducer指示に基づき、現在のCodexタスクが制作全体を引き継ぐ。継続ゴールは完成版の最終承認、正式統合・Release・公式Pages公開、公開後検証までを含む。以下が現在の実行順であり、下方の旧role名、exact-path制限、反復回数、停止・再開cursorは履歴として扱う。固定製品判断、旧データ保全、最終公開承認境界は維持する。
+
+- live確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。PR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。CI `33917360399` は66成功・1失敗・2 skippedで、完成候補ではない。
+- 作業場所：`_isolated/v100-completion-20260907` / `codex/v100-completion-20260907`。元の `v100-save-boundary-6faa` の変更をpatch/statusとして `_v100_completion/evidence/` に保全し、既存ファイルと履歴は変更しない。Section138.36の未commit修正5ファイルを新作業ツリーへ取り込んだ。
+- 今回の新規検証：変更前HEADのproduction build、全1423 tests、content validator、lintエラー0（既存警告12）、diff check成功。取り込んだSection138.36のfocused57/57成功。旧ブラウザQAの成功記載は今回の合格証拠に代用しない。
+- 初回の実ブラウザ/source照合で、平穏な「くまや」へ荒廃した商店街背景、PROLOGUE全体へdaily音響、EPILOGUEへ無関係な社長撃破絵が割り当てられていた。またエンドロール11場面がgeneratorで欠落し、実装者向け指示1行が表示されていた。これらは今回修正した。
+- 修正後の今回の証拠：台本SHA-256 `c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4`を維持し、エンドロール11場面・最後のtitleを生成。場面別背景と音響を接続。2背景334,534bytesを追加し、旧415 assetsの保持/hash条件を維持。production build、全1429 tests、content validator、lint0 errors/12既存warningsが成功。Chromium/WebKit × 1280x720/844x390/844x340の24場面fixtureは全成功、console/page/request/HTTP errors0。証拠は `outputs/completion/` と `outputs/v100-story-bookends/report.json`。これはseedした場面表示と通常の「次へ」の検証であり、30作戦の通常通しプレイ、実機、実speaker聴感、公開PWAの合格には代用しない。
+- 停滞要因：ゲーム本体の未接続演出、browser環境固有の制約、検証操作の不適切な配備選択、巨大な履歴文書と古いIssue cursorが混在していた。今後はソース・実物・今回の証拠を対応させ、同一失敗を無根拠に反復しない。
+
+### 有限の残工程と完了判定
+
+1. **内容・体験を完成**：台本hashを保持し、PROLOGUE、30作戦、ENDING、11場面のエンドロール、EPILOGUEを接続。通常の新規開始から通しプレイし、代表的な章boss/最終bossとCAPS・育成・配備・支援・車両・他modeを確認する。背景・人物・動作・音響の意味不一致と明白な操作不備を解消する。
+2. **対応環境・データ保全**：新規と旧版更新を分離し、保存/結果一回性/再読込/中断復帰/復旧/PWA install・差分update・offline・rollbackを検証。Chromium/WebKitの844x340、844x390、1280x720ほか合意済みviewportを確認し、物理iPhone未検証は区別する。
+3. **同一候補の最終検証**：必要な自動検証と全Phase G、必要remote CIを実行。実装修正と分離したfixed-HEAD read-onlyレビューでHigh/Medium未解消0。影響のない検証は反復せず、変更で無効になる証拠だけ取り直す。
+4. **最終Producer承認**：完成条件を満たした、実際に遊べる固定候補と検証結果・残存事項を提示。この承認前はReady/最終merge/tag/Release/正式deployment/Issue closeを行わない。
+5. **正式公開と確認**：承認候補と統合結果treeを照合し、正式release SHAへtag/Release/Pages requestを固定。匿名公開、asset、fresh/既存save、update/recoveryを公開環境で確認し、問題があれば修正・復旧後に再検証。実態に一致する完了記録を残した時だけgoal complete/Issue close。
+
+現在は工程1。冒頭と結末の欠落・誤接続修正を終え、新規開始から通常の編成・成長・戦闘を確認中。30作戦全体の内容/体験、データ保全とPWA、全Phase G/同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
@@ -190,11 +211,19 @@ Producerが明示的に旧分業へ戻すまで、SOLがVersion 1.0.0をend-to-e
 
 ## 6. Version 1.0.0 execution cursor — r114 Section 138
 
-### Current packet: Section138.35 V1 public metadata assertion propagation
+### Current packet: Section138.36 Stage 25 completed-impact contact-target card ownership
 
-Current local execution: Section138.35 `LOCAL_HOSTED_PRESENTATION_METADATA_VERIFIED / TRANSPORT_READY`. Section138.34 is fixed at local commit11d9512/tree5205b30 after run33911449703 ends naturally. Enemy6/6 and deployment6/6 are green; PR Verify retains the classified candidate-version red; Phase G and canonical/audio are dependency-skipped. Hosted WebKit's11/11 presentation failures all stopped before visual measurement because one historical runner required `大型移動拠点と`, while canonical V1 source requires `装甲車両と` and forbids `移動拠点`. The exact five-path correction aligns that runtime assertion and adds a source binding. Focused22/22, full1423/1423, lint0/12 and diff-check pass. Unchanged Chromium and Windows WebKit presentation commands each pass11/11 once with stable build identity and diagnostics0. No product/runtime/PWA/visual byte, viewport, timeout or fail-closed condition changes.
+Current execution: Section138.36 `QA_HARNESS_STAGE25_CONTACT_TARGET_CARD_STARVATION / SOL_REMEDIATION`. PR171 HEAD `ab1a41ce46fa57789760b533437016fc7b38be36`, tree `b920daf160851d0ff2d3bd61dde29e18f8b84eb0`, automatic run `33917360399`. PR Verify, enemy6/6 and Hosted WebKit11/11 are green. Required Phase G passes Stage6 and Stage24, then Stage25 alone fails the unchanged45-second engagement setup boundary. Its retained transaction starts proof at page time70572/battle time66.3833, contains exact commander/SMG/human impacts and guardian id2 -> shield id5 direct impact at54.5667, but no required shield completed impact. Normal UI trace deployed guardian once and then repeatedly spent recovered inputs on DOM-first medic; later support-object shields and the surviving guardian were on different production lanes with shield attackSequence0/target null. Diagnostics/errors0. Classification and exact evidence remain in Design138.36.
 
-ROLE_LOCK SOL_REMEDIATION. Make one normal exact-five-path Section138.35 commit, then perform live GitHub preflight and one normal fast-forward transport carrying both non-amended Section138.34/138.35 commits into a distinct automatic CI. Canonical macOS WebKit and every required unfiltered lane must be green there. Preserve official Chromium profile ID60032464-d706-4708-a7c8-055ec03c694d unopened. Stage1's setter-free diagnostic reached a49.23s three-star victory with errors0 but cannot advance acceptance across this required red. After remote closure, resume full30-Stage natural progression and integrated local54/unfiltered remote54, then canonical macOS WebKit updates/public-old preparation, physical Safari, native audio, mobile and human gates. `PRODUCT_DESIGN_CHANGE: 0`; M3NO. Fixed-HEAD `SOL_FINAL_REVIEW` leads to the sole `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT`; release actions require explicit Producer approval there.
+The first source-correct local invocation is setup-invalid before browser launch because inherited `PLAYWRIGHT_BROWSERS_PATH` names an absent cache. Rebinding to the already installed workspace WebKit changes no dependency. The first actual WebKit process then stops at2.150s on the correctly selected Stage25 map with an enabled visible132x44 CTA and diagnostics0: normal click completed, but the native-save-backed map-to-formation transition had no target/event action during the runner's immediate first check, so `advanceStory` failed before its declared240-turn loop. Retain transaction/PNG. Classification: `QA_HARNESS_ASYNC_FLOW_COMMIT_SETTLEMENT_GAP`. Within the same source/test paths, no-action turns use the existing18ms/240-turn bound and terminal failure retains the last state. This is a material correction, so one new standalone process follows focused green; there is no unchanged retry.
+
+The next material standalone process reaches full Stage25 formation, then the visible `スキップ` source locator becomes unstable/detaches as that exact target mounts. Playwright rejects after the unchanged30-second action wait although failure state/PNG show formation and diagnostics0. Classification: `QA_HARNESS_SOURCE_CONTROL_DETACH_ON_TARGET_HANDOFF`. One normal click remains; accept its rejection only when the exact requested stop selector is visible, otherwise rethrow the original error. Apply to skip/advance with positive/negative functional tests. No retry, forced input, timeout change or phase/body substitute.
+
+The exact five-path correction passes focused source/Design `57/57`. One fresh standalone Stage25 WebKit process passes `1/1` with shield source id4/sequence1 -> human guardian target id2/direct impact0/hit and exact cue/audio receipt; diagnostics0 and cleanup/proofCleanup succeed. The prescribed Stage6->24->25 route then passes three fresh processes, `9/9` total; all nine transactions are success/`COMPLETE`, exact required receipts, diagnostics0 and cleanup success. Design138.36 fixes the report/transaction hashes. The outer PowerShell wrapper emitted a redirection diagnostic only after all three npm processes completed and wrote their accepted reports; direct artifact readback is retained and no browser rerun occurred.
+
+Final local source gates pass focused57/57, production build/full1424/1424, lint0 errors/12 existing warnings, content validation, static Pages generation and diff check. The local static candidate reports Version1.0.0, precommit parent SHAab1a41c, Issue172,459 assets and104,562,671 bytes; it is local generator evidence, not a release identity. Exact hashes remain in Design138.36.
+
+ROLE_LOCK SOL_REMEDIATION. Old-HEAD run33917360399 terminated naturally on PR171 HEADab1a41c with all66 jobs terminal: success65, failure1, cancelled0 and skipped0. Its only failure is the already-classified old-head `V1 Phase G Production Matrix`; all other jobs, including the full canonical WebKit viewport matrix, succeeded. No cancel, retry or promotion occurred. Status `LOCAL_SECTION13836_COMPLETE / OLD_HEAD_RUN_TERMINATED / READY_FOR_LIVE_PREFLIGHT`. Live GitHub preflight now gates one exact-five-path normal commit/push and a distinct all-required automatic CI. Preserve official Chromium profile ID60032464-d706-4708-a7c8-055ec03c694d unopened. Full30-Stage/integrated54, macOS PWA, physical Safari, native audio/mobile/human and fixed-HEAD SOL_FINAL_REVIEW remain open. `PRODUCT_DESIGN_CHANGE: 0`; M3NO. The sole `FINAL PRODUCER RELEASE-CANDIDATE CHECKPOINT` and approval-only release tail are unchanged.
 
 Completed Section138.30 at local commit069bc6ec4888609add1e9839c3dd074c60f0e3d4; its official-root evidence remains in DESIGN_LOCK Section138.30.
 

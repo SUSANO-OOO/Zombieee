@@ -389,6 +389,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "sourceLine": 259
       },
       {
+        "kind": "title",
+        "speaker": null,
+        "text": "新たな世界の始まり",
+        "portraitOwner": null,
+        "portraitKind": "title",
+        "sourceLine": 261
+      },
+      {
         "kind": "action",
         "speaker": null,
         "text": "放置された大型の災害対応装甲車両。ボンネットには乾いた血、荷室には毛布と水。",
@@ -9264,19 +9272,11 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 2577
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "台詞は使わず、既存背景と短い環境音で構成する。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 2581
       }
     ],
     "source": {
       "startLine": 2504,
-      "endLine": 2594
+      "endLine": 2578
     }
   },
   "v100:event:credits": {
@@ -9287,12 +9287,103 @@ export const V100_STORY_EVENTS = Object.freeze({
     "characterVoice": false,
     "nodes": [
       {
-        "kind": "action",
+        "kind": "montage",
         "speaker": null,
-        "text": "台詞は使わず、既存背景と短い環境音で構成する。",
+        "sceneLabel": "西新商店街",
+        "text": "閉じたシャッターが一枚ずつ上がる。薬局二階は仮設診療所になり、入口に「咬傷はすぐ申告」の手書き札。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 2581
+        "sourceLine": 2583
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "早良区役所",
+        "text": "紙の名簿を照合し、「帰還者」の名前が増える。区役所で回収した区画図から黒塗りが剥がされ、証拠として保管される。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2584
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "西新駅",
+        "text": "列車は動かない。改札とホームの照明だけが戻り、人が病院への保守路を歩く。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2585
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "大学病院",
+        "text": "少量の試作血清が冷蔵庫へ並ぶ。完全変異者の名簿も捨てず、別の棚へ保管される。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2586
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "河口防潮門",
+        "text": "交代の見張り。クレイジーキングの補給車から缶詰が下ろされる。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2587
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "ムガリアン施設",
+        "text": "企業ロゴへ保全テープ。救出された技術者が、所有権表示を消して医療設備だけを再起動する。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2588
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "RED PANTHER装備庫",
+        "text": "赤いレンズと部隊章が箱へ封じられ、Mrs.チハの焼けた認証カードが証拠袋へ入る。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2589
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "ザキミヤ",
+        "text": "水場で手を洗い、妻から娘を受け取る。腰の瓶ではなく、替えのおむつを持つ。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2590
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "装甲車両",
+        "text": "住民が傷んだ装甲板を交換する。新しい板だけ色が違う。車内の地図には、西新の外へ伸びる一本の未確定線。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2591
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "TAKUYA撃破地点",
+        "text": "回収済みの標識と、簡素な監視札。赤レンズの回収車は二度と来ない。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2592
+      },
+      {
+        "kind": "montage",
+        "speaker": null,
+        "sceneLabel": "くまや",
+        "text": "壊れた看板が掛け直される。主人公とクマバーソンが厨房へ入り、ガス栓を開く。青い火が点く。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2593
       }
     ],
     "source": {
@@ -9634,6 +9725,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 2677
+      },
+      {
+        "kind": "title",
+        "speaker": null,
+        "text": "西新世紀末物語",
+        "portraitOwner": null,
+        "portraitKind": "title",
+        "sourceLine": 2679
       }
     ],
     "source": {
