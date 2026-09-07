@@ -6,11 +6,13 @@
 
 2026-09-07のProducer指示に基づき、現在のCodexタスクが制作全体を引き継ぐ。継続ゴールは完成版の最終承認、正式統合・Release・公式Pages公開、公開後検証までを含む。以下が現在の実行順であり、下方の旧role名、exact-path制限、反復回数、停止・再開cursorは履歴として扱う。固定製品判断、旧データ保全、最終公開承認境界は維持する。
 
-- live確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。PR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。CI `33917360399` は66成功・1失敗・2 skippedで、完成候補ではない。
+- live確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。PR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。CI `33917360399` はterminal65成功・1失敗・skipped0で、完成候補ではない。
 - 作業場所：`_isolated/v100-completion-20260907` / `codex/v100-completion-20260907`。元の `v100-save-boundary-6faa` の変更をpatch/statusとして `_v100_completion/evidence/` に保全し、既存ファイルと履歴は変更しない。Section138.36の未commit修正5ファイルを新作業ツリーへ取り込んだ。
 - 今回の新規検証：変更前HEADのproduction build、全1423 tests、content validator、lintエラー0（既存警告12）、diff check成功。取り込んだSection138.36のfocused57/57成功。旧ブラウザQAの成功記載は今回の合格証拠に代用しない。
 - 初回の実ブラウザ/source照合で、平穏な「くまや」へ荒廃した商店街背景、PROLOGUE全体へdaily音響、EPILOGUEへ無関係な社長撃破絵が割り当てられていた。またエンドロール11場面がgeneratorで欠落し、実装者向け指示1行が表示されていた。これらは今回修正した。
 - 修正後の今回の証拠：台本SHA-256 `c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4`を維持し、エンドロール11場面・最後のtitleを生成。場面別背景と音響を接続。2背景334,534bytesを追加し、旧415 assetsの保持/hash条件を維持。production build、全1429 tests、content validator、lint0 errors/12既存warningsが成功。Chromium/WebKit × 1280x720/844x390/844x340の24場面fixtureは全成功、console/page/request/HTTP errors0。証拠は `outputs/completion/` と `outputs/v100-story-bookends/report.json`。これはseedした場面表示と通常の「次へ」の検証であり、30作戦の通常通しプレイ、実機、実speaker聴感、公開PWAの合格には代用しない。
+- 通常プレイからの追加修正：新規開始・初期4人・無強化のStage1を実UIで勝利（132秒、車両408/680、損耗3、星1）。作戦後会話を読み、90 CAPS確定とナオ80 CAPS配備登録→残高10を確認した。これは局所的な通常プレイ証拠であり全30作戦の受入ではない。発見した加入前人物のbattle bark、旧車両名称、編成から装備/育成へ行けない導線、顔が切れる編成画像、報酬/解禁の作戦後会話前への先出し、初回確定画面reload後の進行不能を修正した。最後の問題は確定後に消去されたpendingResultだけを復帰処理が参照していたためであり、同一stageの保存済み結果・完了stage・既読postが一致する時だけ進行文脈を復元する。再付与・初期化はしない。
+- 初回出撃修正後の新規検証：production build、全1434 source tests、lint0 errors/12既存warnings、Chromium/WebKit × 3サイズの編成往復・結果順序・reload fixture12/12が成功。CAPS二重加算0、旧namespace sentinel変更0、console/page/request/HTTP failures0。証拠は `outputs/v100-first-sortie-r6/report.json` と `outputs/completion/first-sortie-accepted-*.log`。先行したfixture不備と実際のreload不具合の失敗記録はr1〜r5に保持し、合格へ昇格しない。
 - 停滞要因：ゲーム本体の未接続演出、browser環境固有の制約、検証操作の不適切な配備選択、巨大な履歴文書と古いIssue cursorが混在していた。今後はソース・実物・今回の証拠を対応させ、同一失敗を無根拠に反復しない。
 
 ### 有限の残工程と完了判定

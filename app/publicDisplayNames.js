@@ -9,7 +9,7 @@ const PUBLIC_CRAWLER_REPLACEMENTS = Object.freeze([
  * Maps the internal vehicle identifier to the producer-approved public term.
  * Save IDs, asset paths, scene IDs, and audio cue IDs remain untouched.
  */
-export function publicDisplayText(value) {
+export function publicDisplayText(value, { crawlerLabel = "移動拠点" } = {}) {
   if (value === null || value === undefined) return value;
   let text = String(value);
   // IDs and repository paths are semantic contracts, not player-facing copy.
@@ -17,7 +17,7 @@ export function publicDisplayText(value) {
   for (const [pattern, replacement] of PUBLIC_CRAWLER_REPLACEMENTS) {
     text = text.replace(pattern, replacement);
   }
-  return text;
+  return crawlerLabel === "移動拠点" ? text : text.replaceAll("移動拠点", crawlerLabel);
 }
 
 export const PUBLIC_CRAWLER_LABEL = "移動拠点";

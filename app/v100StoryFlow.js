@@ -59,7 +59,16 @@ export function createV100StoryFlowState({
   const savedPhase = V100_FLOW_PHASES.includes(saved.phase) && !(saved.phase === "name" && playerName) ? saved.phase : null;
   const cursorEventId = typeof cursor?.eventId === "string" && cursor.eventId.startsWith("v100:event:") ? cursor.eventId : null;
   const savedEventId = typeof saved.eventId === "string" && saved.eventId.startsWith("v100:event:") ? saved.eventId : null;
-  const restoredResult = pendingResult ?? (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId ? lastResult : null);
+  const acknowledgedFirstClear = savedPhase === "first-clear-post"
+    && lastResult?.won === true && lastResult.firstClear === true
+    && typeof lastResult.finalizedAt === "string" && lastResult.stageId === saved.stageId
+    && completedStageIds.includes(saved.stageId)
+    && readStoryEventIds.includes(`v100:event:s${String(stageNumberFor(saved.stageId)).padStart(2, "0")}:post`);
+  // Reward settlement clears the pending transaction before its confirmation
+  // screen. Resume that screen from the matching durable result; never settle
+  // it again or invent a result from an unbound cursor.
+  const restoredResult = pendingResult
+    ?? (acknowledgedFirstClear || (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId) ? lastResult : null);
   const restoredEventId = cursorEventId ?? savedEventId;
   const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId);
   const phase = savedPhase
@@ -198,6 +207,11 @@ export function finalizeV100Flow(state) {
     finalized: true,
   }) };
   return { accepted: true, state: stateWith(state, { phase: "map", eventId: null, destination: "map", completedStageIds: completed, canSkip: false, finalized: true }) };
+}
+
+export function leaveV100Preparation(state) {
+  if (state.phase !== "formation" || !state.stageId) return { accepted: false, reason: "preparation-not-active", state };
+  return { accepted: true, state: stateWith(state, { phase: "map", destination: "map", eventId: null, pendingResult: null, firstClear: false, canSkip: false, finalized: false }) };
 }
 
 export function leaveV100Battle(state, action) {

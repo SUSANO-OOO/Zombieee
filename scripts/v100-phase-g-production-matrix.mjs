@@ -2142,7 +2142,7 @@ const stateContracts = Object.freeze({
   "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-section", ".v100-support-management-card", ".v100-vehicle-section", ".v100-vehicle-stats"] },
   "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
   "battle-boss": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
-  "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-rewards", ".v100-result-actions"] },
+  "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-actions"], forbiddenSelectors: [".v100-result-rewards", ".v100-reward-summary"] },
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
@@ -2199,6 +2199,7 @@ async function productionStateContract(page, state) {
       phase: shell?.getAttribute("data-v100-phase") ?? null,
       surface: shell?.getAttribute("data-v100-surface") ?? null,
       selectorHits: Object.fromEntries(expected.selectors.map((selector) => [selector, visible(selector)])),
+      forbiddenVisible: (expected.forbiddenSelectors ?? []).filter(visible),
       buttonCount: buttons,
       bodyTextLength: document.body.innerText.trim().length,
       screen: snapshot?.screen ?? document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
@@ -2211,7 +2212,7 @@ async function productionStateContract(page, state) {
   const phaseOk = contract.phases.includes(observed.phase);
   const surfaceOk = !contract.surfaces || contract.surfaces.includes(observed.surface);
   const battleOk = !state.startsWith("battle") || (observed.screen === "battle" && observed.battleMounted === true && (observed.canvas?.visiblePixels ?? 0) > 0);
-  return { ok: missingSelectors.length === 0 && phaseOk && surfaceOk && battleOk, expected: contract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
+  return { ok: missingSelectors.length === 0 && observed.forbiddenVisible.length === 0 && phaseOk && surfaceOk && battleOk, expected: contract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
 }
 
 function createCombatImpactReader(page, requiredActorKeys, expectedStageId = null) {

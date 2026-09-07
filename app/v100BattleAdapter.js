@@ -4,6 +4,7 @@ import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.
 import {
   V100_BOSS_BY_ID,
   V100_STAGE_BY_ID,
+  V100_STAGE_IDS,
   V100_VEHICLE,
   v100SupportFor,
 } from "./v100Registry.js";
@@ -215,6 +216,11 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     displayName: definition?.displayName ?? stageId,
     formationUnitIds: freeze([...formationUnitIds]),
     formationKinds: freeze([...formationKinds]),
+    // Ikura is a rescued radio operator, not a purchasable combat unit.
+    barkSpeakerKinds: freeze([...new Set([
+      ...(save?.ownedUnitIds ?? []).map(v100CombatKindForUnit).filter(Boolean),
+      ...(save?.completedStageIds?.includes(V100_STAGE_IDS[0]) ? ["guide"] : []),
+    ])]),
     enemyKinds: freeze([...enemyKinds]),
     selectedSupply: v100SupportSupplyFor(equippedSupportId),
     equippedSupportId,

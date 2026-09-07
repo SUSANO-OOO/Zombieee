@@ -1271,6 +1271,7 @@ type Game = {
   takuyaEnragedAnnounced: boolean;
   takuyaEntranceAudioRemaining: number;
   battleBarks: BattleBarkRuntime;
+  barkSpeakerKinds?: readonly UnitKind[];
   barkFlags: string[];
   storyFlowState: ReturnType<typeof createBattleStoryFlowState>;
   storyBattleBarkState: ReturnType<typeof createStoryBattleBarkState>;
@@ -1363,6 +1364,7 @@ export type AshfallExternalSession = {
   resultId: string;
   displayName?: string;
   formationKinds: readonly UnitKind[];
+  barkSpeakerKinds?: readonly UnitKind[];
   enemyKinds: readonly EnemyKind[];
   selectedSupply: SupplyKind | null;
   equippedSupportId: string | null;
@@ -3116,7 +3118,7 @@ function prepareMayoQa(g: Game) {
 }
 
 function emitBattleBark(g: Game, trigger: string, speakerKind: string, speakerId?: number | string) {
-  const result = queueBattleBark({ runtime: g.battleBarks, event: { trigger, speakerKind, speakerId }, qa: g.qaBarks });
+  const result = queueBattleBark({ runtime: g.battleBarks, event: { trigger, speakerKind, speakerId }, qa: g.qaBarks, allowedSpeakerKinds: g.barkSpeakerKinds });
   g.battleBarks = result.runtime as BattleBarkRuntime;
   return result.shown;
 }
@@ -8517,6 +8519,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [campaignSave]);
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
+  const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? "装甲車両" : "移動拠点" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
   const externalEnemyKindsKey = externalSession?.enemyKinds.join("|") ?? "";
@@ -15455,6 +15458,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       external ? { v100: true } : undefined,
     );
     if (external) {
+      fresh.barkSpeakerKinds = [...(external.barkSpeakerKinds ?? external.formationKinds)];
       const vehicleMaxHp = Math.max(1, Number(external.vehicleMaxHp) || fresh.definition.baseMaxHp);
       fresh.definition = { ...fresh.definition, baseMaxHp: vehicleMaxHp };
       fresh.baseMaxHp = vehicleMaxHp;
@@ -22945,14 +22949,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {screen === "battle" && <>
         {isSurvivalBattle ? <>
           {(hud.battleBarks.length > 0 || hud.banner) && <div className="battle-message-stack battle-message-stack-survival" aria-live="polite">
-            {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{publicDisplayText(bark.speaker)}</b><span>{publicDisplayText(bark.text)}</span></p>)}</div>}
-            {hud.banner && <p className="battle-banner" data-message-kind="banner">{publicDisplayText(hud.banner)}</p>}
+            {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{formatBattleText(bark.speaker)}</b><span>{formatBattleText(bark.text)}</span></p>)}</div>}
+            {hud.banner && <p className="battle-banner" data-message-kind="banner">{formatBattleText(hud.banner)}</p>}
           </div>}
           <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
           <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
           <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
           <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
-            <span>{publicDisplayText("CRAWLER HP")}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
+            <span>{formatBattleText("CRAWLER HP")}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
             <i><em style={{ width: `${healthPct}%` }} /></i>
           </div>
           <div className="survival-speed" aria-label="戦闘速度">
@@ -22968,8 +22972,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
-              {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{publicDisplayText(bark.speaker)}</b><span>{publicDisplayText(bark.text)}</span></p>)}</div>}
-              {hud.banner && <p className="battle-banner" data-message-kind="banner">{publicDisplayText(hud.banner)}</p>}
+              {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{formatBattleText(bark.speaker)}</b><span>{formatBattleText(bark.text)}</span></p>)}</div>}
+              {hud.banner && <p className="battle-banner" data-message-kind="banner">{formatBattleText(hud.banner)}</p>}
             </div>
             <div className="battle-controls-zone">
               <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
@@ -22980,7 +22984,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
 
           {stationMissionHud || selectedOutbreakMissionId
-            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{publicDisplayText(hud.objective)}</b></div></div>
+            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
@@ -23066,7 +23070,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : "車両"}</em>
                </button>
             </div>
-            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>
+            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}</div>
           </div>
         </div>
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
@@ -23138,7 +23142,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
-            <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>{publicDisplayText("感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。")}</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
+            <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>{formatBattleText("感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。")}</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
           <div className="survival-lobby-grid">
             <article>
               <small>FORMATION SNAPSHOT</small><h2>出撃部隊</h2>
@@ -23156,7 +23160,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </article>
             {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
               <small>CHECKPOINT FOUND</small><h2>WAVE {campaignSave.survival.activeCheckpoint.checkpointWave}から再開</h2>
-              <p>{publicDisplayText("保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。")}</p>
+              <p>{formatBattleText("保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。")}</p>
               <button disabled={saveMutationPending || !assetsReady || assetError} onClick={resumeSurvival}>{assetsReady ? "checkpointから再開" : "戦闘アセットを準備中"}</button>
             </article>}
             {(!assetsReady || assetError) && <article className="survival-asset-status" role={assetError ? "alert" : "status"} aria-live="polite">
@@ -23168,7 +23172,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         </section></div>}
         {screen === "survival-result" && survivalResult && <div className="survival-result campaign-overlay"><section>
           <small>RUN SETTLED // ATOMIC SAVE COMPLETE</small>
-          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? publicDisplayText("CRAWLER大破") : "部隊壊滅"}</h1>
+          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? formatBattleText("CRAWLER大破") : "部隊壊滅"}</h1>
           <div className="survival-result-grid">
             <article><small>到達</small><b>WAVE {survivalResult.reachedWave}</b>{survivalResult.newHighestWave && <em>NEW RECORD</em>}</article>
             <article><small>撃破</small><b>{survivalResult.kills}</b><span>BOSS {survivalResult.bossKills}</span></article>
