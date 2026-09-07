@@ -76,6 +76,21 @@ test("V1 event presentation maps canonical story phases to bounded runtime categ
   }
 });
 
+test("canonical interludes leave the floodgate/lab for their actual locations", () => {
+  const view = (eventId, sourceLine) => {
+    const node = V100_STORY_EVENTS[eventId].nodes.find(node => node.sourceLine === sourceLine);
+    assert.ok(node); return v100EventPresentationFor({ eventId, phase:"post", node });
+  };
+  assert.match(view("v100:event:s20:post",1589).backgroundPath,/shopping-street/u);
+  assert.match(view("v100:event:s20:post",1617).backgroundPath,/mugarian-hq/u);
+  const soup=view("v100:event:s25:post",2058);
+  assert.match(soup.backgroundPath,/shopping-street/u);
+  const scene=PRODUCTION_AUDIO_MANIFEST.sceneById[soup.sceneId];
+  assert.ok(scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
+  assert.equal(scene.bgm??null,null);
+  assert.notEqual(view("v100:event:s25:post",2054).sceneId,soup.sceneId);
+});
+
 test("V1 event presentation uses action cues only for owned scene nodes", () => {
   const marker = v100EventPresentationFor({ eventId: "v100:event:s04:pre", phase: "event", node: { kind: "battle-marker" }, nodeIndex: 2 });
   assert.equal(marker.cueId, "ui-confirm");

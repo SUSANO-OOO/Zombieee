@@ -704,6 +704,7 @@ const scenes = [
   { id: "v100-credits-medical", ambience: ["ambience-v070-medical-bay-loop"], preload: [], crossfadeMs: 450 },
   { id: "v100-credits-wind", ambience: ["ambience-v070-stage3-wind-loop"], preload: [], crossfadeMs: 450 },
   { id: "v100-credits-kumaya", ambience: ["ambience-v070-kumaya-daily-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-story-soup-break", ambience: ["ambience-v070-crawler-canteen-loop"], preload: [], crossfadeMs: 640 },
   { id: "story-kumaya-daily", bgm: "music-v070-kumaya-daily", ambience: ["ambience-v070-kumaya-daily-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 520 },
   { id: "story-kumaya-crisis", ambience: ["ambience-v070-kumaya-crisis-loop"], preload: [], crossfadeMs: 120 },
   { id: "story-collapse-montage", bgm: "music-v070-collapse-montage", ambience: ["ambience-v070-collapse-city-loop"], preload: [], crossfadeMs: 700 },

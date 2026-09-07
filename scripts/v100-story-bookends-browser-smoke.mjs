@@ -6,6 +6,8 @@ import path from "node:path";
 import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_STAGE_IDS } from "../app/v100Registry.js";
+import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
@@ -15,6 +17,7 @@ const out = path.resolve(process.env.V100_BOOKENDS_EVIDENCE_DIR ?? "outputs/v100
 await mkdir(out, { recursive: true });
 const report = { evidenceKind: "seeded presentation fixtures; no gameplay completion claim", build: await productionBuildIdentity(), cases: [] };
 const engineNames = (process.env.V100_BOOKENDS_ENGINES ?? "chromium,webkit").split(",");
+const eventSuffixes = (process.env.V100_BOOKENDS_EVENTS ?? "prologue,ending,credits,epilogue").split(",");
 const sizes = (process.env.V100_BOOKENDS_VIEWPORTS ?? "1280x720,844x390,844x340").split(",").map(value => {
   const [width, height] = value.split("x").map(Number);
   assert.ok(width > 0 && height > 0);
@@ -61,10 +64,12 @@ try {
     const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
     try {
       for (const viewport of sizes) {
-        for (const suffix of ["prologue", "ending", "credits", "epilogue"]) {
+        for (const suffix of eventSuffixes) {
           const eventId = `v100:event:${suffix}`;
-          const phase = suffix === "prologue" ? "event" : suffix;
-          const name = `${engine}-${viewport.width}x${viewport.height}-${suffix}`;
+          assert.ok(V100_STORY_EVENTS[eventId], `Unknown event ${eventId}`);
+          const stageNumber = V100_STORY_EVENTS[eventId].stageNumber;
+          const phase = stageNumber ? "post" : suffix === "prologue" ? "event" : suffix;
+          const name = `${engine}-${viewport.width}x${viewport.height}-${suffix.replaceAll(":", "-")}`;
           const context = await browser.newContext({ viewport, hasTouch: viewport.width === 844, isMobile: viewport.width === 844 });
           const page = await context.newPage();
           const result = { name, status: "failed", observations: [], diagnostics: { console: [], page: [], request: [], http: [] } };
@@ -74,8 +79,17 @@ try {
           page.on("requestfailed", request => result.diagnostics.request.push({ url: request.url(), error: request.failure() }));
           page.on("response", response => { if (response.status() >= 400) result.diagnostics.http.push({ url: response.url(), status: response.status() }); });
           try {
-            const save = normalizeV100Save({ ...createDefaultV100Save({ playerName: "場面確認" }), campaignStarted: true,
+            let save = normalizeV100Save({ ...createDefaultV100Save({ playerName: "場面確認" }), campaignStarted: true,
               flowState: { phase, eventId, stageId: null, stageNumber: null, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
+            if (stageNumber) {
+              assert.ok(["s20:post", "s25:post"].includes(suffix));
+              const stageId = V100_STAGE_IDS[stageNumber - 1];
+              const initial = normalizeV100Save({ ...save, availableStageIds: V100_STAGE_IDS.slice(0, stageNumber), completedStageIds: V100_STAGE_IDS.slice(0, stageNumber - 1) });
+              const result = createV100BattleResult({ stageId, battleRunId: name, won: true, bossDefeated: true, vehicleHp: 680, vehicleMaxHp: 680, objectiveComplete: true, elapsedSeconds: 120, unitDeaths: 0 });
+              const pending = recordV100PendingResult(initial, result);
+              assert.equal(pending.applied, true, pending.reason);
+              save = normalizeV100Save({ ...pending.save, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, finalized: false, firstClear: true, destination: phase } });
+            }
             await context.addInitScript(({ origin, serialized }) => {
               if (location.origin !== origin) return;
               for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, serialized);
@@ -91,7 +105,7 @@ try {
             // Every credit shot is reached through the real Next action.
             // The desktop lane also traverses every bookend node, including
             // crisis/blackout/location boundaries and the final title.
-            const last = suffix === "credits" || (engine === "chromium" && viewport.width === 1280) ? nodes.length - 1 : 1;
+            const last = stageNumber || suffix === "credits" || (engine === "chromium" && viewport.width === 1280) ? nodes.length - 1 : 1;
             for (let index = 1; index <= last; index += 1) {
               await page.locator(".v100-event-actions .v100-primary").click();
               const expected = await inspect(page, eventId, phase, index, result);
@@ -101,7 +115,7 @@ try {
                   return snapshot?.receipts?.some(receipt => receipt.action === "started" && receipt.eventId === eventId && receipt.nodeIndex === index && receipt.sceneId === sceneId);
                 }, { eventId, index, sceneId: expected.sceneId }, { timeout: 15000 });
               }
-              if (index === last || (suffix === "credits" && index === 5)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
+              if (index === last || [1617, 1623, 2058, 2064].includes(nodes[index].sourceLine) || (suffix === "credits" && index === 5)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
             }
             if (suffix === "credits") {
               await page.locator(".v100-event-actions .v100-primary").click();

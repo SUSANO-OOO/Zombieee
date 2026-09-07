@@ -931,6 +931,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 404
+      },
+      {
+        "kind": "system",
+        "speaker": "■ SYSTEM",
+        "text": "いくらちゃん加入／通信・情報支援",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 406
       }
     ],
     "source": {
@@ -3437,6 +3445,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "sourceLine": 1039
       },
       {
+        "kind": "player-action",
+        "speaker": "▶ PLAYER",
+        "text": "主人公が搬送車の非常箱から消毒用アルコールと布を取り出し、ザキミヤの足元へ滑らせる。",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1041
+      },
+      {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
         "text": "初対面に火ぃ渡す？　話、早いな。怖いくらい早い",
@@ -3567,6 +3583,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
         "sourceLine": 1073
+      },
+      {
+        "kind": "system",
+        "speaker": "■ SYSTEM",
+        "text": "ザキミヤ加入／火酒投擲・範囲制圧",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1075
       }
     ],
     "source": {
@@ -4143,6 +4167,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 1219
+      },
+      {
+        "kind": "system",
+        "speaker": "■ SYSTEM",
+        "text": "TKY加入／光刃近接",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1221
       }
     ],
     "source": {
@@ -4907,6 +4939,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
         "sourceLine": 1412
+      },
+      {
+        "kind": "system",
+        "speaker": "■ SYSTEM",
+        "text": "Mrs.チハ加入／グレネード制圧",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1414
       }
     ],
     "source": {
@@ -5703,11 +5743,155 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 1613
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "ムガリアン本社方面へ向かう道路。感染者の死骸が一直線に並び、どれも一撃で急所を断たれている。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 1617
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "TKY",
+        "text": "銃ちゃう。刃物や。それも、一本やない",
+        "portraitOwner": "unit-tky",
+        "portraitKind": "major",
+        "sourceLine": 1619
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "路地から二刀を持つ男が現れる。背後で倒れていた感染者が跳ね起きる。男は振り返らず、逆手の一刀だけで首を断つ。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 1621
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "死んだふりが下手な獣よ",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1623
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "今の、見えてたんすか",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
+        "sourceLine": 1625
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "気配がうるさい",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1627
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "男は主人公たちより、遠くの本社塔を見る。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 1629
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "あの黒き楼へ向かうのか。血の臭いが、あそこへ集まっておる",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1631
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "クマバーソン",
+        "text": "強いのは分かった。名前は",
+        "portraitOwner": "unit-kumaverson",
+        "portraitKind": "major",
+        "sourceLine": 1633
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "新免武蔵守藤原玄信。宮本武蔵と呼べ",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1635
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "本人ってことっすか",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
+        "sourceLine": 1637
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "他に誰がおる",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1639
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "TKY",
+        "text": "いや、そこが一番ややこしいねん",
+        "portraitOwner": "unit-tky",
+        "portraitKind": "major",
+        "sourceLine": 1641
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "我も、なぜこの世へ出たか知らぬ。気づけば、鉄の馬と死人ばかりよ",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1643
+      },
+      {
+        "kind": "player-action",
+        "speaker": "▶ PLAYER",
+        "text": "主人公が装甲車両の扉を開け、空いた席を示す。",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1645
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "宮本武蔵",
+        "text": "無口な主だ。されど、道は分かりやすい",
+        "portraitOwner": "unit-miyamoto-musashi",
+        "portraitKind": "major",
+        "sourceLine": 1647
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "宮本武蔵が二刀を納め、車両へ乗る。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 1649
+      },
+      {
+        "kind": "system",
+        "speaker": "■ SYSTEM",
+        "text": "宮本武蔵加入／二刀近接",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 1651
       }
     ],
     "source": {
       "startLine": 1586,
-      "endLine": 1614
+      "endLine": 1652
     }
   },
   "v100:event:s20:first-clear-post": {
@@ -5719,7 +5903,7 @@ export const V100_STORY_EVENTS = Object.freeze({
     "finalizeOnly": true,
     "source": {
       "startLine": 1586,
-      "endLine": 1614
+      "endLine": 1652
     }
   },
   "v100:event:s21:pre": {
@@ -7307,11 +7491,67 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 2054
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "その夜。西新の仮設炊き出し。紙コップの味噌汁。全員、言葉もなく湯気を見ている。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2058
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "ザキミヤは少し離れた場所で妻子と座る。腰の瓶ではなく、哺乳瓶を持っている。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2060
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "ババヤガとMrs.チハは同じ毛布の端を使うが、触れてはいない。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2062
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "……熱い",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
+        "sourceLine": 2064
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "クマバーソン",
+        "text": "冷まして飲め",
+        "portraitOwner": "unit-kumaverson",
+        "portraitKind": "major",
+        "sourceLine": 2066
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "いや。今日は、これでいいっす",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
+        "sourceLine": 2068
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "主人公の無線は数十秒だけ静か。やがて、冷蔵車列の追跡信号が入る。全員が同時に顔を上げる。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 2070
       }
     ],
     "source": {
       "startLine": 2027,
-      "endLine": 2055
+      "endLine": 2071
     }
   },
   "v100:event:s25:first-clear-post": {
@@ -7323,7 +7563,7 @@ export const V100_STORY_EVENTS = Object.freeze({
     "finalizeOnly": true,
     "source": {
       "startLine": 2027,
-      "endLine": 2055
+      "endLine": 2071
     }
   },
   "v100:event:s26:pre": {
@@ -8265,6 +8505,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "sourceLine": 2312
       },
       {
+        "kind": "player-action",
+        "speaker": "▶ PLAYER",
+        "text": "主人公はセガワを見ず、国外への一斉起動回線と感染源原株を破壊対象へ指定する。",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 2314
+      },
+      {
         "kind": "dialogue",
         "speaker": "セガワ",
         "text": "僕は後回しですか",
@@ -8287,6 +8535,14 @@ export const V100_STORY_EVENTS = Object.freeze({
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 2320
+      },
+      {
+        "kind": "battle-marker",
+        "speaker": "◆ BATTLE",
+        "text": "RED PANTHERの防衛を崩し、国外への一斉起動回線と感染源原株を同時破壊せよ。",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 2322
       }
     ],
     "source": {

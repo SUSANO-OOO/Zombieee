@@ -29,6 +29,9 @@ function backdropFor(eventId, node) {
   if (eventId === "v100:event:prologue") return line < 263 ? cuts.kumayaBeforeOutbreak : PRODUCTION_VISUALS.command;
   if (eventId === "v100:event:credits") return V100_CREDITS_SCENES[node?.sceneLabel]?.backgroundPath ?? null;
   if (eventId === "v100:event:epilogue") return cuts.kumayaReopened;
+  if (eventId === "v100:event:s20:post" && line >= 1589) return line >= 1617
+    ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
+  if (eventId === "v100:event:s25:post" && line >= 2058) return visuals["stage-nishijin-shopping-street"];
   if (eventId === "v100:event:ending") {
     if (line < 2527) return visuals["stage-nishijin-defense-line-takuya-omega"];
     if (line < 2551) return visuals["stage-hospital-emergency-ward"];
@@ -77,6 +80,7 @@ function sceneFor(eventId, phase, stage, category, node) {
   }
   if (category === "ending") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING;
   if (category === "epilogue") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
+  if (eventId === "v100:event:s25:post" && Number(node?.sourceLine) >= 2058) return "v100-story-soup-break";
   const stageAudio = stage ? v100StageAudioFor(stage.id, phase === "post" || phase === "first-clear-post" ? "post" : "pre") : null;
   return sceneIdForStoryEvent(eventId, 0) ?? stageAudio?.sceneId ?? PRODUCTION_AUDIO_SCENE_IDS.INTRO;
 }

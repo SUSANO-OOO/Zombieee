@@ -16,6 +16,10 @@
 - 停滞要因：ゲーム本体の未接続演出、browser環境固有の制約、検証操作の不適切な配備選択、巨大な履歴文書と古いIssue cursorが混在していた。今後はソース・実物・今回の証拠を対応させ、同一失敗を無根拠に反復しない。
 - 現行ローカル全Phase G：product HEAD `fe55aef7fa1aee612530c2b8d91b5844674a445d` のproduction buildで全54画面・代表16戦闘を取得。12のcapture transactionは全success/COMPLETE、cleanup/proofCleanup success。後段validatorに、旧瞬間VFX配列への依存と同名variantの別viewport取り違えが残っていた。攻撃・着弾・音声要求・画像hash・期限を束ねる既存atomic proofを維持し、exact evidence pathで対応付けて修正した。保存済みの今回のreportでvalidator成功、focused runtime evidence35/35。初回validator失敗は消さず `outputs/completion/phase-g-fe55aef-validation.log` に保全。巨大checkpointはreport/transactionに保持し、Gitのmanifestからはexact report hashで参照する。証拠は `outputs/v100-completion-phase-g-fe55aef/`。remote CIと最終候補の全受入には代用しない。
 
+- 通常プレイ再評価で、Stage6の実際の同時出撃が10/7へ達する製品不具合を発見した。従来の7枠transaction testは実戦のdeployHuman/spawnHumanへ接続されていなかった。生存中の隊員（同一人物の複数体を含む）と有料出撃待ちの合計を7枠で予約し、実際の投入処理・車両扉・UIで制限する。拒否時は資源/再準備時間を変更しない。actual callback/spawnの4 testsと、Chromium/WebKit実UI・実時間の7体召喚/8体目拒否fixture2/2で確認した。証拠は `outputs/v100-deployment-capacity-r1/report.json`。先行通常プレイ `outputs/v100-normal-campaign-fe55aef*` のsaveと結果は保全するが、上限修正後の難易度/通し受入へ代用しない。上記fe55 Phase Gも現在の戦闘受入を意味しない。
+- 正本全文との照合でStage20「二刀の男」、Stage25「味噌汁」の幕間と全行boldの行動/加入表示、計32 nodesの欠落を発見・復元した。原因はgeneratorが任意の小見出しでpostを切り、未対応Markdownを黙って捨てていたこと。正本hashは不変。全物語行の一回だけの取り込みを生成前に検査し、未知形式は既存出力を保持して失敗させる。舞台に対応する既存背景と炊き出しの環境音を接続した。
+- 上記修正後のproduction build、全1442 source tests、lint0 errors/12既存warningsが成功。focused23/23。幕間を含むStage20/25のpost全53 nodesはChromium/WebKit × 3サイズの12 fixturesで最後まで実際の「次へ」を操作し、表示範囲・背景・音響要求・操作到達性・diagnostics0を確認した（`outputs/v100-restored-interludes-r3/report.json`）。r1/r2のfixture作成不備は保存し製品失敗へ混同しない。全30作戦の修正後通常通し確認、同一候補CI、PWA/他mode、最終reviewと公開は残る。tests件数を製品完成の判定に置き換えない。
+
 ### 有限の残工程と完了判定
 
 1. **内容・体験を完成**：台本hashを保持し、PROLOGUE、30作戦、ENDING、11場面のエンドロール、EPILOGUEを接続。通常の新規開始から通しプレイし、代表的な章boss/最終bossとCAPS・育成・配備・支援・車両・他modeを確認する。背景・人物・動作・音響の意味不一致と明白な操作不備を解消する。
@@ -24,7 +28,7 @@
 4. **最終Producer承認**：完成条件を満たした、実際に遊べる固定候補と検証結果・残存事項を提示。この承認前はReady/最終merge/tag/Release/正式deployment/Issue closeを行わない。
 5. **正式公開と確認**：承認候補と統合結果treeを照合し、正式release SHAへtag/Release/Pages requestを固定。匿名公開、asset、fresh/既存save、update/recoveryを公開環境で確認し、問題があれば修正・復旧後に再検証。実態に一致する完了記録を残した時だけgoal complete/Issue close。
 
-現在は工程1。冒頭と結末の欠落・誤接続修正、初回出撃/報酬復帰修正、現行ローカル全Phase Gを終え、新規開始から通常の編成・成長・戦闘を確認中。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
+現在は工程1。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
