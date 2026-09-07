@@ -46,6 +46,10 @@
 
 候補21539efのCI `34091793707`：PR VerifyとPagesのPR検証は成功したが、Phase Gは追加probeの出力親ディレクトリ未作成（ENOENT）で製品起動前に停止した。親だけを作成して子ディレクトリの排他的作成は維持し、親がない条件で両engineの入力probeを確認した。macOS PWAは新版へ切り替える前、旧公開版の初回installでmanifest commit失敗（画面とjob101651329665のlog/artifactを保存）。新版の更新不具合とも環境不具合とも、まだ確定しない。ゲームコードを含まない新しい永続保存probeを必須工程へ追加。Windowsでは通常contextのpage/worker共有は成功、persistent contextのみput後のmatch=null/keys=[]・再起動後も空。Chromiumは両contextと永続再起動に成功。macOSで同一probeの結果を取得するまでnative PWAは未合格とする。旧結果や一時contextを永続更新の代替合格へ使わない。
 
+後半の実物照合（2026-09-07）：Stage12/19の搬送対象が保守台車のまま、Stage26は背景に大型台車が焼き込まれ冷蔵車3台が実戦へ未接続だった。出典と生成原本を保持した同一車両の通常/損傷画像、実際の任務描画、背景の台車除去、3台を封鎖地点で停止・確保する表示を接続した。Stage26は3台が画面に収まる距離へ調整し、105秒・耐久・妨害/修理条件は維持。全1450 tests/build、lint0 errors、実描画のChromium/WebKit×2サイズ×3作戦12/12で画像decode・台数・実時間の移動・HUD・diagnostics0を確認（`outputs/v100-mission-vehicle-browser-scale-r3`）。透明境界と損傷画像は別の描画fixtureで確認。これを作戦全体の勝敗、全演出状態、通常攻略の合格にはしない。旧415 assetsと既存44 V1 assetsのbytes/hashは維持し、完成補完5 assetsの差分3,128,548bytesを固定した。
+
+Stage23の追加通常探索は獲得済み1105 CAPSからMrs.チハを登録/Lv19まで育成し、残高299を保存した。前衛/遠距離/回復を含めて146.1秒・損耗8で再び敗北（`outputs/v100-normal-campaign-late-s23-r1`）。失敗saveと入力を保全し、無根拠の再戦・敵弱体化はしない。正本17.5と実adapterの照合で、A/B/C/D/P全packの欠落・誤置換、Pのknife欠落とcommander先行、Stage24の未定義pack fallbackを確認。Stage29の二つの破壊対象は別の純粋runtimeにだけ存在し、本番は拠点HP一つ、六elite wavesも四waveのまま。Stage30の二つのA限定add wavesも未接続。これらを次の有限の製品修正とし、影響する通常攻略・実mission state・描画/勝利条件を更新後の実物で検証する。
+
 現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。

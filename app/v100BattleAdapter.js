@@ -1,5 +1,6 @@
 import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
+import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -95,12 +96,13 @@ function phaseScheduleFor(stage, missionType, objective) {
     };
   }
   if (missionType === "escort") {
+    const intercept = V100_MISSION_VEHICLES[stage.id]?.count === 3;
     return {
       durationSeconds: 105,
       phases: freeze([
-        freeze({ at: PREP_SECONDS, phase: 1, label: "護送対象を発進", objective }),
-        freeze({ at: PREP_SECONDS + 42, phase: 2, label: "護送経路を確保", objective }),
-        freeze({ at: PREP_SECONDS + 78, phase: 3, label: "出口まで護送", objective }),
+        freeze({ at: PREP_SECONDS, phase: 1, label: intercept ? "冷蔵車3台を追跡" : "護送対象を発進", objective }),
+        freeze({ at: PREP_SECONDS + 42, phase: 2, label: intercept ? "冷蔵車列を包囲" : "護送経路を確保", objective }),
+        freeze({ at: PREP_SECONDS + 78, phase: 3, label: intercept ? "封鎖地点で冷蔵車列を確保" : "出口まで護送", objective }),
       ]),
     };
   }
@@ -133,7 +135,8 @@ export function v100BattleDefinitionFor(stageId) {
   if (!stage) return null;
   const missionType = MISSION_TYPE_MAP[stage.missionType] ?? "assault";
   const bossKind = bossKindForStage(stage);
-  const objective = MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
+  const missionVehicle = V100_MISSION_VEHICLES[stageId];
+  const objective = missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
   const phase = phaseScheduleFor(stage, missionType, objective);
   const pack = packFor(stage);
   const timeline = [0, 1, 2, 3].map((index) => {
@@ -151,7 +154,7 @@ export function v100BattleDefinitionFor(stageId) {
   });
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
-    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: 258, endX: 720 }
+    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
     : missionType === "sequential-seal"
       ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3, requiresContainment: false }
       : {};
@@ -175,6 +178,7 @@ export function v100BattleDefinitionFor(stageId) {
     objective,
     missionConfig: {
       ...station,
+      ...(missionVehicle ? {targetLabel:missionVehicle.targetLabel,vehicleCount:missionVehicle.count,convoyInterception:missionVehicle.count===3} : {}),
       v100StageNumber: stage.number,
       v100ObjectiveId: stage.objectiveId,
       v100EnemyPack: stage.enemyPack,

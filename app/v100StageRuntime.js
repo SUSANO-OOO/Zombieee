@@ -51,11 +51,11 @@ function runtimeRecord(stage) {
   const existingManifest = STAGE_OBJECT_MANIFEST[stage.id] ?? null;
   const v100Manifest = stage.number > 20 ? V100_RUNTIME_ASSET_MANIFEST.stages[stage.id] ?? null : null;
   const v100Paths = stage.number > 20 ? v100RuntimeAssetPathsForStage(stage.id) : [];
-  const backgroundPath = v100Manifest?.background ?? PRODUCTION_VISUALS.stages[stage.id] ?? null;
+  const backgroundPath = PRODUCTION_VISUALS.stages[stage.id] ?? v100Manifest?.background ?? null;
   const missionObjectPaths = v100Manifest?.missionObjects ?? objectPathsFor(stage.id);
   const vfxPaths = v100Manifest?.vfx ?? [];
   const requiredAssetPaths = stage.number > 20
-    ? v100Paths
+    ? Object.freeze([...new Set([...v100Paths, ...(backgroundPath ? [backgroundPath] : [])])])
     : Object.freeze([...(backgroundPath ? [backgroundPath] : []), ...missionObjectPaths]);
   return Object.freeze({
     stageId: stage.id,

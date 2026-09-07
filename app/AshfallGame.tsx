@@ -521,6 +521,7 @@ import {
   escortCartX,
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
+import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import {
   createResearchContainerRuntime,
   enforceGateEaterContainmentInvariant,
@@ -5444,6 +5445,7 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     const y = activeLaneCenters[1] + 13;
     const integrity = Math.max(0, g.stageMission.integrity ?? 0);
     const maxIntegrity = Math.max(1, g.stageMission.maxIntegrity ?? 1);
+    if (drawV100MissionVehicles(ctx,g,stageObjects,x,y)) return;
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.45)";
@@ -12801,8 +12803,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const escortMissionObject = g.definition.missionType === STATION_MISSION_TYPES.ESCORT
           ? (() => {
               const coastal = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
-              const assetId = coastal ? "coastal-power-rig" : "maintenance-cart";
-              const assetPath = coastal
+              const vehicleProfile = g.definition.missionConfig.v100StageNumber ? V100_MISSION_VEHICLES[g.definition.stageId] : null;
+              const vehicleState = Number(g.stageMission.integrity) / Math.max(1, Number(g.stageMission.maxIntegrity)) < .6 ? "damaged" : "intact";
+              const assetId = vehicleProfile ? `v100-mission-vehicle-${vehicleState}` : coastal ? "coastal-power-rig" : "maintenance-cart";
+              const assetPath = vehicleProfile ? V100_MISSION_VEHICLE_ART[vehicleState] : coastal
                 ? PRODUCTION_VISUALS.missionObjects["coastal-power-rig"]
                 : PRODUCTION_VISUALS.missionObjects["maintenance-cart"];
               const asset = stageObjectRefs.current[assetId];
@@ -12821,6 +12825,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               return {
                 assetId,
                 assetPath,
+                vehicleCount: vehicleProfile?.count ?? 1,
                 assetLoaded: Boolean(asset?.complete && asset.naturalWidth > 0),
                 naturalWidth: asset?.naturalWidth ?? 0,
                 naturalHeight: asset?.naturalHeight ?? 0,
@@ -22775,7 +22780,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const phaseName = hud.missionType === "escort"
-    ? hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
+    ? gameRef.current.definition.missionConfig.convoyInterception === true
+      ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"
+      : hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
     : hud.missionType === "sequential-seal"
       ? hud.phase === 1 ? "電源1" : hud.phase === 2 ? "電源2・3" : "封鎖"
       : isStationPlatformAssault

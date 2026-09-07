@@ -5,8 +5,11 @@ import { readFile } from "node:fs/promises";
 import ts from "typescript";
 import { V100_STAGES } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
-import { advanceStationMissionRuntime as advanceStationMission, createStationMissionRuntime, currentPowerNode, stationMissionObjective, stationMissionOutcome, stationPowerNodes, STATION_MISSION_TYPES } from "../app/stationStageMechanics.js";
+import { advanceStationMissionRuntime as advanceStationMission, createStationMissionRuntime, currentPowerNode, escortCartX, stationMissionObjective, stationMissionOutcome, stationPowerNodes, STATION_MISSION_TYPES } from "../app/stationStageMechanics.js";
+import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { stationSpatialSnapshot } from "../app/stationSpatialMechanics.js";
+import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
+import { drawV100MissionVehicles, V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
 
 test("actual V1 adapter and station runtime complete all power/seal stages without absent legacy entities", () => {
   const stages = V100_STAGES.filter(stage => ["power", "seal"].includes(stage.missionType));
@@ -91,4 +94,40 @@ test("the actual mission renderer draws all four authored panels at their runtim
     assert.deepEqual(positions, panels.map(panel => [panel.x, panel.y - 8]));
     assert.ok(draws.every(args => args.slice(1).every(Number.isFinite)), "every crop and destination is valid");
   }
+});
+
+test("the actual escort renderer uses decoded story vehicles while retaining the legacy cart", async () => {
+  const source = await readFile("app/AshfallGame.tsx", "utf8");
+  const ast = ts.createSourceFile("AshfallGame.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declaration = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "drawStationMission");
+  const code = ts.transpileModule(declaration.getText(ast) + "\ndrawStationMission;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const draw = vm.runInNewContext(code, { drawV100MissionVehicles, STATION_MISSION_TYPES, escortCartX, CAMPAIGN_STAGE_IDS, activeYForContentY:y=>y, activeLaneCenters:[212,282,352] });
+  for (const [number,count,label] of [[6,0,"保守台車"],[12,1,"密閉搬送車"],[19,1,"証拠搬送車"],[26,3,"冷蔵車"]]) {
+    const definition=v100BattleDefinitionFor(V100_STAGES[number-1].id);
+    const runtime=createStationMissionRuntime(definition.missionType,definition.missionConfig);
+    assert.match(definition.objective+stationMissionObjective(runtime,definition.missionConfig),new RegExp(label));
+    const plan=requiredBattleAssetPlan({stageId:definition.stageId}), images={},draws=[];
+    for(const object of plan.stageObjects) images[object.id]={complete:true,naturalWidth:1672,naturalHeight:941};
+    const context=new Proxy({drawImage:(...args)=>draws.push(args),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})}, {get:(target,key)=>target[key]??(()=>{})});
+    draw(context,{definition,stageMission:runtime,time:0},images);
+    const authored=draws.filter(args=>args[0]===images["v100-mission-vehicle-intact"]);
+    assert.equal(authored.length,count,`Stage ${number} vehicle count`);
+    if(count) {
+      assert.equal(draws.length,count,"legacy cart must not overlap the authored vehicles");
+      for(const path of Object.values(V100_MISSION_VEHICLE_ART)) assert.ok(plan.paths.includes(path),"decode both damage states before entry");
+      delete images["v100-mission-vehicle-intact"];
+      assert.throws(()=>draw(context,{definition,stageMission:runtime,time:0},images),/decoded before battle/);
+      const legacyPlan=requiredBattleAssetPlan({stageId:definition.stageId,includeV100Sprites:false});
+      for(const path of Object.values(V100_MISSION_VEHICLE_ART)) assert.ok(!legacyPlan.paths.includes(path));
+    }
+  }
+});
+
+test("the cold convoy is intercepted and secured instead of described as escaping", () => {
+  const definition=v100BattleDefinitionFor(V100_STAGES[25].id),config=definition.missionConfig;
+  const runtime=createStationMissionRuntime(definition.missionType,config);
+  assert.match(definition.objective,/3台.*封鎖地点.*停止・確保/);
+  assert.match(stationMissionObjective({...runtime,completed:true},config),/3台.*停止.*確保/);
+  assert.match(stationMissionObjective({...runtime,failed:true},config),/確保に失敗/);
+  assert.doesNotMatch(definition.phaseSchedule.map(phase=>phase.label).join(" "),/護送|出口/);
 });

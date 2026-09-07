@@ -6,6 +6,7 @@ import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { V100_STAGE_BY_ID } from "./v100Registry.js";
+import { V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -64,7 +65,9 @@ export function requiredBattleAssetPlan({
     && stageId !== CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE
     ? [{ id: "maintenance-cart", path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"], runtimeUsage: "mission-render-source" }]
     : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries];
+  const vehicleObjects = includeV100Sprites && V100_MISSION_VEHICLES[stageId]
+    ? Object.entries(V100_MISSION_VEHICLE_ART).map(([state,path])=>({id:`v100-mission-vehicle-${state}`,path,runtimeUsage:"mission-render-source"})) : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

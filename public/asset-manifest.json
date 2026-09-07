@@ -1495,6 +1495,22 @@
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/red-panther-armory-lockers-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/sealed-transport-damaged-v1.webp",
+      "bytes": 1342174,
+      "hash": "sha256-f5dde41efd128d5ac735835ed5fefe26ac449b8b82b01c7a02c4826a1dcd12f5",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/sealed-transport-intact-v1.webp",
+      "bytes": 1157784,
+      "hash": "sha256-f1bde18daf10dc41a5c67ba783b198dd4aa7707370d7b9b655de326b75be33af",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/stage30-aftermath-core-v1.png",
       "bytes": 139218,
       "hash": "sha256-6ed60475dbf33d2aa2b0dac3433696caf9cece5883a37911a8293b5ce94266d6",
@@ -1612,6 +1628,14 @@
       "path": "/art/v100/stages/s25-executive-lab-r2-background-v1.webp",
       "bytes": 351428,
       "hash": "sha256-c1d436a3c8af43dd07160c001071d407329d97563775f83512b4cc87a425eeec",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
+      "bytes": 294056,
+      "hash": "sha256-595837341ec8d20229441d7e775ec2c3ed0f600759e1803fb0e23bf7443f9964",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

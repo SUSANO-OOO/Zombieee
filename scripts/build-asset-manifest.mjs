@@ -43,6 +43,7 @@ import {
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
 
@@ -228,6 +229,9 @@ for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
   record(assetPath, { pack: "campaign-core", category: "background", criticality: "critical" });
 }
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_MISSION_VEHICLE_ART)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {
