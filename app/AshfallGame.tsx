@@ -215,6 +215,7 @@ import {
   bossTelegraphSnapshot,
   enforceBossBodyBarrier,
   isBossEnemyKind,
+  isBossFighter,
 } from "./bossFoundation.js";
 import {
   BOSS_ANOMALY_TUNING,
@@ -229,6 +230,10 @@ import {
 } from "./bossAnomalies.js";
 import {
   KUROME_PROTOTYPE_TUNING,
+  V100_KUROME_CLONE_TUNING,
+  isKuromeClone,
+  kuromeCloneSpawnPlan,
+  dissolveOrphanedKuromeClones,
   advanceKuromeTracking,
   beginKuromeTracking,
   createKuromeTrackingRuntime,
@@ -791,6 +796,8 @@ function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y:
 
 type Fighter = {
   v100BossId?: string;
+  v100ClonePhase?: number;
+  kuromeCloneDissolved?: boolean;
   v100TwinEnraged?: boolean;
   v100TwinPart?: "a" | "b";
   v100TwinPair?: number;
@@ -2205,7 +2212,7 @@ function scheduleMrsChihaLauncherAudio(
   g.pendingWeaponAudioCues = g.pendingWeaponAudioCues.slice(-16);
 }
 
-function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
+function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSource">) {
   const compactScale = compactBattleViewport() ? 1.1 : 1;
   const depthScale = activeBattlefieldDepthScale(fighter.y);
   const bossDefinition = bossDefinitionForEnemyKind(fighter.kind);
@@ -2218,7 +2225,7 @@ function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
       : ["crusher", "grappler", "brute", "guardian"].includes(fighter.kind)
         ? 94
         : 80) * compactScale;
-  return fighter.y - height * depthScale - (compactScale > 1 ? 2 : 0);
+  return fighter.y - height * depthScale * (isKuromeClone(fighter) ? V100_KUROME_CLONE_TUNING.bodyScale : 1) - (compactScale > 1 ? 2 : 0);
 }
 
 function battleBannerDomRect(canvas: HTMLCanvasElement | null) {
@@ -2468,13 +2475,13 @@ function applyIncomingHumanDamage(
       addDamageText(g, target.x, target.y - 72, "受け流し", .9, "#c5e7ff");
       if (counterTarget) {
         const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
-        const strikeDamage = definition.counterDamage * (isBossEnemyKind(counterTarget.kind) ? definition.bossDamageMultiplier : 1);
+        const strikeDamage = definition.counterDamage * (isBossFighter(counterTarget) ? definition.bossDamageMultiplier : 1);
         const applied = Math.min(counterTarget.hp, strikeDamage);
         counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
         recordUnitDamage(g, target.kind, applied);
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
         counterTarget.flash = Math.max(counterTarget.flash, .3);
-        counterTarget.knock = Math.max(counterTarget.knock, isBossEnemyKind(counterTarget.kind) ? 5 : 14);
+        counterTarget.knock = Math.max(counterTarget.knock, isBossFighter(counterTarget) ? 5 : 14);
         addDamageText(g, counterTarget.x, counterTarget.y - 58, `無空 -${Math.round(applied)}`, .92, "#d7efff");
         addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
       }
@@ -2721,6 +2728,29 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   });
   const spawned = g.fighters[g.fighters.length - 1];
   registerV100Twin(g, spawned);
+  return spawned;
+}
+
+function spawnKuromePhaseClones(g: Game, boss: Fighter, laneCenters: readonly number[], geometry: ReturnType<typeof stageGeometryFor>) {
+  const plan = kuromeCloneSpawnPlan(boss, g.fighters);
+  boss.v100ClonePhase = plan.phase;
+  const spawned: Fighter[] = [];
+  for (const entry of plan.clones) {
+    const lane = Math.max(0, Math.min(2, boss.lane + entry.laneOffset)) as Lane;
+    const clone = spawnEnemy(g, "kurome", lane);
+    Object.assign(clone, {
+      v100BossId: undefined, hp: entry.hp, maxHp: entry.hp, damage: entry.damage,
+      attackEvery: boss.attackEvery, summonOwnerId: boss.id, summonSource: "kurome-clone",
+      abilityCooldown: entry.abilityCooldown, bodyRadius: boss.bodyRadius * V100_KUROME_CLONE_TUNING.bodyScale,
+      combatReady: true, gateEntering: false, spawnGrace: .65,
+    });
+    const point = clampToWalkable(geometry, { x: boss.x + entry.xOffset, y: laneCenters[lane],
+      bodyRadius: Math.max(clone.bodyRadius, enemyRenderedVisualHalfWidth(clone.kind) * V100_KUROME_CLONE_TUNING.bodyScale),
+    });
+    clone.x = point.x; clone.y = point.y;
+    clone.combatReadyX = point.x; clone.combatReadyY = point.y;
+    spawned.push(clone);
+  }
   return spawned;
 }
 
@@ -4151,7 +4181,7 @@ function drawSpriteFighter(
   const frame = spriteFrameFor(renderKind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = compactSpriteScale(renderKind);
-  const depthScale = activeBattlefieldDepthScale(f.y);
+  const depthScale = activeBattlefieldDepthScale(f.y) * (isKuromeClone(f) ? V100_KUROME_CLONE_TUNING.bodyScale : 1);
   const size = {
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
@@ -4209,6 +4239,11 @@ function drawSpriteFighter(
     && f.gateEntering
     && f.spawnPortalId === "crawler-door";
   if (forceOpaque || crawlerDeploymentOpaque) ctx.globalAlpha = 1;
+  if (!forceOpaque && isKuromeClone(f)) {
+    ctx.globalAlpha *= V100_KUROME_CLONE_TUNING.opacity;
+    ctx.shadowColor = "#62e8ef";
+    ctx.shadowBlur = 8;
+  }
   const effectivePoseOpacity = forceOpaque || crawlerDeploymentOpaque ? 1 : pose.opacity;
   if (fighterRenderAuditEnabled && recordAudit) {
     const previousAudit = fighterRenderAudit.get(f);
@@ -6085,8 +6120,7 @@ function drawKuromeCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game)
   const targetX = Number(f.stationAbility.targetX);
   const targetY = Number(f.stationAbility.targetY);
   if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) return;
-  const phaseRatio = f.hp / Math.max(1, f.maxHp);
-  const halfWidth = phaseRatio <= .3
+  const halfWidth = !isKuromeClone(f) && bossFinalPhase(f, .3)
     ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
     : KUROME_PROTOTYPE_TUNING.beamHalfWidth;
   ctx.save();
@@ -8121,8 +8155,12 @@ function drawWorld(
       || f.flash > 0;
     if (showHealthBar) {
       ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
-      ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
+      ctx.fillStyle = f.side === "human" ? "#e9c65a" : isKuromeClone(f) ? "#62e8ef" : "#cb5037";
       ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+      if (isKuromeClone(f)) {
+        ctx.save(); ctx.textAlign = "center"; ctx.font = "bold 10px sans-serif";
+        ctx.fillText("分身", f.x, barY - 4); ctx.restore();
+      }
     }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
@@ -10433,7 +10471,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         };
       },
       accelerateBossFoundationEntry: (bossId: number) => {
-        const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossFighter(fighter));
         if (!boss || !boss.gateEntering) return false;
         // Keep the QA-only entry bounded on hosted WebKit. The entry still
         // traverses the production gate lifecycle; this only prevents a
@@ -10443,7 +10481,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
         const g = gameRef.current;
-        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossFighter(fighter));
         const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
         if (!boss || !human || !boss.combatReady) return null;
         const separation = boss.bodyRadius + human.bodyRadius + 2;
@@ -10470,7 +10508,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       armBossFoundationTelegraph: (bossId: number, humanId: number) => {
         const g = gameRef.current;
-        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossFighter(fighter));
         const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
         if (!boss || !human || !boss.combatReady) return null;
         boss.speed = 0;
@@ -12759,6 +12797,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             kind: fighter.kind,
             aiProfile: fighter.aiProfile,
             v100BossId: fighter.v100BossId,
+            summonSource: fighter.summonSource,
+            summonOwnerId: fighter.summonOwnerId,
+            v100ClonePhase: fighter.v100ClonePhase,
             v100TwinPart: fighter.v100TwinPart,
             v100TwinPair: fighter.v100TwinPair,
             v100TwinEnraged: fighter.v100TwinEnraged,
@@ -16983,7 +17024,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
     g.survivalRun = nextRun;
     const boss = g.fighters.find((fighter) => (
-      isBossEnemyKind(fighter.kind)
+      isBossFighter(fighter)
       && fighter.hp > 0
       && fighter.combatReady
       && fighter.contained !== true
@@ -18205,13 +18246,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     }
                   : effect
               ));
-              const strikeDamage = definition.counterDamage * (isBossEnemyKind(target.kind) ? definition.bossDamageMultiplier : 1);
+              const strikeDamage = definition.counterDamage * (isBossFighter(target) ? definition.bossDamageMultiplier : 1);
               const damage = Math.min(target.hp, strikeDamage);
               target.hp = Math.max(0, target.hp - strikeDamage);
               recordUnitDamage(g, owner.kind, damage);
               target.flash = Math.max(target.flash, .3);
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
-              target.knock = Math.max(target.knock, isBossEnemyKind(target.kind) ? 4 : 13);
+              target.knock = Math.max(target.knock, isBossFighter(target) ? 4 : 13);
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
               addDamageText(g, target.x, target.y - 54, `無空 -${Math.round(damage)}`, .9, "#d7efff");
               addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
@@ -18852,7 +18893,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             && fighter.hp > 0
             && fighter.contained !== true
           ));
-          const survivalBoss = activeSurvivalEnemies.find((fighter) => isBossEnemyKind(fighter.kind));
+          const survivalBoss = activeSurvivalEnemies.find((fighter) => isBossFighter(fighter));
           const survivalStep = advanceSurvivalCombat(g.survivalRuntime, g.survivalRun, {
             seconds: dt,
             activeEnemyCount: activeSurvivalEnemies.length,
@@ -18972,7 +19013,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 && (!owner || owner.hp / Math.max(1, owner.maxHp) > Number(mission.bossHpRatio))) break;
             }
             g.eventIndex += 1;
-            const bossAlive = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind) && fighter.hp > 0);
+            const bossAlive = g.fighters.some((fighter) => isBossFighter(fighter) && fighter.hp > 0);
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
             if (mission.label.includes("警告")) g.flashOverlay = .12;
@@ -20166,6 +20207,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
 
           if (f.kind === "kurome") {
+            if (f.v100BossId === "boss-kurome") {
+              const clones = spawnKuromePhaseClones(g, f, activeLaneCenters, movementStageGeometry);
+              if (clones.length) {
+                for (const clone of clones) addParticles(g, clone.x, clone.y - 40, "#62e8ef", 18);
+                g.banner = "クロメ // 分身展開・本体を見極めろ";
+                g.bannerTime = .82;
+              }
+            }
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
               const liveTarget = g.fighters.find((candidate) => (
@@ -20175,7 +20224,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const step = advanceKuromeTracking(f.stationAbility, dt, liveTarget);
               f.stationAbility = step.runtime as StationAbilityRuntime;
               if (step.fired) {
-                const finalPhase = bossFinalPhase(f, .3);
+                const finalPhase = !isKuromeClone(f) && bossFinalPhase(f, .3);
                 const beam = resolveKuromeBeam({
                   boss: f,
                   runtime: f.stationAbility,
@@ -20184,7 +20233,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
                     : KUROME_PROTOTYPE_TUNING.beamHalfWidth,
                 });
-                const damage = finalPhase
+                const damage = isKuromeClone(f) ? f.damage : finalPhase
                   ? KUROME_PROTOTYPE_TUNING.finalPhaseDamage
                   : KUROME_PROTOTYPE_TUNING.damage;
                 for (const victimId of beam.hits) {
@@ -20204,7 +20253,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 if (beam.target) addParticles(g, beam.target.x, beam.target.y, "#62e8ef", 22);
                 g.flashOverlay = Math.max(g.flashOverlay, .12);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
-                g.banner = finalPhase
+                g.banner = isKuromeClone(f) ? "クロメ分身 // 追跡眼" : finalPhase
                   ? "クロメ // 追跡眼・過励起"
                   : "クロメ // 追跡眼";
                 g.bannerTime = .82;
@@ -20237,7 +20286,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 abilityFrame = true;
-                g.banner = "クロメ // 追跡照準";
+                g.banner = isKuromeClone(f) ? "クロメ分身 // 追跡照準" : "クロメ // 追跡照準";
                 // The ray itself owns the full warning window. Keep the global
                 // banner brief so compact screens do not cover this tall boss.
                 g.bannerTime = .68;
@@ -20507,7 +20556,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 lane: enemy.lane,
                 assignedLane: enemy.anchorLane ?? enemy.lane,
                 kind: enemy.kind,
-                boss: isBossEnemyKind(enemy.kind),
+                boss: isBossFighter(enemy),
                 hp: enemy.hp,
                 combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
@@ -22092,7 +22141,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const laneAnchorError = Math.abs(fighter.y - activeLaneCenters[fighter.lane]);
           g.stationMetrics.maxLaneAnchorError = Math.max(g.stationMetrics.maxLaneAnchorError, laneAnchorError);
           const renderedHalfWidth = fighter.side === "zombie" && isBossEnemyKind(fighter.kind)
-            ? enemyRenderedVisualHalfWidth(fighter.kind)
+            ? enemyRenderedVisualHalfWidth(fighter.kind) * (isKuromeClone(fighter) ? V100_KUROME_CLONE_TUNING.bodyScale : 1)
             : fighter.bodyRadius;
           const grounded = clampToWalkable(stageGeometry, {
             x: fighter.x,
@@ -22223,6 +22272,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
           }
         }
+        dissolveOrphanedKuromeClones(g.fighters);
         const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
         for (const fighter of dead) {
           if (!claimDefeatResolution(g.resolvedDefeatIds, fighter.id)) continue;
@@ -22251,8 +22301,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             continue;
           }
-          addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
-          if (fighter.side === "zombie" && isBossEnemyKind(fighter.kind)) {
+          addParticles(g, fighter.x, fighter.y - 15, isKuromeClone(fighter) ? "#62e8ef" : fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
+          if (fighter.kuromeCloneDissolved) continue;
+          if (fighter.side === "zombie" && isBossFighter(fighter)) {
             addSemanticBattlePresentation(g, {
               semantic: "boss-defeat",
               receiptId: `fighter:${fighter.id}`,
@@ -22267,7 +22318,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             ? humanVoiceCueForUnit(fighter.kind, "death")
             : enemyVoiceCue(fighter.kind, "death");
           playBattleSemanticCue(defeatCue, fighter.x, {
-            semantic: isBossEnemyKind(fighter.kind) ? "boss-defeat" : "fighter-defeat",
+            semantic: isBossFighter(fighter) ? "boss-defeat" : "fighter-defeat",
             receiptId: `fighter:${fighter.id}`,
             ownerId: fighter.id,
             priority: fighter.side === "human"
@@ -22288,7 +22339,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const lifecycle = fighter.side === "zombie"
             ? beginEnemyDeath(createEnemyLifecycle({ id: fighter.id, x: fighter.x, y: fighter.y, lane: fighter.lane, kind: fighter.kind, side: fighter.side, variant: fighter.variant, hp: 0 }))
             : beginAllyDeath(createAllyLifecycle({ id: fighter.id, x: fighter.x, y: fighter.y, lane: fighter.lane, kind: fighter.kind, inheritedKind: fighter.kind, side: fighter.side, variant: fighter.variant, hp: 0 }));
-          g.corpses.push({
+          if (!isKuromeClone(fighter)) g.corpses.push({
             ...lifecycle,
             id: fighter.id,
             x: fighter.x,
@@ -22304,19 +22355,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           } as Corpse);
           if (fighter.side === "zombie") {
             g.kills++; g.combo++; g.comboTime = 2.3;
-            addCombatMetric(g.combatMetrics.enemyDefeatsByKind, fighter.kind, 1);
+            addCombatMetric(g.combatMetrics.enemyDefeatsByKind, isKuromeClone(fighter) ? "kurome-clone" : fighter.kind, 1);
             g.maxCombo = Math.max(g.maxCombo, g.combo);
-            g.scrap += scrapReward(fighter.kind);
+            g.scrap += isKuromeClone(fighter) ? 0 : scrapReward(fighter.kind);
             g.supportGauge = Math.min(
               SUPPORT_GAUGE_MAX,
-              g.supportGauge + supportGaugeReward(
+              g.supportGauge + (isKuromeClone(fighter) ? 0 : supportGaugeReward(
                 fighter.kind,
                 preservesAcceptedSupportTempo(g) ? "full" : "standard",
-              ),
+              )),
             );
             const isOutbreakBoss = g.definition.operationCategory === "outbreak"
               && fighter.kind === g.definition.bossEnemyKind;
-            const twinDefeat = resolveV100TwinDefeat(g, fighter);
+            const twinDefeat = isKuromeClone(fighter) ? { complete: false, enragedIds: [] } : resolveV100TwinDefeat(g, fighter);
             if (twinDefeat.enragedIds.length) {
               g.banner = "フタゴ // 片側撃破・残存個体が激昂";
               g.bannerTime = 3.4;
@@ -22549,7 +22600,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
         dispatchSituationalBattleBarks(g);
         if (!g.survivalRun) dispatchBattleStoryEvents(g);
-        const bossActiveOrIncoming = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind)
+        const bossActiveOrIncoming = g.fighters.some((fighter) => isBossFighter(fighter)
             && fighter.hp > 0 && fighter.contained !== true)
           || g.enemySpawn.pending.some((entry) => isBossEnemyKind(entry.kind));
         const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && bossFinalPhase(fighter, .5));

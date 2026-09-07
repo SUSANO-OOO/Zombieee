@@ -6,6 +6,7 @@ import ts from "typescript";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { battleOutcomeFor } from "../app/battleDefinitions.js";
 import { V100_STAGES } from "../app/v100Registry.js";
+import { isBossFighter } from "../app/bossFoundation.js";
 
 const source=await readFile("app/AshfallGame.tsx","utf8");
 const ast=ts.createSourceFile("AshfallGame.tsx",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -21,7 +22,7 @@ test("the actual empty-arena consumer enqueues Omega, then both A reinforcements
   const definition=createBattleDefinition(V100_STAGES[29].id,{v100:true});
   const g={definition,eventIndex:0,time:definition.timeline[0].at,fighters:[],enemySpawn:{nextEntryId:1,pending:[]}};
   const queued=[],announced=[];
-  const fixture={g,isBossEnemyKind:kind=>kind==="takuya-omega",activeStageViewportId:"844x340",
+  const fixture={g,isBossFighter,isBossEnemyKind:kind=>kind==="takuya-omega",activeStageViewportId:"844x340",
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:event.units.map((kind,index)=>({kind,entryId:runtime.nextEntryId+index}))};},
     enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{},
   };
@@ -49,7 +50,7 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
     const definition = createBattleDefinition(V100_STAGES[2].id, { v100: true });
     const g = { definition, eventIndex: 0, time: 1000, fighters: [], enemySpawn: { nextEntryId: 1, pending: [] } };
     const queued = [];
-    const context = { g, isBossEnemyKind: kind => kind === "takuya", activeStageViewportId: "844x340",
+    const context = { g, isBossFighter, isBossEnemyKind: kind => kind === "takuya", activeStageViewportId: "844x340",
       enqueueEnemyWave: (runtime, event) => { queued.push(event); return { ...runtime, nextEntryId: runtime.nextEntryId + event.units.length, pending: [] }; },
       enemySpawnPortalPoint: () => ({}), announceBossEntrance: () => {}, playCue: () => {}, emitBattleBark: () => {},
     };

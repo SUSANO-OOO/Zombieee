@@ -86,7 +86,9 @@ FUTAGOの実体：承認済みidentity masterから個体A/Bの各14poseを作�
 
 `cf065e696bdc17b8321721e701c549a26193f7cd`のmacOS native WebKitは最小保存probe、旧版更新18/18、部分失敗復旧22/22が成功。独立取得artifact10015022493のZIP SHA256は`485855567d69c6583de052e9c958da89fa68552015d82e8a455a40d5aedaf161`。実socket切断/SW文書・旧namespace書込0・180 CAPS一回・部分cache再開・rollbackを含む。required CI全体は未合格：Phase GのStage4は54.999秒時点でgrapplerがgateEntering/combatReady=falseのため、攻撃窓が登場前に終了した。artifact10015105743（ZIP SHA256 `8dd28d08f4e4d7553014cb8e6342620515224244bfb1bc60ac63b02b560c84f4`）で確認し、`0921e0c`で実登場完了後に従来の45秒攻撃窓を開始する。登場待機は既存battleTimeout内とし、実攻撃条件・失敗証拠は保持。focused実拘束は`outputs/v100-phase-g-stage04-arrival-r1`で成功。新boss修正後の最終候補PWA/全Phase G/remote CIへ旧結果を代用しない。
 
-現在は工程1と2。有限の残件はKurome分身と残る任務objectの本番接続、FUTAGOを含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+クロメの分身を本番へ接続した。HP70%/35%で各段階一度、生存最大2体、各HP410/攻撃17。承認済みの同人物spriteを0.7倍・半透明で描き、「分身」と青い個別HPで本体から区別する。分身も実際に移動・追跡照準・攻撃・被弾し、本体撃破で消滅。分身撃破は独立した敵記録で、boss報酬/拠点露出/解禁や資源の追加付与には使わない。実spawn/座標制限/死亡consumerを実行し、同時2体上限・自己増殖0・回復で再召喚triggerを戻さない・owner別消滅・旧版変更0を確認。全1493 tests/production build、lint0 errors/既存12 warnings成功。16作戦完了/703 CAPS/主力Lv13/車両920の正確なsaveと実UIだけで、Chromium844x340のStage17を168.55秒・車両920/920・損耗1・星3で勝利、2回の分身段階・本体撃破後の分身消滅・objectiveComplete/結果保存・diagnostics0を確認（`outputs/v100-boss-earned-s17-clones-r1`、build `12b85b1e660e386c397846fc8af642e1c6316d3cc356191ebb5cae5375b3803d`）。その後の一行の回復対策は実生成consumerの回帰で確認した。最終同一候補の全編/実機/聴感へ代用しない。
+
+現在は工程1と2。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

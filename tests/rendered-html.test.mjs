@@ -1814,7 +1814,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(newcomerAudio, /unitAudioCueFor\(f\.kind, "weapon", "hardHit"\)/);
   const chainsawLoopStarts = [...game.matchAll(/playProductionCue\(BATTLE_AUDIO_LOOP_CONTRACTS\.crazyKingChainsaw\.cueId, W \/ 2,/g)];
   assert.equal(chainsawLoopStarts.length, 2);
-  assert.match(game, /const defeatCue = fighter\.side === "human"[\s\S]*playBattleSemanticCue\(defeatCue,[\s\S]*semantic: isBossEnemyKind\(fighter\.kind\) \? "boss-defeat" : "fighter-defeat"/);
+  assert.match(game, /const defeatCue = fighter\.side === "human"[\s\S]*playBattleSemanticCue\(defeatCue,[\s\S]*semantic: isBossFighter\(fighter\) \? "boss-defeat" : "fighter-defeat"/);
   assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
   assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
   assert.match(game, /if \(inputGate === "ignore"\) return/);

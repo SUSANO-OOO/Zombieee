@@ -1,5 +1,6 @@
 import { deepFreeze } from "./content/freeze.js";
 import { V100_BOSS_BY_ID } from "./v100Registry.js";
+import { isKuromeClone } from "./kuromeBoss.js";
 
 export const BOSS_FOUNDATION_SCHEMA_VERSION = 1;
 
@@ -505,6 +506,10 @@ export function isBossEnemyKind(enemyKind) {
   return bossDefinitionForEnemyKind(enemyKind) !== null;
 }
 
+export function isBossFighter(fighter) {
+  return isBossEnemyKind(fighter?.kind) && !isKuromeClone(fighter);
+}
+
 export function bossCampaignEntry(enemyKind, overrides = {}) {
   const definition = bossDefinitionForEnemyKind(enemyKind);
   if (!definition) throw new RangeError(`Unknown boss enemy kind: ${String(enemyKind)}`);
@@ -643,6 +648,7 @@ export function bossBattleHudSnapshot(game) {
 export function bossHudSnapshot(fighter) {
   const definition = bossDefinitionForEnemyKind(fighter?.kind);
   if (!definition
+    || isKuromeClone(fighter)
     || fighter?.side !== "zombie"
     || fighter?.combatReady === false
     || fighter?.gateEntering === true
