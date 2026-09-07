@@ -92,7 +92,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(hostedJob, /needs: webkit-enemy-runtime-shard/u);
   assert.match(hostedJob, /Capture Version 0\.9\.9\.5 station final-canvas evidence \(WebKit\)[\s\S]*DEBUG: pw:browser/u);
   assert.doesNotMatch(hostedJob, /continue-on-error:/u);
-  const phaseGJob = workflow.match(/  v100-phase-g-production:\n([\s\S]*?)\n  webkit-hosted:/u)?.[1] ?? "";
+  const phaseGJob = workflow.match(/  v100-phase-g-production:\n([\s\S]*?)\n  v100-native-webkit-pwa:/u)?.[1] ?? "";
   assert.match(phaseGJob, /Capture and validate the full Phase G production matrix[\s\S]*DEBUG: pw:browser/u);
   assert.doesNotMatch(phaseGJob, /continue-on-error:/u);
   const stage3Job = workflow.match(/  webkit-stage3-audio:\n([\s\S]*)$/u)?.[1] ?? "";
@@ -118,7 +118,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit");
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 6);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   assert.doesNotMatch(workflow, /WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
   assert.match(stage3Job, /brew install coreutils/u);
@@ -194,10 +194,10 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["verify", "v100-phase-g-production", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["verify", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
-    "v100-phase-g-production": "verify", "webkit-hosted": "webkit-enemy-runtime-shard",
+    "v100-phase-g-production": "verify", "v100-native-webkit-pwa": "verify", "webkit-hosted": "webkit-enemy-runtime-shard",
     "webkit-enemy-runtime-shard": undefined, "webkit-viewport": ["webkit-deployment-viewport", "webkit-hosted"],
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
@@ -294,14 +294,20 @@ test("r6 diagnostic traces do not alter the CI matrix or bounded runner contract
 
 test("the release Phase G lane covers and validates all production captures", async () => {
   const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
-  const job = workflow.split("  v100-phase-g-production:\n")[1].split("\n  webkit-hosted:")[0];
+  const job = workflow.split("  v100-phase-g-production:\n")[1].split("\n  v100-native-webkit-pwa:")[0];
   assert.match(job, /runs-on: macos-15-intel/u);
   assert.match(job, /npm run qa:v100-phase-g\n\s+npm run qa:v100-phase-g-validate/u);
   assert.doesNotMatch(job, /V100_PHASE_G_ONLY|for sequence|continue-on-error/u);
   assert.match(job, /outputs\/v100-phase-g\n\s+docs\/qa\/v100\/phase-g-screenshot-manifest\.json/u);
-  assert.match(job, /old_sha=55d796cc577d1d9f903a4d2c6b4382196511db27/u);
+  const { jobs } = loadYaml(workflow);
+  const pwa = jobs["v100-native-webkit-pwa"];
+  assert.equal(pwa.needs,"verify","PWA must run even when an unrelated battle capture fails");
+  assert.equal(pwa["continue-on-error"],undefined);
+  const pwaText = JSON.stringify(pwa);
+  assert.match(pwaText, /old_sha=55d796cc577d1d9f903a4d2c6b4382196511db27/u);
   for (const kind of ["EXISTING", "PARTIAL"]) {
-    assert.match(job, new RegExp(`PWA_${kind}_UPDATE_BROWSER: webkit`, "u"));
-    assert.match(job, new RegExp(`PWA_${kind}_UPDATE_EXPECTED_CANDIDATE_SHA: \\$\\{\\{ github\\.event\\.pull_request\\.head\\.sha \\}\\}`, "u"));
+    const step=pwa.steps.find(step=>step.env?.[`PWA_${kind}_UPDATE_BROWSER`]);
+    assert.equal(step.env[`PWA_${kind}_UPDATE_BROWSER`],"webkit");
+    assert.equal(step.env[`PWA_${kind}_UPDATE_EXPECTED_CANDIDATE_SHA`],"${{ github.event.pull_request.head.sha }}");
   }
 });

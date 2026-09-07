@@ -18,7 +18,7 @@ assert.ok(["acceptance", "diagnostic", "save-boundary-diagnostic", "result-bound
 if (lane === "diagnostic") assert.deepEqual(engines, ["chromium"]);
 if (lane === "result-boundary-diagnostic") assert.deepEqual(engines, ["webkit"]);
 const report = { host: process.platform, node: process.version, engines, build: await productionBuildIdentity(), fullAcceptance: false,
-  scope: "Local disclosed fixtures: desktop unproved flags; mobile exact TAKUYA Story receipt, all units Lv30, vehicleLv5,2000 CAPS. Normal production input only; audio disabled. This is mode/storage QA, not balance, natural progression or audio acceptance.", cases: [] };
+  scope: "Local disclosed fixtures: desktop unproved flags; mobile exact TAKUYA Story receipt, all units Lv30, vehicleLv5,2000 CAPS, balanced guardian/ranged/healer formation under the real seven-unit cap. Normal production input only; audio disabled. This is mode/storage QA, not balance, natural progression or audio acceptance.", cases: [] };
 const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 report.lane = lane;
 report.sources = await Promise.all(["app/v100Outbreak.js", "app/v100Save.js", "app/v100Transactions.js", "app/V100ModesView.tsx", "app/V100Campaign.tsx", "app/v100Campaign.css", "app/v100BattleAdapter.js", "app/AshfallGame.tsx", "scripts/v100-outbreak-browser-smoke.mjs"]
@@ -48,6 +48,7 @@ async function combatObservation(page, full = false) {
       barricadeVulnerable: s.barricadeVulnerable, wave: s.wave, eventIndex: s.eventIndex, timelineLength: s.timelineLength, pendingSpawnCount: s.pendingSpawnCount,
       resultPresented: s.resultPresented, saveBoundaryPending: s.saveBoundaryPending,
       enemies: s.fighters.filter(f => f.side === "zombie").map(f => ({ id: f.id, kind: f.kind, hp: f.hp })),
+      humans: s.fighters.filter(f => f.side === "human").map(f => ({ id: f.id, kind: f.kind, hp: f.hp, maxHp: f.maxHp, progressionLevel: f.progressionLevel })),
       presentation: s.battlePresentation, mode: document.documentElement.dataset.pwaScreen,
     };
   }, full);
@@ -66,7 +67,7 @@ try {
           seed.receipts = [boss.firstDefeatReceipt]; seed.completedStageIds = V100_STAGE_IDS.slice(0, 3); seed.availableStageIds = V100_STAGE_IDS.slice(0, 4);
           seed.ownedUnitIds = V100_UNITS.map(unit => unit.id); seed.registeredUnitIds = [...seed.ownedUnitIds]; seed.unitLevels = Object.fromEntries(seed.ownedUnitIds.map(id => [id, 30])); seed.levelCap = 30;
           seed.vehicle.upgradeLevel = 5; seed.vehicle.maxHp = 1080;
-          seed.formationSlots = ["unit-miyamoto-musashi", "unit-kumaverson", "unit-paisen", "unit-hachi", "unit-miyamoto-musashi", "unit-kumaverson", "unit-paisen"];
+          seed.formationSlots = ["unit-gantetsu", "unit-babayaga", "unit-nao", "unit-miyamoto-musashi", "unit-kumaverson", "unit-mizuchi", "unit-hachi"];
         }
         const context = await browser.newContext({ viewport, hasTouch: !locked });
         await context.addInitScript(({ key, seed, origin }) => {
@@ -123,12 +124,15 @@ try {
             await action(page, () => page.getByRole("button", { name: "この異常個体と再戦", exact: true }).click());
             await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
             record.active = (await saved(page)).outbreak.active;
+            const openingSave = await saved(page);
+            record.loadout = { formationSlots: openingSave.formationSlots, levels: openingSave.unitLevels, vehicle: openingSave.vehicle };
             assert.deepEqual(await modeIdentity(page), { screen: "battle", battle: "true", result: "false" });
             if (natural) {
               await page.evaluate(() => { window.__OUTBREAK_ABORT__ = true; });
               const until = Date.now() + 240000;
-              let deploymentClicks = 0;
+              let deploymentClicks = 0, deploymentCursor = 0;
               record.combatSamples = [];
+              let lastCombatSampleAt = 0;
               let baseDestroyedAt = null;
               while (Date.now() < until && !await page.getByRole("alertdialog", { name: "異常発生の戦果保存", exact: true }).isVisible()) {
                 if (lane === "diagnostic") {
@@ -137,9 +141,16 @@ try {
                     baseDestroyedAt ??= Date.now();
                     if (Date.now() - baseDestroyedAt >= 3000) break;
                   }
+                } else if (Date.now() - lastCombatSampleAt >= 15_000) {
+                  record.combatSamples.push(await combatObservation(page, true));
+                  lastCombatSampleAt = Date.now();
                 }
-                const candidate = page.locator('.unit-card[data-kind]:not([disabled]):not([aria-disabled="true"])').first();
-                if (await candidate.isVisible()) { await candidate.click(); deploymentClicks += 1; }
+                // Keep command resource for the next chosen role. Selecting
+                // the first currently affordable card repeatedly spent 25 on
+                // scouts and never funded the ranged/healing cards at all.
+                const cards = page.locator('.unit-card[data-kind]');
+                const candidate = cards.nth(deploymentCursor % await cards.count());
+                if (await candidate.isVisible() && await candidate.isEnabled()) { await candidate.click(); deploymentClicks += 1; deploymentCursor += 1; }
                 await page.waitForTimeout(500);
               }
               if (lane === "diagnostic") {
@@ -164,6 +175,8 @@ try {
               await action(page, () => page.getByRole("button", { name: "戦果の保存を再試行", exact: true }).click());
               await page.getByRole("region", { name: "異常発生の戦果", exact: true }).waitFor();
               record.settled = await saved(page);
+              const observedKinds = new Set(record.combatSamples.flatMap(sample => sample?.humans?.map(human => human.kind) ?? []));
+              for (const kind of ["guardian", "babayaga", "medic"]) assert.ok(observedKinds.has(kind), `The selected ${kind} role was never fielded`);
               assert.equal(record.settled.outbreak.lastResult.won, true); assert.equal(record.settled.caps, 2000 + v100StageReward(boss.stageNumber, "replay"));
               assert.equal(record.settled.bosses.defeatCounts[boss.id], 2); assert.equal(record.settled.outbreak.clearCounts[boss.id], 1); assert.equal(record.settled.equipment.inventory["boss-muscle-fiber"], 1);
               assert.deepEqual(record.settled.completedStageIds, seed.completedStageIds); assert.deepEqual(record.settled.availableStageIds, seed.availableStageIds);

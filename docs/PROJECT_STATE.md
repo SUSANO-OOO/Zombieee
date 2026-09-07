@@ -30,6 +30,12 @@
 
 ### 有限の残工程と完了判定
 
+2026-09-07の追加検証：
+- Stage9の通常プレイで、全ノード起動後に存在しない改札喰い/研究容器を待ち続ける実際の進行不能を再現した。V1の対象4作戦はノード完了と実際の撤収を条件にし、旧作戦のボス/容器条件は維持した。Stage28の4番目のノードも実描画へ接続。Stage9は修正後135秒・車両760/760・損耗0で勝利し、Stage10まで進行した。Stage6で計測した157秒の空待ちに基づき、護送4作戦の距離・速度・wave間隔を一緒に短縮した。全1446 source tests成功。残る護送作戦の実体験は未確認。
+- Stage11は通常の獲得済み編成/Lv7-8で2回敗北し、結果を保存した。最初の操作は回復役を68秒まで出せず、回復を空の場所へ落とした。役割の出撃順と実際の味方位置への回復を修正すると、ボス残り8/2600まで進んだが防衛線が崩壊した。敵や報酬は変更せず、未使用だった航空支援を画面から狙う攻略確認へ進む。敗北→地図でCAPS/receipt/進行/育成の保持を確認。探索の継続を固定候補30作戦の通し受入へ代用しない。
+- 異常発生は、安い隊員を常に優先するQA操作が回復/遠距離役を出せなくしていた。役割順で資源を貯め、guardian/babayaga/medicが実際に投入されたことも検査。WebKit3画面で勝利/保存abort/再試行一回性/reload成功（`outputs/v100-outbreak-station-fixed-webkit-r3`）。防衛モードはChromium/WebKit×3画面で実wave1-5、保存abort/復帰/報酬と成長選択を確認（`outputs/v100-survival-61933b-r1`）。両者は開示した上級seed・audio無効fixtureであり、自然解禁/バランス/音響の受入は別。
+- d956238のCI `34087463132` はPhase GのChromium1280x720ボス画面で、入力API完了にもかかわらずnative pointer receiptsが空になり失敗した。artifact/logを `outputs/completion/ci-d956238-phase-g-*` に保持。Playwright実装がzero-delayクリックのmove/down/upを並行送信することを確認し、順にackを待つ入力へ変更した。2秒期限・実trustedイベント列・出撃受理・無再試行を維持する。Windows最小probeは従来/変更後とも40入力×両engine成功であり、macOS失敗原因の確定証拠ではない。macOSでも比較probeと本番matrixを実行し、未解消なら失敗のまま判定する。PWA工程は無関係な戦闘失敗で未実行にならない独立required jobとした。既存CI全laneは保持。
+
 1. **内容・体験を完成**：台本hashを保持し、PROLOGUE、30作戦、ENDING、11場面のエンドロール、EPILOGUEを接続。通常の新規開始から通しプレイし、代表的な章boss/最終bossとCAPS・育成・配備・支援・車両・他modeを確認する。背景・人物・動作・音響の意味不一致と明白な操作不備を解消する。
 2. **対応環境・データ保全**：新規と旧版更新を分離し、保存/結果一回性/再読込/中断復帰/復旧/PWA install・差分update・offline・rollbackを検証。Chromium/WebKitの844x340、844x390、1280x720ほか合意済みviewportを確認し、物理iPhone未検証は区別する。
 3. **同一候補の最終検証**：必要な自動検証と全Phase G、必要remote CIを実行。実装修正と分離したfixed-HEAD read-onlyレビューでHigh/Medium未解消0。影響のない検証は反復せず、変更で無効になる証拠だけ取り直す。

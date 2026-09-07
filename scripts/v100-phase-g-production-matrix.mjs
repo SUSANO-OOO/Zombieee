@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { orderedNativePointer } from "./ordered-native-pointer.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
@@ -1629,7 +1630,8 @@ async function performVerifiedDeploymentPointer(page, {
       const point = terminalDecision.point;
       const dispatchStartedAt = Date.now();
       pointerDispatched = true;
-      const pointerPromise = page.mouse.click(point.x, point.y);
+      const protocolPhases = [];
+      const pointerPromise = orderedNativePointer(page, point, protocolPhases);
       let dispatchTimer;
       const dispatchResult = await Promise.race([
         pointerPromise.then(() => ({ status: "completed" }), (error) => ({
@@ -1647,6 +1649,7 @@ async function performVerifiedDeploymentPointer(page, {
       }
       let dispatch = {
         ...dispatchResult,
+        protocolPhases,
         attemptId,
         startedAt: new Date(dispatchStartedAt).toISOString(),
         endedAt: new Date().toISOString(),

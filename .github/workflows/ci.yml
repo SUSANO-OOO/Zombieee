@@ -240,6 +240,9 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Diagnose native pointer transport before production capture
+        run: node scripts/native-pointer-browser-probe.mjs
+
       - name: Capture and validate the full Phase G production matrix
         env:
           DEBUG: pw:browser
@@ -256,8 +259,44 @@ jobs:
           path: |
             outputs/v100-phase-g
             docs/qa/v100/phase-g-screenshot-manifest.json
+            outputs/native-pointer-probe
           if-no-files-found: error
           retention-days: 14
+
+  v100-native-webkit-pwa:
+    name: V1 Native WebKit PWA Update and Recovery
+    needs: verify
+    runs-on: macos-15-intel
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install locked WebKit browser
+        run: npx playwright install webkit
+
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
+
+      - name: Build production application
+        run: npm run build
 
       - name: Build the published old release and candidate for native WebKit PWA checks
         env:

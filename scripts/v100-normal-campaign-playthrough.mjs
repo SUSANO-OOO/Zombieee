@@ -66,7 +66,7 @@ async function uiClick(locator) { await ready(); await locator.click(); await re
 const button = name => page.getByRole("button",{name,exact:true});
 const selectPersonnel = unit => page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})});
 function plannedFormation(save) {
-  const preference=["unit-gantetsu","unit-tatara","unit-kumaverson","unit-babayaga","unit-nao","unit-mizuchi","unit-hachi","unit-monkey","unit-paisen"];
+  const preference=["unit-gantetsu","unit-nao","unit-babayaga","unit-mizuchi","unit-hachi","unit-kumaverson","unit-tatara","unit-monkey","unit-paisen"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
@@ -131,7 +131,7 @@ async function configureFormation() {
 async function battle(stage) {
   const record={number:stage.number,id:stage.id,startedAt:new Date().toISOString(),openingSave:await saveAt(),inputs:[],status:"running"};
   report.stages.push(record); await persist();
-  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;
+  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;
   while(await phaseAt()==="battle") {
     await continueRequested();
     const countText = await page.locator(".bay-status").allTextContents();
@@ -157,10 +157,19 @@ async function battle(stage) {
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
+      } else if (/召喚限度\s+0\/7/u.test(countText.join(" ")) && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
+        // An empty defense line needs an affordable escort while the next
+        // expensive role is funded. Keep the ordered role cursor unchanged.
+        const scout=page.locator('button.unit-card[data-kind="scout"]');
+        if(await scout.count() && await scout.isEnabled()) {
+          await scout.click();lastEmergency=Date.now();lastAction=Date.now();
+          record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout"});
+        }
       }
     }
     const barrage=page.getByRole("button",{name:/^装甲車両一斉砲撃/});
-    if(await barrage.isVisible()&&await barrage.isEnabled()) {
+    const bossVisible=await page.locator(".boss-hud").isVisible();
+    if((stage.missionType!=="boss" ? Date.now()-start>12_000 : bossVisible)&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()
@@ -173,11 +182,20 @@ async function battle(stage) {
       await page.mouse.click(hit.x,hit.y);record.inputs.push({seconds:(Date.now()-start)/1000,action:"ability",kind:hit.kind});
     }
     const healing=page.locator('button[data-support-id="support-healing"]');
-    if(await healing.count()&&await healing.isEnabled()) {
-      await healing.click();
+    if(Date.now()-start>12_000&&await healing.count()&&await healing.isEnabled()) {
       const canvas=await page.locator(".game-shell canvas").boundingBox();
-      if(canvas)await page.mouse.click(canvas.x+canvas.width*.35,canvas.y+canvas.height*.48);
-      record.inputs.push({seconds:(Date.now()-start)/1000,action:"healing-supply"});
+      // These anchors belong to visible ability markers over the actual
+      // squad. The old fixed 35% drop frequently healed empty ground.
+      const anchors=await page.locator('button.manual-ability-ready').evaluateAll(elements=>elements.map(el=>({x:Number(el.getAttribute("data-owner-anchor-x")),y:Number(el.getAttribute("data-owner-anchor-y"))})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+      if(canvas&&anchors.length) {
+        anchors.sort((a,b)=>a.x-b.x);const anchor=anchors[Math.floor(anchors.length/2)];
+        const point={x:canvas.x+anchor.x,y:canvas.y+anchor.y+20};
+        const clear=await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==="CANVAS",point);
+        if(clear) {
+          await healing.click();await page.mouse.click(point.x,point.y);
+          record.inputs.push({seconds:(Date.now()-start)/1000,action:"healing-supply",point,visibleSquadAnchors:anchors});
+        }
+      }
     }
     await page.waitForTimeout(300);
     } catch (error) {
@@ -216,6 +234,18 @@ try {
      assert.deepEqual(restored[key], previous.finalSave[key], `Resume preserves ${key}`);
    }
    report.restoredSave = restored;
+   if (report.stages.at(-1)?.status === "lost") {
+     const reasonPath=process.env.V100_NORMAL_PLAY_RETRY_REASON;
+     assert.ok(reasonPath,"A recorded defeat requires a reasoned retry note, not an automatic loop");
+     const bytes=await readFile(reasonPath),reason=JSON.parse(bytes);
+     assert.equal(reason.battleRunId,restored.lastResult?.battleRunId);
+     assert.ok(reason.finding?.length && reason.operatorChanges?.length);
+     assert.equal(await phaseAt(),"result");
+     await uiClick(button("作戦地図へ"));
+     const after=await saveAt();
+     for(const key of ["caps","receipts","completedStageIds","unitLevels","ownedUnitIds"])assert.deepEqual(after[key],restored[key],`Defeat return preserves ${key}`);
+     report.retry={...reason,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
+   }
    if (report.stages.at(-1)?.status === "running" && await phaseAt() === "formation") {
      report.stages.at(-1).status = "interrupted-driver";
      report.stages.at(-1).interruption = { reason: previous.error, recovery: "native reload returned the unfinished battle to formation; completed stages and receipts unchanged" };
