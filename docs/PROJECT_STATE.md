@@ -134,7 +134,11 @@ build b7f1a8bb424624ceedb36b3d72266c36b4158a292467b4d2a441bc6d7b25fd72で両engi
 
 同buildのStage26は獲得済みStage25結果を実UIで確定し、正規410 CAPS報酬後の1499 CAPS/主力Lv19/車両1000を維持して126.12秒、車両1000/1000、損耗0、星3で3台の車列を確保した（outputs/v100-convoy-earned-s26-r1）。実移動/護衛integrity/車両3体/任務結果を観測、資源/HP/時計/結果の改変0。結果直前の到達信号はサンプリング間隔内に完了したため、この実戦ログで緑表示を見たとはしない。状態と完了判定の接続/緑画像は前記独立fixtureで検証済み、同一候補の全編確認で再観測する。
 
-現在は工程1と2。次の開始点は正本どおりの9200HPを持つ最終bossの通常体験。有限の残件は最終boss、自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。大規模CIが制作中の新pushで途中取消になるため、以後の制作修正をまとめ、候補を固定してから全編と必要CIを揃える。旧データ保全/公開承認境界/継続goalを維持する。
+最終bossは同buildの獲得済みStage29完了/499 CAPS/主力Lv24/車両1080のsaveから、正規9200HPのΩを169.77秒、車両1080/1080、損耗1、星3で撃破した（outputs/v100-boss-earned-s30-omega-r1）。70%/35%の両段階とobjectiveCompleteを観測。資源/HP/時計/結果の改変0。ただし、この結果確定前saveと過去のENDING通過を合わせて最終全編合格にはしない。
+
+同実戦の844x340画像でΩの頭部が画面外/上部HUDに隠れる表示不備を発見。戦闘数値/座標/当たり判定を維持し、描画サイズをviewport別に調整、保護中の感染拠点HUDをΩから離れた側へ移した。初期HUD値の未反映と左右切替境界も実フレームで確認して修正。r1-r7の失敗は保持する。空の空間を含む上部帯全体の禁止ではなく、元画像alphaと実際に占有する各HUD矩形をnative canvas座標で照合した。r8はChromium/WebKit×844x340/844x390/1280x720の6条件で実登場から左右のHUD切替まで、完全な輪郭が画面内、HUDとの重なり0、9200HP/目標情報維持、overflow/diagnostics0を確認した（outputs/v100-omega-viewport-browser-r8、build b3791fe317d1fa706dbae4f213bafdfc3931dc829ab782dec5e382e2cdc5a33d）。全1507 source tests/build/lint0errors/既存12warnings/追加script lint/diff check成功。音声/物理端末の合格証拠ではない。
+
+現在は工程1と2。次の開始点は制作候補を固定した新規開始からの全編確認。scripts/v100-final-normal-playthrough.mjsは実CAPS/育成/編成/支援/実時間/通常UIを使い、戦術判断のread-only戦闘観測を明示する。scenario/資源/actor/時計/結果のsetterは使用しない。HEAD/tree/全buildと操作driverのhashを記録し、途中敗北を自動再試行しない。旧探索は履歴として保持し、操作感/聴感の判断は別に行う。有限の残件は同一候補fresh全編、自然解禁他mode/音響/操作感、PWA・必要CI・最終read-only review、Producer最終承認、公開と公開後QA。17df850のremote CIはPhase G/PWA/敵6lane/Hosted/Stage3音声3laneが成功、viewport後段はまだ進行中。制作中の小刻みなpushで取消を繰り返さず、ローカル候補の確認を進めてからまとめて送信する。旧データ保全/公開承認境界/継続goalを維持する。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
