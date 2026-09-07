@@ -100,6 +100,40 @@ test("pre-engagement movement does not consume the unchanged 12-second proof win
   assert.deepEqual(result.completedImpactProof.receiptsByActor["human:ranger"], ranger());
 });
 
+test("ranger fire on an earlier wave cannot spend the spitter's unchanged proof window before it attacks", async () => {
+  const earlier = ranger({ targetId:9,targetKind:"walker",committedAtBattleTime:26.9,contactAtBattleTime:27 });
+  const spitter = receipt({committedAtBattleTime:43,contactAtBattleTime:43.04});
+  const responding = ranger({attackSequence:2,audioReceiptId:"combat-attack:2:1:2",committedAtBattleTime:43.3,contactAtBattleTime:43.4});
+  const f = fixture(now => now < 7_080 ? [] : now < 23_040 ? [earlier]
+    : now < 23_400 ? [earlier,spitter] : [earlier,spitter,responding]);
+  const result = await f.run();
+  assert.equal(result.ok,true);
+  assert.equal(result.completedImpactProof.startedAtBattleTime,43);
+  assert.equal(result.completedImpactProof.deadlineAtPageTime-result.completedImpactProof.startedAtPageTime,12_000);
+  assert.equal(result.collection.engagement.setupBudgetMs,45_000);
+  assert.deepEqual(result.completedImpactProof.receiptsByActor["human:ranger"],responding,"the earlier human hit cannot substitute for a response inside the enemy engagement");
+});
+
+test("an early human hit cannot replace a missing or late response after the required enemy impact", async () => {
+  const earlier=ranger({targetKind:"walker",committedAtBattleTime:26.9,contactAtBattleTime:27});
+  const spitter=receipt({committedAtBattleTime:43,contactAtBattleTime:43.04});
+  const late=ranger({attackSequence:2,audioReceiptId:"combat-attack:2:1:2",committedAtBattleTime:56,contactAtBattleTime:56.1});
+  const f=fixture(now=>now<7080?[]:now<23040?[earlier]:now<36120?[earlier,spitter]:[earlier,spitter,late]);
+  const result=await f.run();
+  assert.equal(result.ok,false);assert.equal(result.completedImpactProof.state,"FAILED");
+  assert.equal(result.completedImpactProof.deadlineAtPageTime-result.completedImpactProof.startedAtPageTime,12000);
+  assert.equal(result.completedImpactProof.receiptsByActor["human:ranger"],undefined);
+});
+
+test("the native opening callback waits for the required enemy rather than an earlier human attack", async () => {
+  const earlier=ranger({targetKind:"walker",committedAtBattleTime:26.9,contactAtBattleTime:27});
+  const f=fixture(now=>now?[earlier]:[]),keys=["zombie:spitter","human:ranger"];
+  const reader=f.api.createCombatImpactReader(f.page,keys),options={requiredCompletedImpactActorKeys:keys};
+  await f.api.observeOpeningCombatAction(reader,()=>assert.fail("no impact yet"),options);
+  f.advance(7080);
+  assert.equal(await f.api.observeOpeningCombatAction(reader,()=>assert.fail("enemy has not attacked"),options),null);
+});
+
 test("baseline, stale-generation, and wrong-kind receipts cannot start engagement", async () => {
   const baseline = receipt({ attackSequence: 9, audioReceiptId: "combat-attack:2:3:9" });
   const stale = receipt({ battleGeneration: 1, audioReceiptId: "combat-attack:1:3:1" });

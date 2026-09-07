@@ -2306,8 +2306,10 @@ async function observeOpeningCombatAction(reader, captureCombatAction, options) 
     return null;
   }
   const current = reader.delta(baseline, envelope);
+  const anchorActorKey = options.requiredCompletedImpactActorKeys.find(key => key.startsWith("zombie:"))
+    ?? options.requiredCompletedImpactActorKeys[0];
   if (!current.snapshot.completedAttackImpacts.some((receipt) =>
-    options.requiredCompletedImpactActorKeys.includes(phaseGProofMachine.actorKeyFor(receipt)))) return null;
+    anchorActorKey === phaseGProofMachine.actorKeyFor(receipt))) return null;
   reader.readEvidence.baseline = baseline;
   // The awaited callback is outside any input lock. It alone collects/seals.
   return await captureCombatAction({ ...options, reader, baselineEnvelope: baseline, engagementEnvelope: envelope });
@@ -2321,6 +2323,11 @@ async function collectCombatCausalProof(page, {
   engagementEnvelope = null,
 } = {}) {
   const completedImpactActorKeys = [...new Set(requiredCompletedImpactActorKeys)];
+  // Earlier-wave human fire cannot consume the required enemy's action window.
+  // Its real completed impact starts the same deadline; any required human
+  // response must still commit within that enemy engagement, never beforehand.
+  const anchorActorKey = completedImpactActorKeys.find(key => key.startsWith("zombie:"))
+    ?? completedImpactActorKeys[0];
   const { readEvidence, readSnapshot, check: engagementInvariant } = reader;
   if (engagementEnvelope) {
     engagementInvariant(engagementEnvelope === readEvidence.latest && baselineEnvelope === readEvidence.baseline
@@ -2346,7 +2353,7 @@ async function collectCombatCausalProof(page, {
     postDeploymentEnvelope = (envelope) => reader.delta(baseline, envelope);
     initialEnvelope = postDeploymentEnvelope(engagementEnvelope ?? baseline);
     let anchor = initialEnvelope.snapshot.completedAttackImpacts.find((receipt) =>
-      completedImpactActorKeys.includes(phaseGProofMachine.actorKeyFor(receipt))) ?? null;
+      anchorActorKey === phaseGProofMachine.actorKeyFor(receipt)) ?? null;
     let setupSampleCount = engagementEnvelope ? 1 : 0;
     while (!anchor) {
       const remainingMs = setupHostDeadlineAt - Date.now();
@@ -2366,7 +2373,7 @@ async function collectCombatCausalProof(page, {
         && initialEnvelope.pageNow <= setupPageDeadlineAt,
       "COMBAT_ENGAGEMENT_DEADLINE_EXCEEDED", { setupBudgetMs, setupSampleCount, pageNow: initialEnvelope.pageNow });
       anchor = initialEnvelope.snapshot.completedAttackImpacts.find((receipt) =>
-        completedImpactActorKeys.includes(phaseGProofMachine.actorKeyFor(receipt))) ?? null;
+        anchorActorKey === phaseGProofMachine.actorKeyFor(receipt)) ?? null;
     }
     anchorBattleTime = anchor.committedAtBattleTime;
     engagement = {
@@ -2675,6 +2682,9 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       { state },
       async () => await configure(page, async (options) => {
         const proof = await collectCombatCausalProof(page, options);
+        // Preserve FAILED and its exact missing-actor/deadline evidence even
+        // when the screenshot guard correctly rejects this collection.
+        completedImpactProof = proof.completedImpactProof;
         await sealCombatProofScreenshot(page, proof, imagePath(label + "-action"), label + "-action");
         completedImpactProof = proof.completedImpactProof;
         const actionOverflow = await overflowAudit(page);

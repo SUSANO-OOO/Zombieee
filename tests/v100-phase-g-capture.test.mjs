@@ -317,8 +317,9 @@ async function fixture(t, options = {}) {
     }),
     productionStateContract: async () => ({ ok: true }),
     collectCombatCausalProof: async () => { collectionCalls += 1; return {
-      ok: true, completedImpactProof: accepted,
-      collection: { converged: true, withinReleaseDeadline: true },
+      ok: !options.incompleteCollection, completedImpactProof: options.incompleteCollection
+        ? machine.fail(accepted,"MISSING_REQUIRED_ACTOR",{missing:["zombie:spitter"]},accepted.deadlineAtPageTime) : accepted,
+      collection: { converged: !options.incompleteCollection, withinReleaseDeadline: !options.incompleteCollection },
     }; },
   };
   const capture = vm.runInNewContext(`${actualFunctions}\ncaptureStateImpl`, globals);
@@ -349,6 +350,16 @@ test("capture consumes its one prepared production proof and its own PNG without
   assert.equal(f.collectionCalls(), 1);
   assert.equal((await f.receipt()).completedImpactProof.state, "COMPLETE");
   assert.equal(f.results[0].sealedCombatCausalProof, undefined);
+});
+
+test("a rejected incomplete collection still persists its original actor failure without a screenshot", async t => {
+  const f=await fixture(t,{preparedProof:true,incompleteCollection:true});
+  await assert.rejects(f.run(),/cannot capture an incomplete attack/u);
+  const receipt=await f.receipt();
+  assert.equal(receipt.outcome,"failure");assert.equal(receipt.screenshot,null);
+  assert.equal(receipt.completedImpactProof.state,"FAILED");
+  assert.equal(receipt.completedImpactProof.failure.code,"MISSING_REQUIRED_ACTOR");
+  assert.deepEqual(receipt.completedImpactProof.failure.detail.missing,["zombie:spitter"]);
 });
 
 test("a prepared proof for different required actors cannot satisfy this capture", async (t) => {

@@ -104,7 +104,11 @@ build `2e7d937369244a9a26d7fe00af343ba5abcca1c0368898c64f3d70cab2283e95` でChro
 
 送信済み819bfe4の最新CIはPR Verify/敵runtime6分割/Hosted/native PWA/Stage3 audio3経路が成功したが、Phase GはStage6 spitterの攻撃証拠が未完成として失敗。再実行せず実jobログとartifactを保存し、原因を切り分ける。他のdeployment条件はまだ進行中でありrequired CI全体は未合格。
 
-現在は工程1と2。次の実装開始点は後半Stage21/23/24/25/27の任務object状態の本番接続と、保存したPhase G Stage6失敗の切り分け。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+同Stage6失敗のartifact10021487262をGitHubのhead/size/digestと独立照合した（22,747,529bytes、SHA256 `a4a68977f0ad339007cc08453c3057251e1b321600051c30117dd58f36d7de79`、`outputs/completion/ci-819b-phaseg`）。rangerが前のwaveを撃った時点で12秒のproofを開始し、39秒の失敗時点ではspitterがまだ射程へ移動中、実着弾17件にspitter0だった。実collectorの短い再現でも同じ失敗を確認後、必要な敵自身の新しい着弾を起点へ修正した。45秒setup/12秒proof/全actor/正確なaudio receipt/新しい味方着弾/PNG/deadline/cleanupは維持し、前のwaveの味方攻撃や期限後攻撃を代用しない。失敗proofはscreenshot guardの前に保全し、元の不足actor/deadlineを失わないよう修正。対象75 tests成功、前wave/期限後/失敗保全のnegative casesを含む。
+
+同じproduction buildでWebKit667x375のStage6を実行し、spitter commit46.1833/contact46.4167、ranger commit51.3833/contact51.5167とそれぞれの実audio要求を取得した。page time81405からdeadline93405に対して86748で受入、実PNGとcleanupを含むCOMPLETE、diagnostics0（`outputs/v100-phase-g-spitter-anchor-r1`）。最終全1500 source tests、lint依存検査、PR差分check成功。旧remote失敗をローカル合格へ書き換えず、新候補の全55画面/required CI合格は別途必要。
+
+現在は工程1と2。次の実装開始点は後半Stage21/23/24/25/27の任務object状態の本番接続。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
