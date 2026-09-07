@@ -4,6 +4,7 @@ import test from "node:test";
 import { load as loadYaml } from "js-yaml";
 
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
+import { CANONICAL_HUD_STATES } from "../scripts/run-v099-hud-states-bounded.mjs";
 
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
@@ -60,17 +61,17 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT:/u);
   assert.match(workflow, /node scripts\/run-v099-hud-states-bounded\.mjs/u);
   const hudJob = workflow.match(/  webkit-viewport:\n([\s\S]*?)\n  webkit-deployment-viewport:/u)?.[1] ?? "";
-  const hudViewports = hudJob.match(/viewport:\r?\n([\s\S]*?)\r?\n        hud_state:/u)?.[1]
+  const hudViewports = hudJob.match(/viewport:\r?\n([\s\S]*?)\r?\n\r?\n    steps:/u)?.[1]
     .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
-  const hudStates = hudJob.match(/hud_state:\r?\n([\s\S]*?)\r?\n\r?\n    steps:/u)?.[1]
-    .match(/^\s+- ([a-z0-9-]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
+  const hudStates = CANONICAL_HUD_STATES;
   assert.deepEqual(hudViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
   assert.deepEqual(hudStates, [
     "stage1-normal", "five-units", "deployment-banner", "manual-ability-banner",
     "objective-full", "support-disabled", "banner-bark-boss", "stage3-boss",
   ]);
   assert.equal(hudViewports.length * hudStates.length, 48);
-  assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
+  assert.doesNotMatch(hudJob, /ISSUE156_WEBKIT_HUD_STATE:/u);
+  assert.match(hudJob, /V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"/u);
   assert.match(hudJob, /needs:\r?\n\s+- webkit-deployment-viewport\r?\n\s+- webkit-hosted/u);
   assert.match(hudJob, /fail-fast: false/u);
   assert.match(hudJob, /max-parallel: 1/u);
@@ -232,7 +233,13 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.deepEqual(jobs["webkit-deployment-viewport"].strategy.matrix.viewport, viewports);
   assert.deepEqual(jobs["webkit-stage3-audio"].strategy.matrix.audio_case, ["entrance-candidate", "final-candidate", "final-base"]);
   assert.equal(jobs["webkit-enemy-runtime-shard"].strategy.matrix.shard.length, 6);
-  assert.equal(jobs["webkit-viewport"].strategy.matrix.hud_state.length, 8);
+  assert.deepEqual(Object.keys(jobs["webkit-viewport"].strategy.matrix), ["viewport"]);
+  assert.equal(viewports.length * CANONICAL_HUD_STATES.length, 48);
+  const hudCapture = jobs["webkit-viewport"].steps.find(step => step.name === "Capture canonical HUD evidence");
+  assert.equal(hudCapture.run, "node scripts/run-v099-hud-states-bounded.mjs");
+  assert.equal(hudCapture.env.ISSUE156_WEBKIT_HUD_STATE, undefined);
+  assert.equal(hudCapture.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS, "60000");
+  assert.equal(jobs["webkit-viewport"]["timeout-minutes"], 20);
 });
 
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {

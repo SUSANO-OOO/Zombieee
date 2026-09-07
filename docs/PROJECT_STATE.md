@@ -140,6 +140,10 @@ build b7f1a8bb424624ceedb36b3d72266c36b4158a292467b4d2a441bc6d7b25fd72で両engi
 
 現在は工程1と2。次の開始点は制作候補を固定した新規開始からの全編確認。scripts/v100-final-normal-playthrough.mjsは実CAPS/育成/編成/支援/実時間/通常UIを使い、戦術判断のread-only戦闘観測を明示する。scenario/資源/actor/時計/結果のsetterは使用しない。HEAD/tree/全buildと操作driverのhashを記録し、途中敗北を自動再試行しない。旧探索は履歴として保持し、操作感/聴感の判断は別に行う。有限の残件は同一候補fresh全編、自然解禁他mode/音響/操作感、PWA・必要CI・最終read-only review、Producer最終承認、公開と公開後QA。17df850のremote CIはPhase G/PWA/敵6lane/Hosted/Stage3音声3laneが成功、viewport後段はまだ進行中。制作中の小刻みなpushで取消を繰り返さず、ローカル候補の確認を進めてからまとめて送信する。旧データ保全/公開承認境界/継続goalを維持する。
 
+固定build 62eea9357eba246ffa4b138fff20cada72435c88458fb672fd149d89d881ce1eの新規経路は第14作戦まで通常進行した。MOTHERは144.17秒/車両840/840/損耗0で突破。第3作戦から正確に分岐した獲得済みsaveの異常発生は再戦・報酬・再読込まで成立したが、サバイバル第3波は遠距離敵1体との長時間の膠着を検出し、射程/追撃制限/操作の切り分け中。未合格のまま保持する。CUAの独立新規saveでは初期4名の第1作戦を156秒/510HP/損耗4/星2で勝利し、105 CAPS/次作戦解禁のreload、844x340→縦向き案内→横画面復帰と一時停止/再開を観察（outputs/completion/manual-ui-587df0f.md）。この短い操作観察で全文/音質/実機の合格を主張しない。
+
+CIの準備重複を実測した。17df850のcanonical HUD job101824077167の成功例は全体206秒に対して撮影19秒で、6サイズ×8状態の48 jobsがmax-parallel1で同じcheckout/npm ci/build/WebKit installを反復していた。既存runCanonicalHudStatesの8状態aggregatorへ接続して1サイズ1jobとする。条件ごとの新Node/server/browser、1attempt、60000msの同一期限、全48条件、fail-closed、前段依存、macOS/固定runtime、artifact保持を維持する。22 contract/negative testsとWindows WebKit844x340で全8状態を各1回、同一build/diagnostics0で通過（outputs/v100-canonical-shared-preparation-844x340-r1）。製品コード/素材/セーブ/判定の変更はなく、macOSでの新版workflow自体はまだ未実行。旧CIは継続中であり、新候補の合格へ代用しない。
+
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
 ## 1. 現在の正式公開
