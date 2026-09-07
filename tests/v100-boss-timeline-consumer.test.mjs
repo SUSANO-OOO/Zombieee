@@ -99,3 +99,13 @@ test("Futago retains all four groups and both bodies but its final group cannot 
   assert.equal(g.eventIndex,4);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[3].units);
   assert.deepEqual(announced,["futago"]);advance();assert.equal(queued.length,1,"the complete final group is committed once without another timer");
 });
+
+test("the president uses the same prior-guard clearance boundary without removing Panther guards or changing the boss",()=>{
+  const definition=createBattleDefinition(V100_STAGES[24].id,{v100:true});
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
+  assert.deepEqual(definition.timeline.map(e=>e.units.length),[2,2,3,4]);
+  assert.deepEqual(definition.timeline.flatMap(e=>e.units).reduce((counts,kind)=>(counts[kind]=(counts[kind]??0)+1,counts),{}),
+    {"red-panther-knife":3,"red-panther-shield":3,"red-panther-smg":2,"red-panther-commander":2,"mugarian-president-mutated":1});
+  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,true]);
+  for(const number of [3,5,11,14,17,20,30])assert.ok(createBattleDefinition(V100_STAGES[number-1].id,{v100:true}).timeline.every(e=>!e.waitForPriorWaveClear));
+});

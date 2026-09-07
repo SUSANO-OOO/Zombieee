@@ -116,10 +116,10 @@ function stageTimeline(stage, missionType, bossKind) {
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
-      // The two full-strength bodies and their three guards form the final
-      // group. Keep every member, but let players clear the preceding heavy
-      // squad before this group arrives; no empty timed intermission is added.
-      ...(stage.number === 24 && bossArrives ? { waitForPriorWaveClear: true } : {}),
+      // The corporate boss group follows durable Panther security squads.
+      // Keep every member, but let players clear those preceding guards before
+      // the full-strength boss arrives; no empty timed intermission is added.
+      ...((stage.number === 24 || stage.number === 25) && bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
     });
   }));
