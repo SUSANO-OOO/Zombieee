@@ -1319,6 +1319,22 @@
       "sourcePath": "/pwa-optimized/art/v0995/enemies/spindle-battle-v2.webp"
     },
     {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "bytes": 811268,
+      "hash": "sha256-9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/bosses/futago-separated-b-battle-v1.webp",
+      "bytes": 968436,
+      "hash": "sha256-800b062ce9b8225d45fd82fba6e5310d8131b5ebc30fd1f53761d9bba02ed609",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/bosses/mugarian-president-mutated-battle-v1.png",
       "bytes": 2520288,
       "hash": "sha256-b0dc0ba553ad194bf2e2e0fa1a56e68c8df1b6ca6995512340ebad5d61fce75a",

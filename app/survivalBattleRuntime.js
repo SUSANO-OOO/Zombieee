@@ -94,7 +94,8 @@ export function captureUnfinishedSurvivalCombatStats(runtime, run, {
   const delta = combatStatsDelta(combatStats, currentRuntime.waveCombatStatsStart);
   const bossKills = Object.entries(delta.enemyDefeatsByKind)
     .filter(([kind]) => isBossEnemyKind(kind))
-    .reduce((total, [, count]) => total + count, 0);
+    .reduce((total, [kind, count]) => total + (currentRun.modePolicy === "v100" && kind === "futago"
+      ? Math.floor(count / 2) : count), 0);
   return recordSurvivalRunCombatStats(currentRun, {
     ...delta,
     kills: Math.max(
@@ -176,12 +177,19 @@ export function survivalWaveSpawnPlan(waveNumber, {
   strictBossPool = false,
 } = {}) {
   const descriptor = survivalWaveDescriptor(waveNumber);
+  const bossKind = selectSurvivalBossKind({
+    waveNumber: descriptor.waveNumber,
+    bossPool,
+    lastBossKind,
+    strictBossPool,
+  });
+  const bossBodies = descriptor.isBoss ? (strictBossPool && bossKind === "futago" ? 2 : 1) : 0;
   const unlockedKinds = Math.min(
     SURVIVAL_NORMAL_ENEMY_KINDS.length,
     2 + Math.floor((descriptor.waveNumber - 1) / 2),
   );
   const normalCount = Math.min(
-    MAX_SURVIVAL_SPAWNS_PER_WAVE - (descriptor.isBoss ? 1 : 0),
+    MAX_SURVIVAL_SPAWNS_PER_WAVE - bossBodies,
     4 + Math.floor(descriptor.waveNumber * 1.35),
   );
   const units = Array.from({ length: normalCount }, (_, index) => (
@@ -189,15 +197,9 @@ export function survivalWaveSpawnPlan(waveNumber, {
       (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * 7) % unlockedKinds
     ]
   ));
-  const bossKind = selectSurvivalBossKind({
-    waveNumber: descriptor.waveNumber,
-    bossPool,
-    lastBossKind,
-    strictBossPool,
-  });
   if (descriptor.isBoss) {
     if (!bossKind) throw new Error("A boss wave requires a discovered boss");
-    units.splice(Math.min(2, units.length), 0, bossKind);
+    units.splice(Math.min(2, units.length), 0, ...Array(bossBodies).fill(bossKind));
   }
   return deepFreeze({
     wave: descriptor.waveNumber,

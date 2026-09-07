@@ -4,7 +4,7 @@ import { requiredBattleAssetPlan } from "./battleAssetPlan.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
-import { SPRITE_STATES, spriteFrameFor, spriteSheetPath } from "./spriteManifest.js";
+import { SPRITE_STATES, SPRITE_COMBAT_KIND, spriteFrameFor, spriteSheetPath } from "./spriteManifest.js";
 import { deepFreeze } from "./content/freeze.js";
 
 function uniqueStrings(values) {
@@ -72,7 +72,7 @@ export function productionEnemyRuntimeContract() {
       stageId: source.stageId,
       enemyKinds: source.enemyKinds,
     });
-    const planKinds = plan.sprites.map(({ kind }) => kind);
+    const planKinds = uniqueStrings(plan.sprites.map(({ kind }) => SPRITE_COMBAT_KIND[kind] ?? kind));
     plannedKinds.push(...planKinds);
     return {
       ...source,
@@ -92,7 +92,9 @@ export function productionEnemyRuntimeContract() {
   const unreachableRegisteredKinds = registryKinds.filter((kind) => !plannedSet.has(kind));
   const bossKinds = uniqueStrings(BOSS_DEFINITIONS.map(({ enemyKind }) => enemyKind));
   const missingBossKinds = bossKinds.filter((kind) => !plannedSet.has(kind));
-  const spriteRequirements = requiredEnemyKinds.map(spriteRequirementFor);
+  const spriteRequirements = uniqueStrings([...requiredEnemyKinds,
+    ...Object.entries(SPRITE_COMBAT_KIND).filter(([, owner]) => plannedSet.has(owner)).map(([kind]) => kind),
+  ]).map(spriteRequirementFor);
 
   return deepFreeze({
     stageSources: stagePlans,

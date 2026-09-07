@@ -20,7 +20,11 @@ export const V100_MISSION_NODE_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/mission-objects/node-states-v1.webp",bytes:1126436,hash:"sha256-1a9b66050dbfefe685e02de8a0d80d18ae28bf28a5766780613283aa55520ffc"}),
   Object.freeze({path:"/art/v100/stages/s16-central-seal-clean-v1.webp",bytes:278536,hash:"sha256-7fed3511f9b3401993d5917a9c241c9733c594c3dcc70898c9e2b62f3e081985"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS]);
+export const V100_FUTAGO_BODY_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/bosses/futago-separated-a-battle-v1.webp",bytes:811268,hash:"sha256-9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368"}),
+  Object.freeze({path:"/art/v100/bosses/futago-separated-b-battle-v1.webp",bytes:968436,hash:"sha256-800b062ce9b8225d45fd82fba6e5310d8131b5ebc30fd1f53761d9bba02ed609"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

@@ -171,7 +171,7 @@ export function battleOutcomeFor(definition, state) {
   if (definition.missionConfig?.v100StageNumber === 29) {
     return researchCoreComplete(state.researchCoreTargets) && state.wavesResolved === true ? "won" : null;
   }
-  if (definition.missionConfig?.v100StageNumber === 30 && state.wavesResolved !== true) return null;
+  if ([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) && state.wavesResolved !== true) return null;
   if (definition.operationCategory === "outbreak") {
     if (state.bossDefeated !== true) return null;
     const livingEnemies = Array.isArray(state.fighters)

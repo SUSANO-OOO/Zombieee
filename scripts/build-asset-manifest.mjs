@@ -150,7 +150,7 @@ if (playableKinds.has("mayo-chan")) playableKinds.add("mayo-chan-feral");
 
 function categoryForKind(kind) {
   if (playableKinds.has(kind)) return "unit";
-  if (isBossEnemyKind(kind)) return "boss";
+  if (isBossEnemyKind(kind) || ["futago-separated-a", "futago-separated-b"].includes(kind)) return "boss";
   return "enemy";
 }
 

@@ -6,7 +6,7 @@ import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, s
 import { v100SurvivalBossPool } from "../app/v100Survival.js";
 import { beginV100Outbreak } from "../app/v100Transactions.js";
 import { createSurvivalRun, normalizeSurvivalRun, beginSurvivalWave, completeSurvivalWave, endSurvivalRun, normalizeSurvivalBossPool, SURVIVAL_END_REASONS } from "../app/survival.js";
-import { survivalWaveReward, selectSurvivalBossKind, survivalWaveSpawnPlan } from "../app/survivalBattleRuntime.js";
+import { survivalWaveReward, selectSurvivalBossKind, survivalWaveSpawnPlan, advanceSurvivalCombat, createSurvivalCombatRuntime, captureUnfinishedSurvivalCombatStats } from "../app/survivalBattleRuntime.js";
 
 const reload = save => deserializeV100Save(serializeV100Save(save)).save;
 function ready(boss = V100_BOSSES[0]) { const save = createDefaultV100Save(); save.campaignStarted = true; save.flowState.phase = "map"; save.receipts = [boss.firstDefeatReceipt]; save.formationSlots = Array(7).fill(save.ownedUnitIds[0]); return normalizeV100Save(save); }
@@ -22,6 +22,36 @@ function completeThrough(run, finalWave, hp = 540) {
   return current;
 }
 function choose(save) { const run = save.survival.active.run; return selectV100SurvivalUpgrade(save, run.runId, run.pendingUpgradeChoices[0]); }
+
+test("V1 survival queues both FUTAGO bodies and awards one boss checkpoint only after both die", () => {
+  const begun = beginV100Survival(ready(V100_BOSSES.find(b => b.id === "boss-futago")), { runId: "actual-twins" }).save;
+  const run = completeThrough(begun.survival.active.run, 4);
+  const queued = advanceSurvivalCombat(createSurvivalCombatRuntime(run), run, {
+    seconds: 2, crawlerHp: 540, livingHumanCount: 7, activeEnemyCount: 0, pendingSpawnCount: 0,
+  });
+  const plan = queued.events.find(event => event.type === "queue-wave").plan;
+  assert.equal(plan.bossKind, "futago");
+  assert.equal(plan.units.filter(kind => kind === "futago").length, 2);
+  const oneDead = { seconds: .1, crawlerHp: 540, livingHumanCount: 7, activeEnemyCount: 1,
+    pendingSpawnCount: 0, bossCombatReady: true, totalKills: 1, combatStats: { enemyDefeatsByKind: { futago: 1 } } };
+  const engaged = advanceSurvivalCombat(queued.runtime, queued.run, oneDead);
+  assert.equal(engaged.run.lastCompletedWave, 4);
+  assert.equal(engaged.events.some(event => event.type === "checkpoint"), false);
+  const withdrawal = captureUnfinishedSurvivalCombatStats(engaged.runtime, engaged.run, oneDead);
+  assert.equal(withdrawal.stats.bossKills, 0, "one defeated body is no defeated source boss");
+  const bothDead = { ...oneDead, activeEnemyCount: 0, totalKills: 2, combatStats: { enemyDefeatsByKind: { futago: 2 } } };
+  const cleanupWithdrawal = captureUnfinishedSurvivalCombatStats(engaged.runtime, engaged.run, bothDead);
+  assert.equal(cleanupWithdrawal.stats.bossKills, 1);
+  const cleared = advanceSurvivalCombat(engaged.runtime, engaged.run, bothDead);
+  assert.equal(cleared.run.stats.bossKills, 1);
+  assert.equal(cleared.run.stats.enemyDefeatsByKind.futago, 2, "physical defeat records retain both bodies");
+  const paid = checkpointV100Survival(begun, cleared.run);
+  assert.equal(paid.applied, true);
+  assert.equal(paid.save.survival.clearCounts["boss-futago"], 1);
+  assert.equal(checkpointV100Survival(paid.save, cleared.run).applied, false);
+  for (const wave of [5, 10, 1000]) assert.ok(survivalWaveSpawnPlan(wave, { bossPool: ["futago"], strictBossPool: true }).units.length <= 32);
+  assert.equal(survivalWaveSpawnPlan(5, { bossPool: ["futago", "takuya"] }).units.filter(kind => kind === "futago").length, 1);
+});
 
 test("V1 preserves the exact receipt pool and seven ordered duplicate slots; legacy semantics remain", () => {
   assert.deepEqual(normalizeSurvivalBossPool(["takuya"]), ["takuya", "gate-eater"]);

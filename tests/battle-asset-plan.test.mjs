@@ -87,7 +87,8 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
   });
   assert.ok(full.sprites.some(({ kind }) => kind === "red-panther-smg"));
   assert.ok(!legacy.sprites.some(({ kind }) => kind === "red-panther-smg"));
-  assert.equal(full.sprites.length - legacy.sprites.length, 6);
+  assert.deepEqual(full.sprites.filter(({ kind }) => !legacy.sprites.some(sprite => sprite.kind === kind)).map(({ kind }) => kind).sort(),
+    ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b"].sort());
   assert.equal(full.stageObjects.length, legacy.stageObjects.length);
   assert.equal(full.persistent.length, legacy.persistent.length);
 });

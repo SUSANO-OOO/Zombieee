@@ -21,7 +21,7 @@ test("all thirty production timelines use the frozen operation's enemies and bos
     const allowed = [...rows[stage.number-1], definition.bossEnemyKind].filter(Boolean);
     for (const event of definition.timeline) for (const kind of event.units) assert.ok(allowed.includes(kind), `Stage ${stage.number} wave ${event.wave}: unauthorized ${kind}`);
     assert.ok(definition.timeline.every((event,index) => index===0 || event.at > definition.timeline[index-1].at));
-    if (definition.bossEnemyKind) assert.equal(definition.timeline.flatMap(event=>event.units).filter(kind=>kind===definition.bossEnemyKind).length,1);
+    if (definition.bossEnemyKind) assert.equal(definition.timeline.flatMap(event=>event.units).filter(kind=>kind===definition.bossEnemyKind).length, stage.number === 24 ? 2 : 1);
   }
 });
 

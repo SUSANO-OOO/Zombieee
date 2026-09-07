@@ -205,6 +205,13 @@ import {
   bossFinalPhase,
   bossControlMultiplier,
   bossSlowMultiplier,
+  bossAbilityPressure,
+  registerV100Twin,
+  resolveV100TwinDefeat,
+  v100TwinSeparationSteps,
+  futagoEnraged,
+  bossRenderKind,
+  bossBattleHudSnapshot,
   bossTelegraphSnapshot,
   enforceBossBodyBarrier,
   isBossEnemyKind,
@@ -695,7 +702,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -785,6 +792,8 @@ function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y:
 type Fighter = {
   v100BossId?: string;
   v100TwinEnraged?: boolean;
+  v100TwinPart?: "a" | "b";
+  v100TwinPair?: number;
   id: number;
   side: "human" | "zombie";
   kind: string;
@@ -1110,6 +1119,8 @@ type ManualAbilityIconView = {
   available: boolean;
 };
 type Corpse = {
+  v100TwinPart?: "a" | "b";
+  v100TwinPair?: number;
   id: number;
   x: number;
   y: number;
@@ -1211,6 +1222,8 @@ type StationMetrics = {
 };
 
 type Game = {
+  v100TwinSpawnCount?: number;
+  v100TwinResolvedPairs?: number[];
   definition: BattleDefinition;
   resultId: string;
   formationKinds: UnitKind[];
@@ -1346,6 +1359,7 @@ type Hud = {
   bossMax: number;
   bossKind: string | null;
   bossPhase?: { phase: number; label: string };
+  bossTwins?: { part: string; hp: number; maxHp: number; arriving: boolean }[];
   bossWorldX: number | null;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
@@ -2705,7 +2719,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     stationAbility: createStationAbilityRuntime(kind),
     ...createUnitRoleRuntime(),
   });
-  return g.fighters[g.fighters.length - 1];
+  const spawned = g.fighters[g.fighters.length - 1];
+  registerV100Twin(g, spawned);
+  return spawned;
 }
 
 function equippedCardForGame(g: Game, kind: UnitKind) {
@@ -3994,7 +4010,7 @@ function drawSpriteFighter(
   } = options;
   const mayoFeral = f.kind === "mayo-chan"
     && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
-  const renderKind = mayoFeral ? "mayo-chan-feral" : f.kind;
+  const renderKind = mayoFeral ? "mayo-chan-feral" : bossRenderKind(f);
   const sprite = sprites[renderKind];
   if (!sprite?.complete || !sprite.naturalWidth) {
     if (fighterRenderAuditEnabled && recordAudit) {
@@ -5998,9 +6014,9 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
       ctx.stroke();
     }
   } else if (f.kind === "futago") {
-    const split = f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold;
+    const split = futagoEnraged(f, BOSS_ANOMALY_TUNING.futago.splitThreshold);
     const separation = split ? 31 : 18;
-    for (const direction of [-1, 1]) {
+    for (const direction of f.v100TwinPart ? [0] : [-1, 1]) {
       const centerX = f.x + direction * separation;
       const gradient = ctx.createRadialGradient(centerX, f.y - 54, 4, centerX, f.y - 46, 72);
       gradient.addColorStop(0, `rgba(255,198,184,${.45 * intensity})`);
@@ -6013,7 +6029,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     }
     ctx.strokeStyle = `rgba(246,171,158,${.48 * intensity})`;
     ctx.lineWidth = 2.5;
-    for (let filament = 0; filament < 7; filament += 1) {
+    for (let filament = 0; filament < (f.v100TwinPart ? 0 : 7); filament += 1) {
       const y = f.y - 82 + filament * 12;
       ctx.beginPath();
       ctx.moveTo(f.x - separation, y);
@@ -7913,10 +7929,11 @@ function drawWorld(
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
     ctx.save();
-    const sprite = sprites[corpse.kind];
+    const corpseRenderKind = bossRenderKind(corpse);
+    const sprite = sprites[corpseRenderKind];
     if (sprite?.complete && sprite.naturalWidth) {
-      const frame = spriteFrameFor(corpse.kind, "death", corpse.side === "human" ? "right" : "left");
-      const authoredSize = fitSpriteBattleDisplaySize(corpse.kind, frame, spriteDisplaySize(corpse.kind));
+      const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
+      const authoredSize = fitSpriteBattleDisplaySize(corpseRenderKind, frame, spriteDisplaySize(corpseRenderKind));
       const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
       const depthScale = activeBattlefieldDepthScale(corpse.y);
       const width = authoredSize.w * compactScale * depthScale;
@@ -7970,17 +7987,13 @@ function drawWorld(
         ctx.scale(1, allyCue.bodyScaleY);
       }
       if (frame.flipX) ctx.scale(-1, 1);
-      ctx.drawImage(
-        sprite,
-        frame.sourceRect.x,
-        frame.sourceRect.y,
-        frame.sourceRect.w,
-        frame.sourceRect.h,
-        -width * frame.anchorX,
-        -height * frame.anchorY,
-        width,
-        height,
-      );
+      for (const slice of frame.drawSlices ?? [{ x: 0, y: 0, w: frame.w, h: frame.h }]) {
+        ctx.drawImage(sprite,
+          frame.x + slice.x, frame.y + slice.y, slice.w, slice.h,
+          -width * frame.anchorX + width * slice.x / frame.w,
+          -height * frame.anchorY + height * slice.y / frame.h,
+          width * slice.w / frame.w, height * slice.h / frame.h);
+      }
       ctx.filter = "none";
     } else {
       ctx.globalAlpha = corpse.state === "ashing" || corpse.state === "ash" ? Math.min(.55, corpse.life / 2) : .65;
@@ -12745,6 +12758,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             side: fighter.side,
             kind: fighter.kind,
             aiProfile: fighter.aiProfile,
+            v100BossId: fighter.v100BossId,
+            v100TwinPart: fighter.v100TwinPart,
+            v100TwinPair: fighter.v100TwinPair,
+            v100TwinEnraged: fighter.v100TwinEnraged,
+            renderKind: bossRenderKind(fighter),
             lane: fighter.lane,
             x: fighter.x,
             y: fighter.y,
@@ -15536,9 +15554,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       prepareStationQa(fresh, retrying ? "start" : qaScenario.state);
     }
     gameRef.current = fresh;
-    const bossHud = fresh.fighters
-      .map((fighter) => bossHudSnapshot(fighter))
-      .find((snapshot) => snapshot !== null);
+    const bossHud = bossBattleHudSnapshot(fresh);
     desiredMusicModeRef.current = "normal";
     finalizedEndRef.current = null;
     setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setScreen("battle"); chooseAction(null);
@@ -15553,7 +15569,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
       deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase, airstrikeCooldownRemaining: fresh.airstrike.cooldownRemaining ?? 0,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
-      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossWorldX: bossHud?.worldX ?? null,
+      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, banner: fresh.bannerTime > 0 ? fresh.banner : null, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
@@ -18949,7 +18965,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
         } else {
           while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
-            const mission = g.definition.timeline[g.eventIndex++] as MissionEvent;
+            const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            if (Number.isFinite(mission.bossHpRatio)) {
+              const owner = g.fighters.find(fighter => fighter.kind === g.definition.bossEnemyKind);
+              if (!g.bossDefeated && !g.bossDefeatPending
+                && (!owner || owner.hp / Math.max(1, owner.maxHp) > Number(mission.bossHpRatio))) break;
+            }
+            g.eventIndex += 1;
             const bossAlive = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind) && fighter.hp > 0);
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
@@ -19450,7 +19472,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             Object.assign(f, advanceBleedDamage(f, dt));
             if (f.hp <= 0) continue;
           }
-          f.abilityCooldown = Math.max(0, f.abilityCooldown - dt);
+          f.abilityCooldown = Math.max(0, f.abilityCooldown - dt * bossAbilityPressure(f));
           if (f.contained) {
             f.targetId = null;
             f.targetObjectId = null;
@@ -19915,7 +19937,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 });
               }
               if (step.events.includes("complete")) {
-                f.abilityCooldown = BOSS_ANOMALY_TUNING.mother.cooldownSeconds;
+                f.abilityCooldown = f.v100BossId === "boss-mother"
+                  ? BOSS_ANOMALY_TUNING.mother.v100RecoverySeconds
+                  : BOSS_ANOMALY_TUNING.mother.cooldownSeconds;
               }
               continue;
             }
@@ -20047,7 +20071,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     const impactLabel = anomalyKind === "gairen"
                       ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
                       : anomalyKind === "futago"
-                        ? `融合交差撃 -${Math.round(resolved.targetDamage)}`
+                        ? `${f.v100TwinPart ? "交差斬撃" : "融合交差撃"} -${Math.round(resolved.targetDamage)}`
                         : anomalyKind === "mugarian-president-mutated"
                           ? `四腕制圧 -${Math.round(resolved.targetDamage)}`
                           : `Ω大剣薙ぎ払い -${Math.round(resolved.targetDamage)}`;
@@ -20063,9 +20087,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   g.banner = anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討・中枢露出"
                     : anomalyKind === "futago"
-                      ? f.stationAbility.split
-                        ? "フタゴ // 裂開・融合交差撃"
-                        : "フタゴ // 融合交差撃"
+                      ? f.v100TwinPart
+                        ? f.stationAbility.split ? "フタゴ // 残存個体・激昂斬撃" : "フタゴ // 双体・交差斬撃"
+                        : f.stationAbility.split ? "フタゴ // 裂開・融合交差撃" : "フタゴ // 融合交差撃"
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧"
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い";
@@ -20093,7 +20117,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
               if (step.events.includes("complete")) {
                 const splitSpeed = anomalyKind === "futago"
-                  && f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold
+                  && futagoEnraged(f, BOSS_ANOMALY_TUNING.futago.splitThreshold)
                   ? BOSS_ANOMALY_TUNING.futago.splitSpeedMultiplier
                   : 1;
                 f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
@@ -22052,6 +22076,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
         }
 
+        for (const position of v100TwinSeparationSteps(g, dt)) {
+          const fighter = g.fighters.find(candidate => candidate.id === position.id);
+          if (!fighter) continue;
+          const separated = clampToWalkable(movementStageGeometry, { ...position,
+            bodyRadius: Math.max(fighter.bodyRadius, enemyRenderedVisualHalfWidth(fighter.kind)) });
+          const delta = separated.x - fighter.x;
+          fighter.x = separated.x; fighter.y = separated.y;
+          actualXDeltaByFighterId.set(fighter.id, (actualXDeltaByFighterId.get(fighter.id) ?? 0) + delta);
+          if (fighterRenderAuditEnabled) fighterActualXDeltaAudit.set(fighter.id, actualXDeltaByFighterId.get(fighter.id) ?? 0);
+        }
         const stageGeometry = movementStageGeometry;
         for (const fighter of g.fighters) {
           if (!fighter.combatReady || fighter.hp <= 0) continue;
@@ -22263,6 +22297,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             side: fighter.side,
             kind: fighter.kind,
             life: fighter.side === "human" ? 14 : 10,
+            v100TwinPart: fighter.v100TwinPart,
+            v100TwinPair: fighter.v100TwinPair,
             variant: fighter.variant,
             prevented: false,
           } as Corpse);
@@ -22280,8 +22316,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             );
             const isOutbreakBoss = g.definition.operationCategory === "outbreak"
               && fighter.kind === g.definition.bossEnemyKind;
-            if (isOutbreakBoss
-              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase)) {
+            const twinDefeat = resolveV100TwinDefeat(g, fighter);
+            if (twinDefeat.enragedIds.length) {
+              g.banner = "フタゴ // 片側撃破・残存個体が激昂";
+              g.bannerTime = 3.4;
+              g.flashOverlay = Math.max(g.flashOverlay, .16);
+            }
+            if (twinDefeat.complete && (isOutbreakBoss
+              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {
               g.bossDefeatPending = true;
               if (!isOutbreakBoss) g.barricadeVulnerable = true;
               const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
@@ -22675,9 +22717,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       performanceCounters.renderFrames += 1;
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        const bossHud = g.fighters
-          .map((fighter) => bossHudSnapshot(fighter))
-          .find((snapshot) => snapshot !== null);
+        const bossHud = bossBattleHudSnapshot(g);
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
@@ -22751,7 +22791,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           deployQueue: g.deployQueue.length,
           summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossWorldX: bossHud?.worldX ?? null,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
@@ -23041,7 +23081,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
-        {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
+        {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div>{hud.bossTwins ? <div className="boss-twin-hp">{hud.bossTwins.map(twin => <span key={twin.part} data-twin-part={twin.part}><small>個体{twin.part.toUpperCase()} {twin.arriving ? "接近中" : `${Math.ceil(twin.hp)}/${twin.maxHp}`}</small><i><em style={{width:`${twin.hp/twin.maxHp*100}%`}} /></i></span>)}</div> : <i><em style={{ width: `${bossPct}%` }} /></i>}</div>}
 
         <div className="bottom-hud">
           <div className="resource-stack">

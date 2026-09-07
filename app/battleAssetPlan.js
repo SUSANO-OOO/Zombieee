@@ -52,6 +52,9 @@ export function requiredBattleAssetPlan({
   const requiredKinds = includeAllSprites
     ? [...(includeV100Sprites ? spriteKinds : legacySpriteKinds)]
     : unique([...formationKinds, ...enemyKinds, "turned"]);
+  if (includeV100Sprites && requiredKinds.includes("futago")) {
+    for (const part of ["a", "b"]) if (!requiredKinds.includes(`futago-separated-${part}`)) requiredKinds.push(`futago-separated-${part}`);
+  }
   const manifestObjects = STAGE_OBJECT_MANIFEST[stageId]?.objects ?? [];
   const v100MissionObjectEntries = v100RuntimeStage
     ? Object.entries(V100_RUNTIME_ASSET_MANIFEST.missionObjects)

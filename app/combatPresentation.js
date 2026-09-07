@@ -661,6 +661,8 @@ const PRESENTATION_KINDS = Object.freeze([
   "ooguchi",
   "gairen",
   "futago",
+  "futago-separated-a",
+  "futago-separated-b",
   "resonator",
   "cagewalker",
   "spindle",
@@ -694,6 +696,8 @@ const BODY_SCALE_BY_KIND = Object.freeze({
   ooguchi: 1.89,
   gairen: 2.45,
   futago: 2.36,
+  "futago-separated-a": 2.36,
+  "futago-separated-b": 2.36,
   "mayo-chan": .82,
   "mayo-chan-feral": .82,
 });

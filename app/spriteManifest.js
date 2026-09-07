@@ -1,6 +1,7 @@
 import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
+import { V100_FUTAGO_SPRITE_GEOMETRY } from "./v100FutagoSpriteGeometry.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -60,6 +61,8 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   ooguchi: Object.freeze({ w: 218, h: 148 }),
   gairen: Object.freeze({ w: 184, h: 176 }),
   futago: Object.freeze({ w: 164, h: 178 }),
+  "futago-separated-a": Object.freeze({ w: 160, h: 56 }),
+  "futago-separated-b": Object.freeze({ w: 160, h: 56 }),
   resonator: Object.freeze({ w: 70, h: 106 }),
   cagewalker: Object.freeze({ w: 112, h: 92 }),
   spindle: Object.freeze({ w: 118, h: 68 }),
@@ -302,12 +305,13 @@ function frameRecord({
   authoredCell,
   drawSlices,
   anchorX = 0.5,
+  groundAnchorPixels,
 }) {
   const [left, top, right, bottom] = visible;
   // Anchor the sprite on the measured bottom-most authored pixel.  Legacy
   // sheets intentionally keep a large transparent strip below the feet, so a
   // fixed near-1.0 anchor would make those characters float above the lane.
-  const anchorY = bottom / source.h;
+  const anchorY = (groundAnchorPixels ?? bottom) / source.h;
   const contentRect = Object.freeze({
     x: source.x + left,
     y: source.y + top,
@@ -333,6 +337,7 @@ function frameRecord({
     gutter,
     anchorX,
     anchorY,
+    ...(groundAnchorPixels !== undefined ? { groundAnchorPixels } : {}),
     anchor: Object.freeze({ x: anchorX, y: anchorY }),
     flipX: nativeDirection !== direction,
     ...(drawSlices ? {
@@ -410,6 +415,26 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
     directions: SPRITE_DIRECTIONS,
     frames: Object.freeze(frames),
   });
+}
+
+function futagoSeparatedManifestEntry(part) {
+  const atlas = V100_FUTAGO_SPRITE_GEOMETRY[part], frames = {};
+  for (const [index, state] of SPRITE_STATES.entries()) {
+    frames[state] = {};
+    for (const direction of SPRITE_DIRECTIONS) {
+      const measured = atlas.frames[direction][index];
+      frames[state][direction] = frameRecord({
+        path: atlas.path, sheetWidth: atlas.width, sheetHeight: atlas.height,
+        ...measured, nativeDirection: direction, direction,
+        authoredCell: { x: 0, y: 0, w: atlas.referenceWidth, h: atlas.referenceHeight },
+      });
+    }
+    Object.freeze(frames[state]);
+  }
+  return Object.freeze({ path: atlas.path, sheet: Object.freeze({ width: atlas.width, height: atlas.height,
+    layout: "seven-authored-poses-by-two-explicit-directions" }), battleScale: 1,
+    battleContentHeight: null, nativeDirection: "explicit-both", states: SPRITE_STATES,
+    directions: SPRITE_DIRECTIONS, frames: Object.freeze(frames) });
 }
 
 function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } = {}) {
@@ -590,6 +615,8 @@ export const SPRITE_MANIFEST = Object.freeze({
   ooguchi: explicitAtlasManifestEntry("ooguchi", "/art/v090/bosses/ooguchi-battle-r1.png"),
   gairen: explicitAtlasManifestEntry("gairen", "/art/v090/bosses/gairen-battle-r1.png"),
   futago: explicitAtlasManifestEntry("futago", "/art/v090/bosses/futago-battle-r1.png"),
+  "futago-separated-a": futagoSeparatedManifestEntry("a"),
+  "futago-separated-b": futagoSeparatedManifestEntry("b"),
   resonator: explicitAtlasManifestEntry("resonator", "/art/v0995/enemies/resonator-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.resonator.sourceFacing }),
   cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v0995/enemies/cagewalker-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.cagewalker.sourceFacing }),
   spindle: explicitAtlasManifestEntry("spindle", "/art/v0995/enemies/spindle-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.spindle.sourceFacing }),
@@ -736,6 +763,8 @@ export function v100SpriteFrameFor(kind, state, direction = "right") {
 
 /** Stable ordered list for the localhost all-frame QA gallery. */
 export const spriteKinds = Object.freeze(Object.keys(SPRITE_MANIFEST));
+// Atlas parts share the same combat identity, AI, discovery and reward owner.
+export const SPRITE_COMBAT_KIND = Object.freeze({ "futago-separated-a": "futago", "futago-separated-b": "futago" });
 /** Legacy campaign sprite set used by the Version 0.9.9.5 local QA plan. */
 export const legacySpriteKinds = Object.freeze(
   spriteKinds.filter((kind) => !SPRITE_MANIFEST[kind].path.startsWith("/art/v100/")),

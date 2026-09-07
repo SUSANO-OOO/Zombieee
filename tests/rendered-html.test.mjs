@@ -1740,7 +1740,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.cooldown-mask small \{[^}]*font:800 clamp\(5px,.48vw,7px\)\/1 monospace;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = hud\.bossPhase \?\? bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
-  assert.match(game, /bossHudSnapshot\(fighter\)/);
+  assert.match(game, /bossBattleHudSnapshot\(g\)/);
   assert.match(game, /enforceBossBodyBarrier\(\{[\s\S]*mover: f,[\s\S]*previousX: movementStartX,[\s\S]*\}\)/);
   assert.match(game, /announceBossEntrance\(g, event\.bossKind\)/);
   assert.match(game, /mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\)/);
@@ -1947,7 +1947,8 @@ test("integrates attack identity, corpse phases, infection, cremation, and gener
   assert.doesNotMatch(game, /INFECTION CREMATED|SURVIVOR TURNED|感染\s*\d/);
   const corpseDraw = game.slice(game.indexOf("for (const corpse of g.corpses)"), game.indexOf("const renderables = ["));
   assert.match(corpseDraw, /allyCorpseVisualCue\(corpse, g\.time\)/);
-  assert.match(corpseDraw, /fitSpriteBattleDisplaySize\(corpse\.kind, frame, spriteDisplaySize\(corpse\.kind\)\)/);
+  assert.match(corpseDraw, /const corpseRenderKind = bossRenderKind\(corpse\)/);
+  assert.match(corpseDraw, /fitSpriteBattleDisplaySize\(corpseRenderKind, frame, spriteDisplaySize\(corpseRenderKind\)\)/);
   assert.match(corpseDraw, /const authoredDeathPose = frame\.derivedFrom !== "hit"/);
   assert.match(corpseDraw, /const fallAngle = authoredDeathPose \? 0/);
   assert.match(corpseDraw, /eyeGlint[\s\S]*smokePuffs[\s\S]*flameTongues[\s\S]*corpse\.state === "ash"/);

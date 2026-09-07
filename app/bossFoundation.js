@@ -557,6 +557,89 @@ export function bossSlowMultiplier(fighter, speedMultiplier) {
   return 1 - (1 - speedMultiplier) * bossControlMultiplier(fighter);
 }
 
+// HP phases increase special-attack pressure without shortening their telegraph.
+// The locked normal-attack cadence remains the baseline for each boss.
+export function bossAbilityPressure(fighter) {
+  if (!V100_BOSS_BY_ID[fighter?.v100BossId]) return 1;
+  return 1 + .12 * (bossPhaseForHp(fighter.hp, fighter.maxHp, fighter.kind, fighter).phase - 1);
+}
+
+// A V1 FUTAGO encounter owns two independent bodies. Keep their part IDs on
+// corpses as well so a death never turns back into the old fused-pair image.
+export function registerV100Twin(game, fighter) {
+  if (fighter.v100BossId !== "boss-futago") return;
+  const ordinal = game.v100TwinSpawnCount ?? 0;
+  fighter.v100TwinPair = Math.floor(ordinal / 2);
+  fighter.v100TwinPart = ordinal % 2 === 0 ? "a" : "b";
+  fighter.v100TwinEnraged = ordinal % 2 === 1 && !game.fighters.some(other =>
+    other.id !== fighter.id && other.v100TwinPair === fighter.v100TwinPair && other.hp > 0);
+  game.v100TwinSpawnCount = ordinal + 1;
+}
+
+export function resolveV100TwinDefeat(game, fighter) {
+  if (!fighter.v100TwinPart) return { complete: true, enragedIds: [] };
+  const survivors = game.fighters.filter(other => other.id !== fighter.id
+    && other.v100TwinPair === fighter.v100TwinPair && other.v100TwinPart && other.hp > 0);
+  const enragedIds = [];
+  for (const survivor of survivors) {
+    if (!survivor.v100TwinEnraged) enragedIds.push(survivor.id);
+    survivor.v100TwinEnraged = true;
+    // An already telegraphed strike keeps its target and complete warning.
+    if (survivor.stationAbility) survivor.stationAbility = { ...survivor.stationAbility, split: true };
+  }
+  const complete = survivors.length === 0
+    && game.v100TwinSpawnCount >= (fighter.v100TwinPair + 1) * 2
+    && !(game.v100TwinResolvedPairs ?? []).includes(fighter.v100TwinPair);
+  if (complete) (game.v100TwinResolvedPairs ??= []).push(fighter.v100TwinPair);
+  return { complete, enragedIds };
+}
+
+export function futagoEnraged(fighter, legacyThreshold = .62) {
+  return fighter?.v100BossId === "boss-futago" ? Boolean(fighter.v100TwinEnraged)
+    : Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= legacyThreshold;
+}
+
+// Run outside individual ability branches: their committed attack frames can
+// intentionally skip ordinary movement, but the two physical bodies must not
+// occupy one footprint for an entire warning/impact/recovery cycle.
+export function v100TwinSeparationSteps(game, seconds) {
+  const pairs = new Map();
+  for (const fighter of game.fighters) {
+    if (!fighter.v100TwinPart || fighter.hp <= 0 || !fighter.combatReady || fighter.gateEntering) continue;
+    const pair = pairs.get(fighter.v100TwinPair) ?? [];
+    pair.push(fighter); pairs.set(fighter.v100TwinPair, pair);
+  }
+  const steps = [];
+  for (const pair of pairs.values()) {
+    if (pair.length !== 2) continue;
+    const [front, rear] = pair.sort((a, b) => a.x - b.x || a.v100TwinPart.localeCompare(b.v100TwinPart));
+    const distance = Math.max(92, front.bodyRadius + rear.bodyRadius + 14);
+    const horizontalGap = Math.sqrt(Math.max(0, distance ** 2 - (front.y - rear.y) ** 2));
+    const step = Math.min(Math.max(0, horizontalGap - (rear.x - front.x)) / 2, 48 * Math.max(0, seconds));
+    if (step > 0) steps.push({ id: front.id, x: front.x - step, y: front.y }, { id: rear.id, x: rear.x + step, y: rear.y });
+  }
+  return steps;
+}
+
+export function bossRenderKind(fighter) {
+  return fighter?.kind === "futago" && ["a", "b"].includes(fighter.v100TwinPart)
+    ? `futago-separated-${fighter.v100TwinPart}` : fighter.kind;
+}
+
+export function bossBattleHudSnapshot(game) {
+  const first = game.fighters.find(fighter => bossHudSnapshot(fighter));
+  if (!first) return null;
+  const hud = bossHudSnapshot(first);
+  if (!first.v100TwinPart) return hud;
+  const members = ["a", "b"].map((part, index) => {
+    const actor = game.fighters.find(other => other.v100TwinPair === first.v100TwinPair && other.v100TwinPart === part);
+    const arriving = (game.v100TwinSpawnCount ?? 0) <= first.v100TwinPair * 2 + index;
+    return { part, hp: actor ? Math.max(0, actor.hp) : arriving ? 3000 : 0, maxHp: 3000, arriving };
+  });
+  const hp = members.reduce((sum, member) => sum + member.hp, 0);
+  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members });
+}
+
 export function bossHudSnapshot(fighter) {
   const definition = bossDefinitionForEnemyKind(fighter?.kind);
   if (!definition

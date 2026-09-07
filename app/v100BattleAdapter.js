@@ -82,6 +82,17 @@ function bossKindForStage(stage) {
 function stageTimeline(stage, missionType, bossKind) {
   const pack = packFor(stage);
   const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (stage.number === 3) {
+    const thresholds = V100_BOSS_BY_ID["boss-takuya"].phaseThresholds;
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
+      freeze({ at: PREP_SECONDS + 1, wave: 2, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 2, wave: 3, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination"]), bossHpRatio: thresholds[1], addWave: true }),
+    ]);
+  }
+  if (stage.number === 5) return freeze([
+    freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "walker", "ooze", "sprinter"]) }),
+  ]);
   if (stage.number === 30) {
     // The boss is the battle's opening threat. Exactly two later A-only
     // reinforcements belong to this operation; no Panther survives its prelude.
@@ -99,7 +110,7 @@ function stageTimeline(stage, missionType, bossKind) {
     const wave = index + 1;
     const units = Array.from({length: count}, () => pack[cursor++ % pack.length]);
     const bossArrives = bossKind && wave === counts.length;
-    if (bossArrives) units.push(bossKind);
+    if (bossArrives) units.push(...(bossKind === "futago" ? [bossKind, bossKind] : [bossKind]));
     return freeze({
       at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : missionType === "escort" ? 20 : 24),
       wave,
