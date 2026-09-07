@@ -23,6 +23,11 @@
 - 通常pushでPR171へ送信し、各commit/tree/parent・変更blobをGitHubから独立readbackした。a60c20bのCIは生成記録末尾の空行でPR全差分の`git diff --check`が失敗したため、1514610でその1行を修正。ローカルもPR base全差分で成功を確認した。取消済み候補のdeployment jobが`always()`で新規起動を続け後続候補を塞ぐ事実も確認し、旧run34086278774をforce-cancelした。新しい設定は`!cancelled()`とし、failure時の診断・全viewport・deadline・macOS環境・既存required lanesを維持して取消だけ尊重する。
 - PWA：公開中0.9.9.5のmanifestと旧static rootを照合し、415 assetsの配信bytes/hashを全検証した。候補1514610のstatic buildでChromiumの既存インストール→V1更新/再起動/offline/rollback/旧save保持/記念CAPS一回性は18/18成功（`outputs/v100-pwa-existing-1514610-chromium-r1`）。部分ダウンロード失敗、close/relaunch、実時間30秒超の停止/継続転送、共有音声bundle一回取得、復旧/rollbackも21/21成功（`outputs/v100-pwa-partial-1514610-chromium-r1`）。Windows WebKitは旧版installのcache保存で失敗。ゲームコードを一切含まない最小probeでもCacheStorage.put直後のmatchがnull、keysが空となり、Chromiumでは同じprobeが永続化・window/worker共有を成功した（`outputs/completion/cache-sharing-probe.json`）。Windows結果をPWA合格へ代用しない。同一候補のmacOS WebKitで既存更新と部分失敗復旧を実行するCI工程を追加し、その結果で合否を判定する。
 
+- 本編の通常探索でStage9が全電源起動後に、登場しない改札喰い/研究容器を要求して進行不能となった。実adapterとstation runtimeで同じ失敗を再現し、V1のStage9/15/16/28だけを非containment作戦として指定した。電源順序、wave解決、帰還、旧版の実ボス/容器条件は維持し、偽のboss撃破flagは立てない。Stage28の4基目が描画されず分母も3固定だったため、実際のmission node定義から4基と進捗を描くよう修正した。新規通常saveでStage9を135秒・全員帰還・結果保存→Stage10へ進行できた。
+- 護送Stage6/12/19/26は、正本の短縮方針に従って通常走行135→105秒、目的地776→720、wave間隔24→20秒を一体で調整。4 waves/敵数・敵種・車両耐久・妨害/修理条件は保持する。Stage6の旧157秒結果は調整後の合格に代用せず、影響4作戦を実プレイで再確認する。
+- このmission修正のproduction buildはfullDist SHA256 `ee0217e1bf0b72867815dd3653de7713eeac74274dc2e5d26a68dcfe5d3ca494`。全1446 source tests、lint0 errors/12既存warningsが成功。実rendererで4基を描く試験と、実adapter/spatial/station runtimeで4作戦を完了する試験を追加した。継続プレイは `outputs/v100-normal-campaign-station-fixed-r1`。以前のbuildから正確なsaveを引き継ぐ探索として区別し、最終候補の新規名前入力から全30作戦の通し受入は別に実行する。d956238のCIは先行buildの診断であり、この変更の候補受入へ代用しない。
+- 他modeの残件：`outputs/v100-outbreak-d956238-r1` のChromium3ケースとWebKit desktopはmode/storage・音声無効fixture成功。WebKit844x390は実際に敗北し、勝利報酬検証は未合格。近接へ偏った旧fixtureの21/24損耗と7枠上限を踏まえ、前衛・遠距離・回復を含む明示fixtureで勝利時保存を再検証する。旧失敗は保持する。サバイバル、実音響、自然なmode進行は別途確認が必要。
+
 ### 有限の残工程と完了判定
 
 1. **内容・体験を完成**：台本hashを保持し、PROLOGUE、30作戦、ENDING、11場面のエンドロール、EPILOGUEを接続。通常の新規開始から通しプレイし、代表的な章boss/最終bossとCAPS・育成・配備・支援・車両・他modeを確認する。背景・人物・動作・音響の意味不一致と明白な操作不備を解消する。

@@ -22,11 +22,25 @@ if (resumeDir) {
   const storageBytes = await readFile(path.join(resumeDir,"browser-storage.json"));
   const previous = JSON.parse(previousBytes);
   assert.equal(previous.origin, origin.href, "Resume the same isolated origin");
-  assert.deepEqual(previous.build, report.build, "A different product build needs a separately identified continuation");
+  if (previous.build.combinedSha256 !== report.build.combinedSha256) {
+    const notePath = process.env.V100_NORMAL_PLAY_EXPLORATORY_CHANGE_NOTE;
+    assert.ok(notePath, "A different product build needs a separately identified exploratory continuation");
+    const noteBytes = await readFile(notePath), note = JSON.parse(noteBytes);
+    assert.equal(note.previousBuildSha256, previous.build.combinedSha256);
+    assert.equal(note.currentBuildSha256, report.build.combinedSha256);
+    assert.ok(note.reason?.length > 0 && note.affectedStageNumbers?.length > 0);
+    report.exploratoryContinuation = { ...note, path: notePath, sha256: createHash("sha256").update(noteBytes).digest("hex") };
+  } else {
+    assert.deepEqual(previous.build, report.build);
+    report.exploratoryContinuation = previous.exploratoryContinuation ?? null;
+  }
   assert.deepEqual(previous.errors, [], "Do not resume unclassified browser diagnostics");
   restoredStorage = JSON.parse(storageBytes);
   report.resumeFrom = { path:resumeDir, reportSha256:createHash("sha256").update(previousBytes).digest("hex"), storageSha256:createHash("sha256").update(storageBytes).digest("hex"), previousStatus:previous.status, previousError:previous.error };
   report.stages = previous.stages; report.events = previous.events; report.transactions = previous.transactions;
+  report.inheritedUnfinishedRecords = previous.stages.flatMap((stage, index) => stage.status === "running"
+    ? [{ index, number: stage.number, status: "unfinished in an earlier segment; not a victory", sourceReport: report.resumeFrom.reportSha256 }] : []);
+  if (report.exploratoryContinuation) report.evidenceKind = "exploratory normal UI route across identified builds; not final-candidate whole-campaign acceptance";
 }
 const browser = await chromium.launch({headless:true});
 const context = await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,...(restoredStorage ? {storageState:restoredStorage} : {})});
@@ -198,6 +212,9 @@ try {
    assert.equal(restored.caps, previous.finalSave.caps);
    assert.deepEqual(restored.receipts, previous.finalSave.receipts);
    assert.deepEqual(restored.pendingResult, previous.finalSave.pendingResult);
+   for (const key of ["ownedUnitIds", "registeredUnitIds", "unitLevels", "formationSlots", "equipment", "vehicle", "completedStageIds", "availableStageIds"]) {
+     assert.deepEqual(restored[key], previous.finalSave[key], `Resume preserves ${key}`);
+   }
    report.restoredSave = restored;
    if (report.stages.at(-1)?.status === "running" && await phaseAt() === "formation") {
      report.stages.at(-1).status = "interrupted-driver";
@@ -212,7 +229,7 @@ try {
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
     await context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true});
-    if(save.readStoryEventIds.includes("v100:event:epilogue")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status="passed";break;}
+    if(save.readStoryEventIds.includes("v100:event:epilogue")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
     const stage=V100_STAGES.find(stage=>save.availableStageIds.includes(stage.id)&&!save.completedStageIds.includes(stage.id));assert.ok(stage,"No next unfinished stage");
     if(preparedStage!==stage.number){await prepareEconomy(stage.number);preparedStage=stage.number;}
     await uiClick(button("この作戦を編成"));
@@ -231,7 +248,7 @@ try {
     await uiClick(page.locator(".v100-event-actions .v100-primary"));
   } else throw new Error(`Unexpected phase ${phase}`);
  }
- if(report.status!=="passed")throw new Error("Normal route did not reach completed epilogue within its finite event count");
+ if(!["passed", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach completed epilogue within its finite event count");
 } catch(error) {report.status="failed";report.error=String(error);await page.screenshot({path:path.join(out,"failure.png")}).catch(()=>{});process.exitCode=1;}
 finally {
   try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);process.exitCode=1; }

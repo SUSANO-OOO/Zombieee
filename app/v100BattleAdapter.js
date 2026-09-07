@@ -96,11 +96,11 @@ function phaseScheduleFor(stage, missionType, objective) {
   }
   if (missionType === "escort") {
     return {
-      durationSeconds: 135,
+      durationSeconds: 105,
       phases: freeze([
         freeze({ at: PREP_SECONDS, phase: 1, label: "護送対象を発進", objective }),
-        freeze({ at: PREP_SECONDS + 55, phase: 2, label: "護送経路を確保", objective }),
-        freeze({ at: PREP_SECONDS + 105, phase: 3, label: "出口まで護送", objective }),
+        freeze({ at: PREP_SECONDS + 42, phase: 2, label: "護送経路を確保", objective }),
+        freeze({ at: PREP_SECONDS + 78, phase: 3, label: "出口まで護送", objective }),
       ]),
     };
   }
@@ -140,7 +140,7 @@ export function v100BattleDefinitionFor(stageId) {
     const wave = index + 1;
     const units = waveUnits(pack, wave, bossKind);
     return freeze({
-      at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : 24),
+      at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : missionType === "escort" ? 20 : 24),
       wave,
       label: wave === 4 && bossKind
         ? `警告 // ${V100_BOSS_BY_ID[stage.firstClearPayload.find((value) => value.startsWith("boss-"))]?.displayName ?? bossKind}`
@@ -151,9 +151,9 @@ export function v100BattleDefinitionFor(stageId) {
   });
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
-    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: 258, endX: 776 }
+    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: 258, endX: 720 }
     : missionType === "sequential-seal"
-      ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3 }
+      ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3, requiresContainment: false }
       : {};
   return freeze({
     stageId,

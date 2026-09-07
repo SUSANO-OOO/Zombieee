@@ -517,6 +517,7 @@ import {
   advanceStationMissionRuntime,
   createStationMissionRuntime,
   currentPowerNode,
+  stationPowerNodes,
   escortCartX,
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
@@ -652,6 +653,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
       duty: "objective",
     };
   }
+  if (g.definition.missionConfig.requiresContainment === false) return null;
   const gateEater = g.fighters.find((candidate) => candidate.kind === "gate-eater"
     && candidate.hp > 0
     && candidate.contained !== true);
@@ -1729,6 +1731,7 @@ const initialGame = (
   areaEffects: [],
   stationHazards: [],
   researchContainer: definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+    && definition.missionConfig.requiresContainment !== false
     ? createResearchContainerRuntime(definition.missionConfig) as ResearchContainerRuntime
     : null,
   stageMission: createStationMissionRuntime(definition.missionType, definition.missionConfig) as StageMissionRuntime,
@@ -5473,19 +5476,12 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const activated = g.stageMission.powerActivated ?? 0;
-    const configuredPanelXs = g.definition.missionConfig.powerXs;
-    const panelXs = Array.isArray(configuredPanelXs) && configuredPanelXs.length === 3
-      ? configuredPanelXs.map((value, index) => Number(value) || [410, 584, 744][index])
-      : [410, 584, 744];
-    const configuredYs = g.definition.missionConfig.powerYs;
-    const panelYs = Array.isArray(configuredYs) && configuredYs.length === 3
-      ? configuredYs.map((value, index) => activeYForContentY(Number(value) || [212, 352, 282][index]))
-      : [212, 352, 282].map(activeYForContentY);
-    for (let index = 0; index < 3; index++) {
+    const panels = stationPowerNodes(g.definition.missionConfig);
+    for (let index = 0; index < panels.length; index++) {
       const active = index < activated;
       const current = index === activated;
-      const x = panelXs[index];
-      const y = panelYs[index] - 8;
+      const x = panels[index].x;
+      const y = activeYForContentY(panels[index].y) - 8;
       ctx.save(); ctx.translate(x, y);
       const powerSprite = stageObjects["station-tunnel-mission-art-source"];
       const powerCrops = [
@@ -5494,7 +5490,7 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         { x: 930, y: 58, w: 350, h: 755 },
       ];
       if (powerSprite?.complete && powerSprite.naturalWidth) {
-        const crop = powerCrops[index];
+        const crop = powerCrops[index % powerCrops.length];
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(powerSprite, crop.x, crop.y, crop.w, crop.h, -23, -92, 46, 94);
@@ -18656,7 +18652,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             if (transition.startsWith("power-")) {
               g.stationMetrics.powerActivations += 1;
-              g.banner = `電源 ${nextMission.powerActivated ?? 0}/3 起動`;
+            g.banner = `電源 ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} 起動`;
               g.bannerTime = 1.4;
               playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });
             } else if (transition === "escort-contaminated") {

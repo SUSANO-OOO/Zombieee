@@ -89,6 +89,7 @@ function sealConfig(config = {}) {
   );
   return freeze({
     ...STATION_MISSION_TUNING.seal,
+    requiresContainment: config.requiresContainment !== false,
     powerCount,
     powerHoldSeconds: positive(config.powerHoldSeconds, STATION_MISSION_TUNING.seal.powerHoldSeconds),
     powerReadyAtSeconds: freeze(readyAt),
@@ -169,6 +170,11 @@ export function currentPowerNode(runtime, config = {}) {
     radiusY: resolved.powerRadiusY,
     readyAtSeconds: resolved.powerReadyAtSeconds[activated],
   });
+}
+
+export function stationPowerNodes(config = {}) {
+  const resolved = sealConfig(config);
+  return freeze(Array.from({ length: resolved.powerCount }, (_, index) => currentPowerNode({ powerActivated: index }, resolved)));
 }
 
 export function stationHumanMoveSpeed({
@@ -307,8 +313,7 @@ export function advanceStationMissionRuntime({
     }
 
     const containmentReady = powerActivated >= resolved.powerCount
-      && defeated
-      && researchContained;
+      && (!resolved.requiresContainment || (defeated && researchContained));
     const sealed = current.sealed === true
       || (containmentReady && wavesResolved === true);
     let escapeRemaining = current.escapeRemaining === null || current.escapeRemaining === undefined
@@ -420,9 +425,9 @@ export function stationMissionObjective(runtime, config = {}) {
       const percent = Math.min(99, Math.floor(finiteNonNegative(runtime.powerHold) / resolved.powerHoldSeconds * 100));
       return `電源${node?.number ?? runtime.powerActivated + 1}を起動 ${percent}%`;
     }
-    if (!runtime.gateEaterDefeated) return "改札喰いを撃破";
-    if (!runtime.researchContainerExposed) return "研究容器を露出させろ";
-    if (!runtime.researchContainerContained) return "研究容器を封鎖扉の向こうへ押し込め";
+    if (resolved.requiresContainment && !runtime.gateEaterDefeated) return "改札喰いを撃破";
+    if (resolved.requiresContainment && !runtime.researchContainerExposed) return "研究容器を露出させろ";
+    if (resolved.requiresContainment && !runtime.researchContainerContained) return "研究容器を封鎖扉の向こうへ押し込め";
     if (!runtime.sealed) return "残存感染体を排除し退路を確保";
     return "退路へ全員帰還";
   }
