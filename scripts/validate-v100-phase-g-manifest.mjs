@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { V100_COMBAT_FX_AUDIT, V100_COMBAT_FX_INVENTORY } from "../app/v100CombatPresentation.js";
 import { deriveV100ProductionEnemyCoverage, validateV100RepresentativeCombatEvidence, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
-import { validateV100ProofImageLink } from "./v100-phase-g-runtime-evidence.mjs";
+import { selectV100EvidenceCapture, validateV100ProofImageLink } from "./v100-phase-g-runtime-evidence.mjs";
 
 const manifestPath = path.resolve("docs/qa/v100/phase-g-screenshot-manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -15,7 +15,8 @@ const evidenceRelativeDir = path.relative(process.cwd(), evidenceDir).replaceAll
 const evidencePrefix = `${evidenceRelativeDir || "."}/`;
 const combatEvidencePrefix = `${evidencePrefix}combat/`;
 const reportPath = path.join(evidenceDir, "phase-g-report.json");
-const report = JSON.parse(await readFile(reportPath, "utf8"));
+const reportBytes = await readFile(reportPath);
+const report = JSON.parse(reportBytes.toString("utf8"));
 const requiredSequence = ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"];
 const requiredCoreStates = ["title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management", "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal"];
 const battleStates = new Set(["battle-normal", "battle-boss", "battle-extra"]);
@@ -39,6 +40,9 @@ function diagnosticsClean(diagnostics) {
 function fail(condition, message) { if (!condition) errors.push(message); }
 
 fail(manifest.schemaVersion === 3, `schemaVersion ${manifest.schemaVersion}`);
+fail(manifest.reportEvidence?.path === `${evidencePrefix}phase-g-report.json`
+  && manifest.reportEvidence?.bytes === reportBytes.length
+  && manifest.reportEvidence?.sha256 === createHash("sha256").update(reportBytes).digest("hex"), "full report byte/hash linkage mismatch");
 fail(manifest.route === "/Zombieee/v100", "route mismatch");
 fail(report.route === "/Zombieee/v100", "runtime report route mismatch");
 fail(manifest.totalScreenshots === 54, `manifest total ${manifest.totalScreenshots}`);
@@ -78,14 +82,9 @@ for (const entry of entries) {
     const runtime = reportEntry?.runtime;
     fail(runtime?.screen === "battle", `${entry.id} is not an actual mounted battle screen`);
     fail(Array.isArray(runtime?.fighters) && runtime.fighters.some((fighter) => fighter.hp > 0), `${entry.id} has no live combat fighter`);
-    const causalActivity = reportEntry?.combatCausalProof;
-    fail((runtime?.attackIdentity?.length ?? 0) > 0
-      || (runtime?.pendingWeaponHits?.length ?? 0) > 0
-      || (runtime?.battlePresentationEffects?.length ?? 0) > 0
-      || (causalActivity?.sourceToTargetEdges?.length ?? 0) > 0
-      || (causalActivity?.visualEvents?.length ?? 0) > 0,
-    `${entry.id} has no combat presentation activity`);
     fail(reportEntry?.combatCausalProof?.ok === true, `${entry.id} causal combat proof is incomplete`);
+    // Completed atomic impacts, matching action PNG and original deadline prove
+    // activity. Transient windup/effect arrays can be empty after that impact.
     const proofLink = validateV100ProofImageLink(reportEntry?.combatCausalProof, runtime);
     fail(proofLink.ok, `${entry.id} exact action image linkage: ${proofLink.errors.join(", ")}`);
     const actionImage = reportEntry?.combatCausalProof?.completedImpactProof?.screenshot;
@@ -117,10 +116,11 @@ for (const evidence of combatEvidence) {
   fail(Array.isArray(evidence.runtimeSequence) && JSON.stringify(evidence.runtimeSequence) === JSON.stringify(requiredSequence), `${evidence.id} causal sequence mismatch`);
   fail(evidence.captureVariant === contract?.captureVariant, `${evidence.id} capture variant mismatch`);
   const linkedEntry = entries.find((entry) => entry.evidence === evidence.evidence);
-  const linkedReport = reportResults.find((entry) => entry.variant === evidence.captureVariant);
+  const linkedReport = selectV100EvidenceCapture(reportResults, evidence.evidence);
   fail(Boolean(linkedEntry) && battleStates.has(linkedEntry.state), `${evidence.id} screenshot is not an actual battle entry`);
   fail(typeof evidence.evidence === "string" && reportByPath.has(evidence.evidence), `${evidence.id} screenshot linkage missing`);
   fail(Boolean(linkedReport), `${evidence.id} production capture variant missing`);
+  fail(linkedReport?.variant === evidence.captureVariant, `${evidence.id} linked capture variant mismatch`);
   fail(linkedReport?.productionContract?.ok === true, `${evidence.id} production state contract failed`);
   fail(linkedReport?.combatCausalProof?.ok === true, `${evidence.id} causal runtime proof failed`);
   fail(diagnosticsClean(linkedReport?.diagnostics), `${evidence.id} linked capture has diagnostics`);

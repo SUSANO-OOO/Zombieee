@@ -3400,6 +3400,8 @@ async function captureState(engineName, viewport, state, configure, checkpointCo
 }
 
 async function writePhaseGManifest(report) {
+  const reportFile = path.join(evidenceDir, "phase-g-report.json");
+  const reportBytes = await readFile(reportFile);
   const entries = report.results.map((result) => {
     const [width, height] = result.viewport.split("x").map(Number);
     const battle = result.state.startsWith("battle");
@@ -3429,7 +3431,6 @@ async function writePhaseGManifest(report) {
         selectors: result.productionContract?.expected?.selectors ?? [],
         observed: result.productionContract?.observed ?? null,
       },
-      checkpointEvidence: result.checkpointEvidence ?? null,
     };
   });
   const resultByVariant = new Map(report.results.map((result) => [result.variant, result]));
@@ -3483,6 +3484,9 @@ async function writePhaseGManifest(report) {
   const observedBattleKinds = [...new Set(report.results.flatMap((result) => result.observedEnemyKinds ?? result.runtime?.fighters?.filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind) ?? []))];
   const manifest = {
     schemaVersion: 3,
+    // Full checkpoint traces remain in the report and capture transactions.
+    // Reference their exact bytes instead of duplicating megabytes in Git.
+    reportEvidence: { path: relativeEvidence(reportFile), bytes: reportBytes.length, sha256: createHash("sha256").update(reportBytes).digest("hex") },
     runtimeContractVersion: 2,
     route: report.route,
     totalScreenshots: entries.length,

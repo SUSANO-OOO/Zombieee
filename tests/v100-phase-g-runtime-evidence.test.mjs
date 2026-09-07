@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, validateV100ProofImageLink, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "../scripts/v100-phase-g-runtime-evidence.mjs";
+import { selectV100EvidenceCapture, deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, validateV100ProofImageLink, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "../scripts/v100-phase-g-runtime-evidence.mjs";
 import { createManualAbilityRuntime, beginManualAbility, selectBabayagaAbilityTarget } from "../app/manualAbilities.js";
 import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-machine.mjs";
 import { V100_REPRESENTATIVE_COMBAT_CONTRACT, representativeRuntimeObservationRule, validateV100RepresentativeCombatEvidence } from "../app/v100PhaseGContract.js";
@@ -34,6 +34,20 @@ function imageCollection() {
 test("exact action image is bound to its complete atomic receipt and original clock", () => {
   const sample = imageCollection();
   assert.deepEqual(validateV100ProofImageLink(sample, runtime()), { ok: true, errors: [] });
+});
+
+test("representative proof resolves its exact image when three captures share the boss variant", () => {
+  const captures = ["1280x720", "844x390", "844x340"].map((viewport, index) => ({
+    variant: "core-battle-boss", viewport, evidence: { path: `outputs/${viewport}.png` },
+    combatCausalProof: { battleGeneration: index + 1 },
+  }));
+  for (const capture of captures) {
+    assert.equal(selectV100EvidenceCapture(captures, capture.evidence.path), capture);
+    assert.equal(selectV100EvidenceCapture([...captures].reverse(), capture.evidence.path), capture);
+  }
+  assert.equal(selectV100EvidenceCapture(captures, "outputs/missing.png"), null);
+  assert.equal(selectV100EvidenceCapture([...captures, { ...captures[2] }], captures[2].evidence.path), null);
+  assert.equal(selectV100EvidenceCapture([{}], undefined), null);
 });
 
 for (const [name, mutate] of [

@@ -5,6 +5,14 @@ import { V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEv
 const receiptContract = createV100PhaseGProofMachine();
 export const V100_MANUAL_MARKER_CLICK_TIMEOUT_MS = 700;
 
+// A variant is shared by several viewport captures. The persisted image path
+// identifies the exact capture; an ambiguous or absent path cannot be evidence.
+export function selectV100EvidenceCapture(results, evidencePath) {
+  if (typeof evidencePath !== "string" || !evidencePath) return null;
+  const matches = results.filter((result) => result.evidence?.path === evidencePath);
+  return matches.length === 1 ? matches[0] : null;
+}
+
 export function validateV100CaptureRepresentativeEvidence({ variant, runtime, completedImpactProof, setupObservations } = {}) {
   const contracts = V100_REPRESENTATIVE_COMBAT_CONTRACT.filter((contract) => contract.captureVariant === variant);
   if (!contracts.length) return { ok: variant === "core-battle-normal", errors: variant === "core-battle-normal" ? [] : ["UNKNOWN_REPRESENTATIVE_CAPTURE"], rows: 0 };

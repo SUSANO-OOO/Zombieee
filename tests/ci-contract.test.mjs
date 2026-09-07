@@ -93,7 +93,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(hostedJob, /Capture Version 0\.9\.9\.5 station final-canvas evidence \(WebKit\)[\s\S]*DEBUG: pw:browser/u);
   assert.doesNotMatch(hostedJob, /continue-on-error:/u);
   const phaseGJob = workflow.match(/  v100-phase-g-production:\n([\s\S]*?)\n  webkit-hosted:/u)?.[1] ?? "";
-  assert.match(phaseGJob, /Capture ordered WebKit battle-extra trio \(focused\)[\s\S]*DEBUG: pw:browser/u);
+  assert.match(phaseGJob, /Capture and validate the full Phase G production matrix[\s\S]*DEBUG: pw:browser/u);
   assert.doesNotMatch(phaseGJob, /continue-on-error:/u);
   const stage3Job = workflow.match(/  webkit-stage3-audio:\n([\s\S]*)$/u)?.[1] ?? "";
   assert.match(stage3Job, /needs: webkit-hosted/u);
@@ -289,4 +289,13 @@ test("r6 diagnostic traces do not alter the CI matrix or bounded runner contract
   assert.match(boundedRunner, /attempt <= 1/);
   assert.match(boundedRunner, /isRetryableTargetClosed\(summary, mode\)/);
   assert.doesNotMatch(boundedRunner, /attempt <= 2|Retrying once/);
+});
+
+test("the release Phase G lane covers and validates all production captures", async () => {
+  const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
+  const job = workflow.split("  v100-phase-g-production:\n")[1].split("\n  webkit-hosted:")[0];
+  assert.match(job, /runs-on: macos-15-intel/u);
+  assert.match(job, /npm run qa:v100-phase-g\n\s+npm run qa:v100-phase-g-validate/u);
+  assert.doesNotMatch(job, /V100_PHASE_G_ONLY|for sequence|continue-on-error/u);
+  assert.match(job, /outputs\/v100-phase-g\n\s+docs\/qa\/v100\/phase-g-screenshot-manifest\.json/u);
 });

@@ -14,6 +14,7 @@
 - 通常プレイからの追加修正：新規開始・初期4人・無強化のStage1を実UIで勝利（132秒、車両408/680、損耗3、星1）。作戦後会話を読み、90 CAPS確定とナオ80 CAPS配備登録→残高10を確認した。これは局所的な通常プレイ証拠であり全30作戦の受入ではない。発見した加入前人物のbattle bark、旧車両名称、編成から装備/育成へ行けない導線、顔が切れる編成画像、報酬/解禁の作戦後会話前への先出し、初回確定画面reload後の進行不能を修正した。最後の問題は確定後に消去されたpendingResultだけを復帰処理が参照していたためであり、同一stageの保存済み結果・完了stage・既読postが一致する時だけ進行文脈を復元する。再付与・初期化はしない。
 - 初回出撃修正後の新規検証：production build、全1434 source tests、lint0 errors/12既存warnings、Chromium/WebKit × 3サイズの編成往復・結果順序・reload fixture12/12が成功。CAPS二重加算0、旧namespace sentinel変更0、console/page/request/HTTP failures0。証拠は `outputs/v100-first-sortie-r6/report.json` と `outputs/completion/first-sortie-accepted-*.log`。先行したfixture不備と実際のreload不具合の失敗記録はr1〜r5に保持し、合格へ昇格しない。
 - 停滞要因：ゲーム本体の未接続演出、browser環境固有の制約、検証操作の不適切な配備選択、巨大な履歴文書と古いIssue cursorが混在していた。今後はソース・実物・今回の証拠を対応させ、同一失敗を無根拠に反復しない。
+- 現行ローカル全Phase G：product HEAD `fe55aef7fa1aee612530c2b8d91b5844674a445d` のproduction buildで全54画面・代表16戦闘を取得。12のcapture transactionは全success/COMPLETE、cleanup/proofCleanup success。後段validatorに、旧瞬間VFX配列への依存と同名variantの別viewport取り違えが残っていた。攻撃・着弾・音声要求・画像hash・期限を束ねる既存atomic proofを維持し、exact evidence pathで対応付けて修正した。保存済みの今回のreportでvalidator成功、focused runtime evidence35/35。初回validator失敗は消さず `outputs/completion/phase-g-fe55aef-validation.log` に保全。巨大checkpointはreport/transactionに保持し、Gitのmanifestからはexact report hashで参照する。証拠は `outputs/v100-completion-phase-g-fe55aef/`。remote CIと最終候補の全受入には代用しない。
 
 ### 有限の残工程と完了判定
 
@@ -23,7 +24,7 @@
 4. **最終Producer承認**：完成条件を満たした、実際に遊べる固定候補と検証結果・残存事項を提示。この承認前はReady/最終merge/tag/Release/正式deployment/Issue closeを行わない。
 5. **正式公開と確認**：承認候補と統合結果treeを照合し、正式release SHAへtag/Release/Pages requestを固定。匿名公開、asset、fresh/既存save、update/recoveryを公開環境で確認し、問題があれば修正・復旧後に再検証。実態に一致する完了記録を残した時だけgoal complete/Issue close。
 
-現在は工程1。冒頭と結末の欠落・誤接続修正を終え、新規開始から通常の編成・成長・戦闘を確認中。30作戦全体の内容/体験、データ保全とPWA、全Phase G/同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
+現在は工程1。冒頭と結末の欠落・誤接続修正、初回出撃/報酬復帰修正、現行ローカル全Phase Gを終え、新規開始から通常の編成・成長・戦闘を確認中。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

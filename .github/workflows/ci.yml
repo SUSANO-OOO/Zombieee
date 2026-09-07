@@ -240,25 +240,22 @@ jobs:
       - name: Build production application
         run: npm run build
 
-      - name: Capture ordered WebKit battle-extra trio (focused)
+      - name: Capture and validate the full Phase G production matrix
         env:
           DEBUG: pw:browser
-          V100_PHASE_G_ONLY: battle-extra
-          V100_PHASE_G_ONLY_ENGINE: webkit
         run: |
           set -euo pipefail
-          for sequence in 1 2 3; do
-            export V100_PHASE_G_SEQUENCE_ID="remote-trio-${sequence}"
-            export V100_PHASE_G_EVIDENCE_DIR="outputs/v100-phase-g-trio/remote-${sequence}"
-            npm run qa:v100-phase-g
-          done
+          npm run qa:v100-phase-g
+          npm run qa:v100-phase-g-validate
 
       - name: Upload Phase G production evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v100-phase-g-webkit-battle-extra-focused
-          path: outputs/v100-phase-g-trio
+          name: v100-phase-g-production-matrix
+          path: |
+            outputs/v100-phase-g
+            docs/qa/v100/phase-g-screenshot-manifest.json
           if-no-files-found: error
           retention-days: 14
 

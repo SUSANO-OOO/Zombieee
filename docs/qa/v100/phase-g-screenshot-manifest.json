@@ -45,7 +45,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:35.255Z",
+      "capturedAt": "2026-09-07T04:19:24.076Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -54,12 +54,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-title-name.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-title-name.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "c0ef03297510590bae7319b5552b92f7a97dcbc209bff531b29c7903ad5ccf5a",
+      "sha256": "ce115d23533c2b82703c70e41e6ffb424f4f63dbd4d436fdb074c6ef5f7a768c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -100,8 +100,9 @@
             "#v100-player-name": true,
             ".v100-name-card .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 3,
-          "bodyTextLength": 166,
+          "bodyTextLength": 154,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -116,7 +117,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:35.912Z",
+      "capturedAt": "2026-09-07T04:19:24.834Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -125,12 +126,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-dialogue-left.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-dialogue-left.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "75b7f5be60cf53da3836ededc57f0efb56500ea35f926342c94b18b1830ebcbd",
+      "sha256": "50339f894bf963fefedbd95a26d79ced77850931f41f49078557b71b37635b62",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -169,6 +170,7 @@
             "[data-v100-state=\"dialogue-left\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 52,
           "screen": null,
@@ -185,7 +187,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:36.589Z",
+      "capturedAt": "2026-09-07T04:19:25.756Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -194,7 +196,7 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-dialogue-right.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-dialogue-right.png",
       "dimensions": {
         "width": 1280,
         "height": 720
@@ -238,6 +240,7 @@
             "[data-v100-state=\"dialogue-right\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 55,
           "screen": null,
@@ -254,7 +257,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:37.229Z",
+      "capturedAt": "2026-09-07T04:19:26.726Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -263,12 +266,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-map-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-map-normal.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "0065072ac8eb0a95722dcda10b37f25ec9af8d12cd6f77f336745e558d2eb814",
+      "sha256": "62613baf478e8648e1da7bc0e40ee43ecc9b36efe11e5c2c2bb797e5ebb58335",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -313,8 +316,9 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 19,
-          "bodyTextLength": 521,
+          "forbiddenVisible": [],
+          "buttonCount": 20,
+          "bodyTextLength": 543,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -329,7 +333,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:38.141Z",
+      "capturedAt": "2026-09-07T04:19:27.927Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -338,12 +342,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-map-locked-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-map-locked-boss.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "778cded3b12313ab540f5cab34cede03c377fa1d60fcc4669043af9bf2f48117",
+      "sha256": "49436464675506aa45e912f41083150975b88e9acf31755b41619e9d82961080",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -386,8 +390,9 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 13,
-          "bodyTextLength": 475,
+          "forbiddenVisible": [],
+          "buttonCount": 14,
+          "bodyTextLength": 497,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -402,7 +407,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:38.915Z",
+      "capturedAt": "2026-09-07T04:19:28.960Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -411,12 +416,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-formation.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-formation.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "0391c5b622abb27d84a61830546dd9e18458f03183d11e076fd272576c6c16f8",
+      "sha256": "ebaedd60170920f9ce89eaa2eed611e5b870cb1057ae139c4decf711a9658ba1",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -457,8 +462,9 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 704,
+          "forbiddenVisible": [],
+          "buttonCount": 29,
+          "bodyTextLength": 702,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -473,7 +479,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:39.666Z",
+      "capturedAt": "2026-09-07T04:19:29.755Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -482,12 +488,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-personnel.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-personnel.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "4a39a58cafb364e7f99b4f315513fa564a13c11697a20866fc24f7fa1b086b9b",
+      "sha256": "600d089d08faf6494fb954f53d0da5dca9d815b006c5fad4c4ca225c1656c80c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -528,8 +534,9 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 18,
-          "bodyTextLength": 330,
+          "bodyTextLength": 342,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -544,7 +551,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T05:59:40.368Z",
+      "capturedAt": "2026-09-07T04:19:30.779Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -553,12 +560,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-support-vehicle-management.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-support-vehicle-management.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "2859566d051f3774c1cc2d474cff9cc67d19d923aa65ebb389e6195e5742a5d0",
+      "sha256": "e4b72134f72f13581148cb0086633be483deb71b3d12fd1f3541aefd902022ac",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -601,8 +608,9 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 5,
-          "bodyTextLength": 308,
+          "forbiddenVisible": [],
+          "buttonCount": 6,
+          "bodyTextLength": 344,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -617,13 +625,15 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:00:08.946Z",
+      "capturedAt": "2026-09-07T04:19:49.463Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
         "human:medic",
         "human:scout",
-        "zombie:walker"
+        "zombie:walker",
+        "zombie:runner",
+        "human:engineer"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -641,14 +651,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-battle-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-battle-normal.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "343ab6fff073bdbcd8f53e96519f449c1f4c96d087224dbc84da51f33af0e3b7",
+      "sha256": "719c35985dd683cdd01c1e15cb73114622e948fff19d245f05da4a726d017a3b",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -692,24 +703,26 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 15,
-          "bodyTextLength": 320,
+          "forbiddenVisible": [],
+          "buttonCount": 14,
+          "bodyTextLength": 326,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 228602,
-            "visibleRatio": 0.9921961805555556,
-            "lumaMean": 34.66141850086738,
-            "lumaVariance": 572.1684693691807
+            "visiblePixels": 228611,
+            "visibleRatio": 0.9922352430555555,
+            "lumaMean": 35.1219034730895,
+            "lumaVariance": 627.5595617527435
           },
           "fighterKinds": [
             "human:medic",
             "human:scout",
             "zombie:walker",
-            "zombie:runner"
+            "zombie:runner",
+            "human:engineer"
           ]
         }
       }
@@ -721,11 +734,11 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:47.256Z",
+      "capturedAt": "2026-09-07T04:21:18.537Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
-        "human:brawler",
+        "human:babayaga",
         "zombie:walker",
         "zombie:shade",
         "zombie:abomination",
@@ -750,14 +763,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-battle-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-battle-boss.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "b720c909b7a9c76c0131eb8a91851b0d9eed0359c62a7a6b33e4c3042ed0d49d",
+      "sha256": "4437010654bace27d30daa28395e0dff0f62b00160d9c834381aa55ae0b038bd",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -801,27 +815,27 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 13,
-          "bodyTextLength": 319,
+          "bodyTextLength": 299,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 229449,
-            "visibleRatio": 0.9958723958333333,
-            "lumaMean": 44.787475690979015,
-            "lumaVariance": 909.6233781141635
+            "visiblePixels": 228863,
+            "visibleRatio": 0.9933289930555556,
+            "lumaMean": 43.72420607204173,
+            "lumaVariance": 850.2729848242923
           },
           "fighterKinds": [
             "human:brawler",
-            "zombie:walker",
             "human:babayaga",
+            "zombie:walker",
             "zombie:shade",
             "zombie:abomination",
-            "zombie:takuya-omega",
-            "human:scout"
+            "zombie:takuya-omega"
           ]
         }
       }
@@ -833,7 +847,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:47.801Z",
+      "capturedAt": "2026-09-07T04:21:19.197Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -842,12 +856,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-result-win.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-result-win.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "42cfcf67cd1bc77489220f1ac3d750613089c4634aa0c011cffbd60c0119e8ac",
+      "sha256": "c74c6a25c1a72449ef5fc3c973425a664c06f0f45a9c4c1b7935e2027e47f93b",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -876,7 +890,6 @@
         "selectors": [
           "[data-v100-surface=\"result-win\"]",
           ".v100-result-records",
-          ".v100-result-rewards",
           ".v100-result-actions"
         ],
         "observed": {
@@ -885,11 +898,11 @@
           "selectorHits": {
             "[data-v100-surface=\"result-win\"]": true,
             ".v100-result-records": true,
-            ".v100-result-rewards": true,
             ".v100-result-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 155,
+          "forbiddenVisible": [],
+          "buttonCount": 2,
+          "bodyTextLength": 160,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -904,7 +917,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:48.277Z",
+      "capturedAt": "2026-09-07T04:21:19.892Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -913,12 +926,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-result-lose.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-result-lose.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "8e735fc2078867eeeed2381c0c991417883c8ae7d13a1004fbccb7f8001ee08f",
+      "sha256": "47e628062f333553f5f510fc01eb845fc094b025474611c598c80c944f18b7c3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -957,8 +970,9 @@
             ".v100-result-records": true,
             ".v100-result-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 4,
-          "bodyTextLength": 128,
+          "bodyTextLength": 142,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -973,7 +987,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:48.842Z",
+      "capturedAt": "2026-09-07T04:21:20.706Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -982,12 +996,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-ending.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-ending.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "a03cb4b1b8e9c1650c7ca22bc8a62e670ccca3666cb1ab4495714221501b331e",
+      "sha256": "3ef19c7ddf6d77cb619a2a96c1111c76f507128e9ce220288cd06d1926e88f31",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1028,6 +1042,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 89,
           "screen": null,
@@ -1044,7 +1059,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:49.346Z",
+      "capturedAt": "2026-09-07T04:21:21.495Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1053,12 +1068,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-credits.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-credits.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "178b65e5f26967fa6ee3acb37ce23983507f539379b8b447e10042f8e41d0b63",
+      "sha256": "60e192b271064007c9863dd7d2e63eca528dea53508f2136ddca0b52f56174e1",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1099,8 +1114,9 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 45,
+          "bodyTextLength": 89,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1115,7 +1131,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:49.934Z",
+      "capturedAt": "2026-09-07T04:21:22.237Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1124,12 +1140,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-epilogue-postgame.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-epilogue-postgame.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "8716a16672a48e036978b603b15e0796873943a5a9a75fc8473e37e8da1a84c1",
+      "sha256": "c53f972a665b4f5687e8ce097bfbba675087d12ba6943ce2dd7a74554a7a8159",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1170,6 +1186,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 88,
           "screen": null,
@@ -1186,7 +1203,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-21T06:01:50.524Z",
+      "capturedAt": "2026-09-07T04:21:23.019Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1195,12 +1212,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-1280x720-data-management-modal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-1280x720-data-management-modal.png",
       "dimensions": {
         "width": 1280,
         "height": 720
       },
-      "sha256": "d5abf18a07ec74544f46559260aa36cf9af22acce360fd94623a2f81e45f241d",
+      "sha256": "4acd635db10df2be41ff5b5a0ea60bac6cad1a0eca02d29b085f28da3eef66d9",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1239,8 +1256,9 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 191,
+          "bodyTextLength": 274,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1255,7 +1273,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:50.914Z",
+      "capturedAt": "2026-09-07T04:21:23.528Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1264,12 +1282,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-title-name.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-title-name.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "9f3954855d4ba9488e7dc713c68ae5b6b08a5266b530db1307b8c73b62f7531d",
+      "sha256": "61834444c6f24f737877763e7badce304b4021078cd62748a0b646bcfe1fc4ef",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1310,8 +1328,9 @@
             "#v100-player-name": true,
             ".v100-name-card .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 3,
-          "bodyTextLength": 166,
+          "bodyTextLength": 154,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1326,7 +1345,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:51.322Z",
+      "capturedAt": "2026-09-07T04:21:24.103Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1335,12 +1354,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-dialogue-left.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-dialogue-left.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "ff51700df051b2923c9ffcd828c01ad952118a4f223c6114603c353d3e40fe44",
+      "sha256": "4250140ce1fb114d3467a6d5ca6c70ed7b8688ae3bad9e7f2904699328ce5b10",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1379,6 +1398,7 @@
             "[data-v100-state=\"dialogue-left\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 52,
           "screen": null,
@@ -1395,7 +1415,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:51.753Z",
+      "capturedAt": "2026-09-07T04:21:24.687Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1404,12 +1424,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-dialogue-right.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-dialogue-right.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "d8dffe8634c78767997619edbd52f25327af0049f83ebf7732b0794ab8568131",
+      "sha256": "6de5b07c64a667aa14573070a3c1a8319443b0cefa22bca8f68cd8a7f35398be",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1448,6 +1468,7 @@
             "[data-v100-state=\"dialogue-right\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 55,
           "screen": null,
@@ -1464,7 +1485,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:52.237Z",
+      "capturedAt": "2026-09-07T04:21:25.320Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1473,12 +1494,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-map-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-map-normal.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "20170e557c37ce8bd803c218658538c1f1f882193115269a21e1039df12a98e1",
+      "sha256": "ec12b149c0a3f723e3e2d6b4eda6affb83b34d756a628086a5d75d6ddfd9e9a7",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1523,8 +1544,9 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 19,
-          "bodyTextLength": 506,
+          "forbiddenVisible": [],
+          "buttonCount": 20,
+          "bodyTextLength": 528,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1539,7 +1561,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:52.871Z",
+      "capturedAt": "2026-09-07T04:21:26.179Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1548,12 +1570,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-map-locked-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-map-locked-boss.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "9d9facea03e4ed22221a63e32867265c16e67bc6cc1422865c6d9bad4198001b",
+      "sha256": "c7b7b3ab51776069fc4065d708c26c8711297505c96709182f788e061f51d34c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1596,8 +1618,9 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 13,
-          "bodyTextLength": 460,
+          "forbiddenVisible": [],
+          "buttonCount": 14,
+          "bodyTextLength": 482,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1612,7 +1635,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:53.517Z",
+      "capturedAt": "2026-09-07T04:21:27.110Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1621,12 +1644,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-formation.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-formation.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "d4a4a757aab6cbd3be45148ee87d149b0c44488e70f7a1bd344dec7970950755",
+      "sha256": "08450d1f45f05c03555f62985a70e98967c437dea9aa7e59d8e1d1f2a1cc6276",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1667,8 +1690,9 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 704,
+          "forbiddenVisible": [],
+          "buttonCount": 29,
+          "bodyTextLength": 702,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1683,7 +1707,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:54.150Z",
+      "capturedAt": "2026-09-07T04:21:27.907Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1692,12 +1716,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-personnel.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-personnel.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "1003ed6b9925a4ca76145272c6086381bc046fe78dbe75840e4e63e69d793994",
+      "sha256": "9d26989307a69c6dfc0e484422f2c64d17cc85bd88a0343837a5f4559a5a1574",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1738,8 +1762,9 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 18,
-          "bodyTextLength": 330,
+          "bodyTextLength": 342,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1754,7 +1779,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:01:54.851Z",
+      "capturedAt": "2026-09-07T04:21:28.678Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1763,12 +1788,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-support-vehicle-management.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-support-vehicle-management.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "fcbc30534cf366429d900d9767a1df8b836a07a363f9062537d250d2e6d92e08",
+      "sha256": "06923233a19b5c880624a8d479f4eb10fa1e6f54e9ad9e974771ff8536b65ecb",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1811,8 +1836,9 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 5,
-          "bodyTextLength": 308,
+          "forbiddenVisible": [],
+          "buttonCount": 6,
+          "bodyTextLength": 344,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1827,12 +1853,15 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:02:22.761Z",
+      "capturedAt": "2026-09-07T04:21:45.600Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
         "human:medic",
-        "human:scout"
+        "human:scout",
+        "zombie:walker",
+        "zombie:runner",
+        "human:engineer"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -1850,14 +1879,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-battle-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-battle-normal.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "48735b860a761338fecaf0f9cbdf315b55c4bbfd19288e7560e4b10c4237af4d",
+      "sha256": "f9600431be30ac9860aa067f36802126312951d2b80f65ecf0d68059aa144c06",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1901,24 +1931,26 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 14,
-          "bodyTextLength": 249,
+          "bodyTextLength": 276,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 81880,
-            "visibleRatio": 0.9950176206100376,
-            "lumaMean": 34.88549282538508,
-            "lumaVariance": 614.9100285838406
+            "visiblePixels": 81883,
+            "visibleRatio": 0.9950540770445984,
+            "lumaMean": 34.566665735823634,
+            "lumaVariance": 579.3320451454342
           },
           "fighterKinds": [
             "human:medic",
             "human:scout",
             "zombie:walker",
-            "zombie:runner"
+            "zombie:runner",
+            "human:engineer"
           ]
         }
       }
@@ -1930,16 +1962,16 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:08.021Z",
+      "capturedAt": "2026-09-07T04:23:09.104Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
-        "human:brawler",
-        "human:engineer",
+        "human:ranger",
+        "human:babayaga",
+        "zombie:walker",
         "zombie:shade",
         "zombie:abomination",
-        "zombie:takuya-omega",
-        "zombie:turned"
+        "zombie:takuya-omega"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -1948,6 +1980,7 @@
         "takuya-omega"
       ],
       "observedEnemyKinds": [
+        "walker",
         "shade",
         "abomination",
         "takuya-omega"
@@ -1959,14 +1992,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-battle-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-battle-boss.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "68d0f9073c9c54a083e129294386e255d18bd6a7a12f8946686a92200cca48bd",
+      "sha256": "32dd8e676159a4c52c40244027f09b0504b287fa470702b88cb8f57b00cdc0ec",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2010,25 +2044,25 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 15,
-          "bodyTextLength": 294,
+          "forbiddenVisible": [],
+          "buttonCount": 13,
+          "bodyTextLength": 240,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 81962,
-            "visibleRatio": 0.9960140964880302,
-            "lumaMean": 47.8551926771174,
-            "lumaVariance": 1002.9062728893658
+            "visiblePixels": 82009,
+            "visibleRatio": 0.9965852472961477,
+            "lumaMean": 47.3117047685013,
+            "lumaVariance": 975.6069624480976
           },
           "fighterKinds": [
-            "human:brawler",
-            "human:medic",
-            "human:engineer",
             "human:ranger",
-            "human:scout",
+            "human:brawler",
+            "human:babayaga",
+            "zombie:walker",
             "zombie:shade",
             "zombie:abomination",
             "zombie:takuya-omega"
@@ -2043,7 +2077,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:09.310Z",
+      "capturedAt": "2026-09-07T04:23:09.641Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2052,12 +2086,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-result-win.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-result-win.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "e48d76de3b87b69f67b688a9fffe4a2ce4248fc7f35ffb06c5714b1cb1116a69",
+      "sha256": "442d348aef890877ac76d8eedccc8b1f0a309cd44d7a2a0354ef86fe7fc0758e",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2086,7 +2120,6 @@
         "selectors": [
           "[data-v100-surface=\"result-win\"]",
           ".v100-result-records",
-          ".v100-result-rewards",
           ".v100-result-actions"
         ],
         "observed": {
@@ -2095,11 +2128,11 @@
           "selectorHits": {
             "[data-v100-surface=\"result-win\"]": true,
             ".v100-result-records": true,
-            ".v100-result-rewards": true,
             ".v100-result-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 155,
+          "forbiddenVisible": [],
+          "buttonCount": 2,
+          "bodyTextLength": 160,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2114,7 +2147,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:09.743Z",
+      "capturedAt": "2026-09-07T04:23:10.210Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2123,12 +2156,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-result-lose.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-result-lose.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "f60485e387c2bf9d0926c97f60892feb7a15658db94222e5d0cebc3482b02b5e",
+      "sha256": "0b995c653ce539ca804e975f016e17856ab1d591d1f3d1869539b6435fe531ca",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2167,8 +2200,9 @@
             ".v100-result-records": true,
             ".v100-result-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 4,
-          "bodyTextLength": 128,
+          "bodyTextLength": 142,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2183,7 +2217,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:10.166Z",
+      "capturedAt": "2026-09-07T04:23:10.789Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2192,12 +2226,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-ending.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-ending.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "f21824163f284b9f7625c7f72dfcf732d8269ac04c47d8e4f91d5ccbf8756005",
+      "sha256": "f7c0aed8a878cc76b2abaa525efd0402340f6ed929e3996a11e2b5832f68506d",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2238,6 +2272,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 89,
           "screen": null,
@@ -2254,7 +2289,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:10.616Z",
+      "capturedAt": "2026-09-07T04:23:11.487Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2263,12 +2298,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-credits.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-credits.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "dcc13225f2d10ac6808fde91c7aa049b5ea77f245de74370eea11cf6bfa49da5",
+      "sha256": "db7fdc9ea8ff1615acee2026837dfd3bd0039a53aaf94f2d64baa15b537b2230",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2309,8 +2344,9 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 45,
+          "bodyTextLength": 89,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2325,7 +2361,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:11.067Z",
+      "capturedAt": "2026-09-07T04:23:12.041Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2334,12 +2370,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-epilogue-postgame.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-epilogue-postgame.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "c7b53ce0547bb432866043a9de3b580d8b090e6e9f7e47c3358e8c26afaf8bf8",
+      "sha256": "4e448d33871decef341a1edbbe363d0ace5e14f6cbb77b86c7350fba968989e5",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2380,6 +2416,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 88,
           "screen": null,
@@ -2396,7 +2433,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-21T06:04:11.609Z",
+      "capturedAt": "2026-09-07T04:23:12.667Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2405,12 +2442,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x390-data-management-modal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x390-data-management-modal.png",
       "dimensions": {
         "width": 844,
         "height": 390
       },
-      "sha256": "eeede993b089f525f683b97793bdd96e3f5268990c86dde5b3b11ecab720eae4",
+      "sha256": "cf33d8e376e6e5db1be5699142ed998dbb7b9fa8a664f5f1937bbe21296e64c0",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2449,8 +2486,9 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 191,
+          "bodyTextLength": 274,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2465,7 +2503,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:12.020Z",
+      "capturedAt": "2026-09-07T04:23:13.217Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2474,12 +2512,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-title-name.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-title-name.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "f422a26f9c0f474e764822bdf56bcb796432cc6761eddfacb7a44dfbd27712b2",
+      "sha256": "b75c8523fb3c8e660ce7e161c16cc8155ee8e867b686b279dc54ee0b413e6486",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2520,8 +2558,9 @@
             "#v100-player-name": true,
             ".v100-name-card .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 3,
-          "bodyTextLength": 166,
+          "bodyTextLength": 154,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2536,7 +2575,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:12.509Z",
+      "capturedAt": "2026-09-07T04:23:13.776Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2545,12 +2584,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-dialogue-left.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-dialogue-left.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "ad993f7933e9115c6a6354405a3527eb288cb16dac07e443a17ce399ceb6be19",
+      "sha256": "de7af7686b5b5f9844a0dc670451c506058b52349864eafcb90fa17006da75b3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2589,6 +2628,7 @@
             "[data-v100-state=\"dialogue-left\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 52,
           "screen": null,
@@ -2605,7 +2645,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:12.958Z",
+      "capturedAt": "2026-09-07T04:23:14.406Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2614,12 +2654,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-dialogue-right.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-dialogue-right.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "8016f34f7b7fe0e63aabbf2d7a872b20986d1481b729d90f8ce070df81127f67",
+      "sha256": "53d1081c9e5e882d0707a6e2de5d4f5cd87a423145b3558bb9af2b0d875913b2",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2658,6 +2698,7 @@
             "[data-v100-state=\"dialogue-right\"]": true,
             ".v100-event-actions .v100-primary": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 55,
           "screen": null,
@@ -2674,7 +2715,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:13.433Z",
+      "capturedAt": "2026-09-07T04:23:15.070Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2683,12 +2724,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-map-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-map-normal.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "6bcc813cd804adb22310e98897242403f30a03d71e48e51bc1a04ccfda46247c",
+      "sha256": "c1caf21f51d3777d47658dc3c15893d84a7043ce44f07b369333f02cecd77b94",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2733,8 +2774,9 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 19,
-          "bodyTextLength": 506,
+          "forbiddenVisible": [],
+          "buttonCount": 20,
+          "bodyTextLength": 528,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2749,7 +2791,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:14.094Z",
+      "capturedAt": "2026-09-07T04:23:15.852Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2758,12 +2800,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-map-locked-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-map-locked-boss.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "c80ba39c8af38fdf71c338218da157ade7ce197f52762bb854d03ac2e64c0d01",
+      "sha256": "128bf30997a9581332212b081fe94091c380e8362147a118636bad940a6090c3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2806,8 +2848,9 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 13,
-          "bodyTextLength": 460,
+          "forbiddenVisible": [],
+          "buttonCount": 14,
+          "bodyTextLength": 482,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2822,7 +2865,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:14.781Z",
+      "capturedAt": "2026-09-07T04:23:16.723Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2831,12 +2874,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-formation.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-formation.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "876c6025b3308997e9fc240434e4b120f213a70fd137f39eb4cb498f5bf1bc76",
+      "sha256": "04d8a57a90976dab2e4715ff4f56169431f7a1b3aca71acd693634b6728ad6fd",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2877,8 +2920,9 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 704,
+          "forbiddenVisible": [],
+          "buttonCount": 29,
+          "bodyTextLength": 702,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2893,7 +2937,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:15.376Z",
+      "capturedAt": "2026-09-07T04:23:17.482Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2902,12 +2946,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-personnel.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-personnel.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "d4d91f170d6071b052638fbbebc5a819bda8bff38a92796bedc6dd1ea3cb8287",
+      "sha256": "61a90d210826099898dc666fe9bf9418765aff610d38a664ada4b02d5a20aff9",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2948,8 +2992,9 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 18,
-          "bodyTextLength": 330,
+          "bodyTextLength": 342,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2964,7 +3009,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:15.958Z",
+      "capturedAt": "2026-09-07T04:23:18.202Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2973,12 +3018,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-support-vehicle-management.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-support-vehicle-management.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "3ce987783fcb3aa348dab774c35a5fb18f1b878a9d3f15cae2d8b799093181ad",
+      "sha256": "f831bde183106b6a8b2a1b14f9f15787a09e0e494338de88d56d2e3a1895868f",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3021,8 +3066,9 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 5,
-          "bodyTextLength": 308,
+          "forbiddenVisible": [],
+          "buttonCount": 6,
+          "bodyTextLength": 344,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3037,12 +3083,15 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:04:45.669Z",
+      "capturedAt": "2026-09-07T04:23:35.039Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
+        "human:medic",
+        "human:scout",
         "zombie:walker",
-        "human:medic"
+        "zombie:runner",
+        "human:engineer"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3060,14 +3109,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-battle-normal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-battle-normal.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "a5fac9a5d5ee0d5e69f0d82b63b66b3363567c7c281c2ea1c7a2978c42eba1b0",
+      "sha256": "6828fd8c13a3a8188d8a40f689217b13b379f393113312c45f13fafccba76de8",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3111,23 +3161,26 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 13,
-          "bodyTextLength": 252,
+          "forbiddenVisible": [],
+          "buttonCount": 14,
+          "bodyTextLength": 276,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71370,
-            "visibleRatio": 0.9948424867577362,
-            "lumaMean": 35.76487927795494,
-            "lumaVariance": 579.8657954165116
+            "visiblePixels": 71374,
+            "visibleRatio": 0.9948982436576527,
+            "lumaMean": 35.83476871481016,
+            "lumaVariance": 604.7145774387654
           },
           "fighterKinds": [
             "human:medic",
+            "human:scout",
             "zombie:walker",
-            "zombie:runner"
+            "zombie:runner",
+            "human:engineer"
           ]
         }
       }
@@ -3139,15 +3192,18 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:22.981Z",
+      "capturedAt": "2026-09-07T04:25:00.294Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
-        "zombie:turned",
+        "human:ranger",
+        "human:brawler",
+        "human:babayaga",
         "zombie:walker",
         "zombie:shade",
         "zombie:abomination",
-        "zombie:takuya-omega"
+        "zombie:takuya-omega",
+        "human:scout"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3156,7 +3212,6 @@
         "takuya-omega"
       ],
       "observedEnemyKinds": [
-        "turned",
         "walker",
         "shade",
         "abomination",
@@ -3169,14 +3224,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-battle-boss.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-battle-boss.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "692b3b47c3c7affed49f417a23cd419ba326f7cf240d0afcc3492a83cfcb2e9d",
+      "sha256": "46b2af5c0550ea191c412e81a4f9f2944f6390567eaf73647f027d80c5f8459c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3220,25 +3276,29 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 13,
-          "bodyTextLength": 251,
+          "bodyTextLength": 277,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71442,
-            "visibleRatio": 0.9958461109562309,
-            "lumaMean": 43.155766010593204,
-            "lumaVariance": 734.2689778830226
+            "visiblePixels": 71396,
+            "visibleRatio": 0.9952049066071926,
+            "lumaMean": 44.25860595204837,
+            "lumaVariance": 854.8111829949138
           },
           "fighterKinds": [
-            "zombie:turned",
+            "human:ranger",
+            "human:brawler",
+            "human:babayaga",
             "zombie:walker",
             "zombie:shade",
             "zombie:abomination",
-            "zombie:takuya-omega"
+            "zombie:takuya-omega",
+            "human:scout"
           ]
         }
       }
@@ -3250,7 +3310,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:23.415Z",
+      "capturedAt": "2026-09-07T04:25:01.014Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3259,12 +3319,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-result-win.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-result-win.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "a774a134fee33d43efa0971b743c3243f7b6e225d64b58bf2ef783ed4cdb66ad",
+      "sha256": "20a93ac013f607add720db54e2b94fac588cff3db57c55e146a9c26ef2de6301",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3293,7 +3353,6 @@
         "selectors": [
           "[data-v100-surface=\"result-win\"]",
           ".v100-result-records",
-          ".v100-result-rewards",
           ".v100-result-actions"
         ],
         "observed": {
@@ -3302,11 +3361,11 @@
           "selectorHits": {
             "[data-v100-surface=\"result-win\"]": true,
             ".v100-result-records": true,
-            ".v100-result-rewards": true,
             ".v100-result-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 155,
+          "forbiddenVisible": [],
+          "buttonCount": 2,
+          "bodyTextLength": 160,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3321,7 +3380,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:23.851Z",
+      "capturedAt": "2026-09-07T04:25:01.581Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3330,12 +3389,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-result-lose.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-result-lose.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "762969a80e76b21b7fc4c9b6318c055f5331703377fc74b0d575510873c138bf",
+      "sha256": "e893a69cb3196573f2191171825f02863dbc5c59c8359df73ec6878b7a70dee4",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3374,8 +3433,9 @@
             ".v100-result-records": true,
             ".v100-result-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 4,
-          "bodyTextLength": 128,
+          "bodyTextLength": 142,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3390,7 +3450,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:24.319Z",
+      "capturedAt": "2026-09-07T04:25:02.134Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3399,12 +3459,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-ending.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-ending.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "8995b3536f7cb78a80e5a9ea468f793b233d5f12201462f62cf32546c2933a82",
+      "sha256": "b8355986890385ad7eb969cfa13deb587c24a9238be21139e6ba9a3a4217432a",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3445,6 +3505,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 89,
           "screen": null,
@@ -3461,7 +3522,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:24.770Z",
+      "capturedAt": "2026-09-07T04:25:02.684Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3470,12 +3531,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-credits.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-credits.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "cb342f90087365d390dbf451ac2bc2c103941067d9b2bc44e15d8a61fed5c0fb",
+      "sha256": "5b98016e06303ce72a37ff5ffc0c7c42f1e59b1645af4e7d9ff33dfbb2a2d6eb",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3516,8 +3577,9 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 45,
+          "bodyTextLength": 89,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3532,7 +3594,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:25.203Z",
+      "capturedAt": "2026-09-07T04:25:03.257Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3541,12 +3603,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-epilogue-postgame.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-epilogue-postgame.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "45b4ba390ef0a009c725fb20574bd37aa2d1a42b1246116f20c5831a94197b84",
+      "sha256": "11ca01750b54572961c8b1da5f409c661c0f8fbd4f77f4cc93aa0068780d20e7",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3587,6 +3649,7 @@
             ".v100-story-node": true,
             ".v100-event-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
           "bodyTextLength": 88,
           "screen": null,
@@ -3603,7 +3666,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-21T06:06:25.807Z",
+      "capturedAt": "2026-09-07T04:25:04.013Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3612,12 +3675,12 @@
       "missionType": null,
       "support": [],
       "vehicle": null,
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-data-management-modal.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-data-management-modal.png",
       "dimensions": {
         "width": 844,
         "height": 340
       },
-      "sha256": "fe3c84907db94db45bd422e9df48d856ce7ddcb775c92ccdc0090170b6f143b8",
+      "sha256": "2b5b8d7a3a1884ce3e76ade872f3ce238958cbe41bad602c97f841e339fd3ec5",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3656,8 +3719,9 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 2,
-          "bodyTextLength": 191,
+          "bodyTextLength": 274,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3672,15 +3736,17 @@
       "variant": "stage03-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "capturedAt": "2026-08-21T06:08:09.339Z",
+      "capturedAt": "2026-09-07T04:26:36.201Z",
       "stageId": "stage-nishijin-defense-line-takuya",
       "stageName": "西新防衛線・TAKUYA",
       "visibleActors": [
         "zombie:abomination",
+        "human:brawler",
         "zombie:walker",
-        "human:kumaverson",
         "zombie:shade",
         "zombie:takuya",
+        "zombie:turned",
+        "human:medic",
         "human:scout"
       ],
       "expectedEnemyKinds": [
@@ -3693,7 +3759,8 @@
         "abomination",
         "walker",
         "shade",
-        "takuya"
+        "takuya",
+        "turned"
       ],
       "missionType": "boss-assault",
       "support": [],
@@ -3702,14 +3769,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-667x375-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-667x375-battle-extra.png",
       "dimensions": {
         "width": 667,
         "height": 375
       },
-      "sha256": "58459d1f394efe4b2b5fc18b1503bcef3134124bd160625e621a4adba668bf10",
+      "sha256": "d336e823fced3c82cceaeab77d665c103f7a0b0ca00b03c6ec2b833c885f0687",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3753,27 +3821,28 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 14,
-          "bodyTextLength": 303,
+          "forbiddenVisible": [],
+          "buttonCount": 15,
+          "bodyTextLength": 329,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 62063,
-            "visibleRatio": 0.9924998400818781,
-            "lumaMean": 39.71898221710382,
-            "lumaVariance": 800.5397563666845
+            "visiblePixels": 62218,
+            "visibleRatio": 0.9949785709716625,
+            "lumaMean": 39.44237665515208,
+            "lumaVariance": 719.7081321375067
           },
           "fighterKinds": [
-            "human:ranger",
             "zombie:abomination",
             "human:brawler",
             "zombie:walker",
-            "human:kumaverson",
             "zombie:shade",
             "zombie:takuya",
+            "zombie:turned",
+            "human:medic",
             "human:scout"
           ]
         }
@@ -3786,13 +3855,15 @@
       "variant": "stage04-grappler",
       "engine": "chromium",
       "viewport": "736x414",
-      "capturedAt": "2026-08-21T06:08:39.149Z",
+      "capturedAt": "2026-09-07T04:26:55.663Z",
       "stageId": "stage-nishijin-station-gate",
       "stageName": "西新駅・閉鎖改札",
       "visibleActors": [
+        "human:medic",
         "human:scout",
         "zombie:walker",
-        "zombie:grappler"
+        "zombie:grappler",
+        "human:ranger"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3810,14 +3881,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-736x414-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-736x414-battle-extra.png",
       "dimensions": {
         "width": 736,
         "height": 414
       },
-      "sha256": "c75a286a0ebee12d0272136b34ab4e0c27f39a67ed064d196629cbbf97f64973",
+      "sha256": "ad029aed151b324ed70ecd2632c7ea8577e1de1ee36ef975b95a71c9f925694b",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3861,24 +3933,26 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 15,
-          "bodyTextLength": 270,
+          "bodyTextLength": 286,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 736,
             "height": 414,
             "sampled": 76176,
-            "visiblePixels": 75674,
-            "visibleRatio": 0.9934099978996009,
-            "lumaMean": 50.420134727474874,
-            "lumaVariance": 1383.2186891672575
+            "visiblePixels": 75673,
+            "visibleRatio": 0.993396870405377,
+            "lumaMean": 50.54507997532159,
+            "lumaVariance": 1395.222425885287
           },
           "fighterKinds": [
             "human:medic",
             "human:scout",
             "zombie:walker",
-            "zombie:grappler"
+            "zombie:grappler",
+            "human:ranger"
           ]
         }
       }
@@ -3890,7 +3964,7 @@
       "variant": "stage21-panther-knife",
       "engine": "chromium",
       "viewport": "932x430",
-      "capturedAt": "2026-08-21T06:09:27.065Z",
+      "capturedAt": "2026-09-07T04:27:36.130Z",
       "stageId": "stage-mugarian-logistics-hq",
       "stageName": "ムガリアン物流本部",
       "visibleActors": [
@@ -3916,14 +3990,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-932x430-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-932x430-battle-extra.png",
       "dimensions": {
         "width": 932,
         "height": 430
       },
-      "sha256": "38e40cc0fdef244617a81cc70b88476e24a8bc37927f4eb46f40f67c6c0f900a",
+      "sha256": "8a154463536dee457eefbb1721663b0739ddfe3865a41a87f8633ac928b7c50e",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3967,24 +4042,25 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 13,
-          "bodyTextLength": 260,
+          "bodyTextLength": 243,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 100025,
-            "visibleRatio": 0.9983531290547959,
-            "lumaMean": 54.53850655953869,
-            "lumaVariance": 1534.0767590763196
+            "visiblePixels": 100030,
+            "visibleRatio": 0.9984030342349536,
+            "lumaMean": 54.20249692185065,
+            "lumaVariance": 1516.2936582558189
           },
           "fighterKinds": [
             "zombie:red-panther-smg",
             "zombie:runner",
-            "zombie:turned",
-            "human:babayaga"
+            "human:babayaga",
+            "zombie:turned"
           ]
         }
       }
@@ -3996,14 +4072,15 @@
       "variant": "stage06-spitter-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "capturedAt": "2026-08-21T06:10:24.928Z",
+      "capturedAt": "2026-09-07T04:28:53.261Z",
       "stageId": "stage-nishijin-station-tunnel-seal",
       "stageName": "西新駅・保守トンネル",
       "visibleActors": [
         "human:ranger",
-        "human:scout",
         "zombie:spitter",
-        "zombie:crusher"
+        "human:scout",
+        "zombie:crusher",
+        "zombie:turned"
       ],
       "expectedEnemyKinds": [
         "runner",
@@ -4022,14 +4099,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-667x375-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-667x375-battle-extra.png",
       "dimensions": {
         "width": 667,
         "height": 375
       },
-      "sha256": "ab5c653ed554bd976760666053b1fcaa119430fd61e0923e35d3f3967b8d853a",
+      "sha256": "8a3adb1af4d640d8e4d513935326356e0b7ca36bc70f88733e5f83f895e7ed1d",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4073,18 +4151,19 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
+          "forbiddenVisible": [],
           "buttonCount": 16,
-          "bodyTextLength": 256,
+          "bodyTextLength": 274,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 62271,
-            "visibleRatio": 0.9958261370178468,
-            "lumaMean": 49.26298816285976,
-            "lumaVariance": 1150.846787464099
+            "visiblePixels": 62320,
+            "visibleRatio": 0.9966097358152626,
+            "lumaMean": 48.93483175334138,
+            "lumaVariance": 1144.27800989005
           },
           "fighterKinds": [
             "human:ranger",
@@ -4103,17 +4182,16 @@
       "variant": "stage24-panther-commander",
       "engine": "webkit",
       "viewport": "736x414",
-      "capturedAt": "2026-08-21T06:11:56.024Z",
+      "capturedAt": "2026-09-07T04:30:55.150Z",
       "stageId": "stage-mugarian-tech-tower",
       "stageName": "ムガリアン技術開発塔",
       "visibleActors": [
-        "human:brawler",
-        "human:babayaga",
-        "human:kumaverson",
+        "human:medic",
+        "human:scout",
         "zombie:red-panther-commander",
         "zombie:red-panther-shield",
-        "zombie:futago",
-        "human:scout"
+        "zombie:red-panther-smg",
+        "zombie:futago"
       ],
       "expectedEnemyKinds": [
         "red-panther-commander",
@@ -4134,14 +4212,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-736x414-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-736x414-battle-extra.png",
       "dimensions": {
         "width": 736,
         "height": 414
       },
-      "sha256": "bf5cb72e268685070f71e909268cb0f61560df43f6c0482a1cdf174ac45f4455",
+      "sha256": "0635ac126ffec8ef2f4f49de14575976a7cc207a05af83b71db45c4cf029bdf1",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4185,23 +4264,23 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 15,
-          "bodyTextLength": 335,
+          "forbiddenVisible": [],
+          "buttonCount": 18,
+          "bodyTextLength": 369,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 736,
             "height": 414,
             "sampled": 76176,
-            "visiblePixels": 75725,
-            "visibleRatio": 0.99407950010502,
-            "lumaMean": 53.86520032030852,
-            "lumaVariance": 1607.8316274380543
+            "visiblePixels": 75731,
+            "visibleRatio": 0.9941582650703634,
+            "lumaMean": 55.79956840474587,
+            "lumaVariance": 1671.536128716212
           },
           "fighterKinds": [
-            "human:brawler",
-            "human:babayaga",
-            "human:kumaverson",
+            "human:medic",
+            "human:scout",
             "zombie:red-panther-commander",
             "zombie:red-panther-shield",
             "zombie:red-panther-smg",
@@ -4217,16 +4296,18 @@
       "variant": "stage25-president",
       "engine": "webkit",
       "viewport": "932x430",
-      "capturedAt": "2026-08-21T06:13:38.472Z",
+      "capturedAt": "2026-09-07T04:33:06.727Z",
       "stageId": "stage-mugarian-executive-lab",
       "stageName": "ムガリアン役員研究所・市場の終わり",
       "visibleActors": [
         "human:guardian",
+        "human:ranger",
         "zombie:red-panther-smg",
         "zombie:red-panther-commander",
         "zombie:red-panther-shield",
-        "zombie:turned",
-        "zombie:mugarian-president-mutated"
+        "human:medic",
+        "zombie:mugarian-president-mutated",
+        "zombie:turned"
       ],
       "expectedEnemyKinds": [
         "red-panther-commander",
@@ -4235,11 +4316,11 @@
         "mugarian-president-mutated"
       ],
       "observedEnemyKinds": [
-        "red-panther-shield",
         "red-panther-smg",
         "red-panther-commander",
-        "turned",
-        "mugarian-president-mutated"
+        "red-panther-shield",
+        "mugarian-president-mutated",
+        "turned"
       ],
       "missionType": "boss-assault",
       "support": [],
@@ -4248,14 +4329,15 @@
         "phaseTime": 0,
         "cooldownRemaining": 0,
         "charge": 1,
-        "damageTriggered": false
+        "damageTriggered": false,
+        "v100": true
       },
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-932x430-battle-extra.png",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-932x430-battle-extra.png",
       "dimensions": {
         "width": 932,
         "height": 430
       },
-      "sha256": "7555e6175d2f1ae2634126d75512c7821146694c058fe60c532be2afa1ba1e30",
+      "sha256": "1243cddf748def22527af1d83122633845598405989cbad07b8d2ebe6bbf9d28",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4299,27 +4381,29 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 16,
-          "bodyTextLength": 317,
+          "forbiddenVisible": [],
+          "buttonCount": 17,
+          "bodyTextLength": 345,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 99262,
-            "visibleRatio": 0.9907375985627308,
-            "lumaMean": 36.00800419602652,
-            "lumaVariance": 553.1828656308654
+            "visiblePixels": 99338,
+            "visibleRatio": 0.9914961573011278,
+            "lumaMean": 35.29105555444602,
+            "lumaVariance": 544.2725602253191
           },
           "fighterKinds": [
-            "zombie:red-panther-shield",
             "human:guardian",
+            "human:ranger",
             "zombie:red-panther-smg",
             "zombie:red-panther-commander",
-            "zombie:turned",
-            "human:ranger",
-            "zombie:mugarian-president-mutated"
+            "zombie:red-panther-shield",
+            "human:medic",
+            "zombie:mugarian-president-mutated",
+            "zombie:turned"
           ]
         }
       }
@@ -4349,12 +4433,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-existing-ally-melee.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-existing-ally-melee.json",
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:08:09.339Z",
+      "timestamp": "2026-09-07T04:26:36.201Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4385,12 +4469,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-existing-ally-ranged.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-existing-ally-ranged.json",
       "stageId": "stage-nishijin-station-tunnel-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:10:24.928Z",
+      "timestamp": "2026-09-07T04:28:53.261Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4421,12 +4505,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-existing-enemy-melee.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-existing-enemy-melee.json",
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:08:09.339Z",
+      "timestamp": "2026-09-07T04:26:36.201Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4457,12 +4541,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-existing-enemy-ranged-special.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-existing-enemy-ranged-special.json",
       "stageId": "stage-nishijin-station-tunnel-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:10:24.928Z",
+      "timestamp": "2026-09-07T04:28:53.261Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4493,12 +4577,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-736x414-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-infected-special.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-736x414-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-infected-special.json",
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-21T06:08:39.149Z",
+      "timestamp": "2026-09-07T04:26:55.663Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4529,12 +4613,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-932x430-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-red-panther-knife.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-932x430-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-red-panther-knife.json",
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-21T06:09:27.065Z",
+      "timestamp": "2026-09-07T04:27:36.130Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4565,12 +4649,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-932x430-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-red-panther-smg.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-932x430-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-red-panther-smg.json",
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-21T06:09:27.065Z",
+      "timestamp": "2026-09-07T04:27:36.130Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4601,12 +4685,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-932x430-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-red-panther-shield.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-932x430-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-red-panther-shield.json",
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-21T06:13:38.472Z",
+      "timestamp": "2026-09-07T04:33:06.727Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4637,12 +4721,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-736x414-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-red-panther-commander.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-736x414-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-red-panther-commander.json",
       "stageId": "stage-mugarian-tech-tower",
       "engine": "webkit",
       "viewport": "736x414",
-      "timestamp": "2026-08-21T06:11:56.024Z",
+      "timestamp": "2026-09-07T04:30:55.150Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4673,12 +4757,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-existing-boss.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-existing-boss.json",
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:08:09.339Z",
+      "timestamp": "2026-09-07T04:26:36.201Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4709,12 +4793,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/webkit-932x430-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-mutated-president.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/webkit-932x430-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-mutated-president.json",
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-21T06:13:38.472Z",
+      "timestamp": "2026-09-07T04:33:06.727Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4745,12 +4829,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-battle-boss.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-takuya-omega.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-battle-boss.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-takuya-omega.json",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-21T06:06:22.981Z",
+      "timestamp": "2026-09-07T04:25:00.294Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4781,12 +4865,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-844x340-battle-boss.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-support.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-844x340-battle-boss.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-support.json",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-21T06:06:22.981Z",
+      "timestamp": "2026-09-07T04:25:00.294Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4817,12 +4901,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-667x375-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-vehicle-ability.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-667x375-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-vehicle-ability.json",
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-21T06:08:09.339Z",
+      "timestamp": "2026-09-07T04:26:36.201Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4853,12 +4937,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-736x414-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-mission-object.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-736x414-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-mission-object.json",
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-21T06:08:39.149Z",
+      "timestamp": "2026-09-07T04:26:55.663Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4889,12 +4973,12 @@
         "target-reaction",
         "aftermath"
       ],
-      "evidence": "outputs/v100-phase-g-merge-r6/chromium-932x430-battle-extra.png",
-      "runtimeEvidence": "outputs/v100-phase-g-merge-r6/combat/combat-status-target-markers.json",
+      "evidence": "outputs/v100-completion-phase-g-fe55aef/chromium-932x430-battle-extra.png",
+      "runtimeEvidence": "outputs/v100-completion-phase-g-fe55aef/combat/combat-status-target-markers.json",
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-21T06:09:27.065Z",
+      "timestamp": "2026-09-07T04:27:36.130Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4960,8 +5044,8 @@
       "shade",
       "abomination",
       "takuya-omega",
-      "turned",
       "takuya",
+      "turned",
       "grappler",
       "red-panther-smg",
       "spitter",
@@ -5125,5 +5209,10 @@
       ],
       "valid": true
     }
+  },
+  "reportEvidence": {
+    "path": "outputs/v100-completion-phase-g-fe55aef/phase-g-report.json",
+    "bytes": 30810673,
+    "sha256": "6ac70c3a3cbad05eb4f908a408618c89570355da02d9a9ce608bb75b1266bc82"
   }
 }
