@@ -542,6 +542,7 @@ import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
 import { drawV100AssaultObject } from "./v100AssaultObjects.js";
+import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
@@ -5512,6 +5513,7 @@ function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard,
 let stationMissionDiagnosticFallbackDrawCount = 0;
 
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false) {
+  drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
   if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);

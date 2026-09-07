@@ -10,6 +10,7 @@ import { V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVe
 import { V100_RESEARCH_CORE_STAGE, V100_RESEARCH_CORE_ART } from "./v100ResearchCore.js";
 import { V100_NODE_ART, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
+import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -80,7 +81,8 @@ export function requiredBattleAssetPlan({
     ? [{id:"v100-mission-node-states",path:V100_NODE_ART,runtimeUsage:"mission-render-source"}] : [];
   const assaultProfile=includeV100Sprites?v100AssaultObjectProfile(stageId):null;
   const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects];
+  const defenseObjects=includeV100Sprites&&v100Stage?.missionType==="timed-defense"?[{id:"v100-defense-perimeter",path:V100_DEFENSE_PERIMETER_ART,runtimeUsage:"mission-render-source"}]:[];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

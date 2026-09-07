@@ -5,6 +5,24 @@ import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { objectiveForBattle, battleOutcomeFor } from "../app/battleDefinitions.js";
 import { v100ClinicalControlState, drawV100ClinicalControl, V100_CLINICAL_CONTROL_ART } from "../app/v100ClinicalControl.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
+import { drawV100DefensePerimeter, V100_DEFENSE_PERIMETER_ART } from "../app/v100DefensePerimeter.js";
+
+test("all authored defense phases follow real threats, crawler impact and the unchanged outcome boundary",()=>{
+  for(const stageId of Object.keys(V100_DEFENSE_OBJECTIVES)){
+    const definition=v100BattleDefinitionFor(stageId),image={complete:true,naturalWidth:1983},frames=[];
+    assert.ok(requiredBattleAssetPlan({stageId}).paths.includes(V100_DEFENSE_PERIMETER_ART));
+    assert.ok(!requiredBattleAssetPlan({stageId,includeV100Sprites:false}).paths.includes(V100_DEFENSE_PERIMETER_ART));
+    const context=new Proxy({drawImage:(_image,left)=>frames.push(left)},{get:(target,key)=>key in target?target[key]:()=>{}});
+    const game={definition,time:definition.prepSeconds+10,baseHp:920,baseMaxHp:920,fighters:[]};
+    const draw=()=>{const before=JSON.stringify(game);assert.equal(drawV100DefensePerimeter(context,game,{'v100-defense-perimeter':image},340,382),true);assert.equal(JSON.stringify(game),before);};
+    draw();game.fighters=[{side:'zombie',hp:100,x:400,combatReady:true,gateEntering:false}];draw();game.crawlerHitFlash=.1;draw();
+    game.time=definition.defenseEndAt;draw();assert.equal(battleOutcomeFor(definition,game),'won');
+    game.baseHp=0;draw();assert.equal(battleOutcomeFor(definition,game),'lost');
+    assert.deepEqual(frames,[0,392,770,1158,1535]);
+    assert.throws(()=>drawV100DefensePerimeter(context,game,{},340,382),/decoded/);
+    game.definition={...definition,missionConfig:{}};assert.equal(drawV100DefensePerimeter(null,game,null,340,382),false);
+  }
+});
 
 test("the real 100-second clinical operation opens exactly 43 records and shares the production completion boundary", () => {
   const definition = v100BattleDefinitionFor("stage-mugarian-clinical-trial-wing");

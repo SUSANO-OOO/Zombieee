@@ -126,7 +126,15 @@ build 19b46f43a9a54ceef31542f5e66f1d3284fa1b8b64f3535573be535bbcd80b7dでChromiu
 
 送信済み21316aaのCI34139232652はPhase G/native WebKit PWA/PR Verify/敵6分割/Hosted/入口audioがlive APIで成功、final audioは実行中または待機（outputs/completion/pr171-objective-live.json）。この結果は新しい襲撃/護衛asset候補の受入へ代用しない。
 
-現在は工程1と2。次の開始点は時間防衛の残る状態演出と獲得済みStage25結果からの後半通常プレイ。有限の残件は時間防衛/最終bossの通常体験、自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。旧データ保全/公開承認境界/継続goalを維持する。
+時間防衛Stage2/7/18/22に、通常/敵接近/被害/完了/失敗の5状態を持つ低い防衛標識を接続した。既存v100DefenseStatusの実敵接近、crawlerHitFlash、戦闘時計、生存・勝利条件だけを参照し、表示側の進行やHP変更は0。Stage22の43室開放表示と設備を併存させる。原本/正確なprompt/可視RGBA無損失encodeを保持。追加1 asset/508,180bytes、完成補完25 assets/17,922,146bytes、候補484 logical/482 distinct、122,484,817bytes。
+
+build b7f1a8bb424624ceedb36b3d72266c36b4158a292467b4d2a441bc6d7b25fd72で両engine×3サイズ×4防衛作戦のnative入口24条件が成功（outputs/v100-defense-placement-browser-r1）。元画像の完全なalpha輪郭、HUD非重複/画面内、overflow/diagnostics0。5状態を本番status/rendererで描く両engineの明示fixtureも成功（outputs/v100-defense-perimeter-preview-r1）。全1507 source tests/build/lint0errors/既存12warnings/追加script lint/diff check成功。
+
+同buildの獲得済みStage21 saveからWebKitでStage22を通常操作し、105.02秒/車両1000/1000/損耗0/星3で43室を開放、結果保存・再読込も一致した（outputs/v100-perimeter-earned-s22-webkit-r1）。最終canvasに防衛標識の通常→緑の完了状態が実時計で描かれた。敵接近/被害/失敗はこの無被害実戦では発生しておらず、前記fixtureの証拠と区別する。
+
+同buildのStage26は獲得済みStage25結果を実UIで確定し、正規410 CAPS報酬後の1499 CAPS/主力Lv19/車両1000を維持して126.12秒、車両1000/1000、損耗0、星3で3台の車列を確保した（outputs/v100-convoy-earned-s26-r1）。実移動/護衛integrity/車両3体/任務結果を観測、資源/HP/時計/結果の改変0。結果直前の到達信号はサンプリング間隔内に完了したため、この実戦ログで緑表示を見たとはしない。状態と完了判定の接続/緑画像は前記独立fixtureで検証済み、同一候補の全編確認で再観測する。
+
+現在は工程1と2。次の開始点は正本どおりの9200HPを持つ最終bossの通常体験。有限の残件は最終boss、自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。大規模CIが制作中の新pushで途中取消になるため、以後の制作修正をまとめ、候補を固定してから全編と必要CIを揃える。旧データ保全/公開承認境界/継続goalを維持する。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

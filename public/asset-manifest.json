@@ -1446,6 +1446,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/mission-objects/defense-perimeter-states-v1.webp",
+      "bytes": 508180,
+      "hash": "sha256-3b7a240eeff611e0ee7eb82a5ee2f771c0b8b559aabf28e1d0676c3db9673ec6",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/escort-cart-damaged-v1.png",
       "bytes": 137802,
       "hash": "sha256-9a7282e6bf097b90fab36494b79e82348ae8054f3013993178c990ac68fccb33",
