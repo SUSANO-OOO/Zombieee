@@ -76,3 +76,26 @@ test("Gate Eater starts with exactly three allowed adds and requires their clear
   assert.deepEqual(definition.timeline.flatMap(event => event.units), ["gate-eater", "walker", "ooze", "sprinter"]);
   assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
 });
+
+test("Futago retains all four groups and both bodies but its final group cannot overlap surviving prior guards", () => {
+  const definition=createBattleDefinition(V100_STAGES[23].id,{v100:true});
+  assert.equal(definition.timeline.length,4);
+  assert.deepEqual(definition.timeline.map(e=>e.units.length),[2,2,3,5]);
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
+  assert.deepEqual(definition.timeline.flatMap(e=>e.units).reduce((counts,kind)=>(counts[kind]=(counts[kind]??0)+1,counts),{}),
+    {"red-panther-shield":5,"red-panther-commander":5,futago:2});
+  assert.equal(definition.timeline[3].waitForPriorWaveClear,true);
+  const g={definition,eventIndex:3,time:77,fighters:[{id:1,side:"zombie",kind:"red-panther-shield",hp:1}],enemySpawn:{nextEntryId:8,pending:[]}};
+  const queued=[],announced=[];
+  const context={g,isBossFighter,isBossEnemyKind:kind=>kind==="futago",activeStageViewportId:"844x340",
+    enqueueEnemyWave:(runtime,event)=>{queued.push(event);return{...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
+    enemySpawnPortalPoint:()=>({}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{}};
+  const advance=()=>vm.runInNewContext(code,context);
+  advance();assert.equal(g.eventIndex,3);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
+  g.time=140;advance();assert.equal(g.eventIndex,3,"time cannot discard a surviving prior guard");
+  g.fighters[0].hp=0;g.enemySpawn.pending=[{entryId:7,kind:"red-panther-commander"}];
+  advance();assert.equal(g.eventIndex,3,"an offscreen queued guard also prevents the final group");
+  g.enemySpawn.pending=[];advance();
+  assert.equal(g.eventIndex,4);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[3].units);
+  assert.deepEqual(announced,["futago"]);advance();assert.equal(queued.length,1,"the complete final group is committed once without another timer");
+});

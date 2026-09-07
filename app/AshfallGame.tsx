@@ -709,7 +709,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; waitForPriorWaveClear?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -19010,6 +19010,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         } else {
           while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            if (mission.waitForPriorWaveClear && (g.enemySpawn.pending.length > 0
+              || g.fighters.some(fighter => fighter.side === "zombie" && fighter.hp > 0))) break;
             if (Number.isFinite(mission.bossHpRatio)) {
               const owner = g.fighters.find(fighter => fighter.kind === g.definition.bossEnemyKind);
               if (!g.bossDefeated && !g.bossDefeatPending
