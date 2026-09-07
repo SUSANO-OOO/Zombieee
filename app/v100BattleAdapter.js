@@ -85,7 +85,9 @@ function stageTimeline(stage, missionType, bossKind) {
     // The boss is the battle's opening threat. Exactly two later A-only
     // reinforcements belong to this operation; no Panther survives its prelude.
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: true }),
+      // bossOnly means "only while an existing boss is alive" in Ashfall's
+      // real event consumer; the opening boss must never carry that gate.
+      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: false }),
       freeze({ at: PREP_SECONDS + 24, wave: 2, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner"]), addWave: true }),
       freeze({ at: PREP_SECONDS + 48, wave: 3, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher"]), addWave: true }),
     ]);

@@ -58,6 +58,10 @@ Stage23の追加通常探索は獲得済み1105 CAPSからMrs.チハを登録/Lv
 
 同じ探索のStage23は101.25秒・車両1000/1000・損耗0、Stage24は221.72秒・車両1000/1000・損耗9で勝利し、結果保存・会話からStage25へ進行した。敵packの修正と実際の射程へ入ってから技能を使う操作を同時に変更しているため、勝敗差の全てを一方の効果とはしない。第24作戦の長さと損耗を含め、後半の通常体験評価は未完了。
 
+獲得済み探索はStage29まで進行・保存した。同作戦は135.58秒・車両1080/1080・損耗0、二対象HP0が結果へ保存された。一方Stage30ではΩが出現せず進行不能を検出。新timelineの`bossOnly`を「ボス単体」と誤解したが、実consumerでは「既存ボスが生存している時のみ」だった。初期登場を無条件へ直し、実際のAshfall while本体を実行してΩ一回とA限定二増援がqueueへ渡ることを検査する。全1460 tests/build、lint0 errors/12既存warnings成功。build `0e947cdb5b8f026affeef47dbc035c279a23048eb3465e822cae5b78137aff73`で、29作戦完了/499 CAPS/Lv24の保存を正確に引き継ぎ実Ω戦を再開（`outputs/v100-earned-tactical-omega-entrance-r1`）。進行不能の旧記録も保持し、未完のStage30を合格にしない。
+
+PWA環境の根因：9fe9851のLinuxでもゲームなしprobeが同じ失敗。Playwright公式PR41701は、パッチ追加したResourceResponseDataのfieldが永続encoderに欠け、保存したresponseをdecodeできずput直後でもmatch=nullになる欠陥を修正している。これは今回の全3 OS症状に一致する。独立した公式Playwright1.63.0/WebKit2359で同じ最小probeがWindowsのpage/worker共有・process再起動保持とも成功（`outputs/completion/native-storage-1.63.0.json`、`native-storage-fixed-owner-r1.json`）。別固定依存でPWAだけを修正版へ進め、描画lane1.56.1は維持。修正版macOSの実PWA更新/失敗復旧/真のoffline再読込は次の受入であり、まだ成功とはしない。
+
 現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
