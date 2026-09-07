@@ -118,6 +118,13 @@ export function setupActorObservation(runtime, side, kind, cueId) {
   const actor = runtime?.fighters?.find((f) => f.side === side && f.kind === kind && Number(f.hp) > 0);
   const completed = runtime?.completedAttackImpacts?.some((r) => r.battleGeneration === runtime.battleGeneration
     && r.sourceSide === side && r.sourceKind === kind && receiptContract.receiptValidation(r).ok);
+  if (side === "zombie" && kind === "grappler") {
+    // A grappler's warning is not its binding action. Keep setup identical to
+    // the final coverage predicate: committed attack or a live target pulled.
+    return { mounted: Boolean(actor), observed: Boolean(completed || actor && (
+      Number(actor.attackSequence) > 0 || Number(actor.attack) > 0 || Number(actor.attackWindup) > 0
+      || observedGrapplerPull(actor, runtime.fighters))) };
+  }
   const active = actor && (Number(actor.attackSequence) > 0 || Number(actor.attack) > 0
     || Number(actor.attackWindup) > 0 || (side === "zombie" && (actor.enemyVfx?.attacking === true
       || actor.enemyVfx?.attackWindup === true || ["attack", "warning"].includes(actor.enemyVfx?.phase))));

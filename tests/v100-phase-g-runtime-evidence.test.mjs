@@ -108,6 +108,20 @@ test("actual Stage25 warning-only return fails while its committed control and r
   assert.throws(() => check(later, { boss: { ...committed, battleGeneration: 3 } }), /SETUP_CAPTURE_MISMATCH/u);
 });
 
+test("grappler setup cannot finish at warning and must observe the actual bound living target", () => {
+  const actor = { id: 8, side: "zombie", kind: "grappler", hp: 100, enemyVfx: { phase: "warning" },
+    stationAbility: { phase: "windup", targetId: 1, remainingSeconds: .5 } };
+  const target = { id: 1, side: "human", kind: "medic", hp: 50, stunned: .08 };
+  const observed = (a, t) => setupActorObservation(runtime({ fighters: [a, t] }), "zombie", "grappler", null).observed;
+  assert.equal(observed(actor, target), false);
+  const pulling = { ...actor, stationAbility: { ...actor.stationAbility, phase: "pulling" } };
+  assert.equal(observed(pulling, target), true);
+  assert.equal(observed(pulling, { ...target, id: 2 }), false);
+  assert.equal(observed(pulling, { ...target, hp: 0 }), false);
+  assert.equal(observed(pulling, { ...target, stunned: 0 }), false);
+  assert.equal(observed({ ...pulling, stationAbility: { ...pulling.stationAbility, remainingSeconds: 0 } }, target), false);
+});
+
 test("all sixteen unchanged representative rows require their actual runtime action", () => {
   for (const contract of V100_REPRESENTATIVE_COMBAT_CONTRACT) {
     const rule = representativeRuntimeObservationRule(contract);

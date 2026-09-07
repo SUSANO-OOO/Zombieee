@@ -23,6 +23,7 @@ import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
+import { isExpectedPartialBundleAbort } from "./pwa-expected-abort.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -459,6 +460,7 @@ function attachDiagnostics(page) {
       phase: diagnosticPhase,
       url: request.url(),
       error: request.failure()?.errorText ?? "unknown",
+      at: Date.now(),
     };
     (teardown ? diagnostics.teardown : diagnostics.requestFailures).push(entry);
   });
@@ -1167,6 +1169,7 @@ try {
     && !failure.error.includes("NS_BINDING_ABORTED")
     && !failure.error.includes("Load request cancelled")
     && !failure.error.includes("ERR_INTERNET_DISCONNECTED")
+    && !isExpectedPartialBundleAbort(failure, audioRequests, new URL(bundlePathname, baseUrl).href)
   ));
   const expectedInjectedConsoleErrors = diagnostics.consoleErrors.filter((entry) => (
     entry.message === "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
@@ -1190,6 +1193,7 @@ try {
     "scripts/pwa-browser-runtime.mjs",
     "scripts/pwa-native-runtime/package-lock.json",
     "scripts/pwa-offline-origin.mjs",
+    "scripts/pwa-expected-abort.mjs",
     "app/PwaGate.tsx",
     "app/GameEntry.tsx",
     "app/v100Save.js",
