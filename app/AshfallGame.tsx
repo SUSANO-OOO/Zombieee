@@ -3849,6 +3849,12 @@ function spriteDisplaySize(kind: string) {
 }
 
 function compactSpriteScale(kind: string) {
+  // The cover crop removes sky on short landscapes. Keep Omega's tallest
+  // authored pose clear of command HUDs at the same combat ground anchor.
+  if (kind === "takuya-omega") {
+    if (!compactBattleViewport()) return .8;
+    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .52 : .6;
+  }
   if (!compactBattleViewport()) return 1;
   return kind === "mother" ? 1.06 : COMPACT_BATTLE_SPRITE_SCALE;
 }
@@ -22949,7 +22955,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const activeBossLabel = activeBossKind
     ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
     : "BOSS";
-  const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
+  const omegaProtectedObjective = gameRef.current.definition.missionConfig.v100StageNumber === 30 && !hud.barricadeVulnerable;
+  const bossHudSide = (hud.bossWorldX ?? (omegaProtectedObjective ? W : 0)) >= W * (omegaProtectedObjective ? .6 : .64) ? "boss-hud-left" : "boss-hud-right";
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
   const commonBattleActionBlockReason = !started
     ? "作戦開始前"
@@ -23152,7 +23159,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </div>
             : stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
-            : <div className={`health-hud barrier-health ${v100CorporateControlLabel(gameRef.current.definition) ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
+            : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div>{hud.bossTwins ? <div className="boss-twin-hp">{hud.bossTwins.map(twin => <span key={twin.part} data-twin-part={twin.part}><small>個体{twin.part.toUpperCase()} {twin.arriving ? "接近中" : `${Math.ceil(twin.hp)}/${twin.maxHp}`}</small><i><em style={{width:`${twin.hp/twin.maxHp*100}%`}} /></i></span>)}</div> : <i><em style={{ width: `${bossPct}%` }} /></i>}</div>}

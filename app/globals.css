@@ -142,6 +142,7 @@ button[aria-disabled="true"]:focus-visible {
 .barrier-health.hit { animation:crawler-hit .16s ease-out; }
 .barrier-health.v100-control-health { width:min(28%,236px); }
 .barrier-health.v100-control-health div span,.barrier-health.v100-control-health div b { white-space:nowrap; }
+.barrier-health.omega-objective-left { left:calc(2% + var(--app-viewport-safe-left)); right:auto; }
 .barrier-health > small { display:block; margin-top:3px; color:#d17b52; font:800 clamp(5px,.52vw,7px) monospace; letter-spacing:.1em; }
 .mission-health { opacity:1; padding:5px 8px; border:1px solid rgba(216,188,118,.45); background:rgba(7,12,13,.78); }
 .mission-health div { display:block; text-align:right; }
