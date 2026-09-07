@@ -295,6 +295,9 @@ jobs:
       - name: Verify pinned macOS WebKit runtime
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
+      - name: Verify native persistent storage before loading either release
+        run: node scripts/native-pwa-storage-probe.mjs
+
       - name: Build production application
         run: npm run build
 

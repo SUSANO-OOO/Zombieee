@@ -42,7 +42,11 @@
 4. **最終Producer承認**：完成条件を満たした、実際に遊べる固定候補と検証結果・残存事項を提示。この承認前はReady/最終merge/tag/Release/正式deployment/Issue closeを行わない。
 5. **正式公開と確認**：承認候補と統合結果treeを照合し、正式release SHAへtag/Release/Pages requestを固定。匿名公開、asset、fresh/既存save、update/recoveryを公開環境で確認し、問題があれば修正・復旧後に再検証。実態に一致する完了記録を残した時だけgoal complete/Issue close。
 
-現在は工程1。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
+追加の現在値（2026-09-07）：通常の獲得済みデータでStage11を163.68秒・車両840/840・損耗4で突破した。ガンテツ/ナオ/ババヤガ/ミズチの役割と重複編成を利用し、敵の数値は変更していない。同じ探索経路でStage22まで進行。護送Stage12は118.18秒、Stage19は119.13秒、ノードStage15/16も実際に帰還・保存まで成立した。Stage23は136.93秒・損耗10で敗北し保存。1105 CAPSを持ちながら、従来の操作スクリプトはStage8以降の新隊員を登録しないため、解禁済みの成長・編成選択を含む攻略確認が残る。`outputs/v100-normal-campaign-roles-s11-r1` は識別した複数build間の通常探索であり、最終候補全30作戦の受入ではない。
+
+候補21539efのCI `34091793707`：PR VerifyとPagesのPR検証は成功したが、Phase Gは追加probeの出力親ディレクトリ未作成（ENOENT）で製品起動前に停止した。親だけを作成して子ディレクトリの排他的作成は維持し、親がない条件で両engineの入力probeを確認した。macOS PWAは新版へ切り替える前、旧公開版の初回installでmanifest commit失敗（画面とjob101651329665のlog/artifactを保存）。新版の更新不具合とも環境不具合とも、まだ確定しない。ゲームコードを含まない新しい永続保存probeを必須工程へ追加。Windowsでは通常contextのpage/worker共有は成功、persistent contextのみput後のmatch=null/keys=[]・再起動後も空。Chromiumは両contextと永続再起動に成功。macOSで同一probeの結果を取得するまでnative PWAは未合格とする。旧結果や一時contextを永続更新の代替合格へ使わない。
+
+現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

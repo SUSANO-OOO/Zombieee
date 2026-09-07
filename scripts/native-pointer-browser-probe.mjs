@@ -6,6 +6,7 @@ import { chromium, webkit } from "playwright";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
 
 const out = path.resolve(process.env.NATIVE_POINTER_EVIDENCE_DIR ?? "outputs/native-pointer-probe");
+await mkdir(path.dirname(out), { recursive: true });
 await mkdir(out, { recursive: false });
 const report = { host: process.platform, scope: "Isolated native browser input diagnostic, not game acceptance", source: createHash("sha256").update(await readFile("scripts/ordered-native-pointer.mjs")).digest("hex"), cases: [] };
 try {

@@ -768,8 +768,17 @@ try {
   await screenshot(page, "rollback-commit-required");
 } catch (error) {
   await screenshot(page, "failure").catch(() => {});
+  const storageAtFailure = await page?.evaluate(async () => {
+    const names=await caches.keys();
+    const cachesAtFailure=await Promise.all(names.map(async name=>({name,entries:(await (await caches.open(name)).keys()).map(request=>request.url)})));
+    return {url:location.href,body:document.body.innerText,caches:cachesAtFailure};
+  }).catch(diagnosticError=>({error:String(diagnosticError)}));
+  const workerAtFailure = await getWorkerState(page).catch(diagnosticError=>({error:String(diagnosticError)}));
   record("persistent existing-PWA update flow completed without an unhandled harness error", false, {
     error: String(error?.stack ?? error),
+    phase: diagnosticPhase,
+    storageAtFailure,
+    workerAtFailure,
   });
 } finally {
   if (context) await closeContext("final-context-close").catch(() => {});
