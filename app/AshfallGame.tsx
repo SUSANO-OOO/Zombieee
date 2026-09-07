@@ -202,6 +202,9 @@ import {
   bossDefinitionForEnemyKind,
   bossHudSnapshot,
   bossPhaseForHp,
+  bossFinalPhase,
+  bossControlMultiplier,
+  bossSlowMultiplier,
   bossTelegraphSnapshot,
   enforceBossBodyBarrier,
   isBossEnemyKind,
@@ -780,6 +783,8 @@ function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y:
 }
 
 type Fighter = {
+  v100BossId?: string;
+  v100TwinEnraged?: boolean;
   id: number;
   side: "human" | "zombie";
   kind: string;
@@ -1340,6 +1345,7 @@ type Hud = {
   bossHp: number;
   bossMax: number;
   bossKind: string | null;
+  bossPhase?: { phase: number; label: string };
   bossWorldX: number | null;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
@@ -2625,7 +2631,7 @@ function fullCompendiumStyle(path: string): CSSProperties {
 }
 
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
-  const data = enemyStatsForWave(kind, g.wave);
+  const data = enemyStatsForWave(kind, g.wave, { v100: Boolean(g.definition.missionConfig?.v100StageNumber) });
   if (!g.enemyKindsSeen.includes(kind)) g.enemyKindsSeen.push(kind);
   const id = g.nextId++;
   const gateEntering = kind !== "turned" && gateEntry !== null;
@@ -4786,7 +4792,7 @@ function drawEnemyCombatReadabilityVfx(
   }
 
   if (snapshot.lowHp && snapshot.boss) {
-    const phase = bossPhaseForHp(f.hp, f.maxHp, f.kind);
+    const phase = bossPhaseForHp(f.hp, f.maxHp, f.kind, f);
     const pulse = .5 + .5 * Math.sin(g.time * (5 + phase.phase));
     const vaporCount = Math.max(2, Math.round((snapshot.critical ? 6 : 3) * density));
     for (let index = 0; index < vaporCount; index += 1) {
@@ -15547,7 +15553,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
       deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase, airstrikeCooldownRemaining: fresh.airstrike.cooldownRemaining ?? 0,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
-      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
+      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, banner: fresh.bannerTime > 0 ? fresh.banner : null, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
@@ -19408,7 +19414,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (f.attackWindup <= 0 && f.attack <= 0 && f.attackWindupTargetId === null) {
             f.attackFacingDirection = null;
           }
-          f.stunned = Math.max(0, f.stunned - dt);
+          f.stunned = Math.max(0, f.stunned - dt / bossControlMultiplier(f));
           f.damageReductionRemaining = advanceNaoProtection(f.damageReductionRemaining, dt);
           if (f.damageReductionRemaining <= 0) f.damageReductionMultiplier = 1;
           f.healFocusRemaining = Math.max(0, f.healFocusRemaining - dt);
@@ -19427,6 +19433,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           f.suppressionStacks = suppression.stacks;
           f.suppressedRemaining = suppression.remainingSeconds;
           f.suppressionMultiplier = suppression.speedMultiplier;
+          const enemyControlSpeedMultiplier = bossSlowMultiplier(f, mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier));
           f.guardStandRemaining = Math.max(0, f.guardStandRemaining - dt);
           f.engineerTrapCooldown = Math.max(0, f.engineerTrapCooldown - dt);
           f.armorBrokenRemaining = Math.max(0, f.armorBrokenRemaining - dt);
@@ -19457,7 +19464,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (Math.abs(f.knock) > .1) {
             const knockResistance = f.kind === "crazy-king" && f.manualAbility?.phase === "active"
               ? MANUAL_ABILITY_REGISTRY["crazy-king"].knockResistanceMultiplier
-              : 1;
+              : bossControlMultiplier(f);
             f.x += (f.side === "human" ? -1 : 1) * f.knock * knockResistance * dt * 6;
             f.knock *= .9;
           }
@@ -20144,7 +20151,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const step = advanceKuromeTracking(f.stationAbility, dt, liveTarget);
               f.stationAbility = step.runtime as StationAbilityRuntime;
               if (step.fired) {
-                const finalPhase = f.hp / Math.max(1, f.maxHp) <= .3;
+                const finalPhase = bossFinalPhase(f, .3);
                 const beam = resolveKuromeBeam({
                   boss: f,
                   runtime: f.stationAbility,
@@ -20189,7 +20196,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 });
               }
               if (step.recovered) {
-                f.abilityCooldown = f.hp / Math.max(1, f.maxHp) <= .3
+                f.abilityCooldown = bossFinalPhase(f, .3)
                   ? KUROME_PROTOTYPE_TUNING.finalPhaseCooldownSeconds
                   : KUROME_PROTOTYPE_TUNING.cooldownSeconds;
               }
@@ -20282,7 +20289,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const before = f.abilityWindup;
               f.abilityWindup = Math.max(0, f.abilityWindup - dt);
               if (before > 0 && f.abilityWindup <= 0) {
-                const enraged = f.hp / f.maxHp <= .5;
+                const enraged = bossFinalPhase(f, .5);
                 const radius = enraged ? 145 : 118;
                 const damage = enraged ? 28 : 22;
                 for (const victim of g.fighters) {
@@ -20300,7 +20307,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             } else if (f.abilityCooldown <= 0 && g.fighters.some((human) => human.side === "human" && human.hp > 0 && fighterDistance(human, f) <= 150)) {
               abilityFrame = true;
               f.abilityWindup = bossDefinitionForEnemyKind("takuya")?.attackTelegraph.warningSeconds ?? 0;
-              f.abilityCooldown = f.hp / f.maxHp <= .5 ? 4.8 : 6.5;
+              f.abilityCooldown = bossFinalPhase(f, .5) ? 4.8 : 6.5;
               g.banner = "TAKUYA // 鉄槌強襲予告";
               g.bannerTime = f.abilityWindup + .05;
             }
@@ -20837,7 +20844,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.attack = .18;
                 f.cooldown = attackCooldownAfterCombatWindup(
                   f,
-                  f.kind === "takuya" && f.hp / f.maxHp <= .5 ? 1 : f.attackEvery,
+                  f.kind === "takuya" && bossFinalPhase(f, .5) ? 1 : f.attackEvery,
                 );
                 playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
                   priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 64,
@@ -20902,10 +20909,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
+              f.x = Math.max(stopX, f.x - f.speed * enemyControlSpeedMultiplier * dt);
               const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * enemyControlSpeedMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
@@ -20916,7 +20923,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.cooldown = .1;
                 continue;
               }
-              const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              const enragedTakuya = f.kind === "takuya" && bossFinalPhase(f, .5);
               const targetHpRatio = target.hp / target.maxHp;
               const roleEffect = f.side === "human" ? roleEffectForAction({
                 unitKind: f.kind,
@@ -21900,7 +21907,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   }
                 }
               }
-              const enragedSiege = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              const enragedSiege = f.kind === "takuya" && bossFinalPhase(f, .5);
               f.attackVariant = null;
               f.attack = f.side === "human" ? attackPresentationDuration(f.kind) : .18;
               f.cooldown = attackCooldownAfterCombatWindup(
@@ -21933,11 +21940,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * enemyControlSpeedMultiplier, seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             f.aiMoveDirection = Math.sign(f.x - movementStartX);
             const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
-            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
+            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * enemyControlSpeedMultiplier * dt);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
             f.lane = activeLaneForY(f.y, f.lane);
           } else {
@@ -21960,12 +21967,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * enemyControlSpeedMultiplier, seconds: dt, burning: false });
               f.aiMoveDirection = Math.sign(f.x - movementStartX);
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane] - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * enemyControlSpeedMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
@@ -22503,7 +22510,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const bossActiveOrIncoming = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind)
             && fighter.hp > 0 && fighter.contained !== true)
           || g.enemySpawn.pending.some((entry) => isBossEnemyKind(entry.kind));
-        const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.hp / fighter.maxHp <= .5);
+        const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && bossFinalPhase(fighter, .5));
         if (enragedTakuya && !g.takuyaEnragedAnnounced) {
           g.takuyaEnragedAnnounced = true;
           emitBattleBark(g, "takuya-enraged", "gunner", "takuya-enraged");
@@ -22744,7 +22751,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           deployQueue: g.deployQueue.length,
           summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
@@ -22805,7 +22812,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
   const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
-  const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
+  const bossPhase = hud.bossPhase ?? bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const currentNodeProfile = externalSession ? V100_NODE_PROFILES[activeBattlefieldStageId] : null;
   const phaseName = hud.missionType === "escort"

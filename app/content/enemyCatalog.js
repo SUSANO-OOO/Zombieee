@@ -1,4 +1,5 @@
 import { deepFreeze } from "./freeze.js";
+import { V100_BOSS_BY_ID } from "../v100Registry.js";
 
 export const ENEMY_CONTENT_SCHEMA_VERSION = 1;
 
@@ -42,16 +43,18 @@ export function enemyContentFor(id) {
   return ENEMY_CONTENT_BY_ID[id] ?? null;
 }
 
-export function enemyStatsForWave(id, wave = 0) {
+export function enemyStatsForWave(id, wave = 0, { v100 = false } = {}) {
   const enemy = enemyContentFor(id);
   if (!enemy) throw new RangeError(`Unknown enemy content: ${String(id)}`);
   const waveNumber = Number.isFinite(wave) ? Math.max(0, wave) : 0;
+  const boss = v100 ? V100_BOSS_BY_ID[`boss-${id}`] : null;
   return Object.freeze({
-    hp: enemy.hp + enemy.hpPerWave * waveNumber,
+    hp: boss?.hp ?? enemy.hp + enemy.hpPerWave * waveNumber,
     speed: enemy.speed,
-    damage: enemy.damage,
+    damage: boss?.damage ?? enemy.damage,
     range: enemy.range,
-    attackEvery: enemy.attackEvery,
+    attackEvery: boss?.cadenceSeconds ?? enemy.attackEvery,
+    ...(boss ? { v100BossId: boss.id } : {}),
   });
 }
 

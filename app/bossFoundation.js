@@ -1,4 +1,5 @@
 import { deepFreeze } from "./content/freeze.js";
+import { V100_BOSS_BY_ID } from "./v100Registry.js";
 
 export const BOSS_FOUNDATION_SCHEMA_VERSION = 1;
 
@@ -520,8 +521,15 @@ export function bossCampaignEntry(enemyKind, overrides = {}) {
   });
 }
 
-export function bossPhaseForHp(hp, maxHp, enemyKind = null) {
+export function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {
   const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
+  const contract = V100_BOSS_BY_ID[fighter?.v100BossId];
+  if (contract && contract.id === `boss-${enemyKind}`) {
+    if (enemyKind === "futago") return deepFreeze({ phase: fighter.v100TwinEnraged ? 2 : 1,
+      label: fighter.v100TwinEnraged ? "残存個体・激昂" : "双体連携" });
+    const current = 1 + contract.phaseThresholds.filter(threshold => ratio <= threshold).length;
+    return deepFreeze({ phase: current, label: current === contract.phaseThresholds.length + 1 ? "最終段階" : `第${current}段階` });
+  }
   const phases = bossDefinitionForEnemyKind(enemyKind)?.phases
     ?? BOSS_DEFINITIONS[0].phases;
   const selected = [...phases]
@@ -532,6 +540,21 @@ export function bossPhaseForHp(hp, maxHp, enemyKind = null) {
     phase: selected.phase,
     label: selected.label,
   });
+}
+
+export function bossFinalPhase(fighter, legacyThreshold) {
+  const contract = V100_BOSS_BY_ID[fighter?.v100BossId];
+  const threshold = contract?.phaseThresholds.filter(value => typeof value === "number").at(-1) ?? legacyThreshold;
+  return Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= threshold;
+}
+
+export function bossControlMultiplier(fighter) {
+  const contract = fighter?.side === "zombie" && V100_BOSS_BY_ID[fighter?.v100BossId];
+  return contract ? 1 - contract.resistance / 100 : 1;
+}
+
+export function bossSlowMultiplier(fighter, speedMultiplier) {
+  return 1 - (1 - speedMultiplier) * bossControlMultiplier(fighter);
 }
 
 export function bossHudSnapshot(fighter) {
@@ -552,7 +575,7 @@ export function bossHudSnapshot(fighter) {
     maxHp,
     hpRatio: hp / maxHp,
     worldX: Number(fighter.x) || 0,
-    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind),
+    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind, fighter),
     hpBar: definition.hpBar,
   });
 }
@@ -565,7 +588,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
     || fighter?.contained === true
     || Number(fighter?.hp) <= 0) return null;
   if (definition.enemyKind === "takuya" && Number(fighter.abilityWindup) > 0) {
-    const finalPhase = Number(fighter.hp) / Math.max(1, Number(fighter.maxHp) || 1) <= .5;
+    const finalPhase = bossFinalPhase(fighter, .5);
     return deepFreeze({
       bossId: definition.id,
       attackId: definition.attackTelegraph.attackId,
@@ -610,7 +633,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
       targetY: Number.isFinite(Number(fighter.stationAbility.targetY))
         ? Number(fighter.stationAbility.targetY)
         : Number(fighter.y) || 0,
-      beamHalfWidth: Number(fighter.hp) / Math.max(1, Number(fighter.maxHp) || 1) <= .3
+      beamHalfWidth: bossFinalPhase(fighter, .3)
         ? definition.attackTelegraph.finalPhaseBeamHalfWidth
         : definition.attackTelegraph.beamHalfWidth,
       locked: fighter.stationAbility.phase === "locked",
@@ -695,7 +718,7 @@ export function bossResultRecord(fighter, { defeated = Number(fighter?.hp) <= 0 
     defeated: defeated === true,
     remainingHp: hp,
     maxHp,
-    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind).phase,
+    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind, fighter).phase,
     reward: definition.reward,
   });
 }

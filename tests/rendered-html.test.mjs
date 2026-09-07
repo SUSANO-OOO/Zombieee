@@ -1739,7 +1739,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.battle-barks \{ position:static;/);
   assert.match(css, /\.cooldown-mask small \{[^}]*font:800 clamp\(5px,.48vw,7px\)\/1 monospace;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
-  assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
+  assert.match(game, /const bossPhase = hud\.bossPhase \?\? bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
   assert.match(game, /bossHudSnapshot\(fighter\)/);
   assert.match(game, /enforceBossBodyBarrier\(\{[\s\S]*mover: f,[\s\S]*previousX: movementStartX,[\s\S]*\}\)/);
   assert.match(game, /announceBossEntrance\(g, event\.bossKind\)/);
