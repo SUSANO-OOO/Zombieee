@@ -14,11 +14,11 @@ import path from "node:path";
 import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
 import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
 import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
-import { chromium, webkit } from "playwright";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 
 const mode = process.env.PWA_OFFICIAL_PROFILE_MODE ?? "prepare";
 const browserName = process.env.PWA_OFFICIAL_PROFILE_BROWSER ?? "chromium";
-const browserType = { chromium, webkit }[browserName];
+const browserType = await pwaBrowserType(browserName);
 const officialUrl = new URL(process.env.PWA_OFFICIAL_PROFILE_URL ?? "https://susano-ooo.github.io/Zombieee/");
 const profileInput = process.env.PWA_OFFICIAL_PROFILE_DIR;
 const evidenceInput = process.env.PWA_OFFICIAL_PROFILE_EVIDENCE_DIR;
@@ -47,8 +47,8 @@ if (officialUrl.protocol !== "https:" || officialUrl.pathname !== "/Zombieee/") 
 // fail with an internal error even though page navigation succeeds. Keep the
 // retained profile at a short named workspace path and fail before first load;
 // otherwise the irreplaceable public-old baseline would be contaminated.
-if (process.platform === "win32" && profileDir.length > 96) {
-  throw new Error(`Windows persistent profile path must be 96 characters or shorter (actual ${profileDir.length})`);
+if (process.platform === "win32" && profileDir.length > 60) {
+  throw new Error(`Windows persistent profile path must be 60 characters or shorter (actual ${profileDir.length})`);
 }
 if (mode === "verify" && (
   !/^[0-9a-f]{40}$/u.test(candidateReleaseSha)

@@ -21,7 +21,8 @@ import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
 import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
-import { chromium, webkit } from "playwright";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -36,7 +37,7 @@ const evidenceDir = path.resolve(
   process.env.PWA_PARTIAL_UPDATE_EVIDENCE_DIR
     ?? path.join(process.cwd(), "outputs", "pwa-partial-failed-update"),
 );
-const browserType = { chromium, webkit }[browserName];
+const browserType = await pwaBrowserType(browserName);
 const basePath = "/Zombieee";
 const scopePath = `${basePath}/`;
 const bundlePathname = `${basePath}/pwa-bundles/audio-v1.bin`;
@@ -660,7 +661,9 @@ async function waitForAudioRequests(mode, count, timeoutMs = 120_000) {
 
 let context = null;
 let page = null;
-const userDataDir = await mkdtemp(path.join(os.tmpdir(), "zombieee-pwa-partial-update-"));
+// WebKit appends 197 characters for a disk-cache response. A 68-character
+// Windows profile path reproduces a native write failure; keep it short.
+const userDataDir = await mkdtemp(path.join(os.tmpdir(), "z-pwa-"));
 
 try {
   ({ context, page } = await openPersistent(userDataDir));
@@ -825,6 +828,15 @@ try {
     && (await v100State(page)).raw === beforeUpdateV100.raw
   ));
   const incidentTransportStart = candidateTransportRequests.length;
+  await page.evaluate(()=>{
+    const trace=[];window.__PWA_PARTIAL_PROGRESS_TRACE__=trace;
+    let last="";
+    const observe=()=>{
+      const text=[...document.querySelectorAll(".pwa-gate,.pwa-notice")].map(element=>element.textContent).join("\n");
+      if(text!==last){last=text;trace.push({at:Date.now(),text});if(trace.length>200)trace.shift();}
+    };
+    new MutationObserver(observe).observe(document.body,{subtree:true,childList:true,characterData:true});observe();
+  });
   await repairButton.click();
   // The held fourth request becomes terminal at the production 30 second
   // no-progress boundary. Keep the observation budget outside that boundary
@@ -1055,24 +1067,27 @@ try {
     legacyWrites: committedRelaunchV100.legacyWrites,
   });
 
-  if (browserName === "chromium") {
+  {
     diagnosticPhase = "candidate-offline-relaunch";
-    await context.setOffline(true);
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
+    const offline=await disconnectPwaOrigin(server);
+    const offlineNavigation=await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
     await waitForV100Ready(page);
     await page.locator(".v100-shell").waitFor({ state: "visible", timeout: 60_000 });
     const offlineV100 = await v100State(page);
     record("offline relaunch uses the committed generation without changing the save", (
-      activeMatchesManifest((await workerState(page)).state?.active, candidateManifest)
+      offlineNavigation.fromServiceWorker()
+      && activeMatchesManifest((await workerState(page)).state?.active, candidateManifest)
       && (await currentSave(page)) === oldSaveRaw
       && offlineV100.raw === beforeUpdateV100.raw
       && offlineV100.oldRaw === oldSaveRaw
       && offlineV100.legacyWrites.length === 0
     ), {
+      offlineNetwork:offline.evidence,
+      documentFromServiceWorker:offlineNavigation.fromServiceWorker(),
       v100SavePreserved: offlineV100.raw === beforeUpdateV100.raw,
       legacyWrites: offlineV100.legacyWrites,
     });
-    await context.setOffline(false);
+    await offline.reconnect();
   }
 
   const rollback = await page.evaluate(async () => {
@@ -1103,8 +1118,12 @@ try {
     legacyWrites: rollbackV100.legacyWrites,
   });
 } catch (error) {
+  await mkdir(evidenceDir,{recursive:true});
+  const pageAtFailure=await page?.evaluate(()=>({text:document.body.innerText,rootFacts:{...document.documentElement.dataset},progressTrace:window.__PWA_PARTIAL_PROGRESS_TRACE__??[]})).catch(captureError=>({captureError:String(captureError)}));
+  await page?.screenshot({path:path.join(evidenceDir,`${browserName}-failure.png`)}).catch(()=>{});
   record("partial-failed update flow completes without an unhandled harness error", false, {
     error: String(error?.stack ?? error),
+    pageAtFailure,
   });
 } finally {
   if (context) await closeContext("final-context-close").catch(() => {});
@@ -1134,6 +1153,9 @@ try {
   await mkdir(evidenceDir, { recursive: true });
   const sourceFiles = [
     "scripts/pwa-partial-failed-update-browser-smoke.mjs",
+    "scripts/pwa-browser-runtime.mjs",
+    "scripts/pwa-native-runtime/package-lock.json",
+    "scripts/pwa-offline-origin.mjs",
     "app/PwaGate.tsx",
     "app/GameEntry.tsx",
     "app/v100Save.js",

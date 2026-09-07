@@ -21,7 +21,8 @@ import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
 import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
-import { chromium, webkit } from "playwright";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 
 const oldRootInput = process.env.PWA_EXISTING_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_EXISTING_UPDATE_CANDIDATE_ROOT;
@@ -39,7 +40,7 @@ const basePath = "/Zombieee";
 const saveKey = "nishijin-campaign-v1";
 const v100SaveKey = V100_PRIMARY_STORAGE_KEY;
 const scopePath = `${basePath}/`;
-const browserType = { chromium, webkit }[browserName];
+const browserType = await pwaBrowserType(browserName);
 
 if (!oldRootInput || !candidateRootInput) throw new Error("PWA_EXISTING_UPDATE_OLD_ROOT and PWA_EXISTING_UPDATE_CANDIDATE_ROOT are required");
 if (!browserType) throw new Error(`Unknown browser: ${browserName}`);
@@ -479,7 +480,7 @@ async function clickAndWait(page, locator, timeoutMs = 300_000) {
 
 let context = null;
 let page = null;
-const userDataDir = await mkdtemp(path.join(os.tmpdir(), "zombieee-pwa-update-"));
+const userDataDir = await mkdtemp(path.join(os.tmpdir(), "z-pwa-"));
 await mkdir(evidenceDir, { recursive: true });
 
 try {
@@ -703,33 +704,31 @@ try {
     legacyWrites: relaunchedV100.legacyWrites,
   });
 
-  if (browserName === "chromium") {
+  {
     diagnosticPhase = "candidate-offline-relaunch";
-    await context.setOffline(true);
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
+    const offline=await disconnectPwaOrigin(server);
+    const offlineNavigation=await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
     await waitForV100Ready(page);
     await page.locator(".v100-shell").waitFor({ state: "visible", timeout: 60_000 });
     const offlineWorker = await getWorkerState(page);
     const offlineSave = await saveState(page);
     const offlineV100 = await v100State(page);
-    record("Chromium offline relaunch serves the committed V1 pack and preserves both saves", (
-      offlineWorker.activeState?.active?.version === RELEASE_VERSION
+    record(`${browserName} offline relaunch serves the committed V1 pack and preserves both saves`, (
+      offlineNavigation.fromServiceWorker()
+      && offlineWorker.activeState?.active?.version === RELEASE_VERSION
       && offlineSave.raw === oldSave.raw
       && offlineV100.raw === beforeUpdateV100.raw
       && offlineV100.legacyWrites.length === 0
     ), {
+      offlineNetwork:offline.evidence,
+      documentFromServiceWorker:offlineNavigation.fromServiceWorker(),
       offlineWorker: workerSummary(offlineWorker),
       legacySavePreserved: offlineSave.raw === oldSave.raw,
       v100SavePreserved: offlineV100.raw === beforeUpdateV100.raw,
       legacyWrites: offlineV100.legacyWrites,
     });
     await screenshot(page, "v1-offline-relaunch");
-    await context.setOffline(false);
-  } else {
-    const storage = await cacheState(page);
-    record("WebKit persistent update storage is retained (offline worker navigation is capability-limited)", (
-      storage.assetEntries === retainedCacheEntryCount
-    ), { storage, capabilityLimit: "Headless WebKit offline emulation is not used as physical Safari evidence." });
+    await offline.reconnect();
   }
 
   const rollback = await page.evaluate(async () => {
@@ -800,6 +799,9 @@ try {
   await mkdir(evidenceDir, { recursive: true });
   const sourceFiles = [
     "scripts/pwa-existing-update-browser-smoke.mjs",
+    "scripts/pwa-browser-runtime.mjs",
+    "scripts/pwa-native-runtime/package-lock.json",
+    "scripts/pwa-offline-origin.mjs",
     "app/PwaGate.tsx",
     "app/GameEntry.tsx",
     "app/v100Save.js",

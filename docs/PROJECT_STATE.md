@@ -62,7 +62,13 @@ Stage23の追加通常探索は獲得済み1105 CAPSからMrs.チハを登録/Lv
 
 PWA環境の根因：9fe9851のLinuxでもゲームなしprobeが同じ失敗。Playwright公式PR41701は、パッチ追加したResourceResponseDataのfieldが永続encoderに欠け、保存したresponseをdecodeできずput直後でもmatch=nullになる欠陥を修正している。これは今回の全3 OS症状に一致する。独立した公式Playwright1.63.0/WebKit2359で同じ最小probeがWindowsのpage/worker共有・process再起動保持とも成功（`outputs/completion/native-storage-1.63.0.json`、`native-storage-fixed-owner-r1.json`）。別固定依存でPWAだけを修正版へ進め、描画lane1.56.1は維持。修正版macOSの実PWA更新/失敗復旧/真のoffline再読込は次の受入であり、まだ成功とはしない。
 
-現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
+今回の探索到達点：`outputs/v100-earned-tactical-omega-entrance-r1` はΩを191.58秒・車両1080/1080・損耗3で撃破し、ENDING32 nodes、credits11、EPILOGUE42を全て「次へ」で通過、30作戦完了/postGameAvailable/クリア後地図と969 CAPSを保存した。browser diagnostics0。これは途中修正を識別した獲得済み探索の完成であり、最終同一候補のfresh全編通し・聴感/実機受入ではない。
+
+PWA追加検証：修正版WebKitで別profileの隔離と再起動保持も成功。a804753の実旧版更新は新旧save保持・差分全取得・waiting worker切替・再起動を確認。WebKitのsetOffline(true)はゲームなしHTML/JSを全てSW cacheへ入れても内部エラーとなるが、同じ最小構成で配信socketを実際に閉じるとSW由来HTML/JSを読み込めた。実PWAもこの実切断方式で再読込/両save保持/rollbackを成功し、ECONNREFUSEDの独立negative controlとdocument.fromServiceWorkerを記録する。擬似responseやcache shimは使わない。更新全体は特典中の通知表示で17/18のため未合格。V1のlayout effectが公開するevent状態へCSSを直結し、MutationObserver→React反映前の表示/操作可能な隙間を閉じた。
+
+部分失敗QAのWindows68文字profileは、ネイティブCacheStorageの追加197文字でMAX_PATHを越え300KB書込を失敗する。ゲームなし68文字/46文字比較で前者write error・後者300000bytes一致を確認して短い専用profileへ変更。変更後の旧pack保存は成功したが、失敗3件の表示待機が61500msで失敗した。期限と品質条件は保持し、同時刻のDOM進捗を保存する診断を追加した（旧r1/r2の失敗を保持）。修正版macOSの実更新と部分失敗復旧は未実行。今回のbuild/全1461 testsは成功し、PWA/full受入が未合格であることは変えない。
+
+現在は工程1と2。30作戦を通じた通常探索の進行は成立したが、初期bossの固定増援/MOTHER brood、任務objectの全状態、Stage16作業用表示とStage28停止表示の実接続、自然解禁他mode/音響/操作感、同一候補fresh通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

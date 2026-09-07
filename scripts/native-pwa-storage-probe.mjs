@@ -5,10 +5,10 @@ import { createServer } from "node:http";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { chromium, webkit } from "playwright";
+import { pwaBrowserType, PWA_WEBKIT_RUNTIME } from "./pwa-browser-runtime.mjs";
 
 const engine = process.env.NATIVE_PWA_PROBE_ENGINE ?? "webkit";
-const type = { chromium, webkit }[engine];
+const type = await pwaBrowserType(engine);
 assert.ok(type, `Unknown browser ${engine}`);
 const output = path.resolve(process.env.NATIVE_PWA_PROBE_OUTPUT ?? "outputs/v100-native-pwa/storage-probe.json");
 await mkdir(path.dirname(output), { recursive: true });
@@ -25,7 +25,7 @@ const server = createServer((request, response) => {
 });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
-const report = { engine, platform:process.platform, origin, scope:"Native page / service worker CacheStorage sharing and browser-process persistence; no product code", cases:[] };
+const report = { engine, platform:process.platform, origin, runtime:engine === "webkit" ? {...PWA_WEBKIT_RUNTIME,executablePath:type.executablePath()} : {baseline:"playwright"}, scope:"Native page / service worker CacheStorage sharing and browser-process persistence; no product code", cases:[] };
 const options = { headless:true, viewport:{width:844,height:390}, deviceScaleFactor:3, hasTouch:true, timeout:30_000 };
 let context;
 try {
@@ -37,6 +37,8 @@ try {
     try {
       if (persistent) context = await type.launchPersistentContext(profile, options);
       else { browser = await type.launch({headless:true,timeout:30_000}); context = await browser.newContext(options); }
+      item.browserVersion=context.browser().version();
+      if(engine === "webkit") assert.equal(item.browserVersion,PWA_WEBKIT_RUNTIME.browserVersion);
       const page = await context.newPage(); await page.goto(origin, {timeout:30_000});
       item.storage = await page.evaluate(async () => {
         await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
@@ -56,6 +58,11 @@ try {
       });
       await context.close(); context=null;
       if (persistent) {
+        const isolatedProfile=await mkdtemp(path.join(os.tmpdir(),"v100-native-storage-isolated-"));
+        context=await type.launchPersistentContext(isolatedProfile,options);
+        const isolated=await context.newPage();await isolated.goto(origin,{timeout:30_000});
+        item.otherProfileKeys=await isolated.evaluate(()=>caches.keys());
+        await context.close();context=null;
         context=await type.launchPersistentContext(profile,options);
         const relaunched=await context.newPage(); await relaunched.goto(origin,{timeout:30_000});
         item.relaunch=await relaunched.evaluate(async()=>{
@@ -65,7 +72,7 @@ try {
       }
       item.passed=item.storage.pageValue==="page-value" && item.storage.fromWorker.pageValue==="page-value"
         && item.storage.workerValue==="worker-value" && item.storage.keys.length===2
-        && (!persistent || item.relaunch.values.length===2 && item.relaunch.values.includes("page-value") && item.relaunch.values.includes("worker-value"));
+        && (!persistent || item.otherProfileKeys.length===0 && item.relaunch.values.length===2 && item.relaunch.values.includes("page-value") && item.relaunch.values.includes("worker-value"));
     } catch(error) { item.error=String(error.stack??error); item.passed=false; }
     finally { await context?.close(); context=null; await browser?.close(); }
   }

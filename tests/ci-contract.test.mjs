@@ -118,12 +118,13 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit");
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 6);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
-  assert.match(nativePwaJob,/runs-on: ubuntu-24\.04/u);
-  assert.match(nativePwaJob,/WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"/u);
-  assert.doesNotMatch(workflow.replace(nativePwaJob,""),/WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
+  assert.match(nativePwaJob,/runs-on: macos-15-intel/u);
+  assert.match(nativePwaJob,/npm ci --prefix scripts\/pwa-native-runtime/u);
+  assert.match(nativePwaJob,/node scripts\/pwa-native-runtime\/node_modules\/playwright\/cli\.js install webkit/u);
+  assert.doesNotMatch(workflow,/WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
   assert.match(stage3Job, /brew install coreutils/u);
   assert.match(stage3Job, /gtimeout --version/u);
   assert.equal((stage3Job.match(/gtimeout --signal=TERM --kill-after=30s 15m node/gu) ?? []).length, 2);
@@ -208,13 +209,17 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);
-    assert.equal(job["runs-on"], id === "v100-native-webkit-pwa" ? "ubuntu-24.04" : "macos-15-intel");
+    assert.equal(job["runs-on"], "macos-15-intel");
     assert.equal(job["continue-on-error"], undefined);
     if (id === "v100-native-webkit-pwa") {
-      assert.equal(job.container.image,"mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a");
-      assert.equal(job.env.V100_PLAYWRIGHT_CONTAINER_IMAGE,job.container.image);
-      assert.equal(job.env.PLAYWRIGHT_BROWSERS_PATH,"/ms-playwright");
-      assert.equal(job.steps.filter(step=>step.run==="node scripts/verify-playwright-container-runtime.mjs").length,1);
+      assert.equal(job.container,undefined);
+      const install=job.steps.findIndex(step=>step.run?.includes("npm ci --prefix scripts/pwa-native-runtime"));
+      const probe=job.steps.findIndex(step=>step.run==="node scripts/native-pwa-storage-probe.mjs");
+      assert.ok(install>=0&&probe>install);
+      const pin=JSON.parse(await readFile("scripts/pwa-native-runtime/package-lock.json"));
+      assert.equal(pin.packages["node_modules/playwright"].version,"1.63.0");
+      assert.equal(pin.packages["node_modules/playwright-core"].version,"1.63.0");
+      assert.match(pin.packages["node_modules/playwright-core"].integrity,/^sha512-/u);
       assert.equal(job.steps.filter(step=>step.run==="node scripts/native-pwa-storage-probe.mjs").length,1);
     } else {
       assert.equal(job.container, undefined);
