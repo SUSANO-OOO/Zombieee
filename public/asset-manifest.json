@@ -1421,6 +1421,14 @@
       "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-smg-battle-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/clinical-control-states-v1.webp",
+      "bytes": 674210,
+      "hash": "sha256-cdb6661eb9d35fe07ef2d9dceaadce27f4a4bddb86dd5b732ef427c75326731b",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/clinical-trial-wing-v1.png",
       "bytes": 117448,
       "hash": "sha256-792b8b3ca5538ecfe0a373aa4d0a59b2b3e5e2d510e718afbddbd49c676e50ca",
@@ -1644,6 +1652,14 @@
       "path": "/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp",
       "bytes": 284166,
       "hash": "sha256-33d923e7a23233746ab3478226c9936070a05804e760a93b1f2bca7d1ab1bfbb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s22-clinical-clean-v1.webp",
+      "bytes": 384054,
+      "hash": "sha256-680b4f146b7d81d4514eb19b54752facee9e2f9a163c5a923de994a23934432a",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

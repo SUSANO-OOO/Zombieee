@@ -1,4 +1,5 @@
 const V100_ROOT = "/art/v100";
+import { V100_CLINICAL_CONTROL_ART } from "./v100ClinicalControl.js";
 
 function freezeRecord(record) {
   return Object.freeze(record);
@@ -37,6 +38,7 @@ const redPanther = freezeRecord({
 });
 
 const missionObjects = freezeRecord({
+  clinicalControlStates: V100_CLINICAL_CONTROL_ART,
   clinicalTrialWing: `${V100_ROOT}/mission-objects/clinical-trial-wing-v1.png`,
   redPantherArmoryLockers: `${V100_ROOT}/mission-objects/red-panther-armory-lockers-v1.png`,
   twinReactorLandmark: `${V100_ROOT}/mission-objects/twin-reactor-landmark-v1.png`,
@@ -60,7 +62,7 @@ const vfx = freezeRecord({
 
 const stages = freezeRecord({
   "stage-mugarian-logistics-hq": freezeRecord({ background: `${V100_ROOT}/stages/s21-mugarian-hq-clean-background-v1.webp`, missionObjects: [], vfx: [vfx.hqSecurityWarning] }),
-  "stage-mugarian-clinical-trial-wing": freezeRecord({ background: `${V100_ROOT}/stages/s22-clinical-trial-wing-r2-background-v1.webp`, missionObjects: [missionObjects.clinicalTrialWing], vfx: [] }),
+  "stage-mugarian-clinical-trial-wing": freezeRecord({ background: `${V100_ROOT}/stages/s22-clinical-clean-v1.webp`, missionObjects: [missionObjects.clinicalControlStates], vfx: [] }),
   "stage-mugarian-special-operations-armory": freezeRecord({ background: `${V100_ROOT}/stages/s23-special-operations-armory-r2-background-v1.webp`, missionObjects: [missionObjects.redPantherArmoryLockers], vfx: [vfx.armoryRedLensAlert] }),
   "stage-mugarian-tech-tower": freezeRecord({ background: `${V100_ROOT}/stages/s24-tech-tower-background-v1.webp`, missionObjects: [missionObjects.twinReactorLandmark], vfx: [] }),
   "stage-mugarian-executive-lab": freezeRecord({ background: `${V100_ROOT}/stages/s25-executive-lab-r2-background-v1.webp`, missionObjects: [missionObjects.presidentArenaTerminal], vfx: [] }),

@@ -24,7 +24,11 @@ export const V100_FUTAGO_BODY_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/bosses/futago-separated-a-battle-v1.webp",bytes:811268,hash:"sha256-9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368"}),
   Object.freeze({path:"/art/v100/bosses/futago-separated-b-battle-v1.webp",bytes:968436,hash:"sha256-800b062ce9b8225d45fd82fba6e5310d8131b5ebc30fd1f53761d9bba02ed609"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS]);
+export const V100_CLINICAL_CONTROL_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/stages/s22-clinical-clean-v1.webp",bytes:384054,hash:"sha256-680b4f146b7d81d4514eb19b54752facee9e2f9a163c5a923de994a23934432a"}),
+  Object.freeze({path:"/art/v100/mission-objects/clinical-control-states-v1.webp",bytes:674210,hash:"sha256-cdb6661eb9d35fe07ef2d9dceaadce27f4a4bddb86dd5b732ef427c75326731b"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

@@ -538,6 +538,7 @@ import {
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
@@ -5508,6 +5509,7 @@ function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard,
 let stationMissionDiagnosticFallbackDrawCount = 0;
 
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false) {
+  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);
     const y = activeLaneCenters[1] + 13;
@@ -22907,7 +22909,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bossPhase = hud.bossPhase ?? bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const currentNodeProfile = externalSession ? V100_NODE_PROFILES[activeBattlefieldStageId] : null;
-  const phaseName = hud.missionType === "escort"
+  const defenseObjective = v100DefenseStatus(gameRef.current.definition, gameRef.current);
+  const phaseName = defenseObjective ? phaseBannerForBattle(gameRef.current.definition, hud.phase) : hud.missionType === "escort"
     ? gameRef.current.definition.missionConfig.convoyInterception === true
       ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"
       : hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
@@ -22920,7 +22923,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           ? hud.phase === 1 ? "侵入" : hud.phase === 2 ? "前進" : "総攻撃"
           : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
-  const defenseObjective = v100DefenseStatus(gameRef.current.definition, gameRef.current);
   const isSurvivalBattle = screen === "battle" && survivalHud !== null;
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;

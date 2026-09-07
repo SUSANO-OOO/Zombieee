@@ -98,7 +98,13 @@ Stage22の43収容室を本番の100秒防衛clockへ接続した。HUDの43個�
 
 21作戦完了/1261 CAPS/主力Lv17/車両1000の獲得済みsaveと実UIだけで、Chromium/WebKit双方がStage22を105.02秒（準備5秒を含む）・車両1000/1000・損耗0・星3で勝利。戦闘中844x340→1280x720→844x390→844x340へ実resizeし、43記録の単調進行と画面内表示を確認。WebKitは0〜43全値とsuccessを観測、結果/再読込で保存とCAPSを保持（`outputs/v100-defense-earned-s22-webkit-r1`）。Chromiumは0〜42と実結果43室を確認後、reloadで「ブラウザで遊ぶ」を押し忘れたfixture失敗を保持。同じbuild/保持したbrowser storageを隔離portへ移し、その後の同一context実reloadで結果とCAPSの保持を確認した（`outputs/v100-defense-earned-s22-chromium-r1/reload-continuation.json`）。全編の再実行でこの失敗を消さない。保存された実結果からのnative scrollによる完了文の表示/画面内/横overflow0は2 engines×3 sizesの6/6（`outputs/v100-defense-result-visibility-r1`）。正常な防衛のため被害phaseのブラウザ受入はこの結果には含めず、legacy境界/実敵の接近と被害/失敗状態はsource検証で区別する。
 
-現在は工程1と2。次の実装開始点はStage22設備画像の左端に残る別部品の切れ端と、防衛中に「前進/総攻撃」と出る旧見出しの整合、および後半Stage21/23/24/25/27の任務object状態の本番接続。Stage22の記録表示成功を設備絵/全演出の完成へ拡張しない。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+Stage22の設備演出を接続した。背景に焼き込まれていた巨大設備と隣の切れ端だけを除去し、同じ医療設備の赤/開放中/緑/消灯の4状態を実防衛clock・勝敗へ接続。戦闘を隠していた大きさを直し、床とUI空き領域へ配置した。防衛の見出しは既存の確定済みphaseScheduleへ一致させた。新規2 assets/1,058,264bytesは生成原本・prompt・hashを保持、atlasは可視RGBA完全一致のlossless変換。旧415素材/既存44素材は変更/削除0、完成補完は14 assets/9,259,788bytes、候補473 logical/471 distinct hashes。
+
+build `2e7d937369244a9a26d7fe00af343ba5abcca1c0368898c64f3d70cab2283e95` でChromium/WebKit×1280x720/844x390/844x340の実入口6条件が画像decode/最終canvas/画面内/進捗パネル非重複/横overflow0/diagnostics0（`outputs/v100-clinical-control-browser-r2`）。同buildのWebKitは正確な獲得済み21作戦完了/1261 CAPS/主力Lv17/車両1000のsaveから実攻略し、105.02秒・損耗0・星3、実canvasの赤→開放中→緑、43室/勝利保存/実reload保持を確認（`outputs/v100-clinical-earned-s22-webkit-r1`）。Chromiumの同攻略/3状態/保存復帰は配置前build `eec2d2f6c511d86f77728ef67175bd17062ff099680b71e005b4fe8026d542ff` で成立したが、画像が床から浮き低画面HUDと重なる不備があり、その記録を保持して位置を修正した。両engineの失敗時を含む4状態は明示fixtureで本番描画関数を確認（`outputs/v100-clinical-control-preview-r1`）し、通常プレイと区別する。全1496 source tests成功、最終位置修正後の対象9 tests/build、新規script lint/full lint0 errors/既存12 warnings/diff check成功。Windows WebKitに出るAudioContext開始不可の表示は音響合格へ代用せず、実機聴感/最終音響受入は残る。
+
+送信済み819bfe4の最新CIはPR Verify/敵runtime6分割/Hosted/native PWA/Stage3 audio3経路が成功したが、Phase GはStage6 spitterの攻撃証拠が未完成として失敗。再実行せず実jobログとartifactを保存し、原因を切り分ける。他のdeployment条件はまだ進行中でありrequired CI全体は未合格。
+
+現在は工程1と2。次の実装開始点は後半Stage21/23/24/25/27の任務object状態の本番接続と、保存したPhase G Stage6失敗の切り分け。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
