@@ -28,7 +28,14 @@ export const V100_CLINICAL_CONTROL_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/stages/s22-clinical-clean-v1.webp",bytes:384054,hash:"sha256-680b4f146b7d81d4514eb19b54752facee9e2f9a163c5a923de994a23934432a"}),
   Object.freeze({path:"/art/v100/mission-objects/clinical-control-states-v1.webp",bytes:674210,hash:"sha256-cdb6661eb9d35fe07ef2d9dceaadce27f4a4bddb86dd5b732ef427c75326731b"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS]);
+export const V100_CORPORATE_MISSION_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/mission-objects/lure-control-states-v1.webp",bytes:845958,hash:"sha256-1dd1c3b5f11cd21ff73e83ee81debfd3a99b89fa85a2f7d7cf515599b655ca88"}),
+  Object.freeze({path:"/art/v100/stages/s23-armory-clean-v1.webp",bytes:474222,hash:"sha256-80bc6ed00bd20bc75db9bdea507623764b0a3a932ae79440f407e5616fcd64c0"}),
+  Object.freeze({path:"/art/v100/stages/s25-executive-lab-clean-v1.webp",bytes:455144,hash:"sha256-a42f401eeac2263d7b6d162beb9e1152b37f8ba30121cb40b57871126bde377f"}),
+  Object.freeze({path:"/art/v100/stages/s27-private-lab-clean-v1.webp",bytes:369420,hash:"sha256-a445f68f30e2ab369b95bec006d01398e3973c3fba6230c892667f7e2df4a12f"}),
+  Object.freeze({path:"/art/v100/mission-objects/corporate-control-states-v1.webp",bytes:1484110,hash:"sha256-ab80d308c2cf4b741d3af07d91142ca952ff874ab272d9db85f609b6a3fb7025"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

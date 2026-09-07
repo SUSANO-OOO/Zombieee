@@ -539,6 +539,7 @@ import {
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
+import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
@@ -6774,6 +6775,7 @@ function drawEnemyBase(
 ) {
   const barrier = WORLD_GEOMETRY.enemyBase;
   if (drawResearchCoreTargets(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
+  if (drawV100CorporateControl(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
   const stationRelaySprite = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
     ? stageObjects["station-gate-mission-art-source"]
     : null;
@@ -22928,7 +22930,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const isSurvivalBattle = screen === "battle" && survivalHud !== null;
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
-  const enemyBaseLabel = gameRef.current.researchCoreTargets ? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const enemyBaseLabel = v100CorporateControlLabel(gameRef.current.definition) ?? (gameRef.current.researchCoreTargets ? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点");
   const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
   const vehicleDisplayLabel = externalSessionActive ? "装甲車両" : PUBLIC_CRAWLER_LABEL;
   const vehicleBarrageControlLabel = externalSessionActive ? `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";
@@ -23142,7 +23144,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </div>
             : stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
-            : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
+            : <div className={`health-hud barrier-health ${v100CorporateControlLabel(gameRef.current.definition) ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div>{hud.bossTwins ? <div className="boss-twin-hp">{hud.bossTwins.map(twin => <span key={twin.part} data-twin-part={twin.part}><small>個体{twin.part.toUpperCase()} {twin.arriving ? "接近中" : `${Math.ceil(twin.hp)}/${twin.maxHp}`}</small><i><em style={{width:`${twin.hp/twin.maxHp*100}%`}} /></i></span>)}</div> : <i><em style={{ width: `${bossPct}%` }} /></i>}</div>}

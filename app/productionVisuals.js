@@ -71,6 +71,9 @@ const OPERATION_BATTLEFIELD_IDS = Object.freeze({
 // Preserve every published asset in the original map and offline manifest.
 // The current stage uses its completed background through this runtime route.
 export const V100_STAGE_BACKGROUND_OVERRIDES = Object.freeze({
+  "stage-mugarian-special-operations-armory": "/art/v100/stages/s23-armory-clean-v1.webp",
+  "stage-mugarian-executive-lab": "/art/v100/stages/s25-executive-lab-clean-v1.webp",
+  "stage-segawa-private-lab": "/art/v100/stages/s27-private-lab-clean-v1.webp",
   "stage-mugarian-clinical-trial-wing": "/art/v100/stages/s22-clinical-clean-v1.webp",
   "stage-hospital-evacuation-route": "/art/v100/stages/s09-hospital-mechanical-room-v1.webp",
   "stage-t-plan-central-seal": "/art/v100/stages/s16-central-seal-clean-v1.webp",

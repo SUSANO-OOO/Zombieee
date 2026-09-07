@@ -108,7 +108,17 @@ build `2e7d937369244a9a26d7fe00af343ba5abcca1c0368898c64f3d70cab2283e95` でChro
 
 同じproduction buildでWebKit667x375のStage6を実行し、spitter commit46.1833/contact46.4167、ranger commit51.3833/contact51.5167とそれぞれの実audio要求を取得した。page time81405からdeadline93405に対して86748で受入、実PNGとcleanupを含むCOMPLETE、diagnostics0（`outputs/v100-phase-g-spitter-anchor-r1`）。最終全1500 source tests、lint依存検査、PR差分check成功。旧remote失敗をローカル合格へ書き換えず、新候補の全55画面/required CI合格は別途必要。
 
-現在は工程1と2。次の実装開始点は後半Stage21/23/24/25/27の任務object状態の本番接続。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+Stage24の通常敗北r2/r3/r4を保持した。r4は同じ23作戦完了/689 CAPS/主力Lv19/車両1000を使い、盾・回復・火力の欠員を実UIで補充しても154.10秒に敗北し、双体は両方3000HPのままだった。敗北後のcanvas消滅による観測エラーも保存し、保存済みnative結果から敗北を独立確認した。先行する重装部隊に最終3兵士と双体が重なる構造を修正し、Stage24の最終波だけは前の生存敵/待機spawnが0になるまで保留、全滅した直後に一度だけ投入する。固定4波/人数[2,2,3,5]/最早時刻[5,29,53,77]/盾5・指揮官5・双体各3000HPは維持。実timeline consumerの生存1HP/待機spawn/時間経過/重複投入negativeを含む20 tests、全1501 source tests/build成功。独立commit ce26db7。
+
+同じ戦力・編成/通常操作方針のr5はChromium844x340で192.62秒、車両1000/1000、損耗3、星3で勝利。双体の独立個体/分離、片方の死亡と生存側の激昂(155.55秒)、両方死亡(174.80秒)、初体死亡では拠点防護解除/勝利にしない、最終結果objectiveComplete/bossDefeatedを確認（outputs/v100-boss-earned-s24-twins-wave-clear-r5、source SHA256 8d993f2fda91dd4d5c89b5a3bd5d2124ac624b9e4ce922faf610cf44603e4dc8、build 4e8a30a72347e7377cb163a728458ad8403a45c9d924615bc819bc7d092a2b9c）。資源・HP・時計・結果の改変0。最終全編/実機/聴感へ代用しない。
+
+Stage23/25/27を同じ資料室と切れた設備の重ね貼りから、赤灯の武器庫/医療設備のある重役研究室/瀬川の私設研究室へ仕上げた。Stage21誘引送信機、23認証鍵制御盤、24中央制御盤、25研究室制御盤、27封鎖装置は、承認済み既存設備の派生4状態を実barricadeHpの100/70/35/0%と防護状態へ接続。描画はHP/勝利/報酬を変更しない。目標名/防護解除/掃討は実状態に合わせて既存HUDへ表示。旧415/既存44 assetsは変更・削除0。5追加3,628,854bytes、完成補完19 assets/12,888,642bytes、候補478 logical/476 distinct、117,451,313bytes。
+
+build 7b0bf2a63c388897e4705d4c924eb83ba7d86b3c7abe971099894dd1bc0eed56でChromium/WebKit×1280x720/844x390/844x340×上記5作戦の実入口30条件が成功（outputs/v100-corporate-missions-browser-r4）。最終canvasの正しい背景/設備、画面内、HUD非重複、横overflow0、diagnostics0を確認。r1の重複世界ラベル、r2/r3の低画面とWebKit長名折り返し失敗は保持し、名前/耐久の改行崩れをHUD幅で修正した。両engineで送信機/制御盤それぞれ4状態の本番描画・元画像からの可視面積・状態無変更も確認（outputs/v100-corporate-control-preview-r2、明示HP fixtureで通常攻略とは別）。全1503 source tests/build、lint0 errors/既存12 warnings/diff check成功。Windows WebKitのAudioContext不可表示を音響合格へ代用しない。
+
+送信済み46a763dのCI34134043841はPhase G/native WebKit PWA/PR Verify/敵6分割/Hostedが成功とlive APIで確認（outputs/completion/ci-46a-jobs-status.jsonl）。このHEADの後続audio/deploymentと、設備追加後候補のrequired CIは別途確認する。旧候補を現在の全体受入へ代用しない。
+
+現在は工程1と2。次の実装開始点は既存感染拠点と護送対象の残る損傷/大破/破壊状態および目的地表示。後半設備5作戦とFUTAGOの激昂から勝利までの通常確認は上記の範囲で成立した。有限の残件は残る任務演出、後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。旧データ保全/公開承認境界/継続goalを維持する。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

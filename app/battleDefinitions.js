@@ -9,6 +9,7 @@ import {
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
+import { v100CorporateControlLabel } from "./v100CorporateControl.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -143,6 +144,8 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  const control=v100CorporateControlLabel(definition);
+  if(control)return state.barricadeHp<=0?"残る警備部隊を掃討":state.barricadeVulnerable?`${control}を破壊`:"異常個体を撃破して制御盤の防護を解除";
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
   const defense = v100DefenseStatus(definition, state);
   if (defense) return defense.objective;

@@ -384,7 +384,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /感染拠点 \/\/ 大破/);
   assert.match(game, /const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
   assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
-  assert.match(game, /const enemyBaseLabel = gameRef\.current\.researchCoreTargets \? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
+  assert.match(game, /const enemyBaseLabel = v100CorporateControlLabel\(gameRef\.current\.definition\) \?\? \(gameRef\.current\.researchCoreTargets \? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"\)/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
