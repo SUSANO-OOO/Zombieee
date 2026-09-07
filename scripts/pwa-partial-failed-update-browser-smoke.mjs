@@ -254,7 +254,7 @@ async function serveCandidateAudio(response) {
   writeHeaders(response, 200, body.byteLength);
   if (audioMode === "incident") {
     // The fourth request remains in flight until the UI cancels it. That leaves
-    // exactly one failed concurrency group visible, matching the incident state.
+    // a failed group of logical slices visible, matching the incident state.
     response.on("close", () => {
       requestRecord.aborted = true;
       requestRecord.durationMs = Date.now() - requestRecord.startedAt;
@@ -838,10 +838,13 @@ try {
     new MutationObserver(observe).observe(document.body,{subtree:true,childList:true,characterData:true});observe();
   });
   await repairButton.click();
-  // The held fourth request becomes terminal at the production 30 second
-  // no-progress boundary. Keep the observation budget outside that boundary
-  // so runner scheduling cannot race the product timeout itself.
-  await page.getByText("失敗 3件", { exact: true }).waitFor({
+  // HTTP attempts count shared bundle transports; the UI counts logical slices
+  // that exhausted all three attempts. Cache lookup scheduling can make that
+  // group smaller than the three concurrent workers. The deterministic tests
+  // in pwa-audio-bundle-retry.test.mjs reproduce both schedules. Below, verify
+  // each displayed failure against its actual path, HTTP status and attempts.
+  const failedSliceCounter = page.getByText(/^失敗 [1-3]件$/u);
+  await failedSliceCounter.waitFor({
     state: "visible",
     timeout: Math.max(60_000, stallDurationMs + 30_000),
   });
@@ -851,7 +854,8 @@ try {
   const incidentProgressCompleted = incidentProgressMatch ? Number(incidentProgressMatch[1]) : null;
   const incidentProgressTotal = incidentProgressMatch ? Number(incidentProgressMatch[2]) : null;
   const incidentCategory = await page.getByText("音声を取得中", { exact: true }).count();
-  const failureCounter = await page.getByText("失敗 3件", { exact: true }).count();
+  const failureCounter = await failedSliceCounter.count();
+  const failedSliceCount = Number(/^失敗 (\d+)件$/u.exec(await failedSliceCounter.textContent() ?? "")?.[1]);
   const incidentChangedRequests = candidateTransportRequests
     .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
     .map(({ pathname }) => pathname);
@@ -871,7 +875,7 @@ try {
   ));
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
-  record("the physical incident class fetches the exact release delta before exposing three failed pending requests and one held request", (
+  record("the incident fetches the exact release delta, three failed bundle attempts and one held request, with failed logical slices visible", (
     partialCache.logicalSatisfied === retainedOldLogicalCount
     && new Set(incidentChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
     && incidentChangedRequests.length === candidatePendingReleaseDeltaTransportPaths.size
@@ -882,6 +886,7 @@ try {
     && incidentProgressCompleted <= incidentProgressTotal
     && incidentCategory === 1
     && failureCounter === 1
+    && failedSliceCount >= 1 && failedSliceCount <= 3
     // Preserve the strict initial concurrency contract. A causally separate
     // retry may already exist after the 30 second boundary, but it cannot
     // weaken or replace any member of the exact four-request incident group.
@@ -911,13 +916,42 @@ try {
     candidateDownloadableCount: candidateDownloadableAssets.length,
     incidentCategory,
     failureCounter,
+    failedSliceCount,
     initialIncidentRequests: initialIncidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
     incidentRetryRequests: incidentRetryRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
     requests: incidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
   });
 
+  await page.evaluate(() => {
+    const captureCancel = (event) => {
+      const button = event.target instanceof Element ? event.target.closest("button") : null;
+      if (button?.textContent?.trim() !== "中断") return;
+      window.__PWA_PARTIAL_CANCEL_FAILURE_LINE__ = [...document.querySelectorAll(".pwa-warning")]
+        .map((item) => item.textContent).find((text) => /^失敗 \d+件$/u.test(text ?? "")) ?? null;
+      document.removeEventListener("click", captureCancel, true);
+    };
+    document.addEventListener("click", captureCancel, true);
+  });
   await page.getByRole("button", { name: "中断" }).click();
   await page.getByRole("heading", { name: "ダウンロードを中断しました" }).waitFor({ state: "visible", timeout: 15_000 });
+  // The cancelled heading is synchronous; the diagnostic list is published
+  // after the held requests acknowledge AbortSignal and finalization finishes.
+  await page.locator(".pwa-failure-list li").first().waitFor({ state: "visible", timeout: 15_000 });
+  const cancelledFailureCount = Number(/^失敗 (\d+)件$/u.exec(
+    await page.evaluate(() => window.__PWA_PARTIAL_CANCEL_FAILURE_LINE__) ?? "",
+  )?.[1]);
+  const failedSliceDetails = await page.locator(".pwa-failure-list li").evaluateAll((items) => items.map((item) => ({
+    path: item.querySelector("code")?.textContent,
+    detail: item.querySelector("span")?.textContent,
+  })));
+  const failedSlicePaths = failedSliceDetails.map((item) => item.path);
+  record("the visible failure count equals distinct pending audio slices that each exhausted three HTTP 503 attempts", (
+    cancelledFailureCount >= failedSliceCount && cancelledFailureCount <= 3
+    && failedSliceDetails.length === cancelledFailureCount
+    && new Set(failedSlicePaths).size === cancelledFailureCount
+    && failedSliceDetails.every((item) => /HTTP 503・3回試行$/u.test(item.detail ?? "")
+      && candidatePendingDownloadableAssets.some((asset) => asset.path === item.path && asset.bundlePath))
+  ), { firstVisibleFailureCount: failedSliceCount, cancelledFailureCount, failedSliceDetails });
   const cancelledCache = await cacheState(page);
   const hashesBeforeRecovery = new Set(await cacheHashes(page));
   const successfulBeforeRecoveryAssets = candidateManifest.assets.filter((asset) => hashesBeforeRecovery.has(asset.hash));

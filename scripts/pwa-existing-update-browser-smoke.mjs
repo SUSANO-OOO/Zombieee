@@ -351,12 +351,15 @@ async function getWorkerState(page) {
 async function waitForActiveVersion(page, version, timeoutMs = 120_000) {
   const started = Date.now();
   let state = null;
+  const observations = [];
   while (Date.now() - started < timeoutMs) {
     state = await getWorkerState(page);
-    if (state?.activeState?.active?.version === version && state.activeWorkerState === "activated") return state;
+    observations.push({ elapsedMs: Date.now() - started, version: state?.activeState?.active?.version ?? null,
+      responded: state?.activeState != null, activeWorkerState: state?.activeWorkerState ?? null });
+    if (state?.activeState?.active?.version === version && state.activeWorkerState === "activated") return { ...state, observations };
     await page.waitForTimeout(250);
   }
-  return state;
+  return { ...state, observations };
 }
 
 async function manifestFromPage(page) {
@@ -515,7 +518,10 @@ try {
   await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   await page.waitForTimeout(500);
   const oldSave = await saveState(page);
-  const oldWorker = await getWorkerState(page);
+  // The old generation has the same asynchronous worker-readiness contract as
+  // update and relaunch. Retain every missing reply instead of interpreting a
+  // single MessageChannel timeout as an absent committed manifest.
+  const oldWorker = await waitForActiveVersion(page, oldVersion);
   record("the old installed profile has an active worker, correct scope, and a real save", (
     oldWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
     && oldWorker.activeWorkerState === "activated"

@@ -68,6 +68,10 @@ PWA追加検証：修正版WebKitで別profileの隔離と再起動保持も成�
 
 部分失敗QAのWindows68文字profileは、ネイティブCacheStorageの追加197文字でMAX_PATHを越え300KB書込を失敗する。ゲームなし68文字/46文字比較で前者write error・後者300000bytes一致を確認して短い専用profileへ変更。変更後の旧pack保存は成功したが、失敗3件の表示待機が61500msで失敗した。期限と品質条件は保持し、同時刻のDOM進捗を保存する診断を追加した（旧r1/r2の失敗を保持）。修正版macOSの実更新と部分失敗復旧は未実行。今回のbuild/全1461 testsは成功し、PWA/full受入が未合格であることは変えない。
 
+PWAの1276ed1 buildで、修正版WebKitの旧版更新18/18と、Chromium/WebKitの部分失敗復旧各22/22が成功（`outputs/v100-pwa-existing-1276-webkit-readiness-r2`、`outputs/v100-pwa-partial-1276-{chromium,webkit}-settled-r3`）。特典中の通知は非表示で旧データ書込0、新旧save保持、実origin切断/SW応答、rollbackを確認。共有音声bundleの3 HTTP失敗は3 logical filesを意味せず、CacheStorage照会順で1〜3 filesが3試行を使い切る。実session/fetcherの同時/遅延照会で3件/2件を短いfixtureで再現し、browserでは実中断クリック時の表示数と確定診断のdistinct path/HTTP503/3試行を照合する。診断の非同期確定前を読んだr2失敗も保存。旧workerの起動確認も更新後と同じactive-generation待機契約を使い、欠落応答を含む全観測を保持。描画laneの変更や保存API代替はしていない。macOSの修正版required laneと、今後の製品変更後の最終候補受入は残る。
+
+9fe9851のremote Phase G失敗は、artifact10011390097の`chromium-1280x720-battle-boss.capture-transaction.json`（SHA256 `13f0d82399ba850bcb80624b77ebfd5da2b6bf99f119bc51843b15b83c6b9666`）を独立取得して確認した。最終観測226.57秒でもΩ/敵0、画面はbattle、diagnostics0。a804753で修正し通常探索で再確認したΩ初期登場の誤ったbossOnly条件と一致する。タイムアウト延長や再実行で合格させず、出現修正を含む次HEADの新規CIで判定する。失敗runに同梱された旧ローカルmanifestは当該runの合格証拠にしない。
+
 現在は工程1と2。30作戦を通じた通常探索の進行は成立したが、初期bossの固定増援/MOTHER brood、任務objectの全状態、Stage16作業用表示とStage28停止表示の実接続、自然解禁他mode/音響/操作感、同一候補fresh通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
