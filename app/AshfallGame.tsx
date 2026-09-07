@@ -538,6 +538,7 @@ import {
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
   createResearchContainerRuntime,
@@ -22919,6 +22920,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           ? hud.phase === 1 ? "侵入" : hud.phase === 2 ? "前進" : "総攻撃"
           : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
+  const defenseObjective = v100DefenseStatus(gameRef.current.definition, gameRef.current);
   const isSurvivalBattle = screen === "battle" && survivalHud !== null;
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
@@ -23127,7 +23129,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </div>
           </div>
 
-          {stationMissionHud || selectedOutbreakMissionId
+          {defenseObjective
+            ? <div className="health-hud barrier-health defense-objective" data-defense-state={defenseObjective.phase} aria-label={`${defenseObjective.label} ${defenseObjective.statusLabel}`}>
+              <div><span>{defenseObjective.label}</span><b>{defenseObjective.recordCount ? `${defenseObjective.openedRecords}/${defenseObjective.recordCount}` : `残り${defenseObjective.remaining}秒`}</b></div>
+              <i><em style={{ width: `${defenseObjective.progress * 100}%` }} /></i>
+              {defenseObjective.recordCount && <div className="defense-room-records" aria-label="収容室の開放記録">{Array.from({length:defenseObjective.recordCount},(_,index)=><span key={index} data-opened={index < defenseObjective.openedRecords} aria-label={`収容室${index+1}・${index < defenseObjective.openedRecords ? "開放済" : "開放待ち"}`} />)}</div>}
+              <small>{defenseObjective.statusLabel}</small>
+            </div>
+            : stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}

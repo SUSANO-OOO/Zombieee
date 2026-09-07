@@ -8,6 +8,7 @@ import {
 } from "./stationStageMechanics.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
+import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -143,6 +144,8 @@ export function phaseBannerForBattle(definition, phase) {
 
 export function objectiveForBattle(definition, state) {
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
+  const defense = v100DefenseStatus(definition, state);
+  if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }

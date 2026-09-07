@@ -94,7 +94,11 @@ FUTAGOの実体：承認済みidentity masterから個体A/Bの各14poseを作�
 
 同じ45aa0cfのMac native WebKit PWA jobは成功。artifact10018866753を再取得し、16,312,200 bytes/sha256 `078956b489385b2bd99738d63153bab38ed529c1ee6900dfd95add934f1323bc`をGitHub metadataと照合。darwin/WebKit2359の実CacheStorage共有/再起動probe、既存更新18/18、部分失敗/復旧22/22、失敗/diagnostics0。旧415 assets保持、候補471/追加56/旧変更削除0。証拠は `outputs/completion/ci-45aa-native-pwa`、build `965936d4ac2ad00c0c2b698261c7072a1d4e6c535e2ca41384eecf00e87ec0f8`。クロメ修正後の候補や物理iPhone/実speaker聴感へは代用しない。
 
-現在は工程1と2。次の実装開始点はStage22の100秒防衛と43収容室の順次開放を実HUD/作戦目標へ結び、現在の「救援区域・防衛対象外」表示を修正すること（正本Stage22 battle-marker）。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+Stage22の43収容室を本番の100秒防衛clockへ接続した。HUDの43個の開放記録、作戦目的/残り時間、結果画面の「収容室43室の開放完了」が連動する。準備/一時停止で独立timerを進めず、死亡/失敗を成功表示にしない。Stage2/7/18も避難誘導/医薬品搬出/記録搬出という目的と防衛進捗へ置き換え、「防衛対象外」と無関係な敵拠点HPを出さない。既存の90/85/95/100秒、勝敗/保存/報酬条件は維持。全1495 tests、production build、lint0 errors/既存12 warnings/diff check成功。build `2be5e3063a8474217297b0b6c5107a84a71a97b329fa3e844b4749855e7d323a`。
+
+21作戦完了/1261 CAPS/主力Lv17/車両1000の獲得済みsaveと実UIだけで、Chromium/WebKit双方がStage22を105.02秒（準備5秒を含む）・車両1000/1000・損耗0・星3で勝利。戦闘中844x340→1280x720→844x390→844x340へ実resizeし、43記録の単調進行と画面内表示を確認。WebKitは0〜43全値とsuccessを観測、結果/再読込で保存とCAPSを保持（`outputs/v100-defense-earned-s22-webkit-r1`）。Chromiumは0〜42と実結果43室を確認後、reloadで「ブラウザで遊ぶ」を押し忘れたfixture失敗を保持。同じbuild/保持したbrowser storageを隔離portへ移し、その後の同一context実reloadで結果とCAPSの保持を確認した（`outputs/v100-defense-earned-s22-chromium-r1/reload-continuation.json`）。全編の再実行でこの失敗を消さない。保存された実結果からのnative scrollによる完了文の表示/画面内/横overflow0は2 engines×3 sizesの6/6（`outputs/v100-defense-result-visibility-r1`）。正常な防衛のため被害phaseのブラウザ受入はこの結果には含めず、legacy境界/実敵の接近と被害/失敗状態はsource検証で区別する。
+
+現在は工程1と2。次の実装開始点はStage22設備画像の左端に残る別部品の切れ端と、防衛中に「前進/総攻撃」と出る旧見出しの整合、および後半Stage21/23/24/25/27の任務object状態の本番接続。Stage22の記録表示成功を設備絵/全演出の完成へ拡張しない。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
