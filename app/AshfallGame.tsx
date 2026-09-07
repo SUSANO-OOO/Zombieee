@@ -522,6 +522,7 @@ import {
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
+import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
   createResearchContainerRuntime,
@@ -942,6 +943,10 @@ type StageMissionRuntime = {
   stalled?: boolean;
   powerActivated?: number;
   powerHold?: number;
+  powerOperating?: boolean;
+  powerOperationStartedAt?: number | null;
+  powerInterruptedAt?: number | null;
+  powerCompletedAt?: readonly number[];
   gateEaterSeen?: boolean;
   gateEaterDefeated?: boolean;
   gateEaterContained?: boolean;
@@ -5489,6 +5494,7 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
       const current = index === activated;
       const x = panels[index].x;
       const y = activeYForContentY(panels[index].y) - 8;
+      if (drawV100MissionNode(ctx, g, stageObjects, index, x, y)) continue;
       ctx.save(); ctx.translate(x, y);
       const powerSprite = stageObjects["station-tunnel-mission-art-source"];
       const powerCrops = [
@@ -5591,7 +5597,8 @@ function stationMissionFinalCanvasAudit(
   if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     return { applicable: false, pass: false, reason: "not-sequential-seal" };
   }
-  const source = stageObjects["station-tunnel-mission-art-source"];
+  const source = stageObjects[g.definition.missionConfig?.v100StageNumber && V100_NODE_PROFILES[g.definition.stageId]
+    ? "v100-mission-node-states" : "station-tunnel-mission-art-source"];
   if (!source?.complete || !source.naturalWidth) {
     return { applicable: true, pass: false, reason: "authored-source-unavailable", authoredPixelCount: 0, finalPixelMatchCount: 0 };
   }
@@ -7106,7 +7113,12 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
   ctx.imageSmoothingQuality = "high";
   ctx.fillStyle = "#111617";
   ctx.fillRect(0, 0, W, H);
-  if ([
+  if (g.definition.missionConfig.v100StageNumber && [16, 28].includes(g.definition.missionConfig.v100StageNumber)) {
+    // These plates put their usable floor below the architectural midline.
+    // Frame that floor behind the unchanged operator/actor lane coordinates.
+    const cropTop = Math.round(background.naturalHeight * .30);
+    ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
+  } else if ([
     CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
     CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
     CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
@@ -18668,7 +18680,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             if (transition.startsWith("power-")) {
               g.stationMetrics.powerActivations += 1;
-            g.banner = `電源 ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} 起動`;
+              g.banner = `${g.definition.missionConfig.powerLabel ?? "電源"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? "起動"}`;
               g.bannerTime = 1.4;
               playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });
             } else if (transition === "escort-contaminated") {
@@ -22795,12 +22807,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
+  const currentNodeProfile = externalSession ? V100_NODE_PROFILES[activeBattlefieldStageId] : null;
   const phaseName = hud.missionType === "escort"
     ? gameRef.current.definition.missionConfig.convoyInterception === true
       ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"
       : hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
     : hud.missionType === "sequential-seal"
-      ? hud.phase === 1 ? "電源1" : hud.phase === 2 ? "電源2・3" : "封鎖"
+      ? currentNodeProfile ? currentNodeProfile.shutdown ? "散布停止" : `${currentNodeProfile.label}操作`
+        : hud.phase === 1 ? "電源1" : hud.phase === 2 ? "電源2・3" : "封鎖"
       : isStationPlatformAssault
         ? hud.phase === 1 ? "確保" : hud.phase === 2 ? "制圧" : "総攻撃"
         : hud.missionType === "assault"

@@ -1477,6 +1477,14 @@
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/national-dispersal-node-4-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/node-states-v1.webp",
+      "bytes": 1126436,
+      "hash": "sha256-1a9b66050dbfefe685e02de8a0d80d18ae28bf28a5766780613283aa55520ffc",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/president-arena-terminal-v1.png",
       "bytes": 136808,
       "hash": "sha256-a39ae4ad71fd658163190c104cc408fa9ad212e398fbf2f475b1abfa20eac185",
@@ -1598,6 +1606,22 @@
       "hash": "sha256-4faaac8803005275b0bc105c7d43a4a86a223278698cba8b65e8d7eabb172bf2",
       "pack": "units",
       "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s09-hospital-mechanical-room-v1.webp",
+      "bytes": 298998,
+      "hash": "sha256-1307a7aa6fdb7a0022b04bad8414dd91ec8a07d2e0eb409e2484d248ed45697d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s16-central-seal-clean-v1.webp",
+      "bytes": 278536,
+      "hash": "sha256-7fed3511f9b3401993d5917a9c241c9733c594c3dcc70898c9e2b62f3e081985",
+      "pack": "campaign-core",
+      "category": "background",
       "criticality": "critical"
     },
     {

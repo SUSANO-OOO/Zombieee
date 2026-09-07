@@ -1,5 +1,5 @@
 import { PRODUCTION_AUDIO_SCENE_IDS, V100_STAGE_AUDIO_CONTRACT } from "./productionAudio.js";
-import { PRODUCTION_VISUALS } from "./productionVisuals.js";
+import { PRODUCTION_VISUALS, V100_STAGE_BACKGROUND_OVERRIDES } from "./productionVisuals.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
 import { V100_RUNTIME_ASSET_MANIFEST, v100RuntimeAssetPathsForStage } from "./v100RuntimeAssetManifest.js";
 import { V100_STAGE_BY_ID, V100_STAGES } from "./v100Registry.js";
@@ -51,7 +51,7 @@ function runtimeRecord(stage) {
   const existingManifest = STAGE_OBJECT_MANIFEST[stage.id] ?? null;
   const v100Manifest = stage.number > 20 ? V100_RUNTIME_ASSET_MANIFEST.stages[stage.id] ?? null : null;
   const v100Paths = stage.number > 20 ? v100RuntimeAssetPathsForStage(stage.id) : [];
-  const backgroundPath = PRODUCTION_VISUALS.stages[stage.id] ?? v100Manifest?.background ?? null;
+  const backgroundPath = V100_STAGE_BACKGROUND_OVERRIDES[stage.id] ?? PRODUCTION_VISUALS.stages[stage.id] ?? v100Manifest?.background ?? null;
   const missionObjectPaths = v100Manifest?.missionObjects ?? objectPathsFor(stage.id);
   const vfxPaths = v100Manifest?.vfx ?? [];
   const requiredAssetPaths = stage.number > 20

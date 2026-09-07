@@ -72,7 +72,15 @@ PWAの1276ed1 buildで、修正版WebKitの旧版更新18/18と、Chromium/WebKi
 
 9fe9851のremote Phase G失敗は、artifact10011390097の`chromium-1280x720-battle-boss.capture-transaction.json`（SHA256 `13f0d82399ba850bcb80624b77ebfd5da2b6bf99f119bc51843b15b83c6b9666`）を独立取得して確認した。最終観測226.57秒でもΩ/敵0、画面はbattle、diagnostics0。a804753で修正し通常探索で再確認したΩ初期登場の誤ったbossOnly条件と一致する。タイムアウト延長や再実行で合格させず、出現修正を含む次HEADの新規CIで判定する。失敗runに同梱された旧ローカルmanifestは当該runの合格証拠にしない。
 
-現在は工程1と2。30作戦を通じた通常探索の進行は成立したが、初期bossの固定増援/MOTHER brood、任務objectの全状態、Stage16作業用表示とStage28停止表示の実接続、自然解禁他mode/音響/操作感、同一候補fresh通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
+任務装置の完成補完：Stage9/15の電源、Stage16の封鎖装置、Stage28の散布装置を、実任務の操作・中断・完了時刻に対応する5状態の原画へ接続した。Stage28は稼働状態から4基を物理停止する。Stage9の屋外駐車場を台本どおりの地下機械室へ替え、Stage16の背景に焼き込まれた作業用表示を除去、Stage16/28の床と実装置の足元を合わせた。新しい3 assetsは1,703,970bytes、生成原本・正確なprompt・hashを保存し、旧415/既存44 assetsは保持。完成補完は計10 assets/6,421,820bytes、候補469 logical assets。
+
+同補完はChromium/WebKit × 1280x720/844x340 × 4作戦の実入口16条件で読み込み・配置・diagnostics0を確認（`outputs/v100-mission-node-browser-r3`）。獲得済み27作戦完了/629 CAPS/Lv22/vehicle5の正確なsaveから、native UIとread-only観測だけでStage28を実攻略した。描画が準備時間込み、任務時刻が準備後という不一致で短い接続/切断が飛ぶことをr3で検出し、同じ時基準へ修正。実draw関数の回帰検査を追加したr4では全4基×5状態を最終canvasで観測、173.77秒・車両1080/1080・損耗3・星3、objectiveCompleteと結果保存が成功、diagnostics0（`outputs/v100-node-earned-s28-r4`、build `332e697a4a4bc4cf547a240ffd79ec3ff51e7377ac8006a2eef8214b0fcbc980`）。これは獲得済み任務の回帰であり、最終fresh全編/音響/実機受入ではない。build/全1468 tests、full lint0 errors/既存12 warnings成功。旧r2の結果遷移後observer失敗とr3の表示不備も保持する。
+
+592fc18のCI：PR Verify、敵runtime6分割、Hosted Runnerは成功。修正版macOS native WebKitのゲームなし永続保存probeと旧版更新18/18は成功、部分失敗復旧は21/22でrequired lane全体は未合格。残るdiagnosticsは意図したbundle中断のmacOS表記`cancelled`で、独立server記録のabort時刻と一致した。URL/phase/server abort時刻を限定して認識する修正とnegative testsを追加した。artifact10013400134のZIP SHA256 `69a3c7b9c5b8f939afdac7c8541bafb9f4ba80acb718a454ed4d3b0363799f21`を独立照合済み。Phase GはStage4のgrapplerが登場する前に撮影し失敗。追加の確認で警告を実攻撃と誤認するsetupも検出したため、最終判定と同じ実拘束/攻撃を待つ修正を行った。focused Stage4は実拘束中の対象1/生存/拘束時間を捕捉して成功（`outputs/v100-phase-g-stage04-grappler-592-fix-r3`）、全1469 source testsも成功。途中の警告誤認と早すぎるengagement windowの失敗も保持する。期限延長、品質条件削除、旧run再実行による合格化はしない。
+
+本番bossの未接続も確認した。Design Lock §8/registryの9体のHP/damage/cadence/phase/resistanceに対し、実spawnEnemyは旧enemyCatalogを使用、フタゴは単体の旧分裂表現、MOTHERは旧3体/D系召喚のままだった。純粋モデルに正しい値があることでは受入できない。これらを実spawn・状態遷移・撃破判定へ接続し、実consumer検査と獲得済み通常プレイで再評価する。
+
+現在は工程1と2。30作戦を通じた通常探索の進行と4種の装置任務表示は成立したが、boss固定能力/phase/耐性/増援/双体と残る任務object、自然解禁他mode/音響/操作感、同一候補fresh通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

@@ -34,7 +34,7 @@ import {
   spriteKinds,
   spriteSheetPath,
 } from "../app/spriteManifest.js";
-import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS } from "../app/productionVisuals.js";
+import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, V100_STAGE_BACKGROUND_OVERRIDES } from "../app/productionVisuals.js";
 import {
   V075_VISUAL_PROFILES,
   V080_UNIT_VISUAL_PROFILES,
@@ -44,6 +44,7 @@ import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js"
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
 import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
+import { V100_NODE_ART } from "../app/v100MissionNodes.js";
 import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
@@ -167,6 +168,7 @@ for (const icon of V099_APP_ICON_PATHS) {
 // --- Campaign core --------------------------------------------------------
 
 sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
+sweep(V100_STAGE_BACKGROUND_OVERRIDES, { pack: "campaign-core", category: "background", criticality: "critical" });
 sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
 sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // Some campaign missions render these overlays directly instead of looking
@@ -232,7 +234,7 @@ for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
-for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), V100_RESEARCH_CORE_ART]) {
+for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART]) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {

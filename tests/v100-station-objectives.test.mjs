@@ -10,6 +10,7 @@ import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { stationSpatialSnapshot } from "../app/stationSpatialMechanics.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
+import { drawV100MissionNode, V100_NODE_PROFILES, v100NodeState, v100NodeFrame } from "../app/v100MissionNodes.js";
 
 test("actual V1 adapter and station runtime complete all power/seal stages without absent legacy entities", () => {
   const stages = V100_STAGES.filter(stage => ["power", "seal"].includes(stage.missionType));
@@ -81,7 +82,7 @@ test("the actual mission renderer draws all four authored panels at their runtim
   const declaration = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "drawStationMission");
   assert.ok(declaration);
   const code = ts.transpileModule(declaration.getText(ast) + "\ndrawStationMission;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const draw = vm.runInNewContext(code, { STATION_MISSION_TYPES, stationPowerNodes, activeYForContentY: y => y, activeLaneCenters: [212, 282, 352] });
+  const draw = vm.runInNewContext(code, { STATION_MISSION_TYPES, stationPowerNodes, drawV100MissionNode, activeYForContentY: y => y, activeLaneCenters: [212, 282, 352] });
   for (const number of [9, 28]) {
     const definition = v100BattleDefinitionFor(V100_STAGES[number - 1].id), panels = stationPowerNodes(definition.missionConfig);
     const draws = [], positions = [];
@@ -89,9 +90,18 @@ test("the actual mission renderer draws all four authored panels at their runtim
     const context = new Proxy({ drawImage: (...args) => draws.push(args), translate: (x, y) => positions.push([x, y]), createRadialGradient: gradient, createLinearGradient: gradient }, {
       get: (target, key) => target[key] ?? (() => {}),
     });
-    draw(context, { definition, stageMission: { powerActivated: panels.length - 1 }, time: 1, researchContainer: null }, { "station-tunnel-mission-art-source": { complete: true, naturalWidth: 1672 } });
+    const runtime = { powerActivated: panels.length - 1 };
+    const image = { complete: true, naturalWidth: 1983 };
+    draw(context, { definition, stageMission: runtime, time: 1, researchContainer: null }, { "v100-mission-node-states": image });
     assert.equal(draws.length, number === 28 ? 4 : 3);
-    assert.deepEqual(positions, panels.map(panel => [panel.x, panel.y - 8]));
+    assert.deepEqual(positions, [], "authored node anchors use actual world destinations");
+    for (const [index, panel] of panels.entries()) {
+      const profile = V100_NODE_PROFILES[definition.stageId];
+      const frame = v100NodeFrame(profile.shape, v100NodeState(runtime, index, 1, profile));
+      assert.equal(draws[index][0], image);
+      assert.equal(draws[index][5] - (frame.x - frame.anchorX) * frame.scale, panel.x);
+      assert.equal(draws[index][6] - (frame.y - frame.anchorY) * frame.scale, panel.y - 8);
+    }
     assert.ok(draws.every(args => args.slice(1).every(Number.isFinite)), "every crop and destination is valid");
   }
 });

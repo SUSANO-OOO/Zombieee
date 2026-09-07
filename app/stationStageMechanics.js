@@ -91,6 +91,8 @@ function sealConfig(config = {}) {
     ...STATION_MISSION_TUNING.seal,
     requiresContainment: config.requiresContainment !== false,
     powerCount,
+    powerLabel: config.powerLabel ?? "電源",
+    powerVerb: config.powerVerb ?? "起動",
     powerHoldSeconds: positive(config.powerHoldSeconds, STATION_MISSION_TUNING.seal.powerHoldSeconds),
     powerReadyAtSeconds: freeze(readyAt),
     powerYs: freeze(powerYs),
@@ -127,6 +129,10 @@ export function createStationMissionRuntime(missionType, config = {}) {
       missionType,
       powerActivated: 0,
       powerHold: 0,
+      powerOperating: false,
+      powerOperationStartedAt: null,
+      powerInterruptedAt: null,
+      powerCompletedAt: freeze([]),
       gateEaterSeen: false,
       gateEaterDefeated: false,
       gateEaterContained: false,
@@ -305,8 +311,13 @@ export function advanceStationMissionRuntime({
       && finiteNonNegative(battleElapsedSeconds) >= node.readyAtSeconds
       && operators > 0
       && Math.max(0, Math.trunc(Number(powerLaneThreats) || 0)) === 0;
+    const elapsed = finiteNonNegative(battleElapsedSeconds);
+    const powerCompletedAt = [...(current.powerCompletedAt ?? [])];
+    const powerOperationStartedAt = canHold && !current.powerOperating ? elapsed : current.powerOperationStartedAt;
+    const powerInterruptedAt = !canHold && current.powerOperating ? elapsed : current.powerInterruptedAt;
     powerHold = canHold ? powerHold + dt : Math.max(0, powerHold - dt * .5);
     if (node && powerHold >= resolved.powerHoldSeconds) {
+      powerCompletedAt[powerActivated] = elapsed;
       powerActivated += 1;
       powerHold = 0;
       transition = `power-${powerActivated}-activated`;
@@ -370,6 +381,10 @@ export function advanceStationMissionRuntime({
       missionType,
       powerActivated,
       powerHold,
+      powerOperating: Boolean(canHold && transition === null),
+      powerOperationStartedAt,
+      powerInterruptedAt,
+      powerCompletedAt: freeze(powerCompletedAt),
       gateEaterSeen: seen,
       gateEaterDefeated: defeated,
       gateEaterContained: gateContained,
@@ -431,7 +446,7 @@ export function stationMissionObjective(runtime, config = {}) {
     if (runtime.powerActivated < resolved.powerCount) {
       const node = currentPowerNode(runtime, resolved);
       const percent = Math.min(99, Math.floor(finiteNonNegative(runtime.powerHold) / resolved.powerHoldSeconds * 100));
-      return `電源${node?.number ?? runtime.powerActivated + 1}を起動 ${percent}%`;
+      return `${resolved.powerLabel}${node?.number ?? runtime.powerActivated + 1}を${resolved.powerVerb} ${percent}%`;
     }
     if (resolved.requiresContainment && !runtime.gateEaterDefeated) return "改札喰いを撃破";
     if (resolved.requiresContainment && !runtime.researchContainerExposed) return "研究容器を露出させろ";

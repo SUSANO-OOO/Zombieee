@@ -1,6 +1,7 @@
 import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
+import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
@@ -133,11 +134,12 @@ function phaseScheduleFor(stage, missionType, objective) {
     };
   }
   if (missionType === "sequential-seal") {
+    const node = V100_NODE_PROFILES[stage.id];
     return {
       phases: freeze([
-        freeze({ at: PREP_SECONDS, phase: 1, label: "第1ノードを起動", objective }),
-        freeze({ at: PREP_SECONDS + 62, phase: 2, label: "封鎖設備を維持", objective }),
-        freeze({ at: PREP_SECONDS + 120, phase: 3, label: "感染流出路を封鎖", objective }),
+        freeze({ at: PREP_SECONDS, phase: 1, label: `第1${node?.label ?? "ノード"}を${node?.verb ?? "起動"}`, objective }),
+        freeze({ at: PREP_SECONDS + 62, phase: 2, label: node?.shutdown ? "残る散布装置を停止" : "封鎖設備を維持", objective }),
+        freeze({ at: PREP_SECONDS + 120, phase: 3, label: node?.shutdown ? "全4基を停止して退路を確保" : "感染流出路を封鎖", objective }),
       ]),
     };
   }
@@ -162,14 +164,16 @@ export function v100BattleDefinitionFor(stageId) {
   const missionType = MISSION_TYPE_MAP[stage.missionType] ?? "assault";
   const bossKind = bossKindForStage(stage);
   const missionVehicle = V100_MISSION_VEHICLES[stageId];
-  const objective = stage.number === 29 ? researchCoreObjective(null) : missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
+  const missionNode = V100_NODE_PROFILES[stageId];
+  const objective = missionNode?.shutdown ? "国内散布装置4基を順番に物理停止" : stage.number === 29 ? researchCoreObjective(null) : missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
   const phase = phaseScheduleFor(stage, missionType, objective);
   const timeline = stageTimeline(stage, missionType, bossKind);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
     : missionType === "sequential-seal"
-      ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3, requiresContainment: false }
+      ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3, requiresContainment: false,
+        powerLabel: missionNode?.label, powerVerb: missionNode?.verb }
       : {};
   return freeze({
     stageId,

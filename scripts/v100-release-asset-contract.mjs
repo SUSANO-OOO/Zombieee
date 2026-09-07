@@ -15,7 +15,12 @@ export const V100_RESEARCH_CORE_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/mission-objects/research-core-targets-v1.webp",bytes:1362558,hash:"sha256-fce826389e3a8a65d82ca0fb82033addfda2a3ff120fa193ca74a5f05115855c"}),
   Object.freeze({path:"/art/v100/stages/s29-underground-research-core-v1.webp",bytes:226744,hash:"sha256-575ef05c2dc0a37f553422b1d3badb88133535dfd0b31e39b1532f8e920ef4a8"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS]);
+export const V100_MISSION_NODE_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/stages/s09-hospital-mechanical-room-v1.webp",bytes:298998,hash:"sha256-1307a7aa6fdb7a0022b04bad8414dd91ec8a07d2e0eb409e2484d248ed45697d"}),
+  Object.freeze({path:"/art/v100/mission-objects/node-states-v1.webp",bytes:1126436,hash:"sha256-1a9b66050dbfefe685e02de8a0d80d18ae28bf28a5766780613283aa55520ffc"}),
+  Object.freeze({path:"/art/v100/stages/s16-central-seal-clean-v1.webp",bytes:278536,hash:"sha256-7fed3511f9b3401993d5917a9c241c9733c594c3dcc70898c9e2b62f3e081985"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

@@ -8,6 +8,7 @@ import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { V100_STAGE_BY_ID } from "./v100Registry.js";
 import { V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { V100_RESEARCH_CORE_STAGE, V100_RESEARCH_CORE_ART } from "./v100ResearchCore.js";
+import { V100_NODE_ART, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -70,7 +71,9 @@ export function requiredBattleAssetPlan({
     ? Object.entries(V100_MISSION_VEHICLE_ART).map(([state,path])=>({id:`v100-mission-vehicle-${state}`,path,runtimeUsage:"mission-render-source"})) : [];
   const researchObjects = includeV100Sprites && stageId===V100_RESEARCH_CORE_STAGE
     ? [{id:"v100-research-core-targets",path:V100_RESEARCH_CORE_ART,runtimeUsage:"mission-render-source"}] : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects];
+  const nodeObjects = includeV100Sprites && V100_NODE_PROFILES[stageId]
+    ? [{id:"v100-mission-node-states",path:V100_NODE_ART,runtimeUsage:"mission-render-source"}] : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({
