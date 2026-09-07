@@ -1464,6 +1464,14 @@
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/escort-cart-intact-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/escort-destination-states-v1.webp",
+      "bytes": 620172,
+      "hash": "sha256-a50b842236356e0f447384f28560f01840d4c3175854c04034b8d0497aaf09d6",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/high-security-research-core-gate-v1.png",
       "bytes": 166496,
       "hash": "sha256-625d69191d4cb9a62420fdab5ee16e40d9484e236e40882ec559fafbc157f230",
@@ -1473,9 +1481,25 @@
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/high-security-research-core-gate-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/infected-stronghold-states-v1.webp",
+      "bytes": 937562,
+      "hash": "sha256-1d669b996d4d95f4f290a7584d162522c2febdf65f0b08dd910fbb57f23761ed",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/lure-control-states-v1.webp",
       "bytes": 845958,
       "hash": "sha256-1dd1c3b5f11cd21ff73e83ee81debfd3a99b89fa85a2f7d7cf515599b655ca88",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/maintenance-cart-states-v1.webp",
+      "bytes": 739792,
+      "hash": "sha256-0bbf0611ecd8b928d0fe19785ff9747c64479c3dd26e41a1824d95412d6abd2c",
       "pack": "campaign-core",
       "category": "object",
       "criticality": "critical"
@@ -1574,6 +1598,22 @@
       "category": "object",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/stage30-aftermath-core-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/station-relay-states-v1.webp",
+      "bytes": 1016762,
+      "hash": "sha256-ac5d07de80bada9a9530cca33e0a85e2362a617f097c41bf60cf721c196ed206",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/transport-states-v1.webp",
+      "bytes": 1211036,
+      "hash": "sha256-aadf0a5ab67e4733ffbf4197b765269236ec4b733e9f82a893b52023d0ce992f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
     },
     {
       "path": "/art/v100/mission-objects/twin-reactor-landmark-v1.png",

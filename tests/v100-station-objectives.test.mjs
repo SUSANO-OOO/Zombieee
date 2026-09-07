@@ -113,7 +113,7 @@ test("the actual escort renderer uses decoded story vehicles while retaining the
   const declaration = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "drawStationMission");
   const code = ts.transpileModule(declaration.getText(ast) + "\ndrawStationMission;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const draw = vm.runInNewContext(code, { drawV100MissionVehicles, drawV100ClinicalControl, STATION_MISSION_TYPES, escortCartX, CAMPAIGN_STAGE_IDS, activeYForContentY:y=>y, activeLaneCenters:[212,282,352] });
-  for (const [number,count,label] of [[6,0,"保守台車"],[12,1,"密閉搬送車"],[19,1,"証拠搬送車"],[26,3,"冷蔵車"]]) {
+  for (const [number,count,label] of [[6,1,"保守台車"],[12,1,"密閉搬送車"],[19,1,"証拠搬送車"],[26,3,"冷蔵車"]]) {
     const definition=v100BattleDefinitionFor(V100_STAGES[number-1].id);
     const runtime=createStationMissionRuntime(definition.missionType,definition.missionConfig);
     assert.match(definition.objective+stationMissionObjective(runtime,definition.missionConfig),new RegExp(label));
@@ -121,12 +121,13 @@ test("the actual escort renderer uses decoded story vehicles while retaining the
     for(const object of plan.stageObjects) images[object.id]={complete:true,naturalWidth:1672,naturalHeight:941};
     const context=new Proxy({drawImage:(...args)=>draws.push(args),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})}, {get:(target,key)=>target[key]??(()=>{})});
     draw(context,{definition,stageMission:runtime,time:0},images);
-    const authored=draws.filter(args=>args[0]===images["v100-mission-vehicle-intact"]);
+    const key=number===6?"maintenanceStates":"transportStates";
+    const authored=draws.filter(args=>args[0]===images[`v100-mission-vehicle-${key}`]);
     assert.equal(authored.length,count,`Stage ${number} vehicle count`);
     if(count) {
-      assert.equal(draws.length,count,"legacy cart must not overlap the authored vehicles");
-      for(const path of Object.values(V100_MISSION_VEHICLE_ART)) assert.ok(plan.paths.includes(path),"decode both damage states before entry");
-      delete images["v100-mission-vehicle-intact"];
+      assert.equal(draws.length,count+1,"one destination plus the exact authored vehicle count, without a second legacy cart");
+      for(const state of [key,"destinationStates"]) assert.ok(plan.paths.includes(V100_MISSION_VEHICLE_ART[state]),"decode all authored states and the destination before entry");
+      delete images[`v100-mission-vehicle-${key}`];
       assert.throws(()=>draw(context,{definition,stageMission:runtime,time:0},images),/decoded before battle/);
       const legacyPlan=requiredBattleAssetPlan({stageId:definition.stageId,includeV100Sprites:false});
       for(const path of Object.values(V100_MISSION_VEHICLE_ART)) assert.ok(!legacyPlan.paths.includes(path));

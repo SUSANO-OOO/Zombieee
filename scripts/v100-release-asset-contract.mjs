@@ -35,7 +35,14 @@ export const V100_CORPORATE_MISSION_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/stages/s27-private-lab-clean-v1.webp",bytes:369420,hash:"sha256-a445f68f30e2ab369b95bec006d01398e3973c3fba6230c892667f7e2df4a12f"}),
   Object.freeze({path:"/art/v100/mission-objects/corporate-control-states-v1.webp",bytes:1484110,hash:"sha256-ab80d308c2cf4b741d3af07d91142ca952ff874ab272d9db85f609b6a3fb7025"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS]);
+export const V100_OBJECTIVE_STATE_ADDITIONS = Object.freeze([
+  Object.freeze({"path":"/art/v100/mission-objects/transport-states-v1.webp","bytes":1211036,"hash":"sha256-aadf0a5ab67e4733ffbf4197b765269236ec4b733e9f82a893b52023d0ce992f"}),
+  Object.freeze({"path":"/art/v100/mission-objects/maintenance-cart-states-v1.webp","bytes":739792,"hash":"sha256-0bbf0611ecd8b928d0fe19785ff9747c64479c3dd26e41a1824d95412d6abd2c"}),
+  Object.freeze({"path":"/art/v100/mission-objects/escort-destination-states-v1.webp","bytes":620172,"hash":"sha256-a50b842236356e0f447384f28560f01840d4c3175854c04034b8d0497aaf09d6"}),
+  Object.freeze({"path":"/art/v100/mission-objects/infected-stronghold-states-v1.webp","bytes":937562,"hash":"sha256-1d669b996d4d95f4f290a7584d162522c2febdf65f0b08dd910fbb57f23761ed"}),
+  Object.freeze({"path":"/art/v100/mission-objects/station-relay-states-v1.webp","bytes":1016762,"hash":"sha256-ac5d07de80bada9a9530cca33e0a85e2362a617f097c41bf60cf721c196ed206"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

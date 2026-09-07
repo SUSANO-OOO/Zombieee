@@ -537,9 +537,11 @@ import {
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
+import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
+import { drawV100AssaultObject } from "./v100AssaultObjects.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
@@ -6776,6 +6778,7 @@ function drawEnemyBase(
   const barrier = WORLD_GEOMETRY.enemyBase;
   if (drawResearchCoreTargets(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
   if (drawV100CorporateControl(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
+  if (drawV100AssaultObject(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
   const stationRelaySprite = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
     ? stageObjects["station-gate-mission-art-source"]
     : null;
@@ -12894,9 +12897,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           ? (() => {
               const coastal = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
               const vehicleProfile = g.definition.missionConfig.v100StageNumber ? V100_MISSION_VEHICLES[g.definition.stageId] : null;
-              const vehicleState = Number(g.stageMission.integrity) / Math.max(1, Number(g.stageMission.maxIntegrity)) < .6 ? "damaged" : "intact";
-              const assetId = vehicleProfile ? `v100-mission-vehicle-${vehicleState}` : coastal ? "coastal-power-rig" : "maintenance-cart";
-              const assetPath = vehicleProfile ? V100_MISSION_VEHICLE_ART[vehicleState] : coastal
+              const vehicleSprite = vehicleProfile ? v100VehicleSprite(g.definition.stageId,g.stageMission) : null;
+              const assetId = vehicleSprite ? `v100-mission-vehicle-${vehicleSprite.assetKey}` : coastal ? "coastal-power-rig" : "maintenance-cart";
+              const assetPath = vehicleSprite ? V100_MISSION_VEHICLE_ART[vehicleSprite.assetKey] : coastal
                 ? PRODUCTION_VISUALS.missionObjects["coastal-power-rig"]
                 : PRODUCTION_VISUALS.missionObjects["maintenance-cart"];
               const asset = stageObjectRefs.current[assetId];
@@ -12916,6 +12919,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 assetId,
                 assetPath,
                 vehicleCount: vehicleProfile?.count ?? 1,
+                authoredState: vehicleSprite?.state ?? null,
+                sourceFrame: vehicleSprite?.frame ?? null,
+                destinationReached: vehicleSprite ? v100EscortDestinationState(g)===1 : null,
                 assetLoaded: Boolean(asset?.complete && asset.naturalWidth > 0),
                 naturalWidth: asset?.naturalWidth ?? 0,
                 naturalHeight: asset?.naturalHeight ?? 0,

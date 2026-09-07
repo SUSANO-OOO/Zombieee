@@ -44,6 +44,7 @@ import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js"
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
 import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
+import { V100_ASSAULT_OBJECT_ART } from "../app/v100AssaultObjects.js";
 import { V100_NODE_ART } from "../app/v100MissionNodes.js";
 import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
@@ -234,7 +235,7 @@ for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
-for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART]) {
+for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), ...Object.values(V100_ASSAULT_OBJECT_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART]) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {

@@ -9,6 +9,7 @@ import { V100_STAGE_BY_ID } from "./v100Registry.js";
 import { V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { V100_RESEARCH_CORE_STAGE, V100_RESEARCH_CORE_ART } from "./v100ResearchCore.js";
 import { V100_NODE_ART, V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -71,12 +72,15 @@ export function requiredBattleAssetPlan({
     ? [{ id: "maintenance-cart", path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"], runtimeUsage: "mission-render-source" }]
     : [];
   const vehicleObjects = includeV100Sprites && V100_MISSION_VEHICLES[stageId]
-    ? Object.entries(V100_MISSION_VEHICLE_ART).map(([state,path])=>({id:`v100-mission-vehicle-${state}`,path,runtimeUsage:"mission-render-source"})) : [];
+    ? [stageId===CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL?"maintenanceStates":"transportStates","destinationStates"]
+      .map(state=>({id:`v100-mission-vehicle-${state}`,path:V100_MISSION_VEHICLE_ART[state],runtimeUsage:"mission-render-source"})) : [];
   const researchObjects = includeV100Sprites && stageId===V100_RESEARCH_CORE_STAGE
     ? [{id:"v100-research-core-targets",path:V100_RESEARCH_CORE_ART,runtimeUsage:"mission-render-source"}] : [];
   const nodeObjects = includeV100Sprites && V100_NODE_PROFILES[stageId]
     ? [{id:"v100-mission-node-states",path:V100_NODE_ART,runtimeUsage:"mission-render-source"}] : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects];
+  const assaultProfile=includeV100Sprites?v100AssaultObjectProfile(stageId):null;
+  const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

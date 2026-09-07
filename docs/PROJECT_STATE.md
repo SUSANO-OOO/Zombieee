@@ -118,7 +118,15 @@ build 7b0bf2a63c388897e4705d4c924eb83ba7d86b3c7abe971099894dd1bc0eed56でChromiu
 
 送信済み46a763dのCI34134043841はPhase G/native WebKit PWA/PR Verify/敵6分割/Hostedが成功とlive APIで確認（outputs/completion/ci-46a-jobs-status.jsonl）。このHEADの後続audio/deploymentと、設備追加後候補のrequired CIは別途確認する。旧候補を現在の全体受入へ代用しない。
 
-現在は工程1と2。次の実装開始点は既存感染拠点と護送対象の残る損傷/大破/破壊状態および目的地表示。後半設備5作戦とFUTAGOの激昂から勝利までの通常確認は上記の範囲で成立した。有限の残件は残る任務演出、後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。旧データ保全/公開承認境界/継続goalを維持する。
+Stage25も獲得済みStage24結果を実UIで確定し、400 CAPSの初回報酬を受領した1089 CAPS/主力Lv19/車両1000で通常確認した。r1は158.82秒/損耗9で敗北し、社長6200HPが無傷のまま先行警備部隊と最終部隊が重なった。Stage24と同じ最終部隊の先行敵掃討条件をStage25へ限定適用（b11bf0c）。固定4波[2,2,3,4]、時刻[5,29,53,77]、knife3/shield3/SMG2/commander2/社長6200HPは不変。r2は同じ獲得済みsave/編成/操作方針で237.95秒、車両1000/1000、損耗9、星3で勝利し、70%/35%両段階と撃破を確認。証拠はoutputs/v100-boss-earned-s25-president-wave-clear-r2、source SHA256 9f0a2f3c7ae739965fe7826f5e199ec9ae15c583a3b95d0f10f56abaf0259acf、build dc7dd14a38ae3dc1ea0ca8e1532d2b5f0b39a8b16421458d43068852a7de7a50。r1を保持、資源/HP/時計/結果の改変0。最終全編受入とは別。
+
+襲撃/護衛の状態表示を接続した。感染拠点と駅の感染中継点は既存identityの通常/損傷/大破/破壊画像を実拠点HPから選び、防護中の不正な損傷表示を防ぐ。Stage6保守台車、12密閉搬送車、19証拠搬送車、26の正確な3台の冷蔵車も実integrityの4状態を使う。各護衛先に未到達/到達信号を配置し、実mission完了かつ生存時にだけ完了表示へ変える。描画からHP/進行/結果は変更しない。旧版のasset/save/描画を保持。原本5枚、正確なprompt、alpha/可視RGB無損失encode、hash/bytesを保全した。追加5 assets/4,525,324bytes、完成補完24 assets/17,413,966bytes、候補483 logical/481 distinct、121,976,637bytes。
+
+build 19b46f43a9a54ceef31542f5e66f1d3284fa1b8b64f3535573be535bbcd80b7dでChromium/WebKit×3サイズ×Stage1/4/6/12/19/26/30の実入口42条件が成功（outputs/v100-objective-placement-browser-r1）。最終canvasの元画像/全alpha輪郭/正確な車両数、画面内/HUD非重複、overflow/diagnostics0を確認。4損傷状態と到達信号は両engineの本番rendererと元画像可視面積・状態不変の明示fixture10条件で確認（outputs/v100-objective-states-preview-r1）。通常勝利/音響/実機の代替にはしない。全1506 source tests、build、lint0 errors/12既存warnings、追加script lint/diff check成功。旧asset-plan testの「V1と旧版の設備数が同数」という前提だけを、追加した拠点1assetと旧設備全保持の厳密な検証へ更新した。
+
+送信済み21316aaのCI34139232652はPhase G/native WebKit PWA/PR Verify/敵6分割/Hosted/入口audioがlive APIで成功、final audioは実行中または待機（outputs/completion/pr171-objective-live.json）。この結果は新しい襲撃/護衛asset候補の受入へ代用しない。
+
+現在は工程1と2。次の開始点は時間防衛の残る状態演出と獲得済みStage25結果からの後半通常プレイ。有限の残件は時間防衛/最終bossの通常体験、自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer最終承認、公開と公開後QA。旧データ保全/公開承認境界/継続goalを維持する。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
