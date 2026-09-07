@@ -51,7 +51,10 @@ const extraBattleContracts = Object.freeze([
   // runtime mutation or a synthetic enemy fixture.
   { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", proofActor: "walker", proofUnitKind: "brute", requireVehicleAction: true, keepHumanTargetAlive: true, formationUnitIds: ["unit-nao", "unit-tatara", "unit-hachi", "unit-monkey", "unit-mizuchi", "unit-paisen", "unit-kumaverson"] },
   { variant: "stage04-grappler", engine: "chromium", viewport: extraBattleViewports[1], stageNumber: 4, bossKind: null, proofActor: "grappler", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
-  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  // Melee contact and later ranged/marker actions have different living-target
+  // requirements. Give each its own ordinary battle and evidence identity.
+  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-knife", formationUnitIds: ["unit-tatara", "unit-gantetsu", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage21-panther-smg", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
   // Keep the three deployed slots combat-active on the compact WebKit proof:
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
@@ -2587,7 +2590,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
   const browserSession = phaseGBrowserSessionForCapture(browser, browserPolicy);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
-  const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
+  const label = `${engineName}-${viewportLabel(viewport)}-${state}${checkpointContract?.variant ? `-${checkpointContract.variant}` : ""}`;
   const captureStartedAt = Date.now();
   let pageCrashPrimary = null;
   let capturePrimaryFailure = null;
@@ -3409,7 +3412,7 @@ async function writePhaseGManifest(report) {
     const [width, height] = result.viewport.split("x").map(Number);
     const battle = result.state.startsWith("battle");
     return {
-      id: `${result.category ?? (battle ? "battle-extra" : "core")}-${result.engine}-${result.viewport}-${result.state}`,
+      id: `${result.category ?? (battle ? "battle-extra" : "core")}-${result.engine}-${result.viewport}-${result.state}${result.state === "battle-extra" ? `-${result.variant}` : ""}`,
       category: result.state === "battle-extra" ? "battle-extra" : "core",
       state: result.state,
       variant: result.variant,
@@ -3486,7 +3489,7 @@ async function writePhaseGManifest(report) {
   const expectedEnemyCoverage = deriveV100ProductionEnemyCoverage();
   const observedBattleKinds = [...new Set(report.results.flatMap((result) => result.observedEnemyKinds ?? result.runtime?.fighters?.filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind) ?? []))];
   const manifest = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     // Full checkpoint traces remain in the report and capture transactions.
     // Reference their exact bytes instead of duplicating megabytes in Git.
     reportEvidence: { path: relativeEvidence(reportFile), bytes: reportBytes.length, sha256: createHash("sha256").update(reportBytes).digest("hex") },
@@ -3631,9 +3634,6 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   let vehicleActionObserved = !requireVehicleAction;
   let proofUnitDeployed = proofUnitKind === null;
   let proofUnitAttackObserved = proofUnitKind === null;
-  const proofActorAttackCueId = proofActor
-    ? enemyCombatCueFor(proofActor, "attack")
-    : null;
   const proofUnitAttackCueId = proofUnitKind
     ? weaponCueForUnit(proofUnitKind)
     : null;
@@ -3664,9 +3664,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const observeProofActorAttack = async (runtime = null) => {
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
     runtime ??= await readSetupRuntime();
-    const observation = setupActorObservation(runtime, "zombie", proofActor, proofActorAttackCueId);
-    if (observation?.mounted === true) recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
-    proofActorAttackObserved = observation?.observed === true;
+    const observation = setupActorObservation(runtime, "zombie", proofActor, enemyCombatCueFor(proofActor, "attack"));
+    if (observation.mounted) recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
+    proofActorAttackObserved = observation.observed;
     if (proofActorAttackObserved) setupObservations[`zombie:${proofActor}`] ??= runtime;
     return proofActorAttackObserved;
   };
@@ -3716,8 +3716,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (vehicleActionObserved) recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
     return vehicleActionObserved;
   };
-  let sustainActive = Boolean(bossKind);
-  let bossDeploymentFinished = !bossKind;
+  let sustainActive = Boolean(bossKind || proofActor && !completedImpactProofEnabled);
+  let bossDeploymentFinished = false;
   let sustainFailure = null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
@@ -3736,7 +3736,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   }, bossKind).catch(() => false);
   // Baseline precedes both main and background ordinary input paths.
   await captureOpeningAction();
-  const sustainTask = bossKind ? (async () => {
+  const sustainTask = sustainActive ? (async () => {
     // These are ordinary player-facing controls.  The loop keeps the
     // evidence run alive long enough to reach the authored boss wave without
     // mutating HP, clocks, enemy state, or battle definitions.
@@ -3753,7 +3753,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
 
-      const abilityButtons = page.locator('button.manual-ability-ready.available:not([disabled])');
+      // The dedicated manual-proof input owns its activation and before/after
+      // observations; background survival input must not consume that charge.
+      const sustainAbilitySelector = 'button.manual-ability-ready.available:not([disabled])'
+        + (manualAbilityKind ? `:not([data-ability-kind="${manualAbilityKind}"])` : "");
+      const abilityButtons = page.locator(sustainAbilitySelector);
       const abilityCount = await abilityButtons.count().catch(() => 0);
       const proofCombatReady = proofActorAttackObserved && proofUnitAttackObserved;
       const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
@@ -3765,7 +3769,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (!bossEngaged && proofCombatReady) {
         for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
           await withPhaseGPageInputLock(page, async () => {
-            const lockedAbility = page.locator('button.manual-ability-ready.available:not([disabled])').nth(index);
+            const lockedAbility = page.locator(sustainAbilitySelector).nth(index);
             if (await lockedAbility.count().catch(() => 0)) await lockedAbility.click({ timeout: 500 }).catch(() => {});
           });
           await page.waitForTimeout(85);
@@ -3816,6 +3820,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await medical.click({ timeout: 500 }).catch(() => {});
           await lockedCanvas.click({ position: { x: lockedBox.width * .34, y: medicalY }, timeout: 700 }).catch(() => {});
         });
+      }
+      // Late ordinary enemy waves also need a real living opponent. Complete
+      // the initial three deployments first, then use only affordable native
+      // cards; the deferred proof unit need not wait for an enemy to attack a
+      // formation that has already died.
+      if (!bossKind && proofActor && bossDeploymentFinished
+        && (!proofUnitDeployed || liveHumanTargetCount < 2)) {
+        const requestedKind = !proofUnitDeployed ? proofUnitKind : null;
+        const pointer = await performVerifiedDeploymentPointer(page, {
+          requestedKind, phase: "proof-target-continuity",
+        });
+        if (pointer.accepted && requestedKind) {
+          deployedKinds.add(requestedKind);
+          if (requestedKind === proofUnitKind) proofUnitDeployed = true;
+        }
       }
       const targetContinuity = proofActorTargetContinuityDecision({
         bossDeploymentFinished,
@@ -4062,58 +4081,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const bossObservation = await waitForRequiredBossPresentation(page, { bossKind, waitForBossAttack });
       if (bossObservation) setupObservations[`zombie:${bossKind}`] ??= bossObservation;
     }
-    if (!completedImpactProofEnabled && proofActor) {
-      // A wave-3 actor cannot act while absent or traversing its entry gate.
-      // Keep the existing 45-second action window after actual combat readiness.
-      if (!proofActorAttackObserved) {
-        recorder?.setAwaiting("proof-actor-combat-ready", { actor: proofActor, predicate: "living exact actor has completed its real entry" });
-        const arrivalDeadline = Date.now() + battleTimeout;
-        let ready = false;
-        while (!proofActorAttackObserved && !ready && Date.now() < arrivalDeadline) {
-          await observeProofActorAttack();
-          ready = setupEnemyCanAct(await readSetupRuntime(), proofActor);
-          if (!proofActorAttackObserved && !ready) await page.waitForTimeout(100);
-        }
-        invariant(proofActorAttackObserved || ready, `proof enemy actor never became combat-ready: ${proofActor}`);
-        recorder?.clearAwaiting();
-      }
-      if (proofActorRequiresContactFirst) {
-        recorder?.setAwaiting("proof-actor-live-human-target", {
-          actor: proofActor,
-          predicate: "exact proof actor owns a current living-human target, or its exact authored attack is already observed with monotonic target history",
-        });
-        const contactDeadline = Date.now() + Math.min(battleTimeout, 45_000);
-        let contactState = await readProofActorContactState();
-        while (!proofActorAttackObserved && contactState?.hasLiveHumanTarget !== true && Date.now() < contactDeadline) {
-          await observeProofActorAttack();
-          contactState = await readProofActorContactState();
-          if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) break;
-          await page.waitForTimeout(100);
-        }
-        if (proofActorAttackObserved) {
-          invariant(contactState?.hasHumanTarget === true, `proof actor ${proofActor} attacked without exact living-human target history`);
-        } else {
-          invariant(contactState?.hasLiveHumanTarget === true, `proof actor ${proofActor} never acquired an exact live human target before attack proof`);
-        }
-        recorder?.clearAwaiting();
-      }
-      if (!proofActorAttackObserved) {
-        recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
-        const proofActorDeadline = Date.now() + Math.min(battleTimeout, 45_000);
-        while (!proofActorAttackObserved && Date.now() < proofActorDeadline) {
-          await observeProofActorAttack();
-          if (!proofActorAttackObserved) await page.waitForTimeout(100);
-        }
-        invariant(proofActorAttackObserved, `proof enemy actor did not attack: ${proofActor}`);
-      }
-      if (proofActorRequiresContactFirst) {
-        const finalContactState = await readProofActorContactState();
-        invariant(finalContactState?.hasHumanTarget === true, `proof actor ${proofActor} attack lacks exact living-human target history`);
-      }
-      recorder?.clearAwaiting();
-      recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor, source: "final-proof-predicate" });
-      recorder?.mark("proof-actor-attack-observed-or-not-required", "observed", { actor: proofActor, evidence: "final-proof-predicate" });
-    }
+    // Observe the human action while its real owner and target are present.
+    // Waiting for a later enemy wave first can consume that finite lifetime;
+    // the concurrent enemy observer already retains its earlier action.
     if (!completedImpactProofEnabled && proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();
     if (!completedImpactProofEnabled && proofUnitKind && !proofUnitDeployed) {
       recorder?.setAwaiting("proof-unit-deployment", { unitKind: proofUnitKind, predicate: "proof unit card leaves ready state" });
@@ -4165,6 +4135,58 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       setupObservations["status-mission-target"] = await waitForManualMarkerObservation(page, manualAbilityKind, manualActionEvidence);
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: `manual-ability:${manualAbilityKind}` });
+    }
+    if (!completedImpactProofEnabled && proofActor) {
+      // A wave-3 actor cannot act while absent or traversing its entry gate.
+      // Keep the existing 45-second action window after actual combat readiness.
+      if (!proofActorAttackObserved) {
+        recorder?.setAwaiting("proof-actor-combat-ready", { actor: proofActor, predicate: "living exact actor has completed its real entry" });
+        const arrivalDeadline = Date.now() + battleTimeout;
+        let ready = false;
+        while (!proofActorAttackObserved && !ready && Date.now() < arrivalDeadline) {
+          await observeProofActorAttack();
+          ready = setupEnemyCanAct(await readSetupRuntime(), proofActor);
+          if (!proofActorAttackObserved && !ready) await page.waitForTimeout(100);
+        }
+        invariant(proofActorAttackObserved || ready, `proof enemy actor never became combat-ready: ${proofActor}`);
+        recorder?.clearAwaiting();
+      }
+      if (proofActorRequiresContactFirst) {
+        recorder?.setAwaiting("proof-actor-live-human-target", {
+          actor: proofActor,
+          predicate: "exact proof actor owns a current living-human target, or its exact authored attack is already observed with monotonic target history",
+        });
+        const contactDeadline = Date.now() + Math.min(battleTimeout, 45_000);
+        let contactState = await readProofActorContactState();
+        while (!proofActorAttackObserved && contactState?.hasLiveHumanTarget !== true && Date.now() < contactDeadline) {
+          await observeProofActorAttack();
+          contactState = await readProofActorContactState();
+          if (proofActorAttackObserved || contactState?.hasLiveHumanTarget === true) break;
+          await page.waitForTimeout(100);
+        }
+        if (proofActorAttackObserved) {
+          invariant(contactState?.hasHumanTarget === true, `proof actor ${proofActor} attacked without exact living-human target history`);
+        } else {
+          invariant(contactState?.hasLiveHumanTarget === true, `proof actor ${proofActor} never acquired an exact live human target before attack proof`);
+        }
+        recorder?.clearAwaiting();
+      }
+      if (!proofActorAttackObserved) {
+        recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
+        const proofActorDeadline = Date.now() + Math.min(battleTimeout, 45_000);
+        while (!proofActorAttackObserved && Date.now() < proofActorDeadline) {
+          await observeProofActorAttack();
+          if (!proofActorAttackObserved) await page.waitForTimeout(100);
+        }
+        invariant(proofActorAttackObserved, `proof enemy actor did not attack: ${proofActor}`);
+      }
+      if (proofActorRequiresContactFirst) {
+        const finalContactState = await readProofActorContactState();
+        invariant(finalContactState?.hasHumanTarget === true, `proof actor ${proofActor} attack lacks exact living-human target history`);
+      }
+      recorder?.clearAwaiting();
+      recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor, source: "final-proof-predicate" });
+      recorder?.mark("proof-actor-attack-observed-or-not-required", "observed", { actor: proofActor, evidence: "final-proof-predicate" });
     }
     if (requireVehicleAction) {
       recorder?.setAwaiting("vehicle-action", { predicate: "vehicle barrage cue or authored crawler firing state" });

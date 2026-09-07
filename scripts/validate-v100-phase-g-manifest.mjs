@@ -39,14 +39,14 @@ function diagnosticsClean(diagnostics) {
 
 function fail(condition, message) { if (!condition) errors.push(message); }
 
-fail(manifest.schemaVersion === 3, `schemaVersion ${manifest.schemaVersion}`);
+fail(manifest.schemaVersion === 4, `schemaVersion ${manifest.schemaVersion}`);
 fail(manifest.reportEvidence?.path === `${evidencePrefix}phase-g-report.json`
   && manifest.reportEvidence?.bytes === reportBytes.length
   && manifest.reportEvidence?.sha256 === createHash("sha256").update(reportBytes).digest("hex"), "full report byte/hash linkage mismatch");
 fail(manifest.route === "/Zombieee/v100", "route mismatch");
 fail(report.route === "/Zombieee/v100", "runtime report route mismatch");
-fail(manifest.totalScreenshots === 54, `manifest total ${manifest.totalScreenshots}`);
-fail(entries.length === 54, `entry count ${entries.length}`);
+fail(manifest.totalScreenshots === 55, `manifest total ${manifest.totalScreenshots}`);
+fail(entries.length === 55, `entry count ${entries.length}`);
 fail(manifest.runtimeContractVersion === 2, `runtimeContractVersion ${manifest.runtimeContractVersion}`);
 fail(manifest.coreStateCount === 16, `coreStateCount ${manifest.coreStateCount}`);
 fail(manifest.combatEvidenceCount === 16, `combatEvidenceCount ${manifest.combatEvidenceCount}`);
@@ -60,7 +60,7 @@ fail(new Set(entries.map(({ evidence }) => evidence)).size === entries.length, "
 const coreEntries = entries.filter(({ category }) => category === "core");
 const extraEntries = entries.filter(({ category }) => category === "battle-extra");
 fail(coreEntries.length === 48, `core entry count ${coreEntries.length}`);
-fail(extraEntries.length === 6, `extra battle entry count ${extraEntries.length}`);
+fail(extraEntries.length === 7, `extra battle entry count ${extraEntries.length}`);
 for (const state of requiredCoreStates) {
   const stateEntries = coreEntries.filter((entry) => entry.state === state);
   fail(stateEntries.length === 3, `${state} core coverage ${stateEntries.length}`);
@@ -186,11 +186,11 @@ for (const entry of entries) {
     errors.push(`${entry.id} evidence unreadable: ${String(error)}`);
   }
 }
-fail(paths.size === 54, `unique image paths ${paths.size}`);
-fail(hashes.size === 54, `unique image hashes ${hashes.size}`);
-fail(reportResults.length === 54, `runtime capture result count ${reportResults.length}`);
+fail(paths.size === 55, `unique image paths ${paths.size}`);
+fail(hashes.size === 55, `unique image hashes ${hashes.size}`);
+fail(reportResults.length === 55, `runtime capture result count ${reportResults.length}`);
 fail(Number(report.pwaOfferShownCount) > 0, "PWA offer was not observed in the production matrix");
-fail(new Set(reportResults.map((entry) => entry.evidence?.path)).size === 54, `runtime report unique paths ${new Set(reportResults.map((entry) => entry.evidence?.path)).size}`);
+fail(new Set(reportResults.map((entry) => entry.evidence?.path)).size === 55, `runtime report unique paths ${new Set(reportResults.map((entry) => entry.evidence?.path)).size}`);
 fail([...new Set(entries.map((entry) => entry.evidence))].every((evidence) => reportByPath.has(evidence)), "runtime report is missing a manifest path");
 
 if (errors.length > 0) throw new Error(`Phase G manifest validation failed:\n${errors.join("\n")}`);

@@ -88,7 +88,13 @@ FUTAGOの実体：承認済みidentity masterから個体A/Bの各14poseを作�
 
 クロメの分身を本番へ接続した。HP70%/35%で各段階一度、生存最大2体、各HP410/攻撃17。承認済みの同人物spriteを0.7倍・半透明で描き、「分身」と青い個別HPで本体から区別する。分身も実際に移動・追跡照準・攻撃・被弾し、本体撃破で消滅。分身撃破は独立した敵記録で、boss報酬/拠点露出/解禁や資源の追加付与には使わない。実spawn/座標制限/死亡consumerを実行し、同時2体上限・自己増殖0・回復で再召喚triggerを戻さない・owner別消滅・旧版変更0を確認。全1493 tests/production build、lint0 errors/既存12 warnings成功。16作戦完了/703 CAPS/主力Lv13/車両920の正確なsaveと実UIだけで、Chromium844x340のStage17を168.55秒・車両920/920・損耗1・星3で勝利、2回の分身段階・本体撃破後の分身消滅・objectiveComplete/結果保存・diagnostics0を確認（`outputs/v100-boss-earned-s17-clones-r1`、build `12b85b1e660e386c397846fc8af642e1c6316d3cc356191ebb5cae5375b3803d`）。その後の一行の回復対策は実生成consumerの回帰で確認した。最終同一候補の全編/実機/聴感へ代用しない。
 
-現在は工程1と2。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
+45aa0cfのremote CI `34122233023` はStage4を越え、Phase GのStage21で失敗した。最初の3人以後に補充せず、後続SMG兵を待つ間に部隊が全滅していた。通常の出撃操作による補充と、標的が生きている間の手動能力確認へ修正。さらに同じ戦闘へナイフ/SMG/マーキングを詰めた計画が、射撃でナイフ兵を行動前に倒すか、近接を成立させても後続まで生存できない構造だった。r1〜r4の失敗/実攻撃記録を保持し、編成の反復調整を止め、近接と射撃/マーキングを独立したStage21キャプチャへ分離した。全16代表行・48 core・既存viewport/engine・攻撃条件/時間制限は維持し、追加実戦7/合計55、manifest schema4を現在の受入とする。同サイズの証拠はvariant名で区別。旧schema3/54枚は履歴のまま保存し、release validatorは受け付けない。旧exact-54手順は今回のProducerによる検証方法再評価指示に基づき更新した。
+
+上記分離後のChromium932x430実戦2ケースは両方成功、ナイフ兵の接触/攻撃とSMG兵・Babayaga・同一activationの生存標的マーキングをそれぞれ実snapshotで確認、原子的攻撃証拠/画像/diagnostics0/overflow0（`outputs/v100-phase-g-stage21-knife-split-r1` と `outputs/v100-phase-g-stage21-smg-split-r1`、build `ad9ccff0ff728fa9e4eb16027e32c478acec7ab037c69269996a6c7d7036855f`）。全1493 tests/production build、lint0 errors/既存12 warnings成功。最後に補充の追加を非atomic通常敵fixtureへ限定し、既存Stage6 atomic経路を維持した後もfocused81/81成功。全55同一候補のremote完走は未確認。別のsource試行で発生した旧証拠名fixture不一致と競合下の短時間bundle timer失敗もログに保持し、製品成功へ混同しない。
+
+同じ45aa0cfのMac native WebKit PWA jobは成功。artifact10018866753を再取得し、16,312,200 bytes/sha256 `078956b489385b2bd99738d63153bab38ed529c1ee6900dfd95add934f1323bc`をGitHub metadataと照合。darwin/WebKit2359の実CacheStorage共有/再起動probe、既存更新18/18、部分失敗/復旧22/22、失敗/diagnostics0。旧415 assets保持、候補471/追加56/旧変更削除0。証拠は `outputs/completion/ci-45aa-native-pwa`、build `965936d4ac2ad00c0c2b698261c7072a1d4e6c535e2ca41384eecf00e87ec0f8`。クロメ修正後の候補や物理iPhone/実speaker聴感へは代用しない。
+
+現在は工程1と2。次の実装開始点はStage22の100秒防衛と43収容室の順次開放を実HUD/作戦目標へ結び、現在の「救援区域・防衛対象外」表示を修正すること（正本Stage22 battle-marker）。有限の残件は残る任務objectの本番接続、FUTAGOの激昂から勝利までのブラウザ受入を含む後半bossの通常体験/自然解禁他mode/音響/操作感、同一候補fresh全編通し・PWA・CI・最終read-only review、Producer承認、公開と公開後QA。FUTAGOの通常敗北を再実行だけで合格へ変えず、編成展開時間・通常敵との重なり・警告と対処の成立をまとめて評価する。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 

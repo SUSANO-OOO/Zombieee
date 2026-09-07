@@ -19,20 +19,24 @@ const evidencePrefixes = new Set(manifest.entries.map(({ evidence }) => {
 }));
 const evidencePrefix = evidencePrefixes.size === 1 ? [...evidencePrefixes][0] : "";
 
-test("Phase G requires the 48 core and 6 additional production screenshot rows", () => {
-  assert.equal(manifest.schemaVersion, 3);
+test("stored Phase G evidence retains its original schema coverage; current acceptance is validated separately", () => {
+  // Preserve the historical report unchanged until a new whole matrix succeeds.
+  // The release validator accepts only schema 4 and all 55 current captures.
+  assert.ok([3, 4].includes(manifest.schemaVersion));
+  const extraCount = manifest.schemaVersion === 4 ? 7 : 6;
+  const totalCount = 48 + extraCount;
   assert.equal(manifest.route, "/Zombieee/v100");
-  assert.equal(manifest.totalScreenshots, 54);
+  assert.equal(manifest.totalScreenshots, totalCount);
   assert.equal(manifest.runtimeContractVersion, 2);
-  assert.equal(manifest.entries.length, 54);
+  assert.equal(manifest.entries.length, totalCount);
   assert.deepEqual(new Set(manifest.requiredEngines), new Set(["chromium", "webkit"]));
   assert.deepEqual(new Set(manifest.requiredCoreViewports), coreViewports);
   assert.deepEqual(new Set(manifest.additionalBattleViewports), extraViewports);
   assert.deepEqual(manifest.requiredCoreStates, coreStates);
   assert.equal(manifest.entries.filter(({ category }) => category === "core").length, 48);
-  assert.equal(manifest.entries.filter(({ category }) => category === "battle-extra").length, 6);
-  assert.equal(new Set(manifest.entries.map(({ id }) => id)).size, 54);
-  assert.equal(new Set(manifest.entries.map(({ evidence }) => evidence)).size, 54);
+  assert.equal(manifest.entries.filter(({ category }) => category === "battle-extra").length, extraCount);
+  assert.equal(new Set(manifest.entries.map(({ id }) => id)).size, totalCount);
+  assert.equal(new Set(manifest.entries.map(({ evidence }) => evidence)).size, totalCount);
   for (const state of coreStates) {
     const rows = manifest.entries.filter((entry) => entry.category === "core" && entry.state === state);
     assert.equal(rows.length, 3, `${state} row count`);
@@ -59,7 +63,7 @@ test("Phase G maps all 16 real-combat evidence rows to the audited production in
   assert.deepEqual(new Set(manifest.combatEvidence.map(({ actor }) => actor)), new Set(combatActors));
   const inventoryActors = new Set(V100_COMBAT_FX_INVENTORY.map(({ actor }) => actor));
   // Representative combat proof may link to either the three core battle
-  // states or one of the six additional battle-extra captures. Both are
+  // states or one of the additional battle-extra captures. Both are
   // production battle mounts; restricting this audit to the extras would
   // reject the canonical ranged-enemy and TAKUYA-Ω core captures.
   const battleStates = new Set(["battle-normal", "battle-boss", "battle-extra"]);

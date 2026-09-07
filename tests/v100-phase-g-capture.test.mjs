@@ -12,6 +12,8 @@ import { manualMarkerActivation, validateV100CaptureRepresentativeEvidence, deri
 import { V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence } from "../app/v100PhaseGContract.js";
 import { LEGACY_SFX_CUE_MAP } from "../app/productionAudio.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_UNITS } from "../app/v100Registry.js";
+import { enemyContentFor } from "../app/content/enemyCatalog.js";
+import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-machine.mjs";
 
 const matrixPath = "scripts/v100-phase-g-production-matrix.mjs";
@@ -31,10 +33,16 @@ test("canonical capture selection rejects empty filters and missing/foreign resu
     "\n({ select: (filters = {}) => phaseGCapturePlan({coreStates,requiredViewports,extraBattleContracts,...filters}), contracts: extraBattleContracts, matches: phaseGResultsMatchPlan })",
   { V100_STAGE_IDS, V100_STAGES, V100_UNITS });
   const full = api.select();
-  assert.equal(full.length, 54);
-  assert.equal(api.select({ onlyState: "battle-extra" }).length, 6);
+  assert.equal(full.length, 55);
+  assert.equal(api.select({ onlyState: "battle-extra" }).length, 7);
   assert.equal(api.select({ onlyState: "battle-extra", onlyEngine: "webkit" }).length, 3);
   assert.equal(api.select({ onlyState: "battle-normal" }).length, 3);
+  for (const row of V100_REPRESENTATIVE_COMBAT_CONTRACT.filter(row => enemyContentFor(row.actor) && row.captureVariant.startsWith("stage"))) {
+    const setup = api.contracts.find(contract => contract.variant === row.captureVariant);
+    assert.ok(setup, row.id);
+    assert.ok([setup.bossKind, setup.proofActor].includes(row.actor), `${row.id}: capture must observe this exact actor`);
+    assert.ok(v100BattleDefinitionFor(setup.stageId).timeline.some(event => event.units.includes(row.actor)), `${row.id}: required actor must exist in the actual V1 operation`);
+  }
   for (const entry of full.filter((entry) => entry.state === "battle-extra")) {
     assert.equal(api.select({ onlyVariant: entry.variant, onlyEngine: entry.engine }).length, 1);
   }
@@ -331,7 +339,7 @@ async function fixture(t, options = {}) {
   t.after(() => assert.ok(events.includes("context-close"), "capture must close its context"));
   return {
     run, events, results, stopped: () => stopped, collectionCalls: () => collectionCalls,
-    receipt: async () => JSON.parse(await readFile(path.join(evidenceDir, "webkit-667x375-battle-extra.capture-transaction.json"), "utf8")),
+    receipt: async () => JSON.parse(await readFile(path.join(evidenceDir, "webkit-667x375-battle-extra-fixture.capture-transaction.json"), "utf8")),
   };
 }
 

@@ -11,7 +11,7 @@ const REPRESENTATIVE_ROWS = [
   ["combat-existing-enemy-ranged-special", "spitter", "projectile-special", "enemy-projectile-muzzle", "acid-impact", "ally-hit-flash", ["enemy-spitter-attack", "object-hit"], "stage06-spitter-seal", "spitter"],
   ["combat-infected-special", "grappler", "infected-special-grapple", "organic-pulse-anchor", "grapple-contact", "stun-and-knock", ["enemy-grappler-attack", "turned"], "stage04-grappler", "grappler"],
   ["combat-red-panther-knife", "red-panther-knife", "knife-footwork", "right-hand-knife", "weapon-arc-contact", "target-flash-knock", ["enemy-red-panther-knife-attack", "melee-hit"], "stage21-panther-knife", "red-panther-knife"],
-  ["combat-red-panther-smg", "red-panther-smg", "socket-smg-burst", "weapon-muzzle", "tracer-impact", "target-flash-knock", ["enemy-red-panther-smg-attack", "ranged-shot"], "stage21-panther-knife", "red-panther-smg"],
+  ["combat-red-panther-smg", "red-panther-smg", "socket-smg-burst", "weapon-muzzle", "tracer-impact", "target-flash-knock", ["enemy-red-panther-smg-attack", "ranged-shot"], "stage21-panther-smg", "red-panther-smg"],
   ["combat-red-panther-shield", "red-panther-shield", "shield-block", "left-arm-shield", "shield-plane-contact", "guard-stagger", ["enemy-red-panther-shield-attack", "structure-heavy"], "stage25-president", "red-panther-shield"],
   ["combat-red-panther-commander", "red-panther-commander", "rally-command", "commander-radio", "rally-telegraph", "ally-buff-state", ["enemy-red-panther-commander-attack", "role-scout"], "stage24-panther-commander", "red-panther-commander"],
   ["combat-existing-boss", "takuya", "boss-phase-attack", "boss-telegraph", "boss-impact", "boss-hit-reaction", ["enemy-takuya-attack", "takuya-hit"], "stage03-takuya", "takuya"],
@@ -20,7 +20,7 @@ const REPRESENTATIVE_ROWS = [
   ["combat-support", "support-healing", "support-activation", "support-world-drop", "healing-pulse-contact", "ally-heal-state", ["support-heal", "status-support-target"], "core-battle-boss", "support-healing"],
   ["combat-vehicle-ability", "vehicle-barrage", "vehicle-barrage", "vehicle-weapon-muzzle", "crawler-barrage-impact", "enemy-hit-flash", ["weapon-barrage", "crawler-hit"], "stage03-takuya", "vehicle-barrage"],
   ["combat-mission-object", "stage-nishijin-station-gate", "mission-object-state-change", "mission-object-bounds", "objective-contact", "mission-target-state", ["sfx-v070-terminal-confirm", "status-mission-target"], "stage04-grappler", "stage-nishijin-station-gate"],
-  ["combat-status-target-markers", "status-mission-target", "target-marker-state", "mission-target-label", "lock-on-contact", "danger-or-target-state", ["ui-select", "status-danger"], "stage21-panther-knife", "status-mission-target"],
+  ["combat-status-target-markers", "status-mission-target", "target-marker-state", "mission-target-label", "lock-on-contact", "danger-or-target-state", ["ui-select", "status-danger"], "stage21-panther-smg", "status-mission-target"],
 ].map(([id, actor, action, source, contactImpact, reaction, seVfx, captureVariant, runtimeActor]) => Object.freeze({
   id,
   actor,
