@@ -118,9 +118,12 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit");
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 6);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
-  assert.doesNotMatch(workflow, /WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
+  const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
+  assert.match(nativePwaJob,/runs-on: ubuntu-24\.04/u);
+  assert.match(nativePwaJob,/WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"/u);
+  assert.doesNotMatch(workflow.replace(nativePwaJob,""),/WEBKIT_SKIA_ENABLE_CPU_RENDERING/u);
   assert.match(stage3Job, /brew install coreutils/u);
   assert.match(stage3Job, /gtimeout --version/u);
   assert.equal((stage3Job.match(/gtimeout --signal=TERM --kill-after=30s 15m node/gu) ?? []).length, 2);
@@ -197,7 +200,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.deepEqual(Object.keys(jobs), ["verify", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
-    "v100-phase-g-production": "verify", "v100-native-webkit-pwa": "verify", "webkit-hosted": "webkit-enemy-runtime-shard",
+    "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
     "webkit-enemy-runtime-shard": undefined, "webkit-viewport": ["webkit-deployment-viewport", "webkit-hosted"],
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
@@ -205,11 +208,19 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);
-    assert.equal(job["runs-on"], "macos-15-intel");
+    assert.equal(job["runs-on"], id === "v100-native-webkit-pwa" ? "ubuntu-24.04" : "macos-15-intel");
     assert.equal(job["continue-on-error"], undefined);
-    assert.equal(job.container, undefined);
+    if (id === "v100-native-webkit-pwa") {
+      assert.equal(job.container.image,"mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a");
+      assert.equal(job.env.V100_PLAYWRIGHT_CONTAINER_IMAGE,job.container.image);
+      assert.equal(job.env.PLAYWRIGHT_BROWSERS_PATH,"/ms-playwright");
+      assert.equal(job.steps.filter(step=>step.run==="node scripts/verify-playwright-container-runtime.mjs").length,1);
+      assert.equal(job.steps.filter(step=>step.run==="node scripts/native-pwa-storage-probe.mjs").length,1);
+    } else {
+      assert.equal(job.container, undefined);
+      assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
+    }
     assert.ok(job.if === undefined || job.if === "${{ !cancelled() }}", `${id} must respect cancellation while retaining failure diagnostics`);
-    assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
   }
   const viewports = ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"];
   assert.deepEqual(jobs["webkit-viewport"].strategy.matrix.viewport, viewports);
@@ -301,7 +312,7 @@ test("the release Phase G lane covers and validates all production captures", as
   assert.match(job, /outputs\/v100-phase-g\n\s+docs\/qa\/v100\/phase-g-screenshot-manifest\.json/u);
   const { jobs } = loadYaml(workflow);
   const pwa = jobs["v100-native-webkit-pwa"];
-  assert.equal(pwa.needs,"verify","PWA must run even when an unrelated battle capture fails");
+  assert.equal(pwa.needs,undefined,"storage diagnosis must not wait behind unrelated battle captures");
   assert.equal(pwa["continue-on-error"],undefined);
   const pwaText = JSON.stringify(pwa);
   assert.match(pwaText, /old_sha=55d796cc577d1d9f903a4d2c6b4382196511db27/u);

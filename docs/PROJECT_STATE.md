@@ -50,6 +50,8 @@
 
 Stage23の追加通常探索は獲得済み1105 CAPSからMrs.チハを登録/Lv19まで育成し、残高299を保存した。前衛/遠距離/回復を含めて146.1秒・損耗8で再び敗北（`outputs/v100-normal-campaign-late-s23-r1`）。失敗saveと入力を保全し、無根拠の再戦・敵弱体化はしない。正本17.5と実adapterの照合で、A/B/C/D/P全packの欠落・誤置換、Pのknife欠落とcommander先行、Stage24の未定義pack fallbackを確認。Stage29の二つの破壊対象は別の純粋runtimeにだけ存在し、本番は拠点HP一つ、六elite wavesも四waveのまま。Stage30の二つのA限定add wavesも未接続。これらを次の有限の製品修正とし、影響する通常攻略・実mission state・描画/勝利条件を更新後の実物で検証する。
 
+71fe89dの今回のremote Phase Gは全54画面/代表16戦闘と後段validatorが成功。artifact10010100463の54画像hash/diagnosticsとreportを独立readbackした（`outputs/completion/ci-71fe89d-phase-g-verification.json`）。macOSの入力probeは旧/順次方式とも両engine40入力ずつ成功しており、旧失敗の原因確定とはしない。一方、同じrunのnative PWAは製品なしprobeでもpersistentのput直後match=null/keys=[]、再起動後も空、一時contextは共有成功だった。macOS/Windows portの永続CacheStorage前提不成立として証拠を保持する。次のrequired PWA jobは既存のdigest固定Playwright1.56.1 Linux container/実WebKitで同じ保存probeと公開旧版→候補の全更新/復旧を実行する。保存APIの代替実装、検証省略、失敗の成功化は行わない。全描画/入力laneはmacOSを維持する。PWA/Phase Gは独立buildのためverifyへの不要な待機依存だけを除去した。Linuxでの永続保存とPWAはまだ未合格であり、実機Safariの証拠にも代用しない。
+
 現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。

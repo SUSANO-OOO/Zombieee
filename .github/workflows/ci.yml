@@ -208,7 +208,6 @@ jobs:
 
   v100-phase-g-production:
     name: V1 Phase G Production Matrix
-    needs: verify
     runs-on: macos-15-intel
     defaults:
       run:
@@ -265,8 +264,17 @@ jobs:
 
   v100-native-webkit-pwa:
     name: V1 Native WebKit PWA Update and Recovery
-    needs: verify
-    runs-on: macos-15-intel
+    # macOS/Windows 2215 persistent contexts lose CacheStorage entries even
+    # without product code (71fe89d native probe). Use the pinned Linux port
+    # for process-persistent storage; macOS still owns every visual/input lane.
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+    env:
+      V100_PLAYWRIGHT_CONTAINER_IMAGE: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+      V100_PLAYWRIGHT_CONTAINER_ENGINES: webkit
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      WEBKIT_SKIA_ENABLE_CPU_RENDERING: "1"
     defaults:
       run:
         shell: bash
@@ -289,11 +297,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install locked WebKit browser
-        run: npx playwright install webkit
-
-      - name: Verify pinned macOS WebKit runtime
-        run: node scripts/verify-playwright-container-runtime.mjs --macos
+      - name: Verify pinned Linux WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs
 
       - name: Verify native persistent storage before loading either release
         run: node scripts/native-pwa-storage-probe.mjs
