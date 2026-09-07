@@ -60,13 +60,12 @@ const extraBattleContracts = Object.freeze([
   // as cards recover. It does not force a fixed DOM index or mutate battle
   // state; the boss gate and combat proof remain fully production-owned.
   { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", proofActor: "red-panther-commander", waitForBossAttack: false, combatProofDurationMs: 4_800, completedImpactProof: true, unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-nao", "unit-hachi", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
-  // Start every boss fixture with the same low-cost opening a player can use
-  // to establish a frontline before the expensive cards recover. The
-  // interaction below selects the first currently ready cards, so the
-  // compact WebKit proof does not depend on a fixed card index.
-  // The formation still contains seven canonical V1 units; this is a QA
-  // interaction plan, not a gameplay or balance change.
-  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", completedImpactProof: true, formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS },
+  // A support-object shield attacks a human only at physical contact or when
+  // that human blocks its route. Until the exact shield impact is sealed,
+  // ordinary guardian-card redeployments maintain a durable blocker across
+  // production-selected lanes instead of spending every recovered click on
+  // the first cheap DOM card. No lane, fighter, clock, or enemy is mutated.
+  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", completedImpactProof: true, completedImpactTargetKind: "guardian", formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS },
 ].map((contract) => Object.freeze({
   ...contract,
   stageId: V100_STAGE_IDS[contract.stageNumber - 1],
@@ -188,10 +187,29 @@ function deploymentCardIdentity(card) {
   };
 }
 
-function bossOpeningCandidates(diagnostics, deployedKinds, completedImpactProofEnabled, { proofUnitKind = null, proofUnitDeployed = false } = {}) {
+function completedImpactTargetDeploymentKind({
+  completedImpactProofEnabled = false,
+  proofActorRequiresContactFirst = false,
+  completedImpactProofSealed = false,
+  completedImpactTargetKind = null,
+} = {}) {
+  return completedImpactProofEnabled
+    && proofActorRequiresContactFirst
+    && !completedImpactProofSealed
+    && completedImpactTargetKind
+    ? completedImpactTargetKind
+    : null;
+}
+
+function bossOpeningCandidates(diagnostics, deployedKinds, completedImpactProofEnabled, { proofUnitKind = null, proofUnitDeployed = false, completedImpactTargetKind = null } = {}) {
   // Roster membership does not forbid a player from redeploying a recovered
   // card. No actor instance is selected or reserved for completed-impact proof.
   const candidates = deploymentCandidatesFromDiagnostics(diagnostics, completedImpactProofEnabled ? new Set() : deployedKinds);
+  // A contact-first proof remains production-owned. The named card is merely
+  // the ordinary player input that keeps a durable route blocker available.
+  if (completedImpactProofEnabled && completedImpactTargetKind) {
+    return candidates.filter((card) => card.kind === completedImpactTargetKind);
+  }
   // Preserve the light first responder, then save command for the required
   // unit instead of continually spending it on cheaper discretionary cards.
   if (!completedImpactProofEnabled && proofUnitKind && !proofUnitDeployed && new Set(deployedKinds).size > 0) {
@@ -1887,26 +1905,46 @@ async function openRoute(page, save = null) {
   await page.locator(".v100-shell").waitFor({ state: "attached", timeout });
 }
 
+async function activateStoryControl(page, control, label, stopSelector) {
+  try {
+    await click(page, control, label);
+    return false;
+  } catch (error) {
+    // A source control may detach because the previously accepted flow
+    // commit mounted the exact target while Playwright was still waiting
+    // for source stability. Only the visible target owns that handoff.
+    if (await visible(page, stopSelector)) return true;
+    throw error;
+  }
+}
+
 async function advanceStory(page, stopSelector) {
+  let latestState = null;
   for (let index = 0; index < 240; index += 1) {
     if (await visible(page, stopSelector)) return;
     const skip = page.getByRole("button", { name: "スキップ", exact: true });
-    if (await skip.isVisible().catch(() => false)) await click(page, skip, "story skip");
+    if (await skip.isVisible().catch(() => false)) {
+      if (await activateStoryControl(page, skip, "story skip", stopSelector)) return;
+    }
     else {
       const advance = page.locator(".v100-event-actions .v100-primary");
       if (!(await advance.isVisible().catch(() => false))) {
-        const state = await page.evaluate(() => ({
+        // A map or event control may commit its native save before React owns
+        // the next surface. Spend the already bounded 240-turn loop on that
+        // real transition instead of declaring failure in its first host turn.
+        latestState = await page.evaluate(() => ({
           phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
           stage: document.querySelector(".v100-shell")?.getAttribute("data-v100-stage") ?? null,
           body: document.body.innerText.slice(0, 1200),
         }));
-        throw new Error(`story stopped before ${stopSelector}: ${JSON.stringify(state)}`);
+        await page.waitForTimeout(18);
+        continue;
       }
-      await click(page, advance, "story advance");
+      if (await activateStoryControl(page, advance, "story advance", stopSelector)) return;
     }
     await page.waitForTimeout(18);
   }
-  throw new Error(`story did not reach ${stopSelector}`);
+  throw new Error(`story did not reach ${stopSelector}: ${JSON.stringify(latestState)}`);
 }
 
 async function waitBattle(page) {
@@ -3522,7 +3560,7 @@ async function formationPage(page, save, stageName = null) {
   checkpointRecorderFor(page)?.markOnce("formation-visible", "completed", { selector: ".v100-formation-panel" });
 }
 
-async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, completedImpactProofEnabled = false, captureCombatAction = null } = {}) {
+async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, completedImpactProofEnabled = false, completedImpactTargetKind = null, captureCombatAction = null } = {}) {
   const recorder = checkpointRecorderFor(page);
   invariant(!completedImpactProofEnabled || (!manualAbilityKind && !requireVehicleAction),
     "completed-impact actor proof cannot share its unchanged deadline with manual or vehicle actions");
@@ -3606,6 +3644,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     && Number(proofActorContent?.range) > 0
     && Number(proofActorContent.range) <= Number(proofActorAiProfile.engagementRadius),
   );
+  invariant(!completedImpactTargetKind || (completedImpactProofEnabled && proofActorRequiresContactFirst),
+    "completed-impact target card requires an enabled contact-first proof actor");
   if (recorder) {
     if (!proofActor) recorder.markOnce("proof-actor-mounted-or-absent", "not-required", { reason: "contract-has-no-proof-actor" });
     if (!proofActor) recorder.mark("proof-actor-attack-observed-or-not-required", "not-required", { reason: "contract-has-no-proof-actor" });
@@ -3708,6 +3748,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const abilityButtons = page.locator('button.manual-ability-ready.available:not([disabled])');
       const abilityCount = await abilityButtons.count().catch(() => 0);
       const proofCombatReady = proofActorAttackObserved && proofUnitAttackObserved;
+      const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
+        completedImpactProofEnabled,
+        proofActorRequiresContactFirst,
+        completedImpactProofSealed: sealedCombatCausalProof !== null,
+        completedImpactTargetKind,
+      });
       if (!bossEngaged && proofCombatReady) {
         for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
           await withPhaseGPageInputLock(page, async () => {
@@ -3784,6 +3830,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // owns survival planning and may use only this real production card.
         if (completedImpactProofEnabled || (proofCombatReady && proofUnitDeployed) || targetContinuity.targetSurvivalPlanPending) {
           await performVerifiedDeploymentPointer(page, {
+            requestedKind: pendingCompletedImpactTargetKind,
             phase: "sustain-redeploy",
           });
         }
@@ -3922,8 +3969,17 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             phase: "candidate-sample",
           });
           recorder?.setLatestReadableState(candidateSample);
-          const readyCandidates = bossOpeningCandidates(candidateSample, deployedKinds, completedImpactProofEnabled, { proofUnitKind, proofUnitDeployed })
-            .map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }));
+          const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
+            completedImpactProofEnabled,
+            proofActorRequiresContactFirst,
+            completedImpactProofSealed: sealedCombatCausalProof !== null,
+            completedImpactTargetKind,
+          });
+          const readyCandidates = bossOpeningCandidates(candidateSample, deployedKinds, completedImpactProofEnabled, {
+            proofUnitKind,
+            proofUnitDeployed,
+            completedImpactTargetKind: pendingCompletedImpactTargetKind,
+          }).map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }));
           if (!completedImpactProofEnabled && proofActorRequiresContactFirst && !proofActorAttackObserved) {
             readyCandidates.sort((left, right) => {
               const leftSupport = left.content?.aiProfile === "support" ? 0 : 1;
@@ -4208,7 +4264,7 @@ for (const contract of extraBattleContracts) {
     stageNumber: contract.stageNumber,
     stageName: contract.stageName,
     expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
-    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, completedImpactProofEnabled: contract.completedImpactProof === true, captureCombatAction }),
+    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, completedImpactProofEnabled: contract.completedImpactProof === true, completedImpactTargetKind: contract.completedImpactTargetKind ?? null, captureCombatAction }),
     variant: contract.variant,
   }), contract);
 }

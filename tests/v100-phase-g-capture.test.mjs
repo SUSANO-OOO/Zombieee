@@ -28,7 +28,7 @@ test("canonical capture selection rejects empty filters and missing/foreign resu
   const functions = ["phaseGCapturePlan", "phaseGResultsMatchPlan"].map((name) => parsed.statements.find((node) =>
     ts.isFunctionDeclaration(node) && node.name?.text === name).getText(parsed));
   const api = vm.runInNewContext(declarations.concat(functions).join("\n") +
-    "\n({ select: (filters = {}) => phaseGCapturePlan({coreStates,requiredViewports,extraBattleContracts,...filters}), matches: phaseGResultsMatchPlan })",
+    "\n({ select: (filters = {}) => phaseGCapturePlan({coreStates,requiredViewports,extraBattleContracts,...filters}), contracts: extraBattleContracts, matches: phaseGResultsMatchPlan })",
   { V100_STAGE_IDS, V100_STAGES, V100_UNITS });
   const full = api.select();
   assert.equal(full.length, 54);
@@ -38,6 +38,10 @@ test("canonical capture selection rejects empty filters and missing/foreign resu
   for (const entry of full.filter((entry) => entry.state === "battle-extra")) {
     assert.equal(api.select({ onlyVariant: entry.variant, onlyEngine: entry.engine }).length, 1);
   }
+  const completedImpactTargets = Array.from(api.contracts)
+    .filter((entry) => entry.completedImpactTargetKind)
+    .map((entry) => [entry.variant, entry.proofActor, entry.completedImpactTargetKind]);
+  assert.deepEqual(completedImpactTargets, [["stage25-president", "red-panther-shield", "guardian"]]);
   for (const filters of [{ onlyVariant: "stage21-panther-knife-smg" }, { onlyState: "unknown" },
     { onlyEngine: "unknown" }, { onlyVariant: "core-battle-normal" },
     { onlyVariant: "stage21-panther-knife", onlyEngine: "webkit" }]) {
@@ -80,7 +84,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
   };
   visit(battle);
   assert.ok(opening && capture);
-  const helpers = ["createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof"]
+  const helpers = ["createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof", "completedImpactTargetDeploymentKind"]
     .map(name => parsed.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name).getText(parsed)).join("\n");
   const machine = createV100PhaseGProofMachine();
   const impacts = [{
@@ -93,6 +97,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
   let now = 0, inputs = 0, captured = 0, proof = null;
   const timeline = [866, 4716, 17300, 29883, 42333, 54716, 66616];
   const events = [];
+  const targetRequests = [];
   const page = {
     evaluate: async () => ({ pageNow: now + 6135, snapshot: {
       schema: "v100-phase-g-combat-snapshot/v1", screen: "battle", stageId: "stage25",
@@ -109,14 +114,15 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
     requiredCompletedImpactActorKeys: ["zombie:red-panther-shield"], requestedCombatProofDurationMs: 12000,
     combatProofDurationMs: 12000, bossDeploymentLimit: 7, recorder: null, bossIsLive: async () => false,
     deployedKinds: new Set(), completedImpactProofEnabled: true, proofUnitKind: null,
-    proofUnitDeployed: true, proofActorRequiresContactFirst: false, proofActorAttackObserved: false,
-    unitContentFor: () => ({}),
+    proofUnitDeployed: true, proofActorRequiresContactFirst: true, proofActorAttackObserved: false,
+    completedImpactTargetKind: "guardian", unitContentFor: () => ({}),
     readBattleDeploymentDiagnostics: async () => {
       // Actual first-positive time falls between the fifth and sixth inputs.
       if (inputs === 5 && now < 48083) now = 48083;
       return {};
     },
-    bossOpeningCandidates: () => {
+    bossOpeningCandidates: (_sample, _deployed, _proofEnabled, options) => {
+      targetRequests.push(options.completedImpactTargetKind);
       if (inputs === 5 && captured === 0) return [];
       return [{ kind: inputs === 0 ? "guardian" : inputs === 6 ? "ranger" : "medic" }];
     },
@@ -153,6 +159,49 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
   assert.deepEqual(events, ["input1", "input2", "input3", "input4", "input5", "capture", "input6", "input7"]);
   assert.equal(proof.startedAtBattleTime, 47.9667);
   assert.equal(proof.deadlineAtPageTime - proof.startedAtPageTime, 12000);
+  assert.ok(targetRequests.slice(0, 6).every((kind) => kind === "guardian"));
+  assert.equal(targetRequests.at(-1), null);
+});
+test("actual story navigation spends its existing bounded turns on native-save settlement", async () => {
+  const names = ["visible", "activateStoryControl", "advanceStory"];
+  const code = names.map((name) => parsed.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name)?.getText(parsed));
+  assert.ok(code.every(Boolean));
+  let activate = async () => { throw new Error("unexpected story control"); };
+  const run = vm.runInNewContext(`${code.join("\n")}\nadvanceStory`, { click: (...args) => activate(...args) });
+  let waits = 0;
+  const page = {
+    locator: (selector) => ({
+      first: () => ({ isVisible: async () => selector === ".settled" && waits >= 3 }),
+      isVisible: async () => false,
+    }),
+    getByRole: () => ({ isVisible: async () => false }),
+    evaluate: async () => ({ phase: "map", stage: "25", body: "transition pending" }),
+    waitForTimeout: async (ms) => { assert.equal(ms, 18); waits += 1; },
+  };
+  await run(page, ".settled");
+  assert.equal(waits, 3);
+
+  let targetVisible = false;
+  const detached = new Error("source detached during target handoff");
+  activate = async () => { targetVisible = true; throw detached; };
+  const handoffPage = {
+    locator: (selector) => ({
+      first: () => ({ isVisible: async () => selector === ".formation" && targetVisible }),
+      isVisible: async () => false,
+    }),
+    getByRole: () => ({ isVisible: async () => true }),
+    waitForTimeout: async () => { throw new Error("target handoff must return without another turn"); },
+  };
+  await run(handoffPage, ".formation");
+  targetVisible = false;
+  activate = async () => { throw detached; };
+  await assert.rejects(run(handoffPage, ".formation"), (error) => error === detached);
+
+  activate = async () => { throw new Error("unexpected story control"); };
+  waits = 0;
+  await assert.rejects(run({ ...page, locator: () => ({ first: () => ({ isVisible: async () => false }), isVisible: async () => false }) }, ".never"),
+    /story did not reach \.never.*transition pending/u);
+  assert.equal(waits, 240);
 });
 test("every checkpoint callsite, including setup branches, belongs to the actual registry", () => {
   const audit = checkpointCallAudit(source);
@@ -382,20 +431,50 @@ test("all browser capture wrappers return the first failure without a retry", as
   }
 });
 
-test("completed-impact boss opening may redeploy a recovered card but never bypass its production eligibility", () => {
-  const names = ["deploymentCandidatesFromDiagnostics", "bossOpeningCandidates"];
+test("completed-impact contact target uses only an eligible ordinary guardian card until exact proof seals", () => {
+  const names = ["deploymentCandidatesFromDiagnostics", "completedImpactTargetDeploymentKind", "bossOpeningCandidates"];
   const code = names.map((name) => parsed.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name)?.getText(parsed));
   assert.ok(code.every(Boolean));
-  const select = vm.runInNewContext(`${code.join("\n")}\nbossOpeningCandidates`, {});
-  const sample = { cards: [
+  const api = vm.runInNewContext(`${code.join("\n")}\n({ target: completedImpactTargetDeploymentKind, select: bossOpeningCandidates })`, {});
+  const blocked = { cards: [
     { kind: "medic", actionability: { eligible: true } },
     { kind: "guardian", actionability: { eligible: false } },
     { kind: "ranger", actionability: { eligible: true } },
   ] };
+  const ready = { cards: blocked.cards.map((card) => card.kind === "guardian"
+    ? { ...card, actionability: { eligible: true } }
+    : card) };
   const deployed = ["medic", "guardian"];
-  assert.deepEqual(Array.from(select(sample, deployed, true), (c) => c.kind), ["medic", "ranger"]);
-  assert.deepEqual(Array.from(select(sample, deployed, false), (c) => c.kind), ["ranger"]);
+  const pending = api.target({ completedImpactProofEnabled: true, proofActorRequiresContactFirst: true,
+    completedImpactProofSealed: false, completedImpactTargetKind: "guardian" });
+  assert.equal(pending, "guardian");
+  assert.deepEqual(Array.from(api.select(blocked, deployed, true, { completedImpactTargetKind: pending }), (c) => c.kind), []);
+  assert.deepEqual(Array.from(api.select(ready, deployed, true, { completedImpactTargetKind: pending }), (c) => c.kind), ["guardian"]);
+  for (const options of [
+    { completedImpactProofEnabled: false, proofActorRequiresContactFirst: true, completedImpactProofSealed: false, completedImpactTargetKind: "guardian" },
+    { completedImpactProofEnabled: true, proofActorRequiresContactFirst: false, completedImpactProofSealed: false, completedImpactTargetKind: "guardian" },
+    { completedImpactProofEnabled: true, proofActorRequiresContactFirst: true, completedImpactProofSealed: true, completedImpactTargetKind: "guardian" },
+  ]) assert.equal(api.target(options), null);
+  assert.deepEqual(Array.from(api.select(blocked, deployed, true), (c) => c.kind), ["medic", "ranger"]);
+  assert.deepEqual(Array.from(api.select(blocked, deployed, false), (c) => c.kind), ["ranger"]);
   assert.deepEqual(deployed, ["medic", "guardian"]);
+
+  const battle = parsed.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === "battlePage");
+  const sustainCalls = [];
+  const visit = (node) => {
+    if (ts.isCallExpression(node) && node.expression.getText(parsed) === "performVerifiedDeploymentPointer") {
+      const options = node.arguments[1];
+      if (ts.isObjectLiteralExpression(options)) {
+        const phase = options.properties.find((property) => property.name?.getText(parsed) === "phase");
+        if (phase?.initializer?.getText(parsed) === '"sustain-redeploy"') sustainCalls.push(options);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(battle);
+  assert.equal(sustainCalls.length, 1);
+  const requestedKind = sustainCalls[0].properties.find((property) => property.name?.getText(parsed) === "requestedKind");
+  assert.equal(requestedKind?.initializer?.getText(parsed), "pendingCompletedImpactTargetKind");
 });
 
 test("boss presentation barrier preserves actual entry and the existing per-lane attack requirement", async () => {
