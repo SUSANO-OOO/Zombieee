@@ -377,14 +377,14 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: definition\.enemyBaseMaxHp/);
-  assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
+  assert.match(game, /if \(!deferredStructureImpact\) applyEnemyBaseDamage\(g, structureDamage, enemyBaseTarget\.researchTargetId\)/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);
   assert.match(game, /感染拠点 \/\/ 大破/);
   assert.match(game, /const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
   assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
-  assert.match(game, /const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
+  assert.match(game, /const enemyBaseLabel = gameRef\.current\.researchCoreTargets \? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
@@ -1272,7 +1272,7 @@ test("machinegun burst damage is deferred to visual impact for fighters and the 
 
   assert.match(pendingResolution, /if \(hit\.eventKind === "muzzle"\)[\s\S]*addWeaponShot/);
   assert.match(pendingResolution, /if \(!hit\.applyDamage\) continue/);
-  assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*g\.barricadeHp = Math\.max\(0, g\.barricadeHp - hit\.damage\)/);
+  assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*applyEnemyBaseDamage\(g, hit\.damage, hit\.researchTargetId\)/);
   assert.match(
     pendingResolution,
     /target\.hp = Math\.max\(0, target\.hp - hit\.damage\)[\s\S]*target\.flash = Math\.max/,

@@ -522,6 +522,7 @@ import {
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
+import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
   createResearchContainerRuntime,
   enforceGateEaterContainmentInvariant,
@@ -999,6 +1000,7 @@ type PendingWeaponHit = {
   targetKind: "fighter" | "enemy-base" | "battlefield-object" | "crawler";
   targetSide?: "human" | "zombie";
   targetObjectId?: number;
+  researchTargetId?: string;
   damageMode?: "direct" | "containment" | "grenade" | "enemy-projectile" | "crawler-barrage" | "enemy-object" | "enemy-siege";
   effect?: RoleEffect;
   emphasized?: boolean;
@@ -1227,6 +1229,7 @@ type Game = {
   baseMaxHp: number;
   barricadeHp: number;
   barricadeMaxHp: number;
+  researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
   barricadeVulnerable: boolean;
   barricadeHitFlash: number;
   barricadeHitY: number;
@@ -1361,6 +1364,7 @@ export type AshfallBattleResult = {
   enemyDefeatsByKind: Readonly<Record<string, number>>;
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   missionRuntime?: StageMissionRuntime;
+  researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
 };
 
 export type AshfallExternalSession = {
@@ -1715,6 +1719,7 @@ const initialGame = (
   baseMaxHp: adjustedBaseMaxHp,
   barricadeHp: definition.enemyBaseMaxHp,
   barricadeMaxHp: definition.enemyBaseMaxHp,
+  researchCoreTargets: createResearchCoreTargets(definition),
   barricadeVulnerable: definition.startsEnemyBaseVulnerable,
   barricadeHitFlash: 0,
   barricadeHitY: activeLaneCenters[1],
@@ -2216,9 +2221,9 @@ function manualAbilityTargetCandidates(g: Game, owner: Fighter) {
     || g.definition.enemyBaseMode === "scenery") {
     return g.fighters;
   }
-  const target = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+  const target = researchCoreAttackTarget(g, enemyBaseTargetPoint(owner.lane, activeLaneCenters));
   return [...g.fighters, {
-    id: "manual-structure:enemy-base",
+    id: target.researchTargetId ? `manual-structure:enemy-base:${target.researchTargetId}` : "manual-structure:enemy-base",
     kind: "infected-base",
     side: "zombie",
     x: target.x,
@@ -6702,6 +6707,7 @@ function drawEnemyBase(
   stageObjects: SpriteMap,
 ) {
   const barrier = WORLD_GEOMETRY.enemyBase;
+  if (drawResearchCoreTargets(ctx, g, stageObjects, barrier, activeLaneCenters)) return;
   const stationRelaySprite = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
     ? stageObjects["station-gate-mission-art-source"]
     : null;
@@ -11492,6 +11498,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const before = {
           bossId: boss.id,
           barricadeHp: g.barricadeHp,
+          researchCoreTargets: g.researchCoreTargets?.map(target => ({ ...target })) ?? null,
           barricadeVulnerable: g.barricadeVulnerable,
         };
         boss.hp = 0;
@@ -12654,6 +12661,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           barricadeHp: g.barricadeHp,
+          researchCoreTargets: g.researchCoreTargets?.map(target => ({ ...target })) ?? null,
           barricadeMaxHp: g.barricadeMaxHp,
           wave: g.wave,
           eventIndex: g.eventIndex,
@@ -12899,6 +12907,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           barricadeHp: g.barricadeHp,
+          researchCoreTargets: g.researchCoreTargets?.map(target => ({ ...target })) ?? null,
           barricadeMaxHp: g.barricadeMaxHp,
           barricadeHitFlash: g.barricadeHitFlash,
           barricadeVulnerable: g.barricadeVulnerable,
@@ -17904,10 +17913,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 recordUnitDamage(g, owner.kind, damage);
                 addDamageText(g, target.x, target.y - 48, `地砕 -${Math.round(damage)}`, .84, "#e6b06b");
               }
-              if (targetIds.has("manual-structure:enemy-base")
+              const structureTargetId = [...targetIds].find(id => id.startsWith("manual-structure:enemy-base"));
+              if (structureTargetId
                 && g.barricadeVulnerable
                 && g.barricadeHp > 0) {
-                const baseTarget = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+                const baseTarget = researchCoreAttackTarget(g, enemyBaseTargetPoint(owner.lane, activeLaneCenters));
                 const structureDamage = Math.min(
                   g.barricadeHp,
                   resolveTataraStrikeDamage(
@@ -17915,7 +17925,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     { targetType: "infected-base" },
                   ),
                 );
-                g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                applyEnemyBaseDamage(g, structureDamage, structureTargetId.split(":")[2]);
                 g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
@@ -18325,7 +18335,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (hit.targetKind === "enemy-base") {
             if (g.barricadeHp <= 0) continue;
             const beforeHit = g.barricadeHp;
-            g.barricadeHp = Math.max(0, g.barricadeHp - hit.damage);
+            const appliedDamage = applyEnemyBaseDamage(g, hit.damage, hit.researchTargetId);
+            if (appliedDamage <= 0) continue;
             g.barricadeHitFlash = .2;
             g.barricadeHitY = hit.targetY;
             addDamageText(g, hit.targetX + (hit.shotIndex - 1) * 7, hit.targetY - 14 - hit.shotIndex * 3, `-${Math.round(Math.min(beforeHit, hit.damage))}`, .62, "#ffd06b");
@@ -18363,7 +18374,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && beforeHit > g.barricadeMaxHp * .7
               && g.barricadeHp <= g.barricadeMaxHp * .7) {
               g.barricadeBucklingAnnounced = true;
-              g.banner = "感染拠点 // 損傷";
+              g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 損傷" : "感染拠点 // 損傷";
               g.bannerTime = 1.5;
               playCue("base-damaged");
             }
@@ -18371,7 +18382,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && beforeHit > g.barricadeMaxHp * .35
               && g.barricadeHp <= g.barricadeMaxHp * .35) {
               g.barricadeCriticalAnnounced = true;
-              g.banner = "感染拠点 // 大破";
+              g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 大破" : "感染拠点 // 大破";
               g.bannerTime = 1.7;
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               playCue("base-critical");
@@ -20798,12 +20809,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             desiredX: allyIntent?.destinationX,
             hasEnemyTarget: f.side === "human" && Boolean(target),
           });
+          const enemyBaseTarget = researchCoreAttackTarget(g, enemyBaseTargetPoint(f.lane, activeLaneCenters));
           const humanMaxX = g.survivalRun
             ? survivalDefenseDestination({ aiProfile: f.aiProfile, desiredX: 9999 })
-            : BARRICADE_X;
+            : Math.max(BARRICADE_X, enemyBaseTarget.x);
           const zombieTargetX = f.side === "zombie" ? (target?.x ?? objectTarget?.x) : undefined;
           const zombieTargetFloor = zombieTargetX !== undefined && zombieTargetX <= f.x ? zombieTargetX : null;
-          const enemyBaseTarget = enemyBaseTargetPoint(f.lane, activeLaneCenters);
           const baseDistance = f.side === "human" ? (g.barricadeVulnerable ? enemyBaseTarget.x - f.x : Infinity) : f.x - BASE_X;
           if (objectTarget && ["active", "impact"].includes(objectTarget.phase)) {
             const stoppingDistance = f.range + 30;
@@ -21608,7 +21619,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const deferredStructureImpact = f.kind === "gunner"
                   || f.kind === "mrs-chiha"
                   || DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind);
-                if (!deferredStructureImpact) g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                if (!deferredStructureImpact) applyEnemyBaseDamage(g, structureDamage, enemyBaseTarget.researchTargetId);
                 if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
                 if (f.kind === "gunner") {
                   const wasOverheated = f.overheated;
@@ -21665,6 +21676,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         shotIndex: event.shotIndex,
                       }),
                       targetKind: "enemy-base" as const,
+                      researchTargetId: enemyBaseTarget.researchTargetId,
                       sourceId: f.id,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
@@ -21710,6 +21722,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       shotIndex: grenadeRound.shotIndex,
                     }),
                     targetKind: "enemy-base" as const,
+                    researchTargetId: enemyBaseTarget.researchTargetId,
                     sourceId: f.id,
                     targetId: null,
                     targetX: enemyBaseTarget.x,
@@ -21750,6 +21763,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         shotIndex: event.shotIndex,
                       }),
                       targetKind: "enemy-base" as const,
+                      researchTargetId: enemyBaseTarget.researchTargetId,
                       sourceId: f.id,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
@@ -21808,10 +21822,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   playCue("role-gunner");
                 }
                 if (!deferredStructureImpact && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
-                  g.barricadeBucklingAnnounced = true; g.banner = "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
+                  g.barricadeBucklingAnnounced = true; g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 損傷" : "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
                 }
                 if (!deferredStructureImpact && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
-                  g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
+                  g.barricadeCriticalAnnounced = true; g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 大破" : "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
                 if (!deferredStructureImpact && !productionMixerRef.current && f.kind !== "mrs-chiha") {
                   playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
@@ -22544,6 +22558,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
                 ? { ...g.stageMission }
                 : undefined,
+              researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
             });
             playCue(g.won ? "victory" : "defeat");
             playEndJingle(g.won);
@@ -22607,6 +22622,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
               ? { ...g.stageMission }
               : undefined,
+            researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
           });
           stopSfx();
           playCue(g.won ? "victory" : "defeat");
@@ -22794,7 +22810,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const isSurvivalBattle = screen === "battle" && survivalHud !== null;
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
-  const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const enemyBaseLabel = gameRef.current.researchCoreTargets ? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
   const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
   const vehicleDisplayLabel = externalSessionActive ? "装甲車両" : PUBLIC_CRAWLER_LABEL;
   const vehicleBarrageControlLabel = externalSessionActive ? `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";

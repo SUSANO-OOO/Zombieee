@@ -11,7 +11,11 @@ export const V100_MISSION_VEHICLE_ADDITIONS = Object.freeze([
 export const V100_MISSION_BACKGROUND_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",bytes:294056,hash:"sha256-595837341ec8d20229441d7e775ec2c3ed0f600759e1803fb0e23bf7443f9964"}),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS]);
+export const V100_RESEARCH_CORE_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/mission-objects/research-core-targets-v1.webp",bytes:1362558,hash:"sha256-fce826389e3a8a65d82ca0fb82033addfda2a3ff120fa193ca74a5f05115855c"}),
+  Object.freeze({path:"/art/v100/stages/s29-underground-research-core-v1.webp",bytes:226744,hash:"sha256-575ef05c2dc0a37f553422b1d3badb88133535dfd0b31e39b1532f8e920ef4a8"}),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS]);
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,

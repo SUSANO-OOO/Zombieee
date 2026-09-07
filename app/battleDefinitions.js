@@ -7,6 +7,7 @@ import {
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
+import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -141,6 +142,7 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
   if (definition.operationCategory === "outbreak") {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
@@ -166,6 +168,10 @@ export function objectiveForBattle(definition, state) {
 
 export function battleOutcomeFor(definition, state) {
   if (state.baseHp <= 0) return "lost";
+  if (definition.missionConfig?.v100StageNumber === 29) {
+    return researchCoreComplete(state.researchCoreTargets) && state.wavesResolved === true ? "won" : null;
+  }
+  if (definition.missionConfig?.v100StageNumber === 30 && state.wavesResolved !== true) return null;
   if (definition.operationCategory === "outbreak") {
     if (state.bossDefeated !== true) return null;
     const livingEnemies = Array.isArray(state.fighters)

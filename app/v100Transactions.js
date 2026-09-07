@@ -181,6 +181,7 @@ export function createV100BattleResult({
   bossDefeated = false,
   elapsedSeconds = 0,
   unitDeaths = 0,
+  researchCoreTargets = null,
 } = {}) {
   const stageNumber = stageNumberFor(stageId);
   if (!stageNumber) return { ok: false, reason: "unknown-stage" };
@@ -200,6 +201,8 @@ export function createV100BattleResult({
     stars: v100StarsForVehicle({ won: validVictory, vehicleHp, vehicleMaxHp }),
     elapsedSeconds: Math.max(0, Number(elapsedSeconds) || 0),
     unitDeaths: Math.max(0, integer(unitDeaths)),
+    ...(stageNumber === 29 && Array.isArray(researchCoreTargets)
+      ? { researchCoreTargets: researchCoreTargets.map(({id,hp,maxHp})=>({id,hp,maxHp})) } : {}),
   });
 }
 

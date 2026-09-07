@@ -581,6 +581,7 @@ export function V100Campaign() {
       bossDefeated: raw.bossDefeated,
       elapsedSeconds: raw.time,
       unitDeaths: raw.unitsLost,
+      researchCoreTargets: raw.researchCoreTargets,
     });
     if (result?.ok === false) {
       setNotice(formatReason(result.reason));

@@ -52,6 +52,12 @@ Stage23の追加通常探索は獲得済み1105 CAPSからMrs.チハを登録/Lv
 
 71fe89dの今回のremote Phase Gは全54画面/代表16戦闘と後段validatorが成功。artifact10010100463の54画像hash/diagnosticsとreportを独立readbackした（`outputs/completion/ci-71fe89d-phase-g-verification.json`）。macOSの入力probeは旧/順次方式とも両engine40入力ずつ成功しており、旧失敗の原因確定とはしない。一方、同じrunのnative PWAは製品なしprobeでもpersistentのput直後match=null/keys=[]、再起動後も空、一時contextは共有成功だった。macOS/Windows portの永続CacheStorage前提不成立として証拠を保持する。次のrequired PWA jobは既存のdigest固定Playwright1.56.1 Linux container/実WebKitで同じ保存probeと公開旧版→候補の全更新/復旧を実行する。保存APIの代替実装、検証省略、失敗の成功化は行わない。全描画/入力laneはmacOSを維持する。PWA/Phase Gは独立buildのためverifyへの不要な待機依存だけを除去した。Linuxでの永続保存とPWAはまだ未合格であり、実機Safariの証拠にも代用しない。
 
+敵編成/研究中枢の接続修正：本番adapterを固定packへ対応させ、Stage24の許可外SMG fallbackを廃止、Stage27のPanther全4種、Stage29の精鋭6波、Stage30のΩ登場後のA限定2増援を実timelineへ接続。Stage7の固定85秒防衛も反映した。Stage29は通信回線/原株それぞれHP500を持ち、近接/手動技能/飛翔中の弾の着弾先を独立保持する。死んだ目標への弾がもう一方へ移ることはない。両方破壊しても6波と残敵が解決するまで勝利しない。台本の地下研究中枢に対応する背景、二対象×通常/損傷/大破/破壊の8セル画像を生成原本/正確なprompt/hashとともに接続し、従来の屋外/改札機背景を本番から外した（旧配信asset自体は保持）。
+
+同修正のbuild SHA256 `191c58130dfa63a219c55231e4704be01f981dd886c52c5e7334da0cf9a7f277`、全1458 source tests、lint0 errors/12既存warnings、manifest/diff checkが成功。Chromium/WebKit844x340の実戦fixtureは、read-only telemetryとnative UIだけで二対象を別々に破壊し6波を掃討、178.87/180.13秒で勝利、結果の二目標記録保存まで成功（`outputs/v100-research-core-browser-r2`）。r1の実勝利後に保存変換が目標記録を捨てることを検出し、Ashfall→V1結果→保存の明示フィールドを追加してr2で確認した。全Lv30/vehicle5・音声OFFのfixtureであり、通常経済/難易度/音響/実機/通し受入ではない。旧415/既存44 assetsは不変、完成補完7 assets計4,717,850bytes、候補466 logical assets。獲得済み299 CAPS/チハLv19の探索は `outputs/v100-earned-tactical-roster-s23-r2` で再開し、Stage23を突破してStage24へ進行中。これは戦術の切り分け用read-only実戦telemetryを使う探索であり、QA bridgeなしの最終通常通しへ代用しない。
+
+同じ探索のStage23は101.25秒・車両1000/1000・損耗0、Stage24は221.72秒・車両1000/1000・損耗9で勝利し、結果保存・会話からStage25へ進行した。敵packの修正と実際の射程へ入ってから技能を使う操作を同時に変更しているため、勝敗差の全てを一方の効果とはしない。第24作戦の長さと損耗を含め、後半の通常体験評価は未完了。
+
 現在は工程1と2。冒頭と結末、初回出撃/報酬復帰、実戦の出撃上限、未接続の幕間を修正し、新規開始から通常の編成・成長・戦闘を再確認する。30作戦全体の内容/体験、データ保全とPWA、同一候補CI、最終read-only review、Producer承認、公開と公開後QAが残る。正式公開の権限待ちを通常の技術修正へ拡張しない。
 
 現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。

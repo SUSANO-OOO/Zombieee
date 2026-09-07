@@ -1,6 +1,7 @@
 import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
+import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -22,22 +23,26 @@ const BOSS_KIND_BY_V100_ID = Object.freeze({
   "boss-takuya-omega": "takuya-omega",
 });
 
-const ENEMY_PACKS = Object.freeze({
-  A: ["walker", "runner", "spitter"],
-  "A+abomination": ["walker", "runner", "abomination"],
-  "A+shade/abomination": ["walker", "shade", "abomination"],
-  "A+grappler": ["walker", "grappler", "crusher"],
-  "A+ooze/sprinter": ["runner", "ooze", "sprinter"],
-  B: ["runner", "spitter", "crusher"],
-  "B+shade": ["runner", "shade", "crusher"],
-  C: ["spitter", "grappler", "ooze", "sprinter"],
-  "D": ["shade", "crusher", "spitter"],
-  "D+panther-knife/smg": ["red-panther-knife", "red-panther-smg", "runner"],
-  "D+panther-shield/smg": ["red-panther-shield", "red-panther-smg", "crusher"],
-  "D+panther-smg/commander": ["red-panther-smg", "red-panther-commander", "shade"],
-  "D+panther-shield/smg/commander": ["red-panther-shield", "red-panther-smg", "red-panther-commander"],
-  P: ["red-panther-commander", "red-panther-shield", "red-panther-smg"],
-  "A-add-waves": ["walker", "shade", "abomination"],
+// Design Lock 17.5 owns these identities. A missing row must fail closed:
+// silently falling back to P previously put SMG units into Stage 24.
+const A = Object.freeze(["walker", "runner", "spitter", "crusher"]);
+const B = Object.freeze([...A, "grappler", "ooze", "sprinter"]);
+const C = Object.freeze([...B, "shade", "abomination"]);
+const D = Object.freeze(["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"]);
+const P = Object.freeze(["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander"]);
+export const V100_ENEMY_PACKS = Object.freeze({
+  A, B, C, D, P,
+  "A+abomination": Object.freeze([...A, "abomination"]),
+  "A+shade/abomination": Object.freeze([...A, "shade", "abomination"]),
+  "A+grappler": Object.freeze([...A, "grappler"]),
+  "A+ooze/sprinter": Object.freeze([...A, "ooze", "sprinter"]),
+  "B+shade": Object.freeze([...B, "shade"]),
+  "D+panther-knife/smg": Object.freeze([...D, "red-panther-knife", "red-panther-smg"]),
+  "D+panther-shield/smg": Object.freeze([...D, "red-panther-shield", "red-panther-smg"]),
+  "D+panther-smg/commander": Object.freeze([...D, "red-panther-smg", "red-panther-commander"]),
+  "D+panther-shield/smg/commander": Object.freeze([...D, "red-panther-shield", "red-panther-smg", "red-panther-commander"]),
+  "panther-shield/commander": Object.freeze(["red-panther-shield", "red-panther-commander"]),
+  "A-add-waves": A,
 });
 
 const MISSION_TYPE_MAP = Object.freeze({
@@ -63,8 +68,9 @@ function freeze(value) {
 }
 
 function packFor(stage) {
-  return ENEMY_PACKS[stage.enemyPack]
-    ?? (stage.enemyPack.includes("panther") ? ENEMY_PACKS.P : ENEMY_PACKS.A);
+  const pack = V100_ENEMY_PACKS[stage.enemyPack];
+  if (!pack) throw new RangeError(`Unknown V1 enemy pack: ${stage.enemyPack}`);
+  return pack;
 }
 
 function bossKindForStage(stage) {
@@ -72,20 +78,38 @@ function bossKindForStage(stage) {
   return boss ? BOSS_KIND_BY_V100_ID[boss] ?? null : null;
 }
 
-function waveUnits(pack, waveNumber, bossKind = null) {
-  const offset = Math.max(0, waveNumber - 1) % pack.length;
-  const units = [
-    pack[offset],
-    pack[(offset + 1) % pack.length],
-    ...(waveNumber >= 3 ? [pack[(offset + 2) % pack.length]] : []),
-  ];
-  if (bossKind && waveNumber === 4) units.push(bossKind);
-  return units;
+function stageTimeline(stage, missionType, bossKind) {
+  const pack = packFor(stage);
+  const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (stage.number === 30) {
+    // The boss is the battle's opening threat. Exactly two later A-only
+    // reinforcements belong to this operation; no Panther survives its prelude.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: true }),
+      freeze({ at: PREP_SECONDS + 24, wave: 2, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 48, wave: 3, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher"]), addWave: true }),
+    ]);
+  }
+  const counts = stage.number === 29 ? [2, 2, 3, 3, 3, 3] : [2, 2, 3, 3];
+  let cursor = 0;
+  return freeze(counts.map((count, index) => {
+    const wave = index + 1;
+    const units = Array.from({length: count}, () => pack[cursor++ % pack.length]);
+    const bossArrives = bossKind && wave === counts.length;
+    if (bossArrives) units.push(bossKind);
+    return freeze({
+      at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : missionType === "escort" ? 20 : 24),
+      wave,
+      label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
+      units: freeze(units),
+      ...(bossArrives ? { bossOnly: false } : {}),
+    });
+  }));
 }
 
 function phaseScheduleFor(stage, missionType, objective) {
   if (missionType === "timed-defense") {
-    const durationSeconds = stage.objectiveId.includes("95s") ? 95 : stage.objectiveId.includes("90s") ? 90 : 100;
+    const durationSeconds = Number(stage.objectiveId.match(/perimeter-(\d+)s/u)?.[1]) || 100;
     return {
       durationSeconds,
       phases: freeze([
@@ -136,22 +160,9 @@ export function v100BattleDefinitionFor(stageId) {
   const missionType = MISSION_TYPE_MAP[stage.missionType] ?? "assault";
   const bossKind = bossKindForStage(stage);
   const missionVehicle = V100_MISSION_VEHICLES[stageId];
-  const objective = missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
+  const objective = stage.number === 29 ? researchCoreObjective(null) : missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const pack = packFor(stage);
-  const timeline = [0, 1, 2, 3].map((index) => {
-    const wave = index + 1;
-    const units = waveUnits(pack, wave, bossKind);
-    return freeze({
-      at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : missionType === "escort" ? 20 : 24),
-      wave,
-      label: wave === 4 && bossKind
-        ? `警告 // ${V100_BOSS_BY_ID[stage.firstClearPayload.find((value) => value.startsWith("boss-"))]?.displayName ?? bossKind}`
-        : `${stage.displayName} // 第${wave}波`,
-      units: freeze(units),
-      ...(wave === 4 && bossKind ? { bossOnly: false } : {}),
-    });
-  });
+  const timeline = stageTimeline(stage, missionType, bossKind);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }

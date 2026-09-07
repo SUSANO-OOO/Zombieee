@@ -33,7 +33,7 @@ export const PRODUCTION_VISUALS = Object.freeze({
     "stage-bay-evacuation-yard": "/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
     "stage-segawa-private-lab": "/art/v100/stages/s27-segawa-private-lab-r2-background-v1.webp",
     "stage-national-dispersal-network": "/art/v100/stages/s28-national-dispersal-network-clean-background-v1.webp",
-    "stage-segawa-research-core": "/art/v100/stages/s29-high-security-research-core-r2-background-v1.webp",
+    "stage-segawa-research-core": "/art/v100/stages/s29-underground-research-core-v1.webp",
     "stage-nishijin-defense-line-takuya-omega": "/art/v100/stages/s30-defense-line-aftermath-background-v1.webp",
   }),
   eventCuts: Object.freeze({

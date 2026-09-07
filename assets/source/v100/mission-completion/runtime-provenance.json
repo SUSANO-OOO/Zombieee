@@ -36,6 +36,31 @@
       "path": "/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
       "bytes": 294056,
       "hash": "sha256-595837341ec8d20229441d7e775ec2c3ed0f600759e1803fb0e23bf7443f9964"
+    },
+    {
+      "state": "research-core-two-targets-four-states",
+      "source": "assets/source/v100/mission-completion/research-core-targets-v1.png",
+      "promptRecord": "assets/source/v100/mission-completion/research-core-prompt.json",
+      "sourceSha256": "3c030dfe2990d9ec7b46650e3d1aa67296dad71bf70a9e151ff9177d0a973924",
+      "output": "public/art/v100/mission-objects/research-core-targets-v1.webp",
+      "path": "/art/v100/mission-objects/research-core-targets-v1.webp",
+      "bytes": 1362558,
+      "hash": "sha256-fce826389e3a8a65d82ca0fb82033addfda2a3ff120fa193ca74a5f05115855c",
+      "width": 1774,
+      "height": 887,
+      "columns": 4,
+      "rows": 2,
+      "sourceHasAlpha": true
+    },
+    {
+      "state": "underground-research-core-background",
+      "source": "assets/source/v100/mission-completion/research-core-background-v1.png",
+      "promptRecord": "assets/source/v100/mission-completion/research-core-background-prompt.json",
+      "sourceSha256": "7ceb5504bf59b4e75ceb157f197e3ec14cf2970fc6bed019ae909cbeeeef7f66",
+      "output": "public/art/v100/stages/s29-underground-research-core-v1.webp",
+      "path": "/art/v100/stages/s29-underground-research-core-v1.webp",
+      "bytes": 226744,
+      "hash": "sha256-575ef05c2dc0a37f553422b1d3badb88133535dfd0b31e39b1532f8e920ef4a8"
     }
   ]
 }

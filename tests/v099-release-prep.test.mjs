@@ -55,10 +55,10 @@ test("the published0.9.9.5 pack reuses415 assets and requires the complete sourc
 test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 6_309_676);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 107_691_219,
-    candidateDistinctHashBytes: 107_151_316,
-    updateFromV0982Bytes: 34_640_102,
-    updateFromV0993Bytes: 24_265_408,
+    candidateTotalBytes: 109_280_521,
+    candidateDistinctHashBytes: 108_740_618,
+    updateFromV0982Bytes: 36_229_404,
+    updateFromV0993Bytes: 25_854_710,
   });
   assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);

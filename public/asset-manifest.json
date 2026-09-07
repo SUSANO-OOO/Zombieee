@@ -1495,6 +1495,14 @@
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/red-panther-armory-lockers-v1.webp"
     },
     {
+      "path": "/art/v100/mission-objects/research-core-targets-v1.webp",
+      "bytes": 1362558,
+      "hash": "sha256-fce826389e3a8a65d82ca0fb82033addfda2a3ff120fa193ca74a5f05115855c",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/sealed-transport-damaged-v1.webp",
       "bytes": 1342174,
       "hash": "sha256-f5dde41efd128d5ac735835ed5fefe26ac449b8b82b01c7a02c4826a1dcd12f5",
@@ -1668,6 +1676,14 @@
       "path": "/art/v100/stages/s29-high-security-research-core-r2-background-v1.webp",
       "bytes": 299550,
       "hash": "sha256-cf54f698985c8f77d6e3ea5e8a32c84d1049fa080d90a3eb703d005570676eeb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s29-underground-research-core-v1.webp",
+      "bytes": 226744,
+      "hash": "sha256-575ef05c2dc0a37f553422b1d3badb88133535dfd0b31e39b1532f8e920ef4a8",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
