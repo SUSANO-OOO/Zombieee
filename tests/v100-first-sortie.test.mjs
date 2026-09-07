@@ -48,6 +48,7 @@ test("V1 display names cover operational subtitles while preserving legacy label
   const options = { crawlerLabel: "装甲車両" };
   assert.equal(publicDisplayText("移動拠点、砲撃姿勢へ。", options), "装甲車両、砲撃姿勢へ。");
   assert.equal(publicDisplayText("移動拠点火器を展開", options), "装甲車両火器を展開");
+  assert.equal(publicDisplayText("ナオ // 移動拠点から出撃", options), "ナオ // 装甲車両から出撃");
   assert.equal(publicDisplayText("CRAWLER HP", options), "装甲車両耐久");
   assert.equal(publicDisplayText("CRAWLER HP"), "移動拠点耐久");
   assert.equal(publicDisplayText("/art/crawler/移動拠点.webp", options), "/art/crawler/移動拠点.webp");

@@ -28,7 +28,8 @@ import {
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import { applyV100UnitLevelProgression } from "./v100Progression.js";
-import { V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
+import { V100_FORMATION_MAX_SLOTS, V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
+import { humanDeploymentCapacity } from "./deploymentCapacity.js";
 import {
   battleAudioRuntimeSnapshot,
   createBattleAudioRuntime,
@@ -2722,7 +2723,13 @@ function equippedCardForGame(g: Game, kind: UnitKind) {
   } as UnitCard & { progressionLevel: number; progressionRank: number };
 }
 
+function humanDeploymentCapacityForGame(g: Game) {
+  return humanDeploymentCapacity({ fighters: g.fighters, queuedUnits: g.deployQueue.length,
+    limit: g.definition.missionConfig?.v100StageNumber ? V100_FORMATION_MAX_SLOTS : Infinity });
+}
+
 function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
+  if (!humanDeploymentCapacityForGame(g).canLaunch) return null;
   const card = equippedCardForGame(g, kind);
   if (!card) return null;
   const id = g.nextId++;
@@ -14687,6 +14694,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
     if (rejectBattleSaveBoundary(`deploy:${kind}:save-pending`)) return false;
     const card = equippedCardForGame(g, kind);
+    const capacity = humanDeploymentCapacityForGame(g);
+    if (!capacity.canReserve) {
+      playUiOperationCue("reject", `deploy:${kind}:formation-full`);
+      g.banner = `召喚限度到達 // ${capacity.limit}`; g.bannerTime = .9;
+      return false;
+    }
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
       if (g.deployQueue.length >= 3) { g.banner = "召喚限度到達 // 3"; g.bannerTime = .9; }
@@ -18695,7 +18708,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           && fighter.hp > 0
         ));
         const crawlerDoorStep = advanceCrawlerDoorRuntime(g.crawlerDoor, dt, {
-          queuedUnits: g.deployQueue.length,
+          queuedUnits: humanDeploymentCapacityForGame(g).canLaunch ? g.deployQueue.length : 0,
           doorwayOccupied,
         });
         g.crawlerDoor = crawlerDoorStep.runtime;
@@ -18726,7 +18739,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             maxInstances: 1,
           });
         }
-        if (crawlerDoorStep.events.includes("launch")) {
+        if (crawlerDoorStep.events.includes("launch") && humanDeploymentCapacityForGame(g).canLaunch) {
           const kind = g.deployQueue.shift();
           if (kind) {
             const deployed = spawnHuman(g, kind, true);
@@ -23018,7 +23031,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
-                  ?? (hud.deployQueue >= 3
+                  ?? ((externalSessionActive && hud.summonedCount + hud.deployQueue >= V100_FORMATION_MAX_SLOTS) || hud.deployQueue >= 3
                     ? "召喚限度到達"
                     : cooldown > 0
                       ? `再準備 ${cooldown}秒`
