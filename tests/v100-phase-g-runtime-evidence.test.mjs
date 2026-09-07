@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { setupEnemyCanAct } from "../scripts/v100-phase-g-runtime-evidence.mjs";
 import { selectV100EvidenceCapture, deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, validateV100ProofImageLink, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "../scripts/v100-phase-g-runtime-evidence.mjs";
 import { createManualAbilityRuntime, beginManualAbility, selectBabayagaAbilityTarget } from "../app/manualAbilities.js";
 import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-machine.mjs";
@@ -120,6 +121,15 @@ test("grappler setup cannot finish at warning and must observe the actual bound 
   assert.equal(observed(pulling, { ...target, hp: 0 }), false);
   assert.equal(observed(pulling, { ...target, stunned: 0 }), false);
   assert.equal(observed({ ...pulling, stationAbility: { ...pulling.stationAbility, remainingSeconds: 0 } }, target), false);
+});
+
+test("the action window waits for the exact enemy to finish its real entry", () => {
+  const actor = { kind: "grappler", side: "zombie", hp: 177, combatReady: true, gateEntering: false };
+  assert.equal(setupEnemyCanAct(runtime(), "grappler"), false);
+  for (const change of [{ combatReady: false, gateEntering: true }, { hp: 0 }, { kind: "walker" }, { side: "human" }]) {
+    assert.equal(setupEnemyCanAct(runtime({ fighters: [{ ...actor, ...change }] }), "grappler"), false);
+  }
+  assert.equal(setupEnemyCanAct(runtime({ fighters: [actor] }), "grappler"), true);
 });
 
 test("all sixteen unchanged representative rows require their actual runtime action", () => {

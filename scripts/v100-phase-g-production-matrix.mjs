@@ -18,7 +18,7 @@ import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT,
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 import { createV100PhaseGProofMachine } from "./v100-phase-g-proof-machine.mjs";
-import { deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
+import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 matrix is local-only; refusing ${baseUrl}`);
@@ -4063,6 +4063,20 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (bossObservation) setupObservations[`zombie:${bossKind}`] ??= bossObservation;
     }
     if (!completedImpactProofEnabled && proofActor) {
+      // A wave-3 actor cannot act while absent or traversing its entry gate.
+      // Keep the existing 45-second action window after actual combat readiness.
+      if (!proofActorAttackObserved) {
+        recorder?.setAwaiting("proof-actor-combat-ready", { actor: proofActor, predicate: "living exact actor has completed its real entry" });
+        const arrivalDeadline = Date.now() + battleTimeout;
+        let ready = false;
+        while (!proofActorAttackObserved && !ready && Date.now() < arrivalDeadline) {
+          await observeProofActorAttack();
+          ready = setupEnemyCanAct(await readSetupRuntime(), proofActor);
+          if (!proofActorAttackObserved && !ready) await page.waitForTimeout(100);
+        }
+        invariant(proofActorAttackObserved || ready, `proof enemy actor never became combat-ready: ${proofActor}`);
+        recorder?.clearAwaiting();
+      }
       if (proofActorRequiresContactFirst) {
         recorder?.setAwaiting("proof-actor-live-human-target", {
           actor: proofActor,

@@ -132,6 +132,11 @@ export function setupActorObservation(runtime, side, kind, cueId) {
   return { mounted: Boolean(actor), observed: Boolean(completed || active || audio) };
 }
 
+export function setupEnemyCanAct(runtime, kind) {
+  return runtime?.fighters?.some(fighter => fighter.side === "zombie" && fighter.kind === kind
+    && Number(fighter.hp) > 0 && fighter.combatReady === true && fighter.gateEntering !== true) === true;
+}
+
 export function setupVehicleActionObserved(runtime) {
   const crawler = runtime?.crawlerAbility;
   return runtime?.audioCueRequests?.some((r) => r.cueId === "weapon-barrage") === true
