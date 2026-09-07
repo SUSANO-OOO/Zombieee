@@ -259,6 +259,53 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Build the published old release and candidate for native WebKit PWA checks
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          old_sha=55d796cc577d1d9f903a4d2c6b4382196511db27
+          old_source="$RUNNER_TEMP/v100-public-old-source"
+          git worktree add --detach "$old_source" "$old_sha"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$old_source/node_modules"
+          (
+            cd "$old_source"
+            npm run build
+            GITHUB_PAGES_RELEASE_VERSION=0.9.9.5 GITHUB_PAGES_RELEASE_SHA="$old_sha" \
+              GITHUB_PAGES_REQUEST_ID=v100-public-old GITHUB_PAGES_ISSUE_NUMBER=172 \
+              node scripts/build-github-pages.mjs
+          )
+          GITHUB_PAGES_RELEASE_VERSION=1.0.0 GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
+            GITHUB_PAGES_REQUEST_ID=v100-native-pwa-candidate GITHUB_PAGES_ISSUE_NUMBER=172 \
+            node scripts/build-github-pages.mjs
+
+      - name: Verify native WebKit persistent PWA update from the public release
+        env:
+          PWA_EXISTING_UPDATE_OLD_ROOT: ${{ runner.temp }}/v100-public-old-source/_site
+          PWA_EXISTING_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PWA_EXISTING_UPDATE_BROWSER: webkit
+          PWA_EXISTING_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/existing
+        run: node scripts/pwa-existing-update-browser-smoke.mjs
+
+      - name: Verify native WebKit partial-download failure and recovery
+        env:
+          PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/v100-public-old-source/_site
+          PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PWA_PARTIAL_UPDATE_BROWSER: webkit
+          PWA_PARTIAL_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/partial
+        run: node scripts/pwa-partial-failed-update-browser-smoke.mjs
+
+      - name: Upload native WebKit PWA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-native-webkit-pwa
+          path: outputs/v100-native-pwa
+          if-no-files-found: warn
+          retention-days: 14
+
   webkit-hosted:
     name: WebKit Hosted Runner Evidence
     needs: webkit-enemy-runtime-shard
@@ -477,7 +524,7 @@ jobs:
   webkit-deployment-viewport:
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
     needs: webkit-stage3-audio
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: macos-15-intel
     defaults:
       run:

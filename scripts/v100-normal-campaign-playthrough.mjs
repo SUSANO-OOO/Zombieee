@@ -149,12 +149,14 @@ async function battle(stage) {
     if(await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
-    const icons=page.locator('button.manual-ability-ready.available[aria-disabled="false"]');
-    for(const icon of (await icons.all()).slice(0,2)) {
-      // Sample the visible hit target once. A moving/disappearing target is
-      // observed again on the next game frame; no force or hidden input.
-      const hit=await icon.evaluate(el=>{const r=el.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;const top=document.elementFromPoint(x,y);return top&&(top===el||el.contains(top))?{x,y,kind:el.getAttribute("data-ability-kind")}:null;}).catch(error => { if (/not attached|detached|Failed to find element/iu.test(String(error))) return null; throw error; });
-      if(hit){await page.mouse.click(hit.x,hit.y);record.inputs.push({seconds:(Date.now()-start)/1000,action:"ability",kind:hit.kind});}
+    // Take one DOM snapshot of these transient targets. Retaining nth()
+    // locators across inputs waited for icons that had already disappeared.
+    const hits=await page.locator('button.manual-ability-ready.available[aria-disabled="false"]').evaluateAll(elements=>elements.slice(0,2).map(el=>{
+      const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,top=document.elementFromPoint(x,y);
+      return top&&(top===el||el.contains(top))?{x,y,kind:el.getAttribute("data-ability-kind")}:null;
+    }).filter(Boolean));
+    for(const hit of hits) {
+      await page.mouse.click(hit.x,hit.y);record.inputs.push({seconds:(Date.now()-start)/1000,action:"ability",kind:hit.kind});
     }
     const healing=page.locator('button[data-support-id="support-healing"]');
     if(await healing.count()&&await healing.isEnabled()) {
@@ -197,6 +199,10 @@ try {
    assert.deepEqual(restored.receipts, previous.finalSave.receipts);
    assert.deepEqual(restored.pendingResult, previous.finalSave.pendingResult);
    report.restoredSave = restored;
+   if (report.stages.at(-1)?.status === "running" && await phaseAt() === "formation") {
+     report.stages.at(-1).status = "interrupted-driver";
+     report.stages.at(-1).interruption = { reason: previous.error, recovery: "native reload returned the unfinished battle to formation; completed stages and receipts unchanged" };
+   }
  }
  let preparedStage=0;
  for(let steps=0;steps<6000;steps++) {

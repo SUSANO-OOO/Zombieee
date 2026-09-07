@@ -6,7 +6,7 @@
 
 2026-09-07のProducer指示に基づき、現在のCodexタスクが制作全体を引き継ぐ。継続ゴールは完成版の最終承認、正式統合・Release・公式Pages公開、公開後検証までを含む。以下が現在の実行順であり、下方の旧role名、exact-path制限、反復回数、停止・再開cursorは履歴として扱う。固定製品判断、旧データ保全、最終公開承認境界は維持する。
 
-- live確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。PR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。CI `33917360399` はterminal65成功・1失敗・skipped0で、完成候補ではない。
+- 開始時のlive確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。開始時のPR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。旧CI `33917360399` はterminal65成功・1失敗・skipped0で、完成候補ではない。以降の可変HEADとCI状態はlive PR/Issue #172を参照する。
 - 作業場所：`_isolated/v100-completion-20260907` / `codex/v100-completion-20260907`。元の `v100-save-boundary-6faa` の変更をpatch/statusとして `_v100_completion/evidence/` に保全し、既存ファイルと履歴は変更しない。Section138.36の未commit修正5ファイルを新作業ツリーへ取り込んだ。
 - 今回の新規検証：変更前HEADのproduction build、全1423 tests、content validator、lintエラー0（既存警告12）、diff check成功。取り込んだSection138.36のfocused57/57成功。旧ブラウザQAの成功記載は今回の合格証拠に代用しない。
 - 初回の実ブラウザ/source照合で、平穏な「くまや」へ荒廃した商店街背景、PROLOGUE全体へdaily音響、EPILOGUEへ無関係な社長撃破絵が割り当てられていた。またエンドロール11場面がgeneratorで欠落し、実装者向け指示1行が表示されていた。これらは今回修正した。
@@ -19,6 +19,9 @@
 - 通常プレイ再評価で、Stage6の実際の同時出撃が10/7へ達する製品不具合を発見した。従来の7枠transaction testは実戦のdeployHuman/spawnHumanへ接続されていなかった。生存中の隊員（同一人物の複数体を含む）と有料出撃待ちの合計を7枠で予約し、実際の投入処理・車両扉・UIで制限する。拒否時は資源/再準備時間を変更しない。actual callback/spawnの4 testsと、Chromium/WebKit実UI・実時間の7体召喚/8体目拒否fixture2/2で確認した。証拠は `outputs/v100-deployment-capacity-r1/report.json`。先行通常プレイ `outputs/v100-normal-campaign-fe55aef*` のsaveと結果は保全するが、上限修正後の難易度/通し受入へ代用しない。上記fe55 Phase Gも現在の戦闘受入を意味しない。
 - 正本全文との照合でStage20「二刀の男」、Stage25「味噌汁」の幕間と全行boldの行動/加入表示、計32 nodesの欠落を発見・復元した。原因はgeneratorが任意の小見出しでpostを切り、未対応Markdownを黙って捨てていたこと。正本hashは不変。全物語行の一回だけの取り込みを生成前に検査し、未知形式は既存出力を保持して失敗させる。舞台に対応する既存背景と炊き出しの環境音を接続した。
 - 上記修正後のproduction build、全1442 source tests、lint0 errors/12既存warningsが成功。focused23/23。幕間を含むStage20/25のpost全53 nodesはChromium/WebKit × 3サイズの12 fixturesで最後まで実際の「次へ」を操作し、表示範囲・背景・音響要求・操作到達性・diagnostics0を確認した（`outputs/v100-restored-interludes-r3/report.json`）。r1/r2のfixture作成不備は保存し製品失敗へ混同しない。全30作戦の修正後通常通し確認、同一候補CI、PWA/他mode、最終reviewと公開は残る。tests件数を製品完成の判定に置き換えない。
+
+- 通常pushでPR171へ送信し、各commit/tree/parent・変更blobをGitHubから独立readbackした。a60c20bのCIは生成記録末尾の空行でPR全差分の`git diff --check`が失敗したため、1514610でその1行を修正。ローカルもPR base全差分で成功を確認した。取消済み候補のdeployment jobが`always()`で新規起動を続け後続候補を塞ぐ事実も確認し、旧run34086278774をforce-cancelした。新しい設定は`!cancelled()`とし、failure時の診断・全viewport・deadline・macOS環境・既存required lanesを維持して取消だけ尊重する。
+- PWA：公開中0.9.9.5のmanifestと旧static rootを照合し、415 assetsの配信bytes/hashを全検証した。候補1514610のstatic buildでChromiumの既存インストール→V1更新/再起動/offline/rollback/旧save保持/記念CAPS一回性は18/18成功（`outputs/v100-pwa-existing-1514610-chromium-r1`）。部分ダウンロード失敗、close/relaunch、実時間30秒超の停止/継続転送、共有音声bundle一回取得、復旧/rollbackも21/21成功（`outputs/v100-pwa-partial-1514610-chromium-r1`）。Windows WebKitは旧版installのcache保存で失敗。ゲームコードを一切含まない最小probeでもCacheStorage.put直後のmatchがnull、keysが空となり、Chromiumでは同じprobeが永続化・window/worker共有を成功した（`outputs/completion/cache-sharing-probe.json`）。Windows結果をPWA合格へ代用しない。同一候補のmacOS WebKitで既存更新と部分失敗復旧を実行するCI工程を追加し、その結果で合否を判定する。
 
 ### 有限の残工程と完了判定
 

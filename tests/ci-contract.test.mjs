@@ -80,7 +80,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
     .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
   assert.deepEqual(deploymentViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
   assert.match(deploymentJob, /needs: webkit-stage3-audio/u);
-  assert.match(deploymentJob, /if: \$\{\{ always\(\) \}\}/u);
+  assert.match(deploymentJob, /if: \$\{\{ !cancelled\(\) \}\}/u);
   assert.match(deploymentJob, /fail-fast: false/u);
   assert.match(deploymentJob, /max-parallel: 1/u);
   assert.doesNotMatch(deploymentJob, /continue-on-error:/u);
@@ -208,6 +208,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     assert.equal(job["runs-on"], "macos-15-intel");
     assert.equal(job["continue-on-error"], undefined);
     assert.equal(job.container, undefined);
+    assert.ok(job.if === undefined || job.if === "${{ !cancelled() }}", `${id} must respect cancellation while retaining failure diagnostics`);
     assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
   }
   const viewports = ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"];
@@ -298,4 +299,9 @@ test("the release Phase G lane covers and validates all production captures", as
   assert.match(job, /npm run qa:v100-phase-g\n\s+npm run qa:v100-phase-g-validate/u);
   assert.doesNotMatch(job, /V100_PHASE_G_ONLY|for sequence|continue-on-error/u);
   assert.match(job, /outputs\/v100-phase-g\n\s+docs\/qa\/v100\/phase-g-screenshot-manifest\.json/u);
+  assert.match(job, /old_sha=55d796cc577d1d9f903a4d2c6b4382196511db27/u);
+  for (const kind of ["EXISTING", "PARTIAL"]) {
+    assert.match(job, new RegExp(`PWA_${kind}_UPDATE_BROWSER: webkit`, "u"));
+    assert.match(job, new RegExp(`PWA_${kind}_UPDATE_EXPECTED_CANDIDATE_SHA: \\$\\{\\{ github\\.event\\.pull_request\\.head\\.sha \\}\\}`, "u"));
+  }
 });
