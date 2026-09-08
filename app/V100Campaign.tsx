@@ -47,7 +47,7 @@ import {
   v100StoryFlowCheckpoint,
 } from "./v100StoryFlow.js";
 import { v100StoryEventFor, v100StoryEventView } from "./v100StoryEvents.js";
-import { v100ProductionSessionFor } from "./v100BattleAdapter.js";
+import { v100MissionObjectiveFor, v100ProductionSessionFor } from "./v100BattleAdapter.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
@@ -197,8 +197,10 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
   "A-add-waves": "追加波状感染群",
 };
 
-function missionLabelFor(value: string | undefined) {
-  return OPERATION_LABELS[value ?? ""] ?? "キャンペーン作戦";
+function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
+  if (stage?.number === 26) return "車列停止・確保";
+  if (stage?.number === 28) return "散布装置停止";
+  return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーン作戦";
 }
 
 function enemyPackLabelFor(value: string | undefined, stageNumber = 99) {
@@ -207,15 +209,7 @@ function enemyPackLabelFor(value: string | undefined, stageNumber = 99) {
 }
 
 function objectiveLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
-  if (!stage) return "作戦目標を達成";
-  if (stage.objectiveId.includes("four")) return "4つの電源ノードを起動して封鎖";
-  if (stage.objectiveId.includes("three")) return "3つの電源ノードを起動して封鎖";
-  if (stage.objectiveId.includes("95s")) return "95秒間、防衛対象を守り抜く";
-  if (stage.objectiveId.includes("90s")) return "90秒間、防衛対象を守り抜く";
-  if (stage.objectiveId.includes("100s")) return "100秒間、防衛対象を守り抜く";
-  if (stage.missionType === "boss") return "異常個体を撃破する";
-  if (stage.missionType === "escort") return "護送対象を出口まで届ける";
-  return "感染拠点を制圧する";
+  return stage ? v100MissionObjectiveFor(stage.id) : "作戦目標を達成";
 }
 
 function eventDisplayLabel(eventId: string | null | undefined) {
@@ -964,7 +958,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
               const [x, y] = mapNodePosition(index, chapterStages.length);
               const nodeState = completed ? "制圧済み" : available ? "出撃可" : "封鎖中";
               return <button type="button" key={entry.id} className={`v100-map-node ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${stageDisplayNameFor(entry)} ${nodeState}`}>
-                <span className="v100-map-node-marker"><i>{isBoss ? "◆" : completed ? "✓" : `S${String(entry.number).padStart(2, "0")}`}</i></span><strong>{stageDisplayNameFor(entry)}</strong><small>{nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : ` / ${missionLabelFor(entry.missionType)}`}</small>
+                <span className="v100-map-node-marker"><i>{isBoss ? "◆" : completed ? "✓" : `S${String(entry.number).padStart(2, "0")}`}</i></span><strong>{stageDisplayNameFor(entry)}</strong><small>{nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : ` / ${missionLabelFor(entry)}`}</small>
               </button>;
             })}
           </nav>
@@ -976,7 +970,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}><strong>隊員</strong><small>{save.ownedUnitIds.length}名 / 出撃編成</small></button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}><strong>出撃装備</strong><small>{save.equippedSupportId ? "支援装備中" : "支援を選ぶ"}</small></button></div>
           {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>作戦封鎖中</strong><span>前作戦クリアで解放</span></div>}
           {boss && <div className="v100-boss-callout"><div className="v100-boss-callout-heading"><span>ボス作戦</span><strong>標的指定</strong></div><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊: {String(boss.special)}</small><div className="v100-threat-meter"><i style={{ width: `${Math.min(100, Math.max(8, boss.hp / 92))}%` }} /></div></div>}
-          <div className="v100-stage-intel"><span>作戦目標</span><strong>{missionLabelFor(stage?.missionType)}</strong><p>{objectiveLabelFor(stage)}</p></div>
+          <div className="v100-stage-intel"><span>作戦目標</span><strong>{missionLabelFor(stage)}</strong><p>{objectiveLabelFor(stage)}</p></div>
           <dl><div><dt>脅威分類</dt><dd>{enemyPackLabelFor(stage?.enemyPack, stage?.number)}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
           <button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "この作戦を編成"}</button>
           <div className="v100-map-briefs"><article><span>隊員</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>

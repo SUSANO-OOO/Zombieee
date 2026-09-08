@@ -150,7 +150,11 @@ CUAの独立新規saveでは初期4名の第1作戦を156秒/510HP/損耗4/星2�
 
 CIの準備重複を実測した。17df850のcanonical HUD job101824077167の成功例は全体206秒に対して撮影19秒で、6サイズ×8状態の48 jobsがmax-parallel1で同じcheckout/npm ci/build/WebKit installを反復していた。既存runCanonicalHudStatesの8状態aggregatorへ接続して1サイズ1jobとする。条件ごとの新Node/server/browser、1attempt、60000msの同一期限、全48条件、fail-closed、前段依存、macOS/固定runtime、artifact保持を維持する。22 contract/negative testsとWindows WebKit844x340で全8状態を各1回、同一build/diagnostics0で通過（outputs/v100-canonical-shared-preparation-844x340-r1）。製品コード/素材/セーブ/判定の変更はなく、macOSでの新版workflow自体はまだ未実行。旧CIは継続中であり、新候補の合格へ代用しない。
 
-現行execution cursorはSection 6とlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
+保存修正f2eaf8d / build f381e8bb31c31aede276527536a8c631ab8b132a7457f6a56d9efe40c5c02ce5の自然mode確認は、Chromiumで異常発生・全39体/種類別撃破・checkpoint・強化選択・撤退精算・reloadまで成功（outputs/v100-earned-modes-f2eaf8d-chromium-r1）。WebKitも39体記録と撤退結果まで進んだが、最後のPlaywright storageState(indexedDB:true)が「Database version is unset」で停止し最終report更新が失われたため、全体passとはしない。ゲームを読み込まない最小probeで、WebKitのみ作成をabortした不存在legacy DBをversion0として列挙し、汎用exporterが停止することを再現。現存DBのnative readは両engineで正常（outputs/v100-aborted-idb-export-probe-r1/r2）。QAはnative readonlyの全V1 stores/3 mirrorsをcheckpointとresultのreload後に照合し、先に判定reportを保存する方式へ変更。browser-storage.jsonはcookies/localStorage、IDB証拠はreport内の明示snapshotであり、他DBはinventoryのみ。保存APIの代替、ゲームデータ変更、未知のexport失敗の黙殺はしない。
+
+実装と分けたfresh read-onlyレビューの追加全30目標照合で、mapのobjectiveId部分一致がS7を拠点攻撃、S14/S26を3電源起動、S28を4電源起動へ誤案内するMedium共通不具合を確認。S16の装置名、Stage3/30の指定主目標、S1/8/10/13の拠点/中継点名、S24/25の撃破bannerも整合対象となった。既存の防衛/装置/車両/企業制御/研究中枢profileを参照するv100MissionObjectiveForを地図と戦闘adapterで共有し、S26/28の短い作戦種別、企業装置名と撃破bannerを接続。勝敗、時間、敵編成、経済、物語本文は変更しない。25 focused/全1509 source tests、lint0 errors/既存12 warnings成功。物理停止の既存契約testは維持して文言を合わせた。修正後の地図全30/短画面、Ωの長い主目標を含む6 viewport、native mode保存と最終fresh通し、同一候補CI、fixed-HEAD再reviewを次に行う。以前のHigh0/Medium0という限定review結果で、この追加findingや未検証を隠さない。
+
+現行execution cursorは上方の完成ミッションとlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
 ## 1. 現在の正式公開
 

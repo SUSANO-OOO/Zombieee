@@ -22410,6 +22410,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ?? "大型感染体";
               g.banner = g.definition.operationCategory === "outbreak"
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
+                : v100CorporateControlLabel(g.definition)
+                ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`
                 : fighter.kind === "takuya"
                 ? "TAKUYA撃破 — 感染拠点が露出"
                 : `${defeatedBossName}撃破 — 感染核が露出`;

@@ -13,10 +13,33 @@ import {
   v100StorageContract,
 } from "../app/v100CampaignStorage.js";
 import { createDefaultV100Save } from "../app/v100Save.js";
-import { v100ProductionSessionFor } from "../app/v100BattleAdapter.js";
+import { v100BattleDefinitionFor, v100MissionObjectiveFor, v100ProductionSessionFor } from "../app/v100BattleAdapter.js";
+import { objectiveForBattle } from "../app/battleDefinitions.js";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("map briefings describe the authored task rather than number words in objective IDs", () => {
+  const expected = new Map([
+    [3, "大型変異感染者TAKUYAを撃破"],
+    [7, "医薬品の搬出を守る"],
+    [14, "ボスを撃破"],
+    [16, "3基の封鎖装置を順番に作動"],
+    [26, "冷蔵車3台を封鎖地点へ追い込み、停止・確保"],
+    [28, "国内散布装置4基を順番に物理停止"],
+    [29, "国外起動回線と感染源原株を破壊"],
+    [30, "TAKUYA-Ωを撃破し、西新を守る"],
+  ]);
+  for (const [number, goal] of expected) {
+    const id = V100_STAGE_IDS[number - 1];
+    assert.equal(v100MissionObjectiveFor(id), goal);
+    assert.equal(v100BattleDefinitionFor(id).objective, goal);
+  }
+  for (const number of [1, 4, 8, 10, 13]) {
+    const definition = v100BattleDefinitionFor(V100_STAGE_IDS[number - 1]);
+    assert.equal(objectiveForBattle(definition, {}), number === 4 ? "感染中継点を破壊" : "感染拠点を破壊");
+  }
+});
 
 test("external battle takes V1 settings while legacy equipment cannot affect its loadout", () => {
   const clean = createDefaultV100Save({ settings: { bgmEnabled: false, graphicsQuality: "power-save", autoSkipReadStory: true } });

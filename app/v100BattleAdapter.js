@@ -2,6 +2,8 @@ import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
+import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
@@ -63,6 +65,26 @@ const MISSION_LABELS = Object.freeze({
   power: "電源ノードを順番に起動",
   seal: "封鎖ノードを順番に起動",
 });
+
+// Map briefing and battle phases describe the same authored objective.
+export function v100MissionObjectiveFor(stageId) {
+  const stage = V100_STAGE_BY_ID[stageId];
+  if (!stage) return "作戦目標を達成";
+  if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
+  if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
+  const control = V100_CORPORATE_CONTROLS[stageId];
+  if (control) return stage.missionType === "boss" ? `異常個体を撃破し、${control}を破壊` : `${control}を破壊`;
+  const defense = V100_DEFENSE_OBJECTIVES[stageId];
+  if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
+  if (stage.number === 29) return researchCoreObjective(null);
+  const node = V100_NODE_PROFILES[stageId];
+  if (node?.shutdown) return `国内${node.label}4基を順番に物理${node.verb}`;
+  if (node) return `${stage.objectiveId.includes("four") ? 4 : 3}基の${node.label}を順番に${node.verb}`;
+  const vehicle = V100_MISSION_VEHICLES[stageId];
+  if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点へ追い込み、停止・確保";
+  if (vehicle) return `${vehicle.targetLabel}を目的地へ護送`;
+  return MISSION_LABELS[stage.missionType] ?? "作戦目標を達成";
+}
 
 function freeze(value) {
   return Object.freeze(value);
@@ -161,8 +183,8 @@ function phaseScheduleFor(stage, missionType, objective) {
   return {
     phases: freeze([
       freeze({ at: PREP_SECONDS, phase: 1, label: "侵入路を確保", objective }),
-      freeze({ at: PREP_SECONDS + 38, phase: 2, label: "敵拠点へ前進", objective }),
-      freeze({ at: PREP_SECONDS + 76, phase: 3, label: bossKindForStage(stage) ? "異常個体を撃破" : "感染拠点へ総攻撃", objective }),
+      freeze({ at: PREP_SECONDS + 38, phase: 2, label: V100_CORPORATE_CONTROLS[stage.id] ? `${V100_CORPORATE_CONTROLS[stage.id]}へ接近` : "敵拠点へ前進", objective }),
+      freeze({ at: PREP_SECONDS + 76, phase: 3, label: bossKindForStage(stage) ? "異常個体を撃破" : objective, objective }),
     ]),
   };
 }
@@ -180,7 +202,7 @@ export function v100BattleDefinitionFor(stageId) {
   const bossKind = bossKindForStage(stage);
   const missionVehicle = V100_MISSION_VEHICLES[stageId];
   const missionNode = V100_NODE_PROFILES[stageId];
-  const objective = missionNode?.shutdown ? "国内散布装置4基を順番に物理停止" : stage.number === 29 ? researchCoreObjective(null) : missionVehicle?.count === 3 ? "冷蔵車3台を封鎖地点へ追い込み、停止・確保" : missionVehicle ? `${missionVehicle.targetLabel}を目的地へ護送` : MISSION_LABELS[stage.missionType] ?? stage.objectiveId;
+  const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
   const timeline = stageTimeline(stage, missionType, bossKind);
   const baseMaxHp = V100_VEHICLE.baseHp;
@@ -214,7 +236,7 @@ export function v100BattleDefinitionFor(stageId) {
       v100StageNumber: stage.number,
       v100ObjectiveId: stage.objectiveId,
       v100EnemyPack: stage.enemyPack,
-      target: stage.missionType === "assault" ? "infected-relay" : undefined,
+      target: stage.missionType === "assault" ? stage.number === 4 ? "infected-relay" : "infected-stronghold" : undefined,
     },
     rescueCount: stage.missionType === "escort" ? 1 : 0,
   });
