@@ -3,9 +3,12 @@ import {orderedNativePointer} from './ordered-native-pointer.mjs';
 // Read-only observations guide ordinary UI inputs. This helper has no combat,
 // save, time, actor or result setters and does not activate a QA scenario.
 export async function nativeBattleTap(page,locator){
-  if(!await locator.count()||!await locator.evaluate(el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true').catch(()=>false))return false;
-  if(await locator.evaluate(el=>el.matches('.unit-card')))try{await locator.scrollIntoViewIfNeeded({timeout:750});}catch{return false;}
-  const point=await locator.evaluate(el=>{const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return document.elementFromPoint(x,y)?.closest('button')===el?{x,y}:null;}).catch(()=>null);
+  // Live ability buttons can disappear or become unavailable between reads.
+  // Observe the current match immediately; never wait for that old owner to return.
+  const state=await locator.evaluateAll(els=>{const el=els.length===1?els[0]:null;return el&&!el.disabled&&el.getAttribute('aria-disabled')!=='true'?{unitCard:el.matches('.unit-card')}:null;});
+  if(!state)return false;
+  if(state.unitCard)try{await locator.scrollIntoViewIfNeeded({timeout:750});}catch{return false;}
+  const point=await locator.evaluateAll(els=>{const el=els.length===1?els[0]:null;if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return document.elementFromPoint(x,y)?.closest('button')===el?{x,y}:null;});
   if(!point)return false;await orderedNativePointer(page,point);return true;
 }
 

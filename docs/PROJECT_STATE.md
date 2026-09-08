@@ -6,6 +6,10 @@
 
 2026-09-07のProducer指示に基づき、現在のCodexタスクが制作全体を引き継ぐ。継続ゴールは完成版の最終承認、正式統合・Release・公式Pages公開、公開後検証までを含む。以下が現在の実行順であり、下方の旧role名、exact-path制限、反復回数、停止・再開cursorは履歴として扱う。固定製品判断、旧データ保全、最終公開承認境界は維持する。
 
+最新の受入状態（2026-09-08）：製品候補0d5f15b / build `0cbd9e27b8eb5c3c12cb4a43636d6ab3c6bf0178f028b20e1110b61ba02bb440`。PR171へ7 commits/32 blobsを通常pushし、GitHubからcommit/tree/parent/bytesを独立照合済み。候補CI34186545314は全25 jobsがterminal success。集約後もcanonical全48条件を維持し、Phase G、native WebKit PWA更新/失敗復旧、音響、敵runtime、配置を含む。地図60/60、自然modeのChromium最終0dとWebKit438、Ω両engine×3サイズ6/6も成功。独立fixed0d差分reviewはHigh0/Medium0/Low0。実speaker聴感/物理iPhoneは未検証であり、ブラウザの代替証拠と区別する。
+
+同一製品buildのfresh全編 `outputs/v100-final-normal-0d5f15b-r1` は23作戦を勝利し全event/報酬/保存を通過、第24作戦の技能ボタン観測でdriverが停止。ゲームdiagnostics0、保存済み23作戦/1562 CAPSと未完戦闘を保持する。消滅したownerのボタンをcount→evaluate→evaluateと別々に待つ競合を、ゲームを含まないnative DOM probeで再現。可用性/座標はevaluateAllで現在の一致を即座に読み、消滅/無効化/被覆なら入力を見送る。5 casesで旧操作のtimeout、修正後の不正入力0、正常ボタンへのtrusted clickを確認（outputs/v100-native-tap-race-r1）。期限延長、資源/actor/時計/結果変更、ゲーム本体変更は0。旧失敗reportとoperator hashを保持し、同一distの保存された進行から再開する。完了済み23作戦を再演せず、未完戦闘はゲーム標準の中断復帰に従う。候補の全編通過、証拠確定/最終review、Producer最終承認、正式公開と公開後QAはまだ未完了。
+
 - 開始時のlive確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。開始時のPR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。旧CI `33917360399` はterminal65成功・1失敗・skipped0で、完成候補ではない。以降の可変HEADとCI状態はlive PR/Issue #172を参照する。
 - 作業場所：`_isolated/v100-completion-20260907` / `codex/v100-completion-20260907`。元の `v100-save-boundary-6faa` の変更をpatch/statusとして `_v100_completion/evidence/` に保全し、既存ファイルと履歴は変更しない。Section138.36の未commit修正5ファイルを新作業ツリーへ取り込んだ。
 - 今回の新規検証：変更前HEADのproduction build、全1423 tests、content validator、lintエラー0（既存警告12）、diff check成功。取り込んだSection138.36のfocused57/57成功。旧ブラウザQAの成功記載は今回の合格証拠に代用しない。
