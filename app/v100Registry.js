@@ -1,4 +1,8 @@
 import { deepFreeze } from "./content/freeze.js";
+import emojiRegex from "./vendor/emojiRegex.js";
+
+const emojiNamePattern = emojiRegex();
+const wholeEmojiNamePattern = new RegExp(`^(?:${emojiNamePattern.source})$`, emojiNamePattern.flags.replace("g", ""));
 
 export const V100_VERSION = "1.0.0";
 export const V100_DESIGN_ID = "V100-SOL-DL-001";
@@ -358,12 +362,18 @@ export function normalizeV100PlayerName(value) {
   if (typeof value !== "string" || !isWellFormedUnicode(value)) return { ok: false, reason: "invalid-characters", value: V100_DEFAULT_PLAYER_NAME };
   const normalized = value.normalize("NFC").replace(/^[\u0020\u3000]+|[\u0020\u3000]+$/gu, "").replace(/[\u0020\u3000]+/gu, " ");
   if (!normalized) return { ok: true, skipped: true, value: V100_DEFAULT_PLAYER_NAME };
-  if (/[\u0000-\u001F\u007F-\u009F\u200B-\u200D\u202A-\u202E\u2066-\u2069\uFEFF]/u.test(normalized)) {
+  if (/\p{Cc}/u.test(normalized)) {
     return { ok: false, reason: "invalid-characters", value: V100_DEFAULT_PLAYER_NAME };
   }
   const segments = typeof Intl?.Segmenter === "function"
-    ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(normalized)].map((entry) => entry.segment)
+    ? [...new Intl.Segmenter("ja", { granularity: "grapheme" }).segment(normalized)].map((entry) => entry.segment)
     : Array.from(normalized);
+  // Joiners and emoji tag characters are allowed only inside a complete,
+  // recognized emoji. Bidi controls and standalone invisible characters fail.
+  if (segments.some(segment => (/\p{Cf}/u.test(segment) && !wholeEmojiNamePattern.test(segment))
+    || /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u.test(segment))) {
+    return { ok: false, reason: "invalid-characters", value: V100_DEFAULT_PLAYER_NAME };
+  }
   if (segments.length < 1 || segments.length > 12) return { ok: false, reason: "too-long", value: V100_DEFAULT_PLAYER_NAME, graphemeCount: segments.length };
   return { ok: true, skipped: false, value: normalized, graphemeCount: segments.length };
 }

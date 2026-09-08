@@ -53,6 +53,9 @@
 .v100-name-card p { margin: 0; color: #bdc9bf; line-height: 1.6; }
 .v100-name-card form { display: grid; gap: 8px; margin-top: 16px; }
 .v100-name-card input { min-height: 48px; padding: 9px 12px; border: 1px solid #546b69; border-radius: 4px; color: #fff; background: #071011; }
+.v100-rename-panel { width: min(520px, 100%); margin: 10px auto; }
+.v100-rename-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.v100-rename-actions button { flex: 1 1 160px; }
 .v100-secondary-data { width: 100%; margin-top: 8px; border-color: #405351 !important; background: #132021 !important; color: #bdc9bf !important; font-size: 12px; }
 .v100-event-layout { position: relative; width: min(1280px, 100%); min-height: max(400px, calc(100dvh - 80px)); margin: 0 auto; overflow: hidden; border: 1px solid #455650; border-radius: 7px; background: #10191a; }
 .v100-event-backdrop { position: absolute; inset: 0; background-position: center; background-size: cover; filter: brightness(.42) saturate(.82); }
@@ -110,6 +113,7 @@
 .v100-map-briefs strong, .v100-formation-loadout strong { color: #e7b566; font-size: 13px; }
 .v100-map-briefs small, .v100-formation-loadout small { color: #9eb0a6; font-size: 10px; }
 .v100-map-tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.v100-map-tools > button, .v100-map-tools > .v100-file-button { min-width: 0; padding-inline: 8px; font-size: 12px; white-space: nowrap; }
 .v100-utility-button { border-color: #786843; color: #d8c28f; background: #17201d; }
 .v100-file-button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 10px; border: 1px solid #4c6260; border-radius: 5px; color: #f1ead7; background: #162526; cursor: pointer; text-align: center; }
 .v100-file-button input { display: none; }

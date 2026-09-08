@@ -84,7 +84,7 @@ type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
 type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolean };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
 type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string; sourceLine?: number; sceneLabel?: string };
-type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "equipment" | "modes" | "data";
+type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "equipment" | "modes" | "data" | "rename";
 
 const PORTRAIT_PATHS: Record<string, string> = {
   "unit-kumaverson": V080_UNIT_VISUAL_PROFILES.kumaverson.eventPortrait.path,
@@ -110,6 +110,8 @@ function stageNumberFor(stageId: string | null) {
 
 function formatReason(reason: string | undefined) {
   const labels: Record<string, string> = {
+    "invalid-characters": "使用できない文字が含まれています",
+    "too-long": "名前は12文字以内で入力してください",
     "stage-locked": "前の作戦を先に完了してください。",
     "objective-incomplete": "ミッション目標が未完了です。",
     "vehicle-destroyed": "装甲車両が破壊されています。",
@@ -494,7 +496,7 @@ export function V100Campaign() {
     // Stable V1 preparation screens publish their actual identity. Story nodes
     // remain unsafe so a release cannot interrupt a cursor or first-clear
     // transition; battle/result explicitly block it.
-    const screen = !hydrated || loadFailure || logOpen || replayEventId || giftPopup ? "event"
+    const screen = !hydrated || loadFailure || logOpen || replayEventId || giftPopup || surface === "rename" ? "event"
       : surface === "data" ? "storage"
       : battleActive ? "battle"
       : resultSaving ? "result"
@@ -645,7 +647,7 @@ export function V100Campaign() {
     eventSubmit.preventDefault();
     const validated = normalizeV100PlayerName(nameInput);
     if (!validated.ok) {
-      setNameError(validated.reason === "too-long" ? "1〜12文字で入力してください。" : "使用できない名前です。");
+      setNameError(formatReason(validated.reason));
       return;
     }
     const nextSave = updateV100PlayerName(save, validated.value).save;
@@ -725,15 +727,21 @@ export function V100Campaign() {
     if (next.accepted) updateFlow(next.state);
   };
 
-  const rename = async () => {
-    const value = window.prompt("主人公の名前", save.playerName);
-    if (value === null) return;
-    const result = updateV100PlayerName(save, value);
+  const openRename = () => {
+    setNameInput(saveRef.current.playerName);
+    setNameError("");
+    openSurface("rename");
+  };
+  const rename = async (event: FormEvent) => {
+    event.preventDefault();
+    const result = updateV100PlayerName(saveRef.current, nameInput);
+    if (result.unchanged) { openSurface("campaign"); return; }
     if (!result.applied) {
-      setNotice(formatReason(result.reason));
+      setNameError(formatReason(result.reason));
       return;
     }
-    await commitSave(result.save, () => setNotice("表示名を更新しました。"));
+    setNameError("");
+    await commitSave(result.save, () => { openSurface("campaign"); setNotice("表示名を更新しました。"); });
   };
 
   const downloadBackup = () => {
@@ -788,7 +796,7 @@ export function V100Campaign() {
 
   const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle";
   const modeResult = save.outbreak.view === "result" || save.survival.view === "result";
-  const screenLabel = surface === "personnel" ? "隊員" : (surface === "support-vehicle" || surface === "equipment") ? "出撃装備" : surface === "data" ? "セーブ" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" || modeResult ? "戦果" : "作戦地図";
+  const screenLabel = surface === "personnel" ? "隊員" : (surface === "support-vehicle" || surface === "equipment") ? "出撃装備" : surface === "data" ? "セーブ" : surface === "rename" ? "名前の変更" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" || modeResult ? "戦果" : "作戦地図";
 
   return (
     <main onClickCapture={blockPendingInput} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-phase={save.outbreak.view === "battle" || save.survival.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.survival.active ? "survival" : save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
@@ -814,7 +822,7 @@ export function V100Campaign() {
               <p>この名前は、物語の中で仲間たちがあなたを呼ぶ名前になります。</p>
               <form onSubmit={startCampaign}>
                 <label htmlFor="v100-player-name">呼ばれたい名前</label>
-                <input id="v100-player-name" value={nameInput} onChange={(event) => setNameInput(event.currentTarget.value)} maxLength={24} autoComplete="nickname" />
+                <input id="v100-player-name" value={nameInput} onChange={(event) => setNameInput(event.currentTarget.value)} autoComplete="nickname" />
                 {nameError && <small className="v100-error" role="alert">{nameError}</small>}
                 <button className="v100-primary" type="submit" aria-label="この名前で作戦を始める">この名前で始める</button>
               </form>
@@ -844,7 +852,7 @@ export function V100Campaign() {
           selectedStageId={selectedStageId}
           onSelect={setSelectedStageId}
           onStart={startStage}
-          onRename={rename}
+          onRename={openRename}
           onBackup={downloadBackup}
           onImport={importBackup}
           onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }}
@@ -852,6 +860,22 @@ export function V100Campaign() {
           onOpenSupportVehicle={() => openSurface("support-vehicle")}
           onOpenData={() => openSurface("data")}
         />
+      )}
+
+      {flow.phase === "map" && surface === "rename" && (
+        <section className="v100-panel v100-name-card v100-rename-panel" aria-labelledby="v100-rename-title" data-v100-surface="rename">
+          <h2 id="v100-rename-title">呼ばれたい名前を変更</h2>
+          <p>仲間があなたを呼ぶ名前です。12文字以内で入力してください。</p>
+          <form onSubmit={rename} onKeyDown={event => { if (event.key === "Escape") openSurface("campaign"); }}>
+            <label htmlFor="v100-rename-input">呼ばれたい名前</label>
+            <input id="v100-rename-input" value={nameInput} onChange={event => { setNameInput(event.currentTarget.value); setNameError(""); }} autoComplete="nickname" aria-describedby={nameError ? "v100-rename-error" : undefined} />
+            {nameError && <small id="v100-rename-error" className="v100-error" role="alert">{nameError}</small>}
+            <div className="v100-rename-actions">
+              <button type="button" onClick={() => openSurface("campaign")}>変更せず戻る</button>
+              <button className="v100-primary" type="submit">この名前に変更</button>
+            </div>
+          </form>
+        </section>
       )}
 
       {(flow.phase === "map" || flow.phase === "formation") && surface === "personnel" && (

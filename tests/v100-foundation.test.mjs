@@ -127,6 +127,37 @@ test("name contract normalizes, rejects unsafe text, and escapes render-time tok
   assert.deepEqual(renamed.save.receipts, []);
 });
 
+test("names accept complete emoji sequences and count them as one grapheme", () => {
+  for (const name of ["西新👩‍🚒の指揮官", "👨‍👩‍👧‍👦", "👩🏽‍💻", "🏳️‍🌈", "🙂‍↔️", "👩‍🚒".repeat(12)]) {
+    assert.equal(normalizeV100PlayerName(name).ok, true, name);
+  }
+  assert.equal(normalizeV100PlayerName("👩‍🚒".repeat(12)).graphemeCount, 12);
+  assert.equal(normalizeV100PlayerName("👩‍🚒".repeat(13)).reason, "too-long");
+  assert.equal(normalizeV100PlayerName("　西新　 👩‍🚒　").value, "西新 👩‍🚒");
+});
+
+test("emoji support does not allow standalone or disguised invisible name characters", () => {
+  for (const name of ["a\u200Db", "👩‍", "\u200D👩", "👩‍A", "a\u200Bb", "a\u200Cb", "a\u2060b", "a\u200Eb", "a\u061Cb", "a\u202Eb", "a\uFEFFb", "\uFE0F", "\u{E0100}西新", "a\u{E0061}", "a\nB", "\uD800"]) {
+    assert.equal(normalizeV100PlayerName(name).ok, false, JSON.stringify(name));
+  }
+});
+
+test("emoji rename and save round-trip preserve earned progression and receipts", () => {
+  const before = createDefaultV100Save({ playerName: "旧名" });
+  before.caps = 150;
+  const renamed = updateV100PlayerName(before, "西新👩‍🚒");
+  assert.equal(renamed.applied, true);
+  const restored = deserializeV100Save(serializeV100Save(renamed.save));
+  assert.equal(restored.ok, true);
+  assert.equal(restored.save.playerName, "西新👩‍🚒");
+  for (const key of Object.keys(before).filter(key => !["playerName", "revision", "updatedAt"].includes(key))) {
+    assert.deepEqual(renamed.save[key], before[key], key);
+  }
+  const rejected = updateV100PlayerName(renamed.save, "👩‍A");
+  assert.equal(rejected.applied, false);
+  assert.deepEqual(rejected.save, renamed.save);
+});
+
 test("formation reservation is atomic, allows duplicate IDs, and rejects slot eight", () => {
   let save = createDefaultV100Save();
   let state = createV100BattleState({ resource: 100 });

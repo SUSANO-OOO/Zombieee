@@ -167,7 +167,7 @@ async function acceptResult(record) {
 try {
  await page.goto(origin.href);await button("ブラウザで遊ぶ").click();
  if (!resumeDir) {
-   await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新通し確認");
+   await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新👩‍🚒確認");
    await uiClick(button("この名前で作戦を始める"));
  } else {
    await ready();
