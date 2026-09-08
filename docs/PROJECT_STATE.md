@@ -12,6 +12,8 @@
 
 最後の名前操作で、標準Chromiumのnative prompt自体は開くが「西新👩‍🚒の指揮官」を拒否する製品不具合を確認（outputs/v100-native-name-dialog-0d5f15b-r1）。U+200Dの一律禁止が確定Design Lock17.1の正しいemoji ZWJ許容に反していた。Unicode17の生成済みemoji-regex10.6.0を公式固定tagから取得し、元blob654b77bfdcced364518e51e86c907a2e72c02e2eとMIT全文を保全した小さなvendor moduleを使用。正規emoji内のformat文字だけ許容し、単独joiner/bidi/制御文字/孤立variation selectorは拒否する。UTF-16 maxLength24による正しい12絵文字の途中切断も除去し、既存grapheme長検査へ統一。IAB Electronのwindow.prompt非対応エラーは標準browserとは別の環境制約であり、名前変更を既存ゲームの入力画面形式へ統一して解消する。取消/同名は保存せず、成功したdurable commit後だけ完了表示、入力中はPWA切替を止める。地図の補助ボタンは字の途中で折れない最小修正を含む。1512 source tests成功、対象lint0errors/既存warningsのみ。修正後の新規名/取消/変更/保存復帰/export/import/短画面の実証、最終固定候補のfresh全編・CI・read-only review、Producer承認と正式公開はまだ未完了。過去の全編/CI成功でこの未検証を埋めない。
 
+名前修正dc7b478のブラウザ初回はChromiumの新規/変更×3画面6条件が成功。WebKit初回はPWA入口からcampaign初期読込完了前のsave nullを基準に読んだQA競合で停止し、ゲームerrorは0。画面の操作可能状態を待ってから基準saveを読むよう修正し、旧reportを保持する。独立reviewのLowで判明したUnicode改行区切りU+2028/U+2029を拒否しnegative case追加、foundation13/13成功。さらにminify既定がvendorのMIT noticeを消すことを生成物で確認したため、Rolldownのlegal comment保持を明示した。修正後buildの配布notice実bytesと両engine12条件は次の確認対象。
+
 - 開始時のlive確認：公開版/mainは `55d796cc577d1d9f903a4d2c6b4382196511db27` / Version 0.9.9.5。PR #169/#170/#171はDraft/open。開始時のPR #171 HEADは `ab1a41ce46fa57789760b533437016fc7b38be36`。旧CI `33917360399` はterminal65成功・1失敗・skipped0で、完成候補ではない。以降の可変HEADとCI状態はlive PR/Issue #172を参照する。
 - 作業場所：`_isolated/v100-completion-20260907` / `codex/v100-completion-20260907`。元の `v100-save-boundary-6faa` の変更をpatch/statusとして `_v100_completion/evidence/` に保全し、既存ファイルと履歴は変更しない。Section138.36の未commit修正5ファイルを新作業ツリーへ取り込んだ。
 - 今回の新規検証：変更前HEADのproduction build、全1423 tests、content validator、lintエラー0（既存警告12）、diff check成功。取り込んだSection138.36のfocused57/57成功。旧ブラウザQAの成功記載は今回の合格証拠に代用しない。

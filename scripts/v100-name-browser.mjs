@@ -30,7 +30,10 @@ try{for(const [engine,type] of Object.entries({chromium,webkit})){
   const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:width===844,storageState});const page=await context.newPage();page.setDefaultTimeout(15000);
   page.on('pageerror',e=>record.errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')record.errors.push(m.text());});page.on('requestfailed',r=>record.errors.push(r.url()+': '+r.failure()?.errorText));
   try{
-   await arrive(page);const before=await saveAt(page),field=page.getByLabel('呼ばれたい名前',{exact:true});
+   await arrive(page);const field=page.getByLabel('呼ばれたい名前',{exact:true});
+   // The PWA offer can finish before the campaign's initial durable load.
+   await (kind==='fresh'?field:page.getByRole('button',{name:'表示名を変更',exact:true})).waitFor();await ready(page);
+   const before=await saveAt(page);
    if(kind==='rename'){await click(page,'表示名を変更');assert.equal(await page.locator('html').getAttribute('data-pwa-screen'),'event');}
    assert.equal(await field.getAttribute('maxlength'),null,'UTF-16 maxlength must not truncate valid 12-grapheme names');
    const submit=kind==='fresh'?'この名前で作戦を始める':'この名前に変更';

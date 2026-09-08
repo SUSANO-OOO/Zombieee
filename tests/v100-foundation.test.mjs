@@ -137,7 +137,7 @@ test("names accept complete emoji sequences and count them as one grapheme", () 
 });
 
 test("emoji support does not allow standalone or disguised invisible name characters", () => {
-  for (const name of ["a\u200Db", "👩‍", "\u200D👩", "👩‍A", "a\u200Bb", "a\u200Cb", "a\u2060b", "a\u200Eb", "a\u061Cb", "a\u202Eb", "a\uFEFFb", "\uFE0F", "\u{E0100}西新", "a\u{E0061}", "a\nB", "\uD800"]) {
+  for (const name of ["a\u200Db", "👩‍", "\u200D👩", "👩‍A", "a\u200Bb", "a\u200Cb", "a\u2060b", "a\u200Eb", "a\u061Cb", "a\u202Eb", "a\uFEFFb", "\uFE0F", "\u{E0100}西新", "a\u{E0061}", "a\nB", "西新\u2028指揮官", "西新\u2029指揮官", "\uD800"]) {
     assert.equal(normalizeV100PlayerName(name).ok, false, JSON.stringify(name));
   }
 });

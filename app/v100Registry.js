@@ -362,7 +362,7 @@ export function normalizeV100PlayerName(value) {
   if (typeof value !== "string" || !isWellFormedUnicode(value)) return { ok: false, reason: "invalid-characters", value: V100_DEFAULT_PLAYER_NAME };
   const normalized = value.normalize("NFC").replace(/^[\u0020\u3000]+|[\u0020\u3000]+$/gu, "").replace(/[\u0020\u3000]+/gu, " ");
   if (!normalized) return { ok: true, skipped: true, value: V100_DEFAULT_PLAYER_NAME };
-  if (/\p{Cc}/u.test(normalized)) {
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(normalized)) {
     return { ok: false, reason: "invalid-characters", value: V100_DEFAULT_PLAYER_NAME };
   }
   const segments = typeof Intl?.Segmenter === "function"
