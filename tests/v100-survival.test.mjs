@@ -23,6 +23,36 @@ function completeThrough(run, finalWave, hp = 540) {
 }
 function choose(save) { const run = save.survival.active.run; return selectV100SurvivalUpgrade(save, run.runId, run.pendingUpgradeChoices[0]); }
 
+test("a lethal projectile must be recorded before a survival checkpoint snapshots combat stats", () => {
+  const save = beginV100Survival(ready(), { runId: "projectile-before-defeat-ledger" }).save;
+  const waveReady = completeThrough(save.survival.active.run, 4);
+  const metrics = { enemyDefeatsByKind: { walker: 12 } };
+  const queued = advanceSurvivalCombat(createSurvivalCombatRuntime(waveReady), waveReady, {
+    seconds: 2, crawlerHp: 540, livingHumanCount: 7, totalKills: 12, combatStats: metrics,
+  });
+  // The projectile phase has reduced the last boss to zero HP, but the later
+  // defeat ledger has not incremented kills or enemyDefeatsByKind yet.
+  const unresolved = advanceSurvivalCombat(queued.runtime, queued.run, {
+    seconds: 1 / 60, crawlerHp: 540, livingHumanCount: 7, bossCombatReady: true,
+    activeEnemyCount: 0, pendingSpawnCount: 0, pendingDefeatCount: 1,
+    totalKills: 12, combatStats: metrics,
+  });
+  assert.equal(unresolved.run.lastCompletedWave, 4);
+  assert.equal(unresolved.events.some(event => event.type === "checkpoint"), false);
+  const recorded = advanceSurvivalCombat(unresolved.runtime, unresolved.run, {
+    seconds: 1 / 60, crawlerHp: 540, livingHumanCount: 7,
+    activeEnemyCount: 0, pendingSpawnCount: 0, pendingDefeatCount: 0,
+    totalKills: 13, combatStats: { enemyDefeatsByKind: { walker: 12, takuya: 1 } },
+  });
+  assert.equal(recorded.run.lastCompletedWave, 5);
+  assert.equal(recorded.run.stats.enemyDefeatsByKind.takuya, 1);
+  assert.equal(recorded.run.stats.kills, 13);
+  const outcome = checkpointV100Survival(save, recorded.run);
+  assert.equal(outcome.applied, true);
+  assert.equal(outcome.save.caps, 110);
+  assert.equal(checkpointV100Survival(reload(outcome.save), recorded.run).applied, false);
+});
+
 test("V1 survival queues both FUTAGO bodies and awards one boss checkpoint only after both die", () => {
   const begun = beginV100Survival(ready(V100_BOSSES.find(b => b.id === "boss-futago")), { runId: "actual-twins" }).save;
   const run = completeThrough(begun.survival.active.run, 4);

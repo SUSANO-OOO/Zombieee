@@ -10,7 +10,7 @@ export async function nativeBattleTap(page,locator){
 }
 
 export async function normalTacticalInput(page,record){
-  const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,over:s.over,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,range:f.range}))};});if(!s||s.over)return;
+  const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,range:f.range}))};});if(!s?.running||s.over)return;
   const humans=s.fighters.filter(f=>f.side==='human'&&f.hp>0),enemies=s.fighters.filter(f=>f.side==='zombie'&&f.hp>0),queue=s.deployQueue??[];
   const cards=page.locator('button.unit-card[data-kind]'),kinds=await cards.evaluateAll(els=>els.map(el=>el.dataset.kind));
   const target=Object.fromEntries([...new Set(kinds)].map(kind=>[kind,kinds.filter(k=>k===kind).length]));
@@ -29,9 +29,12 @@ export async function normalTacticalInput(page,record){
     const point=await page.locator('.game-shell canvas').evaluate((c,t)=>{const r=c.getBoundingClientRect(),scale=Number(c.dataset.worldScale),x=r.x+Number(c.dataset.worldOffsetX)+t.x*scale,y=r.y+Number(c.dataset.worldOffsetY)+t.y*scale;return document.elementFromPoint(x,y)===c?{x,y}:null;},target).catch(()=>null);
     if(point&&await nativeBattleTap(page,page.locator('button.support-btn.airstrike'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'airstrike',target});}
   }else if(enemies.some(f=>f.x<550)&&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
-  const icons=await page.locator('button.manual-ability-ready.available[aria-disabled="false"]').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2,kind:el.dataset.abilityKind};}));
-  for(const icon of icons)if(humans.some(h=>h.kind===icon.kind&&enemies.some(e=>Math.abs(e.x-h.x)<h.range+70))&&await page.evaluate(p=>!!document.elementFromPoint(p.x,p.y)?.closest('button.manual-ability-ready'),icon)){
-    await orderedNativePointer(page,icon);record.inputs.push({time:s.time,action:'ability',kind:icon.kind});
+  // Each enabled button already uses the production ability's target/range.
+  // Normal attack range would wrongly exclude long-range precision abilities.
+  const icons=await page.locator('button.manual-ability-ready.available[aria-disabled="false"]').evaluateAll(els=>els.map(el=>({ownerId:el.dataset.fighterId,kind:el.dataset.abilityKind})));
+  for(const icon of icons){
+    const locator=page.locator('button.manual-ability-ready[data-fighter-id="'+icon.ownerId+'"][aria-disabled="false"]');
+    if(await nativeBattleTap(page,locator))record.inputs.push({time:s.time,action:'ability',kind:icon.kind,ownerId:icon.ownerId});
   }
   if(humans.some(f=>f.hp/f.maxHp<.65)){
     const anchors=await page.locator('button.manual-ability-ready').evaluateAll(els=>els.map(el=>({x:Number(el.dataset.ownerAnchorX),y:Number(el.dataset.ownerAnchorY)})));

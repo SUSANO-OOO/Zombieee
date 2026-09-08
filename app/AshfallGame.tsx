@@ -18917,6 +18917,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             seconds: dt,
             activeEnemyCount: activeSurvivalEnemies.length,
             pendingSpawnCount: g.enemySpawn.pending.length,
+            // Projectile damage runs before this step; defeat accounting runs
+            // later in the frame. Snapshot the wave only after both complete.
+            pendingDefeatCount: g.fighters.filter((fighter) => (
+              fighter.side === "zombie"
+              && fighter.hp <= 0
+              && !g.resolvedDefeatIds.has(fighter.id)
+            )).length,
             totalKills: g.kills,
             crawlerHp: g.baseHp,
             bossCombatReady: Boolean(survivalBoss?.combatReady),

@@ -279,6 +279,7 @@ export function advanceSurvivalCombat(runtime, run, {
   seconds = 0,
   activeEnemyCount = 0,
   pendingSpawnCount = 0,
+  pendingDefeatCount = 0,
   totalKills = 0,
   crawlerHp,
   bossCombatReady = false,
@@ -354,6 +355,7 @@ export function advanceSurvivalCombat(runtime, run, {
     nextRuntime.waveQueued
     && clampInteger(activeEnemyCount, 0, Number.MAX_SAFE_INTEGER, 0) === 0
     && clampInteger(pendingSpawnCount, 0, Number.MAX_SAFE_INTEGER, 0) === 0
+    && clampInteger(pendingDefeatCount, 0, Number.MAX_SAFE_INTEGER, 0) === 0
   ) {
     const descriptor = survivalWaveDescriptor(nextRun.currentWave);
     const waveKills = Math.max(
