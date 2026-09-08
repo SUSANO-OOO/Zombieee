@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {chromium,webkit} from 'playwright';
-import {V100_STAGES} from '../app/v100Registry.js';
+import {V100_BOSSES,V100_STAGES} from '../app/v100Registry.js';
 import {v100MissionObjectiveFor} from '../app/v100BattleAdapter.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 const source=process.env.V100_BRIEFING_SOURCE,bytes=await readFile(source),seed=JSON.parse(bytes).finalSave;
@@ -30,7 +30,11 @@ for(const [engine,type]of Object.entries({chromium,webkit})){
    assert.ok(observed.width>0&&observed.height>0);assert.ok(observed.top>=-1&&observed.bottom<=observed.viewport+1,'Briefing must be reachable by normal scrolling');assert.ok(observed.overflow<=2,'Briefing text must wrap within its column');
    const category=await page.locator('.v100-stage-intel > strong').innerText();
    if(stage.number===26)assert.equal(category,'車列停止・確保');if(stage.number===28)assert.equal(category,'散布装置停止');
-   record.stages.push({number:stage.number,category,...observed});
+   const boss=V100_BOSSES.find(b=>b.stageNumber===stage.number),bossSpecial=boss?await page.locator('.v100-boss-callout > small').innerText():null;
+   if(boss){assert.equal(bossSpecial.includes(boss.special),false);assert.match(bossSpecial,/特殊：.+/u);}
+   const equipmentLabel=await page.locator('.v100-map-actions button[aria-label="出撃装備を選ぶ"] strong').evaluate(el=>{const r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {text:el.textContent,lines:range.getClientRects().length,overflow:el.scrollWidth-el.clientWidth,width:r.width};});
+   assert.equal(equipmentLabel.lines,1);assert.ok(equipmentLabel.overflow<=2);
+   record.stages.push({number:stage.number,category,bossSpecial,equipmentLabel,...observed});
    if([3,7,14,16,21,24,26,28,29,30].includes(stage.number))await page.screenshot({path:out+'/'+engine+'-s'+stage.number+'.png'});
    assert.deepEqual(record.errors,[]);await persist();
   }

@@ -179,6 +179,18 @@ const OPERATION_LABELS: Record<string, string> = {
   seal: "封鎖ノード起動",
 };
 
+const BOSS_SPECIAL_LABELS: Record<string, string> = {
+  "2 adds": "増援を呼ぶ",
+  "3 adds": "増援を呼ぶ",
+  "brood 4/6": "幼体を放出",
+  charge: "突進",
+  clones: "分身",
+  "shell cycle": "装甲を開閉",
+  "survivor enrages": "片側撃破で残存個体が激昂",
+  "four-arm form": "四腕形態",
+  "2 add waves": "増援2波",
+};
+
 const ENEMY_PACK_LABELS: Record<string, string> = {
   A: "標準感染群",
   "A+abomination": "重装感染群",
@@ -969,7 +981,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <h3>{stageDisplayNameFor(stage)}</h3>
           <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}><strong>隊員</strong><small>{save.ownedUnitIds.length}名 / 出撃編成</small></button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}><strong>出撃装備</strong><small>{save.equippedSupportId ? "支援装備中" : "支援を選ぶ"}</small></button></div>
           {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>作戦封鎖中</strong><span>前作戦クリアで解放</span></div>}
-          {boss && <div className="v100-boss-callout"><div className="v100-boss-callout-heading"><span>ボス作戦</span><strong>標的指定</strong></div><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊: {String(boss.special)}</small><div className="v100-threat-meter"><i style={{ width: `${Math.min(100, Math.max(8, boss.hp / 92))}%` }} /></div></div>}
+          {boss && <div className="v100-boss-callout"><div className="v100-boss-callout-heading"><span>ボス作戦</span><strong>標的指定</strong></div><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small><div className="v100-threat-meter"><i style={{ width: `${Math.min(100, Math.max(8, boss.hp / 92))}%` }} /></div></div>}
           <div className="v100-stage-intel"><span>作戦目標</span><strong>{missionLabelFor(stage)}</strong><p>{objectiveLabelFor(stage)}</p></div>
           <dl><div><dt>脅威分類</dt><dd>{enemyPackLabelFor(stage?.enemyPack, stage?.number)}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
           <button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "この作戦を編成"}</button>

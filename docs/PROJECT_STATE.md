@@ -154,6 +154,10 @@ CIの準備重複を実測した。17df850のcanonical HUD job101824077167の成
 
 実装と分けたfresh read-onlyレビューの追加全30目標照合で、mapのobjectiveId部分一致がS7を拠点攻撃、S14/S26を3電源起動、S28を4電源起動へ誤案内するMedium共通不具合を確認。S16の装置名、Stage3/30の指定主目標、S1/8/10/13の拠点/中継点名、S24/25の撃破bannerも整合対象となった。既存の防衛/装置/車両/企業制御/研究中枢profileを参照するv100MissionObjectiveForを地図と戦闘adapterで共有し、S26/28の短い作戦種別、企業装置名と撃破bannerを接続。勝敗、時間、敵編成、経済、物語本文は変更しない。25 focused/全1509 source tests、lint0 errors/既存12 warnings成功。物理停止の既存契約testは維持して文言を合わせた。修正後の地図全30/短画面、Ωの長い主目標を含む6 viewport、native mode保存と最終fresh通し、同一候補CI、fixed-HEAD再reviewを次に行う。以前のHigh0/Medium0という限定review結果で、この追加findingや未検証を隠さない。
 
+4381968 / build491731de0c5b442291d4a6f22ec7a24fbce1151a71c8f23a971c4d70de57720aでは、WebKitの自然異常発生/Survival全39撃破/強化/撤退/reloadとnative IDB全V1 stores・3 mirrorsの一致がterminal pass/exit0（outputs/v100-earned-modes-4381968-webkit-r1）。長い正式Ω主目標を含む両engine×3サイズの実canvas6/6、HUD重なり0/diagnostics0もterminal pass/exit0（outputs/v100-omega-viewport-4381968-r1）。獲得済みpostgame saveの地図全30作戦×両engineは、実native選択/scroll到達/実目標/種類別見出し/無変更saveを確認し60/60、exit0（outputs/v100-mission-briefings-4381968-r1）。fixed-HEADの独立差分再reviewで、先のMedium/Low指摘はコード上で閉鎖、High0/Medium0/Low0。ただしremote CIと最終同一候補のfresh全編/公開は未完了。
+
+同じ地図画像で、ボス特殊行動の「2 add waves」等の内部英語9種類が通常UIへ露出し、短画面の「出撃装備」が不自然に折れることを確認。既存9行動の日本語表示とボタン主ラベルの折返し防止だけを追加し、地図browser検証へ全ボスの表示と1行主ラベルを確認するassertionを足した。戦闘/保存/Ω描画のcodeは4381968から変更なし。最後の地図再確認後に候補を通常pushして新CIを取り、固定buildのfresh全編を行う。小刻みなpush取消や、未検証の成功扱いはしない。
+
 現行execution cursorは上方の完成ミッションとlive Issue #172。以下の旧revisionのQA件数・停止記録は履歴であり、現行candidateの合格証拠へ昇格しない。
 
 ## 1. 現在の正式公開
