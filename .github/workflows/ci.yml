@@ -250,6 +250,12 @@ jobs:
           npm run qa:v100-phase-g
           npm run qa:v100-phase-g-validate
 
+      - name: Measure V1 native boss battle performance (WebKit)
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
       - name: Upload Phase G production evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -259,6 +265,7 @@ jobs:
             outputs/v100-phase-g
             docs/qa/v100/phase-g-screenshot-manifest.json
             outputs/native-pointer-probe
+            outputs/v100-device-runtime
           if-no-files-found: error
           retention-days: 14
 

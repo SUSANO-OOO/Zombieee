@@ -2,7 +2,7 @@
 
 ## 全体進捗ボード — 2026-09-10
 
-**成果物の完了数による全体進捗：71%（17/24項目）。制作・改善：100%（17/17項目）。完成候補の総合受入・公開：0/7項目。** 現在地は **M5 総合検証・性能課題の解消**。制作と代表確認を完了。完成品としての総合合格や最終実プレイ承認は未完了。
+**成果物の完了数による全体進捗：75%（18/24項目）。制作・改善：100%（17/17項目）。完成候補の総合受入・公開：1/7項目。** 現在地は **M5 総合検証・性能課題の解消**。制作と代表確認を完了。完成品としての総合合格や最終実プレイ承認は未完了。
 
 | マイルストーン | 完了項目 | 状態 | 次の完了条件 |
 |---|---:|---|---|
@@ -10,7 +10,7 @@
 | M2 会話・メニュー・購入操作 | 4/4 | 実装・代表確認済み | 最終候補での操作回帰はM5 |
 | M3 戦闘の見た目・動作・VFX | 5/5 | 実装・代表確認済み | 全編の最終品質・性能の受入はM5 |
 | M4 本編進行・戦闘の手応え | 4/4 | 実装・代表確認済み | S24/S27/S30の攻略余地・役割・待機を評価。固定候補の全編確認はM5 |
-| M5 完成候補を固定した通し検証 | 0/4 | 作業中 | 同一候補の全編・保存/PWA・対応環境・CI/独立レビュー |
+| M5 完成候補を固定した通し検証 | 1/4 | 作業中 | 同一候補の全編・保存/PWA・対応環境・CI/独立レビュー |
 | M6 最終承認・正式公開 | 0/3 | 未着手 | Producer承認、承認候補の正式公開、公開後確認 |
 
 この24項目を固定した分母とし、完了した項目だけ1件として数える。着手中の作業やテスト件数を加点しない。制作項目の「完了」は実装とその代表確認を終えた意味で、最終品質・実機・公開承認はM5/M6に別途置く。以前の候補で完了した変更のない制作実績は保持し、最新候補の総合合格へ読み替えない。仕様追加や発見した重大欠陥で分母・完了状態が変わる場合は理由と差分を記録する。作業時間の予測はこの比率と分けて管理する。
@@ -35,7 +35,7 @@
 - M4-3 [完了] CAPS・加入・育成・支援・車両・他mode・結果保存を接続。獲得済み全編saveの復元/一回性確認を保持。
 - M4-4 [完了] S24/S27/S30の獲得済みsaveによる代表通常操作で瀕死・損耗・回復/防御の役割を確認。S30で発見した敵全滅後の無駄な移動待ちを修正。編成を強制する追加条件は設けない。最終候補全編と人の実プレイ受入はM5/M6。
 - M5-1 [未完了] 最終commit/treeを固定し、必要build/test/content/balance/CIと独立read-only全体reviewでHigh/Medium未解消0。
-- M5-2 [未完了] 固定候補の新規開始から全30作戦/終幕、代表他modeまで通しで確認。
+- M5-2 [完了] 固定候補の新規開始から全30作戦/終幕、代表他modeまで通しで確認。
 - M5-3 [未完了] 固定候補の旧save/新規save、破損復旧、PWA更新/中断/失敗復旧/offline/rollback。
 - M5-4 [未完了] 固定候補の3画面寸法、touch/回転/復帰、性能、場面別音響。物理端末とbrowser代替証拠を区別。
 - M6-1 [未完了] 実際に遊べる候補と音/映像・検証結果を提示し、Producerの最終実プレイ承認。
@@ -43,15 +43,17 @@
 - M6-3 [未完了] 公開SHA/匿名アクセス/素材/新旧save/更新復旧を確認し、完了記録・Issue close。
 
 ### 総合検証の最新記録
-保存済み候補の5 commit後差分検査は exit 2（48件・7対象）だったため、Kenney原License 3件を原bytes archive/provenance付きで保管し、空白・改行だけを正規化した。QA 4件もEOF空行だけを整理した。候補範囲525/525、runtime binary 294/294一致を独立照合済み。全体71%（17/24）、M5未完了、全編確認未開始を維持する。
+保存済み候補の5 commit後差分検査は exit 2（48件・7対象）だったため、Kenney原License 3件を原bytes archive/provenance付きで保管し、空白・改行だけを正規化した。QA 4件もEOF空行だけを整理した。候補範囲525/525、runtime binary 294/294一致を独立照合済み。全体75%（18/24）、M5は1/4、M5-1/M5-3/M5-4は未完了。旧S27敗北記録は保持し、同一候補の通常UI再試行で全編確認を完了した。
 
+最新M5作業・確定記録（2026-09-10）：build 1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043。同一候補の新規開始からPROLOGUE72、全30作戦、ENDING32、credits11、EPILOGUE42、postgame-mapまで通常UIで通過し、30作戦完了・既読94・errors0を確認した。S27初回敗北は保全し、QA専用入力優先度修正後の通常UI再試行で全編確認を完了した。actor・時計・HP・結果setterは使用していない。
 
-最新M5作業・確定記録（2026-09-10）：build `1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043`。V1本編戦闘の音声開始/再試行を上部の既存音楽ボタン位置へ統合し、敵を隠す浮動表示を解消。音声操作が不要になれば通常の音楽ボタンへ戻る。Chromium/WebKit各3サイズ（1280×720・844×390・844×340）の同一候補で、浮動表示なし、自然なWebKit失敗時の単一再試行・操作欄内・隣接ボタン/ボスHPとの非重複、Chromiumの通常音楽表示を確認。親が画像を確認し、限定独立review High/Medium 0。build＋全1636/1636、Lint 0 errors / 12 warnings、差分検査成功。初回1635/1636は旧UI形状のsource assertionだけを現行2経路へ修正し、失敗記録を保全。
+Chromium/WebKit各3サイズでの音声開始・再試行UI、旧音楽ボタンへの復帰、浮動表示なしを確認した。音声の聴感、物理iPhone、長時間性能、保存/PWA、固定候補CI/全体reviewの最終受入は別途残る。M5-2完了により全体75%（18/24）、M5は1/4。M5-1/M5-3/M5-4とM6は未完了。次の到達点はM5-1の候補固定・CI/独立review、M5-3の保存/PWA、M5-4の対応環境性能確認である。
 
-同一候補の短い診断では、WebKitの各約1秒の描画数21/9/23に対してChromium46/43/45（順に844×390、1280×720、844×340）。時間窓・戦闘展開は完全一致せず、物理表示FPSや最終性能合格を意味しない。HUDの `will-change` 試行は改善せず取り下げた。Windows WebKitの低速原因は未確定。これ以上同じローカル描画除外probeを増やさず、候補固定と実際のCI/対応環境による受入へ進む。旧performance budgetの `PERF_QA_VERSION` は結果ラベルのみで、V1本編検査への切替ではない。全体71%・M5未完了を維持。
+実記録：outputs/v100-final-normal-84149f6-r2/report.json（source 84149f67、先行segment 2c9f28d、app/public unchanged）、outputs/v100-earned-modes-2c9f28d-chromium-r2、outputs/v100-inline-audio-webkit-r1/report.json、outputs/v100-inline-audio-chromium-r1/report.json、outputs/completion/inline-audio-full-tests-r2.log。local PWAはChromium 18/18・22/22、WebKit 18/18・22/22、lifecycle 24/24を確認したが、hosted CI transport/bindingは未完了。既存のS27敗北記録、earned-mode r1の失敗、性能診断は履歴として保持し、現在候補の総合合格へ転記しない。
+V1性能の新規実測は outputs/v100-device-runtime-chromium-r1/report.json、build 1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043、844x340、30.6046秒、median RAF 59.88fps、p95 RAF 33.4msで、通常基準33msを超過した。actual renderは40.2227Hzで、balanced目標45Hz（許容4.5）を下回る。diagnostics0だが原因は未確定で、閾値は変更せず失敗記録として保持する。macOSの同一V1 CI性能計測は未完了。公式公開readbackはHTTP200・version0.9.9.5・release 55d796cc577d1d9f903a4d2c6b4382196511db27・Issue165で、保存先は outputs/completion/public-old-readback-20260910-r1。旧local rebuildのHTML/manifestは公開版とbyte-identicalではなく、415 assetのpath/hash/bytesは意味的に一致した（素材本体は未取得）。
+前回の短時間診断記録（履歴）：WebKitの各約1秒の描画数21/9/23に対してChromium46/43/45（順に844×390、1280×720、844×340）を記録した。時間窓・戦闘展開は完全一致せず、物理表示FPSや最終性能合格を意味しない。HUDの will-change 試行は改善せず取り下げ、Windows WebKitの低速原因は未確定のまま保持する。旧performance budgetの PERF_QA_VERSION は結果ラベルのみで、V1本編検査への切替ではない。
 
-実記録：`outputs/v100-inline-audio-webkit-r1/report.json`、`outputs/v100-inline-audio-chromium-r1/report.json`、`outputs/completion/inline-audio-full-tests-r2.log`。音声の聴感、物理iPhone、全編、長時間性能、保存/PWA、固定候補CI/全体reviewの最終受入は別途残る。現在実行中のnative processはなし。
-
+前回build/full-test/Lint記録（履歴）：候補 build 1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043 はbuild＋全1636/1636、Lint 0 errors / 12 warnings、差分検査成功。初回1635/1636は旧UI形状のsource assertionだけを現行2経路へ修正し、失敗記録を保全した。これらは現在のM5最終受入を意味しない。
 M5経過・試行時点の記録（2026-09-10）：音声の再試行ボタンをボスHPと重ならない位置へ移し、プレイヤー向けの短い文言へ変更。HUD 3領域の `will-change: transform` は性能比較中の試行で、採用未確定。候補 build `9b114161ca424a343efb97065db3564e8a404dcce3bde4d57e6b8abb34be301b` の全1636/1636テスト・build、Lint 0 errors / 12 warningsが完了。WebKitの通常表示を3画面寸法で計測中（`outputs/v100-hud-compositing-webkit-r1`）。進捗加点はなし。
 
 診断記録の訂正：`outputs/v100-webkit-hud-visibility-r1/report.json` の第3窓は名前が `hud-hidden-all-raster-muted` だが、検査コードがraster抑制modeを設定していなかった。45描画を「HUDとcanvasを両方省いた」証拠に使わない。通常17→HUD非表示41→復元17（各約2秒）と記録された寸法・visibilityは診断材料として保持する。元reportを保全し、表示品質・最終性能の合格とは扱わない。
