@@ -1,5 +1,351 @@
 # 西新世紀末物語 — プロジェクト状態
 
+## 全体進捗ボード — 2026-09-10
+
+**成果物の完了数による全体進捗：71%（17/24項目）。制作・改善：100%（17/17項目）。完成候補の総合受入・公開：0/7項目。** 現在地は **M5 総合検証・性能課題の解消**。制作と代表確認を完了。完成品としての総合合格や最終実プレイ承認は未完了。
+
+| マイルストーン | 完了項目 | 状態 | 次の完了条件 |
+|---|---:|---|---|
+| M1 音の作り分け・不具合修正 | 4/4 | 実装・代表確認済み | 全場面の最終ミックスと実機の聴感はM5/M6で受入 |
+| M2 会話・メニュー・購入操作 | 4/4 | 実装・代表確認済み | 最終候補での操作回帰はM5 |
+| M3 戦闘の見た目・動作・VFX | 5/5 | 実装・代表確認済み | 全編の最終品質・性能の受入はM5 |
+| M4 本編進行・戦闘の手応え | 4/4 | 実装・代表確認済み | S24/S27/S30の攻略余地・役割・待機を評価。固定候補の全編確認はM5 |
+| M5 完成候補を固定した通し検証 | 0/4 | 作業中 | 同一候補の全編・保存/PWA・対応環境・CI/独立レビュー |
+| M6 最終承認・正式公開 | 0/3 | 未着手 | Producer承認、承認候補の正式公開、公開後確認 |
+
+この24項目を固定した分母とし、完了した項目だけ1件として数える。着手中の作業やテスト件数を加点しない。制作項目の「完了」は実装とその代表確認を終えた意味で、最終品質・実機・公開承認はM5/M6に別途置く。以前の候補で完了した変更のない制作実績は保持し、最新候補の総合合格へ読み替えない。仕様追加や発見した重大欠陥で分母・完了状態が変わる場合は理由と差分を記録する。作業時間の予測はこの比率と分けて管理する。
+
+### 固定した24項目と完了の根拠
+
+- M1-1 [完了] 会話送りの電子音・二重確認音を再現修正。実録音の16→0、音源終了/復帰の局所検証。
+- M1-2 [完了] 承認済み通常戦闘/日常の方向、既存boss曲維持、他場面9役割、出典/配布許諾を接続。
+- M1-3 [完了] 武器・打撃・爆発・敵/人物の音を用途へ接続し、既存character voiceを維持。
+- M1-4 [完了] メニュー/戦闘/購入の短い操作音を分け、購入成功時の一回性を確認。
+- M2-1 [完了] 会話番号除去、人物の左右/顔/口の位置、会話文と次へ/skipの一体化。
+- M2-2 [完了] 作戦/隊員/支援/装備/車両の切替、選択対象の近くで登録/購入/育成/装備。
+- M2-3 [完了] 鎖と解放条件、支援/装備の透過画像、既存所有権の維持。
+- M2-4 [完了] 編成の往復と結果画面を含む横画面操作。準備画面の両engine×3サイズ等の代表確認。
+- M3-1 [完了] 技能アイコン下の文字箱除去、boss中央HP、資材/戦闘情報の整理。
+- M3-2 [完了] 人間敵の表示高、マヨの小型化と隣接laneへの接近。難易度評価はM4-4。
+- M3-3 [完了] Kuma防御絵、社長/Omega/RP4体の透過修復、元画像保全と実描画の局所確認。
+- M3-4 [完了] 味方の手動技能を身体動作と実効果・消滅に分けて代表実戦確認。ハチ/ナオ/タタラ/クレイジーキング/モンキー/ザキミヤ/味方TKY/ミセスチハ/ミヤモトムサシ/マヨを含む。タタラは新しい接地姿勢と同一個体・発動・ハンマー座標からの衝撃を両engineで確認。クレイジーキングは実命中の連続native映像を親が確認。パイセン、Kuma、銃口・爪・走鬼・カラミテ・改札喰い・敵TAKUYAの既確認範囲も保持する。候補を跨ぐ代表証拠であり、最新候補の全編受入はM5。
+- M3-5 [完了] 感染ゲート4状態と画面右端外から同一敵の戦闘参加をChromium/WebKit×3サイズで確認。進入中の攻撃/選択・旧小型拠点の重複0。TAKUYAの刃・縄の欠けを修復し元人物/415素材を保全。限定独立review High/Medium 0。
+- M4-1 [完了] 名前入力、PROLOGUE、30作戦、ENDING、credits、EPILOGUEの接続。旧候補で全30勝利/既読94の通し実績。
+- M4-2 [完了] boss中盤登場、防衛/護送の待機短縮と増援追従の実装・代表確認。
+- M4-3 [完了] CAPS・加入・育成・支援・車両・他mode・結果保存を接続。獲得済み全編saveの復元/一回性確認を保持。
+- M4-4 [完了] S24/S27/S30の獲得済みsaveによる代表通常操作で瀕死・損耗・回復/防御の役割を確認。S30で発見した敵全滅後の無駄な移動待ちを修正。編成を強制する追加条件は設けない。最終候補全編と人の実プレイ受入はM5/M6。
+- M5-1 [未完了] 最終commit/treeを固定し、必要build/test/content/balance/CIと独立read-only全体reviewでHigh/Medium未解消0。
+- M5-2 [未完了] 固定候補の新規開始から全30作戦/終幕、代表他modeまで通しで確認。
+- M5-3 [未完了] 固定候補の旧save/新規save、破損復旧、PWA更新/中断/失敗復旧/offline/rollback。
+- M5-4 [未完了] 固定候補の3画面寸法、touch/回転/復帰、性能、場面別音響。物理端末とbrowser代替証拠を区別。
+- M6-1 [未完了] 実際に遊べる候補と音/映像・検証結果を提示し、Producerの最終実プレイ承認。
+- M6-2 [未完了] 承認された候補だけReady/通常merge/tag/Release/公式Pagesへ公開。
+- M6-3 [未完了] 公開SHA/匿名アクセス/素材/新旧save/更新復旧を確認し、完了記録・Issue close。
+
+### 総合検証の最新記録
+
+最新M5作業・確定記録（2026-09-10）：build `1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043`。V1本編戦闘の音声開始/再試行を上部の既存音楽ボタン位置へ統合し、敵を隠す浮動表示を解消。音声操作が不要になれば通常の音楽ボタンへ戻る。Chromium/WebKit各3サイズ（1280×720・844×390・844×340）の同一候補で、浮動表示なし、自然なWebKit失敗時の単一再試行・操作欄内・隣接ボタン/ボスHPとの非重複、Chromiumの通常音楽表示を確認。親が画像を確認し、限定独立review High/Medium 0。build＋全1636/1636、Lint 0 errors / 12 warnings、差分検査成功。初回1635/1636は旧UI形状のsource assertionだけを現行2経路へ修正し、失敗記録を保全。
+
+同一候補の短い診断では、WebKitの各約1秒の描画数21/9/23に対してChromium46/43/45（順に844×390、1280×720、844×340）。時間窓・戦闘展開は完全一致せず、物理表示FPSや最終性能合格を意味しない。HUDの `will-change` 試行は改善せず取り下げた。Windows WebKitの低速原因は未確定。これ以上同じローカル描画除外probeを増やさず、候補固定と実際のCI/対応環境による受入へ進む。旧performance budgetの `PERF_QA_VERSION` は結果ラベルのみで、V1本編検査への切替ではない。全体71%・M5未完了を維持。
+
+実記録：`outputs/v100-inline-audio-webkit-r1/report.json`、`outputs/v100-inline-audio-chromium-r1/report.json`、`outputs/completion/inline-audio-full-tests-r2.log`。音声の聴感、物理iPhone、全編、長時間性能、保存/PWA、固定候補CI/全体reviewの最終受入は別途残る。現在実行中のnative processはなし。
+
+M5経過・試行時点の記録（2026-09-10）：音声の再試行ボタンをボスHPと重ならない位置へ移し、プレイヤー向けの短い文言へ変更。HUD 3領域の `will-change: transform` は性能比較中の試行で、採用未確定。候補 build `9b114161ca424a343efb97065db3564e8a404dcce3bde4d57e6b8abb34be301b` の全1636/1636テスト・build、Lint 0 errors / 12 warningsが完了。WebKitの通常表示を3画面寸法で計測中（`outputs/v100-hud-compositing-webkit-r1`）。進捗加点はなし。
+
+診断記録の訂正：`outputs/v100-webkit-hud-visibility-r1/report.json` の第3窓は名前が `hud-hidden-all-raster-muted` だが、検査コードがraster抑制modeを設定していなかった。45描画を「HUDとcanvasを両方省いた」証拠に使わない。通常17→HUD非表示41→復元17（各約2秒）と記録された寸法・visibilityは診断材料として保持する。元reportを保全し、表示品質・最終性能の合格とは扱わない。
+
+根拠はdocs/PROJECT_STATE.mdの各日付の制作記録と、その記録が指すbuild/report。最新local build `fac730214cb7408d607690ad7b3b081be81c45cb32c5fbb97aa9c2e40fbbd8a2` はbuild＋全1631/1631テスト、Lint 0 errors / 12 warnings、差分検査が成功。TAKUYA修正版6ポーズを親が画像確認し、元の顔・体・服と公開済み415素材のbytes不変を確認。新しい807920 bytesの画像を追加し、旧素材の互換参照も保持。
+
+TAKUYAの予備動作・打撃・立て直し・通常復帰・衝撃消滅を同一個体の実戦でChromium/WebKitとも観測。両方の5枚を親が目視確認し、刃と縄の欠け、左向き、床への衝撃位置と消滅を確認。新候補に対する限定独立reviewはHigh/Medium 0。全ゲームの最終受入ではない。
+
+**使用量による一時停止は解消し、Luna実装を再開済み。** 途中で残った検査・素材台帳の不整合を修正し、失敗ログは保持した。社長戦は計測hook/録画なしのWebKitでも大画面で約1秒9描画（横長小画面22/23描画、すべてDPR1）を確認したため、性能は未受入。追加計測ではcacheが安定した大画面でも9〜10描画、canvas同期呼出しは約2ms/秒に留まり、初回画像生成だけでは説明できない。描画反映・合成側の追加切り分けが必要。ゲートはChromium r2/WebKit r1とも3サイズ・4損傷状態・同一敵の進入確認に合格。初回検査のraw targetable取り違えは実production判定に合わせて修正し、旧失敗ログを保持。後半の手応え、固定候補の総合検証も残る。
+
+追加観測：WebKit大画面は装飾・filter・canvas表示を一時的に外しても約1秒9〜10描画。復元と変更適用を確認した診断r2で、描画待機側の原因は未確定。別の2秒診断は18描画に対しcallback 17件/合計53ms/最大4msで、通常callbackのCPU時間だけでは説明できない。この別診断は末尾の固定3画面assertで失敗し、測定記録を保持したまま画面数の検査だけ修正。総合合格に読み替えない。
+
+手動技能の実戦観測ではパイセン/ナオ/モンキーの15画像を取得。元検査は完了後・死亡後の個体も追跡していたため描画記録欠落128件を含み、clean acceptanceではない。Windowsの画像名に含まれたcolonは元bytesを保った安全なファイル名へ複製し、hash台帳を保存。親が確認したナオ/モンキーの実効果発生画像では準備姿勢と緑/金の線状効果が残っており、身体動作の同期修正をLunaへ割り当てた。タタラの技は今回未発動。これらを理由にM3-4を完了扱いしない。
+
+実効果の発生と身体動作のずれを受け、ナオ/タタラ/モンキーの描画を実技能phaseへ接続した。準備、実効果発生、立て直し、通常復帰を使い分け、通常攻撃・回復量・罠・cooldown・saveは変更しない。新候補21d83aは一式の検証済みで、この変更の限定独立review High/Medium 0。Chromiumの実効果発生画像でナオ/モンキーがattack-b、立て直しでidleへ移ることを親が確認した。観測レポートの描画記録欠落128件はsimulationごとのfighter object複製とWeakMap参照のずれによる非描画タイミングのnullとソースで確認し、元のobservation-error記録を保持。履歴を現在の描画証拠として流用せず、観測側で区別する。タタラは実戦未確認。ゲート/TAKUYA等の既存native証拠は前候補f98c20の保持証拠であり、新候補の総合受入ではない。
+
+M4-4の追加証拠：S27は獲得済みS26 saveと保存済み7枠をそのまま使用し、前候補f98c20で104.33秒・車両1080/1080・損耗0・星3。通常操作7出撃/19技能/車両砲撃1/回復支援1、ナオの実回復853.23/軽減174.52を観測。最後の敵不在9.45秒は目標の封鎖装置への攻撃区間で、親も録画抽出画像で確認。S27に単体bossはなく、RED PANTHERの4種が敵編成。戦闘前のCAPS/所有/育成/車両/編成不変、browser error 0。S24/S27の全面的な難易度受入や敗北・攻略余地の評価は未完了。初回2件のharness事前失敗は保存し、通常会話flowと正式combat kind adapterで修正した。
+
+支援技能の追加仕上げ：ナオの実治療位置に短いラスタの霧、モンキーの設置・作動位置に既存の有刺鉄線と短い粉塵を接続。V1の緑/金の線状演出を止め、旧mode・治療量・罠判定・威力・cooldown・saveを維持した。発動前の効果0、同一owner/activationの実効果と消滅、身体のattack-b→idle→通常復帰を最新a93279のChromium/WebKit 844×340で確認。両方14画像、記録errors/contractFailures 0。親は両engineの治療・罠・効果終了の計6画像を確認した。限定独立review High/Medium 0。罠2素材は元bytes/hashを維持し必須offline分類へ修正。初回全1612/1614の分類/一覧検査失敗は保持し、修正後1614/1614。タタラと残る手動技能の実戦仕上げは引き続きM3-4。
+
+性能の切り分け：ゲームを読み込まないcurrent WebKitの8窓診断は完走。1280×720/844×340とも空ページ・静止canvas・空ページ復元のrAFは約61～62回/秒。単色fillを伴う窓はそれ以上であり、計測環境全体が9回/秒へ固定されているわけではない。ゲーム側で観測した低描画率の原因・性能受入は未解決。物理端末の性能へ読み替えない。
+
+M4-4の新しい攻略例：最新a93279のS24は獲得済みS23 save・保存済み7枠を維持し、198.22秒・車両1000/1000・味方損耗5・星3で勝利。フタゴ初観測102.38秒、通常操作12出撃/44技能/航空支援1/回復支援4。ナオ実回復2898.43/軽減722.27。戦闘前CAPS/所有/育成/車両/編成不変、browser error 0。親はboss初観測と結果画像を確認。最後の敵不在7.70秒は目標表示が中央制御盤破壊へ移った区間で、単なる待機と断定しない。攻略例1件であり、後半全体の難易度受入は未完了。S27の既存f98証拠は保持する。
+
+M3-5の完了により全体を63%（15/24）へ更新。確認ページ先頭へTAKUYAの実ゲーム映像8秒を追加し、Chromiumのタップ再生と横画面2サイズで操作部が画面内に収まることを確認。元映像の速度を保持した無音の動作確認用で、物理iPhoneは未確認。正確な結果と再開位置は `outputs/completion/takuya-president-checkpoint-r1.json` に保存。未commit/未push、公開操作なし。
+
+M3-4の追加実装：光刃・二刀の斬撃・火酒瓶・榴弾の4素材を内蔵画像生成で作成し、元画像と生成指示を保管。4点1,207,286 bytesを追加し、既存manifest pathの変更0を確認。ハチ/TKY/ミセスチハ/ムサシ/ザキミヤの身体姿勢を実技能phaseに接続し、投擲・連射・反撃・マヨの開始粉塵を実発動とworld timeの期限へ接続した。描画時の手/銃口/柄の座標、同一ownerと発動番号、未解決時の取消、発射済み効果の期限を限定独立reviewで確認しHigh/Medium 0。新local候補 `9f60b2872ad6bf42fcc0cbd3803806cdf8ae9fa7057b7bf34f5b2feca5a4a08d` はbuild成功、全1627/1627、Lint 0 errors / 12 warnings。初回1621/1627は新4素材の固定配布台帳への追記漏れで、exact hash/bytesを追記して解消、旧失敗ログを保全。以前のa93279の支援技能native合格は保持証拠であり、新候補の全体合格へ転用しない。
+
+実画面の追加証拠：9f60b2候補のChromiumでTKY/ミセスチハ/ムサシ15画像、ザキミヤ/マヨ10画像を取得し、親が効果発生と投擲/回復/終了の計8画像を確認。ザキミヤは瓶の飛翔・着弾と両効果の消滅を観測。A r2は後続発動の除外と後半全滅を無出撃扱いする観測側の誤判定を含むため総合合格ではない（元記録保全、observerを修正）。ムサシはfallback斬撃を観測し実反撃は未確認。B r1のマヨは凶暴化→退避開始までであり、normal/退避完了の旧判定は採用しない。退避完了個体は同一tickで除去されるため、次に実除去の直接記録で確認する。
+
+マヨの白く強すぎた粉塵を、横長の足元形状・初期alpha .28の短い減衰へ修正。最新local build `509c64ad1e1f1f4f92ce6f5b9bd906a14e842986f644738fbbeb16b5bbc64515` はbuild＋全1628/1628、変更箇所Lint、差分検査成功。直前full Lintは0 errors / 12 warnings、粉塵の限定独立review High/Medium 0。最新粉塵のnative・残る身体動作・WebKit・M4-4以降は未完了のため、全体は63%（15/24）を維持する。4素材の生成指示/出典と原画像保全は outputs/completion/manual-vfx-generation-prompts-r1.json および manual-vfx-processing-r3/provenance.json。再開位置は既存checkpointへ更新、実行中process 0、未commit/未push・未公開。
+
+運用：親が設計・確認、Lunaが明確な実装を担当。次の進捗報告は「全体の完了数 → 閉じた項目 → 現在のmilestone → 次の到達点 → 確認待ち」の順で更新する。変更のない検査を繰り返さず、同じ進捗ボードを更新する。公開前の最終承認境界は維持する。
+
+## 2026-09-10 M3-4 最新checkpoint（未公開）
+
+完了数の分母は固定し、全体63%（15/24）、制作・改善88%（15/17）、M3-4は作業中のままとする。現在buildは `fac730214cb7408d607690ad7b3b081be81c45cb32c5fbb97aa9c2e40fbbd8a2`。M3-4を閉じた時点で16/24（約67%）、M4-4まで閉じた時点で17/24（約71%）となる見込みで、現時点の完了数には加算しない。
+
+- マヨの退避完了は `baseX=128` / `x=128`。Chromium B r3とWebKit B r1で確認した。火の5秒演出は既存CC0ラスタと、配布済み `ground-fire-smoke-r1.webp`（62034 bytes）の範囲で記録する。
+- ハチの連続接近は9/5の実測点を持ち、Chromium C r2 / WebKit C r1で確認した。クレイジーキングは旧光線を除去し身体phaseを観測済みだが、実命中・接触の証明は未完。タタラは身体phase以外の詳細な地面効果評価が未完である。
+- 味方TAKUYA/ミセスチハはChromium A r4 / WebKit A r1がclean。Chromium A r4には改訂harnessで取得した飛翔中・着弾中の実画像がある。ミヤモトムサシはChromium musashi r1（build `6e5`）とWebKit musashi r1（`fac`）で実counterを確認した。
+- WebKit A r2（改訂capture）は現在実行中で、完了扱いにしない。Chromium A r3は継承cache不足によるsetup failureで、既存cache `v100-r114-candidate-0f6d/tmp-sol-playwright-1.56.1` を使うべきものだった。製品変更による失敗ではなく、旧logを保持する。
+- 最新product buildの全テストは1631/1631（`outputs/completion/scout-crazy-full-tests-r1.log`）。最終full lintは0 errors / 12 warnings（`outputs/completion/advanced-manual-final-lint-r2.log`）、差分検査は0（`outputs/completion/advanced-manual-final-diff-r2.log`）。
+
+次の到達点はクレイジーキングとタタラの最終visual proof、続いてM4-4、M5、M6。大きな計画変更や分母のresetは行わず、親が実行中processの状態を別途更新する。
+
+
+## 2026-09-09 社長・Omega・レッドパンサーの透過修復（未公開）
+
+親が設計/レビュー/検証、Lunaが限定実装。無料local画像処理の承認範囲で、元source/identity/v1を保全して6体のv2を組込み。最新local buildは f1fd6adb39fd37715dadf7b2d58167457d0058b0d0fd75216dfbe9932df8e627。c471上の未commit/未push、PR171 Draft/open、Issue172 open、正式公開なし。
+
+- 元sourceから同じ画像hashへ再生成。暗い身体の透過穴を修復し、RPは味方人間に合わせた既存68/70の表示高を維持。SMG/commanderの銃口は実画素で再校正。画像の最終採否はProducer。
+- 初回全体1600/1601でshield hit/deathのcontentRect不一致を検出。縮小前の配置矩形が縮小後alpha境界と異なるのが原因。配置後bufferの非ゼロalphaを自動計測し、手書き補正を削除。PNG bytesを維持し、foot anchor496を固定。修正後build＋全1602/1602、sprite15/15、atlas3/3。検査可搬化後release-prep5/5。限定独立read-only review High/Medium未解消0。全体reviewの代替ではない。
+- 6置換を追加と二重計上した検査を修正し、旧6WebPの実bytes/hash、新6manifest、reduce差分を照合。旧8825958→新8185652、640306bytes減。524logical/522distinct、137179211/136639308bytes。意図外に再圧縮されたKuma guardは旧62126bytes/a6f7f156…へ完全復元。他same-path変更0。
+- 同じf1fd候補でnative Chromium r1/現行WebKit2359 r1のS25/S30、844x340が成功。6体の実canvas系譜を元画像→縮小canvas→本番canvasまで追跡し、alpha1・実source/transport hash・通常攻撃/予告を観測、記録errors0。Lv25所有fixture/車両Lv5、通常UI操作のみ。勝利/獲得campaign/難易度/実銃口receipt/物理端末受入とは別。WKは音声再試行表示があり音響受入を主張しない。
+- 残る表示問題：S25社長の頭が短い横画面の上部HUDへ入り、一部が隠れる。透過欠損とは別に修正する。初回TAKUYAは実slamの後に専用active/recoveryの保持がなく、既存打ち下ろしpose接続を次に扱う。
+
+証拠は outputs/completion/motion-alpha-checkpoint-r1.json と outputs/v100-reviewed-alpha-{chromium,webkit}-r1/report.json。full lintは0errors/16warnings後、新規unused3件を解消して対象lint0、既存13warningsを維持。失敗logを保全。全campaign/static/PWA/remote CIは旧候補の証拠を転記しない。残る動作/VFX/gate/後半体験・固定候補全体QA/CI/最終review/Producer受入を継続する。
+
+## 2026-09-09 クマパーソン防御絵・実被弾確認（未公開）
+
+c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit/未push差分。Producerは無料ローカル画像処理を承認済み。過去の「方法確認は未回答」は当時の記録で、現在は解消。親が設計・レビュー・検証、Lunaが限定実装を担当する。画像の最終採否と公開承認は別に維持する。
+
+- クマパーソンの元生成画像とidentityを保全し、格子背景だけを除去した防御絵を追加。原寸から再生成したセルhash一致を確認。構えと被弾時は新しい鍋の絵、技能中の移動・通常攻撃は元atlasを使う。実被弾の火花は描画済みの鍋座標からのみ出し、未解決座標へ推測配置しない。6秒の効果・威力・回復・移動・saveは維持。
+- 最新build `511d484f20a030737b2a5c0233f6eea740b7d3367fbab0e75964159fd3a4f78c`、build＋全1601/1601成功。全lintは直前差分で0errors/既存13warnings、後続変更は対象lint/diff成功。独立read-only reviewで実描画のowner検索がGuardian限定だった点を発見・修正し、同経路のHigh/Medium未解消0。全体reviewの代替ではない。
+- 初回native Chromiumは不合格を保全：`outputs/v100-kuma-guard-chromium-r1/report.json`。技能中15.33–21.28秒はHP152/flash0、火花draw0。検査操作が16.08秒に援軍と砲撃を使い、実被弾を観測できていなかった。検査をKuma単独編成・実敵攻撃予兆で通常技能ボタンを押す操作へ修正し、同じ技能の終了と永続記録の同一接触3コマ以上を観測するまで援護を控えた。未描画の瞬間は診断件数に分け、描画された移動/通常攻撃の元atlas使用を必須とした。アプリ・時間・HP・接触160msの合格閾値は変更していない。
+- 同じ511d候補でnative Chromium r2／現行WebKit2359 r1の防御観測が成功。CH7draw／WK20draw、両方未帰属0・記録errors0。実鍋座標と被弾姿勢、同一被弾の時間相に沿う3コマ以上（CH[1,2,4,5]、WK[1,4,5]等）、移動/通常攻撃の元atlas、技能後半の静止時の構えを確認。CHの後半構えは第2/第3技能、WKは第1技能にも記録。所有Lv1・S1・844x340の通常ボタン操作のみ、actor/時計/HP/結果setterなし。両reportはwon:false/last:nullであり、勝利・難易度・全campaign・音響・物理端末受入の証拠へ拡大しない。`outputs/v100-kuma-guard-{chromium-r2,webkit-r1}/report.json`。
+- 試聴ページ `#kuma-guard-review` に実録画12秒・無音・通常/0.5倍を追加。CHの通常button再生・VP8選択・12秒・同時再生1・844x390/340で横overflow0・errors0を `kuma-guard-playback-r2.json` に保存。r1のloopback接続失敗は既存serverがLAN専用addressにbindしているためで、製品再生不具合ではない。鍋接触のposter初案は通常攻撃の別flashを誤認していたため却下・保全。native鍋PNGとのROI照合でclip3.30秒/source26.0868秒の構え・敵位置・金色接触を目視確認し、posterを修正した（MAE4.3372/correlation.98461）。動画bytesは再encodeせず、元動画/hash/切出し時間/却下記録は `outputs/v100-audio-review-r2/kuma-guard-review-provenance-r1.json` に保持。Windows WebKit動画player/物理端末の未確認は別に維持。
+- 配布は524logical/522distinct、137819517 logical bytes／137279614 distinct bytes。新PNG hash `676e14ae09d76a6d451d1063fcd2be39c23e61f6ad8a8fac7fe73ca4a77b9d9d`、配布WebPは62126bytes。実alphaと可視RGBは同一。最新static/PWA80/80は旧679fad/522素材の証拠で、この候補へ転記しない。
+- 社長・Omegaのr5、レッドパンサー4体のr3は局所背景修復の候補を目視確認。元sourceから6体すべて同一hashへ再生成し、暗い身体の保全・指定mask外alpha/RGB変更0・足元/セル内収容を確認。限定read-only review High/Medium未解消0。portable generatorからproduction v2への組込みをLunaが実施中。RP一部の画像内配置が変わるため、銃口座標も実画素へ合わせる。native確認はまだ。
+
+PR #171 Draft/open/unmerged、Issue #172 open。Ready・merge・tag・Release・正式公開なし。透過候補の実装、残る身体motion/技能/敵VFX・旧画像欠け・gate最終確認・後半の手触り・固定候補全体QA/独立review/CI/Producer実プレイを継続する。
+
+## 2026-09-09 カラミテ・改札喰いの固有動作とボス体力表示（未公開）
+
+c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit/未push差分。通常戦闘/日常BGMの承認、他場面9役割、既存boss曲維持を継続。PR #171 Draft/open/unmerged、Issue #172 open。正式公開・Ready・merge・tag・Releaseなし。
+
+- V1カラミテは実windupで腕を引き、実pullingで腕を伸ばす既存poseへ切替。表示に使う拘束方向をruntimeに保持。改札喰いは実windup/charging/exposedに構え/低い突進/立て直しを接続し、idleセル基準の倍率を固定した。被弾poseを優先し、対応する旧帯状body演出を止める。実際の突進中だけ既存の短命footdustを使用。元人物atlas・時間・移動距離・威力・HP・保存の変更0。新規3件は実station関数の両方向の拘束/突進/復帰とセル倍率を検証。
+- 身体の構えに重なっていたboss頭上HPは、V1で同じbossを中央HUDに表示している場合だけ非表示。Kurome分身・通常敵・味方・旧modeは維持。録画で中央HUDが警告へ切り替わって見えた点は、e7d2の追加native trace 123描画では欠落0で再現せず、HUDの優先順位codeは変更していない。入場時の短い演出・HUD更新遅延と、継続中の表示を区別する。
+- 初回build e7d2c7ca7dee3253269866ced50baff8c947be112f16c88b715159c6051cab42、全1598/1598。頭上HP整理後の最新build e031f22a046727f9c332cebce6c5defa01477c150f165c0b4d295cc02d3f26bdもbuild＋全1598/1598、lint0errors/既存13warnings、後続対象lint/diff成功。outputs/completion/station-motion-full-tests-r2.log、station-motion-checkpoint-r1.json。
+- native S4カラミテはe7d2のchromium-r2/webkit-r1でwindup/pullingを確認。S5改札喰いは最新e031のchromium-r2/webkit-r2でwindup/charging/exposed・方向・セル倍率を確認し、頭上HP非表示と中央の実DOM位置も確認。CH112/WK65描画。WK最初の2描画だけ中央HUDの初期更新前、その後は維持。各reportの記録diagnostics0。いずれも所有level1 Guardian fixture・通常出撃操作、actor/時計/HP/結果setterなし。全campaign・自然勝利・音響・物理端末の受入には拡大しない。WK画面の音声再試行状態も音響受入済みとは扱わない。
+- 失敗保全：before-r1のS5にカラミテも要求したfixtureは、実S5編成に存在しないため不成立。S4beforeは旧idle/walkの固有動作不合格。S4 CH r1は94.8167秒に予告開始し95秒で観測終了、pose自体の不合格ではない。95秒の出現待ちは維持し、その内に観測した同じ個体の予告だけ最大3秒の実hold完了猶予を追加。成功したCH r2/WK r1は猶予未使用で、判定緩和による成功ではない。全失敗reportを保持。
+- 試聴ページ#station-motion-review：実戦各6秒、計12秒、通常/0.5倍。前半はe7d2カラミテ、後半はe031改札喰い。画像合成・後付けVFX・retime・音声なし。source/output hash・切出し位置はstation-motion-review-provenance-r2.json。CH通常button再生・同時再生1・844x390/340収容・errors0、代表frameの構え/拘束/突進を目視。r1録画/検証も保全。Windows WebKit動画player・物理iPhoneは未検証のまま。
+
+素材追加0、523logical/521distinct。static/PWA80/80は旧679fad/522素材の証拠。残る身体motion・鍋pose/socket・他技能/敵VFX・社長/RPanther透過・旧画像欠け・gate最終確認・後半の手触り・固定候補QA/独立review/CI/Producer実プレイは未完了。無料local人物画像処理の方法確認は未回答。
+
+## 2026-09-09 通常感染者の命中姿勢・時間のずれを修正（未公開）
+
+c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit/未push差分。承認済みの通常戦闘/日常BGM、他場面9役割、既存boss曲維持。PR #171 Draft/open/unmerged、Issue #172 open。公開/Ready/merge/tag/Releaseなし。
+
+- 通常敵の実attack timerは.18秒なのに、rendererがactive＋recoveryの.22秒を基準にしていた。冒頭40msが飛び、命中姿勢が約30msしか残らず、直後に腕を上げ直す表示を修正。V1のwalker/runner/turned/crusher/abomination/grappler/sprinterは実timerから120msの接触pose、短いwithdraw/idleへ移る。被弾と固有能力を優先。3種の通常攻撃対象で元.18秒を共通定数にしただけで、威力/間隔/判定/saveは変更0。
+- 対象の通常近接予告は既存の腕を引くposeを使い、旧帯状図形を止める。元画像編集0。既存idleを基準にcell倍率を固定し、腕上げ/屈みを描く。laneのdepth scaleは維持。legacy感染者はもともと共通倍率であり、全種類に膨縮があったとは主張しない。元legacy atlasの手先等の欠けを確認したが、この工程で素材自体を修復したものではない。
+- build 0d72f699489e6f21bee9c4bd515f75222efe52aa6ac643ec4cbe7385e80f0481。enemy-contact-full-tests-r1.logはbuild完了後に環境resetでtest中断。handle消失と終端集計なしを確認後、同じbuildの全testをr2で1595/1595完走。全lint0errors/既存13warnings、後続対象lint/diff成功。新規test初回の誤ったexport名は修正して対象11/11成功、元失敗log保全。
+- S1 level1所有Guardian fixture、通常出撃buttonのみ。修正前outputs/v100-enemy-contact-before-r1（旧dda4）は命中中にattack-a/idleへ戻り不合格。修正後chromium-r1/webkit-r1は同じ0d72、通常walkerとcrusherの実windup/contactを観測、diagnostics0。接触の中間区間でCH22/2描画、WK8/2描画が全てattack-b。同一個体の倍率を実depthで正規化して維持を確認。actor/時計/HP/結果setterなし。7種類全てのnative実戦・自然勝利・全campaign・物理端末の受入へ拡大しない。
+- 試聴ページ#enemy-contact-review：通常感染者→大型感染者の実録画を各4秒、改善前後各8秒。無音・無retime・後付けVFXなし。改善後1.4秒の爪接触、7.1秒の叩きつけを画像確認。enemy-contact-review-provenance-r1.jsonにsource/output hash、build、切出し位置を保存。CH通常button・0.5/1倍・同時再生1・844x390/340収容・errors0。concat初回のWindows絶対path解釈失敗を保全し、listと同じdirのbasename参照へ修正。Windows WebKit動画player/物理iPhone未確認は別に維持。
+
+配布素材追加0、523logical/521distinct。最新static/PWA80/80は旧679fad/522素材。残る身体motion・鍋pose/socket・他技能/敵VFX・社長/RPanther透過・旧画像欠け・gate最終確認・後半の手触り・固定候補全体QA/独立review/CI/Producer実プレイは未完了。無料local人物画像処理の方法確認は未回答。
+
+## 2026-09-09 走鬼の溜め・突進・復帰（未公開）
+
+承認済みの通常戦闘Simulacra／日常Amberlight、既存boss曲、他場面9役割を維持。c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171 Draft/open/unmerged、Issue #172 open。正式公開・Ready・merge・tag・Release未実施。
+
+- 走鬼（sprinter）のV1能力を実telegraph/burst/recoveryへ結び、既存のしゃがみ／踏み出し／2種の走り／復帰poseを切り替える。元3360x896のidentity atlasは変更0、480x448セルの基準倍率を全poseで揃え、可視boundsごとの再拡大で身体が膨縮する問題を修正。旧図形stretch/rotationを使わず、実移動方向に短い足元dustを出す。速度190・突進1.1秒/209移動・telegraph .55秒・recovery .7秒・HP/威力/save/legacyは維持。
+- build dda4f4c055e2d9133028ba63b09403c7d11c93efdf8b6b9e9a9cd704baaa80d0。souki-full-tests-r2.logはbuild＋全1592/1592成功。全lint0errors/既存13warnings、diff check成功。r1は1591/1592で旧source検査の無条件fit式1件が不適合。V1 sprinter分岐と元generic fallbackを明示して検査し直し、既存寸法/方向/aspect契約は維持。失敗log保全。
+- outputs/v100-souki-native-before-r1（旧b460）はlate windup crouch不在で不合格、体サイズのframe間変化も記録。修正後outputs/v100-souki-native-{chromium,webkit}-r1は同じdda4 build、844x340、S5 level1所有roster fixtureから通常UI操作で自然出現した1体の全能力cycleを観測。両engineで溜めattack-a、burstのattack-b/walk-b/walk-a、復帰idle、一定cell表示倍率、記録diagnostics0。actor/時計/HP/結果setterなし。1cycleの観測であり、自然勝利/全campaign/物理端末の受入とはしない。
+- 試聴ページ#souki-reviewへ改善前後各7秒の無音MP4/VP8を追加。実native録画の末尾を無retime・VFX合成なしで切出し、source/output hashとbuildをsouki-review-provenance-r1.jsonに保存。改善後5秒の低い姿勢、5.5秒のstride/足元dust、6.5秒の立ち姿復帰を画像確認。souki-playback-r1.jsonはChromiumの両再生button・各7秒・0.5/1倍・同時再生1・844x390/340収容・errors0。Windows WebKitのpreview動画再生不具合/物理iPhone未検証は別に維持。
+- WebKit短時間描画の対照：browser-frame-{baseline,schedule-control}-r1は保存済み1画像と実renderPerformance.jsを使う読取実験。旧Windows WebKit2215は45fps指定で3秒113/116描画、現在2359は135/135、Chromiumも135/135。製品scheduler/CI pin/合格閾値は変更0。現在runtime1.63/WebKit2359の正しい録画依存pathで同じ旧b460 Guardian S5を実行したguardian-current-webkit-r2は自然勝利、同一盾被弾phase[1,4,5]、errors0。r1はgame前の録画初期化失敗、正しいruntime pathのrecording on/off probeは成功。旧2215のr4/r6不合格を消さず、macOS CI/物理端末/最新dda4のGuardian受入へ置換しない。
+
+素材追加0、523logical/521distinctを維持。最新static/PWA80/80は旧679fad/522素材。残る身体motion・鍋pose/socket・他技能/敵VFX・社長/RPanther透過・gate最終確認・後半の手触り・固定候補全体QA/独立review/CI/Producer実プレイを継続する。無料local人物画像処理の方法確認は未回答。完成・公開済みとしない。
+
+## 2026-09-09 盾の構え・実被弾の金属接触（未公開）
+
+通常戦闘Simulacra／日常Amberlightの承認方向、既存boss曲、他場面9役割を維持。HEAD c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171 Draft/open/unmerged、Issue #172 open。正式公開・Ready・merge・tag・Release未実施。
+
+- ガンテツのV1手動防御で旧白い帯状VFXを止め、実際の6秒間の合間を既存brace poseで維持。通常移動／通常攻撃は残し、実被弾flashの間は既存hit poseを使う。画の伸縮・回転で動作を作らず、元identity atlasは変更0。新しい身体motion全般の完成とはしない。
+- 元480x448セルの盾面を左右／brace・hit別に測定し、実rendererと同じ変換で金属接触を配置。実正面incomingまたは実interceptionだけで160msの短命queueを作り、最初の描画位置へ一度固定、期限切れで除去する。実戦traceで、改札喰いの突進終了位置と、被弾の後退向きを盾の向きと誤認して火花を落としていたことを確認。実突進originと技能開始時の防御方向を参照する。威力・防御倍率・HP判定・timeline・saveは変更なし。
+- build b460a90f0279134341467f2658c8b3d5d90d735ce8683c7f550a3e839d711314。build成功、全1589/1589（guardian-full-tests-r5.log）、後続QA capture検査追加後の全1590/1590（guardian-full-tests-r6.log）。全lint0errors／既存13warnings、対象lintとdiff check成功。最初の全体実行は環境resetで中断し、完了扱いにしていない。方向の再現testは修正前fail／修正後pass、元画像の不透過な盾面socketも検査。
+- native S5：Chromium r4は自然勝利／console・page・HTTP errors0、同一実被弾で4phase、終盤までbrace維持と実hit poseを確認。WebKit r1〜r3の金属0件はfixture接触不足と上記方向不備の診断記録。修正後r4は2phaseで不合格、r5診断は3phaseで合格したが、後述のcapture改善後r6は2phaseで再び不合格。全部を合格へ上書きしない。各outputs/v100-guardian-native-*、同じb460 build、level1所有roster fixture／通常UI操作のみ。獲得campaign・物理端末の証拠ではない。
+- 検証PNGの同期encodeがWebKitで48〜54ms停止することを測定。実フレームのコピーを最大4枚だけ保持し、戦闘後にencodeする方式へ修正。copyは0ms分解能／後encode47〜78ms。画像内容・座標帰属・160ms寿命・同一被弾3phase以上の合格条件を維持したがr6は未達。読取性能probeでは描画callback中央値3ms／p95 6msに対し描画開始間隔中央値46ms／p95 69ms、snapshot自体0ms分解能。保存処理だけを全原因とせず、録画なし対照でもcallback3/6ms・描画間隔46/69msとほぼ不変、実被弾3phaseを観測。録画を単独原因とも断定しない。outputs/v100-guardian-performance-webkit-{r1,no-video-r1}は62秒までの診断であり、自然結果の受入ではない。
+- 試聴ページ#guardian-reviewへCH実戦10秒のMP4/VP8を追加。実hitはclip 5.0秒で画像確認。元video/hash/build/切出し時刻はguardian-native-provenance-r1.json。音声・後付けVFXなし、元人物画像を維持。Chromiumの通常再生／0.5・1倍／同時再生1／844x340内収容／errors0をguardian-playback-r1.jsonへ保全。Windows WebKit動画再生と物理iPhoneは未解決／未検証のまま。
+
+配布素材は追加なし、523logical/521distinctを維持。最新static/PWA80/80は旧679fad/522素材の証拠で、このbuildへ転記しない。WebKit短時間VFXの観測安定性、身体motion・鍋pose/socket・残る技能/敵VFX・社長/RPanther透過・gate最終確認・後半の手触り・固定候補全体QA/独立review/CI/Producer実プレイが残る。無料local人物画像処理の方法確認は未回答。完成・公開済みとしない。
+
+## 2026-09-09 射撃技能の銃口・実命中演出（未公開）
+
+通常戦闘Simulacra／日常Amberlightの承認方向、既存boss曲、他場面9役割を維持。HEAD c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171 Draft/open/unmerged、Issue #172 open。公開・Ready・merge・tag・Release未実施。
+
+- ミズチ（ranger）、ババヤガ、Raider（gunner）のV1手動技能を更新。発射前から伸びる旧帯状VFXを止め、実技能eventで既存6コマ銃口を現在の武器先端socketへ出し、実HP減少に既存6コマ接触を出す。銃口85/100ms、接触200ms。射撃回数・威力・suppression/mark・音声timeline・saveは変更なし。隣接する掃射は同一銃口の前flashを置換し、残留/重複を防ぐ。legacy描画を維持。身体motion／他技能のVFX完成とはしない。
+- build 4b9ff526ca1f181a78357f826749de84a8ba437d490291d823c6f8f58f743cb5。npm testのbuildは成功、初回1581/1582はgunner source検査の1600文字窓超過で1件失敗。機能変更はなく、gunner→engineerの実branch範囲内で既存suppression式を直接検査するよう修正。文字数上限の延長ではない。同一製品buildで全1582/1582（manual-firearm-full-tests-r2.log）、後続のnative帰属oracle2/2。全lint0errors/既存13warnings、後続対象lintとdiff check成功。失敗logを保全。
+- outputs/v100-manual-firearm-native-{chromium,webkit}-r1：同一4b9ff build、S5 level1所有roster fixture、844x340、通常出撃/技能/支援buttonのみ。両方自然勝利、記録されたconsole/page/HTTP errors0、boss中盤登場/中央HPと3viewportも維持。3人それぞれの実manual eventと位置/時刻/activationを銃口・接触へ対応。CH：Mizuchi4技能、Baba3技能、Raider2技能×5実命中。WK：Mizuchi5技能、Baba3技能、Raider2技能×5実命中。WKの銃口描画では短いflashの一部round/最終frameを観測していない。全発全6コマ描画や物理端末性能とは主張しない。oracleは通常攻撃の誤帰属・誤activation/round・HP非減少・不正transformを拒否。
+- 試聴ページ#manual-firearm-review：CH実戦から3人各8秒、計24秒、MP4/VP8。元video/hash/build/切出し時間はmanual-firearm-native-provenance-r1.json。VFX合成や動作生成なし、音声なし。22.5秒で実制圧3/5と銃口を画像確認。Chromiumの通常button再生・24秒・0.5/1倍・同時再生1・error0をmanual-firearm-playback-r1.jsonへ保存。
+- Windows WebKit動画問題：別loopback fixtureで同じbytesのcookie認証/path能力URLを比較。media要求でcookie欠落→401を確認。path認証では206/200で取得できるがMP4/VP8ともNotSupportedError、再生0。preview-media-auth-diagnostic-r1.json。Cookieだけを全原因と断定せず、既存LAN serverは変更なし。nativeゲームcanvas成功と動画player失敗を区別。物理iPhone未確認。
+- Kuma guard r2はauthoritative portraitを参照してbuilt-in生成したが、1254x1254 RGB・実alphaなしの格子背景のため未採用。outputs/completion/kuma-guard-candidate-r2へ元画像/hash/fullpromptを保全。人物素材の背景除去や描き替えは未実施。無料local画像処理の方法確認は未回答。
+
+配布asset追加なし（523logical/521distinctの爪接触checkpointから変更なし）。最新static/PWA80/80は旧679fad build/522assetsの証拠であり、この候補の証拠へ移さない。身体motion・鍋pose/socket・残る技能/敵VFX・社長/RPanther透過・gate最終確認・後半の手触り・固定候補全体QA/独立review/CI/Producer最終実プレイは残る。独立reviewerの使用制限も継続。完成扱いにせず、通常作業を続ける。
+
+## 2026-09-09 感染者の爪・短い接触演出を実戦へ接続（未公開）
+
+通常戦闘Simulacra／日常AmberlightはProducer承認済み方向を維持し、既存boss曲を残す。他場面の9役割への作り分けも継続。基準HEAD c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171はDraft/open/unmerged、Issue #172はopen。正式公開・Ready・merge・tag・Releaseは未実施。
+
+- 素材：built-in image_genで6コマの爪接触を作成。1536x1024の実alpha、衣服の繊維／少量のくすんだ赤い粒子。元PNGと全promptはassets/source/v100/vfx/generated/claw-contact-{six,provenance}-r1。runtimeはclaw-contact-six-r1.webp、359100 bytes、sha256 14fa53f776f2de7cd77decd9a5a064390571065d0c5afa5d759b85f8fb38d511。可視RGBAと全alphaの完全一致を検査したlossless WebP変換のみ。背景除去・人物の描き替えなし。
+- 接続：walker／runner／grappler／sprinterの実incoming meleeで、味方HPが実際に減った時だけ0.2秒の接触を出す。回避・退避無敵・counter・鍋/盾のactive防御・正damageなし・違う武器では発火しない。通常attackを装飾するだけの発火へ戻さず、既存48件の短命queueを利用。Mayoは人間の胴の高さから16pxのharness位置へ下げた。この小型位置はunit検査であり、Mayo実戦画像の最終受入ではない。
+- 最新build：17ef544acbae622ccef60d7a2c134e433fb5029bec1a07eb9b9c71963c3de9df。npm test内build＋全1579/1579成功（outputs/completion/claw-contact-full-tests-r3.log）。全lint0errors／既存13warnings、後続対象lintとdiff check成功。初回全件は1571/1576で5件失敗し、新規1素材のsource-bound契約登録漏れが原因。実hash／359100 bytesを契約と容量snapshotへ追加し、移行差分・hash・既存素材不変の検査を維持。失敗logは保全。
+- 最新native実戦：outputs/v100-claw-native-{chromium,webkit}-r2。同じ17ef build、S2 level1所有roster fixture、844x340、通常の出撃／技能／支援操作のみ、actor/HP/時計/勝敗setterなし。両方自然勝利、記録されたconsole/page/HTTP errors0。Chromium10接触、WebKit6接触、未帰属draw0。6コマすべてを描画し、少なくとも1実被弾の3コマ以上を時刻・座標・HP減少へ一意に対応。最初のHP80→65。元描画を保存し、不正transform・NaN・違う画像・期限切れ・複数候補を拒否する読取oracleを検査。requestfailed全網羅／実機性能／物理iPhone受入の証拠ではない。
+- 映像：試聴ページ#claw-contact-reviewへ9秒の通常実戦映像、再生button、通常／0.5倍の切替を追加。映像sourceは先行r1の2e1bac874abeec0637b01880c5d17126df188371b01ac5ce03978a931fa68aaaで、Mayo位置修正前だが映っているHachiの処理は同じ。元video/hash/切出し時間をclaw-native-review-provenance-r2.jsonへ保全。合成・動作生成なし、音声なし。Chromiumのnative button再生・9秒duration・速度切替・同時再生1をclaw-review-playback-r3/r4で確認。標準ChromiumにAVC decoderがないため、AVC Baseline 3.1を明記しVP8 WebMも提供。MP4だけのr1失敗、script生成のReferenceError、native controls操作のr2失敗も保全。
+- 映像の未解決：Windows WebKit r2215と専用r2359では、MP4/VP8ともcanPlayTypeはprobablyだが動画はreadyState0／networkState3、再生時間0のまま。通常gesture後も進まず、r3/r4再生検査はWebKit行で失敗。diagnose-claw-webkit-{r1,fixed-r1}相当の記録を保全。原因をdecoderと断定せず、ゲーム内canvas描画の成功と区別する。物理iPhoneでの映像再生は未検証。
+- 人物透過：#sprite-alpha-reviewは既存の社長atlasと未採用candidateのread-only比較。現行の黒い身体の透けと、candidateの腕内側に残る白い背景を確認。runtime差替え0、人物編集0。ローカル画像処理への方法変更の質問は未回答。新しい身体motion／鍋pose/socket／社長・RPanther透過を完成としない。
+
+最新manifestは523logical／521distinct、137757391logical bytes／137217488distinct bytes。outputs/completion/claw-source-build-checkpoint-r1.json。_site／PWA80件の最終成功は下段679fad build／522素材の証拠のままで、新しい523素材候補へ転記しない。旧phone preview/saveも維持。残る身体motion・技能/敵VFX・透過・gateの最終受入・後半の手触り・最新固定候補のPWA/全体review/CI/Producer実プレイ受入を継続する。既存reviewerは使用制限のため今回の独立最終High/Medium0は未確認。完成・公開済みとしない。
+
+## 2026-09-09 会話送りの電子音・画面終了時の音源取得を修正（未公開）
+
+通常戦闘Simulacra／日常Amberlightの採用、既存boss曲維持、他場面の作り分けを継続。基準HEAD c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171はDraft、Issue #172はopen。正式公開と最終承認は未実施。
+
+- 「ピロピロ」の再現原因：会話Nextごとにoperationとactivateが健康なAudioContextへunlockを再実行し、440Hzの確認音を二重再生していた。実ブラウザの12回送りで24発を観測。稼働中のgraphを再利用し、V1イベント／メニューownerだけ自動確認音を無効化。初回0・12回送り0へ改善し、各操作の約0.115秒の専用UI音、場面BGM、明示的音声テストは維持。outputs/v100-event-unlock-tone-{before,after-r2}/report.json。実際のnavigation取消後も保存不変、次タップ音あり・確認音0・runningを確認。
+- 先のWebKit保存UI pageerrorは、beforeunload後・pagehide前の約13msに新しいpreparation.mp3取得が始まることをnative traceで特定。補助的なnavigation guardで新規取得と代替形式fallbackを抑止し、pageshow／取消後の実入力で復帰する。beforeunloadで保存や確認ダイアログは行わず、従来のvisibility/pagehide経路を維持。Firefoxのbfcache・物理端末は未確認。traceはoutputs/v100-lifecycle-trace-webkit-r1。
+- 保存lifecycle：音修正build 96f32bea469056a9a340f60ddd1fbc73b429713024eea5db0fc5c6799221236bでChromium／標準WebKit×3サイズ×4ケースの24/24成功（outputs/v100-audio-navigation-lifecycle-r5）。保存失敗保持・2タブ・破損復旧・撤退・再挑戦・実敗北結果・育成を含む。r4の22成功後のskip timeoutは画面が既にmapへ進んでいた。保存revisionだけを待つ検証側の競合を、次のevent node／目的画面のDOM確定待ちへ修正。旧helperは遅延DOM fixtureで失敗、新helperは同じ1操作で成功。45秒期限・save条件・エラー判定は維持。後述のPWA登録先1行修正前のbuild証拠であり、最新buildの24/24とは表記しない。
+- 録音で追加発見した/v100/末尾slash時のworker登録先ずれも修正。PwaGateの登録に既存の正規baseUrlを渡す。最新buildのroot／v100／v100/で、Chromiumとnative WebKit r2359の計6条件が登録・実JS取得hash・制御下reloadまで成功（outputs/v100-pwa-nested-route-{chromium,webkit}-r2）。r1は検証のasync predicateが早く解決していたため、native serviceWorker.readyを同じ45秒以内で待つ方式へ変更。旧失敗記録を保全。
+- 最新build：679fad20b0dde5c0a76d29714e76fe4617fe087ce28b3aaffb943c2854da5c30。npm test内build＋全1573/1573成功（outputs/completion/audio-final-full-tests-r2.log）、static成功（pwa-nested-route-static-r2.log）、全体lint0errors/既存13warnings、最後の対象lintとdiff check成功。途中の二重build／static早期起動は実行手順の依存関係ミスとして記録を保持。試したbuild plugin変更と追加testは戻しており、build/sites-vite-plugin.tsの製品差分は0。
+- 最新buildのPWA：既存0.9.9.5→1.0.0の通常更新18/18、途中失敗復旧22/22がChromium／native WebKitで各成功、計80/80。outputs/v100-audio-final-pwa-{update,recovery}-{chromium,webkit}-r1。522 assets、同一originでの旧save保持、部分失敗・中断・修復・実origin停止後のoffline再起動を検証。旧96f／fc2／d06の証拠と区別する。
+- 比較音声：outputs/v100-event-audio-comparison-r2は実ゲームのくまや冒頭で8回Nextを操作し、実際の出力mixを分岐録音。確認音16→0、元の出力/gain/SE/BGMを変更せず、MP3変換のみ。旧buildは通常/v100、最新は/v100/で記録。試聴ページの#event-audio-fix-reviewへ前後2本を追加。9.12秒／8.70秒のnative再生、同時発音1、error0、CC BY 4.0出典を確認。これはbrowser録音で、物理speakerの聴感受入ではない。
+
+配布manifestは522logical／520distinct、137398291logical bytes／136858388distinct bytesを維持。旧スマホ試遊root/saveと正式公開先は変更していない。身体motion・実鍋pose/socket・残る技能/敵VFX・社長/RPanther透過・gate最終素材・後半の手触り・固定した最新候補の全体review／CI／Producer最終実プレイ受入が残る。無料ローカル画像処理への方法変更は未回答。既存独立reviewerは使用制限で利用不可のため、今回を独立最終H0/M0確認済みとしない。通常技術作業は継続し、完成・公開済みとはしない。Ready／merge／tag／Release／正式Pages公開／Issue closeは最終承認後。
+
+## 2026-09-09 保存・PWA更新と音源終了処理の検証（未公開）
+
+通常戦闘Simulacra／日常Amberlightの採用、既存boss曲維持、他場面の作り分けは承認内容どおり継続。HEAD c471ebaccb45263e0aa74ee465965521c2a3c990上のローカル未commit／未push差分。PR #171はDraft、Issue #172はopen。Ready・merge・tag・Release・正式Pages公開は未実施。
+
+- 最新build：fc2ebdc0fbc17f559120b9fdb237c04425a59de56f4157548da3caff5e3577ad。audio-background-build-r1.log成功、全test1568/1568、全lint0errors／既存13warnings。source-bound素材522logical／520distinct、137398291logical bytesは維持。static request_idはlocal-uncommitted-audio-background-20260909。metadata上のc471を未commit差分の固定HEAD受入と混同しない。
+- 最新buildのPWA：outputs/v100-audio-background-pwa-{update,recovery}-{chromium,webkit}-r1。公開0.9.9.5／55d796cc577d1d9f903a4d2c6b4382196511db27由来の既存packから、同一origin・persistent profileで通常更新18件と部分失敗復旧22件が各engineで成功、計80件。522素材・実hash差分・waiting worker・一度だけの特典・元save保全・更新後再起動・実origin切断offline・rollbackを確認。復旧は3回のHTTP503、31.5秒の無進行、31.5秒超の実bundle転送、pause/resume、成功済asset非再取得を保持。unexpected browser diagnostics0。Windows WebKitは専用native PWA runtime1.63.0/r2359であり、物理iPhoneではない。
+- 全30作戦で得たsave：outputs/v100-earned-save-reload-r5。前回completed-feedback-diagnosticのfinalSaveを、人工CAPS追加・直接storage書込なしにUIの復元inputへ渡す。Chromium／標準WebKit、844x340で、30クリア・CAPS2641・既読94・一意receipt239・人物名・所有・育成・装備・設定等を保持。再読込とtab閉鎖／再入場でraw save一致、native書出しの再parse一致、同じbackupの再復元でも報酬増加なし、不正envelope拒否後raw save一致。revision／updatedAtのみ通常の復元transactionで更新。古いbuildの通しsaveを新しいbuildで読める証拠であり、最新buildで全30を再走した証拠ではない。
+- 音源終了処理：標準WebKitの保存UIテストでpreparation音源のaccess-control pageerrorを検出。outputs/completion/audio-hidden-fallback-before.jsonの独立した同期制御fixtureでは、hidden／dispose後のfetch失敗でも次のOGGを取りに行くことを再現した。app/audioMixer.jsでhidden／disposed時の新規取得と形式fallbackを止め、復帰時は中断された元sourceから再取得できるidle状態を保つ。表示中の正常な形式fallbackは維持。request/body中断・復帰・dispose・visible fallbackの4新規caseと既存mixer27case、計31件成功。
+- 未解決：上の修正後も標準WebKit r2215のmanual-history-popup-retry-two-tabs-and-recoveryでpreparation.mp3のpageerrorが残る。outputs/v100-audio-background-lifecycle-r2はChromium全12case＋WebKit最初の1case成功、次の1case失敗、後続未実行。保存値assertionは通過したがdiagnostics gateは赤。fetch failureの原因をすべて修正済とは扱わない。PlaywrightのローカルwkPage.jsはjavascript-source errorをpageerrorへ転送するため、unhandled rejectionと断定せずnavigation／page lifecycleの正確な時点を次に採取する。
+- 別runtime対照：outputs/completion/lifecycle-fixed-webkit-control.mjsは正規driverのimportsだけを専用1.63.0/r2359へ置換したoutputs-only control、scope storage-ui。outputs/v100-lifecycle-fixed-webkit-control-r1は1280x720の上記失敗caseを含む3case成功、その後844x390のデータ管理button操作後にdialog待機45秒で停止。failure PNGは名前入力画面のまま。元エラーを無視する処理・timeout延長・force click・save assertion緩和はなし。この対照も最終合格証拠ではない。
+- 失敗記録保全：PWA初回r1は未使用のD:\\CodexCache\\playwright参照でbrowser起動前に停止。既にinstalledのruntime位置に結び直したr2以降で検証。earned-save driver r1〜r4は重複ボタン／入れ子summaryのlocator、再読込時のブラウザ利用確認、存在しない過去notice待機というdriver実装不備を保持し、現在UIに対応したr5で完走。判定期限・save比較項目は削らない。旧_siteはstatic-music-preserved-20260909／static-metal-result-preserved-20260909へcopy保全し、旧phone preview／実saveへ変更なし。
+- 残工程：上記WebKitの音源・初回操作の切り分け、人物の新動作と鍋socket／残るVFX・透過・gate仕上げ、後半難易度、人手の体験、最新候補の全体matrixとfixed-HEAD review／CI／Producer最終受入。人物画像の無料local透過処理のmethod質問は未回答で保留。独立reviewerの利用上限は変化なく、最終High/Medium0を宣言しない。以前に完了したfull30、metal／seal実戦、結果画面12fixtureはそれぞれの旧build証拠として下段に維持。
+
+## 2026-09-09 全30作戦の進行確認・封鎖待機と金属接触・結果画面の改善（未公開）
+
+通常戦闘Simulacra／日常Amberlightの承認、既存boss曲維持、他場面の作り分けを継続。基準HEAD c471ebaccb45263e0aa74ee465965521c2a3c990、全実機フィードバック変更は未commit／未push。正式公開・Ready・merge・tag・Release・Issue closeは行っていない。
+
+- 通し診断完了：outputs/v100-feedback-normal-campaign-r2/report.json は completed-feedback-diagnostic。名前入力から全30作戦勝利、94会話event、ENDING／credits／EPILOGUEを通過。110回の通常購入・育成操作、最終CAPS2641、既読94、postGameAvailable true、receipt239件すべて一意。console／page／request／HTTP errors配列0。開始／終了ともapp/public 1129files SHA256 d8354f9a6bd6b1e65d3a4f40cdfb9787e61cf2a495ee272a082a9b807562303f、dist e0449d7c0e607d7c8d019c80fb33dd19a9bda5df1ae4f0a1dc393bdd4ceafb0cで一致。session27575はexit0、旧r1入口停止logも保全。元final driverのclean-worktree条件は維持。このrunはfast native UI戦術の未commit版診断で、fixed-HEAD最終候補・人手の難易度・物理iPhone受入ではない。S24/S27は各11損耗、後半の難易度体験は引き続き要評価。
+- 封鎖の待機修正：旧readyAt[24,62,104,146]とprep5秒による待ちをV1だけ解除し、現地operator／順番／6秒保持／脅威中断で進行。封鎖後の帰還倍率のみ1.8→3.2。wave全消化、全敵排除、45秒失敗期限、必須帰還ID・死亡条件を保持。時刻bannerも完了済み操作を再指示しない警戒表示へ。S9は旧138.20秒→今回109.90秒、S28は187.47秒→112.18秒。S9/S28各7名の同一ID帰還、損耗0、全装置操作、自然勝利、browser errors／request failures0。帰還は13.22／14.80秒。outputs/v100-seal-pacing-native-r1。元通しrunのearned openingを別storageに投入した再訪比較であり、乱数を固定した速度保証ではない。
+- 鉄鍋接触：実incoming attack時だけ、実alphaの金属火花4コマ[1,2,4,5]を0.16秒描画。旧V1技能の飾りtrailを停止し、ownerなし環境damageでは発火しない。消失した射手のprojectileとTAKUYA splashにはvisual-only originを渡し、従来のdamage/counter target選択は保持。48件の既存描画queueの読取snapshotにowner／activation／正incoming／時刻／座標を結び、期限・正しいframe位相・生存active owner・一意接触を実描画で検査。素材はlossless変換だけ、388546bytes／f27b1bf54ccac3177275aae331b3b3bc8b805c68b87509739f32631143394479。全promptと原本hashはassets/source/v100/vfx/generated/metal-impact-provenance-r1.json。
+- 金属の実戦：同じdist 8f2c22c2e82d196cb70eedb3f0df0e4be5f64cee4b9310861ca2da01f2a528baでChromium r1は4発×4frame、WebKit r2は3発中2発が4frame／1発が3frame。各native出撃・技能だけ、自然勝利、記録errors0、未帰属描画0。outputs/v100-metal-native-chromium-r1／v100-metal-native-webkit-r2。WebKit r1はrunning refが先行してinitial tray cards[]、time0／energy70で出撃観測が停止。旧失敗を残し、同じ既存15秒setup内で実Kuma buttonがvisibleになるのを待つ修正後に再確認。実機sound／GPU／iPhone受入とはしない。旧被弾poseでは鍋が読めない場面があるため、接触hookとframe進行の成立を身体motion・正確な鍋socketの完成へ読み替えない。
+- 結果画面：844x390／844x340で評価・4戦績・次への操作が下へ隠れていたため、横画面だけ2列配置に変更。Chromium／Windows WebKit、1280x720・844x390・844x340、成功S22長文目標／失敗の全12fixtureで44px以上のbuttonが画面内・非遮蔽、4項目表示、native next／retryでpost／formationへ遷移。outputs/v100-result-layout-r1、最新dist d06d117c9e44fc9156e8e4316e4c3f942aa41b0339c51b7ff0a6e56bed229ed1。これは表示fixtureで、新たな勝敗証拠ではない。短命contextを閉じる際のaudio stream Premature closeがserver logにあり、音響・request-failure0の証拠にはしない。metal／seal実戦は直前buildの証拠として区別する。
+- 最新検査：result-layout-build-r1.log成功、result-layout-full-tests-r1.log 1564/1564。全lint0errors／既存13warnings、後続変更driver lint0、diff check成功。最初の全件検査は1554/1564で10件失敗。新metal assetのsource-bound契約追加漏れ6件と、全readyAt0になったfixtureが次ノードで時計を0へ巻戻していた4件が原因。388546bytesの実hashを契約・合計へ追加し、fixtureを単調時刻へ変更。順序・状態・表示・移行hash検証は維持し、旧failed logを保全。manifestは522logical／520distinct、137398291logical bytes／136858388distinct bytes。
+- 独立reviewの境界：先行metal因果帰属M1は実incoming receipt照合へ修正。再読込H0/M0/L1のNaN destination指摘にはdx/dy/transform有限値・非zero determinantと回帰ケースを追加し、oracle3tests成功。その最終独立再読込はreview agentの利用制限で未実施。結果CSS／最終統合差分も独立review未完了であり、最終H/M未解消0の受入へ転記しない。seal診断driverは限定H0/M0/L0。
+
+残工程：新しい身体motion（味方・敵・技能）、他の幾何的VFX、社長／RPantherの透過修復、gate最終素材、正確な鍋socket、CSS素材の画質差、後半の手応え、最新候補での全体save／PWA／CI／独立review。人物候補のcheckerboard焼込み画像は不採用・保全、無料ローカル画像処理への方法確認は未回答のまま。旧PWAの音楽build証拠を最新buildへ転記しない。旧スマホ試遊root／save、試聴ページと非採用候補を保全。完成宣言や正式公開はしていない。
+
+
+## 2026-09-09 戦闘画像の縮小描画と新ポーズ候補（未公開）
+
+通常戦闘「Simulacra」・日常「Amberlight」の方向承認、既存boss曲維持、他場面の作り分けは前checkpointの実装を継続。音楽承認を他素材や正式公開の承認へ広げない。
+
+V1の背景・人物・死体・車両開閉/前景マスク/装備・3層のstage object・感染ゲートを、上限付きの段階縮小キャッシュへ接続した。元asset・source crop・表示位置/寸法・opacity・clipを維持。人物は表示サイズより大きい縮小段階を使い、背景だけは最も近い半縮小段階を選んで1600x900→960x500のような比率にも適用。12MiB/128 entriesのLRU、描画失敗時の原画像fallback、画面離脱・reset時の解放を実装。旧版は従来描画を維持。
+
+基準HEAD c471ebaccb45263e0aa74ee465965521c2a3c990、改善は未commit/未push。最終製品build SHA256 e0449d7c0e607d7c8d019c80fb33dd19a9bda5df1ae4f0a1dc393bdd4ceafb0c（outputs/completion/image-sampling-build-r5.log）。全1553 tests成功（image-sampling-full-tests-r4.log）、lint0 errors/13 warnings、diff check成功。対象の独立read-only review H0/M0/L0。全体fixed-HEAD reviewではない。
+
+- 最終nativeはChromium r3/Windows WebKit r4、同一build、S1の所有済みroster fixtureと通常の出撃/技能/支援入力で自然勝利、diagnostics0。1280x720/844x390/844x340の6画像を目視。outputs/v100-image-sampling-{chromium-native-r3,webkit-native-r4}/report.json、集約はoutputs/completion/image-sampling-final-summary.json。
+- 描画cacheの最大観測量はChromium 5,095,472 bytes、WebKit 5,245,952 bytes。最終hits/buildsは22,839/112と12,901/101。毎frame再生成はしていない。ただしresize/スクリーンショットを含む実行でsimulation dropを44.96/47.72秒計上しており、fps・実機性能の合格証拠にはしない。
+- 単体の縮小改善だけでは背景の描画比率を網羅できなかったr1を保全。r2で背景、r3で重ね画像/ゲートにも接続。r3 full testの2失敗は旧引数の完全一致を使った描画順/前景マスク検査によるもの。新しいV1引数へ正確に更新し、存在・順番・clip/opacity要件は維持。旧1551/1553 logを残し、r4の全件成功へつなげた。
+- 道路と重ね画像のざらつきは改善したが、Windows WebKitの車両細部やCSSカード画像などの画質差は残る。画面全体の視覚受入にはしない。Windows WebKitでは既知のAudioContext未提供による再試行表示があり、このrunは音響の合格証拠ではない。物理iPhone/Safari・実speakerは未確認。
+- パイセンの新6ポーズをbuilt-in image_genで作ったが、初回・透過再依頼とも1536x1024の全1,572,864 pixelsが不透明で、checkerboardが焼き込まれていたため不採用。元画像/全prompt/hash/不採用理由をoutputs/completion/paisen-motion-candidates/provenance.jsonとPNG2枚に保存。runtimeやmanifestへ入れず、新しい身体motionの完成とはしない。
+
+残りは人物/敵/技能の身体motion、他技能VFX、社長/RPanther透過修復、gate最終素材、CSS画像と画質差、全30作戦の体験・save/PWA・最終候補CI/全体review。無料ローカル画像処理への具体的な方法変更の質問は未回答のため保留し、画像非依存の作業を進めた。今回のasset追加は0、manifestは前checkpointの521logical/519distinct、137009745logical bytes/136469842distinct bytesを維持。旧PWA/音楽/打撃buildの証拠は最終buildへ転記しない。正式URL・旧スマホ試遊root/save・Draft・Producer最終公開承認境界を維持。完成・公開済みとはしない。
+
+## 2026-09-09 打撃VFX・パイセン連撃の実戦接続（未公開）
+
+承認済みの通常戦闘／日常BGM、他場面の作り分け、既存boss曲維持は継続。今回は人体への短い接触と地面への打撃に別々の6コマ素材を制作し、V1の物理近接・ハチ・パイセン・タタラへ接続した。built-in image_genの実alphaを保持したlossless WebPのみで、背景除去・身体の描き替えは行っていない。source、全prompt、hashはassets/source/v100/vfx/generatedのcontact／ground-impact各provenance-r1.json。土煙候補は人体hitではなくタタラの地砕き専用に採用。
+
+パイセンの旧「一度に280 damage＋連打表示」を、予備動作後の95ms間隔・56 damage×5回へ変更。通常の距離・対象・前方判定を各打で行い、最後だけknockback。気絶・拘束・死亡時は中断し、保存時は未消化動作時間をcooldownへ含めて再開による再発火を防ぐ。独立reviewで見つかった気絶中の接近継続とcagewalkerの24px押し出し後の遠隔命中も修正。既存2poseを命中間隔へ同期した段階で、新しい身体motionの完成とは扱わない。旧版の単発処理は維持。
+
+基準HEAD c471ebaccb45263e0aa74ee465965521c2a3c990、全実機フィードバック改善は未commit／未push。製品build SHA256は2a4841160d0173674d3533b6c747896707b7331c0597aefacff62c31d59b0cb2。build成功、全1546 tests成功（outputs/completion/contact-full-tests-r5.log）、lint0 errors/13 warnings、diff check成功。対象の製品差分および最終描画観測修正の独立read-only reviewはH0/M0/L0。全体fixed-HEAD reviewではない。
+
+- ネイティブ実戦：844x340、S3所有済みroster fixture、通常の出撃／技能／支援入力のみ。actor・HP・時計・勝敗setterなし。Chromium r4／Windows WebKit r4は同一buildで自然勝利・diagnostics0。実際の5接触と対象HP1544→1488→1432→1376→1320を対応確認。previewはこのChromium r4の実録。
+- 観測の精度：1描画の複数ownerへの誤帰属、同寸法の別画像、非有限時刻を拒否。Chromium r5では一意な5接触を観測したが戦闘は自然敗北し、勝利に読み替えない。WebKit r5はframe0を描画しなかった有効打のframe1〜3を記録していたため、5打検査が失敗。旧failed reportを保全し、元の0.2秒寿命内で実描画frameと命中からの経過時間を厳密照合する方式へ修正。5打・位置・一意owner条件を維持し、期限延長や製品変更なし。
+- 最終観測修正後のWebKit r6：observed、自然勝利、diagnostics0、完全な5接触を3回、接触／地砕きの全6コマを実描画。sourceの5 regression testsで遅延描画positive、位相ずれ・期限切れ・複数owner誤帰属・誤画像・無効状態の拒否を確認。この観測は描画時に生存している対象に限定され、致死打の一般証明ではない。全編の難易度受入・物理iPhone/Safariの合格に転記しない。
+- 配布manifest：521 logical entries／519 distinct hashes、137009745 logical bytes／136469842 distinct bytes。contact503772＋ground914600＝1418372bytesをcritical/offline対象へ固定。最初のfull test7件失敗は生成manifest未更新が原因で、旧logを保持し、再生成後の製品buildで全件成功。音楽時点のPWA更新18/18・復旧22/22はこの打撃buildの証拠ではない。
+- 試聴ページにパイセン連撃8秒＋タタラ地砕き8秒の実録を追加。MP4とWebM、844x340・15.96秒・音声なし、range206と他の音楽／動画との相互排他再生を確認。途中の命中と地砕きを実際にseekして目視。outputs/v100-audio-review-r2/contact-review-report.json、outputs/completion/contact-review-playback.json。
+
+残りは人物／敵／技能の身体motion、他技能の幾何的VFX、社長とRPantherの透過修復、gate最終素材、Windows WebKit縮小画質、全30作戦と新候補のsave/PWA/全体review。無料ローカル背景処理への前の質問は未回答のまま、音楽承認から許可を推定しない。次は既存成果を使って残りの身体motion・素材へ進み、打撃の実装や同じ検査を無目的に繰り返さない。正式URLと旧スマホ試遊root/save、Draft、最終公開承認境界を維持。完成・公開済みとはしない。
+
+## 2026-09-09 発砲VFXの実戦接続・透けの原因確認（未公開）
+
+通常戦闘と日常の方向承認、既存boss曲維持、他場面の作り分けは前checkpointどおり反映済み。今回の追加は発砲VFXと描画位置の修正。6コマの銃口炎をbuilt-in image_genで制作し、元のfractional alphaを保持してlossless WebPへ変換。V1の銃と装甲車だけで85〜140ms表示し、投擲・弓・感染者の口では発火しない。
+
+実戦の初回目視で旧combatWeaponAnchorとBabaの銃口が離れていたため、5人間銃兵の左右・攻撃2poseの20銃口位置を承認済みatlasに固定。spriteの実際のframe、compact/depth/body scale、recoil rotation、flip、bobから発射位置を求める。火花は描画中の銃口へ追従し、弾道始点は発射時に固定、pool再利用時に破棄。論理damage・target・旧版の見た目は変更しない。
+
+基準HEADはc471ebaccb45263e0aa74ee465965521c2a3c990のまま、全改善は未commit／未push。現在build SHA256はbec3eed6acffcbb717123521d108bb62fb52f4da66bb5a0c5ae115851ff3392d。build成功、source tests1536/1536、lint0 errors/13 warnings、標準diff check成功。発砲差分とsocket修正の独立read-only reviewはHigh0/Medium0/Low0。
+
+- Chromium：outputs/v100-muzzle-native-r3。通常のBaba初回出撃からS1が51.7秒で自然勝利、6コマの描画と銃口位置を実見、diagnostics0。
+- Windows WebKit：outputs/v100-muzzle-webkit-r1。S1自然勝利53.55秒・全6コマ・diagnostics0。ただし背景・既存portraitにも粒状表示を認め、視覚品質は未受入。
+- 切り分け：outputs/v100-raster-decoder-control-r1。ゲームrenderer/PWAを通さない単体画像の縮小表示でも同じWebKit差異。原寸背景6486＋Baba1674の計8160 opaque sample pixelsは両engineとも元画像と全channel一致。新火花はalpha255のpixelがなく、このopaque比較の対象0であり一致検証とは扱わない。追加の独立sampling比較（outputs/v100-raster-sampling-control-r1／r2）では、CSS／Canvasのquality指定だけではWebKitの粒状感が残り、2段の半縮小で改善することを確認。原寸Canvasを一度経由するだけでは改善しない。productへの描画方式変更はまだ採用しておらず、負荷・画質の実戦評価も未実施。物理iPhone/Safariの代替合格にしない。
+- 最初のnative r1は射撃役を遅く出して通常射撃前に終了した観測不足、r2は銃口ずれを発見した旧実装として保全。r3だけがsocket修正後の位置証拠。
+- 試聴ページに14秒の実戦発砲映像（音声なし）を追加。MP4を保持し、動画2本にWebM fallbackを追加。新映像のrange206、844x340・14秒再生、他の音源との相互排他を確認。outputs/completion/muzzle-review-playback.json。
+- 配布manifestは519logical entries／517distinct hashes／135,591,373logical bytes。火花追加626,064bytesはsource hashとcritical preload/offline pinに固定。旧公開415assetを維持。前checkpointのPWA更新18/18・復旧22/22は音楽buildの証拠であり、この火花buildのnative更新合格へ転記しない。
+
+社長の透けは背景除去が輪郭から身体の暗部へ入り込む不具合を確認。idleだけで385,292 source pixelsが余分に除去されていた（outputs/completion/president-alpha-diagnosis.json）。暗部を維持するhelperと3 regression testsを作ったが、候補には腕や杖の間の白い背景が残る。候補6atlasはoutputs/completion/motion-alpha-candidatesへ隔離し、通常production builderとruntime参照は旧版のまま。RPanther攻撃コマにも同種の透けがある。局所背景処理への質問は未回答のまま。生成し直した社長cutoutも実alphaがないため不採用。
+
+土煙・小石の6コマ候補はoutputs/completion/vfx-candidatesへ保存したが、地面の打撃に見えるため人体への汎用hitとして採用しない。次は透過仕上げ、gateと人物/敵/技能pose、打撃・技能VFX、WebKit縮小表示差、全30作戦の再検証と最終候補の保存/PWA/固定HEAD review。完成扱いにせず、Producerの2曲承認を画像・実機・公開承認へ広げない。正式URL・旧スマホ試遊rootとsaveは維持。Draft、最終merge/Ready/tag/Release/Pages/Issue closeの承認境界は変更なし。
+
+## 2026-09-09 場面別BGMの方向承認とローカル反映（音楽統合時の記録）
+
+Producerは通常戦闘「Simulacra」、くまや・落ち着いた会話「Amberlight」を承認し、既存boss曲の維持と他シーンの作り分けを指示した。8作品から9用途（通常／追い込み／日常／準備／危機／不穏／安堵／喪失／終幕）のループを制作しV1へ接続。無料のScott Buckley公式音源、CC BY 4.0、作者・曲名・加工内容・出典をゲーム内に表示。自作曲とは表記しない。2案の方向承認を、残りの曲・実機ミックス・画像処理・正式公開の承認へ広げない。
+
+30作戦のpre/post全60本文に音楽を配置し、既存の環境音を保持。S2の地図発見、S3の赤レンズ隊員による回収、S20の街から次の作戦への転換、S25の味噌汁の場面を台本のsourceLineに固定して切替。準備タブ・モード一覧では同じ曲が継続し、異常発生／Survivalの結果にも結果別の曲を配置。戦闘中のshell音楽は停止し、戦闘ownerが従来のboss曲へ切替える。
+
+基準HEADは引き続き `c471ebaccb45263e0aa74ee465965521c2a3c990`、全改善は未commit／未push。最新ローカルbuild SHA256は `d3f8461e90da63de21a3a1dd218ad0a006c1b444d9e9e439ac33385d97293acc`。旧58b21e7の検証は音楽反映前の証拠として保全。正式URL、旧スマホ試遊root、Producerのsaveは未変更。試聴ページに追加7用途を掲載し、17resource／12range取得と新7playerの相互排他再生を確認。
+
+検証：source tests **1530/1530**、build成功、lint **0 errors / 13 warnings**、標準diff check成功。Chromium実AudioBufferSourceの11検査（`outputs/v100-music-runtime-r2`）でタブ間継続、会話30秒停止中の自動音なし、場面切替、mode hub、1曲だけの再生を確認。実戦S3の通常入力で通常→既存boss曲、shell停止を確認（`outputs/v100-music-battle-r1`；mode修正前buildの戦闘経路証拠。戦闘は敗北しておりバランス受入ではない）。全9MP3を復号し72〜96秒、headroom、finite samples、loop seamを検証。`outputs/completion/music-signal-r1.json`。
+
+配布は518 logical entries／516 distinct hashes／134,965,309 logical bytes。追加音楽9MP3は12,425,061 bytes。旧公開版からの差分は103hash／45,223,744bytes、75art＋28audio、76物理取得先（28音は1共有bundle）。全旧assetを保持。更新 **18/18**（`outputs/v100-music-pwa-update-r1`）、通信失敗からの復旧・offline・rollback・旧save保持 **22/22**（`outputs/v100-music-pwa-recovery-r1`）。静的buildのrequest IDは `local-uncommitted-scene-music-20260909`、c471へ新差分をcommit済みとみなさない。
+
+音楽差分の独立read-only review **High0 / Medium0 / Low0**。mode hub/resultの消音指摘を修正し、修正後native hubも再確認済み。Windows WebKitのWeb Audio未提供、物理iPhone／実speaker未確認は維持。新候補CI・fixed-HEAD全体review・完成版の最終実プレイ受入は未実施。
+
+次はゲート透過素材、人物／敵／技能pose、社長の半透明画像の修復と実戦VFXの仕上げ。前の画像背景処理に関する回答は未受領のままで、今回の音楽承認から許可を推定しない。全体は完成扱いにせず、Draftを維持。merge／Ready／tag／Release／Pages／Issue closeは禁止のまま。
+
+## 2026-09-09 Producer実機フィードバック — 完成候補の不受入と再制作
+
+Producerがスマートフォンで序盤からS6〜S7付近まで実際に試遊し、33枚の実機スクリーンショットと音響・UI・戦闘体験の不備を報告した。**c471ebaは完成候補として不受入。最終承認待ちという現在判定を撤回し、内容・体験の改善へ戻る。** 過去の1512 tests/全30作戦通過/CI成功/独立レビューは、その範囲の機能証拠として保全するが、聴感・視認性・面白さ・実機品質の合格を意味しない。正式公開承認は未受領。最終ゴールはV1.0.0完成、Producer最終承認後の正式統合・Release・Pages公開・公開後QAまで維持する。
+
+今回の指示は旧Design Lockの素材再利用限定、固定レイアウト、技能名の常時表示、ボス早期投入、演出の実装最低数などと矛盾する範囲で優先する。台本・人物identity・旧save保全・CAPS/進行の既得権・公開承認境界は守る。プレイヤーのための改善をテスト件数へ置き換えない。
+
+有限の残制作（全て未完了から開始）：
+
+1. **音響**：イベントで繰り返す電子音の発火元・重複・残留を再現して修正。良好と評価されたboss BGMを維持。通常戦闘/緊張/日常/救出など再利用可能な場面群に合わせBGMと環境音を再制作・選定し、武器/敵/技能/爆発/操作SEを整える。メニューと戦闘操作の短い応答音を分ける。無料で制作・配布可能な権利を確認してから採用し、聴感未確認を合格にしない。
+2. **イベント**：会話種別/番号など制作情報を通常画面から除去。身長差を維持しつつ全人物の顔・口を見せ、いくらちゃんと赤レンズ隊員を含め立ち絵の基準・左右配置・明暗を整合。会話と次へ/skipを一つの読みやすい操作領域にする。
+3. **戦闘外UI・購入**：スマホ横画面の作戦/隊員/支援/装備/車両を目的別に切替。選択対象のすぐそばで価格・所持CAPS・購入/登録/育成/装備を完結し、画面上部へ戻る往復を解消。配色/情報階層/押しやすさを再設計。未解放stage/unit/support/equipmentに鎖と解放条件。支援と装備を名称に対応する透過画像で示す。
+4. **戦闘表示・空間**：用途不明の資材表示を整理。感染拠点を戦場奥行きに合うゲートへ作り直し、敵は画面右端・ゲートの背後から進入。技能アイコンは残し、下の技能名/発動可能/対象待ちの箱を除去。boss交戦中のHPは画面上中央へ。人間敵は味方人間の身長基準、bossは脅威が伝わる大きさ、マヨちゃんの小型化・被弾性とムガール社長の不適切な透けを確認する。
+5. **戦闘体験・動作**：bossは通常敵との戦闘を経た中盤に登場。防衛/護送は敵を倒した後の長い待機を解消し、目的達成まで適切な圧力と判断を保つ。味方/敵/技能の予備動作・攻撃・着弾・回復を読み取れるモーションとVFXへ再制作。図形を伸ばす代用、残留VFX、使い回しで意味が合わない演出を完成扱いにしない。
+6. **実物による再受入**：音とVFXはスマホからワンタップで再生できる確認物を用意。重要な美術/聴感判断への返信待ち中は独立作業を進める。新候補は代表的な通常戦闘、購入操作、スマホ画面/実ブラウザ、影響した保存/PWA/全編連結を検証し、最後に独立read-only review。旧候補の成功記録を新候補へ流用しない。その後のみ最終Producer承認へ戻る。
+
+### 2026-09-09 音楽方向承認前の中間到達点（履歴・未公開・未commit）
+
+作業場所は `_isolated/v100-completion-20260907`、branch `codex/v100-completion-20260907`、基準HEAD `c471ebaccb45263e0aa74ee465965521c2a3c990`。製品差分を含むローカルbuildのSHA256は `58b21e7cbac7e17288a2a281c573e077fa127448a2a36575e342a3abc6b53276`。これは既存PR headや公開候補の合格判定ではない。正式URL・旧スマホ試遊用のsave/配信rootは変更していない。
+
+- **音響・イベント**：自動event cueの電子音を除去し、環境音を再制作。replayも表示中の場面が音声を所有し、閉じた後は現在の場面へ戻す。購入音は保存receipt成功後に一度だけ鳴らす。短い役割別操作音、武器・打撃・爆発・倒れる音を接続。既存人物voiceとboss BGMを保持。新しい通常戦闘/日常BGMは確認サンプルのみで、Producerの方向性回答を待ち、まだゲームへ採用していない。
+- **会話・購入画面**：会話番号を除去し、同じ人物の左右位置を維持。いくらちゃんの顔・口が見える位置と、赤レンズ隊員などの上半身基準を調整。会話文と次へ/skipを同じ枠へ。作戦/隊員/支援/装備/車両を切替し、選択対象の横で購入・配備登録。支援と装備の透過画像、鎖と解放条件を接続。既存所有装備の権利を維持し、新規購入だけ進行条件で制限。
+- **戦闘空間・テンポ**：感染ゲートを右端の奥行きへ配置し、旧小型感染拠点の重複描画を除去。敵は全身が画面外の位置から入り、V1進入は最大5秒。S3は37秒、S5は39秒以降にbossを投入し、交戦中のHPは上中央へ一本化。技能下の文字箱を除去。防衛・護送の長い待機を短縮し、護送進捗に追従する増援を追加。代表S1/S3/S6の自然戦闘観測とS5の3画面表示は確認したが、全30作戦の難易度・実機受入は未完了。
+- **サイズ・マヨちゃん**：人間敵は味方人間の実効身長基準へ。マヨちゃんを小型化し、近接AIが隣接laneの生存bossを保持して実際の射程内へ回り込めるよう修正。S5実ブラウザで64.93秒に隣の物理laneから改札喰いへ攻撃した（`outputs/v100-mayo-flank-native-r3`）。この検証編成は敗北しており、バランス合格とはしない。r2でマヨ未出撃だったのは一般QA操作の前衛優先による資源消費で、失敗記録を保全。HP/被ダメージの安易な緩和はしていない。
+- **VFX・美術の残件**：CC0の炎/煙連続コマと土煙を制作処理へ組み込み、クマの打撃FXの残留を修正。図形を伸ばす突進の代用は土煙へ変更。ただし各人物・敵・技能の攻撃pose再制作、全VFX、ゲートの最終美術は未完成。生成したゲートとクマの新poseにチェック背景が残るため未採用で、無料ローカル背景処理への明示回答を待っている。社長は描画opacityを修正しても画像自体の半透明が残り、WebKitとChromiumの実描画で再確認した。素材の修復が必要で、解決済みとしない。Chromium対照は明示した診断用engine変更であり、canonical Phase G受入に数えない。
+
+検証：全1,525 source tests、build成功、lint 0 errors / 13 warnings。標準diff check成功。準備画面はChromium/WebKit各3サイズで操作確認。Chromiumの会話30秒保持と購入で実AudioBufferSourceの開始を観測し、二重開始なし。Windows WebKitはゲームを含まないprobeでもWeb Audio APIを提供せず、画面検証と音声未確認を分離した。物理iPhone・実speakerの受入は未確認。
+
+PWAは同じ旧版profileからの更新18/18（`outputs/v100-feedback-pwa-update-r2`）、503/30秒超停止/30秒超継続転送/再起動/offline/rollback/旧save保持22/22（`outputs/v100-feedback-pwa-recovery-r2`）。新19音は19hash・1共有bundleなので、旧検査の「94差分hash=94物理取得先」を、94hash/32,798,683bytes/76取得先/19音/1bundleへ分離した。全旧asset保持、全Set coverage、非bundle一回取得、初期503×3+held1を維持。修正前の17/18・21/22結果も保全。独立reviewで指摘された追加retryの因果検査も、30秒以上の前attempt abort後という条件とnegative testsで補強済み。実r2は4本のみで、追加5本目の実ブラウザ観測は未取得。
+
+限定独立read-only reviewは準備/装備、音声・HUD・ゲート、マヨAI、進入経路とサイズ、PWA検査修正でHigh0/Medium0/Low0。最終fixed-HEAD全体review・新候補CI・新素材/BGM込みの全編/PWA再受入は未実施。旧c471のCIを流用しない。
+
+次の再開位置：ProducerのBGM2案とローカル画像処理への回答を確認し、新ゲート・人物/敵/技能pose・社長の半透明素材を仕上げる。音声/画像の採用後だけ、影響する配布asset pinと実戦/保存/PWA証拠を更新する。品質確認までDraftを維持し、merge/Ready/tag/Release/Pages/Issue closeは実行しない。
+
+停滞の構造：接続・hash・表示領域・通過可能性の検査を、聴感・構図・情報探索の負担・戦闘の緩急の評価へ拡張せず、完成の代理指標にしていた。次の受入は実物の読みやすさ/意味/タイミングを先に確認し、その成立を壊さないために自動検査を置く。
+
+---
+
 更新日：2026-09-07
 
 ## Version 1.0.0 完成ミッション — 現在の進行記録
@@ -787,3 +1133,28 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 - High／Medium finding未解消
 
 Section138.16 type diagnostic clarification: [Issue172#5537628336](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5537628336) records629 standalone strict diagnostics on the original88bea5f baseline. Required existing build/lint/tests/browser gates remain unchanged; compare newly introduced type diagnostics separately, without claiming strict tsc green or adding suppressions. Victory result exposes the mandatory post-story action; map remains after finalization.
+
+## 2026-09-10 M3完了・次はM4-4（未公開）
+
+全体67%（16/24）、制作94%（16/17）へ更新。タタラに元人物・服装・装備を保つ接地姿勢を追加し、同一owner1/activation1の描画済みハンマー座標から衝撃が発生するよう接続。画像は109168 bytes、manifest追加1/旧変更0。元画像と生成指示を保管。0.6秒の効果と消滅、身体の通常復帰を同じ候補のChromium r3/WebKit r2で確認し、親が実画面を確認。クレイジーキングの実命中は既存fac730映像の連続20frameから親が確認。
+
+最新build 0cb5e2ac60b558c3c5426ee7e0b0f0b9577a929773b855427c56e386cf5d77e3 はbuild＋全1635/1635、Lint 0 errors / 12 warnings、差分検査成功。Tatara限定独立review High/Medium 0。native両engine各6画像、errors/contractFailures 0。CHはstart17.88333/消失観測18.53333、WKはstart18.16667/消失観測18.8。実ハンマーsourcePixelは81.89/491.909。詳細は outputs/v100-tatara-ground-chromium-r3/report.json と outputs/v100-tatara-ground-webkit-r2/report.json。初回1633/1635と初回control failure、改訂前reportは保全。旧代表証拠を最新候補の全体合格へ流用しない。
+
+4秒の実ゲーム映像： [タタラの打撃](../outputs/completion/tatara-ground-review-r1/native-last4s.mp4) （元速度・無音）。正確な再開位置は既存checkpoint。次は後半の負け方と攻略余地の評価、その後同じ完成候補で全編・保存/PWA・性能・音響・CI・独立レビュー。WebKit大画面の性能受入と物理iPhone確認は残る。親が追跡したnative/build/lintはすべて終了。Lunaの直近1turnは使用量上限通知、アカウント全体の利用不可とは断定しない。最終実プレイ承認前の公開操作なし。
+
+
+## 2026-09-10 M4完了・M5へ（未公開）
+
+全体71%（17/24）、制作・代表確認100%（17/17）。S24は5名損耗、S27は回復役のHPが約17%まで低下し回復・軽減を確認。S30修正前には敵全滅後約22秒の移動待ちがあり、正式目標「TAKUYA-Ωを撃破し、西新を守る」に合わせ、ボス・生存敵・待機spawn・予定波の完了後に勝利するよう修正。base死亡の敗北優先とHP閾値を維持。
+
+新build `33cc18c297a8138df3a2799b008267c770f66a03962f34a2bf54bdbd544a75b7` はbuild＋全1636/1636成功（`outputs/completion/s30-outcome-full-tests-r1.log`）。S30差分のscoped lint/diffと限定独立review High/Medium 0。前buildのfull lint 0 errors / 12 warnings記録は保持するが、新buildのfull lintへ読み替えない。
+
+`outputs/v100-boss-earned-s30-omega-r3/report.json` はpassed-earned-regression/errors 0。獲得済みS29 saveの通常操作で137.47秒・損耗2名・車両1080/1080・星3。ボス登場44.30秒、撃破/結果137.47秒、生存敵0。防御役は約1HPまで低下し、ナオ実回復2727.30・軽減608.35・ガンテツ肩代わり170.75を観測。親が結果画像を確認。修正前165.43秒との戦闘経過は完全同一ではないため全差分を待機短縮とは扱わない。両report・失敗ログを保持。
+
+次はM5。WebKit大画面の背景転送診断 `outputs/v100-webkit-background-blit-r1/report.json` は各2秒で通常18描画→背景のみ単色22→復元18、errors 0。背景だけが原因とはいえず画質低下は採用しない。性能解決後に候補を固定し、全編・保存/PWA・3サイズ/操作/音・CI/独立全体reviewを実施する。物理iPhoneの操作・聴感・発熱は未確認。最終承認前のReady/merge/tag/Release/Pages/Issue closeは行わない。
+
+S30候補のfull lintも終端0（0 errors / 12 warnings、`outputs/completion/s30-outcome-full-lint-r1.log`）を確認。前buildのlintからの代用ではなく今回の実行結果。
+
+M5性能追加診断：`outputs/v100-webkit-shadow-blur-r1/report.json` は同じ33cc候補、errors 0。各2秒の描画は通常17→shadowBlur無効18→復元18。非zero設定137件への介入と179回の強制zero、descriptor/元値復元を確認。影は主因ではなく、影を削る製品変更は採用しない。次は画像/図形・文字/全描画を同一実戦の短い診断窓で大分類する。分類r3はsource/検証scriptを含む524 path保持、runtime/cache26 path除外、missing path 0。stage/commit/pushはまだ行っていない。PR171はliveでDraft/open、remote head c471、Issue172 open。
+
+候補固定前の限定確認：content:validateは終端0（`outputs/completion/v100-content-validate-m5-r1.log`）。保存/購入/報酬/PWA復旧の変更と関連save/flowの独立read-only reviewはHigh/Medium 0。実ブラウザ追加確認・固定候補全体reviewとは区別する。WebKit大分類診断はsession76475、`outputs/v100-webkit-raster-group-r1/report.json`、同じ33cc候補で実行中。
