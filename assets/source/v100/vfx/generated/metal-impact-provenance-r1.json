@@ -1,0 +1,62 @@
+{
+  "generator": "Built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: six-frame metal-contact visual-effect sprite sheet for a grounded, illustrated side-view post-apocalyptic action game.\nCreate exactly a 1536x1024 transparent PNG with 3 columns and 2 rows of 512x512 cells. Each cell is the next chronological frame of ONE very brief metal-on-metal impact: a tiny white-hot contact flash; a tight asymmetric fan of thin warm-white and dull golden sparks to the right; fine curling metal filings separating; rapid dimming; a few short fading embers; almost extinguished final specks. Total impression is a 0.18-second frying-pan or metal-shield deflection, NOT a firework or explosion.\nUse a fixed contact origin at (180,256) within every cell. Main fan points to the right, spreading less than 90 degrees; energy and brightness must peak only in frames 1 and 2 then decay. Effect contained within x=120..445 and y=100..410, with clear empty gutters. Delicate irregular physically plausible streaks, individual particles, painted light scatter, crisp luminous core; naturally broken edges. No star-shaped symbol, no regular rays, no circle, no shockwave ring, no polygon, no geometric icon, no magical shield, no fireball, no smoke cloud, no rocks, no dust, no ground plane, no weapon, no person, no text or cell borders.\nThe whole background must be genuinely transparent with real PNG alpha. Do not draw checkerboard pixels or a white, gray or black backdrop. Preserve soft semi-transparent luminosity at the particle edges. Maintain the same anchor and camera across all six cells; designed to read at 45–60 screen pixels.",
+  "source": {
+    "file": "assets/source/v100/vfx/generated/metal-impact-six-r1.png",
+    "bytes": 1413376,
+    "sha256": "c2f1d006ded8fb6ef819d33c6c64c2d1b74a73b3fc70d6d36339543bcdc96274"
+  },
+  "output": {
+    "file": "public/art/v100/combat-vfx/metal-impact-six-r1.webp",
+    "bytes": 388546,
+    "sha256": "f27b1bf54ccac3177275aae331b3b3bc8b805c68b87509739f32631143394479"
+  },
+  "geometry": {
+    "columns": 3,
+    "rows": 2,
+    "cellSize": 512,
+    "usedCells": [
+      1,
+      2,
+      4,
+      5
+    ],
+    "anchor": {
+      "x": 180,
+      "y": 256
+    },
+    "durationSeconds": 0.16
+  },
+  "cells": [
+    {
+      "frame": 1,
+      "edgeVisibleMaximum": 3.6941176470588237,
+      "edgeVisibleMean": 0.002806318082788674,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "frame": 2,
+      "edgeVisibleMaximum": 0.3137254901960784,
+      "edgeVisibleMean": 0.0007821350762527256,
+      "alphaMin": 0,
+      "alphaMax": 251
+    },
+    {
+      "frame": 4,
+      "edgeVisibleMaximum": 0.12941176470588237,
+      "edgeVisibleMean": 0.0007281045751634075,
+      "alphaMin": 0,
+      "alphaMax": 248
+    },
+    {
+      "frame": 5,
+      "edgeVisibleMaximum": 0.027450980392156862,
+      "edgeVisibleMean": 0.000054030501089324476,
+      "alphaMin": 0,
+      "alphaMax": 223
+    }
+  ],
+  "adaptation": "Lossless WebP encoding only, retaining original RGB and fractional alpha. Runtime uses four authored cells with decaying brightness; cell 0 is excluded because its sparks clip at the right edge. Cell 3 is not used in the short decay. No background removal, recoloring, cropping or character changes.",
+  "status": "Local material; runtime and actual-play acceptance recorded separately."
+}

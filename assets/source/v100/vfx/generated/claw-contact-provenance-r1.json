@@ -1,0 +1,73 @@
+{
+  "generator": "Built-in image_gen",
+  "prompt": "Use case: stylized-concept. Create a reusable SIX-FRAME CLAW CONTACT VFX sprite sheet for a grounded, hand-painted realistic Japanese post-apocalyptic side-view action game. Output exactly one 1536x1024 PNG: three columns, two rows, each cell exactly 512x512. All six cells show chronological frames of ONE very brief claw swipe making physical contact with fabric, not six different designs. The contact point stays at (256,256) in every cell; the strike travels from upper left toward lower right. Frame 1: tiny compact compressed contact with two irregular pale fabric threads. Frame 2: strongest very short asymmetric torn-fabric flick with a few muted dark rust-red pinhead droplets. Frame 3: torn fibers and fine pale grit break into separate fragments. Frame 4: fragments spread a little. Frame 5: only sparse fading fibers. Frame 6: nearly empty, two or three faint residual specks. This is a subtle 0.20-second contact accent, readable at 45–65 screen pixels. Keep everything in the central 300x300 of each cell with at least 80 pixels completely empty on all cell edges. Physical dusty fabric texture, desaturated warm gray/ivory and restrained dark red, softly antialiased particulate edges, no orange fire. Real fully transparent PNG alpha background, including all margins and spaces between particles. Do NOT paint a checkerboard or a backdrop. No diagonal straight drawn lines, no three parallel cartoon slash marks, no geometric stars, no cross, no rings, no neon aura, no long motion ribbon, no shockwave, no characters, no body parts, no weapons, no wound, no floor or shadow, no text, no grid borders. Keep the camera, contact anchor, and cell scale constant; each frame must become visibly weaker after frame 2, never loop back to the initial flash.",
+  "original": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-d977008e-12f3-42d4-90fa-9392932755a9.png",
+  "frames": [
+    {
+      "index": 0,
+      "alphaSum": 4377.329411764577,
+      "lumaSum": 587369.6918101807,
+      "zero": 240766,
+      "visible": 21378,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.000051363046855939385
+    },
+    {
+      "index": 1,
+      "alphaSum": 17858.729411777582,
+      "lumaSum": 1938885.706134106,
+      "zero": 150294,
+      "visible": 111850,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.000005136304685593949
+    },
+    {
+      "index": 2,
+      "alphaSum": 8323.60784314019,
+      "lumaSum": 997137.0430917495,
+      "zero": 188457,
+      "visible": 73687,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.000001926114257097731
+    },
+    {
+      "index": 3,
+      "alphaSum": 4073.6431372543557,
+      "lumaSum": 459219.79110661545,
+      "zero": 202924,
+      "visible": 59220,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.00006612992282702194
+    },
+    {
+      "index": 4,
+      "alphaSum": 1782.7921568625065,
+      "lumaSum": 198396.98289804594,
+      "zero": 222737,
+      "visible": 39407,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.000018619104485278068
+    },
+    {
+      "index": 5,
+      "alphaSum": 435.2039215686092,
+      "lumaSum": 35122.79584941114,
+      "zero": 252898,
+      "visible": 9246,
+      "edgeMax": 0.00392156862745098,
+      "edgeMean": 0.0000025681523427969745
+    }
+  ],
+  "adaptation": "Original RGBA retained with lossless WebP encoding only. No background removal, color adjustment, crop or pixel painting.",
+  "source": {
+    "file": "assets/source/v100/vfx/generated/claw-contact-six-r1.png",
+    "bytes": 1364797,
+    "sha256": "e89959f56aa4038a13204ef79d11606553f71426fde7128b8c0dc55c4d438d63"
+  },
+  "output": {
+    "file": "public/art/v100/combat-vfx/claw-contact-six-r1.webp",
+    "bytes": 359100,
+    "sha256": "14fa53f776f2de7cd77decd9a5a064390571065d0c5afa5d759b85f8fb38d511"
+  },
+  "status": "Encoded candidate; runtime and visual acceptance recorded separately"
+}

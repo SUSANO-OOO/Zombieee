@@ -2348,6 +2348,1506 @@
         "public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png"
       ],
       "semanticStates": []
+    },
+    "/public/art/v100/bosses/mugarian-president-mutated-battle-v2.png": {
+      "path": "/public/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 4352,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a",
+      "metadataPath": "/public/art/v100/bosses/mugarian-president-mutated-battle-v2-metadata.json",
+      "commonScale": 0.33994334277620397,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "entrance",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 102,
+            "y": 158,
+            "width": 861,
+            "height": 1275,
+            "alphaPixels": 585270
+          },
+          "contentRect": {
+            "x": 125,
+            "y": 63,
+            "width": 293,
+            "height": 433
+          },
+          "renderedSize": {
+            "width": 293,
+            "height": 433
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 94,
+            "y": 132,
+            "width": 870,
+            "height": 1312,
+            "alphaPixels": 628301
+          },
+          "contentRect": {
+            "x": 124,
+            "y": 50,
+            "width": 296,
+            "height": 446
+          },
+          "renderedSize": {
+            "width": 296,
+            "height": 446
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 76,
+            "y": 193,
+            "width": 921,
+            "height": 1152,
+            "alphaPixels": 527663
+          },
+          "contentRect": {
+            "x": 115,
+            "y": 104,
+            "width": 313,
+            "height": 392
+          },
+          "renderedSize": {
+            "width": 313,
+            "height": 392
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1211,
+            "height": 1299
+          },
+          "sourceBounds": {
+            "x": 10,
+            "y": 209,
+            "width": 1172,
+            "height": 948,
+            "alphaPixels": 433595
+          },
+          "contentRect": {
+            "x": 73,
+            "y": 174,
+            "width": 398,
+            "height": 322
+          },
+          "renderedSize": {
+            "width": 398,
+            "height": 322
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 26,
+            "y": 228,
+            "width": 976,
+            "height": 1147,
+            "alphaPixels": 521994
+          },
+          "contentRect": {
+            "x": 106,
+            "y": 106,
+            "width": 332,
+            "height": 390
+          },
+          "renderedSize": {
+            "width": 332,
+            "height": 390
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "phase",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 34,
+            "y": 50,
+            "width": 973,
+            "height": 1412,
+            "alphaPixels": 590228
+          },
+          "contentRect": {
+            "x": 106,
+            "y": 16,
+            "width": 331,
+            "height": 480
+          },
+          "renderedSize": {
+            "width": 331,
+            "height": 480
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 49,
+            "y": 311,
+            "width": 934,
+            "height": 989,
+            "alphaPixels": 383496
+          },
+          "contentRect": {
+            "x": 113,
+            "y": 160,
+            "width": 318,
+            "height": 336
+          },
+          "renderedSize": {
+            "width": 318,
+            "height": 336
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "defeat",
+          "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1536,
+            "height": 1024
+          },
+          "sourceBounds": {
+            "x": 16,
+            "y": 307,
+            "width": 1498,
+            "height": 605,
+            "alphaPixels": 400516
+          },
+          "contentRect": {
+            "x": 17,
+            "y": 290,
+            "width": 509,
+            "height": 206
+          },
+          "renderedSize": {
+            "width": 509,
+            "height": 206
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+        "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png",
+      "weaponScalePolicy": "identity-master-locked; mutated president preserves the original hooked staff and oversized arm silhouette in every authored state",
+      "semanticStates": [
+        {
+          "state": "entrance",
+          "rightRow": "entrance:right",
+          "leftRow": "entrance:left"
+        },
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "phase",
+          "rightRow": "phase:right",
+          "leftRow": "phase:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        },
+        {
+          "state": "defeat",
+          "rightRow": "defeat:right",
+          "leftRow": "defeat:left"
+        }
+      ],
+      "identityMasterSha256": "be58f640e7b918e0a37a04d6e128b448c71926483a95f9a5a161cd83dfae0d72",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 108
+    },
+    "/public/art/v100/bosses/takuya-omega-battle-v2.png": {
+      "path": "/public/art/v100/bosses/takuya-omega-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 4352,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8",
+      "metadataPath": "/public/art/v100/bosses/takuya-omega-battle-v2-metadata.json",
+      "commonScale": 0.3218707015130674,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "entrance",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 28,
+            "y": 57,
+            "width": 964,
+            "height": 1351,
+            "alphaPixels": 654749
+          },
+          "contentRect": {
+            "x": 117,
+            "y": 61,
+            "width": 310,
+            "height": 435
+          },
+          "renderedSize": {
+            "width": 310,
+            "height": 435
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 82,
+            "y": 32,
+            "width": 908,
+            "height": 1454,
+            "alphaPixels": 731576
+          },
+          "contentRect": {
+            "x": 126,
+            "y": 28,
+            "width": 292,
+            "height": 468
+          },
+          "renderedSize": {
+            "width": 292,
+            "height": 468
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 5,
+            "y": 103,
+            "width": 939,
+            "height": 1339,
+            "alphaPixels": 630777
+          },
+          "contentRect": {
+            "x": 121,
+            "y": 65,
+            "width": 302,
+            "height": 431
+          },
+          "renderedSize": {
+            "width": 302,
+            "height": 431
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1198,
+            "height": 1313
+          },
+          "sourceBounds": {
+            "x": 68,
+            "y": 217,
+            "width": 1020,
+            "height": 889,
+            "alphaPixels": 364714
+          },
+          "contentRect": {
+            "x": 108,
+            "y": 210,
+            "width": 328,
+            "height": 286
+          },
+          "renderedSize": {
+            "width": 328,
+            "height": 286
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 23,
+            "y": 201,
+            "width": 964,
+            "height": 1191,
+            "alphaPixels": 594341
+          },
+          "contentRect": {
+            "x": 117,
+            "y": 113,
+            "width": 310,
+            "height": 383
+          },
+          "renderedSize": {
+            "width": 310,
+            "height": 383
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "phase",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1133,
+            "height": 1388
+          },
+          "sourceBounds": {
+            "x": 70,
+            "y": 18,
+            "width": 1020,
+            "height": 1354,
+            "alphaPixels": 599548
+          },
+          "contentRect": {
+            "x": 108,
+            "y": 60,
+            "width": 328,
+            "height": 436
+          },
+          "renderedSize": {
+            "width": 328,
+            "height": 436
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 12,
+            "y": 233,
+            "width": 1004,
+            "height": 1156,
+            "alphaPixels": 532013
+          },
+          "contentRect": {
+            "x": 110,
+            "y": 124,
+            "width": 323,
+            "height": 372
+          },
+          "renderedSize": {
+            "width": 323,
+            "height": 372
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "defeat",
+          "source": "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1536,
+            "height": 1024
+          },
+          "sourceBounds": {
+            "x": 11,
+            "y": 307,
+            "width": 1490,
+            "height": 592,
+            "alphaPixels": 411330
+          },
+          "contentRect": {
+            "x": 32,
+            "y": 305,
+            "width": 480,
+            "height": 191
+          },
+          "renderedSize": {
+            "width": 480,
+            "height": 191
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+        "assets/source/v100/enemies/takuya-omega-identity-master-r2.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+      "weaponScalePolicy": "identity-master-locked; oversized serrated greatsword keeps the same blade length and width from hand to near-ankle across every authored state",
+      "semanticStates": [
+        {
+          "state": "entrance",
+          "rightRow": "entrance:right",
+          "leftRow": "entrance:left"
+        },
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "phase",
+          "rightRow": "phase:right",
+          "leftRow": "phase:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        },
+        {
+          "state": "defeat",
+          "rightRow": "defeat:right",
+          "leftRow": "defeat:left"
+        }
+      ],
+      "identityMasterSha256": "d46f6a96f693dbf0aa9b81b9ef2b1f5797f461c87505c7390c80464e3a0249af",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 78
+    },
+    "/public/art/v100/enemies/red-panther-commander-battle-v2.png": {
+      "path": "/public/art/v100/enemies/red-panther-commander-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 2720,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "b8bd7198dd7b602ae03f20f1cd36340e713cbb06941e673a8b4c33bdf0f2cc19",
+      "metadataPath": "/public/art/v100/enemies/red-panther-commander-battle-v2-metadata.json",
+      "commonScale": 0.3046875,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 65,
+            "y": 0,
+            "width": 849,
+            "height": 1536,
+            "alphaPixels": 535395
+          },
+          "contentRect": {
+            "x": 182,
+            "y": 28,
+            "width": 184,
+            "height": 468
+          },
+          "renderedSize": {
+            "width": 259,
+            "height": 468
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 49,
+            "y": 7,
+            "width": 942,
+            "height": 1485,
+            "alphaPixels": 598999
+          },
+          "contentRect": {
+            "x": 128,
+            "y": 44,
+            "width": 287,
+            "height": 452
+          },
+          "renderedSize": {
+            "width": 287,
+            "height": 452
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 70,
+            "y": 97,
+            "width": 897,
+            "height": 1256,
+            "alphaPixels": 414252
+          },
+          "contentRect": {
+            "x": 135,
+            "y": 113,
+            "width": 273,
+            "height": 383
+          },
+          "renderedSize": {
+            "width": 273,
+            "height": 383
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 47,
+            "y": 63,
+            "width": 963,
+            "height": 1425,
+            "alphaPixels": 613538
+          },
+          "contentRect": {
+            "x": 125,
+            "y": 62,
+            "width": 275,
+            "height": 434
+          },
+          "renderedSize": {
+            "width": 293,
+            "height": 434
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1536,
+            "height": 1024
+          },
+          "sourceBounds": {
+            "x": 0,
+            "y": 38,
+            "width": 1512,
+            "height": 970,
+            "alphaPixels": 588286
+          },
+          "contentRect": {
+            "x": 41,
+            "y": 215,
+            "width": 461,
+            "height": 281
+          },
+          "renderedSize": {
+            "width": 461,
+            "height": 296
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; compact sidearm keeps the same silhouette and hand attachment across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ],
+      "identityMasterSha256": "dab75e9ec7e6e1075f969d021d8089477ca2e2cb40e3a1e416e5e029bade6dba",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 1
+    },
+    "/public/art/v100/enemies/red-panther-knife-battle-v2.png": {
+      "path": "/public/art/v100/enemies/red-panther-knife-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 2720,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+      "metadataPath": "/public/art/v100/enemies/red-panther-knife-battle-v2-metadata.json",
+      "commonScale": 0.33766233766233766,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 118,
+            "y": 59,
+            "width": 688,
+            "height": 1386,
+            "alphaPixels": 402812
+          },
+          "contentRect": {
+            "x": 156,
+            "y": 28,
+            "width": 232,
+            "height": 468
+          },
+          "renderedSize": {
+            "width": 232,
+            "height": 468
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 101,
+            "y": 207,
+            "width": 770,
+            "height": 1134,
+            "alphaPixels": 299587
+          },
+          "contentRect": {
+            "x": 142,
+            "y": 113,
+            "width": 260,
+            "height": 383
+          },
+          "renderedSize": {
+            "width": 260,
+            "height": 383
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 58,
+            "y": 210,
+            "width": 895,
+            "height": 1124,
+            "alphaPixels": 346768
+          },
+          "contentRect": {
+            "x": 121,
+            "y": 116,
+            "width": 302,
+            "height": 380
+          },
+          "renderedSize": {
+            "width": 302,
+            "height": 380
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 49,
+            "y": 146,
+            "width": 851,
+            "height": 1255,
+            "alphaPixels": 406602
+          },
+          "contentRect": {
+            "x": 128,
+            "y": 72,
+            "width": 287,
+            "height": 424
+          },
+          "renderedSize": {
+            "width": 287,
+            "height": 424
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1254,
+            "height": 1254
+          },
+          "sourceBounds": {
+            "x": 26,
+            "y": 361,
+            "width": 1204,
+            "height": 611,
+            "alphaPixels": 375406
+          },
+          "contentRect": {
+            "x": 68,
+            "y": 290,
+            "width": 407,
+            "height": 206
+          },
+          "renderedSize": {
+            "width": 407,
+            "height": 206
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; serrated combat knife keeps the same blade length, width and hand attachment across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ],
+      "identityMasterSha256": "8875b636ed887caa34aa1a704c31291aa1a774c4429891d2c66e7356fc8082a2",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 2
+    },
+    "/public/art/v100/enemies/red-panther-shield-battle-v2.png": {
+      "path": "/public/art/v100/enemies/red-panther-shield-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 2720,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "5c48ac9a84d89c852e4039f3b58814f0ea70c4907ea9ac8a5e4ffaebd455c475",
+      "metadataPath": "/public/art/v100/enemies/red-panther-shield-battle-v2-metadata.json",
+      "commonScale": 0.31137724550898205,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 104,
+            "y": 17,
+            "width": 864,
+            "height": 1503,
+            "alphaPixels": 749018
+          },
+          "contentRect": {
+            "x": 137,
+            "y": 28,
+            "width": 269,
+            "height": 468
+          },
+          "renderedSize": {
+            "width": 269,
+            "height": 468
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1101,
+            "height": 1429
+          },
+          "sourceBounds": {
+            "x": 118,
+            "y": 114,
+            "width": 877,
+            "height": 1207,
+            "alphaPixels": 574035
+          },
+          "contentRect": {
+            "x": 135,
+            "y": 120,
+            "width": 273,
+            "height": 376
+          },
+          "renderedSize": {
+            "width": 273,
+            "height": 376
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/red-panther-shield/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1229,
+            "height": 1280
+          },
+          "sourceBounds": {
+            "x": 21,
+            "y": 19,
+            "width": 1194,
+            "height": 1227,
+            "alphaPixels": 715146
+          },
+          "contentRect": {
+            "x": 86,
+            "y": 114,
+            "width": 372,
+            "height": 382
+          },
+          "renderedSize": {
+            "width": 372,
+            "height": 382
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/red-panther-shield/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 0,
+            "y": 96,
+            "width": 996,
+            "height": 1408,
+            "alphaPixels": 721488
+          },
+          "contentRect": {
+            "x": 119,
+            "y": 58,
+            "width": 308,
+            "height": 438
+          },
+          "renderedSize": {
+            "width": 310,
+            "height": 438
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/red-panther-shield/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1536,
+            "height": 1024
+          },
+          "sourceBounds": {
+            "x": 30,
+            "y": 36,
+            "width": 1489,
+            "height": 988,
+            "alphaPixels": 670222
+          },
+          "contentRect": {
+            "x": 40,
+            "y": 213,
+            "width": 464,
+            "height": 271
+          },
+          "renderedSize": {
+            "width": 464,
+            "height": 308
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; riot shield keeps the same full body-covering rectangle, viewing slit and red claw marks across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ],
+      "identityMasterSha256": "584e03350283e6e7a92709c98d14ca63a9574e53f46961a39b466a3760d5ea2f",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 2
+    },
+    "/public/art/v100/enemies/red-panther-smg-battle-v2.png": {
+      "path": "/public/art/v100/enemies/red-panther-smg-battle-v2.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 2720,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "e53916e676884631618b8e5cff8f53506451299fcec52638b77724ab724cc5c5",
+      "metadataPath": "/public/art/v100/enemies/red-panther-smg-battle-v2-metadata.json",
+      "commonScale": 0.3103448275862069,
+      "cell": {
+        "width": 544,
+        "height": 512
+      },
+      "noClipping": true,
+      "frameMetadata": [
+        {
+          "state": "idle",
+          "source": "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 71,
+            "y": 14,
+            "width": 759,
+            "height": 1508,
+            "alphaPixels": 484359
+          },
+          "contentRect": {
+            "x": 195,
+            "y": 28,
+            "width": 195,
+            "height": 468
+          },
+          "renderedSize": {
+            "width": 236,
+            "height": 468
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "move",
+          "source": "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 43,
+            "y": 5,
+            "width": 967,
+            "height": 1484,
+            "alphaPixels": 530058
+          },
+          "contentRect": {
+            "x": 122,
+            "y": 35,
+            "width": 300,
+            "height": 461
+          },
+          "renderedSize": {
+            "width": 300,
+            "height": 461
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "attack",
+          "source": "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 34,
+            "y": 126,
+            "width": 944,
+            "height": 1310,
+            "alphaPixels": 418199
+          },
+          "contentRect": {
+            "x": 125,
+            "y": 89,
+            "width": 293,
+            "height": 407
+          },
+          "renderedSize": {
+            "width": 293,
+            "height": 407
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "hit",
+          "source": "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1024,
+            "height": 1536
+          },
+          "sourceBounds": {
+            "x": 0,
+            "y": 19,
+            "width": 1002,
+            "height": 1501,
+            "alphaPixels": 577500
+          },
+          "contentRect": {
+            "x": 116,
+            "y": 37,
+            "width": 307,
+            "height": 455
+          },
+          "renderedSize": {
+            "width": 311,
+            "height": 466
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        },
+        {
+          "state": "death",
+          "source": "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png",
+          "sourceSize": {
+            "width": 1536,
+            "height": 1024
+          },
+          "sourceBounds": {
+            "x": 14,
+            "y": 9,
+            "width": 1504,
+            "height": 991,
+            "alphaPixels": 487039
+          },
+          "contentRect": {
+            "x": 38,
+            "y": 198,
+            "width": 467,
+            "height": 297
+          },
+          "renderedSize": {
+            "width": 467,
+            "height": 308
+          },
+          "row": {
+            "left": "authored",
+            "right": "derived-horizontal-flip"
+          },
+          "clipped": false
+        }
+      ],
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; compact suppressed SMG keeps the same silhouette, suppressor and magazine scale across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ],
+      "identityMasterSha256": "3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8",
+      "repair": "explicit-reviewed-gap-seeds-local-palette",
+      "reviewedGapSeedCount": 2
     }
   }
 }

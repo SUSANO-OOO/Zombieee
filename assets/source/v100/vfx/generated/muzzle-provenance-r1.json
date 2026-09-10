@@ -1,0 +1,27 @@
+{
+  "generator": "Built-in image_gen tool",
+  "generatedFile": "exec-aa3ed65f-5e5c-4889-9ea7-7fb2421f3a3b.png",
+  "prompt": "Create a six-frame muzzle flash sprite sheet, exactly three columns and two rows of 512x512 cells on a 1536x1024 pure black canvas, for additive light compositing. Realistic organic gunpowder flame, ignition, expansion, breakup, smoke and embers in chronological order. Fixed ignition anchor, pointing right. Wide black gutters. No gun, person, letters, geometric stars, triangles, rings or bars.",
+  "adaptation": "The returned source has real fractional alpha, which is preserved. No pixel editing or background removal. Lossless WebP encoding only. Runtime samples six authored cells, rotates at the firing point and expires in 85–140ms according to weapon.",
+  "source": {
+    "file": "assets/source/v100/vfx/generated/muzzle-six-frames-r1.png",
+    "bytes": 1134202,
+    "sha256": "57d43b9018e159cb1fb00e7cab819ec36f09656ca03245baac2475c9772d14fe"
+  },
+  "output": {
+    "file": "public/art/v100/combat-vfx/muzzle-six-frames-r1.webp",
+    "bytes": 626064,
+    "sha256": "f548b07490f2b84d76e02f5be90f4821d9bab9d6273824eb2feb3d409c7cc752"
+  },
+  "geometry": {
+    "columns": 3,
+    "rows": 2,
+    "cellSize": 512,
+    "observedIgnition": {
+      "x": 112,
+      "y": 246
+    },
+    "composite": "lighter"
+  },
+  "status": "Local visual candidate; actual combat and producer acceptance recorded separately."
+}
