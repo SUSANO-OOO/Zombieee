@@ -47,4 +47,3 @@ test("president keeps standard scale and follows Omega short-viewport scale", ()
   assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: false }), .6);
   assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: true }), .52);
 });
-

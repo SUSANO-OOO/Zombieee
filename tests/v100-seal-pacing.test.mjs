@@ -53,4 +53,3 @@ test('return sprint is isolated to the sealed V1 return and still honors slowing
  assert.equal(stationHumanMoveSpeed({baseSpeed:20,runtime:{...sealed,completed:true},config}),20);
  assert.equal(stationHumanMoveSpeed({baseSpeed:20,runtime:sealed}),36,'legacy sealed movement remains 1.8');
 });
-
