@@ -92,3 +92,29 @@ test("long background gaps are capped and an explicit reset discards hidden time
   assert.equal(resumed.simulationStepCount, 1);
   assert.ok(resumed.droppedSimulationSeconds < 1e-9);
 });
+
+test("45Hz render cadence follows jittered elapsed time without render debt", () => {
+  const profile = resolveGraphicsProfile("auto", { width: 844, height: 390 });
+  const schedule = createRuntimeFrameSchedule(0);
+  let renders = 0;
+  let now = 0;
+  for (let frame = 0; frame < 61; frame += 1) {
+    now += frame % 7 === 0 ? 33.4 : 16.6;
+    if (advanceRuntimeFrameSchedule(schedule, now, profile).shouldRender) renders += 1;
+  }
+  const elapsedMs = now - 33.4;
+  const expectedRenders = Math.floor((elapsedMs * 45) / 1000) + 1;
+  assert.ok(Math.abs(renders - expectedRenders) <= 1,
+    `unexpected jittered renders ${renders}; expected ${expectedRenders}`);
+  assert.ok(schedule.renderAccumulatorMs >= 0 && schedule.renderAccumulatorMs < 1000 / 45);
+});
+
+test("a long render gap emits once and does not queue a burst", () => {
+  const profile = resolveGraphicsProfile("auto", { width: 844, height: 390 });
+  const schedule = createRuntimeFrameSchedule(0);
+  assert.equal(advanceRuntimeFrameSchedule(schedule, 16.7, profile).shouldRender, true);
+  assert.equal(advanceRuntimeFrameSchedule(schedule, 5_016.7, profile).shouldRender, true);
+  assert.ok(schedule.renderAccumulatorMs <= 1000 / 45 + 1e-9);
+  assert.equal(advanceRuntimeFrameSchedule(schedule, 10_016.7, profile).shouldRender, true);
+  assert.ok(schedule.renderAccumulatorMs <= 1000 / 45 + 1e-9);
+});

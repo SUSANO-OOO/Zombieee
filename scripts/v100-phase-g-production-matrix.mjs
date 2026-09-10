@@ -9,7 +9,7 @@ import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-teleme
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
-import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
+import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
@@ -707,13 +707,16 @@ const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
     for (const event of Object.values(V100_STORY_EVENTS)) {
       const nodeIndex = event.nodes.findIndex((node, index) => node.kind === "dialogue"
         && node.portraitOwner
-        && v100EventPresentationFor({ eventId: event.id, phase: event.id.endsWith(":post") ? "post" : "event", node, nodeIndex: index }).portraitSide === side);
+        && v100DialogueSlots(event.nodes, index)[side]?.portraitOwner === node.portraitOwner);
       if (nodeIndex >= 0) {
+        const node = event.nodes[nodeIndex];
         return [side, Object.freeze({
           eventId: event.id,
           phase: event.id.endsWith(":post") ? "post" : "event",
           stageNumber: event.stageNumber ?? 1,
           nodeIndex,
+          portraitOwner: node.portraitOwner,
+          nodeKind: node.kind,
         })];
       }
     }
@@ -2145,7 +2148,7 @@ const stateContracts = Object.freeze({
   "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side"] },
   formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
   personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
-  "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-section", ".v100-support-management-card", ".v100-vehicle-section", ".v100-vehicle-stats"] },
+  "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-management-list", ".v100-support-management-card", ".v100-support-art img"] },
   "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
   "battle-boss": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
   "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-actions"], forbiddenSelectors: [".v100-result-rewards", ".v100-reward-summary"] },
@@ -2157,8 +2160,8 @@ const stateContracts = Object.freeze({
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
 });
 
-async function productionStateContract(page, state) {
-  const contract = stateContracts[state];
+async function productionStateContract(page, state, contractOverride = null) {
+  const contract = contractOverride ?? stateContracts[state];
   invariant(contract, `missing Phase G state contract: ${state}`);
   const observed = await page.evaluate(({ expected, battleState }) => {
     const visible = (selector) => {
@@ -2888,6 +2891,12 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
       invariant(phaseGCaptureTransaction.proofState === "COMPLETE"
         && phaseGCaptureTransaction.cleanupOutcome === "success",
       `${label} sealed capture transaction did not preserve successful cleanup: ${JSON.stringify(phaseGCaptureTransaction)}`);
+    }
+    if (state === "support-vehicle-management") {
+      invariant(captureMeta.managementViews?.support?.screenshot?.sha256
+        && captureMeta.managementViews?.vehicle?.screenshot?.sha256
+        && captureMeta.managementViews?.saveUnchangedFromNavigation === true,
+      `${label} management view receipts are incomplete`);
     }
     results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown, evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, phaseGCaptureTransaction, hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null, ...captureMeta });
     return screenshot;
@@ -4283,18 +4292,120 @@ for (const viewport of requiredViewports) {
     await mapPage(page, fullSave({ availableStageIds: [V100_STAGE_IDS[0]] }));
     await click(page, page.getByRole("button", { name: /最終章/u }), "final chapter tab");
     await click(page, page.getByRole("button", { name: /TAKUYA-Ω/u }), "locked boss node");
+    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
     await page.locator(".v100-boss-callout").waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "formation", async (page) => formationPage(page, fullSave()));
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("button", { name: /隊員を編成/u }), "personnel formation");
+    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "隊員", exact: true }), "personnel formation");
     await page.locator('main.v100-shell[data-v100-surface="personnel"]').waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "support-vehicle-management", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("button", { name: /出撃装備を選ぶ/u }), "sortie loadout");
+    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "支援", exact: true }), "support management");
     await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
+    const saveBeforeManagementNavigation = await page.evaluate(() => localStorage.getItem("nishijin-campaign-v100"));
+    const supportContract = await productionStateContract(page, "support-vehicle-management");
+    invariant(supportContract.ok, "support management view contract failed");
+    await page.waitForFunction(() => {
+      const images = [...document.querySelectorAll(".v100-support-art img")];
+      return images.length > 0 && images.every((image) =>
+        image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+    }, null, { timeout });
+    const supportScreenshot = await saveScreenshot(
+      page,
+      path.join(evidenceDir, `chromium-${viewportLabel(viewport)}-support-vehicle-management-support.png`),
+      "support management view",
+    );
+    await click(page, page.getByRole("button", { name: "車両", exact: true }), "vehicle management tab");
+    await page.locator('main.v100-shell[data-v100-surface="vehicle"]').waitFor({ state: "visible", timeout });
+    await page.waitForFunction(() => {
+      const image = document.querySelector(".v100-vehicle-upgrade-art img");
+      return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+    }, null, { timeout });
+    const vehicleContract = await productionStateContract(page, "support-vehicle-management", {
+      phases: ["map"],
+      surfaces: ["vehicle"],
+      selectors: [
+        'main.v100-shell[data-v100-surface="vehicle"]',
+        ".v100-vehicle-upgrade-screen",
+        ".v100-vehicle-upgrade-art img",
+        ".v100-vehicle-upgrade-copy dl",
+        ".v100-vehicle-upgrade-copy button.v100-primary",
+      ],
+    });
+    invariant(vehicleContract.ok, "vehicle management view contract failed");
+    const vehicleDetails = await page.evaluate(() => {
+      const image = document.querySelector(".v100-vehicle-upgrade-art img");
+      const text = document.querySelector(".v100-vehicle-upgrade-copy")?.textContent ?? "";
+      const imageReady = image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+      const levelAndHp = /車体強化\s*\/\s*Lv\.\d+/.test(text) && /現在耐久/.test(text);
+      const action = document.querySelector(".v100-vehicle-upgrade-copy button.v100-primary");
+      const panel = document.querySelector(".v100-vehicle-upgrade-screen");
+      const rectOf = (element) => {
+        if (!(element instanceof Element)) return null;
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, right: rect.right, bottom: rect.bottom };
+      };
+      const styleOf = (element) => {
+        if (!(element instanceof Element)) return null;
+        const style = getComputedStyle(element);
+        return {
+          height: style.height, minHeight: style.minHeight, maxHeight: style.maxHeight,
+          gap: style.gap, flexShrink: style.flexShrink, gridTemplateRows: style.gridTemplateRows,
+          padding: style.padding,
+        };
+      };
+      const imageRect = rectOf(image);
+      const statsRect = rectOf(document.querySelector(".v100-vehicle-upgrade-copy dl"));
+      const actionRect = rectOf(action);
+      const abilities = document.querySelector(".v100-vehicle-abilities");
+      const abilitiesRect = rectOf(abilities);
+      const abilityEntryRects = [...document.querySelectorAll(".v100-vehicle-abilities > div")].map(rectOf);
+      const panelRect = rectOf(panel);
+      const inRect = (rect, boundary) => Boolean(rect && boundary && rect.width > 0 && rect.height > 0
+        && rect.x >= boundary.x - 1 && rect.y >= boundary.y - 1
+        && rect.right <= boundary.right + 1 && rect.bottom <= boundary.bottom + 1);
+      const viewport = { x: 0, y: 0, right: window.innerWidth, bottom: window.innerHeight };
+      const imageInView = inRect(imageRect, viewport) && inRect(imageRect, panelRect);
+      const statsInView = inRect(statsRect, viewport) && inRect(statsRect, panelRect);
+      const actionInView = inRect(actionRect, viewport) && inRect(actionRect, panelRect) && actionRect.height >= 42;
+      const abilitiesInView = inRect(abilitiesRect, viewport) && inRect(abilitiesRect, panelRect)
+        && abilityEntryRects.length === 2 && abilityEntryRects.every((rect) => inRect(rect, viewport) && inRect(rect, panelRect));
+      return {
+        imageReady, levelAndHp,
+        actionVisible: Boolean(actionRect && actionRect.width > 0 && actionRect.height > 0),
+        imageInView, statsInView, actionInView,
+        abilitiesInView, controlsInViewport: imageInView && statsInView && actionInView && abilitiesInView,
+        rects: { image: imageRect, stats: statsRect, action: actionRect, abilities: abilitiesRect, abilityEntries: abilityEntryRects, panel: panelRect },
+        styles: { panel: styleOf(panel), hero: styleOf(document.querySelector(".v100-vehicle-upgrade-hero")), art: styleOf(document.querySelector(".v100-vehicle-upgrade-art")), copy: styleOf(document.querySelector(".v100-vehicle-upgrade-copy")), stats: styleOf(document.querySelector(".v100-vehicle-upgrade-copy dl")), action: styleOf(action) },
+      };
+    });
+    const vehicleDiagnosticScreenshot = vehicleDetails.controlsInViewport ? null : await saveScreenshot(
+      page,
+      path.join(evidenceDir, `chromium-${viewportLabel(viewport)}-support-vehicle-management-vehicle-diagnostic.png`),
+      "vehicle management diagnostic before viewport gate",
+    );
+    invariant(vehicleDetails.imageReady && vehicleDetails.levelAndHp && vehicleDetails.actionVisible && vehicleDetails.controlsInViewport, `vehicle management details are incomplete or outside the visible panel: ${JSON.stringify({ vehicleDetails, vehicleDiagnosticScreenshot })}`);
+    const vehicleOverflow = await overflowAudit(page);
+    invariant(vehicleOverflow.every(({ delta }) => delta <= 1), "vehicle management view horizontal overflow");
+    const vehicleScreenshot = await saveScreenshot(
+      page,
+      path.join(evidenceDir, `chromium-${viewportLabel(viewport)}-support-vehicle-management-vehicle.png`),
+      "vehicle management view",
+    );
+    await click(page, page.getByRole("button", { name: "支援", exact: true }), "support management tab");
+    await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
+    const saveAfterManagementNavigation = await page.evaluate(() => localStorage.getItem("nishijin-campaign-v100"));
+    invariant(saveBeforeManagementNavigation === saveAfterManagementNavigation, "management tab navigation changed the saved inventory");
+    return {
+      managementViews: {
+        support: { contract: supportContract, screenshot: supportScreenshot, surface: "support-vehicle" },
+        vehicle: { contract: vehicleContract, screenshot: vehicleScreenshot, details: vehicleDetails, overflow: vehicleOverflow, surface: "vehicle" },
+        saveUnchangedFromNavigation: true,
+      },
+    };
   });
   await captureState("chromium", viewport, "battle-normal", async (page) => ({ ...(await battlePage(page, fullSave())), variant: "core-battle-normal" }));
   await captureState("chromium", viewport, "battle-boss", async (page) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega" })), variant: "core-battle-boss" }));
@@ -4305,7 +4416,8 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "epilogue-postgame", async (page) => { await openRoute(page, eventSave("epilogue", "v100:event:epilogue")); await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByLabel("作戦地図").getByRole("button", { name: "データ管理", exact: true }), "data management");
+    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
+    await click(page, page.getByRole("button", { name: "データ管理", exact: true }), "data management");
     await page.getByRole("dialog", { name: "データ管理" }).waitFor({ state: "visible", timeout });
   });
 }

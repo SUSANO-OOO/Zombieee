@@ -43,6 +43,10 @@
 - M6-3 [未完了] 公開SHA/匿名アクセス/素材/新旧save/更新復旧を確認し、完了記録・Issue close。
 
 ### 総合検証の最新記録
+現行remote候補は `9554955975b83a32d75e7c272d1590335e91d0c0`（8 commit・527 paths）で、このlocal treeには追加のCSS・scheduler・QA変更があるため同SHAの固定候補とは区別する。実測build `f61aeac924108f867d83c4ec49c07b7191094dd5c5dbedae10117da58b8675a3` は成功し、全1638 tests r3も成功、Lintは0 errors / 12 existing warnings。全体75%（18/24）、M5は1/4、M5-1/M5-3/M5-4とM6は未完了である。
+
+Chromiumのvehicle native validationは3 viewportで画像・stats・action・2 abilitiesを確認し、vehicle High指摘を閉じた。Phase Gのrequired viewportsは3つに戻り、diagnostic filterは除去、unused importも除去済み。性能はChromium 844x340でactual render 41.901Hz、median RAF 59.88fpsは通過したが、p95 RAF 33.4msは基準33msを超え、profiler診断でも原因は未特定である。remote CIは少なくとも5 jobsが2つの既知shared QA defectsで失敗しており、local修正を新CI成功とは扱わない。固定候補CI待ちで、総合受入は未完了である。
+
 保存済み候補の5 commit後差分検査は exit 2（48件・7対象）だったため、Kenney原License 3件を原bytes archive/provenance付きで保管し、空白・改行だけを正規化した。QA 4件もEOF空行だけを整理した。候補範囲525/525、runtime binary 294/294一致を独立照合済み。全体75%（18/24）、M5は1/4、M5-1/M5-3/M5-4は未完了。旧S27敗北記録は保持し、同一候補の通常UI再試行で全編確認を完了した。
 
 最新M5作業・確定記録（2026-09-10）：build 1830903e18982e242d3b6ed66409a11307c581aad05707e29c9186d91bc2e043。同一候補の新規開始からPROLOGUE72、全30作戦、ENDING32、credits11、EPILOGUE42、postgame-mapまで通常UIで通過し、30作戦完了・既読94・errors0を確認した。S27初回敗北は保全し、QA専用入力優先度修正後の通常UI再試行で全編確認を完了した。actor・時計・HP・結果setterは使用していない。

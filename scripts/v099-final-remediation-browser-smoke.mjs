@@ -712,7 +712,21 @@ async function waitForBattleReadiness(page, label) {
       };
     });
     if (lastState.asset?.state === "error") {
-      throw new Error(`${label}: asset readiness failed ${JSON.stringify(lastState)}`);
+      const failureHistory = await page.evaluate(() => window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? []);
+      const failedPaths = new Set(lastState.failedPaths ?? []);
+      const matchingFailures = failureHistory.flatMap((entry) => (
+        Array.isArray(entry?.failures)
+          ? entry.failures.filter((failure) => failedPaths.has(failure?.path))
+          : []
+      ));
+      throw new Error(`${label}: asset readiness failed ${JSON.stringify({
+        ...lastState,
+        failureHistory: matchingFailures.map((failure) => ({
+          generation: failureHistory.find((entry) => entry?.failures?.includes(failure))?.generation ?? null,
+          path: failure.path,
+          reason: failure.reason,
+        })),
+      })}`);
     }
     if (lastState.screen === "battle"
       && lastState.running === true
@@ -1170,8 +1184,14 @@ async function staticRuntimeEvidence() {
   invariant(equipmentFunctionStart >= 0 && equipmentFunctionEnd > equipmentFunctionStart,
     "CRAWLER authored-equipment renderer is missing");
   const equipmentRenderer = ashfallSource.slice(equipmentFunctionStart, equipmentFunctionEnd);
-  invariant(equipmentRenderer.includes("ctx.drawImage("),
+  // V1 may route the authored sheet through the bounded sampler before the
+  // same raster drawImage call; reject renderers without either live path.
+  const directRasterPath = equipmentRenderer.includes("ctx.drawImage(");
+  const sampledRasterPath = /v100ImageSampler\.draw\.bind\(null,\s*ctx\)[\s\S]*ctx\.drawImage\.bind\(ctx\)[\s\S]*\)\(\s*image,\s*resolved\.source\.x/u.test(equipmentRenderer);
+  invariant(directRasterPath || sampledRasterPath,
     "CRAWLER equipment renderer does not draw the authored raster sheet");
+  invariant(/drawCrawlerEquipmentFrame\(ctx,\s*sprites,\s*"barrage"[\s\S]*drawCrawlerEquipmentFrame\(ctx,\s*sprites,\s*"airstrike"/u.test(ashfallSource),
+    "CRAWLER authored-equipment renderer is not invoked for both sheets");
   invariant(!/(?:beginPath|moveTo|lineTo|arc|fillRect|strokeRect|Path2D)\s*\(/u.test(equipmentRenderer),
     "CRAWLER equipment renderer contains Canvas body geometry");
   invariant(!ashfallSource.includes("function drawAirstrikeObserver("),
