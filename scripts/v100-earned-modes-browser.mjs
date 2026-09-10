@@ -23,6 +23,20 @@ const ready=()=>page.waitForFunction(()=>!document.querySelector('.v100-shell[ar
 async function click(name){await ready();await button(name).click();await ready();}
 async function shot(name){await page.screenshot({path:out+'/'+name+'.png'});await persist();}
 function campaignPreserved(s){for(const key of ['completedStageIds','availableStageIds','ownedUnitIds','registeredUnitIds','unitLevels','formationSlots','vehicle'])assert.deepEqual(s[key],seed[key],key);}
+function validateSurvivalEnemyLedger({staticExpected, actualStats, turnedIds, survivingTurnedCount, deployCount}){
+ const staticKinds=new Set(Object.keys(staticExpected));
+ const actual=actualStats.enemyDefeatsByKind??{}, actualKinds=Object.keys(actual);
+ const unknown=actualKinds.filter(kind=>!staticKinds.has(kind)&&kind!=='turned');
+ assert.deepEqual(unknown,[],`Unexpected dynamic enemy kinds: ${unknown.join(',')}`);
+ for(const kind of staticKinds) assert.equal(actual[kind]??0,staticExpected[kind],`Static wave ledger mismatch: ${kind}`);
+ const turned=actual.turned??0;
+ assert.equal(Number.isSafeInteger(turned)&&turned>=0,true,'turned ledger must be a non-negative safe integer');
+ assert.ok(turned<=deployCount,`turned ledger exceeds deployments: ${turned}/${deployCount}`);
+ assert.equal(actualKinds.filter(kind=>staticKinds.has(kind)).length,Object.keys(staticExpected).length,'Static kinds must remain complete');
+ assert.equal(actualStats.kills,Object.values(staticExpected).reduce((sum,count)=>sum+count,0)+turned,'Kills must equal static plus turned');
+ assert.ok(new Set(turnedIds).size<=turned+survivingTurnedCount,'Observed turned IDs exceed defeated plus surviving turned');
+ return { staticExpected:{...staticExpected}, dynamicRecorded:{turned,source:'checkpoint ledger'}, actual:{...actual}, kills:actualStats.kills, observedTurnedIds:[...new Set(turnedIds)], survivingTurnedCount };
+}
 async function durableReadback(expected){
  const evidence=await readNativeIndexedDb(page,'nishijin-campaign-v100');
  assert.equal(evidence.database.version,1);assert.deepEqual(Object.keys(evidence.database.stores).sort(),['entitlements','saves']);
@@ -50,12 +64,14 @@ try{
  const afterOutbreak=await save();campaignPreserved(afterOutbreak);assert.equal(afterOutbreak.caps,seed.caps+outbreak.result.rewardCaps);assert.equal(afterOutbreak.bosses.defeatCounts[boss.id],seed.bosses.defeatCounts[boss.id]+1);
  await shot('outbreak-result');await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('region',{name:'異常発生の戦果',exact:true}).waitFor();assert.deepEqual(await save(),afterOutbreak);outbreak.status='passed';
  await click('異常発生一覧へ');await click('サバイバル');await shot('survival-hub');await click('防衛継続作戦へ出撃');
- const survival={mode:'survival',status:'running',inputs:[],waves:[],opening:await save()};report.modes.push(survival);assert.deepEqual(survival.opening.survival.active.run.bossPool,['takuya']);await persist();
+ const survival={mode:'survival',status:'running',inputs:[],waves:[],turnedIds:[],turnedObservations:[],opening:await save()};report.modes.push(survival);assert.deepEqual(survival.opening.survival.active.run.bossPool,['takuya']);await persist();
  const survivalStart=Date.now();last=0;
  while(!await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).isVisible()){
    assert.ok(Date.now()-survivalStart<20*60_000,'bounded first five ordinary survival waves');assert.deepEqual(report.errors,[]);
    assert.equal(await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).isVisible(),false,'Preserve and diagnose a normal survival defeat');
-   const wave=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.currentWave);if(wave&&!survival.waves.includes(wave))survival.waves.push(wave);
+   const observation=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return {wave:s?.survivalRun?.currentWave??null,turned:(s?.fighters??[]).filter(f=>f.side==='zombie'&&f.kind==='turned'&&Number.isFinite(Number(f.hp))&&Number(f.hp)>0).map(f=>({id:f.id,time:s.time}))};});
+   const wave=observation.wave;if(wave&&!survival.waves.includes(wave))survival.waves.push(wave);
+   for(const turned of observation.turned) if(!survival.turnedIds?.includes(turned.id)) { (survival.turnedIds??=[]).push(turned.id); (survival.turnedObservations??[]).push(turned); }
    try{await normalTacticalInput(page,survival);}catch(e){if(!await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).isVisible())throw e;}
    if(Date.now()-last>30000){await shot('survival-'+Math.floor((Date.now()-survivalStart)/1000));last=Date.now();}await page.waitForTimeout(300);
  }
@@ -63,9 +79,9 @@ try{
  survival.incoming=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getSnapshot().survivalRun);
  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')).survival.active?.run.lastCompletedWave===5||document.querySelector('.survival-save-retry'),null,{timeout:15000});
  survival.checkpoint=await save();assert.equal(survival.checkpoint.survival.active.run.lastCompletedWave,5);campaignPreserved(survival.checkpoint);
- survival.expectedDefeats={};for(let wave=1;wave<=5;wave++)for(const kind of survivalWaveSpawnPlan(wave,{bossPool:survival.opening.survival.active.run.bossPool,strictBossPool:true}).units)survival.expectedDefeats[kind]=(survival.expectedDefeats[kind]??0)+1;
- assert.deepEqual(survival.checkpoint.survival.active.run.stats.enemyDefeatsByKind,survival.expectedDefeats,'Every actual spawned enemy must reach the checkpoint ledger');
- assert.equal(survival.checkpoint.survival.active.run.stats.kills,Object.values(survival.expectedDefeats).reduce((a,b)=>a+b,0));
+ survival.survivingTurnedCount=await page.evaluate(()=>new Set((window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters??[]).filter(f=>f.side==='zombie'&&f.kind==='turned'&&Number(f.hp)>0).map(f=>f.id)).size);
+ survival.staticExpectedDefeats={};for(let wave=1;wave<=5;wave++)for(const kind of survivalWaveSpawnPlan(wave,{bossPool:survival.opening.survival.active.run.bossPool,strictBossPool:true}).units)survival.staticExpectedDefeats[kind]=(survival.staticExpectedDefeats[kind]??0)+1;
+ survival.ledgerValidation=validateSurvivalEnemyLedger({staticExpected:survival.staticExpectedDefeats,actualStats:survival.checkpoint.survival.active.run.stats,turnedIds:survival.turnedIds??[],survivingTurnedCount:survival.survivingTurnedCount,deployCount:survival.inputs.filter(input=>input.action==='deploy').length});
  await shot('survival-checkpoint');
  await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).waitFor();assert.deepEqual(await save(),survival.checkpoint);
  survival.checkpointReadback=await durableReadback(survival.checkpoint);await persist();

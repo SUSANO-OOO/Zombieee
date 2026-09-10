@@ -18,8 +18,23 @@ export async function normalTacticalInput(page,record){
   const cards=page.locator('button.unit-card[data-kind]'),kinds=await cards.evaluateAll(els=>els.map(el=>el.dataset.kind));
   const target=Object.fromEntries([...new Set(kinds)].map(kind=>[kind,kinds.filter(k=>k===kind).length]));
   const count=kind=>humans.filter(f=>f.kind===kind).length+queue.filter(f=>f.kind===kind).length;
-  const front=target.guardian?'guardian':'brawler',healer=target.medic?'medic':target.scout?'scout':null,ranged=target.ranger?'ranger':'kumaverson';
-  const priorities=count(front)===0?[front]:healer&&count(healer)===0?[healer]:count('babayaga')+count(ranged)===0?['babayaga',ranged]:count(front)<(target[front]??0)?[front]:healer&&count(healer)<Math.min(2,target[healer]??0)?[healer]:count('babayaga')<(target.babayaga??0)?['babayaga']:count(ranged)<(target[ranged]??0)?[ranged]:kinds;
+  const available = candidates => candidates.find(kind => target[kind]) ?? null;
+  const front=available(['guardian','brawler']), healer=available(['medic','scout']);
+  // Prefer the precision unit with the deliberate 58-command cost whenever it
+  // exists; only fall back to the cheaper ranged card when it is unavailable.
+  const ranged=available(['babayaga','ranger','kumaverson']);
+  const secondaryRanged=available(['babayaga','ranger','kumaverson'].filter(kind=>kind!==ranged));
+  // Select exactly one unmet role per call. This keeps an unavailable preferred
+  // card reserved instead of spending its command on a cheaper fallback.
+  const priorities = front && count(front)<1 ? [front]
+    : ranged && count(ranged)<1 ? [ranged]
+      : healer && count(healer)<1 ? [healer]
+        : secondaryRanged && count(secondaryRanged)<1 ? [secondaryRanged]
+          : front && count(front)<target[front] ? [front]
+            : ranged && count(ranged)<target[ranged] ? [ranged]
+              : secondaryRanged && count(secondaryRanged)<target[secondaryRanged] ? [secondaryRanged]
+                : healer && count(healer)<target[healer] ? [healer]
+                  : kinds.find(kind=>count(kind)<target[kind]) ? [kinds.find(kind=>count(kind)<target[kind])]:[];
   for(const kind of priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
     const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
