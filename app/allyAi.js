@@ -2,6 +2,7 @@ import {
   canAcquireCombatTarget,
   canNormalAttackTarget,
   combatHitboxesOverlap,
+  isMayoBossFlankTarget,
 } from "./combatLifecycle.js";
 
 export const ALLY_AI_INTENTS = Object.freeze({
@@ -120,6 +121,7 @@ function resultForDestination({
   target = null,
   assignedLane,
   destinationLane = assignedLane,
+  destinationY = null,
   claimGranted = false,
   takuyaDefeated = false,
   attackable = false,
@@ -138,6 +140,7 @@ function resultForDestination({
     desiredX: movement.desiredX,
     assignedLane,
     destinationLane: validLane(destinationLane) ? destinationLane : assignedLane,
+    destinationY,
     moveDirection: movement.moveDirection,
     reached: movement.reached,
     deadbandHeld: movement.deadbandHeld,
@@ -316,6 +319,7 @@ export function decideAllyIntent({
     ? currentEnemies.filter((enemy) => {
       if (urgentEnemies.includes(enemy)) return true;
       const { attacker, target } = normalizedCombatants(unit, enemy);
+      if (previousIntent?.targetId === enemy.id && isMayoBossFlankTarget(attacker, target)) return true;
       return enemy.hitboxOverlapping === true || combatHitboxesOverlap({ left: attacker, right: target });
     })
     : enemies;
@@ -346,7 +350,16 @@ export function decideAllyIntent({
         bossLane: selectedLane,
       })
       : selectedLane;
-    const verticalDistance = Number.isFinite(selected.enemy.verticalDistance)
+    // Stop on the boss's side within real melee reach, not at the next lane's
+    // center (70px away, beyond Mayo's 22px attack plus the boss body radius).
+    const destinationY = unit.kind === "mayo-chan" && selected.enemy.boss === true
+      && Number.isFinite(selected.enemy.y)
+      ? selected.enemy.y + Math.sign(destinationLane - selectedLane)
+        * Math.max(0, finite(unit.attackRange ?? unit.range) + finite(selected.enemy.bodyRadius) - rangePadding) * .9
+      : null;
+    const verticalDistance = destinationY !== null
+      ? Math.abs(destinationY - selected.enemy.y)
+      : Number.isFinite(selected.enemy.verticalDistance)
       ? selected.enemy.verticalDistance
       : Number.isFinite(unit.y) && Number.isFinite(selected.enemy.y)
         ? Math.abs(unit.y - selected.enemy.y)
@@ -388,6 +401,7 @@ export function decideAllyIntent({
       target: selected.enemy,
       assignedLane: deploymentLane,
       destinationLane,
+      destinationY,
       claimGranted: !selected.local
         && !selected.isPrevious
         && !selected.urgentDefense
@@ -455,6 +469,7 @@ export function decideAllyIntent({
     desiredX: unitX,
     assignedLane: deploymentLane,
     destinationLane: deploymentLane,
+    destinationY: null,
     moveDirection: 0,
     reached: true,
     deadbandHeld: true,

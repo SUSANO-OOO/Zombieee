@@ -25,6 +25,16 @@ export const PRODUCTION_VISUALS = Object.freeze({
     "stage-civic-archive-route": "/art/v090/stages/civic-archive-route-background-v1.webp",
     "stage-coastal-link-bridge": "/art/v090/stages/coastal-link-bridge-background-v1.webp",
     "stage-estuary-floodgate-seal": "/art/v090/stages/estuary-floodgate-background-v1.webp",
+    "stage-mugarian-logistics-hq": "/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp",
+    "stage-mugarian-clinical-trial-wing": "/art/v100/stages/s22-clinical-trial-wing-r2-background-v1.webp",
+    "stage-mugarian-special-operations-armory": "/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp",
+    "stage-mugarian-tech-tower": "/art/v100/stages/s24-tech-tower-background-v1.webp",
+    "stage-mugarian-executive-lab": "/art/v100/stages/s25-executive-lab-r2-background-v1.webp",
+    "stage-bay-evacuation-yard": "/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
+    "stage-segawa-private-lab": "/art/v100/stages/s27-segawa-private-lab-r2-background-v1.webp",
+    "stage-national-dispersal-network": "/art/v100/stages/s28-national-dispersal-network-clean-background-v1.webp",
+    "stage-segawa-research-core": "/art/v100/stages/s29-underground-research-core-v1.webp",
+    "stage-nishijin-defense-line-takuya-omega": "/art/v100/stages/s30-defense-line-aftermath-background-v1.webp",
   }),
   eventCuts: Object.freeze({
     "station-gate-rescue-cut": "/art/v070/events/station-gate-rescue-cut-v1.webp",
@@ -58,7 +68,18 @@ const OPERATION_BATTLEFIELD_IDS = Object.freeze({
   "outbreak-futago-shelter-seam": "stage-estuary-floodgate-seal",
 });
 
+// Preserve every published asset in the original map and offline manifest.
+// The current stage uses its completed background through this runtime route.
+export const V100_STAGE_BACKGROUND_OVERRIDES = Object.freeze({
+  "stage-mugarian-special-operations-armory": "/art/v100/stages/s23-armory-clean-v1.webp",
+  "stage-mugarian-executive-lab": "/art/v100/stages/s25-executive-lab-clean-v1.webp",
+  "stage-segawa-private-lab": "/art/v100/stages/s27-private-lab-clean-v1.webp",
+  "stage-mugarian-clinical-trial-wing": "/art/v100/stages/s22-clinical-clean-v1.webp",
+  "stage-hospital-evacuation-route": "/art/v100/stages/s09-hospital-mechanical-room-v1.webp",
+  "stage-t-plan-central-seal": "/art/v100/stages/s16-central-seal-clean-v1.webp",
+});
+
 export function stageVisualFor(stageId) {
   const battlefieldId = OPERATION_BATTLEFIELD_IDS[stageId] ?? stageId;
-  return PRODUCTION_VISUALS.stages[battlefieldId] ?? "/battlefield-v4.png";
+  return V100_STAGE_BACKGROUND_OVERRIDES[battlefieldId] ?? PRODUCTION_VISUALS.stages[battlefieldId] ?? "/battlefield-v4.png";
 }

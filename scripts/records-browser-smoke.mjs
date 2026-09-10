@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -152,7 +153,7 @@ async function openRecords(page) {
     key: saveKey,
     value: serializedSeed,
   });
-  await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
   await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
   await page.locator("button.title-start").waitFor({ state: "visible", timeout });
   await page.locator("button.title-start").click();

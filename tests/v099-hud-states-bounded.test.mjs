@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { readFile } from "node:fs/promises";
 
 import {
   CANONICAL_HUD_STATES,
@@ -26,6 +25,62 @@ function passedSummary(stateId) {
       diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] },
     }],
   };
+}
+
+const EMPTY_DIAGNOSTICS = Object.freeze({
+  consoleErrors: [],
+  pageErrors: [],
+  requestFailures: [],
+  httpErrors: [],
+});
+
+function failedHudSummary(stateId, lifecycleLog, overrides = {}) {
+  return {
+    total: 1,
+    passed: 0,
+    failed: 1,
+    caseTypes: ["hud"],
+    hudStateFilterActive: true,
+    hudStates: [stateId],
+    buildIdentityAtStart: { combinedSha256: "stable-build" },
+    buildIdentityAtEnd: { combinedSha256: "stable-build" },
+    buildIdentityStable: true,
+    results: [{
+      type: "hud",
+      status: "failed",
+      error: "battle messages did not clear: page.waitForFunction: Target page, context or browser has been closed",
+      lifecycleLog,
+      diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] },
+      ...overrides.result,
+    }],
+    ...overrides.summary,
+  };
+}
+
+async function writeCleanCrashLifecycle(attemptDir, mode = "clean") {
+  const lifecyclePath = path.join(attemptDir, "stage3-boss-hud-lifecycle.jsonl");
+  const diagnostics = { ...EMPTY_DIAGNOSTICS };
+  const entries = [
+    { event: "case start", normalCleanupStarted: false, pageDiagnostics: diagnostics },
+    { event: "battle readiness complete", milestone: "battle readiness complete", normalCleanupStarted: false, pageDiagnostics: diagnostics },
+  ];
+  if (mode !== "page-close-only") {
+    entries.push({
+      event: "page crash",
+      unexpected: true,
+      normalCleanupStarted: mode === "cleanup-owned",
+      pageDiagnostics: diagnostics,
+    });
+  }
+  entries.push({
+    event: "page close",
+    unexpected: mode !== "cleanup-owned",
+    normalCleanupStarted: mode === "cleanup-owned",
+    pageDiagnostics: diagnostics,
+  });
+  if (mode === "cleanup-owned") entries.push({ event: "context close begin", normalCleanupStarted: true, pageDiagnostics: diagnostics });
+  await writeFile(lifecyclePath, `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`);
+  return lifecyclePath;
 }
 
 async function writeSummary(attemptDir, summary) {
@@ -62,26 +117,42 @@ test("HUD state aggregator rejects missing and duplicate inventory", async () =>
   }), /every canonical state exactly once/u);
 });
 
-test("HUD state aggregator retries only exact target-close and still requires a real pass", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-retry-"));
-  let firstCalls = 0;
-  const report = await runCanonicalHudStates({
-    evidenceRoot: root,
-    runAttempt: async ({ stateId, attempt, attemptDir }) => {
-      if (stateId === CANONICAL_HUD_STATES[0] && attempt === 1) {
-        firstCalls += 1;
-        await writeSummary(attemptDir, {
-          total: 1, passed: 0, failed: 1, results: [{ status: "failed", error: "page.screenshot: Target page, context or browser has been closed" }],
-        });
-        return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" };
-      }
-      await writeSummary(attemptDir, passedSummary(stateId));
-      return { code: 0, output: "passed\n" };
-    },
+for (const canonicalEnvelope of [false, true]) {
+  test(`HUD clean native crash never launches a second attempt (cases=${canonicalEnvelope})`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-no-retry-"));
+    let calls = 0;
+    await assert.rejects(runCanonicalHudStates({
+      evidenceRoot: root,
+      runAttempt: async ({ stateId, attemptDir }) => {
+        calls += 1;
+        const lifecycleLog = await writeCleanCrashLifecycle(attemptDir);
+        const summary = failedHudSummary(stateId, lifecycleLog);
+        if (canonicalEnvelope) summary.cases = [{ error: "Error: page.waitForFunction: Target page, context or browser has been closed" }];
+        await writeSummary(attemptDir, summary);
+        return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\\n" };
+      },
+    }), /bounded HUD evidence failed/u);
+    assert.equal(calls, 1);
+    const report = JSON.parse(await readFile(path.join(root, "bounded-summary.json"), "utf8"));
+    assert.equal(report.status, "failed");
+    assert.equal(report.states.length, 1);
+    assert.equal(report.states[0].attempts.length, 1);
   });
-  assert.equal(report.status, "passed");
-  assert.equal(firstCalls, 1);
-  assert.equal(report.states[0].attempts.length, 2);
+}
+
+test("isolated HUD clean native crash also stops after its first attempt", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "hud-single-no-retry-"));
+  let calls = 0;
+  await assert.rejects(runOneHudStateBounded({
+    stateId: "stage3-boss", evidenceRoot: root,
+    runAttempt: async ({ stateId, attemptDir }) => {
+      calls += 1;
+      const lifecycleLog = await writeCleanCrashLifecycle(attemptDir);
+      await writeSummary(attemptDir, failedHudSummary(stateId, lifecycleLog));
+      return { code: 1, output: "Target page, context or browser has been closed" };
+    },
+  }), /bounded HUD evidence failed/u);
+  assert.equal(calls, 1);
 });
 
 test("HUD state aggregator never retries a product assertion", async () => {
@@ -126,3 +197,47 @@ test("isolated HUD runtime labels preserve exact slash ownership for target-clos
   assert.match(source, /const lifecycleName = `\$\{axisName\}-\$\{stateId\}`/u);
   assert.doesNotMatch(source, /const name = `\$\{axisName\}-\$\{stateId\}`/u);
 });
+
+for (const mode of [
+  "missing-lifecycle",
+  "malformed-lifecycle",
+  "outside-evidence-root",
+  "dirty-diagnostics",
+  "cleanup-owned",
+  "assertion-only",
+  "timeout-only",
+  "page-close-only",
+]) {
+  test(`clean unexpected HUD crash proof rejects ${mode} without a second attempt`, async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), `hud-crash-${mode}-`));
+    let calls = 0;
+    await assert.rejects(() => runOneHudStateBounded({
+      stateId: "stage3-boss",
+      evidenceRoot: root,
+      runAttempt: async ({ attemptDir }) => {
+        calls += 1;
+        let lifecycleLog = null;
+        if (mode !== "missing-lifecycle") {
+          lifecycleLog = mode === "outside-evidence-root"
+            ? await writeCleanCrashLifecycle(root, "clean")
+            : await writeCleanCrashLifecycle(attemptDir, mode === "page-close-only" ? "page-close-only" : mode);
+          if (mode === "malformed-lifecycle") await writeFile(lifecycleLog, "not-json\n");
+        }
+        const summary = failedHudSummary("stage3-boss", lifecycleLog);
+        if (mode === "dirty-diagnostics") summary.results[0].diagnostics.consoleErrors.push("unexpected console error");
+        if (mode === "assertion-only") summary.results[0].error = "objective is clipped";
+        if (mode === "timeout-only") summary.results[0].error = "page.waitForFunction: Timeout 45000ms exceeded";
+        await writeSummary(attemptDir, summary);
+        return {
+          code: 1,
+          output: mode === "assertion-only"
+            ? "objective is clipped\n"
+            : mode === "timeout-only"
+            ? "page.waitForFunction: Timeout 45000ms exceeded\n"
+            : "battle messages did not clear\n",
+        };
+      },
+    }), /bounded HUD evidence failed/u);
+    assert.equal(calls, 1);
+  });
+}

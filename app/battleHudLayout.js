@@ -213,7 +213,10 @@ export function mobileBattleHudUnitSlots(cards = [], formationKinds = [], maxSlo
     .filter((card) => card && typeof card.kind === "string")
     .map((card) => [card.kind, card]));
   const selected = (Array.isArray(formationKinds) ? formationKinds : [])
-    .filter((kind, index, values) => typeof kind === "string" && values.indexOf(kind) === index)
+    // Ordered formation slots are instances, not a set of unit kinds. A
+    // repeated unit is an intentional V1 formation choice and must remain a
+    // separate playable card.
+    .filter((kind) => typeof kind === "string")
     .map((kind) => byKind.get(kind))
     .filter(Boolean)
     .slice(0, limit);

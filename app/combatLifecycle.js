@@ -146,6 +146,16 @@ function lineOfSightResult(hasLineOfSight, attacker, target, required) {
   return !required;
 }
 
+/** Mayo can circle a living boss, but cannot acquire ordinary foes across lanes. */
+export function isMayoBossFlankTarget(attacker, target) {
+  return attacker?.kind === "mayo-chan"
+    && (target?.boss === true || isBossEnemyKind(target?.kind))
+    && isCombatTargetable(target)
+    && !(attacker.side && target.side && attacker.side === target.side)
+    && Number.isInteger(attacker.lane) && Number.isInteger(target.lane)
+    && Math.abs(attacker.lane - target.lane) <= 1;
+}
+
 /**
  * Checks whether a target is legal for this attacker's normal-attack search.
  * Range is deliberately excluded so pursuit and firing share every other
@@ -166,7 +176,7 @@ export function canAcquireCombatTarget({ attacker, target, roleRules, hasLineOfS
   if (laneDistance > 1) return false;
 
   const rule = roleRuleFor(attacker, roleRules);
-  if (rule.attackType === "melee" && laneDistance !== 0) return false;
+  if (rule.attackType === "melee" && laneDistance !== 0 && !isMayoBossFlankTarget(attacker, target)) return false;
   if (rule.attackType === "ranged" && laneDistance === 1) {
     if (!rule.allowAdjacentLaneTargets) return false;
     if (!lineOfSightResult(hasLineOfSight, attacker, target, true)) return false;

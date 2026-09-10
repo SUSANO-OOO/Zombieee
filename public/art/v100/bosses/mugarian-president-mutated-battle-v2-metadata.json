@@ -1,0 +1,1175 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "repair": "explicit-reviewed-gap-seeds-local-palette",
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 4352,
+    "height": 1024
+  },
+  "commonScale": 0.33994334277620397,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "noClipping": true,
+  "groundAnchorPixels": 496,
+  "identityMaster": "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png",
+  "identityMasterSha256": "be58f640e7b918e0a37a04d6e128b448c71926483a95f9a5a161cd83dfae0d72",
+  "sources": [
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+      "sha256": "67aa1514137e0b6357119a0b4656ad4bd97f57ef34ad4a7354a4d4b801c87b3e",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 102,
+        "y": 158,
+        "width": 861,
+        "height": 1275,
+        "alphaPixels": 585270
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 964050,
+        "seedPixels": 23544,
+        "seedCount": 12,
+        "seedResults": [
+          {
+            "seed": [
+              678,
+              474
+            ],
+            "removed": 12138
+          },
+          {
+            "seed": [
+              143,
+              403
+            ],
+            "removed": 2471
+          },
+          {
+            "seed": [
+              610,
+              681
+            ],
+            "removed": 2098
+          },
+          {
+            "seed": [
+              165,
+              793
+            ],
+            "removed": 1355
+          },
+          {
+            "seed": [
+              649,
+              517
+            ],
+            "removed": 996
+          },
+          {
+            "seed": [
+              693,
+              448
+            ],
+            "removed": 918
+          },
+          {
+            "seed": [
+              646,
+              176
+            ],
+            "removed": 787
+          },
+          {
+            "seed": [
+              797,
+              286
+            ],
+            "removed": 753
+          },
+          {
+            "seed": [
+              665,
+              839
+            ],
+            "removed": 767
+          },
+          {
+            "seed": [
+              657,
+              950
+            ],
+            "removed": 434
+          },
+          {
+            "seed": [
+              140,
+              971
+            ],
+            "removed": 423
+          },
+          {
+            "seed": [
+              144,
+              1043
+            ],
+            "removed": 404
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 987594,
+        "allowedMaskPixels": 987594,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+      "sha256": "8689bd42950a1b7af9f8bba94d8a0b4d997735145d1da8556607c9aff40151bf",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 94,
+        "y": 132,
+        "width": 870,
+        "height": 1312,
+        "alphaPixels": 628301
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 857568,
+        "seedPixels": 86995,
+        "seedCount": 23,
+        "seedResults": [
+          {
+            "seed": [
+              323,
+              652
+            ],
+            "removed": 56357
+          },
+          {
+            "seed": [
+              665,
+              467
+            ],
+            "removed": 13336
+          },
+          {
+            "seed": [
+              567,
+              626
+            ],
+            "removed": 3916
+          },
+          {
+            "seed": [
+              134,
+              407
+            ],
+            "removed": 3659
+          },
+          {
+            "seed": [
+              179,
+              811
+            ],
+            "removed": 1304
+          },
+          {
+            "seed": [
+              682,
+              431
+            ],
+            "removed": 1183
+          },
+          {
+            "seed": [
+              874,
+              811
+            ],
+            "removed": 1014
+          },
+          {
+            "seed": [
+              636,
+              511
+            ],
+            "removed": 925
+          },
+          {
+            "seed": [
+              808,
+              276
+            ],
+            "removed": 793
+          },
+          {
+            "seed": [
+              649,
+              162
+            ],
+            "removed": 789
+          },
+          {
+            "seed": [
+              915,
+              434
+            ],
+            "removed": 430
+          },
+          {
+            "seed": [
+              937,
+              525
+            ],
+            "removed": 416
+          },
+          {
+            "seed": [
+              943,
+              629
+            ],
+            "removed": 401
+          },
+          {
+            "seed": [
+              123,
+              612
+            ],
+            "removed": 360
+          },
+          {
+            "seed": [
+              735,
+              570
+            ],
+            "removed": 313
+          },
+          {
+            "seed": [
+              928,
+              496
+            ],
+            "removed": 122
+          },
+          {
+            "seed": [
+              586,
+              658
+            ],
+            "removed": 110
+          },
+          {
+            "seed": [
+              658,
+              868
+            ],
+            "removed": 543
+          },
+          {
+            "seed": [
+              150,
+              903
+            ],
+            "removed": 202
+          },
+          {
+            "seed": [
+              169,
+              1014
+            ],
+            "removed": 0
+          },
+          {
+            "seed": [
+              174,
+              1095
+            ],
+            "removed": 311
+          },
+          {
+            "seed": [
+              535,
+              1123
+            ],
+            "removed": 178
+          },
+          {
+            "seed": [
+              691,
+              1104
+            ],
+            "removed": 333
+          }
+        ],
+        "zeroRemovalSeeds": [
+          [
+            169,
+            1014
+          ]
+        ],
+        "changedPixels": 944563,
+        "allowedMaskPixels": 944563,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+      "sha256": "172d8393ba2b061b467557a429a5be965070afc993c8095a775b9f4c5f5590f9",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 76,
+        "y": 193,
+        "width": 921,
+        "height": 1152,
+        "alphaPixels": 527663
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 973618,
+        "seedPixels": 71583,
+        "seedCount": 13,
+        "seedResults": [
+          {
+            "seed": [
+              366,
+              616
+            ],
+            "removed": 51237
+          },
+          {
+            "seed": [
+              639,
+              514
+            ],
+            "removed": 10537
+          },
+          {
+            "seed": [
+              602,
+              695
+            ],
+            "removed": 2739
+          },
+          {
+            "seed": [
+              122,
+              449
+            ],
+            "removed": 2172
+          },
+          {
+            "seed": [
+              659,
+              483
+            ],
+            "removed": 2121
+          },
+          {
+            "seed": [
+              592,
+              201
+            ],
+            "removed": 968
+          },
+          {
+            "seed": [
+              752,
+              299
+            ],
+            "removed": 714
+          },
+          {
+            "seed": [
+              936,
+              637
+            ],
+            "removed": 585
+          },
+          {
+            "seed": [
+              717,
+              600
+            ],
+            "removed": 510
+          },
+          {
+            "seed": [
+              864,
+              497
+            ],
+            "removed": 0
+          },
+          {
+            "seed": [
+              720,
+              248
+            ],
+            "removed": 0
+          },
+          {
+            "seed": [
+              747,
+              262
+            ],
+            "removed": 0
+          },
+          {
+            "seed": [
+              627,
+              636
+            ],
+            "removed": 0
+          }
+        ],
+        "zeroRemovalSeeds": [
+          [
+            864,
+            497
+          ],
+          [
+            720,
+            248
+          ],
+          [
+            747,
+            262
+          ],
+          [
+            627,
+            636
+          ]
+        ],
+        "changedPixels": 1045201,
+        "allowedMaskPixels": 1045201,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+      "sha256": "59d5052d8344c2b3da18a60a7fe90c2309ba41292931ce9f3dbea95f4245a295",
+      "sourceSize": {
+        "width": 1211,
+        "height": 1299
+      },
+      "sourceBounds": {
+        "x": 10,
+        "y": 209,
+        "width": 1172,
+        "height": 948,
+        "alphaPixels": 433595
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1124736,
+        "seedPixels": 14758,
+        "seedCount": 13,
+        "seedResults": [
+          {
+            "seed": [
+              565,
+              557
+            ],
+            "removed": 8572
+          },
+          {
+            "seed": [
+              790,
+              361
+            ],
+            "removed": 1618
+          },
+          {
+            "seed": [
+              654,
+              738
+            ],
+            "removed": 836
+          },
+          {
+            "seed": [
+              1010,
+              861
+            ],
+            "removed": 725
+          },
+          {
+            "seed": [
+              360,
+              342
+            ],
+            "removed": 544
+          },
+          {
+            "seed": [
+              463,
+              506
+            ],
+            "removed": 503
+          },
+          {
+            "seed": [
+              664,
+              242
+            ],
+            "removed": 471
+          },
+          {
+            "seed": [
+              759,
+              316
+            ],
+            "removed": 311
+          },
+          {
+            "seed": [
+              696,
+              263
+            ],
+            "removed": 297
+          },
+          {
+            "seed": [
+              836,
+              927
+            ],
+            "removed": 290
+          },
+          {
+            "seed": [
+              103,
+              585
+            ],
+            "removed": 287
+          },
+          {
+            "seed": [
+              258,
+              486
+            ],
+            "removed": 165
+          },
+          {
+            "seed": [
+              862,
+              787
+            ],
+            "removed": 139
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1139494,
+        "allowedMaskPixels": 1139494,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+      "sha256": "fd9ba3251491da54d11d1233e75a774387b662c023a54a3b99c7a65f889d7ba3",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 26,
+        "y": 228,
+        "width": 976,
+        "height": 1147,
+        "alphaPixels": 521994
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1023025,
+        "seedPixels": 27845,
+        "seedCount": 12,
+        "seedResults": [
+          {
+            "seed": [
+              410,
+              544
+            ],
+            "removed": 18888
+          },
+          {
+            "seed": [
+              91,
+              343
+            ],
+            "removed": 3026
+          },
+          {
+            "seed": [
+              739,
+              529
+            ],
+            "removed": 1307
+          },
+          {
+            "seed": [
+              181,
+              684
+            ],
+            "removed": 1213
+          },
+          {
+            "seed": [
+              788,
+              293
+            ],
+            "removed": 709
+          },
+          {
+            "seed": [
+              676,
+              575
+            ],
+            "removed": 609
+          },
+          {
+            "seed": [
+              880,
+              426
+            ],
+            "removed": 599
+          },
+          {
+            "seed": [
+              192,
+              857
+            ],
+            "removed": 366
+          },
+          {
+            "seed": [
+              788,
+              666
+            ],
+            "removed": 333
+          },
+          {
+            "seed": [
+              606,
+              1004
+            ],
+            "removed": 313
+          },
+          {
+            "seed": [
+              725,
+              301
+            ],
+            "removed": 246
+          },
+          {
+            "seed": [
+              165,
+              757
+            ],
+            "removed": 236
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1050870,
+        "allowedMaskPixels": 1050870,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+      "sha256": "6fbde4bf375620555b1ec734c168b207f185df2540e944c79f9437c82230abe9",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 34,
+        "y": 50,
+        "width": 973,
+        "height": 1412,
+        "alphaPixels": 590228
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 939596,
+        "seedPixels": 43040,
+        "seedCount": 13,
+        "seedResults": [
+          {
+            "seed": [
+              350,
+              677
+            ],
+            "removed": 32145
+          },
+          {
+            "seed": [
+              81,
+              457
+            ],
+            "removed": 2236
+          },
+          {
+            "seed": [
+              949,
+              270
+            ],
+            "removed": 1557
+          },
+          {
+            "seed": [
+              660,
+              625
+            ],
+            "removed": 1327
+          },
+          {
+            "seed": [
+              849,
+              573
+            ],
+            "removed": 1202
+          },
+          {
+            "seed": [
+              801,
+              554
+            ],
+            "removed": 999
+          },
+          {
+            "seed": [
+              984,
+              421
+            ],
+            "removed": 947
+          },
+          {
+            "seed": [
+              882,
+              198
+            ],
+            "removed": 779
+          },
+          {
+            "seed": [
+              664,
+              567
+            ],
+            "removed": 692
+          },
+          {
+            "seed": [
+              568,
+              340
+            ],
+            "removed": 649
+          },
+          {
+            "seed": [
+              731,
+              978
+            ],
+            "removed": 507
+          },
+          {
+            "seed": [
+              623,
+              224
+            ],
+            "removed": 0
+          },
+          {
+            "seed": [
+              800,
+              325
+            ],
+            "removed": 0
+          }
+        ],
+        "zeroRemovalSeeds": [
+          [
+            623,
+            224
+          ],
+          [
+            800,
+            325
+          ]
+        ],
+        "changedPixels": 982636,
+        "allowedMaskPixels": 982636,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+      "sha256": "39203d26ecf3856bc6c150c7b08a755eb04b007f688c9170f2eba5bfc6a1acdc",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 49,
+        "y": 311,
+        "width": 934,
+        "height": 989,
+        "alphaPixels": 383496
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1182472,
+        "seedPixels": 6896,
+        "seedCount": 12,
+        "seedResults": [
+          {
+            "seed": [
+              92,
+              492
+            ],
+            "removed": 1616
+          },
+          {
+            "seed": [
+              444,
+              318
+            ],
+            "removed": 1295
+          },
+          {
+            "seed": [
+              579,
+              448
+            ],
+            "removed": 1126
+          },
+          {
+            "seed": [
+              180,
+              821
+            ],
+            "removed": 773
+          },
+          {
+            "seed": [
+              350,
+              359
+            ],
+            "removed": 339
+          },
+          {
+            "seed": [
+              104,
+              664
+            ],
+            "removed": 325
+          },
+          {
+            "seed": [
+              195,
+              976
+            ],
+            "removed": 338
+          },
+          {
+            "seed": [
+              213,
+              1036
+            ],
+            "removed": 315
+          },
+          {
+            "seed": [
+              712,
+              786
+            ],
+            "removed": 279
+          },
+          {
+            "seed": [
+              827,
+              828
+            ],
+            "removed": 229
+          },
+          {
+            "seed": [
+              171,
+              892
+            ],
+            "removed": 143
+          },
+          {
+            "seed": [
+              495,
+              449
+            ],
+            "removed": 118
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1189368,
+        "allowedMaskPixels": 1189368,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+      "sha256": "bbd87e5561a3fdd9ed06720dda62312ff8dc3a7293f3ca7b1171dbda4c6ee572",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 16,
+        "y": 307,
+        "width": 1498,
+        "height": 605,
+        "alphaPixels": 400516
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1160460,
+        "seedPixels": 11888,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              400,
+              708
+            ],
+            "removed": 7906
+          },
+          {
+            "seed": [
+              680,
+              316
+            ],
+            "removed": 944
+          },
+          {
+            "seed": [
+              484,
+              405
+            ],
+            "removed": 768
+          },
+          {
+            "seed": [
+              562,
+              356
+            ],
+            "removed": 696
+          },
+          {
+            "seed": [
+              792,
+              403
+            ],
+            "removed": 504
+          },
+          {
+            "seed": [
+              834,
+              800
+            ],
+            "removed": 495
+          },
+          {
+            "seed": [
+              863,
+              449
+            ],
+            "removed": 261
+          },
+          {
+            "seed": [
+              704,
+              439
+            ],
+            "removed": 130
+          },
+          {
+            "seed": [
+              153,
+              755
+            ],
+            "removed": 82
+          },
+          {
+            "seed": [
+              467,
+              821
+            ],
+            "removed": 102
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1172348,
+        "allowedMaskPixels": 1172348,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    }
+  ],
+  "frames": [
+    {
+      "state": "entrance",
+      "contentRect": {
+        "x": 125,
+        "y": 63,
+        "width": 293,
+        "height": 433
+      },
+      "renderedSize": {
+        "width": 293,
+        "height": 433
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "idle",
+      "contentRect": {
+        "x": 124,
+        "y": 50,
+        "width": 296,
+        "height": 446
+      },
+      "renderedSize": {
+        "width": 296,
+        "height": 446
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "contentRect": {
+        "x": 115,
+        "y": 104,
+        "width": 313,
+        "height": 392
+      },
+      "renderedSize": {
+        "width": 313,
+        "height": 392
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "contentRect": {
+        "x": 73,
+        "y": 174,
+        "width": 398,
+        "height": 322
+      },
+      "renderedSize": {
+        "width": 398,
+        "height": 322
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "contentRect": {
+        "x": 106,
+        "y": 106,
+        "width": 332,
+        "height": 390
+      },
+      "renderedSize": {
+        "width": 332,
+        "height": 390
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "phase",
+      "contentRect": {
+        "x": 106,
+        "y": 16,
+        "width": 331,
+        "height": 480
+      },
+      "renderedSize": {
+        "width": 331,
+        "height": 480
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "contentRect": {
+        "x": 113,
+        "y": 160,
+        "width": 318,
+        "height": 336
+      },
+      "renderedSize": {
+        "width": 318,
+        "height": 336
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "defeat",
+      "contentRect": {
+        "x": 17,
+        "y": 290,
+        "width": 509,
+        "height": 206
+      },
+      "renderedSize": {
+        "width": 509,
+        "height": 206
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    }
+  ],
+  "sha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a"
+}

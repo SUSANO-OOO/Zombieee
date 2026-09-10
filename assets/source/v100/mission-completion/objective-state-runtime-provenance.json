@@ -1,0 +1,76 @@
+{
+  "generator": "built-in image_gen",
+  "promptSets": [
+    "remaining-objective-prompts.json",
+    "escort-completion-prompts.json",
+    "station-relay-prompts.json"
+  ],
+  "encoding": "Format conversion only. All alpha bytes and all visible RGB values are lossless. No painting, cropping, resizing or alpha synthesis.",
+  "records": [
+    {
+      "source": "assets/source/v100/mission-completion/transport-four-cutout-r2.png",
+      "sourceSha256": "493137d3f2f9e1dd50c0d77fa1f138083821cd201fa4d45eb464a9572ed30af7",
+      "output": "public/art/v100/mission-objects/transport-states-v1.webp",
+      "path": "/art/v100/mission-objects/transport-states-v1.webp",
+      "bytes": 1211036,
+      "hash": "sha256-aadf0a5ab67e4733ffbf4197b765269236ec4b733e9f82a893b52023d0ce992f",
+      "width": 1536,
+      "height": 1024,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true,
+      "transparentPixels": 827659
+    },
+    {
+      "source": "assets/source/v100/mission-completion/maintenance-cart-cutout-r2.png",
+      "sourceSha256": "7f46dab4624efb99559b0c5bb90a4770adb43982b807903511aef718a04cdf8b",
+      "output": "public/art/v100/mission-objects/maintenance-cart-states-v1.webp",
+      "path": "/art/v100/mission-objects/maintenance-cart-states-v1.webp",
+      "bytes": 739792,
+      "hash": "sha256-0bbf0611ecd8b928d0fe19785ff9747c64479c3dd26e41a1824d95412d6abd2c",
+      "width": 1254,
+      "height": 1254,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true,
+      "transparentPixels": 1197819
+    },
+    {
+      "source": "assets/source/v100/mission-completion/escort-destination-states-r1.png",
+      "sourceSha256": "b479349046fd8a736e691ada6427b928bc8aa55780c21e313013d10b4316e780",
+      "output": "public/art/v100/mission-objects/escort-destination-states-v1.webp",
+      "path": "/art/v100/mission-objects/escort-destination-states-v1.webp",
+      "bytes": 620172,
+      "hash": "sha256-a50b842236356e0f447384f28560f01840d4c3175854c04034b8d0497aaf09d6",
+      "width": 1774,
+      "height": 887,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true,
+      "transparentPixels": 1227924
+    },
+    {
+      "source": "assets/source/v100/mission-completion/infected-stronghold-states-r1.png",
+      "sourceSha256": "391df4774304c90c0cb7c4fea7c2a5ef23a6bcf3d9fe3f65419fb3815eacabf5",
+      "output": "public/art/v100/mission-objects/infected-stronghold-states-v1.webp",
+      "path": "/art/v100/mission-objects/infected-stronghold-states-v1.webp",
+      "bytes": 937562,
+      "hash": "sha256-1d669b996d4d95f4f290a7584d162522c2febdf65f0b08dd910fbb57f23761ed",
+      "width": 2073,
+      "height": 758,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true,
+      "transparentPixels": 1138466
+    },
+    {
+      "source": "assets/source/v100/mission-completion/station-relay-states-spaced-r5.png",
+      "sourceSha256": "909132bd27a3b0c332163d8d5640c08a524ad00b16c4aafde6ea5f538987d532",
+      "output": "public/art/v100/mission-objects/station-relay-states-v1.webp",
+      "path": "/art/v100/mission-objects/station-relay-states-v1.webp",
+      "bytes": 1016762,
+      "hash": "sha256-ac5d07de80bada9a9530cca33e0a85e2362a617f097c41bf60cf721c196ed206",
+      "width": 2172,
+      "height": 724,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true,
+      "transparentPixels": 1048767
+    }
+  ]
+}

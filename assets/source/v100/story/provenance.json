@@ -1,0 +1,26 @@
+{
+  "method": "OpenAI built-in ImageGen; project-original environment artwork; no people or private identity input",
+  "direction": "Kumaya before the outbreak and the same room reopened thirty days after Nishijin's liberation; preserve the canonical story and all existing character identities",
+  "generatedAt": "2026-09-07",
+  "generatedBy": "scripts/build-v100-story-backgrounds.mjs",
+  "records": [
+    {
+      "source": "assets/source/v100/story/kumaya-before-outbreak-v1.png",
+      "sourceSha256": "8638221093646d316f5609795043cc45b5ce206f0c3d9063f2381cd0cf5a4580",
+      "output": "public/art/v100/story/kumaya-before-outbreak-v1.webp",
+      "sha256": "f209eb6b9dfee542e58b2dcd0a9ad32505e49eaff9c9b05d93de8fbe2d7fe9f1",
+      "bytes": 158796,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "source": "assets/source/v100/story/kumaya-reopened-v1.png",
+      "sourceSha256": "446975e675f715977f9041cea9593fa6c73ce36293b5bcd5f6e893ffc42d882e",
+      "output": "public/art/v100/story/kumaya-reopened-v1.webp",
+      "sha256": "5c388170fb89c3981a262aeaab4715e838d28d3b2cbaf61cc046b2d1d26b8eb8",
+      "bytes": 175738,
+      "width": 1672,
+      "height": 941
+    }
+  ]
+}

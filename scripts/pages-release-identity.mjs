@@ -1,7 +1,9 @@
-const VERSIONED_PRODUCT_TITLE_PATTERN = /西新世紀末物語｜アーリーアクセス版 (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?/gu;
+import { releaseTitleForVersion } from "../app/releaseIdentity.js";
+
+const VERSIONED_PRODUCT_TITLE_PATTERN = /西新世紀末物語｜(?:アーリーアクセス版|Version) (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?/gu;
 
 export function normalizeReleaseTitle(source, releaseVersion) {
-  const expectedTitle = `西新世紀末物語｜アーリーアクセス版 ${releaseVersion}`;
+  const expectedTitle = releaseTitleForVersion(releaseVersion);
   const versionedTitles = source.match(VERSIONED_PRODUCT_TITLE_PATTERN) ?? [];
   if (!versionedTitles.length) {
     throw new Error("Rendered document does not contain the versioned product title");

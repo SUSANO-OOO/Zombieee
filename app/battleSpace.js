@@ -382,12 +382,17 @@ export function enemySpawnPortalPoint({
   entryId = 1,
   kind = "walker",
   missionType = "assault",
+  v100InfectedGate = false,
   viewport = STAGE_VIEWPORT_IDS.STANDARD,
 } = {}) {
   const space = battleSpaceFor(stageId, viewport);
   const portals = space.spawnPortals.enemy;
   const slot = Math.abs(Math.trunc(finite(entryId, 1)) * 7 + kind.length * 3) % portals.length;
-  const portal = portals[slot];
+  // The first giants enter along the middle route: their taller silhouettes
+  // need ground clearance below the fixed top controls on short landscapes.
+  const portal = v100InfectedGate && ["takuya", "gate-eater"].includes(kind)
+    ? portals.find(candidate => nearestLogicalLane(stageId, candidate.entry.y, space.viewportId).index === 1) ?? portals[slot]
+    : portals[slot];
   const {
     bodyRadius,
     clearance,
@@ -395,7 +400,9 @@ export function enemySpawnPortalPoint({
     visualHalfWidth,
     spawnClass,
   } = spawnClassGeometry(kind);
-  const profile = enemySpawnProfileFor(missionType);
+  const profile = v100InfectedGate
+    ? { id: "v100-infected-gate-right-edge", entryMode: "right-edge-outside", outsideMargin: 18, readyPadding: 8 }
+    : enemySpawnProfileFor(missionType);
   const internalRoute = nearestLogicalLane(stageId, portal.entry.y, space.viewportId);
   const usesRightEdge = profile.entryMode !== "base-interior";
   const x = usesRightEdge
@@ -405,6 +412,7 @@ export function enemySpawnPortalPoint({
     ? Math.min(
       space.world.width - visualHalfWidth - profile.readyPadding,
       space.walkableArea.maxX - (spawnClass === "boss" ? visualHalfWidth : bodyRadius),
+      v100InfectedGate ? WORLD_GEOMETRY.enemyBase.drawX + 18 - visualHalfWidth - 8 : Infinity,
     )
     : portal.entry.x - clearance;
   return deepFreeze({
@@ -417,7 +425,7 @@ export function enemySpawnPortalPoint({
     y: portal.hidden.y,
     combatReadyX,
     combatReadyY: portal.entry.y,
-    entrySpeed,
+    entrySpeed: v100InfectedGate ? Math.max(entrySpeed, Math.hypot(x-combatReadyX, portal.hidden.y-portal.entry.y)/5) : entrySpeed,
     bodyRadius,
     visualHalfWidth,
     spawnClass,

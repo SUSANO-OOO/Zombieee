@@ -846,7 +846,11 @@ test("existing eleven abilities connect unique combat mechanics, canvas VFX, and
   assert.match(source, /event\.kind === "brute"[\s\S]{0,3000}manual-structure:enemy-base/);
   assert.match(source, /manualDamageMultiplier[\s\S]{0,260}crazy-king/);
   assert.match(source, /event\.kind === "babayaga"[\s\S]{0,1200}markSeconds/);
-  assert.match(source, /event\.kind === "gunner"[\s\S]{0,1600}suppressionSeconds/);
+  const gunnerStart = source.indexOf('if (event.kind === "gunner") {');
+  const gunnerEnd = source.indexOf('if (event.kind === "engineer") {', gunnerStart);
+  assert.ok(gunnerStart >= 0 && gunnerEnd > gunnerStart, "The gunner handler must have its own bounded branch");
+  const gunnerHandler = source.slice(gunnerStart, gunnerEnd);
+  assert.match(gunnerHandler, /target\.suppressedRemaining = Math\.max\(target\.suppressedRemaining, definition\.suppressionSeconds\)/);
   assert.match(source, /activeGuardian[\s\S]{0,900}allyDamageTakenMultiplier/);
   assert.match(source, /engineerTrapManual[\s\S]{0,1800}trappedTargets[\s\S]{0,1000}slowSeconds/);
   assert.match(source, /playManualAbilityTimelineCue\(owner, "impact"/);

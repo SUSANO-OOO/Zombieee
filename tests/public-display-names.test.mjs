@@ -26,12 +26,18 @@ test("public vehicle wording uses the approved mobile-facing alias without chang
 });
 
 test("public metadata starts with the approved vehicle wording and rejects retired CRAWLER copy", async () => {
-  const layout = await readFile(path.join(ROOT, "app", "layout.tsx"), "utf8");
+  const [layout, browserSmoke] = await Promise.all([
+    readFile(path.join(ROOT, "app", "layout.tsx"), "utf8"),
+    readFile(path.join(ROOT, "scripts", "issue156-remediation-browser-smoke.mjs"), "utf8"),
+  ]);
   const description = layout.match(/description:\s*\n?\s*"([^"]+)"/u)?.[1] ?? "";
-  assert.match(description, /^大型移動拠点と/u);
-  assert.doesNotMatch(description, /CRAWLER|クローラー/iu);
+  assert.match(description, /^装甲車両と/u);
+  assert.doesNotMatch(description, /CRAWLER|クローラー|移動拠点/iu);
+  assert.match(browserSmoke, /metadata\?\.startsWith\("装甲車両と"\)/u);
+  assert.match(browserSmoke, /!\/crawler\|クローラー\|移動拠点\/iu\.test\(metadata \?\? ""\)/u);
+  assert.doesNotMatch(browserSmoke, /metadata\?\.startsWith\("大型移動拠点と"\)/u);
 
-  for (const forbidden of ["CRAWLER", "crawler", "クローラー"]) {
-    assert.match(`大型移動拠点と${forbidden}`, /crawler|クローラー/iu, `negative fixture: ${forbidden}`);
+  for (const forbidden of ["CRAWLER", "crawler", "クローラー", "移動拠点"]) {
+    assert.match(`装甲車両と${forbidden}`, /crawler|クローラー|移動拠点/iu, `negative fixture: ${forbidden}`);
   }
 });

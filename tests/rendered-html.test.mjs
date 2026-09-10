@@ -129,7 +129,7 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.9.5 release identity and the PWA gate", async () => {
+test("server-renders the 1.0.0 release identity and the PWA gate", async () => {
   // Since 0.9.8.1 the first painted screen is the PWA gate, not the title: a
   // visitor is invited to install before anything decides to fetch the game for
   // them. The game shell therefore mounts on the client once the gate resolves,
@@ -142,10 +142,10 @@ test("server-renders the 0.9.9.5 release identity and the PWA gate", async () =>
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.5<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜Version 1\.0\.0<\/title>/);
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 0\.9\.9\.5。"/);
+  assert.match(html, /content="[^"]*Version 1\.0\.0。"/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -277,9 +277,10 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
     readFile(new URL("../app/storyEvents.js", import.meta.url), "utf8"),
   ]);
   const battleUi = game.slice(game.indexOf("const healthPct"));
-  assert.match(battleUi, />移動拠点</);
+  assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
   assert.match(battleUi, /第\{hud\.phase\}段階/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
+  assert.match(battleUi, /召喚限度 \{hud\.summonedCount\}\/7/);
   assert.match(battleUi, /移動拠点一斉掃射/);
   assert.match(battleUi, />一時停止</);
   assert.doesNotMatch(battleUi, />CRAWLER<|>PAUSED<|>SEC<|aria-label="Survivor units"/);
@@ -316,12 +317,12 @@ test("draws three unmistakably different stage environments", async () => {
 
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber))',
     "drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback)",
     "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber))',
     "const renderables = [",
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"], Boolean(g.definition.missionConfig.v100StageNumber))',
   ].map((needle) => worldDraw.indexOf(needle));
   assert.ok(drawOrder.every((index) => index >= 0), `missing draw step: ${drawOrder.join(",")}`);
   assert.ok(drawOrder.every((index, position) => position === 0 || index > drawOrder[position - 1]), "background, gate, objective, fighters, and foreground preserve depth order");
@@ -376,14 +377,14 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: definition\.enemyBaseMaxHp/);
-  assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
+  assert.match(game, /if \(!deferredStructureImpact\) applyEnemyBaseDamage\(g, structureDamage, enemyBaseTarget\.researchTargetId\)/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);
   assert.match(game, /感染拠点 \/\/ 大破/);
   assert.match(game, /const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
   assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
-  assert.match(game, /const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
+  assert.match(game, /const enemyBaseLabel = v100CorporateControlLabel\(gameRef\.current\.definition\) \?\? \(gameRef\.current\.researchCoreTargets \? "破壊目標・総耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"\)/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
@@ -469,7 +470,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /activeBattlefieldDepthScale\(f\.y\)/);
   assert.match(game, /const drawSlices = frame\.drawSlices \?\?/);
   assert.match(game, /fighter\.side === "zombie" && isBossEnemyKind\(fighter\.kind\)[\s\S]*enemyRenderedVisualHalfWidth\(fighter\.kind\)[\s\S]*Math\.max\(fighter\.bodyRadius, renderedHalfWidth\)/);
-  assert.match(game, /const authoredSize = fitSpriteBattleDisplaySize\(renderKind, frame, spriteDisplaySize\(renderKind\)\)/);
+  assert.match(game, /fitSpriteBattleDisplaySize\('kumaverson', spriteFrameFor\('kumaverson', 'idle', direction\), spriteDisplaySize\('kumaverson'\)\)/);
+  assert.match(game, /const authoredSize = tataraGroundCandidate\s*\? v100TataraDisplaySize\(/);
+  assert.match(game, /options\.v100AuthoredPresentation && renderKind === 'sprinter'\s*\? v100SoukiAuthoredSize\(frame,direction,spriteDisplaySize\(renderKind\)\)\s*: options\.v100AuthoredPresentation && V100_CONTACT_ENEMY_KINDS\.includes\(renderKind\)\s*\? v100EnemyContactSize\(renderKind,frame,direction,spriteDisplaySize\(renderKind\)\)\s*: options\.v100AuthoredPresentation && renderKind === 'gate-eater'\s*\? v100GateEaterAuthoredSize\(frame,direction,spriteDisplaySize\(renderKind\)\)\s*: fitSpriteBattleDisplaySize\(renderKind, frame, spriteDisplaySize\(renderKind\)\)/);
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
@@ -536,7 +539,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
   assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
   assert.match(game, /function battleBannerDomRect[\s\S]*document\.querySelector<HTMLElement>\("\.battle-banner"\)/);
-  assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{publicDisplayText\(hud\.banner\)\}<\/p>/);
+  assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{formatBattleText\(hud\.banner\)\}<\/p>/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.doesNotMatch(css, /battle-nishijin-shopping-street-v1\.webp/);
   assert.match(game, /const battleHudFrameStyle = \{[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
@@ -578,9 +581,10 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
   assert.match(game, /g\.deployQueue\.length >= 3/);
-  assert.match(game, /格納庫満員 \/\/ 3/);
+  assert.match(game, /召喚限度到達 \/\/ 3/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
-  assert.match(game, /格納庫 \{hud\.deployQueue\}\/3/);
+  assert.match(game, /summonedCount: number/);
+  assert.match(game, /召喚限度 \{hud\.summonedCount\}\/7/);
   assert.match(game, /advanceLimitFor\(g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /支援ゲージ/);
   assert.match(game, /移動拠点一斉掃射/);
@@ -1232,19 +1236,23 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*target\.hp = Math\.max\(0, target\.hp - hit\.damage\)/);
   assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*addParticles\(g, target\.x, target\.y - 22/);
 
-  const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
+  const shotDraw = game.slice(game.indexOf("function drawAuthoredShotVfx"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("function drawAuthoredShotVfx")));
   assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
   assert.match(shotDraw, /const weaponProfile = weaponProfileForUnit\(weapon\)/);
   assert.match(shotDraw, /weaponProfile\.trailColor/);
+  assert.match(shotDraw, /drawCombatRibbon/);
+  assert.match(shotDraw, /drawCombatSplinters/);
+  assert.match(shotDraw, /drawProjectileCore/);
+  assert.match(shotDraw, /hooked-crowbar-arc/);
   assert.match(shotDraw, /const impactDelay =/);
   assert.match(shotDraw, /const hitStopSeconds =/);
   assert.match(shotDraw, /const impactProgress =/);
   assert.match(shotDraw, /const p = elapsed < impactDelay[\s\S]*elapsed \/ impactDelay[\s\S]*: 1/);
-  assert.match(shotDraw, /weaponProfile\.trail === "high-velocity"[\s\S]*weaponProfile\.trail === "burst-tracer"[\s\S]*weaponProfile\.trail === "bolt"/);
-  assert.match(shotDraw, /ctx\.moveTo\(x - ux \* tailLength, y - uy \* tailLength\);\s*ctx\.lineTo\(x, y\)/);
-  assert.match(shotDraw, /if \(p < \.3\)[\s\S]*const muzzle =[\s\S]*ctx\.closePath\(\);\s*ctx\.fill\(\)/);
+  assert.match(shotDraw, /trail === "high-velocity"[\s\S]*trail === "burst-tracer"[\s\S]*trail === "bolt"/);
   assert.match(shotDraw, /if \(shot\.casing && p < \.52\)[\s\S]*ctx\.fillStyle = "#d8a94f"/);
-  assert.match(shotDraw, /if \(impactProgress >= 0\)[\s\S]*weaponProfile\.impactRadius[\s\S]*ctx\.arc\(shot\.tx, shot\.ty/);
+  assert.match(shotDraw, /if \(impactProgress >= 0\)[\s\S]*drawCombatSplinters[\s\S]*weaponProfile\.impactRadius/);
+  assert.doesNotMatch(shotDraw, /ctx\.ellipse\(x, y/);
+  assert.doesNotMatch(shotDraw, /ctx\.ellipse\(shot\.tx, shot\.ty/);
   assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x, shot\.y\);\s*ctx\.lineTo\(shot\.tx, shot\.ty\)/);
   assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x - \d+, shot\.y\);\s*ctx\.lineTo\(shot\.x \+ \d+, shot\.y\)/);
 });
@@ -1266,7 +1274,7 @@ test("machinegun burst damage is deferred to visual impact for fighters and the 
 
   assert.match(pendingResolution, /if \(hit\.eventKind === "muzzle"\)[\s\S]*addWeaponShot/);
   assert.match(pendingResolution, /if \(!hit\.applyDamage\) continue/);
-  assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*g\.barricadeHp = Math\.max\(0, g\.barricadeHp - hit\.damage\)/);
+  assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*applyEnemyBaseDamage\(g, hit\.damage, hit\.researchTargetId\)/);
   assert.match(
     pendingResolution,
     /target\.hp = Math\.max\(0, target\.hp - hit\.damage\)[\s\S]*target\.flash = Math\.max/,
@@ -1548,7 +1556,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(crawlerDraw, /ctx\.translate\(crawler\.commandDeckX/);
   assert.doesNotMatch(crawlerDraw, /ctx\.moveTo\(crawler\.weaponX - 14/);
   assert.match(crawlerDraw, /drawCrawlerEquipmentFrame\(ctx, sprites, "barrage",[\s\S]*drawCrawlerEquipmentFrame\(ctx, sprites, "airstrike",/);
-  assert.match(game, /function drawCrawlerForegroundMask[\s\S]*sprites\.crawlerForegroundMask[\s\S]*drawCrawlerAsset\(ctx, foregroundMask, crawler\)/);
+  assert.match(game, /function drawCrawlerForegroundMask[\s\S]*sprites\.crawlerForegroundMask[\s\S]*drawCrawlerAsset\(ctx, foregroundMask, crawler, Boolean\(g\.definition\.missionConfig\.v100StageNumber\)\)/);
   assert.match(game, /unitPass === "before-foreground-mask"[\s\S]*type: "crawler-foreground"[\s\S]*drawCrawlerForegroundMask/);
   assert.doesNotMatch(crawlerDraw, /ctx\.clip\(\)/);
   assert.match(game, /const crawlerDeploymentOpaque = f\.side === "human"[\s\S]*f\.spawnPortalId === "crawler-door"[\s\S]*ctx\.globalAlpha = 1/);
@@ -1733,8 +1741,8 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.battle-barks \{ position:static;/);
   assert.match(css, /\.cooldown-mask small \{[^}]*font:800 clamp\(5px,.48vw,7px\)\/1 monospace;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
-  assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
-  assert.match(game, /bossHudSnapshot\(fighter\)/);
+  assert.match(game, /const bossPhase = hud\.bossPhase \?\? bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
+  assert.match(game, /bossBattleHudSnapshot\(g\)/);
   assert.match(game, /enforceBossBodyBarrier\(\{[\s\S]*mover: f,[\s\S]*previousX: movementStartX,[\s\S]*\}\)/);
   assert.match(game, /announceBossEntrance\(g, event\.bossKind\)/);
   assert.match(game, /mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\)/);
@@ -1745,7 +1753,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.doesNotMatch(game, /g\.bannerTime = Math\.max\(g\.bannerTime, 1\.05\)/);
   assert.match(game, /const selectedStageBossKind = selectedOutbreakMissionId[\s\S]*OUTBREAK_MISSION_BY_ID\[selectedOutbreakMissionId\]\?\.boss\?\.enemyKind[\s\S]*CAMPAIGN_STAGE_BY_ID\[selectedStageId\]\?\.boss\?\.enemyKind \?\? null/);
   assert.match(game, /bossDefinitionForEnemyKind\(activeBossKind\)\?\.displayName/);
-  assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(game, /\{activeBossLabel\}<small>\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:20%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
   assert.match(css, /\.boss-hud \{ top:100px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
@@ -1808,7 +1816,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(newcomerAudio, /unitAudioCueFor\(f\.kind, "weapon", "hardHit"\)/);
   const chainsawLoopStarts = [...game.matchAll(/playProductionCue\(BATTLE_AUDIO_LOOP_CONTRACTS\.crazyKingChainsaw\.cueId, W \/ 2,/g)];
   assert.equal(chainsawLoopStarts.length, 2);
-  assert.match(game, /const defeatCue = fighter\.side === "human"[\s\S]*playBattleSemanticCue\(defeatCue,[\s\S]*semantic: isBossEnemyKind\(fighter\.kind\) \? "boss-defeat" : "fighter-defeat"/);
+  assert.match(game, /const defeatCue = fighter\.side === "human"[\s\S]*playBattleSemanticCue\(defeatCue,[\s\S]*semantic: isBossFighter\(fighter\) \? "boss-defeat" : "fighter-defeat"/);
   assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
   assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
   assert.match(game, /if \(inputGate === "ignore"\) return/);
@@ -1916,7 +1924,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
-  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, revealRight, H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, Math\.min\(revealRight, options\.enemyGateOcclusionX \?\? W\), H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /const incomingBossKind = mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\) \?\? null;[\s\S]*announceBossEntrance\(g, incomingBossKind,[\s\S]*activateTakuyaScene: incomingBossKind === "takuya"/);
   assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playBattleSemanticCue\(definition\.entrance\.cueId[\s\S]*semantic: "boss-entrance"[\s\S]*receiptId/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*isBossEnemyKind\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
@@ -1941,7 +1949,8 @@ test("integrates attack identity, corpse phases, infection, cremation, and gener
   assert.doesNotMatch(game, /INFECTION CREMATED|SURVIVOR TURNED|感染\s*\d/);
   const corpseDraw = game.slice(game.indexOf("for (const corpse of g.corpses)"), game.indexOf("const renderables = ["));
   assert.match(corpseDraw, /allyCorpseVisualCue\(corpse, g\.time\)/);
-  assert.match(corpseDraw, /fitSpriteBattleDisplaySize\(corpse\.kind, frame, spriteDisplaySize\(corpse\.kind\)\)/);
+  assert.match(corpseDraw, /const corpseRenderKind = bossRenderKind\(corpse\)/);
+  assert.match(corpseDraw, /fitSpriteBattleDisplaySize\(corpseRenderKind, frame, spriteDisplaySize\(corpseRenderKind\)\)/);
   assert.match(corpseDraw, /const authoredDeathPose = frame\.derivedFrom !== "hit"/);
   assert.match(corpseDraw, /const fallAngle = authoredDeathPose \? 0/);
   assert.match(corpseDraw, /eyeGlint[\s\S]*smokePuffs[\s\S]*flameTongues[\s\S]*corpse\.state === "ash"/);

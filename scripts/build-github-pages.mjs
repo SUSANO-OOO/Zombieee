@@ -63,10 +63,11 @@ const assets = {
 };
 
 const worker = (await import(`${pathToFileURL(serverEntry).href}?pages=${Date.now()}`)).default;
-const rendered = await worker.fetch(new Request("https://pages.invalid/"), { ASSETS: assets });
-if (!rendered.ok) throw new Error(`Failed to render the root document: ${rendered.status}`);
-let html = await rendered.text();
-html = normalizeReleaseTitle(html, releaseVersion);
+async function renderRoute(routePath) {
+  const rendered = await worker.fetch(new Request(`https://pages.invalid${routePath}`), { ASSETS: assets });
+  if (!rendered.ok) throw new Error(`Failed to render the ${routePath} document: ${rendered.status}`);
+  return rendered.text();
+}
 
 const topLevelEntries = await readdir(clientDir, { withFileTypes: true });
 const directoryPrefixes = topLevelEntries
@@ -95,14 +96,22 @@ function patchVinextPreloadBase(source) {
   return source.replaceAll(originalHelper, pagesHelper);
 }
 
-html = prefixAbsoluteReferences(html);
-html = html.replace(
-  "<head>",
-  `<head><meta name="github-pages-version" content="${escapeHtmlAttribute(releaseVersion)}"><meta name="github-pages-release" content="${escapeHtmlAttribute(releaseSha)}"><meta name="github-pages-request-id" content="${escapeHtmlAttribute(releaseRequestId)}"><meta name="github-pages-issue" content="${escapeHtmlAttribute(releaseIssueNumber)}"><meta name="github-pages-base" content="${basePath || "/"}/">`,
-);
+function finalizeHtml(source) {
+  let html = normalizeReleaseTitle(source, releaseVersion);
+  html = prefixAbsoluteReferences(html);
+  return html.replace(
+    "<head>",
+    `<head><meta name="github-pages-version" content="${escapeHtmlAttribute(releaseVersion)}"><meta name="github-pages-release" content="${escapeHtmlAttribute(releaseSha)}"><meta name="github-pages-request-id" content="${escapeHtmlAttribute(releaseRequestId)}"><meta name="github-pages-issue" content="${escapeHtmlAttribute(releaseIssueNumber)}"><meta name="github-pages-base" content="${basePath || "/"}/">`,
+  );
+}
 
-await writeFile(path.join(outputDir, "index.html"), html, "utf8");
-await writeFile(path.join(outputDir, "404.html"), html, "utf8");
+const rootHtml = finalizeHtml(await renderRoute("/"));
+const v100Html = finalizeHtml(await renderRoute("/v100"));
+
+await mkdir(path.join(outputDir, "v100"), { recursive: true });
+await writeFile(path.join(outputDir, "index.html"), rootHtml, "utf8");
+await writeFile(path.join(outputDir, "v100", "index.html"), v100Html, "utf8");
+await writeFile(path.join(outputDir, "404.html"), rootHtml, "utf8");
 await writeFile(path.join(outputDir, ".nojekyll"), "", "utf8");
 
 let preloadHelperPatchCount = 0;
@@ -129,19 +138,27 @@ if (basePath && preloadHelperPatchCount !== 1) {
   throw new Error(`Expected one vinext preload helper patch, found ${preloadHelperPatchCount}`);
 }
 
-const index = await readFile(path.join(outputDir, "index.html"), "utf8");
-const requiredReferences = [...index.matchAll(/(?:href|src)="([^"?#]+)["?#]/g)].map((match) => match[1]);
-const missing = [];
-for (const reference of requiredReferences) {
-  if (!reference.startsWith(`${basePath}/`)) continue;
-  const relativePath = reference.slice(basePath.length + 1);
-  try {
-    await stat(path.join(outputDir, relativePath));
-  } catch {
-    missing.push(reference);
+async function verifyHtmlReferences(filePath) {
+  const html = await readFile(filePath, "utf8");
+  const references = [...html.matchAll(/(?:href|src)="([^"?#]+)["?#]/g)].map((match) => match[1]);
+  const missing = [];
+  for (const reference of references) {
+    if (!reference.startsWith(`${basePath}/`)) continue;
+    const relativePath = reference.slice(basePath.length + 1);
+    try {
+      await stat(path.join(outputDir, relativePath));
+    } catch {
+      missing.push(reference);
+    }
   }
+  if (missing.length) throw new Error(`Missing GitHub Pages assets in ${filePath}: ${missing.join(", ")}`);
+  return references;
 }
-if (missing.length) throw new Error(`Missing GitHub Pages assets: ${missing.join(", ")}`);
+
+const index = await readFile(path.join(outputDir, "index.html"), "utf8");
+const v100Index = await readFile(path.join(outputDir, "v100", "index.html"), "utf8");
+const requiredReferences = await verifyHtmlReferences(path.join(outputDir, "index.html"));
+const v100References = await verifyHtmlReferences(path.join(outputDir, "v100", "index.html"));
 
 // --- PWA distribution manifest -------------------------------------------
 //
@@ -224,7 +241,9 @@ console.log(JSON.stringify({
   basePath: basePath || "/",
   outputDir,
   renderedBytes: index.length,
+  renderedV100Bytes: v100Index.length,
   checkedReferences: requiredReferences.length,
+  checkedV100References: v100References.length,
   preloadHelperPatchCount,
   releaseVersion,
   releaseSha,

@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
 import { selectPreferredAudioSource } from "../app/pwaAssetManifest.js";
 
 const root = process.cwd();
@@ -25,7 +25,7 @@ const chunks = [];
 const assets = {};
 let offset = 0;
 
-for (const audioAsset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
+for (const audioAsset of INSTALL_AUDIO_ASSETS) {
   const source = selectPreferredAudioSource(audioAsset.sources);
   if (!source) throw new Error(`Audio cue ${audioAsset.id} has no playable source`);
   const sourcePath = path.join(publicDir, source.src.replace(/^\//, ""));

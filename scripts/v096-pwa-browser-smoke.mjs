@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Version 0.9.6 PWA browser smoke.
 //
 // Runs against a real production server so the service worker, Cache Storage,
@@ -78,7 +79,7 @@ page.on("response", (response) => {
 });
 
 await page.addInitScript(PAGE_HELPERS);
-await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
 // --- 1. Installability -----------------------------------------------------
 
@@ -388,7 +389,7 @@ entryPage.on("request", (request) => {
   if (/\/(art|audio|icons)\//.test(pathname)) entryAssetRequests.push(pathname);
 });
 await routeSmallPack(entryContext);
-await entryPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
+await entryPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
 const skipLabel = entryPage.getByRole("button", { name: "ブラウザで遊ぶ" });
 await skipLabel.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
@@ -576,7 +577,7 @@ appPage.on("request", (request) => {
   const { pathname } = new URL(request.url());
   if (/\/(art|audio|icons|pwa-bundles)\//.test(pathname)) appAssetRequests.push(pathname);
 });
-await appPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
+await appPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
 const startDownload = appPage.getByRole("button", { name: "ダウンロードを開始" });
 await startDownload.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});

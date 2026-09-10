@@ -1,0 +1,934 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "repair": "explicit-reviewed-gap-seeds-local-palette",
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 4352,
+    "height": 1024
+  },
+  "commonScale": 0.3218707015130674,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "noClipping": true,
+  "groundAnchorPixels": 496,
+  "identityMaster": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+  "identityMasterSha256": "d46f6a96f693dbf0aa9b81b9ef2b1f5797f461c87505c7390c80464e3a0249af",
+  "sources": [
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+      "sha256": "d3366a9f6652e522f12bb732c495de162bdd060ba06c59fa986c1b0da83026d7",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 28,
+        "y": 57,
+        "width": 964,
+        "height": 1351,
+        "alphaPixels": 654749
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 854280,
+        "seedPixels": 63835,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              617,
+              544
+            ],
+            "removed": 28436
+          },
+          {
+            "seed": [
+              387,
+              661
+            ],
+            "removed": 17163
+          },
+          {
+            "seed": [
+              927,
+              436
+            ],
+            "removed": 4859
+          },
+          {
+            "seed": [
+              844,
+              242
+            ],
+            "removed": 4216
+          },
+          {
+            "seed": [
+              673,
+              71
+            ],
+            "removed": 4106
+          },
+          {
+            "seed": [
+              804,
+              175
+            ],
+            "removed": 1459
+          },
+          {
+            "seed": [
+              769,
+              123
+            ],
+            "removed": 1371
+          },
+          {
+            "seed": [
+              782,
+              170
+            ],
+            "removed": 1045
+          },
+          {
+            "seed": [
+              710,
+              648
+            ],
+            "removed": 602
+          },
+          {
+            "seed": [
+              851,
+              314
+            ],
+            "removed": 578
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 918115,
+        "allowedMaskPixels": 918115,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+      "sha256": "eb010a3efa2843de120222e9590be46aa944248562ba54ab9da3271cf59605bb",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 82,
+        "y": 32,
+        "width": 908,
+        "height": 1454,
+        "alphaPixels": 731576
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 793809,
+        "seedPixels": 47479,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              364,
+              676
+            ],
+            "removed": 24120
+          },
+          {
+            "seed": [
+              637,
+              563
+            ],
+            "removed": 10607
+          },
+          {
+            "seed": [
+              658,
+              48
+            ],
+            "removed": 4543
+          },
+          {
+            "seed": [
+              687,
+              513
+            ],
+            "removed": 2588
+          },
+          {
+            "seed": [
+              870,
+              278
+            ],
+            "removed": 1399
+          },
+          {
+            "seed": [
+              959,
+              531
+            ],
+            "removed": 1138
+          },
+          {
+            "seed": [
+              780,
+              106
+            ],
+            "removed": 1036
+          },
+          {
+            "seed": [
+              898,
+              389
+            ],
+            "removed": 976
+          },
+          {
+            "seed": [
+              704,
+              677
+            ],
+            "removed": 619
+          },
+          {
+            "seed": [
+              914,
+              452
+            ],
+            "removed": 453
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 841288,
+        "allowedMaskPixels": 841288,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+      "sha256": "5c8e808b38f1a1c3ee1fe253e0ec45dbe0cb8ff064bd8743a6ee4def7bf0a4bb",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 5,
+        "y": 103,
+        "width": 939,
+        "height": 1339,
+        "alphaPixels": 630777
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 910854,
+        "seedPixels": 31233,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              341,
+              772
+            ],
+            "removed": 20151
+          },
+          {
+            "seed": [
+              581,
+              118
+            ],
+            "removed": 4044
+          },
+          {
+            "seed": [
+              777,
+              295
+            ],
+            "removed": 1342
+          },
+          {
+            "seed": [
+              691,
+              151
+            ],
+            "removed": 1279
+          },
+          {
+            "seed": [
+              706,
+              200
+            ],
+            "removed": 937
+          },
+          {
+            "seed": [
+              878,
+              541
+            ],
+            "removed": 900
+          },
+          {
+            "seed": [
+              799,
+              417
+            ],
+            "removed": 867
+          },
+          {
+            "seed": [
+              863,
+              545
+            ],
+            "removed": 806
+          },
+          {
+            "seed": [
+              724,
+              202
+            ],
+            "removed": 500
+          },
+          {
+            "seed": [
+              592,
+              168
+            ],
+            "removed": 407
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 942087,
+        "allowedMaskPixels": 942087,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+      "sha256": "356e9583c17c5525c08f839ad689c82aeb85b321aa740d0b1ae4f8c1fd7eb914",
+      "sourceSize": {
+        "width": 1198,
+        "height": 1313
+      },
+      "sourceBounds": {
+        "x": 68,
+        "y": 217,
+        "width": 1020,
+        "height": 889,
+        "alphaPixels": 364714
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1186467,
+        "seedPixels": 21793,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              981,
+              453
+            ],
+            "removed": 5945
+          },
+          {
+            "seed": [
+              821,
+              239
+            ],
+            "removed": 4744
+          },
+          {
+            "seed": [
+              969,
+              500
+            ],
+            "removed": 2898
+          },
+          {
+            "seed": [
+              714,
+              231
+            ],
+            "removed": 2625
+          },
+          {
+            "seed": [
+              915,
+              323
+            ],
+            "removed": 1720
+          },
+          {
+            "seed": [
+              913,
+              564
+            ],
+            "removed": 998
+          },
+          {
+            "seed": [
+              958,
+              515
+            ],
+            "removed": 926
+          },
+          {
+            "seed": [
+              854,
+              588
+            ],
+            "removed": 770
+          },
+          {
+            "seed": [
+              803,
+              298
+            ],
+            "removed": 761
+          },
+          {
+            "seed": [
+              882,
+              582
+            ],
+            "removed": 406
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1208260,
+        "allowedMaskPixels": 1208260,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+      "sha256": "d79f83c2c23d1ee171d9fa1b7e24db9e29440a60e81232dbf8c4e24189c2561a",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 23,
+        "y": 201,
+        "width": 964,
+        "height": 1191,
+        "alphaPixels": 594341
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 946478,
+        "seedPixels": 32045,
+        "seedCount": 9,
+        "seedResults": [
+          {
+            "seed": [
+              331,
+              631
+            ],
+            "removed": 9379
+          },
+          {
+            "seed": [
+              825,
+              240
+            ],
+            "removed": 5985
+          },
+          {
+            "seed": [
+              688,
+              588
+            ],
+            "removed": 5289
+          },
+          {
+            "seed": [
+              746,
+              736
+            ],
+            "removed": 4383
+          },
+          {
+            "seed": [
+              875,
+              404
+            ],
+            "removed": 2343
+          },
+          {
+            "seed": [
+              901,
+              352
+            ],
+            "removed": 1879
+          },
+          {
+            "seed": [
+              942,
+              440
+            ],
+            "removed": 1254
+          },
+          {
+            "seed": [
+              818,
+              291
+            ],
+            "removed": 892
+          },
+          {
+            "seed": [
+              722,
+              685
+            ],
+            "removed": 641
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 978523,
+        "allowedMaskPixels": 978523,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+      "sha256": "74fe005e27175c96568231a837fd3a713bc697ea61c293c3fd7982be5a8399cb",
+      "sourceSize": {
+        "width": 1133,
+        "height": 1388
+      },
+      "sourceBounds": {
+        "x": 70,
+        "y": 18,
+        "width": 1020,
+        "height": 1354,
+        "alphaPixels": 599548
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 948040,
+        "seedPixels": 25016,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              724,
+              558
+            ],
+            "removed": 6432
+          },
+          {
+            "seed": [
+              811,
+              270
+            ],
+            "removed": 4908
+          },
+          {
+            "seed": [
+              723,
+              219
+            ],
+            "removed": 3913
+          },
+          {
+            "seed": [
+              602,
+              184
+            ],
+            "removed": 2977
+          },
+          {
+            "seed": [
+              793,
+              270
+            ],
+            "removed": 1376
+          },
+          {
+            "seed": [
+              940,
+              413
+            ],
+            "removed": 1290
+          },
+          {
+            "seed": [
+              623,
+              224
+            ],
+            "removed": 684
+          },
+          {
+            "seed": [
+              800,
+              325
+            ],
+            "removed": 444
+          },
+          {
+            "seed": [
+              856,
+              371
+            ],
+            "removed": 63
+          },
+          {
+            "seed": [
+              1015,
+              530
+            ],
+            "removed": 2929
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 973056,
+        "allowedMaskPixels": 973056,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+      "sha256": "a140a331f70a00da5ffce6db3c8a63552b02ca6e16237c5bca246db6fa59a2bc",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 12,
+        "y": 233,
+        "width": 1004,
+        "height": 1156,
+        "alphaPixels": 532013
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1021616,
+        "seedPixels": 19235,
+        "seedCount": 10,
+        "seedResults": [
+          {
+            "seed": [
+              550,
+              265
+            ],
+            "removed": 5325
+          },
+          {
+            "seed": [
+              663,
+              360
+            ],
+            "removed": 5341
+          },
+          {
+            "seed": [
+              277,
+              288
+            ],
+            "removed": 4229
+          },
+          {
+            "seed": [
+              422,
+              248
+            ],
+            "removed": 2290
+          },
+          {
+            "seed": [
+              461,
+              284
+            ],
+            "removed": 582
+          },
+          {
+            "seed": [
+              597,
+              350
+            ],
+            "removed": 567
+          },
+          {
+            "seed": [
+              321,
+              338
+            ],
+            "removed": 321
+          },
+          {
+            "seed": [
+              497,
+              294
+            ],
+            "removed": 277
+          },
+          {
+            "seed": [
+              608,
+              379
+            ],
+            "removed": 168
+          },
+          {
+            "seed": [
+              678,
+              396
+            ],
+            "removed": 135
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1040851,
+        "allowedMaskPixels": 1040851,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+      "sha256": "955eedde6471a17e6c6709d8aeb3dd20f441108705507f56c173980e7944badc",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 11,
+        "y": 307,
+        "width": 1490,
+        "height": 592,
+        "alphaPixels": 411330
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=190/chroma<=16",
+        "edgePixels": 1136665,
+        "seedPixels": 24869,
+        "seedCount": 9,
+        "seedResults": [
+          {
+            "seed": [
+              326,
+              679
+            ],
+            "removed": 15842
+          },
+          {
+            "seed": [
+              596,
+              322
+            ],
+            "removed": 3037
+          },
+          {
+            "seed": [
+              775,
+              388
+            ],
+            "removed": 2176
+          },
+          {
+            "seed": [
+              555,
+              360
+            ],
+            "removed": 1197
+          },
+          {
+            "seed": [
+              831,
+              444
+            ],
+            "removed": 1081
+          },
+          {
+            "seed": [
+              703,
+              376
+            ],
+            "removed": 871
+          },
+          {
+            "seed": [
+              743,
+              399
+            ],
+            "removed": 381
+          },
+          {
+            "seed": [
+              512,
+              374
+            ],
+            "removed": 125
+          },
+          {
+            "seed": [
+              807,
+              444
+            ],
+            "removed": 159
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1161534,
+        "allowedMaskPixels": 1161534,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    }
+  ],
+  "frames": [
+    {
+      "state": "entrance",
+      "contentRect": {
+        "x": 117,
+        "y": 61,
+        "width": 310,
+        "height": 435
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 435
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "idle",
+      "contentRect": {
+        "x": 126,
+        "y": 28,
+        "width": 292,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 292,
+        "height": 468
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "contentRect": {
+        "x": 121,
+        "y": 65,
+        "width": 302,
+        "height": 431
+      },
+      "renderedSize": {
+        "width": 302,
+        "height": 431
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "contentRect": {
+        "x": 108,
+        "y": 210,
+        "width": 328,
+        "height": 286
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 286
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "contentRect": {
+        "x": 117,
+        "y": 113,
+        "width": 310,
+        "height": 383
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 383
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "phase",
+      "contentRect": {
+        "x": 108,
+        "y": 60,
+        "width": 328,
+        "height": 436
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 436
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "contentRect": {
+        "x": 110,
+        "y": 124,
+        "width": 323,
+        "height": 372
+      },
+      "renderedSize": {
+        "width": 323,
+        "height": 372
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "defeat",
+      "contentRect": {
+        "x": 32,
+        "y": 305,
+        "width": 480,
+        "height": 191
+      },
+      "renderedSize": {
+        "width": 480,
+        "height": 191
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    }
+  ],
+  "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8"
+}

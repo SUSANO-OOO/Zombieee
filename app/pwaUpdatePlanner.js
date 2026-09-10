@@ -17,8 +17,10 @@ import { diffAssetManifests, isContentHash, validateAssetManifest } from "./pwaA
 export const SAFE_ACTIVATION_SCREENS = Object.freeze([
   "title",
   "map",
+  "formation",
   "records",
   "personnel",
+  "loadout",
   "storage",
 ]);
 

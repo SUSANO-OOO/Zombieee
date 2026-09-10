@@ -5,6 +5,8 @@ import {
   V099_SUPPORT_POD_AUDIO_CONTRACT,
   v099AudioSource,
 } from "./battleAudioContracts.js";
+import { V100_STAGES } from "./v100Registry.js";
+import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -94,6 +96,40 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   "anchor-bloom": "abomination",
 });
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
+
+const V100_ENEMY_COMBAT_CUE_TARGETS = Object.freeze({
+  "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-shield": Object.freeze({ attack: "weapon-pan-heavy-hit", hurt: "weapon-pan-hit", death: "v100-body-fall" }),
+  "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-commander": Object.freeze({ attack: "weapon-rifle", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "mugarian-president-mutated": Object.freeze({
+    entrance: "boss-mother-entrance",
+    attack: "boss-mother-brood-eruption",
+    hurt: "enemy-abomination-hurt",
+    phase: "boss-mother-brood-warning",
+    death: "enemy-abomination-death",
+    defeat: "boss-mother-brood-eruption",
+  }),
+  "takuya-omega": Object.freeze({
+    entrance: "sfx-v070-takuya-entrance",
+    attack: "enemy-takuya-attack",
+    hurt: "enemy-takuya-hurt",
+    phase: "boss-ooguchi-charge-warning",
+    death: "enemy-takuya-death",
+    defeat: "boss-ooguchi-charge-impact",
+  }),
+});
+
+const V100_ENEMY_COMBAT_CUE_ALIASES = Object.freeze(Object.entries(V100_ENEMY_COMBAT_CUE_TARGETS).flatMap(([kind, events]) => (
+  Object.entries(events).map(([event, targetId]) => ({
+    id: `enemy-${kind}-${event}`,
+    targetId,
+    instanceKey: `enemy-${kind}-${event}`,
+    priority: ["entrance", "phase", "defeat", "death"].includes(event) ? 96 : 74,
+    cooldownMs: event === "attack" ? 120 : event === "hurt" ? 180 : 500,
+    maxInstances: event === "attack" ? 4 : 2,
+  }))
+)));
 
 const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "weapon-chainsaw-start", category: "weapons", cooldownMs: 180, maxInstances: 1, gain: 0.82, priority: 72 },
@@ -391,6 +427,11 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 )));
 
 const assets = [
+  { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },
+  ...["advance", "navigate", "cancel", "confirm", "reject"].map(role => ({
+    id: `v100-ui-${role}`, category: "ui", sources: sourceFor("/audio/v100", "ui", `v100-ui-${role}`),
+    preload: "lazy", loop: false, gain: .8, priority: 48, cooldownMs: 70, maxInstances: 1,
+  })),
   ...MUSIC_TRACKS.map(musicAsset),
   ...UI_CUES.map((name) => sfxAsset(name, "ui", { gain: 0.68, priority: 32, cooldownMs: 45, maxInstances: 3 })),
   sfxAsset("radio-open", "ui", { gain: 0.7, priority: 48, cooldownMs: 120, maxInstances: 2 }),
@@ -480,6 +521,7 @@ const aliases = [
     cooldownMs: 260,
     maxInstances: 1,
   },
+  ...V100_ENEMY_COMBAT_CUE_ALIASES,
 ];
 const COMMON_UI_PRELOAD = Object.freeze([
   "ui-cancel",
@@ -551,6 +593,99 @@ export const TAKUYA_ENTRANCE_AUDIO = Object.freeze({
 
 const STATION_PRELOAD = Object.freeze(Object.values(STATION_AUDIO_CUE_IDS));
 
+const V100_AUDIO_FAMILY_BY_STAGE_NUMBER = Object.freeze({
+  21: Object.freeze({ normal: "logistics", pressure: "surface", pre: "logistics-pre", post: "logistics-post" }),
+  22: Object.freeze({ normal: "clinical", pressure: "surface", pre: "clinical-pre", post: "clinical-post" }),
+  23: Object.freeze({ normal: "armory", pressure: "station", pre: "armory-pre", post: "armory-post" }),
+  24: Object.freeze({ normal: "tower", pressure: "surface", pre: "tower-pre", post: "tower-post" }),
+  25: Object.freeze({ normal: "executive", pressure: "surface", pre: "executive-pre", post: "executive-post" }),
+  26: Object.freeze({ normal: "bay", pressure: "surface", pre: "bay-pre", post: "bay-post" }),
+  27: Object.freeze({ normal: "private-lab", pressure: "station", pre: "private-lab-pre", post: "private-lab-post" }),
+  28: Object.freeze({ normal: "network", pressure: "station", pre: "network-pre", post: "network-post" }),
+  29: Object.freeze({ normal: "research-core", pressure: "surface", pre: "research-core-pre", post: "research-core-post" }),
+  30: Object.freeze({ normal: "final", pressure: "surface", pre: "final-pre", post: "final-post" }),
+});
+
+const V100_AUDIO_BASE_SCENES = Object.freeze({
+  logistics: { bgm: "music-v099-normal", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 800 },
+  clinical: { bgm: "music-v099-normal", ambience: ["ambience-v070-medical-bay-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 760 },
+  armory: { bgm: "music-v099-normal", ambience: ["ambience-v070-station-gate-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 650 },
+  tower: { bgm: "music-v099-normal", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 760 },
+  executive: { bgm: "music-v099-normal", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 760 },
+  bay: { bgm: "music-v099-normal", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 760 },
+  "private-lab": { bgm: "music-v099-normal", ambience: ["ambience-v070-station-tunnel-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 620 },
+  network: { bgm: "music-v099-normal", ambience: ["ambience-v070-station-tunnel-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 620 },
+  "research-core": { bgm: "music-v099-normal", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMBAT_PRELOAD, crossfadeMs: 760 },
+  final: { bgm: "music-v099-normal", ambience: ["ambience-v070-stage3-wind-loop"], preload: [...COMBAT_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 620 },
+  surface: { bgm: "music-v099-pressure-surface", preload: [...COMBAT_PRELOAD, ...V099_COMBAT_PRELOAD], crossfadeMs: 600 },
+  station: { bgm: "music-v099-pressure-station", preload: [...COMBAT_PRELOAD, ...V099_COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 600 },
+  "logistics-pre": { bgm: "music-v070-stage2-tension", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  "clinical-pre": { ambience: ["ambience-v070-medical-bay-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 320 },
+  "armory-pre": { bgm: "music-v070-station-gate", ambience: ["ambience-v070-station-gate-loop"], preload: STATION_PRELOAD, crossfadeMs: 320 },
+  "tower-pre": { bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  "executive-pre": { bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  "bay-pre": { bgm: "music-v070-stage2-tension", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  "private-lab-pre": { bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: STATION_PRELOAD, crossfadeMs: 320 },
+  "network-pre": { bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: STATION_PRELOAD, crossfadeMs: 320 },
+  "research-core-pre": { bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  "final-pre": { bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-stage3-wind-loop"], preload: [...COMMON_UI_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 420 },
+  "logistics-post": { bgm: "music-v070-rescue", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 280 },
+  "clinical-post": { ambience: ["ambience-v070-medical-bay-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  "armory-post": { ambience: ["ambience-v070-station-gate-loop"], preload: STATION_PRELOAD, crossfadeMs: 260 },
+  "tower-post": { bgm: "music-v070-return", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 280 },
+  "executive-post": { bgm: "music-v070-return", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 280 },
+  "bay-post": { bgm: "music-v070-rescue", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 280 },
+  "private-lab-post": { bgm: "music-v070-return", ambience: ["ambience-v070-station-tunnel-loop"], preload: STATION_PRELOAD, crossfadeMs: 260 },
+  "network-post": { bgm: "music-v070-return", ambience: ["ambience-v070-station-tunnel-loop"], preload: STATION_PRELOAD, crossfadeMs: 260 },
+  "research-core-post": { bgm: "music-v070-return", ambience: ["ambience-v070-crawler-ops-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 280 },
+  "final-post": { bgm: "music-v070-crawler-morning", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 360 },
+});
+
+function v100AudioSceneId(stageNumber, phase) {
+  return `v100-s${String(stageNumber).padStart(2, "0")}-${phase}`;
+}
+
+const V100_STAGE_AUDIO_SCENE_CONTRACT = Object.freeze(Object.fromEntries(V100_STAGES
+  .filter(({ number }) => number > 20)
+  .map((stage) => {
+    const family = V100_AUDIO_FAMILY_BY_STAGE_NUMBER[stage.number];
+    return [stage.id, Object.freeze({
+      battle: v100AudioSceneId(stage.number, "battle"),
+      pressure: v100AudioSceneId(stage.number, "pressure"),
+      pre: v100AudioSceneId(stage.number, "pre"),
+      post: v100AudioSceneId(stage.number, "post"),
+      boss: "boss",
+      family,
+    })];
+  })));
+
+const V100_STAGE_SCENE_BY_ID = Object.freeze(Object.fromEntries(
+  Object.entries(V100_STAGE_AUDIO_SCENE_CONTRACT).map(([stageId, contract]) => [stageId, contract.battle]),
+));
+const V100_STORY_AUDIO_EVENT_SCENE_IDS = Object.freeze(Object.fromEntries(V100_STAGES
+  .filter(({ number }) => number > 20)
+  .flatMap((stage) => {
+    const scenesForStage = V100_STAGE_AUDIO_SCENE_CONTRACT[stage.id];
+    return [
+      [stage.eventIds.pre, scenesForStage.pre],
+      [stage.eventIds.post, scenesForStage.post],
+      [stage.eventIds.firstClearPost, scenesForStage.post],
+    ];
+  })));
+
+const V100_SCENE_DEFINITIONS = V100_STAGES
+  .filter(({ number }) => number > 20)
+  .flatMap((stage) => {
+    const family = V100_AUDIO_FAMILY_BY_STAGE_NUMBER[stage.number];
+    const ids = V100_STAGE_AUDIO_SCENE_CONTRACT[stage.id];
+    return [
+      { id: ids.battle, ...V100_AUDIO_BASE_SCENES[family.normal] },
+      { id: ids.pressure, ...V100_AUDIO_BASE_SCENES[family.pressure] },
+      { id: ids.pre, ...V100_AUDIO_BASE_SCENES[family.pre] },
+      { id: ids.post, ...V100_AUDIO_BASE_SCENES[family.post] },
+    ];
+  });
+
 const scenes = [
   { id: "title", bgm: "music-title", preload: COMMON_UI_PRELOAD, crossfadeMs: 900 },
   { id: "intro", bgm: "music-intro", ambience: ["radio-static-loop"], preload: [...COMMON_UI_PRELOAD, ...RADIO_CUES], crossfadeMs: 700 },
@@ -568,6 +703,14 @@ const scenes = [
   { id: "victory", bgm: "music-victory", preload: ["ui-confirm"], crossfadeMs: 320 },
   { id: "defeat", bgm: "music-defeat", preload: ["ui-confirm", "ui-cancel"], crossfadeMs: 320 },
   { id: "silence-prologue-title", preload: [], crossfadeMs: 0 },
+  // Credits reuse location ambience without BGM or character voices.
+  { id: "v100-credits-street", ambience: ["ambience-v070-rain-street-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-room", ambience: ["ambience-v070-crawler-ops-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-station", ambience: ["ambience-v070-station-platform-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-medical", ambience: ["ambience-v070-medical-bay-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-wind", ambience: ["ambience-v070-stage3-wind-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-credits-kumaya", ambience: ["ambience-v070-kumaya-daily-loop"], preload: [], crossfadeMs: 450 },
+  { id: "v100-story-soup-break", ambience: ["ambience-v070-crawler-canteen-loop"], preload: [], crossfadeMs: 640 },
   { id: "story-kumaya-daily", bgm: "music-v070-kumaya-daily", ambience: ["ambience-v070-kumaya-daily-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 520 },
   { id: "story-kumaya-crisis", ambience: ["ambience-v070-kumaya-crisis-loop"], preload: [], crossfadeMs: 120 },
   { id: "story-collapse-montage", bgm: "music-v070-collapse-montage", ambience: ["ambience-v070-collapse-city-loop"], preload: [], crossfadeMs: 700 },
@@ -595,6 +738,7 @@ const scenes = [
   { id: "silence-station-seal", ambience: ["ambience-v070-station-seal-aftermath-loop"], preload: [STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, STATION_AUDIO_CUE_IDS.MACHINE_STOP, STATION_AUDIO_CUE_IDS.RETURN_MARKER], crossfadeMs: 140 },
   { id: "story-station-return", bgm: "music-v070-return", ambience: ["ambience-v070-crawler-ops-loop"], preload: [STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 560 },
   { id: "story-chapter-ending", bgm: "music-v070-crawler-morning", ambience: ["ambience-v070-crawler-canteen-loop"], preload: [STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 640 },
+  ...V100_SCENE_DEFINITIONS,
 ];
 
 export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
@@ -604,6 +748,21 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
   aliases,
   scenes,
 });
+
+export const V100_AUDIO_MANIFEST = createAudioManifest(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST));
+// Installation inventories physical files, whereas playback addresses cues.
+// A V1 replacement must not steal a legacy cue's metadata or offline entry.
+const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
+  asset.sources.map(source => source.src).join('|'), asset,
+]));
+for (const asset of V100_AUDIO_MANIFEST.assets) {
+  const key = asset.sources.map(source => source.src).join('|');
+  if (!installAudioBySource.has(key)) {
+    const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');
+    installAudioBySource.set(key, Object.freeze({ ...asset, id: `install-${pathId}` }));
+  }
+}
+export const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   TITLE: "title",
@@ -651,6 +810,14 @@ export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   STORY_CHAPTER_ENDING: "story-chapter-ending",
 });
 
+export const V100_AUDIO_SCENE_IDS = Object.freeze(Object.fromEntries(
+  Object.entries(V100_STAGE_AUDIO_SCENE_CONTRACT).flatMap(([stageId, contract]) => Object.entries(contract)
+    .filter(([phase]) => ["battle", "pressure", "pre", "post"].includes(phase))
+    .map(([phase, sceneId]) => [`${stageId}:${phase}`, sceneId])),
+));
+
+export const V100_STAGE_AUDIO_CONTRACT = V100_STAGE_AUDIO_SCENE_CONTRACT;
+
 const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_1,
   [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
@@ -672,6 +839,7 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
   [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
   [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
+  ...V100_STAGE_SCENE_BY_ID,
 });
 
 export const BATTLE_STAGE_SCENE_BY_ID = STAGE_SCENE_BY_ID;
@@ -682,6 +850,7 @@ export const BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE = Object.freeze({
   [PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
   [PRODUCTION_AUDIO_SCENE_IDS.STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
   [PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
+  ...Object.fromEntries(Object.values(V100_STAGE_AUDIO_SCENE_CONTRACT).map((contract) => [contract.battle, contract.pressure])),
 });
 export const BATTLE_PRESSURE_SCENE_BY_STAGE_ID = Object.freeze(
   Object.fromEntries(Object.entries(STAGE_SCENE_BY_ID).map(([stageId, sceneId]) => [
@@ -895,8 +1064,15 @@ export function stopBattleAudioLoops(mixer, { fadeMs = 0 } = {}) {
 }
 
 export function enemyVoiceCue(kind, event) {
+  const v100Cue = ownValue(V100_ENEMY_COMBAT_CUE_TARGETS, kind)?.[event];
+  if (v100Cue) return `enemy-${kind}-${event}`;
   const profile = ENEMY_KINDS.includes(kind) ? kind : ownValue(ENEMY_VOICE_PROFILE_BY_KIND, kind);
   return profile && ENEMY_VOICE_EVENTS.includes(event) ? `enemy-${profile}-${event}` : null;
+}
+
+export function enemyCombatCueFor(kind, event) {
+  const cue = ownValue(V100_ENEMY_COMBAT_CUE_TARGETS, kind)?.[event];
+  return cue ? `enemy-${kind}-${event}` : enemyVoiceCue(kind, event);
 }
 
 function outcomeFrom(value) {
@@ -960,6 +1136,7 @@ export const STORY_AUDIO_EVENT_SCENE_IDS = Object.freeze({
   "stage-station-tunnel-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
   "stage-station-tunnel-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
   "chapter-ending-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING,
+  ...V100_STORY_AUDIO_EVENT_SCENE_IDS,
 });
 
 export const STORY_AUDIO_PHASE_RULES = Object.freeze([

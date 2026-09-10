@@ -34,7 +34,7 @@ import {
   spriteKinds,
   spriteSheetPath,
 } from "../app/spriteManifest.js";
-import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS } from "../app/productionVisuals.js";
+import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, V100_STAGE_BACKGROUND_OVERRIDES } from "../app/productionVisuals.js";
 import {
   V075_VISUAL_PROFILES,
   V080_UNIT_VISUAL_PROFILES,
@@ -42,8 +42,17 @@ import {
 } from "../app/visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
-import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
+import { V100_ASSAULT_OBJECT_ART } from "../app/v100AssaultObjects.js";
+import { V100_DEFENSE_PERIMETER_ART } from "../app/v100DefensePerimeter.js";
+import { V100_NODE_ART } from "../app/v100MissionNodes.js";
+import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
+import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
+import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
+import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -146,7 +155,7 @@ if (playableKinds.has("mayo-chan")) playableKinds.add("mayo-chan-feral");
 
 function categoryForKind(kind) {
   if (playableKinds.has(kind)) return "unit";
-  if (isBossEnemyKind(kind)) return "boss";
+  if (isBossEnemyKind(kind) || ["futago-separated-a", "futago-separated-b"].includes(kind)) return "boss";
   return "enemy";
 }
 
@@ -164,11 +173,14 @@ for (const icon of V099_APP_ICON_PATHS) {
 // --- Campaign core --------------------------------------------------------
 
 sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
+sweep(V100_STAGE_BACKGROUND_OVERRIDES, { pack: "campaign-core", category: "background", criticality: "critical" });
 sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
-sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // Some campaign missions render these overlays directly instead of looking
 // through STAGE_OBJECT_MANIFEST. They are still real gameplay assets.
 sweep(PRODUCTION_VISUALS.missionObjects, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(V100_PREPARATION_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(V100_COMBAT_VFX_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // These three supplies are direct renderer dependencies rather than entries in
 // STAGE_OBJECT_MANIFEST. They are part of the full first-install pack because
 // the battle UI can request them on any supported campaign stage.
@@ -191,6 +203,15 @@ for (const kind of spriteKinds) {
     criticality: "critical",
   });
 }
+// The Takuya renderer now uses the repaired V1 atlas, while the published
+// legacy battle gutter remains a released compatibility asset. It is not a
+// runtime sprite registration, so retain it explicitly in the distribution
+// manifest with its source-bound transport derivative.
+record("/art/v060/characters/legacy/takuya-battle-gutter-v1.png", {
+  pack: "units",
+  category: "boss",
+  criticality: "critical",
+});
 
 // CRAWLER and the infected base are persistent battlefield fixtures.
 sweep(V075_VISUAL_PROFILES.crawler, { pack: "units", category: "unit", criticality: "critical" });
@@ -211,9 +232,45 @@ for (const boss of BOSS_DEFINITIONS) {
   record(boss.compendium?.assetPath, { pack: "units", category: "boss", criticality: "critical" });
 }
 
+// --- Version 1.0.0 campaign runtime assets -------------------------------
+// The V1 route is a gameplay route, so every asset it can reach is part of the
+// first-install pack and is critical for a complete V1 offline generation.
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.portraits)) {
+  record(assetPath, { pack: "units", category: "portrait", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.bosses)) {
+  record(assetPath, { pack: "units", category: "boss", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.redPanther)) {
+  record(assetPath, { pack: "units", category: "enemy", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
+  record(assetPath, { pack: "campaign-core", category: "background", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+record(V100_KUMAVERSON_GUARD_ART.path, { pack: "units", category: "unit", criticality: "critical" });
+record("/art/v100/characters/tatara-ground-strike-r1.webp", { pack: "units", category: "unit", criticality: "critical" });
+for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), ...Object.values(V100_ASSAULT_OBJECT_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART, V100_DEFENSE_PERIMETER_ART]) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
+  record(stage.background, { pack: "campaign-core", category: "background", criticality: "critical" });
+  for (const assetPath of stage.missionObjects) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
+  for (const assetPath of stage.vfx) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
+}
+
 // --- Audio ----------------------------------------------------------------
 
-for (const asset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
+for (const asset of INSTALL_AUDIO_ASSETS) {
   const audioChannel = audioChannelFor(asset.category);
   const source = selectPreferredAudioSource(asset.sources);
   if (!source) continue;

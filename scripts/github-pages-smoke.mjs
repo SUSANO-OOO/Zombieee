@@ -3,13 +3,14 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { chromium } from "playwright";
+import { releaseTitleForVersion } from "../app/releaseIdentity.js";
 
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
-const expectedTitle = expectedVersion ? `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}` : null;
+const expectedTitle = expectedVersion ? releaseTitleForVersion(expectedVersion) : null;
 const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
@@ -85,8 +86,8 @@ try {
     // carry on. The invitation has its own coverage in the PWA matrix.
     await dismissInstallOffer(page);
 
-    await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
-    const startButton = page.locator(".title-start");
+    await page.locator("#v100-name-title").waitFor({ state: "visible", timeout: 120_000 });
+    const startButton = page.getByRole("button", { name: "この名前で作戦を始める", exact: true });
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
     const initialTitle = await page.title();
     if (expectedTitle && initialTitle !== expectedTitle) {
@@ -106,8 +107,9 @@ try {
     }
 
     await page.screenshot({ path: path.join(evidenceDir, `github-pages-title-${viewport.width}x${viewport.height}.png`), fullPage: true });
+    await page.locator("#v100-player-name").fill("公開確認");
     await startButton.click();
-    await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator('[data-v100-event-id="v100:event:prologue"]').waitFor({ state: "visible", timeout: 30_000 });
     const postInteractionTitle = await page.title();
     if (expectedTitle && postInteractionTitle !== expectedTitle) {
       throw new Error(`Post-interaction title does not equal "${expectedTitle}": ${postInteractionTitle}`);

@@ -245,7 +245,11 @@ jobs:
           REQUEST_ID: ${{ steps.release.outputs.request_id }}
           ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
         run: |
-          grep -Fq "<title>西新世紀末物語｜アーリーアクセス版 $VERSION</title>" _site/index.html
+          if [[ "$VERSION" == 0.* ]]; then
+            grep -Fq "<title>西新世紀末物語｜アーリーアクセス版 $VERSION</title>" _site/index.html
+          else
+            grep -Fq "<title>西新世紀末物語｜Version $VERSION</title>" _site/index.html
+          fi
           grep -Fq "<meta name=\"github-pages-version\" content=\"$VERSION\">" _site/index.html
           grep -Fq "<meta name=\"github-pages-release\" content=\"$RELEASE_SHA\">" _site/index.html
           grep -Fq "<meta name=\"github-pages-request-id\" content=\"$REQUEST_ID\">" _site/index.html

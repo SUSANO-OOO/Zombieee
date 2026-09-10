@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isRetryableTargetClosedLog } from "./run-v0995-enemy-runtime-bounded.mjs";
+import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 
 export const CANONICAL_DEPLOYMENT_KINDS = Object.freeze([
   "scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic",
@@ -56,8 +56,15 @@ export async function runCanonicalDeploymentUnits({
   evidenceRoot = env.ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT,
   kinds = CANONICAL_DEPLOYMENT_KINDS,
   runAttempt,
+  createHostResourceTelemetry = createWebKitHostResourceTelemetry,
 } = {}) {
   if (!evidenceRoot) throw new Error("ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT is required");
+  if (typeof createHostResourceTelemetry !== "function") {
+    throw new Error("deployment telemetry factory must be a function");
+  }
+  if (createHostResourceTelemetry !== createWebKitHostResourceTelemetry && typeof runAttempt !== "function") {
+    throw new Error("deployment telemetry override requires an injected runAttempt");
+  }
   if (kinds.length !== CANONICAL_DEPLOYMENT_KINDS.length
     || new Set(kinds).size !== kinds.length
     || !CANONICAL_DEPLOYMENT_KINDS.every((kind) => kinds.includes(kind))) {
@@ -65,33 +72,93 @@ export async function runCanonicalDeploymentUnits({
   }
   const root = path.resolve(cwd, evidenceRoot);
   await mkdir(root, { recursive: true });
+  const hostResourceTelemetry = await createHostResourceTelemetry({
+    evidenceDir: root,
+    label: "bounded-deployment-parent",
+    referenceRoot: cwd,
+    metadata: {
+      owner: "deployment-bounded-parent",
+      canonicalUnitCount: CANONICAL_DEPLOYMENT_KINDS.length,
+    },
+  });
   const units = [];
-  for (const kind of kinds) {
-    const attempts = [];
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+  let hostResourceTelemetrySummary = null;
+  let primaryFailure = null;
+  let hostResourceTelemetryStopError = null;
+  try {
+    for (const kind of kinds) {
+      const attempts = [];
+      const attempt = 1;
       const attemptDir = path.join(root, kind, `attempt-${attempt}`);
       await mkdir(attemptDir, { recursive: true });
-      const execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
+      hostResourceTelemetry.event("unit-child-start", { kind, attempt });
+      let execution;
+      try {
+        execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
+      } catch (error) {
+        hostResourceTelemetry.event("unit-child-exit", { kind, attempt, status: "runner-error" });
+        throw error;
+      }
+      hostResourceTelemetry.event("unit-child-exit", {
+        kind,
+        attempt,
+        code: execution.code,
+        signal: execution.signal ?? null,
+      });
       await writeFile(path.join(attemptDir, "runner.log"), execution.output ?? "", "utf8");
       const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
         .then(JSON.parse)
         .catch(() => null);
       const passed = execution.code === 0 && summary && assertUnitPass(summary, kind);
-      const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}`;
-      const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
-      attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
-      if (passed) break;
-      if (attempt !== 1 || !retryableTargetClosed) break;
-      console.warn(`Retrying ${kind} once after an exact hosted-WebKit target-closed incident.`);
+      attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, summary });
+      units.push({ kind, passed, attempts });
+      if (!passed) break;
     }
-    const passed = attempts.at(-1)?.passed === true;
-    units.push({ kind, passed, attempts });
-    if (!passed) break;
+  } catch (error) {
+    primaryFailure = error;
+    throw error;
+  } finally {
+    try {
+      hostResourceTelemetrySummary = await hostResourceTelemetry.stop({
+        event: "bounded-parent-complete",
+        completedUnitCount: units.length,
+        allCanonicalUnitsReached: units.length === CANONICAL_DEPLOYMENT_KINDS.length,
+      });
+    } catch (telemetryError) {
+      hostResourceTelemetryStopError = String(telemetryError);
+      if (primaryFailure) {
+        primaryFailure.hostResourceTelemetryFailure = {
+          code: "WEBKIT_HOST_TELEMETRY_PERSISTENCE_FAILED",
+          error: hostResourceTelemetryStopError,
+        };
+      } else if (!units.some(({ passed }) => !passed)) {
+        throw telemetryError;
+      }
+    }
   }
-  const complete = units.length === CANONICAL_DEPLOYMENT_KINDS.length && units.every(({ passed }) => passed);
-  const report = { status: complete ? "passed" : "failed", canonicalKinds: CANONICAL_DEPLOYMENT_KINDS, units };
+  const hostResourceTelemetryValid = hostResourceTelemetrySummary?.supported !== true
+    || hostResourceTelemetrySummary.status === "complete";
+  const complete = units.length === CANONICAL_DEPLOYMENT_KINDS.length
+    && units.every(({ passed }) => passed)
+    && hostResourceTelemetryValid
+    && hostResourceTelemetryStopError === null;
+  const report = {
+    status: complete ? "passed" : "failed",
+    canonicalKinds: CANONICAL_DEPLOYMENT_KINDS,
+    units,
+    hostResourceTelemetry: hostResourceTelemetry.reference(),
+    hostResourceTelemetryStatus: hostResourceTelemetrySummary?.status ?? "failed",
+    hostResourceTelemetryValidity: hostResourceTelemetrySummary?.valid ?? null,
+    hostResourceTelemetryInvalidReason: hostResourceTelemetrySummary?.invalidReason ?? null,
+    hostResourceTelemetryStopError,
+  };
   await writeFile(path.join(root, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  if (!complete) throw new Error(`bounded deployment evidence failed at ${units.at(-1)?.kind ?? "inventory"}`);
+  if (!complete) {
+    const failedAt = units.some(({ passed }) => !passed)
+      ? units.at(-1)?.kind ?? "inventory"
+      : "host-resource-telemetry";
+    throw new Error(`bounded deployment evidence failed at ${failedAt}`);
+  }
   return report;
 }
 

@@ -1,0 +1,56 @@
+{
+  "generator": "built-in image_gen",
+  "accepted": [
+    "s22-clean-background-r1.png",
+    "s22-control-states-cutout-r5.png"
+  ],
+  "rejectedIntermediateReason": "r1/r4 have an opaque background. r3 clips at the right edge. These sources are retained for provenance and do not enter the release pack.",
+  "records": [
+    {
+      "source": "s22-clean-background-r1.png",
+      "original": "exec-20280da0-ec73-4f1a-a830-5c7c03503e2f.png",
+      "references": [
+        "public/art/v100/stages/s22-clinical-trial-wing-r2-background-v1.webp"
+      ],
+      "prompt": "Use case: precise-object-edit. Asset type: clean background plate for an existing 2D side-view post-apocalyptic game, widescreen 16:9. The provided image is the exact EDIT TARGET. Remove the large gray medical cabinet with the red warning beacon, all organic matter attached to that cabinet, and the detached narrow red/gray cut-off sliver immediately to its left, all in the right foreground. Reconstruct the floor and far-right wall/door naturally behind the removed foreground prop. Preserve everything else: identical dark industrial medical-compound architecture, upper balcony, mesh partitions and shelving on the left, central doorway, camera, perspective, lighting, damp stone floor and overall muted colors. Preserve the broad unobstructed walkable foreground and its existing floor plane. Do not add people, monsters, UI, words, signage, labels, new props or foreground obstacles. The control cabinet will be drawn separately by the game at runtime, so there must be no cabinet, beacon, cut-off remnant or matching silhouette baked into this clean background. Keep the same 16:9 composition and as close as possible to the original image size. Output one finished opaque background image.",
+      "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-20280da0-ec73-4f1a-a830-5c7c03503e2f.png"
+    },
+    {
+      "source": "s22-control-states-r1.png",
+      "original": "exec-9946c798-f5e9-4b3f-949a-d8cebc6ee7b5.png",
+      "references": [
+        "public/art/v100/mission-objects/clinical-trial-wing-v1.png"
+      ],
+      "prompt": "Use case: precise-object-edit and transparent game-sprite derivation. The input is the EDIT TARGET and visual design reference. Create a polished runtime sprite sheet with FOUR separate copies of the SAME central gray medical control cabinet, in ONE horizontal row of four equal cells on a REAL fully transparent alpha background. Wide sheet, approximately 4:1 aspect ratio. Each complete object must fit inside its own equal cell with generous transparent margins on every side and at least 50 transparent pixels separating silhouettes. Keep identical camera, 3/4 facing, size, ground baseline, square gray steel body, medical cross, side-mounted small screen, connected cables and attached dark organic growth in all four cells. Remove the unwanted detached red/gray cut-off sliver at the far left of the reference entirely; do not copy it. No neighboring-object fragments, captions, numbers, text, people, checkerboard, background, floor or ground shadow. Left-to-right four authored operating states: (1) SEALED: cabinet closed, red warning beacon and red small status screen; (2) RELEASING: same cabinet closed, bright amber beacon, cyan screen showing a few simple progress bars, engaged control lever; (3) RELEASE COMPLETE: same cabinet, green beacon and green screen, lever fully raised/unlocked; (4) POWER LOST: same cabinet and attached organic matter unchanged, beacon and screen completely unlit, lever at rest. This is a remote containment-room control unit, so state changes are controls and lights; do not open a large front door, invent new compartments or turn the cabinet into a different model. Ensure every copy is an entire coherent isolated cutout, same scale and baseline. High quality dark painterly post-apocalyptic game art faithful to the reference. Output exactly one transparent four-state sprite sheet.",
+      "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-9946c798-f5e9-4b3f-949a-d8cebc6ee7b5.png"
+    },
+    {
+      "source": "s22-control-states-cutout-r3.png",
+      "original": "exec-970859a7-4b9e-4c9c-977f-7fc47f8e3cc4.png",
+      "references": [
+        "assets/source/v100/mission-completion/s22-control-states-r1.png"
+      ],
+      "prompt": "Remove the background from this image. Isolate all four medical control cabinet sprites on a transparent background, preserving their exact placement, proportions, colors and detail.",
+      "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-970859a7-4b9e-4c9c-977f-7fc47f8e3cc4.png"
+    },
+    {
+      "source": "s22-control-states-spaced-r4.png",
+      "original": "exec-c211109d-0a79-4d7d-8069-0dbf6cd5df41.png",
+      "references": [
+        "assets/source/v100/mission-completion/s22-control-states-cutout-r3.png",
+        "assets/source/v100/mission-completion/s22-control-states-r1.png"
+      ],
+      "prompt": "Re-layout the transparent four-state cabinet atlas in Image 1. Image 2 is supporting reference for the complete unclipped silhouettes only. Preserve the exact four medical-cabinet designs, their red/amber/green/unlit state order and the lever positions. Arrange ONE ROW of FOUR EQUAL-WIDTH COLUMNS on an actually transparent canvas. Shrink ALL FOUR complete cabinet sprites by the SAME uniform factor to about 65% of their current size, leaving the sheet itself wide. Each complete silhouette, including all attached organic roots and lever tips, must sit fully inside the MIDDLE 70% of its own cell, with at least 60 completely transparent pixels on EVERY side. Restore the small outermost organic tip at the right edge of the fourth cabinet so the entire object is intact and separated from the canvas edge. All four objects have the same body scale and a common floor baseline. No silhouette or shadow may touch another cell or any image edge. Do not change the cabinet model, colors, state details, direction, texture or perspective. Keep real transparent alpha: no checkerboard, matte, floor, captions, grid, shadows or background. This is a production atlas spacing and edge-restoration correction, not a redesign.",
+      "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-c211109d-0a79-4d7d-8069-0dbf6cd5df41.png"
+    },
+    {
+      "source": "s22-control-states-cutout-r5.png",
+      "original": "exec-f38374c9-6eb9-4a69-b5c1-d7ee78f518fb.png",
+      "references": [
+        "assets/source/v100/mission-completion/s22-control-states-spaced-r4.png"
+      ],
+      "prompt": "Remove the background from this image. Isolate all four medical control cabinet sprites on a transparent background, preserving their exact placement, proportions, colors and detail.",
+      "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-f38374c9-6eb9-4a69-b5c1-d7ee78f518fb.png"
+    }
+  ]
+}

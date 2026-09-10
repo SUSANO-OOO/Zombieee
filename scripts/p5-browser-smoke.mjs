@@ -46,6 +46,8 @@ if (!["all", "story", "lifecycle", "bark", "battle-audio"].includes(qaScope)) {
 const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-browser-smoke");
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
 const teardownTimeout = Math.max(1_000, Number(process.env.P5_QA_TEARDOWN_TIMEOUT_MS) || 5_000);
+const FINAL_CUT_TRACE_INTERVAL_MS = 1_000;
+const FINAL_CUT_TRACE_MAX_SAMPLES = 75;
 
 function stage3Progress(label, checkpoint, startedAt) {
   console.log(JSON.stringify({
@@ -68,6 +70,464 @@ async function boundedPageCall(operation, label, limitMs = teardownTimeout) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+class TimeoutError extends Error {
+  constructor(message, evidence) {
+    super(message);
+    this.name = "TimeoutError";
+    this.evidence = evidence;
+  }
+}
+
+async function waitForFinalCutPredicateFromNode({ page, cueFragment, expectedSceneId, label, timeoutMs = timeout }) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({ cueFragment: expectedCueFragment, expectedSceneId: expectedAudioScene }) => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const activeScriptedFinalCue = Boolean(snapshot?.battleBarks?.active?.some((bark) => (
+        bark.scripted === true && bark.scriptedCueId?.includes(expectedCueFragment)
+      )));
+      const bossDefeated = snapshot?.bossDefeated ?? null;
+      const bossDefeatedIsFalse = bossDefeated === false;
+      const audioScene = document.documentElement.dataset.audioScene ?? null;
+      const audioSceneMatches = audioScene === expectedAudioScene;
+      return {
+        activeScriptedFinalCue,
+        bossDefeated,
+        bossDefeatedIsFalse,
+        audioScene,
+        expectedAudioScene,
+        audioSceneMatches,
+        matched: activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches,
+      };
+    }, { cueFragment, expectedSceneId });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.matched) return lastEvidence;
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(`${label} final-cut predicate timed out after ${timeoutMs}ms`, lastEvidence);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
+async function waitForFinalFifoFromNode({
+  page,
+  finalLines,
+  cueFragment,
+  expectedSceneId,
+  requireActiveBgm,
+  label,
+  timeoutMs = timeout,
+}) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({
+      finalLines: expectedLines,
+      cueFragment: expectedCueFragment,
+      expectedSceneId: expectedAudioScene,
+      requireActiveBgm: mustHaveActiveBgm,
+    }) => {
+      const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
+      const observedLines = expectedLines.map((line) => ({
+        ...line,
+        matched: samples.some((sample) => (
+          sample.snapshot?.bossDefeated === false
+          && sample.audioScene === expectedAudioScene
+          && (!mustHaveActiveBgm || sample.audioSceneState?.bgmAssetId === "music-boss")
+          && sample.snapshot?.battleBarks?.active?.some((bark) => (
+            bark.scripted === true
+            && bark.scriptedCueId?.includes(expectedCueFragment)
+            && bark.speaker === line.speaker
+            && bark.text === line.text
+          ))
+        )),
+      }));
+      return {
+        sampleCount: samples.length,
+        observedLines,
+        matched: observedLines.every((line) => line.matched),
+      };
+    }, { finalLines, cueFragment, expectedSceneId, requireActiveBgm });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.matched) return lastEvidence;
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(`${label} remaining final FIFO timed out after ${timeoutMs}ms`, lastEvidence);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
+async function withStage3FinalPresentationSuppression({
+  page,
+  label,
+  operation,
+  resumeButton = null,
+  adoptEntryGuard = false,
+}) {
+  const owner = "p5-stage3-final-cut";
+  const resumeButtonHandle = resumeButton ? await resumeButton.elementHandle() : null;
+  invariant(resumeButton === null || resumeButtonHandle !== null,
+    `${label} real resume button handle is unavailable`);
+  let arm;
+  try {
+    arm = await page.evaluate(({ requestedOwner, resumeElement, requireEntryGuard }) => {
+      const parameters = new URLSearchParams(location.search);
+      const localRoute = ["localhost", "127.0.0.1"].includes(location.hostname)
+        && parameters.get("qa") === "endgame"
+        && parameters.get("qaHudFiniteAssets") === "1";
+      if (!localRoute) throw new Error("P5_STAGE3_FINAL_PRESENTATION_ROUTE_UNAVAILABLE");
+      const beforeResume = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      if (beforeResume?.screen !== "battle" || beforeResume.running !== true || beforeResume.over === true) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_REQUIRES_LIVE_BATTLE");
+      }
+      if (resumeElement !== null && beforeResume.paused !== true) {
+        throw new Error("P5_STAGE3_FINAL_REAL_RESUME_REQUIRES_PAUSED_BATTLE");
+      }
+      if (resumeElement === null && beforeResume.paused === true) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_REQUIRES_UNPAUSED_BATTLE");
+      }
+      const entryGuard = requireEntryGuard
+        ? window.__P5_STAGE3_FINAL_ENTRY_PRESENTATION_GUARD__
+        : null;
+      if (requireEntryGuard && !(entryGuard?.schema === "p5-stage3-final-entry-presentation-guard/v1"
+        && entryGuard.owner === "p5-stage3-final-entry"
+        && entryGuard.phase === "active"
+        && entryGuard.battleRoot instanceof HTMLElement
+        && entryGuard.canvas instanceof HTMLCanvasElement
+        && entryGuard.styleElement instanceof HTMLStyleElement
+        && entryGuard.styleElement.isConnected
+        && document.documentElement.dataset.p5Stage3FinalEntryGuard === "active"
+        && getComputedStyle(entryGuard.canvas).display === "none")) {
+        throw new Error("P5_STAGE3_FINAL_ENTRY_GUARD_NOT_ACTIVE");
+      }
+      const transferEntryGuard = () => {
+        if (!entryGuard) return { receipt: null, pausedAnimations: [] };
+        entryGuard.observer?.disconnect();
+        const pausedAnimations = [...new Set(entryGuard.pausedAnimations ?? [])];
+        const receipt = Object.freeze({
+          schema: "p5-stage3-final-entry-presentation-transfer/v1",
+          owner: entryGuard.owner,
+          phase: entryGuard.phase,
+          armedAtPageTime: entryGuard.armedAtPageTime,
+          activatedAtPageTime: entryGuard.activatedAtPageTime,
+          transferredAtPageTime: performance.now(),
+          activationCount: entryGuard.activationCount,
+          pausedAnimationCount: pausedAnimations.length,
+          canvasIntrinsicWidth: entryGuard.canvas.width,
+          canvasIntrinsicHeight: entryGuard.canvas.height,
+        });
+        entryGuard.styleElement.remove();
+        delete document.documentElement.dataset.p5Stage3FinalEntryGuard;
+        delete window.__P5_STAGE3_FINAL_ENTRY_PRESENTATION_GUARD__;
+        return { receipt, pausedAnimations };
+      };
+      let resumeBoundary = null;
+      if (resumeElement !== null) {
+        if (!(resumeElement instanceof HTMLButtonElement)
+          || resumeElement.disabled
+          || resumeElement.getAttribute("aria-disabled") === "true"
+          || resumeElement.textContent?.trim() !== "作戦を再開") {
+          throw new Error("P5_STAGE3_FINAL_REAL_RESUME_BUTTON_INVALID");
+        }
+        resumeElement.click();
+        const resumedSnapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+        if (resumedSnapshot?.paused !== false) {
+          throw new Error("P5_STAGE3_FINAL_REAL_RESUME_NOT_ACCEPTED");
+        }
+        resumeBoundary = {
+          schema: "p5-stage3-final-real-resume-boundary/v1",
+          pageNow: performance.now(),
+          snapshot: resumedSnapshot,
+        };
+      }
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      if (snapshot?.screen !== "battle" || snapshot.running !== true || snapshot.paused === true || snapshot.over === true) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_REQUIRES_LIVE_BATTLE");
+      }
+      const bridge = window.__ASHFALL_BATTLE_QA__;
+      if (typeof bridge?.setQaPresentationQuiesced === "function") {
+        const receipt = bridge.setQaPresentationQuiesced(true, requestedOwner);
+        if (!(receipt?.schema === "v100-qa-presentation-quiescence/v1"
+          && receipt.active === true
+          && receipt.owner === requestedOwner
+          && receipt.route === "stage3-final"
+          && receipt.datasetActive === true
+          && receipt.running === true
+          && receipt.paused !== true
+          && receipt.over !== true)) {
+          throw new Error(`P5_STAGE3_FINAL_PRESENTATION_BRIDGE_REJECTED:${JSON.stringify(receipt)}`);
+        }
+        const transferred = transferEntryGuard();
+        const state = {
+          schema: "p5-stage3-final-presentation-state/v1",
+          owner: requestedOwner,
+          mode: "app-bridge",
+          enteredAtBattleTime: Number(snapshot.time),
+          resumeBoundary,
+          bridgeArm: receipt,
+          entryGuardTransfer: transferred.receipt,
+          entryGuardPausedAnimations: transferred.pausedAnimations,
+        };
+        window.__P5_STAGE3_FINAL_PRESENTATION_STATE__ = state;
+        return {
+          schema: state.schema,
+          owner: state.owner,
+          mode: state.mode,
+          enteredAtBattleTime: state.enteredAtBattleTime,
+          resumeBoundary: state.resumeBoundary,
+          bridgeArm: state.bridgeArm,
+          entryGuardTransfer: state.entryGuardTransfer,
+        };
+      }
+      const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
+      const canvas = battleRoot?.querySelector("canvas.battlefield");
+      if (!(battleRoot instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement)) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_SURFACE_MISSING");
+      }
+      const rect = canvas.getBoundingClientRect();
+      const style = getComputedStyle(canvas);
+      const guardedSurface = requireEntryGuard
+        && style.display === "none"
+        && canvas.width > 0
+        && canvas.height > 0;
+      const visibleSurface = rect.width > 0
+        && rect.height > 0
+        && style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity) > 0;
+      if (!(guardedSurface || visibleSurface)) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_SURFACE_NOT_OWNED");
+      }
+      const battleRootStyle = battleRoot.getAttribute("style");
+      battleRoot.style.visibility = "hidden";
+      document.documentElement.dataset.p5Stage3FinalPresentationSuppressed = "true";
+      const runningAnimations = typeof battleRoot.getAnimations === "function"
+        ? battleRoot.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running")
+        : [];
+      for (const animation of runningAnimations) animation.pause();
+      const transferred = transferEntryGuard();
+      const pausedAnimations = [...new Set([...runningAnimations, ...transferred.pausedAnimations])];
+      const state = {
+        schema: "p5-stage3-final-presentation-state/v1",
+        owner: requestedOwner,
+        mode: "base-dom-suppression",
+        enteredAtBattleTime: Number(snapshot.time),
+        resumeBoundary,
+        battleRoot,
+        battleRootStyle,
+        pausedAnimations,
+        pausedAnimationCount: pausedAnimations.length,
+        entryGuardTransfer: transferred.receipt,
+        entryCanvas: {
+          width: rect.width,
+          height: rect.height,
+          intrinsicWidth: canvas.width,
+          intrinsicHeight: canvas.height,
+          display: style.display,
+          visibility: style.visibility,
+          opacity: style.opacity,
+        },
+      };
+      window.__P5_STAGE3_FINAL_PRESENTATION_STATE__ = state;
+      return {
+        schema: state.schema,
+        owner: state.owner,
+        mode: state.mode,
+        enteredAtBattleTime: state.enteredAtBattleTime,
+        resumeBoundary: state.resumeBoundary,
+        pausedAnimationCount: state.pausedAnimationCount,
+        entryGuardTransfer: state.entryGuardTransfer,
+        entryCanvas: state.entryCanvas,
+      };
+    }, { requestedOwner: owner, resumeElement: resumeButtonHandle, requireEntryGuard: adoptEntryGuard });
+  } finally {
+    await resumeButtonHandle?.dispose();
+  }
+  invariant(resumeButton === null || (
+    arm?.resumeBoundary?.schema === "p5-stage3-final-real-resume-boundary/v1"
+    && arm.resumeBoundary.snapshot?.paused === false
+  ), `${label} did not atomically bind the real resume boundary to presentation ownership`);
+
+  let value;
+  let operationError = null;
+  try {
+    value = await operation();
+  } catch (error) {
+    operationError = error;
+  }
+
+  let release = null;
+  let releaseError = null;
+  if (!page.isClosed()) {
+    try {
+      release = await page.evaluate(({ requestedOwner }) => {
+        const state = window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+        if (!(state?.schema === "p5-stage3-final-presentation-state/v1" && state.owner === requestedOwner)) {
+          throw new Error("P5_STAGE3_FINAL_PRESENTATION_RELEASE_OWNER_MISSING");
+        }
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        if (state.mode === "app-bridge") {
+          const receipt = window.__ASHFALL_BATTLE_QA__?.setQaPresentationQuiesced?.(false, requestedOwner) ?? null;
+          if (!(receipt?.schema === "v100-qa-presentation-quiescence/v1"
+            && receipt.active === false
+            && receipt.owner === requestedOwner
+            && receipt.route === "stage3-final"
+            && receipt.datasetActive === false
+            && receipt.running === true
+            && receipt.paused !== true
+            && receipt.over !== true
+            && Number(receipt.releasedAtRenderFrames) === Number(receipt.enteredAtRenderFrames)
+            && Number(receipt.releasedAtSimulationTicks) > Number(receipt.enteredAtSimulationTicks)
+            && Number(receipt.suppressedRenderFrames) > 0)) {
+            throw new Error(`P5_STAGE3_FINAL_PRESENTATION_RELEASE_INVALID:${JSON.stringify(receipt)}`);
+          }
+          let entryGuardResumedAnimationCount = 0;
+          for (const animation of state.entryGuardPausedAnimations ?? []) {
+            try {
+              if (animation.playState === "paused") {
+                animation.play();
+                entryGuardResumedAnimationCount += 1;
+              }
+            } catch {
+              // Detached CSS animations cannot affect the restored surface.
+            }
+          }
+          delete window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+          return {
+            schema: "p5-stage3-final-presentation-release/v1",
+            owner: requestedOwner,
+            mode: state.mode,
+            enteredAtBattleTime: state.enteredAtBattleTime,
+            releasedAtBattleTime: Number(snapshot?.time),
+            resumeBoundary: state.resumeBoundary,
+            bridgeArm: state.bridgeArm,
+            bridgeRelease: receipt,
+            entryGuardTransfer: state.entryGuardTransfer,
+            resumedAnimationCount: Number(receipt.resumedAnimationCount) + entryGuardResumedAnimationCount,
+            entryGuardResumedAnimationCount,
+          };
+        }
+        if (state.mode !== "base-dom-suppression" || !(state.battleRoot instanceof HTMLElement)) {
+          throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_RELEASE_INVALID");
+        }
+        if (state.battleRootStyle === null) state.battleRoot.removeAttribute("style");
+        else state.battleRoot.setAttribute("style", state.battleRootStyle);
+        let resumedAnimationCount = 0;
+        for (const animation of state.pausedAnimations ?? []) {
+          try {
+            if (animation.playState === "paused") {
+              animation.play();
+              resumedAnimationCount += 1;
+            }
+          } catch {
+            // Detached CSS animations cannot affect the restored surface.
+          }
+        }
+        delete document.documentElement.dataset.p5Stage3FinalPresentationSuppressed;
+        delete window.__P5_STAGE3_FINAL_PRESENTATION_STATE__;
+        return {
+          schema: "p5-stage3-final-presentation-release/v1",
+          owner: requestedOwner,
+          mode: state.mode,
+          enteredAtBattleTime: state.enteredAtBattleTime,
+          releasedAtBattleTime: Number(snapshot?.time),
+          resumeBoundary: state.resumeBoundary,
+          entryGuardTransfer: state.entryGuardTransfer,
+          pausedAnimationCount: state.pausedAnimationCount,
+          resumedAnimationCount,
+          entryCanvas: state.entryCanvas,
+        };
+      }, { requestedOwner: owner });
+    } catch (error) {
+      releaseError = error;
+    }
+  }
+  if (operationError) {
+    if (releaseError) throw new Error(`${String(operationError)}; Stage 3 presentation release also failed: ${String(releaseError)}`);
+    throw operationError;
+  }
+  if (releaseError) throw releaseError;
+  invariant(release?.schema === "p5-stage3-final-presentation-release/v1"
+    && release.owner === owner
+    && Number(release.releasedAtBattleTime) > Number(release.enteredAtBattleTime),
+  `${label} did not advance the production battle through final-cut presentation suppression`);
+
+  const restored = release.mode === "app-bridge"
+    ? await page.waitForFunction(({ releasedRenderFrames, releasedBattleTime }) => {
+      const quiescence = window.__ASHFALL_BATTLE_QA__?.getQaPresentationQuiescence?.();
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const canvas = document.querySelector('.game-shell[data-screen="battle"] canvas.battlefield');
+      const rect = canvas?.getBoundingClientRect();
+      const style = canvas ? getComputedStyle(canvas) : null;
+      const ready = quiescence?.active === false
+        && Number(quiescence.renderFrames) >= Number(releasedRenderFrames) + 3
+        && Number(snapshot?.time) > Number(releasedBattleTime)
+        && rect?.width > 0
+        && rect?.height > 0
+        && style?.display !== "none"
+        && style?.visibility !== "hidden"
+        && Number(style?.opacity) > 0;
+      return ready ? { renderFrames: quiescence.renderFrames, battleTime: snapshot.time, width: rect.width, height: rect.height } : false;
+    }, {
+      releasedRenderFrames: release.bridgeRelease.releasedAtRenderFrames,
+      releasedBattleTime: release.releasedAtBattleTime,
+    }, { timeout: Math.min(timeout, 10_000), polling: 50 }).then(async (handle) => {
+      const receipt = await handle.jsonValue();
+      await handle.dispose();
+      return receipt;
+    })
+    : await page.evaluate(async ({ releasedBattleTime }) => {
+      await new Promise((resolve) => {
+        let frames = 0;
+        const step = () => {
+          frames += 1;
+          if (frames >= 3) resolve();
+          else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const canvas = document.querySelector('.game-shell[data-screen="battle"] canvas.battlefield');
+      const rect = canvas?.getBoundingClientRect();
+      const style = canvas ? getComputedStyle(canvas) : null;
+      if (!(Number(snapshot?.time) > Number(releasedBattleTime)
+        && rect?.width > 0
+        && rect?.height > 0
+        && style?.display !== "none"
+        && style?.visibility !== "hidden"
+        && Number(style?.opacity) > 0)) {
+        throw new Error("P5_STAGE3_FINAL_PRESENTATION_BASE_RESTORATION_INVALID");
+      }
+      return { renderFrames: 3, battleTime: snapshot.time, width: rect.width, height: rect.height };
+    }, { releasedBattleTime: release.releasedAtBattleTime });
+  return {
+    value,
+    receipt: {
+      schema: "p5-stage3-final-presentation-suppression/v1",
+      arm,
+      release,
+      restored,
+    },
+  };
 }
 
 async function closePlaywrightResource(resource, label) {
@@ -347,6 +807,7 @@ function battleQaUrl(mode) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({
     qa: mode,
+    qaHudFiniteAssets: "1",
     safe: "iphone-landscape",
   }).toString();
   return String(url);
@@ -366,7 +827,7 @@ async function waitForStableTakuyaLoadoutAssets(page, label) {
         && Number(assetState.total) > 0
         && assetState.pending === 0
         && assetState.failed === 0
-        && root.dataset.assetResidentScope === "all-local-qa"
+        && root.dataset.assetResidentScope === "finite-hud-runtime-qa"
         && root.dataset.assetResidentStage === expectedStageId
         && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
     },
@@ -403,7 +864,7 @@ async function waitForStableTakuyaLoadoutAssets(page, label) {
       && after.total === before.total
       && after.datasetGeneration === after.generation
       && after.stageId === expectedTakuyaStageId
-      && after.scope === "all-local-qa") {
+      && after.scope === "finite-hud-runtime-qa") {
       stable = { before, after };
     }
   }
@@ -424,7 +885,163 @@ function assertLocalQaBootstrapDiagnostics(raw, label) {
     `${label} bootstrap retained pending requests: ${JSON.stringify(raw.pendingRequestUrls)}`);
 }
 
-async function enterLegacyQaBattle(page, label) {
+async function dispatchReadyTakuyaLoadout(page, label, { armFinalEntryPresentationGuard = false } = {}) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({ expectedStageId, armFinalEntryPresentationGuard }) => {
+      const root = document.documentElement;
+      const shell = document.querySelector(".game-shell");
+      const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
+      const deployButton = document.querySelector(".formation-footer .campaign-primary");
+      const selectedFormationCount = document.querySelectorAll(
+        '.formation-unit-select[aria-pressed="true"]',
+      ).length;
+      const screen = shell?.getAttribute("data-screen") ?? null;
+      const stageId = shell?.getAttribute("data-stage-id") ?? null;
+      const assetGeneration = Number(assetState?.generation);
+      const assetTotal = Number(assetState?.total);
+      const assetPending = Number(assetState?.pending);
+      const assetFailed = Number(assetState?.failed);
+      const datasetGeneration = Number(root.dataset.assetLoadGeneration);
+      const residentStageId = root.dataset.assetResidentStage ?? null;
+      const residentScope = root.dataset.assetResidentScope ?? null;
+      const buttonText = deployButton?.textContent?.replace(/\s+/gu, " ").trim() ?? null;
+      const buttonNativeDisabled = deployButton instanceof HTMLButtonElement
+        ? deployButton.disabled
+        : null;
+      const buttonAriaDisabled = deployButton?.getAttribute("aria-disabled") ?? null;
+      const ready = screen === "loadout"
+        && stageId === expectedStageId
+        && assetState?.state === "ready"
+        && assetGeneration > 0
+        && assetTotal > 0
+        && assetPending === 0
+        && assetFailed === 0
+        && datasetGeneration === assetGeneration
+        && residentStageId === expectedStageId
+        && residentScope === "finite-hud-runtime-qa"
+        && selectedFormationCount > 0
+        && buttonText?.includes("この編成で出撃") === true
+        && buttonNativeDisabled === false
+        && buttonAriaDisabled !== "true"
+        && typeof deployButton?.click === "function";
+      const receipt = {
+        schema: "p5-stage3-loadout-dispatch/v1",
+        dispatchCount: 0,
+        ready,
+        expectedStageId,
+        screen,
+        stageId,
+        assetStatus: assetState?.state ?? null,
+        assetGeneration,
+        assetTotal,
+        assetPending,
+        assetFailed,
+        datasetGeneration,
+        residentStageId,
+        residentScope,
+        selectedFormationCount,
+        buttonText,
+        buttonNativeDisabled,
+        buttonAriaDisabled,
+      };
+      if (!ready) return Object.freeze(receipt);
+      let entryPresentationGuard = null;
+      if (armFinalEntryPresentationGuard) {
+        const parameters = new URLSearchParams(location.search);
+        const localFinalRoute = ["localhost", "127.0.0.1"].includes(location.hostname)
+          && parameters.get("qa") === "endgame"
+          && parameters.get("qaHudFiniteAssets") === "1";
+        if (!localFinalRoute) throw new Error("P5_STAGE3_FINAL_ENTRY_GUARD_ROUTE_UNAVAILABLE");
+        if (window.__P5_STAGE3_FINAL_ENTRY_PRESENTATION_GUARD__) {
+          throw new Error("P5_STAGE3_FINAL_ENTRY_GUARD_ALREADY_ARMED");
+        }
+        const guardStyle = document.createElement("style");
+        guardStyle.id = "p5-stage3-final-entry-presentation-guard";
+        guardStyle.textContent = `html[data-p5-stage3-final-entry-guard="active"] .game-shell[data-screen="battle"] canvas.battlefield { display: none !important; }`;
+        document.head.append(guardStyle);
+        root.dataset.p5Stage3FinalEntryGuard = "active";
+        const guard = {
+          schema: "p5-stage3-final-entry-presentation-guard/v1",
+          owner: "p5-stage3-final-entry",
+          phase: "armed",
+          armedAtPageTime: performance.now(),
+          activatedAtPageTime: null,
+          activationCount: 0,
+          styleElement: guardStyle,
+          observer: null,
+          battleRoot: null,
+          canvas: null,
+          pausedAnimations: [],
+        };
+        const activate = () => {
+          const battleRoot = document.querySelector('.game-shell[data-screen="battle"]');
+          const canvas = battleRoot?.querySelector("canvas.battlefield");
+          if (!(battleRoot instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement)) return;
+          guard.battleRoot = battleRoot;
+          guard.canvas = canvas;
+          guard.phase = "active";
+          guard.activatedAtPageTime ??= performance.now();
+          guard.activationCount += 1;
+          const knownAnimations = new Set(guard.pausedAnimations);
+          const runningAnimations = typeof battleRoot.getAnimations === "function"
+            ? battleRoot.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running")
+            : [];
+          for (const animation of runningAnimations) {
+            animation.pause();
+            knownAnimations.add(animation);
+          }
+          guard.pausedAnimations = [...knownAnimations];
+        };
+        const observer = new MutationObserver(activate);
+        observer.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ["data-screen"],
+        });
+        guard.observer = observer;
+        window.__P5_STAGE3_FINAL_ENTRY_PRESENTATION_GUARD__ = guard;
+        activate();
+        entryPresentationGuard = Object.freeze({
+          schema: guard.schema,
+          owner: guard.owner,
+          phase: guard.phase,
+          armedAtPageTime: guard.armedAtPageTime,
+          route: "stage3-final",
+          canvasRule: "display-none",
+        });
+      }
+      deployButton.click();
+      return Object.freeze({ ...receipt, dispatchCount: 1, entryPresentationGuard });
+    }, { expectedStageId: expectedTakuyaStageId, armFinalEntryPresentationGuard });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.dispatchCount === 1) return Object.freeze(lastEvidence);
+    const remainingMs = timeout - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(
+        `${label} loadout dispatch readiness timed out after ${timeout}ms`,
+        lastEvidence,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
+async function enterLegacyQaBattle(
+  page,
+  label,
+  startedAt,
+  { armFinalEntryPresentationGuard = false } = {},
+) {
   await page.waitForFunction(
     () => {
       const screen = document.querySelector(".game-shell")?.getAttribute("data-screen");
@@ -433,34 +1050,11 @@ async function enterLegacyQaBattle(page, label) {
     undefined,
     { timeout },
   );
+  let deployBoundary = null;
   if (await page.locator('.game-shell[data-screen="loadout"]').count()) {
-    // Let the loadout generation finish before the deploy selection starts the
-    // battle generation. Otherwise the harness itself aborts an in-flight
-    // loadout asset request and obscures real product request failures.
-    await page.waitForFunction(
-      () => {
-        const root = document.documentElement;
-        const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
-        return assetState?.state === "ready"
-          && assetState.pending === 0
-          && assetState.failed === 0
-          && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
-      },
-      undefined,
-      { timeout },
-    );
-    const deployButton = page.getByRole("button", { name: /この編成で出撃/ });
-    await deployButton.waitFor({ state: "visible", timeout });
-    await page.waitForFunction(
-      () => {
-        const buttons = [...document.querySelectorAll("button")];
-        const deploy = buttons.find((button) => button.textContent?.includes("この編成で出撃"));
-        return Boolean(deploy && !deploy.disabled);
-      },
-      undefined,
-      { timeout },
-    );
-    await deployButton.click({ timeout });
+    stage3Progress(label, "loadout-dispatch-wait", startedAt);
+    deployBoundary = await dispatchReadyTakuyaLoadout(page, label, { armFinalEntryPresentationGuard });
+    stage3Progress(label, "loadout-dispatched", startedAt);
   }
   await page.waitForFunction(
     () => {
@@ -479,6 +1073,8 @@ async function enterLegacyQaBattle(page, label) {
   const snapshot = await storyBattleSnapshot(page);
   invariant(snapshot?.stageId === expectedTakuyaStageId && snapshot?.running === true,
     `${label} did not enter the deterministic Stage 3 battle`);
+  stage3Progress(label, "battle-entry", startedAt);
+  return deployBoundary;
 }
 
 async function waitForNetworkQuiet(page) {
@@ -1416,6 +2012,164 @@ async function stopStoryBattleRecorder(page) {
   }), "story battle recorder stop").catch(() => undefined);
 }
 
+function createFinalCutTrace({ page, diagnostics, expectedSceneId, label }) {
+  const startedAt = Date.now();
+  const samples = [];
+  let active = true;
+  let inFlight = null;
+  let timer = null;
+  let lastSampleError = null;
+  let termination = "running";
+  const pageSignals = {
+    close: false,
+    crash: false,
+    closeAtElapsedMs: null,
+    crashAtElapsedMs: null,
+  };
+  const awaitedPredicate = {
+    phase: "final-cut",
+    timeoutMs: timeout,
+    pollingMs: 50,
+    components: [
+      "snapshot.battleBarks.active includes scripted cue stage-takuya-final-v070",
+      "snapshot.bossDefeated === false",
+      `document.documentElement.dataset.audioScene === ${expectedSceneId}`,
+    ],
+  };
+
+  const capture = async () => {
+    if (!active || samples.length >= FINAL_CUT_TRACE_MAX_SAMPLES) return;
+    if (inFlight) {
+      await inFlight;
+      return;
+    }
+    const sampleStartedAt = Date.now();
+    inFlight = (async () => {
+      try {
+        const runtime = await page.evaluate(() => {
+          const battleApi = window.__ASHFALL_BATTLE_QA__;
+          const audioApi = window.__ASHFALL_AUDIO_QA__;
+          const snapshot = battleApi?.getSnapshot?.() ?? null;
+          const takuya = snapshot?.fighters?.find((fighter) => (
+            fighter.side === "zombie" && fighter.kind === "takuya"
+          )) ?? null;
+          const assetState = window.__ASHFALL_ASSET_QA__?.getState?.() ?? null;
+          const activeBarks = snapshot?.battleBarks?.active ?? [];
+          const pendingBarks = snapshot?.battleBarks?.pendingScripted ?? [];
+          return {
+            documentVisibility: document.visibilityState,
+            audioScene: document.documentElement.dataset.audioScene ?? null,
+            snapshot: snapshot ? {
+              time: snapshot.time ?? null,
+              paused: snapshot.paused ?? null,
+              over: snapshot.over ?? null,
+              bossDefeated: snapshot.bossDefeated ?? null,
+            } : null,
+            takuya: takuya ? {
+              id: takuya.id,
+              hp: takuya.hp,
+              maxHp: takuya.maxHp,
+              ratio: takuya.maxHp > 0 ? takuya.hp / takuya.maxHp : null,
+              combatReady: takuya.combatReady ?? null,
+              gateEntering: takuya.gateEntering ?? null,
+              contained: takuya.contained ?? null,
+              state: takuya.animationPresentation?.state ?? takuya.state ?? null,
+              cooldown: takuya.cooldown ?? null,
+              target: {
+                id: takuya.targetId ?? null,
+                objectId: takuya.targetObjectId ?? null,
+              },
+              targetId: takuya.targetId ?? null,
+              targetObjectId: takuya.targetObjectId ?? null,
+            } : null,
+            livingHumanCount: (snapshot?.fighters ?? [])
+              .filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+            livingHumanKinds: [...new Set((snapshot?.fighters ?? [])
+              .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+              .map((fighter) => fighter.kind))],
+            storyBattleReceiptEventIds: [...(snapshot?.storyBattleReceiptEventIds ?? [])],
+            storyBattleEvaluatedCueKeys: [...(snapshot?.storyBattleEvaluatedCueKeys ?? [])],
+            activeScriptedBarkIds: activeBarks
+              .filter((bark) => bark.scripted === true)
+              .map((bark) => bark.id),
+            pendingScriptedBarkIds: pendingBarks
+              .filter((bark) => bark.scripted === true)
+              .map((bark) => bark.id),
+            assetState: assetState ? {
+              state: assetState.state ?? null,
+              generation: assetState.generation ?? null,
+              completed: assetState.completed ?? null,
+              total: assetState.total ?? null,
+              pending: assetState.pending ?? null,
+              failed: assetState.failed ?? null,
+              reason: assetState.reason ?? assetState.failureReason ?? null,
+            } : null,
+            audioSceneState: audioApi?.getSceneState?.() ?? null,
+          };
+        });
+        const diagnosticSnapshot = diagnostics.snapshot();
+        const pageClosed = page.isClosed();
+        samples.push({
+          wallTime: new Date(sampleStartedAt).toISOString(),
+          elapsedWallMs: sampleStartedAt - startedAt,
+          label,
+          ...runtime,
+          pageState: { url: page.url(), closed: pageClosed },
+          pendingRequestState: {
+            count: diagnosticSnapshot.pendingRequestCount,
+            urls: diagnosticSnapshot.pendingRequestUrls,
+          },
+        });
+      } catch (error) {
+        lastSampleError = String(error);
+      } finally {
+        inFlight = null;
+      }
+    })();
+    await inFlight;
+  };
+
+  page.on("close", () => {
+    pageSignals.close = true;
+    pageSignals.closeAtElapsedMs ??= Date.now() - startedAt;
+    termination = termination === "running" ? "page-close" : termination;
+    active = false;
+    if (timer) clearInterval(timer);
+  });
+  page.on("crash", () => {
+    pageSignals.crash = true;
+    pageSignals.crashAtElapsedMs ??= Date.now() - startedAt;
+    termination = termination === "running" ? "page-crash" : termination;
+    active = false;
+    if (timer) clearInterval(timer);
+  });
+  void capture();
+  timer = setInterval(() => { void capture(); }, FINAL_CUT_TRACE_INTERVAL_MS);
+
+  return {
+    capture,
+    async stop(reason = null) {
+      active = false;
+      if (reason) termination = reason;
+      if (timer) clearInterval(timer);
+      timer = null;
+      if (inFlight) await inFlight;
+      return {
+        sampleIntervalMs: FINAL_CUT_TRACE_INTERVAL_MS,
+        maxSamples: FINAL_CUT_TRACE_MAX_SAMPLES,
+        samples,
+        sampleCount: samples.length,
+        lastSample: samples.at(-1) ?? null,
+        lastSuccessfulSample: samples.at(-1) ?? null,
+        lastSampleError,
+        pageSignals,
+        termination,
+        awaitedPredicate,
+      };
+    },
+  };
+}
+
 async function webAudioCapability(page) {
   return page.evaluate(() => ({
     audioContext: typeof (window.AudioContext ?? window.webkitAudioContext),
@@ -1490,6 +2244,7 @@ async function pauseAndVerifyFrozenScriptedBark({
   cueFragment,
   label,
   whilePaused = null,
+  deferResume = false,
 }) {
   await page.waitForFunction(
     ({ cueFragment }) => {
@@ -1528,6 +2283,17 @@ async function pauseAndVerifyFrozenScriptedBark({
 
   const resumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
   await resumeButton.waitFor({ state: "visible", timeout });
+  if (deferResume) {
+    return {
+      before,
+      paused,
+      held,
+      resumeButton,
+      resumed: null,
+      resumeBoundary: null,
+      scriptedLineId: beforeBark.id,
+    };
+  }
   // Sample the resume boundary in the same page task that dispatches the real
   // button handler.  A Node-side click followed by a second IPC round-trip can
   // miss several live simulation ticks on a loaded hosted runner and must not
@@ -1578,7 +2344,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
     diagnostics.reset();
     diagnostics.setPhase("stage3-setup");
-    await enterLegacyQaBattle(page, label);
+    result.deployBoundary = await enterLegacyQaBattle(page, label, auditStartedAt);
     result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
     assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
     diagnostics.reset();
@@ -1742,6 +2508,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
   } catch (error) {
     stage3Progress(label, `failure:${result.phase}`, auditStartedAt);
     result.error = String(error);
+    result.failureEvidence = error?.evidence ?? null;
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
@@ -1761,6 +2528,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   const page = await context.newPage();
   const diagnostics = createDiagnostics(page);
   const label = `${engine}/${viewport.width}x${viewport.height}/takuya-final-audio`;
+  let finalCutTrace = null;
   const result = {
     engine,
     viewport,
@@ -1783,7 +2551,9 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
     diagnostics.reset();
     diagnostics.setPhase("stage3-setup");
-    await enterLegacyQaBattle(page, label);
+    result.deployBoundary = await enterLegacyQaBattle(page, label, startedAt, {
+      armFinalEntryPresentationGuard: true,
+    });
     result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
     assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
     diagnostics.reset();
@@ -1798,51 +2568,66 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
-    await page.getByRole("button", { name: "作戦を再開", exact: true }).click({ timeout });
-    await page.waitForFunction(
-      () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
-      undefined,
-      { timeout },
-    );
+    finalCutTrace = createFinalCutTrace({
+      page,
+      diagnostics,
+      expectedSceneId: expectedTakuyaBossSceneId,
+      label,
+    });
+    await finalCutTrace.capture();
+    const initialResumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
 
     result.phase = "final-cut";
     stage3Progress(label, "final-cut", startedAt);
     diagnostics.setPhase(result.phase);
-    await page.waitForFunction(
-      ({ cueFragment, expectedSceneId }) => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-        return snapshot?.battleBarks?.active?.some((bark) => (
-          bark.scripted === true && bark.scriptedCueId?.includes(cueFragment)
-        )) && snapshot?.bossDefeated === false
-          && document.documentElement.dataset.audioScene === expectedSceneId;
-      },
-      { cueFragment: "stage-takuya-final-v070", expectedSceneId: expectedTakuyaBossSceneId },
-      { timeout, polling: 50 },
-    );
-    const pauseEvidence = await pauseAndVerifyFrozenScriptedBark({
+    const finalCutPresentation = await withStage3FinalPresentationSuppression({
+      page,
+      label,
+      resumeButton: initialResumeButton,
+      adoptEntryGuard: true,
+      operation: () => waitForFinalCutPredicateFromNode({
+        page,
+        cueFragment: "stage-takuya-final-v070",
+        expectedSceneId: expectedTakuyaBossSceneId,
+        label,
+        timeoutMs: timeout,
+      }),
+    });
+    result.finalCutPredicate = finalCutPresentation.value;
+    result.finalCutPresentationSuppression = finalCutPresentation.receipt;
+    const deferredPauseEvidence = await pauseAndVerifyFrozenScriptedBark({
       page,
       cueFragment: "stage-takuya-final-v070",
       label: `${label}/pause`,
+      deferResume: true,
     });
     const finalLines = STORY_EVENTS["stage-takuya-final-v070"].lines.map(({ speaker, text }) => ({ speaker, text }));
-    await page.waitForFunction(
-      ({ finalLines, expectedSceneId, requireActiveBgm }) => {
-        const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
-        return finalLines.every((line) => samples.some((sample) => (
-          sample.snapshot?.bossDefeated === false
-          && sample.audioScene === expectedSceneId
-          && (!requireActiveBgm || sample.audioSceneState?.bgmAssetId === "music-boss")
-          && sample.snapshot?.battleBarks?.active?.some((bark) => (
-            bark.scripted === true
-            && bark.scriptedCueId?.includes("stage-takuya-final-v070")
-            && bark.speaker === line.speaker
-            && bark.text === line.text
-          ))
-        )));
-      },
-      { finalLines, expectedSceneId: expectedTakuyaBossSceneId, requireActiveBgm: !audioBlocked },
-      { timeout, polling: 50 },
-    );
+    const finalFifoPresentation = await withStage3FinalPresentationSuppression({
+      page,
+      label: `${label}/remaining-final-fifo`,
+      resumeButton: deferredPauseEvidence.resumeButton,
+      operation: () => waitForFinalFifoFromNode({
+        page,
+        finalLines,
+        cueFragment: "stage-takuya-final-v070",
+        expectedSceneId: expectedTakuyaBossSceneId,
+        requireActiveBgm: !audioBlocked,
+        label: `${label}/remaining-final-fifo`,
+        timeoutMs: timeout,
+      }),
+    });
+    const resumeBoundary = finalFifoPresentation.receipt.arm.resumeBoundary;
+    const resumed = resumeBoundary.snapshot;
+    const resumedBark = activeScriptedBark(resumed, "stage-takuya-final-v070");
+    invariant(resumedBark?.id === deferredPauseEvidence.scriptedLineId,
+      `${label} did not restore the frozen scripted line under the second presentation owner`);
+    const { resumeButton: _resumeButton, ...pauseEvidenceBeforeResume } = deferredPauseEvidence;
+    const pauseEvidence = {
+      ...pauseEvidenceBeforeResume,
+      resumed,
+      resumeBoundary,
+    };
+    result.finalFifoPresentationSuppression = finalFifoPresentation.receipt;
     const defeatProofSetup = await page.evaluate(() => (
       window.__ASHFALL_BATTLE_QA__?.prepareTakuyaBossDefeatAudioProof?.() ?? null
     ));
@@ -1988,6 +2773,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   } catch (error) {
     stage3Progress(label, `failure:${result.phase}`, startedAt);
     result.error = String(error);
+    result.failureEvidence = error?.evidence ?? null;
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
@@ -2004,6 +2790,12 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       }))).catch(() => []);
   } finally {
     stage3Progress(label, "teardown-start", startedAt);
+    if (finalCutTrace) {
+      const traceTermination = result.phase === "complete"
+        ? "success"
+        : result.error?.includes("Timeout") ? "deadline" : "audit-error";
+      result.finalCutTrace = await finalCutTrace.stop(traceTermination);
+    }
     await stopStoryBattleRecorder(page);
     await closePlaywrightResource(page, `${label}/page`);
     await closePlaywrightResource(context, `${label}/context`);

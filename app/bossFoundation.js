@@ -1,4 +1,6 @@
 import { deepFreeze } from "./content/freeze.js";
+import { V100_BOSS_BY_ID } from "./v100Registry.js";
+import { isKuromeClone } from "./kuromeBoss.js";
 
 export const BOSS_FOUNDATION_SCHEMA_VERSION = 1;
 
@@ -376,6 +378,112 @@ export const BOSS_DEFINITIONS = deepFreeze([
       assetPath: "/art/v090/bosses/futago-compendium-r1.webp",
     },
   },
+  {
+    id: "boss-mugarian-president-mutated",
+    enemyKind: "mugarian-president-mutated",
+    displayName: "変異ムガリアン社長",
+    workingName: false,
+    prototypeStatus: "producer-approved",
+    classification: "四腕制圧・医療設備融合型異常発生個体",
+    hpBar: { color: "#b24b4b", accentColor: "#f0b15e" },
+    phases: [
+      phase(1, "第1段階", 1),
+      phase(2, "四腕展開", .7),
+      phase(3, "役員暴走", .35),
+    ],
+    entrance: {
+      warningLabel: "異常発生 // 変異ムガリアン社長",
+      cueId: "enemy-takuya-attack",
+      fullBodyRequired: true,
+    },
+    attackTelegraph: {
+      attackId: "president-four-arm-crush",
+      displayName: "四腕制圧",
+      kind: "lane-rectangle",
+      warningSeconds: 1.05,
+      laneHalfHeight: 46,
+      color: "#d05c4f",
+      counterplay: "赤い制圧線から離れ、攻撃後の隙を狙う",
+    },
+    display: {
+      sizeClass: "giant-boss",
+      compactBodyHeight: 172,
+      standardBodyHeight: 158,
+      bodyBounds: { width: 222, height: 190 },
+      footAnchor: { x: .5, y: .98 },
+      shadow: { radiusX: 72, radiusY: 16 },
+      hitboxRadius: 48,
+    },
+    combat: {
+      attackRange: 68,
+      statusResistance: { stun: .76, push: .05, slow: .82 },
+      formChange: "four-arm-deployment",
+      summonProfile: "red-panther-command",
+      componentChange: "executive-medical-core",
+    },
+    reward: { equipmentId: "boss-mimic-larynx", quantity: 1 },
+    resultId: "boss-result-mugarian-president-mutated",
+    compendiumId: "boss-compendium-mugarian-president-mutated",
+    compendium: {
+      title: "変異ムガリアン社長",
+      summary: "四本の腕と医療設備を一体化させ、制圧線を叩きつける企業中枢の異常個体。",
+      assetPath: "/art/v100/portraits/mugarian-president-mutated-event-portrait-v1.webp",
+    },
+  },
+  {
+    id: "boss-takuya-omega",
+    enemyKind: "takuya-omega",
+    displayName: "TAKUYA-Ω",
+    workingName: false,
+    prototypeStatus: "producer-approved",
+    classification: "大剣強襲・終端防衛型異常発生個体",
+    hpBar: { color: "#b58a55", accentColor: "#f2d889" },
+    phases: [
+      phase(1, "第1段階", 1),
+      phase(2, "大剣展開", .75),
+      phase(3, "終端暴走", .45),
+      phase(4, "最終防衛", .2),
+    ],
+    entrance: {
+      warningLabel: "最終警告 // TAKUYA-Ω",
+      cueId: "enemy-takuya-attack",
+      fullBodyRequired: true,
+    },
+    attackTelegraph: {
+      attackId: "omega-greatsword-cleave",
+      displayName: "Ω大剣薙ぎ払い",
+      kind: "shell-sweep",
+      warningSeconds: 1.18,
+      radius: 210,
+      laneHalfHeight: 72,
+      color: "#e2a64f",
+      counterplay: "大剣の薙ぎ払い範囲から退避し、振り抜き後に反撃",
+    },
+    display: {
+      sizeClass: "giant-boss",
+      compactBodyHeight: 286,
+      standardBodyHeight: 260,
+      bodyBounds: { width: 320, height: 260 },
+      footAnchor: { x: .5, y: .98 },
+      shadow: { radiusX: 100, radiusY: 22 },
+      hitboxRadius: 60,
+    },
+    combat: {
+      attackRange: 62,
+      statusResistance: { stun: .82, push: .03, slow: .88 },
+      formChange: "omega-greatsword-release",
+      summonProfile: "omega-add-waves",
+      componentChange: "omega-defense-core",
+    },
+    reward: { equipmentId: "boss-muscle-fiber", quantity: 1 },
+    resultId: "boss-result-takuya-omega",
+    compendiumId: "boss-compendium-takuya-omega",
+    compendium: {
+      title: "TAKUYA-Ω",
+      summary: "大剣の重量と終端防衛の圧力で、最後の防衛線を正面から叩き割る個体。",
+      assetPath: "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
+    },
+  },
 ]);
 
 export const BOSS_DEFINITION_BY_ID = deepFreeze(Object.fromEntries(
@@ -398,6 +506,10 @@ export function isBossEnemyKind(enemyKind) {
   return bossDefinitionForEnemyKind(enemyKind) !== null;
 }
 
+export function isBossFighter(fighter) {
+  return isBossEnemyKind(fighter?.kind) && !isKuromeClone(fighter);
+}
+
 export function bossCampaignEntry(enemyKind, overrides = {}) {
   const definition = bossDefinitionForEnemyKind(enemyKind);
   if (!definition) throw new RangeError(`Unknown boss enemy kind: ${String(enemyKind)}`);
@@ -414,8 +526,15 @@ export function bossCampaignEntry(enemyKind, overrides = {}) {
   });
 }
 
-export function bossPhaseForHp(hp, maxHp, enemyKind = null) {
+export function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {
   const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
+  const contract = V100_BOSS_BY_ID[fighter?.v100BossId];
+  if (contract && contract.id === `boss-${enemyKind}`) {
+    if (enemyKind === "futago") return deepFreeze({ phase: fighter.v100TwinEnraged ? 2 : 1,
+      label: fighter.v100TwinEnraged ? "残存個体・激昂" : "双体連携" });
+    const current = 1 + contract.phaseThresholds.filter(threshold => ratio <= threshold).length;
+    return deepFreeze({ phase: current, label: current === contract.phaseThresholds.length + 1 ? "最終段階" : `第${current}段階` });
+  }
   const phases = bossDefinitionForEnemyKind(enemyKind)?.phases
     ?? BOSS_DEFINITIONS[0].phases;
   const selected = [...phases]
@@ -428,9 +547,108 @@ export function bossPhaseForHp(hp, maxHp, enemyKind = null) {
   });
 }
 
+export function bossFinalPhase(fighter, legacyThreshold) {
+  const contract = V100_BOSS_BY_ID[fighter?.v100BossId];
+  const threshold = contract?.phaseThresholds.filter(value => typeof value === "number").at(-1) ?? legacyThreshold;
+  return Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= threshold;
+}
+
+export function bossControlMultiplier(fighter) {
+  const contract = fighter?.side === "zombie" && V100_BOSS_BY_ID[fighter?.v100BossId];
+  return contract ? 1 - contract.resistance / 100 : 1;
+}
+
+export function bossSlowMultiplier(fighter, speedMultiplier) {
+  return 1 - (1 - speedMultiplier) * bossControlMultiplier(fighter);
+}
+
+// HP phases increase special-attack pressure without shortening their telegraph.
+// The locked normal-attack cadence remains the baseline for each boss.
+export function bossAbilityPressure(fighter) {
+  if (!V100_BOSS_BY_ID[fighter?.v100BossId]) return 1;
+  return 1 + .12 * (bossPhaseForHp(fighter.hp, fighter.maxHp, fighter.kind, fighter).phase - 1);
+}
+
+// A V1 FUTAGO encounter owns two independent bodies. Keep their part IDs on
+// corpses as well so a death never turns back into the old fused-pair image.
+export function registerV100Twin(game, fighter) {
+  if (fighter.v100BossId !== "boss-futago") return;
+  const ordinal = game.v100TwinSpawnCount ?? 0;
+  fighter.v100TwinPair = Math.floor(ordinal / 2);
+  fighter.v100TwinPart = ordinal % 2 === 0 ? "a" : "b";
+  fighter.v100TwinEnraged = ordinal % 2 === 1 && !game.fighters.some(other =>
+    other.id !== fighter.id && other.v100TwinPair === fighter.v100TwinPair && other.hp > 0);
+  game.v100TwinSpawnCount = ordinal + 1;
+}
+
+export function resolveV100TwinDefeat(game, fighter) {
+  if (!fighter.v100TwinPart) return { complete: true, enragedIds: [] };
+  const survivors = game.fighters.filter(other => other.id !== fighter.id
+    && other.v100TwinPair === fighter.v100TwinPair && other.v100TwinPart && other.hp > 0);
+  const enragedIds = [];
+  for (const survivor of survivors) {
+    if (!survivor.v100TwinEnraged) enragedIds.push(survivor.id);
+    survivor.v100TwinEnraged = true;
+    // An already telegraphed strike keeps its target and complete warning.
+    if (survivor.stationAbility) survivor.stationAbility = { ...survivor.stationAbility, split: true };
+  }
+  const complete = survivors.length === 0
+    && game.v100TwinSpawnCount >= (fighter.v100TwinPair + 1) * 2
+    && !(game.v100TwinResolvedPairs ?? []).includes(fighter.v100TwinPair);
+  if (complete) (game.v100TwinResolvedPairs ??= []).push(fighter.v100TwinPair);
+  return { complete, enragedIds };
+}
+
+export function futagoEnraged(fighter, legacyThreshold = .62) {
+  return fighter?.v100BossId === "boss-futago" ? Boolean(fighter.v100TwinEnraged)
+    : Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= legacyThreshold;
+}
+
+// Run outside individual ability branches: their committed attack frames can
+// intentionally skip ordinary movement, but the two physical bodies must not
+// occupy one footprint for an entire warning/impact/recovery cycle.
+export function v100TwinSeparationSteps(game, seconds) {
+  const pairs = new Map();
+  for (const fighter of game.fighters) {
+    if (!fighter.v100TwinPart || fighter.hp <= 0 || !fighter.combatReady || fighter.gateEntering) continue;
+    const pair = pairs.get(fighter.v100TwinPair) ?? [];
+    pair.push(fighter); pairs.set(fighter.v100TwinPair, pair);
+  }
+  const steps = [];
+  for (const pair of pairs.values()) {
+    if (pair.length !== 2) continue;
+    const [front, rear] = pair.sort((a, b) => a.x - b.x || a.v100TwinPart.localeCompare(b.v100TwinPart));
+    const distance = Math.max(92, front.bodyRadius + rear.bodyRadius + 14);
+    const horizontalGap = Math.sqrt(Math.max(0, distance ** 2 - (front.y - rear.y) ** 2));
+    const step = Math.min(Math.max(0, horizontalGap - (rear.x - front.x)) / 2, 48 * Math.max(0, seconds));
+    if (step > 0) steps.push({ id: front.id, x: front.x - step, y: front.y }, { id: rear.id, x: rear.x + step, y: rear.y });
+  }
+  return steps;
+}
+
+export function bossRenderKind(fighter) {
+  return fighter?.kind === "futago" && ["a", "b"].includes(fighter.v100TwinPart)
+    ? `futago-separated-${fighter.v100TwinPart}` : fighter.kind;
+}
+
+export function bossBattleHudSnapshot(game) {
+  const first = game.fighters.find(fighter => bossHudSnapshot(fighter));
+  if (!first) return null;
+  const hud = bossHudSnapshot(first);
+  if (!first.v100TwinPart) return hud;
+  const members = ["a", "b"].map((part, index) => {
+    const actor = game.fighters.find(other => other.v100TwinPair === first.v100TwinPair && other.v100TwinPart === part);
+    const arriving = (game.v100TwinSpawnCount ?? 0) <= first.v100TwinPair * 2 + index;
+    return { part, hp: actor ? Math.max(0, actor.hp) : arriving ? 3000 : 0, maxHp: 3000, arriving };
+  });
+  const hp = members.reduce((sum, member) => sum + member.hp, 0);
+  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members });
+}
+
 export function bossHudSnapshot(fighter) {
   const definition = bossDefinitionForEnemyKind(fighter?.kind);
   if (!definition
+    || isKuromeClone(fighter)
     || fighter?.side !== "zombie"
     || fighter?.combatReady === false
     || fighter?.gateEntering === true
@@ -446,7 +664,7 @@ export function bossHudSnapshot(fighter) {
     maxHp,
     hpRatio: hp / maxHp,
     worldX: Number(fighter.x) || 0,
-    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind),
+    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind, fighter),
     hpBar: definition.hpBar,
   });
 }
@@ -459,7 +677,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
     || fighter?.contained === true
     || Number(fighter?.hp) <= 0) return null;
   if (definition.enemyKind === "takuya" && Number(fighter.abilityWindup) > 0) {
-    const finalPhase = Number(fighter.hp) / Math.max(1, Number(fighter.maxHp) || 1) <= .5;
+    const finalPhase = bossFinalPhase(fighter, .5);
     return deepFreeze({
       bossId: definition.id,
       attackId: definition.attackTelegraph.attackId,
@@ -504,7 +722,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
       targetY: Number.isFinite(Number(fighter.stationAbility.targetY))
         ? Number(fighter.stationAbility.targetY)
         : Number(fighter.y) || 0,
-      beamHalfWidth: Number(fighter.hp) / Math.max(1, Number(fighter.maxHp) || 1) <= .3
+      beamHalfWidth: bossFinalPhase(fighter, .3)
         ? definition.attackTelegraph.finalPhaseBeamHalfWidth
         : definition.attackTelegraph.beamHalfWidth,
       locked: fighter.stationAbility.phase === "locked",
@@ -512,7 +730,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
       counterplay: definition.attackTelegraph.counterplay,
     });
   }
-  if (["mother", "ooguchi", "gairen", "futago"].includes(definition.enemyKind)
+  if (["mother", "ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(definition.enemyKind)
     && fighter.stationAbility?.phase === "warning") {
     return deepFreeze({
       bossId: definition.id,
@@ -589,7 +807,7 @@ export function bossResultRecord(fighter, { defeated = Number(fighter?.hp) <= 0 
     defeated: defeated === true,
     remainingHp: hp,
     maxHp,
-    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind).phase,
+    phase: bossPhaseForHp(hp, maxHp, definition.enemyKind, fighter).phase,
     reward: definition.reward,
   });
 }
