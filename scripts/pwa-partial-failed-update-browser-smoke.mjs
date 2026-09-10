@@ -23,7 +23,7 @@ import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
-import { isExpectedPartialBundleAbort } from "./pwa-expected-abort.mjs";
+import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry } from "./pwa-expected-abort.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -880,7 +880,11 @@ try {
   record("the incident fetches the exact release delta, three failed bundle attempts and one held request, with failed logical slices visible", (
     partialCache.logicalSatisfied === retainedOldLogicalCount
     && new Set(incidentChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
-    && incidentChangedRequests.length === candidatePendingReleaseDeltaTransportPaths.size
+    // A new audio slice makes the shared bundle part of the release delta.
+    // Its intentionally failed/held requests are counted by the strict
+    // four-request incident group below, not as duplicate art downloads.
+    && incidentChangedRequests.filter((pathname) => pathname !== bundlePathname).length
+      === [...candidatePendingReleaseDeltaTransportPaths].filter((pathname) => pathname !== bundlePathname).length
     && incidentProgressCompleted !== null
     && incidentProgressTotal >= candidateProgressTotalMin
     && incidentProgressTotal <= candidateProgressTotalMax
@@ -896,7 +900,7 @@ try {
     && initialIncidentRequests.slice(0, 3).every((request) => request.completed)
     && !initialIncidentRequests[3].completed
     && incidentRetryRequests.length <= 1
-    && incidentRetryRequests.every((request) => !request.completed)
+    && incidentRetryRequests.every((request) => isCausalPwaIncidentRetry(initialIncidentRequests[3], request))
     && incidentRuntimeAudioSourceRequests.every((pathname) => candidateBundledAudioSourcePaths.has(pathname))
     && incidentUnexpectedRequests.length === 0
     && incidentUnchangedStoredRefetches.length === 0

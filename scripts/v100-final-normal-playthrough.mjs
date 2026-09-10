@@ -71,6 +71,7 @@ async function ready() {
 }
 async function uiClick(locator) { await ready(); await locator.click(); await ready(); }
 const button = name => page.getByRole("button",{name,exact:true});
+const preparationTab = name => page.getByRole("navigation",{name:"作戦準備メニュー",exact:true}).getByRole("button",{name,exact:true});
 const selectPersonnel = unit => page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})});
 function plannedFormation(save) {
   const owned=id=>save.ownedUnitIds.includes(id);
@@ -81,7 +82,7 @@ function plannedFormation(save) {
 }
 async function prepareEconomy(stageNumber) {
   let save=await saveAt();
-  await uiClick(button("隊員を編成"));
+  await uiClick(preparationTab("隊員"));
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
@@ -90,9 +91,8 @@ async function prepareEconomy(stageNumber) {
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
-  await uiClick(button("作戦地図へ"));
   // Reserve a modest vehicle progression and the first unlocked healing supply.
-  await uiClick(button("出撃装備を選ぶ"));
+  await uiClick(preparationTab("支援"));
   if(save.supportPurchaseUnlockedIds.includes("support-healing")) {
     const healing=page.locator(".v100-support-management-card").filter({has:page.getByRole("heading",{name:"回復支援",exact:true})});
     if(!save.ownedSupportIds.includes("support-healing")&&save.caps>=50) {
@@ -106,13 +106,11 @@ async function prepareEconomy(stageNumber) {
   const desiredVehicleLevel=Math.min(5,Math.floor(stageNumber/5));
   const cost=V100_VEHICLE.upgradeCosts[save.vehicle.upgradeLevel]??Infinity;
   if(save.vehicle.upgradeLevel<desiredVehicleLevel&&save.caps>=cost) {
-    await uiClick(button("装甲車両を強化"));
+    await uiClick(preparationTab("車両"));
     await uiClick(button(`HPを強化 / ${cost} CAPS`)); save=await saveAt();
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
-    await uiClick(button("出撃装備へ"));
   }
-  await uiClick(button("作戦地図へ"));
-  await uiClick(button("隊員を編成"));
+  await uiClick(preparationTab("隊員"));
   const targetLevel=Math.min(save.levelCap,Math.max(1,Math.ceil(stageNumber*.8)));
   for(let n=0;n<210;n++) {
     const ids=plannedFormation(save).filter(id=>save.unitLevels[id]<targetLevel).sort((a,b)=>save.unitLevels[a]-save.unitLevels[b]);
@@ -123,7 +121,7 @@ async function prepareEconomy(stageNumber) {
     await uiClick(selectPersonnel(unit));await uiClick(button(`強化 ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
-  await uiClick(button("作戦地図へ"));
+  await uiClick(preparationTab("作戦"));
 }
 async function configureFormation() {
   const save=await saveAt();const wanted=plannedFormation(save);

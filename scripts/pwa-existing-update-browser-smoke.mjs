@@ -203,6 +203,7 @@ const unchangedOldAssets = oldManifest.assets.filter((asset) => {
 });
 const candidateNewHashAssets = candidateManifest.assets.filter((asset) => !oldDistinctHashes.has(asset.hash));
 const candidateNewHashes = new Set(candidateNewHashAssets.map((asset) => asset.hash));
+const candidateNewBundledAssets = candidateNewHashAssets.filter((asset) => asset.bundlePath);
 const retainedCacheEntryCount = new Set([...oldDistinctHashes, ...candidateDistinctHashes]).size;
 const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset) => (
   `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`
@@ -215,13 +216,17 @@ record("candidate keeps the complete asset set and declares an exact hash delta"
   && candidateNewHashAssets.length === assetContract.additionsFromV0995
   && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
   && candidateNewHashAssets.length === candidateNewHashes.size
-  && candidateExpectedNetworkPaths.size === candidateNewHashes.size
+  && candidateNewBundledAssets.length === assetContract.bundledAudioAdditionsFromV0995
+  && candidateNewBundledAssets.every((asset) => asset.bundlePath === assetContract.audioBundlePath)
+  && candidateExpectedNetworkPaths.size === assetContract.networkSourcesFromV0995
 ), {
   oldDistinctHashes: oldDistinctHashes.size,
   candidateDistinctHashes: candidateDistinctHashes.size,
   changedHashes: candidateNewHashes.size,
   changedLogicalAssets: candidateNewHashAssets.length,
   changedBytes: candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0),
+  bundledAssets: candidateNewBundledAssets.length,
+  networkSourceCount: candidateExpectedNetworkPaths.size,
   expectedNetworkPaths: [...candidateExpectedNetworkPaths].sort(),
   oldBytes: oldManifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
   candidateBytes: candidateManifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),

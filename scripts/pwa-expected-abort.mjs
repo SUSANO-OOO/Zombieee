@@ -8,3 +8,13 @@ export function isExpectedPartialBundleAbort(failure, requests, bundleUrl) {
     && Number.isFinite(request.startedAt) && Number.isFinite(request.durationMs)
     && Math.abs(failure.at - request.startedAt - request.durationMs) < 5000);
 }
+
+export function isCausalPwaIncidentRetry(previous, retry) {
+  return previous?.mode === "incident" && previous.index === 4
+    && previous.aborted === true && previous.completed === false
+    && Number.isFinite(previous.startedAt) && Number.isFinite(previous.durationMs)
+    && previous.durationMs >= 30_000
+    && retry?.mode === "incident" && retry.index === 5 && retry.completed === false
+    && Number.isFinite(retry.startedAt)
+    && retry.startedAt >= previous.startedAt + previous.durationMs;
+}

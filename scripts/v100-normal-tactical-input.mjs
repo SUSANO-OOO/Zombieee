@@ -18,8 +18,8 @@ export async function normalTacticalInput(page,record){
   const cards=page.locator('button.unit-card[data-kind]'),kinds=await cards.evaluateAll(els=>els.map(el=>el.dataset.kind));
   const target=Object.fromEntries([...new Set(kinds)].map(kind=>[kind,kinds.filter(k=>k===kind).length]));
   const count=kind=>humans.filter(f=>f.kind===kind).length+queue.filter(f=>f.kind===kind).length;
-  const front=target.guardian?'guardian':'brawler',healer=target.medic?'medic':'scout',ranged=target.ranger?'ranger':'kumaverson';
-  const priorities=count(front)===0?[front]:count(healer)===0?[healer]:count('babayaga')+count(ranged)===0?['babayaga',ranged]:count(front)<(target[front]??0)?[front]:count(healer)<Math.min(2,target[healer]??0)?[healer]:count('babayaga')<(target.babayaga??0)?['babayaga']:count(ranged)<(target[ranged]??0)?[ranged]:kinds;
+  const front=target.guardian?'guardian':'brawler',healer=target.medic?'medic':target.scout?'scout':null,ranged=target.ranger?'ranger':'kumaverson';
+  const priorities=count(front)===0?[front]:healer&&count(healer)===0?[healer]:count('babayaga')+count(ranged)===0?['babayaga',ranged]:count(front)<(target[front]??0)?[front]:healer&&count(healer)<Math.min(2,target[healer]??0)?[healer]:count('babayaga')<(target.babayaga??0)?['babayaga']:count(ranged)<(target[ranged]??0)?[ranged]:kinds;
   for(const kind of priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
     const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;

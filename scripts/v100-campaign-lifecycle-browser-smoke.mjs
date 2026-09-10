@@ -54,9 +54,20 @@ async function eventTo(page, selector, limit) {
   for (let step = 0; step < limit; step++) {
     await ready(page);
     if (await page.locator(selector).isVisible()) return;
+    const previousEvent = await page.locator(".v100-event-layout").evaluate(element => [
+      element.dataset.v100Surface, element.dataset.v100EventId, element.dataset.v100NodeIndex,
+    ].join(":"));
     const skip = page.getByRole("button", { name: "スキップ", exact: true });
     if (await skip.isVisible()) await clickSaved(page, skip);
     else await clickSaved(page, page.locator(".v100-event-actions .v100-primary"));
+    // Storage publication precedes React's DOM commit. Do not submit a second
+    // action against the departing event just because its revision is saved.
+    await page.waitForFunction(({ selector, previousEvent }) => {
+      const destination = document.querySelector(selector);
+      if (destination?.getClientRects().length) return true;
+      const event = document.querySelector(".v100-event-layout");
+      return event && [event.dataset.v100Surface, event.dataset.v100EventId, event.dataset.v100NodeIndex].join(":") !== previousEvent;
+    }, { selector, previousEvent });
   }
   throw new Error(`Story did not reach ${selector}`);
 }
@@ -264,7 +275,7 @@ try {
         });
         const funded = { ...createDefaultV100Save({ playerName: "育成監査" }), campaignStarted: true, caps: 100, flowState: { phase: "map", destination: "map" } };
         await withCase(browser, engine, viewport, "funded-level-fixture", { label: "isolated 100 CAPS map save, not natural progression", serialized: serializeV100Save(funded) }, async (page, record) => {
-          await page.getByRole("button", { name: "隊員を編成", exact: true }).click();
+          await page.getByRole("navigation", { name: "作戦準備メニュー", exact: true }).getByRole("button", { name: "隊員", exact: true }).click();
           const button = page.locator(".v100-personnel-focus .v100-primary");
           await fault(page, true); await button.click();
           await page.getByRole("status").filter({ hasText: "セーブ" }).waitFor();
@@ -277,7 +288,7 @@ try {
           assert.ok(!(await page.locator(".v100-personnel-focus").innerText()).includes("武器・射程・固有能力"));
           await shot(page, record, "level-up");
           await record.reload();
-          await page.getByRole("button", { name: "隊員を編成", exact: true }).click();
+          await page.getByRole("navigation", { name: "作戦準備メニュー", exact: true }).getByRole("button", { name: "隊員", exact: true }).click();
           assert.ok((await page.locator(".v100-personnel-focus").innerText()).includes("Lv.2"));
           assert.equal((await saveAt(page)).caps, upgraded.caps);
           await shot(page, record, "level-restored");

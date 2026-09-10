@@ -1,3 +1,4 @@
+import { V100_MOTION_ATLAS_REPLACEMENTS, V100_PHONE_REVIEW_ASSET_ADDITIONS, V100_PHONE_REVIEW_ASSET_REMOVALS } from "./v100-phone-review-asset-contract.mjs";
 // Source-bound additions for the 2026-09-07 completion pass. Existing published
 // assets and the original 44 V1 derivatives retain their exact transport bytes.
 export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
@@ -43,13 +44,37 @@ export const V100_OBJECTIVE_STATE_ADDITIONS = Object.freeze([
   Object.freeze({"path":"/art/v100/mission-objects/station-relay-states-v1.webp","bytes":1016762,"hash":"sha256-ac5d07de80bada9a9530cca33e0a85e2362a617f097c41bf60cf721c196ed206"}),
 ]);
 export const V100_DEFENSE_PERIMETER_ADDITIONS = Object.freeze([Object.freeze({"path":"/art/v100/mission-objects/defense-perimeter-states-v1.webp","bytes":508180,"hash":"sha256-3b7a240eeff611e0ee7eb82a5ee2f771c0b8b559aabf28e1d0676c3db9673ec6"})]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS]);
+export const V100_ADVANCED_COMBAT_VFX_ADDITIONS = Object.freeze([
+  Object.freeze({ path: "/art/v100/combat-vfx/lightblade-six-frames-r1.webp", bytes: 837874, hash: "sha256-ed4a8daaf82d6962caa3c61069033060a406b269e01c1fde30e88b882409a588", criticality: "critical" }),
+  Object.freeze({ path: "/art/v100/combat-vfx/countercut-six-frames-r1.webp", bytes: 349086, hash: "sha256-80f7b6ee1453ee292ea52033db63ea40334ac3a58d7b98e09ca9c567c9c1304a", criticality: "critical" }),
+  Object.freeze({ path: "/art/v100/combat-vfx/fire-whisky-projectile-r1.webp", bytes: 8646, hash: "sha256-79239e88afe4e1873c09958ad252ff5e8e5ac5ca3252996a5fa6160c76a5f296", criticality: "critical" }),
+  Object.freeze({ path: "/art/v100/combat-vfx/grenade-projectile-r1.webp", bytes: 11680, hash: "sha256-7b79a10a19f5379627ee40fb9de905e2577127dca79f9c853446d2363edd2119", criticality: "critical" }),
+  Object.freeze({ path: "/art/v100/combat-vfx/ground-fire-smoke-r1.webp", bytes: 62034, hash: "sha256-48137f3e70be5a1df0286cf88099af4761313416f56b96d4ea062530daa135be", criticality: "critical" }),
+]);
+const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.map(asset=>asset.path));
+const replacedMotionPaths = new Set(V100_MOTION_ATLAS_REPLACEMENTS.map(asset=>asset.newPath));
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path))));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
+// The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
+// one physical transport. Pin this separately from logical asset coverage.
+const bundledAudioAdditionsFromV0995 = 28;
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,
   distinctHashes: 457 + V100_COMPLETION_ASSET_ADDITIONS.length,
   additionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length,
-  bytesFromV0995: 14_821_106 + addedBytes,
+  bundledAudioAdditionsFromV0995,
+  audioBundlePath: "/pwa-bundles/audio-v1.bin",
+  networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1,
+  artAdditionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
+  // Measured against the frozen 0.9.9.5 manifest: 111 new logical paths,
+  // including the six v2 motion paths and repaired Takuya atlas transported
+  // through optimized WebP. The published Takuya gutter remains retained.
+  bytesFromV0995: 49_624_054,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
+  motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
+  candidateTotalBytes: 139_365_619,
+  candidateDistinctHashBytes: 138_825_716,
+  updateFromV0982Bytes: 66_314_502,
+  updateFromV0993Bytes: 55_939_808,
 });

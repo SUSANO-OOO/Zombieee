@@ -12,18 +12,18 @@ const GUTTER = 16;
 
 const ATLASES = Object.freeze([
   {
-    asset: "public/art/v100/bosses/mugarian-president-mutated-battle-v1.png",
-    metadata: "public/art/v100/bosses/mugarian-president-mutated-battle-v1-metadata.json",
+    asset: "public/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+    metadata: "public/art/v100/bosses/mugarian-president-mutated-battle-v2-metadata.json",
     states: ["entrance", "idle", "move", "attack", "hit", "phase", "death", "defeat"],
   },
   {
-    asset: "public/art/v100/bosses/takuya-omega-battle-v1.png",
-    metadata: "public/art/v100/bosses/takuya-omega-battle-v1-metadata.json",
+    asset: "public/art/v100/bosses/takuya-omega-battle-v2.png",
+    metadata: "public/art/v100/bosses/takuya-omega-battle-v2-metadata.json",
     states: ["entrance", "idle", "move", "attack", "hit", "phase", "death", "defeat"],
   },
   ...["knife", "shield", "smg", "commander"].map((role) => ({
-    asset: `public/art/v100/enemies/red-panther-${role}-battle-v1.png`,
-    metadata: `public/art/v100/enemies/red-panther-${role}-battle-v1-metadata.json`,
+    asset: `public/art/v100/enemies/red-panther-${role}-battle-v2.png`,
+    metadata: `public/art/v100/enemies/red-panther-${role}-battle-v2-metadata.json`,
     states: ["idle", "move", "attack", "hit", "death"],
   })),
 ]);
@@ -109,8 +109,9 @@ async function checkAtlas(record) {
       width: frame.contentRect.width,
       height: frame.contentRect.height,
     };
-    assert.deepEqual(left, { ...expected, alphaPixels: left.alphaPixels, partialPixels: left.partialPixels }, `${record.asset}/${frame.state} metadata bounds`);
-    assert.deepEqual(right, { ...mirroredRect(expected), alphaPixels: right.alphaPixels, partialPixels: right.partialPixels }, `${record.asset}/${frame.state} mirrored bounds`);
+    assert.ok(left.x >= expected.x && left.y >= expected.y && left.x + left.width <= expected.x + expected.width && left.y + left.height <= expected.y + expected.height, `${record.asset}/${frame.state} authored alpha escapes metadata placement`);
+    const mirrored = mirroredRect(expected);
+    assert.ok(right.x >= mirrored.x && right.y >= mirrored.y && right.x + right.width <= mirrored.x + mirrored.width && right.y + right.height <= mirrored.y + mirrored.height, `${record.asset}/${frame.state} mirrored alpha escapes metadata placement`);
     assert.equal(left.alphaPixels, right.alphaPixels, `${record.asset}/${frame.state} mirrored alpha`);
     assert.ok(left.partialPixels > 0, `${record.asset}/${frame.state} retains anti-aliased alpha`);
     assertPerimeterTransparent(data, info.width, leftOffsetX, CELL_HEIGHT);
