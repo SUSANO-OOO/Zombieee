@@ -88,8 +88,27 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
   assert.ok(full.sprites.some(({ kind }) => kind === "red-panther-smg"));
   assert.ok(!legacy.sprites.some(({ kind }) => kind === "red-panther-smg"));
   assert.deepEqual(full.sprites.filter(({ kind }) => !legacy.sprites.some(sprite => sprite.kind === kind)).map(({ kind }) => kind).sort(),
-    ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b"].sort());
-  assert.deepEqual(full.stageObjects.filter(entry=>!legacy.stageObjects.some(old=>old.id===entry.id)).map(entry=>entry.path),["/art/v100/mission-objects/infected-stronghold-states-v1.webp"]);
+    ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b", "kumaverson-guard"].sort());
+  assert.deepEqual(full.stageObjects.filter(entry=>!legacy.stageObjects.some(old=>old.id===entry.id)).map(entry=>entry.path),[
+    "/art/v100/mission-objects/boundary-gate-states-r1.webp",
+    "/art/v100/combat-vfx/explosion-fire-smoke.webp",
+    "/art/v100/combat-vfx/blackSmoke01.webp",
+    "/art/v100/combat-vfx/blackSmoke05.webp",
+    "/art/v100/combat-vfx/whitePuff00.webp",
+    "/art/v100/combat-vfx/muzzle-six-frames-r1.webp",
+    "/art/v100/combat-vfx/contact-six-frames-r1.webp",
+    "/art/v100/combat-vfx/ground-impact-six-frames-r1.webp",
+    "/art/v100/combat-vfx/metal-impact-six-r1.webp",
+    "/art/v100/combat-vfx/claw-contact-six-r1.webp",
+    "/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png",
+    "/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png",
+    "/art/v100/combat-vfx/grenade-projectile-r1.webp",
+    "/art/v100/combat-vfx/fire-whisky-projectile-r1.webp",
+    "/art/v100/combat-vfx/lightblade-six-frames-r1.webp",
+    "/art/v100/combat-vfx/countercut-six-frames-r1.webp",
+    "/art/v100/combat-vfx/ground-fire-smoke-r1.webp",
+    "/art/v100/characters/tatara-ground-strike-r1.webp",
+  ]);
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
   assert.equal(full.persistent.length, legacy.persistent.length);
 });

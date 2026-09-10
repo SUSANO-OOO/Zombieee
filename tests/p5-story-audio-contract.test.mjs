@@ -880,9 +880,10 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
   assert.match(gameSource, /humanVoiceCueForUnit\(f\.kind, "attack"\)/u);
   assert.match(gameSource, /humanVoiceCueForUnit\(target\.kind, "hurt"\)/u);
   assert.match(gameSource, /humanVoiceCueForUnit\(fighter\.kind, "death"\)/u);
-  const controlStart = gameSource.indexOf('{audioUnlockVisible && <button');
-  const controlEnd = gameSource.indexOf("</button>}", controlStart);
-  assert.ok(controlStart >= 0 && controlEnd > controlStart, "audio enable control exists");
-  const controlSource = gameSource.slice(controlStart, controlEnd);
+  const inlineControl = gameSource.indexOf('{compactBattleAudioUnlock ? <button');
+  const fallbackControl = gameSource.indexOf('{audioUnlockVisible && !compactBattleAudioUnlock && <button');
+  assert.ok(inlineControl >= 0 && fallbackControl >= 0, "audio enable controls exist");
+  const controlSource = gameSource.slice(inlineControl, gameSource.indexOf("</button>", inlineControl))
+    + gameSource.slice(fallbackControl, gameSource.indexOf("</button>}", fallbackControl));
   assert.match(controlSource, /戦闘ボイス/u);
 });

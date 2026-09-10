@@ -1239,7 +1239,9 @@ function playableProceduralPose(kind, state, progress) {
 function combatProceduralPose(kind, state, progress) {
   const pose = playableProceduralPose(kind, state, progress)
     ?? semanticProceduralPose(state, progress);
-  if (!PLAYABLE_COMBAT_KINDS.includes(kind) || pose.opacity === 1) return pose;
+  // Physical bodies remain opaque through turns, hit reactions and phase
+  // changes. Explicit clone/defeat layers own their intentional transparency.
+  if (pose.opacity === 1) return pose;
   return { ...pose, opacity: 1 };
 }
 

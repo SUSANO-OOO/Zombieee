@@ -54,6 +54,7 @@ function escortConfig(config = {}) {
     durationSeconds: positive(config.durationSeconds, STATION_MISSION_TUNING.escort.durationSeconds),
     maxIntegrity: positive(config.maxIntegrity, STATION_MISSION_TUNING.escort.maxIntegrity),
     repairSeconds: positive(config.repairSeconds, STATION_MISSION_TUNING.escort.repairSeconds),
+    minimumEscortReadiness: clamp01(config.minimumEscortReadiness),
     startX: finiteNonNegative(config.startX, STATION_MISSION_TUNING.escort.startX),
     endX: finiteNonNegative(config.endX, STATION_MISSION_TUNING.escort.endX),
   });
@@ -251,7 +252,7 @@ export function advanceStationMissionRuntime({
       repairRemaining = Math.max(0, repairRemaining - dt);
     }
     const stalled = escorts === 0 || threats > 0 || contaminationActive || repairRemaining > 0;
-    const escortReadiness = Math.min(1, .58 + Math.min(3, escorts) * .14);
+    const escortReadiness = Math.min(1, Math.max(resolved.minimumEscortReadiness, .58 + Math.min(3, escorts) * .14));
     const progress = current.completed
       ? 1
       : Math.min(1, clamp01(current.progress) + (stalled ? 0 : dt * escortReadiness / resolved.durationSeconds));

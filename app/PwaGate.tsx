@@ -252,7 +252,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const store = createAssetStore({ caches: window.caches, scope: baseUrl });
       storeRef.current = store;
 
-      registrationRef.current = await registerServiceWorker(window);
+      registrationRef.current = await registerServiceWorker(window, { baseUrl });
 
       const state = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
       if (cancelled) return;

@@ -317,12 +317,12 @@ test("draws three unmistakably different stage environments", async () => {
 
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber))',
     "drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback)",
     "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber))',
     "const renderables = [",
-    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"])',
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"], Boolean(g.definition.missionConfig.v100StageNumber))',
   ].map((needle) => worldDraw.indexOf(needle));
   assert.ok(drawOrder.every((index) => index >= 0), `missing draw step: ${drawOrder.join(",")}`);
   assert.ok(drawOrder.every((index, position) => position === 0 || index > drawOrder[position - 1]), "background, gate, objective, fighters, and foreground preserve depth order");
@@ -470,7 +470,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /activeBattlefieldDepthScale\(f\.y\)/);
   assert.match(game, /const drawSlices = frame\.drawSlices \?\?/);
   assert.match(game, /fighter\.side === "zombie" && isBossEnemyKind\(fighter\.kind\)[\s\S]*enemyRenderedVisualHalfWidth\(fighter\.kind\)[\s\S]*Math\.max\(fighter\.bodyRadius, renderedHalfWidth\)/);
-  assert.match(game, /const authoredSize = fitSpriteBattleDisplaySize\(renderKind, frame, spriteDisplaySize\(renderKind\)\)/);
+  assert.match(game, /fitSpriteBattleDisplaySize\('kumaverson', spriteFrameFor\('kumaverson', 'idle', direction\), spriteDisplaySize\('kumaverson'\)\)/);
+  assert.match(game, /const authoredSize = tataraGroundCandidate\s*\? v100TataraDisplaySize\(/);
+  assert.match(game, /options\.v100AuthoredPresentation && renderKind === 'sprinter'\s*\? v100SoukiAuthoredSize\(frame,direction,spriteDisplaySize\(renderKind\)\)\s*: options\.v100AuthoredPresentation && V100_CONTACT_ENEMY_KINDS\.includes\(renderKind\)\s*\? v100EnemyContactSize\(renderKind,frame,direction,spriteDisplaySize\(renderKind\)\)\s*: options\.v100AuthoredPresentation && renderKind === 'gate-eater'\s*\? v100GateEaterAuthoredSize\(frame,direction,spriteDisplaySize\(renderKind\)\)\s*: fitSpriteBattleDisplaySize\(renderKind, frame, spriteDisplaySize\(renderKind\)\)/);
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
@@ -1554,7 +1556,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(crawlerDraw, /ctx\.translate\(crawler\.commandDeckX/);
   assert.doesNotMatch(crawlerDraw, /ctx\.moveTo\(crawler\.weaponX - 14/);
   assert.match(crawlerDraw, /drawCrawlerEquipmentFrame\(ctx, sprites, "barrage",[\s\S]*drawCrawlerEquipmentFrame\(ctx, sprites, "airstrike",/);
-  assert.match(game, /function drawCrawlerForegroundMask[\s\S]*sprites\.crawlerForegroundMask[\s\S]*drawCrawlerAsset\(ctx, foregroundMask, crawler\)/);
+  assert.match(game, /function drawCrawlerForegroundMask[\s\S]*sprites\.crawlerForegroundMask[\s\S]*drawCrawlerAsset\(ctx, foregroundMask, crawler, Boolean\(g\.definition\.missionConfig\.v100StageNumber\)\)/);
   assert.match(game, /unitPass === "before-foreground-mask"[\s\S]*type: "crawler-foreground"[\s\S]*drawCrawlerForegroundMask/);
   assert.doesNotMatch(crawlerDraw, /ctx\.clip\(\)/);
   assert.match(game, /const crawlerDeploymentOpaque = f\.side === "human"[\s\S]*f\.spawnPortalId === "crawler-door"[\s\S]*ctx\.globalAlpha = 1/);
@@ -1751,7 +1753,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.doesNotMatch(game, /g\.bannerTime = Math\.max\(g\.bannerTime, 1\.05\)/);
   assert.match(game, /const selectedStageBossKind = selectedOutbreakMissionId[\s\S]*OUTBREAK_MISSION_BY_ID\[selectedOutbreakMissionId\]\?\.boss\?\.enemyKind[\s\S]*CAMPAIGN_STAGE_BY_ID\[selectedStageId\]\?\.boss\?\.enemyKind \?\? null/);
   assert.match(game, /bossDefinitionForEnemyKind\(activeBossKind\)\?\.displayName/);
-  assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(game, /\{activeBossLabel\}<small>\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:20%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
   assert.match(css, /\.boss-hud \{ top:100px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
@@ -1922,7 +1924,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
-  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, revealRight, H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, Math\.min\(revealRight, options\.enemyGateOcclusionX \?\? W\), H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /const incomingBossKind = mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\) \?\? null;[\s\S]*announceBossEntrance\(g, incomingBossKind,[\s\S]*activateTakuyaScene: incomingBossKind === "takuya"/);
   assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playBattleSemanticCue\(definition\.entrance\.cueId[\s\S]*semantic: "boss-entrance"[\s\S]*receiptId/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*isBossEnemyKind\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);

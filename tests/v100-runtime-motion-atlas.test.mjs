@@ -25,7 +25,7 @@ const CELL_WIDTH = 544;
 const CELL_HEIGHT = 512;
 const ATLAS_HEIGHT = CELL_HEIGHT * 2;
 const APPROVED_DECODED_SURFACE_BYTES = 80_216_064;
-const APPROVED_DISPLAY_GEOMETRY_HASH = "93e48efa1692b14a61d2de29641570cd10d2f02149f85d9f89815f68861ff53d";
+const APPROVED_DISPLAY_GEOMETRY_HASH = "7ba890dd733301d70332eae61b80f438fa640cf045975eb938d3a4251de068fe";
 
 const MOTION_ATLASES = Object.freeze([
   {
@@ -38,7 +38,7 @@ const MOTION_ATLASES = Object.freeze([
     columns: 8,
     policy: /hooked staff and oversized arm silhouette/u,
     commonScale: 0.33994334277620397,
-    approvedVisibleHash: "02a65632ef9731f91a9977e7cd4d58e4ff87999ff6bada097afac85376b39de3",
+    approvedVisibleHash: "8eae7322e016b41b5b244574f41587d0483a1502ac6449cfbd2a2a739b833e90",
   },
   {
     kind: "boss-takuya-omega",
@@ -50,7 +50,7 @@ const MOTION_ATLASES = Object.freeze([
     columns: 8,
     policy: /oversized serrated greatsword.*same blade length and width/u,
     commonScale: 0.3218707015130674,
-    approvedVisibleHash: "8c70bd8b2eac413fa2909e1a60ab18db7a40d464f6a0eb234ef757ee6288676f",
+    approvedVisibleHash: "e5e2b81dde0079fc6c1b5bd54a7e008a9e55696d4bd5b42e65541bf8a87c81ac",
   },
   {
     kind: "red-panther-knife",
@@ -62,7 +62,7 @@ const MOTION_ATLASES = Object.freeze([
     columns: 5,
     policy: /serrated combat knife.*same blade length/u,
     commonScale: 0.33766233766233766,
-    approvedVisibleHash: "64306872600104595040f2f8dd1d29f18cd347a8e96964694622e6cede855035",
+    approvedVisibleHash: "8c42770702a79b375b43c57923d7095a02e2d5ac73b32b6a17210e92d2f34410",
   },
   {
     kind: "red-panther-shield",
@@ -73,8 +73,8 @@ const MOTION_ATLASES = Object.freeze([
     states: ["idle", "move", "attack", "hit", "death"],
     columns: 5,
     policy: /riot shield.*full body-covering rectangle/u,
-    commonScale: 0.31388329979879276,
-    approvedVisibleHash: "4e10e673db28baedde72cc98e38e4c132ad616dde21093310c788a97cbe1aaf7",
+    commonScale: 0.31137724550898205,
+    approvedVisibleHash: "6fed958bd5a31be9fcf8060ed831d7fd8d6871b0bbb87426c2049865261a63f5",
   },
   {
     kind: "red-panther-smg",
@@ -85,8 +85,8 @@ const MOTION_ATLASES = Object.freeze([
     states: ["idle", "move", "attack", "hit", "death"],
     columns: 5,
     policy: /suppressed SMG.*same silhouette/u,
-    commonScale: 0.31117021276595747,
-    approvedVisibleHash: "8c12fa3dd831b6c5e400e13d4b642b79e5cde37a9a1076c24c2b85f9f182d56b",
+    commonScale: 0.3103448275862069,
+    approvedVisibleHash: "2a97aa388bbe3a3acccf335c1b915e9f379fce225445be53fe0d1a0cf7c002ca",
   },
   {
     kind: "red-panther-commander",
@@ -97,8 +97,8 @@ const MOTION_ATLASES = Object.freeze([
     states: ["idle", "move", "attack", "hit", "death"],
     columns: 5,
     policy: /compact sidearm.*same silhouette/u,
-    commonScale: 0.30708661417322836,
-    approvedVisibleHash: "8756beab8bde3780f72c6957c5155b27a3a5b7cdf4f6151af52ea7d0b0201c10",
+    commonScale: 0.3046875,
+    approvedVisibleHash: "43b9e7d510b651035c86193cde66429c58b5985af46b7fee56ecc670c4450a78",
   },
 ]);
 

@@ -7,10 +7,27 @@ import { V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
 import { v100ProductionSessionFor } from "../app/v100BattleAdapter.js";
 import { aggregateEquipmentEffects, equipmentEnhancementCost } from "../app/equipment.js";
 
-const funded = () => ({ ...createDefaultV100Save(), caps: 20000, ownedUnitIds: V100_UNITS.map(unit => unit.id) });
+const funded = () => ({ ...createDefaultV100Save(), caps: 20000, ownedUnitIds: V100_UNITS.map(unit => unit.id), completedStageIds: [...V100_STAGE_IDS] });
 const buy = (save, id) => purchaseV100Equipment(save, id, { expectedQuantity: save.equipment.inventory[id] ?? 0 });
 const reload = save => { const result = deserializeV100Save(serializeV100Save(save)); assert.equal(result.ok, true); return result.save; };
 const session = save => v100ProductionSessionFor({ save, stageId: V100_STAGE_IDS[0], resultId: "gear-proof" });
+
+test("shop gates require the cleared stage, preserve locked balances, and retain earlier ownership", () => {
+  for (const item of V100_EQUIPMENT_CATALOG.filter(item => item.source === "supply-shop" && item.unlockStageNumber > 0)) {
+    const before = { ...funded(), completedStageIds: V100_STAGE_IDS.slice(0, item.unlockStageNumber - 1), availableStageIds: [...V100_STAGE_IDS] };
+    const denied = buy(before, item.id);
+    assert.equal(denied.reason, "equipment-locked", item.id);
+    assert.deepEqual(denied.save, normalizeV100Save(before));
+    before.completedStageIds.push(V100_STAGE_IDS[item.unlockStageNumber - 1]);
+    const purchased = buy(before, item.id);
+    assert.equal(purchased.applied, true, item.id);
+    const inherited = reload({ ...purchased.save, completedStageIds: [] });
+    const equipped = equipV100Equipment(inherited, { equipmentId: item.id, slot: 0, ...(item.slotType === "personal" ? { unitId: V100_UNITS[0].id } : {}) });
+    assert.equal(equipped.applied, true, "Earlier ownership remains usable: " + item.id);
+    assert.equal(upgradeV100Equipment(inherited, item.id, { expectedLevel: 0 }).applied, true);
+    if (item.slotType === "personal") assert.equal(buy(inherited, item.id).applied, true);
+  }
+});
 
 test("V1 catalog excludes conflicting vehicle HP and rejects prototype/legacy inventory", () => {
   assert.equal(V100_EQUIPMENT_CATALOG.length, 19);

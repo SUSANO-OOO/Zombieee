@@ -275,6 +275,7 @@ export function laneForCenters({
 /** Advances Y toward an assigned/committed lane without teleporting physical lane state. */
 export function advanceTowardLane({
   y,
+  destinationY,
   destinationLane,
   currentLane = 1,
   laneCenters = LANE_Y,
@@ -287,7 +288,9 @@ export function advanceTowardLane({
   const current = isLane(currentLane, centers.length) ? currentLane : 0;
   const destination = isLane(destinationLane, centers.length) ? destinationLane : current;
   const startY = finite(y, centers[current]);
-  const targetY = centers[destination];
+  const targetY = Number.isFinite(destinationY)
+    ? Math.max(centers[0], Math.min(centers[centers.length - 1], destinationY))
+    : centers[destination];
   const delta = targetY - startY;
   const tolerance = nonNegative(settleTolerance, 1);
   const maxStep = nonNegative(laneSpeed) * nonNegative(seconds);

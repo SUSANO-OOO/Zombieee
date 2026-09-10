@@ -101,29 +101,51 @@ function bossKindForStage(stage) {
   return boss ? BOSS_KIND_BY_V100_ID[boss] ?? null : null;
 }
 
+function missionDurationSeconds(stage, missionType) {
+  if (missionType === "timed-defense") return (Number(stage.objectiveId.match(/perimeter-(\d+)s/u)?.[1]) || 100) - 12;
+  return stage.number === 6 ? 78 : stage.number === 12 ? 84 : 90;
+}
+
 function stageTimeline(stage, missionType, bossKind) {
   const pack = packFor(stage);
   const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (missionType === "escort" || missionType === "timed-defense") {
+    // Contacts follow distance travelled: a stalled cart cannot exhaust
+    // every wave and spend its final half crossing an empty battlefield.
+    let cursor = 0;
+    const duration = missionDurationSeconds(stage, missionType);
+    return freeze([2, 2, 2, 2, 2, 3].map((count, index) => freeze({
+      at: PREP_SECONDS + (missionType === "escort" ? index * 12 : Math.round(index * (duration - 15) / 5)),
+      wave: index + 1,
+      label: missionType === "escort" && index >= 2 ? "護送経路 // 迎撃部隊接近" : `${stage.displayName} // 第${index + 1}波`,
+      ...(missionType === "escort" && index >= 2 ? { escortProgress: [.2, .45, .7, .88][index - 2] } : {}),
+      units: freeze(Array.from({ length: count }, () => pack[cursor++ % pack.length])),
+    })));
+  }
   if (stage.number === 3) {
     const thresholds = V100_BOSS_BY_ID["boss-takuya"].phaseThresholds;
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
-      freeze({ at: PREP_SECONDS + 1, wave: 2, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 2, wave: 3, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination"]), bossHpRatio: thresholds[1], addWave: true }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "防衛線 // 先行感染群", units: freeze(["walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 13, wave: 2, label: "防衛線 // 敵群接近", units: freeze(["walker", "shade"]) }),
+      freeze({ at: PREP_SECONDS + 32, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
+      freeze({ at: PREP_SECONDS + 33, wave: 4, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 34, wave: 5, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
   if (stage.number === 5) return freeze([
-    freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "walker", "ooze", "sprinter"]) }),
+    freeze({ at: PREP_SECONDS, wave: 1, label: "駅構内 // 先行感染群", units: freeze(["walker", "ooze"]) }),
+    freeze({ at: PREP_SECONDS + 14, wave: 2, label: "ホーム奥 // 敵群接近", units: freeze(["sprinter", "walker"]) }),
+    freeze({ at: PREP_SECONDS + 34, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
   ]);
   if (stage.number === 30) {
-    // The boss is the battle's opening threat. Exactly two later A-only
-    // reinforcements belong to this operation; no Panther survives its prelude.
+    // Establish the defense before revealing Omega. His two later A-only
+    // reinforcements remain; the prelude contains no Panther units.
     return freeze([
-      // bossOnly means "only while an existing boss is alive" in Ashfall's
-      // real event consumer; the opening boss must never carry that gate.
-      freeze({ at: PREP_SECONDS, wave: 1, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: false }),
-      freeze({ at: PREP_SECONDS + 24, wave: 2, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 48, wave: 3, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 防衛線を確保", units: freeze(["spitter", "crusher"]) }),
+      freeze({ at: PREP_SECONDS + 34, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: false }),
+      freeze({ at: PREP_SECONDS + 58, wave: 4, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 82, wave: 5, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher"]), addWave: true }),
     ]);
   }
   const counts = stage.number === 29 ? [2, 2, 3, 3, 3, 3] : [2, 2, 3, 3];
@@ -149,7 +171,7 @@ function stageTimeline(stage, missionType, bossKind) {
 
 function phaseScheduleFor(stage, missionType, objective) {
   if (missionType === "timed-defense") {
-    const durationSeconds = Number(stage.objectiveId.match(/perimeter-(\d+)s/u)?.[1]) || 100;
+    const durationSeconds = missionDurationSeconds(stage, missionType);
     return {
       durationSeconds,
       phases: freeze([
@@ -162,11 +184,11 @@ function phaseScheduleFor(stage, missionType, objective) {
   if (missionType === "escort") {
     const intercept = V100_MISSION_VEHICLES[stage.id]?.count === 3;
     return {
-      durationSeconds: 105,
+      durationSeconds: missionDurationSeconds(stage, missionType),
       phases: freeze([
         freeze({ at: PREP_SECONDS, phase: 1, label: intercept ? "冷蔵車3台を追跡" : "護送対象を発進", objective }),
-        freeze({ at: PREP_SECONDS + 42, phase: 2, label: intercept ? "冷蔵車列を包囲" : "護送経路を確保", objective }),
-        freeze({ at: PREP_SECONDS + 78, phase: 3, label: intercept ? "封鎖地点で冷蔵車列を確保" : "出口まで護送", objective }),
+        freeze({ at: PREP_SECONDS + Math.round(missionDurationSeconds(stage, missionType) * .4), phase: 2, label: intercept ? "冷蔵車列を包囲" : "護送経路を確保", objective }),
+        freeze({ at: PREP_SECONDS + Math.round(missionDurationSeconds(stage, missionType) * .8), phase: 3, label: intercept ? "封鎖地点で冷蔵車列を確保" : "出口まで護送", objective }),
       ]),
     };
   }
@@ -174,9 +196,9 @@ function phaseScheduleFor(stage, missionType, objective) {
     const node = V100_NODE_PROFILES[stage.id];
     return {
       phases: freeze([
-        freeze({ at: PREP_SECONDS, phase: 1, label: `第1${node?.label ?? "ノード"}を${node?.verb ?? "起動"}`, objective }),
-        freeze({ at: PREP_SECONDS + 62, phase: 2, label: node?.shutdown ? "残る散布装置を停止" : "封鎖設備を維持", objective }),
-        freeze({ at: PREP_SECONDS + 120, phase: 3, label: node?.shutdown ? "全4基を停止して退路を確保" : "感染流出路を封鎖", objective }),
+        freeze({ at: PREP_SECONDS, phase: 1, label: `${node?.label ?? "封鎖設備"}へ前進`, objective }),
+        freeze({ at: PREP_SECONDS + 62, phase: 2, label: "作戦区域を警戒", objective }),
+        freeze({ at: PREP_SECONDS + 120, phase: 3, label: "帰還経路を警戒", objective }),
       ]),
     };
   }
@@ -207,9 +229,12 @@ export function v100BattleDefinitionFor(stageId) {
   const timeline = stageTimeline(stage, missionType, bossKind);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
-    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
+    ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
     : missionType === "sequential-seal"
       ? { powerCount: stage.objectiveId.includes("four") ? 4 : 3, requiresContainment: false,
+        // Operators, sequential hold and nearby threats own progress. A
+        // cleared route must not wait for legacy absolute activation times.
+        powerReadyAtSeconds: [0,0,0,0], returnSpeedMultiplier: 3.2,
         powerLabel: missionNode?.label, powerVerb: missionNode?.verb }
       : {};
   return freeze({
@@ -221,7 +246,8 @@ export function v100BattleDefinitionFor(stageId) {
     prepSeconds: PREP_SECONDS,
     baseMaxHp,
     starThresholds: { 1: 0.01, 2: 0.7, 3: 0.9 },
-    enemyBaseMaxHp: 1000,
+    // Once a boss falls, breaching its gate is a short finishing action.
+    enemyBaseMaxHp: bossKind ? 350 : 1000,
     enemyBaseMode: missionType === "assault" || missionType === "boss-assault" ? "target" : "scenery",
     startsEnemyBaseVulnerable: missionType === "assault" && !bossKind,
     bossUnlocksEnemyBase: Boolean(bossKind),

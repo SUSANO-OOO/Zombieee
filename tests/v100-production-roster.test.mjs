@@ -36,16 +36,16 @@ test("Stage 29 owns six elite waves and Stage 30 only two A add waves after Omeg
   assert.equal(core.timeline.length,6);
   assert.ok(core.timeline.flatMap(event=>event.units).every(kind=>P.includes(kind)));
   assert.equal(core.bossEnemyKind,null);
-  assert.equal(finale.timeline.length,3);
-  assert.deepEqual(finale.timeline[0].units,["takuya-omega"]);
+  assert.equal(finale.timeline.length,5);
+  assert.deepEqual(finale.timeline[2].units,["takuya-omega"]);
   const adds=finale.timeline.filter(event=>event.addWave);
   assert.equal(adds.length,2);
   assert.deepEqual(adds.flatMap(event=>event.units),A);
-  assert.ok(adds.every(event=>event.at>finale.timeline[0].at));
+  assert.ok(adds.every(event=>event.at>finale.timeline[2].at));
 });
 
-test("all timed operations use their fixed 85/90/95/100 second perimeter", () => {
-  for (const [number,seconds] of [[2,90],[7,85],[18,95],[22,100]]) {
+test("all timed operations use their revised 73/78/83/88 second perimeter", () => {
+  for (const [number,seconds] of [[2,78],[7,73],[18,83],[22,88]]) {
     const definition=definitionFor(number);
     assert.equal(definition.defenseEndAt-definition.prepSeconds,seconds);
   }

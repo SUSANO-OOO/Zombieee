@@ -1,5 +1,5 @@
 import { createAudioMixer } from "./audioMixer.js";
-import { PRODUCTION_AUDIO_MANIFEST } from "./productionAudio.js";
+import { V100_AUDIO_MANIFEST } from "./productionAudio.js";
 
 function now() {
   return new Date().toISOString();
@@ -8,8 +8,9 @@ function now() {
 export function createV100EventAudioOwner({ windowTarget = globalThis.window, onState = null } = {}) {
   const receipts = [];
   const mixer = createAudioMixer({
-    manifest: PRODUCTION_AUDIO_MANIFEST,
+    manifest: V100_AUDIO_MANIFEST,
     maxVoices: 12,
+    enableAcknowledgementTone: false,
     maxWarningsTotal: 4,
     maxWarningsPerKey: 1,
     logger: null,
@@ -38,6 +39,11 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
   };
   const unsubscribe = mixer.subscribeStatus((status) => publish({ type: "status", ...status }), { emitCurrent: true });
   const detachUnlock = mixer.attachUnlock(windowTarget);
+  // Ordinary menu/dialogue actions reuse the running graph. Re-unlocking it
+  // plays the enable acknowledgement tone, even when no unlock is needed.
+  const ensureUnlocked = (reason) => mixer.unlocked && mixer.getAudioStatus().state === "running"
+    ? Promise.resolve(true)
+    : mixer.unlock({ reason });
 
   async function present(presentation, reason = "node") {
     if (disposed || !presentation?.sceneId) return null;
@@ -63,7 +69,7 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
 
   async function activate(presentation) {
     if (disposed) return false;
-    const unlocked = await mixer.unlock({ reason: "v100-event-gesture" });
+    const unlocked = await ensureUnlocked("v100-event-gesture");
     if (!unlocked) {
       record("unlock-failed", presentation, { audioState: mixer.getAudioStatus().state });
       return false;
@@ -121,6 +127,12 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     present,
     activate,
     stop,
+    setSettings: settings => mixer.setSettings({ ...settings, masterVolume: .9, ambienceVolume: .35 }),
+    operation: async (role = "navigate") => {
+      if (disposed || !["advance", "navigate", "cancel", "confirm", "reject"].includes(role)) return false;
+      if (!await ensureUnlocked("v100-interface-gesture")) return false;
+      return mixer.play(`v100-ui-${role}`, { instanceKey: "v100-interface", dedupeKey: `v100-interface:${role}` });
+    },
     snapshot,
     dispose: async () => {
       if (disposed) return;

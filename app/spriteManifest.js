@@ -2,6 +2,7 @@ import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFI
 import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { V100_FUTAGO_SPRITE_GEOMETRY } from "./v100FutagoSpriteGeometry.js";
+import { V100_TAKUYA_SPRITE_GEOMETRY } from "./v100TakuyaSpriteGeometry.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -42,8 +43,8 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   tky: Object.freeze({ w: 61, h: 102 }),
   "mrs-chiha": Object.freeze({ w: 63, h: 103 }),
   "miyamoto-musashi": Object.freeze({ w: 67, h: 106 }),
-  "mayo-chan": Object.freeze({ w: 70, h: 62 }),
-  "mayo-chan-feral": Object.freeze({ w: 76, h: 67 }),
+  "mayo-chan": Object.freeze({ w: 58, h: 46 }),
+  "mayo-chan-feral": Object.freeze({ w: 65, h: 52 }),
   walker: Object.freeze({ w: 58, h: 96 }),
   runner: Object.freeze({ w: 53, h: 90 }),
   turned: Object.freeze({ w: 58, h: 96 }),
@@ -51,7 +52,7 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   spitter: Object.freeze({ w: 62, h: 101 }),
   crusher: Object.freeze({ w: 80, h: 112 }),
   abomination: Object.freeze({ w: 101, h: 132 }),
-  takuya: Object.freeze({ w: 94, h: 128 }),
+  takuya: Object.freeze({ w: 118, h: 160 }),
   grappler: Object.freeze({ w: 78, h: 108 }),
   ooze: Object.freeze({ w: 70, h: 94 }),
   sprinter: Object.freeze({ w: 58, h: 96 }),
@@ -69,10 +70,10 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   "choir-knot": Object.freeze({ w: 88, h: 92 }),
   "pall-manta": Object.freeze({ w: 126, h: 72 }),
   "anchor-bloom": Object.freeze({ w: 112, h: 62 }),
-  "red-panther-knife": Object.freeze({ w: 66, h: 104 }),
-  "red-panther-shield": Object.freeze({ w: 80, h: 110 }),
-  "red-panther-smg": Object.freeze({ w: 68, h: 104 }),
-  "red-panther-commander": Object.freeze({ w: 76, h: 110 }),
+  "red-panther-knife": Object.freeze({ w: 54, h: 68 }),
+  "red-panther-shield": Object.freeze({ w: 62, h: 70 }),
+  "red-panther-smg": Object.freeze({ w: 54, h: 68 }),
+  "red-panther-commander": Object.freeze({ w: 58, h: 70 }),
   "mugarian-president-mutated": Object.freeze({ w: 220, h: 190 }),
   // TAKUYA-Ω is the final-form boss.  Give its standing body a clearly
   // larger battle envelope than the Stage 25 president; the atlas keeps the
@@ -462,7 +463,7 @@ function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } 
     // The authored atlas cells reserve much more transparent composition room
     // than legacy sheets. Normalize the visible body to the established battle
     // silhouette height while still drawing the complete source cell.
-    battleContentHeight: 68,
+    battleContentHeight: kind === "gate-eater" ? 82 : 68,
     nativeDirection: "explicit-both",
     ...(semanticSourceFacing ? { semanticSourceFacing } : {}),
     states: SPRITE_STATES,
@@ -497,13 +498,13 @@ const V100_CUSTOM_LEFT_VISIBLE_BY_KIND = Object.freeze({
     [156, 28, 388, 496], [142, 113, 402, 496], [121, 116, 423, 496], [128, 72, 415, 496], [68, 290, 475, 496],
   ]),
   "red-panther-shield": Object.freeze([
-    [137, 28, 407, 496], [134, 117, 409, 496], [86, 115, 458, 496], [118, 56, 425, 496], [39, 229, 505, 496],
+    [137, 28, 406, 496], [135, 120, 408, 496], [86, 114, 458, 496], [119, 58, 427, 496], [40, 213, 504, 484],
   ]),
   "red-panther-smg": Object.freeze([
-    [176, 28, 367, 496], [122, 40, 421, 496], [125, 88, 419, 496], [128, 45, 416, 496], [39, 203, 504, 496],
+    [195, 28, 390, 496], [122, 35, 422, 496], [125, 89, 418, 496], [116, 37, 423, 492], [38, 198, 505, 495],
   ]),
   "red-panther-commander": Object.freeze([
-    [181, 28, 362, 496], [128, 41, 415, 496], [134, 110, 409, 496], [135, 61, 409, 496], [46, 235, 498, 496],
+    [182, 28, 366, 496], [128, 44, 415, 496], [135, 113, 408, 496], [125, 62, 400, 496], [41, 215, 502, 496],
   ]),
   "mugarian-president-mutated": Object.freeze([
     [125, 63, 418, 496], [124, 50, 420, 496], [115, 104, 428, 496], [73, 174, 471, 496],
@@ -515,14 +516,87 @@ const V100_CUSTOM_LEFT_VISIBLE_BY_KIND = Object.freeze({
   ]),
 });
 
-function mirrorV100VisibleRect([left, top, right, bottom]) {
-  return Object.freeze([V100_CUSTOM_CELL_WIDTH - right, top, V100_CUSTOM_CELL_WIDTH - left, bottom]);
+const TAKUYA_REPAIRED_ATLAS_PATH = "/art/v100/bosses/takuya-battle-repaired-v1.png";
+const TAKUYA_REPAIRED_STATES = Object.freeze(["idle", "walk-a", "walk-b", "attack-a", "attack-b", "hit"]);
+
+function takuyaManifestEntry() {
+  const geometry = V100_TAKUYA_SPRITE_GEOMETRY;
+  const frames = {};
+  const referenceFrames = geometry.frames?.right
+    ?? geometry.visibleRects.map((visible, index) => ({
+      visible,
+      anchorX: geometry.anchorX,
+      groundAnchorPixels: geometry.groundAnchorPixels[index],
+    }));
+  for (const state of SPRITE_STATES) {
+    const index = STATE_FRAME_INDEX[state];
+    const sourceState = TAKUYA_REPAIRED_STATES[index] ?? "hit";
+    const sourceIndex = TAKUYA_REPAIRED_STATES.indexOf(sourceState);
+    const stateFrames = {};
+    for (const direction of SPRITE_DIRECTIONS) {
+      const raw = geometry.frames?.[direction]?.[sourceIndex] ?? referenceFrames[sourceIndex];
+      if (!raw) throw new RangeError(`Missing repaired TAKUYA geometry for ${direction}:${sourceState}`);
+      const source = raw.source ?? {
+        x: sourceIndex * geometry.cellWidth,
+        y: 0,
+        w: geometry.cellWidth,
+        h: geometry.cellHeight,
+      };
+      const rawVisible = raw.visible;
+      if (!Array.isArray(rawVisible) || rawVisible.length !== 4) throw new TypeError("Invalid repaired TAKUYA visible rect");
+      // Both directions sample the same authored row; the renderer mirrors
+      // the source cell, so alpha bounds remain in source coordinates.
+      const visible = rawVisible;
+      stateFrames[direction] = frameRecord({
+        path: TAKUYA_REPAIRED_ATLAS_PATH,
+        sheetWidth: geometry.cellWidth * geometry.columns,
+        sheetHeight: geometry.cellHeight,
+        source,
+        visible,
+        nativeDirection: "left",
+        direction,
+        derivedFrom: state === "death" ? "hit" : undefined,
+        anchorX: raw.anchorX ?? geometry.anchorX,
+        groundAnchorPixels: raw.groundAnchorPixels ?? geometry.groundAnchorPixels?.[sourceIndex],
+        authoredCell: { w: geometry.sourceWidth, h: geometry.sourceHeight },
+      });
+    }
+    frames[state] = Object.freeze(stateFrames);
+  }
+  return Object.freeze({
+    path: TAKUYA_REPAIRED_ATLAS_PATH,
+    sheet: Object.freeze({
+      width: geometry.cellWidth * geometry.columns,
+      height: geometry.cellHeight,
+      layout: "v100-six-horizontal-source-facing-right",
+      cellWidth: geometry.cellWidth,
+      cellHeight: geometry.cellHeight,
+    }),
+    battleContentHeight: null,
+    battleScale: 1,
+    nativeDirection: "right",
+    states: SPRITE_STATES,
+    directions: SPRITE_DIRECTIONS,
+    frames: Object.freeze(frames),
+  });
 }
+
+// These direction-specific bounds are generated from the decoded v2 atlas
+// rows after resize. Lanczos alpha can trim a one-pixel edge asymmetrically
+// when the authored row is mirrored, so derive each row independently.
+const V100_CUSTOM_RIGHT_VISIBLE_BY_KIND = Object.freeze({
+  "red-panther-knife": Object.freeze([[156,28,388,496],[142,113,402,496],[121,116,423,496],[129,72,416,496],[69,290,476,496]]),
+  "red-panther-shield": Object.freeze([[138,28,407,496],[136,120,409,496],[86,114,458,496],[117,58,425,496],[40,213,504,484]]),
+  "red-panther-smg": Object.freeze([[154,28,349,496],[122,35,422,496],[126,89,419,496],[121,37,428,492],[39,198,506,495]]),
+  "red-panther-commander": Object.freeze([[178,28,362,496],[129,44,416,496],[136,113,409,496],[144,62,419,496],[42,215,503,496]]),
+  "mugarian-president-mutated": Object.freeze([[126,63,419,496],[124,50,420,496],[116,104,429,496],[73,174,471,496],[106,106,438,496],[107,16,438,496],[113,160,431,496],[18,290,527,496]]),
+  "takuya-omega": Object.freeze([[117,61,427,496],[126,28,418,496],[121,65,423,496],[108,210,436,496],[117,113,427,496],[108,60,436,496],[111,124,434,496],[32,305,512,496]]),
+});
 
 const V100_CUSTOM_VISIBLE_BY_KIND = Object.freeze(Object.fromEntries(
   Object.entries(V100_CUSTOM_LEFT_VISIBLE_BY_KIND).map(([kind, leftVisible]) => [kind, Object.freeze({
     left: leftVisible,
-    right: Object.freeze(leftVisible.map(mirrorV100VisibleRect)),
+    right: V100_CUSTOM_RIGHT_VISIBLE_BY_KIND[kind],
   })]),
 ));
 
@@ -557,6 +631,7 @@ function v100CustomAtlasManifestEntry({ kind, path, sourceStates, visible }) {
         visible: visible[direction][sourceIndex],
         nativeDirection: direction,
         direction,
+        groundAnchorPixels: V100_CUSTOM_CELL_HEIGHT - 16,
         // Use the measured idle silhouette as the fixed scale reference for
         // every state.  A wide attack or horizontal death pose therefore
         // keeps the same body multiplier instead of being fitted separately.
@@ -605,7 +680,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   shade: legacyManifestEntry("shade", "left"),
   crusher: legacyManifestEntry("crusher", "left"),
   abomination: legacyManifestEntry("crusher", "left"),
-  takuya: legacyManifestEntry("takuya", "left"),
+  takuya: takuyaManifestEntry(),
   grappler: explicitAtlasManifestEntry("grappler", "/art/v070/characters/grappler-battle-v1.png"),
   ooze: explicitAtlasManifestEntry("ooze", "/art/v070/characters/ooze-battle-v1.png"),
   sprinter: explicitAtlasManifestEntry("sprinter", "/art/v070/characters/sprinter-battle-v1.png"),
@@ -766,8 +841,22 @@ export const spriteKinds = Object.freeze(Object.keys(SPRITE_MANIFEST));
 // Atlas parts share the same combat identity, AI, discovery and reward owner.
 export const SPRITE_COMBAT_KIND = Object.freeze({ "futago-separated-a": "futago", "futago-separated-b": "futago" });
 /** Legacy campaign sprite set used by the Version 0.9.9.5 local QA plan. */
+// Takuya's repaired V1 atlas is a new runtime path, but the existing Takuya
+// battle kind remains part of the legacy QA distribution contract. Keep only
+// genuinely V1-only kinds out of the legacy plan.
+const V100_ONLY_SPRITE_KINDS = new Set([
+  "futago-separated-a",
+  "futago-separated-b",
+  "kumaverson-guard",
+  "mugarian-president-mutated",
+  "red-panther-commander",
+  "red-panther-knife",
+  "red-panther-shield",
+  "red-panther-smg",
+  "takuya-omega",
+]);
 export const legacySpriteKinds = Object.freeze(
-  spriteKinds.filter((kind) => !SPRITE_MANIFEST[kind].path.startsWith("/art/v100/")),
+  spriteKinds.filter((kind) => !V100_ONLY_SPRITE_KINDS.has(kind)),
 );
 
 export function spriteStatesFor(kind) {

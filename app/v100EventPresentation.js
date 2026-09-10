@@ -6,6 +6,7 @@ import { V100_STAGE_IDS, V100_STAGES } from "./v100Registry.js";
 import { v100StageAudioFor } from "./v100StageRuntime.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
+import { v100StoryScoreScene } from "./v100Music.js";
 
 const visuals = PRODUCTION_VISUALS.stages;
 const cuts = V100_RUNTIME_ASSET_MANIFEST.storyCuts;
@@ -81,6 +82,8 @@ function sceneFor(eventId, phase, stage, category, node) {
   if (category === "ending") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING;
   if (category === "epilogue") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
   if (eventId === "v100:event:s25:post" && Number(node?.sourceLine) >= 2058) return "v100-story-soup-break";
+  const scoreScene = v100StoryScoreScene(eventId, Number(node?.sourceLine) || 0);
+  if (scoreScene) return scoreScene;
   const stageAudio = stage ? v100StageAudioFor(stage.id, phase === "post" || phase === "first-clear-post" ? "post" : "pre") : null;
   return sceneIdForStoryEvent(eventId, 0) ?? stageAudio?.sceneId ?? PRODUCTION_AUDIO_SCENE_IDS.INTRO;
 }
@@ -94,10 +97,12 @@ function transitionFor(node, nodeIndex) {
   return "dialogue-cut";
 }
 
-function cueFor(node, category) {
+function cueFor(category) {
   if (category === "credits") return null;
-  if (node?.kind === "battle-marker" || node?.kind === "system") return "ui-confirm";
-  if (node?.kind === "player-action") return "radio-open";
+  // UI acknowledgement is owned by the actual button gesture, not a story
+  // node category. Authored scene cues can be assigned explicitly when needed.
+  // A player action is not necessarily a radio transmission. Generic action
+  // beats used to replay the radio chirp throughout otherwise quiet scenes.
   return null;
 }
 
@@ -130,7 +135,7 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     portraitMode: node?.portraitOwner ? (node?.portraitKind ?? "major") : "silhouette",
     transition: transitionFor(node, nodeIndex),
     sceneId,
-    cueId: cueFor(node, category),
+    cueId: cueFor(category),
     dialogueDucking: node?.kind === "dialogue",
     audioOwner: "v100-event-runtime",
   });

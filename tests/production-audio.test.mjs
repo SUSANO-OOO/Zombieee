@@ -13,6 +13,7 @@ import {
   EMPLOYMENT_AUDIO_CUE_IDS,
   LEGACY_SFX_CUE_MAP,
   PRODUCTION_AUDIO_MANIFEST,
+  V100_AUDIO_MANIFEST,
   PRODUCTION_AUDIO_SCENE_IDS,
   STATION_AUDIO_CUE_IDS,
   STORY_AUDIO_EVENT_SCENE_IDS,
@@ -157,9 +158,9 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 250);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 256);
   // 0.9.8 adds one track: the loadout theme, as the usual MP3 + OGG pair.
-  assert.equal(manifestPaths.length, 438);
+  assert.equal(manifestPaths.length, 450);
   assert.equal(
     manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v098/")).length,
     2,
@@ -183,7 +184,7 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
 });
 
 test("every referenced source is repository-local, nonempty, and has a complete supported audio container", () => {
-  for (const asset of PRODUCTION_AUDIO_MANIFEST.assets) {
+  for (const asset of [...PRODUCTION_AUDIO_MANIFEST.assets, ...V100_AUDIO_MANIFEST.assets]) {
     const wavCue = asset.sources[0]?.type === "audio/wav";
     const v099Cue = asset.sources[0]?.src.startsWith("/audio/v099/");
     assert.equal(asset.sources.length, wavCue || v099Cue ? 1 : 2, asset.id);
@@ -193,7 +194,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx))\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score))\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -848,7 +849,7 @@ test("employment dossier reveal uses a dedicated one-shot cue contract", () => {
 
 test("gameplay routes scenes, combat identity, and procedural fallback through the production mixer", () => {
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
-  assert.match(source, /createAudioMixer\(\{[\s\S]*manifest: PRODUCTION_AUDIO_MANIFEST/);
+  assert.match(source, /createAudioMixer\(\{[\s\S]*manifest: playbackManifest/);
   assert.match(source, /const productionCue = LEGACY_SFX_CUE_MAP\[cueId\]/);
   assert.match(source, /const fallback = \(\) => productionMixer\.playTestTone\(\{/);
   assert.match(source, /if \(!productionMixer\) return false/);
@@ -857,7 +858,7 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /onAssetFailure: \(failure:[\s\S]*failure\.category === "bgm"[\s\S]*setAudioUnlockUi\("partial"\)/);
   assert.match(source, /className="audio-test-tone" data-audio-unlock-control="true" onClick=\{playAudioTestTone\}/);
   assert.match(source, /className="enable-audio-button"[\s\S]*data-audio-unlock-control="true"/);
-  for (const label of ["音声を有効にする", "音声を準備中…", "音声が有効になりました", "一部音声を再試行できます", "音声を開始できませんでした　もう一度試す"]) {
+  for (const label of ["音声を有効にする", "音声を準備中…", "音声が有効になりました", "一部音声を再試行できます", "音声を再試行"]) {
     assert.match(source, new RegExp(label));
   }
   assert.match(source, /const audioUnlockShortLabel = [\s\S]*"音声開始"/);
@@ -909,7 +910,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
   assert.match(source, /assets: qaAssets/);
   assert.match(source, /pools: qaPools/);
   assert.match(source, /cueIds: \[\.\.\.qaAssets\.map[\s\S]*\.\.\.qaPools\.map/);
-  assert.match(source, /sceneIds: PRODUCTION_AUDIO_MANIFEST\.scenes\.map/);
+  assert.match(source, /sceneIds: playbackManifest\.scenes\.map/);
   assert.match(source, /play: async \(cueId: string,[\s\S]*mixer\.play\(cueId, options\)/);
   assert.match(source, /setScene: async \(sceneId: string\)[\s\S]*mixer\.setScene\(sceneId\)/);
   assert.match(source, /stopScene: \(fadeMs = 0\) => mixer\.stopScene/);
@@ -922,7 +923,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 292);
+  assert.equal(allCueIds.length, 298);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

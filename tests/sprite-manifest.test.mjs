@@ -24,6 +24,7 @@ import {
   spriteSheetPath,
   spriteStatesFor,
 } from "../app/spriteManifest.js";
+import { V100_TAKUYA_SPRITE_GEOMETRY } from "../app/v100TakuyaSpriteGeometry.js";
 import {
   alphaBounds,
   decodeRgbaPng,
@@ -94,6 +95,37 @@ test("TAKUYA-Ω keeps a giant final-form envelope through attack and death", () 
   assert.ok(death.contentRect.w >= idle.contentRect.w);
   assert.equal(attack.flipX, false);
   assert.equal(death.flipX, false);
+});
+
+test("repaired TAKUYA atlas keeps six measured cells, mirrored facing, and the legacy source", async () => {
+  const entry = SPRITE_MANIFEST.takuya;
+  assert.equal(entry.path, "/art/v100/bosses/takuya-battle-repaired-v1.png");
+  assert.deepEqual(entry.sheet, {
+    width: 3072,
+    height: 757,
+    layout: "v100-six-horizontal-source-facing-right",
+    cellWidth: 512,
+    cellHeight: 757,
+  });
+  assert.equal(V100_TAKUYA_SPRITE_GEOMETRY.atlasSha256, await sha256(publicFile(entry.path)));
+  assert.equal(await sha256(publicFile("/takuya-boss-sprites-v2.png")), V100_TAKUYA_SPRITE_GEOMETRY.sourceSha256);
+  const expectedGround = [604, 609, 607, 606, 617, 608];
+  const sourceIndexes = [0, 1, 2, 3, 4, 5, 5];
+  for (const [index, state] of SPRITE_STATES.entries()) {
+    const sourceIndex = sourceIndexes[index];
+    for (const direction of SPRITE_DIRECTIONS) {
+      const frame = spriteFrameFor("takuya", state, direction);
+      assert.deepEqual(frame.sourceRect, { x: sourceIndex * 512, y: 0, w: 512, h: 757 });
+      assert.equal(frame.groundAnchorPixels, expectedGround[sourceIndex]);
+      assert.equal(frame.flipX, direction === "right");
+      assert.equal(frame.authoredCell.w, 362);
+      assert.equal(frame.authoredCell.h, 724);
+      assert.ok(frame.contentRect.w > 0 && frame.contentRect.h > 0);
+    }
+  }
+  assert.equal(spriteFrameFor("takuya", "idle", "right").anchorX, V100_TAKUYA_SPRITE_GEOMETRY.anchorX);
+  assert.equal(spriteFrameFor("takuya", "idle", "left").anchorX, V100_TAKUYA_SPRITE_GEOMETRY.anchorX);
+  assert.equal(spriteFrameFor("takuya", "death", "left").derivedFrom, "hit");
 });
 
 test("sprite audit uses the same battle-size fitting path as runtime", async () => {
@@ -218,7 +250,7 @@ test("legacy gutter atlases preserve every source-cell pixel without scaling or 
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];
-  assert.equal(uniqueEntries.length, 6);
+  assert.equal(uniqueEntries.length, 5);
   for (const entry of uniqueEntries) {
     assert.notEqual(entry.sourceSheet.path, "/takuya-boss-sprites-v1.png", "retired TAKUYA sheet cannot be a runtime source");
     assert.equal(entry.sourceSheet.cellEdges[0], 0);

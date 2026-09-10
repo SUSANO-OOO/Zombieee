@@ -10,7 +10,10 @@ import { V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVe
 import { V100_RESEARCH_CORE_STAGE, V100_RESEARCH_CORE_ART } from "./v100ResearchCore.js";
 import { V100_NODE_ART, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
+import { V100_COMBAT_VFX_ART } from "./v100CombatVfx.js";
 import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
+import { V100_KUMAVERSON_GUARD_ART } from "./v100KumaversonPresentation.js";
+import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -82,7 +85,11 @@ export function requiredBattleAssetPlan({
   const assaultProfile=includeV100Sprites?v100AssaultObjectProfile(stageId):null;
   const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
   const defenseObjects=includeV100Sprites&&v100Stage?.missionType==="timed-defense"?[{id:"v100-defense-perimeter",path:V100_DEFENSE_PERIMETER_ART,runtimeUsage:"mission-render-source"}]:[];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects];
+  const combatVfx = includeV100Sprites && v100Stage
+    ? Object.entries(V100_COMBAT_VFX_ART).map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
+  const tataraObjects = includeV100Sprites && v100Stage && requiredKinds.includes("brute")
+    ? [{ id: TATARA_GROUND_ART.id, path: TATARA_GROUND_ART.path, runtimeUsage: "battle-overlay" }] : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({
@@ -97,15 +104,18 @@ export function requiredBattleAssetPlan({
     ...Object.entries(BATTLE_SUPPORT_ASSET_PATHS)
       .map(([key, path]) => frozenEntry({ key, path, category: "support" })),
   ];
+  const guardSprite = includeV100Sprites && v100Stage && requiredKinds.includes("kumaverson")
+    ? [{ kind: "kumaverson-guard", path: V100_KUMAVERSON_GUARD_ART.path, category: "unit" }]
+    : [];
   const plan = {
     stageId,
     background: frozenEntry({ path: stageVisualFor(stageId), category: "background" }),
     enemyBase: frozenEntry({ path: V075_VISUAL_PROFILES.enemyBase.intact.path, category: "base" }),
-    sprites: requiredKinds.map((kind) => frozenEntry({
+    sprites: [...requiredKinds.map((kind) => frozenEntry({
       kind,
       path: spriteSheetPath(kind),
       category: formationKinds.includes(kind) ? "unit" : "enemy",
-    })),
+    })), ...guardSprite.map(frozenEntry)],
     stageObjects: Object.freeze(stageObjects),
     persistent: Object.freeze(persistent),
   };

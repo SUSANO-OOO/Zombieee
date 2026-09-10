@@ -435,6 +435,22 @@ test("the worker is registered at the app base path, not the site root", async (
   assert.equal(registered[0].options.updateViaCache, "none");
 });
 
+test("an explicit application base owns the worker for trailing-slash nested routes", async () => {
+  const registered = [];
+  const windowRef = {
+    isSecureContext: true, caches: {},
+    location: { href: "https://example.test/Zombieee/v100/" },
+    navigator: { serviceWorker: {
+      register: async (url, options) => { registered.push({ url, options }); return { scope: options.scope }; },
+    } },
+  };
+  const result = await registerServiceWorker(windowRef, { baseUrl: "https://example.test/Zombieee/" });
+  assert.deepEqual(registered, [{ url: "https://example.test/Zombieee/sw.js", options: {
+    scope: "https://example.test/Zombieee/", updateViaCache: "none",
+  } }]);
+  assert.equal(result.scope, "https://example.test/Zombieee/");
+});
+
 test("a failed registration returns null instead of breaking the app", async () => {
   const windowRef = {
     isSecureContext: true,

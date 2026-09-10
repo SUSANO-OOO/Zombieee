@@ -6,6 +6,7 @@ import {
   v099AudioSource,
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
+import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -97,10 +98,10 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
 const V100_ENEMY_COMBAT_CUE_TARGETS = Object.freeze({
-  "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "support-explosion" }),
-  "red-panther-shield": Object.freeze({ attack: "weapon-pan-heavy-hit", hurt: "support-barrier", death: "support-explosion" }),
-  "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-rifle", death: "support-explosion" }),
-  "red-panther-commander": Object.freeze({ attack: "weapon-rifle", hurt: "weapon-melee-impact", death: "support-explosion" }),
+  "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-shield": Object.freeze({ attack: "weapon-pan-heavy-hit", hurt: "weapon-pan-hit", death: "v100-body-fall" }),
+  "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-commander": Object.freeze({ attack: "weapon-rifle", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "mugarian-president-mutated": Object.freeze({
     entrance: "boss-mother-entrance",
     attack: "boss-mother-brood-eruption",
@@ -426,6 +427,11 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 )));
 
 const assets = [
+  { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },
+  ...["advance", "navigate", "cancel", "confirm", "reject"].map(role => ({
+    id: `v100-ui-${role}`, category: "ui", sources: sourceFor("/audio/v100", "ui", `v100-ui-${role}`),
+    preload: "lazy", loop: false, gain: .8, priority: 48, cooldownMs: 70, maxInstances: 1,
+  })),
   ...MUSIC_TRACKS.map(musicAsset),
   ...UI_CUES.map((name) => sfxAsset(name, "ui", { gain: 0.68, priority: 32, cooldownMs: 45, maxInstances: 3 })),
   sfxAsset("radio-open", "ui", { gain: 0.7, priority: 48, cooldownMs: 120, maxInstances: 2 }),
@@ -742,6 +748,21 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
   aliases,
   scenes,
 });
+
+export const V100_AUDIO_MANIFEST = createAudioManifest(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST));
+// Installation inventories physical files, whereas playback addresses cues.
+// A V1 replacement must not steal a legacy cue's metadata or offline entry.
+const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
+  asset.sources.map(source => source.src).join('|'), asset,
+]));
+for (const asset of V100_AUDIO_MANIFEST.assets) {
+  const key = asset.sources.map(source => source.src).join('|');
+  if (!installAudioBySource.has(key)) {
+    const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');
+    installAudioBySource.set(key, Object.freeze({ ...asset, id: `install-${pathId}` }));
+  }
+}
+export const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   TITLE: "title",

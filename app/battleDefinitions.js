@@ -202,6 +202,10 @@ export function battleOutcomeFor(definition, state) {
     : definition.baseMaxHp;
   const clearRatio = definition.starThresholds?.[1] ?? 0;
   const hasClearHp = Number(state.baseHp) / baseMaxHp >= clearRatio;
+  if (definition.missionConfig?.v100StageNumber === 30) {
+    if (state.bossDefeated !== true || state.bossDefeatPending === true || state.barricadeVulnerable !== true) return null;
+    return hasClearHp ? "won" : "lost";
+  }
   if (definition.missionType === "timed-defense") {
     if (state.time < definition.defenseEndAt) return null;
     return hasClearHp ? "won" : "lost";

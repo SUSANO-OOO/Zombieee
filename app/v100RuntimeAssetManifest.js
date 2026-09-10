@@ -27,15 +27,15 @@ const storyCuts = freezeRecord({
 });
 
 const bosses = freezeRecord({
-  "boss-mugarian-president-mutated": `${V100_ROOT}/bosses/mugarian-president-mutated-battle-v1.png`,
-  "boss-takuya-omega": `${V100_ROOT}/bosses/takuya-omega-battle-v1.png`,
+  "boss-mugarian-president-mutated": `${V100_ROOT}/bosses/mugarian-president-mutated-battle-v2.png`,
+  "boss-takuya-omega": `${V100_ROOT}/bosses/takuya-omega-battle-v2.png`,
 });
 
 const redPanther = freezeRecord({
-  knife: `${V100_ROOT}/enemies/red-panther-knife-battle-v1.png`,
-  shield: `${V100_ROOT}/enemies/red-panther-shield-battle-v1.png`,
-  smg: `${V100_ROOT}/enemies/red-panther-smg-battle-v1.png`,
-  commander: `${V100_ROOT}/enemies/red-panther-commander-battle-v1.png`,
+  knife: `${V100_ROOT}/enemies/red-panther-knife-battle-v2.png`,
+  shield: `${V100_ROOT}/enemies/red-panther-shield-battle-v2.png`,
+  smg: `${V100_ROOT}/enemies/red-panther-smg-battle-v2.png`,
+  commander: `${V100_ROOT}/enemies/red-panther-commander-battle-v2.png`,
 });
 
 const missionObjects = freezeRecord({

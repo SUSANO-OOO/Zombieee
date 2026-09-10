@@ -12,7 +12,7 @@ import {
 } from "./v100Registry.js";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
-import { v100EquipmentFor, v100EquipmentQuantityCap, normalizeV100Equipment } from "./v100Equipment.js";
+import { v100EquipmentFor, v100EquipmentQuantityCap, v100EquipmentPurchaseUnlocked, normalizeV100Equipment } from "./v100Equipment.js";
 import { equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCEMENT } from "./equipment.js";
 import { v100DiscoveredBosses } from "./v100BossProgress.js";
 import { v100OutbreakEncounters, v100OutbreakRunIdValid } from "./v100Outbreak.js";
@@ -81,6 +81,7 @@ export function purchaseV100Equipment(save, equipmentId, { expectedQuantity, now
   const current = normalizeV100Save(save);
   const item = v100EquipmentFor(equipmentId);
   if (!item || item.source !== "supply-shop") return { applied: false, reason: "equipment-unavailable", save: current };
+  if (!v100EquipmentPurchaseUnlocked(current, equipmentId)) return { applied: false, reason: "equipment-locked", save: current };
   const quantity = current.equipment.inventory[equipmentId] ?? 0;
   if (quantity !== expectedQuantity) return { applied: false, reason: "stale-equipment", save: current };
   if (quantity >= v100EquipmentQuantityCap(equipmentId)) return { applied: false, reason: "equipment-cap", save: current };

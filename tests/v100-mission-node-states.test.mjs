@@ -23,8 +23,11 @@ for (const [stageId, profile] of Object.entries(V100_NODE_PROFILES)) {
         battleElapsedSeconds: elapsed, seconds, baseHp: 680, humanCount: 1,
         powerOperatorCount: 1, powerLaneThreats: threats, wavesResolved: false });
     };
+    let clock = 0;
     for (const node of nodes) {
-      const index = node.number - 1, elapsed = node.readyAtSeconds;
+      // Readiness is a lower bound, not a fresh clock for each operation.
+      // V1 nodes now start ready; their actual sequence still moves forward.
+      const index = node.number - 1, elapsed = Math.max(clock, node.readyAtSeconds);
       assert.equal(v100NodeState(runtime, index, elapsed, profile), initialState);
       step(elapsed, .1);
       assert.equal(v100NodeState(runtime, index, elapsed, profile), "connection");
@@ -44,6 +47,7 @@ for (const [stageId, profile] of Object.entries(V100_NODE_PROFILES)) {
       assertRenderedState(index, elapsed + 8.2, profile.shutdown ? "disconnection" : "connection");
       assert.equal(v100NodeState(runtime, index, elapsed + 9, profile), profile.shutdown ? "off" : "on");
       assert.equal(runtime.completed, false, "nodes alone cannot skip wave clearance and the required return");
+      clock = elapsed + 10;
     }
     assert.equal(nodes.length, profile.shutdown ? 4 : 3);
     if (profile.shutdown) {

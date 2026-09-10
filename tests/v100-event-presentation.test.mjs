@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { access } from "node:fs/promises";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
-import { PRODUCTION_AUDIO_MANIFEST, PRODUCTION_AUDIO_SCENE_IDS } from "../app/productionAudio.js";
+import { V100_AUDIO_MANIFEST, PRODUCTION_AUDIO_SCENE_IDS } from "../app/productionAudio.js";
 
 import {
   V100_EVENT_PRESENTATION_CATEGORIES,
@@ -28,16 +28,16 @@ test("canonical prologue moves from daily life through crisis, blackout, vehicle
   assert.match(v100EventPresentationFor({ eventId, node: nodes[0] }).backgroundPath, /kumaya-before-outbreak/u);
 });
 
-test("every authored credit shot has a real location and ambience without music or character voice", async () => {
+test("credits keep location ambience under a continuous ending score without character voice", async () => {
   const eventId = "v100:event:credits";
   for (const node of V100_STORY_EVENTS[eventId].nodes) {
     const presentation = v100EventPresentationFor({ eventId, phase: "credits", node });
     assert.equal(presentation.sceneLabel, node.sceneLabel);
     assert.ok(presentation.backgroundPath, `missing background: ${node.sceneLabel}`);
     await access(`public${presentation.backgroundPath}`);
-    const scene = PRODUCTION_AUDIO_MANIFEST.sceneById[presentation.sceneId];
+    const scene = V100_AUDIO_MANIFEST.sceneById[presentation.sceneId];
     assert.ok(scene, `missing audio scene: ${node.sceneLabel}`);
-    assert.equal(scene.bgm ?? null, null);
+    assert.equal(scene.bgm, "music-v100-score-ending");
     assert.ok(scene.ambience.length > 0);
     assert.equal(presentation.cueId, null);
     assert.equal(presentation.portraitOwner, null);
@@ -85,15 +85,15 @@ test("canonical interludes leave the floodgate/lab for their actual locations", 
   assert.match(view("v100:event:s20:post",1617).backgroundPath,/mugarian-hq/u);
   const soup=view("v100:event:s25:post",2058);
   assert.match(soup.backgroundPath,/shopping-street/u);
-  const scene=PRODUCTION_AUDIO_MANIFEST.sceneById[soup.sceneId];
+  const scene=V100_AUDIO_MANIFEST.sceneById[soup.sceneId];
   assert.ok(scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
-  assert.equal(scene.bgm??null,null);
+  assert.equal(scene.bgm,"music-v100-score-daily");
   assert.notEqual(view("v100:event:s25:post",2054).sceneId,soup.sceneId);
 });
 
 test("V1 event presentation uses action cues only for owned scene nodes", () => {
   const marker = v100EventPresentationFor({ eventId: "v100:event:s04:pre", phase: "event", node: { kind: "battle-marker" }, nodeIndex: 2 });
-  assert.equal(marker.cueId, "ui-confirm");
+  assert.equal(marker.cueId, null);
   assert.equal(marker.transition, "blackout-reveal");
   const credits = v100EventPresentationFor({ eventId: "v100:event:credits", phase: "credits", node: { kind: "system" }, nodeIndex: 2 });
   assert.equal(credits.cueId, null);

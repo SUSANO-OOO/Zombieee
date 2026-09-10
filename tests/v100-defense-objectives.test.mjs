@@ -24,10 +24,10 @@ test("all authored defense phases follow real threats, crawler impact and the un
   }
 });
 
-test("the real 100-second clinical operation opens exactly 43 records and shares the production completion boundary", () => {
+test("the real 88-second clinical operation opens exactly 43 records and shares the production completion boundary", () => {
   const definition = v100BattleDefinitionFor("stage-mugarian-clinical-trial-wing");
   const duration = definition.defenseEndAt - definition.prepSeconds;
-  assert.equal(duration, 100);
+  assert.equal(duration, 88);
   const state = {time:0,baseHp:920,baseMaxHp:920,fighters:[]};
   assert.equal(v100DefenseStatus(definition,state).openedRecords,0);
   for(let record=1;record<=43;record++) {
@@ -50,8 +50,8 @@ test("the real 100-second clinical operation opens exactly 43 records and shares
   }
 });
 
-test("V1 defense objectives reflect live contact and damage, preserve all four durations and exclude legacy operations", () => {
-  const durations=[90,85,95,100];
+test("V1 defense objectives reflect live contact and damage, use the shortened four durations and exclude legacy operations", () => {
+  const durations=[78,73,83,88];
   for(const [index,stageId] of Object.keys(V100_DEFENSE_OBJECTIVES).entries()) {
     const definition=v100BattleDefinitionFor(stageId);
     assert.equal(definition.defenseEndAt-definition.prepSeconds,durations[index]);
