@@ -1,0 +1,42 @@
+name: V1 Native Runtime Diagnostic
+
+on:
+  push:
+    branches:
+      - codex/v100-frame-baseline-20260914
+
+permissions:
+  contents: read
+
+jobs:
+  native-frame-baseline:
+    name: Diagnostic-only native WebKit frame baseline
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Run diagnostic-only frame baseline
+        run: node scripts/v100-native-frame-baseline.mjs
+      - name: Upload diagnostic-only artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-native-frame-baseline-diagnostic-only
+          path: outputs/v100-native-frame-baseline
+          if-no-files-found: warn
+          retention-days: 14
+
