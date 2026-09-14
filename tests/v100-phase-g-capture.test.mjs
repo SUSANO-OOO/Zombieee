@@ -23,6 +23,80 @@ const checkpointDeclaration = parsed.statements.find((node) => ts.isVariableStat
   && node.declarationList.declarations.some((entry) => entry.name.getText(parsed) === "BATTLE_EXTRA_CHECKPOINTS"));
 assert.ok(checkpointDeclaration, "actual checkpoint registry must exist");
 const registeredCheckpoints = Array.from(vm.runInNewContext(checkpointDeclaration.getText(parsed) + "\nBATTLE_EXTRA_CHECKPOINTS"));
+test("deployment pointer diagnostics are bounded, capture handler failures, and clean up both raw registrations", async () => {
+  const install = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "installDeploymentPointerReceipt");
+  const read = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "readDeploymentPointerReceipts");
+  const remove = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "removeDeploymentPointerReceipt");
+  const sourceText = [install, read, remove].map((node) => node?.getText(parsed) ?? "").join("\n");
+  assert.ok(sourceText.includes("MAX_RAW_EVENT_TRAIL = 64"));
+  assert.ok(sourceText.includes("MAX_HANDLER_EXCEPTIONS = 16"));
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) assert.ok(sourceText.includes(`\"${type}\"`));
+  for (const field of ["isTrusted", "clientX", "clientY", "activeElement", "visibilityState", "performanceNowMs", "documentIdentity", "currentElementFromPoint", "handlerExceptions"]) {
+    assert.ok(sourceText.includes(field), `diagnostic field missing: ${field}`);
+  }
+  assert.ok(sourceText.includes("throw error"), "receipt handler exceptions must still rethrow");
+  assert.equal(sourceText.includes("preventDefault"), false);
+  assert.equal(sourceText.includes("dispatchEvent"), false);
+  assert.equal(sourceText.includes("click()"), false);
+  assert.ok(read.getText(parsed).includes("diagnostics"), "diagnostics must travel with receipt reads");
+
+  class FakeElement {
+    constructor(name = "button") { this.nodeName = name.toUpperCase(); this.attrs = new Map(); this.id = ""; }
+    getAttribute(name) { return this.attrs.get(name) ?? null; }
+    closest(selector) { return selector === "button.unit-card" && this.attrs.get("data-kind") ? this : null; }
+    getBoundingClientRect() { return { width: 40, height: 40 }; }
+  }
+  const documentListeners = new Map();
+  const windowListeners = new Map();
+  const targetCard = new FakeElement("button");
+  targetCard.attrs.set("data-kind", "scout");
+  targetCard.attrs.set("data-slot-index", "1");
+  const document = {
+    documentElement: new FakeElement("html"),
+    activeElement: new FakeElement("button"),
+    visibilityState: "visible",
+    hidden: false,
+    hasFocus: () => true,
+    elementFromPoint: () => targetCard,
+    addEventListener: (type, handler) => documentListeners.set(type, [...(documentListeners.get(type) ?? []), handler]),
+    removeEventListener: (type, handler) => documentListeners.set(type, (documentListeners.get(type) ?? []).filter((entry) => entry !== handler)),
+  };
+  const window = {
+    addEventListener: (type, handler) => windowListeners.set(type, [...(windowListeners.get(type) ?? []), handler]),
+    removeEventListener: (type, handler) => windowListeners.set(type, (windowListeners.get(type) ?? []).filter((entry) => entry !== handler)),
+  };
+  const evaluate = async (callback, args) => vm.runInNewContext(`(${callback.toString()})(args)`, {
+    args, window, document, Element: FakeElement, performance: { now: () => 12 }, Math,
+  });
+  const installFn = vm.runInNewContext(`${install.getText(parsed)}\ninstallDeploymentPointerReceipt`, {});
+  const removeFn = vm.runInNewContext(`${remove.getText(parsed)}\nremoveDeploymentPointerReceipt`, {
+    observePromiseWithin: async (value) => ({ status: "fulfilled", value: await value }),
+    DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS: 100,
+  });
+  const readFn = vm.runInNewContext(`${read.getText(parsed)}\nreadDeploymentPointerReceipts`, {
+    observePromiseWithin: async (value) => ({ status: "fulfilled", value: await value }),
+  });
+  await installFn({ evaluate }, "attempt", { nodeId: "deployment-card-1", kind: "scout", slot: "1" });
+  const rawEvent = { type: "click", isTrusted: true, clientX: 10, clientY: 20, target: targetCard };
+  window.__ASHFALL_BATTLE_QA__ = { getPhaseGCombatSnapshot: () => ({ screen: "battle", running: true, paused: false, over: false, won: false, energy: 10, deployQueue: [], deployCooldowns: { scout: 0 } }) };
+  const receiptHandler = (documentListeners.get("click") ?? []).at(-1);
+  receiptHandler(rawEvent);
+  for (let index = 0; index < 70; index += 1) for (const handler of windowListeners.get("click") ?? []) handler(rawEvent);
+  const registry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__;
+  assert.equal(registry.get("attempt").rawEventTrail.length, 64);
+  assert.equal(registry.get("attempt").receipts.length, 1, "raw hooks must not alter existing receipts");
+  assert.equal(registry.get("attempt").rawEventTrail.at(-1).target.closestUnitCard.nodeIdentity, "deployment-card-4");
+  window.__ASHFALL_BATTLE_QA__ = { getPhaseGCombatSnapshot: () => { throw new Error("fixture snapshot failure"); } };
+  for (let index = 0; index < 20; index += 1) assert.throws(() => receiptHandler(rawEvent), /fixture snapshot failure/u);
+  assert.equal(registry.get("attempt").handlerExceptions.length, 16);
+  const originalDocumentIdentity = registry.get("attempt").diagnostics.before.documentElementIdentity;
+  document.documentElement = new FakeElement("html");
+  const receiptRead = await readFn({ evaluate, isClosed: () => false }, "attempt", 100);
+  assert.notEqual(receiptRead.diagnostics.after.documentElementIdentity, originalDocumentIdentity, "receipt read must observe replaced document identity");
+  await removeFn({ evaluate, isClosed: () => false }, "attempt");
+  assert.equal((windowListeners.get("click") ?? []).length, 0);
+  assert.equal((documentListeners.get("click") ?? []).length, 0);
+});
 test("canonical capture selection rejects empty filters and missing/foreign results independently of results.length", () => {
   const constants = ["requiredViewports", "extraBattleViewports", "MAXED_QA_UNIT_LEVELS", "extraBattleContracts", "coreStates"];
   const declarations = constants.map((name) => parsed.statements.find((node) => ts.isVariableStatement(node)

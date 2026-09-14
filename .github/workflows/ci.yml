@@ -239,6 +239,14 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Capture native WebKit Stage 3 battle music gate
+        env:
+          V100_BATTLE_MUSIC_CHECK: "1"
+          V100_BATTLE_IMPROVEMENT_STAGES: "3"
+          V100_BATTLE_IMPROVEMENT_ENGINE: webkit
+          V100_BATTLE_IMPROVEMENT_OUT: outputs/v100-native-music/webkit
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-battle-improvement-browser.mjs
+
       - name: Diagnose native pointer transport before production capture
         run: node scripts/native-pointer-browser-probe.mjs
 
@@ -266,6 +274,7 @@ jobs:
             docs/qa/v100/phase-g-screenshot-manifest.json
             outputs/native-pointer-probe
             outputs/v100-device-runtime
+            outputs/v100-native-music
           if-no-files-found: error
           retention-days: 14
 

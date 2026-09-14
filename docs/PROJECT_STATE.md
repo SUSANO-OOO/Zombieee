@@ -43,9 +43,9 @@
 - M6-3 [未完了] 公開SHA/匿名アクセス/素材/新旧save/更新復旧を確認し、完了記録・Issue close。
 
 ### 総合検証の最新記録
-現行remote候補は `9554955975b83a32d75e7c272d1590335e91d0c0`（8 commit・527 paths）で、このlocal treeには追加のCSS・scheduler・QA変更があるため同SHAの固定候補とは区別する。実測build `f61aeac924108f867d83c4ec49c07b7191094dd5c5dbedae10117da58b8675a3` は成功し、全1638 tests r3も成功、Lintは0 errors / 12 existing warnings。全体75%（18/24）、M5は1/4、M5-1/M5-3/M5-4とM6は未完了である。
+2026-09-14確認時点のremote候補は `4aa920292c4b5e3ca1adb29520a2812ef5c7f36d`。今回の追加は入力診断・Stage 3音楽検査・CI・記録で、app/publicは変更していない。成功済み製品build `f61aeac924108f867d83c4ec49c07b7191094dd5c5dbedae10117da58b8675a3` を使用し、全1639/1639 tests（outputs/completion/qa-gates-full-tests-r1.log）、対象Lint、差分検査に成功。製品の変更56ファイルは独立source reviewでHigh/Medium 0、親担当が全56 blobsを照合した。全体75%（18/24）、M5は1/4で、M5-1/M5-3/M5-4とM6は未完了。
 
-Chromiumのvehicle native validationは3 viewportで画像・stats・action・2 abilitiesを確認し、vehicle High指摘を閉じた。Phase Gのrequired viewportsは3つに戻り、diagnostic filterは除去、unused importも除去済み。性能はChromium 844x340でactual render 41.901Hz、median RAF 59.88fpsは通過したが、p95 RAF 33.4msは基準33msを超え、profiler診断でも原因は未特定である。remote CIは少なくとも5 jobsが2つの既知shared QA defectsで失敗しており、local修正を新CI成功とは扱わない。固定候補CI待ちで、総合受入は未完了である。
+同HEADのCI `34442928087` は24 jobs成功・Phase G 1件失敗（BROWSER_POINTER_RECEIPT_MISSING）。同HEADのmacOS WebKit PWA更新18/18・失敗復旧22/22は取得archiveの本体hashと両結果を照合済みだが、性能計測stepは未実行。今回のChromiumボス画面3サイズでは12出撃操作の各3 receipts・10 raw events、例外0、3画像hashを確認した。CI失敗の解消は未判定。音楽r3はLv1部隊の自然敗北（137秒）で撃破後の曲を確認できず、失敗記録を保存した。r4は音楽確認専用の初期4人Lv8・車両Lv2を通常操作し、114.883秒で勝利。221 mixer samplesで通常→既存ボス曲→ボス撃破後の曲、二重再生0・音声/通信エラー0を確認した（outputs/completion/music-native-root-readback-r4.json）。これはWindows Chromiumの証拠であり、Macの新音楽検査、物理端末・実speaker・難易度受入とは区別する。local p95 RAF 33.4msは基準33ms未達のまま、総合受入を継続する。
 
 保存済み候補の5 commit後差分検査は exit 2（48件・7対象）だったため、Kenney原License 3件を原bytes archive/provenance付きで保管し、空白・改行だけを正規化した。QA 4件もEOF空行だけを整理した。候補範囲525/525、runtime binary 294/294一致を独立照合済み。全体75%（18/24）、M5は1/4、M5-1/M5-3/M5-4は未完了。旧S27敗北記録は保持し、同一候補の通常UI再試行で全編確認を完了した。
 

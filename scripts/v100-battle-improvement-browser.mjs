@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
 const useCurrentWebKit=process.env.NEW_V100_NATIVE_CURRENT_WEBKIT==='1';
 const {chromium,webkit}=await import(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'playwright');
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
-import {V100_STAGE_IDS} from '../app/v100Registry.js';
+import {V100_INITIAL_UNIT_IDS,V100_STAGE_IDS,V100_VEHICLE} from '../app/v100Registry.js';
 import {normalTacticalInput,nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installMuzzleCanvasAudit} from './v100-muzzle-canvas-audit.mjs';
@@ -20,26 +23,72 @@ const includeMayo=process.env.V100_BATTLE_IMPROVEMENT_MAYO==='1';
 const manualFirearmCheck=process.env.V100_MANUAL_FIREARM_CHECK==='1';
 const guardianCheck=process.env.V100_GUARDIAN_CHECK==='1';
 const kumaGuardCheck=process.env.V100_KUMA_GUARD_CHECK==='1';
+const requiredMusic=['music-v100-score-normal','music-boss','music-v100-score-pressure'];
+function assertBattleMusicGate(result){
+ const samples=result.musicSamples;
+ assert.ok(Array.isArray(samples)&&samples.length>0,'Native music gate requires real mixer samples');
+ assert.ok(samples.every(s=>s?.audio&&Array.isArray(s.audio.activeBgm)&&typeof s.audio.contextState==='string'&&typeof s.audio.audioState==='string'&&typeof s.audio.unlocked==='boolean'&&Array.isArray(s.audio.duplicateLoopInstanceKeys)&&s.shellAudio&&typeof s.shellAudio.activeBgmVoices==='number'),'Native music gate rejects missing mixer or shell diagnostics');
+ assert.ok(samples.some(s=>s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-normal'&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&v.voiceGain>0)),'Normal music lacks running-context positive mixer evidence');
+ for(const sample of samples){assert.equal(sample.shellAudio.activeBgmVoices,0,'Preparation owner stops throughout battle');assert.deepEqual(sample.audio.duplicateLoopInstanceKeys,[]);}
+ if(result.number!==3)return;
+ const firstIndexes=requiredMusic.map(assetId=>samples.findIndex(s=>s.audio.activeBgm.some(v=>v.assetId===assetId)));
+ assert.ok(firstIndexes.every(index=>index>=0)&&firstIndexes.every((index,i)=>i===0||index>firstIndexes[i-1]),`Stage 3 BGM order is incomplete or out of order: ${JSON.stringify(firstIndexes)}`);
+ for(const assetId of requiredMusic){assert.ok(samples.some(s=>s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId===assetId&&v.voiceGain>0)),`${assetId} lacks running-context positive mixer evidence`);}
+ assert.ok(result.boss?.firstObservedTime!==undefined&&result.bossDefeatedAt!==undefined,'Stage 3 must observe boss arrival and natural defeat');
+ assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure')),'Pressure music must follow natural boss defeat');
+ assert.ok(result.finalRequestFailures&&Array.isArray(result.finalRequestFailures.events)&&result.finalRequestFailures.overflow===0,'Native music failure events must be present and structurally complete');
+ assert.deepEqual(result.finalRequestFailures.events,[],'Native music must not report audio failure events');
+ assert.ok(Array.isArray(result.networkRequestFailures),'Native music request failure collection is missing');
+ assert.deepEqual(result.networkRequestFailures,[],'Native music must not report failed network requests');
+}
+if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
+ const sample=(assetId,time)=>({time,audio:{activeBgm:[{assetId,voiceGain:1}],contextState:'running',audioState:'running',unlocked:true,duplicateLoopInstanceKeys:[]},shellAudio:{activeBgmVoices:0}});
+ const ownerFailureEvents=[];const ownerQa={getFailureEvents:()=>({events:ownerFailureEvents,overflow:0})};const retainedFailureGetter=ownerQa.getFailureEvents;ownerFailureEvents.push({assetId:'transient'});assert.deepEqual(retainedFailureGetter().events,[{assetId:'transient'}]);ownerFailureEvents.length=0;
+ const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
+ assert.doesNotThrow(()=>assertBattleMusicGate(valid));
+ for(const invalid of [
+  {...valid,musicSamples:valid.musicSamples.slice(0,2)},
+  {...valid,musicSamples:[sample('music-boss',2),sample('music-v100-score-normal',3),sample('music-v100-score-pressure',4)]},
+  {...valid,musicSamples:valid.musicSamples.map(s=>s===valid.musicSamples[1]?{...s,audio:{...s.audio,contextState:'suspended'}}:s)},
+  {...valid,musicSamples:valid.musicSamples.map(s=>s===valid.musicSamples[1]?{...s,audio:null}:s)},
+  {...valid,finalRequestFailures:null},
+  {...valid,finalRequestFailures:{events:[],overflow:1}},
+  {...valid,networkRequestFailures:[{url:'/audio.ogg'}]},
+  {...valid,bossDefeatedAt:5},
+ ])assert.throws(()=>assertBattleMusicGate(invalid));
+ console.log('v100 battle music gate negative fixtures passed');
+ process.exit(0);
+}
+await mkdir(dirname(out),{recursive:true});
 await mkdir(out,{recursive:false});
-const report={scope:'Isolated owned-roster stage fixtures, level 1. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',results:[]};
+const playwrightPackageUrl=new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/package.json':'../node_modules/playwright/package.json',import.meta.url);
+const playwrightPackage=JSON.parse(await readFile(playwrightPackageUrl,'utf8'));
+const report={scope:'Isolated owned-roster stage fixtures, level 1. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 alone uses the four existing base units at level 8 and vehicle upgrade level 2; other callers retain their existing fixture. MUSIC_CHECK BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
 const browser=await ({chromium,webkit}[engine]).launch({headless:true});
+report.provenance.browserVersion=await browser.version();
 try{for(const number of numbers){
  const viewport={width:844,height:340};
  const context=await browser.newContext({viewport,hasTouch:true,isMobile:true,recordVideo:{dir:out+'/videos',size:viewport}});
  const page=await context.newPage();page.setDefaultTimeout(15000);
- const result={number,status:'running',inputs:[],samples:[],errors:[],captures:[]};report.results.push(result);
+ const result={number,status:'running',fixture:null,inputs:[],samples:[],errors:[],networkRequestFailures:[],captures:[]};report.results.push(result);
  page.on('pageerror',e=>result.errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error')result.errors.push(m.text());});
  page.on('response',r=>{if(r.status()>=400)result.errors.push(r.status()+' '+r.url());});
+ page.on('requestfailed',r=>result.networkRequestFailures.push({url:r.url(),method:r.method(),failure:r.failure()?.errorText??null}));
  const screenshot=async name=>{await page.screenshot({path:`${out}/s${number}-${name}.png`});result.captures.push(name);};
  try{
   const base=createDefaultV100Save({playerName:'戦場改善確認'}),stageId=V100_STAGE_IDS[number-1];
+  const soundOnlyStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
   const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(number>=6?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
   const contactCheck=process.env.V100_CONTACT_CHECK==='1';
   if(!kumaGuardCheck&& (manualFirearmCheck||guardianCheck))for(const id of ['unit-gantetsu','unit-mizuchi','unit-raider'])if(!owned.includes(id))owned.push(id);
   if(contactCheck)owned.push('unit-tatara');
   const formation=kumaGuardCheck?['unit-kumaverson',null,null,null,null,null,null]:manualFirearmCheck||guardianCheck?['unit-gantetsu','unit-babayaga','unit-mizuchi','unit-raider',null,null,null]:contactCheck?['unit-paisen','unit-tatara','unit-kumaverson','unit-babayaga',null,null,null]:[...owned, ...Array(Math.max(0,7-owned.length)).fill(null)].slice(0,7);
-  const save=normalizeV100Save({...base,campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS.slice(0,number),completedStageIds:V100_STAGE_IDS.slice(0,number-1),ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:formation,
+  const unitLevels=soundOnlyStage3?Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,8])):base.unitLevels;
+  const vehicle=soundOnlyStage3?{...base.vehicle,upgradeLevel:2,maxHp:V100_VEHICLE.baseHp+2*V100_VEHICLE.hpPerUpgrade}:base.vehicle;
+  if(soundOnlyStage3)assert.deepEqual(owned,V100_INITIAL_UNIT_IDS,'Sound-only Stage 3 fixture must use exactly the four existing base units');
+  result.fixture={soundOnlyStage3,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
+  const save=normalizeV100Save({...base,campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS.slice(0,number),completedStageIds:V100_STAGE_IDS.slice(0,number-1),ownedUnitIds:owned,registeredUnitIds:owned,unitLevels,vehicle,formationSlots:formation,
    ...(number>=6?{ownedSupportIds:['support-healing'],equippedSupportId:'support-healing',supportPurchaseUnlockedIds:['support-healing']}:{}),
    flowState:{phase:'formation',stageId,stageNumber:number,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
   await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
@@ -54,6 +103,15 @@ try{for(const number of numbers){
   await play.or(start).first().waitFor();if(await play.isVisible())await play.click();
   await start.click();await page.locator('.game-shell canvas').waitFor();
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+  if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
+   result.musicFailureObserverInstalled=await page.evaluate(()=>{
+    const getter=window.__ASHFALL_AUDIO_QA__?.getFailureEvents;
+    if(typeof getter!=='function')return false;
+    window.__V100_MUSIC_FAILURE_OBSERVER__={getFailureEvents:getter};
+    return typeof window.__V100_MUSIC_FAILURE_OBSERVER__.getFailureEvents==='function';
+   });
+   assert.equal(result.musicFailureObserverInstalled,true,'Native music failure observer must retain the original QA getter');
+  }
   // The combat ref can start before React commits its deployment tray. Observe
   // the requested native control, using the existing setup timeout, before tap.
   if(process.env.V100_METAL_CHECK==='1'||kumaGuardCheck)await page.locator('button.unit-card[data-kind="kumaverson"]').waitFor({state:'visible'});
@@ -84,6 +142,7 @@ try{for(const number of numbers){
   while(Date.now()<deadline){
    last=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return s?{time:s.time,over:s.over,running:s.running,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,objective:s.objective,stageMission:s.stageMission,enemySpawn:s.enemySpawn,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,assignedLane:f.assignedLane,targetId:f.targetId,attack:f.attack,attackSequence:f.attackSequence,combatReady:f.combatReady,gateEntering:f.gateEntering}))}:null;});
    if(!last)break;
+   if(process.env.V100_BATTLE_MUSIC_CHECK==='1')result.lastReadableBattleSnapshot=last;
    if(guardianCheck){
     const guards=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__.getSnapshot();return s.fighters.filter(f=>f.kind==='guardian'&&f.hp>0&&f.manualAbility?.phase==='active').map(f=>({time:s.time,id:f.id,hp:f.hp,phase:f.manualAbility?.phase,activationId:f.manualAbility?.activationId,remaining:f.manualAbility.activeRemaining,pose:f.renderAudit?.spriteState,render:f.renderAudit,attack:f.attack,attackWindup:f.attackWindup,abilityWindup:f.abilityWindup,aiMoveDirection:f.aiMoveDirection,gateEntering:f.gateEntering,animationState:f.animationPresentation?.state}));});
     (result.guardSamples??=[]).push(...guards);
@@ -110,11 +169,12 @@ try{for(const number of numbers){
     // this fixture observes, instead of adding a fifth rear-line copy first.
     if(!last.fighters.some(f=>f.kind==='brute'&&f.hp>0)&&await nativeBattleTap(page,page.locator('button.unit-card[data-kind="brute"]')))result.inputs.push({time:last.time,action:'deploy',kind:'brute',reason:'native ground-impact observation'});
    }
-   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
-    const audio=await page.evaluate(()=>{const battle=window.__ASHFALL_AUDIO_QA__?.getDiagnostics(),shell=window.__V100_EVENT_AUDIO_QA__?.getDiagnostics();return{audio:battle?{activeBgm:battle.activeBgm,duplicateLoopInstanceKeys:battle.duplicateLoopInstanceKeys}:null,shellAudio:{activeBgmVoices:shell?.activeBgmVoices??0}};});
+  if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
+    const audio=await page.evaluate(()=>{const battle=window.__ASHFALL_AUDIO_QA__,shell=window.__V100_EVENT_AUDIO_QA__,diagnostics=battle?.getDiagnostics?.()??null,status=battle?.getAudioStatus?.()??null;return{audio:diagnostics?{activeBgm:diagnostics.activeBgm,duplicateLoopInstanceKeys:diagnostics.duplicateLoopInstanceKeys,contextState:diagnostics.contextState??status?.contextState??null,audioState:diagnostics.audioState??status?.state??null,unlocked:diagnostics.unlocked??null,activeBgmVoices:diagnostics.activeBgmVoices??0}:null,audioStatus:status,shellAudio:shell?.getDiagnostics?.()??null,cueRequests:battle?.getCueRequests?.()??[]};});
     (result.musicSamples??=[]).push({time:last.time,...audio});
    }
    const enemies=last.fighters.filter(f=>f.side==='zombie'&&f.hp>0);
+   if((number===3||number===5)&&result.boss&&!result.bossDefeatedAt&&!enemies.some(f=>f.kind===(number===3?'takuya':'gate-eater'))&&last.time>result.boss.firstObservedTime)result.bossDefeatedAt=last.time;
    if(includeMayo){
     const boss=enemies.find(f=>f.kind==='gate-eater'||f.kind==='takuya');
     for(const mayo of last.fighters.filter(f=>f.kind==='mayo-chan'&&f.hp>0)){
@@ -164,6 +224,11 @@ try{for(const number of numbers){
    await normalTacticalInput(page,result);await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
+  if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
+   await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').waitFor();
+   result.actualResult={won:await page.locator('[data-v100-surface="result-win"]').count()===1,loss:await page.locator('[data-v100-surface="result-lose"]').count()===1};
+  }
+  if(process.env.V100_BATTLE_MUSIC_CHECK==='1')result.finalRequestFailures=await page.evaluate(()=>window.__V100_MUSIC_FAILURE_OBSERVER__?.getFailureEvents?.()??null);
   if(process.env.V100_GUARDIAN_TRACE==='1')result.guardianTrace=await page.evaluate(()=>window.__V100_GUARDIAN_TRACE__);
   if(manualFirearmCheck){
    const {captures,...audit}=await page.evaluate(()=>window.__V100_MANUAL_FIREARM_QA__);result.manualFirearmAudit=audit;
@@ -237,14 +302,11 @@ try{for(const number of numbers){
    await writeFile(out+'/s'+number+'-muzzle-canvas.png',Buffer.from(image.split(',')[1],'base64'));
   }
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
-   const music=result.musicSamples.filter(s=>s.audio);
-   assert.ok(music.some(s=>s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-normal')),'Native combat plays approved normal music');
-   if(number===3)assert.ok(music.some(s=>s.audio.activeBgm.some(v=>v.assetId==='music-boss')),'Natural boss arrival preserves original boss music');
-   for(const s of music){assert.equal(s.shellAudio?.activeBgmVoices??0,0,'Preparation owner stops throughout battle');assert.deepEqual(s.audio.duplicateLoopInstanceKeys,[]);}
+   assertBattleMusicGate(result);
   }
   assert.ok(last?.over||await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').count(),'Battle must reach its natural result before bounded QA deadline');
   await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').waitFor();
-  result.won=await page.locator('[data-v100-surface="result-win"]').count()===1;
+  result.won=process.env.V100_BATTLE_MUSIC_CHECK==='1'?result.actualResult.won:await page.locator('[data-v100-surface="result-win"]').count()===1;
   await screenshot('result');
   if(number===3||number===5)assert.ok(result.boss,'Actual boss arrival must be observed');
   if(includeMayo)assert.ok(result.mayoFlankAttacks?.length,'Mayo must actually attack a living boss from an adjacent physical lane');

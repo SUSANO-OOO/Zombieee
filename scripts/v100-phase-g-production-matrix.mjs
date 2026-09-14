@@ -1207,9 +1207,77 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
     };
     const receiptRegistry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__ ??= new Map();
     const receipts = [];
+    const rawEventTrail = [];
+    const handlerExceptions = [];
+    const MAX_HANDLER_EXCEPTIONS = 16;
+    const MAX_RAW_EVENT_TRAIL = 64;
     const receiptStartedAt = performance.now();
+    const documentIdentityFor = () => {
+      nodeRegistry.documents ??= new WeakMap();
+      if (!nodeRegistry.documents.has(document)) nodeRegistry.documents.set(document, `document-${nodeRegistry.next++}`);
+      return nodeRegistry.documents.get(document);
+    };
+    const nodeDetails = (node) => node instanceof Element ? {
+      nodeName: node.nodeName,
+      id: node.id || null,
+      className: node.getAttribute("class"),
+      kind: node.getAttribute("data-kind"),
+      slot: node.getAttribute("data-slot-index"),
+      nodeIdentity: nodeIdFor(node),
+      closestUnitCard: node.closest("button.unit-card") ? {
+        nodeIdentity: nodeIdFor(node.closest("button.unit-card")),
+        kind: node.closest("button.unit-card").getAttribute("data-kind"),
+        slot: node.closest("button.unit-card").getAttribute("data-slot-index"),
+      } : null,
+    } : null;
+    const diagnosticSnapshot = (point = null) => {
+      const hitTarget = point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
+        ? document.elementFromPoint(Number(point.x), Number(point.y)) : null;
+      return {
+        documentIdentity: documentIdentityFor(),
+        documentElementIdentity: nodeDetails(document.documentElement)?.nodeIdentity ?? null,
+        hasFocus: document.hasFocus(),
+        hidden: document.hidden,
+        point: point ? { x: Number(point.x), y: Number(point.y) } : null,
+        currentElementFromPoint: nodeDetails(hitTarget),
+        activeElement: nodeDetails(document.activeElement),
+        visibilityState: document.visibilityState,
+        performanceNowMs: performance.now(),
+      };
+    };
+    const rawEventHandler = (event) => {
+      const entry = {
+        type: event.type,
+        listenerTarget: event.currentTarget === window ? "window" : "document",
+        isTrusted: event.isTrusted,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        target: nodeDetails(event.target),
+        activeElement: nodeDetails(document.activeElement),
+        visibilityState: document.visibilityState,
+        performanceNowMs: performance.now(),
+        documentIdentity: documentIdentityFor(),
+        documentElementIdentity: nodeDetails(document.documentElement)?.nodeIdentity ?? null,
+        hasFocus: document.hasFocus(),
+        hidden: document.hidden,
+      };
+      rawEventTrail.push(entry);
+      if (rawEventTrail.length > MAX_RAW_EVENT_TRAIL) rawEventTrail.splice(0, rawEventTrail.length - MAX_RAW_EVENT_TRAIL);
+    };
+    const captureHandlerException = (error, event) => {
+      if (handlerExceptions.length >= MAX_HANDLER_EXCEPTIONS) handlerExceptions.shift();
+      handlerExceptions.push({
+        type: event?.type ?? null,
+        name: error?.name ?? "Error",
+        message: String(error?.message ?? error),
+        stack: String(error?.stack ?? "").slice(0, 2_000),
+        performanceNowMs: performance.now(),
+        documentIdentity: documentIdentityFor(),
+      });
+    };
     const handler = (event) => {
-      const observedAtPerformanceMs = performance.now();
+      try {
+        const observedAtPerformanceMs = performance.now();
       const dispatchStartedAtPerformanceMs = receiptRegistry.get(receiptAttemptId)?.dispatchStartedAtPerformanceMs ?? null;
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest("button.unit-card") ?? null;
@@ -1249,7 +1317,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
       if (!Number.isFinite(numericCost)) reasons.push("cost-not-finite");
       if (!Number.isFinite(energy) || energy < numericCost) reasons.push("insufficient-energy");
       if (!Number.isFinite(cooldown) || cooldown !== 0) reasons.push("cooldown-not-zero");
-      receipts.push({
+        receipts.push({
         sequence: receipts.length + 1,
         attemptId: receiptAttemptId,
         elapsedMs: Math.round((observedAtPerformanceMs - receiptStartedAt) * 100) / 100,
@@ -1278,10 +1346,21 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
             slot: hitOwner.getAttribute("data-slot-index"),
           } : null,
         },
-      });
+        });
+      } catch (error) {
+        captureHandlerException(error, event);
+        throw error;
+      }
     };
+    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) window.addEventListener(type, rawEventHandler, true);
+    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) document.addEventListener(type, rawEventHandler, true);
     for (const type of ["pointerdown", "pointerup", "click"]) document.addEventListener(type, handler, true);
-    receiptRegistry.set(receiptAttemptId, { receipts, handler, dispatchStartedAtPerformanceMs: null });
+    receiptRegistry.set(receiptAttemptId, {
+      receipts, handler, rawEventHandler, rawEventTrail, handlerExceptions,
+      diagnosticSnapshot,
+      diagnostics: { rawEventTrail, handlerExceptions, before: diagnosticSnapshot(), after: null },
+      dispatchStartedAtPerformanceMs: null,
+    });
     return true;
   }, { receiptAttemptId: attemptId, identity: expectedIdentity });
 }
@@ -1290,27 +1369,37 @@ async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
   if (page.isClosed()) return { status: "page-closed", receipts: [] };
   if (timeoutMs <= 0) return { status: "timeout", timeoutMs: 0, receipts: [] };
   const result = await observePromiseWithin(page.evaluate((receiptAttemptId) => (
-    window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId)?.receipts ?? []
+    (() => {
+      const entry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId);
+      if (entry?.diagnostics) {
+        const point = entry.diagnostics.before?.point;
+        entry.diagnostics.after = entry.diagnosticSnapshot(point);
+      }
+      return { receipts: entry?.receipts ?? [], diagnostics: entry?.diagnostics ?? null };
+    })()
   ), attemptId), timeoutMs);
   return {
     ...result,
     value: undefined,
-    receipts: result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [],
+    receipts: result.status === "fulfilled" && Array.isArray(result.value?.receipts) ? result.value.receipts : [],
+    diagnostics: result.status === "fulfilled" ? result.value?.diagnostics ?? null : null,
   };
 }
 
 async function waitForDeploymentPointerReceipts(page, attemptId, deadlineAt) {
   const reads = [];
   let receipts = [];
+  let diagnostics = null;
   while (Date.now() < deadlineAt && !page.isClosed()) {
     const read = await readDeploymentPointerReceipts(page, attemptId, deadlineAt - Date.now());
     reads.push({ ...read, receiptCount: read.receipts.length });
     if (read.status === "fulfilled") receipts = read.receipts;
+    if (read.status === "fulfilled") diagnostics = read.diagnostics;
     if (receipts.length >= 3 && receipts.some((receipt) => receipt.type === "click")) break;
     if (read.status !== "fulfilled") break;
     await new Promise((resolve) => setTimeout(resolve, Math.min(8, Math.max(1, deadlineAt - Date.now()))));
   }
-  return { receipts, reads };
+  return { receipts, reads, diagnostics };
 }
 
 async function removeDeploymentPointerReceipt(page, attemptId) {
@@ -1319,6 +1408,10 @@ async function removeDeploymentPointerReceipt(page, attemptId) {
     const registry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__;
     const entry = registry?.get(receiptAttemptId);
     if (!entry) return;
+    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) {
+      window.removeEventListener(type, entry.rawEventHandler, true);
+      document.removeEventListener(type, entry.rawEventHandler, true);
+    }
     for (const type of ["pointerdown", "pointerup", "click"]) document.removeEventListener(type, entry.handler, true);
     registry.delete(receiptAttemptId);
   }, attemptId), DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS);
@@ -1677,7 +1770,7 @@ async function performVerifiedDeploymentPointer(page, {
           attemptId,
           dispatchStartedAt + DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS,
         )
-        : { receipts: [], reads: [] };
+        : { receipts: [], reads: [], diagnostics: null };
       const receipts = receiptResult.receipts;
       const receiptOutcome = deploymentPointerOutcome({
         dispatch,
@@ -1696,6 +1789,7 @@ async function performVerifiedDeploymentPointer(page, {
           point,
           dispatch,
           receipts,
+          pointerDiagnostics: receiptResult.diagnostics,
           receiptReads: receiptResult.reads,
           samples,
           before: terminalDiagnostics,
@@ -1735,6 +1829,7 @@ async function performVerifiedDeploymentPointer(page, {
         point,
         dispatch,
         receipts,
+        pointerDiagnostics: receiptResult.diagnostics,
         samples,
         before: terminalDiagnostics,
         after: acceptance.diagnostics,
@@ -3256,7 +3351,12 @@ async function readBattleDeploymentDiagnostics(page, {
     const objectiveText = [...document.querySelectorAll(
       ".battle-objective, [data-battle-objective], [aria-label*='目標' i]",
     )].map((element) => (element.textContent ?? "").trim()).filter(Boolean);
-    if (dispatchReceipt) dispatchReceipt.dispatchStartedAtPerformanceMs = performance.now();
+    if (dispatchReceipt) {
+      dispatchReceipt.dispatchStartedAtPerformanceMs = performance.now();
+      const diagnosticCard = cards.find((card) => card.kind === kind && String(card.slot) === String(slot)) ?? null;
+      const point = diagnosticCard?.center ?? null;
+      dispatchReceipt.diagnostics.before = dispatchReceipt.diagnosticSnapshot(point);
+    }
     return {
       capturedAt: new Date().toISOString(),
       pageClosed: false,
