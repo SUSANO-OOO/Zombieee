@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
+import vm from "node:vm";
 
 import {
   AIRSTRIKE_DEF,
@@ -1297,9 +1298,28 @@ test("browser QA helper propagates its selected local port into every wrapped sm
     "utf8",
   );
   const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  assert.match(helper, /reserveQaPort\(requestedPort\)/);
-  assert.match(helper, /refusing to reuse an unknown server/);
-  assert.match(helper, /const origin = `http:\/\/127\.0\.0\.1:\$\{port\}\/`/);
+  assert.doesNotMatch(helper, /reserveQaPort/);
+  assert.match(helper, /"--hostname",\s*"127\.0\.0\.1",\s*"--port",\s*String\(requestedPort\)/u);
+  assert.match(helper, /server\.once\("exit"/u);
+  assert.match(helper, /QA server exited before readiness/u);
+  assert.match(helper, /server\.signalCode/u);
+  assert.match(helper, /AbortSignal\.timeout\(Math\.max\(1, deadline - Date\.now\(\)\)\)/u);
+  assert.match(helper, /requestedPort > 0 && actualPort !== requestedPort/u);
+  const parseStart = helper.indexOf("function parseRequestedQaPort");
+  const parseEnd = helper.indexOf("const requestedPort", parseStart);
+  const parserApi = vm.runInNewContext(`${helper.slice(parseStart, parseEnd)}\n({ parseRequestedQaPort, parseVinextReadyLine, createVinextReadyLineParser })`);
+  assert.equal(parserApi.parseRequestedQaPort("0"), 0);
+  assert.equal(parserApi.parseRequestedQaPort("65535"), 65535);
+  for (const invalid of ["", "-1", "65536", "49307x"]) assert.throws(() => parserApi.parseRequestedQaPort(invalid));
+  const ready = [];
+  const errors = [];
+  const consume = parserApi.createVinextReadyLineParser({ onReady: (origin) => ready.push(origin), onError: (error) => errors.push(error) });
+  const line = "[vinext] Production server running at http://127.0.0.1:49307\n";
+  consume(line.slice(0, 21)); consume(line.slice(21));
+  assert.deepEqual(ready, ["http://127.0.0.1:49307/"]);
+  consume("[vinext] Production server running at http://0.0.0.0:49307\n");
+  consume("[vinext] Production server running at http://127.0.0.1:0\n");
+  assert.equal(errors.length, 2, "wrong host and invalid port must fail closed");
   assert.match(helper, /process\.env\.COMBAT_PRESENTATION_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.MOBILE_LIFECYCLE_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.SAVE_MIGRATION_QA_BASE_URL = origin/);

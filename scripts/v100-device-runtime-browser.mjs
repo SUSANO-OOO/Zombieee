@@ -213,6 +213,7 @@ const report = {
   measurement: { seconds: measurementMs / 1000, representative: true, uninterrupted: true },
   results: [],
 };
+await mkdir(path.dirname(evidenceDir), { recursive: true });
 await mkdir(evidenceDir, { recursive: false });
 const require = createRequire(import.meta.url);
 const playwrightModulePath = process.env.PLAYWRIGHT_MODULE_PATH
