@@ -28,8 +28,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install WebKit
+        id: install-browser
         run: npx playwright install --with-deps webkit
-      - name: Run diagnostic-only frame baseline
+      - name: Run diagnostic-only frame baseline (headless)
+        env:
+          V100_NATIVE_FRAME_BASELINE_HEADLESS: "1"
+          V100_NATIVE_FRAME_BASELINE_OUT: outputs/v100-native-frame-baseline/headless
+        run: node scripts/v100-native-frame-baseline.mjs
+      - name: Run diagnostic-only frame baseline (headed)
+        if: ${{ !cancelled() && steps.install-browser.outcome == 'success' }}
+        env:
+          V100_NATIVE_FRAME_BASELINE_HEADLESS: "0"
+          V100_NATIVE_FRAME_BASELINE_OUT: outputs/v100-native-frame-baseline/headed
         run: node scripts/v100-native-frame-baseline.mjs
       - name: Upload diagnostic-only artifact
         if: always()
@@ -39,4 +49,3 @@ jobs:
           path: outputs/v100-native-frame-baseline
           if-no-files-found: warn
           retention-days: 14
-

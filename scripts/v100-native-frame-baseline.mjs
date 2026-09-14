@@ -10,6 +10,9 @@ const outputPath = path.join(outputDirectory, "report.json");
 const sourcePath = path.resolve("scripts/v100-native-frame-baseline.mjs");
 const durationMs = 30_000;
 const sampleCap = 60_000;
+const configuredHeadless = process.env.V100_NATIVE_FRAME_BASELINE_HEADLESS ?? "1";
+if (!["0", "1"].includes(configuredHeadless)) throw new Error(`V100_NATIVE_FRAME_BASELINE_HEADLESS must be 1 or 0, got ${configuredHeadless}`);
+const headless = configuredHeadless === "1";
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const git = (args) => execFileSync("git", args, { encoding: "utf8" }).trim();
 const modulePath = process.env.PLAYWRIGHT_MODULE_PATH ? path.resolve(process.env.PLAYWRIGHT_MODULE_PATH) : path.resolve("node_modules/playwright/index.mjs");
@@ -25,6 +28,7 @@ const report = {
   source: { path: path.relative(process.cwd(), sourcePath).replaceAll("\\", "/"), sha256: sha256(await readFile(sourcePath)) },
   environment: { expectedNode: "22.13.0", expectedPlaywright: "1.56.1", expectedRunner: "macos-15-intel", node: process.version, platform: process.platform + "-" + process.arch, runnerOS: process.env.RUNNER_OS ?? null, runnerArch: process.env.RUNNER_ARCH ?? null, imageOS: process.env.ImageOS ?? null, head: git(["rev-parse", "HEAD"]), tree: git(["rev-parse", "HEAD^{tree}"]), parent: git(["rev-parse", "HEAD^"]) },
   playwright: { version: packageJson.version, expected: "1.56.1", matchesExpected: packageJson.version === "1.56.1" },
+  launchOptions: { headless },
   browser: null,
   page: null,
   phases: [],
@@ -49,8 +53,8 @@ let browser = null;
 let context = null;
 let page = null;
 try {
-  browser = await playwright.webkit.launch({ headless: true, timeout: 30_000 });
-  report.browser = { version: browser.version(), engine: "webkit" };
+  browser = await playwright.webkit.launch({ headless, timeout: 30_000 });
+  report.browser = { version: browser.version(), engine: "webkit", headless };
   context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true });
   page = await context.newPage();
   report.page = await page.evaluate(() => ({ userAgent: navigator.userAgent, devicePixelRatio: window.devicePixelRatio, viewport: { width: innerWidth, height: innerHeight } }));
