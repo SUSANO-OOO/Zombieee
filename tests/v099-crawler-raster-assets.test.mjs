@@ -134,7 +134,17 @@ test("v0.9.9.0 CRAWLER assets are deterministic project-local raster derivatives
     cwd: new URL("..", import.meta.url),
     stdio: "pipe",
   });
-  const provenance = JSON.parse(await readFile(new URL("../assets/source/v099/crawler/provenance.json", import.meta.url), "utf8"));
+  const provenancePath = new URL("../assets/source/v099/crawler/provenance.json", import.meta.url);
+  const provenanceBytes = await readFile(provenancePath);
+  assert.equal(provenanceBytes.includes(Buffer.from("\r\n")), false,
+    "generated crawler provenance must remain canonical LF text on every checkout");
+  const eolAttribute = execFileSync("git", ["check-attr", "eol", "--", "assets/source/v099/crawler/provenance.json"], {
+    cwd: new URL("..", import.meta.url),
+    encoding: "utf8",
+  });
+  assert.match(eolAttribute, /: eol: lf\r?\n$/u,
+    "crawler provenance checkout must be pinned to LF by .gitattributes");
+  const provenance = JSON.parse(provenanceBytes.toString("utf8"));
   assert.equal(provenance.version, "0.9.9.0");
   assert.equal(provenance.generator, "scripts/build-v099-crawler-assets.mjs");
   assert.equal(provenance.generatorRevision, 2);

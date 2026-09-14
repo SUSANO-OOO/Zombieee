@@ -19,8 +19,9 @@ export const STATION_MISSION_TUNING = freeze({
   seal: freeze({
     powerCount: 3,
     powerHoldSeconds: 6,
-    powerReadyAtSeconds: freeze([24, 62, 104]),
-    powerYs: freeze([212, 352, 282]),
+    powerReadyAtSeconds: freeze([24, 62, 104, 146]),
+    powerYs: freeze([212, 352, 282, 212]),
+    powerXs: freeze([410, 584, 744, 888]),
     escapeSeconds: 45,
     returnSpeedMultiplier: 1.8,
   }),
@@ -53,26 +54,46 @@ function escortConfig(config = {}) {
     durationSeconds: positive(config.durationSeconds, STATION_MISSION_TUNING.escort.durationSeconds),
     maxIntegrity: positive(config.maxIntegrity, STATION_MISSION_TUNING.escort.maxIntegrity),
     repairSeconds: positive(config.repairSeconds, STATION_MISSION_TUNING.escort.repairSeconds),
+    minimumEscortReadiness: clamp01(config.minimumEscortReadiness),
     startX: finiteNonNegative(config.startX, STATION_MISSION_TUNING.escort.startX),
     endX: finiteNonNegative(config.endX, STATION_MISSION_TUNING.escort.endX),
   });
 }
 
 function sealConfig(config = {}) {
-  const readyAt = Array.isArray(config.powerReadyAtSeconds) && config.powerReadyAtSeconds.length === 3
-    ? config.powerReadyAtSeconds.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerReadyAtSeconds[index]))
-    : [...STATION_MISSION_TUNING.seal.powerReadyAtSeconds];
-  const powerYs = Array.isArray(config.powerYs) && config.powerYs.length === 3
-    ? config.powerYs.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerYs[index]))
-    : [...STATION_MISSION_TUNING.seal.powerYs];
+  const requestedCount = Math.trunc(Number(config.powerCount));
+  const powerCount = Number.isFinite(requestedCount)
+    ? Math.max(1, Math.min(4, requestedCount))
+    : STATION_MISSION_TUNING.seal.powerCount;
+  const valuesFor = (source, fallback, mapper) => Array.from({ length: powerCount }, (_, index) => {
+    const sourceValue = Array.isArray(source) ? source[index] : undefined;
+    const fallbackValue = fallback[index] ?? fallback[fallback.length - 1] ?? 0;
+    return mapper(sourceValue, index, fallbackValue);
+  });
+  const readyAt = valuesFor(
+    config.powerReadyAtSeconds,
+    STATION_MISSION_TUNING.seal.powerReadyAtSeconds,
+    (value, index, fallback) => finiteNonNegative(value, fallback + Math.max(0, index - 3) * 42),
+  );
+  const powerYs = valuesFor(
+    config.powerYs,
+    STATION_MISSION_TUNING.seal.powerYs,
+    (value, _index, fallback) => finiteNonNegative(value, fallback),
+  );
   const powerLanes = powerYs.map((y) => INTERNAL_ROUTE_Y.reduce((nearest, routeY, index) => (
     Math.abs(y - routeY) < Math.abs(y - INTERNAL_ROUTE_Y[nearest]) ? index : nearest
   ), 0));
-  const powerXs = Array.isArray(config.powerXs) && config.powerXs.length === 3
-    ? config.powerXs.map((value, index) => finiteNonNegative(value, [410, 584, 744][index]))
-    : [410, 584, 744];
+  const powerXs = valuesFor(
+    config.powerXs,
+    STATION_MISSION_TUNING.seal.powerXs,
+    (value, _index, fallback) => finiteNonNegative(value, fallback),
+  );
   return freeze({
     ...STATION_MISSION_TUNING.seal,
+    requiresContainment: config.requiresContainment !== false,
+    powerCount,
+    powerLabel: config.powerLabel ?? "電源",
+    powerVerb: config.powerVerb ?? "起動",
     powerHoldSeconds: positive(config.powerHoldSeconds, STATION_MISSION_TUNING.seal.powerHoldSeconds),
     powerReadyAtSeconds: freeze(readyAt),
     powerYs: freeze(powerYs),
@@ -109,6 +130,10 @@ export function createStationMissionRuntime(missionType, config = {}) {
       missionType,
       powerActivated: 0,
       powerHold: 0,
+      powerOperating: false,
+      powerOperationStartedAt: null,
+      powerInterruptedAt: null,
+      powerCompletedAt: freeze([]),
       gateEaterSeen: false,
       gateEaterDefeated: false,
       gateEaterContained: false,
@@ -152,6 +177,11 @@ export function currentPowerNode(runtime, config = {}) {
     radiusY: resolved.powerRadiusY,
     readyAtSeconds: resolved.powerReadyAtSeconds[activated],
   });
+}
+
+export function stationPowerNodes(config = {}) {
+  const resolved = sealConfig(config);
+  return freeze(Array.from({ length: resolved.powerCount }, (_, index) => currentPowerNode({ powerActivated: index }, resolved)));
 }
 
 export function stationHumanMoveSpeed({
@@ -222,7 +252,7 @@ export function advanceStationMissionRuntime({
       repairRemaining = Math.max(0, repairRemaining - dt);
     }
     const stalled = escorts === 0 || threats > 0 || contaminationActive || repairRemaining > 0;
-    const escortReadiness = Math.min(1, .58 + Math.min(3, escorts) * .14);
+    const escortReadiness = Math.min(1, Math.max(resolved.minimumEscortReadiness, .58 + Math.min(3, escorts) * .14));
     const progress = current.completed
       ? 1
       : Math.min(1, clamp01(current.progress) + (stalled ? 0 : dt * escortReadiness / resolved.durationSeconds));
@@ -282,16 +312,20 @@ export function advanceStationMissionRuntime({
       && finiteNonNegative(battleElapsedSeconds) >= node.readyAtSeconds
       && operators > 0
       && Math.max(0, Math.trunc(Number(powerLaneThreats) || 0)) === 0;
+    const elapsed = finiteNonNegative(battleElapsedSeconds);
+    const powerCompletedAt = [...(current.powerCompletedAt ?? [])];
+    const powerOperationStartedAt = canHold && !current.powerOperating ? elapsed : current.powerOperationStartedAt;
+    const powerInterruptedAt = !canHold && current.powerOperating ? elapsed : current.powerInterruptedAt;
     powerHold = canHold ? powerHold + dt : Math.max(0, powerHold - dt * .5);
     if (node && powerHold >= resolved.powerHoldSeconds) {
+      powerCompletedAt[powerActivated] = elapsed;
       powerActivated += 1;
       powerHold = 0;
       transition = `power-${powerActivated}-activated`;
     }
 
     const containmentReady = powerActivated >= resolved.powerCount
-      && defeated
-      && researchContained;
+      && (!resolved.requiresContainment || (defeated && researchContained));
     const sealed = current.sealed === true
       || (containmentReady && wavesResolved === true);
     let escapeRemaining = current.escapeRemaining === null || current.escapeRemaining === undefined
@@ -348,6 +382,10 @@ export function advanceStationMissionRuntime({
       missionType,
       powerActivated,
       powerHold,
+      powerOperating: Boolean(canHold && transition === null),
+      powerOperationStartedAt,
+      powerInterruptedAt,
+      powerCompletedAt: freeze(powerCompletedAt),
       gateEaterSeen: seen,
       gateEaterDefeated: defeated,
       gateEaterContained: gateContained,
@@ -382,6 +420,14 @@ export function stationMissionObjective(runtime, config = {}) {
     const targetLabel = typeof config.targetLabel === "string" && config.targetLabel.trim()
       ? config.targetLabel.trim()
       : "保守台車";
+    if(config.convoyInterception === true) {
+      if(runtime.failed) return "冷蔵車列の確保に失敗";
+      if(runtime.completed) return "冷蔵車3台を停止・確保";
+      if(runtime.contaminated) return "漏泥の床汚染を排除";
+      if(runtime.repairRemaining>0) return `冷蔵車列の進路を復旧 ${Math.ceil(runtime.repairRemaining)}秒`;
+      if(runtime.stalled) return "冷蔵車列を守る残存部隊を排除";
+      return `冷蔵車3台を封鎖地点へ追い込む ${Math.floor(clamp01(runtime.progress)*100)}%`;
+    }
     if (runtime.failed) return `${targetLabel}を防衛できなかった`;
     if (runtime.completed) return `${targetLabel}を出口へ護送完了`;
     if (runtime.contaminated) return "漏泥の床汚染を排除";
@@ -401,11 +447,11 @@ export function stationMissionObjective(runtime, config = {}) {
     if (runtime.powerActivated < resolved.powerCount) {
       const node = currentPowerNode(runtime, resolved);
       const percent = Math.min(99, Math.floor(finiteNonNegative(runtime.powerHold) / resolved.powerHoldSeconds * 100));
-      return `電源${node?.number ?? runtime.powerActivated + 1}を起動 ${percent}%`;
+      return `${resolved.powerLabel}${node?.number ?? runtime.powerActivated + 1}を${resolved.powerVerb} ${percent}%`;
     }
-    if (!runtime.gateEaterDefeated) return "改札喰いを撃破";
-    if (!runtime.researchContainerExposed) return "研究容器を露出させろ";
-    if (!runtime.researchContainerContained) return "研究容器を封鎖扉の向こうへ押し込め";
+    if (resolved.requiresContainment && !runtime.gateEaterDefeated) return "改札喰いを撃破";
+    if (resolved.requiresContainment && !runtime.researchContainerExposed) return "研究容器を露出させろ";
+    if (resolved.requiresContainment && !runtime.researchContainerContained) return "研究容器を封鎖扉の向こうへ押し込め";
     if (!runtime.sealed) return "残存感染体を排除し退路を確保";
     return "退路へ全員帰還";
   }

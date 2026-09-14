@@ -1,0 +1,201 @@
+{
+  "generator": "scripts/build-takuya-battle-repaired-v2.py",
+  "source": {
+    "path": "public/takuya-boss-sprites-v2.png",
+    "sha256": "05278f4dc66456baaed8fc85f69bbe752b7b8aeebace8ac8b92610db270230ee",
+    "globalAlphaComponents": 21,
+    "assignment": {
+      "idle": [
+        1
+      ],
+      "walk-a": [
+        2
+      ],
+      "walk-b": [
+        3
+      ],
+      "attack-a": [
+        0
+      ],
+      "attack-b": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        5
+      ],
+      "hit": [
+        4
+      ]
+    },
+    "unassigned": [],
+    "duplicateAssignments": []
+  },
+  "output": {
+    "path": "public/art/v100/bosses/takuya-battle-repaired-v1.png",
+    "sha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419"
+  },
+  "geometry": {
+    "format": "nishijin-v100-takuya-repaired-motion-atlas",
+    "version": 1,
+    "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+    "cellWidth": 512,
+    "cellHeight": 757,
+    "columns": 6,
+    "sourceWidth": 362,
+    "sourceHeight": 724,
+    "sourceOffset": {
+      "x": 48,
+      "y": 16
+    },
+    "anchorX": 0.447265625,
+    "groundAnchorPixels": [
+      604,
+      609,
+      607,
+      606,
+      617,
+      608
+    ],
+    "states": [
+      "idle",
+      "walk-a",
+      "walk-b",
+      "attack-a",
+      "attack-b",
+      "hit"
+    ],
+    "visibleRects": [
+      [
+        91,
+        142,
+        433,
+        604
+      ],
+      [
+        102,
+        153,
+        415,
+        609
+      ],
+      [
+        95,
+        153,
+        417,
+        607
+      ],
+      [
+        106,
+        47,
+        482,
+        606
+      ],
+      [
+        75,
+        263,
+        406,
+        617
+      ],
+      [
+        43,
+        191,
+        378,
+        608
+      ]
+    ],
+    "sourceSha256": "05278f4dc66456baaed8fc85f69bbe752b7b8aeebace8ac8b92610db270230ee",
+    "atlasSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419"
+  },
+  "changes": {
+    "walk-a": {
+      "globalComponent": 2,
+      "bladePolygon": [
+        [
+          95,
+          483
+        ],
+        [
+          277,
+          381
+        ],
+        [
+          316,
+          443
+        ],
+        [
+          129,
+          550
+        ]
+      ],
+      "bladePixels": 15862,
+      "translationPx": [
+        20,
+        -5
+      ],
+      "handProtection": "exact source RGBA overwrite"
+    },
+    "hit": {
+      "globalComponent": 4,
+      "bladeSource": "walk-b global component 3 polygon",
+      "rotationDegreesClockwise": 8,
+      "sourceConnection": [
+        249,
+        413
+      ],
+      "targetConnection": [
+        205,
+        444
+      ],
+      "translationPx": [
+        -44,
+        31
+      ],
+      "handProtection": "exact source RGBA overwrite"
+    },
+    "idle": {
+      "globalComponent": 1
+    },
+    "walk-b": {
+      "globalComponent": 3
+    },
+    "attack-a": {
+      "globalComponent": 0
+    },
+    "attack-b": {
+      "globalComponent": 5,
+      "debrisComponents": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    }
+  },
+  "checks": {
+    "all21ComponentsAssignedExactlyOnce": true,
+    "sourceRGBAReusedForAssignedComponents": true,
+    "legacy35cePreserved": "outputs/completion/takuya-atlas-repaired-v1/rejected-35ce-candidate.png"
+  }
+}

@@ -45,6 +45,7 @@ test("Karamite begins an explicit windup only for a targetable same-lane enemy i
     remainingSeconds: STATION_ENEMY_TUNING.karamite.windupSeconds,
     targetId: "h",
     lane: 1,
+    direction: -1,
   });
   assert.equal(Object.isFrozen(started.runtime), true);
   assert.equal(

@@ -1,0 +1,32 @@
+{
+  "generator": "built-in image_gen",
+  "promptSet": "assets/source/v100/mission-completion/clinical-prompts.json",
+  "encoding": "Format conversion only. Atlas preserves every visible RGBA pixel; background quality92. No cropping, resizing or painting.",
+  "runtime": "app/v100ClinicalControl.js uses the real defense clock and complete source frames.",
+  "records": [
+    {
+      "source": "assets/source/v100/mission-completion/s22-clean-background-r1.png",
+      "sourceSha256": "188c3e87efab25606625a53a4adf38c4025298a3a60f8b7c05cb87ba99dc64de",
+      "output": "public/art/v100/stages/s22-clinical-clean-v1.webp",
+      "path": "/art/v100/stages/s22-clinical-clean-v1.webp",
+      "bytes": 384054,
+      "hash": "sha256-680b4f146b7d81d4514eb19b54752facee9e2f9a163c5a923de994a23934432a",
+      "width": 1672,
+      "height": 941,
+      "sourceHasAlpha": false,
+      "visibleRgbaLossless": false
+    },
+    {
+      "source": "assets/source/v100/mission-completion/s22-control-states-cutout-r5.png",
+      "sourceSha256": "3c67635b64e27cde5901195b4650712cbf98c0e8cccc81632224b44039a40bf7",
+      "output": "public/art/v100/mission-objects/clinical-control-states-v1.webp",
+      "path": "/art/v100/mission-objects/clinical-control-states-v1.webp",
+      "bytes": 674210,
+      "hash": "sha256-cdb6661eb9d35fe07ef2d9dceaadce27f4a4bddb86dd5b732ef427c75326731b",
+      "width": 2010,
+      "height": 782,
+      "sourceHasAlpha": true,
+      "visibleRgbaLossless": true
+    }
+  ]
+}

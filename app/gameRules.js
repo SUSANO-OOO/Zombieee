@@ -5,6 +5,7 @@ import {
 } from "./bossFoundation.js";
 import { enemySpawnClassFor } from "./content/enemyCatalog.js";
 import { UNIT_CONTENT, UNIT_CONTENT_BY_ID } from "./content/unitCatalog.js";
+import { V100_VEHICLE, v100SupportFor } from "./v100Registry.js";
 
 export const COMMAND_MAX = 150;
 export const COMMAND_INITIAL = 70;
@@ -87,6 +88,7 @@ export function advanceConvoyEvacuation({
  *   targetable: boolean,
  *   landingTriggered?: boolean,
  *   detonationTriggered?: boolean,
+ *   v100SupportId?: string | null,
  *   readyToLand?: boolean,
  *   remaining?: number | null,
  *   life?: number,
@@ -446,12 +448,15 @@ export function advanceBattlefieldSupplyCooldowns(cooldowns = {}, seconds = 0) {
   );
 }
 
-export function beginBattlefieldSupplyCooldown(cooldowns = {}, kind) {
+/** @param {Record<string, number>} cooldowns @param {string} kind @param {string | null} [v100SupportId] */
+export function beginBattlefieldSupplyCooldown(cooldowns = {}, kind, v100SupportId = undefined) {
   if (!(kind in BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS)) return { ...cooldowns };
+  const def = battlefieldSupplyDefinition(kind, v100SupportId);
+  if (!def) return { ...cooldowns };
   return {
     ...createBattlefieldSupplyCooldowns(),
     ...cooldowns,
-    [kind]: BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS[kind],
+    [kind]: v100SupportId === undefined ? BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS[kind] : v100SupportFor(v100SupportId).cooldownSeconds,
   };
 }
 
@@ -501,8 +506,16 @@ export function advanceEnemyBaseCollapse({ barricadeHp, elapsed = 0, seconds = 0
   return { active: true, elapsed: nextElapsed, complete: nextElapsed >= safeDuration };
 }
 
-function battlefieldSupplyDef(kind) {
-  return kind === "container" ? BATTLEFIELD_SUPPLY_DEFS.pod : BATTLEFIELD_SUPPLY_DEFS[kind];
+/** Undefined selects the legacy rules; null is an explicitly unequipped V1 slot.
+ * @param {string} kind @param {string | null} [v100SupportId]
+ */
+export function battlefieldSupplyDefinition(kind, v100SupportId = undefined) {
+  const legacy = kind === "container" ? BATTLEFIELD_SUPPLY_DEFS.pod : BATTLEFIELD_SUPPLY_DEFS[kind];
+  if (v100SupportId === undefined) return legacy;
+  const support = v100SupportFor(v100SupportId);
+  if (!support || kind !== (support.id === "support-healing" ? "medical" : "drum")) return null;
+  return { ...legacy, name: support.displayName, cost: support.battleCost,
+    ...(support.id === "support-explosive-drum" ? { burnSeconds: 0 } : {}) };
 }
 
 function worldYFor(object) {
@@ -543,6 +556,7 @@ function supplyStillPresent(supply) {
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
  *   kind?: string, supplyKind?: string, lane?: number, x: number, y?: number,
  *   cooldown?: number,
+ *   v100SupportId?: string | null,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
  *   forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  * }} input
@@ -550,11 +564,13 @@ function supplyStillPresent(supply) {
 export function battlefieldSupplyPlacementCheck({
   running, paused, over, scrap, kind, supplyKind, lane, x, y,
   cooldown = 0,
+  v100SupportId = undefined,
   supplies = [], objects = [], supports = [], forbiddenZones = [], laneCenters = LANE_Y,
 }) {
   const selectedKind = supplyKind ?? kind;
-  const def = battlefieldSupplyDef(selectedKind);
+  const def = battlefieldSupplyDefinition(selectedKind, v100SupportId);
   if (!def) return { ok: false, reason: "未対応の戦場物資です" };
+  if (v100SupportId !== undefined && !Number.isFinite(scrap)) return { ok: false, reason: "戦場資源が無効です" };
   if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
   if (over) return { ok: false, reason: "作戦終了後は配置できません" };
@@ -575,7 +591,7 @@ export function battlefieldSupplyPlacementCheck({
 
   const occupied = [...supplies, ...objects, ...supports].filter(supplyStillPresent);
   if (occupied.some((existing) => {
-    const existingDef = battlefieldSupplyDef(existing.kind);
+    const existingDef = battlefieldSupplyDefinition(existing.kind, existing.v100SupportId);
     const clearance = Math.max(def.placementClearance, existingDef?.placementClearance ?? FIELD_OBJECT_CLEARANCE);
     return battlefieldDistance(x, placementY, existing) < clearance;
   })) return { ok: false, reason: "既存物資に近すぎます" };
@@ -603,6 +619,7 @@ function createMedicalAreaEffect(supply, id) {
  * @param {{
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
  *   kind?: string, supplyKind?: string, lane?: number, x: number, y?: number,
+ *   cooldown?: number, v100SupportId?: string | null,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
  *   areaEffects?: RuleAreaEffect[], forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  *   nextId?: number, nextAreaEffectId?: number,
@@ -614,7 +631,7 @@ export function resolveBattlefieldSupplyPlacement(input) {
   const nextId = input.nextId ?? 0;
   const nextAreaEffectId = input.nextAreaEffectId ?? 0;
   const kind = input.supplyKind ?? input.kind;
-  const def = battlefieldSupplyDef(kind);
+  const def = battlefieldSupplyDefinition(kind, input.v100SupportId);
   const check = battlefieldSupplyPlacementCheck({ ...input, kind });
   if (!check.ok) return { ...check, scrap: input.scrap, supplies, areaEffects, nextId, nextAreaEffectId };
   const laneCenters = input.laneCenters ?? LANE_Y;
@@ -624,6 +641,7 @@ export function resolveBattlefieldSupplyPlacement(input) {
   const supply = {
     id: nextId,
     kind,
+    ...(input.v100SupportId === undefined ? {} : { v100SupportId: input.v100SupportId }),
     lane,
     x: input.x,
     y,
@@ -650,8 +668,8 @@ export function resolveBattlefieldSupplyPlacement(input) {
 
 /** @param {{supply: RuleSupply, fighters?: RuleFighter[], laneCenters?: readonly number[]}} input */
 export function resolveBattlefieldSupplyLanding({ supply, fighters = [], laneCenters = LANE_Y }) {
-  const def = battlefieldSupplyDef(supply?.kind);
-  if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping" || (!supply.readyToLand && supply.phaseTime > 0)) {
+  const def = battlefieldSupplyDefinition(supply?.kind, supply?.v100SupportId);
+  if (!def || !supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping" || (!supply.readyToLand && supply.phaseTime > 0)) {
     return { triggered: false, supply, fighters, hits: [] };
   }
   const hits = [];
@@ -672,7 +690,7 @@ export function resolveBattlefieldSupplyLanding({ supply, fighters = [], laneCen
 
 export function advanceBattlefieldSupply(supply, seconds) {
   const elapsed = Math.max(0, seconds);
-  const def = battlefieldSupplyDef(supply.kind);
+  const def = battlefieldSupplyDefinition(supply.kind, supply.v100SupportId);
   if (!def || elapsed === 0 || supply.phase === "expired") return supply;
   if (supply.phase === "dropping") {
     const phaseTime = Math.max(0, supply.phaseTime - elapsed);
@@ -715,7 +733,7 @@ export function advanceBattlefieldSupply(supply, seconds) {
 }
 
 export function applyBattlefieldSupplyDamage(supply, damage) {
-  const def = battlefieldSupplyDef(supply.kind);
+  const def = battlefieldSupplyDefinition(supply.kind, supply.v100SupportId);
   if (!def || !supply.targetable || supply.phase === "expired" || supply.phase === "destroying") {
     return { supply, detonationRequested: false };
   }
@@ -745,8 +763,8 @@ export function requestDrumDetonation(supply, reason = "manual") {
 
 /** @param {{supply: RuleSupply, fighters?: RuleFighter[], areaEffects?: RuleAreaEffect[], nextAreaEffectId?: number, laneCenters?: readonly number[]}} input */
 export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0, laneCenters = LANE_Y }) {
-  const def = BATTLEFIELD_SUPPLY_DEFS.drum;
-  if (!supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
+  const def = supply && battlefieldSupplyDefinition(supply.kind, supply.v100SupportId);
+  if (!def || !supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
     return { triggered: false, supply, fighters, hits: [], areaEffects, nextAreaEffectId };
   }
   const hits = [];
@@ -774,8 +792,8 @@ export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [],
     supply: { ...supply, hp: 0, phase: "destroying", phaseTime: def.destroySeconds, detonationTriggered: true, blocksEnemies: false, targetable: false },
     fighters: nextFighters,
     hits,
-    areaEffects: [...areaEffects, burn],
-    nextAreaEffectId: nextAreaEffectId + 1,
+    areaEffects: def.burnSeconds > 0 ? [...areaEffects, burn] : areaEffects,
+    nextAreaEffectId: nextAreaEffectId + (def.burnSeconds > 0 ? 1 : 0),
   };
 }
 
@@ -882,16 +900,26 @@ export function resolveFieldSupportPlacement({ running, paused, over, rage, cost
   return { ok: true, reason: "配置できます", rage: rage - cost, x: placedX };
 }
 
-export function createEmergencySupportRuntime() {
-  return { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false };
+export function vehicleAbilityDefinition(abilityId, v100 = false) {
+  if (v100) return V100_VEHICLE.abilities.find(ability => ability.id === abilityId);
+  return abilityId === "vehicle-airstrike"
+    ? { battleCost: AIRSTRIKE_DEF.gaugeCost, cooldownSeconds: 0 }
+    : { battleCost: 0, cooldownSeconds: CRAWLER_BARRAGE_DEF.cooldownSeconds };
+}
+
+export function createEmergencySupportRuntime(v100 = false) {
+  return { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false,
+    ...(v100 ? { v100: true, cooldownRemaining: 0 } : {}) };
 }
 
 export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
+  if (runtime.v100 && !Number.isFinite(supportGauge)) return { ok: false, reason: "支援ゲージが無効です" };
   if (!running) return { ok: false, reason: "作戦開始後に要請できます" };
   if (paused) return { ok: false, reason: "一時停止中は要請できません" };
   if (over) return { ok: false, reason: "作戦終了後は要請できません" };
   if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です" };
-  if (supportGauge < AIRSTRIKE_DEF.gaugeCost) return { ok: false, reason: "支援ゲージが不足しています" };
+  if ((runtime.cooldownRemaining ?? 0) > 0) return { ok: false, reason: `航空支援を再準備中です（${Math.ceil(runtime.cooldownRemaining)}秒）` };
+  if (supportGauge < vehicleAbilityDefinition("vehicle-airstrike", runtime.v100).battleCost) return { ok: false, reason: "支援ゲージが不足しています" };
   const internalLane = normalizedInternalLane(lane, y, laneCenters);
   const targetY = Number.isFinite(y) ? y : internalLane === null ? Number.NaN : laneCenters[internalLane];
   if (internalLane === null || !Number.isFinite(targetY) || !Number.isFinite(x)) {
@@ -909,8 +937,10 @@ export function requestAirstrike({ running, paused, over, supportGauge, lane, x,
   return {
     ok: true,
     reason: "航空支援を要請しました",
-    supportGauge: supportGauge - AIRSTRIKE_DEF.gaugeCost,
+    supportGauge: supportGauge - vehicleAbilityDefinition("vehicle-airstrike", runtime.v100).battleCost,
     runtime: {
+      ...runtime,
+      ...(runtime.v100 ? { cooldownRemaining: vehicleAbilityDefinition("vehicle-airstrike", true).cooldownSeconds } : {}),
       phase: "radio",
       phaseTime: AIRSTRIKE_DEF.radioSeconds,
       targetX: check.targetX,
@@ -926,7 +956,8 @@ function nextAirstrikePhase(runtime) {
   if (runtime.phase === "targeting") return { ...runtime, phase: "inbound", phaseTime: AIRSTRIKE_DEF.inboundSeconds };
   if (runtime.phase === "inbound") return { ...runtime, phase: "impact", phaseTime: AIRSTRIKE_DEF.impactSeconds, impactTriggered: false };
   if (runtime.phase === "impact") return { ...runtime, phase: "returning", phaseTime: AIRSTRIKE_DEF.returnSeconds };
-  return createEmergencySupportRuntime();
+  return { ...createEmergencySupportRuntime(runtime.v100),
+    ...(runtime.v100 ? { cooldownRemaining: runtime.cooldownRemaining } : {}) };
 }
 
 export function airstrikeObserverPose(runtime) {
@@ -944,6 +975,7 @@ export function airstrikeObserverPose(runtime) {
 export function advanceEmergencySupportRuntime(runtime, seconds) {
   let next = { ...runtime };
   let remaining = Math.max(0, seconds);
+  if (next.v100) next.cooldownRemaining = Math.max(0, (next.cooldownRemaining ?? 0) - remaining);
   const events = [];
   while (next.phase !== "idle" && remaining >= next.phaseTime) {
     remaining -= next.phaseTime;
@@ -977,23 +1009,27 @@ export function resolveAirstrikeImpact({ runtime, fighters = [], laneCenters = L
   return { triggered: true, runtime: { ...runtime, impactTriggered: true }, fighters: nextFighters, hits };
 }
 
-/** @param {number} [initialCharge] */
-export function createCrawlerAbilityRuntime(initialCharge = CRAWLER_BARRAGE_DEF.initialCharge) {
+/** @param {number} [initialCharge] @param {boolean} [v100] */
+export function createCrawlerAbilityRuntime(initialCharge = CRAWLER_BARRAGE_DEF.initialCharge, v100 = false) {
   const charge = Math.max(0, Math.min(1, initialCharge));
-  const cooldownRemaining = CRAWLER_BARRAGE_DEF.cooldownSeconds * (1 - charge);
+  const cooldownRemaining = vehicleAbilityDefinition("vehicle-barrage", v100).cooldownSeconds * (1 - charge);
   return cooldownRemaining === 0
-    ? { phase: "ready", phaseTime: 0, cooldownRemaining: 0, charge: 1, damageTriggered: false }
-    : { phase: "cooldown", phaseTime: cooldownRemaining, cooldownRemaining, charge, damageTriggered: false };
+    ? { phase: "ready", phaseTime: 0, cooldownRemaining: 0, charge: 1, damageTriggered: false, ...(v100 ? { v100: true } : {}) }
+    : { phase: "cooldown", phaseTime: cooldownRemaining, cooldownRemaining, charge, damageTriggered: false, ...(v100 ? { v100: true } : {}) };
 }
 
-export function requestCrawlerBarrage({ running, paused, over, runtime }) {
-  if (!running) return { ok: false, reason: "作戦開始後に使用できます", runtime };
-  if (paused) return { ok: false, reason: "一時停止中は使用できません", runtime };
-  if (over) return { ok: false, reason: "作戦終了後は使用できません", runtime };
-  if (runtime.phase !== "ready") return { ok: false, reason: "一斉掃射は再装填中です", runtime };
+export function requestCrawlerBarrage({ running, paused, over, runtime, supportGauge = 0 }) {
+  if (runtime.v100 && !Number.isFinite(supportGauge)) return { ok: false, reason: "支援ゲージが無効です", runtime, supportGauge };
+  if (!running) return { ok: false, reason: "作戦開始後に使用できます", runtime, supportGauge };
+  if (paused) return { ok: false, reason: "一時停止中は使用できません", runtime, supportGauge };
+  if (over) return { ok: false, reason: "作戦終了後は使用できません", runtime, supportGauge };
+  if (runtime.phase !== "ready") return { ok: false, reason: "一斉掃射は再装填中です", runtime, supportGauge };
+  const cost = vehicleAbilityDefinition("vehicle-barrage", runtime.v100).battleCost;
+  if (supportGauge < cost) return { ok: false, reason: "支援ゲージが不足しています", runtime, supportGauge };
   return {
     ok: true,
     reason: "火器を展開します",
+    supportGauge: supportGauge - cost,
     runtime: { ...runtime, phase: "deploying", phaseTime: CRAWLER_BARRAGE_DEF.deploySeconds, charge: 0, damageTriggered: false },
   };
 }
@@ -1001,7 +1037,7 @@ export function requestCrawlerBarrage({ running, paused, over, runtime }) {
 function nextCrawlerAbilityPhase(runtime) {
   if (runtime.phase === "deploying") return { ...runtime, phase: "firing", phaseTime: CRAWLER_BARRAGE_DEF.fireSeconds, damageTriggered: false };
   if (runtime.phase === "firing") return { ...runtime, phase: "recovering", phaseTime: CRAWLER_BARRAGE_DEF.recoverSeconds };
-  if (runtime.phase === "recovering") return createCrawlerAbilityRuntime(0);
+  if (runtime.phase === "recovering") return createCrawlerAbilityRuntime(0, runtime.v100);
   return runtime;
 }
 
@@ -1014,8 +1050,8 @@ export function advanceCrawlerAbilityRuntime(runtime, seconds) {
     const cooldownRemaining = Math.max(0, next.cooldownRemaining - consumed);
     remaining -= consumed;
     next = cooldownRemaining === 0
-      ? createCrawlerAbilityRuntime(1)
-      : { ...next, phaseTime: cooldownRemaining, cooldownRemaining, charge: 1 - cooldownRemaining / CRAWLER_BARRAGE_DEF.cooldownSeconds };
+      ? createCrawlerAbilityRuntime(1, next.v100)
+      : { ...next, phaseTime: cooldownRemaining, cooldownRemaining, charge: 1 - cooldownRemaining / vehicleAbilityDefinition("vehicle-barrage", next.v100).cooldownSeconds };
     if (next.phase === "ready") events.push("ready");
   }
   while (["deploying", "firing", "recovering"].includes(next.phase) && remaining >= next.phaseTime) {

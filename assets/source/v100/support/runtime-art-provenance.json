@@ -1,0 +1,27 @@
+{
+  "generator": "image_gen",
+  "adaptation": "Resize and WebP encoding only; original alpha retained",
+  "files": [
+    {
+      "source": "assets/source/v100/support/medical-station-r1.png",
+      "runtime": "public/art/v100/support/medical-station-r1.webp",
+      "sourceSha256": "bb86ef63045caba222aa3cc7f58b6b5d1093afafce29c58a4c6dc8342eebc924",
+      "sha256": "7604849fb1e8fb278432aa7f1e2f9782963bc16c58594e2fa2876c6da450ff00",
+      "bytes": 34414
+    },
+    {
+      "source": "assets/source/v100/support/incendiary-drum-r1.png",
+      "runtime": "public/art/v100/support/incendiary-drum-r1.webp",
+      "sourceSha256": "4f685f3a36a2f12f9bd9779712af84630d98dfc2a1e91ebcd6d22f509cbeb3cd",
+      "sha256": "1269796f7ff379fd856d8e2ad8e89c02c2a4a4aacfecef0aeafde10d1db22871",
+      "bytes": 45714
+    },
+    {
+      "source": "assets/source/v100/equipment/inventory-atlas-r1.png",
+      "runtime": "public/art/v100/equipment/inventory-atlas-r1.webp",
+      "sourceSha256": "baa45752aad16c0b485a1d11339adb0962913303f4ed19d6f7b506c29c459c83",
+      "sha256": "a426198839b80b54d42923e6e0a9d1e4e719611c84524fa2e81ff6c6753ce766",
+      "bytes": 497206
+    }
+  ]
+}

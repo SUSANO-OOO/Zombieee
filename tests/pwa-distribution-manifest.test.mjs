@@ -195,9 +195,15 @@ test("every stage background reachable from the campaign is in the pack", async 
 });
 
 test("the full install contains one preferred playable source for every audio cue", async () => {
-  const { PRODUCTION_AUDIO_MANIFEST } = await import("../app/productionAudio.js");
+  const { PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST, INSTALL_AUDIO_ASSETS } = await import("../app/productionAudio.js");
   const audioAssets = manifest.assets.filter((asset) => asset.category === "audio");
   const byId = new Map(audioAssets.map((asset) => [asset.audioId, asset]));
+  assert.equal(byId.size, audioAssets.length, "Physical inventory IDs must be unique");
+  assert.equal(new Set(INSTALL_AUDIO_ASSETS.map(asset => asset.id)).size, INSTALL_AUDIO_ASSETS.length);
+  for (const cue of V100_AUDIO_MANIFEST.assets) {
+    const preferred = selectPreferredAudioSource(cue.sources);
+    assert.ok(audioAssets.some(asset => asset.path === preferred.src), `V1 cue ${cue.id} is unavailable offline`);
+  }
   for (const audioAsset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
     const preferred = selectPreferredAudioSource(audioAsset.sources);
     const shipped = byId.get(audioAsset.id);
@@ -229,7 +235,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 250);
+  assert.equal(bundled.length, 278);
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));

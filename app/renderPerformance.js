@@ -131,15 +131,22 @@ export function advanceRuntimeFrameSchedule(schedule, nowMs, profile) {
   runtime.renderAccumulatorMs = Math.max(
     0,
     Number.isFinite(previousRenderAccumulator) ? previousRenderAccumulator : 0,
-  ) + Math.min(renderIntervalMs, rawElapsedSeconds * 1000);
+  ) + rawElapsedSeconds * 1000;
   const firstRender = runtime.lastRenderAtMs === null;
   const shouldRender = firstRender
     || runtime.renderAccumulatorMs + 1e-6 >= renderIntervalMs;
   if (shouldRender) {
     runtime.lastRenderAtMs = now;
-    runtime.renderAccumulatorMs = firstRender
-      ? 0
-      : Math.max(0, runtime.renderAccumulatorMs - renderIntervalMs);
+    if (firstRender) {
+      runtime.renderAccumulatorMs = 0;
+    } else {
+      // Preserve at most one missed interval while emitting one draw per RAF.
+      // Clamping the carry prevents a long gap from creating unbounded render debt.
+      runtime.renderAccumulatorMs = Math.min(
+        renderIntervalMs,
+        Math.max(0, runtime.renderAccumulatorMs - renderIntervalMs),
+      );
+    }
   }
   return {
     simulationStepCount,

@@ -6,6 +6,10 @@ import {
   stationMissionObjective,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
+import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
+import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
+import { v100DefenseStatus } from "./v100DefenseObjectives.js";
+import { v100CorporateControlLabel } from "./v100CorporateControl.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -79,7 +83,11 @@ function operationPhaseSchedule(stage) {
   return schedule;
 }
 
-export function createBattleDefinition(stageId) {
+export function createBattleDefinition(stageId, { v100 = false } = {}) {
+  if (v100) {
+    const v100Definition = v100BattleDefinitionFor(stageId);
+    if (v100Definition) return v100Definition;
+  }
   const outbreakMission = OUTBREAK_MISSION_BY_ID[stageId] ?? null;
   const stage = CAMPAIGN_STAGE_BY_ID[stageId] ?? outbreakMission;
   if (!stage) throw new RangeError(`Unknown campaign stage: ${String(stageId)}`);
@@ -136,6 +144,11 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  const control=v100CorporateControlLabel(definition);
+  if(control)return state.barricadeHp<=0?"残る警備部隊を掃討":state.barricadeVulnerable?`${control}を破壊`:"異常個体を撃破して制御盤の防護を解除";
+  if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
+  const defense = v100DefenseStatus(definition, state);
+  if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
@@ -161,6 +174,10 @@ export function objectiveForBattle(definition, state) {
 
 export function battleOutcomeFor(definition, state) {
   if (state.baseHp <= 0) return "lost";
+  if (definition.missionConfig?.v100StageNumber === 29) {
+    return researchCoreComplete(state.researchCoreTargets) && state.wavesResolved === true ? "won" : null;
+  }
+  if ([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) && state.wavesResolved !== true) return null;
   if (definition.operationCategory === "outbreak") {
     if (state.bossDefeated !== true) return null;
     const livingEnemies = Array.isArray(state.fighters)
@@ -185,6 +202,10 @@ export function battleOutcomeFor(definition, state) {
     : definition.baseMaxHp;
   const clearRatio = definition.starThresholds?.[1] ?? 0;
   const hasClearHp = Number(state.baseHp) / baseMaxHp >= clearRatio;
+  if (definition.missionConfig?.v100StageNumber === 30) {
+    if (state.bossDefeated !== true || state.bossDefeatPending === true || state.barricadeVulnerable !== true) return null;
+    return hasClearHp ? "won" : "lost";
+  }
   if (definition.missionType === "timed-defense") {
     if (state.time < definition.defenseEndAt) return null;
     return hasClearHp ? "won" : "lost";

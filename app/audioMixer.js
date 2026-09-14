@@ -117,6 +117,7 @@ export class AudioMixer {
     maxWarningsTotal = 12,
     maxWarningsPerKey = 1,
     closeContextOnDispose = true,
+    enableAcknowledgementTone = true,
     gestureDedupeMs = 750,
     maxPreloadConcurrency = 4,
     unlockTimeoutMs = 2000,
@@ -134,6 +135,7 @@ export class AudioMixer {
     this.maxWarningsTotal = Math.max(0, Math.floor(maxWarningsTotal));
     this.maxWarningsPerKey = Math.max(0, Math.floor(maxWarningsPerKey));
     this.closeContextOnDispose = closeContextOnDispose;
+    this.enableAcknowledgementTone = enableAcknowledgementTone;
     this.gestureDedupeMs = Math.max(0, Number.isFinite(gestureDedupeMs) ? gestureDedupeMs : 750);
     this.maxPreloadConcurrency = Math.max(1, Math.min(16, Math.floor(
       Number.isFinite(maxPreloadConcurrency) ? maxPreloadConcurrency : 4,
@@ -167,6 +169,7 @@ export class AudioMixer {
     this.unlockTarget = null;
     this.lifecycleCleanup = null;
     this.lifecycleHidden = false;
+    this.navigationPending = false;
     this.lifecycleGeneration = 0;
     this.contextStateCleanup = null;
     this.unlockPromise = null;
@@ -324,8 +327,32 @@ export class AudioMixer {
       void Promise.resolve(context.suspend()).catch(() => undefined);
     };
     const onPageShow = () => {
+      clearNavigationPending();
       this.lifecycleHidden = readHidden();
       recover("pageshow");
+    };
+    // WebKit can reject new fetches between beforeunload and pagehide even
+    // though visibilityState is still visible. This listener never prompts.
+    const onReturnInput = () => {
+      if (!this.navigationPending || readHidden()) return;
+      clearNavigationPending();
+      // A real new input in the same document means a pending navigation was
+      // cancelled. Existing playback was not stopped; retry a deferred scene.
+      const desired = this.desiredScene;
+      if (desired) void this.setScene(desired.sceneId, desired.options).catch((error) => {
+        this.#warn("scene-after-navigation-cancel", "The pending audio scene could not resume after navigation cancellation.", error);
+      });
+      recover("navigation-cancelled-input");
+    };
+    const clearNavigationPending = () => {
+      this.navigationPending = false;
+      windowTarget?.removeEventListener?.("pointerdown", onReturnInput, { capture: true });
+      windowTarget?.removeEventListener?.("keydown", onReturnInput, { capture: true });
+    };
+    const onBeforeUnload = () => {
+      this.navigationPending = true;
+      windowTarget?.addEventListener?.("pointerdown", onReturnInput, { capture: true, passive: true });
+      windowTarget?.addEventListener?.("keydown", onReturnInput, { capture: true, passive: true });
     };
     const onPageHide = () => {
       markHidden();
@@ -347,13 +374,18 @@ export class AudioMixer {
       this.lifecycleHidden = false;
     }
     windowTarget?.addEventListener?.("pagehide", onPageHide, { capture: true, passive: true });
+    windowTarget?.addEventListener?.("beforeunload", onBeforeUnload, { capture: true, passive: true });
     windowTarget?.addEventListener?.("pageshow", onPageShow, { capture: true, passive: true });
     documentTarget?.addEventListener?.("visibilitychange", onVisibilityChange, { capture: true, passive: true });
     const cleanup = () => {
       if (!active) return;
       active = false;
       this.lifecycleHidden = false;
+      this.navigationPending = false;
       windowTarget?.removeEventListener?.("pagehide", onPageHide, { capture: true });
+      windowTarget?.removeEventListener?.("beforeunload", onBeforeUnload, { capture: true });
+      windowTarget?.removeEventListener?.("pointerdown", onReturnInput, { capture: true });
+      windowTarget?.removeEventListener?.("keydown", onReturnInput, { capture: true });
       windowTarget?.removeEventListener?.("pageshow", onPageShow, { capture: true });
       documentTarget?.removeEventListener?.("visibilitychange", onVisibilityChange, { capture: true });
       if (this.lifecycleCleanup === cleanup) this.lifecycleCleanup = null;
@@ -504,9 +536,9 @@ export class AudioMixer {
         if (this.context.state !== "running") throw new Error(`AudioContext remained ${String(this.context.state)}`);
         this.unlockCleanup?.();
         const pendingScene = this.pendingScene;
-        // This oscillator starts synchronously on the resumed production graph,
-        // providing an audible enable acknowledgement without another context.
-        if (!this.playTestTone({ respectSettings: false })) {
+        // Callers that expose an audio-test control can request a synchronous
+        // acknowledgement on this graph. Menu owners use their authored SFX.
+        if (this.enableAcknowledgementTone && !this.playTestTone({ respectSettings: false })) {
           throw new Error("The audio confirmation tone could not start");
         }
         this.pendingScene = null;
@@ -739,6 +771,7 @@ export class AudioMixer {
   }
 
   async #fetchAsset(assetId) {
+    if (this.disposed || this.lifecycleHidden || this.navigationPending) return null;
     const asset = this.manifest.assetById[assetId];
     if (!asset) {
       this.#warn(`unknown-asset:${String(assetId)}`, `Unknown audio asset ${String(assetId)} was ignored.`);
@@ -790,6 +823,14 @@ export class AudioMixer {
           entry.status = "fetched";
           return entry;
         } catch (error) {
+          // A navigation/background interruption is not a broken audio format.
+          // Do not start the next format from a hidden or disposed document;
+          // keep this source retryable when the player returns.
+          if (this.disposed || this.lifecycleHidden || this.navigationPending) {
+            entry.status = "idle";
+            entry.nextSourceIndex = sourceIndex;
+            return null;
+          }
           lastError = error;
         } finally {
           if (timeoutId !== null) globalThis.clearTimeout(timeoutId);

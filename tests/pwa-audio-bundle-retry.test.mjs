@@ -148,3 +148,46 @@ test("concurrent retry callers join one retry round and never duplicate the bund
   assert.equal(right.state, "complete");
   assert.equal(requests.length, 2, "one initial and one shared retry request");
 });
+
+for (const delayedThirdCacheLookup of [false, true]) {
+  test(`three failed bundle requests expose ${delayedThirdCacheLookup ? 2 : 3} failed slices when cache lookups ${delayedThirdCacheLookup ? "are staggered" : "finish together"}`, async () => {
+    let releaseFourth;
+    const fourthRequest = new Promise((resolve) => { releaseFourth = resolve; });
+    let requests = 0;
+    const assets = Array.from({ length: 6 }, (_, index) => ({
+      ...audioAssets()[0], path: `/audio/${index}.mp3`, hash: hashOf(index + 1),
+    }));
+    const fetcher = createAssetFetcher({
+      baseUrl: "https://example.test/Zombieee/",
+      fetchImpl: async (_url, { signal }) => {
+        requests += 1;
+        if (requests <= 3) return response(new Uint8Array(), { status: 503 });
+        releaseFourth();
+        return new Promise((_, reject) => signal.addEventListener("abort", () => {
+          reject(Object.assign(new Error("cancelled by the session"), { name: "AbortError" }));
+        }, { once: true }));
+      },
+    });
+    const session = createAssetDownloadSession({
+      assets, fetchAsset: fetcher, concurrency: 3, maxAttempts: 3,
+      store: {
+        has: async (asset) => {
+          if (delayedThirdCacheLookup && asset.path === assets[2].path) await fourthRequest;
+          return false;
+        },
+        put: async () => assert.fail("no unsuccessful bundle may enter the asset cache"),
+      },
+    });
+    const running = session.start();
+    await fourthRequest;
+    await new Promise((resolve) => setImmediate(resolve));
+    const incident = session.getSnapshot();
+    assert.equal(requests, 4, "three 503 responses followed by one shared held request");
+    assert.equal(incident.failedCount, delayedThirdCacheLookup ? 2 : 3);
+    assert.equal(incident.completedCount, 0);
+    assert.ok(incident.failures.every((failure) => failure.reason === "http"
+      && failure.status === 503 && failure.attempts === 3));
+    session.cancel();
+    assert.equal((await running).state, "cancelled");
+  });
+}
