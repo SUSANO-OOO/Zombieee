@@ -24,9 +24,23 @@ export async function normalTacticalInput(page,record){
   // exists; only fall back to the cheaper ranged card when it is unavailable.
   const ranged=available(['babayaga','ranger','kumaverson']);
   const secondaryRanged=available(['babayaga','ranger','kumaverson'].filter(kind=>kind!==ranged));
+  // The earned early-campaign route needs a medic before spending command on
+  // the precision unit. Stage 11 lost with the late-game priority while the
+  // same levels and formation had won with this role order in earlier runs.
+  // Keep the precision-first profile for the later stages it was added for.
+  const earlyCampaign = Number.isInteger(record.number) && record.number <= 26;
+  const earlyRanged = available(['ranger','kumaverson']);
+  const earlyPriorities = front && count(front)===0 ? [front]
+    : healer && count(healer)===0 ? [healer]
+      : count('babayaga')+count(earlyRanged)===0 ? ['babayaga',earlyRanged].filter(Boolean)
+        : front && count(front)<target[front] ? [front]
+          : healer && count(healer)<Math.min(2,target[healer]) ? [healer]
+            : count('babayaga')<(target.babayaga??0) ? ['babayaga']
+              : earlyRanged && count(earlyRanged)<target[earlyRanged] ? [earlyRanged]
+                : kinds;
   // Select exactly one unmet role per call. This keeps an unavailable preferred
   // card reserved instead of spending its command on a cheaper fallback.
-  const priorities = front && count(front)<1 ? [front]
+  const latePriorities = front && count(front)<1 ? [front]
     : ranged && count(ranged)<1 ? [ranged]
       : healer && count(healer)<1 ? [healer]
         : secondaryRanged && count(secondaryRanged)<1 ? [secondaryRanged]
@@ -35,6 +49,8 @@ export async function normalTacticalInput(page,record){
               : secondaryRanged && count(secondaryRanged)<target[secondaryRanged] ? [secondaryRanged]
                 : healer && count(healer)<target[healer] ? [healer]
                   : kinds.find(kind=>count(kind)<target[kind]) ? [kinds.find(kind=>count(kind)<target[kind])]:[];
+  const priorities = earlyCampaign ? earlyPriorities : latePriorities;
+  record.tacticalProfile ??= earlyCampaign ? 'early-roles' : 'late-precision';
   for(const kind of priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
     const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
