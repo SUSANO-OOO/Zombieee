@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
-import {chromium,webkit} from 'playwright';
+import {chromium} from 'playwright';
+import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {exportV100BrowserSave,importV100BrowserSave} from '../app/v100CampaignStorage.js';
 import {V100_PRIMARY_STORAGE_KEY} from '../app/v100Save.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
@@ -47,7 +48,10 @@ async function restore(page,content){
  await page.waitForFunction(({key,before})=>JSON.parse(localStorage.getItem(key)).revision>before,{key:V100_PRIMARY_STORAGE_KEY,before});
  await ready(page);await page.locator('.v100-map-layout').waitFor();
 }
-for(const [engine,type]of Object.entries({chromium,webkit})){
+const engines=(process.env.V100_EARNED_SAVE_ENGINES??'chromium,webkit').split(',');
+assert.ok(engines.length>0&&engines.every(engine=>engine==='chromium'||engine==='webkit'));
+for(const engine of engines){
+ const type=engine==='webkit'?await pwaBrowserType('webkit'):chromium;
  const browser=await type.launch({headless:true}),context=await browser.newContext({viewport:{width:844,height:340},isMobile:true,hasTouch:true,acceptDownloads:true});
  const record={engine,status:'running',errors:[],navigationAborts:[],teardownAborts:[]};report.cases.push(record);
  let navigation=false,teardown=false,page;

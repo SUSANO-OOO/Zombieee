@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { chromium, webkit } from "playwright";
+import { chromium } from "playwright";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { createDefaultV100Save, serializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createDefaultCampaignSave, computeCampaignSaveIntegrity } from "../app/campaign.js";
@@ -132,6 +133,23 @@ async function withCase(browser, engine, viewport, name, fixture, run) {
     assert.deepEqual(record.errors, []); record.status = "passed";
   } catch (error) {
     record.status = "failed"; record.error = String(error);
+    record.failureState = await page.evaluate(() => {
+      const shell = document.querySelector(".v100-shell");
+      const button = shell?.querySelector(".v100-secondary-data");
+      const rect = button?.getBoundingClientRect();
+      const hit = rect ? document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
+      return {
+        phase: shell?.getAttribute("data-v100-phase"),
+        surface: shell?.getAttribute("data-v100-surface"),
+        pwaScreen: document.documentElement.dataset.pwaScreen,
+        savePending: document.documentElement.dataset.pwaSaveMutationPending,
+        buttonConnected: button?.isConnected ?? false,
+        buttonHit: hit?.tagName ?? null,
+        buttonHitText: hit?.textContent?.trim().slice(0, 80) ?? null,
+        dataDialogs: document.querySelectorAll('[role="dialog"][aria-labelledby="v100-data-title"]').length,
+        reactEventKeys: button ? Object.keys(button).filter(key => key.startsWith("__react")).length : 0,
+      };
+    }).catch(reason => ({ error: String(reason) }));
     await shot(page, record, "failure").catch(e => { record.screenshotError = String(e); });
     throw error;
   } finally {
@@ -143,7 +161,8 @@ async function withCase(browser, engine, viewport, name, fixture, run) {
 
 try {
   for (const engine of engines) {
-    const browser = await ({ chromium, webkit }[engine]).launch();
+    const browserType = engine === "webkit" ? await pwaBrowserType("webkit") : chromium;
+    const browser = await browserType.launch();
     try {
       for (const viewport of viewports) {
         if (scope !== "lifecycle") {

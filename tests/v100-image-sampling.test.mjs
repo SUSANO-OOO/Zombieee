@@ -56,3 +56,21 @@ test('failure at any half-size step releases both the current and previous worki
   assert.ok(canvases.every(c=>c.width===0&&c.height===0));assert.equal(f.sampler.snapshot().bytes,0);
  }
 });
+test('filtered sampled images reuse one bounded filtered surface and clear it',()=>{
+ const canvases=[],mainDraws=[];
+ const createCanvas=()=>{const canvas={width:0,height:0};canvas.getContext=()=>({
+  getContextAttributes:()=>({colorSpace:'srgb'}),save(){},restore(){},setTransform(){},clearRect(){},beginPath(){},rect(){},clip(){},drawImage(){},
+ });canvases.push(canvas);return canvas;};
+ const sampler=createV100ImageSampler({createCanvas});
+ const source={naturalWidth:512,naturalHeight:512,src:'immutable.webp',__V100_IMMUTABLE_SAMPLER__:true};
+ const stack=[],ctx={filter:'sepia(32%)',globalAlpha:.8,globalCompositeOperation:'source-over',shadowBlur:0,shadowOffsetX:0,shadowOffsetY:0,imageSmoothingEnabled:true,imageSmoothingQuality:'high',
+  getContextAttributes:()=>({colorSpace:'srgb'}),getTransform:()=>({a:1,b:0,c:0,d:1,e:0,f:0}),
+  save(){stack.push({filter:this.filter,globalAlpha:this.globalAlpha})},restore(){Object.assign(this,stack.pop())},setTransform(){},drawImage(...args){mainDraws.push(args)} };
+ for(let i=0;i<2;i++)sampler.draw(ctx,source,0,0,512,512,10,12,64,64);
+ const filtered=sampler.snapshot().filteredImageLayer;
+ assert.equal(filtered.builds,1);assert.equal(filtered.hits,1);assert.equal(filtered.drawCount,2);
+ assert.equal(filtered.fallbacks,0);assert.equal(filtered.errors,0);assert.equal(filtered.ownedSurfaces,1);
+ assert.equal(mainDraws.length,2);assert.equal(ctx.filter,'sepia(32%)');
+ sampler.clear();assert.equal(sampler.snapshot().filteredImageLayer.bytes,0);
+ assert.ok(canvases.every(canvas=>canvas.width===0&&canvas.height===0));
+});

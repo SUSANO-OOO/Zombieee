@@ -851,9 +851,9 @@ export function V100Campaign() {
                 <label htmlFor="v100-player-name">呼ばれたい名前</label>
                 <input id="v100-player-name" value={nameInput} onChange={(event) => setNameInput(event.currentTarget.value)} autoComplete="nickname" />
                 {nameError && <small className="v100-error" role="alert">{nameError}</small>}
-                <button className="v100-primary" type="submit" aria-label="この名前で作戦を始める">この名前で始める</button>
+                <button className="v100-primary" type="submit" aria-label="この名前で作戦を始める" disabled={saveBusy}>この名前で始める</button>
               </form>
-              <button className="v100-secondary-data" type="button" onClick={() => openSurface("data")}>データ管理</button>
+              <button className="v100-secondary-data" type="button" disabled={saveBusy} onClick={() => openSurface("data")}>データ管理</button>
             </div>
           </div>
         </section>

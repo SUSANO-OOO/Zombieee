@@ -552,6 +552,8 @@ import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirear
 import {v100BrawlerComboPose,v100BrawlerCanAct,v100BrawlerCanContact} from './v100BrawlerCombo.js';
 import {createV100ImageSampler} from './v100ImageSampling.js';
 const v100ImageSampler=createV100ImageSampler();
+import {createV100ShotLayer} from './v100ShotLayer.js';
+const v100ShotLayer=createV100ShotLayer();
 import { V100_WEAPON_SOCKETS, v100RenderedWeaponSocket } from "./v100WeaponSockets.js";
 import { v100RenderedTakuyaGroundSocket } from "./v100TakuyaGroundSocket.js";
 import { v100GuardianGuardPose, V100_GUARDIAN_STABLE_POSE, v100RenderedShieldSocket } from "./v100GuardianPresentation.js";
@@ -2056,6 +2058,7 @@ function addShot(
 
 function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
+  v100ShotLayer.clear();
   clearV100ContactQueue(g);
   clearV100ManualFirearmVfx(g);
   clearV100SupportAbilityEffects(g);
@@ -7556,9 +7559,16 @@ function drawStageGeometryDebug(ctx: CanvasRenderingContext2D, g: Game) {
 }
 
 type GraphicsProfile = ReturnType<typeof resolveGraphicsProfile>;
+const BATTLE_CANVAS_CONTEXT_OPTIONS: CanvasRenderingContext2DSettings = { alpha: false, desynchronized: true };
 type StaticBattlefieldCache = {
   key: string;
   canvas: HTMLCanvasElement | null;
+  bitmap: ImageBitmap | null;
+  generation: number;
+  gradeKey: string;
+  gradeCanvas: HTMLCanvasElement | null;
+  gradeBitmap: ImageBitmap | null;
+  gradeGeneration: number;
   hits: number;
   rebuilds: number;
 };
@@ -7584,6 +7594,9 @@ function drawCachedStageBackground(
     cache.canvas.height = H;
   }
   if (cache.key !== key) {
+    cache.bitmap?.close();
+    cache.bitmap = null;
+    cache.generation += 1;
     const cacheContext = cache.canvas.getContext("2d");
     if (!cacheContext) {
       drawStageBackground(ctx, g, background);
@@ -7596,10 +7609,61 @@ function drawCachedStageBackground(
     drawStageBackground(cacheContext, g, background);
     cache.key = key;
     cache.rebuilds += 1;
+    if (typeof createImageBitmap === "function") {
+      const generation = cache.generation;
+      void createImageBitmap(cache.canvas).then((bitmap) => {
+        if (cache.generation === generation && cache.key === key) cache.bitmap = bitmap;
+        else bitmap.close();
+      }).catch(() => { /* Keep the canvas as the exact visual fallback. */ });
+    }
   } else {
     cache.hits += 1;
   }
-  ctx.drawImage(cache.canvas, 0, 0, W, H);
+  ctx.drawImage(cache.bitmap ?? cache.canvas, 0, 0, W, H);
+}
+
+function drawCachedBattleGrade(ctx: CanvasRenderingContext2D, cache: StaticBattlefieldCache, shakeX: number, shakeY: number) {
+  const t = ctx.getTransform();
+  const shiftX = t.a * shakeX + t.c * shakeY;
+  const shiftY = t.b * shakeX + t.d * shakeY;
+  const baseX = t.e - shiftX;
+  const baseY = t.f - shiftY;
+  const key = [ctx.canvas.width, ctx.canvas.height, t.a, t.b, t.c, t.d, baseX, baseY]
+    .map((value) => Number(value.toFixed(6))).join("|");
+  if (cache.gradeKey !== key) {
+    cache.gradeBitmap?.close();
+    cache.gradeBitmap = null;
+    cache.gradeGeneration += 1;
+    if (!cache.gradeCanvas) cache.gradeCanvas = document.createElement("canvas");
+    cache.gradeCanvas.width = ctx.canvas.width;
+    cache.gradeCanvas.height = ctx.canvas.height;
+    const gradeContext = cache.gradeCanvas.getContext("2d");
+    if (gradeContext) {
+      gradeContext.setTransform(t.a, t.b, t.c, t.d, baseX, baseY);
+      const grade = gradeContext.createLinearGradient(0, 0, W, 0);
+      grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
+      gradeContext.fillStyle = grade;
+      gradeContext.fillRect(0, 0, W, H);
+      cache.gradeKey = key;
+      if (typeof createImageBitmap === "function") {
+        const generation = cache.gradeGeneration;
+        void createImageBitmap(cache.gradeCanvas).then((bitmap) => {
+          if (cache.gradeGeneration === generation && cache.gradeKey === key) cache.gradeBitmap = bitmap;
+          else bitmap.close();
+        }).catch(() => { /* Keep the canvas as the exact visual fallback. */ });
+      }
+    }
+  }
+  if (!cache.gradeCanvas || cache.gradeKey !== key) {
+    const grade = ctx.createLinearGradient(0, 0, W, 0);
+    grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
+    ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
+    return;
+  }
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(cache.gradeBitmap ?? cache.gradeCanvas, shiftX, shiftY);
+  ctx.restore();
 }
 
 function visibleRenderPoint(x: number, y: number, margin: number) {
@@ -8170,9 +8234,7 @@ function drawWorld(
   } else if (allowDiagnosticFallback) drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
-  const grade = ctx.createLinearGradient(0, 0, W, 0);
-  grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
-  ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
+  drawCachedBattleGrade(ctx, staticBackgroundCache, sx, sy);
 
   const activeStageObjects = activeStageObjectsForGame(g);
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
@@ -8467,7 +8529,9 @@ function drawWorld(
     });
   }
 
-  for (const sourceShot of g.shots) {
+  const drawShots = (shotCtx: CanvasRenderingContext2D) => {
+    const ctx = shotCtx;
+    for (const sourceShot of g.shots) {
     let shot = sourceShot;
     const sourceFighter = g.definition.missionConfig.v100StageNumber && V100_WEAPON_SOCKETS[sourceShot.weapon??""]
       ? g.fighters.find(f=>f.id===sourceShot.sourceId) : undefined;
@@ -8524,7 +8588,10 @@ function drawWorld(
       muzzleOrigin: V100_WEAPON_SOCKETS[weapon] ? liveSocket??null : undefined,
     });
     ctx.restore();
-  }
+    }
+  };
+  if (g.definition.missionConfig.v100StageNumber && g.shots.length > 0) v100ShotLayer.draw(ctx, drawShots);
+  else drawShots(ctx);
   ctx.shadowBlur = 0;
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity, stageObjects);
   for (const p of g.particles) {
@@ -8571,9 +8638,26 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const staticBattlefieldCacheRef = useRef<StaticBattlefieldCache>({
     key: "",
     canvas: null,
+    bitmap: null,
+    generation: 0,
+    gradeKey: "",
+    gradeCanvas: null,
+    gradeBitmap: null,
+    gradeGeneration: 0,
     hits: 0,
     rebuilds: 0,
   });
+  useEffect(() => () => {
+    const cache = staticBattlefieldCacheRef.current;
+    cache.generation += 1;
+    cache.gradeGeneration += 1;
+    cache.bitmap?.close();
+    cache.gradeBitmap?.close();
+    cache.bitmap = null;
+    cache.gradeBitmap = null;
+    cache.key = "";
+    cache.gradeKey = "";
+  }, []);
   const backgroundRef = useRef<HTMLImageElement | null>(null);
   const backgroundCacheRef = useRef<Record<string, HTMLImageElement>>({});
   const spriteRefs = useRef<SpriteMap>({});
@@ -13535,6 +13619,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       getPerformanceSnapshot: () => ({
         ...runtimePerformanceRef.current,
         imageSamplingCache: v100ImageSampler.snapshot(),
+        shotLayer: v100ShotLayer.snapshot(),
         graphicsProfile: { ...graphicsProfileRef.current },
         staticBackgroundCache: {
           hits: staticBattlefieldCacheRef.current.hits,
@@ -14275,7 +14360,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       canvas.dataset.visualFloorAuthored = String(nextStageGeometry.floor.visual.authored);
       canvas.dataset.visualFloorHorizonY = String(nextStageGeometry.floor.visual.horizonY);
       canvas.dataset.visualFloorNearEdgeY = String(nextStageGeometry.floor.visual.nearEdgeY);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", BATTLE_CANVAS_CONTEXT_OPTIONS);
       if (ctx) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = graphicsProfile.smoothingQuality as ImageSmoothingQuality;
@@ -17885,7 +17970,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const loop = (now: number) => {
       frame = null;
       const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
+      const ctx = canvas?.getContext("2d", BATTLE_CANVAS_CONTEXT_OPTIONS);
       const g = gameRef.current;
       if (!ctx) { requestFrame(); return; }
       const performanceCounters = runtimePerformanceRef.current;
@@ -23317,6 +23402,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       active = false;
       suspendFrames();
       v100ImageSampler.clear();
+      v100ShotLayer.clear();
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
