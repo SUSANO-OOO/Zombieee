@@ -158,6 +158,37 @@ async function observeStrictCanvasClip(page, viewport, label) {
   throw new Error(`${label}: active canvas never exposed finite attached geometry ${JSON.stringify(observations.slice(-8))}`);
 }
 
+async function readRuntimeLiveness(page) {
+  return page.evaluate(() => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const performanceSnapshot = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
+    const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
+    const canvas = document.querySelector("canvas.battlefield");
+    return {
+      at: performance.now(),
+      visibilityState: document.visibilityState,
+      hidden: document.hidden,
+      assetLoadState: document.documentElement.dataset.assetLoadState ?? null,
+      mount,
+      canvas: canvas ? { connected: canvas.isConnected, active: canvas.classList.contains("active") } : null,
+      battle: snapshot ? {
+        screen: snapshot.screen,
+        time: snapshot.time,
+        running: snapshot.running,
+        paused: snapshot.paused,
+        over: snapshot.over,
+        saveBoundaryPending: snapshot.saveBoundaryPending,
+      } : null,
+      frames: performanceSnapshot ? {
+        rafRequests: performanceSnapshot.rafRequests,
+        rafCancellations: performanceSnapshot.rafCancellations,
+        simulationTicks: performanceSnapshot.simulationTicks,
+        renderFrames: performanceSnapshot.renderFrames,
+      } : null,
+    };
+  });
+}
+
 function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
   const label = `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`;
   invariant(samples.length >= 2, `${label}: fewer than two runtime samples`);
@@ -238,9 +269,10 @@ for (const engine of engines) {
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
           const assetSetupBoundary = await diagnosticControl.sealSetup();
           for (const phase of phases) {
-            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, prepared: null, samples: [], capture: null };
+            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, prepared: null, livenessBefore: null, livenessAfter: null, samples: [], capture: null };
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
             activeEvidence.prepared = prepared;
+            activeEvidence.livenessBefore = await readRuntimeLiveness(page);
             const samples = activeEvidence.samples;
             const started = performance.now();
             while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
@@ -252,6 +284,7 @@ for (const engine of engines) {
               if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
               if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
             }
+            activeEvidence.livenessAfter = await readRuntimeLiveness(page);
             assertRenderSequence({ engine, viewport, kind, phase, samples });
             const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
             const canvasObservation = await observeStrictCanvasClip(

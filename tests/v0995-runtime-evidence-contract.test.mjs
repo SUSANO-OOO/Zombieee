@@ -76,6 +76,7 @@ test("actual enemy harness persists screenshot failure before cleanup and preser
       diagnosticsFor: () => ({ diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] }, calibrate: async () => {}, sealSetup: async () => ({ ready: true }) }),
       baseUrl: new URL("http://127.0.0.1/"), timeout: 45000, dismissInstallOffer: async () => {}, phases: ["move"],
       assertRenderSequence: ({ samples }) => assert.equal(samples.length, 2),
+      readRuntimeLiveness: async () => ({ visibilityState: "visible", frames: { renderFrames: 3 } }),
       observeStrictCanvasClip: async () => ({ clip: { x: 0, y: 0, width: 844, height: 340 } }),
       outputDir: "evidence", path: { join: (...parts) => parts.join("/") }, results: [], representativeShots: [],
       enemyRuntimeFailureRecord,
@@ -93,6 +94,8 @@ test("actual enemy harness persists screenshot failure before cleanup and preser
     assert.equal(persisted.status, "failed");
     assert.equal(persisted.active.prepared.fighterId, 7);
     assert.equal(persisted.active.samples.length, 2);
+    assert.equal(persisted.active.livenessBefore.frames.renderFrames, 3);
+    assert.equal(persisted.active.livenessAfter.visibilityState, "visible");
     assert.equal(persisted.active.capture.preCapture.fighter.id, 7);
     assert.equal(persisted.active.capture.status, "pending");
     assert.equal(persisted.completedResults.length, 0);

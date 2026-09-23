@@ -111,7 +111,10 @@ async function prepareEconomy(stageNumber) {
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
   }
   await uiClick(preparationTab("隊員"));
-  const targetLevel=Math.min(save.levelCap,Math.max(1,Math.ceil(stageNumber*.8)));
+  // The earned route reaches the tech tower with a 25-level cap and enough
+  // saved CAPS to prepare for its armored wave. Spend those earned resources
+  // through the normal personnel UI before the late campaign battles.
+  const targetLevel=stageNumber>=24 ? save.levelCap : Math.min(save.levelCap,Math.max(1,Math.ceil(stageNumber*.8)));
   for(let n=0;n<210;n++) {
     const ids=plannedFormation(save).filter(id=>save.unitLevels[id]<targetLevel).sort((a,b)=>save.unitLevels[a]-save.unitLevels[b]);
     const id=ids.find(id=>save.caps>=v100LevelCost(save.unitLevels[id]+1));

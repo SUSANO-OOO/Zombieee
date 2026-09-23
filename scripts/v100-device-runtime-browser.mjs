@@ -24,6 +24,7 @@ assert.ok(["chromium", "webkit"].includes(engine), `unsupported engine: ${engine
 const evidenceDir = path.resolve(process.env.V100_DEVICE_RUNTIME_OUT ?? "outputs/v100-device-runtime-browser-r1");
 const setupTimeoutMs = 8 * 60_000;
 const measurementMs = 30_000;
+const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const defaultViewports = [
   { width: 844, height: 340, safeArea: true },
   { width: 844, height: 390, safeArea: true },
@@ -134,6 +135,7 @@ async function waitForBattle(page, deadline) {
 }
 async function beginMeasurement(page) {
   return page.evaluate(() => {
+    window.__V100_RAF_CALLBACK_DIAG__?.start();
     const state = { startedAt: performance.now(), times: [], overflow: 0, active: true, handle: 0, visibilityEvents: [] };
     const mark = (type) => state.visibilityEvents.push({ type, at: performance.now(), visibilityState: document.visibilityState });
     state.listeners = { visibilitychange: () => mark("visibilitychange"), blur: () => mark("blur"), pagehide: () => mark("pagehide") };
@@ -158,8 +160,9 @@ async function endMeasurement(page) {
     cancelAnimationFrame(state.handle);
     const endedAt = performance.now();
     const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
+    const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
     for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState };
+    return { startedAt: state.startedAt, endedAt, times: state.times, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
   });
 }
 
@@ -229,6 +232,38 @@ try {
     const name = `${engine}-${viewport.width}x${viewport.height}`;
     const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
     const page = await context.newPage();
+    if (callbackDiagnostic) {
+      await page.addInitScript(() => {
+        const original = window.requestAnimationFrame.bind(window);
+        const durations = [];
+        let active = false;
+        window.requestAnimationFrame = (callback) => original((timestamp) => {
+          const started = performance.now();
+          try { return callback(timestamp); }
+          finally {
+            if (active && durations.length < 8_000) durations.push(performance.now() - started);
+          }
+        });
+        window.__V100_RAF_CALLBACK_DIAG__ = {
+          start() { durations.length = 0; active = true; },
+          stop() {
+            active = false;
+            const sorted = [...durations].sort((a, b) => a - b);
+            const at = (fraction) => sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)] ?? null;
+            return {
+              diagnosticOnly: true,
+              count: sorted.length,
+              p50Ms: at(.5),
+              p95Ms: at(.95),
+              maxMs: sorted.at(-1) ?? null,
+              over8Ms: sorted.filter((duration) => duration > 8).length,
+              over16Ms: sorted.filter((duration) => duration > 16).length,
+              over33Ms: sorted.filter((duration) => duration > 33).length,
+            };
+          },
+        };
+      });
+    }
     const result = { name, viewport, status: "failed", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     report.results.push(result);
     let measurementActive = false;
@@ -312,7 +347,7 @@ try {
         medianFps: medianFps >= 50,
         renderCadence: renderCadenceToleranceHz !== null && effectiveRenderHz !== null && Math.abs(effectiveRenderHz - expectedRenderHz) <= renderCadenceToleranceHz,
       };
-      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
+      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
       await page.screenshot({ path: path.join(evidenceDir, `${name}-after.png`) });
       assert.ok(gates.sampleCount, "insufficient rAF samples for representative window");
       assert.ok(gates.overflow, "rAF observer overflowed");
