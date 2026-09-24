@@ -221,6 +221,16 @@ try{for(const number of numbers){
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
    }
+   if(soundOnlyStage3&&result.boss&&last.time>=45
+    &&last.fighters.filter(f=>f.kind==='brawler'&&f.side==='human'&&f.hp>0).length===1
+    &&!result.inputs.some(input=>input.action==='deploy'&&input.kind==='brawler'&&input.time>=result.boss.firstObservedTime)){
+    // A surviving opening brawler makes the generic one-per-role policy buy a
+    // rear unit instead. Reinforce the actual boss front through the native
+    // card while the fixed four-unit fixture and all battle gates stay intact.
+    if(await nativeBattleTap(page,page.locator('button.unit-card[data-kind="brawler"]'))){
+     result.inputs.push({time:last.time,action:'deploy',kind:'brawler',reason:'native boss-front reinforcement'});
+    }
+   }
    await normalTacticalInput(page,result);await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
@@ -302,6 +312,7 @@ try{for(const number of numbers){
    await writeFile(out+'/s'+number+'-muzzle-canvas.png',Buffer.from(image.split(',')[1],'base64'));
   }
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
+   assert.equal(result.actualResult?.won,true,'Stage 3 native music fixture must win through ordinary battle inputs');
    assertBattleMusicGate(result);
   }
   assert.ok(last?.over||await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').count(),'Battle must reach its natural result before bounded QA deadline');

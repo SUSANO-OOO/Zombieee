@@ -22,8 +22,9 @@ const errors = [];
 page.on("pageerror", (error) => errors.push(String(error)));
 page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
 try {
+  const deadline = Date.now() + 30_000;
   await page.goto(base, { waitUntil: "domcontentloaded" });
-  await page.locator(".v100-shell").first().waitFor({ timeout: 30_000 }).catch(async (error) => {
+  await page.locator(".v100-shell").first().waitFor({ timeout: Math.max(1, deadline - Date.now()) }).catch(async (error) => {
     const diagnostic = await page.evaluate(() => ({
       title: document.title,
       body: document.body.innerText.slice(0, 800),
@@ -31,6 +32,9 @@ try {
     }));
     throw new Error(`${error.message}\n${JSON.stringify(diagnostic)}\n${JSON.stringify(errors)}`);
   });
+  // The game shell and registration-failure notice are rendered by separate
+  // async effects. Require both within the original 30-second budget.
+  await page.locator(".pwa-notice").waitFor({ state: "visible", timeout: Math.max(1, deadline - Date.now()) });
   const state = await page.evaluate(() => ({
     standalone: Boolean(navigator.standalone),
     gameMounted: Boolean(document.querySelector(".v100-shell")),
