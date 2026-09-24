@@ -1,12 +1,22 @@
 # 西新世紀末物語 — プロジェクト状態
 
-### 最新検証記録 — 2026-09-14
+### 現行候補の到達点 — 2026-09-24
+
+Version 1.0.0 は PR #171 の Draft 候補で、Issue #172 を実行台帳とする。正式公開・Ready 化・最終 merge・tag・Release・Issue close は Producer の最終承認後に限る。旧 save、旧 QA 証拠、既存未追跡ファイルは保全する。
+
+**現行候補の厳密な完了数は17/24。** 制作 M1〜M4 の17/17は保持する。2026-09-14時点の19/24は旧候補の累積記録であり、現行候補の受入数へ転用しない。Stage 29 の継続戦闘中に配備を拒否する製品不具合と、844×390/340 の credits 文面に操作ボタンが重なる表示を修正したため、M5-2の新規開始→全30→終幕を現行製品buildで取り直す。M5-3の旧save・PWA更新/失敗/オフラインも、製品assetが変わった現行PR headで再確認する。過去の通し勝利、保存・復旧の合格記録は履歴として残す。
+
+PR head `43be9290982e367adde7da85bf526920b9e7f6c7` の CI `35949929709` は、PR Verify、native WebKit PWA 18/18・22/22、敵runtime六分割に合格したが、Phase G の Stage 3 で「証明開始後12秒間に新しい実命中なし」となり不合格。Stage 25 の Mac WebKit 性能stepは依存により未実行だった。戦闘は継続し、開始前の実命中30件と致命的browser診断0を保持する。Windows system Chromeによる限定診断は、修正前後ともStage 3代表証拠16/16に通過。修正後は実車両行動後・boss表示待ち前の同じ12秒窓で因果証明を封印し、実brute命中、action/最終場面の別画像、後続boss表示を確認した。これはpin済みMac CIや最終候補の代替合格ではない。
+
+有限の残工程は、(1) 現行PR headへ通常push後、Stage 3を含む必須CIと、Phase Gの成否に依存しないMac性能実測を取得する、(2) WebKit実戦性能が基準未達なら画質・閾値を維持して製品原因を修正する、(3) 同一最終候補の新規開始→全30→ENDING/credits/EPILOGUE、代表他mode、旧/新save、PWA導入・更新・オフライン・復旧、3画面/touch/回転/復帰/音を確認する、(4) fixed-HEAD独立read-only全体reviewでHigh/Medium未解消0とし、実機未検証と代替browser証拠を分けて実際に遊べるRCをProducerへ提示する、(5) 最終承認後だけ正式統合・tag・Release・公式GitHub Pages公開・公開後QA・Issue closeを行う、の順。Windows WebKitの実戦p95約54ms/描画約24Hzは未達、物理iPhoneの発熱・実speaker・物理操作は未検証。期限や完了率だけでRC/公開合格へ繰り上げない。
+
+### 旧候補の検証記録 — 2026-09-14
 
 M5-3の検証を完了した。今回の検証対象・remote候補は `6967d22ffddd3407c1ce0e26db2badc8118b33be` で、追加pushはない。全6件のnative corruption caseと24 PNGを確認し、保存処理のコードが検証対象commitと一致することを照合した。根拠は `outputs/completion/m5-3-corruption-root-readback-r1.json` と、現行6967のmacOS PWA 18/18・22/22検証receiptである。これにより全体は19/24（約79%）、M5は2/4、総合受入・公開は2/7。制作17/17は従来どおりで、M5-1、M5-4、M6は未完了。物理端末と実speakerは未検証である。
 
 CI `34811694006` はPhase Gの55 screenshots・16 combatsと、native Mac musicの366 samples（normal→boss→pressure）に合格し、rootと独立archiveの照合も完了した。ただし同一jobはperformance開始前に出力親ディレクトリ不足のENOENTで失敗し、enemy01はEADDRINUSEで失敗した。両QA起動修正はlocalで実装・review済みで、閾値は緩和していない。現行候補のfresh local buildは `f7a16e197e4995b4a9a9022af89783ce5aeb52652ce41b1617ee34ebefc17adc`（npm testがbuildを含む）で、全1639/1639 testsに合格し、browser client assetsは従来の `f61` と一致した。corruption 6件はf7の安定状態でbefore/afterを確認し、WK reload cancel 1件も保持記録した。CI失敗とenemy01失敗は成功扱いへ読み替えず、再実行・公開判定は別途とする。
 
-## 全体進捗ボード — 2026-09-14
+## 旧候補時点の全体進捗ボード — 2026-09-14
 
 **成果物の完了数による全体進捗：約79%（19/24項目）。制作・改善：100%（17/17項目）。完成候補の総合受入・公開：2/7項目。** 現在地は **M5 総合検証・性能課題の解消**。制作と代表確認を完了。完成品としての総合合格や最終実プレイ承認は未完了。
 
