@@ -24,12 +24,17 @@ assert.ok(["chromium", "webkit"].includes(engine), `unsupported engine: ${engine
 const evidenceDir = path.resolve(process.env.V100_DEVICE_RUNTIME_OUT ?? "outputs/v100-device-runtime-browser-r1");
 const setupTimeoutMs = 8 * 60_000;
 const paintIsolation = process.env.V100_DEVICE_RUNTIME_PAINT_ISOLATION ?? "none";
-assert.ok(["none", "hud", "canvas", "hud-and-canvas"].includes(paintIsolation), `invalid paint isolation: ${paintIsolation}`);
+assert.ok(["none", "hud", "canvas", "hud-and-canvas", "draw-suppressed"].includes(paintIsolation), `invalid paint isolation: ${paintIsolation}`);
+const qualityDiagnostic = process.env.V100_DEVICE_RUNTIME_QUALITY_DIAGNOSTIC ?? "auto";
+assert.ok(["auto", "power-save"].includes(qualityDiagnostic), `invalid quality diagnostic: ${qualityDiagnostic}`);
 const diagnosticSeconds = Number(process.env.V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS ?? 15);
 assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diagnosticSeconds <= 30, "diagnostic seconds must be 10..30");
-const measurementMs = paintIsolation === "none" ? 30_000 : diagnosticSeconds * 1_000;
+const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
+const contextSyncDiagnostic = process.env.V100_DEVICE_RUNTIME_CONTEXT_SYNC_DIAGNOSTIC === "1";
+const observerlessDiagnostic = process.env.V100_DEVICE_RUNTIME_OBSERVERLESS === "1";
+const suppressDebugDatasetDiagnostic = process.env.V100_DEVICE_RUNTIME_SUPPRESS_DEBUG_DATASET === "1";
 const defaultViewports = [
   { width: 844, height: 340, safeArea: true },
   { width: 844, height: 390, safeArea: true },
@@ -265,7 +270,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none", uninterrupted: true, paintIsolation, diagnosticOnly: paintIsolation !== "none" },
+  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic, uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });
@@ -285,6 +290,38 @@ try {
     const blankBaseline = blankBaselineDiagnostic ? await measureBlankRaf(browser, viewport) : null;
     const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
     const page = await context.newPage();
+    if (suppressDebugDatasetDiagnostic) {
+      await page.addInitScript(() => {
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "dataset");
+        Object.defineProperty(HTMLElement.prototype, "dataset", {
+          ...descriptor,
+          get() {
+            const raw = descriptor.get.call(this);
+            if (this !== document.documentElement) return raw;
+            return new Proxy(raw, {
+              set(target, key, value) {
+                if (key === "manualAbilityLayoutDebug") {
+                  window.__V100_DEBUG_DATASET_SUPPRESSED__ = (window.__V100_DEBUG_DATASET_SUPPRESSED__ ?? 0) + 1;
+                  return true;
+                }
+                return Reflect.set(target, key, value);
+              },
+            });
+          },
+        });
+      });
+    }
+    if (contextSyncDiagnostic) {
+      await page.addInitScript(() => {
+        const original = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function(type, options) {
+          if (type === "2d" && this.matches("canvas.battlefield") && options?.desynchronized === true) {
+            return original.call(this, type, { ...options, desynchronized: false });
+          }
+          return original.call(this, type, options);
+        };
+      });
+    }
     if (callbackDiagnostic) {
       await page.addInitScript(() => {
         const original = window.requestAnimationFrame.bind(window);
@@ -353,6 +390,10 @@ try {
       }
       assert.ok(latest?.running && !latest.over && latest.boss.length > 0 && latest.humanCount > 0, "live S25 boss/human setup coverage missing");
       result.setup = { initial: initialProjection, firstLive: latest };
+      if (qualityDiagnostic !== "auto") {
+        await page.evaluate((mode) => window.__ASHFALL_BATTLE_QA__.setGraphicsQuality(mode), qualityDiagnostic);
+        await page.waitForFunction((mode) => window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.()?.graphicsProfile?.requestedMode === mode, qualityDiagnostic);
+      }
       result.canvasContext = await page.locator("canvas.battlefield").evaluate((canvas) => ({
         width: canvas.width,
         height: canvas.height,
@@ -362,38 +403,64 @@ try {
         attributes: canvas.getContext("2d")?.getContextAttributes?.() ?? null,
       }));
       if (paintIsolation !== "none") {
-        const selectors = [];
-        if (paintIsolation.includes("hud")) selectors.push(".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert", ".bottom-hud", ".stats-strip", ".barrier-health", ".manual-ability-legend", ".manual-ability-ready");
-        if (paintIsolation.includes("canvas")) selectors.push("canvas.battlefield");
-        await page.addStyleTag({ content: `${selectors.join(",")} { opacity:0!important; }` });
-        result.paintIsolation = { diagnosticOnly: true, selectors };
+        if (paintIsolation === "draw-suppressed") {
+          result.paintIsolation = await page.locator("canvas.battlefield").evaluate((canvas) => {
+            const ctx = canvas.getContext("2d");
+            const methods = ["drawImage", "fillRect", "clearRect", "strokeRect", "fill", "stroke", "fillText", "strokeText", "putImageData"];
+            for (const method of methods) {
+              const silent = () => {};
+              ctx[method] = silent;
+              if (ctx[method] !== silent) throw new Error(`Canvas diagnostic could not suppress ${method}`);
+            }
+            return { diagnosticOnly: true, methods };
+          });
+        } else {
+          const selectors = [];
+          if (paintIsolation.includes("hud")) selectors.push(".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert", ".bottom-hud", ".stats-strip", ".barrier-health", ".manual-ability-legend", ".manual-ability-ready");
+          if (paintIsolation.includes("canvas")) selectors.push("canvas.battlefield");
+          await page.addStyleTag({ content: `${selectors.join(",")} { opacity:0!important; }` });
+          result.paintIsolation = { diagnosticOnly: true, selectors };
+        }
       }
       await page.screenshot({ path: path.join(evidenceDir, `${name}-before.png`) });
       measurementActive = true;
       const measurement = await beginMeasurement(page);
       result.measurementStarted = true;
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
-      const started = Date.now();
-      let previousSample = 0;
-      while (Date.now() - started < measurementMs) {
-        const snapshot = await page.evaluate(() => ({
-          state: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
-          performance: window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null,
-        }));
-        const projected = snapshotProjection(snapshot.state);
-        if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
-          throw new Error("30-second window lost live battle, humans, or boss");
+      if (observerlessDiagnostic) {
+        await page.waitForTimeout(measurementMs);
+        const final = snapshotProjection(await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null));
+        if (!final?.running || final.over || final.humanCount <= 0 || final.boss.length === 0) {
+          throw new Error("observerless diagnostic lost live battle, humans, or boss");
         }
-        if (Date.now() - previousSample >= 1000) {
-          result.measurementSamples.push(projected);
-          previousSample = Date.now();
+        result.measurementSamples.push(final);
+      } else {
+        const started = Date.now();
+        let previousSample = 0;
+        while (Date.now() - started < measurementMs) {
+          const snapshot = await page.evaluate(() => ({
+            state: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
+            performance: window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null,
+          }));
+          const projected = snapshotProjection(snapshot.state);
+          if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
+            throw new Error("30-second window lost live battle, humans, or boss");
+          }
+          if (Date.now() - previousSample >= 1000) {
+            result.measurementSamples.push(projected);
+            previousSample = Date.now();
+          }
+          await normalTacticalInput(page, result);
+          await page.waitForTimeout(350);
         }
-        await normalTacticalInput(page, result);
-        await page.waitForTimeout(350);
       }
       const raf = await endMeasurement(page);
       measurementActive = false;
       result.measurementEnded = true;
+      if (suppressDebugDatasetDiagnostic) {
+        result.suppressedDatasetWrites = await page.evaluate(() => window.__V100_DEBUG_DATASET_SUPPRESSED__ ?? 0);
+        assert.ok(result.suppressedDatasetWrites > 0, "debug dataset suppression did not intercept writes");
+      }
       const intervals = (raf?.times ?? []).slice(1).map((time, index) => time - raf.times[index]);
       const invalidIntervals = (raf?.times ?? []).slice(1).filter((time, index) => !Number.isFinite(time) || !Number.isFinite(raf.times[index]) || time <= raf.times[index]);
       const elapsed = (raf?.endedAt ?? measurement.startedAt) - measurement.startedAt;

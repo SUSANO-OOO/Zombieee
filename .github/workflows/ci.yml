@@ -255,9 +255,34 @@ jobs:
         run: npm run build
 
       - name: Measure V1 native boss battle performance (WebKit)
+        id: primary_perf
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Independently repeat narrow landscape boss performance (WebKit)
+        id: repeat_perf
+        if: ${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x340
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-repeat
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Diagnose narrow landscape canvas cost after performance failure
+        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x340
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-draw-suppressed
+          V100_DEVICE_RUNTIME_PAINT_ISOLATION: draw-suppressed
+          V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS: "15"
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
@@ -270,6 +295,8 @@ jobs:
           path: |
             outputs/v100-webkit-frame-control/report.json
             outputs/v100-device-runtime/webkit
+            outputs/v100-device-runtime/webkit-844x340-repeat
+            outputs/v100-device-runtime/webkit-844x340-draw-suppressed
           if-no-files-found: error
           retention-days: 14
 
