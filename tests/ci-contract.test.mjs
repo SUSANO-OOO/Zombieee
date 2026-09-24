@@ -74,7 +74,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(hudJob, /V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"/u);
   assert.match(hudJob, /needs:\r?\n\s+- webkit-deployment-viewport\r?\n\s+- webkit-hosted/u);
   assert.match(hudJob, /fail-fast: false/u);
-  assert.match(hudJob, /max-parallel: 1/u);
+  assert.match(hudJob, /max-parallel: 3/u);
   assert.doesNotMatch(hudJob, /continue-on-error:/u);
   const deploymentJob = workflow.match(/  webkit-deployment-viewport:\n([\s\S]*?)\n  webkit-stage3-audio:/u)?.[1] ?? "";
   const deploymentViewports = deploymentJob.match(/viewport:\r?\n([\s\S]*?)\r?\n    steps:/u)?.[1]
@@ -83,7 +83,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(deploymentJob, /needs: webkit-stage3-audio/u);
   assert.match(deploymentJob, /if: \$\{\{ !cancelled\(\) \}\}/u);
   assert.match(deploymentJob, /fail-fast: false/u);
-  assert.match(deploymentJob, /max-parallel: 1/u);
+  assert.match(deploymentJob, /max-parallel: 3/u);
   assert.doesNotMatch(deploymentJob, /continue-on-error:/u);
   const enemyJob = workflow.match(/  webkit-enemy-runtime-shard:\n([\s\S]*?)\n  webkit-viewport:/u)?.[1] ?? "";
   assert.match(enemyJob, /fail-fast: false/u);

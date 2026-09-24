@@ -596,6 +596,7 @@ jobs:
         run: npx playwright install webkit
 
       - name: Verify pinned macOS WebKit runtime
+        timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
@@ -632,7 +633,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         viewport:
           - 667x375
@@ -666,6 +667,7 @@ jobs:
         run: npx playwright install webkit
 
       - name: Verify pinned macOS WebKit runtime
+        timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture canonical HUD evidence
@@ -699,7 +701,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         viewport:
           - 667x375
@@ -725,6 +727,7 @@ jobs:
       - name: Install locked Playwright browsers
         run: npx playwright install webkit
       - name: Verify pinned macOS WebKit runtime
+        timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
       - name: Build production application
         run: npm run build
