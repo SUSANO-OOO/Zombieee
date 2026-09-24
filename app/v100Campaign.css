@@ -457,7 +457,12 @@
     repeating-linear-gradient(90deg, transparent 0 29px, #e6c68a0b 29px 30px, transparent 30px 61px);
   mix-blend-mode: screen;
 }
-.v100-shell > *:not(.game-shell):not(.v100-modal-backdrop):not(.v100-save-retry) { position: relative; z-index: 1; }
+.v100-shell > *:not(.game-shell):not(.v100-modal-backdrop):not(.v100-save-retry):not(.v100-rotate-notice) { position: relative; z-index: 1; }
+.v100-shell > .v100-rotate-notice { display: none; position: fixed; z-index: 1000; inset: 0; width: 100vw; height: 100dvh; padding: 24px; place-items: center; align-content: center; gap: 12px; text-align: center; background: radial-gradient(circle, #273039, #090c0e 70%); color: #ead7b6; }
+.v100-rotate-notice span { color: #d68157; font-size: 54px; line-height: 1; animation: rotate-phone 1.8s ease-in-out infinite; }
+.v100-rotate-notice b { font-size: 18px; }
+.v100-rotate-notice small { color: #ad9e8b; font-size: 11px; font-weight: 700; }
+@media (orientation: portrait) and (max-width: 800px) { .v100-shell > .v100-rotate-notice { display: grid; } }
 .v100-topbar {
   position: relative;
   padding: 9px 12px 12px;
