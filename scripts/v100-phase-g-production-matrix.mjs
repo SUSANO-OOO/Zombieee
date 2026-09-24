@@ -4034,8 +4034,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   // Contact-first proof actors stop the plan from adding another card once
   // the production runtime has acquired a human target, so a transient attack
   // cannot be erased by a later player action.
+  // The completed-impact cases need a living frontline until the exact enemy
+  // action is sealed. After three real deployments, hand ordinary play to the
+  // tactical loop instead of spending the entire formation's command on the
+  // first cheap card to leave cooldown. All seven formation slots remain
+  // available to that loop through the production UI.
   const bossDeploymentLimit = bossKind
-    ? new Set((save.formationSlots ?? []).filter(Boolean)).size
+    ? Math.min(
+      completedImpactProofEnabled ? 3 : Number.POSITIVE_INFINITY,
+      new Set((save.formationSlots ?? []).filter(Boolean)).size,
+    )
     : 0;
   const deploymentTrace = [];
   const recordDeployment = (entry) => {
