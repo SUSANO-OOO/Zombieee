@@ -1,5 +1,15 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-09-24 現行の判定点と有限の残工程
+
+PR #171 は Draft、Issue #172 は実行台帳。最終承認前の Ready・最終 merge・tag・Release・公式 Pages 公開・Issue close は行わない。現在の厳密な完了数は17/24のまま。
+
+直前のQA基盤候補 `122d352ca76c4a80ec7e63aca1b6342913fcf180` のCI `35963330686` は、PR Verify、Phase G本番マトリクス、Apple Silicon上の元のWebKit性能基準、native WebKit PWA既存版更新18/18・部分失敗復旧22/22、敵runtime六分割が成功した。性能の844×340/390、1280×720は実戦p95 rAF 27/20/20ms、中央値58.82/58.82/62.5fps、実描画43.97/44.72/44.86Hz、記録browser errors 0。Intel runnerで失敗した旧計測は履歴として保全し、Apple Silicon結果を物理iPhoneの発熱・speaker・実操作の確認へ転用しない。このheadの製品sourceは先に通常UIで名前入力から全30戦・ENDING・credits・EPILOGUEを通過した `26b8551` と一致するが、全headは一致しない。
+
+通常プレイで獲得したS3 saveを別profileに分岐し、Chromium 844×340で異常発生の勝利・再読込、サバイバルwave 1〜5・checkpointの強化・撤退・結果再読込を確認した（`outputs/completion/earned-modes-head122-r2/report.json`）。この画像でサバイバル拠点とboss記録の説明文が装備カード用の汎用CSSに巻き込まれ、checkpoint選択肢が7〜9pxだったことを発見。装備カードの指定を装備画面のbuttonに限定し、Version 1.0.0のcheckpoint選択肢だけ文字サイズと余白を調整した。同じ獲得済みS3 saveを復元し、Chromium/WebKit 844×340で装備カタログ12枚・横はみ出し0も確認した。checkpointは獲得済みwave 5 saveの復元表示で両engineの3選択肢・viewport内収容・console/page/request error 0を確認。自然到達と復元表示の証拠は区別する。このCSS変更は `122d352` のCIに含まれず、次のheadで再受入する。
+
+残工程は (1) この表示差分を通常commit/pushし、同一headの必須CIと実ブラウザの画面・音・入力・保存/PWAを取り直す、(2) 同一headの名前入力から終幕、代表他mode、新旧save/復旧を確認する、(3) fixed-HEAD独立read-only全体reviewでHigh/Medium未解消0にする、(4) 実際に遊べるRCをProducerへ提示し最終実プレイ承認を得る、(5) 承認後に正式統合・tag・Release・Pages公開・公開後検証・Issue closeを実施する、の5段階。既存の成功証拠は原因解析に使い、変更後headの合格数へ繰り上げない。
+
 ### 現行候補の到達点 — 2026-09-24
 
 Version 1.0.0 は PR #171 の Draft 候補で、Issue #172 を実行台帳とする。正式公開・Ready 化・最終 merge・tag・Release・Issue close は Producer の最終承認後に限る。旧 save、旧 QA 証拠、既存未追跡ファイルは保全する。

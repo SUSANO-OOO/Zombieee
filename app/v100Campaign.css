@@ -1320,6 +1320,15 @@
 .v100-mode-result dt { color: #c3c6b4; }
 .v100-mode-result dd { margin: 8px 0; font-size: 22px; }
 
+/* V1 Survival choices must remain legible on a short landscape screen. */
+.v100-shell .survival-upgrade-screen > section > small,
+.v100-shell .survival-upgrade-choices small { font-size: 11px; line-height: 1.3; }
+.v100-shell .survival-upgrade-screen p { font-size: 12px; line-height: 1.35; }
+.v100-shell .survival-upgrade-choices button { min-height: 110px; padding: 10px; gap: 4px; }
+.v100-shell .survival-upgrade-choices b { font-size: 16px; line-height: 1.2; }
+.v100-shell .survival-upgrade-choices span,
+.v100-shell .survival-upgrade-choices em { font-size: 12px; line-height: 1.25; }
+
 /* Story bookends keep the location readable behind the opaque dialogue panel. */
 .v100-event-category-prologue .v100-event-backdrop,
 .v100-event-category-ending .v100-event-backdrop,
