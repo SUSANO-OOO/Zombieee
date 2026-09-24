@@ -207,12 +207,12 @@ jobs:
           retention-days: 14
 
   v100-webkit-frame-control:
-    name: V1 WebKit Frame Control
+    name: V1 WebKit Frame and Boss Performance
     runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout synthetic PR merge
@@ -240,12 +240,25 @@ jobs:
       - name: Capture blank and active-canvas frame controls
         run: node scripts/v100-webkit-frame-control.mjs
 
-      - name: Upload WebKit frame controls
+      - name: Build production application
+        run: npm run build
+
+      - name: Measure V1 native boss battle performance (WebKit)
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Upload WebKit frame controls and boss performance
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v100-webkit-frame-control
-          path: outputs/v100-webkit-frame-control/report.json
+          name: v100-webkit-frame-and-boss-performance
+          path: |
+            outputs/v100-webkit-frame-control/report.json
+            outputs/v100-device-runtime/webkit
           if-no-files-found: error
           retention-days: 14
 
@@ -303,14 +316,6 @@ jobs:
           npm run qa:v100-phase-g
           npm run qa:v100-phase-g-validate
 
-      - name: Measure V1 native boss battle performance (WebKit)
-        if: ${{ !cancelled() && steps.playwright_browsers.outcome == 'success' && steps.production_build.outcome == 'success' }}
-        env:
-          V100_DEVICE_RUNTIME_ENGINE: webkit
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
-          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
-
       - name: Upload Phase G production evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -320,7 +325,6 @@ jobs:
             outputs/v100-phase-g
             docs/qa/v100/phase-g-screenshot-manifest.json
             outputs/native-pointer-probe
-            outputs/v100-device-runtime
             outputs/v100-native-music
           if-no-files-found: error
           retention-days: 14
