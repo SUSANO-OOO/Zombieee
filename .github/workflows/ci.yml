@@ -93,6 +93,12 @@ jobs:
       - name: Install focused browser engines
         run: npx playwright install --with-deps chromium
 
+      - name: Verify PWA shell commit and offline relaunch (Chromium)
+        run: node scripts/pwa-shell-commit-browser-smoke.mjs
+
+      - name: Verify online play after PWA registration failure (Chromium)
+        run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-registration-fallback-browser-smoke.mjs
+
       - name: Build exact base and candidate PWA sites for partial-update QA
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}

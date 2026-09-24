@@ -139,6 +139,7 @@ process.env.V095_EMPLOYMENT_QA_BASE_URL = origin;
 process.env.V0951_HOTFIX_QA_BASE_URL = origin;
 process.env.V0952_HOTFIX_QA_BASE_URL = origin;
 process.env.V096_PWA_QA_BASE_URL = origin;
+process.env.PWA_REGISTRATION_FALLBACK_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;

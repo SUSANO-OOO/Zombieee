@@ -159,6 +159,16 @@ const index = await readFile(path.join(outputDir, "index.html"), "utf8");
 const v100Index = await readFile(path.join(outputDir, "v100", "index.html"), "utf8");
 const requiredReferences = await verifyHtmlReferences(path.join(outputDir, "index.html"));
 const v100References = await verifyHtmlReferences(path.join(outputDir, "v100", "index.html"));
+const shellList = JSON.parse(await readFile(path.join(outputDir, "pwa-shell.json"), "utf8"));
+const viteManifest = JSON.parse(await readFile(path.join(clientDir, ".vite", "manifest.json"), "utf8"));
+const expectedShellFiles = [...new Set(Object.values(viteManifest).flatMap((entry) => [
+  entry.file,
+  ...(entry.css ?? []),
+]).filter((file) => /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)))].sort();
+if (expectedShellFiles.length === 0 || JSON.stringify(shellList.files) !== JSON.stringify(expectedShellFiles)) {
+  throw new Error("PWA shell list does not match the emitted JS/CSS chunks");
+}
+for (const file of expectedShellFiles) await stat(path.join(outputDir, file));
 
 // --- PWA distribution manifest -------------------------------------------
 //
@@ -244,6 +254,7 @@ console.log(JSON.stringify({
   renderedV100Bytes: v100Index.length,
   checkedReferences: requiredReferences.length,
   checkedV100References: v100References.length,
+  shellFiles: expectedShellFiles.length,
   preloadHelperPatchCount,
   releaseVersion,
   releaseSha,

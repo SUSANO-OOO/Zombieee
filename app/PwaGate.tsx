@@ -151,6 +151,7 @@ function InstallSteps({ steps }: { steps: Array<Record<string, unknown>> }) {
 
 export function PwaGate({ children }: { children: React.ReactNode }) {
   const [supported, setSupported] = useState(false);
+  const [registrationFailed, setRegistrationFailed] = useState(false);
   const [standalone, setStandalone] = useState(false);
   const [installedManifest, setInstalledManifest] = useState<Manifest | null>(null);
   const [publishedManifest, setPublishedManifest] = useState<Manifest | null>(null);
@@ -253,6 +254,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       storeRef.current = store;
 
       registrationRef.current = await registerServiceWorker(window, { baseUrl });
+      if (!registrationRef.current) {
+        // API presence does not guarantee registration. A standalone first run
+        // cannot commit a pack without a worker, so release the network game
+        // instead of trapping the player behind an impossible download gate.
+        if (!cancelled) {
+          setSupported(false);
+          setRegistrationFailed(true);
+          setPublishedManifestState("unsupported");
+          setPublishedChecked(true);
+        }
+        return;
+      }
 
       const state = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
       if (cancelled) return;
@@ -460,7 +473,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         refreshStored,
         commitManifest: async (registration, candidate) => {
           try {
-            return await requestFromServiceWorker(registration, { type: "pwa:commit-manifest", manifest: candidate });
+            return await requestFromServiceWorker(
+              registration,
+              { type: "pwa:commit-manifest", manifest: candidate },
+              { timeoutMs: 60_000 },
+            );
           } catch {
             return null;
           }
@@ -588,6 +605,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         commitManifest: async (registration, manifest) => requestFromServiceWorker(
           registration,
           { type: "pwa:commit-manifest", manifest },
+          { timeoutMs: 60_000 },
         ),
         readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
         persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
@@ -704,7 +722,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // otherwise a complete uncommitted candidate could slip through on reload.
   // If the lookup fails offline, `publishedChecked` still releases the retained
   // active generation rather than treating a network absence as data loss.
-  const settling = !booted || (standalone && !publishedChecked);
+  const settling = !booted || (supported && standalone && !publishedChecked);
   const blocking = settling
     || phase === "install-offer"
     || phase === "download-complete"
@@ -716,6 +734,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!blocking && children}
+
+      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
+        <aside className="pwa-notice" role="status">
+          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
+          <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
+        </aside>
+      )}
 
       {blocking && (
         <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">

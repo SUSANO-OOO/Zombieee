@@ -148,17 +148,20 @@ test("committing a manifest warms the shell so a first install can boot offline"
   // Without this the shell cache is only ever filled by a navigation that
   // happens after a commit. On a first install the only navigation happens
   // before it, so a fully downloaded app taken offline would fail to start.
-  assert.match(serviceWorkerSource, /async function warmShell\(generation\)/);
+  assert.match(serviceWorkerSource, /async function warmShell\(manifest\)/);
   const commitCase = serviceWorkerSource.slice(
     serviceWorkerSource.indexOf('case "pwa:commit-manifest"'),
     serviceWorkerSource.indexOf('case "pwa:rollback"'),
   );
   assert.match(commitCase, /await warmShell\(/, "commit must warm the shell");
-  // Warming reaches the network. The page is told its install succeeded first,
-  // so a slow prefetch cannot time out the commit reply it is waiting on.
+  // A complete pack cannot be acknowledged while the boot shell is missing.
   assert.ok(
-    commitCase.indexOf("reply(event") < commitCase.indexOf("warmShell("),
-    "the commit must be acknowledged before the shell is warmed",
+    commitCase.indexOf("warmShell(") < commitCase.indexOf("writeState(next)"),
+    "the worker must warm before activating the generation",
+  );
+  assert.ok(
+    commitCase.indexOf("writeState(next)") < commitCase.indexOf('type: "pwa:committed"'),
+    "the worker must acknowledge only after the active pointer is durable",
   );
 });
 

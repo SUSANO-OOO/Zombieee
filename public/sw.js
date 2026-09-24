@@ -28,6 +28,7 @@ const STATIC_SHELL_PATHS = Object.freeze([
   "asset-manifest.json",
   "release.json",
 ]);
+const SHELL_WARM_TIMEOUT_MS = 45_000;
 
 /** Synthetic, content-addressed key space for game assets. */
 const ASSET_KEY_PREFIX = "__pwa-asset__";
@@ -226,17 +227,26 @@ async function respondNetworkFirst(request, cacheName) {
 async function respondForNavigation(request) {
   const state = await readState();
   const generation = state.active ? generationOf(state.active) : null;
+  const relativePath = new URL(request.url).pathname.slice(scopeUrl.pathname.length);
+  const indexUrl = new URL(
+    relativePath === "v100" || relativePath.startsWith("v100/")
+      ? "v100/index.html" : "index.html",
+    scopeUrl,
+  ).toString();
   try {
     const response = await fetch(request);
-    if (response.ok && generation) {
+    const html = response.ok && generation && isHtmlResponse(response)
+      ? await response.clone().text() : "";
+    const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+    if (html && (!servedRelease || servedRelease === state.active.releaseSha)) {
       const cache = await caches.open(shellCacheName(generation));
-      await cache.put(new URL("index.html", scopeUrl).toString(), response.clone());
+      await cache.put(indexUrl, response.clone());
     }
     return response;
   } catch (error) {
     if (generation) {
       const cache = await caches.open(shellCacheName(generation));
-      const cached = await cache.match(new URL("index.html", scopeUrl).toString());
+      const cached = await cache.match(indexUrl);
       if (cached) return cached;
     }
     throw error;
@@ -254,53 +264,95 @@ async function respondForNavigation(request) {
  * is what makes "offline relaunch plays what was downloaded" true on the very
  * first run.
  *
- * Best effort by design: a shell that cannot be warmed must never fail the
- * commit, because the assets are already verified and stored.
+ * A complete asset pack cannot be reported offline-ready until both route
+ * documents and every emitted JS/CSS chunk have been saved as one generation.
  */
-async function warmShell(generation) {
+async function warmShell(manifest) {
+  const generation = generationOf(manifest);
   const cache = await caches.open(shellCacheName(generation));
-  const indexUrl = new URL("index.html", scopeUrl).toString();
-  try {
-    const response = await fetch(new URL("./", scopeUrl).toString(), { cache: "no-store" });
-    if (!response.ok) return { warmed: 0 };
-    const html = await response.clone().text();
-    await cache.put(indexUrl, response);
-
-    // Cache the hashed build output the shell references, so the boot path is
-    // complete offline rather than only partly cached.
-    const references = new Set();
-    for (const match of html.matchAll(/(?:src|href)="([^"?#]+\.(?:js|mjs|css))["?#]/g)) {
-      references.add(new URL(match[1], scopeUrl).toString());
+  const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
+  const validFiles = (files) => Array.isArray(files) && files.length > 0
+    && files.every((file) => typeof file === "string"
+      && /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)
+      && !file.split("/").includes(".."));
+  const cachedReady = async () => {
+    const cachedList = await cache.match(shellListUrl);
+    if (!cachedList) return false;
+    const { files } = await cachedList.clone().json();
+    if (!validFiles(files)) return false;
+    for (const path of ["index.html", "v100/index.html"]) {
+      const response = await cache.match(new URL(path, scopeUrl).toString());
+      if (!response || !isHtmlResponse(response)) return false;
+      const html = await response.clone().text();
+      const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+      if (servedRelease && servedRelease !== manifest.releaseSha) return false;
     }
-    let warmed = 1;
+    const hits = await Promise.all(files.map(async (file) => {
+      const response = await cache.match(new URL(file, scopeUrl).toString());
+      const type = response?.headers.get("content-type") ?? "";
+      return Boolean(response?.ok && (file.endsWith(".css")
+        ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type)));
+    }));
+    return hits.every(Boolean);
+  };
+  try {
+    if (await cachedReady()) return { ready: true, reused: true };
+  } catch { /* incomplete or corrupt cache; try the network */ }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SHELL_WARM_TIMEOUT_MS);
+  const fetchRequired = async (url, kind) => {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok || response.status !== 200) throw new Error(`${kind}-http-${response.status}`);
+    if (kind === "html" && !isHtmlResponse(response)) throw new Error("shell-html-type");
+    if (kind === "script" && !/javascript|ecmascript/u.test(response.headers.get("content-type") ?? "")) {
+      throw new Error("shell-script-type");
+    }
+    if (kind === "style" && !/text\/css/u.test(response.headers.get("content-type") ?? "")) {
+      throw new Error("shell-style-type");
+    }
+    return response;
+  };
+  try {
+    const shellListResponse = await fetchRequired(shellListUrl, "manifest");
+    const shellList = await shellListResponse.clone().json();
+    if (!validFiles(shellList.files)) throw new Error("invalid-shell-list");
+    await cache.put(shellListUrl, shellListResponse);
+    const required = [
+      { path: "./", key: "index.html" },
+      { path: "v100/", key: "v100/index.html" },
+    ];
+    for (const route of required) {
+      const response = await fetchRequired(new URL(route.path, scopeUrl).toString(), "html");
+      const html = await response.clone().text();
+      const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+      if (servedRelease && servedRelease !== manifest.releaseSha) throw new Error("shell-release-mismatch");
+      await cache.put(new URL(route.key, scopeUrl).toString(), response);
+    }
     for (const shellPath of STATIC_SHELL_PATHS) {
       const shellUrl = new URL(shellPath, scopeUrl).toString();
       try {
-        const shellAsset = await fetch(shellUrl, { cache: "no-store" });
+        const shellAsset = await fetch(shellUrl, { cache: "no-store", signal: controller.signal });
         if (shellAsset.ok && shellAsset.status === 200) {
           await cache.put(shellUrl, shellAsset);
-          warmed += 1;
         }
       } catch {
         // A deployment without optional release metadata may still have a
         // fully valid game shell. Keep warming the rest of the assets.
       }
     }
-    for (const reference of references) {
-      if (new URL(reference).origin !== scopeUrl.origin) continue;
-      try {
-        const asset = await fetch(reference, { cache: "no-store" });
-        if (asset.ok && asset.status === 200) {
-          await cache.put(reference, asset);
-          warmed += 1;
-        }
-      } catch {
-        // One missing shell file must not abandon the rest.
-      }
-    }
-    return { warmed };
-  } catch {
-    return { warmed: 0 };
+    const assets = await Promise.allSettled(shellList.files.map(async (file) => {
+      const url = new URL(file, scopeUrl).toString();
+      const response = await fetchRequired(url, file.endsWith(".css") ? "style" : "script");
+      await cache.put(url, response);
+    }));
+    const failed = assets.find((result) => result.status === "rejected");
+    if (failed) throw failed.reason;
+    if (!await cachedReady()) throw new Error("shell-cache-incomplete");
+    return { ready: true, files: shellList.files.length + required.length };
+  } catch (error) {
+    return { ready: false, reason: String(error?.message ?? error) };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -482,6 +534,10 @@ self.addEventListener("message", (event) => {
         const manifest = message.manifest;
         if (!manifest?.assets?.length) return reply(event, { type: "pwa:commit-failed", reason: "invalid-manifest" });
         const state = await readState();
+        const warmed = await warmShell(manifest);
+        if (!warmed.ready) {
+          return reply(event, { type: "pwa:commit-failed", reason: `shell-${warmed.reason}` });
+        }
         const next = {
           active: manifest,
           previous: state.active && generationOf(state.active) !== generationOf(manifest)
@@ -492,20 +548,12 @@ self.addEventListener("message", (event) => {
         await writeState(next);
         invalidateManifestMemo();
         assetIndexMemo = null;
-        // Collecting first is safe: the new generation is already active, so
-        // its shell cache name is retained even before anything is in it.
         const collected = await collectGarbage(next);
-
-        // Answer as soon as the generation is committed. Warming the shell
-        // reaches the network, and the page must not sit waiting on a prefetch
-        // to be told that its install succeeded. waitUntil keeps the worker
-        // alive until the warm finishes.
         await reply(event, {
           type: "pwa:committed",
           generation: generationOf(manifest),
           ...collected,
         });
-        await warmShell(generationOf(manifest));
         return undefined;
       }
 
