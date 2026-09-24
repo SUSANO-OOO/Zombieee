@@ -24,6 +24,7 @@ const rasterGroupAblation = process.env.V100_PRESIDENT_RASTER_GROUP_ABLATION ===
 const hudVisibilityAblation = process.env.V100_PRESIDENT_HUD_VISIBILITY_ABLATION === "1";
 const rafCallbackProfile = process.env.V100_PRESIDENT_RAF_CALLBACK_PROFILE === "1";
 const rafProfileViewport = process.env.V100_PRESIDENT_RAF_PROFILE_VIEWPORT ?? null;
+const diagnosticViewport = process.env.V100_PRESIDENT_DIAGNOSTIC_VIEWPORT ?? null;
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(output); assert.ok(["chromium", "webkit"].includes(engineName));
 assert.ok(["localhost", "127.0.0.1"].includes(origin.hostname));
@@ -33,7 +34,9 @@ assert.ok(!rasterGroupAblation || (baselineOnly && !recordVideo && !renderProfil
 assert.ok(!hudVisibilityAblation || (baselineOnly && !recordVideo && !renderProfile && !compositeAblation && !rafCallbackProfile && !backgroundBlitAblation && !shadowBlurAblation && !rasterGroupAblation), "HUD visibility ablation requires baseline-only, no recording, and no concurrent probes");
 const allViewports = [{ width: 844, height: 390 }, { width: 1280, height: 720 }, { width: 844, height: 340 }];
 assert.ok(!rafProfileViewport || rafProfileViewport === "1280x720", "RAF callback profile viewport must be 1280x720");
-const viewports = backgroundBlitAblation || shadowBlurAblation || rasterGroupAblation || hudVisibilityAblation ? [{ width: 1280, height: 720 }] : (rafProfileViewport ? allViewports.filter(viewport => `${viewport.width}x${viewport.height}` === rafProfileViewport) : allViewports);
+assert.ok(!diagnosticViewport || allViewports.some(viewport => `${viewport.width}x${viewport.height}` === diagnosticViewport), "diagnostic viewport must be an existing acceptance viewport");
+const ablationViewport = diagnosticViewport ? allViewports.filter(viewport => `${viewport.width}x${viewport.height}` === diagnosticViewport) : [{ width: 1280, height: 720 }];
+const viewports = backgroundBlitAblation || shadowBlurAblation || rasterGroupAblation || hudVisibilityAblation ? ablationViewport : (rafProfileViewport ? allViewports.filter(viewport => `${viewport.width}x${viewport.height}` === rafProfileViewport) : allViewports);
 assert.ok(!backgroundBlitAblation || (viewports.length === 1 && viewports[0].width === 1280 && viewports[0].height === 720), "background blit ablation requires 1280x720");
 const sourcePath = "/art/v100/bosses/mugarian-president-mutated-battle-v2.png";
 const sourceFile = new URL(`../public${sourcePath}`, import.meta.url);

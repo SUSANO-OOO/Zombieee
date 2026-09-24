@@ -8225,11 +8225,16 @@ function drawWorld(
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.restore();
-  if (background?.complete && background.naturalWidth) {
+  // The cached stage plate is opaque and covers the viewport. Clearing first
+  // forces a second full-canvas raster pass on WebKit every battle frame.
+  const hasOpaqueStagePlate = Boolean(background?.complete && background.naturalWidth);
+  if (!hasOpaqueStagePlate) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+  }
+  if (hasOpaqueStagePlate && background) {
     drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);
   } else if (allowDiagnosticFallback) drawDiagnosticStationBackground(ctx, g);
   ctx.save();

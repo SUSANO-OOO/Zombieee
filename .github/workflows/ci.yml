@@ -311,6 +311,18 @@ jobs:
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
+      - name: Diagnose 844x390 raster groups after performance failure
+        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          V100_PRESIDENT_PRESENTATION_ENGINE: webkit
+          V100_PRESIDENT_PRESENTATION_OUT: outputs/v100-device-runtime/webkit-844x390-raster-groups
+          V100_PRESIDENT_RECORD_VIDEO: "0"
+          V100_PRESIDENT_BASELINE_ONLY: "1"
+          V100_PRESIDENT_RASTER_GROUP_ABLATION: "1"
+          V100_PRESIDENT_DIAGNOSTIC_VIEWPORT: 844x390
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-president-presentation-browser.mjs
+
       - name: Upload WebKit frame controls and boss performance
         if: always()
         uses: actions/upload-artifact@v4
@@ -323,6 +335,7 @@ jobs:
             outputs/v100-device-runtime/webkit-844x390-repeat
             outputs/v100-device-runtime/webkit-844x340-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-draw-suppressed
+            outputs/v100-device-runtime/webkit-844x390-raster-groups
           if-no-files-found: error
           retention-days: 14
 
