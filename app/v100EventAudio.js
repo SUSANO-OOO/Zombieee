@@ -131,6 +131,10 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     operation: async (role = "navigate") => {
       if (disposed || !["advance", "navigate", "cancel", "confirm", "reject"].includes(role)) return false;
       if (!await ensureUnlocked("v100-interface-gesture")) return false;
+      const settings = mixer.getSettings();
+      // A disabled UI sound must not start a lazy asset fetch that can be
+      // cancelled when this same operation moves the app to a new release.
+      if (settings.muted || !settings.sfxEnabled || settings.masterVolume <= 0 || settings.sfxVolume <= 0) return false;
       return mixer.play(`v100-ui-${role}`, { instanceKey: "v100-interface", dedupeKey: `v100-interface:${role}` });
     },
     snapshot,
