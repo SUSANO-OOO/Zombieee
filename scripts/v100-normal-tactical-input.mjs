@@ -13,7 +13,7 @@ export async function nativeBattleTap(page,locator){
 }
 
 export async function normalTacticalInput(page,record){
-  const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,range:f.range}))};});if(!s?.running||s.over)return;
+  const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,range:f.range}))};});if(!s?.running||s.over)return;
   const humans=s.fighters.filter(f=>f.side==='human'&&f.hp>0),enemies=s.fighters.filter(f=>f.side==='zombie'&&f.hp>0),queue=s.deployQueue??[];
   const cards=page.locator('button.unit-card[data-kind]'),kinds=await cards.evaluateAll(els=>els.map(el=>el.dataset.kind));
   const target=Object.fromEntries([...new Set(kinds)].map(kind=>[kind,kinds.filter(k=>k===kind).length]));
@@ -49,7 +49,11 @@ export async function normalTacticalInput(page,record){
               : secondaryRanged && count(secondaryRanged)<target[secondaryRanged] ? [secondaryRanged]
                 : healer && count(healer)<target[healer] ? [healer]
                   : kinds.find(kind=>count(kind)<target[kind]) ? [kinds.find(kind=>count(kind)<target[kind])]:[];
-  const priorities = earlyCampaign ? earlyPriorities : latePriorities;
+  // The fixed four-unit boss/music fixture needs to reserve command for its
+  // only precision attacker. Ordinary campaign runs keep their established
+  // stage-dependent role order.
+  const bossPrecision = record.tacticalProfile==='boss-precision';
+  const priorities = earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities;
   record.tacticalProfile ??= earlyCampaign ? 'early-roles' : 'late-precision';
   for(const kind of priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
@@ -58,11 +62,19 @@ export async function normalTacticalInput(page,record){
     if(deployed)break;
   }
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];
-  if(cluster?.members.length>=3){
-    const target={x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length};
+  const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):null;
+  let airstrikeRequested=false;
+  if(cluster?.members.length>=3||boss){
+    const target=cluster?.members.length>=3
+      ? {x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length}
+      : {x:Math.min(805,Math.max(230,boss.x)),y:boss.y};
     const point=await page.locator('.game-shell canvas').evaluate((c,t)=>{const r=c.getBoundingClientRect(),scale=Number(c.dataset.worldScale),x=r.x+Number(c.dataset.worldOffsetX)+t.x*scale,y=r.y+Number(c.dataset.worldOffsetY)+t.y*scale;return document.elementFromPoint(x,y)===c?{x,y}:null;},target).catch(()=>null);
-    if(point&&await nativeBattleTap(page,page.locator('button.support-btn.airstrike'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'airstrike',target});}
-  }else if(enemies.some(f=>f.x<550)&&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
+    if(point&&await nativeBattleTap(page,page.locator('button.support-btn.airstrike'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'airstrike',target});airstrikeRequested=true;}
+  }
+  // When the boss fixture cannot afford another airstrike, use the crawler's
+  // ordinary barrage control against enemies already threatening its front.
+  if(!airstrikeRequested&&(bossPrecision||cluster?.members.length<3)
+    &&enemies.some(f=>f.x<550)&&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
   // Each enabled button already uses the production ability's target/range.
   // Normal attack range would wrongly exclude long-range precision abilities.
   const icons=await page.locator('button.manual-ability-ready.available[aria-disabled="false"]').evaluateAll(els=>els.map(el=>({ownerId:el.dataset.fighterId,kind:el.dataset.abilityKind})));
@@ -75,5 +87,5 @@ export async function normalTacticalInput(page,record){
     anchors.sort((a,b)=>a.x-b.x);const anchor=anchors[Math.floor(anchors.length/2)],box=await page.locator('.game-shell canvas').boundingBox({timeout:750}).catch(()=>null);
     if(anchor&&box){const point={x:box.x+anchor.x,y:box.y+anchor.y+20};if(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.tagName==='CANVAS',point)&&await nativeBattleTap(page,page.locator('button[data-support-id="support-healing"]'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'healing-supply',point});}}
   }
-  if(!record.lastObservedTime||s.time-record.lastObservedTime>=2){record.lastObservedTime=s.time;(record.samples??=[]).push({time:s.time,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,command:s.energy,humanCount:humans.length,enemyCount:enemies.length,objective:s.objective,escort:s.escortMissionObject});}
+  if(!record.lastObservedTime||s.time-record.lastObservedTime>=2){record.lastObservedTime=s.time;(record.samples??=[]).push({time:s.time,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,command:s.energy,supportGauge:s.supportGauge,airstrikePhase:s.airstrike?.phase,airstrikeCooldownRemaining:s.airstrike?.cooldownRemaining,humanCount:humans.length,enemyCount:enemies.length,objective:s.objective,escort:s.escortMissionObject});}
 }

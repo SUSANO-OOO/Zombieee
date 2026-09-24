@@ -79,6 +79,7 @@ try{for(const number of numbers){
  try{
   const base=createDefaultV100Save({playerName:'戦場改善確認'}),stageId=V100_STAGE_IDS[number-1];
   const soundOnlyStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
+  if(soundOnlyStage3)result.tacticalProfile='boss-precision';
   const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(number>=6?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
   const contactCheck=process.env.V100_CONTACT_CHECK==='1';
   if(!kumaGuardCheck&& (manualFirearmCheck||guardianCheck))for(const id of ['unit-gantetsu','unit-mizuchi','unit-raider'])if(!owned.includes(id))owned.push(id);
