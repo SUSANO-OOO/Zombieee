@@ -25,7 +25,7 @@ export const PRODUCTION_VISUALS = Object.freeze({
     "stage-civic-archive-route": "/art/v090/stages/civic-archive-route-background-v1.webp",
     "stage-coastal-link-bridge": "/art/v090/stages/coastal-link-bridge-background-v1.webp",
     "stage-estuary-floodgate-seal": "/art/v090/stages/estuary-floodgate-background-v1.webp",
-    "stage-mugarian-logistics-hq": "/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp",
+    "stage-mugarian-logistics-hq": "/art/v100/stages/s21-mugarian-hq-gate-r4-background-v1.webp",
     "stage-mugarian-clinical-trial-wing": "/art/v100/stages/s22-clinical-trial-wing-r2-background-v1.webp",
     "stage-mugarian-special-operations-armory": "/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp",
     "stage-mugarian-tech-tower": "/art/v100/stages/s24-tech-tower-background-v1.webp",

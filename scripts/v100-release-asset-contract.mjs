@@ -1,6 +1,6 @@
 import { V100_MOTION_ATLAS_REPLACEMENTS, V100_PHONE_REVIEW_ASSET_ADDITIONS, V100_PHONE_REVIEW_ASSET_REMOVALS } from "./v100-phone-review-asset-contract.mjs";
-// Source-bound additions for the 2026-09-07 completion pass. Existing published
-// assets and the original 44 V1 derivatives retain their exact transport bytes.
+// Source-bound additions for the 2026-09-07 completion pass. Published assets
+// retain their bytes; the Stage 21 HQ gate replaces its duplicate V1 plate.
 export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
   Object.freeze({ path: "/art/v100/story/kumaya-before-outbreak-v1.webp", bytes: 158796, hash: "sha256-f209eb6b9dfee542e58b2dcd0a9ad32505e49eaff9c9b05d93de8fbe2d7fe9f1" }),
   Object.freeze({ path: "/art/v100/story/kumaya-reopened-v1.webp", bytes: 175738, hash: "sha256-5c388170fb89c3981a262aeaab4715e838d28d3b2cbaf61cc046b2d1d26b8eb8" }),
@@ -69,12 +69,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   // Measured against the frozen 0.9.9.5 manifest: 111 new logical paths,
   // including the six v2 motion paths and repaired Takuya atlas transported
   // through optimized WebP. The published Takuya gutter remains retained.
-  bytesFromV0995: 49_624_054,
+  bytesFromV0995: 49_575_030,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 139_365_619,
-  candidateDistinctHashBytes: 138_825_716,
-  updateFromV0982Bytes: 66_314_502,
-  updateFromV0993Bytes: 55_939_808,
+  candidateTotalBytes: 139_316_595,
+  candidateDistinctHashBytes: 138_776_692,
+  updateFromV0982Bytes: 66_265_478,
+  updateFromV0993Bytes: 55_890_784,
 });

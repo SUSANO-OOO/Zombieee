@@ -3,7 +3,7 @@
   "designId": "V100-SOL-DL-001 r2",
   "storySha256": "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4",
   "generator": "scripts/build-v100-runtime-assets.mjs",
-  "policy": "finite-derivatives-from-selected-masters-and-existing-authored-production-sources",
+  "policy": "finite-derivatives-from-selected-masters-existing-production-and-authored-stage21-source",
   "draftGuideTexturesRemoved": true,
   "draftGuideTexturePolicy": "v080 arrow, chevron, route-marker and geometric guide textures are not used in V1 runtime backgrounds",
   "privateReferencePhotosIncluded": false,
@@ -304,6 +304,10 @@
     "public/art/v100/mission-objects/twin-reactor-landmark-v1.png": {
       "path": "public/art/v100/mission-objects/twin-reactor-landmark-v1.png",
       "sha256": "bf23593e6a376cbfe9441726b2a761505b5e8fa10c4cea1fdaac4617e816e3ea"
+    },
+    "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png": {
+      "path": "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png",
+      "sha256": "1d2fa278b7b807afa765f1091242c22cb19b500271b0a25d4c73efc1d5ed71c7"
     }
   },
   "outputs": {
@@ -3848,6 +3852,19 @@
       "identityMasterSha256": "3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8",
       "repair": "explicit-reviewed-gap-seeds-local-palette",
       "reviewedGapSeedCount": 2
+    },
+    "/public/art/v100/stages/s21-mugarian-hq-gate-r4-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "c5423cd968065917f1b763b8c5f3bc2d2330d4a76f07c0dea9e4759be8162407",
+      "sources": [
+        "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png"
+      ],
+      "semanticStates": []
     }
   }
 }

@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { V100_RUNTIME_ASSET_MANIFEST, validateV100RuntimeAssetManifest } from "../app/v100RuntimeAssetManifest.js";
+import { PRODUCTION_VISUALS } from "../app/productionVisuals.js";
 import {
   SPRITE_DIRECTIONS,
   SPRITE_STATES,
@@ -184,6 +185,35 @@ test("V1 runtime manifest exposes the complete Stage 21-30 and motion asset cont
   assert.equal(Object.keys(V100_RUNTIME_ASSET_MANIFEST.bosses).length, 2);
   assert.equal(Object.keys(V100_RUNTIME_ASSET_MANIFEST.redPanther).length, 4);
   assert.equal(Object.keys(V100_RUNTIME_ASSET_MANIFEST.stages).length, 10);
+});
+
+test("Stage 21 HQ gate is a distinct authored scene at the actual battle background path", async () => {
+  const stageId = "stage-mugarian-logistics-hq";
+  const hqPath = V100_RUNTIME_ASSET_MANIFEST.stages[stageId].background;
+  assert.equal(PRODUCTION_VISUALS.stages[stageId], hqPath);
+
+  const provenance = JSON.parse(await readFile(sourceFile("assets/source/v100/runtime/v100-runtime-assets-provenance.json"), "utf8"));
+  const sourcePath = "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png";
+  const sourceBytes = await readFile(sourceFile(sourcePath));
+  assert.equal(provenance.sources[sourcePath]?.sha256, sha256(sourceBytes));
+  const output = provenance.outputs[`/public${hqPath}`];
+  const hqBytes = await readFile(publicFile(hqPath));
+  assert.equal(output?.sha256, sha256(hqBytes));
+  assert.deepEqual(output.sources, [sourcePath]);
+  assert.deepEqual({ width: output.width, height: output.height }, { width: 1600, height: 900 });
+
+  const bayBytes = await readFile(publicFile(PRODUCTION_VISUALS.stages["stage-bay-tower-service"]));
+  const [hq, bay] = await Promise.all([hqBytes, bayBytes].map((bytes) => sharp(bytes).resize(80, 45).removeAlpha().raw().toBuffer()));
+  let changed = 0;
+  let compared = 0;
+  for (let y = 0; y < 26; y += 1) {
+    for (let x = 40; x < 80; x += 1) {
+      const pixel = (y * 80 + x) * 3;
+      compared += 1;
+      if ([0, 1, 2].some((channel) => Math.abs(hq[pixel + channel] - bay[pixel + channel]) > 16)) changed += 1;
+    }
+  }
+  assert.ok(changed / compared > 0.2, `Stage 21 corporate gate vanished into Stage 17 plate: ${changed}/${compared}`);
 });
 
 test("custom runtime atlases preserve approved centered cells, exact pixels, PWA transport, and alpha gutters", async () => {

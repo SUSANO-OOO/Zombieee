@@ -8,6 +8,8 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const SOURCE = path.join(ROOT, "assets", "source", "v100");
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 const STORY_SHA = "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4";
+const STAGE_21_HQ_SOURCE = "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png";
+const STAGE_21_HQ_SHA = "1d2fa278b7b807afa765f1091242c22cb19b500271b0a25d4c73efc1d5ed71c7";
 
 const MASTER_HASHES = Object.freeze({
   "assets/source/v100/characters/segawa-identity-master-r2.png": "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d",
@@ -185,6 +187,7 @@ async function makeVfx(outputStem, sourceRelativePath, sourceLabel, width = 260,
 
 async function main() {
   for (const [relativePath, expectedHash] of Object.entries(MASTER_HASHES)) await registerSource(relativePath, expectedHash);
+  await registerSource(STAGE_21_HQ_SOURCE, STAGE_21_HQ_SHA);
   for (const relativePath of Object.values(EXISTING)) await registerSource(relativePath);
 
   const segawa = "assets/source/v100/characters/segawa-identity-master-r2.png";
@@ -227,10 +230,10 @@ async function main() {
     { path: EXISTING.transmitterDamaged, label: EXISTING.transmitterDamaged, width: 280, height: 340, left: 360, top: 40 },
   ], 720, 420);
 
-  // The v080 research/hospital plates contain guide arrows and geometric
-  // markers intended for layout review.  V1 runtime scenes use clean v090
-  // production plates instead; gameplay guidance belongs to the UI layer.
-  await stageBackground("s21-mugarian-hq", EXISTING.bayTower, EXISTING.bayTower, [], "s21-mugarian-hq-clean");
+  // Stage 21 uses its own authored HQ gate and wordmarks. The former clean
+  // plate reproduced Stage 17's bay tower and hid the corporate landmark.
+  // Other scenes avoid v080 guide textures; gameplay guidance stays in UI.
+  await stageBackground("s21-mugarian-hq", STAGE_21_HQ_SOURCE, STAGE_21_HQ_SOURCE, [], "s21-mugarian-hq-gate-r4");
   await stageBackground("s22-clinical-trial-wing", EXISTING.civicArchive, EXISTING.civicArchive, [
     { path: "public/art/v100/mission-objects/clinical-trial-wing-v1.png", label: "/art/v100/mission-objects/clinical-trial-wing-v1.png", width: 420, height: 390, left: 1110, top: 240 },
   ], "s22-clinical-trial-wing-r2");
@@ -272,7 +275,7 @@ async function main() {
     designId: "V100-SOL-DL-001 r2",
     storySha256: STORY_SHA,
     generator: "scripts/build-v100-runtime-assets.mjs",
-    policy: "finite-derivatives-from-selected-masters-and-existing-authored-production-sources",
+    policy: "finite-derivatives-from-selected-masters-existing-production-and-authored-stage21-source",
     draftGuideTexturesRemoved: true,
     draftGuideTexturePolicy: "v080 arrow, chevron, route-marker and geometric guide textures are not used in V1 runtime backgrounds",
     privateReferencePhotosIncluded: false,

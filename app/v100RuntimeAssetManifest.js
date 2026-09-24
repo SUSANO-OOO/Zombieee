@@ -64,7 +64,7 @@ const vfx = freezeRecord({
 });
 
 const stages = freezeRecord({
-  "stage-mugarian-logistics-hq": freezeRecord({ background: `${V100_ROOT}/stages/s21-mugarian-hq-clean-background-v1.webp`, missionObjects: [missionObjects.lureControlStates], vfx: [vfx.hqSecurityWarning] }),
+  "stage-mugarian-logistics-hq": freezeRecord({ background: `${V100_ROOT}/stages/s21-mugarian-hq-gate-r4-background-v1.webp`, missionObjects: [missionObjects.lureControlStates], vfx: [vfx.hqSecurityWarning] }),
   "stage-mugarian-clinical-trial-wing": freezeRecord({ background: `${V100_ROOT}/stages/s22-clinical-clean-v1.webp`, missionObjects: [missionObjects.clinicalControlStates], vfx: [] }),
   "stage-mugarian-special-operations-armory": freezeRecord({ background: `${V100_ROOT}/stages/s23-armory-clean-v1.webp`, missionObjects: [missionObjects.corporateControlStates], vfx: [vfx.armoryRedLensAlert] }),
   "stage-mugarian-tech-tower": freezeRecord({ background: `${V100_ROOT}/stages/s24-tech-tower-background-v1.webp`, missionObjects: [missionObjects.corporateControlStates, missionObjects.twinReactorLandmark], vfx: [] }),

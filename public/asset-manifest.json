@@ -1851,9 +1851,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp",
-      "bytes": 284166,
-      "hash": "sha256-33d923e7a23233746ab3478226c9936070a05804e760a93b1f2bca7d1ab1bfbb",
+      "path": "/art/v100/stages/s21-mugarian-hq-gate-r4-background-v1.webp",
+      "bytes": 235142,
+      "hash": "sha256-c5423cd968065917f1b763b8c5f3bc2d2330d4a76f07c0dea9e4759be8162407",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
