@@ -325,7 +325,7 @@ for (const engine of engines) {
               },
             };
             if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-            results.push({ engine, viewport, kind, phase, prepared, samples, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+            results.push({ engine, viewport, kind, phase, prepared, samples, livenessBefore: activeEvidence.livenessBefore, livenessAfter: activeEvidence.livenessAfter, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
           const postReady = diagnosticControl.diagnostics;
           invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);

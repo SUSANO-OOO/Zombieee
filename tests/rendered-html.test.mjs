@@ -1605,7 +1605,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
-  assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| hud\.barricadeHp <= 0/);
+  assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| gameRef\.current\.over/);
   assert.match(game, /const chooseActionWithCue[\s\S]*if \(!g\.running \|\| g\.paused \|\| g\.over\) return/);
   assert.match(game, /function prepareRolesQa/);
   assert.match(game, /prepareQaMode\(fresh, qaMode\)/);

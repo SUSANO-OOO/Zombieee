@@ -23,8 +23,13 @@ const engine = process.env.V100_DEVICE_RUNTIME_ENGINE ?? "chromium";
 assert.ok(["chromium", "webkit"].includes(engine), `unsupported engine: ${engine}`);
 const evidenceDir = path.resolve(process.env.V100_DEVICE_RUNTIME_OUT ?? "outputs/v100-device-runtime-browser-r1");
 const setupTimeoutMs = 8 * 60_000;
-const measurementMs = 30_000;
+const paintIsolation = process.env.V100_DEVICE_RUNTIME_PAINT_ISOLATION ?? "none";
+assert.ok(["none", "hud", "canvas", "hud-and-canvas"].includes(paintIsolation), `invalid paint isolation: ${paintIsolation}`);
+const diagnosticSeconds = Number(process.env.V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS ?? 15);
+assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diagnosticSeconds <= 30, "diagnostic seconds must be 10..30");
+const measurementMs = paintIsolation === "none" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
+const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
 const defaultViewports = [
   { width: 844, height: 340, safeArea: true },
   { width: 844, height: 390, safeArea: true },
@@ -69,6 +74,44 @@ function percentile(values, fraction) {
   return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)];
 }
 function median(values) { return percentile(values, 0.5); }
+async function measureBlankRaf(browser, viewport) {
+  const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
+  try {
+    const page = await context.newPage();
+    await page.setContent("<!doctype html><html><body></body></html>");
+    const observation = await page.evaluate(() => new Promise((resolve, reject) => {
+      const started = performance.now();
+      const times = [];
+      let handle = null;
+      const watchdog = setTimeout(() => {
+        if (handle !== null) cancelAnimationFrame(handle);
+        reject(new Error("blank rAF diagnostic watchdog"));
+      }, 8_000);
+      const tick = (at) => {
+        times.push(at);
+        if (performance.now() - started >= 2_000) {
+          clearTimeout(watchdog);
+          resolve({ times, visibilityState: document.visibilityState, elapsedMs: performance.now() - started });
+        } else handle = requestAnimationFrame(tick);
+      };
+      handle = requestAnimationFrame(tick);
+    }));
+    const intervals = observation.times.slice(1).map((at, index) => at - observation.times[index]);
+    return {
+      diagnosticOnly: true,
+      status: "captured",
+      callbackCount: observation.times.length,
+      elapsedMs: observation.elapsedMs,
+      visibilityState: observation.visibilityState,
+      medianRafMs: median(intervals),
+      p95RafMs: percentile(intervals, .95),
+    };
+  } catch (error) {
+    return { diagnosticOnly: true, status: "failed", error: String(error) };
+  } finally {
+    await context.close();
+  }
+}
 function snapshotProjection(snapshot) {
   if (!snapshot) return null;
   const living = (snapshot.fighters ?? []).filter((fighter) => Number(fighter.hp) > 0);
@@ -122,7 +165,16 @@ async function waitForBattle(page, deadline) {
     if (phase === "map") {
       await page.getByRole("button", { name: "この作戦を編成", exact: true }).click();
     } else if (phase === "formation") {
-      await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
+      try {
+        await page.getByRole("button", { name: "戦闘へ", exact: true }).click({ timeout: 5_000 });
+      } catch (error) {
+        // WebKit can detach the button after the accepted click while
+        // Playwright is still waiting for a stable element. The live battle
+        // state is the authoritative acknowledgement of this transition.
+        const accepted = await page.evaluate(() => document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") === "battle"
+          && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.running === true).catch(() => false);
+        if (!accepted) throw error;
+      }
     } else if (await page.locator(".v100-event-actions .v100-primary").count()) {
       await page.locator(".v100-event-actions .v100-primary").click();
     } else if (phase === "result" || await page.locator(".v100-result-actions .v100-primary").count()) {
@@ -213,7 +265,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, representative: true, uninterrupted: true },
+  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none", uninterrupted: true, paintIsolation, diagnosticOnly: paintIsolation !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });
@@ -230,6 +282,7 @@ report.provenance.browserVersion = await browser.version();
 try {
   for (const viewport of viewports) {
     const name = `${engine}-${viewport.width}x${viewport.height}`;
+    const blankBaseline = blankBaselineDiagnostic ? await measureBlankRaf(browser, viewport) : null;
     const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
     const page = await context.newPage();
     if (callbackDiagnostic) {
@@ -264,7 +317,7 @@ try {
         };
       });
     }
-    const result = { name, viewport, status: "failed", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
+    const result = { name, viewport, status: "failed", blankBaseline, diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     report.results.push(result);
     let measurementActive = false;
     page.on("console", (message) => { if (message.type() === "error") result.diagnostics.consoleErrors.push(message.text()); });
@@ -300,6 +353,21 @@ try {
       }
       assert.ok(latest?.running && !latest.over && latest.boss.length > 0 && latest.humanCount > 0, "live S25 boss/human setup coverage missing");
       result.setup = { initial: initialProjection, firstLive: latest };
+      result.canvasContext = await page.locator("canvas.battlefield").evaluate((canvas) => ({
+        width: canvas.width,
+        height: canvas.height,
+        cssWidth: canvas.getBoundingClientRect().width,
+        cssHeight: canvas.getBoundingClientRect().height,
+        dpr: window.devicePixelRatio,
+        attributes: canvas.getContext("2d")?.getContextAttributes?.() ?? null,
+      }));
+      if (paintIsolation !== "none") {
+        const selectors = [];
+        if (paintIsolation.includes("hud")) selectors.push(".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert", ".bottom-hud", ".stats-strip", ".barrier-health", ".manual-ability-legend", ".manual-ability-ready");
+        if (paintIsolation.includes("canvas")) selectors.push("canvas.battlefield");
+        await page.addStyleTag({ content: `${selectors.join(",")} { opacity:0!important; }` });
+        result.paintIsolation = { diagnosticOnly: true, selectors };
+      }
       await page.screenshot({ path: path.join(evidenceDir, `${name}-before.png`) });
       measurementActive = true;
       const measurement = await beginMeasurement(page);
@@ -378,7 +446,13 @@ const reportPath = path.join(evidenceDir, "report.json");
 await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
 const failures = report.results.filter((result) => result.status !== "passed" || Object.values(result.diagnostics).some((items) => items.length > 0));
 if (failures.length > 0) {
-  console.error(JSON.stringify({ status: "failed", report: reportPath, failures }, null, 2));
+  console.error(JSON.stringify({ status: "failed", report: reportPath, failures: failures.map(result => ({
+    name: result.name, error: result.error, blankBaseline: result.blankBaseline,
+    performance: result.performance && { p95RafMs: result.performance.p95RafMs,
+      medianFps: result.performance.medianFps, effectiveRenderHz: result.performance.effectiveRenderHz,
+      callbackDiagnostic: result.performance.callbackDiagnostic, gates: result.performance.gates },
+    diagnosticCounts: Object.fromEntries(Object.entries(result.diagnostics).map(([kind, items]) => [kind, items.length])),
+  })) }, null, 2));
   process.exitCode = 1;
 } else {
   console.log(JSON.stringify({ status: "passed", report: reportPath, cases: report.results.length }, null, 2));

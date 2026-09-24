@@ -262,6 +262,7 @@ jobs:
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Upload Phase G production evidence

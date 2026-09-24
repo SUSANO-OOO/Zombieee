@@ -23446,7 +23446,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     : "BOSS";
   const omegaProtectedObjective = gameRef.current.definition.missionConfig.v100StageNumber === 30 && !hud.barricadeVulnerable;
   const bossHudSide = (hud.bossWorldX ?? (omegaProtectedObjective ? W : 0)) >= W * (omegaProtectedObjective ? .6 : .64) ? "boss-hud-left" : "boss-hud-right";
-  const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
+  // Research-core missions can continue after both enemy objectives collapse.
+  // Lock controls only when the battle itself has ended or the crawler is lost.
+  const combatLocked = !!end || hud.baseHp <= 0 || gameRef.current.over;
   const commonBattleActionBlockReason = !started
     ? "作戦開始前"
     : paused
