@@ -4325,6 +4325,17 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         "required vehicle action has no retained production observation");
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
+      if (!completedImpactProofEnabled) {
+        invariant(typeof captureCombatAction === "function", "vehicle battle causal capture callback missing");
+        // Seal the ordinary live-combat impact before the later boss presentation wait.
+        // That wait can outlast an active wave without changing the 12-second proof.
+        sealedCombatCausalProof = await captureCombatAction({
+          durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
+          requiredCompletedImpactActorKeys,
+        });
+        invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE",
+          "vehicle battle causal proof was not sealed in live combat");
+      }
     }
     if (!completedImpactProofEnabled) {
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
