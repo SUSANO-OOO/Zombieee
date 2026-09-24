@@ -119,7 +119,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit");
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 8);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
   assert.match(nativePwaJob,/runs-on: macos-15-intel/u);
@@ -199,10 +199,10 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["verify", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["verify", "v100-webkit-frame-control", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
-    "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
+    "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
     "webkit-enemy-runtime-shard": undefined, "webkit-viewport": ["webkit-deployment-viewport", "webkit-hosted"],
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
@@ -228,6 +228,13 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     }
     assert.ok(job.if === undefined || job.if === "${{ !cancelled() }}", `${id} must respect cancellation while retaining failure diagnostics`);
   }
+  const frameControl = jobs["v100-webkit-frame-control"];
+  const frameSteps = frameControl.steps;
+  const browserInstall = frameSteps.findIndex((step) => step.run === "npx playwright install webkit");
+  const runtimePin = frameSteps.findIndex((step) => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos");
+  const capture = frameSteps.findIndex((step) => step.run === "node scripts/v100-webkit-frame-control.mjs");
+  assert.ok(browserInstall >= 0 && runtimePin > browserInstall && capture > runtimePin);
+  assert.equal(frameSteps.find((step) => step.name === "Upload WebKit frame controls")?.with?.["if-no-files-found"], "error");
   const viewports = ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"];
   assert.deepEqual(jobs["webkit-viewport"].strategy.matrix.viewport, viewports);
   assert.deepEqual(jobs["webkit-deployment-viewport"].strategy.matrix.viewport, viewports);

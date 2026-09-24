@@ -206,6 +206,49 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v100-webkit-frame-control:
+    name: V1 WebKit Frame Control
+    runs-on: macos-15-intel
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install locked WebKit
+        run: npx playwright install webkit
+
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos
+
+      - name: Capture blank and active-canvas frame controls
+        run: node scripts/v100-webkit-frame-control.mjs
+
+      - name: Upload WebKit frame controls
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-webkit-frame-control
+          path: outputs/v100-webkit-frame-control/report.json
+          if-no-files-found: error
+          retention-days: 14
+
   v100-phase-g-production:
     name: V1 Phase G Production Matrix
     runs-on: macos-15-intel
