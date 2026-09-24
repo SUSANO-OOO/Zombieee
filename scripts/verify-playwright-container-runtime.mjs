@@ -32,15 +32,25 @@ export const MAC_WEBKIT_FILES = Object.freeze({
   "Playwright.app/Contents/MacOS/Playwright": "3686ea5661a4dc6d5e8af1367c23ed25097d8f7ecfeda75c52cea64c3072dd83",
   "pw_run.sh": "a85baad3d8c07173ac387a59b41500c382b21ed692afe0964d29aac247ccc63b",
 });
+// Official Playwright 1.56.1 WebKit 2215 mac-15-arm64 archive:
+// SHA256 0153c535d081e095a464172b298bb15470a30c5f72481735ab30a3253f7458fa.
+export const MAC_ARM64_WEBKIT_FILES = Object.freeze({
+  "JavaScriptCore.framework/Versions/A/JavaScriptCore": "041098da1110858c1a33e855636c05f2aa6d84e5592b13dda57db8aa40f9031b",
+  "WebCore.framework/Versions/A/WebCore": "a259c64a53cc1cb652de3e9e06cd788a9440ac4a81ef8d7b43f0bee0c4a721ff",
+  "WebKit.framework/Versions/A/WebKit": "2a27417aba1f1116285e6d5c7ed7a25adc89997a85d3bb0648017e71116ac2e8",
+  "Playwright.app/Contents/MacOS/Playwright": "e91c7a44fe0b4f1feea6ca62efea226ca19dcae9c6edb4835257acc4a88de3b9",
+  "pw_run.sh": "a85baad3d8c07173ac387a59b41500c382b21ed692afe0964d29aac247ccc63b",
+});
 export const MAC_WEBKIT_FORBIDDEN_ENV = Object.freeze([
   "WEBKIT_SKIA_ENABLE_CPU_RENDERING", "WEBKIT_SKIA_CPU_PAINTING_THREADS", "WEBKIT_SKIA_GPU_PAINTING_THREADS",
   "PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH", "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE",
   "PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_DOWNLOAD_HOST", "PLAYWRIGHT_WEBKIT_DOWNLOAD_HOST",
 ]);
 
-export function assertMacWebKitSnapshot(snapshot, { requireSmoke = false } = {}) {
+export function assertMacWebKitSnapshot(snapshot, { requireSmoke = false, arch = "x64" } = {}) {
   assert.equal(snapshot.platform, "darwin");
-  assert.equal(snapshot.arch, "x64");
+  assert.ok(arch === "x64" || arch === "arm64", "unsupported macOS WebKit architecture");
+  assert.equal(snapshot.arch, arch);
   assert.match(snapshot.osVersion, /^15\./u);
   assert.equal(snapshot.node, "v22.13.0");
   assert.equal(snapshot.packageVersion, "1.56.1");
@@ -49,7 +59,7 @@ export function assertMacWebKitSnapshot(snapshot, { requireSmoke = false } = {})
   for (const key of MAC_WEBKIT_FORBIDDEN_ENV) assert.equal(snapshot.env[key], undefined, key);
   assert.equal(snapshot.executableExists, true);
   assert.equal(snapshot.executablePath, path.posix.join(snapshot.expectedRoot, "pw_run.sh"));
-  assert.deepEqual(snapshot.files, MAC_WEBKIT_FILES, "macOS WebKit critical runtime hashes");
+  assert.deepEqual(snapshot.files, arch === "arm64" ? MAC_ARM64_WEBKIT_FILES : MAC_WEBKIT_FILES, "macOS WebKit critical runtime hashes");
   if (requireSmoke) {
     assert.equal(snapshot.runtimeVersion, "26.0");
     assert.equal(snapshot.capabilities?.canvas, true);
@@ -58,8 +68,9 @@ export function assertMacWebKitSnapshot(snapshot, { requireSmoke = false } = {})
   return snapshot;
 }
 
-export async function verifyMacWebKitRuntime() {
+export async function verifyMacWebKitRuntime({ arch = "x64" } = {}) {
   assert.equal(process.platform, "darwin", "macOS runtime preflight cannot run on another port");
+  assert.equal(process.arch, arch, "macOS WebKit host architecture mismatch");
   const coreRoot = path.dirname(require.resolve("playwright-core/package.json"));
   const metadata = JSON.parse(await readFile(path.join(coreRoot, "browsers.json"), "utf8"))
     .browsers.find(({ name }) => name === "webkit");
@@ -75,14 +86,14 @@ export async function verifyMacWebKitRuntime() {
     expectedRoot, executablePath: existsSync(executablePath) ? realpathSync(executablePath) : executablePath,
     executableExists: existsSync(executablePath), files: {},
   };
-  for (const relative of Object.keys(MAC_WEBKIT_FILES)) {
+  for (const relative of Object.keys(arch === "arm64" ? MAC_ARM64_WEBKIT_FILES : MAC_WEBKIT_FILES)) {
     const file = path.join(expectedRoot, relative);
     assert.equal(realpathSync(file).startsWith(expectedRoot + path.sep), true, "runtime file outside expected installation");
     const hash = createHash("sha256");
     for await (const chunk of createReadStream(file)) hash.update(chunk);
     snapshot.files[relative] = hash.digest("hex");
   }
-  assertMacWebKitSnapshot(snapshot);
+  assertMacWebKitSnapshot(snapshot, { arch });
   let browser = null;
   try {
     browser = await webkit.launch({ headless: true });
@@ -92,7 +103,7 @@ export async function verifyMacWebKitRuntime() {
       audioContext: typeof AudioContext,
       canvas: Boolean(document.createElement("canvas").getContext("2d")),
     }));
-    assertMacWebKitSnapshot(snapshot, { requireSmoke: true });
+    assertMacWebKitSnapshot(snapshot, { requireSmoke: true, arch });
   } finally {
     await browser?.close();
     console.log(JSON.stringify({ macWebKitRuntime: snapshot }, null, 2));
@@ -240,6 +251,7 @@ export async function verifyPlaywrightContainerRuntime() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.argv[2] === "--macos") await verifyMacWebKitRuntime();
+  else if (process.argv[2] === "--macos-arm64") await verifyMacWebKitRuntime({ arch: "arm64" });
   else if (process.argv[2] === "--webkit-rendering") await verifyWebKitRenderingRuntime();
   else await verifyPlaywrightContainerRuntime();
 }

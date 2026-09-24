@@ -16,6 +16,16 @@ QA基盤head `140aca5646d600246d86e5e73dab4ff0dbd55132` の CI `35957082578` は
 
 有限の残工程は、(1) Mac対照とStage 25製品描画内訳を照合し、画質を維持した必要な製品最適化と性能受入に使える計測方式を確定する、(2) 修正候補を通常pushし、Stage 3を含む必須CIと実ブラウザQAを同じheadで取得する、(3) 同一最終候補の新規開始→全30→ENDING/credits/EPILOGUE、代表他mode、旧/新save、PWA導入・更新・オフライン・復旧、3画面/touch/回転/復帰/音を確認する、(4) fixed-HEAD独立read-only全体reviewでHigh/Medium未解消0とし、実機未検証と代替browser証拠を分けて実際に遊べるRCをProducerへ提示する、(5) 最終承認後だけ正式統合・tag・Release・公式GitHub Pages公開・公開後QA・Issue closeを行う、の順。Windows WebKitの実戦性能も未達、物理iPhoneの発熱・実speaker・物理操作は未検証。期限や完了率だけでRC/公開合格へ繰り上げない。
 
+### 2026-09-24 追加の現行検証とQA基盤修正（未公開）
+
+PR head `59d4e737aeb3a49a2fb8796436cf8521b886d054` の CI `35959016551` はPR VerifyとStage 3を通過したが、Phase GはStage 24で固定QA編成の後半戦が敗北し、native PWA更新は音声ファイル1要求の `cancelled`、Mac Intel WebKit実戦性能は3画面とも元のp95／FPS／描画Hz基準未達。敵runtime shard 02もartifactなしで失敗し、実runner logが取得できず原因未分類。後続jobが非終端のため、このCIを合格としない。Stage 24では司令官の実命中・action画像は先に `COMPLETE` だった。元の7枠は medic/scout偏重となり、後半で強い役割をほぼ使わず敗北した。製品不具合と決めつけず、固定QA入力と通常攻略の差を調べた。
+
+製品sourceを固定した `26b8551662dbda76c7c7fff8c3536761788e67a1` の新規通常UI通し `outputs/v100-final-normal-exact-product-26b8551-r1/report.json` は、名前入力・PROLOGUE・全30戦・ENDING・credits・EPILOGUE・postgameまで完走し、30勝、全戦星3、最小車両残HP比92.1%、記録browser errors 0。Stage 24は170.62秒、車両1000/1000、損耗2、Stage 30は126.83秒、車両1080/1080、損耗2。通常操作・読取観測のみで、戦闘／時計／結果setterなし。Stage 24／30と終幕の画像を目視した。この製品sourceはhead `59d4e73` と同一だが、実行head全体は異なり、代表他mode・PWA・Mac性能・物理端末・最終固定HEAD受入へ転記しない。M5-2は代表他modeを含むため、完了数17/24を維持する。
+
+未commitのQA修正はStage 24の編成・実命中条件・7枠・4.8秒窓・boss述語を維持し、証明と7枠後の通常UI戦術だけを切り替える。固定Windows WebKit 736×414単独 `outputs/completion/phaseg-stage24-tactics-r1/phase-g-report.json` は7/7入力、司令官→scout実命中 `COMPLETE`、action／最終画像、実Futago登場、raw browser errors 0で1/1成功。元CI失敗と本修正の単独成功を両方保全し、全Phase G／Mac合格にはしない。native PWAの現行head相当ローカル固定WebKitでは更新18/18を2回、部分失敗復旧22/22を1回確認。音声要求の開始・応答・終了phaseの診断を追加して次のMac失敗を分類するが、`cancelled` を免除しない。失敗時にも独立の部分失敗復旧stepを実行して証拠を残す。
+
+Mac Intel runnerの単純canvas対照も約30Hzで、現行WebKit実戦は別途p95 58／69／47ms、中央値30.3fps、描画29.5／27.46／30.18Hzで失敗。性能jobだけApple Silicon標準 `macos-15` の比較へ移し、公式Playwright 1.56.1 WebKit2215 mac-15-arm64配布zip（SHA256 `0153c535d081e095a464172b298bb15470a30c5f72481735ab30a3253f7458fa`）から5重要ファイルのhashを採取して別の厳密preflightを追加する。6つの既存WebKit証拠jobはIntelのまま。M1で成功するという予断は置かず、元の性能基準を維持し実測してから製品／環境要因を再分類する。次は本QA修正のsource/full gates、通常commit・通常push、fresh Mac CI／artifact、代表他mode・保存／PWA・音響・画面／入力・独立reviewで同一候補を閉じる。正式公開境界は不変。
+
 ### 旧候補の検証記録 — 2026-09-14
 
 M5-3の検証を完了した。今回の検証対象・remote候補は `6967d22ffddd3407c1ce0e26db2badc8118b33be` で、追加pushはない。全6件のnative corruption caseと24 PNGを確認し、保存処理のコードが検証対象commitと一致することを照合した。根拠は `outputs/completion/m5-3-corruption-root-readback-r1.json` と、現行6967のmacOS PWA 18/18・22/22検証receiptである。これにより全体は19/24（約79%）、M5は2/4、総合受入・公開は2/7。制作17/17は従来どおりで、M5-1、M5-4、M6は未完了。物理端末と実speakerは未検証である。

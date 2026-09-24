@@ -119,7 +119,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit");
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 8);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
+  assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 1);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
   assert.match(nativePwaJob,/runs-on: macos-15-intel/u);
@@ -210,7 +211,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);
-    assert.equal(job["runs-on"], "macos-15-intel");
+    assert.equal(job["runs-on"], id === "v100-webkit-frame-control" ? "macos-15" : "macos-15-intel");
     assert.equal(job["continue-on-error"], undefined);
     if (id === "v100-native-webkit-pwa") {
       assert.equal(job.container,undefined);
@@ -222,6 +223,9 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
       assert.equal(pin.packages["node_modules/playwright-core"].version,"1.63.0");
       assert.match(pin.packages["node_modules/playwright-core"].integrity,/^sha512-/u);
       assert.equal(job.steps.filter(step=>step.run==="node scripts/native-pwa-storage-probe.mjs").length,1);
+    } else if (id === "v100-webkit-frame-control") {
+      assert.equal(job.container, undefined);
+      assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos-arm64").length, 1);
     } else {
       assert.equal(job.container, undefined);
       assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
@@ -230,12 +234,14 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   }
   const frameControl = jobs["v100-webkit-frame-control"];
   const frameSteps = frameControl.steps;
+  const arch = frameSteps.findIndex((step) => step.name === "Verify Apple Silicon performance host");
   const browserInstall = frameSteps.findIndex((step) => step.run === "npx playwright install webkit");
-  const runtimePin = frameSteps.findIndex((step) => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos");
+  const runtimePin = frameSteps.findIndex((step) => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos-arm64");
   const capture = frameSteps.findIndex((step) => step.run === "node scripts/v100-webkit-frame-control.mjs");
   const build = frameSteps.findIndex((step) => step.run === "npm run build");
   const performance = frameSteps.findIndex((step) => step.run === "node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs");
-  assert.ok(browserInstall >= 0 && runtimePin > browserInstall && capture > runtimePin && build > capture && performance > build);
+  assert.ok(arch >= 0 && arch < browserInstall && runtimePin > browserInstall && capture > runtimePin && build > capture && performance > build);
+  assert.match(frameSteps[arch].run, /test "\$\(uname -m\)" = arm64/u);
   assert.equal(frameSteps[performance]?.env?.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC, "1");
   assert.equal(frameSteps.find((step) => step.name === "Upload WebKit frame controls and boss performance")?.with?.["if-no-files-found"], "error");
   assert.equal(jobs["v100-phase-g-production"].steps.some((step) => step.name === "Measure V1 native boss battle performance (WebKit)"), false);

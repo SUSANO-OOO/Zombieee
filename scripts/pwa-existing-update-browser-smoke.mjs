@@ -70,10 +70,18 @@ const diagnostics = {
   httpErrors: [],
   requestFailures: [],
   teardown: [],
+  audioRequestLifecycle: [],
+  audioOwnerAtTransition: {},
+  transitions: [],
 };
 const images = [];
 let diagnosticPhase = "setup";
 let teardown = false;
+const audioRequests = new WeakMap();
+
+function markTransition(action) {
+  diagnostics.transitions.push({ action, phase: diagnosticPhase, at: new Date().toISOString() });
+}
 
 function record(name, passed, detail = {}) {
   results.push({ name, passed, ...detail });
@@ -263,6 +271,23 @@ const address = server.address();
 const baseUrl = `http://127.0.0.1:${address.port}${basePath}/`;
 
 function attachPageDiagnostics(page) {
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) markTransition(`navigation:${frame.url()}`);
+  });
+  page.on("request", (request) => {
+    if (!new URL(request.url()).pathname.includes("/audio/")) return;
+    // An audio request can begin before the worker switch and be cancelled
+    // during it. Preserve both ends of that timeline without exempting it.
+    const entry = {
+      url: request.url(),
+      resourceType: request.resourceType(),
+      startedAt: new Date().toISOString(),
+      startedPhase: diagnosticPhase,
+      status: "pending",
+    };
+    audioRequests.set(request, entry);
+    diagnostics.audioRequestLifecycle.push(entry);
+  });
   page.on("console", (message) => {
     if (message.type() === "error") {
       const entry = { phase: diagnosticPhase, message: message.text() };
@@ -274,16 +299,37 @@ function attachPageDiagnostics(page) {
     (teardown ? diagnostics.teardown : diagnostics.pageErrors).push(entry);
   });
   page.on("response", (response) => {
+    const audio = audioRequests.get(response.request());
+    if (audio) {
+      audio.responseStatus = response.status();
+      audio.respondedAt = new Date().toISOString();
+    }
     if (response.status() >= 400 && !response.url().includes("__qa/")) {
       const entry = { phase: diagnosticPhase, url: response.url(), status: response.status() };
       (teardown ? diagnostics.teardown : diagnostics.httpErrors).push(entry);
     }
   });
+  page.on("requestfinished", (request) => {
+    const audio = audioRequests.get(request);
+    if (audio) {
+      audio.status = "finished";
+      audio.finishedAt = new Date().toISOString();
+      audio.finishedPhase = diagnosticPhase;
+    }
+  });
   page.on("requestfailed", (request) => {
+    const audio = audioRequests.get(request);
+    if (audio) {
+      audio.status = "failed";
+      audio.finishedAt = new Date().toISOString();
+      audio.finishedPhase = diagnosticPhase;
+      audio.error = request.failure()?.errorText ?? "unknown";
+    }
     const entry = {
       phase: diagnosticPhase,
       url: request.url(),
       error: request.failure()?.errorText ?? "unknown",
+      ...(audio ? { startedPhase: audio.startedPhase, startedAt: audio.startedAt, responseStatus: audio.responseStatus ?? null } : {}),
     };
     (teardown ? diagnostics.teardown : diagnostics.requestFailures).push(entry);
   });
@@ -601,9 +647,13 @@ try {
     legacyWrites: beforeUpdateV100.legacyWrites,
   });
   await screenshot(page, "v1-gift-before-update");
+  markTransition("gift-confirmation-click");
   await giftConfirmation.click();
   await gift.waitFor({ state: "detached", timeout: 30_000 });
   await waitForV100Ready(page);
+  diagnostics.audioOwnerAtTransition.beforeUpdate = await page.evaluate(() => (
+    window.__V100_EVENT_AUDIO_QA__?.getDiagnostics?.() ?? null
+  ));
   await updateButton.waitFor({ state: "visible", timeout: 60_000 });
 
   const waitingWorker = await page.evaluate(async () => {
@@ -639,14 +689,22 @@ try {
   await screenshot(page, "v1-update-ready");
   const updateAssetStart = candidateAssetRequests.length;
   const updateNetworkAssetStart = candidateNetworkAssetRequests.length;
+  markTransition("update-control-click");
   await updateControl.click();
   diagnosticPhase = "candidate-update-download";
+  markTransition("update-control-click-complete");
   const updatedWorker = await waitForActiveVersion(page, RELEASE_VERSION, 120_000);
+  markTransition("candidate-worker-active");
   const startUpdatedGame = page.getByRole("button", { name: "ゲームを始める", exact: true });
   await startUpdatedGame.waitFor({ state: "visible", timeout: 120_000 });
   await screenshot(page, "v1-update-complete");
+  markTransition("start-updated-game-click");
   await startUpdatedGame.click();
   await waitForV100Ready(page);
+  markTransition("updated-game-ready");
+  diagnostics.audioOwnerAtTransition.afterUpdate = await page.evaluate(() => (
+    window.__V100_EVENT_AUDIO_QA__?.getDiagnostics?.() ?? null
+  ));
   const candidateLegacySave = await saveState(page);
   const candidateV100 = await v100State(page);
   const candidateCache = await cacheState(page);

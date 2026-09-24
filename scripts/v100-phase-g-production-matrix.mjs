@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
+import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
@@ -3723,6 +3724,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     invariant(equippedSupport?.className.split(/\s+/u).includes("medical"), `boss support fixture did not equip canonical recovery support: ${JSON.stringify(equippedSupport)}`);
   }
   const deployedKinds = new Set();
+  const tacticalRecord = { number: V100_STAGES.find((entry) => entry.id === expectedStageId)?.number ?? null, inputs: [] };
   // Capture-local evidence, not a proof machine or a browser-global history.
   // At most one first-positive raw observation per required action category.
   const setupObservations = {};
@@ -3864,6 +3866,19 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
+  const accelerateBossEntry = async () => {
+    if (!bossKind) return;
+    // Only the authored entry animation is accelerated. Spawn, sprite mount,
+    // damage, enemy AI, and the required attack remain production-owned.
+    await page.evaluate((expectedKind) => {
+      const bridge = window.__ASHFALL_BATTLE_QA__;
+      const snapshot = bridge?.getPhaseGCombatSnapshot?.();
+      const boss = snapshot?.fighters?.find((fighter) => (
+        fighter.side === "zombie" && fighter.kind === expectedKind && fighter.gateEntering
+      ));
+      if (boss) bridge?.accelerateBossFoundationEntry?.(boss.id);
+    }, bossKind).catch(() => {});
+  };
   // Baseline precedes both main and background ordinary input paths.
   await captureOpeningAction();
   const sustainTask = sustainActive ? (async () => {
@@ -3882,6 +3897,17 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
+      if (completedImpactProofEnabled && !waitForBossAttack && bossDeploymentFinished
+        && sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE") {
+        // Once the exact actor impact has been sealed, the representative
+        // battle uses the same ordinary UI tactics as the full campaign run.
+        // Keeping the first ready low-cost card forever starves stronger
+        // formation roles and can defeat the QA fixture before boss entry.
+        await withPhaseGPageInputLock(page, () => normalTacticalInput(page, tacticalRecord));
+        await accelerateBossEntry();
+        await page.waitForTimeout(520);
+        continue;
+      }
 
       // The dedicated manual-proof input owns its activation and before/after
       // observations; background survival input must not consume that charge.
@@ -3992,22 +4018,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           });
         }
       }
-      if (bossKind) {
-        // The QA bridge only accelerates the authored boss gate-entry
-        // animation. Spawn, entry state, sprite mount, and combat remain
-        // production-owned; this prevents compact WebKit from losing the
-        // vehicle before the real boss reaches the battlefield.
-        await page.evaluate((expectedKind) => {
-          const bridge = window.__ASHFALL_BATTLE_QA__;
-          const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
-          const boss = snapshot?.fighters?.find((fighter) => (
-            fighter.side === "zombie"
-            && fighter.kind === expectedKind
-            && fighter.gateEntering
-          ));
-          if (boss) bridge?.accelerateBossFoundationEntry?.(boss.id);
-        }, bossKind).catch(() => {});
-      }
+      await accelerateBossEntry();
       await page.waitForTimeout(520);
     }
   })() : null;
@@ -4363,6 +4374,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       deployedKinds: [...deployedKinds], proofActorAttackObserved,
       proofUnitDeployed, proofUnitAttackObserved, vehicleActionObserved,
       deploymentTrace, observations: setupObservations, manualAction: manualActionEvidence,
+      tacticalInput: tacticalRecord,
       sealedCombatCausalProof,
     };
     sustainActive = false;
@@ -4395,7 +4407,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     fighterKinds: runtime.fighterKinds,
     phaseGCombatSnapshotProfile,
     deploymentTrace,
-    setupEvidence: { observations: setupObservations, manualAction: manualActionEvidence },
+    setupEvidence: { observations: setupObservations, manualAction: manualActionEvidence, tacticalInput: tacticalRecord },
     requiredCompletedImpactActorKeys,
     sealedCombatCausalProof,
   };
