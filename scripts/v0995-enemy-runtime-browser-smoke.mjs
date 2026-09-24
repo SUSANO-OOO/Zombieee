@@ -189,6 +189,25 @@ async function readRuntimeLiveness(page) {
   });
 }
 
+async function waitForActiveRuntime(page, label) {
+  // Asset decode can finish before WebKit resumes live frames. Keep each phase's
+  // original audit window, but require real simulation and paint first.
+  const before = await readRuntimeLiveness(page);
+  const deadline = Date.now() + Math.min(timeout, 12_000);
+  let after = before;
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(100);
+    after = await readRuntimeLiveness(page);
+    if (after.visibilityState === "visible" && after.battle?.running && !after.battle.paused
+      && after.frames?.renderFrames >= before.frames?.renderFrames + 2
+      && after.frames?.simulationTicks >= before.frames?.simulationTicks + 2
+      && after.battle.time > before.battle?.time) {
+      return { before, after };
+    }
+  }
+  throw new Error(`${label}: live renderer did not advance after asset setup ${JSON.stringify({ before, after })}`);
+}
+
 function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
   const label = `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`;
   invariant(samples.length >= 2, `${label}: fewer than two runtime samples`);
@@ -268,8 +287,10 @@ for (const engine of engines) {
           const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
           const assetSetupBoundary = await diagnosticControl.sealSetup();
+          activeEvidence = { engine, viewport, kind, phase: "runtime-readiness", assetSetupBoundary };
+          const runtimeReady = await waitForActiveRuntime(page, `${engine}/${viewport.width}x${viewport.height}/${kind}`);
           for (const phase of phases) {
-            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, prepared: null, livenessBefore: null, livenessAfter: null, samples: [], capture: null };
+            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, runtimeReady, prepared: null, livenessBefore: null, livenessAfter: null, samples: [], capture: null };
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
             activeEvidence.prepared = prepared;
             activeEvidence.livenessBefore = await readRuntimeLiveness(page);

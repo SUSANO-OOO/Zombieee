@@ -77,6 +77,7 @@ test("actual enemy harness persists screenshot failure before cleanup and preser
       baseUrl: new URL("http://127.0.0.1/"), timeout: 45000, dismissInstallOffer: async () => {}, phases: ["move"],
       assertRenderSequence: ({ samples }) => assert.equal(samples.length, 2),
       readRuntimeLiveness: async () => ({ visibilityState: "visible", frames: { renderFrames: 3 } }),
+      waitForActiveRuntime: async () => ({ before: { frames: { renderFrames: 1 } }, after: { frames: { renderFrames: 3 } } }),
       observeStrictCanvasClip: async () => ({ clip: { x: 0, y: 0, width: 844, height: 340 } }),
       outputDir: "evidence", path: { join: (...parts) => parts.join("/") }, results: [], representativeShots: [],
       enemyRuntimeFailureRecord,
