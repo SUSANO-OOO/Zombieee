@@ -2246,20 +2246,37 @@ async function pauseAndVerifyFrozenScriptedBark({
   whilePaused = null,
   deferResume = false,
 }) {
-  await page.waitForFunction(
-    ({ cueFragment }) => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-      return snapshot?.battleBarks?.active?.some((bark) => (
-        bark.scripted === true && bark.scriptedCueId?.includes(cueFragment)
-      ));
-    },
-    { cueFragment },
-    { timeout },
+  // Capture the active line and dispatch pause in one page task. On a busy
+  // WebKit host, a separate snapshot followed by a locator click can outlive
+  // this short line and falsely report that the pause changed it.
+  const before = await page.getByRole("button", { name: "一時停止", exact: true }).evaluate(
+    (button, { cueFragment, limitMs }) => new Promise((resolve, reject) => {
+      const started = performance.now();
+      const capture = () => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        if (snapshot?.battleBarks?.active?.some((bark) => (
+          bark.scripted === true && bark.scriptedCueId?.includes(cueFragment)
+        ))) {
+          if (!button.isConnected || button.disabled || button.getAttribute("aria-disabled") === "true") {
+            reject(new Error("Pause control unavailable at the active scripted line"));
+            return;
+          }
+          button.click();
+          resolve(snapshot);
+          return;
+        }
+        if (performance.now() - started >= limitMs) {
+          reject(new Error("No active scripted line appeared before the pause deadline"));
+          return;
+        }
+        window.setTimeout(capture, 16);
+      };
+      capture();
+    }),
+    { cueFragment, limitMs: timeout },
   );
-  const before = await storyBattleSnapshot(page);
   const beforeBark = activeScriptedBark(before, cueFragment);
   invariant(beforeBark, `${label} has no scripted bark before pause`);
-  await page.getByRole("button", { name: "一時停止", exact: true }).click({ timeout });
   await page.waitForFunction(
     () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === true,
     undefined,
