@@ -232,11 +232,13 @@ jobs:
         run: npm ci
 
       - name: Install locked Playwright browsers
+        id: playwright_browsers
         run: npx playwright install chromium webkit
       - name: Verify pinned macOS WebKit runtime
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Build production application
+        id: production_build
         run: npm run build
 
       - name: Capture native WebKit Stage 3 battle music gate
@@ -259,6 +261,7 @@ jobs:
           npm run qa:v100-phase-g-validate
 
       - name: Measure V1 native boss battle performance (WebKit)
+        if: ${{ !cancelled() && steps.playwright_browsers.outcome == 'success' && steps.production_build.outcome == 'success' }}
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
