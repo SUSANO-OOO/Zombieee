@@ -18,6 +18,7 @@ import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT,
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 import { createV100PhaseGProofMachine } from "./v100-phase-g-proof-machine.mjs";
+import { createVehicleCombatProofGate } from "./v100-vehicle-combat-proof-gate.mjs";
 import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -3730,6 +3731,15 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const requiredCompletedImpactActorKeys = completedImpactProofEnabled
     ? [proofActor ? `zombie:${proofActor}` : null, proofUnitKind ? `human:${proofUnitKind}` : null].filter(Boolean)
     : [];
+  const vehicleProofGate = requireVehicleAction && !completedImpactProofEnabled
+    ? createVehicleCombatProofGate(() => {
+      invariant(typeof captureCombatAction === "function", "vehicle battle causal capture callback missing");
+      return captureCombatAction({
+        durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
+        requiredCompletedImpactActorKeys,
+      });
+    })
+    : null;
   const combatImpactReader = completedImpactProofEnabled
     ? createCombatImpactReader(page, requiredCompletedImpactActorKeys, expectedStageId) : null;
   const captureOpeningAction = async () => {
@@ -3833,6 +3843,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     vehicleActionObserved = setupVehicleActionObserved(runtime);
     if (vehicleActionObserved) setupObservations["vehicle-barrage"] ??= runtime;
     if (vehicleActionObserved) recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
+    if (vehicleActionObserved) vehicleProofGate?.start();
     return vehicleActionObserved;
   };
   let sustainActive = Boolean(bossKind || proofActor && !completedImpactProofEnabled);
@@ -4326,13 +4337,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       recorder?.clearAwaiting();
       recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
       if (!completedImpactProofEnabled) {
-        invariant(typeof captureCombatAction === "function", "vehicle battle causal capture callback missing");
-        // Seal the ordinary live-combat impact before the later boss presentation wait.
-        // That wait can outlast an active wave without changing the 12-second proof.
-        sealedCombatCausalProof = await captureCombatAction({
-          durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
-          requiredCompletedImpactActorKeys,
-        });
+        // Observation started the original 12-second proof during active combat.
+        // Read the same result here before the later boss presentation wait.
+        sealedCombatCausalProof = await vehicleProofGate.result();
         invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE",
           "vehicle battle causal proof was not sealed in live combat");
       }

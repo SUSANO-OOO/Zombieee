@@ -12,6 +12,8 @@ PR head `43be9290982e367adde7da85bf526920b9e7f6c7` の CI `35949929709` は、PR
 
 その後の QA-only head `7ef613b915b21d0f5131af4ff1fd20ef01047bf7` の CI `35956218663` で、独立 Mac WebKit 対照jobが成功した。844×390の可視ページ各約3秒で、空白・空canvas・全面fill・1回/2回blitのrAF中央値はいずれも33ms、p95は順に36/42/41/47/37ms、callback p95は0〜1ms。空白だけでは判定不能だったこのMac runnerの制約を、試した描画あり単純canvasでも確認した。ただし同じ固定Windows WebKitの描画あり対照は1〜2msで、engine一般の上限ではない。旧headのMac実戦p95 49/59/51msには対照より長い尾が残り、製品負荷も切り分ける。Windows WebKitの通常観測を止めた診断もp95 46ms・約28Hzで、頻回のQA snapshotだけが主因ではない。元のMac実戦gateは不合格のまま、RCは未成立。性能jobを長いPhase Gの後段から独立対照jobへ移し、同じrunnerで対照→製品計測を並列実施するQA基盤変更を進める。対照の成功を製品の合格とはしない。
 
+QA基盤head `140aca5646d600246d86e5e73dab4ff0dbd55132` の CI `35957082578` は独立Mac WebKit性能をPhase Gより先に取得し、実戦p95 61/47/42ms・中央値30.3fps・実描画28.47/30.75/30.59Hzで3画面とも不合格。対照p95 35〜38ms、実戦JS callback p95 9/6/6ms。Phase Gも別途、Stage 3の固定12秒実命中証明が期限切れで失敗。失敗artifactでは車両行動をbattle26.65秒で観測し、実命中は38.25秒まであったが、証明開始は38.83秒へ遅れた。元の12秒窓・命中条件を保ち、車両行動の最初の観測時点で一度だけ証明を開始して後段でその結果を受け取るQA修正を局所確認した。全1660/1660、Lint 0 errors/既存12 warnings、content validator、build、差分checkと、固定Chromium 667×375のStage 3単独実ブラウザ1/1が成功。車両実観測battle25.63秒直後の25.65秒にproof開始、実命中・action/最終画面・診断0を確認した。ただし現行remote CIの成功には転記しない。旧製品sourceを固定した新規開始→全30の探索的通しも並行し、最終候補の受入とは区別する。
+
 有限の残工程は、(1) Mac対照とStage 25製品描画内訳を照合し、画質を維持した必要な製品最適化と性能受入に使える計測方式を確定する、(2) 修正候補を通常pushし、Stage 3を含む必須CIと実ブラウザQAを同じheadで取得する、(3) 同一最終候補の新規開始→全30→ENDING/credits/EPILOGUE、代表他mode、旧/新save、PWA導入・更新・オフライン・復旧、3画面/touch/回転/復帰/音を確認する、(4) fixed-HEAD独立read-only全体reviewでHigh/Medium未解消0とし、実機未検証と代替browser証拠を分けて実際に遊べるRCをProducerへ提示する、(5) 最終承認後だけ正式統合・tag・Release・公式GitHub Pages公開・公開後QA・Issue closeを行う、の順。Windows WebKitの実戦性能も未達、物理iPhoneの発熱・実speaker・物理操作は未検証。期限や完了率だけでRC/公開合格へ繰り上げない。
 
 ### 旧候補の検証記録 — 2026-09-14
