@@ -662,9 +662,23 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   }, [commitRecovery.required, recoverCommittedPack]);
 
   const clearAssets = useCallback(async () => {
-    await storeRef.current?.clearAssets();
-    await requestFromServiceWorker(registrationRef.current, { type: "pwa:clear-assets" });
-    await refreshStored();
+    try {
+      if (registrationRef.current) {
+        // The worker serializes this with commit and rollback. Clearing from
+        // the page first could empty a candidate pack during its final check.
+        const cleared = await requestFromServiceWorker(
+          registrationRef.current,
+          { type: "pwa:clear-assets" },
+          { timeoutMs: 120_000 },
+        );
+        if (cleared?.type !== "pwa:assets-cleared") throw new Error("worker-clear-unconfirmed");
+      } else {
+        await storeRef.current?.clearAssets();
+      }
+      await refreshStored();
+    } catch (cause) {
+      setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);
+    }
   }, [refreshStored]);
 
   // Bytes held that neither the active nor the rollback generation references.

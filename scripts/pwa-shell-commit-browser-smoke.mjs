@@ -1,5 +1,6 @@
 // Real Service Worker/Cache Storage proof of first-install and update shell gates.
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -21,6 +22,7 @@ const server = createServer((request, response) => {
   }));
   if (pathname === "/Zombieee/" || pathname === "/Zombieee/v100/") {
     if (failure === "root" && pathname === "/Zombieee/") return send(503, "text/plain", "offline root");
+    if (failure === "v100" && pathname === "/Zombieee/v100/") return send(503, "text/plain", "offline V100");
     const route = pathname.includes("v100") ? "v100" : "root";
     return send(200, "text/html", `<!doctype html><html><head><meta name="github-pages-release" content="${releaseSha}"><link rel="stylesheet" href="/Zombieee/assets/base.css"></head><body data-route="${route}"><script src="/Zombieee/assets/base.js"></script></body></html>`);
   }
@@ -47,9 +49,21 @@ const browser = await chromium.launch();
 const context = await browser.newContext();
 const page = await context.newPage();
 const checks = [];
+const assetHash = (sha) => `sha256-${createHash("sha256").update(sha.at(-1)).digest("hex")}`;
 const manifest = (sha) => ({ version: "1.0.0", releaseSha: sha, assets: [
-  { path: "/art/probe.png", hash: `sha256-${"0".repeat(64)}`, bytes: 1 },
+  { path: "/art/probe.png", hash: assetHash(sha), bytes: 1 },
 ] });
+const putAsset = (sha, body = sha.at(-1)) => page.evaluate(async ({ hash, body }) => {
+  const cache = await caches.open("zombieee-assets-v1");
+  const key = new URL(`__pwa-asset__/${hash}`, new URL("/Zombieee/", location.href));
+  await cache.put(key, new Response(new TextEncoder().encode(body), {
+    headers: { "content-type": "image/png", "x-pwa-asset-hash": hash },
+  }));
+}, { hash: assetHash(sha), body });
+const deleteAsset = (sha) => page.evaluate(async (hash) => {
+  const cache = await caches.open("zombieee-assets-v1");
+  return cache.delete(new URL(`__pwa-asset__/${hash}`, new URL("/Zombieee/", location.href)));
+}, assetHash(sha));
 const ask = (message, fromPage = page) => fromPage.evaluate(async (data) => {
   const registration = await navigator.serviceWorker.ready;
   return new Promise((resolve) => {
@@ -65,6 +79,7 @@ try {
     await navigator.serviceWorker.ready;
   });
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await putAsset("shell-a");
 
   failure = "root";
   const firstFailure = await ask({ type: "pwa:commit-manifest", manifest: manifest("shell-a") });
@@ -79,7 +94,17 @@ try {
   assert.equal((await ask({ type: "pwa:get-state" })).active.releaseSha, "shell-a");
   checks.push("complete root, V100, JS, and CSS shell commits");
 
+  for (const [route, expected] of [["", "root"], ["v100/", "v100"]]) {
+    failure = expected === "root" ? "root" : "v100";
+    await page.goto(new URL(route, base).toString(), { waitUntil: "load" });
+    assert.deepEqual(await page.evaluate(() => ({
+      route: document.body.dataset.route, shell: window.__shellBoot,
+    })), { route: expected, shell: "shell-a" });
+    checks.push(`${expected} keeps launching the active generation during an HTTP 503 outage`);
+  }
+
   releaseSha = "shell-b";
+  await putAsset("shell-b");
   failure = "css";
   const updateFailure = await ask({ type: "pwa:commit-manifest", manifest: manifest("shell-b") });
   const updateState = await ask({ type: "pwa:get-state" });
@@ -89,12 +114,43 @@ try {
   checks.push("missing update CSS leaves the old active generation intact");
 
   failure = null;
+  await deleteAsset("shell-b");
+  const missingCandidate = await ask({ type: "pwa:commit-manifest", manifest: manifest("shell-b") });
+  assert.deepEqual({ type: missingCandidate.type, reason: missingCandidate.reason }, {
+    type: "pwa:commit-failed", reason: "asset-missing",
+  });
+  assert.equal((await ask({ type: "pwa:get-state" })).active.releaseSha, "shell-a");
+  checks.push("a candidate with one missing required asset cannot become active");
+  await putAsset("shell-b", "x");
+  const corruptCandidate = await ask({ type: "pwa:commit-manifest", manifest: manifest("shell-b") });
+  assert.deepEqual({ type: corruptCandidate.type, reason: corruptCandidate.reason }, {
+    type: "pwa:commit-failed", reason: "asset-hash-mismatch",
+  });
+  assert.equal((await ask({ type: "pwa:get-state" })).active.releaseSha, "shell-a");
+  checks.push("a candidate with a same-size corrupt required asset cannot become active");
+  await putAsset("shell-b");
   const updateSuccess = await ask({ type: "pwa:commit-manifest", manifest: manifest("shell-b") });
   const finalState = await ask({ type: "pwa:get-state" });
   assert.equal(updateSuccess.type, "pwa:committed");
   assert.equal(finalState.active.releaseSha, "shell-b");
   assert.equal(finalState.previous.releaseSha, "shell-a");
   checks.push("successful update retains the prior generation");
+
+  await deleteAsset("shell-a");
+  const missingRollback = await ask({ type: "pwa:rollback" });
+  assert.deepEqual({ type: missingRollback.type, reason: missingRollback.reason }, {
+    type: "pwa:rollback-failed", reason: "previous-asset-missing",
+  });
+  assert.equal((await ask({ type: "pwa:get-state" })).active.releaseSha, "shell-b");
+  checks.push("rollback rejects a previous generation with an evicted required asset");
+  await putAsset("shell-a", "x");
+  const corruptRollback = await ask({ type: "pwa:rollback" });
+  assert.deepEqual({ type: corruptRollback.type, reason: corruptRollback.reason }, {
+    type: "pwa:rollback-failed", reason: "previous-asset-hash-mismatch",
+  });
+  assert.equal((await ask({ type: "pwa:get-state" })).active.releaseSha, "shell-b");
+  checks.push("rollback rejects a previous generation with same-size corrupt bytes");
+  await putAsset("shell-a");
 
   await context.setOffline(true);
   assert.equal((await ask({ type: "pwa:rollback" })).type, "pwa:rolled-back");
@@ -117,6 +173,7 @@ try {
   const otherPage = await context.newPage();
   await otherPage.goto(base, { waitUntil: "domcontentloaded" });
   releaseSha = "shell-c";
+  await putAsset("shell-c");
   failure = "delay-css";
   const cssRequested = new Promise((resolve) => { onHeldCssRequest = resolve; });
   const pendingCommit = ask({ type: "pwa:commit-manifest", manifest: manifest("shell-c") });
@@ -152,6 +209,7 @@ try {
     new Promise((_, reject) => setTimeout(() => reject(new Error("competing commit never reached the delayed CSS")), 10_000)),
   ]);
   releaseSha = "shell-d";
+  await putAsset("shell-d");
   failure = null;
   const newestCommit = ask({ type: "pwa:commit-manifest", manifest: manifest("shell-d") }, otherPage);
   const supersededByCommit = await competingCommit;

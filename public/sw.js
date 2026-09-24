@@ -233,8 +233,19 @@ async function respondForNavigation(request) {
       ? "v100/index.html" : "index.html",
     scopeUrl,
   ).toString();
+  const retainedPage = async () => {
+    if (!generation) return null;
+    const cache = await caches.open(shellCacheName(generation));
+    return cache.match(indexUrl);
+  };
   try {
     const response = await fetch(request);
+    // A failed or non-HTML navigation is not a playable document even when
+    // fetch resolves (for example an origin returning HTTP 503 or soft-404).
+    if (!response.ok || !isHtmlResponse(response)) {
+      const cached = await retainedPage();
+      if (cached) return cached;
+    }
     const html = response.ok && generation && isHtmlResponse(response)
       ? await response.clone().text() : "";
     const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
@@ -244,11 +255,8 @@ async function respondForNavigation(request) {
     }
     return response;
   } catch (error) {
-    if (generation) {
-      const cache = await caches.open(shellCacheName(generation));
-      const cached = await cache.match(indexUrl);
-      if (cached) return cached;
-    }
+    const cached = await retainedPage();
+    if (cached) return cached;
     throw error;
   }
 }
@@ -267,36 +275,43 @@ async function respondForNavigation(request) {
  * A complete asset pack cannot be reported offline-ready until both route
  * documents and every emitted JS/CSS chunk have been saved as one generation.
  */
+function validShellFiles(files) {
+  return Array.isArray(files) && files.length > 0
+    && files.every((file) => typeof file === "string"
+      && /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)
+      && !file.split("/").includes(".."));
+}
+
+async function cachedShellReady(manifest) {
+  const generation = generationOf(manifest);
+  const cache = await caches.open(shellCacheName(generation));
+  const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
+  const cachedList = await cache.match(shellListUrl);
+  if (!cachedList) return false;
+  const { files } = await cachedList.clone().json();
+  if (!validShellFiles(files)) return false;
+  for (const path of ["index.html", "v100/index.html"]) {
+    const response = await cache.match(new URL(path, scopeUrl).toString());
+    if (!response || !isHtmlResponse(response)) return false;
+    const html = await response.clone().text();
+    const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+    if (servedRelease && servedRelease !== manifest.releaseSha) return false;
+  }
+  const hits = await Promise.all(files.map(async (file) => {
+    const response = await cache.match(new URL(file, scopeUrl).toString());
+    const type = response?.headers.get("content-type") ?? "";
+    return Boolean(response?.ok && (file.endsWith(".css")
+      ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type)));
+  }));
+  return hits.every(Boolean);
+}
+
 async function warmShell(manifest, controller) {
   const generation = generationOf(manifest);
   const cache = await caches.open(shellCacheName(generation));
   const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
-  const validFiles = (files) => Array.isArray(files) && files.length > 0
-    && files.every((file) => typeof file === "string"
-      && /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)
-      && !file.split("/").includes(".."));
-  const cachedReady = async () => {
-    const cachedList = await cache.match(shellListUrl);
-    if (!cachedList) return false;
-    const { files } = await cachedList.clone().json();
-    if (!validFiles(files)) return false;
-    for (const path of ["index.html", "v100/index.html"]) {
-      const response = await cache.match(new URL(path, scopeUrl).toString());
-      if (!response || !isHtmlResponse(response)) return false;
-      const html = await response.clone().text();
-      const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
-      if (servedRelease && servedRelease !== manifest.releaseSha) return false;
-    }
-    const hits = await Promise.all(files.map(async (file) => {
-      const response = await cache.match(new URL(file, scopeUrl).toString());
-      const type = response?.headers.get("content-type") ?? "";
-      return Boolean(response?.ok && (file.endsWith(".css")
-        ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type)));
-    }));
-    return hits.every(Boolean);
-  };
   try {
-    if (await cachedReady()) return { ready: true, reused: true };
+    if (await cachedShellReady(manifest)) return { ready: true, reused: true };
   } catch { /* incomplete or corrupt cache; try the network */ }
   const timer = setTimeout(() => controller.abort(), SHELL_WARM_TIMEOUT_MS);
   const fetchRequired = async (url, kind) => {
@@ -314,7 +329,7 @@ async function warmShell(manifest, controller) {
   try {
     const shellListResponse = await fetchRequired(shellListUrl, "manifest");
     const shellList = await shellListResponse.clone().json();
-    if (!validFiles(shellList.files)) throw new Error("invalid-shell-list");
+    if (!validShellFiles(shellList.files)) throw new Error("invalid-shell-list");
     await cache.put(shellListUrl, shellListResponse);
     const required = [
       { path: "./", key: "index.html" },
@@ -346,12 +361,75 @@ async function warmShell(manifest, controller) {
     }));
     const failed = assets.find((result) => result.status === "rejected");
     if (failed) throw failed.reason;
-    if (!await cachedReady()) throw new Error("shell-cache-incomplete");
+    if (!await cachedShellReady(manifest)) throw new Error("shell-cache-incomplete");
     return { ready: true, files: shellList.files.length + required.length };
   } catch (error) {
     return { ready: false, reason: String(error?.message ?? error) };
   } finally {
     clearTimeout(timer);
+  }
+}
+
+async function retainedShellReady(manifest) {
+  try {
+    // Versions before V1 have no pwa-shell.json. Their worker cached the root
+    // document and the JS/CSS referenced directly by it for offline rollback.
+    if (Number(String(manifest.version).split(".")[0]) >= 1) {
+      return cachedShellReady(manifest);
+    }
+    const cache = await caches.open(shellCacheName(generationOf(manifest)));
+    const root = await cache.match(new URL("index.html", scopeUrl).toString());
+    if (!root?.ok || !isHtmlResponse(root)) return false;
+    const html = await root.clone().text();
+    const references = [...html.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|mjs|css))(?:[?#][^"']*)?["']/giu)]
+      .map((match) => new URL(match[1], scopeUrl));
+    if (references.length === 0) return false;
+    for (const url of references) {
+      if (url.origin !== scopeUrl.origin || !url.pathname.startsWith(scopeUrl.pathname)) return false;
+      const response = await cache.match(url.toString());
+      const type = response?.headers.get("content-type") ?? "";
+      if (!response?.ok || !(url.pathname.endsWith(".css")
+        ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type))) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Recheck every retained body at the pointer boundary, including its digest. */
+async function verifiedAssetPack(manifest) {
+  const unique = new Map();
+  for (const asset of manifest?.assets ?? []) {
+    if (!/^sha256-[0-9a-f]{64}$/u.test(asset.hash)
+      || !Number.isSafeInteger(asset.bytes) || asset.bytes < 0) {
+      return { ready: false, reason: "invalid-asset-entry" };
+    }
+    const priorSize = unique.get(asset.hash);
+    if (priorSize !== undefined && priorSize !== asset.bytes) {
+      return { ready: false, reason: "conflicting-asset-entry" };
+    }
+    unique.set(asset.hash, asset.bytes);
+  }
+  if (unique.size === 0) return { ready: false, reason: "empty-asset-pack" };
+  try {
+    const cache = await caches.open(ASSET_CACHE);
+    const entries = [...unique.entries()];
+    for (let offset = 0; offset < entries.length; offset += 8) {
+      const batch = await Promise.all(entries.slice(offset, offset + 8).map(async ([hash, bytes]) => {
+        const response = await cache.match(assetCacheKey(hash));
+        if (!response?.ok) return { ready: false, reason: "asset-missing", hash };
+        const body = await response.arrayBuffer();
+        if (body.byteLength !== bytes) return { ready: false, reason: "asset-size-mismatch", hash };
+        if (await sha256(body) !== hash) return { ready: false, reason: "asset-hash-mismatch", hash };
+        return { ready: true };
+      }));
+      const failed = batch.find((entry) => !entry.ready);
+      if (failed) return failed;
+    }
+    return { ready: true, verified: entries.length };
+  } catch {
+    return { ready: false, reason: "asset-store-unavailable" };
   }
 }
 
@@ -549,6 +627,9 @@ self.addEventListener("message", (event) => {
         if (!manifest?.assets?.length) return reply(event, { type: "pwa:commit-failed", reason: "invalid-manifest" });
         return queueStateMutation(async (intent) => {
           const before = await readState();
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
           const warmController = new AbortController();
           activeShellWarmController = warmController;
           let warmed;
@@ -562,6 +643,13 @@ self.addEventListener("message", (event) => {
           }
           if (!warmed.ready) {
             return reply(event, { type: "pwa:commit-failed", reason: `shell-${warmed.reason}` });
+          }
+          const pack = await verifiedAssetPack(manifest);
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          if (!pack.ready) {
+            return reply(event, { type: "pwa:commit-failed", reason: pack.reason });
           }
           const state = await readState();
           const activeGeneration = (value) => value ? generationOf(value) : null;
@@ -593,9 +681,19 @@ self.addEventListener("message", (event) => {
 
       // Explicit rollback to the retained previous generation.
       case "pwa:rollback": {
-        return queueStateMutation(async () => {
+        return queueStateMutation(async (intent) => {
           const state = await readState();
           if (!state.previous) return reply(event, { type: "pwa:rollback-failed", reason: "no-previous-generation" });
+          if (!await retainedShellReady(state.previous)) {
+            return reply(event, { type: "pwa:rollback-failed", reason: "previous-shell-incomplete" });
+          }
+          const pack = await verifiedAssetPack(state.previous);
+          if (!pack.ready) {
+            return reply(event, { type: "pwa:rollback-failed", reason: `previous-${pack.reason}` });
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:rollback-failed", reason: "superseded" });
+          }
           await writeState({ active: state.previous, previous: null, pending: null });
           invalidateManifestMemo();
           assetIndexMemo = null;
