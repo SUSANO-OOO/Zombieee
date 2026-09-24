@@ -1330,7 +1330,9 @@
 .v100-node-title h2 { color: #f5dfab; font-family: serif; font-size: clamp(28px, 5vw, 64px); font-weight: 500; letter-spacing: .1em; }
 .v100-story-node.v100-credits-shot { inset: auto 10% 17%; padding: 20px 28px; border-left: 2px solid #c8a262; background: #071011ed; }
 .v100-credits-shot h2 { margin: 8px 0 12px; color: #f4dfae; font-family: serif; font-size: clamp(24px, 3vw, 38px); }
-.v100-credits-shot p { max-width: 850px; margin: 0; color: #eee7d6; font-size: clamp(14px, 1.6vw, 20px); line-height: 1.7; }
+.v100-credits-shot p { max-width: 850px; margin: 0 auto; color: #eee7d6; font-size: clamp(14px, 1.6vw, 20px); line-height: 1.7; }
+.v100-credits-shot .v100-event-actions { position: static; justify-content: center; margin-top: 12px; }
+.v100-credits-shot .v100-event-actions button { min-height: 44px; }
 @media (max-height: 430px) {
   .v100-story-node.v100-credits-shot { inset: auto 8% 22%; padding: 12px 18px; }
   .v100-credits-shot h2 { margin: 5px 0 7px; font-size: 22px; }

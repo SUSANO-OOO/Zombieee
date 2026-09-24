@@ -36,22 +36,32 @@ async function inspect(page, eventId, phase, index, result) {
     const action = element.querySelector(".v100-primary");
     const button = action?.getBoundingClientRect();
     const hit = button && document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
+    const creditText = copy?.matches(".v100-credits-shot") ? copy.querySelector("p")?.getBoundingClientRect() : null;
+    const creditActions = copy?.matches(".v100-credits-shot") ? copy.querySelector(".v100-event-actions")?.getBoundingClientRect() : null;
     return {
       background: backdrop ? getComputedStyle(backdrop).backgroundImage : null,
       titleCard: backdrop?.getAttribute("data-v100-title-card") === "true",
       text: copy?.textContent ?? "", scene: copy?.getAttribute("data-v100-credit-scene"),
       copyFits: Boolean(rect && rect.top >= 0 && rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight),
       actionReachable: Boolean(action && hit && (hit === action || action.contains(hit))),
+      creditTextActionGapPx: creditText && creditActions ? creditActions.top - creditText.bottom : null,
+      creditActionsInsideCard: creditActions && rect ? creditActions.top >= rect.top && creditActions.bottom <= rect.bottom + 1 : null,
       bodyOverflow: Math.max(document.documentElement.scrollWidth - innerWidth, document.body.scrollWidth - innerWidth),
     };
   });
   if (expected.backgroundPath) assert.ok(state.background?.includes(expected.backgroundPath), JSON.stringify(state));
   if (node.kind === "title") assert.equal(state.titleCard, true);
   if (node.kind === "montage") assert.equal(state.scene, node.sceneLabel);
+  if (node.kind === "montage") {
+    assert.ok(state.creditTextActionGapPx >= 4, `${eventId}:${index} credit text overlaps actions`);
+    assert.equal(state.creditActionsInsideCard, true, `${eventId}:${index} credit actions leave the card`);
+  }
   assert.equal(state.copyFits, true, `${eventId}:${index} text outside viewport`);
   assert.equal(state.actionReachable, true, `${eventId}:${index} next action is occluded`);
   assert.ok(state.bodyOverflow <= 1);
   assert.ok(!state.text.includes("台詞は使わず"));
+  await page.waitForFunction((sceneId) => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.()?.desired?.sceneId === sceneId,
+    expected.sceneId, { timeout: 15_000 });
   const audio = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
   assert.equal(audio?.desired?.sceneId, expected.sceneId);
   result.observations.push({ index, sourceLine: node.sourceLine, expectedSceneId: expected.sceneId, ...state });
