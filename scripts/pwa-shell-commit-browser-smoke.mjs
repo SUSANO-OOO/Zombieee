@@ -7,6 +7,8 @@ import { chromium } from "playwright";
 const workerBytes = await readFile(new URL("../public/sw.js", import.meta.url));
 let releaseSha = "shell-a";
 let failure = null;
+let onHeldCssRequest = null;
+const heldCssResponses = [];
 const server = createServer((request, response) => {
   const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
   const send = (status, type, body) => {
@@ -27,6 +29,11 @@ const server = createServer((request, response) => {
   }
   if (pathname === "/Zombieee/assets/base.css") {
     if (failure === "css") return send(503, "text/plain", "missing css");
+    if (failure === "delay-css") {
+      heldCssResponses.push(response);
+      onHeldCssRequest?.();
+      return undefined;
+    }
     return send(200, "text/css", "body{color:rgb(1,2,3)}");
   }
   if (pathname === "/Zombieee/asset-manifest.json") return send(200, "application/json", "{}");
@@ -43,7 +50,7 @@ const checks = [];
 const manifest = (sha) => ({ version: "1.0.0", releaseSha: sha, assets: [
   { path: "/art/probe.png", hash: `sha256-${"0".repeat(64)}`, bytes: 1 },
 ] });
-const ask = (message) => page.evaluate(async (data) => {
+const ask = (message, fromPage = page) => fromPage.evaluate(async (data) => {
   const registration = await navigator.serviceWorker.ready;
   return new Promise((resolve) => {
     const channel = new MessageChannel();
@@ -105,8 +112,66 @@ try {
     assert.deepEqual(actual, { route: expected, shell: "shell-b", css: "rgb(1, 2, 3)" });
     checks.push(`${expected} launches offline with its own HTML and the active JS/CSS`);
   }
+
+  await context.setOffline(false);
+  const otherPage = await context.newPage();
+  await otherPage.goto(base, { waitUntil: "domcontentloaded" });
+  releaseSha = "shell-c";
+  failure = "delay-css";
+  const cssRequested = new Promise((resolve) => { onHeldCssRequest = resolve; });
+  const pendingCommit = ask({ type: "pwa:commit-manifest", manifest: manifest("shell-c") });
+  await Promise.race([
+    cssRequested,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("concurrent commit never reached the delayed CSS")), 10_000)),
+  ]);
+  const rollbackDuringWarm = await ask({ type: "pwa:rollback" }, otherPage);
+  const supersededCommit = await pendingCommit;
+  failure = null;
+  for (const response of heldCssResponses) response.end("body{color:rgb(1,2,3)}");
+  const afterRollback = await ask({ type: "pwa:get-state" });
+  assert.equal(rollbackDuringWarm.type, "pwa:rolled-back");
+  assert.deepEqual({ type: supersededCommit.type, reason: supersededCommit.reason }, {
+    type: "pwa:commit-failed", reason: "superseded",
+  });
+  assert.equal(afterRollback.active.releaseSha, "shell-a");
+  assert.equal(afterRollback.previous, null);
+  assert.equal(await page.evaluate(() => caches.has("zombieee-shell-1.0.0-shell-a")), true);
+  checks.push("another tab can roll back while a newer shell warms without being overwritten");
+  await context.setOffline(true);
+  await page.goto(base, { waitUntil: "load" });
+  assert.equal(await page.evaluate(() => window.__shellBoot), "shell-a");
+  checks.push("the rolled-back generation still launches offline after the concurrent request");
+
+  await context.setOffline(false);
+  failure = "delay-css";
+  releaseSha = "shell-c";
+  const secondCssRequested = new Promise((resolve) => { onHeldCssRequest = resolve; });
+  const competingCommit = ask({ type: "pwa:commit-manifest", manifest: manifest("shell-c") });
+  await Promise.race([
+    secondCssRequested,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("competing commit never reached the delayed CSS")), 10_000)),
+  ]);
+  releaseSha = "shell-d";
+  failure = null;
+  const newestCommit = ask({ type: "pwa:commit-manifest", manifest: manifest("shell-d") }, otherPage);
+  const supersededByCommit = await competingCommit;
+  const latestResult = await newestCommit;
+  for (const response of heldCssResponses) {
+    if (!response.writableEnded) response.end("body{color:rgb(1,2,3)}");
+  }
+  const finalConcurrentState = await ask({ type: "pwa:get-state" });
+  assert.deepEqual({ type: supersededByCommit.type, reason: supersededByCommit.reason }, {
+    type: "pwa:commit-failed", reason: "superseded",
+  });
+  assert.equal(latestResult.type, "pwa:committed");
+  assert.equal(finalConcurrentState.active.releaseSha, "shell-d");
+  assert.equal(finalConcurrentState.previous.releaseSha, "shell-a");
+  checks.push("overlapping commits choose the latest request and retain the outgoing generation");
   console.log(JSON.stringify({ status: "passed", checks, base }, null, 2));
 } finally {
+  for (const response of heldCssResponses) {
+    if (!response.writableEnded) response.end();
+  }
   await context.setOffline(false).catch(() => {});
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

@@ -267,7 +267,7 @@ async function respondForNavigation(request) {
  * A complete asset pack cannot be reported offline-ready until both route
  * documents and every emitted JS/CSS chunk have been saved as one generation.
  */
-async function warmShell(manifest) {
+async function warmShell(manifest, controller) {
   const generation = generationOf(manifest);
   const cache = await caches.open(shellCacheName(generation));
   const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
@@ -298,7 +298,6 @@ async function warmShell(manifest) {
   try {
     if (await cachedReady()) return { ready: true, reused: true };
   } catch { /* incomplete or corrupt cache; try the network */ }
-  const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SHELL_WARM_TIMEOUT_MS);
   const fetchRequired = async (url, kind) => {
     const response = await fetch(url, { cache: "no-store", signal: controller.signal });
@@ -502,6 +501,21 @@ function usageBytesFor(state, present) {
   return bytes;
 }
 
+// Message events can overlap while a shell is warming. Keep pointer changes and
+// garbage collection in arrival order, and cancel an unfinished warm when a
+// newer commit, rollback, or clear request takes precedence.
+let stateMutationTail = Promise.resolve();
+let stateMutationIntent = 0;
+let activeShellWarmController = null;
+
+function queueStateMutation(operation) {
+  const intent = ++stateMutationIntent;
+  activeShellWarmController?.abort();
+  const result = stateMutationTail.then(() => operation(intent));
+  stateMutationTail = result.catch(() => {});
+  return result;
+}
+
 self.addEventListener("message", (event) => {
   const message = event.data;
   if (!message || typeof message.type !== "string") return;
@@ -533,38 +547,60 @@ self.addEventListener("message", (event) => {
       case "pwa:commit-manifest": {
         const manifest = message.manifest;
         if (!manifest?.assets?.length) return reply(event, { type: "pwa:commit-failed", reason: "invalid-manifest" });
-        const state = await readState();
-        const warmed = await warmShell(manifest);
-        if (!warmed.ready) {
-          return reply(event, { type: "pwa:commit-failed", reason: `shell-${warmed.reason}` });
-        }
-        const next = {
-          active: manifest,
-          previous: state.active && generationOf(state.active) !== generationOf(manifest)
-            ? state.active
-            : state.previous,
-          pending: null,
-        };
-        await writeState(next);
-        invalidateManifestMemo();
-        assetIndexMemo = null;
-        const collected = await collectGarbage(next);
-        await reply(event, {
-          type: "pwa:committed",
-          generation: generationOf(manifest),
-          ...collected,
+        return queueStateMutation(async (intent) => {
+          const before = await readState();
+          const warmController = new AbortController();
+          activeShellWarmController = warmController;
+          let warmed;
+          try {
+            warmed = await warmShell(manifest, warmController);
+          } finally {
+            if (activeShellWarmController === warmController) activeShellWarmController = null;
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          if (!warmed.ready) {
+            return reply(event, { type: "pwa:commit-failed", reason: `shell-${warmed.reason}` });
+          }
+          const state = await readState();
+          const activeGeneration = (value) => value ? generationOf(value) : null;
+          if (activeGeneration(state.active) !== activeGeneration(before.active)) {
+            return reply(event, { type: "pwa:commit-failed", reason: "active-mismatch" });
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          const next = {
+            active: manifest,
+            previous: state.active && generationOf(state.active) !== generationOf(manifest)
+              ? state.active
+              : state.previous,
+            pending: null,
+          };
+          await writeState(next);
+          invalidateManifestMemo();
+          assetIndexMemo = null;
+          const collected = await collectGarbage(next);
+          await reply(event, {
+            type: "pwa:committed",
+            generation: generationOf(manifest),
+            ...collected,
+          });
+          return undefined;
         });
-        return undefined;
       }
 
       // Explicit rollback to the retained previous generation.
       case "pwa:rollback": {
-        const state = await readState();
-        if (!state.previous) return reply(event, { type: "pwa:rollback-failed", reason: "no-previous-generation" });
-        await writeState({ active: state.previous, previous: null, pending: null });
-        invalidateManifestMemo();
-        assetIndexMemo = null;
-        return reply(event, { type: "pwa:rolled-back", generation: generationOf(state.previous) });
+        return queueStateMutation(async () => {
+          const state = await readState();
+          if (!state.previous) return reply(event, { type: "pwa:rollback-failed", reason: "no-previous-generation" });
+          await writeState({ active: state.previous, previous: null, pending: null });
+          invalidateManifestMemo();
+          assetIndexMemo = null;
+          return reply(event, { type: "pwa:rolled-back", generation: generationOf(state.previous) });
+        });
       }
 
       // Only ever sent from a safe screen; never called on install.
@@ -575,8 +611,10 @@ self.addEventListener("message", (event) => {
 
       // Drops asset bytes without touching any save data.
       case "pwa:clear-assets": {
-        await caches.delete(ASSET_CACHE);
-        return reply(event, { type: "pwa:assets-cleared" });
+        return queueStateMutation(async () => {
+          await caches.delete(ASSET_CACHE);
+          return reply(event, { type: "pwa:assets-cleared" });
+        });
       }
 
       default:

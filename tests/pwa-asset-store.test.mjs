@@ -148,7 +148,7 @@ test("committing a manifest warms the shell so a first install can boot offline"
   // Without this the shell cache is only ever filled by a navigation that
   // happens after a commit. On a first install the only navigation happens
   // before it, so a fully downloaded app taken offline would fail to start.
-  assert.match(serviceWorkerSource, /async function warmShell\(manifest\)/);
+  assert.match(serviceWorkerSource, /async function warmShell\(manifest, controller\)/);
   const commitCase = serviceWorkerSource.slice(
     serviceWorkerSource.indexOf('case "pwa:commit-manifest"'),
     serviceWorkerSource.indexOf('case "pwa:rollback"'),
