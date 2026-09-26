@@ -43,6 +43,10 @@ function assertBattleMusicGate(result){
  assert.ok(Array.isArray(result.networkRequestFailures),'Native music request failure collection is missing');
  assert.deepEqual(result.networkRequestFailures,[],'Native music must not report failed network requests');
 }
+function assertNaturalBattleOutcome(result){
+ const outcome=result.actualResult;
+ assert.ok(outcome&&typeof outcome.won==='boolean'&&typeof outcome.loss==='boolean'&&outcome.won!==outcome.loss,'Native music gate needs one real win or loss result');
+}
 if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
  const sample=(assetId,time)=>({time,audio:{activeBgm:[{assetId,voiceGain:1}],contextState:'running',audioState:'running',unlocked:true,duplicateLoopInstanceKeys:[]},shellAudio:{activeBgmVoices:0}});
  const ownerFailureEvents=[];const ownerQa={getFailureEvents:()=>({events:ownerFailureEvents,overflow:0})};const retainedFailureGetter=ownerQa.getFailureEvents;ownerFailureEvents.push({assetId:'transient'});assert.deepEqual(retainedFailureGetter().events,[{assetId:'transient'}]);ownerFailureEvents.length=0;
@@ -61,6 +65,9 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
   {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2)]},
   {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),{...sample('music-v100-score-pressure',4),audio:{...sample('music-v100-score-pressure',4).audio,activeBgm:[{assetId:'music-v100-score-pressure',voiceGain:0}]}}]},
  ])assert.throws(()=>assertBattleMusicGate(invalid));
+  assert.doesNotThrow(()=>assertNaturalBattleOutcome({actualResult:{won:true,loss:false}}));
+  assert.doesNotThrow(()=>assertNaturalBattleOutcome({actualResult:{won:false,loss:true}}));
+  for(const actualResult of [null,{won:false,loss:false},{won:true,loss:true}])assert.throws(()=>assertNaturalBattleOutcome({actualResult}));
  console.log('v100 battle music gate negative fixtures passed');
  process.exit(0);
 }
@@ -68,7 +75,7 @@ await mkdir(dirname(out),{recursive:true});
 await mkdir(out,{recursive:false});
 const playwrightPackageUrl=new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/package.json':'../node_modules/playwright/package.json',import.meta.url);
 const playwrightPackage=JSON.parse(await readFile(playwrightPackageUrl,'utf8'));
-const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses an attainable first-two-stage budget: Nao plus four initial units at level 2, without a vehicle upgrade. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
+const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses an attainable first-two-stage budget: Nao plus four initial units at level 2, without a vehicle upgrade. It requires natural boss defeat, all three running-context BGM phases and one natural battle result; the final win/loss is recorded separately. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
 const browser=await ({chromium,webkit}[engine]).launch({headless:true});
 report.provenance.browserVersion=await browser.version();
 try{for(const number of numbers){
@@ -148,7 +155,7 @@ try{for(const number of numbers){
   }
   // macOS WebKit advanced only 127 simulation seconds in the prior 240-second
   // wall budget after the Producer-requested later, stronger Stage 3 boss.
-  // Keep the natural victory and music gates while allowing the attainable
+  // Keep the natural boss defeat and music gates while allowing the attainable
   // early-campaign roster enough wall time to finish on that host.
   const deadline=Date.now()+(musicStage3?420000:240000);
   let last=null,emptySince=null,maxEmpty=0;
@@ -315,7 +322,7 @@ try{for(const number of numbers){
    await writeFile(out+'/s'+number+'-muzzle-canvas.png',Buffer.from(image.split(',')[1],'base64'));
   }
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
-   assert.equal(result.actualResult?.won,true,'Stage 3 native music fixture must win through ordinary battle inputs');
+   assertNaturalBattleOutcome(result);
    assertBattleMusicGate(result);
   }
   assert.ok(last?.over||await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').count(),'Battle must reach its natural result before bounded QA deadline');
