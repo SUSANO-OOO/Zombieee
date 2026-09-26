@@ -124,7 +124,38 @@ jobs:
           GITHUB_PAGES_ISSUE_NUMBER=156 \
             node scripts/build-github-pages.mjs
 
+      - name: Classify whether PWA asset update QA applies
+        id: pwa_update_scope
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed=0
+          runtime_change=0
+          changed_paths_file="$RUNNER_TEMP/pwa-update-changed-paths.z"
+          git diff --name-only -z "$PR_BASE_SHA...$PR_HEAD_SHA" > "$changed_paths_file"
+          while IFS= read -r -d '' path; do
+            changed=1
+            case "$path" in
+              docs/*|.github/workflows/ci.yml) ;;
+              *) runtime_change=1 ;;
+            esac
+          done < "$changed_paths_file"
+          if (( changed == 0 )); then
+            echo "PR has no changed paths" >&2
+            exit 1
+          fi
+          if (( runtime_change == 0 )); then
+            echo "applicable=false" >> "$GITHUB_OUTPUT"
+            echo "PWA asset-update QA is inapplicable to a docs/workflow-only PR; the production build and browser checks still run." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "applicable=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Reproduce and recover the partial-failed existing PWA (Chromium)
+        if: steps.pwa_update_scope.outputs.applicable == 'true'
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
