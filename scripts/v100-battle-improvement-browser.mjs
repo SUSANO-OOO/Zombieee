@@ -36,6 +36,7 @@ function assertBattleMusicGate(result){
  assert.ok(normalIndex>=0&&bossIndex>normalIndex,`Stage 3 must start normal music before boss music: ${normalIndex}, ${bossIndex}`);
  for(const assetId of requiredMusic){assert.ok(samples.some(s=>s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId===assetId&&v.voiceGain>0)),`${assetId} lacks running-context positive mixer evidence`);}
  assert.ok(result.boss?.firstObservedTime!==undefined&&result.bossDefeatedAt!==undefined,'Stage 3 must observe boss arrival and natural defeat');
+ assert.equal(result.lastReadableBattleSnapshot?.bossDefeated,true,'Stage 3 must record the actual boss-defeated state');
  assert.ok(samples[bossIndex].time>=result.boss.firstObservedTime&&samples[bossIndex].time<result.bossDefeatedAt,'Boss music must play during the observed boss fight');
  assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
  assert.ok(result.finalRequestFailures&&Array.isArray(result.finalRequestFailures.events)&&result.finalRequestFailures.overflow===0,'Native music failure events must be present and structurally complete');
@@ -50,7 +51,7 @@ function assertNaturalBattleOutcome(result){
 if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
  const sample=(assetId,time)=>({time,audio:{activeBgm:[{assetId,voiceGain:1}],contextState:'running',audioState:'running',unlocked:true,duplicateLoopInstanceKeys:[]},shellAudio:{activeBgmVoices:0}});
  const ownerFailureEvents=[];const ownerQa={getFailureEvents:()=>({events:ownerFailureEvents,overflow:0})};const retainedFailureGetter=ownerQa.getFailureEvents;ownerFailureEvents.push({assetId:'transient'});assert.deepEqual(retainedFailureGetter().events,[{assetId:'transient'}]);ownerFailureEvents.length=0;
- const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
+ const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,lastReadableBattleSnapshot:{bossDefeated:true},finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
  assert.doesNotThrow(()=>assertBattleMusicGate(valid));
  assert.doesNotThrow(()=>assertBattleMusicGate({...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),sample('music-v100-score-pressure',4)]}));
  for(const invalid of [
@@ -62,6 +63,7 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
   {...valid,finalRequestFailures:{events:[],overflow:1}},
   {...valid,networkRequestFailures:[{url:'/audio.ogg'}]},
   {...valid,bossDefeatedAt:5},
+  {...valid,lastReadableBattleSnapshot:{bossDefeated:false}},
   {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2)]},
   {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),{...sample('music-v100-score-pressure',4),audio:{...sample('music-v100-score-pressure',4).audio,activeBgm:[{assetId:'music-v100-score-pressure',voiceGain:0}]}}]},
  ])assert.throws(()=>assertBattleMusicGate(invalid));
@@ -160,7 +162,7 @@ try{for(const number of numbers){
   const deadline=Date.now()+(musicStage3?420000:240000);
   let last=null,emptySince=null,maxEmpty=0;
   while(Date.now()<deadline){
-   last=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return s?{time:s.time,over:s.over,running:s.running,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,objective:s.objective,stageMission:s.stageMission,enemySpawn:s.enemySpawn,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,assignedLane:f.assignedLane,targetId:f.targetId,attack:f.attack,attackSequence:f.attackSequence,combatReady:f.combatReady,gateEntering:f.gateEntering}))}:null;});
+   last=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return s?{time:s.time,over:s.over,running:s.running,bossDefeated:s.bossDefeated,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,objective:s.objective,stageMission:s.stageMission,enemySpawn:s.enemySpawn,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,assignedLane:f.assignedLane,targetId:f.targetId,attack:f.attack,attackSequence:f.attackSequence,combatReady:f.combatReady,gateEntering:f.gateEntering}))}:null;});
    if(!last)break;
    if(process.env.V100_BATTLE_MUSIC_CHECK==='1')result.lastReadableBattleSnapshot=last;
    if(guardianCheck){
