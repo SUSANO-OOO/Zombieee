@@ -6,7 +6,9 @@
 
 PR #171はDraft/open、製品ソースの固定点は`ee3925ce091b1b39734d254701034c6c516516be`。その後のCI判定修正を確認した固定点は`d4f2891727702c341ac7b8c8bb56bd3841f547aa`。先行文書PR #169はDraft/openで確認済み固定点`640fdc34a0c9a2a88d28e7c509b7d21a032c6941`、PR #170もDraft/open。両PRのCI判定修正は独立read-only再reviewでHigh 0／Medium 0。この文書を反映した後の最新headとCIはlive PRおよびIssue #172で確認し、旧CIの成功を合格へ繰り上げない。
 
-同じ製品ソースのローカル検証は全1664/1664 test、production build、Lint 0 error、content/CAPS、Phase G 55/55と証拠validator、スマートフォン横画面の代表的通常プレイ、Chromium/WebKitの静的Pages形6/6、旧30 Stage saveの読込・再読込・終了再開・書出し・再import・不正import保護、PWA更新18/18・部分失敗復旧22/22、Mac WebKit 844×390 p95 19ms／844×340 p95 30ms（33ms基準）に到達した。全94 event／30 Stage／630表示nodeと保存receiptは開発者モードの合成勝利で通した。AIが30戦を通常操作で勝利する工程は置かず、合成勝利を自然勝利の証拠とも扱わない。
+同じ製品ソースのローカル検証は全1664/1664 test、production build、Lint 0 error、content/CAPS、Phase G 55/55と証拠validator、スマートフォン横画面の代表的通常プレイ、Chromium/WebKitの静的Pages形6/6、旧30 Stage saveの読込・再読込・終了再開・書出し・再import・不正import保護に到達した。全94 event／30 Stage／630表示nodeと保存receiptは開発者モードの合成勝利で通した。AIが30戦を通常操作で勝利する工程は置かず、合成勝利を自然勝利の証拠とも扱わない。
+
+前head `ee3925c` のCIは20 job成功後に新head pushで自動cancelされた。完了済みjobのartifactではnative WebKit PWA更新18/18・部分失敗復旧22/22、Mac WebKit 844×390 p95 19ms／844×340 p95 30ms（33ms基準）を実測した。これはローカルQAでも全CI完走でもなく、この文書反映後の最終headのCI合格へ転記しない。
 
 一時試遊URLは`https://organizations-wifi-announcement-passive.trycloudflare.com/Zombieee/v100`。現在のページ内SHA表示は製品ソース`ee3925c`であり、CI確定後に最終head表示へ更新・再確認する。これは公式GitHub Pages公開ではない。物理スマートフォンの発熱、実speaker、最終的な手触りはProducer実機受入で判定し、WebKit測定と区別する。
 
