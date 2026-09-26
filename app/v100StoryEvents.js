@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "2d4e075c20ab375339740ca5677680b03aed51a678242c060287e0cc619a24ed";
+export const V100_STORY_SOURCE_SHA256 = "1d6a21b05bf3b5687d8723c2817478a1b608c3c6bdfcffc9bfd9bb3b957e3fd2";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -597,7 +597,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "番号が丸見えです。隠すにしては雑すぎる",
+        "text": "市の救援箱なのに、下にムガリアンの番号がある",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 87
@@ -605,7 +605,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "雑に見せたかった可能性もある",
+        "text": "上から貼っただけやな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 88
@@ -613,7 +613,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "わざと見せたってこと？　……嫌な予感がします",
+        "text": "誰が手配したのか、調べます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 89
@@ -825,7 +825,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ミズチ",
-        "text": "あなたの分まで数えない。自分のは数えた",
+        "text": "七発。駅までなら足りる",
         "portraitOwner": "unit-mizuchi",
         "portraitKind": "major",
         "sourceLine": 119
@@ -902,7 +902,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "交差点の向こうで、橙の防災ベストを着た巨体が車を押しのける。胸の名札は「TAKUYA」。",
+        "text": "交差点の向こうで、橙の防災ベストを着た巨体が車を押しのける。黒い眼帯、頬の傷。胸の名札は「TAKUYA」。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 132
@@ -2221,7 +2221,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "私が繋いだ端末から抜かれた。……親切なふりをした回線ほど嫌い",
+        "text": "私が繋いだ端末から抜かれた。……気づけなかった",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 321
@@ -3005,7 +3005,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "TKY",
-        "text": "そこの車！　人が乗っとる方、三か所外してくれ！　俺が切ると丸ごと飛ぶ！",
+        "text": "そこの車！　人が乗っとる車両の連結器、三つ外してくれ！　俺が切ると丸ごと飛ぶ！",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
         "sourceLine": 435
@@ -3357,7 +3357,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "俺らが三つ閉める。その間、弾は人に使うなよ",
+        "text": "俺らが三つ閉める。最後の一発、残しとけよ",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 486
@@ -3365,7 +3365,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハの声",
-        "text": "それを言う相手、間違ってる",
+        "text": "言われなくても。迎えに来るなら急いで",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 487
@@ -3581,7 +3581,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "二人とも相手の腕を調べ、ようやく手を止める。抱き合うには、人が通る幅しかない。",
+        "text": "二人とも相手の腕を調べ、無傷と分かっても手を離さない。車内では十二人が出発を待っている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 519
@@ -4151,7 +4151,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "本社へ続く道には、感染者が急所を断たれて倒れている。二刀の男が路地から出てくる。",
+        "text": "本社へ続く道には、首筋や胸を斬られた感染者が倒れている。二刀の男が路地から出てくる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 604,
@@ -4696,7 +4696,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "言えば疑われる。疑われるべきだったから、黙った",
+        "text": "言えば疑われると思った。……でも、疑われて当然だった",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
         "sourceLine": 680
@@ -5096,7 +5096,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "設備は残す。働く人も守る。でも、あなたへは返さない",
+        "text": "設備は残す。働く人も守る。でも、あなたを逃がす約束はできない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
         "sourceLine": 737
@@ -5486,7 +5486,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "RED PANTHER隊長",
-        "text": "ネコ殺しのセガワ特級博士命令。ここから先へ入れるな",
+        "text": "セガワ特級博士の命令だ。ここから先へは通さない",
         "portraitOwner": "red-panther-commander",
         "portraitKind": "major",
         "sourceLine": 794
@@ -6034,7 +6034,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "高い制御音が続く。TAKUYA-Ωは主人公たちを通り越し、音源へ振り向く。発信器が、セガワの手ごと砕けた。",
+        "text": "高い制御音が続く。TAKUYA-Ωは主人公たちを通り越し、音源へ踏み込む。発信器と握った手が、大刃の下で砕けた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 873
@@ -6066,7 +6066,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "セガワの呼吸が止まる。先に感染群が交差点へ流れ込み、巨体はその奥から避難バスへ向き直る。",
+        "text": "セガワの呼吸が止まる。感染群が交差点へ流れ込み、巨体はその奥から避難バスへ向き直る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 877
@@ -6597,7 +6597,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "期限はだいぶ過ぎたけど",
+        "text": "だいぶ待たせたな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 954
