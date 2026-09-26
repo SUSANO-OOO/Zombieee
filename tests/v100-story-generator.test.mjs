@@ -1,12 +1,27 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { v100StoryPortraitPath } from "../app/v100StoryPortraitPaths.js";
 
 const shotLabels = ["西新商店街", "早良区役所", "西新駅", "大学病院", "河口防潮門", "ムガリアン施設", "RED PANTHER装備庫", "ザキミヤ", "装甲車両", "TAKUYA撃破地点", "くまや"];
+
+test("every authored speaking portrait resolves to an installed visual", () => {
+  const owners = new Set(Object.values(V100_STORY_EVENTS)
+    .flatMap(event => event.nodes)
+    .filter(node => node.kind === "dialogue" && node.portraitOwner)
+    .map(node => node.portraitOwner));
+  assert.ok(owners.size >= 15, "the full cast must be checked");
+  for (const owner of owners) {
+    const assetPath = v100StoryPortraitPath(owner);
+    assert.ok(assetPath?.startsWith("/art/"), `${owner} lacks a story portrait`);
+    assert.ok(existsSync(path.join(process.cwd(), "public", assetPath.slice(1))), `${owner} portrait is missing: ${assetPath}`);
+  }
+});
 
 test("canonical end roll contains all eleven ordered shots, never the production instruction", () => {
   const credits = V100_STORY_EVENTS["v100:event:credits"];

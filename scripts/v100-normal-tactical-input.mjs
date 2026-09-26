@@ -75,8 +75,8 @@ export async function normalTacticalInput(page,record,{observeSnapshot}={}){
   }
   // When the boss fixture cannot afford another airstrike, use the crawler's
   // ordinary barrage control against enemies already threatening its front.
-  if(!airstrikeRequested&&(bossPrecision||cluster?.members.length<3)
-    &&enemies.some(f=>f.x<550)&&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
+  if(!airstrikeRequested&&enemies.some(f=>f.x<550)
+    &&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
   // Each enabled button already uses the production ability's target/range.
   // Normal attack range would wrongly exclude long-range precision abilities.
   const icons=await page.locator('button.manual-ability-ready.available[aria-disabled="false"]').evaluateAll(els=>els.map(el=>({ownerId:el.dataset.fighterId,kind:el.dataset.abilityKind})));

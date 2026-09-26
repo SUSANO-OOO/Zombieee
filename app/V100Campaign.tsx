@@ -55,6 +55,7 @@ import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
+import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
 import { v100LevelStats } from "./v100Progression.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
@@ -62,7 +63,6 @@ import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { unitContentFor } from "./content/unitCatalog.js";
 import { AshfallGame, type AshfallBattleResult } from "./AshfallGame";
 import { v100StageRuntimeFor } from "./v100StageRuntime.js";
-import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { FORMATION_CARD_ART } from "./spriteManifest.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { PROLOGUE_SYNOPSIS } from "./storyEvents.js";
@@ -80,7 +80,6 @@ import {
   restoreV100BrowserSave,
   subscribeV100SaveChanges,
 } from "./v100CampaignStorage.js";
-import { EVENT_PORTRAIT_PROFILES, V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V100EquipmentView } from "./V100EquipmentView";
 import { V100ModesView } from "./V100ModesView";
 import "./v100Campaign.css";
@@ -93,22 +92,6 @@ type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolea
 type Flow = ReturnType<typeof createV100StoryFlowState>;
 type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string; sourceLine?: number; sceneLabel?: string; sceneTag?: string };
 type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "vehicle" | "equipment" | "modes" | "data" | "rename";
-
-const PORTRAIT_PATHS: Record<string, string> = {
-  "unit-kumaverson": V080_UNIT_VISUAL_PROFILES.kumaverson.eventPortrait.path,
-  "unit-paisen": V080_UNIT_VISUAL_PROFILES.brawler.eventPortrait.path,
-  "unit-babayaga": V080_UNIT_VISUAL_PROFILES.babayaga.eventPortrait.path,
-  "unit-zakimiya": V090_UNIT_VISUAL_PROFILES.zakimiya.eventPortrait.path,
-  "unit-tky": V090_UNIT_VISUAL_PROFILES.tky.eventPortrait.path,
-  "unit-mrs-chiha": V090_UNIT_VISUAL_PROFILES["mrs-chiha"].eventPortrait.path,
-  "unit-crazy-king": V080_UNIT_VISUAL_PROFILES["crazy-king"].eventPortrait.path,
-  "unit-miyamoto-musashi": V090_UNIT_VISUAL_PROFILES["miyamoto-musashi"].eventPortrait.path,
-  "guide-ikura": V075_VISUAL_PROFILES.ikura.eventPortrait.path,
-  segawa: V100_RUNTIME_ASSET_MANIFEST.portraits.segawa,
-  "mugarian-president": V100_RUNTIME_ASSET_MANIFEST.portraits.mugarianPresident,
-  "red-panther-commander": V100_RUNTIME_ASSET_MANIFEST.portraits.redPantherCommander,
-  "minor-human-shared-event-silhouette": V100_RUNTIME_ASSET_MANIFEST.portraits.minorHuman,
-};
 
 const UNIT_BY_ID = new Map(V100_UNITS.map((unit) => [unit.id, unit]));
 
@@ -153,7 +136,7 @@ function formatReason(reason: string | undefined) {
 }
 
 function portraitFor(owner: string | null | undefined) {
-  return owner ? PORTRAIT_PATHS[owner] ?? EVENT_PORTRAIT_PROFILES[owner]?.path ?? null : null;
+  return v100StoryPortraitPath(owner);
 }
 
 function isEventPhase(phase: Flow["phase"]) {
