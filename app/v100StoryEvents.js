@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "cfaad7f359011cc8524ba260f40225052657e0d6a5bd5f00ef610a9a8e7eac08";
+export const V100_STORY_SOURCE_SHA256 = "2d4e075c20ab375339740ca5677680b03aed51a678242c060287e0cc619a24ed";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -589,7 +589,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "いくらちゃんは老人へ水を渡し、薬品箱の上貼りを指でめくる。市のラベルの下から「MUGARIAN」。",
+        "text": "いくらちゃんは老人へ水を渡し、薬品箱の市のラベルをめくる。その下に「MUGARIAN」の印字。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 86
@@ -597,7 +597,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "会社の番号を隠して、市の箱に見せてる。誰かの雑な仕事、見つけました",
+        "text": "番号が丸見えです。隠すにしては雑すぎる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 87
@@ -613,7 +613,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "……嫌な方の正解、すぐ出しますね",
+        "text": "わざと見せたってこと？　……嫌な予感がします",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 89
@@ -685,7 +685,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "区役所前に残った最後の救援車。エンジンを掛けたまま、一席だけ空けて待つ。足を痛めた安藤が、コピー室から戻らない。",
+        "text": "区役所前に残った最後の救援車。エンジンを掛けたまま、一席だけ空けて待つ。屋根の射手が退路を見張る。足を痛めた安藤が、コピー室から戻らない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 100
@@ -5120,7 +5120,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "それなら、私に残る薬は？",
+        "text": "なら、私はどうすればいい",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
         "sourceLine": 740
