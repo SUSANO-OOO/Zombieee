@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "4ac615c4330a142902c224acf42c67896efe201814b6361e6e14b644774c23e2";
+export const V100_STORY_SOURCE_SHA256 = "e984438654b0e890fd0d4cb9630723f0e05e88ad6508903146d4b3c6594805c2";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -321,7 +321,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "危うく、配線を一本買いすぎるとこやった",
+        "text": "危うく、切らんでいい線まで切るとこやった",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 47,
@@ -497,7 +497,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "パイセンが階段を見上げる。老人を背負うには両手が要る。握っていた鉄パイプを車内へ置いた。",
+        "text": "パイセンが鉄パイプを車内へ放り、両手を空ける。二階の窓では、誰かが老人の身体を支えている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 73
@@ -505,7 +505,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "俺、先に上がります。{{PLAYER_NAME}}さん、車を階段へ。帰りにあの人の手を空けたいんで",
+        "text": "俺が先に上がります！　{{PLAYER_NAME}}さん、車を裏階段へ。降りてきた人を受け取って！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 74
@@ -513,7 +513,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が車両を階段の前へ寄せ、救出路を示す。",
+        "text": "主人公が車両を裏階段の前へ寄せ、救出路を示す。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 75
@@ -685,7 +685,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "区役所の前で避難バスがエンジンを掛けたまま待つ。車内は満員。コピー室の安藤だけが戻らない。",
+        "text": "区役所前に残った最後の救援車。エンジンを掛けたまま、一席だけ空けて待つ。足を痛めた安藤が、コピー室から戻らない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 100
@@ -701,7 +701,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "パイセンは窓越しに乗客を見る。子どもが曇ったガラスを手で拭き、彼を見る。",
+        "text": "後部座席で毛布を握る子どもが、開いた扉越しにパイセンを見る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 102
@@ -717,7 +717,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が装甲車両をバスの前へ寄せ、パイセンへ車椅子を渡す。",
+        "text": "主人公が装甲車両を救援車の前へ寄せ、パイセンへ車椅子を渡す。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 104
@@ -749,7 +749,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "battle-marker",
         "speaker": "◆ BATTLE",
-        "text": "避難バスと救出経路を守れ。",
+        "text": "救援車と救出経路を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 108
@@ -769,7 +769,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "パイセンが車椅子を押して飛び出す。安藤の膝には、古い携帯ラジオ。バスの運転手が扉を開けたまま、彼らへ手を振る。",
+        "text": "パイセンが車椅子を押して飛び出す。安藤の膝には、古い携帯ラジオ。救援車の運転手が後部扉を開く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 112
@@ -785,7 +785,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "それ、落とさないでください。取りに戻る勇気、もう残ってないっす",
+        "text": "いくらちゃん、ラジオ受け取って！　俺、安藤さんを乗せる。……取りに戻る勇気、もうないっす",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 114
@@ -793,7 +793,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "バスが出る。パイセンは手すりを握ったまま、指を一本ずつほどく。いくらちゃんが黙ってラジオの周波数を合わせた。",
+        "text": "安藤がラジオを渡す。パイセンと運転手が彼を空席へ座らせ、車椅子を畳んで積む。屋根の射手も降りた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 115
@@ -801,7 +801,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "バスの屋根から射手が降りてくる。撃ち残した薬莢を拾い、駅へ向かう道だけを見ている。",
+        "text": "救援車が出る。パイセンは手袋を外し、震える指を一度だけ握り直す。いくらちゃんが黙ってラジオの周波数を合わせた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 116
@@ -809,7 +809,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ミズチ",
-        "text": "ミズチ。バスの後ろは見届けた。駅へ行くなら、次の交差点は開けておく",
+        "text": "ミズチ。救援車の退路は確保した。駅へ行くなら、次の交差点は開けておく",
         "portraitOwner": "unit-mizuchi",
         "portraitKind": "major",
         "sourceLine": 117
@@ -851,7 +851,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が図を撮り、安藤のラジオを駅の周波数へ合わせる。",
+        "text": "主人公が避難図を撮り、駅員室へ向かう道を地図に記す。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 124,
@@ -1949,7 +1949,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "名前まで書いてある。さっきまで、ここに家族が来てたんすね",
+        "text": "名前も、家族の写真もある。……置いていくしかないんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 282
@@ -2361,7 +2361,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "装甲車両から降りたマヨちゃんが、開いた扉の前で止まる。耳が立ったのを見て、先行するハチも足を止めた。",
+        "text": "隊列の後ろを歩くマヨちゃんが、開いた扉の前で止まる。耳が立ったのを見て、先行するハチも足を止めた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 342
@@ -2385,7 +2385,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公がマヨちゃんの戦術ハーネスを確かめ、車両へ戻る経路を空ける。",
+        "text": "主人公がマヨちゃんの戦術ハーネスを確かめ、後方へ戻る経路を空ける。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 345
@@ -3417,7 +3417,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハの声",
-        "text": "聞こえる。最後の一発は、まだ持ってる",
+        "text": "聞こえる。拳銃の最後の一発は、まだ持ってる",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 495
@@ -3473,7 +3473,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "回廊の奥に十二人。Mrs.チハは最後尾で一発だけ残ったランチャーを構える。子どもの靴紐を結び直す手だけが、一瞬空いた。",
+        "text": "回廊の奥に十二人。Mrs.チハは拳銃を腰へ戻し、子どもの靴紐を結び直す。背負っていたランチャーを構えた。残る弾は一発。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 504
@@ -4592,7 +4592,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が救出者を安全回廊へ送り、Mrs.チハと共に追撃から離れる。",
+        "text": "主人公が救出者を安全回廊経由で病院へ送り、Mrs.チハと共に追撃から離れる。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 665
@@ -5962,7 +5962,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "最初に戻った交差点。避難バスの最後尾が、まだ安全回廊へ入れない。後部窓には娘を抱いたザキミヤの妻。標識が折れ、建物の陰から巨体が姿を現す。",
+        "text": "最初に戻った交差点。病院から再避難するバスの最後尾が、安全回廊へ入る列で止まっている。後部窓には娘を抱いたザキミヤの妻。標識が折れ、建物の陰から巨体が姿を現す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 864
