@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "48583a09d72fc672cec916e6b84afdc6f19271e63ac4f9e8b4c9de6929102487";
+export const V100_STORY_SOURCE_SHA256 = "4ac615c4330a142902c224acf42c67896efe201814b6361e6e14b644774c23e2";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -2825,7 +2825,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "青い端子を繋げば、薬の庫と奥の避難室が開きます",
+        "text": "青い端子を繋げば、冷蔵コンテナと奥の避難室が開きます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 409
@@ -2841,7 +2841,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "私の設備です。映像を受け取った。今、どの扉を開けるかは、あなたたちに決めてほしい",
+        "text": "私の設備です。映像を受け取った。扉を開けるかどうかは、あなたたちが決めてください",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 411
@@ -2901,7 +2901,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "避難者が二人、薬箱と一緒に出てくる。セガワの言った順に扉は開いた。",
+        "text": "避難室から二人が出てくる。開いた冷蔵コンテナから、無傷の薬箱が運び出される。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 420
@@ -6114,7 +6114,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "TAKUYA！　駅でも声が裏返った。今もだ！　……あのバスには、指一本触れさせねえ！",
+        "text": "TAKUYA！　あの日も怖かった。今も怖えよ！　……それでも、あのバスには指一本触れさせねえ！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 883
