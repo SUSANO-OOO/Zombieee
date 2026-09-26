@@ -31,11 +31,13 @@ function assertBattleMusicGate(result){
  assert.ok(samples.some(s=>s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-normal'&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&v.voiceGain>0)),'Normal music lacks running-context positive mixer evidence');
  for(const sample of samples){assert.equal(sample.shellAudio.activeBgmVoices,0,'Preparation owner stops throughout battle');assert.deepEqual(sample.audio.duplicateLoopInstanceKeys,[]);}
  if(result.number!==3)return;
- const firstIndexes=requiredMusic.map(assetId=>samples.findIndex(s=>s.audio.activeBgm.some(v=>v.assetId===assetId)));
- assert.ok(firstIndexes.every(index=>index>=0)&&firstIndexes.every((index,i)=>i===0||index>firstIndexes[i-1]),`Stage 3 BGM order is incomplete or out of order: ${JSON.stringify(firstIndexes)}`);
+ const normalIndex=samples.findIndex(s=>s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-normal'));
+ const bossIndex=samples.findIndex(s=>s.audio.activeBgm.some(v=>v.assetId==='music-boss'));
+ assert.ok(normalIndex>=0&&bossIndex>normalIndex,`Stage 3 must start normal music before boss music: ${normalIndex}, ${bossIndex}`);
  for(const assetId of requiredMusic){assert.ok(samples.some(s=>s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId===assetId&&v.voiceGain>0)),`${assetId} lacks running-context positive mixer evidence`);}
  assert.ok(result.boss?.firstObservedTime!==undefined&&result.bossDefeatedAt!==undefined,'Stage 3 must observe boss arrival and natural defeat');
- assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure')),'Pressure music must follow natural boss defeat');
+ assert.ok(samples[bossIndex].time>=result.boss.firstObservedTime&&samples[bossIndex].time<result.bossDefeatedAt,'Boss music must play during the observed boss fight');
+ assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
  assert.ok(result.finalRequestFailures&&Array.isArray(result.finalRequestFailures.events)&&result.finalRequestFailures.overflow===0,'Native music failure events must be present and structurally complete');
  assert.deepEqual(result.finalRequestFailures.events,[],'Native music must not report audio failure events');
  assert.ok(Array.isArray(result.networkRequestFailures),'Native music request failure collection is missing');
@@ -46,6 +48,7 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
  const ownerFailureEvents=[];const ownerQa={getFailureEvents:()=>({events:ownerFailureEvents,overflow:0})};const retainedFailureGetter=ownerQa.getFailureEvents;ownerFailureEvents.push({assetId:'transient'});assert.deepEqual(retainedFailureGetter().events,[{assetId:'transient'}]);ownerFailureEvents.length=0;
  const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
  assert.doesNotThrow(()=>assertBattleMusicGate(valid));
+ assert.doesNotThrow(()=>assertBattleMusicGate({...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),sample('music-v100-score-pressure',4)]}));
  for(const invalid of [
   {...valid,musicSamples:valid.musicSamples.slice(0,2)},
   {...valid,musicSamples:[sample('music-boss',2),sample('music-v100-score-normal',3),sample('music-v100-score-pressure',4)]},
@@ -55,6 +58,8 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
   {...valid,finalRequestFailures:{events:[],overflow:1}},
   {...valid,networkRequestFailures:[{url:'/audio.ogg'}]},
   {...valid,bossDefeatedAt:5},
+  {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2)]},
+  {...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),{...sample('music-v100-score-pressure',4),audio:{...sample('music-v100-score-pressure',4).audio,activeBgm:[{assetId:'music-v100-score-pressure',voiceGain:0}]}}]},
  ])assert.throws(()=>assertBattleMusicGate(invalid));
  console.log('v100 battle music gate negative fixtures passed');
  process.exit(0);

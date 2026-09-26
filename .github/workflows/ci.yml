@@ -301,6 +301,19 @@ jobs:
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
+      - name: Preserve measured WebKit performance before diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-webkit-primary-performance
+          path: |
+            outputs/v100-webkit-frame-control
+            outputs/v100-device-runtime/webkit
+            outputs/v100-device-runtime/webkit-844x340-repeat
+            outputs/v100-device-runtime/webkit-844x390-repeat
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Diagnose 844x340 boss performance without QA polling
         if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
         continue-on-error: true
