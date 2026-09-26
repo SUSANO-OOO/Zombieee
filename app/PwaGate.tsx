@@ -44,8 +44,26 @@ import {
   requestFromServiceWorker,
 } from "./pwaRuntime.js";
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
+import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
+
+function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | "unsupported") {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.pwaManifestState = state;
+}
+
+/**
+ * The manifest is metadata only and boot marks the game usable before this
+ * lookup starts. Do not race it against a synthetic deadline: a slow hosted
+ * WebKit response can turn the losing promise into a browser-level cancelled
+ * request even though the production route mounted correctly. A genuinely
+ * unavailable manifest is handled by the existing catch path without blocking
+ * the title, map, or battle surfaces.
+ */
+async function fetchPublishedManifestBounded(baseUrl: string) {
+  return fetchPublishedManifest({ baseUrl });
+}
 
 function readSafetyFromDocument() {
   if (typeof document === "undefined") return {};
@@ -133,6 +151,7 @@ function InstallSteps({ steps }: { steps: Array<Record<string, unknown>> }) {
 
 export function PwaGate({ children }: { children: React.ReactNode }) {
   const [supported, setSupported] = useState(false);
+  const [registrationFailed, setRegistrationFailed] = useState(false);
   const [standalone, setStandalone] = useState(false);
   const [installedManifest, setInstalledManifest] = useState<Manifest | null>(null);
   const [publishedManifest, setPublishedManifest] = useState<Manifest | null>(null);
@@ -166,12 +185,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [booted, setBooted] = useState(false);
   // A standalone launch cannot decide whether a fully cached candidate still
   // needs its generation pointer until the published manifest has either
-  // arrived or failed its bounded lookup. This closes the reload-time gap where
+  // arrived or failed its lookup. This closes the reload-time gap where
   // an old active generation could briefly mount before commit recovery ran.
   const [publishedChecked, setPublishedChecked] = useState(false);
 
   const baseUrl = useMemo(
-    () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
+    () => (typeof window === "undefined" ? "/" : resolvePwaBaseUrl(window)),
     [],
   );
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
@@ -201,18 +220,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
    */
   const loadPublishedManifest = useCallback(async () => {
     setError(null);
+    setPublishedManifestState("loading");
     try {
-      // Bounded: the title waits on this during boot, so an unanswered request
-      // must not hold the screen indefinitely.
-      const published = await fetchPublishedManifest({
-        baseUrl,
-        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(10_000) : undefined,
-      });
+      // The shell is already usable while this metadata round trip runs; the
+      // fetch itself is never artificially aborted.
+      const published = await fetchPublishedManifestBounded(baseUrl);
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
+      setPublishedManifestState("ready");
       return true;
     } catch {
       setManifestUnreachable(true);
+      setPublishedManifestState("unreachable");
       return false;
     } finally {
       setPublishedChecked(true);
@@ -225,6 +244,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     (async () => {
       if (!isPwaSupported(window)) {
         setSupported(false);
+        setPublishedManifestState("unsupported");
         return;
       }
       setSupported(true);
@@ -233,7 +253,19 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const store = createAssetStore({ caches: window.caches, scope: baseUrl });
       storeRef.current = store;
 
-      registrationRef.current = await registerServiceWorker(window);
+      registrationRef.current = await registerServiceWorker(window, { baseUrl });
+      if (!registrationRef.current) {
+        // API presence does not guarantee registration. A standalone first run
+        // cannot commit a pack without a worker, so release the network game
+        // instead of trapping the player behind an impossible download gate.
+        if (!cancelled) {
+          setSupported(false);
+          setRegistrationFailed(true);
+          setPublishedManifestState("unsupported");
+          setPublishedChecked(true);
+        }
+        return;
+      }
 
       const state = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
       if (cancelled) return;
@@ -365,6 +397,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
+  const deferAssetNoticeForEvent = String(safety.screen ?? "title") === "event";
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -440,7 +473,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         refreshStored,
         commitManifest: async (registration, candidate) => {
           try {
-            return await requestFromServiceWorker(registration, { type: "pwa:commit-manifest", manifest: candidate });
+            return await requestFromServiceWorker(
+              registration,
+              { type: "pwa:commit-manifest", manifest: candidate },
+              { timeoutMs: 60_000 },
+            );
           } catch {
             return null;
           }
@@ -568,6 +605,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         commitManifest: async (registration, manifest) => requestFromServiceWorker(
           registration,
           { type: "pwa:commit-manifest", manifest },
+          { timeoutMs: 60_000 },
         ),
         readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
         persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
@@ -624,9 +662,23 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   }, [commitRecovery.required, recoverCommittedPack]);
 
   const clearAssets = useCallback(async () => {
-    await storeRef.current?.clearAssets();
-    await requestFromServiceWorker(registrationRef.current, { type: "pwa:clear-assets" });
-    await refreshStored();
+    try {
+      if (registrationRef.current) {
+        // The worker serializes this with commit and rollback. Clearing from
+        // the page first could empty a candidate pack during its final check.
+        const cleared = await requestFromServiceWorker(
+          registrationRef.current,
+          { type: "pwa:clear-assets" },
+          { timeoutMs: 120_000 },
+        );
+        if (cleared?.type !== "pwa:assets-cleared") throw new Error("worker-clear-unconfirmed");
+      } else {
+        await storeRef.current?.clearAssets();
+      }
+      await refreshStored();
+    } catch (cause) {
+      setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);
+    }
   }, [refreshStored]);
 
   // Bytes held that neither the active nor the rollback generation references.
@@ -680,11 +732,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // device is. Without it the very first render is unblocked, the game mounts,
   // and title art and music are fetched before the player has been asked
   // anything - which is precisely what a browser tab must not do here. A
-  // standalone launch also waits for the bounded published-manifest lookup:
+  // standalone launch also waits for the published-manifest lookup:
   // otherwise a complete uncommitted candidate could slip through on reload.
   // If the lookup fails offline, `publishedChecked` still releases the retained
   // active generation rather than treating a network absence as data loss.
-  const settling = !booted || (standalone && !publishedChecked);
+  const settling = !booted || (supported && standalone && !publishedChecked);
   const blocking = settling
     || phase === "install-offer"
     || phase === "download-complete"
@@ -696,6 +748,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!blocking && children}
+
+      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
+        <aside className="pwa-notice" role="status">
+          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
+          <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
+        </aside>
+      )}
 
       {blocking && (
         <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
@@ -893,14 +952,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Repair and update notices never block play; they sit above the game. */}
-      {!blocking && phase === "repair-required" && installPlan && (
+      {!blocking && phase === "repair-required" && installPlan && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice" role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
           <button type="button" onClick={startInstall}>不足分だけ再取得</button>
         </aside>
       )}
 
-      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && (
+      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice pwa-update" role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
           <p>{updateCopy.downloadLine}</p>

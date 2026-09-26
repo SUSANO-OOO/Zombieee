@@ -1,3 +1,11 @@
+export function enemyRuntimeFailureRecord({ error, active, results, diagnostics }) {
+  // Only already-returned facts: failure reporting must not call a dead page.
+  return structuredClone({
+    status: "failed", error: String(error?.stack ?? error), active: active ?? null,
+    completedResults: results, diagnostics: diagnostics ?? null,
+  });
+}
+
 const normalizePathname = (value) => {
   try {
     return decodeURIComponent(new URL(value, "http://qa.invalid/").pathname).replace(/\/+$/u, "");

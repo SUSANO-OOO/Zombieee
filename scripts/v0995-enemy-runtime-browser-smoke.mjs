@@ -4,13 +4,15 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import sharp from "sharp";
 
+import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
-import { spriteFrameFor } from "../app/spriteManifest.js";
+import { SPRITE_STATES, spriteFrameFor } from "../app/spriteManifest.js";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import {
   classifySupersededAssetRequestFailures,
   reconcilePageClockRequestFailures,
   strictCanvasScreenshotClip,
+  enemyRuntimeFailureRecord,
 } from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -31,14 +33,46 @@ await mkdir(outputDir, { recursive: true });
 await mkdir(compactDir, { recursive: true });
 
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const runtimeContract = productionEnemyRuntimeContract();
 const fullInventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
-invariant(fullInventory.length === 23 && new Set(fullInventory).size === 23, `expected finite 23 production enemies/bosses, got ${fullInventory.length}`);
-const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? fullInventory.join(","))
+const requiredKinds = runtimeContract.requiredEnemyKinds;
+const requiredSet = new Set(requiredKinds);
+const registrySet = new Set(runtimeContract.registryKinds);
+const inventorySet = new Set(fullInventory);
+const missingKinds = requiredKinds.filter((kind) => !inventorySet.has(kind));
+const duplicateCoverage = fullInventory
+  .filter((kind, index) => fullInventory.indexOf(kind) !== index)
+  .filter((kind, index, values) => values.indexOf(kind) === index);
+const unknownInventoryKinds = fullInventory.filter((kind) => !registrySet.has(kind));
+const extraInventoryKinds = fullInventory.filter((kind) => !requiredSet.has(kind));
+const runtimeSpriteStateMissing = runtimeContract.spriteRequirements
+  .filter(({ error, states, sheet }) => (
+    Boolean(error) || !sheet || states.length !== SPRITE_STATES.length
+      || states.some(({ left, right }) => (
+        !left?.path || !right?.path
+        || !left?.sourceRect || !right?.sourceRect
+        || ![left.sourceRect.x, left.sourceRect.y, left.sourceRect.w, left.sourceRect.h,
+          right.sourceRect.x, right.sourceRect.y, right.sourceRect.w, right.sourceRect.h].every(Number.isFinite)
+      ))
+  ))
+  .map(({ kind, error }) => ({ kind, error }));
+invariant(requiredKinds.length > 0, "production enemy runtime contract resolved no required enemies/bosses");
+invariant(runtimeContract.unknownReachableKinds.length === 0,
+  `runtime stage plan contains unregistered kinds: ${runtimeContract.unknownReachableKinds.join(",")}`);
+invariant(runtimeContract.missingBossKinds.length === 0,
+  `runtime stage plan omits registered bosses: ${runtimeContract.missingBossKinds.join(",")}`);
+invariant(missingKinds.length === 0, `production sprite inventory is missing required kinds: ${missingKinds.join(",")}`);
+invariant(duplicateCoverage.length === 0, `production sprite inventory duplicates coverage: ${duplicateCoverage.join(",")}`);
+invariant(unknownInventoryKinds.length === 0, `production sprite inventory has unregistered kinds: ${unknownInventoryKinds.join(",")}`);
+invariant(extraInventoryKinds.length === 0, `production sprite inventory has non-reachable extra kinds: ${extraInventoryKinds.join(",")}`);
+invariant(runtimeSpriteStateMissing.length === 0,
+  `required runtime sprite/state is missing: ${JSON.stringify(runtimeSpriteStateMissing)}`);
+const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? requiredKinds.join(","))
   .split(",").map((value) => value.trim()).filter(Boolean);
 invariant(requestedKinds.length > 0 && new Set(requestedKinds).size === requestedKinds.length,
   "V0995_ENEMY_QA_KINDS must be a non-empty unique subset");
-invariant(requestedKinds.every((kind) => fullInventory.includes(kind)),
-  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !fullInventory.includes(kind)).join(",")}`);
+invariant(requestedKinds.every((kind) => requiredSet.has(kind)),
+  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !requiredSet.has(kind)).join(",")}`);
 const inventory = requestedKinds;
 const phases = ["move", "attack", "hit", "die"];
 const results = [];
@@ -124,6 +158,56 @@ async function observeStrictCanvasClip(page, viewport, label) {
   throw new Error(`${label}: active canvas never exposed finite attached geometry ${JSON.stringify(observations.slice(-8))}`);
 }
 
+async function readRuntimeLiveness(page) {
+  return page.evaluate(() => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const performanceSnapshot = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
+    const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
+    const canvas = document.querySelector("canvas.battlefield");
+    return {
+      at: performance.now(),
+      visibilityState: document.visibilityState,
+      hidden: document.hidden,
+      assetLoadState: document.documentElement.dataset.assetLoadState ?? null,
+      mount,
+      canvas: canvas ? { connected: canvas.isConnected, active: canvas.classList.contains("active") } : null,
+      battle: snapshot ? {
+        screen: snapshot.screen,
+        time: snapshot.time,
+        running: snapshot.running,
+        paused: snapshot.paused,
+        over: snapshot.over,
+        saveBoundaryPending: snapshot.saveBoundaryPending,
+      } : null,
+      frames: performanceSnapshot ? {
+        rafRequests: performanceSnapshot.rafRequests,
+        rafCancellations: performanceSnapshot.rafCancellations,
+        simulationTicks: performanceSnapshot.simulationTicks,
+        renderFrames: performanceSnapshot.renderFrames,
+      } : null,
+    };
+  });
+}
+
+async function waitForActiveRuntime(page, label) {
+  // Asset decode can finish before WebKit resumes live frames. Keep each phase's
+  // original audit window, but require real simulation and paint first.
+  const before = await readRuntimeLiveness(page);
+  const deadline = Date.now() + Math.min(timeout, 12_000);
+  let after = before;
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(100);
+    after = await readRuntimeLiveness(page);
+    if (after.visibilityState === "visible" && after.battle?.running && !after.battle.paused
+      && after.frames?.renderFrames >= before.frames?.renderFrames + 2
+      && after.frames?.simulationTicks >= before.frames?.simulationTicks + 2
+      && after.battle.time > before.battle?.time) {
+      return { before, after };
+    }
+  }
+  throw new Error(`${label}: live renderer did not advance after asset setup ${JSON.stringify({ before, after })}`);
+}
+
 function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
   const label = `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`;
   invariant(samples.length >= 2, `${label}: fewer than two runtime samples`);
@@ -165,6 +249,7 @@ for (const engine of engines) {
   const browserType = playwright[engine];
   invariant(browserType, `unknown browser ${engine}`);
   const browser = await browserType.launch({ headless: true });
+  let primaryError = null;
   try {
     for (const viewport of viewports) {
       for (const kind of inventory) {
@@ -173,9 +258,12 @@ for (const engine of engines) {
         // decoded high-resolution atlas while preserving the same production
         // simulation, renderer, semantic checks and four phase screenshots.
         const context = await browser.newContext({ viewport });
+        let caseError = null;
+        let diagnosticControl = null;
+        let activeEvidence = { engine, viewport, kind, phase: "setup" };
         try {
           const page = await context.newPage();
-          const diagnosticControl = diagnosticsFor(page);
+          diagnosticControl = diagnosticsFor(page);
           const url = new URL(baseUrl);
           url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
           const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
@@ -199,9 +287,14 @@ for (const engine of engines) {
           const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
           const assetSetupBoundary = await diagnosticControl.sealSetup();
+          activeEvidence = { engine, viewport, kind, phase: "runtime-readiness", assetSetupBoundary };
+          const runtimeReady = await waitForActiveRuntime(page, `${engine}/${viewport.width}x${viewport.height}/${kind}`);
           for (const phase of phases) {
+            activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, runtimeReady, prepared: null, livenessBefore: null, livenessAfter: null, samples: [], capture: null };
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
-            const samples = [];
+            activeEvidence.prepared = prepared;
+            activeEvidence.livenessBefore = await readRuntimeLiveness(page);
+            const samples = activeEvidence.samples;
             const started = performance.now();
             while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
               await page.waitForTimeout(40);
@@ -212,6 +305,7 @@ for (const engine of engines) {
               if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
               if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
             }
+            activeEvidence.livenessAfter = await readRuntimeLiveness(page);
             assertRenderSequence({ engine, viewport, kind, phase, samples });
             const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
             const canvasObservation = await observeStrictCanvasClip(
@@ -220,14 +314,19 @@ for (const engine of engines) {
               `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`,
             );
             const clip = canvasObservation.clip;
+            activeEvidence.capture = { status: "pending", screenshotFile, canvasObservation, clip };
             const captureStartedAt = Date.now();
             const preCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.preCapture = preCapture;
+            activeEvidence.capture.startedAt = captureStartedAt;
             await page.screenshot({ path: screenshotFile, clip, timeout });
+            activeEvidence.capture.status = "screenshot-written";
             const postCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
             ), prepared.fighterId);
+            activeEvidence.capture.postCapture = postCapture;
             const capture = {
               mode: "strict-page-clip",
               attemptCount: 1,
@@ -247,26 +346,66 @@ for (const engine of engines) {
               },
             };
             if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-            results.push({ engine, viewport, kind, phase, prepared, samples, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+            results.push({ engine, viewport, kind, phase, prepared, samples, livenessBefore: activeEvidence.livenessBefore, livenessAfter: activeEvidence.livenessAfter, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
           const postReady = diagnosticControl.diagnostics;
           invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);
+        } catch (error) {
+          caseError = error;
+          try {
+            await writeFile(path.join(outputDir, "enemy-runtime-failure.json"), `${JSON.stringify(enemyRuntimeFailureRecord({
+              error, active: activeEvidence, results, diagnostics: diagnosticControl?.diagnostics,
+            }), null, 2)}\n`);
+          } catch (persistenceError) {
+            console.error("enemy runtime failure evidence persistence failed", persistenceError);
+          }
+          throw error;
         } finally {
-          await context.close();
+          try { await context.close(); } catch (cleanupError) {
+            if (!caseError) throw cleanupError;
+            console.error("enemy runtime secondary context cleanup failure", cleanupError);
+          }
         }
       }
     }
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await browser.close();
+    try { await browser.close(); } catch (cleanupError) {
+      if (!primaryError) throw cleanupError;
+      console.error("enemy runtime secondary browser cleanup failure", cleanupError);
+    }
   }
 }
 
 const rawFile = path.join(outputDir, "enemy-runtime-report.json");
-await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), fullInventory, inventory, results }, null, 2)}\n`);
+await writeFile(rawFile, `${JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  runtimeContract: {
+    requiredKinds,
+    missingKinds,
+    duplicateCoverage,
+    unknownInventoryKinds,
+    extraInventoryKinds,
+    runtimeSpriteStateMissing,
+    unknownReachableKinds: runtimeContract.unknownReachableKinds,
+    missingBossKinds: runtimeContract.missingBossKinds,
+  },
+  fullInventory,
+  inventory,
+  results,
+}, null, 2)}\n`);
 const compact = {
   generatedAt: new Date().toISOString(),
   fullInventoryCount: fullInventory.length,
   inventoryCount: inventory.length,
+  requiredInventoryCount: requiredKinds.length,
+  missingKinds,
+  duplicateCoverage,
+  unknownInventoryKinds,
+  extraInventoryKinds,
+  runtimeSpriteStateMissing,
   engines,
   viewports,
   phases,

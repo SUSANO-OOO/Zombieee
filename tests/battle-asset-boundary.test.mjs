@@ -8,7 +8,7 @@ test("finite HUD evidence cannot change the production-host asset plan", () => {
   assert.match(ashfallSource, /finiteHudRuntimeQa = localQaParameters\.get\("qaHudFiniteAssets"\) === "1"/);
   assert.match(ashfallSource, /\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
   assert.match(ashfallSource, /Boolean\(qaMode \|\| qaScenario\)/);
-  assert.match(ashfallSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\)[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa[\s\S]*?&& !finiteHudRuntimeQa/);
+  assert.match(ashfallSource, /includeAllSprites: localQaRequested[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa[\s\S]*?&& !finiteHudRuntimeQa/);
 });
 
 test("battle readiness uses one closed blocking plan without degraded-ready", () => {
@@ -35,7 +35,7 @@ test("local fault deadlines apply only to the selected required asset", () => {
 test("visual integrity evidence uses a local-only finite plan without changing production", () => {
   assert.match(ashfallSource, /finiteVisualIntegrityQa = localQaParameters\.get\("qaVisualIntegrity"\) === "1"/u);
   assert.match(ashfallSource, /!finiteEnemyRuntimeQa[\s\S]*!finiteVisualIntegrityQa[\s\S]*!finiteHudRuntimeQa/u);
-  assert.match(ashfallSource, /getRequiredPlan:[\s\S]*?qaVisualIntegrity[\s\S]*?\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/u);
+  assert.match(ashfallSource, /getRequiredPlan:[\s\S]*?const finiteVisual = parameters\.get\("qaVisualIntegrity"\) === "1"[\s\S]*?localHost/u);
 });
 
 test("final station pixels require the authored silhouette and reject unpainted or primitive-only output", () => {

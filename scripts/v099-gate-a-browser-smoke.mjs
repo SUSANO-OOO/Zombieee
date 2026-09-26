@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -32,7 +33,7 @@ for (const testCase of cases) {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
   });
   try {
-    const response = await page.goto(String(baseUrl), { waitUntil: "networkidle", timeout: 30_000 });
+    const response = await page.goto(legacyQaUrl(baseUrl), { waitUntil: "networkidle", timeout: 30_000 });
     if (!response?.ok()) throw new Error(`navigation ${response?.status()}`);
     if (!await page.getByRole("heading", { name: /Gate A Creative Acceptance Package/ }).isVisible()) {
       throw new Error("Gate A heading is not visible");

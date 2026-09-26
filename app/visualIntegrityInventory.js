@@ -9,6 +9,7 @@ import {
   spriteSheetPath,
 } from "./spriteManifest.js";
 import { EVENT_PORTRAIT_PROFILES } from "./visualProfiles.js";
+import { V100_COMBAT_FX_AUDIT, V100_COMBAT_FX_INVENTORY } from "./v100CombatPresentation.js";
 
 export const PRODUCTION_FALLBACK_RENDERERS = Object.freeze([
   Object.freeze({ owner: "fighter-sprite", productionPolicy: "required-blocking", qaFallback: "local-qa-only" }),
@@ -46,6 +47,8 @@ export function productionVisualIntegrityInventory() {
         right: spriteFrameFor(kind, state, "right"),
       }))),
     }))),
+    combatFx: V100_COMBAT_FX_INVENTORY,
+    combatFxAudit: V100_COMBAT_FX_AUDIT,
     fallbackRenderers: PRODUCTION_FALLBACK_RENDERERS,
   });
 }

@@ -1,0 +1,267 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 4352,
+    "height": 1024
+  },
+  "commonScale": 0.3218707015130674,
+  "identityReferenceStates": [
+    "entrance",
+    "idle",
+    "move"
+  ],
+  "referenceHeight": 1454,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "frames": [
+    {
+      "state": "entrance",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 28,
+        "y": 57,
+        "width": 964,
+        "height": 1351,
+        "alphaPixels": 339333
+      },
+      "contentRect": {
+        "x": 117,
+        "y": 61,
+        "width": 310,
+        "height": 435
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 435
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "idle",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 82,
+        "y": 32,
+        "width": 908,
+        "height": 1454,
+        "alphaPixels": 404081
+      },
+      "contentRect": {
+        "x": 126,
+        "y": 28,
+        "width": 292,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 292,
+        "height": 468
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 5,
+        "y": 103,
+        "width": 939,
+        "height": 1339,
+        "alphaPixels": 338590
+      },
+      "contentRect": {
+        "x": 121,
+        "y": 65,
+        "width": 302,
+        "height": 431
+      },
+      "renderedSize": {
+        "width": 302,
+        "height": 431
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1198,
+        "height": 1313
+      },
+      "sourceBounds": {
+        "x": 68,
+        "y": 217,
+        "width": 1020,
+        "height": 889,
+        "alphaPixels": 202147
+      },
+      "contentRect": {
+        "x": 108,
+        "y": 210,
+        "width": 328,
+        "height": 286
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 286
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 23,
+        "y": 201,
+        "width": 964,
+        "height": 1191,
+        "alphaPixels": 325622
+      },
+      "contentRect": {
+        "x": 117,
+        "y": 113,
+        "width": 310,
+        "height": 383
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 383
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "phase",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1133,
+        "height": 1388
+      },
+      "sourceBounds": {
+        "x": 70,
+        "y": 18,
+        "width": 1020,
+        "height": 1354,
+        "alphaPixels": 336528
+      },
+      "contentRect": {
+        "x": 108,
+        "y": 60,
+        "width": 328,
+        "height": 436
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 436
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 12,
+        "y": 233,
+        "width": 1004,
+        "height": 1156,
+        "alphaPixels": 282012
+      },
+      "contentRect": {
+        "x": 110,
+        "y": 124,
+        "width": 323,
+        "height": 372
+      },
+      "renderedSize": {
+        "width": 323,
+        "height": 372
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "defeat",
+      "source": "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 11,
+        "y": 307,
+        "width": 1490,
+        "height": 592,
+        "alphaPixels": 258223
+      },
+      "contentRect": {
+        "x": 32,
+        "y": 305,
+        "width": 480,
+        "height": 191
+      },
+      "renderedSize": {
+        "width": 480,
+        "height": 191
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    }
+  ],
+  "noClipping": true
+}

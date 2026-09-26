@@ -1,0 +1,31 @@
+{
+  "generator": "Built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: six-frame contact-impact sprite sheet for a grounded realistic side-view Japanese post-apocalyptic action game. Create exactly a 1536x1024 PNG containing three columns and two rows of 512x512 cells. All six cells are chronological frames of ONE short non-fiery punch/blunt-weapon contact burst: initial compact pale gray-white compression, short asymmetric spray of fine dust/sweat/fabric lint, expanding micro-particles, rapidly dissipating wisps, only a few faint specks in final frame. Fixed contact origin at the center (256,256) of every cell, primary energy travels toward the right. Keep generous completely transparent gutters, effects confined within central 340x340 of every cell. Genuinely transparent background with real PNG alpha, no checkerboard pixels, no backdrop. Realistic practical fine particulate VFX with a subtle bright initial contact core, readable at 40–65 screen pixels. Neutral warm off-white and muted gray; no orange fire, no rocks, no gravel, no ground plane, no blood, no explosive fireball, no magic aura, no drawn lines or geometric stars, no circles, no shockwave rings, no characters, no weapons, no text, no border. This is a brief physical contact accent, not a projectile or a sustained effect. Smooth chronological expansion then dissipation, constant camera and anchor.",
+  "source": {
+    "file": "assets/source/v100/vfx/generated/contact-six-frames-r1.png",
+    "bytes": 1547478,
+    "sha256": "e867bf2d2044b42f6bb1409f5be07a52ddc1ef320918926524ef947331a19bc8"
+  },
+  "output": {
+    "file": "public/art/v100/combat-vfx/contact-six-frames-r1.webp",
+    "bytes": 503772,
+    "sha256": "079d25a89e41af964ba28f699947fc0deb33282bd2b9ebea35036ae099be627e"
+  },
+  "geometry": {
+    "columns": 3,
+    "rows": 2,
+    "cellSize": 512,
+    "contactAnchor": {
+      "x": 228,
+      "y": 270
+    }
+  },
+  "alpha": {
+    "min": 0,
+    "max": 253,
+    "edgeVisibleMax": 0.2235294117647059,
+    "edgeVisibleMean": 0.00007460058097312983
+  },
+  "adaptation": "Original fractional alpha and visible RGB retained; lossless WebP encoding only. No background removal or pixel painting.",
+  "status": "Local candidate. Runtime, actual-play visual acceptance and release are recorded separately."
+}

@@ -219,6 +219,27 @@ test("the first pointer gesture synchronously creates and resumes context, while
   await mixer.dispose();
 });
 
+test("a menu mixer can unlock and recover without diagnostic tones while keeping music and explicit test playback", async () => {
+  const context = new FakeContext();
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context, enableAcknowledgementTone: false });
+  const windowTarget = new FakeWindow();
+  mixer.attachUnlock(windowTarget);
+  await mixer.setScene("title");
+  windowTarget.fire("pointerdown");
+  await flush();
+  assert.equal(context.oscillators.length, 0);
+  assert.equal(mixer.getAudioStatus().state, AUDIO_MIXER_STATES.RUNNING);
+  assert.equal(mixer.getSceneState().sceneId, "title");
+  assert.equal(context.sources.length, 1);
+  context.state = "suspended";
+  assert.equal(await mixer.recoverAudio(), true);
+  await flush();
+  assert.equal(context.oscillators.length, 0);
+  assert.equal(mixer.playTestTone(), true);
+  assert.equal(context.oscillators.length, 1);
+  await mixer.dispose();
+});
+
 test("an explicit audio control owns its pointer and produces one manual unlock tone", async () => {
   const context = new FakeContext();
   let contextCreations = 0;

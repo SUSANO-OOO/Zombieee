@@ -1,0 +1,237 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "repair": "reviewed-costume-continuity-image-edit-with-locked-frame-geometry",
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 4352,
+    "height": 1024
+  },
+  "commonScale": 0.3218707015130674,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "noClipping": true,
+  "groundAnchorPixels": 496,
+  "identityMaster": "assets/source/v100/enemies/takuya-omega-identity-master-vest-r3.png",
+  "identityMasterSha256": "a677aa42e2fdb169e25b2083b6eb2a68af41b2d2fc19ea856d90aeb1a3525ab4",
+  "sources": [
+    {
+      "state": "entrance",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 58,
+        "top": 391,
+        "width": 158,
+        "height": 220
+      }
+    },
+    {
+      "state": "idle",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 335,
+        "top": 375,
+        "width": 149,
+        "height": 236
+      }
+    },
+    {
+      "state": "move",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 606,
+        "top": 391,
+        "width": 153,
+        "height": 221
+      }
+    },
+    {
+      "state": "attack",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 872,
+        "top": 464,
+        "width": 168,
+        "height": 147
+      }
+    },
+    {
+      "state": "hit",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 1151,
+        "top": 418,
+        "width": 158,
+        "height": 194
+      }
+    },
+    {
+      "state": "phase",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 1419,
+        "top": 391,
+        "width": 168,
+        "height": 221
+      }
+    },
+    {
+      "state": "death",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 1692,
+        "top": 422,
+        "width": 164,
+        "height": 189
+      }
+    },
+    {
+      "state": "defeat",
+      "path": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+      "sourceSha256": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+      "bounds": {
+        "left": 1923,
+        "top": 515,
+        "width": 241,
+        "height": 97
+      }
+    }
+  ],
+  "frames": [
+    {
+      "state": "entrance",
+      "contentRect": {
+        "x": 117,
+        "y": 61,
+        "width": 310,
+        "height": 435
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 435
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "idle",
+      "contentRect": {
+        "x": 126,
+        "y": 28,
+        "width": 292,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 292,
+        "height": 468
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "contentRect": {
+        "x": 121,
+        "y": 65,
+        "width": 302,
+        "height": 431
+      },
+      "renderedSize": {
+        "width": 302,
+        "height": 431
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "contentRect": {
+        "x": 108,
+        "y": 210,
+        "width": 328,
+        "height": 286
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 286
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "contentRect": {
+        "x": 117,
+        "y": 113,
+        "width": 310,
+        "height": 383
+      },
+      "renderedSize": {
+        "width": 310,
+        "height": 383
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "phase",
+      "contentRect": {
+        "x": 108,
+        "y": 60,
+        "width": 328,
+        "height": 436
+      },
+      "renderedSize": {
+        "width": 328,
+        "height": 436
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "contentRect": {
+        "x": 110,
+        "y": 124,
+        "width": 323,
+        "height": 372
+      },
+      "renderedSize": {
+        "width": 323,
+        "height": 372
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "defeat",
+      "contentRect": {
+        "x": 32,
+        "y": 305,
+        "width": 480,
+        "height": 191
+      },
+      "renderedSize": {
+        "width": 480,
+        "height": 191
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    }
+  ],
+  "sha256": "081ec8dda63b5a243a9856a557aef2572e81839ab9ff6f8005851b748e7b26f2",
+  "costumeContinuity": "orange emergency vest remnants, eight pose-aligned mirrored frames"
+}

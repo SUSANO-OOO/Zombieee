@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -284,7 +285,7 @@ async function runCase(browser, engine, viewport, scenario, stageNumber = 1, sav
   }
 
   try {
-    await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+    await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout });
     invariant(await page.locator(".game-shell").getAttribute("data-release-version") === "0.9.5.2", "candidate identity mismatch");
     if (saveMode === "fresh" || saveMode === "legacy-v13") {

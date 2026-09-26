@@ -1,0 +1,16 @@
+{
+  "source": "assets/source/v100/characters/kumaverson-guard-source-r3.png",
+  "sourceSha256": "389890305ee0094f1e14b51568c6dc5cbf3dce26c57274f0745ea243928e5158",
+  "generator": "builtin imagegen; RGB checker background is burned into source; this is a local derived alpha candidate",
+  "prompt": "Use case: identity-preserve edit. Create ONE full-body defensive game sprite of Kumaverson, the exact man in the first portrait. Preserve that face, messy black hair, scars, muscular build, dirty off-white short-sleeve T-shirt, dark worn trousers, belt, shoes and battered iron frying pan. Second reference is the game's existing full-body scale and painted rendering style. Single character facing RIGHT in three-quarter side view, feet planted shoulder-width, knees slightly braced, holding the frying pan firmly with both hands IN FRONT OF HIS CHEST to block an enemy coming from the right. The broad dark metal pan face is visibly presented toward the incoming attack. Maintain anatomically plausible arms and hands. Full body including shoes, centered with generous transparent margins, no cropping. Gritty detailed painted game artwork matching the references, crisp silhouette. Background must be actually transparent alpha, never a checkerboard drawn into opaque pixels. No floor, shadows, sparks, impact effects, particles, glow, text, border, grid, duplicate figures, or extra equipment. Output only the single clean braced pose with genuine transparent background. Do not redesign the identity or make the face clean or younger.",
+  "references": [
+    "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+    "public/art/v060/characters/kumaverson-battle-v1.png"
+  ],
+  "generatorSource": "C:/Users/okait/.codex/generated_images/01a079d3-063c-7401-963b-c507867eead5/exec-f1195de8-fd04-4454-98ef-3a3446fabc27.png",
+  "localProcessingApproved": true,
+  "productionPath": "public/art/v100/characters/kumaverson-guard-v1.png",
+  "derivedSha256": "676e14ae09d76a6d451d1063fcd2be39c23e61f6ad8a8fac7fe73ca4a77b9d9d",
+  "localCandidateAdopted": true,
+  "producerFinalAcceptancePending": true
+}

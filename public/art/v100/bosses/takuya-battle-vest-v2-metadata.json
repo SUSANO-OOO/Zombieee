@@ -1,0 +1,111 @@
+{
+  "format": "nishijin-v100-takuya-repaired-motion-atlas",
+  "version": 1,
+  "path": "/art/v100/bosses/takuya-battle-vest-v2.png",
+  "cellWidth": 512,
+  "cellHeight": 757,
+  "columns": 6,
+  "sourceWidth": 362,
+  "sourceHeight": 724,
+  "sourceOffset": {
+    "x": 48,
+    "y": 16
+  },
+  "anchorX": 0.447265625,
+  "groundAnchorPixels": [
+    604,
+    609,
+    607,
+    606,
+    617,
+    608
+  ],
+  "states": [
+    "idle",
+    "walk-a",
+    "walk-b",
+    "attack-a",
+    "attack-b",
+    "hit"
+  ],
+  "visibleRects": [
+    [
+      91,
+      142,
+      433,
+      604
+    ],
+    [
+      102,
+      153,
+      415,
+      609
+    ],
+    [
+      95,
+      153,
+      417,
+      607
+    ],
+    [
+      106,
+      47,
+      482,
+      606
+    ],
+    [
+      75,
+      263,
+      406,
+      617
+    ],
+    [
+      43,
+      191,
+      378,
+      608
+    ]
+  ],
+  "sourceSha256": "f3a247b527568e2d5d752d08eca4e9c10681a2aba1a40869c6cfcd19a5f3daac",
+  "atlasSha256": "52eb95dd58882b7165b98671aa2dfff106c69dbae9e1de35217c3d8927ee290d",
+  "sourcePath": "assets/source/v100/takuya/takuya-stage3-vest-source-v2.png",
+  "frameSourceBounds": [
+    {
+      "left": 14,
+      "top": 188,
+      "width": 296,
+      "height": 387
+    },
+    {
+      "left": 380,
+      "top": 197,
+      "width": 275,
+      "height": 381
+    },
+    {
+      "left": 755,
+      "top": 196,
+      "width": 281,
+      "height": 380
+    },
+    {
+      "left": 1127,
+      "top": 113,
+      "width": 310,
+      "height": 463
+    },
+    {
+      "left": 1494,
+      "top": 286,
+      "width": 282,
+      "height": 296
+    },
+    {
+      "left": 1834,
+      "top": 231,
+      "width": 286,
+      "height": 346
+    }
+  ],
+  "costumeContinuity": "orange emergency vest remnants, six pose-aligned frames"
+}

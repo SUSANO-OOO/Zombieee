@@ -28,6 +28,7 @@ const STATIC_SHELL_PATHS = Object.freeze([
   "asset-manifest.json",
   "release.json",
 ]);
+const SHELL_WARM_TIMEOUT_MS = 45_000;
 
 /** Synthetic, content-addressed key space for game assets. */
 const ASSET_KEY_PREFIX = "__pwa-asset__";
@@ -226,19 +227,36 @@ async function respondNetworkFirst(request, cacheName) {
 async function respondForNavigation(request) {
   const state = await readState();
   const generation = state.active ? generationOf(state.active) : null;
+  const relativePath = new URL(request.url).pathname.slice(scopeUrl.pathname.length);
+  const indexUrl = new URL(
+    relativePath === "v100" || relativePath.startsWith("v100/")
+      ? "v100/index.html" : "index.html",
+    scopeUrl,
+  ).toString();
+  const retainedPage = async () => {
+    if (!generation) return null;
+    const cache = await caches.open(shellCacheName(generation));
+    return cache.match(indexUrl);
+  };
   try {
     const response = await fetch(request);
-    if (response.ok && generation) {
+    // A failed or non-HTML navigation is not a playable document even when
+    // fetch resolves (for example an origin returning HTTP 503 or soft-404).
+    if (!response.ok || !isHtmlResponse(response)) {
+      const cached = await retainedPage();
+      if (cached) return cached;
+    }
+    const html = response.ok && generation && isHtmlResponse(response)
+      ? await response.clone().text() : "";
+    const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+    if (html && (!servedRelease || servedRelease === state.active.releaseSha)) {
       const cache = await caches.open(shellCacheName(generation));
-      await cache.put(new URL("index.html", scopeUrl).toString(), response.clone());
+      await cache.put(indexUrl, response.clone());
     }
     return response;
   } catch (error) {
-    if (generation) {
-      const cache = await caches.open(shellCacheName(generation));
-      const cached = await cache.match(new URL("index.html", scopeUrl).toString());
-      if (cached) return cached;
-    }
+    const cached = await retainedPage();
+    if (cached) return cached;
     throw error;
   }
 }
@@ -254,53 +272,164 @@ async function respondForNavigation(request) {
  * is what makes "offline relaunch plays what was downloaded" true on the very
  * first run.
  *
- * Best effort by design: a shell that cannot be warmed must never fail the
- * commit, because the assets are already verified and stored.
+ * A complete asset pack cannot be reported offline-ready until both route
+ * documents and every emitted JS/CSS chunk have been saved as one generation.
  */
-async function warmShell(generation) {
-  const cache = await caches.open(shellCacheName(generation));
-  const indexUrl = new URL("index.html", scopeUrl).toString();
-  try {
-    const response = await fetch(new URL("./", scopeUrl).toString(), { cache: "no-store" });
-    if (!response.ok) return { warmed: 0 };
-    const html = await response.clone().text();
-    await cache.put(indexUrl, response);
+function validShellFiles(files) {
+  return Array.isArray(files) && files.length > 0
+    && files.every((file) => typeof file === "string"
+      && /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)
+      && !file.split("/").includes(".."));
+}
 
-    // Cache the hashed build output the shell references, so the boot path is
-    // complete offline rather than only partly cached.
-    const references = new Set();
-    for (const match of html.matchAll(/(?:src|href)="([^"?#]+\.(?:js|mjs|css))["?#]/g)) {
-      references.add(new URL(match[1], scopeUrl).toString());
+async function cachedShellReady(manifest) {
+  const generation = generationOf(manifest);
+  const cache = await caches.open(shellCacheName(generation));
+  const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
+  const cachedList = await cache.match(shellListUrl);
+  if (!cachedList) return false;
+  const { files } = await cachedList.clone().json();
+  if (!validShellFiles(files)) return false;
+  for (const path of ["index.html", "v100/index.html"]) {
+    const response = await cache.match(new URL(path, scopeUrl).toString());
+    if (!response || !isHtmlResponse(response)) return false;
+    const html = await response.clone().text();
+    const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+    if (servedRelease && servedRelease !== manifest.releaseSha) return false;
+  }
+  const hits = await Promise.all(files.map(async (file) => {
+    const response = await cache.match(new URL(file, scopeUrl).toString());
+    const type = response?.headers.get("content-type") ?? "";
+    return Boolean(response?.ok && (file.endsWith(".css")
+      ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type)));
+  }));
+  return hits.every(Boolean);
+}
+
+async function warmShell(manifest, controller) {
+  const generation = generationOf(manifest);
+  const cache = await caches.open(shellCacheName(generation));
+  const shellListUrl = new URL("pwa-shell.json", scopeUrl).toString();
+  try {
+    if (await cachedShellReady(manifest)) return { ready: true, reused: true };
+  } catch { /* incomplete or corrupt cache; try the network */ }
+  const timer = setTimeout(() => controller.abort(), SHELL_WARM_TIMEOUT_MS);
+  const fetchRequired = async (url, kind) => {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok || response.status !== 200) throw new Error(`${kind}-http-${response.status}`);
+    if (kind === "html" && !isHtmlResponse(response)) throw new Error("shell-html-type");
+    if (kind === "script" && !/javascript|ecmascript/u.test(response.headers.get("content-type") ?? "")) {
+      throw new Error("shell-script-type");
     }
-    let warmed = 1;
+    if (kind === "style" && !/text\/css/u.test(response.headers.get("content-type") ?? "")) {
+      throw new Error("shell-style-type");
+    }
+    return response;
+  };
+  try {
+    const shellListResponse = await fetchRequired(shellListUrl, "manifest");
+    const shellList = await shellListResponse.clone().json();
+    if (!validShellFiles(shellList.files)) throw new Error("invalid-shell-list");
+    await cache.put(shellListUrl, shellListResponse);
+    const required = [
+      { path: "./", key: "index.html" },
+      { path: "v100/", key: "v100/index.html" },
+    ];
+    for (const route of required) {
+      const response = await fetchRequired(new URL(route.path, scopeUrl).toString(), "html");
+      const html = await response.clone().text();
+      const servedRelease = html.match(/<meta name="github-pages-release" content="([^"]+)"/i)?.[1];
+      if (servedRelease && servedRelease !== manifest.releaseSha) throw new Error("shell-release-mismatch");
+      await cache.put(new URL(route.key, scopeUrl).toString(), response);
+    }
     for (const shellPath of STATIC_SHELL_PATHS) {
       const shellUrl = new URL(shellPath, scopeUrl).toString();
       try {
-        const shellAsset = await fetch(shellUrl, { cache: "no-store" });
+        const shellAsset = await fetch(shellUrl, { cache: "no-store", signal: controller.signal });
         if (shellAsset.ok && shellAsset.status === 200) {
           await cache.put(shellUrl, shellAsset);
-          warmed += 1;
         }
       } catch {
         // A deployment without optional release metadata may still have a
         // fully valid game shell. Keep warming the rest of the assets.
       }
     }
-    for (const reference of references) {
-      if (new URL(reference).origin !== scopeUrl.origin) continue;
-      try {
-        const asset = await fetch(reference, { cache: "no-store" });
-        if (asset.ok && asset.status === 200) {
-          await cache.put(reference, asset);
-          warmed += 1;
-        }
-      } catch {
-        // One missing shell file must not abandon the rest.
-      }
+    const assets = await Promise.allSettled(shellList.files.map(async (file) => {
+      const url = new URL(file, scopeUrl).toString();
+      const response = await fetchRequired(url, file.endsWith(".css") ? "style" : "script");
+      await cache.put(url, response);
+    }));
+    const failed = assets.find((result) => result.status === "rejected");
+    if (failed) throw failed.reason;
+    if (!await cachedShellReady(manifest)) throw new Error("shell-cache-incomplete");
+    return { ready: true, files: shellList.files.length + required.length };
+  } catch (error) {
+    return { ready: false, reason: String(error?.message ?? error) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function retainedShellReady(manifest) {
+  try {
+    // Versions before V1 have no pwa-shell.json. Their worker cached the root
+    // document and the JS/CSS referenced directly by it for offline rollback.
+    if (Number(String(manifest.version).split(".")[0]) >= 1) {
+      return cachedShellReady(manifest);
     }
-    return { warmed };
+    const cache = await caches.open(shellCacheName(generationOf(manifest)));
+    const root = await cache.match(new URL("index.html", scopeUrl).toString());
+    if (!root?.ok || !isHtmlResponse(root)) return false;
+    const html = await root.clone().text();
+    const references = [...html.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|mjs|css))(?:[?#][^"']*)?["']/giu)]
+      .map((match) => new URL(match[1], scopeUrl));
+    if (references.length === 0) return false;
+    for (const url of references) {
+      if (url.origin !== scopeUrl.origin || !url.pathname.startsWith(scopeUrl.pathname)) return false;
+      const response = await cache.match(url.toString());
+      const type = response?.headers.get("content-type") ?? "";
+      if (!response?.ok || !(url.pathname.endsWith(".css")
+        ? /text\/css/u.test(type) : /javascript|ecmascript/u.test(type))) return false;
+    }
+    return true;
   } catch {
-    return { warmed: 0 };
+    return false;
+  }
+}
+
+/** Recheck every retained body at the pointer boundary, including its digest. */
+async function verifiedAssetPack(manifest) {
+  const unique = new Map();
+  for (const asset of manifest?.assets ?? []) {
+    if (!/^sha256-[0-9a-f]{64}$/u.test(asset.hash)
+      || !Number.isSafeInteger(asset.bytes) || asset.bytes < 0) {
+      return { ready: false, reason: "invalid-asset-entry" };
+    }
+    const priorSize = unique.get(asset.hash);
+    if (priorSize !== undefined && priorSize !== asset.bytes) {
+      return { ready: false, reason: "conflicting-asset-entry" };
+    }
+    unique.set(asset.hash, asset.bytes);
+  }
+  if (unique.size === 0) return { ready: false, reason: "empty-asset-pack" };
+  try {
+    const cache = await caches.open(ASSET_CACHE);
+    const entries = [...unique.entries()];
+    for (let offset = 0; offset < entries.length; offset += 8) {
+      const batch = await Promise.all(entries.slice(offset, offset + 8).map(async ([hash, bytes]) => {
+        const response = await cache.match(assetCacheKey(hash));
+        if (!response?.ok) return { ready: false, reason: "asset-missing", hash };
+        const body = await response.arrayBuffer();
+        if (body.byteLength !== bytes) return { ready: false, reason: "asset-size-mismatch", hash };
+        if (await sha256(body) !== hash) return { ready: false, reason: "asset-hash-mismatch", hash };
+        return { ready: true };
+      }));
+      const failed = batch.find((entry) => !entry.ready);
+      if (failed) return failed;
+    }
+    return { ready: true, verified: entries.length };
+  } catch {
+    return { ready: false, reason: "asset-store-unavailable" };
   }
 }
 
@@ -450,6 +579,21 @@ function usageBytesFor(state, present) {
   return bytes;
 }
 
+// Message events can overlap while a shell is warming. Keep pointer changes and
+// garbage collection in arrival order, and cancel an unfinished warm when a
+// newer commit, rollback, or clear request takes precedence.
+let stateMutationTail = Promise.resolve();
+let stateMutationIntent = 0;
+let activeShellWarmController = null;
+
+function queueStateMutation(operation) {
+  const intent = ++stateMutationIntent;
+  activeShellWarmController?.abort();
+  const result = stateMutationTail.then(() => operation(intent));
+  stateMutationTail = result.catch(() => {});
+  return result;
+}
+
 self.addEventListener("message", (event) => {
   const message = event.data;
   if (!message || typeof message.type !== "string") return;
@@ -481,42 +625,80 @@ self.addEventListener("message", (event) => {
       case "pwa:commit-manifest": {
         const manifest = message.manifest;
         if (!manifest?.assets?.length) return reply(event, { type: "pwa:commit-failed", reason: "invalid-manifest" });
-        const state = await readState();
-        const next = {
-          active: manifest,
-          previous: state.active && generationOf(state.active) !== generationOf(manifest)
-            ? state.active
-            : state.previous,
-          pending: null,
-        };
-        await writeState(next);
-        invalidateManifestMemo();
-        assetIndexMemo = null;
-        // Collecting first is safe: the new generation is already active, so
-        // its shell cache name is retained even before anything is in it.
-        const collected = await collectGarbage(next);
-
-        // Answer as soon as the generation is committed. Warming the shell
-        // reaches the network, and the page must not sit waiting on a prefetch
-        // to be told that its install succeeded. waitUntil keeps the worker
-        // alive until the warm finishes.
-        await reply(event, {
-          type: "pwa:committed",
-          generation: generationOf(manifest),
-          ...collected,
+        return queueStateMutation(async (intent) => {
+          const before = await readState();
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          const warmController = new AbortController();
+          activeShellWarmController = warmController;
+          let warmed;
+          try {
+            warmed = await warmShell(manifest, warmController);
+          } finally {
+            if (activeShellWarmController === warmController) activeShellWarmController = null;
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          if (!warmed.ready) {
+            return reply(event, { type: "pwa:commit-failed", reason: `shell-${warmed.reason}` });
+          }
+          const pack = await verifiedAssetPack(manifest);
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          if (!pack.ready) {
+            return reply(event, { type: "pwa:commit-failed", reason: pack.reason });
+          }
+          const state = await readState();
+          const activeGeneration = (value) => value ? generationOf(value) : null;
+          if (activeGeneration(state.active) !== activeGeneration(before.active)) {
+            return reply(event, { type: "pwa:commit-failed", reason: "active-mismatch" });
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:commit-failed", reason: "superseded" });
+          }
+          const next = {
+            active: manifest,
+            previous: state.active && generationOf(state.active) !== generationOf(manifest)
+              ? state.active
+              : state.previous,
+            pending: null,
+          };
+          await writeState(next);
+          invalidateManifestMemo();
+          assetIndexMemo = null;
+          const collected = await collectGarbage(next);
+          await reply(event, {
+            type: "pwa:committed",
+            generation: generationOf(manifest),
+            ...collected,
+          });
+          return undefined;
         });
-        await warmShell(generationOf(manifest));
-        return undefined;
       }
 
       // Explicit rollback to the retained previous generation.
       case "pwa:rollback": {
-        const state = await readState();
-        if (!state.previous) return reply(event, { type: "pwa:rollback-failed", reason: "no-previous-generation" });
-        await writeState({ active: state.previous, previous: null, pending: null });
-        invalidateManifestMemo();
-        assetIndexMemo = null;
-        return reply(event, { type: "pwa:rolled-back", generation: generationOf(state.previous) });
+        return queueStateMutation(async (intent) => {
+          const state = await readState();
+          if (!state.previous) return reply(event, { type: "pwa:rollback-failed", reason: "no-previous-generation" });
+          if (!await retainedShellReady(state.previous)) {
+            return reply(event, { type: "pwa:rollback-failed", reason: "previous-shell-incomplete" });
+          }
+          const pack = await verifiedAssetPack(state.previous);
+          if (!pack.ready) {
+            return reply(event, { type: "pwa:rollback-failed", reason: `previous-${pack.reason}` });
+          }
+          if (intent !== stateMutationIntent) {
+            return reply(event, { type: "pwa:rollback-failed", reason: "superseded" });
+          }
+          await writeState({ active: state.previous, previous: null, pending: null });
+          invalidateManifestMemo();
+          assetIndexMemo = null;
+          return reply(event, { type: "pwa:rolled-back", generation: generationOf(state.previous) });
+        });
       }
 
       // Only ever sent from a safe screen; never called on install.
@@ -527,8 +709,10 @@ self.addEventListener("message", (event) => {
 
       // Drops asset bytes without touching any save data.
       case "pwa:clear-assets": {
-        await caches.delete(ASSET_CACHE);
-        return reply(event, { type: "pwa:assets-cleared" });
+        return queueStateMutation(async () => {
+          await caches.delete(ASSET_CACHE);
+          return reply(event, { type: "pwa:assets-cleared" });
+        });
       }
 
       default:

@@ -1,10 +1,13 @@
 import { deepFreeze } from "./content/freeze.js";
+import { bossFinalPhase, futagoEnraged } from "./bossFoundation.js";
 
 export const BOSS_ANOMALY_KINDS = deepFreeze([
   "mother",
   "ooguchi",
   "gairen",
   "futago",
+  "mugarian-president-mutated",
+  "takuya-omega",
 ]);
 
 export const BOSS_ANOMALY_TUNING = deepFreeze({
@@ -13,6 +16,7 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     activeSeconds: .9,
     recoverySeconds: 1,
     cooldownSeconds: 7.8,
+    v100RecoverySeconds: 16,
     summonKinds: ["runner", "resonator", "spindle"],
     summonCount: 3,
     summonCap: 9,
@@ -51,6 +55,24 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     crossStrikeHalfWidth: 18,
     crossStrikeAngleRadians: .43,
     splitSpeedMultiplier: 1.42,
+  },
+  "mugarian-president-mutated": {
+    warningSeconds: 1.05,
+    activeSeconds: .86,
+    recoverySeconds: 1.02,
+    cooldownSeconds: 7.4,
+    controlRadius: 150,
+    controlDamage: 46,
+    splitThreshold: .7,
+  },
+  "takuya-omega": {
+    warningSeconds: 1.18,
+    activeSeconds: 1.1,
+    recoverySeconds: 1.08,
+    cooldownSeconds: 6.8,
+    controlRadius: 210,
+    controlDamage: 58,
+    splitThreshold: .45,
   },
 });
 
@@ -120,7 +142,6 @@ export function beginBossAnomalyAbility({
   if (boss.kind !== "mother" && !target) {
     return deepFreeze({ ok: false, runtime: createBossAnomalyRuntime(boss.kind) });
   }
-  const hpRatio = Math.max(0, Number(boss.hp)) / Math.max(1, Number(boss.maxHp) || 1);
   return deepFreeze({
     ok: true,
     runtime: {
@@ -132,7 +153,7 @@ export function beginBossAnomalyAbility({
       targetY: target ? finite(target.y) : finite(boss.y),
       lane: target && Number.isInteger(target.lane) ? target.lane : boss.lane ?? null,
       guarded: boss.kind === "gairen",
-      split: boss.kind === "futago" && hpRatio <= tuning.splitThreshold,
+      split: boss.kind === "futago" && futagoEnraged(boss, tuning.splitThreshold),
     },
   });
 }
@@ -233,7 +254,7 @@ export function bossAnomalyAreaTargetIds({
       ? tuning.sweepRadius
       : kind === "futago"
         ? tuning.crossStrikeRadius
-        : 0;
+        : tuning.controlRadius;
   if (!(radius > 0)) return deepFreeze([]);
   return deepFreeze((Array.isArray(candidates) ? candidates : [])
     .filter(livingHuman)
@@ -275,6 +296,10 @@ export function motherBroodSummonPlan({
     return deepFreeze([]);
   }
   const tuning = BOSS_ANOMALY_TUNING.mother;
+  const v100 = boss.v100BossId === "boss-mother";
+  // Stage11 owns C enemies. The older D identities cannot appear here.
+  const summonKinds = v100 ? ["runner", "spitter", "ooze"] : tuning.summonKinds;
+  const desiredCount = v100 ? (bossFinalPhase(boss, .4) ? 6 : 4) : tuning.summonCount;
   const ownerId = String(boss.id);
   const livingOwnedBrood = (Array.isArray(candidates) ? candidates : [])
     .filter((candidate) => (
@@ -282,18 +307,18 @@ export function motherBroodSummonPlan({
       && Number(candidate.hp) > 0
       && candidate.summonSource === "mother-brood"
       && String(candidate.summonOwnerId) === ownerId
-      && tuning.summonKinds.includes(candidate.kind)
+      && summonKinds.includes(candidate.kind)
     )).length;
   const normalizedCap = Math.max(0, Math.floor(finite(cap, tuning.summonCap)));
   const summonCount = Math.min(
-    tuning.summonCount,
+    desiredCount,
     Math.max(0, normalizedCap - livingOwnedBrood),
   );
   const sequence = Math.max(0, Math.floor(finite(attackSequence)));
   const laneOffsets = [-1, 1, 0];
   const xOffsets = [-84, 58, -22];
   return deepFreeze(Array.from({ length: summonCount }, (_, index) => ({
-    kind: tuning.summonKinds[(sequence + index) % tuning.summonKinds.length],
+    kind: summonKinds[(sequence + index) % summonKinds.length],
     laneOffset: laneOffsets[index % laneOffsets.length],
     xOffset: xOffsets[index % xOffsets.length],
   })));

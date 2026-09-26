@@ -87,7 +87,7 @@ test("player-facing outbreak route commits one atomic campaign save before publi
   assert.match(screens, /bossImagePath[\s\S]*初回固有装備[\s\S]*この任務の編成へ/);
   assert.match(game, /const openOutbreak[\s\S]*setScreen\("outbreak"\)/);
   assert.match(game, /const requestBattle[\s\S]*selectedOutbreakMissionId[\s\S]*createBattleResultId\(selectedOutbreakMissionId\)/);
-  assert.match(game, /storyFlowState: createBattleStoryFlowState\(definition\.stageId\)/);
+  assert.match(game, /storyFlowState: definitionOptions\.v100[\s\S]*createBattleStoryFlowState\(definition\.stageId\)/);
   assert.ok((game.match(/stageId: g\.definition\.operationId/g)?.length ?? 0) >= 2);
   assert.match(game, /const isOutbreakBoss = g\.definition\.operationCategory === "outbreak"[\s\S]*if \(!isOutbreakBoss\) g\.barricadeVulnerable = true/);
   assert.match(game, /persistOutbreakCampaignSettlement\([\s\S]*persist: async \(candidate: CampaignSave\) => \{[\s\S]*outbreakSettlementPersistenceQaRef\.current\.attempts \+= 1[\s\S]*return persistCampaignSave\(candidate\)/);

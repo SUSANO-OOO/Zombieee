@@ -166,7 +166,9 @@ async function waitSaveBoundaryClear(page) {
 
 async function openBattle(page, viewport) {
   const url = new URL(baseUrl);
-  url.search = new URLSearchParams({ qa: "roles", ...(viewport.safeArea ? { safe: "iphone-landscape" } : {}) }).toString();
+  // Save-boundary checks exercise the deployed battle route, so load the
+  // finite stage plan instead of every legacy sprite in one QA document.
+  url.search = new URLSearchParams({ qa: "roles", qaHudFiniteAssets: "1", ...(viewport.safeArea ? { safe: "iphone-landscape" } : {}) }).toString();
   const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
   invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
   await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
@@ -176,7 +178,9 @@ async function openBattle(page, viewport) {
   await start.waitFor({ state: "visible", timeout });
   await page.waitForFunction(() => {
     const button = document.querySelector(".formation-footer .campaign-primary");
-    return button instanceof HTMLButtonElement && !button.disabled;
+    return button instanceof HTMLButtonElement
+      && !button.disabled
+      && button.getAttribute("aria-disabled") !== "true";
   }, null, { timeout });
   await start.click();
   for (let count = 0; count < 8; count += 1) {
@@ -777,4 +781,7 @@ for (const engine of engines) {
   }
 }
 
-console.log(JSON.stringify({ status: "passed", results }, null, 2));
+const allPassed = results.length === engines.length * viewports.length
+  && results.every((result) => result.status === "passed");
+console.log(JSON.stringify({ status: allPassed ? "passed" : "failed", results }, null, 2));
+invariant(allPassed, "save-boundary QA did not pass every requested engine and viewport");

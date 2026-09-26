@@ -1,0 +1,101 @@
+{
+  "creator": "Kenney",
+  "pack": "Interface Sounds 1.0",
+  "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+  "downloadUrl": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "license": "CC0-1.0",
+  "licenseFile": "License.txt",
+  "adaptation": "Shortened, filtered, lowered gain, faded; derived for V1 interface roles",
+  "files": [
+    {
+      "role": "advance",
+      "path": "public/audio/v100/ui/v100-ui-advance.ogg",
+      "bytes": 4327,
+      "sha256": "3019f749167c89b89bf4382bc9233a3726a8eacfe05a55c69b0f39b3de0bd5d8",
+      "source": "click_001.ogg",
+      "sourceSha256": "ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9",
+      "filters": "atrim=0:0.14,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.48,afade=t=out:st=0.105:d=0.035"
+    },
+    {
+      "role": "advance",
+      "path": "public/audio/v100/ui/v100-ui-advance.mp3",
+      "bytes": 1635,
+      "sha256": "934249280f387eab6c34b6a7820ce9d726a59080e7bb45017b784f2ba96a5686",
+      "source": "click_001.ogg",
+      "sourceSha256": "ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9",
+      "filters": "atrim=0:0.14,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.48,afade=t=out:st=0.105:d=0.035"
+    },
+    {
+      "role": "navigate",
+      "path": "public/audio/v100/ui/v100-ui-navigate.ogg",
+      "bytes": 3932,
+      "sha256": "db0b838ebd713c71fc9846e35b0a176de41b7e1fe56014e2a7c6829a64fedd1f",
+      "source": "click_002.ogg",
+      "sourceSha256": "adcd1f4adc35f1b41bc1b5bbefeff7aa44f2f3f0d96d3199b544140c7c1e761c",
+      "filters": "atrim=0:0.16,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.55,afade=t=out:st=0.125:d=0.035"
+    },
+    {
+      "role": "navigate",
+      "path": "public/audio/v100/ui/v100-ui-navigate.mp3",
+      "bytes": 1270,
+      "sha256": "08bfcb8e5a0d37e4bb97e0c8aac27851da1b63c8743f9f55dc4e1bb69e934e6a",
+      "source": "click_002.ogg",
+      "sourceSha256": "adcd1f4adc35f1b41bc1b5bbefeff7aa44f2f3f0d96d3199b544140c7c1e761c",
+      "filters": "atrim=0:0.16,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.55,afade=t=out:st=0.125:d=0.035"
+    },
+    {
+      "role": "cancel",
+      "path": "public/audio/v100/ui/v100-ui-cancel.ogg",
+      "bytes": 4641,
+      "sha256": "cd65d1f3204c205e81e046e2932b6f9bc20b7c28d3218d85ab6259c02c16fa23",
+      "source": "back_001.ogg",
+      "sourceSha256": "07db973f79f6ae0f2edc34561e7592e24d0577455919fb602cb8ecc0da991dcf",
+      "filters": "atrim=0:0.22,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.5,afade=t=out:st=0.185:d=0.035"
+    },
+    {
+      "role": "cancel",
+      "path": "public/audio/v100/ui/v100-ui-cancel.mp3",
+      "bytes": 2105,
+      "sha256": "3c94ec5fe7c94266b45c82a64fbdba9a0cb8f879c5b403e4876db3011500ae96",
+      "source": "back_001.ogg",
+      "sourceSha256": "07db973f79f6ae0f2edc34561e7592e24d0577455919fb602cb8ecc0da991dcf",
+      "filters": "atrim=0:0.22,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.5,afade=t=out:st=0.185:d=0.035"
+    },
+    {
+      "role": "confirm",
+      "path": "public/audio/v100/ui/v100-ui-confirm.ogg",
+      "bytes": 4662,
+      "sha256": "0adc1dcec98744233d6ac300b478fe51da18840f34efe3eb57c9ceb4e29f6986",
+      "source": "confirmation_001.ogg",
+      "sourceSha256": "063564703b6094d70718a3e787a55cc9141611e4ecd6b6637f8828f79b4a8c3a",
+      "filters": "atrim=0:0.36,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.55,afade=t=out:st=0.325:d=0.035"
+    },
+    {
+      "role": "confirm",
+      "path": "public/audio/v100/ui/v100-ui-confirm.mp3",
+      "bytes": 2804,
+      "sha256": "04047bcb301acb4551ee1683eac301f978254839c13df10763484fc4164f9405",
+      "source": "confirmation_001.ogg",
+      "sourceSha256": "063564703b6094d70718a3e787a55cc9141611e4ecd6b6637f8828f79b4a8c3a",
+      "filters": "atrim=0:0.36,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.55,afade=t=out:st=0.325:d=0.035"
+    },
+    {
+      "role": "reject",
+      "path": "public/audio/v100/ui/v100-ui-reject.ogg",
+      "bytes": 5389,
+      "sha256": "2dd7409ad997d3665f9e1f972733c6ae2d8e37e2106636607c55ccb3060aa36c",
+      "source": "error_001.ogg",
+      "sourceSha256": "46e67425d16339772e8d328fb36a49426c9467418686e11beeb71ff84b0f6433",
+      "filters": "atrim=0:0.26,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.4,afade=t=out:st=0.225:d=0.035"
+    },
+    {
+      "role": "reject",
+      "path": "public/audio/v100/ui/v100-ui-reject.mp3",
+      "bytes": 2912,
+      "sha256": "ba9cce88a298f381ce1a5164282ee28eea49673e1e0d45aebe2c07a1289f765a",
+      "source": "error_001.ogg",
+      "sourceSha256": "46e67425d16339772e8d328fb36a49426c9467418686e11beeb71ff84b0f6433",
+      "filters": "atrim=0:0.26,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=7500,volume=0.4,afade=t=out:st=0.225:d=0.035"
+    }
+  ]
+}
