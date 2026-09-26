@@ -28,17 +28,19 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
     enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{},
   };
   vm.runInNewContext(code,fixture);
-  assert.deepEqual(queued.flatMap(event=>event.units),["walker","runner"]);
+  assert.deepEqual(queued.flatMap(event=>event.units),["walker","runner","spitter"]);
   assert.deepEqual(announced,[]);
-  g.time=definition.timeline[2].at-0.01;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[]);
-  g.time=definition.timeline[2].at;vm.runInNewContext(code,fixture);assert.deepEqual(announced,["takuya-omega"]);
+  g.time=definition.timeline[4].at-0.01;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[]);
+  g.time=definition.timeline[4].at;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[],"Prelude guards must clear first");
+  g.enemySpawn.pending=[];vm.runInNewContext(code,fixture);assert.deepEqual(announced,["takuya-omega"]);
   g.fighters.push({kind:"takuya-omega",hp:9200});
+  g.enemySpawn.pending=[];
   g.time=definition.timeline.at(-1).at;
   vm.runInNewContext(code,fixture);
-  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5]);
-  assert.deepEqual(queued.slice(3).flatMap(event=>event.units),["walker","runner","spitter","crusher"]);
+  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7]);
+  assert.deepEqual(queued.slice(5).flatMap(event=>event.units),["walker","runner","crusher","spitter","spitter","crusher","walker","runner"]);
   vm.runInNewContext(code,fixture);
-  assert.equal(queued.length,5,"Every real event is consumed once");
+  assert.equal(queued.length,7,"Every real event is consumed once");
 });
 
 test("no V1 boss entrance requires that same boss to be alive already",()=>{
@@ -75,26 +77,29 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       enemySpawnPortalPoint: () => ({}), announceBossEntrance: () => {}, playCue: () => {}, emitBattleBark: () => {},
     };
     const advance = () => vm.runInNewContext(code, context);
-    advance(); assert.equal(queued.length, 3, "pending entrance cannot consume a phase wave");
-    g.fighters.push({ kind: "takuya", hp: 1600, maxHp: 1600 });
-    advance(); assert.equal(queued.length, 3, "elapsed time alone cannot activate HP reinforcements");
+    advance(); assert.equal(queued.length, 5, "pending entrance cannot consume a phase wave");
+    g.fighters.push({ kind: "takuya", hp: 2400, maxHp: 2400 });
+    advance(); assert.equal(queued.length, 5, "elapsed time alone cannot activate HP reinforcements");
     if (burstDefeat) {
       g.fighters = []; g.bossDefeated = true;
-      advance(); assert.equal(queued.length, 5, "burst defeat cannot discard either reinforcement");
+      advance(); assert.equal(queued.length, 7, "burst defeat cannot discard either reinforcement");
     } else {
-      g.fighters[0].hp = 1600 * .70; advance(); assert.equal(queued.length, 4);
-      g.fighters[0].hp = 1600 * .35; advance(); assert.equal(queued.length, 5);
+      g.fighters[0].hp = 2400 * .70; advance(); assert.equal(queued.length, 6);
+      g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 7);
     }
-    advance(); assert.equal(queued.length, 5, "phase waves commit once");
-    assert.deepEqual(queued.slice(3).map(event => event.units), [["walker", "runner", "shade"], ["spitter", "crusher", "abomination"]]);
+    advance(); assert.equal(queued.length, 7, "phase waves commit once");
+    assert.deepEqual(queued.slice(5).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "abomination", "runner"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
 });
 
 test("Gate Eater follows two infection waves and still requires their clearance", () => {
   const definition = createBattleDefinition(V100_STAGES[4].id, { v100: true });
-  assert.deepEqual(definition.timeline.flatMap(event => event.units), ["walker", "ooze", "sprinter", "walker", "gate-eater"]);
-  assert.ok(definition.timeline[2].at-definition.prepSeconds>=30);
+  assert.equal(definition.timeline.length,7);
+  assert.equal(definition.timeline[4].units[0],"gate-eater");
+  assert.ok(definition.timeline[4].at-definition.prepSeconds>=100);
+  assert.ok(definition.timeline.slice(0,4).flatMap(event=>event.units).length>=15);
+  assert.deepEqual(definition.timeline.slice(5).map(event=>event.bossHpRatio),[.75,.4]);
   assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
 });
 
@@ -117,35 +122,35 @@ test("all campaign bosses have ordinary combat before their entrance",()=>{
  }
 });
 
-test("Futago retains all four groups and both bodies but its final group cannot overlap surviving prior guards", () => {
+test("Futago retains both bodies and its final group cannot overlap surviving prior guards", () => {
   const definition=createBattleDefinition(V100_STAGES[23].id,{v100:true});
-  assert.equal(definition.timeline.length,4);
-  assert.deepEqual(definition.timeline.map(e=>e.units.length),[2,2,3,5]);
-  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
-  assert.deepEqual(definition.timeline.flatMap(e=>e.units).reduce((counts,kind)=>(counts[kind]=(counts[kind]??0)+1,counts),{}),
-    {"red-panther-shield":5,"red-panther-commander":5,futago:2});
-  assert.equal(definition.timeline[3].waitForPriorWaveClear,true);
-  const g={definition,eventIndex:3,time:77,fighters:[{id:1,side:"zombie",kind:"red-panther-shield",hp:1}],enemySpawn:{nextEntryId:8,pending:[]}};
+  assert.equal(definition.timeline.length,6);
+  assert.ok(definition.timeline.slice(0,5).flatMap(e=>e.units).every(kind=>["red-panther-shield","red-panther-commander"].includes(kind)));
+  assert.deepEqual(definition.timeline[5].units.slice(-2),["futago","futago"]);
+  assert.equal(definition.timeline[5].waitForPriorWaveClear,true);
+  const g={definition,eventIndex:5,time:definition.timeline[5].at,fighters:[{id:1,side:"zombie",kind:"red-panther-shield",hp:1}],enemySpawn:{nextEntryId:8,pending:[]}};
   const queued=[],announced=[];
   const context={g,isBossFighter,isBossEnemyKind:kind=>kind==="futago",activeStageViewportId:"844x340",
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return{...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
     enemySpawnPortalPoint:()=>({}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{}};
   const advance=()=>vm.runInNewContext(code,context);
-  advance();assert.equal(g.eventIndex,3);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
-  g.time=140;advance();assert.equal(g.eventIndex,3,"time cannot discard a surviving prior guard");
+  advance();assert.equal(g.eventIndex,5);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
+  g.time=140;advance();assert.equal(g.eventIndex,5,"time cannot discard a surviving prior guard");
   g.fighters[0].hp=0;g.enemySpawn.pending=[{entryId:7,kind:"red-panther-commander"}];
-  advance();assert.equal(g.eventIndex,3,"an offscreen queued guard also prevents the final group");
+  advance();assert.equal(g.eventIndex,5,"an offscreen queued guard also prevents the final group");
   g.enemySpawn.pending=[];advance();
-  assert.equal(g.eventIndex,4);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[3].units);
+  assert.equal(g.eventIndex,6);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[5].units);
   assert.deepEqual(announced,["futago"]);advance();assert.equal(queued.length,1,"the complete final group is committed once without another timer");
 });
 
 test("the president uses the same prior-guard clearance boundary without removing Panther guards or changing the boss",()=>{
   const definition=createBattleDefinition(V100_STAGES[24].id,{v100:true});
-  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
-  assert.deepEqual(definition.timeline.map(e=>e.units.length),[2,2,3,4]);
-  assert.deepEqual(definition.timeline.flatMap(e=>e.units).reduce((counts,kind)=>(counts[kind]=(counts[kind]??0)+1,counts),{}),
-    {"red-panther-knife":3,"red-panther-shield":3,"red-panther-smg":2,"red-panther-commander":2,"mugarian-president-mutated":1});
-  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,true]);
-  for(const number of [3,5,11,14,17,20,30])assert.ok(createBattleDefinition(V100_STAGES[number-1].id,{v100:true}).timeline.every(e=>!e.waitForPriorWaveClear));
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,26,47,68,89,110]);
+  assert.ok(definition.timeline.slice(0,5).flatMap(e=>e.units).every(kind=>kind.startsWith("red-panther-")));
+  assert.equal(definition.timeline.at(-1).units.filter(kind=>kind==="mugarian-president-mutated").length,1);
+  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,false,false,true]);
+  for(const number of [3,5,11,14,17,20,30]){
+    const d=createBattleDefinition(V100_STAGES[number-1].id,{v100:true});
+    assert.equal(d.timeline.find(e=>e.units.includes(d.bossEnemyKind)).waitForPriorWaveClear,true);
+  }
 });

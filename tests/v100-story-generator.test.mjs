@@ -12,9 +12,8 @@ test("canonical end roll contains all eleven ordered shots, never the production
   const credits = V100_STORY_EVENTS["v100:event:credits"];
   assert.deepEqual(credits.nodes.map(node => node.sceneLabel), shotLabels);
   assert.ok(credits.nodes.every(node => node.kind === "montage" && node.speaker === null && node.text.length > 0));
-  assert.equal(credits.nodes[0].sourceLine, 2583);
-  assert.equal(credits.nodes.at(-1).sourceLine, 2593);
-  assert.ok(!V100_STORY_EVENTS["v100:event:ending"].nodes.some(node => node.sourceLine >= 2579));
+  assert.equal(credits.nodes.at(-1).sourceLine - credits.nodes[0].sourceLine, 10);
+  assert.ok(V100_STORY_EVENTS["v100:event:ending"].nodes.every(node => node.sourceLine < credits.nodes[0].sourceLine));
   assert.ok(![...credits.nodes, ...V100_STORY_EVENTS["v100:event:ending"].nodes].some(node => node.text.includes("台詞は使わず")));
   assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.at(-1).text, "西新世紀末物語");
 });
@@ -62,15 +61,11 @@ test("generator preserves Markdown credits and titles and fails on a missing sho
   assert.equal(await readFile(output, "utf8"), generated, "failed generation must preserve the previous output");
 });
 
-test("canonical interludes and bold join/action markers retain every authored source line", () => {
+test("Producer rewrite preserves key joins, reveals and ending without markup leaks", () => {
   const allNodes = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes);
-  const recovered = [406, 1041, 1075, 1221, 1414, ...Array.from({ length: 18 }, (_, i) => 1617 + i * 2), ...Array.from({ length: 7 }, (_, i) => 2058 + i * 2), 2314, 2322];
-  for (const sourceLine of recovered) {
-    const matching = allNodes.filter(node => node.sourceLine === sourceLine);
-    assert.equal(matching.length, 1, `source line ${sourceLine} must appear exactly once`);
-    assert.ok(matching[0].text.length > 0);
-    assert.ok(!matching[0].text.includes("**"));
-  }
+  assert.equal(new Set(allNodes.map(node => node.sourceLine)).size, allNodes.length);
+  assert.ok(allNodes.every(node => node.text.length > 0 && !node.text.includes("**")));
   assert.equal(V100_STORY_EVENTS["v100:event:s20:post"].nodes.at(-1).text, "宮本武蔵加入／二刀近接");
-  assert.equal(V100_STORY_EVENTS["v100:event:s25:post"].nodes.at(-1).sourceLine, 2070);
+  assert.ok(V100_STORY_EVENTS["v100:event:s23:post"].nodes.some(node => node.text.includes("セガワ")));
+  assert.ok(V100_STORY_EVENTS["v100:event:s30:pre"].nodes.some(node => node.kind === "boss-marker" && node.text === "TAKUYA-Ω"));
 });

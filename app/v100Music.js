@@ -12,7 +12,7 @@ export const V100_MUSIC_TRACKS = Object.freeze([
   { role: 'ending', title: 'The Restoration', file: 'TheRestoration', page: 'the-restoration', start: 10, duration: 98, gain: .66 },
 ]);
 export const v100ScoreAssetId = role => 'music-v100-score-' + role;
-// Source-bound decisions, not keyword matching on dialogue. One pair per S01–S30.
+// Scene-tag decisions from the authored script, not dialogue keywords or line numbers.
 export const V100_STORY_SCORE_ROLES = Object.freeze([
   ['tension','relief'], ['tension','relief'], ['horror','loss'],
   ['horror','relief'], ['horror','relief'], ['tension','tension'],
@@ -26,15 +26,15 @@ export const V100_STORY_SCORE_ROLES = Object.freeze([
   ['tension','tension'], ['horror','horror'], ['tension','ending'],
 ].map(pair => Object.freeze(pair)));
 export const V100_STORY_SCORE_CUTS = Object.freeze([
-  { stage: 2, line: 471, role: 'tension' },
-  { stage: 3, line: 546, role: 'horror' },
-  { stage: 20, line: 1617, role: 'preparation' },
+  { stage: 2, tag: 'evidence', role: 'tension' },
+  { stage: 3, tag: 'retrieval', role: 'horror' },
+  { stage: 20, tag: 'musashi', role: 'preparation' },
 ]);
-export function v100StoryScoreScene(eventId, sourceLine = 0) {
+export function v100StoryScoreScene(eventId, sceneTag = null) {
   const match = /^v100:event:s(\d{2}):(pre|post|first-clear-post)$/u.exec(eventId ?? '');
   if (!match || !V100_STORY_SCORE_ROLES[Number(match[1]) - 1]) return null;
   const phase = match[2] === 'pre' ? 'pre' : 'post';
-  const cut = phase === 'post' && V100_STORY_SCORE_CUTS.find(c => c.stage === Number(match[1]) && sourceLine >= c.line);
+  const cut = phase === 'post' && V100_STORY_SCORE_CUTS.find(c => c.stage === Number(match[1]) && sceneTag === c.tag);
   return 'v100-score-s' + match[1] + '-' + phase + (cut ? '-cut' : '');
 }
 function baseStoryScene(number, phase) {

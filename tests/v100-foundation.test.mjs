@@ -49,11 +49,11 @@ test("V1.0.0 registry is one closed 30-stage contract", () => {
   assert.equal(V100_STAGE_IDS.length, 30);
   assert.equal(new Set(V100_STAGE_IDS).size, 30);
   assert.equal(V100_EVENT_IDS.length, 1 + 30 * 3 + 3);
-  assert.equal(V100_STAGE_REWARD_TOTAL, 9000);
-  assert.equal(v100StageReward(1, "first-clear"), 90);
-  assert.equal(v100StageReward(30, "first-clear"), 380);
-  assert.equal(v100StageReward(1, "replay"), 20);
-  assert.equal(v100StageReward(30, "replay"), 75);
+  assert.equal(V100_STAGE_REWARD_TOTAL, 6780);
+  assert.equal(v100StageReward(1, "first-clear"), 87);
+  assert.equal(v100StageReward(30, "first-clear"), 290);
+  assert.equal(v100StageReward(1, "replay"), 15);
+  assert.equal(v100StageReward(30, "replay"), 45);
   assert.equal(v100StarsForVehicle({ won: true, vehicleHp: 612, vehicleMaxHp: 680 }), 3);
   assert.equal(V100_STAGE_BY_ID[V100_STAGE_IDS[29]].eventIds.firstClearPost, "v100:event:s30:first-clear-post");
   assert.equal(V100_STAGE_BY_ID[V100_STAGE_IDS[28]].firstClearPayload.includes("omega-post-story-only"), true);
@@ -62,7 +62,7 @@ test("V1.0.0 registry is one closed 30-stage contract", () => {
 test("V1.0.0 unit, level, vehicle, support, and boss values are fixed", () => {
   assert.deepEqual(V100_INITIAL_UNIT_IDS, ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga"]);
   assert.equal(V100_UNITS.length, 16);
-  assert.deepEqual(V100_LEVEL_COSTS, [10, 12, 14, 16, 18, 20, 22, 24, 26, 30, 34, 38, 42, 46, 52, 58, 64, 70, 76, 84, 92, 100, 108, 116, 126, 138, 150, 162, 174]);
+  assert.deepEqual(V100_LEVEL_COSTS, [25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305]);
   assert.deepEqual([0, 5, 10, 15, 20, 25].map(v100LevelCapForStage), [5, 10, 15, 20, 25, 30]);
   assert.equal(v100LevelStats({ hp: 100, damage: 50, healing: 40, cooldown: 2 }, 5).hp, 110);
   assert.equal(v100LevelStats({ hp: 100, damage: 50, healing: 40, cooldown: 2 }, 5).damage, 54);
@@ -194,7 +194,7 @@ test("stage finalize applies first clear payloads and exact boss mode gates once
   assert.equal(save.bosses.discoveredIds.includes("boss-takuya"), true);
   assert.equal(v100BossVisibleInOtherModes(save, "boss-takuya"), true);
   assert.equal(v100BossVisibleInOtherModes(save, "boss-gate-eater"), false);
-  assert.equal(save.caps, 150);
+  assert.equal(save.caps, 126);
 });
 
 test("boss battle results cannot bypass the explicit defeat presentation", () => {
@@ -228,8 +228,8 @@ test("registered units and supports are purchased separately from unlock registr
   assert.equal(support.applied, true);
   assert.equal(support.save.ownedUnitIds.includes("unit-nao"), true);
   assert.equal(support.save.ownedSupportIds.includes("support-healing"), true);
-  assert.equal(support.save.caps, 70);
-  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 70 }).costCaps, 10);
+  assert.equal(support.save.caps, 40);
+  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 40 }).costCaps, 25);
 });
 
 test("save round trip retains only V1 state and rejects the wrong namespace", () => {

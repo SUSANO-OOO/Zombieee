@@ -81,10 +81,10 @@ test("campaign contract has exactly 30 ordered, unique stages", async () => {
 
 test("economy, levels, vehicle, support, and boss values are fixed", async () => {
   const design = await readFile(DESIGN, "utf8");
-  assert.match(design, /exactly 9,000 CAPS/u);
-  assert.match(design, /approximately 7,875 CAPS/u);
+  assert.match(design, /exactly 6,780 CAPS/u);
+  assert.match(design, /6,105 CAPS/u);
   assert.match(design, /legacy release gift of 180 CAPS exactly once/u);
-  assert.match(design, /`10,12,14,16,18,20,22,24,26,30,34,38,42,46,52,58,64,70,76,84,92,100,108,116,126,138,150,162,174`/u);
+  assert.match(design, /`25,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305`/u);
   assert.match(design, /Base vehicle HP: 680/u);
   assert.match(design, /maximum 1,080/u);
   assert.match(design, /120, 180, 260, 360, 480 CAPS/u);
@@ -96,7 +96,7 @@ test("supports unlock at exact non-entry transitions and vehicle abilities stay 
   const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
   const expected = [
     ["回復支援", "support-healing", "v100:s02:support-healing:unlock", 50, 50, 25],
-    ["爆薬ドラム缶", "support-explosive-drum", "v100:s06:support-explosive-drum:unlock", 40, 40, 20],
+    ["ドラム缶", "support-explosive-drum", "v100:s06:support-explosive-drum:unlock", 40, 40, 20],
     ["火炎ドラム缶", "support-incendiary-drum", "v100:s09:support-incendiary-drum:unlock", 55, 55, 28],
   ];
   for (const [label, id, receipt, unlockCost, battleCost, cooldown] of expected) {

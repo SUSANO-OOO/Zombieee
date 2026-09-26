@@ -25,19 +25,19 @@ export const V100_CREDITS_SCENES = Object.freeze({
 });
 
 function backdropFor(eventId, node) {
-  const line = Number(node?.sourceLine) || 0;
+  const sceneTag = node?.sceneTag ?? null;
   if (node?.kind === "title") return null;
-  if (eventId === "v100:event:prologue") return line < 263 ? cuts.kumayaBeforeOutbreak : PRODUCTION_VISUALS.command;
+  if (eventId === "v100:event:prologue") return ["escape", "radio"].includes(sceneTag) ? PRODUCTION_VISUALS.command : cuts.kumayaBeforeOutbreak;
   if (eventId === "v100:event:credits") return V100_CREDITS_SCENES[node?.sceneLabel]?.backgroundPath ?? null;
   if (eventId === "v100:event:epilogue") return cuts.kumayaReopened;
-  if (eventId === "v100:event:s20:post" && line >= 1589) return line >= 1617
+  if (eventId === "v100:event:s20:post") return sceneTag === "musashi"
     ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
-  if (eventId === "v100:event:s25:post" && line >= 2058) return visuals["stage-nishijin-shopping-street"];
+  if (eventId === "v100:event:s25:post" && sceneTag === "soup") return visuals["stage-nishijin-shopping-street"];
   if (eventId === "v100:event:ending") {
-    if (line < 2527) return visuals["stage-nishijin-defense-line-takuya-omega"];
-    if (line < 2551) return visuals["stage-hospital-emergency-ward"];
-    if (line < 2563) return PRODUCTION_VISUALS.command;
-    return cuts.kumayaReopened;
+    return sceneTag === "hospital" ? visuals["stage-hospital-emergency-ward"]
+      : sceneTag === "signal" ? PRODUCTION_VISUALS.command
+        : sceneTag === "kumaya" ? cuts.kumayaReopened
+          : visuals["stage-nishijin-defense-line-takuya-omega"];
   }
   return null;
 }
@@ -72,17 +72,15 @@ function sceneFor(eventId, phase, stage, category, node) {
   if (node?.kind === "title") return PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE;
   if (category === "credits") return V100_CREDITS_SCENES[node?.sceneLabel]?.sceneId ?? PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE;
   if (category === "prologue") {
-    const line = Number(node?.sourceLine) || 0;
-    if (line >= 287) return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL;
-    if (line >= 263) return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE;
-    if (line >= 259) return PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE;
-    if (line >= 207) return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS;
+    if (node?.sceneTag === "radio") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL;
+    if (node?.sceneTag === "escape") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE;
+    if (node?.sceneTag === "crisis") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS;
     return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
   }
   if (category === "ending") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING;
   if (category === "epilogue") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
-  if (eventId === "v100:event:s25:post" && Number(node?.sourceLine) >= 2058) return "v100-story-soup-break";
-  const scoreScene = v100StoryScoreScene(eventId, Number(node?.sourceLine) || 0);
+  if (eventId === "v100:event:s25:post" && node?.sceneTag === "soup") return "v100-story-soup-break";
+  const scoreScene = v100StoryScoreScene(eventId, node?.sceneTag ?? null);
   if (scoreScene) return scoreScene;
   const stageAudio = stage ? v100StageAudioFor(stage.id, phase === "post" || phase === "first-clear-post" ? "post" : "pre") : null;
   return sceneIdForStoryEvent(eventId, 0) ?? stageAudio?.sceneId ?? PRODUCTION_AUDIO_SCENE_IDS.INTRO;

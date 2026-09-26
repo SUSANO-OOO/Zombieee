@@ -37,15 +37,15 @@ test('TAKUYA mourning, the red-lens retrieval, the quiet soup and the finale fol
   for(const cut of V100_STORY_SCORE_CUTS){
     const eventId='v100:event:s'+String(cut.stage).padStart(2,'0')+':post';
     const event=V100_STORY_EVENTS[eventId];
-    const at=event.nodes.find(n=>n.sourceLine===cut.line);
-    assert.ok(at,'Canonical cut line exists: '+cut.line);
+    const at=event.nodes.find(n=>n.sceneTag===cut.tag);
+    assert.ok(at,'Canonical scene tag exists: '+cut.tag);
     const index=event.nodes.indexOf(at), before=event.nodes[index-1];
     const get=node=>current.sceneById[v100EventPresentationFor({eventId,node,phase:'post'}).sceneId].bgm;
     assert.notEqual(get(before),get(at));
     assert.equal(get(at),'music-v100-score-'+cut.role);
   }
-  for(const [eventId,line,role] of [['v100:event:s03:post',526,'loss'],['v100:event:s25:post',2058,'daily']]){
-    const node=V100_STORY_EVENTS[eventId].nodes.find(n=>n.sourceLine===line);
+  for(const [eventId,tag,role] of [['v100:event:s03:post',null,'loss'],['v100:event:s25:post','soup','daily']]){
+    const node=V100_STORY_EVENTS[eventId].nodes.find(n=>(n.sceneTag??null)===tag);
     assert.ok(node);assert.equal(current.sceneById[v100EventPresentationFor({eventId,node}).sceneId].bgm,'music-v100-score-'+role);
   }
 });

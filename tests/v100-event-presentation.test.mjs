@@ -9,20 +9,18 @@ import {
   v100EventPresentationFor,
 } from "../app/v100EventPresentation.js";
 
-test("canonical prologue moves from daily life through crisis, blackout, vehicle and radio scenes", () => {
+test("Producer prologue moves from daily life through crisis, escape and radio scenes", () => {
   const eventId = "v100:event:prologue";
   const nodes = V100_STORY_EVENTS[eventId].nodes;
   const expected = [
-    [167, PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY],
-    [207, PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS],
-    [259, PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE],
-    [261, PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE],
-    [265, PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE],
-    [289, PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL],
+    ["daily", PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY],
+    ["crisis", PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS],
+    ["escape", PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE],
+    ["radio", PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL],
   ];
-  for (const [sourceLine, sceneId] of expected) {
-    const node = nodes.find(candidate => candidate.sourceLine === sourceLine);
-    assert.ok(node, `canonical scene starts on source line ${sourceLine}`);
+  for (const [tag, sceneId] of expected) {
+    const node = nodes.find(candidate => candidate.sceneTag === tag);
+    assert.ok(node, `canonical scene ${tag} exists`);
     assert.equal(v100EventPresentationFor({ eventId, node }).sceneId, sceneId);
   }
   assert.match(v100EventPresentationFor({ eventId, node: nodes[0] }).backgroundPath, /kumaya-before-outbreak/u);
@@ -46,8 +44,8 @@ test("credits keep location ambience under a continuous ending score without cha
 
 test("ending locations follow the source scenes and epilogue returns to the reopened Kumaya", () => {
   const ending = V100_STORY_EVENTS["v100:event:ending"].nodes;
-  const backgrounds = [2507, 2529, 2553, 2565].map(sourceLine => v100EventPresentationFor({
-    eventId: "v100:event:ending", node: ending.find(node => node.sourceLine === sourceLine),
+  const backgrounds = ["dawn", "hospital", "signal", "kumaya"].map(sceneTag => v100EventPresentationFor({
+    eventId: "v100:event:ending", node: ending.find(node => node.sceneTag === sceneTag),
   }).backgroundPath);
   assert.equal(new Set(backgrounds).size, 4);
   assert.ok(backgrounds.every(background => background && !background.includes("ending-defeat")));
@@ -77,18 +75,18 @@ test("V1 event presentation maps canonical story phases to bounded runtime categ
 });
 
 test("canonical interludes leave the floodgate/lab for their actual locations", () => {
-  const view = (eventId, sourceLine) => {
-    const node = V100_STORY_EVENTS[eventId].nodes.find(node => node.sourceLine === sourceLine);
+  const view = (eventId, sceneTag) => {
+    const node = V100_STORY_EVENTS[eventId].nodes.find(node => node.sceneTag === sceneTag);
     assert.ok(node); return v100EventPresentationFor({ eventId, phase:"post", node });
   };
-  assert.match(view("v100:event:s20:post",1589).backgroundPath,/shopping-street/u);
-  assert.match(view("v100:event:s20:post",1617).backgroundPath,/mugarian-hq/u);
-  const soup=view("v100:event:s25:post",2058);
+  assert.match(view("v100:event:s20:post","corridor").backgroundPath,/shopping-street/u);
+  assert.match(view("v100:event:s20:post","musashi").backgroundPath,/mugarian-hq/u);
+  const soup=view("v100:event:s25:post","soup");
   assert.match(soup.backgroundPath,/shopping-street/u);
   const scene=V100_AUDIO_MANIFEST.sceneById[soup.sceneId];
   assert.ok(scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
   assert.equal(scene.bgm,"music-v100-score-daily");
-  assert.notEqual(view("v100:event:s25:post",2054).sceneId,soup.sceneId);
+  assert.notEqual(v100EventPresentationFor({ eventId:"v100:event:s25:post", phase:"post", node:V100_STORY_EVENTS["v100:event:s25:post"].nodes[0] }).sceneId,soup.sceneId);
 });
 
 test("V1 event presentation uses action cues only for owned scene nodes", () => {

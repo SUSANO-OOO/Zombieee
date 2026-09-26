@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const sourcePath = process.argv[2];
-if (!sourcePath) throw new Error("Usage: node scripts/generate-v100-story-events.mjs <reconstructed-story.md>");
+if (!sourcePath) throw new Error("Usage: node scripts/generate-v100-story-events.mjs <story-source.md>");
 
 const root = process.cwd();
 const source = await readFile(sourcePath, "utf8");
@@ -38,14 +38,18 @@ function ownerForSpeaker(speaker) {
 
 function parseNodes(sectionLines, offset, { credits = false } = {}) {
   const nodes = [];
+  let sceneTag = null;
+  const pushNode = (node) => nodes.push(sceneTag ? { ...node, sceneTag } : node);
   for (let index = 0; index < sectionLines.length; index += 1) {
     const raw = sectionLines[index];
     const sourceLine = offset + index + 1;
+    const scene = raw.match(/^#### SCENE ([a-z0-9-]+)$/u);
+    if (scene) { sceneTag = scene[1]; continue; }
     if (credits) {
       // These eleven authored shots are Markdown list items, not dialogue.
       // The italic instruction above them belongs to the authoring document.
       const shot = raw.match(/^\*\s+\*\*(.+?)：\*\*\s*(.+?)\s*$/u);
-      if (shot) nodes.push({
+      if (shot) pushNode({
         kind: "montage", speaker: null, sceneLabel: clean(shot[1]),
         text: clean(shot[2]), portraitOwner: null, portraitKind: "stage-direction", sourceLine,
       });
@@ -53,7 +57,7 @@ function parseNodes(sectionLines, offset, { credits = false } = {}) {
     }
     const title = raw.match(/^\*\*■ TITLE\*\*[ \t　]+(.+)$/u);
     if (title) {
-      nodes.push({ kind: "title", speaker: null, text: clean(title[1]), portraitOwner: null, portraitKind: "title", sourceLine });
+      pushNode({ kind: "title", speaker: null, text: clean(title[1]), portraitOwner: null, portraitKind: "title", sourceLine });
       continue;
     }
     let match = raw.match(/^\*\*(.+?)\*\*[ \t　]*(?:「(.*)」|『(.*)』)\s*$/u);
@@ -61,7 +65,7 @@ function parseNodes(sectionLines, offset, { credits = false } = {}) {
       const speaker = clean(match[1]);
       const text = clean(match[2] ?? match[3] ?? "");
       const owner = ownerForSpeaker(speaker);
-      nodes.push({ kind: "dialogue", speaker, text, ...owner, sourceLine });
+      pushNode({ kind: "dialogue", speaker, text, ...owner, sourceLine });
       continue;
     }
     match = raw.match(/^\*\*(.+?)[ \t　]+[「『](.*)[」』]\*\*\s*$/u);
@@ -69,14 +73,14 @@ function parseNodes(sectionLines, offset, { credits = false } = {}) {
       const speaker = clean(match[1]);
       const text = clean(match[2]);
       const owner = ownerForSpeaker(speaker);
-      nodes.push({ kind: "dialogue", speaker, text, ...owner, sourceLine });
+      pushNode({ kind: "dialogue", speaker, text, ...owner, sourceLine });
       continue;
     }
     match = raw.match(/^\*\*(▶ PLAYER|■ SYSTEM|◆ BATTLE|◆ BOSS)\*\*[ \t　]*(.*)$/u)
       ?? raw.match(/^\*\*(▶ PLAYER|■ SYSTEM|◆ BATTLE|◆ BOSS)[ \t　]+(.*?)\*\*\s*$/u);
     if (match) {
       const marker = match[1];
-      nodes.push({
+      pushNode({
         kind: marker === "◆ BATTLE" ? "battle-marker" : marker === "◆ BOSS" ? "boss-marker" : marker === "▶ PLAYER" ? "player-action" : "system",
         speaker: marker,
         text: clean(match[2]),
@@ -88,7 +92,7 @@ function parseNodes(sectionLines, offset, { credits = false } = {}) {
     }
     match = raw.match(/^\*(?!\*)(.*)\*\s*$/u);
     if (match && clean(match[1])) {
-      nodes.push({ kind: "action", speaker: null, text: clean(match[1]), portraitOwner: null, portraitKind: "stage-direction", sourceLine });
+      pushNode({ kind: "action", speaker: null, text: clean(match[1]), portraitOwner: null, portraitKind: "stage-direction", sourceLine });
     }
   }
   return nodes;
@@ -151,7 +155,8 @@ function stageEvent(number, sectionStart, sectionEnd) {
 
 const eventEntries = [];
 const prologueStart = findHeading(/^# PROLOGUE/u);
-const prologueEnd = findNextTopHeading(prologueStart);
+const prologueEnd = findHeading(/^## Stage 1｜/u, prologueStart);
+if (prologueStart < 0 || prologueEnd <= prologueStart) throw new Error("Missing PROLOGUE or Stage 1 boundary");
 eventEntries.push(["v100:event:prologue", {
   id: "v100:event:prologue", kind: "prologue", stageNumber: null, musicProfile: "FINAL", nodes: parseNodes(lines.slice(prologueStart + 1, prologueEnd), prologueStart + 1),
   source: { startLine: prologueStart + 2, endLine: prologueEnd },
@@ -181,7 +186,7 @@ for (const [id, heading, kind, musicProfile] of [
   }]);
 }
 
-const output = `// Generated from the canonical v10 story source. Do not hand-edit.\nimport { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";\n\nexport const V100_STORY_SOURCE_SHA256 = "${sourceSha}";\nexport const V100_STORY_SOURCE_LINE_COUNT = ${lines.length};\nexport const V100_STORY_SCRIPT_VERSION = "v10-final-release";\n\nexport const V100_STORY_EVENTS = Object.freeze(${JSON.stringify(Object.fromEntries(eventEntries), null, 2)});\n\nconst missing = V100_EVENT_IDS.filter((eventId) => !V100_STORY_EVENTS[eventId]);\nif (missing.length > 0) throw new Error(\`Missing V1.0.0 story event definitions: \${missing.join(", ")}\`);\n\nexport function v100StoryEventFor(eventId) {\n  return V100_STORY_EVENTS[eventId] ?? null;\n}\n\nexport function v100StoryEventIdsForStage(stageNumber) {\n  const stage = String(Number(stageNumber)).padStart(2, "0");\n  return [\`v100:event:s\${stage}:pre\`, \`v100:event:s\${stage}:post\`, \`v100:event:s\${stage}:first-clear-post\`].filter((eventId) => Boolean(V100_STORY_EVENTS[eventId]));\n}\n\nexport function v100StoryNodeText(node, playerName) {\n  return node?.text == null ? "" : renderV100PlayerName(node.text, playerName);\n}\n\nexport function v100StoryEventView(eventId, playerName) {\n  const event = v100StoryEventFor(eventId);\n  if (!event) return null;\n  return { ...event, nodes: event.nodes.map((node) => ({ ...node, text: v100StoryNodeText(node, playerName) })) };\n}\n\nexport function v100StoryContract() {\n  return Object.freeze({\n    eventIds: V100_EVENT_IDS,\n    eventCount: V100_EVENT_IDS.length,\n    prologueFirst: V100_EVENT_IDS[0],\n    endingSequence: ["v100:event:ending", "v100:event:credits", "v100:event:epilogue"],\n    creditsHasDialogue: V100_STORY_EVENTS["v100:event:credits"].nodes.some((node) => node.kind === "dialogue"),\n    creditsMusic: V100_STORY_EVENTS["v100:event:credits"].musicProfile,\n    sourceSha256: V100_STORY_SOURCE_SHA256,\n  });\n}\n\nvoid V100_EVENT_BY_ID;\n`;
+const output = `// Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.\nimport { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";\n\nexport const V100_STORY_SOURCE_SHA256 = "${sourceSha}";\nexport const V100_STORY_SOURCE_LINE_COUNT = ${lines.length};\nexport const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";\n\nexport const V100_STORY_EVENTS = Object.freeze(${JSON.stringify(Object.fromEntries(eventEntries), null, 2)});\n\nconst missing = V100_EVENT_IDS.filter((eventId) => !V100_STORY_EVENTS[eventId]);\nif (missing.length > 0) throw new Error(\`Missing V1.0.0 story event definitions: \${missing.join(", ")}\`);\n\nexport function v100StoryEventFor(eventId) {\n  return V100_STORY_EVENTS[eventId] ?? null;\n}\n\nexport function v100StoryEventIdsForStage(stageNumber) {\n  const stage = String(Number(stageNumber)).padStart(2, "0");\n  return [\`v100:event:s\${stage}:pre\`, \`v100:event:s\${stage}:post\`, \`v100:event:s\${stage}:first-clear-post\`].filter((eventId) => Boolean(V100_STORY_EVENTS[eventId]));\n}\n\nexport function v100StoryNodeText(node, playerName) {\n  return node?.text == null ? "" : renderV100PlayerName(node.text, playerName);\n}\n\nexport function v100StoryEventView(eventId, playerName) {\n  const event = v100StoryEventFor(eventId);\n  if (!event) return null;\n  return { ...event, nodes: event.nodes.map((node) => ({ ...node, text: v100StoryNodeText(node, playerName) })) };\n}\n\nexport function v100StoryContract() {\n  return Object.freeze({\n    eventIds: V100_EVENT_IDS,\n    eventCount: V100_EVENT_IDS.length,\n    prologueFirst: V100_EVENT_IDS[0],\n    endingSequence: ["v100:event:ending", "v100:event:credits", "v100:event:epilogue"],\n    creditsHasDialogue: V100_STORY_EVENTS["v100:event:credits"].nodes.some((node) => node.kind === "dialogue"),\n    creditsMusic: V100_STORY_EVENTS["v100:event:credits"].musicProfile,\n    sourceSha256: V100_STORY_SOURCE_SHA256,\n  });\n}\n\nvoid V100_EVENT_BY_ID;\n`;
 // Unknown Markdown previously disappeared silently, including two complete
 // interludes and whole-line bold action/join markers. Require every authored
 // narrative line exactly once before replacing the generated output.
@@ -194,7 +199,7 @@ for (const [eventId, event] of eventEntries) {
 }
 for (let index = prologueStart + 1; index < lines.length; index += 1) {
   const raw = lines[index].trim();
-  if (!raw || /^(?:#{1,3} |\||\*\*NOTE(?:\*\*|：))/u.test(raw) || raw === "**■ END**") continue;
+  if (!raw || /^(?:#{1,4} |\||\*\*NOTE(?:\*\*|：))/u.test(raw) || raw === "**■ END**") continue;
   if (raw === "*台詞は使わず、既存背景と短い環境音で構成する。*") continue;
   if (!sourceOwners.has(index + 1)) throw new Error(`Unparsed authored story line ${index + 1}: ${raw}`);
 }

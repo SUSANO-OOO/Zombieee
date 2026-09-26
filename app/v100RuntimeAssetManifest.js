@@ -79,7 +79,8 @@ const stages = freezeRecord({
 export const V100_RUNTIME_ASSET_MANIFEST = Object.freeze({
   schema: "v100-runtime-asset-manifest-v1",
   designId: "V100-SOL-DL-001 r2",
-  storySha256: "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4",
+  storySha256: "fade66cba8f546a900d485017e31021a617b5b2b8b9de200d94af425bfaa15aa",
+  visualBasisStorySha256: "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4",
   provenancePath: "assets/source/v100/runtime/v100-runtime-assets-provenance.json",
   generatedBy: "scripts/build-v100-runtime-assets.mjs",
   portraits,
@@ -114,7 +115,7 @@ export function validateV100RuntimeAssetManifest() {
   const errors = [];
   const paths = v100RuntimeAssetPathList();
   if (new Set(paths).size !== paths.length) errors.push("duplicate-runtime-path");
-  if (V100_RUNTIME_ASSET_MANIFEST.storySha256 !== "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4") errors.push("story-source-drift");
+  if (V100_RUNTIME_ASSET_MANIFEST.storySha256 !== "fade66cba8f546a900d485017e31021a617b5b2b8b9de200d94af425bfaa15aa") errors.push("story-source-drift");
   if (Object.keys(stages).length !== 10) errors.push("stage-21-30-count");
   if (Object.keys(redPanther).length !== 4) errors.push("red-panther-role-count");
   if (Object.keys(bosses).length !== 2) errors.push("new-boss-atlas-count");

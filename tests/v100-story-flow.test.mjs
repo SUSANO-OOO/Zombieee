@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 
 import { V100_EVENT_IDS } from "../app/v100Registry.js";
 import {
@@ -21,11 +23,12 @@ import {
   skipV100StoryEvent,
 } from "../app/v100StoryFlow.js";
 
-test("canonical v10 story event registry is complete and source-bound", () => {
+test("Producer rewrite story event registry is complete and source-bound", async () => {
   assert.equal(Object.keys(V100_STORY_EVENTS).length, 94);
   assert.deepEqual(Object.keys(V100_STORY_EVENTS), V100_EVENT_IDS);
-  assert.equal(V100_STORY_SOURCE_SHA256, "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4");
-  assert.equal(V100_STORY_SOURCE_LINE_COUNT, 2681);
+  const source = await readFile(new URL("../docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md", import.meta.url));
+  assert.equal(V100_STORY_SOURCE_SHA256, createHash("sha256").update(source).digest("hex"));
+  assert.equal(V100_STORY_SOURCE_LINE_COUNT, source.toString("utf8").split(/\r?\n/u).length);
   assert.equal(v100StoryContract().creditsHasDialogue, false);
   assert.equal(v100StoryContract().creditsMusic, null);
   for (const event of Object.values(V100_STORY_EVENTS)) {
@@ -37,11 +40,11 @@ test("canonical v10 story event registry is complete and source-bound", () => {
 });
 
 test("story rendering expands the current name without mutating the source registry", () => {
-  const source = V100_STORY_EVENTS["v100:event:s01:post"].nodes.find((node) => node.text.includes("PLAYER"));
+  const source = V100_STORY_EVENTS["v100:event:epilogue"].nodes.find((node) => node.text.includes("PLAYER"));
   assert.ok(source);
-  const view = v100StoryEventView("v100:event:s01:post", "指揮官");
+  const view = v100StoryEventView("v100:event:epilogue", "指揮官");
   assert.equal(view.nodes.some((node) => node.text.includes("指揮官")), true);
-  assert.equal(V100_STORY_EVENTS["v100:event:s01:post"].nodes.some((node) => node.text.includes("指揮官")), false);
+  assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.some((node) => node.text.includes("指揮官")), false);
 });
 
 test("V1.0.0 stage flow cannot bypass battle/result/finalize and routes defeat safely", () => {
