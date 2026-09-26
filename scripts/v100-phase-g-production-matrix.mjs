@@ -51,7 +51,7 @@ const extraBattleContracts = Object.freeze([
   // to complete its own attack lifecycle before the later boss support loop
   // opens the full formation. This is a player-facing card order, not a
   // runtime mutation or a synthetic enemy fixture.
-  { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", proofActor: "walker", proofUnitKind: "brute", requireVehicleAction: true, keepHumanTargetAlive: true, formationUnitIds: ["unit-nao", "unit-tatara", "unit-hachi", "unit-monkey", "unit-mizuchi", "unit-paisen", "unit-kumaverson"] },
+  { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", proofActor: "walker", proofUnitKind: "brute", requireVehicleAction: true, keepHumanTargetAlive: true, formationUnitIds: ["unit-nao", "unit-tatara", "unit-hachi", "unit-monkey", "unit-mizuchi", "unit-paisen", "unit-kumaverson"], bossPresentationMode: "local-developer-boss-wave" },
   { variant: "stage04-grappler", engine: "chromium", viewport: extraBattleViewports[1], stageNumber: 4, bossKind: null, proofActor: "grappler", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
   // Melee contact and later ranged/marker actions have different living-target
   // requirements. Give each its own ordinary battle and evidence identity.
@@ -3733,6 +3733,18 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const manualActionEvidence = {};
   let sealedCombatCausalProof = null;
   let developerBossWaveEvidence = null;
+  const prepareDeveloperBossWave = async () => {
+    invariant(bossKind && bossPresentationMode === "local-developer-boss-wave",
+      "developer boss-wave handoff is not configured");
+    developerBossWaveEvidence = await withPhaseGPageInputLock(page, () => page.evaluate((kind) => (
+      window.__ASHFALL_BATTLE_QA__?.prepareV100BossWaveProof?.(kind) ?? null
+    ), bossKind));
+    invariant(developerBossWaveEvidence?.mode === "local-developer-boss-wave"
+      && developerBossWaveEvidence.stageId === expectedStageId
+      && developerBossWaveEvidence.bossKind === bossKind
+      && developerBossWaveEvidence.queuedKinds?.filter((kind) => kind === bossKind).length === (bossKind === "futago" ? 2 : 1),
+    `developer boss-wave handoff invalid: ${JSON.stringify(developerBossWaveEvidence)}`);
+  };
   const requiredCompletedImpactActorKeys = completedImpactProofEnabled
     ? [proofActor ? `zombie:${proofActor}` : null, proofUnitKind ? `human:${proofUnitKind}` : null].filter(Boolean)
     : [];
@@ -4246,14 +4258,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // localhost developer bridge to reach the authored final wave without
         // requiring an AI player to clear every preceding squad. The normal
         // wave consumer still enqueues the real group and boss assets.
-        developerBossWaveEvidence = await withPhaseGPageInputLock(page, () => page.evaluate((kind) => (
-          window.__ASHFALL_BATTLE_QA__?.prepareV100BossWaveProof?.(kind) ?? null
-        ), bossKind));
-        invariant(developerBossWaveEvidence?.mode === "local-developer-boss-wave"
-          && developerBossWaveEvidence.stageId === expectedStageId
-          && developerBossWaveEvidence.bossKind === bossKind
-          && developerBossWaveEvidence.queuedKinds?.filter((kind) => kind === bossKind).length === (bossKind === "futago" ? 2 : 1),
-        `developer boss-wave handoff invalid: ${JSON.stringify(developerBossWaveEvidence)}`);
+        await prepareDeveloperBossWave();
       }
       const bossObservation = await waitForRequiredBossPresentation(page, { bossKind, waitForBossAttack });
       if (bossObservation) setupObservations[`zombie:${bossKind}`] ??= bossObservation;
@@ -4392,6 +4397,18 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
     }
     if (!completedImpactProofEnabled) {
+      if (bossKind && bossPresentationMode === "local-developer-boss-wave") {
+        invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
+          && proofActorAttackObserved && proofUnitAttackObserved && vehicleActionObserved,
+        "ordinary Stage 3 combat and vehicle proof must be sealed before developer boss-wave handoff");
+        const liveHumanCount = await page.evaluate(() => (
+          window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters ?? []
+        ).filter((fighter) => fighter.side === "human" && fighter.hp > 0).length);
+        invariant(liveHumanCount > 0, "Stage 3 requires a naturally surviving human before boss-wave handoff");
+        await prepareDeveloperBossWave();
+        invariant(developerBossWaveEvidence?.fallbackHumanSpawned === false,
+          "Stage 3 boss-wave handoff cannot add a synthetic fallback human");
+      }
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
       if (!bossKind || !waitForBossAttack) {
         await waitForCombatActivity(page);

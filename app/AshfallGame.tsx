@@ -10683,9 +10683,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           bossAreaDamage: bossArea.targetDamage,
         };
       },
-      prepareV100BossWaveProof: (kind: "futago" | "mugarian-president-mutated") => {
+      prepareV100BossWaveProof: (kind: "takuya" | "futago" | "mugarian-president-mutated") => {
         const g = gameRef.current;
-        if (![24, 25].includes(g.definition.missionConfig?.v100StageNumber ?? -1)
+        const requiredStageNumber = kind === "takuya" ? 3 : kind === "futago" ? 24 : 25;
+        if (g.definition.missionConfig?.v100StageNumber !== requiredStageNumber
           || g.definition.bossEnemyKind !== kind) {
           throw new Error(`V1 boss-wave proof does not match ${g.definition.stageId}: ${kind}`);
         }
@@ -10709,7 +10710,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.paused = false;
         g.over = false;
         g.won = false;
-        if (!g.fighters.some((fighter) => fighter.side === "human" && fighter.hp > 0)) {
+        const retainedHumanCount = g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length;
+        if (retainedHumanCount === 0) {
           spawnHuman(g, "guardian");
         }
         setPaused(false);
@@ -10720,6 +10722,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           wave: mission.wave,
           queuedKinds: [...mission.units],
           retainedHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+          fallbackHumanSpawned: retainedHumanCount === 0,
         };
       },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
