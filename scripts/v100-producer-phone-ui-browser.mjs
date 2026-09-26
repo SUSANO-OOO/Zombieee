@@ -54,6 +54,7 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     await prologue.waitFor();
     await capture("prologue-844x390");
     row.prologueNameVisible = (await prologue.innerText()).includes("試遊指揮官");
+    assert.equal(row.prologueNameVisible, true, "the entered name must be visible in the opening prologue scene");
     await page.reload();
     await play.or(prologue).first().waitFor();
     if (await play.isVisible()) await play.tap();
@@ -70,10 +71,10 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     recruitPage.on("requestfailed", (request) => row.requestFailures.push(`${request.failure()?.errorText ?? "failed"} ${request.url()}`));
     const base = createDefaultV100Save({ playerName: "試遊指揮官" });
     const recruitSave = normalizeV100Save({
-      ...base, campaignStarted: true, caps: 112,
+      ...base, campaignStarted: true, caps: 87,
       availableStageIds: V100_STAGE_IDS.slice(0, 2), completedStageIds: V100_STAGE_IDS.slice(0, 1),
       registeredUnitIds: [...base.registeredUnitIds, "unit-nao"],
-      lastResult: { stageId: V100_STAGE_IDS[0], stageNumber: 1, won: true, firstClear: true, rewardCaps: 112, finalizedAt: "2026-09-26T00:00:00.000Z" },
+      lastResult: { stageId: V100_STAGE_IDS[0], stageNumber: 1, won: true, stars: 1, firstClear: true, rewardCaps: 87, finalizedAt: "2026-09-26T00:00:00.000Z" },
       flowState: { phase: "map", eventId: null, stageId: V100_STAGE_IDS[0], stageNumber: 1, destination: "map", nodeIndex: 0, firstClear: true, finalized: true },
     });
     await recruitPage.addInitScript((value) => {
@@ -85,18 +86,18 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     await recruitPlay.or(offer).first().waitFor();
     if (await recruitPlay.isVisible()) await recruitPlay.tap();
     await offer.waitFor();
-    assert.match(await offer.innerText(), /110 CAPS/);
+    assert.match(await offer.innerText(), /85 CAPS/);
     await recruitPage.waitForFunction(() => {
       const button = document.querySelector(".v100-recruit-actions .v100-primary");
       return button instanceof HTMLButtonElement && !button.disabled;
     });
-    for (const name of [/110 CAPSで配備登録/, "後で決める"]) {
+    for (const name of [/85 CAPSで配備登録/, "後で決める"]) {
       const rect = await offer.getByRole("button", { name }).boundingBox();
       assert.ok(rect && rect.y >= 0 && rect.y + rect.height <= 340, "recruit choice must be visible without scrolling on a short phone viewport");
     }
     await recruitPage.screenshot({ path: `${out}/${engine}-recruit-844x340.png` });
     row.captures.push("recruit-844x340");
-    await offer.getByRole("button", { name: /110 CAPSで配備登録/ }).tap();
+    await offer.getByRole("button", { name: /85 CAPSで配備登録/ }).tap();
     await offer.waitFor({ state: "hidden" });
     const persisted = await recruitPage.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100") || "null"));
     assert.ok(persisted?.ownedUnitIds?.includes("unit-nao"), "recruit purchase must be saved");

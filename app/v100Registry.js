@@ -174,7 +174,7 @@ const UNIT_ROWS = [
   ["PAISEN", "パイセン", "frontline", 0, "initial"],
   ["KUMAVERSON", "クマバーソン", "heavy", 0, "initial"],
   ["BABAYAGA", "ババヤガ", "marksman", 0, "initial"],
-  ["NAO", "ナオ", "support", 110, 1],
+  ["NAO", "ナオ", "support", 85, 1],
   ["MIZUCHI", "ミズチ", "suppression", 155, 2],
   ["MONKEY", "モンキー", "engineer", 190, 4],
   ["CRAZY_KING", "クレイジーキング", "frontline", 220, 5],
@@ -211,7 +211,7 @@ export const V100_LEVEL_CAP_MILESTONES = deepFreeze([
 ]);
 
 export const V100_LEVEL_COSTS = deepFreeze([
-  25, 35, 45, 55, 65, 75, 85, 95, 105, 115,
+  30, 35, 45, 55, 65, 75, 85, 95, 105, 115,
   125, 135, 145, 155, 165, 175, 185, 195, 205, 215,
   225, 235, 245, 255, 265, 275, 285, 295, 305,
 ]);

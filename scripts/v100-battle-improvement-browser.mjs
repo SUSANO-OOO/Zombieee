@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 const useCurrentWebKit=process.env.NEW_V100_NATIVE_CURRENT_WEBKIT==='1';
 const {chromium,webkit}=await import(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'playwright');
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
-import {V100_INITIAL_UNIT_IDS,V100_STAGE_IDS,V100_VEHICLE} from '../app/v100Registry.js';
+import {V100_INITIAL_UNIT_IDS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {normalTacticalInput,nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installMuzzleCanvasAudit} from './v100-muzzle-canvas-audit.mjs';
@@ -63,7 +63,7 @@ await mkdir(dirname(out),{recursive:true});
 await mkdir(out,{recursive:false});
 const playwrightPackageUrl=new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/package.json':'../node_modules/playwright/package.json',import.meta.url);
 const playwrightPackage=JSON.parse(await readFile(playwrightPackageUrl,'utf8'));
-const report={scope:'Isolated owned-roster stage fixtures, level 1. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 alone uses the four existing base units at level 8 and vehicle upgrade level 2; other callers retain their existing fixture. MUSIC_CHECK BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
+const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses an attainable first-two-stage budget: Nao plus four initial units at level 2, without a vehicle upgrade. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
 const browser=await ({chromium,webkit}[engine]).launch({headless:true});
 report.provenance.browserVersion=await browser.version();
 try{for(const number of numbers){
@@ -78,21 +78,20 @@ try{for(const number of numbers){
  const screenshot=async name=>{await page.screenshot({path:`${out}/s${number}-${name}.png`});result.captures.push(name);};
  try{
   const base=createDefaultV100Save({playerName:'戦場改善確認'}),stageId=V100_STAGE_IDS[number-1];
-  const soundOnlyStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
-  const earnedStage3=process.env.V100_EARNED_STAGE3_FIXTURE==='1'&&number===3;
+  const musicStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
+  const earnedStage3=(process.env.V100_EARNED_STAGE3_FIXTURE==='1'||musicStage3)&&number===3;
   const earnedStage5=process.env.V100_EARNED_STAGE5_FIXTURE==='1'&&number===5;
-  if(soundOnlyStage3)result.tacticalProfile='boss-precision';
   const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(earnedStage3||earnedStage5?['unit-nao']:[]),...(number>=6||earnedStage5?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
   const contactCheck=process.env.V100_CONTACT_CHECK==='1';
   if(!kumaGuardCheck&& (manualFirearmCheck||guardianCheck))for(const id of ['unit-gantetsu','unit-mizuchi','unit-raider'])if(!owned.includes(id))owned.push(id);
   if(contactCheck)owned.push('unit-tatara');
   const formation=kumaGuardCheck?['unit-kumaverson',null,null,null,null,null,null]:manualFirearmCheck||guardianCheck?['unit-gantetsu','unit-babayaga','unit-mizuchi','unit-raider',null,null,null]:contactCheck?['unit-paisen','unit-tatara','unit-kumaverson','unit-babayaga',null,null,null]:[...owned, ...Array(Math.max(0,7-owned.length)).fill(null)].slice(0,7);
-  // Stage 1+2 three-star receipts yield 231 CAPS. Nao (110) plus four
-  // level-2 upgrades (4*25) are affordable with 21 CAPS left.
-  const unitLevels=soundOnlyStage3?Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,8])):earnedStage3||earnedStage5?{...base.unitLevels,...Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,2]))}:base.unitLevels;
-  const vehicle=soundOnlyStage3?{...base.vehicle,upgradeLevel:2,maxHp:V100_VEHICLE.baseHp+2*V100_VEHICLE.hpPerUpgrade}:base.vehicle;
-  if(soundOnlyStage3)assert.deepEqual(owned,V100_INITIAL_UNIT_IDS,'Sound-only Stage 3 fixture must use exactly the four existing base units');
-  result.fixture={soundOnlyStage3,earnedStage3,earnedStage5,earnedBudgetCaps:earnedStage3?231:earnedStage5?490:null,earnedSpentCaps:earnedStage3?210:earnedStage5?415:null,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
+  // Stage 1+2 three-star receipts yield 231 CAPS. Nao (85) plus four
+  // level-2 upgrades (4*30) are affordable with 26 CAPS left.
+  const unitLevels=earnedStage3||earnedStage5?{...base.unitLevels,...Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,2]))}:base.unitLevels;
+  const vehicle=base.vehicle;
+  if(musicStage3)assert.deepEqual(owned,[...V100_INITIAL_UNIT_IDS,'unit-nao'],'Stage 3 music fixture must stay within the attainable first-two-stage roster');
+  result.fixture={musicStage3,earnedStage3,earnedStage5,earnedBudgetCaps:earnedStage3?231:earnedStage5?490:null,earnedSpentCaps:earnedStage3?205:earnedStage5?410:null,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
   const save=normalizeV100Save({...base,campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS.slice(0,number),completedStageIds:V100_STAGE_IDS.slice(0,number-1),ownedUnitIds:owned,registeredUnitIds:owned,unitLevels,vehicle,formationSlots:formation,
    ...(number>=6||earnedStage5?{ownedSupportIds:['support-healing'],equippedSupportId:'support-healing',supportPurchaseUnlockedIds:['support-healing']}:{}),
    flowState:{phase:'formation',stageId,stageNumber:number,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -142,7 +141,11 @@ try{for(const number of numbers){
    assert.ok(await nativeBattleTap(page,page.locator('button.unit-card[data-kind="mayo-chan"]')),'Mayo must accept an ordinary initial deployment tap');
    result.inputs.push({action:'deploy',kind:'mayo-chan',reason:'bounded Mayo observation: initial native deployment'});
   }
-  const deadline=Date.now()+240000;
+  // macOS WebKit advanced only 127 simulation seconds in the prior 240-second
+  // wall budget after the Producer-requested later, stronger Stage 3 boss.
+  // Keep the natural victory and music gates while allowing the attainable
+  // early-campaign roster enough wall time to finish on that host.
+  const deadline=Date.now()+(musicStage3?420000:240000);
   let last=null,emptySince=null,maxEmpty=0;
   while(Date.now()<deadline){
    last=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return s?{time:s.time,over:s.over,running:s.running,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,objective:s.objective,stageMission:s.stageMission,enemySpawn:s.enemySpawn,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,assignedLane:f.assignedLane,targetId:f.targetId,attack:f.attack,attackSequence:f.attackSequence,combatReady:f.combatReady,gateEntering:f.gateEntering}))}:null;});
@@ -225,16 +228,6 @@ try{for(const number of numbers){
      if(await nativeBattleTap(page,ability)){result.inputs.push({time:observation.time,action:'ability',kind:'kumaverson',ownerId:observation.kumaId,reason:observation.incoming?'read-only incoming attack windup':'read-only target attack reach',triggerObservation:observation.incoming??observation.close});result.kumaObservationTrigger={activationId:(observation.activationId??0)+1};}
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
-   }
-   if(soundOnlyStage3&&result.boss&&last.time>=45
-    &&last.fighters.filter(f=>f.kind==='brawler'&&f.side==='human'&&f.hp>0).length===1
-    &&!result.inputs.some(input=>input.action==='deploy'&&input.kind==='brawler'&&input.time>=result.boss.firstObservedTime)){
-    // A surviving opening brawler makes the generic one-per-role policy buy a
-    // rear unit instead. Reinforce the actual boss front through the native
-    // card while the fixed four-unit fixture and all battle gates stay intact.
-    if(await nativeBattleTap(page,page.locator('button.unit-card[data-kind="brawler"]'))){
-     result.inputs.push({time:last.time,action:'deploy',kind:'brawler',reason:'native boss-front reinforcement'});
-    }
    }
    await normalTacticalInput(page,result);await page.waitForTimeout(350);
   }

@@ -877,14 +877,15 @@ try {
   ));
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
-  record("the incident fetches the exact release delta, three failed bundle attempts and one held request, with failed logical slices visible", (
+  record("the incident requests only release-delta assets, three failed bundle attempts and one held request, with failed logical slices visible", (
     partialCache.logicalSatisfied === retainedOldLogicalCount
-    && new Set(incidentChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
-    // A new audio slice makes the shared bundle part of the release delta.
-    // Its intentionally failed/held requests are counted by the strict
-    // four-request incident group below, not as duplicate art downloads.
-    && incidentChangedRequests.filter((pathname) => pathname !== bundlePathname).length
-      === [...candidatePendingReleaseDeltaTransportPaths].filter((pathname) => pathname !== bundlePathname).length
+    // The incident snapshot is taken while one bundle request is held. Newly
+    // added art may still be queued; require a unique subset now, then the
+    // complete exact delta after the recovered generation commits below.
+    && incidentChangedRequests.every((pathname) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
+    && incidentChangedRequests.some((pathname) => pathname !== bundlePathname)
+    && new Set(incidentChangedRequests.filter((pathname) => pathname !== bundlePathname)).size
+      === incidentChangedRequests.filter((pathname) => pathname !== bundlePathname).length
     && incidentProgressCompleted !== null
     && incidentProgressTotal >= candidateProgressTotalMin
     && incidentProgressTotal <= candidateProgressTotalMax
@@ -1066,6 +1067,11 @@ try {
   const recoveryAssetRequests = candidateTransportRequests
     .slice(recoveryTransportStart)
     .map((request) => request.pathname);
+  const completeChangedRequests = candidateTransportRequests
+    .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
+    .map(({ pathname }) => pathname);
+  const completeDirectChangedRequests = completeChangedRequests.filter((pathname) => pathname !== bundlePathname);
+  const expectedDirectChangedRequests = [...candidatePendingReleaseDeltaTransportPaths].filter((pathname) => pathname !== bundlePathname);
   const successfulRefetches = recoveryAssetRequests.filter((pathname) => (
     pathname !== bundlePathname && successfulBeforeRecoveryTransportPaths.has(pathname)
   ));
@@ -1074,6 +1080,8 @@ try {
   ));
   record("recovery fetches only failed or pending content, never re-fetches any successful asset, and does not fetch the bundle per slice", (
     recoveryAssetRequests.every((pathname) => candidateDownloadTransportPaths.has(pathname))
+    && new Set(completeChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
+    && completeDirectChangedRequests.length === expectedDirectChangedRequests.length
     && successfulRefetches.length === 0
     && unchangedHashRefetches.length === 0
     && recoveryAssetRequests.filter((pathname) => pathname === bundlePathname).length === 2
@@ -1082,6 +1090,8 @@ try {
     successfulBeforeRecoveryLogicalAssets: successfulBeforeRecoveryAssets.length,
     recoveryAssetRequests,
     downloadTargetTransportPaths: [...candidateDownloadTransportPaths],
+    completeChangedRequestCount: completeChangedRequests.length,
+    expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
     successfulRefetches,
     unchangedHashRefetches,
   });

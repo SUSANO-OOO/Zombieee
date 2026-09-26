@@ -10,7 +10,7 @@
 - Reconstructed story SHA-256: `c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4`
 - Product target: `Version 1.0.0`
 
-2026-09-26 Producer実機試遊で更新された現行表示脚本は`docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md`（SHA-256 `fade66cba8f546a900d485017e31021a617b5b2b8b9de200d94af425bfaa15aa`）。上記の復元脚本SHAは旧全文と画像制作基準の来歴として維持する。戦闘密度、経済、通常ドラム缶、タイトルの権利・クレジット、最高画質の新規初期値、開発者モードによる全編確認の詳細はProducer Decisionsの2026-09-26追記を優先する。
+2026-09-26 Producer実機試遊で更新された現行表示脚本は`docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md`（SHA-256 `aee233b8c47bc9991bea439a5a0a2eee1b910155c59c7a87d48740d8a837c625`）。上記の復元脚本SHAは旧全文と画像制作基準の来歴として維持する。戦闘密度、経済、通常ドラム缶、タイトルの権利・クレジット、最高画質の新規初期値、開発者モードによる全編確認の詳細はProducer Decisionsの2026-09-26追記を優先する。
 
 Current execution contract: Section 138, with latest active delta 138.10 and the live Issue #172 cursor. Earlier revision-specific execution sections are historical, not alternative resume paths.
 
@@ -162,7 +162,7 @@ The Stage 1-30 campaign is owned by the separate Version 1.0.0 namespace. A reve
 | Availability | Unit | CAPS |
 |---|---|---:|
 | initial | Hachi, Paisen, Kumaverson, Babayaga | free |
-| Stage 1 | Nao | 110 |
+| Stage 1 | Nao | 85 |
 | Stage 2 | Mizuchi | 155 |
 | Stage 4 | Monkey | 190 |
 | Stage 5 | Crazy King | 220 |
@@ -202,7 +202,7 @@ Initial cap 5; Stage 5 raises it to 10; Stage 10 to 15; Stage 15 to 20; Stage 20
 
 Level-up costs for L2-L30 are fixed:
 
-`25,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305`
+`30,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305`
 
 At level L, max HP is `round(baseHP * (1 + 0.025 * (L - 1)))`; damage and healing are `round(baseValue * (1 + 0.02 * (L - 1)))`. Unit-specific defense begins at 2%–18% and gains 0.15 percentage points per level, capped at 32%. Cooldown, range, movement, animation duration, and target selection do not scale with level.
 
@@ -222,6 +222,7 @@ At level L, max HP is `round(baseHP * (1 + 0.025 * (L - 1)))`; damage and healin
 - Replay: `max(15, round-to-nearest-5(firstClear * 0.16))` CAPS.
 - Sum of all first-clear and star rewards is exactly 6,780 CAPS.
 - A standard two-star route yields 6,105 CAPS.
+- Stage 1の1つ星初回報酬87 CAPSでナオ85 CAPSを登録できる。3つ星でもナオ登録と初回育成30 CAPSの同時購入はできず、次の作戦で選択が残る。
 - An eligible pre-1.0.0 play history grants the new Version 1.0.0 campaign one receipt-backed legacy release gift of 180 CAPS exactly once; no legacy CAPS balance or other progression is imported.
 
 No time-limited monetization, premium currency, purchase API, or negative balance is introduced.
@@ -240,9 +241,9 @@ Exactly one player-facing support is equipped before sortie. Support ownership i
 |---|---|---|---:|---:|---:|
 | 回復支援 | `support-healing` | Stage 2 first clear: `v100:s02:support-healing:unlock` | 50 CAPS | 50 | 25 s |
 | ドラム缶 | `support-explosive-drum` | Stage 6 first clear: `v100:s06:support-explosive-drum:unlock` | 40 CAPS | 40 | 20 s |
+| 火炎ドラム缶 | `support-incendiary-drum` | Stage 9 first clear: `v100:s09:support-incendiary-drum:unlock` | 55 CAPS | 55 | 28 s |
 
 `support-explosive-drum` is a save-compatible internal ID. In Version 1.0.0 it is an ordinary metal drum with 230 HP that blocks enemies and never explodes; its authored art, battlefield sprite, text, and effect must agree.
-| 火炎ドラム缶 | `support-incendiary-drum` | Stage 9 first clear: `v100:s09:support-incendiary-drum:unlock` | 55 CAPS | 55 | 28 s |
 
 Stage 2, 6, and 9 are the exact unlock stages. The first-clear transaction reveals the support for purchase; it does not auto-purchase it. `pod` is not a normal loadout option. Equipping zero or more than one support, using an unowned support, granting the same unlock twice, or firing a support without its battle-local cost/cooldown fails.
 

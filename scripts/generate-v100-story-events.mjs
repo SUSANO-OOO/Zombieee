@@ -20,7 +20,7 @@ function clean(value) {
 
 function ownerForSpeaker(speaker) {
   const major = new Map([
-    ["パイセン", "unit-paisen"], ["クマバーソン", "unit-kumaverson"], ["ババヤガ", "unit-babayaga"],
+    ["ハチ", "unit-hachi"], ["パイセン", "unit-paisen"], ["クマバーソン", "unit-kumaverson"], ["ババヤガ", "unit-babayaga"],
     ["いくらちゃん", "guide-ikura"], ["ナオ", "unit-nao"], ["ミズチ", "unit-mizuchi"], ["タタラ", "unit-tatara"],
     ["クレイジーキング", "unit-crazy-king"], ["レイダー", "unit-raider"], ["ガンテツ", "unit-gantetsu"],
     ["モンキー", "unit-monkey"], ["マヨちゃん", "unit-mayo-chan"], ["ザキミヤ", "unit-zakimiya"],

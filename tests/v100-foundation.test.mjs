@@ -62,7 +62,7 @@ test("V1.0.0 registry is one closed 30-stage contract", () => {
 test("V1.0.0 unit, level, vehicle, support, and boss values are fixed", () => {
   assert.deepEqual(V100_INITIAL_UNIT_IDS, ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga"]);
   assert.equal(V100_UNITS.length, 16);
-  assert.deepEqual(V100_LEVEL_COSTS, [25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305]);
+  assert.deepEqual(V100_LEVEL_COSTS, [30, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305]);
   assert.deepEqual([0, 5, 10, 15, 20, 25].map(v100LevelCapForStage), [5, 10, 15, 20, 25, 30]);
   assert.equal(v100LevelStats({ hp: 100, damage: 50, healing: 40, cooldown: 2 }, 5).hp, 110);
   assert.equal(v100LevelStats({ hp: 100, damage: 50, healing: 40, cooldown: 2 }, 5).damage, 54);
@@ -228,8 +228,8 @@ test("registered units and supports are purchased separately from unlock registr
   assert.equal(support.applied, true);
   assert.equal(support.save.ownedUnitIds.includes("unit-nao"), true);
   assert.equal(support.save.ownedSupportIds.includes("support-healing"), true);
-  assert.equal(support.save.caps, 40);
-  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 40 }).costCaps, 25);
+  assert.equal(support.save.caps, 65);
+  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 65 }).costCaps, 30);
 });
 
 test("save round trip retains only V1 state and rejects the wrong namespace", () => {

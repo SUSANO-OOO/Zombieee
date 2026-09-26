@@ -84,7 +84,8 @@ test("economy, levels, vehicle, support, and boss values are fixed", async () =>
   assert.match(design, /exactly 6,780 CAPS/u);
   assert.match(design, /6,105 CAPS/u);
   assert.match(design, /legacy release gift of 180 CAPS exactly once/u);
-  assert.match(design, /`25,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305`/u);
+  assert.match(design, /`30,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305`/u);
+  assert.match(design, /\| Stage 1 \| Nao \| 85 \|/u);
   assert.match(design, /Base vehicle HP: 680/u);
   assert.match(design, /maximum 1,080/u);
   assert.match(design, /120, 180, 260, 360, 480 CAPS/u);

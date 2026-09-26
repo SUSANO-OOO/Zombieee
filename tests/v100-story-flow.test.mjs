@@ -47,6 +47,19 @@ test("story rendering expands the current name without mutating the source regis
   assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.some((node) => node.text.includes("指揮官")), false);
 });
 
+test("name and recruitment introductions are present before their release gates", () => {
+  for (const id of ["v100:event:prologue", "v100:event:s01:pre", "v100:event:s10:pre", "v100:event:s30:pre", "v100:event:ending", "v100:event:credits", "v100:event:epilogue"]) {
+    assert.ok(V100_STORY_EVENTS[id].nodes.some((node) => node.text.includes("{{PLAYER_NAME}}")), `${id} must reflect the entered name`);
+    assert.ok(v100StoryEventView(id, "試遊指揮官").nodes.some((node) => node.text.includes("試遊指揮官")), `${id} must render the name`);
+  }
+  assert.equal(V100_STORY_EVENTS["v100:event:credits"].nodes.some((node) => node.kind === "dialogue"), false);
+  for (const [stage, name] of [[1, "ナオ"], [2, "ミズチ"], [4, "モンキー"], [5, "クレイジーキング"], [6, "レイダー"], [7, "タタラ"], [8, "ガンテツ"], [10, "マヨちゃん"]]) {
+    const id = `v100:event:s${String(stage).padStart(2, "0")}:post`;
+    assert.ok(V100_STORY_EVENTS[id].nodes.some((node) => node.text.includes(name) || node.speaker === name), `${name} must be introduced before the Stage ${stage} registration offer`);
+  }
+  assert.ok(V100_STORY_EVENTS["v100:event:prologue"].nodes.some((node) => node.speaker === "ハチ" && node.portraitOwner === "unit-hachi"));
+});
+
 test("V1.0.0 stage flow cannot bypass battle/result/finalize and routes defeat safely", () => {
   let state = createV100StoryFlowState({ playerName: "指揮官" });
   let transition = beginV100StageAttempt(state, "stage-nishijin-shopping-street");
