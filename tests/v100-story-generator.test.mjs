@@ -80,7 +80,9 @@ test("Producer rewrite preserves key joins, reveals and ending without markup le
   const allNodes = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes);
   assert.equal(new Set(allNodes.map(node => node.sourceLine)).size, allNodes.length);
   assert.ok(allNodes.every(node => node.text.length > 0 && !node.text.includes("**")));
-  assert.equal(V100_STORY_EVENTS["v100:event:s20:post"].nodes.at(-1).text, "宮本武蔵加入／二刀近接");
+  for (const [stage, name] of [[12, "ザキミヤ"], [14, "TKY"], [17, "Mrs.チハ"], [20, "宮本武蔵"]]) {
+    assert.equal(V100_STORY_EVENTS[`v100:event:s${stage}:post`].nodes.at(-1).text, `${name}が合流。戦闘配備登録が解禁。`);
+  }
   assert.ok(V100_STORY_EVENTS["v100:event:s23:post"].nodes.some(node => node.text.includes("セガワ")));
   assert.ok(V100_STORY_EVENTS["v100:event:s30:pre"].nodes.some(node => node.kind === "boss-marker" && node.text === "TAKUYA-Ω"));
 });

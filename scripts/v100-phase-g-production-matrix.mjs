@@ -3852,6 +3852,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     return vehicleActionObserved;
   };
   let sustainActive = Boolean(bossKind || proofActor && !completedImpactProofEnabled);
+  // The Stage 3 vehicle proof is sealed by the same immutable completed-impact
+  // receipt as the later boss fixtures. After its required walker, brute and
+  // vehicle actions, ordinary tactical input must take over before seven slow
+  // serial opening deployments leave the vehicle undefended.
+  const ordinaryTacticsAfterProof = completedImpactProofEnabled || requireVehicleAction;
   let bossDeploymentFinished = false;
   let sustainFailure = null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
@@ -3900,8 +3905,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
-      if (completedImpactProofEnabled && bossDeploymentFinished
-        && sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE") {
+      if (ordinaryTacticsAfterProof && bossDeploymentFinished
+        && sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
+        && (!requireVehicleAction || (proofActorAttackObserved && proofUnitAttackObserved))) {
         // Once the exact actor impact has been sealed, the representative
         // battle uses the same ordinary UI tactics as the full campaign run.
         // Keeping the first ready low-cost card forever starves stronger
@@ -4045,7 +4051,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   // available to that loop through the production UI.
   const bossDeploymentLimit = bossKind
     ? Math.min(
-      completedImpactProofEnabled ? 3 : Number.POSITIVE_INFINITY,
+      ordinaryTacticsAfterProof ? 3 : Number.POSITIVE_INFINITY,
       new Set((save.formationSlots ?? []).filter(Boolean)).size,
     )
     : 0;
