@@ -31,17 +31,19 @@ test("Panther operations introduce the knife role and Stage 27 actually fields a
   assert.deepEqual([...new Set(definitionFor(24).timeline.flatMap(event=>event.units))].sort(),[P[1],P[3],"futago"].sort());
 });
 
-test("Stage 29 owns six elite waves and Stage 30 only two A add waves after Omega", () => {
+test("Stage 29 owns six elite waves and Stage 30 has two A-only add waves after a delayed Omega", () => {
   const core=definitionFor(29), finale=definitionFor(30);
   assert.equal(core.timeline.length,6);
   assert.ok(core.timeline.flatMap(event=>event.units).every(kind=>P.includes(kind)));
   assert.equal(core.bossEnemyKind,null);
-  assert.equal(finale.timeline.length,5);
-  assert.deepEqual(finale.timeline[2].units,["takuya-omega"]);
+  assert.equal(finale.timeline.length,7);
+  assert.deepEqual(finale.timeline[4].units,["takuya-omega"]);
+  assert.ok(finale.timeline[4].at-finale.prepSeconds>=110);
   const adds=finale.timeline.filter(event=>event.addWave);
   assert.equal(adds.length,2);
-  assert.deepEqual(adds.flatMap(event=>event.units),A);
-  assert.ok(adds.every(event=>event.at>finale.timeline[2].at));
+  assert.ok(adds.flatMap(event=>event.units).every(kind=>A.includes(kind)));
+  assert.deepEqual([...new Set(adds.flatMap(event=>event.units))].sort(),[...A].sort());
+  assert.ok(adds.every(event=>event.at>finale.timeline[4].at));
 });
 
 test("all timed operations use their revised 73/78/83/88 second perimeter", () => {

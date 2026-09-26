@@ -10,6 +10,13 @@ import {
 export const V100_LEVEL_MIN = 1;
 export const V100_LEVEL_MAX = 30;
 
+const V100_BASE_DEFENSE = Object.freeze({
+  scout: .02, ranger: .02, brute: .12, brawler: .08, gunner: .04,
+  medic: .03, "crazy-king": .04, kumaverson: .10, babayaga: .02,
+  guardian: .18, engineer: .06, zakimiya: .06, tky: .04,
+  "mrs-chiha": .03, "miyamoto-musashi": .08, "mayo-chan": .03,
+});
+
 export function v100UnitLevelFor(levels, unitId) {
   const value = Number(levels?.[unitId]);
   return Number.isFinite(value) ? Math.max(V100_LEVEL_MIN, Math.min(V100_LEVEL_MAX, Math.floor(value))) : V100_LEVEL_MIN;
@@ -50,10 +57,14 @@ export function applyV100LevelUpgrade({ levels = {}, unitId, clearedStageNumber 
 }
 
 export function v100LevelStats(base, level) {
+  const safeLevel = Math.max(1, Math.min(30, Math.floor(Number(level) || 1)));
   return Object.freeze({
-    hp: v100UnitStatAtLevel(base?.hp ?? 0, level, "hp"),
-    damage: v100UnitStatAtLevel(base?.damage ?? 0, level, "damage"),
-    healing: v100UnitStatAtLevel(base?.healing ?? 0, level, "healing"),
+    hp: v100UnitStatAtLevel(base?.hp ?? 0, safeLevel, "hp"),
+    damage: v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"),
+    healing: v100UnitStatAtLevel(base?.healing ?? 0, safeLevel, "healing"),
+    defense: Math.min(.32, (base?.defense ?? V100_BASE_DEFENSE[base?.kind] ?? 0) + (safeLevel - 1) * .0015),
+    speed: base?.speed ?? 0,
+    attackEvery: base?.attackEvery ?? 1,
     cooldown: base?.cooldown,
     range: base?.range,
     movement: base?.movement,
@@ -72,6 +83,7 @@ export function applyV100UnitLevelProgression(card, level) {
     progressionRank: 0,
     hp: stats.hp,
     damage: stats.damage,
+    defense: stats.defense,
   });
 }
 

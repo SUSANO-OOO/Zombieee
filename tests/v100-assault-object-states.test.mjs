@@ -9,6 +9,8 @@ import {v100VehicleSprite,v100EscortDestinationState} from '../app/v100MissionVe
 
 test('authored assault states consume applied damage and preserve protected bases, special objectives and legacy rendering',()=>{
   assert.deepEqual(V100_STAGES.filter(s=>v100AssaultObjectProfile(s.id)).map(s=>s.number),[1,3,4,5,8,10,11,13,14,17,20,30]);
+  assert.equal(v100AssaultObjectProfile(V100_STAGES[3].id),'relay');
+  assert.equal(v100AssaultObjectProfile(V100_STAGES[4].id),'relay');
   for(const stage of V100_STAGES){
     const profile=v100AssaultObjectProfile(stage.id),definition=v100BattleDefinitionFor(stage.id);
     if(!profile){assert.equal(drawV100AssaultObject(null,{definition},null,null,null),false);continue;}
@@ -18,11 +20,11 @@ test('authored assault states consume applied damage and preserve protected base
     assert.equal(drawV100AssaultObject(null,{definition:{...definition,missionConfig:{}}},null,null,null),false);
     const game={definition,barricadeHp:1000,barricadeMaxHp:1000,barricadeVulnerable:false},frames=[];
     const context=new Proxy({drawImage:(_image,left)=>frames.push(left)},{get:(target,key)=>key in target?target[key]:()=>{}});
-    const image={complete:true,naturalWidth:1672},objects={[`v100-assault-${profile}`]:image};
+    const image={complete:true,naturalWidth:profile==='relay'?2172:1672},objects={[`v100-assault-${profile}`]:image};
     const draw=()=>{const before=JSON.stringify(game);assert.equal(drawV100AssaultObject(context,game,objects,{attackX:875},[212,282,352]),true);assert.equal(JSON.stringify(game),before);};
     applyEnemyBaseDamage(game,1000);draw();assert.equal(game.barricadeHp,1000);
     game.barricadeVulnerable=true;applyEnemyBaseDamage(game,300);draw();applyEnemyBaseDamage(game,400);draw();applyEnemyBaseDamage(game,300);draw();
-    assert.deepEqual(frames,[0,466,882,1260]);
+    assert.deepEqual(frames,profile==='relay'?[0,543,1086,1629]:[0,466,882,1260]);
     assert.throws(()=>drawV100AssaultObject(context,game,{}, {attackX:875},[212,282,352]),/decoded/);
   }
 });

@@ -1,6 +1,6 @@
 import { V100_MUSIC_TRACKS } from "./v100Music.js";
-export function V100AssetCredits() {
-  return <details className="v100-asset-credits"><summary>制作・素材クレジット</summary>
+export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
+  return <details className="v100-asset-credits" open={expanded}><summary>制作・素材クレジット</summary>
     <p>場面別BGM：Scott Buckley ／
       <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>。
       抜粋、ループの継ぎ目、音量をゲーム用に調整。</p>

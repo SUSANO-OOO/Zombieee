@@ -174,18 +174,18 @@ const UNIT_ROWS = [
   ["PAISEN", "パイセン", "frontline", 0, "initial"],
   ["KUMAVERSON", "クマバーソン", "heavy", 0, "initial"],
   ["BABAYAGA", "ババヤガ", "marksman", 0, "initial"],
-  ["NAO", "ナオ", "support", 80, 1],
-  ["MIZUCHI", "ミズチ", "suppression", 100, 2],
-  ["MONKEY", "モンキー", "engineer", 110, 4],
-  ["CRAZY_KING", "クレイジーキング", "frontline", 120, 5],
-  ["RAIDER", "レイダー", "suppression", 130, 6],
-  ["TATARA", "タタラ", "heavy", 145, 7],
-  ["GANTETSU", "ガンテツ", "heavy", 150, 8],
-  ["MAYO_CHAN", "マヨちゃん", "skirmisher", 160, 10],
-  ["ZAKIMIYA", "ザキミヤ", "frontline", 175, 12],
-  ["TKY", "TKY", "skirmisher", 190, 14],
-  ["MRS_CHIHA", "Mrs.チハ", "marksman", 210, 17],
-  ["MIYAMOTO_MUSASHI", "宮本武蔵", "frontline", 230, 20],
+  ["NAO", "ナオ", "support", 110, 1],
+  ["MIZUCHI", "ミズチ", "suppression", 155, 2],
+  ["MONKEY", "モンキー", "engineer", 190, 4],
+  ["CRAZY_KING", "クレイジーキング", "frontline", 220, 5],
+  ["RAIDER", "レイダー", "suppression", 240, 6],
+  ["TATARA", "タタラ", "heavy", 260, 7],
+  ["GANTETSU", "ガンテツ", "heavy", 280, 8],
+  ["MAYO_CHAN", "マヨちゃん", "skirmisher", 300, 10],
+  ["ZAKIMIYA", "ザキミヤ", "frontline", 320, 12],
+  ["TKY", "TKY", "skirmisher", 340, 14],
+  ["MRS_CHIHA", "Mrs.チハ", "marksman", 370, 17],
+  ["MIYAMOTO_MUSASHI", "宮本武蔵", "frontline", 400, 20],
 ];
 
 export const V100_UNITS = deepFreeze(UNIT_ROWS.map(([key, displayName, role, costCaps, availability]) => ({
@@ -211,9 +211,9 @@ export const V100_LEVEL_CAP_MILESTONES = deepFreeze([
 ]);
 
 export const V100_LEVEL_COSTS = deepFreeze([
-  10, 12, 14, 16, 18, 20, 22, 24, 26, 30,
-  34, 38, 42, 46, 52, 58, 64, 70, 76, 84,
-  92, 100, 108, 116, 126, 138, 150, 162, 174,
+  25, 35, 45, 55, 65, 75, 85, 95, 105, 115,
+  125, 135, 145, 155, 165, 175, 185, 195, 205, 215,
+  225, 235, 245, 255, 265, 275, 285, 295, 305,
 ]);
 
 export const V100_SUPPORTS = deepFreeze([
@@ -228,7 +228,8 @@ export const V100_SUPPORTS = deepFreeze([
   },
   {
     id: "support-explosive-drum",
-    displayName: "爆薬ドラム缶",
+    // Keep the persisted id and receipt; the player-facing prop is an ordinary drum.
+    displayName: "ドラム缶",
     unlockStageNumber: 6,
     unlockReceipt: "v100:s06:support-explosive-drum:unlock",
     unlockCostCaps: 40,
@@ -260,8 +261,8 @@ export const V100_VEHICLE = deepFreeze({
 });
 
 const BOSS_ROWS = [
-  ["boss-takuya", "TAKUYA", 3, 1600, 34, 1.25, [0.70, 0.35], "2 adds", 45, 110, 20],
-  ["boss-gate-eater", "改札喰い", 5, 2100, 30, 1.40, [0.75, 0.40], "3 adds", 55, 130, 25],
+  ["boss-takuya", "TAKUYA", 3, 2400, 44, 1.25, [0.70, 0.35], "2 adds", 45, 110, 20],
+  ["boss-gate-eater", "改札喰い", 5, 3200, 39, 1.40, [0.75, 0.40], "3 adds", 55, 130, 25],
   ["boss-mother", "MOTHER", 11, 2800, 28, 1.10, [0.70, 0.40], "brood 4/6", 60, 190, 40],
   ["boss-ooguchi", "オオグチ", 14, 3400, 42, 1.55, [0.75, 0.45], "charge", 65, 220, 45],
   ["boss-kurome", "クロメ", 17, 4100, 34, 0.90, [0.70, 0.35], "clones", 70, 250, 50],
@@ -410,10 +411,10 @@ function roundToFive(value) {
 
 export function v100StageReward(stageNumber, kind = "first-clear") {
   const number = Math.max(1, Math.min(30, Math.floor(Number(stageNumber) || 1)));
-  if (kind === "first-clear") return 80 + number * 10;
-  if (kind === "star:2") return 15 + 5 * Math.floor((number - 1) / 5);
-  if (kind === "star:3") return 25 + 5 * Math.floor((number - 1) / 5);
-  if (kind === "replay") return Math.max(20, roundToFive((80 + number * 10) * 0.20));
+  if (kind === "first-clear") return 80 + number * 7;
+  if (kind === "star:2") return 10 + 2 * Math.floor((number - 1) / 5);
+  if (kind === "star:3") return 15 + 3 * Math.floor((number - 1) / 5);
+  if (kind === "replay") return Math.max(15, roundToFive((80 + number * 7) * 0.16));
   return 0;
 }
 

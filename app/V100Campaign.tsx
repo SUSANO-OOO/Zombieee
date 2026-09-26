@@ -56,6 +56,7 @@ import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
+import { v100LevelStats } from "./v100Progression.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { unitContentFor } from "./content/unitCatalog.js";
@@ -90,7 +91,7 @@ type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, nu
 type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
 type GiftDisplay = NonNullable<StorageOutcome["popup"]> & { acknowledged: boolean };
 type Flow = ReturnType<typeof createV100StoryFlowState>;
-type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string; sourceLine?: number; sceneLabel?: string };
+type StoryNode = { kind?: string; speaker?: string | null; text?: string; portraitOwner?: string | null; portraitKind?: string; sourceLine?: number; sceneLabel?: string; sceneTag?: string };
 type CampaignSurface = "campaign" | "personnel" | "support-vehicle" | "vehicle" | "equipment" | "modes" | "data" | "rename";
 
 const PORTRAIT_PATHS: Record<string, string> = {
@@ -312,6 +313,7 @@ export function V100Campaign() {
   const [loadFailure, setLoadFailure] = useState(false);
   const [recovery, setRecovery] = useState<StorageOutcome["recovery"]>(null);
   const [logOpen, setLogOpen] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const [replayEventId, setReplayEventId] = useState<string | null>(null);
   const [replayNodeIndex, setReplayNodeIndex] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -818,6 +820,11 @@ export function V100Campaign() {
   </main>;
 
   const immersiveFlow = flow.phase === "name" || isEventPhase(flow.phase) || flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle";
+  const recruitOffer = flow.phase === "map" && surface === "campaign" && save.lastResult?.firstClear === true
+    ? V100_UNITS.find((unit) => unit.availabilityStageNumber === save.lastResult?.stageNumber
+      && save.registeredUnitIds.includes(unit.id) && !save.ownedUnitIds.includes(unit.id)
+      && !save.receipts.includes(`v100:recruit-offer:${unit.id}:seen`)) ?? null
+    : null;
   const modeResult = save.outbreak.view === "result" || save.survival.view === "result";
   const screenLabel = surface === "personnel" ? "隊員" : surface === "vehicle" ? "装甲車両" : surface === "support-vehicle" ? "戦術支援" : surface === "equipment" ? "装備" : surface === "data" ? "セーブ" : surface === "rename" ? "名前の変更" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" || modeResult ? "戦果" : "作戦地図";
 
@@ -857,6 +864,7 @@ export function V100Campaign() {
                 <button className="v100-primary" type="submit" aria-label="この名前で作戦を始める" disabled={saveBusy}>この名前で始める</button>
               </form>
               <button className="v100-secondary-data" type="button" disabled={saveBusy} onClick={() => openSurface("data")}>データ管理</button>
+              <button className="v100-secondary-data" type="button" onClick={() => setCreditsOpen(true)}>権利・クレジット</button>
             </div>
           </div>
         </section>
@@ -962,6 +970,8 @@ export function V100Campaign() {
       )}
 
       {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
+      {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">新しい隊員 / 配備登録可能</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><dl><div><dt>配備登録</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSで登録できます。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで配備登録</button></div></section></div>}
+      {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">Version 1.0.0</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
       {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
@@ -1076,6 +1086,11 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
   const selectedRegistered = Boolean(selectedUnit && save.registeredUnitIds.includes(selectedUnit.id));
   const selectedLevel = selectedUnit ? Math.max(1, Number(save.unitLevels[selectedUnit.id]) || 1) : 1;
   const selectedNextCost = selectedLevel < save.levelCap ? v100LevelCost(selectedLevel + 1) : 0;
+  const selectedCombatKind = selectedUnit ? campaignUnitIdToCombatKind(selectedUnit.id) : null;
+  const selectedBaseStats = selectedCombatKind ? unitContentFor(selectedCombatKind) : null;
+  const currentStats = selectedBaseStats ? v100LevelStats(selectedBaseStats, selectedLevel) : null;
+  const nextStats = selectedBaseStats && selectedOwned && selectedNextCost > 0 ? v100LevelStats(selectedBaseStats, selectedLevel + 1) : null;
+  const showStats = (name: string, value: number | string, next: number | string | null = null) => <div className="v100-unit-stat" key={name}><span>{name}</span><strong>{value}</strong>{next !== null && next !== value && <small>→ {next}</small>}</div>;
   return <section className="v100-panel v100-management-panel v100-personnel-screen" data-v100-surface="personnel" aria-label="隊員">
     <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 隊員</span><h2>隊員</h2></div><button type="button" onClick={onBack}>{returnLabel}</button></div>
     <div className="v100-personnel-workspace"><div className="v100-personnel-roster"><div className="v100-roster-heading"><h3>隊員一覧</h3><span>{save.ownedUnitIds.length}名</span></div><div className="v100-personnel-grid">{V100_UNITS.map((unit) => {
@@ -1085,7 +1100,14 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
       return <button type="button" className={`v100-personnel-card game-unit-card ${selectedUnit?.id === unit.id ? "selected" : ""} ${owned ? "owned" : registered ? "registered" : "locked"}`} key={unit.id} onClick={() => setSelectedUnitId(unit.id)} aria-pressed={selectedUnit?.id === unit.id}>
         <div className="v100-personnel-art">{art && <img src={art} alt="" />}{!owned && !registered && <V100LockChain />}</div><div className="v100-personnel-copy"><h3>{unit.displayName}</h3><span>{v100RoleLabelFor(unit.role)}</span><small>{owned ? `Lv.${Math.max(1, Number(save.unitLevels[unit.id]) || 1)}` : registered ? "配備登録可" : `S${String(unit.availabilityStageNumber).padStart(2,"0")}で解放`}</small></div>
       </button>;
-    })}</div></div><aside className="v100-personnel-focus" aria-label="選択中の隊員">{selectedUnit && <><span className="v100-kicker">選択中の隊員</span><div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={`${selectedUnit.displayName}の立ち絵`} />}</div><div className="v100-personnel-focus-copy"><h3>{selectedUnit.displayName}</h3><strong>{v100RoleLabelFor(selectedUnit.role)}</strong><p>{unitDescriptionFor(selectedUnit.id)}</p><dl><div><dt>状態</dt><dd>{selectedOwned ? "配備登録済" : selectedRegistered ? "配備登録可" : "未解放"}</dd></div><div><dt>レベル</dt><dd>{selectedOwned ? `Lv.${selectedLevel} / ${save.levelCap}` : "—"}</dd></div></dl>{selectedOwned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, selectedLevel)} disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>強化 {selectedNextCost > 0 ? `${selectedNextCost} CAPS` : "上限"}</button> : selectedRegistered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>配備登録 {selectedUnit.registrationCostCaps > 0 ? `${selectedUnit.registrationCostCaps} CAPS` : ""}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
+    })}</div></div><aside className="v100-personnel-focus" aria-label="選択中の隊員">{selectedUnit && <><span className="v100-kicker">選択中の隊員</span><div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={`${selectedUnit.displayName}の立ち絵`} />}</div><div className="v100-personnel-focus-copy"><h3>{selectedUnit.displayName}</h3><strong>{v100RoleLabelFor(selectedUnit.role)}</strong><p>{unitDescriptionFor(selectedUnit.id)}</p><dl><div><dt>状態</dt><dd>{selectedOwned ? "配備登録済" : selectedRegistered ? "配備登録可" : "未解放"}</dd></div><div><dt>レベル</dt><dd>{selectedOwned ? `Lv.${selectedLevel} / ${save.levelCap}` : "—"}</dd></div></dl>{currentStats && selectedBaseStats && <div className="v100-personnel-stats" aria-label="戦闘能力と強化後の値">{[
+      showStats("HP", currentStats.hp, nextStats?.hp ?? null),
+      showStats("防御力", `${(currentStats.defense * 100).toFixed(1)}%`, nextStats ? `${(nextStats.defense * 100).toFixed(1)}%` : null),
+      showStats("近接ダメージ", selectedBaseStats.range < 80 ? currentStats.damage : "—", selectedBaseStats.range < 80 ? nextStats?.damage ?? null : null),
+      showStats("射撃ダメージ", selectedBaseStats.range >= 80 ? currentStats.damage : "—", selectedBaseStats.range >= 80 ? nextStats?.damage ?? null : null),
+      showStats("移動速度", currentStats.speed),
+      showStats("攻撃間隔", `${currentStats.attackEvery}秒`),
+    ]}</div>}{selectedOwned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, selectedLevel)} disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>強化 {selectedNextCost > 0 ? `${selectedNextCost} CAPS` : "上限"}</button> : selectedRegistered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>配備登録 {selectedUnit.registrationCostCaps > 0 ? `${selectedUnit.registrationCostCaps} CAPS` : ""}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
   </section>;
 }
 

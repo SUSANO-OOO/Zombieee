@@ -51,9 +51,15 @@ export const V100_ADVANCED_COMBAT_VFX_ADDITIONS = Object.freeze([
   Object.freeze({ path: "/art/v100/combat-vfx/grenade-projectile-r1.webp", bytes: 11680, hash: "sha256-7b79a10a19f5379627ee40fb9de905e2577127dca79f9c853446d2363edd2119", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/combat-vfx/ground-fire-smoke-r1.webp", bytes: 62034, hash: "sha256-48137f3e70be5a1df0286cf88099af4761313416f56b96d4ea062530daa135be", criticality: "critical" }),
 ]);
-const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.map(asset=>asset.path));
+export const V100_PRODUCER_FEEDBACK_ART_ADDITIONS = Object.freeze([
+  Object.freeze({ path: "/plain-drum-v1.png", bytes: 1135560, hash: "sha256-fe78295d2777e89b907f574bbc6c548b2e74f09b7c0801092a0f161b13bc9c99", criticality: "critical" }),
+]);
+// The station relay was correctly excluded while unused. Stage 4/5 now draw
+// it as their actual objective, so the current release includes it again.
+const restoredCandidatePaths = new Set(["/art/v100/mission-objects/station-relay-states-v1.webp"]);
+const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.filter(asset=>!restoredCandidatePaths.has(asset.path)).map(asset=>asset.path));
 const replacedMotionPaths = new Set(V100_MOTION_ATLAS_REPLACEMENTS.map(asset=>asset.newPath));
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path))));
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path))));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
@@ -66,15 +72,14 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   audioBundlePath: "/pwa-bundles/audio-v1.bin",
   networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1,
   artAdditionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
-  // Measured against the frozen 0.9.9.5 manifest: 111 new logical paths,
-  // including the six v2 motion paths and repaired Takuya atlas transported
-  // through optimized WebP. The published Takuya gutter remains retained.
-  bytesFromV0995: 49_575_030,
+  // Measured against the frozen 0.9.9.5 manifest, including the restored
+  // station relay and the ordinary drum's lossless WebP transport.
+  bytesFromV0995: 51_714_332,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 139_316_595,
-  candidateDistinctHashBytes: 138_776_692,
-  updateFromV0982Bytes: 66_265_478,
-  updateFromV0993Bytes: 55_890_784,
+  candidateTotalBytes: 141_455_897,
+  candidateDistinctHashBytes: 140_915_994,
+  updateFromV0982Bytes: 68_404_780,
+  updateFromV0993Bytes: 58_030_086,
 });

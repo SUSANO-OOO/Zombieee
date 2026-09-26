@@ -17,7 +17,8 @@ import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
-  drum: "/explosive-drum-v1.png",
+  drum: "/plain-drum-v1.png",
+  drumFire: "/art/v100/support/incendiary-drum-r1.webp",
   medical: "/medical-supply-station-v1.png",
 });
 

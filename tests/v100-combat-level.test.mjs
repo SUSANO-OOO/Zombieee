@@ -7,15 +7,17 @@ import { applyUnitLevelProgression } from "../app/unitProgression.js";
 import { UNIT_ROLE_TUNING, resolveNaoHealing } from "../app/unitRoleMechanics.js";
 
 for (const [level, hpMultiplier, damageMultiplier] of [[1, 1, 1], [5, 1.1, 1.08], [15, 1.35, 1.28], [30, 1.725, 1.58]]) {
-  test(`all16 production cards use the locked V1 level${level} without cadence or role bonuses`, () => {
+  test(`all16 production cards show V1 level${level} HP, damage and bounded defense without cadence changes`, () => {
     assert.equal(UNIT_CONTENT.length, 16);
     for (const card of UNIT_CONTENT) {
       const next = applyV100UnitLevelProgression(card, level);
       assert.equal(next.hp, Math.round(card.hp * hpMultiplier));
       assert.equal(next.damage, Math.round(card.damage * damageMultiplier));
       assert.equal(next.progressionLevel, level); assert.equal(next.progressionRank, 0);
-      for (const [key, value] of Object.entries(card)) if (!["hp", "damage"].includes(key)) assert.deepEqual(next[key], value, `${card.kind}:${key}`);
-      for (const key of ["defense", "healingMultiplier", "trapDurationMultiplier", "milestones"]) assert.equal(next[key], card[key]);
+      for (const [key, value] of Object.entries(card)) if (!["hp", "damage", "defense"].includes(key)) assert.deepEqual(next[key], value, `${card.kind}:${key}`);
+      assert.ok(next.defense >= .02 && next.defense <= .32);
+      if (level > 1) assert.ok(next.defense > applyV100UnitLevelProgression(card, 1).defense);
+      for (const key of ["healingMultiplier", "trapDurationMultiplier", "milestones"]) assert.equal(next[key], card[key]);
       assert.ok(Object.isFrozen(next));
     }
   });

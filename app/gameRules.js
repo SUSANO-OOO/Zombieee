@@ -515,7 +515,9 @@ export function battlefieldSupplyDefinition(kind, v100SupportId = undefined) {
   const support = v100SupportFor(v100SupportId);
   if (!support || kind !== (support.id === "support-healing" ? "medical" : "drum")) return null;
   return { ...legacy, name: support.displayName, cost: support.battleCost,
-    ...(support.id === "support-explosive-drum" ? { burnSeconds: 0 } : {}) };
+    ...(support.id === "support-explosive-drum" ? {
+      maxHp: 230, blocksEnemies: true, blastDamage: 0, burnSeconds: 0,
+    } : {}) };
 }
 
 function worldYFor(object) {
@@ -739,7 +741,7 @@ export function applyBattlefieldSupplyDamage(supply, damage) {
   }
   const hp = Math.max(0, supply.hp - Math.max(0, damage));
   if (hp > 0) return { supply: { ...supply, hp }, detonationRequested: false };
-  if (supply.kind === "drum") {
+  if (supply.kind === "drum" && supply.v100SupportId !== "support-explosive-drum") {
     return {
       supply: { ...supply, hp: 0, phase: "detonating", targetable: false, detonationReason: "destroyed" },
       detonationRequested: true,
@@ -753,6 +755,7 @@ export function applyBattlefieldSupplyDamage(supply, damage) {
 
 export function requestDrumDetonation(supply, reason = "manual") {
   if (!supply || supply.kind !== "drum") return { ok: false, reason: "爆薬ドラムではありません", supply };
+  if (supply.v100SupportId === "support-explosive-drum") return { ok: false, reason: "このドラム缶は起爆しません", supply };
   if (supply.detonationTriggered || supply.phase === "destroying" || supply.phase === "expired") {
     return { ok: false, reason: "起爆済みです", supply };
   }
@@ -764,7 +767,7 @@ export function requestDrumDetonation(supply, reason = "manual") {
 /** @param {{supply: RuleSupply, fighters?: RuleFighter[], areaEffects?: RuleAreaEffect[], nextAreaEffectId?: number, laneCenters?: readonly number[]}} input */
 export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0, laneCenters = LANE_Y }) {
   const def = supply && battlefieldSupplyDefinition(supply.kind, supply.v100SupportId);
-  if (!def || !supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
+  if (!def || !supply || supply.kind !== "drum" || supply.v100SupportId === "support-explosive-drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
     return { triggered: false, supply, fighters, hits: [], areaEffects, nextAreaEffectId };
   }
   const hits = [];

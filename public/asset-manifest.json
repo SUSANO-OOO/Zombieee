@@ -1345,8 +1345,8 @@
     },
     {
       "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
-      "bytes": 807920,
-      "hash": "sha256-5b3d50d3b334a5e97bb5f13d7e2f58db0d8021342ab2adb974fe0b16bff39cdc",
+      "bytes": 797630,
+      "hash": "sha256-121a60cc5677bb052cdf721f9d06631b7ce6f705d001918ab4b38e96096df4b8",
       "pack": "units",
       "category": "boss",
       "criticality": "critical",
@@ -1363,8 +1363,8 @@
     },
     {
       "path": "/art/v100/characters/kumaverson-guard-v1.png",
-      "bytes": 62126,
-      "hash": "sha256-a6f7f15691bdd54b0bcceaf0019904c45ec81e134ae4aabae2a2dc7eedda5dff",
+      "bytes": 59396,
+      "hash": "sha256-85678314a14a0b756935580d544a4bcfac533c64b6c0a477dd9352b7e1d40faf",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",
@@ -1752,6 +1752,14 @@
       "category": "object",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v100/mission-objects/stage30-aftermath-core-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/station-relay-states-v1.webp",
+      "bytes": 1016762,
+      "hash": "sha256-ac5d07de80bada9a9530cca33e0a85e2362a617f097c41bf60cf721c196ed206",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
     },
     {
       "path": "/art/v100/mission-objects/transport-states-v1.webp",
@@ -6289,6 +6297,15 @@
       "category": "object",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/medical-supply-station-v1.webp"
+    },
+    {
+      "path": "/plain-drum-v1.png",
+      "bytes": 1135560,
+      "hash": "sha256-fe78295d2777e89b907f574bbc6c548b2e74f09b7c0801092a0f161b13bc9c99",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/plain-drum-v1.webp"
     },
     {
       "path": "/tactical-drop-pod-v1.png",

@@ -33,7 +33,7 @@ export const V100_DEFAULT_SETTINGS = Object.freeze({
   sfxVolume: 0.9,
   reducedMotion: false,
   battleEventMode: "first-time",
-  graphicsQuality: "auto",
+  graphicsQuality: "high",
   autoSkipReadStory: false,
 });
 

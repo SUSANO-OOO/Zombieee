@@ -7,7 +7,7 @@ import {
   LANE_Y, AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF,
   battlefieldSupplyDefinition, resolveBattlefieldSupplyPlacement,
   beginBattlefieldSupplyCooldown, advanceBattlefieldSupplyCooldowns,
-  advanceBattlefieldSupply, requestDrumDetonation, resolveDrumDetonation, advanceAreaEffects,
+  advanceBattlefieldSupply, applyBattlefieldSupplyDamage, requestDrumDetonation, resolveDrumDetonation, advanceAreaEffects,
   createEmergencySupportRuntime, requestAirstrike, advanceEmergencySupportRuntime, resolveAirstrikeImpact,
   createCrawlerAbilityRuntime, requestCrawlerBarrage, advanceCrawlerAbilityRuntime, resolveCrawlerBarrage,
 } from "../app/gameRules.js";
@@ -69,23 +69,31 @@ test("canonical healing actually heals allies without damaging enemies", () => {
   assert.equal(step.fighters[0].hp, 38); assert.equal(step.fighters[1].hp, 300);
 });
 
-for (const id of ["support-explosive-drum", "support-incendiary-drum"]) {
-  test(`${id} preserves identity through drop and one-shot detonation with its own fire behavior`, () => {
-    let supply = placement(id).supplies[0];
-    supply = advanceBattlefieldSupply(supply, 10); supply = advanceBattlefieldSupply(supply, 10);
-    assert.equal(supply.phase, "active"); assert.equal(supply.v100SupportId, id);
-    supply = requestDrumDetonation(supply).supply;
-    const result = resolveDrumDetonation({ supply, fighters: [enemy, friend], nextAreaEffectId: 30 });
-    assert.equal(result.triggered, true); assert.equal(result.fighters[0].hp, 182); assert.equal(result.fighters[1].hp, 20);
-    assert.equal(result.supply.v100SupportId, id);
-    assert.equal(result.areaEffects.length, id === "support-incendiary-drum" ? 1 : 0);
-    if (result.areaEffects.length) {
-      const step = advanceAreaEffects({ areaEffects: result.areaEffects, fighters: result.fighters, seconds: 1 });
-      assert.equal(step.fighters[0].hp, 167); assert.equal(step.fighters[0].slowMultiplier, 0.8);
-    }
-    assert.equal(resolveDrumDetonation({ supply: result.supply, fighters: result.fighters }).triggered, false);
-  });
-}
+test("the persisted middle support id is an ordinary blocking drum with no blast or fire", () => {
+  let supply = placement("support-explosive-drum").supplies[0];
+  supply = advanceBattlefieldSupply(supply, 10); supply = advanceBattlefieldSupply(supply, 10);
+  const definition = battlefieldSupplyDefinition("drum", supply.v100SupportId);
+  assert.equal(definition.name, "ドラム缶"); assert.equal(definition.blocksEnemies, true);
+  assert.equal(definition.blastDamage, 0); assert.equal(definition.burnSeconds, 0);
+  assert.equal(requestDrumDetonation(supply).ok, false);
+  assert.equal(resolveDrumDetonation({ supply: { ...supply, phase: "detonating" }, fighters: [enemy] }).triggered, false);
+  const destroyed = applyBattlefieldSupplyDamage(supply, supply.hp);
+  assert.equal(destroyed.detonationRequested, false);
+  assert.equal(destroyed.supply.phase, "destroying");
+  assert.equal(destroyed.supply.v100SupportId, "support-explosive-drum");
+});
+
+test("the fire drum still detonates once and burns enemies without harming allies", () => {
+  let supply = placement("support-incendiary-drum").supplies[0];
+  supply = advanceBattlefieldSupply(supply, 10); supply = advanceBattlefieldSupply(supply, 10);
+  supply = requestDrumDetonation(supply).supply;
+  const result = resolveDrumDetonation({ supply, fighters: [enemy, friend], nextAreaEffectId: 30 });
+  assert.equal(result.triggered, true); assert.equal(result.fighters[0].hp, 182); assert.equal(result.fighters[1].hp, 20);
+  assert.equal(result.areaEffects.length, 1);
+  const step = advanceAreaEffects({ areaEffects: result.areaEffects, fighters: result.fighters, seconds: 1 });
+  assert.equal(step.fighters[0].hp, 167); assert.equal(step.fighters[0].slowMultiplier, 0.8);
+  assert.equal(resolveDrumDetonation({ supply: result.supply, fighters: result.fighters }).triggered, false);
+});
 
 test("V1 airstrike spends85 once and retains its50-second reuse timer through actual impact and stow", () => {
   const idle = createEmergencySupportRuntime(true);

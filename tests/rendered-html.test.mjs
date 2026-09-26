@@ -360,6 +360,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
     access(new URL("../public/medic-sprites-v1.png", import.meta.url)),
     access(new URL("../public/tactical-drop-pod-v1.png", import.meta.url)),
     access(new URL("../public/explosive-drum-v1.png", import.meta.url)),
+    access(new URL("../public/plain-drum-v1.png", import.meta.url)),
     access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
@@ -371,7 +372,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(assetPlan, /crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.barrage\.sheet\.path/);
   assert.match(assetPlan, /crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.airstrike\.sheet\.path/);
   assert.match(assetPlan, /pod: "\/tactical-drop-pod-v1\.png"/);
-  assert.match(assetPlan, /drum: "\/explosive-drum-v1\.png"/);
+  assert.match(assetPlan, /drum: "\/plain-drum-v1\.png"/);
   assert.match(assetPlan, /medical: "\/medical-supply-station-v1\.png"/);
   assert.match(game, /drawBattlefieldSupply\(ctx, renderable\.object, sprites, allowDiagnosticFallback\)/);
   assert.match(game, /function drawEnemyBase/);

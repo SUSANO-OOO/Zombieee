@@ -6619,7 +6619,7 @@ function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: Battlefiel
   if (drumPose) ctx.rotate(drumPose.rotation);
   if (object.phase === "destroying") { ctx.translate(0, (1 - destroyRatio) * 14); ctx.rotate((1 - destroyRatio) * -.18); ctx.scale(.78 + destroyRatio * .22, .58 + destroyRatio * .42); }
   if (object.hitFlash > 0) { ctx.shadowColor = "#fff0a4"; ctx.shadowBlur = 14; }
-  const supplySprite = sprites[object.kind];
+  const supplySprite = object.v100SupportId === "support-incendiary-drum" ? sprites.drumFire : sprites[object.kind];
   if (object.kind === "pod" && supplySprite?.complete && supplySprite.naturalWidth) {
     ctx.filter = hpRatio <= .3 ? "saturate(.5) brightness(.66) sepia(.16)" : hpRatio <= .62 ? "saturate(.72) brightness(.82)" : "none";
     ctx.drawImage(supplySprite, 102, 40, 311, 356, -38, -66, 76, 87);
@@ -18836,7 +18836,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`;
               g.bannerTime = 1.25;
               addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
-              playBattleSemanticCue("support-explosion", objectTarget.x, {
+              playBattleSemanticCue("support-pod-impact", objectTarget.x, {
                 semantic: "object-destroy",
                 receiptId: `supply:${objectTarget.id}:destroy`,
                 ownerId: `supply:${objectTarget.id}`,
@@ -19495,6 +19495,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const bossAlive = g.fighters.some((fighter) => isBossFighter(fighter) && fighter.hp > 0);
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
+            if (g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
+              && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {
+              g.barricadeVulnerable = true;
+              g.banner = `${mission.label} // 拠点防護解除`;
+              g.bannerTime = 2.8;
+              g.flashOverlay = Math.max(g.flashOverlay, .15);
+            }
             if (mission.label.includes("警告")) g.flashOverlay = .12;
             const firstNewEntryId = g.enemySpawn.nextEntryId;
             g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
@@ -21464,7 +21471,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       ? `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`
                       : `${battlefieldSupplyDefinition(objectTarget.kind, objectTarget.v100SupportId).name}破壊 // 戦場`; g.bannerTime = 1.25;
                     addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
-                    playBattleSemanticCue("support-explosion", objectTarget.x, {
+                    playBattleSemanticCue("support-pod-impact", objectTarget.x, {
                       semantic: "object-destroy",
                       receiptId: `supply:${objectTarget.id}:destroy`,
                       ownerId: `supply:${objectTarget.id}`,

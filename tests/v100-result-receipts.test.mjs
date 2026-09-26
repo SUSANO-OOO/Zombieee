@@ -12,11 +12,12 @@ const unchanged = (before, actual) => { assert.equal(actual.applied,false); asse
 
 test('same initial result never becomes a paid replay after serialization or later results', () => {
   const firstResult=result(1,'first-s01'), first=settle(seed(),firstResult);
-  assert.equal(first.caps,130);
+  const firstPayout=v100StageReward(1,'first-clear')+v100StageReward(1,'star:2')+v100StageReward(1,'star:3');
+  assert.equal(first.caps,firstPayout);
   unchanged(first,recordV100PendingResult(first,firstResult));
   unchanged(first,finalizeV100PendingResult(first,{result:firstResult}));
   const replay=settle(restore(first),result(1,'new-replay-s01'));
-  assert.equal(replay.caps,150);
+  assert.equal(replay.caps,firstPayout+v100StageReward(1,'replay'));
   unchanged(replay,recordV100PendingResult(replay,firstResult));
   const stale=normalizeV100Save({...replay,pendingResult:firstResult});
   unchanged(stale,finalizeV100PendingResult(stale));

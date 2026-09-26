@@ -114,7 +114,7 @@ function stageTimeline(stage, missionType, bossKind) {
     // every wave and spend its final half crossing an empty battlefield.
     let cursor = 0;
     const duration = missionDurationSeconds(stage, missionType);
-    return freeze([2, 2, 2, 2, 2, 3].map((count, index) => freeze({
+    return freeze([3, 3, 4, 4, 4, 5].map((count, index) => freeze({
       at: PREP_SECONDS + (missionType === "escort" ? index * 12 : Math.round(index * (duration - 15) / 5)),
       wave: index + 1,
       label: missionType === "escort" && index >= 2 ? "護送経路 // 迎撃部隊接近" : `${stage.displayName} // 第${index + 1}波`,
@@ -125,30 +125,44 @@ function stageTimeline(stage, missionType, bossKind) {
   if (stage.number === 3) {
     const thresholds = V100_BOSS_BY_ID["boss-takuya"].phaseThresholds;
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: "防衛線 // 先行感染群", units: freeze(["walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 13, wave: 2, label: "防衛線 // 敵群接近", units: freeze(["walker", "shade"]) }),
-      freeze({ at: PREP_SECONDS + 32, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
-      freeze({ at: PREP_SECONDS + 33, wave: 4, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 34, wave: 5, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination"]), bossHpRatio: thresholds[1], addWave: true }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "防衛線 // 先行感染群", units: freeze(["walker", "runner", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 20, wave: 2, label: "防衛線 // 左翼に接敵", units: freeze(["walker", "spitter", "runner", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 42, wave: 3, label: "防衛線 // 中央突破", units: freeze(["shade", "walker", "spitter", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 65, wave: 4, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 96, wave: 5, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "runner", "spitter"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 97, wave: 6, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 98, wave: 7, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
-  if (stage.number === 5) return freeze([
-    freeze({ at: PREP_SECONDS, wave: 1, label: "駅構内 // 先行感染群", units: freeze(["walker", "ooze"]) }),
-    freeze({ at: PREP_SECONDS + 14, wave: 2, label: "ホーム奥 // 敵群接近", units: freeze(["sprinter", "walker"]) }),
-    freeze({ at: PREP_SECONDS + 34, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]) }),
-  ]);
+  if (stage.number === 5) {
+    const thresholds = V100_BOSS_BY_ID["boss-gate-eater"].phaseThresholds;
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "駅構内 // 先行感染群", units: freeze(["walker", "ooze", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 20, wave: 2, label: "ホーム奥 // 高速個体", units: freeze(["sprinter", "walker", "ooze", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 43, wave: 3, label: "改札前 // 左右同時", units: freeze(["ooze", "sprinter", "walker", "spitter"]) }),
+      freeze({ at: PREP_SECONDS + 68, wave: 4, label: "改札前 // 重量級", units: freeze(["crusher", "sprinter", "ooze", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 102, wave: 5, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "sprinter"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 103, wave: 6, label: "改札前 // 増援1/2", units: freeze(["ooze", "runner", "sprinter"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 104, wave: 7, label: "改札前 // 増援2/2", units: freeze(["crusher", "ooze", "sprinter"]), bossHpRatio: thresholds[1], addWave: true }),
+    ]);
+  }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
     // reinforcements remain; the prelude contains no Panther units.
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 防衛線を確保", units: freeze(["spitter", "crusher"]) }),
-      freeze({ at: PREP_SECONDS + 34, wave: 3, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), bossOnly: false }),
-      freeze({ at: PREP_SECONDS + 58, wave: 4, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 82, wave: 5, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter"]) }),
+      freeze({ at: PREP_SECONDS + 22, wave: 2, label: "最終防衛 // 左翼接敵", units: freeze(["spitter", "crusher", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 44, wave: 3, label: "最終防衛 // 防衛線を確保", units: freeze(["crusher", "runner", "spitter", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 68, wave: 4, label: "最終防衛 // 突破を阻止", units: freeze(["crusher", "spitter", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 112, wave: 5, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 136, wave: 6, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner", "crusher", "spitter"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 160, wave: 7, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher", "walker", "runner"]), addWave: true }),
     ]);
   }
-  const counts = stage.number === 29 ? [2, 2, 3, 3, 3, 3] : [2, 2, 3, 3];
+  const counts = stage.number === 23 ? [2, 3, 4, 5, 5, 6]
+    : stage.number === 1 ? [3, 3, 4, 4, 4]
+    : stage.number <= 10 ? [3, 4, 4, 4, 5]
+      : [4, 4, 5, 5, 5, 6];
   let cursor = 0;
   return freeze(counts.map((count, index) => {
     const wave = index + 1;
@@ -156,14 +170,11 @@ function stageTimeline(stage, missionType, bossKind) {
     const bossArrives = bossKind && wave === counts.length;
     if (bossArrives) units.push(...(bossKind === "futago" ? [bossKind, bossKind] : [bossKind]));
     return freeze({
-      at: PREP_SECONDS + index * (missionType === "timed-defense" ? 27 : missionType === "escort" ? 20 : 24),
+      at: PREP_SECONDS + index * (stage.number <= 10 ? 20 : 21),
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
-      // The corporate boss group follows durable Panther security squads.
-      // Keep every member, but let players clear those preceding guards before
-      // the full-strength boss arrives; no empty timed intermission is added.
-      ...((stage.number === 24 || stage.number === 25) && bossArrives ? { waitForPriorWaveClear: true } : {}),
+      ...(bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
     });
   }));
@@ -249,7 +260,7 @@ export function v100BattleDefinitionFor(stageId) {
     // Once a boss falls, breaching its gate is a short finishing action.
     enemyBaseMaxHp: bossKind ? 350 : 1000,
     enemyBaseMode: missionType === "assault" || missionType === "boss-assault" ? "target" : "scenery",
-    startsEnemyBaseVulnerable: missionType === "assault" && !bossKind,
+    startsEnemyBaseVulnerable: false,
     bossUnlocksEnemyBase: Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,
