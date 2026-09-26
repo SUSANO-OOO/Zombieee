@@ -78,11 +78,11 @@ await mkdir(out,{recursive:false});
 const playwrightPackageUrl=new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/package.json':'../node_modules/playwright/package.json',import.meta.url);
 const playwrightPackage=JSON.parse(await readFile(playwrightPackageUrl,'utf8'));
 const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses an attainable first-two-stage budget: Nao plus four initial units at level 2, without a vehicle upgrade. It requires natural boss defeat, all three running-context BGM phases and one natural battle result; the final win/loss is recorded separately. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
-const browser=await ({chromium,webkit}[engine]).launch({headless:true});
+const browser=await ({chromium,webkit}[engine]).launch({headless:true,...(process.env.V100_BATTLE_IMPROVEMENT_EXECUTABLE?{executablePath:process.env.V100_BATTLE_IMPROVEMENT_EXECUTABLE}:{})});
 report.provenance.browserVersion=await browser.version();
 try{for(const number of numbers){
  const viewport={width:844,height:340};
- const context=await browser.newContext({viewport,hasTouch:true,isMobile:true,recordVideo:{dir:out+'/videos',size:viewport}});
+ const context=await browser.newContext({viewport,hasTouch:true,isMobile:true,...(process.env.V100_BATTLE_IMPROVEMENT_SKIP_VIDEO==='1'?{}:{recordVideo:{dir:out+'/videos',size:viewport}})});
  const page=await context.newPage();page.setDefaultTimeout(15000);
  const result={number,status:'running',fixture:null,inputs:[],samples:[],errors:[],networkRequestFailures:[],captures:[]};report.results.push(result);
  page.on('pageerror',e=>result.errors.push(String(e)));
@@ -243,7 +243,7 @@ try{for(const number of numbers){
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
    }
-   await normalTacticalInput(page,result);await page.waitForTimeout(350);
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){

@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "b6abab83ec1518fbbd32bf3ffa0e2be4ec45de4bd5312d73814bfb61363e8048";
+export const V100_STORY_SOURCE_SHA256 = "55bc2c17cff0cc46a1cf024d9f9dc328194cc1a9b6458799551cd88dd8657e6c";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -96,7 +96,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "二文字で用件は済む。余計な情報がないのは優良銘柄や",
+        "text": "十分や。買い忘れたら、俺のせいってことやろ",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 18,
@@ -105,7 +105,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "銘柄じゃなか。帰りに買え",
+        "text": "分かっとるなら、忘れんなよ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 19,
@@ -2661,7 +2661,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "伏せろ！　次は外さんぞ、あいつら！",
+        "text": "伏せろ！　次は当ててくるぞ！",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 385
@@ -6114,7 +6114,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "背の投薬管がセガワを貫く。彼は巨体の反応を追い、声を絞り出す。",
+        "text": "背の投薬管がセガワを貫く。彼は巨体へ手を伸ばす。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 883
@@ -6122,7 +6122,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "制御者を、先に除く。……僕も、病巣か",
+        "text": "待て……私の声が、分からないのか",
         "portraitOwner": "segawa",
         "portraitKind": "major",
         "sourceLine": 884
