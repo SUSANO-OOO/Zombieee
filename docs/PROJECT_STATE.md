@@ -1,8 +1,20 @@
 # 西新世紀末物語 — プロジェクト状態
 
-### 2026-09-24 現行の判定点と有限の残工程
+### 2026-09-26 Version 1.0.0 現行候補と残工程
 
-PR #171 は Draft、Issue #172 は実行台帳。最終承認前の Ready・最終 merge・tag・Release・公式 Pages 公開・Issue close は行わない。現在の厳密な完了数は17/24のまま。
+最新の実行台帳はIssue #172、製品判断は`docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md`の2026-09-26改訂、表示脚本は`docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md`を参照する。この節より下の2026-09-24以前の候補SHA、CI、完了数は当時の履歴であり、現候補の合格や進捗率へ転用しない。従来の17/24はProducerのスマートフォン実プレイで差し戻された旧仕様の値である。
+
+PR #171はDraft/open、製品ソースの固定点は`ee3925ce091b1b39734d254701034c6c516516be`。その後のCI判定修正を確認した固定点は`d4f2891727702c341ac7b8c8bb56bd3841f547aa`。先行文書PR #169はDraft/openで確認済み固定点`640fdc34a0c9a2a88d28e7c509b7d21a032c6941`、PR #170もDraft/open。両PRのCI判定修正は独立read-only再reviewでHigh 0／Medium 0。この文書を反映した後の最新headとCIはlive PRおよびIssue #172で確認し、旧CIの成功を合格へ繰り上げない。
+
+同じ製品ソースのローカル検証は全1664/1664 test、production build、Lint 0 error、content/CAPS、Phase G 55/55と証拠validator、スマートフォン横画面の代表的通常プレイ、Chromium/WebKitの静的Pages形6/6、旧30 Stage saveの読込・再読込・終了再開・書出し・再import・不正import保護、PWA更新18/18・部分失敗復旧22/22、Mac WebKit 844×390 p95 19ms／844×340 p95 30ms（33ms基準）に到達した。全94 event／30 Stage／630表示nodeと保存receiptは開発者モードの合成勝利で通した。AIが30戦を通常操作で勝利する工程は置かず、合成勝利を自然勝利の証拠とも扱わない。
+
+一時試遊URLは`https://organizations-wifi-announcement-passive.trycloudflare.com/Zombieee/v100`。現在のページ内SHA表示は製品ソース`ee3925c`であり、CI確定後に最終head表示へ更新・再確認する。これは公式GitHub Pages公開ではない。物理スマートフォンの発熱、実speaker、最終的な手触りはProducer実機受入で判定し、WebKit測定と区別する。
+
+残工程は(1) #169と#171の固定headの必要CIを完走させ、失敗時は原因と影響範囲だけ修正する、(2) 最終headの試遊版を再確認し、独立read-only最終review High/Medium 0とともにProducerへ提示して最終実プレイ承認を得る、(3) 承認後だけ#169→#170→#171を最新ref／checks／treeで順次正式統合し、承認treeと最終merge-result treeの一致を確認する、(4) tag・Release・明示的な公式Pages request・公開後QA・Issue close。最終承認前のReady、最終merge、tag、Release、公式Pages公開、Issue closeは行わない。報告・テスト合格・候補提示だけでgoalをcompleteにしない。既存未commit／未追跡ファイルと旧saveは保全する。
+
+### 2026-09-24 当時の判定点と残工程（履歴）
+
+PR #171 は Draft、Issue #172 は実行台帳。最終承認前の Ready・最終 merge・tag・Release・公式 Pages 公開・Issue close は行わない。当時の旧仕様の完了数は17/24。
 
 直前のQA基盤候補 `122d352ca76c4a80ec7e63aca1b6342913fcf180` のCI `35963330686` は、PR Verify、Phase G本番マトリクス、Apple Silicon上の元のWebKit性能基準、native WebKit PWA既存版更新18/18・部分失敗復旧22/22、敵runtime六分割が成功した。性能の844×340/390、1280×720は実戦p95 rAF 27/20/20ms、中央値58.82/58.82/62.5fps、実描画43.97/44.72/44.86Hz、記録browser errors 0。Intel runnerで失敗した旧計測は履歴として保全し、Apple Silicon結果を物理iPhoneの発熱・speaker・実操作の確認へ転用しない。このheadの製品sourceは先に通常UIで名前入力から全30戦・ENDING・credits・EPILOGUEを通過した `26b8551` と一致するが、全headは一致しない。
 
@@ -10,11 +22,11 @@ PR #171 は Draft、Issue #172 は実行台帳。最終承認前の Ready・最�
 
 残工程は (1) この表示差分を通常commit/pushし、同一headの必須CIと実ブラウザの画面・音・入力・保存/PWAを取り直す、(2) 同一headの名前入力から終幕、代表他mode、新旧save/復旧を確認する、(3) fixed-HEAD独立read-only全体reviewでHigh/Medium未解消0にする、(4) 実際に遊べるRCをProducerへ提示し最終実プレイ承認を得る、(5) 承認後に正式統合・tag・Release・Pages公開・公開後検証・Issue closeを実施する、の5段階。既存の成功証拠は原因解析に使い、変更後headの合格数へ繰り上げない。
 
-### 現行候補の到達点 — 2026-09-24
+### 2026-09-24 当時の候補の到達点（履歴）
 
 Version 1.0.0 は PR #171 の Draft 候補で、Issue #172 を実行台帳とする。正式公開・Ready 化・最終 merge・tag・Release・Issue close は Producer の最終承認後に限る。旧 save、旧 QA 証拠、既存未追跡ファイルは保全する。
 
-**現行候補の厳密な完了数は17/24。** 制作 M1〜M4 の17/17は保持する。2026-09-14時点の19/24は旧候補の累積記録であり、現行候補の受入数へ転用しない。Stage 29 の継続戦闘中に配備を拒否する製品不具合と、844×390/340 の credits 文面に操作ボタンが重なる表示を修正したため、M5-2の新規開始→全30→終幕を現行製品buildで取り直す。M5-3の旧save・PWA更新/失敗/オフラインも、製品assetが変わった現行PR headで再確認する。過去の通し勝利、保存・復旧の合格記録は履歴として残す。
+**当時の旧仕様の完了数は17/24。** 制作 M1〜M4 の17/17は保持する。2026-09-14時点の19/24は旧候補の累積記録であり、当時の候補の受入数へ転用しない。Stage 29 の継続戦闘中に配備を拒否する製品不具合と、844×390/340 の credits 文面に操作ボタンが重なる表示を修正したため、M5-2の新規開始→全30→終幕を当時の製品buildで取り直す。M5-3の旧save・PWA更新/失敗/オフラインも、製品assetが変わった当時のPR headで再確認する。過去の通し勝利、保存・復旧の合格記録は履歴として残す。
 
 PR head `43be9290982e367adde7da85bf526920b9e7f6c7` の CI `35949929709` は、PR Verify、native WebKit PWA 18/18・22/22、敵runtime六分割に合格したが、Phase G の Stage 3 で「証明開始後12秒間に新しい実命中なし」となり不合格。Stage 25 の Mac WebKit 性能stepは依存により未実行だった。戦闘は継続し、開始前の実命中30件と致命的browser診断0を保持する。Windows system Chromeによる限定診断は、修正前後ともStage 3代表証拠16/16に通過。修正後は実車両行動後・boss表示待ち前の同じ12秒窓で因果証明を封印し、実brute命中、action/最終場面の別画像、後続boss表示を確認した。これはpin済みMac CIや最終候補の代替合格ではない。
 
@@ -599,7 +611,7 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - formation最大7、battle active合計7、同一character複数召喚可
 - mission：拠点破壊、短い時間防衛、必要時だけswitch／台車、boss
 - campaign Level cap：30
-- support：回復支援、爆薬ドラム缶、火炎ドラム缶
+- support：回復支援、通常ドラム缶、火炎ドラム缶（2026-09-26 Producer改訂）
 - 装甲車両HP：canonical base＋恒久upgrade。専用強化screen、atomic transaction、強化SE
 - RED PANTHER正式名はStage 27で初開示
 - セガワ写真はセガワ専用private identity reference。原写真をpublic Git／artifactへ保存しない
