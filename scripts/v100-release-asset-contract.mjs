@@ -54,32 +54,48 @@ export const V100_ADVANCED_COMBAT_VFX_ADDITIONS = Object.freeze([
 export const V100_PRODUCER_FEEDBACK_ART_ADDITIONS = Object.freeze([
   Object.freeze({ path: "/plain-drum-v1.png", bytes: 1135560, hash: "sha256-fe78295d2777e89b907f574bbc6c548b2e74f09b7c0801092a0f161b13bc9c99", criticality: "critical" }),
 ]);
+// Current story/character continuity correction. The previous four V1 art
+// files remain on disk and in Git history; these are the source-bound assets
+// actually shipped by this candidate.
+export const V100_TAKUYA_VEST_ASSET_ADDITIONS = Object.freeze([
+  Object.freeze({path:"/art/v100/bosses/takuya-battle-vest-v2.png",bytes:901412,hash:"sha256-2549394e5b7538de15e0251ffe34795304c9f65d40baff0261b9d7015aa84217",criticality:"critical"}),
+  Object.freeze({path:"/art/v100/bosses/takuya-omega-battle-vest-v3.png",bytes:1927020,hash:"sha256-ad14238cb9d4483ea37ff4715edbb06c9d1f1973cb6fe234dda3004d2e28d26d",criticality:"critical"}),
+  Object.freeze({path:"/art/v100/cuts/takuya-omega-ending-defeat-vest-v3.webp",bytes:218698,hash:"sha256-10d72799bbc2549df5b34af39bd4bfea30709af0a1bc51ba7522eed67765f72d",criticality:"critical"}),
+  Object.freeze({path:"/art/v100/portraits/takuya-omega-event-portrait-vest-v2.webp",bytes:365214,hash:"sha256-22afe446144ecc5d90f963c2046174e61da2a64f7e6415fcc0b51333a6038b18",criticality:"critical"}),
+]);
+export const V100_TAKUYA_VEST_ASSET_REMOVALS = Object.freeze([
+  "/art/v100/bosses/takuya-battle-repaired-v1.png",
+  "/art/v100/bosses/takuya-omega-battle-v2.png",
+  "/art/v100/cuts/takuya-omega-ending-defeat-v1.webp",
+  "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
+]);
 // The station relay was correctly excluded while unused. Stage 4/5 now draw
 // it as their actual objective, so the current release includes it again.
 const restoredCandidatePaths = new Set(["/art/v100/mission-objects/station-relay-states-v1.webp"]);
 const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.filter(asset=>!restoredCandidatePaths.has(asset.path)).map(asset=>asset.path));
 const replacedMotionPaths = new Set(V100_MOTION_ATLAS_REPLACEMENTS.map(asset=>asset.newPath));
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path))));
+const supersededVestPaths = new Set(V100_TAKUYA_VEST_ASSET_REMOVALS);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)&&!supersededVestPaths.has(asset.path)),V100_TAKUYA_VEST_ASSET_ADDITIONS));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
 const bundledAudioAdditionsFromV0995 = 28;
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
-  count: 459 + V100_COMPLETION_ASSET_ADDITIONS.length,
-  distinctHashes: 457 + V100_COMPLETION_ASSET_ADDITIONS.length,
-  additionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  count: 456 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  distinctHashes: 454 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  additionsFromV0995: 41 + V100_COMPLETION_ASSET_ADDITIONS.length,
   bundledAudioAdditionsFromV0995,
   audioBundlePath: "/pwa-bundles/audio-v1.bin",
-  networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1,
-  artAdditionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
+  networkSourcesFromV0995: 41 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1,
+  artAdditionsFromV0995: 41 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 51_714_332,
+  bytesFromV0995: 51_865_110,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 141_455_897,
-  candidateDistinctHashBytes: 140_915_994,
-  updateFromV0982Bytes: 68_404_780,
-  updateFromV0993Bytes: 58_030_086,
+  candidateTotalBytes: 141_606_675,
+  candidateDistinctHashBytes: 141_066_772,
+  updateFromV0982Bytes: 68_555_558,
+  updateFromV0993Bytes: 58_180_864,
 });

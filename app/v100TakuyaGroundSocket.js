@@ -2,11 +2,11 @@
 // Cell-local point is the lowest opaque blade pixel before the authored
 // ground-impact effect is composited: x=188, y=617.
 export const TAKUYA_GROUND_BLADE_SOCKET = Object.freeze({
-  sourceId: "takuya-battle-repaired-v1",
-  path: "/art/v100/bosses/takuya-battle-repaired-v1.png",
+  sourceId: "takuya-battle-vest-v2",
+  path: "/art/v100/bosses/takuya-battle-vest-v2.png",
   state: "attack-b",
   pixel: Object.freeze({ x: 188, y: 617 }),
-  sourceHash: "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+  sourceHash: "52eb95dd58882b7165b98671aa2dfff106c69dbae9e1de35217c3d8927ee290d",
 });
 
 export function v100RenderedTakuyaGroundSocket({ frame, size, pose, x, y, bob = 0, depthScale = 1, direction }) {

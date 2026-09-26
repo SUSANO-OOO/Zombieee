@@ -1,3 +1,5 @@
+import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
+
 export const V100_COMBAT_VFX_ART=Object.freeze({
  'v100-explosion':'/art/v100/combat-vfx/explosion-fire-smoke.webp',
  'v100-smoke-a':'/art/v100/combat-vfx/blackSmoke01.webp',
@@ -86,7 +88,7 @@ export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,
 export function queueV100TakuyaGroundContact(world,{owner}={}){
  if(!world.definition?.missionConfig?.v100StageNumber||owner?.kind!=='takuya'||owner?.side!=='zombie'||!(owner.hp>0)||!owner.id)return false;
  const entry={x:null,y:null,ground:true,size:136,direction:owner.x>=0?1:-1,startedAt:world.time,duration:.6,
-  takuyaGroundContact:{sourceId:'takuya-battle-repaired-v1',kind:'takuya-ground-blade',ownerId:owner.id,resolvedSocket:false}};
+  takuyaGroundContact:{sourceId:TAKUYA_GROUND_BLADE_SOCKET.sourceId,kind:'takuya-ground-blade',ownerId:owner.id,resolvedSocket:false}};
  const entries=(contactQueues.get(world)??[]).filter(e=>world.time-e.startedAt<e.duration);
  contactQueues.set(world,[...entries,entry].slice(-48)); return true;
 }

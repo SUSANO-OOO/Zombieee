@@ -10683,9 +10683,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           bossAreaDamage: bossArea.targetDamage,
         };
       },
-      prepareV100BossWaveProof: (kind: "takuya" | "futago" | "mugarian-president-mutated") => {
+      prepareV100BossWaveProof: (kind: "takuya" | "futago" | "mugarian-president-mutated" | "takuya-omega") => {
         const g = gameRef.current;
-        const requiredStageNumber = kind === "takuya" ? 3 : kind === "futago" ? 24 : 25;
+        const requiredStageNumber = kind === "takuya" ? 3 : kind === "futago" ? 24 : kind === "mugarian-president-mutated" ? 25 : 30;
         if (g.definition.missionConfig?.v100StageNumber !== requiredStageNumber
           || g.definition.bossEnemyKind !== kind) {
           throw new Error(`V1 boss-wave proof does not match ${g.definition.stageId}: ${kind}`);

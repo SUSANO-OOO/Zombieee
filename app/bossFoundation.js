@@ -481,7 +481,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
     compendium: {
       title: "TAKUYA-Ω",
       summary: "大剣の重量と終端防衛の圧力で、最後の防衛線を正面から叩き割る個体。",
-      assetPath: "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
+      assetPath: "/art/v100/portraits/takuya-omega-event-portrait-vest-v2.webp",
     },
   },
 ]);

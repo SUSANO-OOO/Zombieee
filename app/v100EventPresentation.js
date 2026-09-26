@@ -33,6 +33,7 @@ function backdropFor(eventId, node) {
   if (eventId === "v100:event:s20:post") return sceneTag === "musashi"
     ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
   if (eventId === "v100:event:s25:post" && sceneTag === "soup") return visuals["stage-nishijin-shopping-street"];
+  if (eventId === "v100:event:s30:post" && sceneTag === "defeat") return cuts.takuyaOmegaEndingDefeat;
   if (eventId === "v100:event:ending") {
     return sceneTag === "hospital" ? visuals["stage-hospital-emergency-ward"]
       : sceneTag === "signal" ? PRODUCTION_VISUALS.command

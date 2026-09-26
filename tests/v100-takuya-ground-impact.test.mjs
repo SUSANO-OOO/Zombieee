@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { drawV100ContactQueue, getV100SkillContactSnapshot, queueV100TakuyaGroundContact } from "../app/v100CombatVfx.js";
 import { TAKUYA_GROUND_BLADE_SOCKET, v100RenderedTakuyaGroundSocket } from "../app/v100TakuyaGroundSocket.js";
@@ -13,6 +15,11 @@ const frame = (flipX = false) => ({
   flipX,
 });
 const pose = { offsetX: 0, offsetY: 0, rotationRadians: 0, scaleX: 1, scaleY: 1 };
+
+test("Takuya ground socket identifies the adopted costume atlas", async () => {
+  const atlas = await readFile(new URL(`../public${TAKUYA_GROUND_BLADE_SOCKET.path}`, import.meta.url));
+  assert.equal(createHash("sha256").update(atlas).digest("hex"), TAKUYA_GROUND_BLADE_SOCKET.sourceHash);
+});
 
 test("Takuya ground socket is source-bound to attack-b blade contact and respects native left/flip", () => {
   const left = v100RenderedTakuyaGroundSocket({ frame: frame(false), size: { w: 220, h: 325 }, pose, x: 300, y: 500, direction: "left" });
@@ -34,7 +41,7 @@ test("Takuya ground impact waits for the rendered attack-b socket, snapshots lin
   drawV100ContactQueue(ctx, objects, w, null, () => socket);
   assert.equal(calls.length, 1);
   const [snapshot] = getV100SkillContactSnapshot(w);
-  assert.equal(snapshot.sourceId, "takuya-battle-repaired-v1");
+  assert.equal(snapshot.sourceId, "takuya-battle-vest-v2");
   assert.equal(snapshot.kind, "takuya-ground-blade");
   assert.deepEqual(snapshot.resolvedSocket, socket);
   w.time += .61;

@@ -51,7 +51,7 @@ const MOTION_ATLASES = Object.freeze([
     columns: 8,
     policy: /oversized serrated greatsword.*same blade length and width/u,
     commonScale: 0.3218707015130674,
-    approvedVisibleHash: "e5e2b81dde0079fc6c1b5bd54a7e008a9e55696d4bd5b42e65541bf8a87c81ac",
+    approvedVisibleHash: "33c5245423069de390e24fe1d0350cb13f183378b6c34797e1c8883f16d2405f",
   },
   {
     kind: "red-panther-knife",
@@ -218,17 +218,20 @@ test("Stage 21 HQ gate is a distinct authored scene at the actual battle backgro
 
 test("custom runtime atlases preserve approved centered cells, exact pixels, PWA transport, and alpha gutters", async () => {
   const provenance = JSON.parse(await readFile(sourceFile("assets/source/v100/runtime/v100-runtime-assets-provenance.json"), "utf8"));
+  const costumeProvenance = JSON.parse(await readFile(sourceFile("assets/source/v100/takuya/takuya-vest-v2.provenance.json"), "utf8"));
   const distribution = JSON.parse(await readFile(sourceFile("public/asset-manifest.json"), "utf8"));
   const distributedByPath = new Map(distribution.assets.map((asset) => [asset.path, asset]));
   assert.equal(provenance.draftGuideTexturesRemoved, true);
   let decodedSurfaceBytes = 0;
 
   for (const motion of MOTION_ATLASES) {
+    const isCostumeEdit = motion.kind === "boss-takuya-omega";
     const assetPath = V100_RUNTIME_ASSET_MANIFEST[motion.group][motion.key];
     const bytes = await readFile(publicFile(assetPath));
     const decoded = decodeRgbaPng(bytes);
     decodedSurfaceBytes += decoded.width * decoded.height * 4;
-    const expectedOutput = provenance.outputs[`/public${assetPath}`];
+    const historicalPath = isCostumeEdit ? "/art/v100/bosses/takuya-omega-battle-v2.png" : assetPath;
+    const expectedOutput = provenance.outputs[`/public${historicalPath}`];
     const metadataPath = assetPath.replace(/\.png$/u, "-metadata.json");
     const metadata = JSON.parse(await readFile(publicFile(metadataPath), "utf8"));
     assert.ok(expectedOutput, `${motion.kind} provenance output`);
@@ -241,8 +244,17 @@ test("custom runtime atlases preserve approved centered cells, exact pixels, PWA
     assert.equal(expectedOutput.height, decoded.height);
     assert.equal(expectedOutput.channels, 4);
     assert.equal(expectedOutput.hasAlpha, true);
-    assert.equal(expectedOutput.sha256, sha256(bytes), `${motion.kind} provenance hash`);
-    assert.equal(expectedOutput.metadataPath, `/public${metadataPath}`);
+    if (isCostumeEdit) {
+      const historicalBytes = await readFile(publicFile(historicalPath));
+      assert.equal(expectedOutput.sha256, sha256(historicalBytes), `${motion.kind} reviewed baseline preserved`);
+      assert.equal(costumeProvenance.outputSha256.omega.sha256, sha256(bytes), `${motion.kind} costume provenance hash`);
+      assert.equal(metadata.sha256, sha256(bytes), `${motion.kind} costume metadata hash`);
+      assert.equal(metadata.identityMasterSha256, costumeProvenance.sourceSha256.identity);
+      assert.deepEqual(metadata.sources.map(source => source.sourceSha256), motion.states.map(() => costumeProvenance.sourceSha256.omega));
+    } else {
+      assert.equal(expectedOutput.sha256, sha256(bytes), `${motion.kind} provenance hash`);
+      assert.equal(expectedOutput.metadataPath, `/public${metadataPath}`);
+    }
     assert.equal(expectedOutput.commonScale, motion.commonScale);
     assert.deepEqual(expectedOutput.cell, { width: CELL_WIDTH, height: CELL_HEIGHT });
     assert.equal(expectedOutput.noClipping, true);

@@ -6,10 +6,11 @@ const { chromium, webkit } = await import(
   useCurrentWebKit ? "./pwa-native-runtime/node_modules/playwright/index.mjs" : "playwright",
 );
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_INITIAL_UNIT_IDS, V100_STAGE_IDS, V100_VEHICLE } from "../app/v100Registry.js";
+import { V100_BOSS_BY_ID, V100_INITIAL_UNIT_IDS, V100_STAGE_IDS, V100_VEHICLE } from "../app/v100Registry.js";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { spriteFrameFor } from "../app/spriteManifest.js";
 import { TAKUYA_SLAM_PRESENTATION } from "../app/v100TakuyaPresentation.js";
+import { TAKUYA_GROUND_BLADE_SOCKET } from "../app/v100TakuyaGroundSocket.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
@@ -35,6 +36,7 @@ function installTakuyaSlamSampler(options = 400, injectedRuntime = null) {
   const configured = typeof options === "object" ? options : { maxSamples: options };
   const maxSamples = Number(configured.maxSamples) || 400;
   const expectedSpritePath = configured.spritePath ?? null;
+  const expectedGroundSourceId = configured.groundSourceId ?? null;
   const windowRef = injectedRuntime?.windowRef ?? window;
   const documentRef = injectedRuntime?.documentRef ?? document;
   const impactSeconds = .24;
@@ -128,7 +130,7 @@ function installTakuyaSlamSampler(options = 400, injectedRuntime = null) {
       copyCanvas(`${state.activation.activationId}-windup`);
     }
     const allSkillContacts = snapshot.v100SkillContacts.filter((contact) => (
-      contact?.sourceId === "takuya-battle-repaired-v1"
+      contact?.sourceId === expectedGroundSourceId
       && contact?.kind === "takuya-ground-blade"
     ));
     const skillContacts = allSkillContacts.filter((contact) => contact?.ownerId === entry.id);
@@ -228,7 +230,7 @@ function runSamplerControl() {
   const normalSnapshots = snapshots.map((snapshot, index) => ({
     ...snapshot,
     v100SkillContacts: index === 1 || index === 2
-      ? [{ sourceId: "takuya-battle-repaired-v1", kind: "takuya-ground-blade", ownerId: 7, startedAt: 2, duration: .6, resolvedSocket: { x: 300, y: 220 } }]
+      ? [{ sourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId, kind: "takuya-ground-blade", ownerId: 7, startedAt: 2, duration: .6, resolvedSocket: { x: 300, y: 220 } }]
       : [],
   }));
   let index = 0;
@@ -241,7 +243,7 @@ function runSamplerControl() {
   const fakeDocument = { querySelector: () => fakeCanvas, createElement: () => fakeCanvas };
   // Exercise the exact function source sent through Playwright's addInitScript serialization.
   const serialized = Function(`return (${installTakuyaSlamSampler.toString()})`)();
-  serialized({ maxSamples: 16, spritePath: TAKUYA_SPRITE_PATH }, { windowRef: fakeWindow, documentRef: fakeDocument });
+  serialized({ maxSamples: 16, spritePath: TAKUYA_SPRITE_PATH, groundSourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId }, { windowRef: fakeWindow, documentRef: fakeDocument });
   fakeWindow.__V100_TAKUYA_SLAM_QA__.start();
   for (index = 0; index < snapshots.length; index += 1) raf.shift()?.();
   const samples = fakeWindow.__V100_TAKUYA_SLAM_QA__.samples();
@@ -259,7 +261,7 @@ function runSamplerControl() {
   assert.deepEqual(fakeWindow.__V100_TAKUYA_SLAM_QA__.captureNames(), ["1-windup", "1-impact", "1-recovery", "1-restored", "1-vfx-expired"]);
   raf.length = 0;
   const missingApiWindow = { __ASHFALL_BATTLE_QA__: { getSnapshot: () => snapshots[0] }, requestAnimationFrame: (callback) => raf.push(callback) };
-  serialized({ maxSamples: 2, spritePath: TAKUYA_SPRITE_PATH }, { windowRef: missingApiWindow, documentRef: fakeDocument });
+  serialized({ maxSamples: 2, spritePath: TAKUYA_SPRITE_PATH, groundSourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId }, { windowRef: missingApiWindow, documentRef: fakeDocument });
   missingApiWindow.__V100_TAKUYA_SLAM_QA__.start();
   raf.shift()?.();
   assert.equal(missingApiWindow.__V100_TAKUYA_SLAM_QA__.missingApi(), true, "missing Phase-G API fails closed");
@@ -268,7 +270,7 @@ function runSamplerControl() {
     getSnapshot: () => snapshots[0],
     getPhaseGCombatSnapshot: () => ({ ...phaseSnapshots[0], time: 1.1 }),
   }, requestAnimationFrame: (callback) => raf.push(callback) };
-  serialized({ maxSamples: 2, spritePath: TAKUYA_SPRITE_PATH }, { windowRef: mismatchWindow, documentRef: fakeDocument });
+  serialized({ maxSamples: 2, spritePath: TAKUYA_SPRITE_PATH, groundSourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId }, { windowRef: mismatchWindow, documentRef: fakeDocument });
   mismatchWindow.__V100_TAKUYA_SLAM_QA__.start();
   raf.shift()?.();
   assert.deepEqual(mismatchWindow.__V100_TAKUYA_SLAM_QA__.timeMismatches(), [{ snapshotTime: 1, phaseTime: 1.1 }], "snapshot and Phase-G time must match");
@@ -290,14 +292,14 @@ function runSamplerControl() {
       },
       requestAnimationFrame: (callback) => caseRaf.push(callback),
     };
-    serialized({ maxSamples: 4, spritePath: TAKUYA_SPRITE_PATH }, { windowRef: caseWindow, documentRef: fakeDocument });
+    serialized({ maxSamples: 4, spritePath: TAKUYA_SPRITE_PATH, groundSourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId }, { windowRef: caseWindow, documentRef: fakeDocument });
     caseWindow.__V100_TAKUYA_SLAM_QA__.start();
     for (caseIndex = 0; caseIndex < 2; caseIndex += 1) caseRaf.shift()?.();
     return caseWindow.__V100_TAKUYA_SLAM_QA__.skillContractFailures();
   };
-  const wrongOwnerFailures = runContactContractCase({ sourceId: "takuya-battle-repaired-v1", kind: "takuya-ground-blade", ownerId: 8, startedAt: 2, duration: .6, resolvedSocket: { x: 300, y: 220 } });
+  const wrongOwnerFailures = runContactContractCase({ sourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId, kind: "takuya-ground-blade", ownerId: 8, startedAt: 2, duration: .6, resolvedSocket: { x: 300, y: 220 } });
   assert.ok(wrongOwnerFailures.some((failure) => failure.type === "wrong-owner"), "control rejects a contact owned by another fighter");
-  const oldActivationFailures = runContactContractCase({ sourceId: "takuya-battle-repaired-v1", kind: "takuya-ground-blade", ownerId: 7, startedAt: 1, duration: .6, resolvedSocket: { x: 300, y: 220 } });
+  const oldActivationFailures = runContactContractCase({ sourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId, kind: "takuya-ground-blade", ownerId: 7, startedAt: 1, duration: .6, resolvedSocket: { x: 300, y: 220 } });
   assert.ok(oldActivationFailures.some((failure) => failure.type === "startedAt-mismatch"), "control rejects a contact from an older activation");
   return { serialized: true, samples: samples.length, captures: fakeWindow.__V100_TAKUYA_SLAM_QA__.captureNames(), joinFailures: fakeWindow.__V100_TAKUYA_SLAM_QA__.joinFailures(), missingApiRejected: true, timeMismatchRejected: true, skillContacts: true, wrongOwnerRejected: true, oldActivationRejected: true, groundContactFailures: [] };
 }
@@ -365,8 +367,8 @@ const report = {
 };
 const tacticalRecord = { inputs: report.inputs, samples: [] };
 
-const browser = await ({ chromium, webkit }[engine]).launch({ headless: true });
-const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, recordVideo: { dir: `${out}/videos`, size: viewport } });
+const browser = await ({ chromium, webkit }[engine]).launch({ headless: true, ...(process.env.V100_TAKUYA_SLAM_EXECUTABLE ? { executablePath: process.env.V100_TAKUYA_SLAM_EXECUTABLE } : {}) });
+const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, ...(process.env.V100_TAKUYA_SLAM_DISABLE_VIDEO === "1" ? {} : { recordVideo: { dir: `${out}/videos`, size: viewport } }) });
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
 page.on("pageerror", (error) => report.errors.push(String(error)));
@@ -375,7 +377,7 @@ page.on("response", (response) => { if (response.status() >= 400) report.errors.
 page.on("requestfailed", (request) => report.errors.push(`requestfailed ${request.url()} ${request.failure()?.errorText ?? "unknown"}`));
 
 try {
-  await page.addInitScript(installTakuyaSlamSampler, { maxSamples: 400, spritePath: TAKUYA_SPRITE_PATH });
+  await page.addInitScript(installTakuyaSlamSampler, { maxSamples: 400, spritePath: TAKUYA_SPRITE_PATH, groundSourceId: TAKUYA_GROUND_BLADE_SOCKET.sourceId });
   await page.addInitScript((value) => {
     for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, value);
   }, serializeV100Save(save));
@@ -418,7 +420,7 @@ try {
       report.slamSamples = samples;
       if (samples.some((sample) => sample.remaining > 0)) report.snapshotFieldPositive = true;
       assert.equal(Number.isFinite(boss.maxHp), true);
-      assert.equal(boss.maxHp, 1600);
+      assert.equal(boss.maxHp, V100_BOSS_BY_ID["boss-takuya"].hp);
       const byActivation = new Map();
       for (const sample of samples) {
         const key = `${sample.id}:${sample.slamActivationId ?? "none"}`;

@@ -516,7 +516,7 @@ const V100_CUSTOM_LEFT_VISIBLE_BY_KIND = Object.freeze({
   ]),
 });
 
-const TAKUYA_REPAIRED_ATLAS_PATH = "/art/v100/bosses/takuya-battle-repaired-v1.png";
+const TAKUYA_REPAIRED_ATLAS_PATH = "/art/v100/bosses/takuya-battle-vest-v2.png";
 const TAKUYA_REPAIRED_STATES = Object.freeze(["idle", "walk-a", "walk-b", "attack-a", "attack-b", "hit"]);
 
 function takuyaManifestEntry() {

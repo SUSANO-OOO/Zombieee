@@ -8,7 +8,7 @@ import test from "node:test";
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { RELEASE_SHA_PLACEHOLDER } from "../app/pwaAssetManifest.js";
 import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js";
-import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_COMPLETION_ASSET_ADDITIONS } from "../scripts/v100-release-asset-contract.mjs";
+import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_COMPLETION_ASSET_ADDITIONS, V100_TAKUYA_VEST_ASSET_ADDITIONS, V100_TAKUYA_VEST_ASSET_REMOVALS } from "../scripts/v100-release-asset-contract.mjs";
 import { V100_MOTION_ATLAS_REPLACEMENTS as motionReplacements } from "../scripts/v100-phone-review-asset-contract.mjs";
 
 const PUBLISHED_V0982_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
@@ -47,7 +47,13 @@ test("the six motion atlas replacements preserve source-bound old/new transport 
     const oldHashOnDisk = `sha256-${createHash("sha256").update(oldBytesOnDisk).digest("hex")}`;
     const next = candidate.assets.find((asset) => asset.path === replacement.newPath);
     assert.deepEqual({ bytes: oldBytesOnDisk.length, hash: oldHashOnDisk }, { bytes: replacement.oldBytes, hash: replacement.oldHash });
-    assert.deepEqual({ bytes: next?.bytes, hash: next?.hash }, { bytes: replacement.newBytes, hash: replacement.newHash });
+    if (replacement.newPath === "/art/v100/bosses/takuya-omega-battle-v2.png") {
+      const historicalV2 = readFileSync(new URL(`../public/pwa-optimized${replacement.newPath.replace(/\.png$/u, ".webp")}`, import.meta.url));
+      assert.deepEqual({ bytes: historicalV2.length, hash: `sha256-${createHash("sha256").update(historicalV2).digest("hex")}` }, { bytes: replacement.newBytes, hash: replacement.newHash });
+      assert.equal(next, undefined, "reviewed V2 remains historical after the costume correction");
+      const adopted = V100_TAKUYA_VEST_ASSET_ADDITIONS.find(asset => asset.path === "/art/v100/bosses/takuya-omega-battle-vest-v3.png");
+      assert.deepEqual({ bytes: candidate.assets.find(asset => asset.path === adopted.path)?.bytes, hash: candidate.assets.find(asset => asset.path === adopted.path)?.hash }, { bytes: adopted.bytes, hash: adopted.hash });
+    } else assert.deepEqual({ bytes: next?.bytes, hash: next?.hash }, { bytes: replacement.newBytes, hash: replacement.newHash });
     assert.equal(candidate.assets.some((asset) => asset.path === replacement.oldPath), false);
   }
 });
@@ -69,10 +75,10 @@ test("the published0.9.9.5 pack reuses415 assets and requires the complete sourc
 test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 141_455_897,
-    candidateDistinctHashBytes: 140_915_994,
-    updateFromV0982Bytes: 68_404_780,
-    updateFromV0993Bytes: 58_030_086,
+    candidateTotalBytes: 141_606_675,
+    candidateDistinctHashBytes: 141_066_772,
+    updateFromV0982Bytes: 68_555_558,
+    updateFromV0993Bytes: 58_180_864,
   });
   assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);
@@ -86,6 +92,7 @@ test("the Version 1.0.0 release candidate has one immutable identity and complet
     assert.equal(actual.bytes, expected.bytes);
     assert.equal(actual.criticality, expected.criticality ?? "critical");
   }
+  for (const oldPath of V100_TAKUYA_VEST_ASSET_REMOVALS) assert.equal(candidate.assets.some(asset => asset.path === oldPath), false, oldPath);
   assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), APPROVED_SIZE_SNAPSHOTS.candidateTotalBytes);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
@@ -108,7 +115,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "1.0.0");
-  assert.equal(update.downloadCount, 108 + V100_COMPLETION_ASSET_ADDITIONS.length);
+  assert.equal(update.downloadCount, 105 + V100_COMPLETION_ASSET_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 348);
   assert.equal(update.reusedCount, 3);
@@ -143,7 +150,7 @@ test("the published Version 0.9.9.3 pack updates to 1.0.0 while reusing unchange
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
   assert.equal(update.toVersion, "1.0.0");
-  assert.equal(update.downloadCount, 59 + V100_COMPLETION_ASSET_ADDITIONS.length);
+  assert.equal(update.downloadCount, 56 + V100_COMPLETION_ASSET_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 397);
   assert.equal(update.reusedCount, 3);

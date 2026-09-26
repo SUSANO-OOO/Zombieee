@@ -1344,22 +1344,22 @@
       "sourcePath": "/pwa-optimized/art/v100/bosses/mugarian-president-mutated-battle-v2.webp"
     },
     {
-      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
-      "bytes": 797630,
-      "hash": "sha256-121a60cc5677bb052cdf721f9d06631b7ce6f705d001918ab4b38e96096df4b8",
+      "path": "/art/v100/bosses/takuya-battle-vest-v2.png",
+      "bytes": 901412,
+      "hash": "sha256-2549394e5b7538de15e0251ffe34795304c9f65d40baff0261b9d7015aa84217",
       "pack": "units",
       "category": "boss",
       "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-battle-repaired-v1.webp"
+      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-battle-vest-v2.webp"
     },
     {
-      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
-      "bytes": 2026194,
-      "hash": "sha256-69b07efe91c9e97c56bf644dff4c2360ca9b1708239e920280962f01a6b98cd5",
+      "path": "/art/v100/bosses/takuya-omega-battle-vest-v3.png",
+      "bytes": 1927020,
+      "hash": "sha256-ad14238cb9d4483ea37ff4715edbb06c9d1f1973cb6fe234dda3004d2e28d26d",
       "pack": "units",
       "category": "boss",
       "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-omega-battle-v2.webp"
+      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-omega-battle-vest-v3.webp"
     },
     {
       "path": "/art/v100/characters/kumaverson-guard-v1.png",
@@ -1515,9 +1515,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/cuts/takuya-omega-ending-defeat-v1.webp",
-      "bytes": 322682,
-      "hash": "sha256-d00d35ef3533dcd5099b24bb7d2822ae7f4b08acc85c669b96811cb4ceba4ffb",
+      "path": "/art/v100/cuts/takuya-omega-ending-defeat-vest-v3.webp",
+      "bytes": 218698,
+      "hash": "sha256-10d72799bbc2549df5b34af39bd4bfea30709af0a1bc51ba7522eed67765f72d",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1835,9 +1835,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
-      "bytes": 115060,
-      "hash": "sha256-4faaac8803005275b0bc105c7d43a4a86a223278698cba8b65e8d7eabb172bf2",
+      "path": "/art/v100/portraits/takuya-omega-event-portrait-vest-v2.webp",
+      "bytes": 365214,
+      "hash": "sha256-22afe446144ecc5d90f963c2046174e61da2a64f7e6415fcc0b51333a6038b18",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"

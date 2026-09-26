@@ -12,7 +12,7 @@ const portraits = freezeRecord({
   mugarianPresident: `${V100_ROOT}/portraits/mugarian-president-event-portrait-v1.webp`,
   mugarianPresidentProfile: `${V100_ROOT}/portraits/mugarian-president-dialogue-profile-v1.webp`,
   mutatedPresident: `${V100_ROOT}/portraits/mugarian-president-mutated-event-portrait-v1.webp`,
-  takuyaOmega: `${V100_ROOT}/portraits/takuya-omega-event-portrait-v1.webp`,
+  takuyaOmega: `${V100_ROOT}/portraits/takuya-omega-event-portrait-vest-v2.webp`,
   redPantherCommander: `${V100_ROOT}/portraits/red-panther-commander-event-portrait-v1.webp`,
   minorHuman: `${V100_ROOT}/portraits/minor-human-shared-event-silhouette-event-portrait-v1.webp`,
 });
@@ -23,12 +23,12 @@ const storyCuts = freezeRecord({
   segawaPrivateLab: `${V100_ROOT}/cuts/segawa-private-lab-reveal-v1.webp`,
   mugarianPresidentExecutiveLab: `${V100_ROOT}/cuts/mugarian-president-executive-lab-v1.webp`,
   mutatedPresidentDefeat: `${V100_ROOT}/cuts/mugarian-president-defeat-v1.webp`,
-  takuyaOmegaEndingDefeat: `${V100_ROOT}/cuts/takuya-omega-ending-defeat-v1.webp`,
+  takuyaOmegaEndingDefeat: `${V100_ROOT}/cuts/takuya-omega-ending-defeat-vest-v3.webp`,
 });
 
 const bosses = freezeRecord({
   "boss-mugarian-president-mutated": `${V100_ROOT}/bosses/mugarian-president-mutated-battle-v2.png`,
-  "boss-takuya-omega": `${V100_ROOT}/bosses/takuya-omega-battle-v2.png`,
+  "boss-takuya-omega": `${V100_ROOT}/bosses/takuya-omega-battle-vest-v3.png`,
 });
 
 const redPanther = freezeRecord({

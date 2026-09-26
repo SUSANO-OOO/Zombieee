@@ -21,6 +21,11 @@ const ATLASES = Object.freeze([
     metadata: "public/art/v100/bosses/takuya-omega-battle-v2-metadata.json",
     states: ["entrance", "idle", "move", "attack", "hit", "phase", "death", "defeat"],
   },
+  {
+    asset: "public/art/v100/bosses/takuya-omega-battle-vest-v3.png",
+    metadata: "public/art/v100/bosses/takuya-omega-battle-vest-v3-metadata.json",
+    states: ["entrance", "idle", "move", "attack", "hit", "phase", "death", "defeat"],
+  },
   ...["knife", "shield", "smg", "commander"].map((role) => ({
     asset: `public/art/v100/enemies/red-panther-${role}-battle-v2.png`,
     metadata: `public/art/v100/enemies/red-panther-${role}-battle-v2-metadata.json`,
