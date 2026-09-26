@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "e984438654b0e890fd0d4cb9630723f0e05e88ad6508903146d4b3c6594805c2";
+export const V100_STORY_SOURCE_SHA256 = "cfaad7f359011cc8524ba260f40225052657e0d6a5bd5f00ef610a9a8e7eac08";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -2661,7 +2661,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "ザキミヤ、伏せろ！　次は外さんぞ、あいつら！",
+        "text": "伏せろ！　次は外さんぞ、あいつら！",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 385
@@ -5790,7 +5790,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "区役所では、バスを出す方が生存率は高かった。あなたたちは戻った",
+        "text": "区役所では、救援車を出す方が生存率は高かった。あなたたちは戻った",
         "portraitOwner": "segawa",
         "portraitKind": "major",
         "sourceLine": 839
