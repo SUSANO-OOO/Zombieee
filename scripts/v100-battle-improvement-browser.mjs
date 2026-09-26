@@ -79,18 +79,22 @@ try{for(const number of numbers){
  try{
   const base=createDefaultV100Save({playerName:'戦場改善確認'}),stageId=V100_STAGE_IDS[number-1];
   const soundOnlyStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
+  const earnedStage3=process.env.V100_EARNED_STAGE3_FIXTURE==='1'&&number===3;
+  const earnedStage5=process.env.V100_EARNED_STAGE5_FIXTURE==='1'&&number===5;
   if(soundOnlyStage3)result.tacticalProfile='boss-precision';
-  const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(number>=6?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
+  const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(earnedStage3||earnedStage5?['unit-nao']:[]),...(number>=6||earnedStage5?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
   const contactCheck=process.env.V100_CONTACT_CHECK==='1';
   if(!kumaGuardCheck&& (manualFirearmCheck||guardianCheck))for(const id of ['unit-gantetsu','unit-mizuchi','unit-raider'])if(!owned.includes(id))owned.push(id);
   if(contactCheck)owned.push('unit-tatara');
   const formation=kumaGuardCheck?['unit-kumaverson',null,null,null,null,null,null]:manualFirearmCheck||guardianCheck?['unit-gantetsu','unit-babayaga','unit-mizuchi','unit-raider',null,null,null]:contactCheck?['unit-paisen','unit-tatara','unit-kumaverson','unit-babayaga',null,null,null]:[...owned, ...Array(Math.max(0,7-owned.length)).fill(null)].slice(0,7);
-  const unitLevels=soundOnlyStage3?Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,8])):base.unitLevels;
+  // Stage 1+2 three-star receipts yield 231 CAPS. Nao (110) plus four
+  // level-2 upgrades (4*25) are affordable with 21 CAPS left.
+  const unitLevels=soundOnlyStage3?Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,8])):earnedStage3||earnedStage5?{...base.unitLevels,...Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,2]))}:base.unitLevels;
   const vehicle=soundOnlyStage3?{...base.vehicle,upgradeLevel:2,maxHp:V100_VEHICLE.baseHp+2*V100_VEHICLE.hpPerUpgrade}:base.vehicle;
   if(soundOnlyStage3)assert.deepEqual(owned,V100_INITIAL_UNIT_IDS,'Sound-only Stage 3 fixture must use exactly the four existing base units');
-  result.fixture={soundOnlyStage3,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
+  result.fixture={soundOnlyStage3,earnedStage3,earnedStage5,earnedBudgetCaps:earnedStage3?231:earnedStage5?490:null,earnedSpentCaps:earnedStage3?210:earnedStage5?415:null,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
   const save=normalizeV100Save({...base,campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS.slice(0,number),completedStageIds:V100_STAGE_IDS.slice(0,number-1),ownedUnitIds:owned,registeredUnitIds:owned,unitLevels,vehicle,formationSlots:formation,
-   ...(number>=6?{ownedSupportIds:['support-healing'],equippedSupportId:'support-healing',supportPurchaseUnlockedIds:['support-healing']}:{}),
+   ...(number>=6||earnedStage5?{ownedSupportIds:['support-healing'],equippedSupportId:'support-healing',supportPurchaseUnlockedIds:['support-healing']}:{}),
    flowState:{phase:'formation',stageId,stageNumber:number,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
   await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
   if(process.env.V100_MUZZLE_CHECK==='1')await page.addInitScript(installMuzzleCanvasAudit);

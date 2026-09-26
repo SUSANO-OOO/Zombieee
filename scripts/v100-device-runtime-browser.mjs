@@ -438,19 +438,16 @@ try {
         const started = Date.now();
         let previousSample = 0;
         while (Date.now() - started < measurementMs) {
-          const snapshot = await page.evaluate(() => ({
-            state: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
-            performance: window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null,
-          }));
-          const projected = snapshotProjection(snapshot.state);
-          if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
-            throw new Error("30-second window lost live battle, humans, or boss");
-          }
-          if (Date.now() - previousSample >= 1000) {
-            result.measurementSamples.push(projected);
-            previousSample = Date.now();
-          }
-          await normalTacticalInput(page, result);
+          await normalTacticalInput(page, result, { observeSnapshot(snapshot) {
+            const projected = snapshotProjection(snapshot);
+            if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
+              throw new Error("30-second window lost live battle, humans, or boss");
+            }
+            if (Date.now() - previousSample >= 1000) {
+              result.measurementSamples.push(projected);
+              previousSample = Date.now();
+            }
+          } });
           await page.waitForTimeout(350);
         }
       }

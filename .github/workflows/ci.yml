@@ -90,6 +90,22 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Audit all 30 story stages in developer mode
+        run: node scripts/v100-devmode-full-campaign.mjs
+
+      - name: Audit V1 CAPS purchasing power
+        run: node scripts/v100-economy-budget.mjs
+
+      - name: Upload developer mode campaign audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-devmode-full-campaign
+          path: |
+            outputs/completion/v100-devmode-full-campaign/report.json
+            outputs/completion/v100-economy-budget/report.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Install focused browser engines
         run: npx playwright install --with-deps chromium
 
@@ -286,7 +302,7 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Diagnose 844x340 boss performance without QA polling
-        if: ${{ always() && steps.primary_perf.outcome == 'failure' }}
+        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
         continue-on-error: true
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
@@ -298,7 +314,7 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Diagnose 844x390 boss performance without QA polling
-        if: ${{ always() && steps.primary_perf.outcome == 'failure' }}
+        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
         continue-on-error: true
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit

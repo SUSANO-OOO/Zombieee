@@ -84,10 +84,10 @@ for(const engine of engines){
   assert.equal(new Set(second.receipts).size,second.receipts.length);
   record.repeatedImport={caps:second.caps,receipts:second.receipts.length,revision:second.revision};
   record.step='invalid-import';const invalidDialog=await openData(page),beforeInvalid=await rawSave(page);
-  const previousNotice=await page.evaluate(()=>document.querySelector('[role="status"]')?.textContent??'');
   await invalidDialog.locator('.v100-data-actions input[type=file]').setInputFiles({name:'invalid-backup.json',mimeType:'application/json',buffer:Buffer.from('{"format":"broken"}')});
-  await page.waitForFunction(previous=>{const text=document.querySelector('[role="status"]')?.textContent;return Boolean(text&&text!==previous);},previousNotice);await ready(page);
-  record.invalidImportNotice=await page.getByRole('status').innerText();
+  const invalidNotice=invalidDialog.locator('.v100-data-feedback[role="status"]').filter({hasText:'セーブを書き込めませんでした'});
+  await invalidNotice.waitFor();await ready(page);
+  record.invalidImportNotice=await invalidNotice.innerText();
   assert.ok(!record.invalidImportNotice.includes('復元しました'));
   assert.equal(await rawSave(page),beforeInvalid,'Rejected import must preserve exact saved bytes');
   await page.screenshot({path:out+'/'+engine+'-invalid-import-keeps-save.png'});
