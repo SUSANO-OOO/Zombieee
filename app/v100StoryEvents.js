@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "e916332cacf6fc4373f53856c60002a89a2e5966eeeabc8a676feaceaa828ba2";
+export const V100_STORY_SOURCE_SHA256 = "b6abab83ec1518fbbd32bf3ffa0e2be4ec45de4bd5312d73814bfb61363e8048";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -902,7 +902,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "交差点の向こうで、破れた橙の防災ベストをまとった巨体が車を押しのける。黒い防護眼鏡、頬の傷。ベストの名札には「TAKUYA」。",
+        "text": "交差点の向こうで、破れた橙の防災ベストをまとった巨体が車を押しのける。黒い防護眼鏡、頬の傷。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 132
@@ -6026,7 +6026,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "異様に肥大した右腕の装甲を黒い鎖が締めつける。背の投薬管が脈打ち、剣とも槌ともつかない大刃が路面を削る。",
+        "text": "異様に肥大した片腕の装甲を黒い鎖が締めつける。背の投薬管が脈打ち、剣とも槌ともつかない大刃が路面を削る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 872
