@@ -7580,6 +7580,11 @@ function drawCachedStageBackground(
   cache: StaticBattlefieldCache,
   profile: GraphicsProfile,
 ) {
+  // Bake the static plate at the physical output size. WebKit otherwise
+  // rescales the full world-size image and composites the grade every frame.
+  const outputWidth = ctx.canvas.width;
+  const outputHeight = ctx.canvas.height;
+  const worldTransform = ctx.getTransform();
   const key = [
     g.definition.stageId,
     activeStageViewportId,
@@ -7587,12 +7592,21 @@ function drawCachedStageBackground(
     background.naturalWidth,
     background.naturalHeight,
     profile.smoothingQuality,
+    "output-grade-v1",
+    outputWidth,
+    outputHeight,
+    worldTransform.a.toFixed(6),
+    worldTransform.b.toFixed(6),
+    worldTransform.c.toFixed(6),
+    worldTransform.d.toFixed(6),
+    worldTransform.e.toFixed(6),
+    worldTransform.f.toFixed(6),
   ].join("|");
   if (!cache.canvas) {
     cache.canvas = document.createElement("canvas");
-    cache.canvas.width = W;
-    cache.canvas.height = H;
   }
+  if (cache.canvas.width !== outputWidth) cache.canvas.width = outputWidth;
+  if (cache.canvas.height !== outputHeight) cache.canvas.height = outputHeight;
   if (cache.key !== key) {
     cache.bitmap?.close();
     cache.bitmap = null;
@@ -7603,10 +7617,17 @@ function drawCachedStageBackground(
       return;
     }
     cacheContext.setTransform(1, 0, 0, 1, 0, 0);
-    cacheContext.clearRect(0, 0, W, H);
+    cacheContext.clearRect(0, 0, outputWidth, outputHeight);
+    cacheContext.setTransform(worldTransform);
     cacheContext.imageSmoothingEnabled = true;
     cacheContext.imageSmoothingQuality = profile.smoothingQuality as ImageSmoothingQuality;
     drawStageBackground(cacheContext, g, background);
+    const grade = cacheContext.createLinearGradient(0, 0, W, 0);
+    grade.addColorStop(0, "rgba(23,28,31,.18)");
+    grade.addColorStop(.55, "rgba(15,13,12,.04)");
+    grade.addColorStop(1, "rgba(58,18,12,.2)");
+    cacheContext.fillStyle = grade;
+    cacheContext.fillRect(0, 0, W, H);
     cache.key = key;
     cache.rebuilds += 1;
     if (typeof createImageBitmap === "function") {
@@ -7619,7 +7640,10 @@ function drawCachedStageBackground(
   } else {
     cache.hits += 1;
   }
-  ctx.drawImage(cache.bitmap ?? cache.canvas, 0, 0, W, H);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(cache.bitmap ?? cache.canvas, 0, 0);
+  ctx.restore();
 }
 
 function drawCachedBattleGrade(ctx: CanvasRenderingContext2D, cache: StaticBattlefieldCache, shakeX: number, shakeY: number) {
@@ -8239,7 +8263,7 @@ function drawWorld(
   } else if (allowDiagnosticFallback) drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
-  drawCachedBattleGrade(ctx, staticBackgroundCache, sx, sy);
+  if (!hasOpaqueStagePlate) drawCachedBattleGrade(ctx, staticBackgroundCache, sx, sy);
 
   const activeStageObjects = activeStageObjectsForGame(g);
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));

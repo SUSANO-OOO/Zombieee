@@ -164,7 +164,7 @@ const server = createServer(async (request, response) => {
       response.writeHead(404).end("Not found");
       return;
     }
-    if (currentLabel === "candidate" && /\/(?:art|audio|pwa-bundles)\//.test(url.pathname)) {
+    if (currentLabel === "candidate" && /\/(?:art|audio|pwa-bundles|pwa-optimized)\//.test(url.pathname)) {
       candidateNetworkAssetRequests.push(url.pathname);
     }
     const served = await serveFile(rootForLabel(currentLabel), url.pathname, currentLabel);
@@ -591,7 +591,7 @@ try {
   const candidateAssetRequests = [];
   page.on("request", (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (/\/(?:art|audio|pwa-bundles)\//.test(pathname)) candidateAssetRequests.push(pathname);
+    if (/\/(?:art|audio|pwa-bundles|pwa-optimized)\//.test(pathname)) candidateAssetRequests.push(pathname);
   });
   diagnosticPhase = "candidate-unqualified-entry";
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });

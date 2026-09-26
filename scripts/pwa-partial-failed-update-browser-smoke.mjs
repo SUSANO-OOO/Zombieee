@@ -284,7 +284,7 @@ const server = createServer(async (request, response) => {
     }
     if (
       currentLabel === "candidate"
-      && (/\/(?:art|audio|icons|pwa-bundles)\//.test(url.pathname)
+      && (/\/(?:art|audio|icons|pwa-bundles|pwa-optimized)\//.test(url.pathname)
         || /\/(?:explosive-drum|medical-supply-station|tactical-drop-pod)-v1/.test(url.pathname))
     ) {
       candidateTransportRequests.push({ pathname: url.pathname, audioMode, at: Date.now() });
