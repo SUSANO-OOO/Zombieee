@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "dab6cf271f1c4c1d6bd7a9711789d0e5de3bc183dc381bfa913961356d6e36a5";
+export const V100_STORY_SOURCE_SHA256 = "48583a09d72fc672cec916e6b84afdc6f19271e63ac4f9e8b4c9de6929102487";
 export const V100_STORY_SOURCE_LINE_COUNT = 966;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -2653,7 +2653,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "赤いレンズが男を捉える。銃声。瓶が砕け、男はまだ立っている。",
+        "text": "赤レンズの兵が発砲。ザキミヤの手の瓶が砕け、喉元を破片がかすめる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 384
@@ -2661,7 +2661,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "右へ二十二センチ。警告や。次は身体に来る",
+        "text": "ザキミヤ、伏せろ！　次は外さんぞ、あいつら！",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
         "sourceLine": 385
@@ -6114,7 +6114,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "TAKUYA、こっちだ。……来いよ。バスが抜けるまで、俺は動かない",
+        "text": "TAKUYA！　駅でも声が裏返った。今もだ！　……あのバスには、指一本触れさせねえ！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 883
