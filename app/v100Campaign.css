@@ -313,6 +313,7 @@
 .v100-vehicle-readout strong { color: #f0ce7b; font-family: Georgia, serif; font-size: 25px; }
 .v100-vehicle-readout span { color: #b5c4b0; font-size: 11px; }
 .v100-data-modal { width: min(590px, 100%); }
+.v100-data-feedback { position: sticky; top: 0; z-index: 1; margin: 8px 0; box-shadow: 0 3px 14px #0008; }
 .v100-data-summary { display: grid; gap: 7px; margin: 15px 0; }
 .v100-data-summary div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid #2d4141; }
 .v100-data-summary dt { color: #93a79d; font-size: 11px; }

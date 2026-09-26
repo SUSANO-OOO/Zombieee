@@ -218,7 +218,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Checkout synthetic PR merge
@@ -285,6 +285,30 @@ jobs:
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
+      - name: Diagnose 844x340 boss performance without QA polling
+        if: ${{ always() && steps.primary_perf.outcome == 'failure' }}
+        continue-on-error: true
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x340
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-observerless
+          V100_DEVICE_RUNTIME_OBSERVERLESS: "1"
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Diagnose 844x390 boss performance without QA polling
+        if: ${{ always() && steps.primary_perf.outcome == 'failure' }}
+        continue-on-error: true
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x390
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-observerless
+          V100_DEVICE_RUNTIME_OBSERVERLESS: "1"
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
       - name: Diagnose narrow landscape canvas cost after performance failure
         if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
         continue-on-error: true
@@ -345,6 +369,8 @@ jobs:
             outputs/v100-device-runtime/webkit
             outputs/v100-device-runtime/webkit-844x340-repeat
             outputs/v100-device-runtime/webkit-844x390-repeat
+            outputs/v100-device-runtime/webkit-844x340-observerless
+            outputs/v100-device-runtime/webkit-844x390-observerless
             outputs/v100-device-runtime/webkit-844x340-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-raster-groups
