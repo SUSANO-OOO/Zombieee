@@ -8,7 +8,7 @@ import { orderedNativePointer } from "./ordered-native-pointer.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
@@ -62,16 +62,17 @@ const extraBattleContracts = Object.freeze([
   // visible without changing the stage, roster, or production battle rules.
   { variant: "stage06-spitter-seal", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 6, bossKind: null, proofActor: "spitter", proofUnitKind: "ranger", proofUnitFirst: true, completedImpactProof: true, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
   // The compact WebKit boss route establishes an opening frontline with the
-  // first three currently ready cards, then continues real redeploy actions
-  // as cards recover. It does not force a fixed DOM index or mutate battle
-  // state; the boss gate and combat proof remain fully production-owned.
-  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", proofActor: "red-panther-commander", waitForBossAttack: false, combatProofDurationMs: 4_800, completedImpactProof: true, unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-nao", "unit-hachi", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
+  // First collect the exact Panther impact through normal combat and UI card
+  // inputs. The local developer handoff then advances to the authored final
+  // wave; its real boss actors, attacks and canvas remain production-owned.
+  // This row does not claim a natural clear of the preceding waves.
+  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", proofActor: "red-panther-commander", waitForBossAttack: false, combatProofDurationMs: 4_800, completedImpactProof: true, unitLevels: MAXED_QA_UNIT_LEVELS, vehicleUpgradeLevel: 5, formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-babayaga", "unit-gantetsu", "unit-nao", "unit-mizuchi", "unit-mizuchi"], openingKinds: ["guardian", "medic", "babayaga"], tacticalProfile: "early-roles", bossPresentationMode: "local-developer-boss-wave" },
   // A support-object shield attacks a human only at physical contact or when
   // that human blocks its route. Until the exact shield impact is sealed,
   // ordinary guardian-card redeployments maintain a durable blocker across
   // production-selected lanes instead of spending every recovered click on
   // the first cheap DOM card. No lane, fighter, clock, or enemy is mutated.
-  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", completedImpactProof: true, completedImpactTargetKind: "guardian", formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS },
+  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", proofActor: "red-panther-shield", completedImpactProof: true, completedImpactTargetKind: "guardian", formationUnitIds: ["unit-gantetsu", "unit-nao", "unit-kumaverson", "unit-paisen", "unit-babayaga", "unit-mizuchi", "unit-tatara"], unitLevels: MAXED_QA_UNIT_LEVELS, vehicleUpgradeLevel: 5, bossPresentationMode: "local-developer-boss-wave" },
 ].map((contract) => Object.freeze({
   ...contract,
   stageId: V100_STAGE_IDS[contract.stageNumber - 1],
@@ -855,7 +856,7 @@ function relativeEvidence(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
 
-function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null } = {}) {
+function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null, vehicleUpgradeLevel = 3 } = {}) {
   const base = createDefaultV100Save({ playerName: "QAプレイヤー" });
   return normalizeV100Save({
     ...base,
@@ -873,7 +874,7 @@ function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds =
     equippedSupportId: V100_SUPPORTS[0]?.id ?? null,
     formationSlots: (formationUnitIds ?? V100_UNITS.slice(0, 7).map((unit) => unit.id)).slice(0, 7),
     levelCap: 30,
-    vehicle: { upgradeLevel: 3, maxHp: 920, upgradeReceipts: ["v100:vehicle:upgrade:1", "v100:vehicle:upgrade:2", "v100:vehicle:upgrade:3"] },
+    vehicle: { upgradeLevel: vehicleUpgradeLevel, maxHp: V100_VEHICLE.baseHp + vehicleUpgradeLevel * V100_VEHICLE.hpPerUpgrade, upgradeReceipts: Array.from({ length: vehicleUpgradeLevel }, (_, index) => `v100:vehicle:upgrade:${index + 1}`) },
     flowState: flowState ?? { phase: "map", eventId: null, stageId: V100_STAGE_IDS[0], stageNumber: 1, destination: "map", nodeIndex: 0, firstClear: false, finalized: true },
     pendingResult,
   });
@@ -3692,7 +3693,7 @@ async function formationPage(page, save, stageName = null) {
   checkpointRecorderFor(page)?.markOnce("formation-visible", "completed", { selector: ".v100-formation-panel" });
 }
 
-async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, completedImpactProofEnabled = false, completedImpactTargetKind = null, captureCombatAction = null } = {}) {
+async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null, completedImpactProofEnabled = false, completedImpactTargetKind = null, openingKinds = [], tacticalProfile = null, bossPresentationMode = "normal", captureCombatAction = null } = {}) {
   const recorder = checkpointRecorderFor(page);
   invariant(!completedImpactProofEnabled || (!manualAbilityKind && !requireVehicleAction),
     "completed-impact actor proof cannot share its unchanged deadline with manual or vehicle actions");
@@ -3724,12 +3725,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     invariant(equippedSupport?.className.split(/\s+/u).includes("medical"), `boss support fixture did not equip canonical recovery support: ${JSON.stringify(equippedSupport)}`);
   }
   const deployedKinds = new Set();
-  const tacticalRecord = { number: V100_STAGES.find((entry) => entry.id === expectedStageId)?.number ?? null, inputs: [] };
+  const tacticalStageNumber = V100_STAGES.find((entry) => entry.id === expectedStageId)?.number ?? null;
+  const tacticalRecord = { number: tacticalStageNumber, tacticalProfile: tacticalProfile ?? (tacticalStageNumber >= 24 ? 'late-precision' : undefined), inputs: [] };
   // Capture-local evidence, not a proof machine or a browser-global history.
   // At most one first-positive raw observation per required action category.
   const setupObservations = {};
   const manualActionEvidence = {};
   let sealedCombatCausalProof = null;
+  let developerBossWaveEvidence = null;
   const requiredCompletedImpactActorKeys = completedImpactProofEnabled
     ? [proofActor ? `zombie:${proofActor}` : null, proofUnitKind ? `human:${proofUnitKind}` : null].filter(Boolean)
     : [];
@@ -3897,13 +3900,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
-      if (completedImpactProofEnabled && !waitForBossAttack && bossDeploymentFinished
+      if (completedImpactProofEnabled && bossDeploymentFinished
         && sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE") {
         // Once the exact actor impact has been sealed, the representative
         // battle uses the same ordinary UI tactics as the full campaign run.
         // Keeping the first ready low-cost card forever starves stronger
         // formation roles and can defeat the QA fixture before boss entry.
-        await withPhaseGPageInputLock(page, () => normalTacticalInput(page, tacticalRecord));
+        // The boss-attack fixture also needs living humans when its boss arrives.
+        await withPhaseGPageInputLock(page, () => normalTacticalInput(page, tacticalRecord, { barrageWhenOverwhelmed: tacticalStageNumber >= 25, barrageEnabled: tacticalStageNumber !== 24, airstrikeAfterSeconds: tacticalStageNumber >= 24 ? 40 : 0 }));
         await accelerateBossEntry();
         await page.waitForTimeout(520);
         continue;
@@ -3943,7 +3947,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const canvas = page.locator("canvas.battlefield");
       const box = await canvas.boundingBox().catch(() => null);
       if (box) {
-        if (!bossEngaged && proofCombatReady) {
+        if (!bossEngaged && proofCombatReady && !completedImpactProofEnabled) {
           await withPhaseGPageInputLock(page, async () => {
             const lockedCanvas = page.locator("canvas.battlefield");
             const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
@@ -4151,11 +4155,15 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             completedImpactProofSealed: sealedCombatCausalProof !== null,
             completedImpactTargetKind,
           });
+          // The isolated source replay exercises this loop without the outer
+          // battlePage parameters; its default is the ordinary candidate order.
+          const requestedOpeningKind = typeof openingKinds === "undefined" ? null : openingKinds[deployment] ?? null;
           const readyCandidates = bossOpeningCandidates(candidateSample, deployedKinds, completedImpactProofEnabled, {
             proofUnitKind,
             proofUnitDeployed,
             completedImpactTargetKind: pendingCompletedImpactTargetKind,
-          }).map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }));
+          }).filter((card) => !requestedOpeningKind || card.kind === requestedOpeningKind)
+            .map((card, candidateIndex) => ({ card, kind: card.kind, content: unitContentFor(card.kind), candidateIndex }));
           if (!completedImpactProofEnabled && proofActorRequiresContactFirst && !proofActorAttackObserved) {
             readyCandidates.sort((left, right) => {
               const leftSupport = left.content?.aiProfile === "support" ? 0 : 1;
@@ -4227,6 +4235,20 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
         requiredCompletedImpactActorKeys,
       });
+      if (bossKind && bossPresentationMode === "local-developer-boss-wave") {
+        // The exact Panther attack was observed in normal combat. Now use the
+        // localhost developer bridge to reach the authored final wave without
+        // requiring an AI player to clear every preceding squad. The normal
+        // wave consumer still enqueues the real group and boss assets.
+        developerBossWaveEvidence = await withPhaseGPageInputLock(page, () => page.evaluate((kind) => (
+          window.__ASHFALL_BATTLE_QA__?.prepareV100BossWaveProof?.(kind) ?? null
+        ), bossKind));
+        invariant(developerBossWaveEvidence?.mode === "local-developer-boss-wave"
+          && developerBossWaveEvidence.stageId === expectedStageId
+          && developerBossWaveEvidence.bossKind === bossKind
+          && developerBossWaveEvidence.queuedKinds?.filter((kind) => kind === bossKind).length === (bossKind === "futago" ? 2 : 1),
+        `developer boss-wave handoff invalid: ${JSON.stringify(developerBossWaveEvidence)}`);
+      }
       const bossObservation = await waitForRequiredBossPresentation(page, { bossKind, waitForBossAttack });
       if (bossObservation) setupObservations[`zombie:${bossKind}`] ??= bossObservation;
     }
@@ -4384,6 +4406,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       deploymentTrace, observations: setupObservations, manualAction: manualActionEvidence,
       tacticalInput: tacticalRecord,
       sealedCombatCausalProof,
+      developerBossWaveEvidence,
     };
     sustainActive = false;
     await sustainDone;
@@ -4409,13 +4432,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     stageId,
     stageName: V100_STAGES.find((entry) => entry.id === stageId)?.displayName ?? stageName,
     bossKind,
+    bossPresentationMode,
     ...(requestedCombatProofDurationMs ? { combatProofDurationMs: requestedCombatProofDurationMs } : {}),
     expectedEnemyKinds: [...new Set(definition?.timeline?.flatMap((wave) => wave.units) ?? [])],
     observedEnemyKinds: runtime.enemyKinds,
     fighterKinds: runtime.fighterKinds,
     phaseGCombatSnapshotProfile,
     deploymentTrace,
-    setupEvidence: { observations: setupObservations, manualAction: manualActionEvidence, tacticalInput: tacticalRecord },
+    setupEvidence: { observations: setupObservations, manualAction: manualActionEvidence, tacticalInput: tacticalRecord, developerBossWaveEvidence },
     requiredCompletedImpactActorKeys,
     sealedCombatCausalProof,
   };
@@ -4568,7 +4592,7 @@ for (const contract of extraBattleContracts) {
     stageNumber: contract.stageNumber,
     stageName: contract.stageName,
     expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
-    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, completedImpactProofEnabled: contract.completedImpactProof === true, completedImpactTargetKind: contract.completedImpactTargetKind ?? null, captureCombatAction }),
+    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels, vehicleUpgradeLevel: contract.vehicleUpgradeLevel }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null, completedImpactProofEnabled: contract.completedImpactProof === true, completedImpactTargetKind: contract.completedImpactTargetKind ?? null, openingKinds: contract.openingKinds ?? [], tacticalProfile: contract.tacticalProfile ?? null, bossPresentationMode: contract.bossPresentationMode ?? "normal", captureCombatAction }),
     variant: contract.variant,
   }), contract);
 }

@@ -12,7 +12,7 @@ export async function nativeBattleTap(page,locator){
   if(!point)return false;await orderedNativePointer(page,point);return true;
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot}={}){
+export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0}={}){
   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};});
   observeSnapshot?.(s);
   if(!s?.running||s.over)return;
@@ -30,7 +30,8 @@ export async function normalTacticalInput(page,record,{observeSnapshot}={}){
   // the precision unit. Stage 11 lost with the late-game priority while the
   // same levels and formation had won with this role order in earlier runs.
   // Keep the precision-first profile for the later stages it was added for.
-  const earlyCampaign = Number.isInteger(record.number) && record.number <= 26;
+  const earlyCampaign = Number.isInteger(record.number) && record.number <= 26
+    && record.tacticalProfile !== 'late-precision';
   const earlyRanged = available(['ranger','kumaverson']);
   const earlyPriorities = front && count(front)===0 ? [front]
     : healer && count(healer)===0 ? [healer]
@@ -66,16 +67,19 @@ export async function normalTacticalInput(page,record,{observeSnapshot}={}){
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];
   const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):null;
   let airstrikeRequested=false;
-  if(cluster?.members.length>=3||boss){
+  if(s.time>=airstrikeAfterSeconds&&(cluster?.members.length>=3||boss)){
     const target=cluster?.members.length>=3
       ? {x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length}
       : {x:Math.min(805,Math.max(230,boss.x)),y:boss.y};
     const point=await page.locator('.game-shell canvas').evaluate((c,t)=>{const r=c.getBoundingClientRect(),scale=Number(c.dataset.worldScale),x=r.x+Number(c.dataset.worldOffsetX)+t.x*scale,y=r.y+Number(c.dataset.worldOffsetY)+t.y*scale;return document.elementFromPoint(x,y)===c?{x,y}:null;},target).catch(()=>null);
     if(point&&await nativeBattleTap(page,page.locator('button.support-btn.airstrike'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'airstrike',target});airstrikeRequested=true;}
   }
-  // When the boss fixture cannot afford another airstrike, use the crawler's
-  // ordinary barrage control against enemies already threatening its front.
-  if(!airstrikeRequested&&enemies.some(f=>f.x<550)
+  // Keep the airstrike-first representative route. At the large-viewport
+  // stress fixture, a crowd of eight is already an immediate vehicle threat;
+  // use the ordinary barrage button before that crowd reaches the front.
+  const overwhelmingCrowd=barrageWhenOverwhelmed&&enemies.length>=8;
+  if(barrageEnabled&&!airstrikeRequested&&(bossPrecision||cluster?.members.length<3||overwhelmingCrowd)
+    &&(overwhelmingCrowd||enemies.some(f=>f.x<550))
     &&await nativeBattleTap(page,page.locator('button.support-btn.barrage')))record.inputs.push({time:s.time,action:'barrage'});
   // Each enabled button already uses the production ability's target/range.
   // Normal attack range would wrongly exclude long-range precision abilities.

@@ -124,31 +124,33 @@ test("all campaign bosses have ordinary combat before their entrance",()=>{
 
 test("Futago retains both bodies and its final group cannot overlap surviving prior guards", () => {
   const definition=createBattleDefinition(V100_STAGES[23].id,{v100:true});
-  assert.equal(definition.timeline.length,6);
-  assert.ok(definition.timeline.slice(0,5).flatMap(e=>e.units).every(kind=>["red-panther-shield","red-panther-commander"].includes(kind)));
-  assert.deepEqual(definition.timeline[5].units.slice(-2),["futago","futago"]);
-  assert.equal(definition.timeline[5].waitForPriorWaveClear,true);
-  const g={definition,eventIndex:5,time:definition.timeline[5].at,fighters:[{id:1,side:"zombie",kind:"red-panther-shield",hp:1}],enemySpawn:{nextEntryId:8,pending:[]}};
+  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="futago").length),[2,2,3,3]);
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
+  assert.ok(definition.timeline.slice(0,3).flatMap(e=>e.units).every(kind=>["red-panther-shield","red-panther-commander"].includes(kind)));
+  assert.deepEqual(definition.timeline[3].units.slice(-2),["futago","futago"]);
+  assert.equal(definition.timeline[3].waitForPriorWaveClear,true);
+  const g={definition,eventIndex:3,time:definition.timeline[3].at,fighters:[{id:1,side:"zombie",kind:"red-panther-shield",hp:1}],enemySpawn:{nextEntryId:8,pending:[]}};
   const queued=[],announced=[];
   const context={g,isBossFighter,isBossEnemyKind:kind=>kind==="futago",activeStageViewportId:"844x340",
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return{...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
     enemySpawnPortalPoint:()=>({}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{}};
   const advance=()=>vm.runInNewContext(code,context);
-  advance();assert.equal(g.eventIndex,5);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
-  g.time=140;advance();assert.equal(g.eventIndex,5,"time cannot discard a surviving prior guard");
+  advance();assert.equal(g.eventIndex,3);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
+  g.time=140;advance();assert.equal(g.eventIndex,3,"time cannot discard a surviving prior guard");
   g.fighters[0].hp=0;g.enemySpawn.pending=[{entryId:7,kind:"red-panther-commander"}];
-  advance();assert.equal(g.eventIndex,5,"an offscreen queued guard also prevents the final group");
+  advance();assert.equal(g.eventIndex,3,"an offscreen queued guard also prevents the final group");
   g.enemySpawn.pending=[];advance();
-  assert.equal(g.eventIndex,6);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[5].units);
+  assert.equal(g.eventIndex,4);assert.equal(queued.length,1);assert.deepEqual(queued[0].units,definition.timeline[3].units);
   assert.deepEqual(announced,["futago"]);advance();assert.equal(queued.length,1,"the complete final group is committed once without another timer");
 });
 
 test("the president uses the same prior-guard clearance boundary without removing Panther guards or changing the boss",()=>{
   const definition=createBattleDefinition(V100_STAGES[24].id,{v100:true});
-  assert.deepEqual(definition.timeline.map(e=>e.at),[5,26,47,68,89,110]);
-  assert.ok(definition.timeline.slice(0,5).flatMap(e=>e.units).every(kind=>kind.startsWith("red-panther-")));
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
+  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="mugarian-president-mutated").length),[2,2,3,3]);
+  assert.ok(definition.timeline.slice(0,3).flatMap(e=>e.units).every(kind=>kind.startsWith("red-panther-")));
   assert.equal(definition.timeline.at(-1).units.filter(kind=>kind==="mugarian-president-mutated").length,1);
-  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,false,false,true]);
+  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,true]);
   for(const number of [3,5,11,14,17,20,30]){
     const d=createBattleDefinition(V100_STAGES[number-1].id,{v100:true});
     assert.equal(d.timeline.find(e=>e.units.includes(d.bossEnemyKind)).waitForPriorWaveClear,true);

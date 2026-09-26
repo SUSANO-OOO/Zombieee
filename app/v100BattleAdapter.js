@@ -159,7 +159,12 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 160, wave: 7, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher", "walker", "runner"]), addWave: true }),
     ]);
   }
-  const counts = stage.number === 23 ? [2, 3, 4, 5, 5, 6]
+  // Panther commanders can create extra threats while the shield line holds.
+  // Their two boss routes keep the four-wave pressure proven in normal play;
+  // six dense waves leave a summoned backlog that prevents boss entry.
+  const corporateBossRoute = stage.number === 24 || stage.number === 25;
+  const counts = corporateBossRoute ? [2, 2, 3, 3]
+    : stage.number === 23 ? [2, 3, 4, 5, 5, 6]
     : stage.number === 1 ? [3, 3, 4, 4, 4]
     : stage.number <= 10 ? [3, 4, 4, 4, 5]
       : [4, 4, 5, 5, 5, 6];
@@ -170,7 +175,7 @@ function stageTimeline(stage, missionType, bossKind) {
     const bossArrives = bossKind && wave === counts.length;
     if (bossArrives) units.push(...(bossKind === "futago" ? [bossKind, bossKind] : [bossKind]));
     return freeze({
-      at: PREP_SECONDS + index * (stage.number <= 10 ? 20 : 21),
+      at: PREP_SECONDS + index * (corporateBossRoute ? 24 : stage.number <= 10 ? 20 : 21),
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),

@@ -10683,6 +10683,45 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           bossAreaDamage: bossArea.targetDamage,
         };
       },
+      prepareV100BossWaveProof: (kind: "futago" | "mugarian-president-mutated") => {
+        const g = gameRef.current;
+        if (![24, 25].includes(g.definition.missionConfig?.v100StageNumber ?? -1)
+          || g.definition.bossEnemyKind !== kind) {
+          throw new Error(`V1 boss-wave proof does not match ${g.definition.stageId}: ${kind}`);
+        }
+        const missionIndex = g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
+        if (missionIndex < 0) throw new Error(`V1 boss wave is missing: ${kind}`);
+        const mission = g.definition.timeline[missionIndex];
+        // Localhost-only developer fast-forward. Keep the current player team,
+        // mission objects, boss definition and production wave consumer. The
+        // real final group, including both Futago bodies, is queued on the
+        // next simulation tick after prior combat proof has been captured.
+        g.fighters = g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0);
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = missionIndex;
+        g.time = mission.at;
+        g.wave = Math.max(1, mission.wave - 1);
+        g.deployQueue = [];
+        g.banner = "";
+        g.bannerTime = 0;
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        if (!g.fighters.some((fighter) => fighter.side === "human" && fighter.hp > 0)) {
+          spawnHuman(g, "guardian");
+        }
+        setPaused(false);
+        return {
+          mode: "local-developer-boss-wave",
+          stageId: g.definition.stageId,
+          bossKind: kind,
+          wave: mission.wave,
+          queuedKinds: [...mission.units],
+          retainedHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+        };
+      },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);

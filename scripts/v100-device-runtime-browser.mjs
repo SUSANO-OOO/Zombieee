@@ -354,7 +354,7 @@ try {
         };
       });
     }
-    const result = { name, viewport, status: "failed", blankBaseline, diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
+    const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     report.results.push(result);
     let measurementActive = false;
     page.on("console", (message) => { if (message.type() === "error") result.diagnostics.consoleErrors.push(message.text()); });
@@ -385,7 +385,7 @@ try {
         latest = snapshotProjection(snapshot);
         if (latest?.running && !latest.over && latest.boss.length > 0 && latest.humanCount > 0) break;
         if (!latest?.running || latest?.over) throw new Error("S25 ended before boss and human coverage were observed");
-        await normalTacticalInput(page, result);
+        await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea });
         await page.waitForTimeout(350);
       }
       assert.ok(latest?.running && !latest.over && latest.boss.length > 0 && latest.humanCount > 0, "live S25 boss/human setup coverage missing");
@@ -438,7 +438,7 @@ try {
         const started = Date.now();
         let previousSample = 0;
         while (Date.now() - started < measurementMs) {
-          await normalTacticalInput(page, result, { observeSnapshot(snapshot) {
+          await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
               throw new Error("30-second window lost live battle, humans, or boss");

@@ -82,6 +82,8 @@ async function advanceToMap(page) {
     const skip = page.getByRole("button", { name: "スキップ", exact: true });
     if (await visible(skip)) {
       await clickButton(page, skip, "story skip");
+      await page.locator(".v100-map-layout").waitFor({ state: "visible", timeout });
+      return step + 1;
     } else {
       const advance = page.locator(".v100-event-actions .v100-primary");
       await clickButton(page, advance, "story advance");
@@ -97,6 +99,8 @@ async function advanceToFormation(page) {
     const skip = page.getByRole("button", { name: "スキップ", exact: true });
     if (await visible(skip)) {
       await clickButton(page, skip, "pre-operation skip");
+      await page.locator(".v100-formation-panel").waitFor({ state: "visible", timeout });
+      return step + 1;
     } else {
       await clickButton(page, page.locator(".v100-event-actions .v100-primary"), "pre-operation advance");
     }
