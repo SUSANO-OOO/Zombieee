@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "55bc2c17cff0cc46a1cf024d9f9dc328194cc1a9b6458799551cd88dd8657e6c";
+export const V100_STORY_SOURCE_SHA256 = "ef6b82fc434d791714deacb765a9aa036275e52504b5fdd0579e47a59e291b23";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -785,7 +785,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "いくらちゃん、ラジオ受け取って！　俺、安藤さんを乗せる。……取りに戻る勇気、もうないっす",
+        "text": "いくらちゃん、ラジオ受け取って！　俺、安藤さんを乗せる。乗ったら、すぐ出してください！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 114
@@ -1389,7 +1389,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "一人が、曲がったチェーンソーを床へ置く。扉を破ろうとして刃が噛み、途中で手を止めた跡がある。",
+        "text": "一人が、曲がったチェーンソーを床へ置く。保守室の扉には浅い切り傷が一筋。刃を止めてから、彼は外側で感染者を押さえ続けていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 203
@@ -1397,7 +1397,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "王の剣、扉に敗北。こいつを巻き込む前に刃を止めた。……負けてよかった",
+        "text": "王の剣、封印。民は無事か",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
         "sourceLine": 204
@@ -1421,7 +1421,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "……では、余の勝ちということにする",
+        "text": "……なら、余の勝ちだ",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
         "sourceLine": 207
@@ -2393,7 +2393,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "薬局の箱、病院の備蓄、ここ。番号の親が同じです",
+        "text": "薬局の箱も病院の備蓄も、ここと同じ管理番号です",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 346
@@ -3733,7 +3733,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "必要な薬も、ご家族も。台帳を返していただければ手配できマス",
+        "text": "薬も、ご家族も、こちらで手配します。台帳を返していただければ、ですがネ",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
         "sourceLine": 540
@@ -4122,7 +4122,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "後ろから缶詰を積んだ小さな台車。クレイジーキングが王冠代わりの傷だらけのヘルメットを押さえる。",
+        "text": "後ろから缶詰を積んだ小さな台車。クレイジーキングはがたつく車輪を足で押さえ、一缶も落とさず運んでくる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 599,
@@ -4131,7 +4131,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "余の国土に道が戻った。通行料は取らん。缶詰を半分、病院へ頼む",
+        "text": "我が道、奪還。缶詰半分、病院へ",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
         "sourceLine": 600,
@@ -4149,7 +4149,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "明日の朝飯。王も食わねば働けん",
+        "text": "王の朝飯。空腹では守れん",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
         "sourceLine": 602,
@@ -4158,7 +4158,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "その制度、俺も加入したいっす",
+        "text": "朝飯つきなら、俺も入れてください",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 603,
@@ -4640,7 +4640,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "防爆扉の外で、追撃部隊が爆薬を貼る音。Mrs.チハはランチャー、拳銃、認証カードを主人公たちの前へ置いた。",
+        "text": "防爆扉を閉めた作戦庫。遠くで追撃部隊の声がする。Mrs.チハはランチャー、拳銃、認証カードを主人公たちの前へ置いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 673
@@ -4940,7 +4940,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "限定した危機を当社が止める。街に復旧、会社に契約。数字の上では、そうなるはずデシタ",
+        "text": "小さな危機を当社が収めれば、街は戻り、契約だけが残る。……そのはずでした",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
         "sourceLine": 714
@@ -5104,7 +5104,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "設備も薬も渡しましょう。私の退路だけ保証してクダサイ",
+        "text": "設備も薬も渡します。私の退路だけは保証してください",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
         "sourceLine": 738
