@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "1b2632e2334f83abc5f2110854bf3705cb2af2fdbb77cd99e2799be2289a342c";
+export const V100_STORY_SOURCE_SHA256 = "c3afe1a1ed49d67889f5a6ab2e94bcb7312cd4c8fa06325e0e7aa0cc6cf622c1";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -809,7 +809,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ミズチ",
-        "text": "ミズチ。救援車の退路は確保した。駅へ行くなら、次の交差点は開けておく",
+        "text": "ミズチ。救援車の退路は確保した。駅へ行くなら、防衛線までの道は開けておく",
         "portraitOwner": "unit-mizuchi",
         "portraitKind": "major",
         "sourceLine": 117
@@ -902,7 +902,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "交差点の向こうで、破れた橙の防災ベストをまとった巨体が車を押しのける。黒い防護眼鏡、頬の傷。",
+        "text": "仮設照明の向こうで、破れた橙の防災ベストをまとった巨体がバリケードを押しのける。黒い防護眼鏡、頬の傷。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 132
@@ -934,7 +934,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が横転車を盾にし、左右へ仲間を配置する。",
+        "text": "主人公が装甲車両を盾にし、左右へ仲間を配置する。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 136
@@ -1026,7 +1026,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が横転車へ牽引線を掛け、駅へ通る道を開く。",
+        "text": "主人公が防壁の残骸に牽引線を掛け、駅へ通る道を開く。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 149
@@ -1034,7 +1034,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "装甲車両が去ったあと、赤いレンズの防護服が交差点へ入る。銃口を下げたまま、迷いなくTAKUYAへ向かう。",
+        "text": "装甲車両が去ったあと、赤いレンズの防護服が防衛線へ入る。銃口を下げたまま、迷いなくTAKUYAへ向かう。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 152,
@@ -1193,7 +1193,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "主人公が振り返る。交差点で見た防護服と同じだ。",
+        "text": "主人公が振り返る。防衛線で見た防護服と同じだ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 175
@@ -5594,7 +5594,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "別の映像には、最初の交差点で倒したTAKUYAの遺骸を回収する赤レンズ部隊。再生処置の記録が続く。",
+        "text": "別の映像には、西新の防衛線で倒したTAKUYAの遺骸を回収する赤レンズ部隊。再生処置の記録が続く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 809
@@ -6010,7 +6010,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "最初に戻った交差点。病院から再避難する最後尾のバスが、安全回廊の手前で止まっている。後部窓には娘を抱いたザキミヤの妻。標識が折れ、建物の陰から巨体が姿を現す。",
+        "text": "最初にTAKUYAを止めた防衛線。最後尾の避難バスは、ここから見えない待機路で立ち往生している。無線から、ザキミヤの妻が娘をあやす声。仮設照明の陰から巨体が現れる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 870
@@ -6130,7 +6130,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "セガワの呼吸が止まる。感染群が交差点へ流れ込み、巨体はその奥から避難バスへ向き直る。",
+        "text": "セガワの呼吸が止まる。感染群が防壁の切れ目へ流れ込み、巨体は待機路のバスへ向きを変える。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 885
@@ -6222,7 +6222,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "巨体が交差点へ崩れる。誰もすぐには近づかない。いくらちゃんは測定器を二度見て、前へ出かけた足を止める。",
+        "text": "巨体が防衛線の路面へ崩れる。誰もすぐには近づかない。いくらちゃんは測定器を二度見て、前へ出かけた足を止める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 900,
@@ -6328,7 +6328,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "朝霧の旧道。試料を運ぶ車が病院へ先行する。武蔵は二刀を差し、別の道の前で立ち止まる。",
+        "text": "焼けた防衛線の路面に朝日が差す。試料を運ぶ車が病院へ先行する。武蔵は二刀を差し、別の道の前で立ち止まる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 916,
@@ -6346,7 +6346,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が歩み寄る。武蔵は礼をして、霧へ進む。",
+        "text": "主人公が歩み寄る。武蔵は礼をして、煙の向こうへ進む。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 918,
