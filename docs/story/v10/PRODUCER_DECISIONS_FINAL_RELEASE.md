@@ -225,7 +225,7 @@ ProducerがSolへ添付する写真は『ネコ殺しのセガワ特級博士』
 
 既存TAKUYAのcharacter identityと見た目を明確に基礎にし、Stage 3のTAKUYAと同一個体の最終変異だと認識できる連続性を持たせる。
 
-既存TAKUYAの顔・頭部・体格・特徴、橙色の安全vest残骸、人工armor、背面の複数投薬管を継承し、不均衡な異常肥大、左右非対称、肉体と人工armorの侵食・融合、投薬による暴走感、崩れたsilhouetteを加える。単なる巨大化、色違い、装甲追加、genericなAI怪物、無関係な別monster、綺麗すぎる近未来robotは不合格。
+既存TAKUYAの顔・頭部・体格・特徴、裸の上半身の縫合痕と黒い拘束帯、黒い短パンとブーツ、大型の刃を継承する。その上で人工armor、背面の複数投薬管、不均衡な異常肥大、左右非対称、肉体と人工armorの侵食・融合、投薬による暴走感、崩れたsilhouetteを加える。単なる巨大化、色違い、装甲追加、genericなAI怪物、無関係な別monster、綺麗すぎる近未来robotは不合格。橙色の安全vestはTAKUYAの既存衣装ではなく、Stage 3・TAKUYA-Ω・ENDINGのどの画像にも追加しない。
 
 現行文書の「約2倍」は厳密な数値acceptanceにせず、既存TAKUYAとの連続性、final bossとしての圧力、mobile readability、telegraph、hitbox、animation、performanceを同時に満たすexact scaleをSolが確定する。
 

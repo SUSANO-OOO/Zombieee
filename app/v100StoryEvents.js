@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "af9744bb0dcdbf0d62ac7f6c475e9c684eb1f926e0dc648c62d24b053853a2d5";
+export const V100_STORY_SOURCE_SHA256 = "a45102ef1185ef674a1e42eb2f7c9511cb1526d35479284e44b0c0282351f250";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -6026,7 +6026,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "異様に肥大した片腕に黒い鎖が食い込む。背の投薬管が脈打ち、剣とも槌ともつかない大刃が路面を削る。",
+        "text": "異様に肥大した片腕に縫合痕が走る。首から垂れた黒い鎖が揺れ、背の投薬管が脈打つ。剣とも槌ともつかない大刃が路面を削る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 872
