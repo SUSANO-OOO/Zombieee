@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "ef6b82fc434d791714deacb765a9aa036275e52504b5fdd0579e47a59e291b23";
+export const V100_STORY_SOURCE_SHA256 = "43e7ddfb1922f4d3b2644629fdc573ed7052e4087cac44d979b767dd75a6b594";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -5674,7 +5674,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "人も土地も使い潰してきた。止められたはずなのに、誰も止めなかった。だから、私が止めます",
+        "text": "水も土も、戻るには時間が要る。人間は、分かっていてその時間を奪う",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 821
@@ -5682,7 +5682,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "TKY",
-        "text": "せやから、あんたが人を選んで殺すんか",
+        "text": "人を減らして、その時間を買うんか",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
         "sourceLine": 822
@@ -5690,7 +5690,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "人間が病巣なら、数を減らすしかない",
+        "text": "それが、いま残った手段です",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 823
@@ -5698,7 +5698,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "うちの娘も病巣か",
+        "text": "うちの娘も、あんたの数字か",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
         "sourceLine": 824
@@ -5714,7 +5714,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "なら巻き込むな。分かっとって殺す方を選ぶな",
+        "text": "ほんなら撒くな。風は子どもを避けて通らん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
         "sourceLine": 826
@@ -5722,7 +5722,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "返答はない。最初の保護カバーが閉まり始める。",
+        "text": "セガワは答えない。最初の保護カバーが閉まり始める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 827
