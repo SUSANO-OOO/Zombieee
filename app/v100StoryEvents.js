@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "43e7ddfb1922f4d3b2644629fdc573ed7052e4087cac44d979b767dd75a6b594";
+export const V100_STORY_SOURCE_SHA256 = "1b2632e2334f83abc5f2110854bf3705cb2af2fdbb77cd99e2799be2289a342c";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -1389,7 +1389,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "一人が、曲がったチェーンソーを床へ置く。保守室の扉には浅い切り傷が一筋。刃を止めてから、彼は外側で感染者を押さえ続けていた。",
+        "text": "一人が、曲がったチェーンソーを床へ置く。扉の内側には浅い切り傷が一筋。刃を止めた彼は、保守員を背に、外から押される扉を支え続けていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 203

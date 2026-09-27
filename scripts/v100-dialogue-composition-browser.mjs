@@ -19,6 +19,7 @@ const all=Object.entries(V100_STORY_EVENTS).flatMap(([eventId,event])=>event.nod
 const longest=all.filter(x=>x.node.kind==='dialogue').sort((a,b)=>b.node.text.length-a.node.text.length)[0];
 const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:5},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},
  {id:'s17-reunion',eventId:'v100:event:s17:post',nodeIndex:4,includes:'ほんとに来た'},
+ {id:'s05-door',eventId:'v100:event:s05:post',nodeIndex:1,includes:'保守員を背に'},
  {id:'s28-segawa',eventId:'v100:event:s28:pre',nodeIndex:3,includes:'戻るには時間が要る',radio:true},
  {id:'s29-instruction',eventId:'v100:event:s29:pre',nodeIndex:6,includes:'両方やります！'},
  {id:'s30-paisen',eventId:'v100:event:s30:pre',nodeIndex:21,includes:'指一本触れさせねえ！'},
