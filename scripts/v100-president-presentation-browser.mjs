@@ -146,7 +146,60 @@ function installRasterGroupAblation() {
   state.restore = () => { const methodRestored = {}; for (const [method, original] of originals) { CanvasRenderingContext2D.prototype[method] = original; methodRestored[method] = CanvasRenderingContext2D.prototype[method] === original; } state.methodRestored = methodRestored; state.restored = Object.values(methodRestored).every(Boolean); return { ...state, setMode: undefined, restore: undefined }; }; window.__V100_PRESIDENT_RASTER_GROUP_ABLATION__ = state; return state;
 }
 function restoreRasterGroupAblation() { const state = window.__V100_PRESIDENT_RASTER_GROUP_ABLATION__; return state?.restore ? state.restore() : { restored: false }; }
-function installHudVisibilityAblation() { const canvas = document.querySelector(".game-shell canvas"); const style = document.createElement("style"); const rect = canvas?.getBoundingClientRect?.(); const state = { installed: true, enabled: Boolean(canvas), windows: [], mode: "original", restored: false, style, canvas, originalVisibility: canvas ? window.getComputedStyle(canvas).visibility : null, originalRect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null, originalBacking: canvas ? { width: canvas.width, height: canvas.height } : null, hudVisibility: null, restore: null }; if (!canvas) { state.enabled = false; state.errors = ["production-canvas-missing"]; return state; } style.textContent = `body,body *,body::before,body::after,body *::before,body *::after{visibility:hidden!important}.game-shell canvas{visibility:visible!important}`; style.disabled = true; (document.head || document.documentElement).appendChild(style); state.setMode = mode => { if (!["original", "hud-hidden", "hud-hidden-all-raster-muted", "restored"].includes(mode)) throw new RangeError("invalid HUD mode"); state.mode = mode; style.disabled = mode === "original" || mode === "restored"; return { mode }; }; state.read = () => { const r = canvas.getBoundingClientRect(); return { canvas: { width: canvas.width, height: canvas.height, visibility: window.getComputedStyle(canvas).visibility, x: r.x, y: r.y, cssWidth: r.width, cssHeight: r.height }, hudVisibility: [...document.querySelectorAll(".v100-boss-center,.top-hud,.battle-message-stack")].slice(0, 3).map(node => window.getComputedStyle(node).visibility) }; }; state.restore = () => { style.remove(); const r = canvas.getBoundingClientRect(); state.restored = !document.contains(style) && window.getComputedStyle(canvas).visibility === state.originalVisibility && state.originalRect && r.x === state.originalRect.x && r.y === state.originalRect.y && r.width === state.originalRect.width && r.height === state.originalRect.height; return { ...state, setMode: undefined, read: undefined, restore: undefined, style: undefined, canvas: undefined }; }; window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__ = state; return state; }
+function installHudVisibilityAblation() {
+  const canvas = document.querySelector(".game-shell canvas");
+  const rect = canvas?.getBoundingClientRect?.();
+  const styles = {
+    "top-hidden": document.createElement("style"),
+    "bottom-hidden": document.createElement("style"),
+    "vignette-hidden": document.createElement("style"),
+    "hud-hidden": document.createElement("style"),
+  };
+  const state = {
+    installed: true, enabled: Boolean(canvas), mode: "original", restored: false,
+    styles, canvas, originalVisibility: canvas ? window.getComputedStyle(canvas).visibility : null,
+    originalRect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null,
+  };
+  if (!canvas) { state.enabled = false; state.errors = ["production-canvas-missing"]; return state; }
+  styles["top-hidden"].textContent = ".top-hud,.top-hud *,.v100-boss-center,.v100-boss-center *,.barrier-health,.barrier-health *,.boss-hud,.boss-hud *,.crawler-alert,.crawler-alert *,.manual-ability-legend,.manual-ability-legend *,.manual-ability-ready,.manual-ability-ready *{visibility:hidden!important}";
+  styles["bottom-hidden"].textContent = ".bottom-hud,.bottom-hud *{visibility:hidden!important}";
+  styles["vignette-hidden"].textContent = ".game-frame::after{visibility:hidden!important}";
+  styles["hud-hidden"].textContent = "body,body *,body::before,body::after,body *::before,body *::after{visibility:hidden!important}.game-shell canvas{visibility:visible!important}";
+  for (const style of Object.values(styles)) {
+    style.disabled = true;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  state.setMode = mode => {
+    if (!["original", "top-hidden", "bottom-hidden", "top-bottom-hidden", "vignette-hidden", "hud-hidden", "restored"].includes(mode)) throw new RangeError("invalid HUD mode");
+    state.mode = mode;
+    for (const [key, style] of Object.entries(styles)) {
+      style.disabled = key !== mode && !(mode === "top-bottom-hidden" && (key === "top-hidden" || key === "bottom-hidden"));
+    }
+    return { mode };
+  };
+  state.read = () => {
+    const r = canvas.getBoundingClientRect();
+    const visibility = selector => {
+      const node = document.querySelector(selector);
+      return node ? window.getComputedStyle(node).visibility : null;
+    };
+    return {
+      canvas: { width: canvas.width, height: canvas.height, visibility: window.getComputedStyle(canvas).visibility, x: r.x, y: r.y, cssWidth: r.width, cssHeight: r.height },
+      hudVisibility: { top: visibility(".top-hud"), bottom: visibility(".bottom-hud"), boss: visibility(".v100-boss-center"), vignette: window.getComputedStyle(document.querySelector(".game-frame"), "::after").visibility },
+    };
+  };
+  state.restore = () => {
+    for (const style of Object.values(styles)) style.remove();
+    const r = canvas.getBoundingClientRect();
+    state.restored = Object.values(styles).every(style => !document.contains(style))
+      && window.getComputedStyle(canvas).visibility === state.originalVisibility
+      && state.originalRect && r.x === state.originalRect.x && r.y === state.originalRect.y
+      && r.width === state.originalRect.width && r.height === state.originalRect.height;
+    return { restored: state.restored };
+  };
+  window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__ = state;
+  return state;
+}
 function restoreHudVisibilityAblation() { const state = window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__; return state?.restore ? state.restore() : { restored: false }; }
 
 function runSaveFixtureControl() {
@@ -261,7 +314,27 @@ function runRasterGroupAblationControls() {
   const methods = ["drawImage", "fill", "fillRect", "stroke", "strokeRect", "fillText", "strokeText", "clearRect"]; class FakeCanvas {} class FakeContext { constructor(canvas) { this.canvas = canvas; } }
   for (const method of methods) FakeContext.prototype[method] = function() { return `${method}-ok`; }; const production = new FakeCanvas(); const offscreen = new FakeCanvas(); const documentRef = { querySelector: () => production }; const windowRef = {}; const original = Object.fromEntries(methods.map(method => [method, FakeContext.prototype[method]])); const state = Function("CanvasRenderingContext2D", "document", "window", `return (${installRasterGroupAblation.toString()})()`)(FakeContext, documentRef, windowRef); assert.equal(state.enabled, true); const prod = new FakeContext(production); const other = new FakeContext(offscreen); for (const method of methods) { prod[method](); other[method](); } state.setMode("images-muted"); assert.equal(prod.drawImage(), undefined); assert.equal(other.drawImage(), "drawImage-ok"); state.setMode("geometry-text-muted"); assert.equal(prod.fillRect(), undefined); assert.equal(other.fillRect(), "fillRect-ok"); state.setMode("all-muted"); assert.equal(prod.clearRect(), undefined); const restored = Function("CanvasRenderingContext2D", "window", `return (${restoreRasterGroupAblation.toString()})()`)(FakeContext, windowRef); assert.equal(restored.restored, true); assert.deepEqual(restored.methodRestored, Object.fromEntries(methods.map(method => [method, true]))); for (const method of methods) assert.equal(FakeContext.prototype[method], original[method]); const missing = Function("CanvasRenderingContext2D", "document", "window", `return (${installRasterGroupAblation.toString()})`)(FakeContext, { querySelector: () => null }, {}); assert.equal(missing().enabled, false); assert.throws(() => state.setMode("bad")); return { passed: true, checks: ["production-only method suppression", "offscreen isolation", "five mode dispatch", "full method identity restore", "missing target/invalid mode diagnostics"] };
 }
-function runHudVisibilityAblationControls() { const nodes = [{ style: {}, computed: { visibility: "visible" } }]; const canvas = { width: 10, height: 10, style: {}, getContext() { return {}; }, getBoundingClientRect() { return { x: 0, y: 0, width: 10, height: 10 }; } }; const documentRef = { querySelector: () => canvas, createElement: () => ({ remove() { this.removed = true; } }), head: { appendChild() {} }, documentElement: {}, contains: node => !node.removed, querySelectorAll: () => nodes }; const windowRef = { getComputedStyle: () => ({ visibility: "visible" }) }; const install = Function("document", "window", `return (${installHudVisibilityAblation.toString()})()`)(documentRef, windowRef); assert.equal(install.enabled, true); install.setMode("hud-hidden"); assert.equal(install.read().canvas.width, 10); install.setMode("hud-hidden-all-raster-muted"); assert.throws(() => install.setMode("invalid")); const restored = Function("window", `return (${restoreHudVisibilityAblation.toString()})()`)(windowRef); assert.equal(restored.restored, true); return { passed: true, checks: ["serialized HUD modes", "canvas geometry readback", "invalid mode rejection", "style removal restore"] }; }
+function runHudVisibilityAblationControls() {
+  const canvas = { width: 10, height: 10, getBoundingClientRect: () => ({ x: 0, y: 0, width: 10, height: 10 }) };
+  const styles = [];
+  const documentRef = {
+    querySelector: selector => selector === ".game-shell canvas" ? canvas : null,
+    createElement: () => { const style = { remove() { this.removed = true; } }; styles.push(style); return style; },
+    head: { appendChild() {} }, documentElement: {}, contains: node => !node.removed,
+  };
+  const windowRef = { getComputedStyle: () => ({ visibility: "visible" }) };
+  const state = Function("document", "window", `return (${installHudVisibilityAblation.toString()})()`)(documentRef, windowRef);
+  assert.equal(state.enabled, true);
+  for (const mode of ["top-hidden", "bottom-hidden", "top-bottom-hidden", "vignette-hidden", "hud-hidden", "original"]) {
+    state.setMode(mode);
+    assert.equal(Object.values(state.styles).filter(style => !style.disabled).length, mode === "original" ? 0 : mode === "top-bottom-hidden" ? 2 : 1);
+  }
+  assert.equal(state.read().canvas.width, 10);
+  assert.throws(() => state.setMode("invalid"));
+  assert.equal(Function("window", `return (${restoreHudVisibilityAblation.toString()})()`)(windowRef).restored, true);
+  assert.ok(styles.every(style => style.removed));
+  return { passed: true, checks: ["separate top/bottom/combined/vignette/all modes", "canvas geometry readback", "invalid mode rejection", "all styles removed"] };
+}
 
 function installRafCallbackProfile({ maxEntries = 180 } = {}) {
   const original = window.requestAnimationFrame; const state = { installed: true, entries: [], overflow: 0, invalidTimestamps: 0, maxEntries, restored: false, restore: null };
@@ -416,7 +489,47 @@ try {
       await page.waitForTimeout(1000);
       const end = await readBaselineDiagnostic();
       const baselineCase = { viewport, expectedId, mode: "baseline-only", requestedDurationMs: 1000, durationMs: end.measuredAt - start.measuredAt, runtimePerformanceStart: start, runtimePerformanceEnd: end, runtimePerformanceDelta: presentationPerformanceDelta(start, end), visualAcceptance: false };
-      if (hudVisibilityAblation) { let probe = null; const windows = []; try { probe = await page.evaluate(installHudVisibilityAblation); assert.ok(probe?.enabled, "HUD ablation target missing"); const read = () => page.evaluate(() => { const a = window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__; const p = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? {}; return { measuredAt: performance.now(), renderFrames: p.renderFrames ?? 0, rafRequests: p.rafRequests ?? 0, read: a?.read?.() ?? null }; }); for (const mode of ["original", "hud-hidden", "hud-hidden-all-raster-muted", "restored"]) { await page.evaluate(next => window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__?.setMode(next), mode); if (mode === "hud-hidden-all-raster-muted") await page.evaluate(installRasterGroupAblation); const before = await read(); await page.waitForTimeout(2000); const after = await read(); if (mode === "hud-hidden-all-raster-muted") await page.evaluate(restoreRasterGroupAblation); windows.push({ mode, requestedDurationMs: 2000, actualDurationMs: after.measuredAt - before.measuredAt, frameDelta: after.renderFrames - before.renderFrames, rafDelta: after.rafRequests - before.rafRequests, canvasBefore: before.read?.canvas ?? null, canvasAfter: after.read?.canvas ?? null, hudVisibility: after.read?.hudVisibility ?? [], visualAcceptance: false }); await page.screenshot({ path: path.join(output, `president-hud-visibility-${mode}.png`) }); } assert.ok(windows.every(item => item.actualDurationMs >= 1900 && item.actualDurationMs <= 2600)); assert.ok(windows.every(item => item.frameDelta > 0)); baselineCase.hudVisibilityAblationDiagnostic = { windows, visualAcceptance: false }; } finally { const restored = await page.evaluate(restoreHudVisibilityAblation).catch(() => ({ restored: false })); baselineCase.hudVisibilityAblationDiagnostic ??= {}; baselineCase.hudVisibilityAblationDiagnostic.restored = restored.restored === true; assert.equal(restored.restored, true); } report.cases.push(baselineCase); continue; }
+      if (hudVisibilityAblation) {
+        const windows = [];
+        try {
+          const probe = await page.evaluate(installHudVisibilityAblation);
+          assert.ok(probe?.enabled, "HUD ablation target missing");
+          const read = () => page.evaluate(() => {
+            const active = window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__;
+            const performanceSnapshot = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? {};
+            return {
+              measuredAt: performance.now(),
+              renderFrames: performanceSnapshot.renderFrames ?? 0,
+              rafRequests: performanceSnapshot.rafRequests ?? 0,
+              read: active?.read?.() ?? null,
+            };
+          });
+          for (const [index, mode] of ["original", "top-hidden", "original", "bottom-hidden", "original", "top-bottom-hidden", "original", "vignette-hidden", "original", "hud-hidden", "restored"].entries()) {
+            await page.evaluate(next => window.__V100_PRESIDENT_HUD_VISIBILITY_ABLATION__?.setMode(next), mode);
+            const before = await read();
+            await page.waitForTimeout(2000);
+            const after = await read();
+            windows.push({
+              index, mode, requestedDurationMs: 2000, actualDurationMs: after.measuredAt - before.measuredAt,
+              frameDelta: after.renderFrames - before.renderFrames,
+              rafDelta: after.rafRequests - before.rafRequests,
+              canvasBefore: before.read?.canvas ?? null, canvasAfter: after.read?.canvas ?? null,
+              hudVisibility: after.read?.hudVisibility ?? null, visualAcceptance: false,
+            });
+            await page.screenshot({ path: path.join(output, `president-hud-visibility-${index}-${mode}.png`) });
+          }
+          assert.ok(windows.every(item => item.actualDurationMs >= 1900 && item.actualDurationMs <= 2600));
+          assert.ok(windows.every(item => item.frameDelta > 0));
+          baselineCase.hudVisibilityAblationDiagnostic = { windows, visualAcceptance: false };
+        } finally {
+          const restored = await page.evaluate(restoreHudVisibilityAblation).catch(() => ({ restored: false }));
+          baselineCase.hudVisibilityAblationDiagnostic ??= {};
+          baselineCase.hudVisibilityAblationDiagnostic.restored = restored.restored === true;
+          assert.equal(restored.restored, true);
+        }
+        report.cases.push(baselineCase);
+        continue;
+      }
       if (!backgroundBlitAblation && !shadowBlurAblation && !rasterGroupAblation && !hudVisibilityAblation && !renderProfile && !compositeAblation && !rafCallbackProfile) {
         const layout = await page.evaluate(() => {
           const selectors = [".enable-audio-button", ".audio-unlock-inline", ".v100-boss-center", ".phase-block", ".battle-controls-zone", ".battle-controls-zone .icon-btn:not(.audio-unlock-inline)"];
