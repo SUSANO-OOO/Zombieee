@@ -243,9 +243,10 @@ try{for(const number of numbers){
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
    }
-   // In the early-budget music fixture, keep the ordinary airstrike ready for
-   // TAKUYA's scheduled arrival instead of spending it on a pre-boss cluster.
-   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,airstrikeAfterSeconds:musicStage3?100:0,bossAirstrikePriority:musicStage3});await page.waitForTimeout(350);
+   // Clear the opening wave with the first ordinary airstrike. Once each
+   // owned unit has deployed, bank command for the boss assault; save the
+   // next support charge for TAKUYA instead of a pre-boss cluster.
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:!musicStage3||result.inputs.filter(input=>input.action==='airstrike').length>=2,reserveSecondAirstrikeForBoss:musicStage3,holdRedeploymentUntilBoss:musicStage3});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){

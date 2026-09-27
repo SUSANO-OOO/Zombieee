@@ -12,7 +12,7 @@ export async function nativeBattleTap(page,locator){
   if(!point)return false;await orderedNativePointer(page,point);return true;
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false}={}){
+export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};});
   observeSnapshot?.(s);
   if(!s?.running||s.over)return;
@@ -58,17 +58,20 @@ export async function normalTacticalInput(page,record,{observeSnapshot,barrageWh
   const bossPrecision = record.tacticalProfile==='boss-precision';
   const priorities = earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities;
   record.tacticalProfile ??= earlyCampaign ? 'early-roles' : 'late-precision';
-  for(const kind of priorities){
+  const deployedKinds=new Set(record.inputs.filter(input=>input.action==='deploy').map(input=>input.kind));
+  const holdRedeployment=holdRedeploymentUntilBoss&&kinds.every(kind=>deployedKinds.has(kind))&&!enemies.some(f=>f.kind==='takuya');
+  for(const kind of holdRedeployment?[]:priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
     const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
     for(let i=0;i<await candidates.count();i++)if(await nativeBattleTap(page,candidates.nth(i))){record.inputs.push({time:s.time,action:'deploy',kind,command:s.energy});deployed=true;break;}
     if(deployed)break;
   }
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];
-  const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):bossAirstrikePriority?enemies.find(f=>f.kind==='takuya'&&f.combatReady):null;
+  const reserveForBoss=reserveSecondAirstrikeForBoss&&record.inputs.some(input=>input.action==='airstrike');
+  const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):bossAirstrikePriority||reserveForBoss?enemies.find(f=>f.kind==='takuya'&&f.combatReady):null;
   let airstrikeRequested=false;
-  if(s.time>=airstrikeAfterSeconds&&(bossAirstrikePriority?boss:cluster?.members.length>=3||boss)){
-    const target=bossAirstrikePriority&&boss
+  if(s.time>=airstrikeAfterSeconds&&(bossAirstrikePriority||reserveForBoss?boss:cluster?.members.length>=3||boss)){
+    const target=(bossAirstrikePriority||reserveForBoss)&&boss
       ? {x:Math.min(805,Math.max(230,boss.x)),y:boss.y}
       : cluster?.members.length>=3
       ? {x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length}
