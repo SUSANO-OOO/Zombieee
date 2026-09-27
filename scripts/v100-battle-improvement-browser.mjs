@@ -248,7 +248,7 @@ try{for(const number of numbers){
    // Clear the opening wave with the first ordinary airstrike. Once each
    // owned unit has deployed, bank command for the boss assault; save the
    // next support charge for TAKUYA instead of a pre-boss cluster.
-   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:!musicStage3||Boolean(result.bossDefeatedAt)||result.inputs.filter(input=>input.action==='airstrike').length>=2,reserveSecondAirstrikeForBoss:musicStage3,holdRedeploymentUntilBoss:musicStage3});await page.waitForTimeout(350);
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:!musicStage3||Boolean(result.bossDefeatedAt),reserveSecondAirstrikeForBoss:musicStage3,holdRedeploymentUntilBoss:musicStage3});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
