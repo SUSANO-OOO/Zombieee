@@ -12,7 +12,7 @@ export async function nativeBattleTap(page,locator){
   if(!point)return false;await orderedNativePointer(page,point);return true;
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0}={}){
+export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false}={}){
   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};});
   observeSnapshot?.(s);
   if(!s?.running||s.over)return;
@@ -65,10 +65,12 @@ export async function normalTacticalInput(page,record,{observeSnapshot,barrageWh
     if(deployed)break;
   }
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];
-  const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):null;
+  const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):bossAirstrikePriority?enemies.find(f=>f.kind==='takuya'&&f.combatReady):null;
   let airstrikeRequested=false;
-  if(s.time>=airstrikeAfterSeconds&&(cluster?.members.length>=3||boss)){
-    const target=cluster?.members.length>=3
+  if(s.time>=airstrikeAfterSeconds&&(bossAirstrikePriority?boss:cluster?.members.length>=3||boss)){
+    const target=bossAirstrikePriority&&boss
+      ? {x:Math.min(805,Math.max(230,boss.x)),y:boss.y}
+      : cluster?.members.length>=3
       ? {x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length}
       : {x:Math.min(805,Math.max(230,boss.x)),y:boss.y};
     const point=await page.locator('.game-shell canvas').evaluate((c,t)=>{const r=c.getBoundingClientRect(),scale=Number(c.dataset.worldScale),x=r.x+Number(c.dataset.worldOffsetX)+t.x*scale,y=r.y+Number(c.dataset.worldOffsetY)+t.y*scale;return document.elementFromPoint(x,y)===c?{x,y}:null;},target).catch(()=>null);

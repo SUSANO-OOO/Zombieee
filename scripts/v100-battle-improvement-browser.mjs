@@ -243,7 +243,9 @@ try{for(const number of numbers){
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
    }
-   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3});await page.waitForTimeout(350);
+   // In the early-budget music fixture, keep the ordinary airstrike ready for
+   // TAKUYA's scheduled arrival instead of spending it on a pre-boss cluster.
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,airstrikeAfterSeconds:musicStage3?100:0,bossAirstrikePriority:musicStage3});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
