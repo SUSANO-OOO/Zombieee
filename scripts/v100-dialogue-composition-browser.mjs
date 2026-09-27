@@ -25,7 +25,7 @@ const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:5},ownerCase('gu
  {id:'s29-instruction',eventId:'v100:event:s29:pre',nodeIndex:6,includes:'両方やります！'},
  {id:'s30-paisen',eventId:'v100:event:s30:pre',nodeIndex:21,includes:'指一本触れさせねえ！'},
  {id:'s30-return',eventId:'v100:event:s30:pre',nodeIndex:0,includes:'見えない待機路'},
- {id:'s30-defeat',eventId:'v100:event:s30:post',nodeIndex:0,includes:'巨体が防衛線の路面へ崩れる',backdrop:'takuya-omega-ending-defeat-vest-v3.webp'},
+ {id:'s30-defeat',eventId:'v100:event:s30:post',nodeIndex:0,includes:'巨体が防衛線の路面へ崩れる',backdrop:'takuya-omega-ending-defeat-original-costume-v4.webp'},
  {id:'s30-cleared',eventId:'v100:event:s30:post',nodeIndex:6,includes:'最後の避難バス',backdrop:'s30-defense-line-aftermath-background-v1.webp'}];
 const report={scope:'Explicit isolated story fixtures; visual composition and native next controls, not whole-campaign acceptance',build:await productionBuildIdentity(),results:[]};
 const engines=Object.entries({chromium,webkit}).filter(([name])=>(process.env.V100_DIALOGUE_QA_ENGINES??'chromium,webkit').split(',').includes(name));

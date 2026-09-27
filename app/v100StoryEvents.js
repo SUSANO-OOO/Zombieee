@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "c3afe1a1ed49d67889f5a6ab2e94bcb7312cd4c8fa06325e0e7aa0cc6cf622c1";
+export const V100_STORY_SOURCE_SHA256 = "af9744bb0dcdbf0d62ac7f6c475e9c684eb1f926e0dc648c62d24b053853a2d5";
 export const V100_STORY_SOURCE_LINE_COUNT = 978;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -902,7 +902,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "仮設照明の向こうで、破れた橙の防災ベストをまとった巨体がバリケードを押しのける。黒い防護眼鏡、頬の傷。",
+        "text": "仮設照明の向こうで、鎖を引きずる巨体がバリケードを押しのける。黒い防護眼鏡、頬の傷。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 132
@@ -926,7 +926,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "分からん。あの格好で、人を助けとったことだけは分かる",
+        "text": "分からん。発生の日、あの人が薬を運んでくれたことは覚えとる",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 135
@@ -994,7 +994,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "TAKUYAの指が、放送の鳴る方へ伸びたまま止まる。クマバーソンが街頭放送の電源を切り、ベストの端を拾って顔へ掛ける。",
+        "text": "TAKUYAの指が、放送の鳴る方へ伸びたまま止まる。クマバーソンが街頭放送の電源を切り、伸びた手をそっと地面へ戻す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 145
@@ -1052,7 +1052,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "防災ベストが剥がされ、黒い袋に収まる。",
+        "text": "隊員がTAKUYAの鎖を外し、遺体を黒い袋へ収める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 154,
@@ -5954,7 +5954,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "画面に、人工装甲をまとったTAKUYA。進路は西新の安全回廊。",
+        "text": "画面に、投薬管と鎖で拘束されたTAKUYA。進路は西新の安全回廊。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 861
@@ -6018,7 +6018,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "頬の傷、後ろへ流した淡い髪、黒い防護眼鏡。裂けた橙の防災ベストが鎖の下に残る。",
+        "text": "頬の傷、後ろへ流した淡い髪、黒い防護眼鏡。傷跡だらけの胸を、古い革帯が斜めに走る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 871
@@ -6026,7 +6026,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "異様に肥大した片腕の装甲を黒い鎖が締めつける。背の投薬管が脈打ち、剣とも槌ともつかない大刃が路面を削る。",
+        "text": "異様に肥大した片腕に黒い鎖が食い込む。背の投薬管が脈打ち、剣とも槌ともつかない大刃が路面を削る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 872
