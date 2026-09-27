@@ -191,9 +191,11 @@ try{for(const number of numbers){
     // this fixture observes, instead of adding a fifth rear-line copy first.
     if(!last.fighters.some(f=>f.kind==='brute'&&f.hp>0)&&await nativeBattleTap(page,page.locator('button.unit-card[data-kind="brute"]')))result.inputs.push({time:last.time,action:'deploy',kind:'brute',reason:'native ground-impact observation'});
    }
-  if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
-    const audio=await page.evaluate(()=>{const battle=window.__ASHFALL_AUDIO_QA__,shell=window.__V100_EVENT_AUDIO_QA__,diagnostics=battle?.getDiagnostics?.()??null,status=battle?.getAudioStatus?.()??null;return{audio:diagnostics?{activeBgm:diagnostics.activeBgm,duplicateLoopInstanceKeys:diagnostics.duplicateLoopInstanceKeys,contextState:diagnostics.contextState??status?.contextState??null,audioState:diagnostics.audioState??status?.state??null,unlocked:diagnostics.unlocked??null,activeBgmVoices:diagnostics.activeBgmVoices??0}:null,audioStatus:status,shellAudio:shell?.getDiagnostics?.()??null,cueRequests:battle?.getCueRequests?.()??[]};});
-    (result.musicSamples??=[]).push({time:last.time,...audio});
+  // The result transition unmounts the battle mixer. Its post-result state
+  // is not an in-battle music sample; keep every pre-result sample strict.
+  if(process.env.V100_BATTLE_MUSIC_CHECK==='1'&&!last.over){
+    const audio=await page.evaluate(()=>{if(window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.over||document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'))return null;const battle=window.__ASHFALL_AUDIO_QA__,shell=window.__V100_EVENT_AUDIO_QA__,diagnostics=battle?.getDiagnostics?.()??null,status=battle?.getAudioStatus?.()??null;return{audio:diagnostics?{activeBgm:diagnostics.activeBgm,duplicateLoopInstanceKeys:diagnostics.duplicateLoopInstanceKeys,contextState:diagnostics.contextState??status?.contextState??null,audioState:diagnostics.audioState??status?.state??null,unlocked:diagnostics.unlocked??null,activeBgmVoices:diagnostics.activeBgmVoices??0}:null,audioStatus:status,shellAudio:shell?.getDiagnostics?.()??null,cueRequests:battle?.getCueRequests?.()??[]};});
+    if(audio)(result.musicSamples??=[]).push({time:last.time,...audio});
    }
    const enemies=last.fighters.filter(f=>f.side==='zombie'&&f.hp>0);
    if((number===3||number===5)&&result.boss&&!result.bossDefeatedAt&&!enemies.some(f=>f.kind===(number===3?'takuya':'gate-eater'))&&last.time>result.boss.firstObservedTime)result.bossDefeatedAt=last.time;
