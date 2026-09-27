@@ -59,7 +59,7 @@ export async function normalTacticalInput(page,record,{observeSnapshot,barrageWh
   const priorities = earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities;
   record.tacticalProfile ??= earlyCampaign ? 'early-roles' : 'late-precision';
   const deployedKinds=new Set(record.inputs.filter(input=>input.action==='deploy').map(input=>input.kind));
-  const holdRedeployment=holdRedeploymentUntilBoss&&kinds.every(kind=>deployedKinds.has(kind))&&!enemies.some(f=>f.kind==='takuya');
+  const holdRedeployment=holdRedeploymentUntilBoss&&kinds.every(kind=>deployedKinds.has(kind))&&!record.boss;
   for(const kind of holdRedeployment?[]:priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
     const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
@@ -67,7 +67,7 @@ export async function normalTacticalInput(page,record,{observeSnapshot,barrageWh
     if(deployed)break;
   }
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];
-  const reserveForBoss=reserveSecondAirstrikeForBoss&&record.inputs.some(input=>input.action==='airstrike');
+  const reserveForBoss=reserveSecondAirstrikeForBoss&&!record.bossDefeatedAt&&record.inputs.some(input=>input.action==='airstrike');
   const boss=bossPrecision?enemies.find(f=>f.kind==='takuya'):bossAirstrikePriority||reserveForBoss?enemies.find(f=>f.kind==='takuya'&&f.combatReady):null;
   let airstrikeRequested=false;
   if(s.time>=airstrikeAfterSeconds&&(bossAirstrikePriority||reserveForBoss?boss:cluster?.members.length>=3||boss)){
