@@ -1,6 +1,6 @@
 /* Phone formation is a field plan: one featured operator, seven roster slots,
  * and a separate hand of recruit cards. The board itself never scrolls. */
-@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
   .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
     border: 0;
     border-radius: 0;
@@ -172,7 +172,7 @@
   .v100-formation-panel .v100-roster-card-copy strong { font-size: 12px; line-height: 1.1; }
   .v100-formation-panel .v100-roster-card-copy small { font-size: 10px; }
 }
-@media (min-width: 640px) and (max-width: 980px) and (max-height: 360px) and (orientation: landscape) {
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
   .v100-formation-panel .v100-formation-board { grid-template-rows: minmax(0, 1fr) 44px; }
   .v100-formation-panel .v100-formation-focus > h3 { font-size: 14px; margin-top: 2px; }
   .v100-formation-panel .v100-formation-focus > button { display: none; }
@@ -189,7 +189,7 @@
  * decisions. Showing both at once made every face and label too small. */
 .v100-picker-close,
 .v100-personnel-detail-back { display: none; }
-@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
   .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
     padding: 4px 7px;
     background: linear-gradient(90deg, #070c0be8, #0b1714c8 54%, #09100de0), var(--v100-stage-art) center / cover;
@@ -348,7 +348,7 @@
   .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 12px; }
   .v100-personnel-screen.detail-open .v100-personnel-focus-copy > button { min-height: 42px; margin-top: auto; font-size: 14px; }
 }
-@media (min-width: 640px) and (max-width: 980px) and (max-height: 360px) and (orientation: landscape) {
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
   .v100-formation-panel .v100-formation-focus > h3 { font-size: 16px; }
   .v100-formation-panel .v100-formation-focus > button { display: block; min-height: 30px; bottom: 5px; font-size: 11px; }
   .v100-formation-panel .v100-slot-meta em { display: block; font-size: 9px; }
@@ -363,7 +363,7 @@
  * physical battle positions. Keep the seven touch targets above 44px. */
 .v100-field-map-title,
 .v100-field-map-drawing { display: none; }
-@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
   .v100-formation-panel:not(.picker-open) .v100-slot-rail {
     position: relative;
     isolation: isolate;
@@ -476,4 +476,21 @@
     white-space: nowrap;
   }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta em { display: block; color: #d5b17c; font-size: 8px; line-height: 11px; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (min-height: 421px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy dl {
+    position: absolute;
+    top: 7px;
+    right: 12px;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    margin: 0;
+    font-size: 10px;
+  }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy dl div { gap: 5px; padding: 0; border: 0; }
+  .v100-personnel-screen.detail-open .v100-personnel-stats { gap: 4px; margin: 2px 0; }
+  .v100-personnel-screen.detail-open .v100-unit-stat { min-height: 54px; padding: 3px 6px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 18px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 11px; }
 }
