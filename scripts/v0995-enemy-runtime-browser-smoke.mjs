@@ -302,7 +302,8 @@ for (const engine of engines) {
               samples.push({ at: performance.now() - started, audit });
               if (samples.length >= 2 && phase === "move" && audit.fighter?.actualXDelta < -.05 && audit.renderHistory.length >= 3) break;
               if (samples.length >= 2 && phase === "attack" && audit.fighter && (audit.fighter.attackSequence > 0 || audit.fighter.attack > 0) && audit.renderHistory.length >= 3) break;
-              if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
+              if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp
+                && audit.renderHistory.some(({ assetReady, requestedState }) => assetReady && (requestedState === "hit-light" || requestedState === "hit-heavy"))) break;
               if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
             }
             activeEvidence.livenessAfter = await readRuntimeLiveness(page);

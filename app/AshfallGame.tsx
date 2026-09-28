@@ -19196,7 +19196,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.roleMetrics.raiderSuppressionApplications += 1;
             if (hit.raiderSecondary) g.roleMetrics.raiderPierceHits += 1;
           }
-          target.flash = Math.max(target.flash, .12);
+          // Keep a direct-hit reaction visible across a composited phone frame.
+          // The flash is presentation-only; damage and combat timing stay fixed.
+          target.flash = Math.max(target.flash, .22);
           target.knock = Math.max(target.knock, 2 + hit.recoil * 4);
           addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(appliedDamage)), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
           addParticles(g, target.x, target.y - 26, "#e8c56c", 2);
