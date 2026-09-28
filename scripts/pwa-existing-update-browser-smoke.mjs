@@ -1,5 +1,5 @@
 import { legacyQaUrl } from "./legacy-qa-url.mjs";
-import { V100_RELEASE_ASSET_CONTRACT as assetContract } from "./v100-release-asset-contract.mjs";
+import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_WEBKIT_CARD_REPLACEMENT } from "./v100-release-asset-contract.mjs";
 // Persistent existing-PWA update smoke.
 //
 // This is deliberately a two-release, same-origin test. The server switches
@@ -209,6 +209,8 @@ const unchangedOldAssets = oldManifest.assets.filter((asset) => {
     && (candidate.sourcePath ?? null) === (asset.sourcePath ?? null)
     && (candidate.bundlePath ?? null) === (asset.bundlePath ?? null);
 });
+const unchangedOldPaths = new Set(unchangedOldAssets.map((asset) => asset.path));
+const replacedOldPaths = oldManifest.assets.filter((asset) => !unchangedOldPaths.has(asset.path)).map((asset) => asset.path);
 const candidateNewHashAssets = candidateManifest.assets.filter((asset) => !oldDistinctHashes.has(asset.hash));
 const candidateNewHashes = new Set(candidateNewHashAssets.map((asset) => asset.hash));
 const candidateNewBundledAssets = candidateNewHashAssets.filter((asset) => asset.bundlePath);
@@ -216,10 +218,12 @@ const retainedCacheEntryCount = new Set([...oldDistinctHashes, ...candidateDisti
 const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset) => (
   `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`
 )));
-record("candidate keeps the complete asset set and declares an exact hash delta", (
+record("candidate preserves unchanged assets and declares the approved WebKit card replacement", (
   oldDistinctHashes.size === 413
   && candidateDistinctHashes.size === assetContract.distinctHashes
-  && unchangedOldAssets.length === oldManifest.assets.length
+  && replacedOldPaths.length === 1
+  && replacedOldPaths[0] === "/art/v080/characters/cards/kumaverson-formation-card-r2.webp"
+  && candidateByPath.get(V100_WEBKIT_CARD_REPLACEMENT.path)?.hash === V100_WEBKIT_CARD_REPLACEMENT.hash
   && candidateManifest.assets.length === assetContract.count
   && candidateNewHashAssets.length === assetContract.additionsFromV0995
   && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
@@ -229,6 +233,7 @@ record("candidate keeps the complete asset set and declares an exact hash delta"
   && candidateExpectedNetworkPaths.size === assetContract.networkSourcesFromV0995
 ), {
   oldDistinctHashes: oldDistinctHashes.size,
+  replacedOldPaths,
   candidateDistinctHashes: candidateDistinctHashes.size,
   changedHashes: candidateNewHashes.size,
   changedLogicalAssets: candidateNewHashAssets.length,

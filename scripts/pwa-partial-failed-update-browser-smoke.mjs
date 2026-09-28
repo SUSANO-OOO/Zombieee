@@ -2,8 +2,8 @@ import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Persistent partial-failed existing-PWA recovery smoke.
 //
 // The old generation is first installed completely. Its content-addressed
-// cache is then reduced, in-place, to the exact shared content hashes derived
-// from the base/candidate manifests while
+// cache is then reduced, in-place, to a deterministic subset of shared
+// content hashes plus old-only hashes needed for a real rollback while
 // the old manifest, Service Worker registration, browser
 // profile, and save remain untouched. The candidate must recover that same
 // profile through a failed audio transport, close/relaunch, a real >30 second
@@ -348,16 +348,18 @@ const candidateHashes = new Set(candidateManifest.assets.map((asset) => asset.ha
 const candidateMissingNewAssets = manifestDelta.missingNew;
 const candidateMissingNewHashes = new Set(candidateMissingNewAssets.map((asset) => asset.hash));
 const candidateReleaseDeltaAssets = [...manifestDelta.changed, ...manifestDelta.missingNew];
-// The incident starts from a deterministic partial cache. The retained hash
-// subset is selected from the exact shared hash set by a stable stride, rather
-// than by a remembered asset count; a new candidate therefore gets a valid
-// partial fixture even when its manifest cardinality changes.
+// The incident starts from a deterministic partial cache. Select a subset of
+// shared hashes by a stable stride, but retain old-only bytes: the previous
+// generation must still be complete after the candidate fills missing shared
+// bytes, or a rollback check would be testing an artificially broken backup.
 const sharedHashCandidates = [...new Set([...oldManifest.assets]
   .sort((left, right) => left.path.localeCompare(right.path))
   .filter((asset) => candidateHashes.has(asset.hash))
   .map((asset) => asset.hash))];
 const retainedHashStride = 3;
-const retainedHashes = new Set(sharedHashCandidates.filter((_, index) => index % retainedHashStride === 0));
+const retainedSharedHashes = new Set(sharedHashCandidates.filter((_, index) => index % retainedHashStride === 0));
+const oldOnlyHashes = new Set([...oldHashes].filter((hash) => !candidateHashes.has(hash)));
+const retainedHashes = new Set([...retainedSharedHashes, ...oldOnlyHashes]);
 const retainedOldAssets = oldManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
 const retainedCandidateAssets = candidateManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
 const retainedOldLogicalCount = retainedOldAssets.length;
@@ -386,9 +388,9 @@ record("the candidate update plan derives changed, missing/new, removed, and ret
   && candidateReleaseDeltaAssets.length > 0
   && candidateMissingNewAssets.length === manifestDelta.missingNew.length
   && retainedHashes.size > 0
-  && retainedHashes.size < sharedHashCandidates.length
+  && retainedSharedHashes.size < sharedHashCandidates.length
   && retainedOldLogicalCount >= retainedHashes.size
-  && retainedCandidateLogicalCount >= retainedHashes.size
+  && retainedCandidateLogicalCount >= retainedSharedHashes.size
   && candidateDownloadableAssets.every((asset) => allowedDownloadPaths.has(asset.path))
   && candidateDownloadableAssets.every((asset) => !unchangedStoredAssets.some((unchanged) => unchanged.path === asset.path))
   && candidateUpdatePlan.unchanged.every((asset) => retainedHashes.has(asset.hash))
@@ -403,7 +405,8 @@ record("the candidate update plan derives changed, missing/new, removed, and ret
   changedHashes: candidateMissingNewHashes.size,
   changedLogicalAssets: candidateReleaseDeltaAssets.length,
   changedBytes: candidateReleaseDeltaAssets.reduce((sum, asset) => sum + asset.bytes, 0),
-  retainedSharedHashes: retainedHashes.size,
+  retainedSharedHashes: retainedSharedHashes.size,
+  retainedOldOnlyHashes: oldOnlyHashes.size,
   downloadTargets: candidateDownloadableAssets.length,
   downloadTargetBytes: candidateUpdatePlan.downloadBytes,
 });
@@ -696,7 +699,7 @@ try {
   const partialCache = await cacheState(page, oldManifest);
   const partialWorker = await workerState(page);
   const oldSaveRaw = await currentSave(page);
-  record("the incident fixture retains the derived shared hashes in the old active generation and the same raw save", (
+  record("the incident fixture retains shared and old-only rollback hashes with the same raw save", (
     partial.retainedHashes === retainedHashes.size
     && partialCache.logicalSatisfied === retainedOldLogicalCount
     && activeMatchesManifest(partialWorker.state?.active, oldManifest, oldVersion)
@@ -704,7 +707,8 @@ try {
   ), {
     partial,
     partialCache,
-    retainedSharedHashes: retainedHashes.size,
+    retainedSharedHashes: retainedSharedHashes.size,
+    retainedOldOnlyHashes: oldOnlyHashes.size,
     retainedOldLogicalCount,
     activeVersion: partialWorker.state?.active?.version,
     saveHash: sha256(oldSaveRaw ?? ""),
@@ -977,7 +981,8 @@ try {
     && cancelledV100.legacyWrites.length === 0
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
-    retainedSharedHashes: retainedHashes.size,
+    retainedSharedHashes: retainedSharedHashes.size,
+    retainedOldOnlyHashes: oldOnlyHashes.size,
     retainedCandidateLogicalCount,
     cancelledCache,
     activeVersion: cancelledWorker.state?.active?.version,
@@ -1034,6 +1039,7 @@ try {
   await startUpdatedGame.click();
   await waitForV100Ready(page);
   const finalCache = await cacheState(page);
+  const finalCacheHashes = new Set(await cacheHashes(page));
   const finalSaveRaw = await currentSave(page);
   const finalV100 = await v100State(page);
   const completedRecoveryRequests = audioRequests.filter((request) => request.mode === "recovery");
@@ -1047,7 +1053,8 @@ try {
   ), { requestCount: completedRecoveryRequests.length, slowDurationMs: slow?.durationMs, progressEvents: slow?.progress.length });
   record(`partial recovery reaches the candidate manifest, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
     finalCache.logicalSatisfied === candidateManifest.assets.length
-    && finalCache.assetEntries === candidateHashes.size
+    && finalCache.assetEntries === new Set([...candidateHashes, ...oldOnlyHashes]).size
+    && [...oldOnlyHashes].every((hash) => finalCacheHashes.has(hash))
     && activeMatchesManifest(updatedWorker?.state?.active, candidateManifest)
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw
@@ -1231,7 +1238,8 @@ try {
     fixture: {
       logicalSatisfied: retainedOldLogicalCount,
       retainedCandidateLogicalCount,
-      retainedSharedHashes: retainedHashes.size,
+      retainedSharedHashes: retainedSharedHashes.size,
+      retainedOldOnlyHashes: oldOnlyHashes.size,
       total: oldManifest.assets.length,
       candidateTotal: candidateManifest.assets.length,
       candidateDownloadTargets: candidateDownloadableAssets.length,
