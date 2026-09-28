@@ -2244,7 +2244,7 @@ const stateContracts = Object.freeze({
   "dialogue-right": { phases: [dialogueEvidenceTargets.right.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
   "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
   "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
-  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-formation-focus", ".v100-formation-footer .v100-primary"] },
+  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-formation-focus", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
   personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
   "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-management-list", ".v100-support-management-card", ".v100-support-art img"] },
   "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -2261,6 +2261,12 @@ const stateContracts = Object.freeze({
 async function productionStateContract(page, state, contractOverride = null) {
   const contract = contractOverride ?? stateContracts[state];
   invariant(contract, `missing Phase G state contract: ${state}`);
+  const viewport = page.viewportSize();
+  const phoneFormation = state === "formation" && viewport?.width >= 640 && viewport.width <= 980
+    && viewport.height <= 480 && viewport.width > viewport.height;
+  const expectedContract = phoneFormation
+    ? { ...contract, selectors: contract.selectors.filter((selector) => selector !== ".v100-roster-card") }
+    : contract;
   const observed = await page.evaluate(({ expected, battleState }) => {
     const visible = (selector) => {
       const element = document.querySelector(selector);
@@ -2314,12 +2320,12 @@ async function productionStateContract(page, state, contractOverride = null) {
       canvas: canvasAudit,
       fighterKinds: Array.isArray(snapshot?.fighters) ? [...new Set(snapshot.fighters.map((fighter) => `${fighter.side}:${fighter.kind}`))] : [],
     };
-  }, { expected: contract, battleState: state.startsWith("battle") });
-  const missingSelectors = contract.selectors.filter((selector) => observed.selectorHits?.[selector] !== true);
-  const phaseOk = contract.phases.includes(observed.phase);
-  const surfaceOk = !contract.surfaces || contract.surfaces.includes(observed.surface);
+  }, { expected: expectedContract, battleState: state.startsWith("battle") });
+  const missingSelectors = expectedContract.selectors.filter((selector) => observed.selectorHits?.[selector] !== true);
+  const phaseOk = expectedContract.phases.includes(observed.phase);
+  const surfaceOk = !expectedContract.surfaces || expectedContract.surfaces.includes(observed.surface);
   const battleOk = !state.startsWith("battle") || (observed.screen === "battle" && observed.battleMounted === true && (observed.canvas?.visiblePixels ?? 0) > 0);
-  return { ok: missingSelectors.length === 0 && observed.forbiddenVisible.length === 0 && phaseOk && surfaceOk && battleOk, expected: contract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
+  return { ok: missingSelectors.length === 0 && observed.forbiddenVisible.length === 0 && phaseOk && surfaceOk && battleOk, expected: expectedContract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
 }
 
 function createCombatImpactReader(page, requiredActorKeys, expectedStageId = null) {
