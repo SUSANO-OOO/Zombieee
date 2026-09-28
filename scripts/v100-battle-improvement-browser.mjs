@@ -23,6 +23,9 @@ const includeMayo=process.env.V100_BATTLE_IMPROVEMENT_MAYO==='1';
 const manualFirearmCheck=process.env.V100_MANUAL_FIREARM_CHECK==='1';
 const guardianCheck=process.env.V100_GUARDIAN_CHECK==='1';
 const kumaGuardCheck=process.env.V100_KUMA_GUARD_CHECK==='1';
+if(process.env.V100_BATTLE_MUSIC_CHECK==='1'&&process.env.V100_EARNED_STAGE3_FIXTURE==='1'){
+ throw new Error('Stage 3 music and earned-budget fixtures must be run separately');
+}
 const requiredMusic=['music-v100-score-normal','music-boss','music-v100-score-pressure'];
 function assertBattleMusicGate(result){
  const samples=result.musicSamples;
