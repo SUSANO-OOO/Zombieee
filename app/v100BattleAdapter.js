@@ -134,12 +134,13 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 34, advanceOnClearAfter: PREP_SECONDS + 28, wave: 3, label: "防衛線 // 中央突破", units: freeze(["shade", "walker", "spitter", "runner", "walker"]) }),
       freeze({ at: PREP_SECONDS + 54, advanceOnClearAfter: PREP_SECONDS + 44, wave: 4, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner", "spitter"]) }),
       freeze({ at: PREP_SECONDS + 75, advanceOnClearAfter: PREP_SECONDS + 60, wave: 5, label: "防衛線 // 防壁に接近", units: freeze(["runner", "spitter", "crusher", "walker", "runner"]) }),
-      // The boss waits for the final guard to fall, never for an empty lane timer.
-      // The front line is already occupied. Reveal TAKUYA alone, then let his
-      // health phases add readable flanks instead of one arrival-time flood.
-      freeze({ at: PREP_SECONDS + 95, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 110, wave: 7, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 128, wave: 8, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
+      // A last guard keeps the lane occupied while TAKUYA reaches the gate.
+      // A fast squad can bring both this contact and the entrance forward,
+      // but only after clearing each preceding group and its spawn queue.
+      freeze({ at: PREP_SECONDS + 87, advanceOnClearAfter: PREP_SECONDS + 75, wave: 6, label: "防衛線 // 最後の防壁", units: freeze(["walker", "runner", "shade", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 95, advanceOnClearAfter: PREP_SECONDS + 85, wave: 7, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 110, wave: 8, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 128, wave: 9, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
   if (stage.number === 5) {
@@ -151,10 +152,11 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 51, advanceOnClearAfter: PREP_SECONDS + 44, wave: 4, label: "改札前 // 重量級", units: freeze(["crusher", "sprinter", "ooze", "walker", "spitter", "runner"]) }),
       freeze({ at: PREP_SECONDS + 69, advanceOnClearAfter: PREP_SECONDS + 60, wave: 5, label: "改札前 // 防衛線に接敵", units: freeze(["ooze", "sprinter", "runner", "crusher", "spitter", "walker"]) }),
       freeze({ at: PREP_SECONDS + 85, advanceOnClearAfter: PREP_SECONDS + 76, wave: 6, label: "改札前 // 踏みとどまれ", units: freeze(["sprinter", "ooze", "walker", "runner", "spitter", "sprinter"]) }),
-      freeze({ at: PREP_SECONDS + 98, wave: 7, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "sprinter"]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 109, wave: 8, label: "改札前 // 増援1/3", units: freeze(["ooze", "runner", "sprinter"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 127, wave: 9, label: "改札前 // 増援2/3", units: freeze(["ooze", "sprinter", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
-      freeze({ at: PREP_SECONDS + 145, wave: 10, label: "改札前 // 増援3/3", units: freeze(["sprinter", "ooze", "walker"]), bossHpRatio: 0.2, addWave: true }),
+      freeze({ at: PREP_SECONDS + 93, advanceOnClearAfter: PREP_SECONDS + 83, wave: 7, label: "改札前 // 最終封鎖線", units: freeze(["walker", "ooze", "sprinter", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 98, advanceOnClearAfter: PREP_SECONDS + 93, wave: 8, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "sprinter"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 109, wave: 9, label: "改札前 // 増援1/3", units: freeze(["ooze", "runner", "sprinter"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 127, wave: 10, label: "改札前 // 増援2/3", units: freeze(["ooze", "sprinter", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
+      freeze({ at: PREP_SECONDS + 145, wave: 11, label: "改札前 // 増援3/3", units: freeze(["sprinter", "ooze", "walker"]), bossHpRatio: 0.2, addWave: true }),
     ]);
   }
   if (stage.number === 30) {
