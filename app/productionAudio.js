@@ -1239,7 +1239,7 @@ export const LEGACY_SFX_CUE_MAP = Object.freeze({
   "role-babayaga": "weapon-suppressed-pistol",
   "structure-heavy": "weapon-hammer",
   "structure-light": "weapon-melee-impact",
-  "crawler-hit": "weapon-melee-impact",
+  "crawler-hit": "weapon-pan-heavy-hit",
   "crawler-critical": "ui-error",
   "base-damaged": "weapon-melee-impact",
   "base-critical": "support-explosion",

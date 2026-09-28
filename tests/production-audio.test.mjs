@@ -35,6 +35,18 @@ import {
   weaponCueForUnit,
 } from "../app/productionAudio.js";
 
+test("armored-vehicle damage uses a metal cue without a human-like attack voice", () => {
+  assert.equal(LEGACY_SFX_CUE_MAP["crawler-hit"], "weapon-pan-heavy-hit");
+  const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
+  const from = source.indexOf('if (beginCombatNormalAttackWindup(f, "crawler", BASE_X)) continue;');
+  const to = source.indexOf("const enragedSiege =", from);
+  assert.ok(from > 0 && to > from);
+  const vehicleStrike = source.slice(from, to);
+  assert.ok(vehicleStrike.includes('playCue("crawler-hit")'));
+  assert.ok(!vehicleStrike.includes('enemyVoiceCue('));
+  assert.ok(!vehicleStrike.includes('humanVoiceCueForUnit('));
+});
+
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
 function publicFileFor(sourcePath) {

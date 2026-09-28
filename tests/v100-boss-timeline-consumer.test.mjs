@@ -28,19 +28,20 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
     enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{},
   };
   vm.runInNewContext(code,fixture);
-  assert.deepEqual(queued.flatMap(event=>event.units),["walker","runner","spitter"]);
+  assert.deepEqual(queued.flatMap(event=>event.units),definition.timeline[0].units);
   assert.deepEqual(announced,[]);
-  g.time=definition.timeline[4].at-0.01;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[]);
-  g.time=definition.timeline[4].at;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[],"Prelude guards must clear first");
+  const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya-omega"));
+  g.time=definition.timeline[entrance].at-0.01;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[]);
+  g.time=definition.timeline[entrance].at;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[],"Prelude guards must clear first");
   g.enemySpawn.pending=[];vm.runInNewContext(code,fixture);assert.deepEqual(announced,["takuya-omega"]);
   g.fighters.push({kind:"takuya-omega",hp:9200});
   g.enemySpawn.pending=[];
   g.time=definition.timeline.at(-1).at;
   vm.runInNewContext(code,fixture);
-  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7]);
-  assert.deepEqual(queued.slice(5).flatMap(event=>event.units),["walker","runner","crusher","spitter","spitter","crusher","walker","runner"]);
+  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7,8]);
+  assert.deepEqual(queued.slice(entrance+1).flatMap(event=>event.units),["walker","runner","crusher","spitter","runner","walker","crusher","spitter","spitter","crusher","walker","runner","spitter","crusher","runner","crusher"]);
   vm.runInNewContext(code,fixture);
-  assert.equal(queued.length,7,"Every real event is consumed once");
+  assert.equal(queued.length,8,"Every real event is consumed once");
 });
 
 test("no V1 boss entrance requires that same boss to be alive already",()=>{
@@ -77,29 +78,41 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       enemySpawnPortalPoint: () => ({}), announceBossEntrance: () => {}, playCue: () => {}, emitBattleBark: () => {},
     };
     const advance = () => vm.runInNewContext(code, context);
-    advance(); assert.equal(queued.length, 5, "pending entrance cannot consume a phase wave");
+    advance(); assert.equal(queued.length, 6, "pending entrance cannot consume a phase wave");
     g.fighters.push({ kind: "takuya", hp: 2400, maxHp: 2400 });
-    advance(); assert.equal(queued.length, 5, "elapsed time alone cannot activate HP reinforcements");
+    advance(); assert.equal(queued.length, 6, "elapsed time alone cannot activate HP reinforcements");
     if (burstDefeat) {
       g.fighters = []; g.bossDefeated = true;
-      advance(); assert.equal(queued.length, 7, "burst defeat cannot discard either reinforcement");
+      advance(); assert.equal(queued.length, 8, "burst defeat cannot discard either reinforcement");
     } else {
-      g.fighters[0].hp = 2400 * .70; advance(); assert.equal(queued.length, 6);
-      g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 7);
+      g.fighters[0].hp = 2400 * .70; advance(); assert.equal(queued.length, 7);
+      g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 8);
     }
-    advance(); assert.equal(queued.length, 7, "phase waves commit once");
-    assert.deepEqual(queued.slice(5).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "abomination", "runner"]]);
+    advance(); assert.equal(queued.length, 8, "phase waves commit once");
+    assert.deepEqual(queued.slice(6).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "abomination", "runner"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
 });
 
-test("Gate Eater follows two infection waves and still requires their clearance", () => {
+test("Stage 3's final preboss contact flows into TAKUYA without an empty-lane timer", () => {
+  const definition=createBattleDefinition(V100_STAGES[2].id,{v100:true});
+  const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya"));
+  assert.equal(entrance,5);
+  assert.ok(definition.timeline[entrance].at-definition.prepSeconds>=90);
+  assert.ok(definition.timeline[entrance].at-definition.timeline[entrance-1].at<=20);
+  assert.ok(definition.timeline.slice(0,entrance).flatMap(event=>event.units).length>=20);
+  assert.equal(definition.timeline[entrance].waitForPriorWaveClear,true);
+});
+
+test("Gate Eater follows five pressure waves and three separated infection waves", () => {
   const definition = createBattleDefinition(V100_STAGES[4].id, { v100: true });
-  assert.equal(definition.timeline.length,7);
-  assert.equal(definition.timeline[4].units[0],"gate-eater");
-  assert.ok(definition.timeline[4].at-definition.prepSeconds>=100);
-  assert.ok(definition.timeline.slice(0,4).flatMap(event=>event.units).length>=15);
-  assert.deepEqual(definition.timeline.slice(5).map(event=>event.bossHpRatio),[.75,.4]);
+  assert.equal(definition.timeline.length,9);
+  assert.equal(definition.timeline[5].units[0],"gate-eater");
+  assert.ok(definition.timeline[5].at-definition.prepSeconds>=90);
+  assert.ok(definition.timeline[5].at-definition.timeline[4].at<=12);
+  assert.ok(definition.timeline.slice(0,5).flatMap(event=>event.units).length>=25);
+  assert.deepEqual(definition.timeline.slice(6).map(event=>event.bossHpRatio),[.75,.4,.2]);
+  assert.ok(definition.timeline.slice(7).every((event,index)=>event.at-definition.timeline[6+index].at>=15));
   assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
 });
 

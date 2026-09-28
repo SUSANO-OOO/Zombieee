@@ -43,15 +43,21 @@ export function enemyContentFor(id) {
   return ENEMY_CONTENT_BY_ID[id] ?? null;
 }
 
-export function enemyStatsForWave(id, wave = 0, { v100 = false } = {}) {
+export function enemyStatsForWave(id, wave = 0, { v100 = false, stageNumber = 1 } = {}) {
   const enemy = enemyContentFor(id);
   if (!enemy) throw new RangeError(`Unknown enemy content: ${String(id)}`);
   const waveNumber = Number.isFinite(wave) ? Math.max(0, wave) : 0;
   const boss = v100 ? V100_BOSS_BY_ID[`boss-${id}`] : null;
+  // V1 units improve through the campaign. Infected in late operations must
+  // continue to demand attention even when the player owns upgraded units.
+  // Named bosses and Panther soldiers retain their authored encounter stats.
+  const campaignStep = v100 && enemy.spawnClass !== "boss" && !id.startsWith("red-panther-")
+    ? Math.min(29, Math.max(0, Number.isFinite(stageNumber) ? Math.floor(stageNumber) - 1 : 0))
+    : 0;
   return Object.freeze({
-    hp: boss?.hp ?? enemy.hp + enemy.hpPerWave * waveNumber,
+    hp: boss?.hp ?? Math.round((enemy.hp + enemy.hpPerWave * waveNumber) * (1 + campaignStep * .016)),
     speed: enemy.speed,
-    damage: boss?.damage ?? enemy.damage,
+    damage: boss?.damage ?? Math.round(enemy.damage * (1 + campaignStep * .01) * 10) / 10,
     range: enemy.range,
     attackEvery: boss?.cadenceSeconds ?? enemy.attackEvery,
     ...(boss ? { v100BossId: boss.id } : {}),

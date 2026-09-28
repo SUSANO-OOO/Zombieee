@@ -2706,7 +2706,10 @@ function fullCompendiumStyle(path: string): CSSProperties {
 }
 
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
-  const data = enemyStatsForWave(kind, g.wave, { v100: Boolean(g.definition.missionConfig?.v100StageNumber) });
+  const data = enemyStatsForWave(kind, g.wave, {
+    v100: Boolean(g.definition.missionConfig?.v100StageNumber),
+    stageNumber: g.definition.missionConfig?.v100StageNumber,
+  });
   if (!g.enemyKindsSeen.includes(kind)) g.enemyKindsSeen.push(kind);
   const id = g.nextId++;
   const gateEntering = kind !== "turned" && gateEntry !== null;
@@ -22497,14 +22500,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
                 if (!deferredEnemyProjectile) g.baseHp = Math.max(0, g.baseHp - siegeDamage);
-                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
-                  priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 66,
-                  cooldownMs: 170,
-                  maxInstances: 3,
-                  fallbackCue: f.kind === "takuya" || f.kind === "gate-eater"
-                    ? "takuya-slam"
-                    : ENEMY_PROJECTILE_KINDS.includes(f.kind) ? "ranged-shot" : "structure-light",
-                });
+                // A vehicle strike belongs to the metal impact route. Enemy
+                // vocal attacks here sounded like a human hurt reaction at the
+                // exact moment the vehicle HP fell.
                 if (deferredEnemyProjectile) {
                   const crawlerTarget = { x: BASE_X + 8, y: f.y };
                   const origin = weaponAnchorForTarget(f, crawlerTarget);

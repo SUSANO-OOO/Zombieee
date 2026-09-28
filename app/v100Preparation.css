@@ -97,6 +97,7 @@
  .v100-personnel-screen .v100-unit-stat small { font-size: 9px; }
  .v100-personnel-screen .v100-personnel-focus-copy > button { min-height: 30px; padding: 2px 6px; font-size: 12px; }
 }
+
 @media (max-height: 500px) and (orientation: landscape) {
  .v100-shell.v100-surface-vehicle > .v100-vehicle-upgrade-screen { padding: 7px 10px; }
  .v100-shell.v100-surface-vehicle .v100-panel-heading { margin-bottom: 4px; min-height: 24px; }
@@ -256,3 +257,286 @@
 .v100-asset-credits > summary { cursor: pointer; color: #e9c180; }
 .v100-asset-credits p { margin: 8px 0; }
 .v100-asset-credits a { color: #8ed0d8; text-decoration: underline; }
+
+/* Landscape phones need readable controls and one predictable scroll surface.
+ * The sortie footer remains in view while the roster can be browsed at full size. */
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+ .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-image: linear-gradient(125deg, #1d231fe8, #090c0def 74%), var(--v100-stage-art, var(--v100-command-art));
+  background-size: cover;
+  background-position: center;
+ }
+ .v100-formation-panel .v100-formation-workspace,
+ .v100-formation-panel .v100-formation-columns { flex: none; min-height: 0; overflow: visible; }
+ .v100-formation-panel .v100-formation-columns { display: block; }
+ .v100-formation-panel .v100-slot-rail { height: 72px; }
+ .v100-formation-panel .v100-slot-track { min-width: 780px; }
+ .v100-formation-panel .v100-roster-heading { display: flex; height: 22px; }
+ .v100-formation-panel .v100-roster-grid { overflow: visible; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 78px; gap: 7px; padding: 2px 2px 10px; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-roster-card { padding: 6px; gap: 9px; }
+ .v100-formation-panel .v100-roster-card-art { width: 58px; }
+ .v100-formation-panel .v100-roster-card-copy strong { font-size: 14px; line-height: 1.2; white-space: normal; }
+ .v100-formation-panel .v100-roster-card-copy small { font-size: 11px; line-height: 1.2; }
+ .v100-formation-panel .v100-formation-footer { position: sticky; bottom: 0; z-index: 4; padding: 7px 0 max(4px, env(safe-area-inset-bottom)); background: #0a1214f5; box-shadow: 0 -8px 16px #050909d9; }
+
+ .v100-personnel-screen .v100-personnel-workspace { grid-template-columns: minmax(190px, 30%) minmax(0, 1fr); gap: 8px; }
+ .v100-personnel-screen .v100-personnel-grid { grid-auto-rows: 62px; }
+ .v100-personnel-screen .v100-personnel-card.game-unit-card { min-height: 62px; }
+ .v100-personnel-screen .v100-personnel-art { width: 48px; height: 54px; flex-basis: 48px; }
+ .v100-personnel-screen .v100-personnel-focus { display: block; min-height: 0; overflow: hidden; padding: 7px 9px; background: linear-gradient(145deg, #30291ee8, #101615f2 76%); }
+ .v100-personnel-screen .v100-personnel-focus-art { display: none; }
+ .v100-personnel-screen .v100-personnel-focus-copy { display: flex; height: 100%; gap: 3px; overflow-y: auto; }
+ .v100-personnel-screen .v100-personnel-focus-copy h3 { font-size: 18px; line-height: 1.15; }
+ .v100-personnel-screen .v100-personnel-focus-copy > strong { font-size: 11px; }
+ .v100-personnel-screen .v100-personnel-focus-copy dl { gap: 10px; margin: 1px 0 2px; }
+ .v100-personnel-screen .v100-personnel-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 3px 0; }
+ .v100-personnel-screen .v100-unit-stat { min-height: 36px; padding: 4px 6px; gap: 1px 6px; }
+ .v100-personnel-screen .v100-unit-stat span { font-size: 11px; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
+ .v100-personnel-screen .v100-unit-stat strong { font-size: 15px; line-height: 1.1; white-space: nowrap; }
+ .v100-personnel-screen .v100-unit-stat small { font-size: 10px; line-height: 1; }
+ .v100-personnel-screen .v100-personnel-focus-copy > button { min-height: 38px; font-size: 13px; }
+}
+
+/* On a phone, keep the complete seven-slot board and one full-height unit
+ * chooser visible together. Additional recruits move sideways, never under
+ * the sortie button. */
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+ .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
+  overflow: hidden;
+  gap: 3px;
+ }
+ .v100-formation-panel .v100-slot-rail { height: 67px; flex: none; }
+ .v100-formation-panel .v100-formation-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+ }
+ .v100-formation-panel .v100-roster-heading { display: flex; height: 18px; margin: 0; }
+ .v100-formation-panel .v100-roster-heading span::after { content: " ／ 横にスワイプ"; }
+ .v100-formation-panel .v100-formation-columns {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+ }
+ .v100-formation-panel .v100-roster-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 20%);
+  grid-template-columns: none;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  gap: 5px;
+  padding: 0 2px 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+ }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-roster-card {
+  height: 100%;
+  min-height: 0;
+  padding: 3px;
+  gap: 5px;
+ }
+ .v100-formation-panel .v100-roster-card-art { width: 46px; }
+ .v100-formation-panel .v100-roster-card-copy strong { font-size: 12px; }
+ .v100-formation-panel .v100-roster-card-copy small { font-size: 10px; }
+ .v100-formation-panel .v100-formation-footer {
+  position: static;
+  flex: none;
+  height: 46px;
+  padding: 1px 0;
+  background: none;
+  box-shadow: none;
+ }
+ .v100-formation-panel .v100-formation-footer button { min-height: 42px; }
+
+ .v100-personnel-screen .v100-personnel-focus-copy { gap: 1px; overflow: hidden; }
+ .v100-personnel-screen .v100-personnel-focus-copy h3 { font-size: 16px; }
+ .v100-personnel-screen .v100-personnel-focus-copy dl { gap: 7px; margin: 0; }
+ .v100-personnel-screen .v100-personnel-stats {
+  flex: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  margin: 1px 0;
+ }
+ .v100-personnel-screen .v100-unit-stat { min-height: 34px; padding: 2px 5px; }
+ .v100-personnel-screen .v100-unit-stat span { font-size: 10px; white-space: nowrap; }
+ .v100-personnel-screen .v100-unit-stat strong { font-size: 14px; }
+ .v100-personnel-screen .v100-unit-stat small { font-size: 9px; }
+ .v100-personnel-screen .v100-personnel-focus-copy > button { flex: none; min-height: 36px; }
+}
+
+/* Field board: actual stage art, physical slot markers, and a swipeable unit hand.
+ * The seven deployment positions stay visible while the unit hand moves. */
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+ .v100-shell:has(> .v100-command-tabs) { gap: 4px; padding: 4px max(7px, env(safe-area-inset-right)) 5px max(7px, env(safe-area-inset-left)); background: #0a0d0c; }
+ .v100-shell:has(> .v100-command-tabs) > .v100-topbar { min-height: 29px; padding-bottom: 2px; border-color: #8e7654; }
+ .v100-shell:has(> .v100-command-tabs) .v100-topbar h1 { font-size: 18px; letter-spacing: .08em; }
+ .v100-command-tabs { gap: 2px; border-bottom: 2px solid #4b4331; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-command-tabs button { min-height: 38px; border: 0; border-radius: 0; background: #171b19; color: #d0c9b8; box-shadow: inset 0 -1px #555345; font-size: 15px; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-command-tabs button[aria-current="page"] { background: #e0aa58; color: #17130e; box-shadow: inset 0 -4px #633b23; }
+ .v100-shell:has(> .v100-command-tabs) > .v100-panel { padding: 5px 7px; border-color: #766852; border-radius: 0; }
+ .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel { background: linear-gradient(90deg,#090d0ded 5%,#121712d9 62%,#111412d9),var(--v100-stage-art) center 46% / cover; }
+ .v100-formation-panel .v100-sortie-heading { min-height: 20px; padding: 0 2px; border-left: 3px solid #db9e4d; }
+ .v100-formation-panel .v100-sortie-heading > div { gap: 7px; }
+ .v100-formation-panel .v100-sortie-heading h2 { font-size: 16px; color: #ffe1a5; }
+ .v100-formation-panel .v100-formation-stage-name { font-size: 12px; color: #dfd9c9; }
+ .v100-formation-panel .v100-slot-rail { height: 56px; padding: 0; overflow: visible; }
+ .v100-formation-panel .v100-slot-track { gap: 3px; grid-template-columns: repeat(7,minmax(0,1fr)); }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-slot { gap: 4px; padding: 2px; border-radius: 0; background: linear-gradient(150deg,#283029e8,#131814ed); border: 1px solid #77694e; box-shadow: inset 0 0 0 1px #080b09; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-slot.selected { border-color: #ffce6b; background: linear-gradient(140deg,#594026,#211d17); box-shadow: inset 0 0 0 1px #d49c50,0 0 8px #ffb65365; }
+ .v100-formation-panel .v100-slot-portrait { width: 32px; }
+ .v100-formation-panel .v100-slot-meta small { color: #dfad62; font-size: 9px; font-weight: 800; }
+ .v100-formation-panel .v100-slot-meta strong { color: #fff3d9; font-size: 11px; }
+ .v100-formation-panel .v100-slot-meta em { font-size: 9px; }
+ .v100-formation-panel .v100-roster-heading { height: 19px; padding: 0 2px; color: #f2dbab; border-bottom: 1px solid #936735; }
+ .v100-formation-panel .v100-roster-heading h3 { font-size: 12px; }
+ .v100-formation-panel .v100-roster-heading span { font-size: 11px; }
+ .v100-formation-panel .v100-roster-grid { grid-auto-columns: 218px; gap: 5px; scrollbar-width: thin; scrollbar-color: #ba853b #101612; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-roster-card { padding: 3px; gap: 9px; border-radius: 0; border: 1px solid #75664e; background: linear-gradient(115deg,#33382d,#101c1add); text-align: left; box-shadow: inset 0 -3px #171913; }
+ .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-roster-card.selected { border-color: #ffd075; background: linear-gradient(115deg,#51452e,#18211b); box-shadow: inset 0 -3px #b07037; }
+ .v100-formation-panel .v100-roster-card-art { width: 69px; filter: drop-shadow(2px 0 4px #000); }
+ .v100-formation-panel .v100-roster-card-copy { gap: 3px; }
+ .v100-formation-panel .v100-roster-card-copy strong { font-size: 17px; line-height: 1.15; color: #fff0cc; }
+ .v100-formation-panel .v100-roster-card-copy small { font-size: 11px; color: #d6d9c6; }
+ .v100-formation-panel .v100-roster-card-copy small:last-child { display: none; }
+ .v100-formation-panel .v100-formation-footer { height: 43px; gap: 4px; }
+ .v100-formation-panel .v100-formation-footer button { min-height: 41px; border-radius: 0; font-size: 14px; }
+ .v100-formation-panel .v100-formation-footer .v100-primary { color: #1f140c; background: linear-gradient(#ffd078,#b77835); border-color: #f8d89b; font-weight: 900; letter-spacing: .15em; }
+
+ .v100-shell:has(> .v100-command-tabs) > .v100-personnel-screen { background: linear-gradient(145deg,#171a15,#0b1010 70%); }
+ .v100-personnel-screen .v100-panel-heading { min-height: 22px; margin-bottom: 3px; border-bottom: 1px solid #986d36; }
+ .v100-personnel-screen .v100-panel-heading h2 { font-size: 17px; color: #ffe0a5; }
+ .v100-personnel-screen .v100-personnel-workspace { display: grid; grid-template-areas: "roster" "focus"; grid-template-columns: minmax(0,1fr); grid-template-rows: 83px minmax(0,1fr); gap: 4px; }
+ .v100-personnel-screen .v100-personnel-roster { min-width: 0; }
+ .v100-personnel-screen .v100-roster-heading { height: 17px; min-height: 17px; margin: 0; padding: 0 3px; border-bottom: 1px solid #9d753b; }
+ .v100-personnel-screen .v100-personnel-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 163px; grid-template-columns: none; grid-template-rows: 60px; gap: 4px; overflow-x: auto; overflow-y: hidden; padding: 2px 0; touch-action: pan-x; }
+ .v100-personnel-screen .v100-personnel-card.game-unit-card { min-height: 0; height: 60px; display: flex; gap: 5px; padding: 2px; border-radius: 0; border-color: #6c624c; background: #242b25; }
+ .v100-personnel-screen .v100-personnel-card.selected { border-color: #ffcf73; background: #493e29; box-shadow: inset 0 -3px #b16f36; }
+ .v100-personnel-screen .v100-personnel-art { width: 48px; height: 54px; flex-basis: 48px; }
+ .v100-personnel-screen .v100-personnel-copy { gap: 1px; }
+ .v100-personnel-screen .v100-personnel-copy h3 { font-size: 14px; color: #ffebbc; }
+ .v100-personnel-screen .v100-personnel-copy span,.v100-personnel-screen .v100-personnel-copy small { font-size: 10px; }
+ .v100-personnel-screen .v100-personnel-focus { display: grid; grid-template-columns: 85px minmax(0,1fr); grid-template-rows: minmax(0,1fr); gap: 6px; padding: 4px; border: 1px solid #a2844e; border-radius: 0; background: linear-gradient(90deg,#27291e,#101714); }
+ .v100-personnel-screen .v100-personnel-focus-art { display: block; grid-column: 1; grid-row: 1; width: 85px; height: 100%; max-height: none; }
+ .v100-personnel-screen .v100-personnel-focus-art img { object-fit: cover; object-position: center top; }
+ .v100-personnel-screen .v100-personnel-focus-copy { grid-column: 2; grid-row: 1; min-width: 0; gap: 0; overflow-y: auto; }
+ .v100-personnel-screen .v100-personnel-focus-copy h3 { font-size: 17px; color: #ffe2a5; }
+ .v100-personnel-screen .v100-personnel-focus-copy > strong { font-size: 11px; }
+ .v100-personnel-screen .v100-personnel-focus-copy dl { display: none; }
+ .v100-personnel-screen .v100-personnel-stats { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2px; margin: 1px 0; }
+ .v100-personnel-screen .v100-unit-stat { min-height: 30px; padding: 2px 4px; border-radius: 0; background: #121b18; border-left: 2px solid #aa8049; }
+ .v100-personnel-screen .v100-unit-stat span { font-size: 10px; color: #ded7bd; }
+ .v100-personnel-screen .v100-unit-stat strong { font-size: 15px; color: #ffe0a2; }
+ .v100-personnel-screen .v100-unit-stat small { font-size: 10px; }
+ .v100-personnel-screen .v100-personnel-focus-copy > button { min-height: 35px; border-radius: 0; font-size: 13px; margin-top: auto; }
+}
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 360px) and (orientation: landscape) {
+ .v100-formation-panel .v100-slot-rail { height: 48px; }
+ .v100-formation-panel .v100-roster-heading { height: 16px; }
+ .v100-formation-panel .v100-formation-footer { height: 41px; }
+ .v100-formation-panel .v100-formation-footer button { min-height: 39px; }
+ .v100-personnel-screen .v100-personnel-workspace { grid-template-rows: 69px minmax(0,1fr); }
+ .v100-personnel-screen .v100-personnel-grid { grid-template-rows: 49px; }
+ .v100-personnel-screen .v100-personnel-card.game-unit-card { height: 49px; }
+ .v100-personnel-screen .v100-personnel-art { height: 43px; }
+ .v100-personnel-screen .v100-personnel-focus { grid-template-columns: 68px minmax(0,1fr); }
+ .v100-personnel-screen .v100-personnel-focus { grid-template-columns: minmax(0,1fr); }
+ .v100-personnel-screen .v100-personnel-focus-art { display: none; }
+ .v100-personnel-screen .v100-personnel-focus-copy { grid-column: 1; }
+ .v100-personnel-screen .v100-personnel-focus-copy > strong { display: none; }
+ .v100-personnel-screen .v100-personnel-focus-copy h3 { font-size: 15px; line-height: 1; }
+ .v100-personnel-screen .v100-unit-stat { min-height: 26px; padding: 1px 3px; }
+ .v100-personnel-screen .v100-unit-stat strong { font-size: 13px; }
+ .v100-personnel-screen .v100-personnel-focus-copy > button { min-height: 30px; }
+}
+
+/* The remaining preparation stations have their own physical layout:
+ * a three-bay support rack, item inspection bench and crawler hangar. */
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+ .v100-shell:has(> .v100-command-tabs) > .v100-loadout-screen { background: linear-gradient(120deg,#121a18f5,#182018e9),var(--v100-command-art) center / cover; }
+ .v100-loadout-screen .v100-panel-heading { margin-bottom: 4px; border-bottom: 1px solid #a27e44; }
+ .v100-loadout-screen .v100-panel-heading h2 { color: #ffe0a2; font-size: 17px; }
+ .v100-loadout-screen .v100-panel-heading p { color: #d1d0ba; font-size: 11px; }
+ .v100-loadout-screen .v100-support-management-list { grid-template-columns: 1.3fr 1fr 1fr; gap: 5px; }
+ .v100-loadout-screen .v100-support-management-card { display: grid; grid-template-columns: 86px minmax(0,1fr); grid-template-rows: minmax(0,1fr) 38px; align-items: center; gap: 3px 5px; padding: 5px; background: linear-gradient(150deg,#29342c,#111916); border: 1px solid #8b7856; text-align: left; border-radius: 0; }
+ .v100-loadout-screen .v100-support-management-card.selected { border-color: #ffc46d; box-shadow: inset 0 0 0 1px #c18b40; }
+ .v100-loadout-screen .v100-support-management-card.locked { filter: saturate(.65); }
+ .v100-loadout-screen .v100-support-art.v100-support-illustration { width: 86px; height: 94px; max-height: none; min-height: 0; grid-column: 1; grid-row: 1; align-self: center; }
+ .v100-loadout-screen .v100-loadout-card-copy { grid-column: 2; grid-row: 1; min-width: 0; }
+ .v100-loadout-screen .v100-loadout-card-copy h3 { font-size: 16px; line-height: 1.2; }
+ .v100-loadout-screen .v100-loadout-card-copy p { font-size: 11px; line-height: 1.35; }
+ .v100-loadout-screen .v100-support-management-card > button,.v100-loadout-screen .v100-support-management-card > .v100-state-badge { grid-column: 1 / -1; grid-row: 2; width: 100%; min-height: 37px; margin: 0; border-radius: 0; }
+
+ .v100-shell:has(> .v100-command-tabs) > .v100-equipment-screen { background: linear-gradient(125deg,#171c17f2,#101b19f1),var(--v100-command-art) center / cover; }
+ .v100-equipment-screen .v100-panel-heading { min-height: 35px; margin: 0 0 5px; border-bottom: 1px solid #9d7646; }
+ .v100-equipment-screen .v100-equipment-tabs button { border-radius: 0; min-height: 31px; font-size: 12px; }
+ .v100-equipment-workspace { grid-template-columns: minmax(0,1.45fr) minmax(280px,1fr); gap: 6px; }
+ .v100-equipment-screen .v100-equipment-catalog { gap: 4px; grid-auto-rows: 76px; padding-right: 2px; }
+ .v100-equipment-screen button.v100-equipment-card { padding: 3px; gap: 5px; border-radius: 0; border-color: #786d53; background: #29352e; }
+ .v100-equipment-screen button.v100-equipment-card.selected { border-color: #ffcf79; background: #4b402b; box-shadow: inset 0 -3px #a9783b; }
+ .v100-equipment-screen .v100-equipment-card .v100-equipment-art { width: 68px; height: 68px; flex-basis: 68px; }
+ .v100-equipment-screen button.v100-equipment-card strong { font-size: 13px; }
+ .v100-equipment-focus { gap: 4px; padding: 6px; background: linear-gradient(125deg,#272c22,#111b17); border-color: #b29055; border-radius: 0; }
+ .v100-equipment-focus-heading { display: grid; grid-template-columns: 112px minmax(0,1fr); gap: 8px; align-items: center; }
+ .v100-equipment-focus-heading .v100-equipment-art { width: 112px; height: 112px; flex-basis: 112px; filter: drop-shadow(0 5px 8px #0009); }
+ .v100-equipment-focus-heading h3 { font-size: 18px; line-height: 1.15; }
+ .v100-equipment-focus-heading p { font-size: 13px; color: #f4dcaa; }
+ .v100-equipment-focus-actions button { border-radius: 0; }
+
+ .v100-shell.v100-surface-vehicle > .v100-vehicle-upgrade-screen { background: linear-gradient(110deg,#0b1110f2,#24281ce5),var(--v100-command-art) center / cover; }
+ .v100-shell.v100-surface-vehicle .v100-panel-heading { border-bottom: 1px solid #b5884f; }
+ .v100-shell.v100-surface-vehicle .v100-panel-heading h2 { color: #ffe1a4; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-hero { grid-template-columns: minmax(200px,39%) minmax(0,1fr); gap: 9px; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-art { position: relative; background: linear-gradient(#171c1699,#171c1688),repeating-linear-gradient(155deg,#313c32 0 6px,#242a23 6px 12px); border-bottom: 3px solid #b58c4e; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-art::after { content: "西新防衛線 / 車両整備"; position: absolute; left: 7px; bottom: 3px; color: #e9d5a7; font-size: 10px; letter-spacing: .1em; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-copy dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 3px; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-copy dl > div { border-left: 2px solid #bb9052; padding-left: 5px; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-copy dd { color: #ffdd9c; font-size: 17px; font-weight: 900; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-copy > .v100-primary { border-radius: 0; }
+}
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 360px) and (orientation: landscape) {
+ .v100-loadout-screen .v100-support-management-card { grid-template-columns: 66px minmax(0,1fr); grid-template-rows: minmax(0,1fr) 34px; }
+ .v100-loadout-screen .v100-support-art.v100-support-illustration { width: 66px; height: 72px; }
+ .v100-loadout-screen .v100-loadout-card-copy h3 { font-size: 14px; }
+ .v100-loadout-screen .v100-support-management-card > button,.v100-loadout-screen .v100-support-management-card > .v100-state-badge { min-height: 33px; }
+ .v100-equipment-focus-heading { grid-template-columns: 88px minmax(0,1fr); }
+ .v100-equipment-focus-heading .v100-equipment-art { width: 88px; height: 88px; flex-basis: 88px; }
+ .v100-equipment-focus-heading h3 { font-size: 16px; }
+ .v100-equipment-screen .v100-equipment-catalog { grid-auto-rows: 68px; }
+ .v100-equipment-screen .v100-equipment-card .v100-equipment-art { width: 58px; height: 58px; flex-basis: 58px; }
+ .v100-shell.v100-surface-vehicle .v100-vehicle-upgrade-copy dd { font-size: 14px; }
+}
+
+/* Route board: the selected operation shows its real battlefield, while the
+ * chapter route remains a compact, tappable index on a short phone screen. */
+@media (min-width: 640px) and (max-width: 980px) and (max-height: 420px) and (orientation: landscape) {
+ .v100-shell:has(> .v100-command-tabs) > .v100-map-layout { padding: 2px; gap: 3px; background: #101511; border: 1px solid #7b684d; }
+ .v100-shell:has(> .v100-command-tabs) .v100-chapter-tabs { gap: 2px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-chapter-tabs button { min-height: 38px; border: 0; border-radius: 0; background: #1c2925; box-shadow: inset 0 -2px #536c55; }
+ .v100-shell:has(> .v100-command-tabs) .v100-chapter-tabs button.selected { background: #54462b; box-shadow: inset 0 -3px #d9a053; }
+ .v100-shell:has(> .v100-command-tabs) .v100-chapter-tabs button strong { font-size: 12px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-chapter-tabs button small { font-size: 9px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-route-label { height: 8px; min-height: 8px; margin: 0 4px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-grid { grid-template-columns: minmax(0,1.6fr) minmax(260px,1fr); gap: 4px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-canvas-shell { background: linear-gradient(120deg,#1f2a23e8,#111814ed),repeating-linear-gradient(90deg,#78926d19 0 1px,transparent 1px 24px); border: 1px solid #74684c; padding: 3px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-canvas { gap: 4px; padding: 1px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node { min-height: 67px; padding: 4px; gap: 1px 4px; grid-template-columns: 29px minmax(0,1fr); border-radius: 0; border: 1px solid #5f7867; background: #17231fbf; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node.selected { border-color: #eab66b; background: linear-gradient(100deg,#121a16ee,#2a2315a9),var(--v100-selected-stage-art) center / cover; box-shadow: inset 0 0 0 1px #d0a063; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node.boss-node.selected { border-color: #e78359; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node strong { color: #ffedcb; font-size: 11px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node small { color: #c5d5bd; font-size: 9px; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-node-marker { width: 29px; height: 29px; border-radius: 0; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-side { position: relative; padding: 7px; border: 1px solid #b68556; border-radius: 0; background: linear-gradient(180deg,#111611b5 0%,#101712dc 55%,#0c100dee 100%),var(--v100-selected-stage-art) center / cover; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-side h3 { max-width: 96%; color: #fff0c7; font-size: 17px; text-shadow: 0 2px 4px #000; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-side-heading { color: #f2c483; font-weight: 800; }
+ .v100-shell:has(> .v100-command-tabs) .v100-stage-intel { padding: 5px; background: #15211ecb; border: 1px solid #cba06b; border-left: 4px solid #da8955; border-radius: 0; }
+ .v100-shell:has(> .v100-command-tabs) .v100-stage-intel strong { color: #fce1b6; }
+ .v100-shell:has(> .v100-command-tabs) .v100-stage-intel p { color: #e6e7d5; }
+ .v100-shell:has(> .v100-command-tabs) .v100-map-side > .v100-primary { border-radius: 0; min-height: 42px; background: linear-gradient(#f7c578,#a96a38); color: #24160d; font-weight: 900; }
+}

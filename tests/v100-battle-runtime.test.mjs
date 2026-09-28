@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { enemyStatsForWave } from "../app/content/enemyCatalog.js";
 
 import {
   advanceV100StageBattle,
@@ -7,6 +8,19 @@ import {
   v100BattleRuntimeContract,
   v100StageBattleResult,
 } from "../app/v100BattleRuntime.js";
+
+test("late V1 infected apply more pressure while legacy, bosses and Panther stats keep their own contracts", () => {
+  for (const kind of ["walker", "runner", "crusher", "ooze"]) {
+    const early=enemyStatsForWave(kind,3,{v100:true,stageNumber:3});
+    const middle=enemyStatsForWave(kind,3,{v100:true,stageNumber:16});
+    const late=enemyStatsForWave(kind,3,{v100:true,stageNumber:30});
+    assert.ok(early.hp<middle.hp && middle.hp<late.hp,kind);
+    assert.ok(early.damage<middle.damage && middle.damage<late.damage,kind);
+    assert.deepEqual(enemyStatsForWave(kind,3,{stageNumber:30}),enemyStatsForWave(kind,3));
+  }
+  assert.deepEqual(enemyStatsForWave("takuya-omega",6,{v100:true,stageNumber:30}),enemyStatsForWave("takuya-omega",6,{v100:true,stageNumber:1}));
+  assert.deepEqual(enemyStatsForWave("red-panther-commander",3,{v100:true,stageNumber:25}),enemyStatsForWave("red-panther-commander",3,{v100:true,stageNumber:1}));
+});
 
 test("assault and objective state transitions become a real V1 battle result", () => {
   let result = createV100StageBattle({ stageId: "stage-nishijin-shopping-street" });
