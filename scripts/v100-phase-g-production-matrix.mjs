@@ -56,7 +56,7 @@ const extraBattleContracts = Object.freeze([
   // Melee contact and later ranged/marker actions have different living-target
   // requirements. Give each its own ordinary battle and evidence identity.
   { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-knife", formationUnitIds: ["unit-tatara", "unit-gantetsu", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
-  { variant: "stage21-panther-smg", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage21-panther-smg", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["brute", "babayaga", "ranger"] },
   // Keep the three deployed slots combat-active on the compact WebKit proof:
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
@@ -4097,6 +4097,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           });
           recorder?.setLatestReadableState(candidateSample);
           const candidateCards = deploymentCandidatesFromDiagnostics(candidateSample, deployedKinds);
+          const requestedOpeningKind = openingKinds[slot] ?? null;
           // When a focused contract names a canonical player proof unit,
           // prefer that currently-ready card first. This keeps the evidence
           // plan on the real formation without substituting a different
@@ -4110,7 +4111,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               if (leftDps !== rightDps) return leftDps - rightDps;
               return Number(left.content?.cost ?? 0) - Number(right.content?.cost ?? 0);
             });
-          const selectedCandidate = (proofUnitFirst && slot === 0 && proofUnitKind
+          const defaultCandidate = (proofUnitFirst && slot === 0 && proofUnitKind
             ? candidateCards.find((card) => card.kind === proofUnitKind)
             : slot > 0 && proofUnitKind
             ? candidateCards.find((card) => card.kind === proofUnitKind)
@@ -4118,6 +4119,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             ?? openingCandidates[0]?.card
             ?? candidateCards[0]
             ?? null;
+          const selectedCandidate = requestedOpeningKind
+            ? candidateCards.find((card) => card.kind === requestedOpeningKind) ?? null
+            : defaultCandidate;
           if (!selectedCandidate) {
             await page.waitForTimeout(120);
             continue;

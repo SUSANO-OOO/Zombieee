@@ -968,7 +968,9 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const resolvedPresentation = presentation ?? v100EventPresentationFor({ eventId, phase, node, nodeIndex });
   const slots = v100DialogueSlots(eventId ? v100StoryEventFor(eventId)?.nodes ?? [node] : [node], nodeIndex);
   const portraitSide = portrait ? slots.right?.portraitOwner === node.portraitOwner ? "right" : "left" : "none";
-  const secondaryNode = node.kind === "dialogue" ? slots[portraitSide === "right" ? "left" : "right"] : null;
+  // An offscreen/radio voice has no on-screen speaker. Do not leave the
+  // previous interlocutor's portrait beside that voice as a false speaker.
+  const secondaryNode = node.kind === "dialogue" && portrait ? slots[portraitSide === "right" ? "left" : "right"] : null;
   const secondaryPortrait = portraitFor(secondaryNode?.portraitOwner);
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";

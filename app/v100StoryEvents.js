@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "ed15d68b1c355318cd0652d89dd5592e7671c8c919b8ba901288d45634eb4f7f";
+export const V100_STORY_SOURCE_SHA256 = "d80e9c9e69a13b25466a8e6019b2cbf5b111e5ae0781d6fa64e08a70f550c063";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -2990,7 +2990,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "輸送記録には、発生前に結ばれた封鎖と復旧の契約。別都市の契約書には、まだ地名がない。",
+        "text": "輸送記録には、発生前に結ばれた封鎖と復旧の契約。別都市の契約書には、まだ地名がない。束の下から、水質異常を「一時的」と書き直した報告書が出てくる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 430
@@ -5619,7 +5619,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "紙ファイルの表紙に「特級博士 セガワ／内部通称：ネコ殺し」。『初期動物試験記録に由来』と付箋がある。壁には発生前からの西新の地図。",
+        "text": "紙ファイルの表紙に「特級博士 セガワ」。余白の「ネコ殺し」は赤ペンで消し損ねている。棚には動物試験の記録。壁には発生前からの西新の地図。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 811
@@ -5739,7 +5739,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "水も土も、戻るには時間が要る。人間は、分かっていてその時間を奪う",
+        "text": "西新の水は、何度調べても基準を超えた。報告書では、毎年『一時的』で片づけられました",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 828
@@ -5747,7 +5747,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "TKY",
-        "text": "人を減らして、その時間を買うんか",
+        "text": "それ書いたやつを止めろよ。なんで街へ撒く",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
         "sourceLine": 829
@@ -5755,7 +5755,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "そうです。人間が止まらないなら、止めるしかない",
+        "text": "一人止めても、次が同じ欄に丸をつけます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 830
@@ -5763,7 +5763,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "うちの娘も、あんたの数字か",
+        "text": "それで、うちの娘にも撒くんか",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
         "sourceLine": 831
@@ -5771,7 +5771,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "あの子に罪はありません",
+        "text": "……あの子に罪はありません",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 832
@@ -5779,7 +5779,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "ほんなら撒くな。風は子どもを避けて通らん",
+        "text": "知っとるなら、その手を止めろ。風は子どもを選ばん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
         "sourceLine": 833
@@ -6179,7 +6179,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "命令音を、脅威として覚えたのか……私まで",
+        "text": "寄るな。私は、お前を――",
         "portraitOwner": "segawa",
         "portraitKind": "major",
         "sourceLine": 890

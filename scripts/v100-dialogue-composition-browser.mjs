@@ -20,10 +20,10 @@ const longest=all.filter(x=>x.node.kind==='dialogue').sort((a,b)=>b.node.text.le
 const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:5},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},
  {id:'s17-reunion',eventId:'v100:event:s17:post',nodeIndex:4,includes:'ほんとに来た'},
  {id:'s05-door',eventId:'v100:event:s05:post',nodeIndex:1,includes:'保守員を背に'},
- {id:'s03-defense-line',eventId:'v100:event:s03:pre',nodeIndex:0,includes:'仮設照明の向こう'},
- {id:'s28-segawa',eventId:'v100:event:s28:pre',nodeIndex:3,includes:'戻るには時間が要る',radio:true},
+ {id:'s03-defense-line',eventId:'v100:event:s03:pre',nodeIndex:0,includes:'防衛線の照明がひとつ消える'},
+ {id:'s28-segawa',eventId:'v100:event:s28:pre',nodeIndex:3,includes:'報告書では、毎年',radio:true},
  {id:'s29-instruction',eventId:'v100:event:s29:pre',nodeIndex:6,includes:'両方やります！'},
- {id:'s30-paisen',eventId:'v100:event:s30:pre',nodeIndex:21,includes:'指一本触れさせねえ！'},
+ {id:'s30-paisen',eventId:'v100:event:s30:pre',nodeIndex:20,includes:'指一本触れさせねえ！'},
  {id:'s30-return',eventId:'v100:event:s30:pre',nodeIndex:0,includes:'見えない待機路'},
  {id:'s30-defeat',eventId:'v100:event:s30:post',nodeIndex:0,includes:'巨体が防衛線の路面へ崩れる',backdrop:'takuya-omega-ending-defeat-original-costume-v4.webp'},
  {id:'s30-cleared',eventId:'v100:event:s30:post',nodeIndex:6,includes:'最後の避難バス',backdrop:'s30-defense-line-aftermath-background-v1.webp'}];
@@ -57,7 +57,7 @@ for(const [engine,browserType] of engines){
    result.geometry=geometry;
    if(fixture.includes)assert.ok(geometry.textValue.includes(fixture.includes));
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
-   if(fixture.radio)assert.ok(geometry.portraits.every(p=>p.owner!=='segawa'),'offscreen radio voice must not appear as physical Segawa');
+   if(fixture.radio)assert.equal(geometry.portraits.length,0,'offscreen radio voice must not inherit an on-screen speaker portrait');
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));
    for(const rect of [geometry.copy,geometry.text,geometry.actions]){assert.ok(rect.x>=0&&rect.y>=0&&rect.right<=viewport.width&&rect.bottom<=viewport.height);}
    assert.ok(geometry.actions.x>=geometry.text.right,'Actions must not overlap the dialogue');
