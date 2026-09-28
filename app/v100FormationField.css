@@ -162,10 +162,10 @@
   .v100-formation-panel .v100-roster-card-copy small { font-size: 10px; }
 }
 @media (min-width: 640px) and (max-width: 980px) and (max-height: 360px) and (orientation: landscape) {
-  .v100-formation-panel .v100-formation-board { grid-template-rows: minmax(0, 1fr) 50px; }
+  .v100-formation-panel .v100-formation-board { grid-template-rows: minmax(0, 1fr) 44px; }
   .v100-formation-panel .v100-formation-focus > h3 { font-size: 14px; margin-top: 2px; }
   .v100-formation-panel .v100-formation-focus > button { display: none; }
-  .v100-formation-panel .v100-slot-rail { padding-top: 13px; padding-bottom: 2px; }
+  .v100-formation-panel .v100-slot-rail { padding-top: 10px; padding-bottom: 2px; }
   .v100-formation-panel .v100-slot-rail::before { font-size: 9px; }
   .v100-formation-panel .v100-slot-meta em { display: none; }
   .v100-formation-panel .v100-roster-heading { padding: 3px 5px; }

@@ -818,7 +818,7 @@ export function V100Campaign() {
         <span aria-hidden="true">↻</span><b>スマホを横向きにしてください</b><small>横画面に戻ると、同じ作戦から続けられます</small>
       </div>}
       {!immersiveFlow && <header className="v100-topbar v100-compact-topbar">
-        <div className="v100-topbar-title"><span className="v100-backmark" aria-hidden="true">西新</span><div><span className="v100-kicker">現場指揮</span><h1>{flow.phase === "map" || flow.phase === "formation" ? "西新 / 作戦準備" : screenLabel}</h1></div></div>
+        <div className="v100-topbar-title"><span className="v100-backmark" aria-hidden="true">西新</span><div><span className="v100-kicker">現場指揮</span><h1>{flow.phase === "map" || flow.phase === "formation" ? `西新 / ${screenLabel}` : screenLabel}</h1></div></div>
         <div className="v100-save-meta"><span>{RELEASE_LABEL}</span><span>{save.caps} CAPS</span>{surface === "campaign" && <button type="button" onClick={() => setLogOpen((open) => !open)}>会話記録</button>}{flow.phase === "map" && <button type="button" onClick={() => openSurface("modes")}>異常発生・記録</button>}</div>
       </header>}
 
