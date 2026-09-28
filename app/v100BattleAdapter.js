@@ -137,7 +137,9 @@ function stageTimeline(stage, missionType, bossKind) {
       // The boss waits for the final guard to fall, never for an empty lane timer.
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind, "runner"]), waitForPriorWaveClear: true }),
       freeze({ at: PREP_SECONDS + 105, wave: 7, label: "防衛線 // 増援1/2", units: freeze(["walker", "runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 123, wave: 8, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "abomination", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
+      // The crusher already anchors the final flank. An abomination beside it
+      // exhausted an attainable Stage 2 roster before TAKUYA could fall.
+      freeze({ at: PREP_SECONDS + 123, wave: 8, label: "防衛線 // 増援2/2", units: freeze(["spitter", "crusher", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
   if (stage.number === 5) {

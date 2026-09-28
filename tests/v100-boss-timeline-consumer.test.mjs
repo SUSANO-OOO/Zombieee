@@ -89,7 +89,7 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 8);
     }
     advance(); assert.equal(queued.length, 8, "phase waves commit once");
-    assert.deepEqual(queued.slice(6).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "abomination", "runner"]]);
+    assert.deepEqual(queued.slice(6).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "runner"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
 });

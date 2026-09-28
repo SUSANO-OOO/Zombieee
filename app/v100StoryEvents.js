@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "f01cf58b1ba621839008a6ffb82ebd13661a1b7d791a3110c116f0d4ec45e605";
+export const V100_STORY_SOURCE_SHA256 = "c5c887ddb0688381327429648bfb07f65f81001a4d7d744c1de88ce1ef1ab7bd";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -918,7 +918,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "返事はない。TAKUYAが刃を振ると、柵の留め具が一列に飛んだ。パイセンの足元へ鉄板が滑る。",
+        "text": "返事はない。TAKUYAが刃を振ると、柵の留め具が一列に飛んだ。パイセンの足元へ鉄板が滑る。巨体は柵を越えず、暗がりへ引いた。刃を引きずる音だけが群れの後ろを移っていく。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 134
@@ -1084,7 +1084,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "隊員がTAKUYAの鎖を外し、遺体を黒い袋へ収める。",
+        "text": "隊員がTAKUYAの遺体を黒い袋へ収め、クマバーソンの外した鎖も拾い上げる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 158,
@@ -1225,7 +1225,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "主人公が振り返る。防衛線で見た防護服と同じだ。",
+        "text": "主人公が赤いレンズの証言を記録する。駅員は、奥の保守扉を指した。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 179
@@ -6098,7 +6098,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "主人公が装甲車両でセガワの指揮車の退路を塞ぐ。セガワは携帯発信器を掲げる。",
+        "text": "主人公が装甲車両を避難バスの前へ横付けする。離れたゲート脇では、セガワが指揮車を降り、携帯発信器を掲げた。いくらちゃんが監視映像を車内の画面へ送る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 881
@@ -6178,7 +6178,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "背の投薬管がセガワを貫く。差し出した手は巨体に届かず、路面へ落ちた。呼吸も止まる。",
+        "text": "肥大した手がセガワをつかみ、指揮車へ叩きつける。握りしめていた発信器の欠片が路面へ落ちた。セガワは動かない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 891
@@ -6186,7 +6186,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "防壁の切れ目へ感染群が流れ込み、TAKUYA-Ωは待機路のバスへ向きを変える。",
+        "text": "防壁の切れ目へ感染群が流れ込む。その奥でTAKUYA-Ωが待機路のバスへ向きを変え、ゆっくり歩き出す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 892
@@ -6234,7 +6234,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が仲間の配置を確かめ、巨体へ向かう。",
+        "text": "主人公が仲間の配置を確かめ、まず感染群の前へ出る。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 898
