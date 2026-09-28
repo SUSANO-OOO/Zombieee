@@ -4200,12 +4200,16 @@ function drawSpriteFighter(
           : f.step;
   const guardianGuardPose = options.v100AuthoredPresentation && f.side === 'human' && f.kind === 'guardian'
     ? v100GuardianGuardPose(f.manualAbility, MANUAL_ABILITY_REGISTRY.guardian, f.flash, {moving:f.gateEntering||f.animationPresentation?.state==='move',attacking:f.attack>0||f.attackWindup>0||f.abilityWindup>0}) : null;
+  // Keep the bright hit outline, while attack warnings and strikes retain their pose.
+  const actionPresentationFlash = f.attackWindup > 0 || f.attack > 0 || f.abilityWindup > 0
+    || ["telegraph", "windup", "warning", "charging", "ready", "pulling", "burst", "active", "firing"].includes(f.stationAbility.phase)
+    ? 0 : f.flash;
   const soukiPose = options.v100AuthoredPresentation && f.side === 'zombie' && f.kind === 'sprinter'
-    ? v100SoukiPose(f.stationAbility,f.flash) : null;
+    ? v100SoukiPose(f.stationAbility,actionPresentationFlash) : null;
   const enemyContactPose = options.v100AuthoredPresentation && f.side === 'zombie'
-    ? v100EnemyContactPose(f.kind,{attack:f.attack,attackWindup:f.attackWindup,flash:f.flash,abilityPhase:f.stationAbility.phase}) : null;
+    ? v100EnemyContactPose(f.kind,{attack:f.attack,attackWindup:f.attackWindup,flash:actionPresentationFlash,abilityPhase:f.stationAbility.phase}) : null;
   const stationAbilityPose = options.v100AuthoredPresentation && f.side === 'zombie'
-    ? v100StationAbilityPose(f.kind,f.stationAbility,f.flash) : null;
+    ? v100StationAbilityPose(f.kind,f.stationAbility,actionPresentationFlash) : null;
   const lockedDirection = Number(f.manualAbility?.target?.direction);
   const fallbackDirection = combatFacingDirection({
     side: f.side,
@@ -4312,7 +4316,7 @@ function drawSpriteFighter(
         bodyScale: 1,
         pose: TAKUYA_STABLE_POSE,
       }
-    : f.flash > 0
+    : actionPresentationFlash > 0
     ? sampleAnimationClip(
       f.kind,
       f.knock >= 12 ? "hit-heavy" : "hit-light",
@@ -12467,14 +12471,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           enemy.cooldown = 0;
           enemy.attackWindup = 0;
         } else {
-          human.x = 430;
+          human.x = enemy.x - Math.max(12, Math.min(40, enemy.range * .45));
           enemy.speed = 0;
           enemy.laneSpeed = 0;
           enemy.cooldown = 99;
           enemy.attackFacingDirection = "left";
+          enemy.aiMoveDirection = -1;
+          enemy.entryDirection = -1;
+          enemy.animationPresentation = createCombatAnimationRuntime({ direction: "left", x: enemy.x, y: enemy.y });
           enemy.attackWindupTargetId = human.id;
-          enemy.attackWindup = .3;
-          enemy.attack = .3;
+          enemy.attackWindup = 0;
+          enemy.attack = 0;
           const lethal = phase === "die";
           g.pendingWeaponHits.push({
             eventKind: "impact",
@@ -23015,13 +23022,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 : 0,
             manualDirection: Number(fighter.manualAbility?.target?.direction),
             manualAbilityActive,
-            attacking: fighter.attackWindup > 0 || fighter.attack > 0,
+            attacking: fighter.attackWindup > 0 || fighter.attack > 0 || fighter.flash > 0,
           });
           const presentationState = fighter.mayoRetreat
             ? fighter.mayoRetreat.phase === "run"
               ? "retreat"
               : mayoRetreatSpriteState(fighter.mayoRetreat)
-            : fighter.flash > 0
+            : fighter.flash > 0 && !(fighter.attackWindup > 0 || fighter.attack > 0 || fighter.abilityWindup > 0
+              || ["telegraph", "windup", "warning", "charging", "ready", "pulling", "burst", "active", "firing"].includes(fighter.stationAbility.phase))
               ? fighter.knock >= 12 ? "hit-heavy" : "hit-light"
               : fighter.kind === "gunner" && fighter.overheated && fighter.attack <= 0
                 ? "reload"

@@ -37,7 +37,7 @@ test("slam pose stays readable over flash, expires, and stays V1-only", async ()
   assert.ok(impact.indexOf("damage = enraged ? 28 : 22") < impact.indexOf("f.takuyaSlamPresentationRemaining = TAKUYA_SLAM_PRESENTATION.impactSeconds"));
   assert.ok(impact.includes("radius = enraged ? 145 : 118"));
   assert.ok(impact.includes("v100StageNumber"));
-  assert.ok(source.indexOf(": takuyaSlamPose") < source.indexOf(": f.flash > 0"));
+  assert.ok(source.indexOf(": takuyaSlamPose") < source.indexOf(": actionPresentationFlash > 0"));
   assert.match(source, /pose: TAKUYA_STABLE_POSE/u);
   assert.doesNotMatch(source, /manualAbility.*takuyaSlamPresentation/u);
 });
