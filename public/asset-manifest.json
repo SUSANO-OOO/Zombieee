@@ -703,9 +703,9 @@
       "criticality": "optional"
     },
     {
-      "path": "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
-      "bytes": 63232,
-      "hash": "sha256-5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7",
+      "path": "/art/v080/characters/cards/kumaverson-formation-card-r2.png",
+      "bytes": 396090,
+      "hash": "sha256-fc36119a1af2eff154380fc9ca821370edae06825e50250e4565683a0bb241ba",
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"

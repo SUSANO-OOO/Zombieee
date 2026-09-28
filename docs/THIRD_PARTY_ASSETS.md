@@ -462,6 +462,7 @@ finalは`build-v080-character-assets.mjs`または`build-v080-stage-assets.mjs`�
 | `public/art/v080/characters/cards/guardian-formation-card-r2.webp` | `94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9` | 既存正式portrait＋自作SHIELD badge |
 | `public/art/v080/characters/cards/gunner-formation-card-r2.webp` | `f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24` | 既存正式portrait＋自作LMG badge |
 | `public/art/v080/characters/cards/kumaverson-formation-card-r2.webp` | `5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7` | 既存正式portrait＋自作PAN badge |
+| `public/art/v080/characters/cards/kumaverson-formation-card-r2.png` | `fc36119a1af2eff154380fc9ca821370edae06825e50250e4565683a0bb241ba` | 上記カードの表示画素を保ったPNG派生。スマートフォンWebKitでWebP表示が破綻するため採用 |
 | `public/art/v080/characters/cards/medic-formation-card-r2.webp` | `a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730` | 既存正式portrait＋自作MED badge |
 | `public/art/v080/characters/cards/monkey-formation-card-r2.webp` | `95b1704c0cb3ba9351bb16bebb4a27ef92e115d1d58861c53abbb5427213166f` | Monkey cutout source＋自作CARBINE badge |
 | `public/art/v080/characters/cards/ranger-formation-card-r2.webp` | `9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639` | 既存正式portrait＋自作RIFLE badge |

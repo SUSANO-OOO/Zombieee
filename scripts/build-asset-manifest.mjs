@@ -67,6 +67,9 @@ const allowMissingDerivatives = process.argv.includes("--allow-missing-derivativ
 const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav)$/i;
 
 function optimizedRasterPath(assetPath) {
+  // WebKit corrupts this transparent card when decoded from WebP, including
+  // the otherwise lossless PWA transport derivative.
+  if (assetPath === "/art/v080/characters/cards/kumaverson-formation-card-r2.png") return null;
   if (!assetPath.endsWith(".png") || assetPath.startsWith("/icons/")) return null;
   return `/pwa-optimized${assetPath.replace(/\.png$/i, ".webp")}`;
 }

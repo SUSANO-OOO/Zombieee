@@ -63,19 +63,27 @@ export const V100_TAKUYA_DEFEAT_CUT_ADDITION = Object.freeze({
   criticality: "critical",
 });
 export const V100_TAKUYA_DEFEAT_CUT_REMOVAL = "/art/v100/cuts/takuya-omega-ending-defeat-v1.webp";
+// The published WebP decodes as black stripes in phone WebKit. Its PNG is a
+// lossless decoded-pixel replacement; the WebP leaves the install manifest.
+export const V100_WEBKIT_CARD_REPLACEMENT = Object.freeze({
+  path: "/art/v080/characters/cards/kumaverson-formation-card-r2.png",
+  bytes: 396090,
+  hash: "sha256-fc36119a1af2eff154380fc9ca821370edae06825e50250e4565683a0bb241ba",
+  criticality: "optional",
+});
 // The station relay was correctly excluded while unused. Stage 4/5 now draw
 // it as their actual objective, so the current release includes it again.
 const restoredCandidatePaths = new Set(["/art/v100/mission-objects/station-relay-states-v1.webp"]);
 const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.filter(asset=>!restoredCandidatePaths.has(asset.path)).map(asset=>asset.path));
 const replacedMotionPaths = new Set(V100_MOTION_ATLAS_REPLACEMENTS.map(asset=>asset.newPath));
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION));
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
 const bundledAudioAdditionsFromV0995 = 28;
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
-  count: 458 + V100_COMPLETION_ASSET_ADDITIONS.length,
-  distinctHashes: 456 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  count: 457 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  distinctHashes: 455 + V100_COMPLETION_ASSET_ADDITIONS.length,
   additionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.length,
   bundledAudioAdditionsFromV0995,
   audioBundlePath: "/pwa-bundles/audio-v1.bin",
@@ -83,12 +91,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 52_895_862,
+  bytesFromV0995: 53_291_952,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 142_637_427,
-  candidateDistinctHashBytes: 142_097_524,
-  updateFromV0982Bytes: 69_586_310,
-  updateFromV0993Bytes: 59_211_616,
+  candidateTotalBytes: 142_970_285,
+  candidateDistinctHashBytes: 142_430_382,
+  updateFromV0982Bytes: 69_982_400,
+  updateFromV0993Bytes: 59_607_706,
 });
