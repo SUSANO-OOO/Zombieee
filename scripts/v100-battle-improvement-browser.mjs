@@ -77,7 +77,7 @@ await mkdir(dirname(out),{recursive:true});
 await mkdir(out,{recursive:false});
 const playwrightPackageUrl=new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/package.json':'../node_modules/playwright/package.json',import.meta.url);
 const playwrightPackage=JSON.parse(await readFile(playwrightPackageUrl,'utf8'));
-const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses an attainable first-two-stage budget: Nao plus four initial units at level 2, without a vehicle upgrade. It requires natural boss defeat, all three running-context BGM phases and one natural battle result; the final win/loss is recorded separately. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
+const report={scope:'Isolated owned-roster stage fixtures. Native deploy/support/ability input only after battle starts; no clock/actor/HP/result setters. Not earned campaign or physical-device acceptance. MUSIC_CHECK Stage 3 uses a developer verification roster of the five early units at level 4, without a vehicle upgrade; this isolates mixer transitions from early-campaign balance. The separate EARNED_STAGE3_FIXTURE retains its first-two-stage budget. Music verification requires natural boss defeat, all three running-context BGM phases and one natural battle result; the final win/loss is recorded separately. BGM active voice is native mixer evidence; cue requests are request-only and do not prove audible output.',build:await productionBuildIdentity(),engine,runtimeChoice:useCurrentWebKit?'current-webkit-runtime':'default-playwright-runtime',provenance:{head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),node:process.version,platform:`${process.platform}-${process.arch}`,playwrightModulePath:fileURLToPath(new URL(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'../node_modules/playwright/index.js',import.meta.url)),playwrightPackageVersion:playwrightPackage.version},results:[]};
 const browser=await ({chromium,webkit}[engine]).launch({headless:true,...(process.env.V100_BATTLE_IMPROVEMENT_EXECUTABLE?{executablePath:process.env.V100_BATTLE_IMPROVEMENT_EXECUTABLE}:{})});
 report.provenance.browserVersion=await browser.version();
 try{for(const number of numbers){
@@ -93,18 +93,18 @@ try{for(const number of numbers){
  try{
   const base=createDefaultV100Save({playerName:'戦場改善確認'}),stageId=V100_STAGE_IDS[number-1];
   const musicStage3=process.env.V100_BATTLE_MUSIC_CHECK==='1'&&number===3;
-  const earnedStage3=(process.env.V100_EARNED_STAGE3_FIXTURE==='1'||musicStage3)&&number===3;
+  const earnedStage3=process.env.V100_EARNED_STAGE3_FIXTURE==='1'&&number===3;
   const earnedStage5=process.env.V100_EARNED_STAGE5_FIXTURE==='1'&&number===5;
-  const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(earnedStage3||earnedStage5?['unit-nao']:[]),...(number>=6||earnedStage5?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
+  const owned=kumaGuardCheck?['unit-kumaverson']:[...base.ownedUnitIds,...(musicStage3||earnedStage3||earnedStage5?['unit-nao']:[]),...(number>=6||earnedStage5?['unit-mizuchi']:[]),...(includeMayo?['unit-mayo-chan']:[])];
   const contactCheck=process.env.V100_CONTACT_CHECK==='1';
   if(!kumaGuardCheck&& (manualFirearmCheck||guardianCheck))for(const id of ['unit-gantetsu','unit-mizuchi','unit-raider'])if(!owned.includes(id))owned.push(id);
   if(contactCheck)owned.push('unit-tatara');
   const formation=kumaGuardCheck?['unit-kumaverson',null,null,null,null,null,null]:manualFirearmCheck||guardianCheck?['unit-gantetsu','unit-babayaga','unit-mizuchi','unit-raider',null,null,null]:contactCheck?['unit-paisen','unit-tatara','unit-kumaverson','unit-babayaga',null,null,null]:[...owned, ...Array(Math.max(0,7-owned.length)).fill(null)].slice(0,7);
   // Stage 1+2 three-star receipts yield 231 CAPS. Nao (85) plus four
   // level-2 upgrades (4*30) are affordable with 26 CAPS left.
-  const unitLevels=earnedStage3||earnedStage5?{...base.unitLevels,...Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,2]))}:base.unitLevels;
+  const unitLevels=musicStage3?{...base.unitLevels,...Object.fromEntries(owned.map(id=>[id,4]))}:earnedStage3||earnedStage5?{...base.unitLevels,...Object.fromEntries(V100_INITIAL_UNIT_IDS.map(id=>[id,2]))}:base.unitLevels;
   const vehicle=base.vehicle;
-  if(musicStage3)assert.deepEqual(owned,[...V100_INITIAL_UNIT_IDS,'unit-nao'],'Stage 3 music fixture must stay within the attainable first-two-stage roster');
+  if(musicStage3)assert.deepEqual(owned,[...V100_INITIAL_UNIT_IDS,'unit-nao'],'Stage 3 music fixture must use the five early character identities');
   result.fixture={musicStage3,earnedStage3,earnedStage5,earnedBudgetCaps:earnedStage3?231:earnedStage5?490:null,earnedSpentCaps:earnedStage3?205:earnedStage5?410:null,ownedUnitIds:owned,formationSlots:formation,unitLevels:Object.fromEntries(owned.map(id=>[id,unitLevels[id]])),vehicle:{upgradeLevel:vehicle.upgradeLevel,maxHp:vehicle.maxHp}};
   const save=normalizeV100Save({...base,campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS.slice(0,number),completedStageIds:V100_STAGE_IDS.slice(0,number-1),ownedUnitIds:owned,registeredUnitIds:owned,unitLevels,vehicle,formationSlots:formation,
    ...(number>=6||earnedStage5?{ownedSupportIds:['support-healing'],equippedSupportId:'support-healing',supportPurchaseUnlockedIds:['support-healing']}:{}),
@@ -248,7 +248,10 @@ try{for(const number of numbers){
    // Clear the opening wave with the first ordinary airstrike. The longer
    // pre-boss defense requires replacing fallen units through the deployment
    // tray and using the available barrage against a crowded vehicle lane.
-   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:true,reserveSecondAirstrikeForBoss:musicStage3});await page.waitForTimeout(350);
+   // The denser pre-boss waves can defeat this earned roster before TAKUYA
+   // arrives. Spend a ready airstrike on a real crowd, then observe the boss
+   // music and natural defeat from the same unmodified combat rules.
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:true});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
