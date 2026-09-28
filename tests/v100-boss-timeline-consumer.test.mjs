@@ -100,7 +100,7 @@ test("Stage 3's final preboss contact flows into TAKUYA without an empty-lane ti
   assert.equal(entrance,6);
   assert.ok(definition.timeline[entrance].at-definition.prepSeconds>=90);
   assert.ok(definition.timeline[entrance].at-definition.timeline[entrance-1].at<=20);
-  assert.deepEqual(definition.timeline.slice(0,entrance).map(event=>event.units.length),[4,5,5,5,5,4]);
+  assert.deepEqual(definition.timeline.slice(0,entrance).map(event=>event.units.length),[5,5,5,6,6,5]);
   assert.ok(definition.timeline.slice(1,entrance).every((event,index)=>event.at-definition.timeline[index].at<=21));
   assert.equal(definition.timeline[entrance].waitForPriorWaveClear,true);
   assert.equal(definition.timeline[entrance].advanceOnClearAfter-definition.timeline[entrance-1].advanceOnClearAfter,10);

@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
-import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
+import { nativeBattleTap, normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
@@ -20,7 +20,7 @@ import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 import { createV100PhaseGProofMachine } from "./v100-phase-g-proof-machine.mjs";
 import { createVehicleCombatProofGate } from "./v100-vehicle-combat-proof-gate.mjs";
-import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
+import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 matrix is local-only; refusing ${baseUrl}`);
@@ -4320,7 +4320,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           if (manualAbilityKind === "babayaga" && !babayagaMarkerInputReady(runtime, ownerId)) return false;
           manualActionEvidence.ownerId = ownerId;
           manualActionEvidence.beforeInput = runtime;
-          await ability.click({ timeout: V100_MANUAL_MARKER_CLICK_TIMEOUT_MS });
+          // The moving in-battle button may be replaced between locator
+          // stability checks. Use the same ordered native pointer path as
+          // ordinary tactical input; the receipt gate below still proves the
+          // exact activation, living target, and completed impact.
+          if (!(await nativeBattleTap(page, ability))) return false;
           manualActionEvidence.afterInput = await readSetupRuntime();
           return true;
         });
