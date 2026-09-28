@@ -1062,12 +1062,14 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
     <div className="v100-formation-brief"><strong>今回の部隊</strong><span>枠を選び、隊員を配置</span><button type="button" onClick={onLoadout}>出撃装備</button></div>
     <div className="v100-formation-board">
     <div className="v100-slot-rail" aria-label="7枠の編成">
-      <span className="v100-field-map-title" aria-hidden="true">作戦配置図 <small>隊員登録枠 / 戦闘時に選択</small></span>
-      <svg className="v100-field-map-drawing" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-        <path className="v100-field-map-blocks" d="M10 86H258V13 M10 118H170V298 M188 0V121H350V300 M330 0V72H558V300 M510 0V145H737V300 M682 0V83H973 M833 0V203H994 M0 228H225 M228 172H510 M495 228H996 M752 151H1000" />
-        <path className="v100-field-map-perimeter" d="M0 277C152 226 198 279 341 244S577 196 700 232 845 215 1000 183" />
-        <path className="v100-field-map-route-shadow" d="M110 174L290 114 440 186 570 90 680 165 800 111 900 183" />
-        <path className="v100-field-map-route" d="M110 174L290 114 440 186 570 90 680 165 800 111 900 183" />
+      <span className="v100-field-map-title">作戦図 <small>{stage ? `S${String(stage.number).padStart(2, "0")} / ${missionLabelFor(stage)}` : "出撃準備"}</small></span>
+      <div className="v100-field-map-intel"><span>作戦区域 / 作戦目標</span><strong>{objectiveLabelFor(stage)}</strong><span>脅威：{enemyPackLabelFor(stage?.enemyPack, stage?.number)}</span></div>
+      <svg className="v100-field-map-drawing" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
+        <path className="v100-field-map-blocks" d="M0 45H240V0 M0 132H126V64H354V0 M248 170V90H490V0 M383 170V145H610V0 M596 170V84H790V0 M762 170V116H1000 M855 0V54H1000" />
+        <path className="v100-field-map-perimeter" d="M0 116C159 105 169 130 310 115S469 91 555 106" />
+        <path className="v100-field-map-route-shadow" d="M928 77C775 54 698 107 598 83S408 75 286 106" />
+        <path className="v100-field-map-route" d="M928 77C775 54 698 107 598 83S408 75 286 106" />
+        <path className="v100-field-map-arrow" d="M286 106L319 83 M286 106L325 122" />
       </svg>
       <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => { const art = unitId ? formationCardForUnit(unitId) : null; const unit = unitId ? UNIT_BY_ID.get(unitId) : null; return <button type="button" key={`slot-${index}`} className={`v100-slot ${activeSlot === index ? "selected" : ""} ${unitId ? "filled" : "empty"}`} onClick={() => { setActiveSlot(index); setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={`編成枠${index + 1}${unit ? ` ${unit.displayName}` : " 空き"}`}><span className="v100-slot-portrait">{art ? <img key={art} src={art} alt="" onLoad={(event) => { const image = event.currentTarget; const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve(); void decoded.then(() => requestAnimationFrame(() => { if (image.isConnected && image.naturalWidth > 0) image.dataset.loaded = "true"; })); }} /> : <i aria-hidden="true">＋</i>}</span><span className="v100-slot-meta"><small>枠 {index + 1}</small><strong>{unit ? unit.displayName : "空席"}</strong><em>{unit ? v100RoleLabelFor(unit.role) : "隊員を選択"}</em></span></button>; })}</div>
     </div>
