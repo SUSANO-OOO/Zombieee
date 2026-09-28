@@ -738,7 +738,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -19561,11 +19561,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
           }
         } else {
-          while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
+          while (g.eventIndex < g.definition.timeline.length) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            const scheduled = g.time >= mission.at;
+            const earlyCandidate = !scheduled && Number.isFinite(mission.advanceOnClearAfter)
+              && g.time >= Number(mission.advanceOnClearAfter);
+            if (!scheduled && !earlyCandidate) break;
+            const priorWaveClear = (earlyCandidate || mission.waitForPriorWaveClear)
+              && g.enemySpawn.pending.length === 0
+              && !g.fighters.some(fighter => fighter.side === "zombie" && fighter.hp > 0);
+            if (earlyCandidate && !priorWaveClear) break;
             if (Number.isFinite(mission.escortProgress) && (g.stageMission?.progress ?? 0) < Number(mission.escortProgress)) break;
-            if (mission.waitForPriorWaveClear && (g.enemySpawn.pending.length > 0
-              || g.fighters.some(fighter => fighter.side === "zombie" && fighter.hp > 0))) break;
+            if (mission.waitForPriorWaveClear && !priorWaveClear) break;
             if (Number.isFinite(mission.bossHpRatio)) {
               const owner = g.fighters.find(fighter => fighter.kind === g.definition.bossEnemyKind);
               if (!g.bossDefeated && !g.bossDefeatPending

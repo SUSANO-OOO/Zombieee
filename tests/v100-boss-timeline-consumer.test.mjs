@@ -89,7 +89,7 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 8);
     }
     advance(); assert.equal(queued.length, 8, "phase waves commit once");
-    assert.deepEqual(queued.slice(6).map(event => event.units), [["walker", "runner", "shade", "walker"], ["spitter", "crusher", "runner"]]);
+    assert.deepEqual(queued.slice(6).map(event => event.units), [["runner", "shade", "walker"], ["spitter", "walker", "runner"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
 });
@@ -100,19 +100,45 @@ test("Stage 3's final preboss contact flows into TAKUYA without an empty-lane ti
   assert.equal(entrance,5);
   assert.ok(definition.timeline[entrance].at-definition.prepSeconds>=90);
   assert.ok(definition.timeline[entrance].at-definition.timeline[entrance-1].at<=20);
-  assert.ok(definition.timeline.slice(0,entrance).flatMap(event=>event.units).length>=20);
+  assert.deepEqual(definition.timeline.slice(0,entrance).map(event=>event.units.length),[4,5,5,5,5]);
+  assert.ok(definition.timeline.slice(1,entrance).every((event,index)=>event.at-definition.timeline[index].at<=21));
   assert.equal(definition.timeline[entrance].waitForPriorWaveClear,true);
 });
 
-test("Gate Eater follows five pressure waves and three separated infection waves", () => {
+test("Stages 3 and 5 bring the next contact forward only after the prior wave clears", () => {
+  for (const number of [3, 5]) {
+    const definition=createBattleDefinition(V100_STAGES[number-1].id,{v100:true});
+    const second=definition.timeline[1];
+    assert.ok(second.advanceOnClearAfter>definition.timeline[0].at);
+    assert.ok(second.advanceOnClearAfter<second.at);
+    const g={definition,eventIndex:1,time:second.advanceOnClearAfter-.01,fighters:[],enemySpawn:{nextEntryId:1,pending:[]}};
+    const queued=[];
+    const fixture={g,isBossFighter,v100AssaultObjectProfile,isBossEnemyKind:()=>false,activeStageViewportId:"844x340",
+      enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
+      enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:()=>{},playCue:()=>{},emitBattleBark:()=>{},
+    };
+    const advance=()=>vm.runInNewContext(code,fixture);
+    advance();assert.equal(queued.length,0);
+    g.enemySpawn.pending=[{entryId:1,kind:"walker"}];g.time=second.advanceOnClearAfter;
+    advance();assert.equal(queued.length,0,"a queued enemy still occupies the previous wave");
+    g.enemySpawn.pending=[];g.fighters=[{side:"zombie",hp:1,kind:"walker"}];
+    advance();assert.equal(queued.length,0,"a living enemy still occupies the previous wave");
+    g.fighters=[];advance();assert.deepEqual(queued.map(event=>event.wave),[2]);
+    advance();assert.equal(queued.length,1,"early contact must be consumed once");
+  }
+});
+
+test("Gate Eater follows six pressure waves and three separated infection waves", () => {
   const definition = createBattleDefinition(V100_STAGES[4].id, { v100: true });
-  assert.equal(definition.timeline.length,9);
-  assert.equal(definition.timeline[5].units[0],"gate-eater");
-  assert.ok(definition.timeline[5].at-definition.prepSeconds>=90);
-  assert.ok(definition.timeline[5].at-definition.timeline[4].at<=12);
-  assert.ok(definition.timeline.slice(0,5).flatMap(event=>event.units).length>=25);
-  assert.deepEqual(definition.timeline.slice(6).map(event=>event.bossHpRatio),[.75,.4,.2]);
-  assert.ok(definition.timeline.slice(7).every((event,index)=>event.at-definition.timeline[6+index].at>=15));
+  assert.equal(definition.timeline.length,10);
+  assert.equal(definition.timeline[6].units[0],"gate-eater");
+  assert.ok(definition.timeline[6].at-definition.prepSeconds>=90);
+  assert.ok(definition.timeline[6].at-definition.timeline[5].at<=13);
+  assert.deepEqual(definition.timeline.slice(0,6).map(event=>event.units.length),[5,5,5,6,6,6]);
+  assert.ok(definition.timeline.slice(1,6).every((event,index)=>event.at-definition.timeline[index].at<=18));
+  assert.deepEqual(definition.timeline.slice(7).map(event=>event.units.length),[3,3,3]);
+  assert.deepEqual(definition.timeline.slice(7).map(event=>event.bossHpRatio),[.75,.4,.2]);
+  assert.ok(definition.timeline.slice(8).every((event,index)=>event.at-definition.timeline[7+index].at>=15));
   assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
 });
 
