@@ -464,7 +464,8 @@
     border-radius: 50%;
     background: #171d19;
   }
-  .v100-formation-panel:not(.picker-open) .v100-slot-portrait img { object-fit: cover; object-position: center 12%; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait img { visibility: hidden; object-fit: cover; object-position: center 12%; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait img[data-loaded="true"] { visibility: visible; }
   .v100-formation-panel:not(.picker-open) .v100-slot-portrait i { font-size: 24px; line-height: 39px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta {
     position: absolute;

@@ -4409,14 +4409,20 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (!completedImpactProofEnabled) {
       if (bossKind && bossPresentationMode === "local-developer-boss-wave") {
         if (tacticalStageNumber === 30) {
-          // The core visual matrix proves the real Omega actor and attack, not
-          // a passive QA player's ability to clear five late-game prewaves.
-          // Keep normal combat activity and real card deployment as the entry
-          // receipt, then use the localhost-only developer bridge for the
-          // authored boss wave. A separate normal-play run owns difficulty.
+          // Seal the ordinary opening fight's completed impact before the
+          // developer handoff. The later Omega representative observation
+          // can consume its first attack, so a new 12-second causal window
+          // after that observation would miss real earlier combat.
           invariant(!proofActor && !proofUnitKind && !requireVehicleAction,
             "Stage 30 visual handoff cannot replace a required combat proof");
           await waitForCombatActivity(page);
+          invariant(typeof captureCombatAction === "function", "Stage 30 opening combat capture callback missing");
+          sealedCombatCausalProof ??= await captureCombatAction({
+            durationMs: requestedCombatProofDurationMs ?? combatProofDurationMs,
+            requiredCompletedImpactActorKeys,
+          });
+          invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE",
+            "Stage 30 opening combat has no completed impact before boss-wave handoff");
         } else {
           invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
             && proofActorAttackObserved && proofUnitAttackObserved && vehicleActionObserved,
@@ -4622,7 +4628,7 @@ for (const viewport of requiredViewports) {
     };
   });
   await captureState("chromium", viewport, "battle-normal", async (page) => ({ ...(await battlePage(page, fullSave())), variant: "core-battle-normal" }));
-  await captureState("chromium", viewport, "battle-boss", async (page) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega", bossPresentationMode: "local-developer-boss-wave" })), variant: "core-battle-boss" }));
+  await captureState("chromium", viewport, "battle-boss", async (page, captureCombatAction) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega", bossPresentationMode: "local-developer-boss-wave", captureCombatAction })), variant: "core-battle-boss" }));
   await captureState("chromium", viewport, "result-win", async (page) => { await openRoute(page, resultSave(true)); await page.locator('[data-v100-surface="result-win"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });

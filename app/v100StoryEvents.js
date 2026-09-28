@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "d80e9c9e69a13b25466a8e6019b2cbf5b111e5ae0781d6fa64e08a70f550c063";
+export const V100_STORY_SOURCE_SHA256 = "3067731d970ba4725e5cd999e86886d0d277c4a3a30f49eea45c533d4127764d";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -5619,7 +5619,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "紙ファイルの表紙に「特級博士 セガワ」。余白の「ネコ殺し」は赤ペンで消し損ねている。棚には動物試験の記録。壁には発生前からの西新の地図。",
+        "text": "紙ファイルの表紙に「特級博士 セガワ」。余白の「ネコ殺し」は赤ペンで消し損ねている。棚には動物試験の記録。壁の西新の地図には、避難者数と散布後に減った工場排水のグラフが重ねられている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 811
@@ -5755,7 +5755,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "一人止めても、次が同じ欄に丸をつけます",
+        "text": "何年訴えても、工場は一日も止まらなかった。西新に撒いたら三日で止まった。逃げた人が戻るかも、あそこで見たかった",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 830
