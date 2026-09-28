@@ -245,10 +245,10 @@ try{for(const number of numbers){
     }
     if(!result.kumaObservationComplete){await page.waitForTimeout(350);continue;}
    }
-   // Clear the opening wave with the first ordinary airstrike. Once each
-   // owned unit has deployed, bank command for the boss assault; save the
-   // next support charge for TAKUYA instead of a pre-boss cluster.
-   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:!musicStage3||Boolean(result.bossDefeatedAt),reserveSecondAirstrikeForBoss:musicStage3,holdRedeploymentUntilBoss:musicStage3});await page.waitForTimeout(350);
+   // Clear the opening wave with the first ordinary airstrike. The longer
+   // pre-boss defense requires replacing fallen units through the deployment
+   // tray and using the available barrage against a crowded vehicle lane.
+   await normalTacticalInput(page,result,{barrageWhenOverwhelmed:musicStage3,barrageEnabled:true,reserveSecondAirstrikeForBoss:musicStage3});await page.waitForTimeout(350);
   }
   result.last=last;result.maxEmptyAfter20Seconds=maxEmpty;
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
