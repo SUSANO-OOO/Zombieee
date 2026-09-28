@@ -1,8 +1,8 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "a45102ef1185ef674a1e42eb2f7c9511cb1526d35479284e44b0c0282351f250";
-export const V100_STORY_SOURCE_LINE_COUNT = 978;
+export const V100_STORY_SOURCE_SHA256 = "f01cf58b1ba621839008a6ffb82ebd13661a1b7d791a3110c116f0d4ec45e605";
+export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
 export const V100_STORY_EVENTS = Object.freeze({
@@ -51,7 +51,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "{{PLAYER_NAME}}さん、ここ。席は俺が守りました。唐揚げは守れなかったっす",
+        "text": "{{PLAYER_NAME}}さん、席ならあります。唐揚げの方は……すいません、俺が一個",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 13,
@@ -60,7 +60,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "残り二個。皿は三枚。誰が食うたかは聞かん",
+        "text": "あとの二個、分けるしかなかね。正直に言うたけん、皿は洗って",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 14,
@@ -186,7 +186,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "男の腕には歯形がある。クマバーソンが布巾を当てる間に、男の指が止まった。",
+        "text": "男の腕には歯形がある。クマバーソンが布巾を当てる。男は水を求めて口を開くが、声にならない。掴んでいた布巾から、指が一本ずつ離れた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 30,
@@ -204,7 +204,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "男",
-        "text": "……まだ、言え……",
+        "text": "……たす、け……",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
         "sourceLine": 32,
@@ -213,7 +213,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "呼吸が途切れ、男が主人公へ飛びかかる。椅子の脚がその顎を受け止めた。",
+        "text": "言い終える前に呼吸が止まる。クマバーソンが脈を探した瞬間、男が跳ね起き、主人公へ噛みつく。椅子の脚が顎を受け止めた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 33,
@@ -449,7 +449,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "女の声",
-        "text": "そこの、ごっつい車。聞こえてたらライト一回だけ",
+        "text": "そこの装甲車！　聞こえたらライト、一回！",
         "portraitOwner": null,
         "portraitKind": "offscreen",
         "sourceLine": 67
@@ -505,7 +505,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "俺が先に上がります！　{{PLAYER_NAME}}さん、車を裏階段へ。降りてきた人を受け取って！",
+        "text": "俺が上がります！　{{PLAYER_NAME}}さん、裏階段に車を寄せて！　降りてきた人、お願いっす！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 74
@@ -709,7 +709,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "待たせてください。俺が連れて戻る。扉は、それまで閉めてていいっす",
+        "text": "俺が迎えに行きます。扉、閉めて待っててください。必ず戻るんで",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 103
@@ -733,7 +733,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "了解。俺だけ置いて出ないでくださいよ",
+        "text": "了解。安藤さんを乗せたら、俺も飛び乗ります",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 106
@@ -902,66 +902,90 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "仮設照明の向こうで、鎖を引きずる巨体がバリケードを押しのける。黒い防護眼鏡、頬の傷。",
+        "text": "防衛線の照明がひとつ消える。向こう側に黒い拘束帯と、縫い合わされた裸の胸。大刃を引きずる音が、感染群の足音より先に来た。頬の傷と防護眼鏡で、パイセンにも分かる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 132
       },
       {
-        "kind": "action",
-        "speaker": null,
-        "text": "壊れた街頭放送が、発生前の呼びかけを繰り返す。「タクヤさん、薬局へ」。巨体の顔がスピーカーを追った。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "……タクヤさん？",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
         "sourceLine": 133
       },
       {
-        "kind": "dialogue",
-        "speaker": "パイセン",
-        "text": "まだ、自分の名前って分かるんすか",
-        "portraitOwner": "unit-paisen",
-        "portraitKind": "major",
+        "kind": "action",
+        "speaker": null,
+        "text": "返事はない。TAKUYAが刃を振ると、柵の留め具が一列に飛んだ。パイセンの足元へ鉄板が滑る。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
         "sourceLine": 134
-      },
-      {
-        "kind": "dialogue",
-        "speaker": "クマバーソン",
-        "text": "分からん。発生の日、あの人が薬を運んでくれたことは覚えとる",
-        "portraitOwner": "unit-kumaverson",
-        "portraitKind": "major",
-        "sourceLine": 135
       },
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が装甲車両を盾にし、左右へ仲間を配置する。",
+        "text": "主人公がパイセンの襟をつかんで引き戻す。鉄板は二人のいた場所を抜け、装甲車両の車輪に当たった。",
         "portraitOwner": null,
         "portraitKind": "system",
+        "sourceLine": 135
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "クマバーソン",
+        "text": "発生の日、あの人は薬を運んどった。俺が頼んだんや",
+        "portraitOwner": "unit-kumaverson",
+        "portraitKind": "major",
         "sourceLine": 136
       },
       {
         "kind": "dialogue",
-        "speaker": "ババヤガ",
-        "text": "右は俺が落とす。正面に立ち続けるな",
-        "portraitOwner": "unit-babayaga",
+        "speaker": "パイセン",
+        "text": "だったら、俺も覚えてます。受け取った方は、忘れんすよ",
+        "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 137
       },
       {
-        "kind": "action",
-        "speaker": null,
-        "text": "パイセンは開いた車両の扉を一度閉め、クマバーソンの隣へ立つ。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
+        "kind": "dialogue",
+        "speaker": "ババヤガ",
+        "text": "パイセン、前を見ろ。群れが柵を越えた",
+        "portraitOwner": "unit-babayaga",
+        "portraitKind": "major",
         "sourceLine": 138
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "あの人を通したら、駅まで追いかけてくる。……来いよ。ここで止めるしかないっす",
+        "text": "……分かってる。分かってるっす",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 139
+      },
+      {
+        "kind": "player-action",
+        "speaker": "▶ PLAYER",
+        "text": "主人公が装甲車両を横に寄せ、左右の進入路へ仲間を割り振る。",
+        "portraitOwner": null,
+        "portraitKind": "system",
+        "sourceLine": 140
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "パイセンは扉を閉め、クマバーソンの横へ走る。後ろでは駅へ向かう避難者が、まだ防壁を通り抜けていた。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 141
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "パイセン",
+        "text": "あの人が来る前に、道を空ける。……怖いけど、足は動くっす",
+        "portraitOwner": "unit-paisen",
+        "portraitKind": "major",
+        "sourceLine": 142
       },
       {
         "kind": "boss-marker",
@@ -969,7 +993,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "TAKUYA",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 140
+        "sourceLine": 143
       },
       {
         "kind": "battle-marker",
@@ -977,12 +1001,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "感染群を退け、TAKUYAを止めよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 141
+        "sourceLine": 144
       }
     ],
     "source": {
       "startLine": 131,
-      "endLine": 142
+      "endLine": 145
     }
   },
   "v100:event:s03:post": {
@@ -994,26 +1018,34 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "TAKUYAの指が、放送の鳴る方へ伸びたまま止まる。クマバーソンが街頭放送の電源を切り、伸びた手をそっと地面へ戻す。",
+        "text": "TAKUYAの大刃が地面へ落ちる。開いた手は何かを渡す形のままだった。クマバーソンが手首の鎖をそっと外す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 145
+        "sourceLine": 148
       },
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "もう、働かせんでよか",
+        "text": "すまん。運ぶもん、まだあるって言うてしまいそうや",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 146
+        "sourceLine": 149
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "パイセンは刃を見ないようにして、外れた鎖を端へ寄せる。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 150
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "駅の人、まだ待ってるんすよね",
+        "text": "駅の人が待ってます。……行きましょう",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 147
+        "sourceLine": 151
       },
       {
         "kind": "dialogue",
@@ -1021,7 +1053,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "信号は生きてます。細いけど、切れてない",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 148
+        "sourceLine": 152
       },
       {
         "kind": "player-action",
@@ -1029,7 +1061,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が防壁の残骸に牽引線を掛け、駅へ通る道を開く。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 149
+        "sourceLine": 153
       },
       {
         "kind": "action",
@@ -1037,7 +1069,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "装甲車両が去ったあと、赤いレンズの防護服が防衛線へ入る。銃口を下げたまま、迷いなくTAKUYAへ向かう。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 152,
+        "sourceLine": 156,
         "sceneTag": "retrieval"
       },
       {
@@ -1046,7 +1078,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "T-03、回収。記録は残すな",
         "portraitOwner": "red-panther-commander",
         "portraitKind": "major",
-        "sourceLine": 153,
+        "sourceLine": 157,
         "sceneTag": "retrieval"
       },
       {
@@ -1055,13 +1087,13 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "隊員がTAKUYAの鎖を外し、遺体を黒い袋へ収める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 154,
+        "sourceLine": 158,
         "sceneTag": "retrieval"
       }
     ],
     "source": {
-      "startLine": 144,
-      "endLine": 155
+      "startLine": 147,
+      "endLine": 159
     }
   },
   "v100:event:s03:first-clear-post": {
@@ -1072,8 +1104,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 144,
-      "endLine": 155
+      "startLine": 147,
+      "endLine": 159
     }
   },
   "v100:event:s04:pre": {
@@ -1088,7 +1120,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "駅のシャッターは腰の高さで止まっている。地上の風が途切れ、暗い構内から非常電話の呼び出し音だけが続く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 160
+        "sourceLine": 164
       },
       {
         "kind": "dialogue",
@@ -1096,7 +1128,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "自動じゃない。誰かが、かけ直してます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 161
+        "sourceLine": 165
       },
       {
         "kind": "dialogue",
@@ -1104,7 +1136,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "下りたら、空が見えなくなるんすよね",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 162
+        "sourceLine": 166
       },
       {
         "kind": "player-action",
@@ -1112,7 +1144,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が隙間から入り、内側のシャッターを押し上げる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 163
+        "sourceLine": 167
       },
       {
         "kind": "action",
@@ -1120,7 +1152,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "受話器から、咳に混じって駅員の声。駅員室に三人、ホームの保守室に二人。一人は噛まれている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 164
+        "sourceLine": 168
       },
       {
         "kind": "dialogue",
@@ -1128,7 +1160,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "五人。帰りの人数も、数えといてください",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 165
+        "sourceLine": 169
       },
       {
         "kind": "dialogue",
@@ -1136,7 +1168,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺がシャッターを押さえる。お前は声の方へ行け",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 166
+        "sourceLine": 170
       },
       {
         "kind": "battle-marker",
@@ -1144,12 +1176,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "閉鎖改札の感染拠点を破壊し、駅員室へ進め。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 167
+        "sourceLine": 171
       }
     ],
     "source": {
-      "startLine": 159,
-      "endLine": 168
+      "startLine": 163,
+      "endLine": 172
     }
   },
   "v100:event:s04:post": {
@@ -1164,7 +1196,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "駅員室の女性は咬傷をタオルで押さえ、ホームの二人を先に助けてと頼む。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 171
+        "sourceLine": 175
       },
       {
         "kind": "dialogue",
@@ -1172,7 +1204,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一緒に出る。順番を決めるために置いてきたわけじゃなか",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 172
+        "sourceLine": 176
       },
       {
         "kind": "action",
@@ -1180,7 +1212,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "パイセンが反対側から肩を貸す。女性は、彼の震える手に体重を預けすぎないよう歩く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 173
+        "sourceLine": 177
       },
       {
         "kind": "dialogue",
@@ -1188,7 +1220,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "黒い防護服が、ホームへ冷蔵ケースを置いていきました。レンズが赤くて",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 174
+        "sourceLine": 178
       },
       {
         "kind": "action",
@@ -1196,7 +1228,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が振り返る。防衛線で見た防護服と同じだ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 175
+        "sourceLine": 179
       },
       {
         "kind": "action",
@@ -1204,7 +1236,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "駅員室の配線盤裏の点検口から、罠装置を腰に下げた男が這い出す。非常電話を鳴らし続けたのは彼だった。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 176
+        "sourceLine": 180
       },
       {
         "kind": "dialogue",
@@ -1212,7 +1244,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "モンキー。非常電話を鳴らし続けたのは俺。シャッターも直せる。ホームを開けたら、こっちも見つかるけど",
         "portraitOwner": "unit-monkey",
         "portraitKind": "major",
-        "sourceLine": 177
+        "sourceLine": 181
       },
       {
         "kind": "player-action",
@@ -1220,7 +1252,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が駅員室の退路を指し、開閉の合図をモンキーへ預ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 178
+        "sourceLine": 182
       },
       {
         "kind": "dialogue",
@@ -1228,7 +1260,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "先に逃がすのか。その順なら回路を組める。合図は一回で頼む",
         "portraitOwner": "unit-monkey",
         "portraitKind": "major",
-        "sourceLine": 179
+        "sourceLine": 183
       },
       {
         "kind": "player-action",
@@ -1236,7 +1268,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が駅員を車両へ送り、ホームへの保守扉を開ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 180
+        "sourceLine": 184
       },
       {
         "kind": "system",
@@ -1244,7 +1276,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "工兵のモンキーが配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 181
+        "sourceLine": 185
       },
       {
         "kind": "system",
@@ -1252,12 +1284,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ホームの二人と冷蔵ケースを確認する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 182
+        "sourceLine": 186
       }
     ],
     "source": {
-      "startLine": 170,
-      "endLine": 183
+      "startLine": 174,
+      "endLine": 187
     }
   },
   "v100:event:s04:first-clear-post": {
@@ -1268,8 +1300,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 170,
-      "endLine": 183
+      "startLine": 174,
+      "endLine": 187
     }
   },
   "v100:event:s05:pre": {
@@ -1281,10 +1313,10 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "地下ホーム。壊れた改札機を背負うように感染組織が膨れ、電子音のたびに巨体が頭を揺らす。保守室の扉を叩く音が、途中で鈍く変わった。",
+        "text": "地下ホーム。保守室の扉が内側から叩かれる。反対側には感染者の群れ。さらに奥、壊れた改札機の向こうで、何か大きなものが金属を引きずっている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 188
+        "sourceLine": 192
       },
       {
         "kind": "dialogue",
@@ -1292,63 +1324,79 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人います！　扉が曲がって、内側から押しても開きません！",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 189
+        "sourceLine": 193
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "あの塊、改札ごと動いてる。扉まで来たら、逃げ場ないっす",
+        "text": "手前にあれだけいるのに、奥でも何か待ってるんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 190
+        "sourceLine": 194
       },
       {
         "kind": "action",
         "speaker": null,
-        "text": "巨体が電子音へ首を向ける。いくらちゃんが反対ホームの放送設備を指した。電源灯は生きている。",
+        "text": "改札の奥で電子音が一度鳴る。金属を引きずる音が止まる。やがて、反対側の暗がりを回るように、ゆっくり遠ざかった。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 191
+        "sourceLine": 195
       },
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "音で向こうへ引ける。クマバーソンさん、フライパン、一回叩いて",
+        "text": "放送設備、まだ使える。手前の群れだけでも反対側へ振ります",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 192
+        "sourceLine": 196
       },
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "一回だけやぞ。まだ店で使うつもりやけん",
+        "text": "何を流す",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 193
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "乾いた打音を録り、いくらちゃんが反対ホームの放送から流す。巨体が改札を引きずって離れる。曲がった扉の蝶番が、また鳴った。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 194
+        "sourceLine": 197
       },
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "戻ってくる。もう一度流します。今、扉まで走って！",
+        "text": "はっきり鳴るもの。短い音なら、繰り返せます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 195
+        "sourceLine": 198
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "クマバーソンがフライパンを叩く。いくらちゃんがその一打を録り、反対ホームのスピーカーで繰り返した。群れの先頭が向きを変える。奥の大きな影は、まだ動かない。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 199
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "クマバーソン",
+        "text": "帰ったら、これは洗ってから使おうな",
+        "portraitOwner": "unit-kumaverson",
+        "portraitKind": "major",
+        "sourceLine": 200
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "保守員の声",
+        "text": "扉が、もう！",
+        "portraitOwner": null,
+        "portraitKind": "offscreen",
+        "sourceLine": 201
       },
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公が合図し、仲間を保守室側へ展開する。",
+        "text": "主人公が仲間を保守室側へ展開し、放送の切り替えをいくらちゃんに任せる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 196
+        "sourceLine": 202
       },
       {
         "kind": "boss-marker",
@@ -1356,7 +1404,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "改札喰い",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 197
+        "sourceLine": 203
       },
       {
         "kind": "battle-marker",
@@ -1364,12 +1412,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "感染群を退け、改札喰いを倒して保守室の二人を救え。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 198
+        "sourceLine": 204
       }
     ],
     "source": {
-      "startLine": 187,
-      "endLine": 199
+      "startLine": 191,
+      "endLine": 205
     }
   },
   "v100:event:s05:post": {
@@ -1384,7 +1432,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "保守室から出た二人が、互いの肩を離さない。いくらちゃんは人数を数え、端末を握る指から力を抜いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 202
+        "sourceLine": 208
       },
       {
         "kind": "action",
@@ -1392,7 +1440,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一人が、曲がったチェーンソーを床へ置く。扉の内側には浅い切り傷が一筋。刃を止めた彼は、保守員を背に、外から押される扉を支え続けていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 203
+        "sourceLine": 209
       },
       {
         "kind": "dialogue",
@@ -1400,7 +1448,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "王の剣、封印。民は無事か",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
-        "sourceLine": 204
+        "sourceLine": 210
       },
       {
         "kind": "dialogue",
@@ -1408,7 +1456,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "自分の前に立ってくれてました。ずっと",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 205
+        "sourceLine": 211
       },
       {
         "kind": "dialogue",
@@ -1416,7 +1464,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人で出てきたなら、それで勝ちや",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 206
+        "sourceLine": 212
       },
       {
         "kind": "dialogue",
@@ -1424,7 +1472,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……なら、余の勝ちだ",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
-        "sourceLine": 207
+        "sourceLine": 213
       },
       {
         "kind": "dialogue",
@@ -1432,7 +1480,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "これ、病院へ。置いていった人たちは、中身を半分持っていった",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 208
+        "sourceLine": 214
       },
       {
         "kind": "action",
@@ -1440,7 +1488,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "冷蔵ケースには「感染初期処置用」。薬局と同じムガリアンの管理番号。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 209
+        "sourceLine": 215
       },
       {
         "kind": "dialogue",
@@ -1448,7 +1496,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "半分を抜いて、残りをここへ。誰が使うか見とったんやろな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 210
+        "sourceLine": 216
       },
       {
         "kind": "dialogue",
@@ -1456,7 +1504,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "誰に",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 211
+        "sourceLine": 217
       },
       {
         "kind": "dialogue",
@@ -1464,7 +1512,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "配送先は大学病院の地下搬入口。線路の先にあるんです。電車じゃなくて、保守扉の向こう",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 212
+        "sourceLine": 218
       },
       {
         "kind": "player-action",
@@ -1472,7 +1520,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公がケースを背負い、病院へ続く保守扉を開ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 213
+        "sourceLine": 219
       },
       {
         "kind": "system",
@@ -1480,7 +1528,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "前衛のクレイジーキングが配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 214
+        "sourceLine": 220
       },
       {
         "kind": "system",
@@ -1488,12 +1536,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院へ向かう保守トンネルを進む。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 215
+        "sourceLine": 221
       }
     ],
     "source": {
-      "startLine": 201,
-      "endLine": 216
+      "startLine": 207,
+      "endLine": 222
     }
   },
   "v100:event:s05:first-clear-post": {
@@ -1504,8 +1552,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 201,
-      "endLine": 216
+      "startLine": 207,
+      "endLine": 222
     }
   },
   "v100:event:s06:pre": {
@@ -1520,7 +1568,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "トンネルの泥に、同じ歩幅の軍靴の跡。排水溝には赤いレンズの欠片が残る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 221
+        "sourceLine": 227
       },
       {
         "kind": "dialogue",
@@ -1528,7 +1576,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院側へ行ってます。この足跡、一列で迷ってない",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 222
+        "sourceLine": 228
       },
       {
         "kind": "action",
@@ -1536,7 +1584,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中継器が一瞬だけ電波を戻し、発生二日目に送られた未着信メッセージがババヤガの端末へ届く。差出人はMrs.チハ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 223
+        "sourceLine": 229
       },
       {
         "kind": "dialogue",
@@ -1544,7 +1592,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "無事。湾岸へ移る。連絡はしないで",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 224
+        "sourceLine": 230
       },
       {
         "kind": "dialogue",
@@ -1552,23 +1600,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "奥さん、ですか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 225
+        "sourceLine": 231
       },
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "届くまで四十日以上。返事を打つには、遅すぎる",
+        "text": "四十日前か。……牛乳はもう買えんな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 226
+        "sourceLine": 232
       },
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "届いたのは今や。返事は、会ってからでもできる",
+        "text": "会えたら、何を買うか本人に聞け",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 227
+        "sourceLine": 233
       },
       {
         "kind": "action",
@@ -1576,7 +1624,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "奥の隔壁が開いたまま、感染群が病院側へ押し寄せる。手前には輪止めを噛ませた保守台車。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 228
+        "sourceLine": 234
       },
       {
         "kind": "dialogue",
@@ -1584,7 +1632,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "冷蔵ケースを台車に。あの隔壁まで運べたら、追ってくる奴らを閉め出せます！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 229
+        "sourceLine": 235
       },
       {
         "kind": "player-action",
@@ -1592,7 +1640,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公がケースを台車に固定し、輪止めを外して発進させる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 230
+        "sourceLine": 236
       },
       {
         "kind": "battle-marker",
@@ -1600,12 +1648,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "保守台車を病院側の隔壁まで護衛し、感染群の流入を止めよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 231
+        "sourceLine": 237
       }
     ],
     "source": {
-      "startLine": 220,
-      "endLine": 232
+      "startLine": 226,
+      "endLine": 238
     }
   },
   "v100:event:s06:post": {
@@ -1620,7 +1668,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "台車が病院側の隔壁を越える。主人公が閉鎖盤を叩き、扉が噛み合う。向こう側の爪が金属を打ち、次第に遠くなる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 235
+        "sourceLine": 241
       },
       {
         "kind": "action",
@@ -1628,7 +1676,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院側の踊り場で、軽機関銃を構えた射手が最後の流入路を押さえている。銃身は熱く、弾帯はもう短い。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 236
+        "sourceLine": 242
       },
       {
         "kind": "dialogue",
@@ -1636,7 +1684,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "レイダー。病院へ人を通すなら、私の後ろを走って。止まったら撃てない",
         "portraitOwner": "unit-raider",
         "portraitKind": "major",
-        "sourceLine": 237
+        "sourceLine": 243
       },
       {
         "kind": "dialogue",
@@ -1644,7 +1692,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "その弾数で、何分持つ",
         "portraitOwner": "unit-mizuchi",
         "portraitKind": "major",
-        "sourceLine": 238
+        "sourceLine": 244
       },
       {
         "kind": "dialogue",
@@ -1652,7 +1700,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "何分も要らない。向こうにある弾を取りに行く",
         "portraitOwner": "unit-raider",
         "portraitKind": "major",
-        "sourceLine": 239
+        "sourceLine": 245
       },
       {
         "kind": "action",
@@ -1660,7 +1708,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ババヤガは返信欄に「牛乳」と打ち、圏外表示を見て消す。端末はしまわず、胸ポケットへ入れた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 240
+        "sourceLine": 246
       },
       {
         "kind": "dialogue",
@@ -1668,7 +1716,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "冷えるぞ。歩きながら探そう",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 241
+        "sourceLine": 247
       },
       {
         "kind": "action",
@@ -1676,7 +1724,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院側の非常回線が開く。救急搬入口で薬と人手が足りない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 242
+        "sourceLine": 248
       },
       {
         "kind": "player-action",
@@ -1684,7 +1732,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が冷蔵ケースを持ち直し、病院の扉へ走る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 243
+        "sourceLine": 249
       },
       {
         "kind": "system",
@@ -1692,12 +1740,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "制圧射撃のレイダーが配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 244
+        "sourceLine": 250
       }
     ],
     "source": {
-      "startLine": 234,
-      "endLine": 245
+      "startLine": 240,
+      "endLine": 251
     }
   },
   "v100:event:s06:first-clear-post": {
@@ -1708,8 +1756,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 234,
-      "endLine": 245
+      "startLine": 240,
+      "endLine": 251
     }
   },
   "v100:event:s07:pre": {
@@ -1724,7 +1772,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "搬入口からストレッチャーが廊下まで続く。駅で救った女性駅員は、咬傷を押さえながら自分の足で入ってきた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 250
+        "sourceLine": 256
       },
       {
         "kind": "dialogue",
@@ -1732,7 +1780,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "噛まれてから、どれくらい",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 251
+        "sourceLine": 257
       },
       {
         "kind": "dialogue",
@@ -1740,7 +1788,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一時間未満。会話できます。腕の変色はここまで",
         "portraitOwner": "unit-nao",
         "portraitKind": "major",
-        "sourceLine": 252
+        "sourceLine": 258
       },
       {
         "kind": "dialogue",
@@ -1748,7 +1796,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "初期なら進行を遅らせられる。治せるとは、まだ言えません",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 253
+        "sourceLine": 259
       },
       {
         "kind": "player-action",
@@ -1756,7 +1804,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が冷蔵ケースを渡す。医師は不足した容器の跡を見て、唇を結ぶ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 254
+        "sourceLine": 260
       },
       {
         "kind": "dialogue",
@@ -1764,7 +1812,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "残りで何人分になるか、すぐ確かめます。患者を入れる間、外を守って",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 255
+        "sourceLine": 261
       },
       {
         "kind": "dialogue",
@@ -1772,7 +1820,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "運ぶ方も俺らでやる。先生は腕を見とって",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 256
+        "sourceLine": 262
       },
       {
         "kind": "action",
@@ -1780,7 +1828,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "救急車へ感染者がぶつかる。搬入口の防火扉が半分しか閉まらない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 257
+        "sourceLine": 263
       },
       {
         "kind": "battle-marker",
@@ -1788,12 +1836,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "医薬品と負傷者の移送が終わるまで搬入口を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 258
+        "sourceLine": 264
       }
     ],
     "source": {
-      "startLine": 249,
-      "endLine": 259
+      "startLine": 255,
+      "endLine": 265
     }
   },
   "v100:event:s07:post": {
@@ -1808,7 +1856,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "最後のストレッチャーが中へ入る。駅員の腕の変色に、医師が新しい線を引く。そこからは、まだ広がっていない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 262
+        "sourceLine": 268
       },
       {
         "kind": "action",
@@ -1816,7 +1864,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "防火扉の留め具が外れかける。大きなハンマーを持つ男が、扉ではなく歪んだ枠だけを叩き戻す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 263
+        "sourceLine": 269
       },
       {
         "kind": "dialogue",
@@ -1824,7 +1872,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "タタラ。扉を叩いたら患者側へ倒れる。枠だけ直す",
         "portraitOwner": "unit-tatara",
         "portraitKind": "major",
-        "sourceLine": 264
+        "sourceLine": 270
       },
       {
         "kind": "dialogue",
@@ -1832,7 +1880,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "この人、朝から扉と口喧嘩してるんです",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 265
+        "sourceLine": 271
       },
       {
         "kind": "dialogue",
@@ -1840,7 +1888,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "口では負けとる。だから叩く方を頼む",
         "portraitOwner": "unit-tatara",
         "portraitKind": "major",
-        "sourceLine": 266
+        "sourceLine": 272
       },
       {
         "kind": "dialogue",
@@ -1848,15 +1896,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "線、越えてないっすよね",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 267
+        "sourceLine": 273
       },
       {
         "kind": "dialogue",
         "speaker": "医師",
-        "text": "今は。六時間後、また見ます",
+        "text": "今は。次は六時間後。それまでは、隣にいてあげて",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 268
+        "sourceLine": 274
       },
       {
         "kind": "dialogue",
@@ -1864,7 +1912,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "その六時間で、次の薬を探す",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 269
+        "sourceLine": 275
       },
       {
         "kind": "action",
@@ -1872,7 +1920,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "医師が救急病棟の鍵を渡す。薬品庫と、残った看護師が二人。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 270
+        "sourceLine": 276
       },
       {
         "kind": "player-action",
@@ -1880,7 +1928,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が空の冷蔵ケースを受け取り、東病棟の扉を開ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 271
+        "sourceLine": 277
       },
       {
         "kind": "system",
@@ -1888,7 +1936,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "破砕兵のタタラが配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 272
+        "sourceLine": 278
       },
       {
         "kind": "system",
@@ -1896,12 +1944,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "救急病棟で薬と職員を探す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 273
+        "sourceLine": 279
       }
     ],
     "source": {
-      "startLine": 261,
-      "endLine": 274
+      "startLine": 267,
+      "endLine": 280
     }
   },
   "v100:event:s07:first-clear-post": {
@@ -1912,8 +1960,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 261,
-      "endLine": 274
+      "startLine": 267,
+      "endLine": 280
     }
   },
   "v100:event:s08:pre": {
@@ -1928,7 +1976,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "処置室の扉が、内側から三回叩かれる。主人公も三回、叩き返す。返事は、今度は二回。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 279
+        "sourceLine": 285
       },
       {
         "kind": "dialogue",
@@ -1936,7 +1984,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人います。右の個室は開けないで",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 280
+        "sourceLine": 286
       },
       {
         "kind": "action",
@@ -1944,7 +1992,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガラスの向こうには患者の名札と家族写真。病衣の人影が、何度も窓へ額を当てている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 281
+        "sourceLine": 287
       },
       {
         "kind": "dialogue",
@@ -1952,7 +2000,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "名前も、家族の写真もある。……置いていくしかないんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 282
+        "sourceLine": 288
       },
       {
         "kind": "dialogue",
@@ -1960,7 +2008,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "開けたら、その人も廊下の二人も助けられない",
         "portraitOwner": "unit-nao",
         "portraitKind": "major",
-        "sourceLine": 283
+        "sourceLine": 289
       },
       {
         "kind": "action",
@@ -1968,7 +2016,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "パイセンはガラスに映った自分の顔から目を逸らし、処置室の扉へ向き直る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 284
+        "sourceLine": 290
       },
       {
         "kind": "dialogue",
@@ -1976,7 +2024,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……分かりました。中の二人の声を、先に拾います",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 285
+        "sourceLine": 291
       },
       {
         "kind": "battle-marker",
@@ -1984,12 +2032,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "処置室への道を開き、感染拠点を破壊せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 286
+        "sourceLine": 292
       }
     ],
     "source": {
-      "startLine": 278,
-      "endLine": 287
+      "startLine": 284,
+      "endLine": 293
     }
   },
   "v100:event:s08:post": {
@@ -2004,7 +2052,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "看護師は薬と一緒に、破れた紙台帳を渡す。発生初日、まだ会話のできた患者十二人が地下へ運ばれていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 290
+        "sourceLine": 296
       },
       {
         "kind": "action",
@@ -2012,7 +2060,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "処置室の内側から、大きな防護盾が運び出される。看護師二人の前に立っていた男は、肩の傷を見せようとしない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 291
+        "sourceLine": 297
       },
       {
         "kind": "dialogue",
@@ -2020,7 +2068,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガンテツです。看護師さんから出してください。私は最後で",
         "portraitOwner": "unit-gantetsu",
         "portraitKind": "major",
-        "sourceLine": 292
+        "sourceLine": 298
       },
       {
         "kind": "dialogue",
@@ -2028,7 +2076,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "肩を隠したままでは、最後まで立てません。盾を降ろして",
         "portraitOwner": "unit-nao",
         "portraitKind": "major",
-        "sourceLine": 293
+        "sourceLine": 299
       },
       {
         "kind": "action",
@@ -2036,7 +2084,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガンテツは一度だけ看護師二人を見る。二人が頷くのを見て、ようやく盾を置いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 294
+        "sourceLine": 300
       },
       {
         "kind": "dialogue",
@@ -2044,7 +2092,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "名前を呼んでも、番号で答えろと言われました",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 295
+        "sourceLine": 301
       },
       {
         "kind": "dialogue",
@@ -2052,7 +2100,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "搬送先はB3-L。病院の図面には、そんな階がない",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 296
+        "sourceLine": 302
       },
       {
         "kind": "action",
@@ -2060,7 +2108,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "パイセンが紙台帳の端を揃え、破れたページを掌で押さえる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 297
+        "sourceLine": 303
       },
       {
         "kind": "dialogue",
@@ -2068,7 +2116,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "この紙、俺が持ちます。名前だけは汚したくない",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 298
+        "sourceLine": 304
       },
       {
         "kind": "player-action",
@@ -2076,7 +2124,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が台帳を撮り、薬を搬入口へ送り出す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 299
+        "sourceLine": 305
       },
       {
         "kind": "system",
@@ -2084,7 +2132,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "防衛重装のガンテツが配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 300
+        "sourceLine": 306
       },
       {
         "kind": "system",
@@ -2092,12 +2140,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "地下機械室からB3-Lの入口を探す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 301
+        "sourceLine": 307
       }
     ],
     "source": {
-      "startLine": 289,
-      "endLine": 302
+      "startLine": 295,
+      "endLine": 308
     }
   },
   "v100:event:s08:first-clear-post": {
@@ -2108,8 +2156,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 289,
-      "endLine": 302
+      "startLine": 295,
+      "endLine": 308
     }
   },
   "v100:event:s09:pre": {
@@ -2124,7 +2172,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院の発電機は止まりかけている。病棟側の灯りが一つ消えるたび、制御盤の「研究区画優先」だけが明るくなる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 307
+        "sourceLine": 313
       },
       {
         "kind": "dialogue",
@@ -2132,7 +2180,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "上の病棟より、下の階へ電気が流れてる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 308
+        "sourceLine": 314
       },
       {
         "kind": "dialogue",
@@ -2140,7 +2188,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "発生前からか",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 309
+        "sourceLine": 315
       },
       {
         "kind": "dialogue",
@@ -2148,7 +2196,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "設定した日付が残ってます。半年前",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 310
+        "sourceLine": 316
       },
       {
         "kind": "action",
@@ -2156,7 +2204,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "冷却ファンに感染組織が絡み、機械室に焦げた樹脂の臭いが満ちる。非常電源盤は三か所とも落ちている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 311
+        "sourceLine": 317
       },
       {
         "kind": "player-action",
@@ -2164,7 +2212,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が三か所の非常電源盤へ仲間を割り振り、手動始動レバーへ走る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 312
+        "sourceLine": 318
       },
       {
         "kind": "dialogue",
@@ -2172,7 +2220,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病棟の灯りを戻す。下の扉も、開ける",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 313
+        "sourceLine": 319
       },
       {
         "kind": "battle-marker",
@@ -2180,12 +2228,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三か所の非常電源盤を起動し、発電機を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 314
+        "sourceLine": 320
       }
     ],
     "source": {
-      "startLine": 306,
-      "endLine": 315
+      "startLine": 312,
+      "endLine": 321
     }
   },
   "v100:event:s09:post": {
@@ -2200,7 +2248,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三つ目の盤が緑へ変わり、照明が戻る。壁の継ぎ目が開き、隠されたエレベーターに「B3-L」の表示。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 318
+        "sourceLine": 324
       },
       {
         "kind": "action",
@@ -2208,7 +2256,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんの端末が鳴る。主人公たちの戦闘映像が、知らない回線へ送られていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 319
+        "sourceLine": 325
       },
       {
         "kind": "system",
@@ -2216,7 +2264,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "外部転送完了／転送先：SEG-LAB",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 320
+        "sourceLine": 326
       },
       {
         "kind": "dialogue",
@@ -2224,7 +2272,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "私が繋いだ端末から抜かれた。……気づけなかった",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 321
+        "sourceLine": 327
       },
       {
         "kind": "dialogue",
@@ -2232,7 +2280,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "次を止められるか",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 322
+        "sourceLine": 328
       },
       {
         "kind": "player-action",
@@ -2240,7 +2288,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が表示を撮り、送信線を根元から抜く。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 323
+        "sourceLine": 329
       },
       {
         "kind": "dialogue",
@@ -2248,7 +2296,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "もう送られた分は消せない。でも、こっちにも記録が残った",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 324
+        "sourceLine": 330
       },
       {
         "kind": "action",
@@ -2256,12 +2304,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "エレベーターの下から、短い救難音が返る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 325
+        "sourceLine": 331
       }
     ],
     "source": {
-      "startLine": 317,
-      "endLine": 326
+      "startLine": 323,
+      "endLine": 332
     }
   },
   "v100:event:s09:first-clear-post": {
@@ -2272,8 +2320,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 317,
-      "endLine": 326
+      "startLine": 323,
+      "endLine": 332
     }
   },
   "v100:event:s10:pre": {
@@ -2288,7 +2336,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "地下三階は病院の壁ではない。防弾ガラスの奥に、商店街、駅、区役所の監視映像が同時に並ぶ。薬局の白いタオルまで映っている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 331
+        "sourceLine": 337
       },
       {
         "kind": "dialogue",
@@ -2296,7 +2344,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}さん、俺たちが逃げてた場所、全部映ってる",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 332
+        "sourceLine": 338
       },
       {
         "kind": "system",
@@ -2304,7 +2352,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "T計画／都市対応実証フィールド／区画B-01〜B-09",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 333
+        "sourceLine": 339
       },
       {
         "kind": "dialogue",
@@ -2312,7 +2360,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "備えとったんやない。俺らが店を出る前から、待っとった",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 334
+        "sourceLine": 340
       },
       {
         "kind": "action",
@@ -2320,7 +2368,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "除染ゲートが異常を告げ、隔壁が閉まる。天井の配管から感染個体が落ちる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 335
+        "sourceLine": 341
       },
       {
         "kind": "player-action",
@@ -2328,7 +2376,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が非常解除盤へ走り、仲間の退路を確保する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 336
+        "sourceLine": 342
       },
       {
         "kind": "battle-marker",
@@ -2336,12 +2384,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "除染制御を復旧し、隔離区画への扉を開けよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 337
+        "sourceLine": 343
       }
     ],
     "source": {
-      "startLine": 330,
-      "endLine": 338
+      "startLine": 336,
+      "endLine": 344
     }
   },
   "v100:event:s10:post": {
@@ -2356,7 +2404,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ゲートの表示が緑へ変わる。奥のモニターに、生存反応三つと大型検体一つ。管理企業はムガリアン製薬。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 341
+        "sourceLine": 347
       },
       {
         "kind": "action",
@@ -2364,7 +2412,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "隊列の後ろを歩くマヨちゃんが、開いた扉の前で止まる。耳が立ったのを見て、先行するハチも足を止めた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 342
+        "sourceLine": 348
       },
       {
         "kind": "dialogue",
@@ -2372,7 +2420,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "さっきまで尻尾振ってたのに。奥に何かいる",
         "portraitOwner": "unit-hachi",
         "portraitKind": "major",
-        "sourceLine": 343
+        "sourceLine": 349
       },
       {
         "kind": "dialogue",
@@ -2380,7 +2428,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "前へ出すなら、戻す道も空けて。小さいから、見失う",
         "portraitOwner": "unit-nao",
         "portraitKind": "major",
-        "sourceLine": 344
+        "sourceLine": 350
       },
       {
         "kind": "player-action",
@@ -2388,7 +2436,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公がマヨちゃんの戦術ハーネスを確かめ、後方へ戻る経路を空ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 345
+        "sourceLine": 351
       },
       {
         "kind": "dialogue",
@@ -2396,23 +2444,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "薬局の箱も病院の備蓄も、ここと同じ管理番号です",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 346
+        "sourceLine": 352
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "手形が三つ。あの人たちを先に出します",
+        "text": "三人とも、こっちを待ってる。先に開けましょう",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 347
+        "sourceLine": 353
       },
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "俺もそう思う",
+        "text": "ああ。マヨちゃんは俺が抱く。お前は扉へ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 348
+        "sourceLine": 354
       },
       {
         "kind": "player-action",
@@ -2420,7 +2468,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が防疫扉を開き、隔離区画へ踏み込む。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 349
+        "sourceLine": 355
       },
       {
         "kind": "system",
@@ -2428,7 +2476,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "マヨちゃんが遊撃の配備登録候補になった。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 350
+        "sourceLine": 356
       },
       {
         "kind": "system",
@@ -2436,12 +2484,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "生存者を救出し、大型検体を止める。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 351
+        "sourceLine": 357
       }
     ],
     "source": {
-      "startLine": 340,
-      "endLine": 352
+      "startLine": 346,
+      "endLine": 358
     }
   },
   "v100:event:s10:first-clear-post": {
@@ -2452,8 +2500,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 340,
-      "endLine": 352
+      "startLine": 346,
+      "endLine": 358
     }
   },
   "v100:event:s11:pre": {
@@ -2468,7 +2516,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "待機室のガラスに、内側から三つの手形。研究員たちは酸素の残量を指で示し、主人公たちの背後の槽を見ない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 357
+        "sourceLine": 363
       },
       {
         "kind": "dialogue",
@@ -2476,7 +2524,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "隔離を戻して。扉を開けたら、あれも出ます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 358
+        "sourceLine": 364
       },
       {
         "kind": "action",
@@ -2484,7 +2532,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "最大槽の札には「MOTHER」。製造日は発生より前だった。供給管が待機室と同じ天井を通る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 359
+        "sourceLine": 365
       },
       {
         "kind": "dialogue",
@@ -2492,7 +2540,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あれを作った人が、ここにいるんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 360
+        "sourceLine": 366
       },
       {
         "kind": "dialogue",
@@ -2500,7 +2548,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "います。私です。だから、管を切る場所も分かる",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 361
+        "sourceLine": 367
       },
       {
         "kind": "dialogue",
@@ -2508,7 +2556,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "出てから話を聞く。三人とも、ここで死なせん",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 362
+        "sourceLine": 368
       },
       {
         "kind": "player-action",
@@ -2516,7 +2564,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が酸素供給を待機室へ切り替え、隔離レバーを引く。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 363
+        "sourceLine": 369
       },
       {
         "kind": "boss-marker",
@@ -2524,7 +2572,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "MOTHER",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 364
+        "sourceLine": 370
       },
       {
         "kind": "battle-marker",
@@ -2532,12 +2580,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "供給管を復旧し、待機室を守りながらMOTHERを止めよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 365
+        "sourceLine": 371
       }
     ],
     "source": {
-      "startLine": 356,
-      "endLine": 366
+      "startLine": 362,
+      "endLine": 372
     }
   },
   "v100:event:s11:post": {
@@ -2552,7 +2600,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "封鎖扉が閉まる。研究員の一人は、MOTHERの槽を見ないよう壁づたいに歩く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 369
+        "sourceLine": 375
       },
       {
         "kind": "dialogue",
@@ -2560,7 +2608,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "私は培養を続けた。地上へ出す命令も見た。止めずに、今日まで来た",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 370
+        "sourceLine": 376
       },
       {
         "kind": "action",
@@ -2568,7 +2616,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "差し出された搬送票には、発生前の日付と回収班の赤い認識灯の記録。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 371
+        "sourceLine": 377
       },
       {
         "kind": "dialogue",
@@ -2576,7 +2624,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "赤いレンズのやつらか",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 372
+        "sourceLine": 378
       },
       {
         "kind": "dialogue",
@@ -2584,7 +2632,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "抑制液の処方も渡します。進行を遅らせるだけで、治療薬にはならない",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 373
+        "sourceLine": 379
       },
       {
         "kind": "dialogue",
@@ -2592,7 +2640,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "医者に渡す。その違いも、俺が伝える",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 374
+        "sourceLine": 380
       },
       {
         "kind": "player-action",
@@ -2600,12 +2648,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が票と処方を封じ、三人を地上へ送り出す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 375
+        "sourceLine": 381
       }
     ],
     "source": {
-      "startLine": 368,
-      "endLine": 376
+      "startLine": 374,
+      "endLine": 382
     }
   },
   "v100:event:s11:first-clear-post": {
@@ -2616,8 +2664,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 368,
-      "endLine": 376
+      "startLine": 374,
+      "endLine": 382
     }
   },
   "v100:event:s12:pre": {
@@ -2632,7 +2680,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "坑道で炎が上がる。赤レンズ部隊が密閉搬送車を走らせようとしている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 381
+        "sourceLine": 387
       },
       {
         "kind": "action",
@@ -2640,7 +2688,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "荷台の表示盤に妻と娘の名を見つけた男が、空のウイスキー瓶を握って飛び出す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 382
+        "sourceLine": 388
       },
       {
         "kind": "dialogue",
@@ -2648,7 +2696,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "待て！　その車に妻と娘の記録がある！　持っていくな！",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 383
+        "sourceLine": 389
       },
       {
         "kind": "action",
@@ -2656,7 +2704,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "赤レンズの兵が発砲。ザキミヤの手の瓶が砕け、喉元を破片がかすめる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 384
+        "sourceLine": 390
       },
       {
         "kind": "dialogue",
@@ -2664,7 +2712,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "伏せろ！　次は当ててくるぞ！",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 385
+        "sourceLine": 391
       },
       {
         "kind": "dialogue",
@@ -2672,7 +2720,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "こっちに来い！",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 386
+        "sourceLine": 392
       },
       {
         "kind": "dialogue",
@@ -2680,7 +2728,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺だけ逃げたら、二人がどこへ行ったか分からん！",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 387
+        "sourceLine": 393
       },
       {
         "kind": "player-action",
@@ -2688,7 +2736,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が搬送車と男の間へ装甲車両を滑り込ませ、運転席を奪う。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 388
+        "sourceLine": 394
       },
       {
         "kind": "dialogue",
@@ -2696,7 +2744,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "車内の記録は、坑道出口の端末で開けます。まず車をそこまで！",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 389
+        "sourceLine": 395
       },
       {
         "kind": "battle-marker",
@@ -2704,12 +2752,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "密閉搬送車を坑道出口まで護衛し、ザキミヤと移送記録を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 390
+        "sourceLine": 396
       }
     ],
     "source": {
-      "startLine": 380,
-      "endLine": 391
+      "startLine": 386,
+      "endLine": 397
     }
   },
   "v100:event:s12:post": {
@@ -2724,7 +2772,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "密閉搬送車が坑道出口へ着く。いくらちゃんが保守端末に接続すると、表示盤に妻子の名前。「湾岸封鎖区へ移送／以後不明」。ザキミヤは消えかけた画面を両手で押さえる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 394
+        "sourceLine": 400
       },
       {
         "kind": "dialogue",
@@ -2732,7 +2780,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "不明なら、まだ探してええんよな",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 395
+        "sourceLine": 401
       },
       {
         "kind": "dialogue",
@@ -2740,7 +2788,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中央台帳に続きがあります。ここには死亡記録もない",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 396
+        "sourceLine": 402
       },
       {
         "kind": "action",
@@ -2748,15 +2796,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤが乳児の写真を見せる。親指が小さな顔を隠さないよう、端を持つ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 397
+        "sourceLine": 403
       },
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "足、言うこと聞かん。さっき大声出したのに",
+        "text": "あんな大声は出せたのにな。立とうとしたら、足が言うこと聞かん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 398
+        "sourceLine": 404
       },
       {
         "kind": "dialogue",
@@ -2764,7 +2812,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺も最初そうでした。今も、たまになります",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 399
+        "sourceLine": 405
       },
       {
         "kind": "dialogue",
@@ -2772,7 +2820,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "座席ならある。立つのは、乗ってからでよか",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 400
+        "sourceLine": 406
       },
       {
         "kind": "player-action",
@@ -2780,7 +2828,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が空席の扉を開く。ザキミヤは写真を胸へ戻して乗る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 401
+        "sourceLine": 407
       },
       {
         "kind": "system",
@@ -2788,12 +2836,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤが合流。戦闘配備登録が解禁。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 402
+        "sourceLine": 408
       }
     ],
     "source": {
-      "startLine": 393,
-      "endLine": 403
+      "startLine": 399,
+      "endLine": 409
     }
   },
   "v100:event:s12:first-clear-post": {
@@ -2804,8 +2852,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 393,
-      "endLine": 403
+      "startLine": 399,
+      "endLine": 409
     }
   },
   "v100:event:s13:pre": {
@@ -2820,7 +2868,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "救援薬の冷蔵コンテナは企業の認証がなければ開かない。奥では避難室の灯りが点滅する。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 408
+        "sourceLine": 414
       },
       {
         "kind": "dialogue",
@@ -2828,7 +2876,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "青い端子を繋げば、冷蔵コンテナと奥の避難室が開きます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 409
+        "sourceLine": 415
       },
       {
         "kind": "dialogue",
@@ -2836,15 +2884,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院のSEG-LABも、あなたの回線？",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 410
+        "sourceLine": 416
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "私の設備です。映像を受け取った。扉を開けるかどうかは、あなたたちが決めてください",
+        "text": "私の設備です。映像で見ています。扉を開けるかどうかは、あなたたちが決めてください",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 411
+        "sourceLine": 417
       },
       {
         "kind": "dialogue",
@@ -2852,7 +2900,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "見てたなら、避難室に何人いるか分かりますよね",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 412
+        "sourceLine": 418
       },
       {
         "kind": "dialogue",
@@ -2860,7 +2908,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人です。一人は足を怪我している",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 413
+        "sourceLine": 419
       },
       {
         "kind": "action",
@@ -2868,7 +2916,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんが避難室の熱源を確かめる。二つ。嘘ではない。だからこそ、彼女は端末の録画を止めない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 414
+        "sourceLine": 420
       },
       {
         "kind": "player-action",
@@ -2876,7 +2924,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が端子を繋ぎ、開いた扉の前へ立つ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 415
+        "sourceLine": 421
       },
       {
         "kind": "battle-marker",
@@ -2884,12 +2932,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "避難室と薬品庫を確保し、物資の搬出を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 416
+        "sourceLine": 422
       }
     ],
     "source": {
-      "startLine": 407,
-      "endLine": 417
+      "startLine": 413,
+      "endLine": 423
     }
   },
   "v100:event:s13:post": {
@@ -2904,7 +2952,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "避難室から二人が出てくる。開いた冷蔵コンテナから、無傷の薬箱が運び出される。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 420
+        "sourceLine": 426
       },
       {
         "kind": "dialogue",
@@ -2912,7 +2960,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "助かった。そこは礼を言う。だが映像は渡した覚えがない",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 421
+        "sourceLine": 427
       },
       {
         "kind": "dialogue",
@@ -2920,7 +2968,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "消せない記録がある。それも含めて、いずれ見せます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 422
+        "sourceLine": 428
       },
       {
         "kind": "dialogue",
@@ -2928,7 +2976,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "待つ気はありません。こちらでも調べます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 423
+        "sourceLine": 429
       },
       {
         "kind": "action",
@@ -2936,7 +2984,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "輸送記録には、発生前に結ばれた封鎖と復旧の契約。別都市の契約書には、まだ地名がない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 424
+        "sourceLine": 430
       },
       {
         "kind": "dialogue",
@@ -2944,7 +2992,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "災害より先に、請求先だけ決めていた",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 425
+        "sourceLine": 431
       },
       {
         "kind": "dialogue",
@@ -2952,7 +3000,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "これ、誰に見せたら止まる",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 426
+        "sourceLine": 432
       },
       {
         "kind": "dialogue",
@@ -2960,7 +3008,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "原本を一か所へ集めないでください。消す側も、その方法を知っています",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 427
+        "sourceLine": 433
       },
       {
         "kind": "player-action",
@@ -2968,12 +3016,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が紙の原本を回収し、次の救難信号が出る線路へ向かう。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 428
+        "sourceLine": 434
       }
     ],
     "source": {
-      "startLine": 419,
-      "endLine": 429
+      "startLine": 425,
+      "endLine": 435
     }
   },
   "v100:event:s13:first-clear-post": {
@@ -2984,8 +3032,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 419,
-      "endLine": 429
+      "startLine": 425,
+      "endLine": 435
     }
   },
   "v100:event:s14:pre": {
@@ -3000,7 +3048,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "民間車両が冷蔵貨車に繋がれたまま、感染体に押されている。白い光刃の男が連結部へ斬り込むが、人を乗せた車両まで揺れた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 434
+        "sourceLine": 440
       },
       {
         "kind": "dialogue",
@@ -3008,7 +3056,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "そこの車！　人が乗っとる車両の連結器、三つ外してくれ！　俺が切ると丸ごと飛ぶ！",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 435
+        "sourceLine": 441
       },
       {
         "kind": "dialogue",
@@ -3016,7 +3064,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あんたは？",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 436
+        "sourceLine": 442
       },
       {
         "kind": "dialogue",
@@ -3024,7 +3072,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "こいつの口を塞ぐ。名乗りはあと。……TKY、三文字や。覚えやすいやろ",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 437
+        "sourceLine": 443
       },
       {
         "kind": "action",
@@ -3032,7 +3080,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "貨車が軋む。窓の内側から子どもが手を振り、すぐ引っ込める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 438
+        "sourceLine": 444
       },
       {
         "kind": "player-action",
@@ -3040,7 +3088,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が一つ目の連結器へ走り、解除ハンドルを握る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 439
+        "sourceLine": 445
       },
       {
         "kind": "boss-marker",
@@ -3048,7 +3096,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "オオグチ",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 440
+        "sourceLine": 446
       },
       {
         "kind": "battle-marker",
@@ -3056,12 +3104,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "連結を三つ外し、民間車両を逃がせ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 441
+        "sourceLine": 447
       }
     ],
     "source": {
-      "startLine": 433,
-      "endLine": 442
+      "startLine": 439,
+      "endLine": 448
     }
   },
   "v100:event:s14:post": {
@@ -3076,7 +3124,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "車両が安全側へ動く。TKYは刃を消し、最後の子どもが降りるまで線路に残る。子どもへ手を振ると、握った柄の熱さに顔をしかめた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 445
+        "sourceLine": 451
       },
       {
         "kind": "dialogue",
@@ -3084,7 +3132,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "もう一人、刀を二本持った人が本社の方へ行った。名前は聞けなかった",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 446
+        "sourceLine": 452
       },
       {
         "kind": "dialogue",
@@ -3092,7 +3140,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二刀か。こっちは一刀で手一杯やのに",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 447
+        "sourceLine": 453
       },
       {
         "kind": "action",
@@ -3100,7 +3148,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんがババヤガへ端末を向ける。「チハ／湾岸封鎖区／十七日目生存」。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 448
+        "sourceLine": 454
       },
       {
         "kind": "dialogue",
@@ -3108,7 +3156,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……この人、俺の妻",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 449
+        "sourceLine": 455
       },
       {
         "kind": "dialogue",
@@ -3116,7 +3164,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "湾岸へ行くんやな。さっきの子らが通る道、俺も開けとく",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 450
+        "sourceLine": 456
       },
       {
         "kind": "player-action",
@@ -3124,7 +3172,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が車両の扉を開く。TKYが避難者へ一度手を振って乗る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 451
+        "sourceLine": 457
       },
       {
         "kind": "system",
@@ -3132,12 +3180,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "TKYが合流。戦闘配備登録が解禁。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 452
+        "sourceLine": 458
       }
     ],
     "source": {
-      "startLine": 444,
-      "endLine": 453
+      "startLine": 450,
+      "endLine": 459
     }
   },
   "v100:event:s14:first-clear-post": {
@@ -3148,8 +3196,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 444,
-      "endLine": 453
+      "startLine": 450,
+      "endLine": 459
     }
   },
   "v100:event:s15:pre": {
@@ -3164,7 +3212,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "民間救難回線のランプだけが消えている。企業警備回線は明るく点いたまま。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 458
+        "sourceLine": 464
       },
       {
         "kind": "dialogue",
@@ -3172,7 +3220,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "民間回線は左の三つの盤から起こせます。右へ触れると回収班に位置が出ます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 459
+        "sourceLine": 465
       },
       {
         "kind": "dialogue",
@@ -3180,7 +3228,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "図面は私も見ます。左の三つです。右には触らないで",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 460
+        "sourceLine": 466
       },
       {
         "kind": "action",
@@ -3188,7 +3236,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ババヤガが別の無線を合わせる。雑音の向こうで、女性が避難者の名前を一人ずつ呼んでいる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 461
+        "sourceLine": 467
       },
       {
         "kind": "dialogue",
@@ -3196,7 +3244,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……チハ。名前の呼び方が、同じや",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 462
+        "sourceLine": 468
       },
       {
         "kind": "action",
@@ -3204,7 +3252,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "声が途切れ、制御盤へ感染者が押し寄せる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 463
+        "sourceLine": 469
       },
       {
         "kind": "player-action",
@@ -3212,7 +3260,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が三つの盤を地図で示し、仲間を回線の前へ配置する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 464
+        "sourceLine": 470
       },
       {
         "kind": "battle-marker",
@@ -3220,12 +3268,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "救難回線の三つの盤を復旧し、制御区を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 465
+        "sourceLine": 471
       }
     ],
     "source": {
-      "startLine": 457,
-      "endLine": 466
+      "startLine": 463,
+      "endLine": 472
     }
   },
   "v100:event:s15:post": {
@@ -3240,7 +3288,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三つ目の盤が点灯し、回線が繋がる。女性は十二人の避難者を数え終え、最後の一人へ水を渡してから無線に出る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 469
+        "sourceLine": 475
       },
       {
         "kind": "dialogue",
@@ -3248,7 +3296,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "チハ。俺や",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 470
+        "sourceLine": 476
       },
       {
         "kind": "dialogue",
@@ -3256,7 +3304,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "分かってる。呼ぶ声だけで",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 471
+        "sourceLine": 477
       },
       {
         "kind": "dialogue",
@@ -3264,7 +3312,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "今行く",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 472
+        "sourceLine": 478
       },
       {
         "kind": "dialogue",
@@ -3272,7 +3320,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中央のゲートを閉めて。ここへ来ても、流入が続けば十二人は出せない",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 473
+        "sourceLine": 479
       },
       {
         "kind": "dialogue",
@@ -3280,7 +3328,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……順番は分かった。そこから動くな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 474
+        "sourceLine": 480
       },
       {
         "kind": "action",
@@ -3288,7 +3336,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一拍の無音のあと、彼女が小さく息を吐く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 475
+        "sourceLine": 481
       },
       {
         "kind": "dialogue",
@@ -3296,7 +3344,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あなたも",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 476
+        "sourceLine": 482
       },
       {
         "kind": "player-action",
@@ -3304,12 +3352,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が中央封鎖区への地図を受け取り、出発する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 477
+        "sourceLine": 483
       }
     ],
     "source": {
-      "startLine": 468,
-      "endLine": 478
+      "startLine": 474,
+      "endLine": 484
     }
   },
   "v100:event:s15:first-clear-post": {
@@ -3320,8 +3368,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 468,
-      "endLine": 478
+      "startLine": 474,
+      "endLine": 484
     }
   },
   "v100:event:s16:pre": {
@@ -3336,7 +3384,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三基のゲートが開いたまま、湾岸へ感染者を送り出している。塔から、間隔を置いた単発の銃声。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 483
+        "sourceLine": 489
       },
       {
         "kind": "dialogue",
@@ -3344,7 +3392,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "全部閉めます。一本残せば、地下から抜ける",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 484
+        "sourceLine": 490
       },
       {
         "kind": "dialogue",
@@ -3352,23 +3400,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "残り二十七発。子どもたちを階段の下へ移す",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 485
+        "sourceLine": 491
       },
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "俺らが三つ閉める。最後の一発、残しとけよ",
+        "text": "俺らが三つ閉める。子どもらを窓から離しとけ",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 486
+        "sourceLine": 492
       },
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハの声",
-        "text": "言われなくても。迎えに来るなら急いで",
+        "text": "もう移した。迎えに来るなら急いで",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 487
+        "sourceLine": 493
       },
       {
         "kind": "player-action",
@@ -3376,7 +3424,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が三基の担当を指示し、最初の閉鎖盤へ向かう。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 488
+        "sourceLine": 494
       },
       {
         "kind": "battle-marker",
@@ -3384,12 +3432,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三基のゲートを閉鎖し、湾岸への流入を止めよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 489
+        "sourceLine": 495
       }
     ],
     "source": {
-      "startLine": 482,
-      "endLine": 490
+      "startLine": 488,
+      "endLine": 496
     }
   },
   "v100:event:s16:post": {
@@ -3404,7 +3452,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三つ目のゲートが閉じる。塔からの銃声も止まる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 493
+        "sourceLine": 499
       },
       {
         "kind": "dialogue",
@@ -3412,23 +3460,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "チハ、聞こえるか",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 494
+        "sourceLine": 500
       },
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハの声",
-        "text": "聞こえる。拳銃の最後の一発は、まだ持ってる",
+        "text": "聞こえる。子どもたちも無事",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 495
+        "sourceLine": 501
       },
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "その一発は残しとけ。十二人目まで、俺が通す",
+        "text": "よかった。十二人目まで、俺が通す",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 496
+        "sourceLine": 502
       },
       {
         "kind": "action",
@@ -3436,7 +3484,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "地図に塔への細い通路が現れる。セガワが所要時間を読み上げ、いくらちゃんは時刻だけ記録する。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 497
+        "sourceLine": 503
       },
       {
         "kind": "player-action",
@@ -3444,12 +3492,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が車両を塔へ発進させる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 498
+        "sourceLine": 504
       }
     ],
     "source": {
-      "startLine": 492,
-      "endLine": 499
+      "startLine": 498,
+      "endLine": 505
     }
   },
   "v100:event:s16:first-clear-post": {
@@ -3460,8 +3508,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 492,
-      "endLine": 499
+      "startLine": 498,
+      "endLine": 505
     }
   },
   "v100:event:s17:pre": {
@@ -3476,7 +3524,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "回廊の奥に十二人。Mrs.チハは拳銃を腰へ戻し、子どもの靴紐を結び直す。背負っていたランチャーを構えた。残る弾は一発。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 504
+        "sourceLine": 510
       },
       {
         "kind": "dialogue",
@@ -3484,7 +3532,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "子どもを真ん中に。押さないで、歩いて",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 505
+        "sourceLine": 511
       },
       {
         "kind": "action",
@@ -3492,7 +3540,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "単眼の感染体が明かりへ向く。ババヤガが呼ぶより先に、Mrs.チハが撃つ。弾が足元で炸裂し、粉塵が眼を覆う。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 506
+        "sourceLine": 512
       },
       {
         "kind": "dialogue",
@@ -3500,7 +3548,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "煙が晴れるまで。子どもを先に！",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 507
+        "sourceLine": 513
       },
       {
         "kind": "dialogue",
@@ -3508,7 +3556,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "お前は下がれ",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 508
+        "sourceLine": 514
       },
       {
         "kind": "dialogue",
@@ -3516,7 +3564,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "十二人目が通ったら",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 509
+        "sourceLine": 515
       },
       {
         "kind": "player-action",
@@ -3524,7 +3572,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が煙の手前へ部隊を展開させ、回廊の前へ出る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 510
+        "sourceLine": 516
       },
       {
         "kind": "boss-marker",
@@ -3532,7 +3580,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "クロメ",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 511
+        "sourceLine": 517
       },
       {
         "kind": "battle-marker",
@@ -3540,12 +3588,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "大型個体を退け、十二人の避難路を確保せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 512
+        "sourceLine": 518
       }
     ],
     "source": {
-      "startLine": 503,
-      "endLine": 513
+      "startLine": 509,
+      "endLine": 519
     }
   },
   "v100:event:s17:post": {
@@ -3560,7 +3608,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "十二人目が車両へ乗る。Mrs.チハはもう一度数え、それからババヤガを見る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 516
+        "sourceLine": 522
       },
       {
         "kind": "dialogue",
@@ -3568,7 +3616,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "その袖、破れてる。噛まれた？",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 517
+        "sourceLine": 523
       },
       {
         "kind": "dialogue",
@@ -3576,7 +3624,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "違う。お前は",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 518
+        "sourceLine": 524
       },
       {
         "kind": "action",
@@ -3584,7 +3632,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人とも相手の腕を調べ、無傷と分かっても手を離さない。車内では十二人が出発を待っている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 519
+        "sourceLine": 525
       },
       {
         "kind": "dialogue",
@@ -3592,7 +3640,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……ほんとに来た",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 520
+        "sourceLine": 526
       },
       {
         "kind": "dialogue",
@@ -3600,7 +3648,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "遅くなった",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 521
+        "sourceLine": 527
       },
       {
         "kind": "dialogue",
@@ -3608,7 +3656,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "遅い。話はあと。この十二人を病院へ",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 522
+        "sourceLine": 528
       },
       {
         "kind": "dialogue",
@@ -3616,7 +3664,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "分かった。十二人、俺が数える",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 523
+        "sourceLine": 529
       },
       {
         "kind": "action",
@@ -3624,7 +3672,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんが防疫扉へ触れる前に、Mrs.チハが八桁の番号で開ける。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 524
+        "sourceLine": 530
       },
       {
         "kind": "dialogue",
@@ -3632,7 +3680,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "その番号は？",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 525
+        "sourceLine": 531
       },
       {
         "kind": "dialogue",
@@ -3640,7 +3688,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "会社で使った番号。いくらちゃん、入力履歴を残して",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 526
+        "sourceLine": 532
       },
       {
         "kind": "dialogue",
@@ -3648,7 +3696,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "残します。誰の番号かも、あとで聞きます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 527
+        "sourceLine": 533
       },
       {
         "kind": "player-action",
@@ -3656,7 +3704,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が予備弾薬と空席を渡す。いくらちゃんは入力履歴を保存する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 528
+        "sourceLine": 534
       },
       {
         "kind": "system",
@@ -3664,12 +3712,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "Mrs.チハが合流。戦闘配備登録が解禁。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 529
+        "sourceLine": 535
       }
     ],
     "source": {
-      "startLine": 515,
-      "endLine": 530
+      "startLine": 521,
+      "endLine": 536
     }
   },
   "v100:event:s17:first-clear-post": {
@@ -3680,8 +3728,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 515,
-      "endLine": 530
+      "startLine": 521,
+      "endLine": 536
     }
   },
   "v100:event:s18:pre": {
@@ -3696,7 +3744,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "紙の台帳が天井まで積まれ、端末では遠隔消去が始まっている。電子音は一件消えるごとに短く鳴る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 535
+        "sourceLine": 541
       },
       {
         "kind": "dialogue",
@@ -3704,7 +3752,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "妻と娘だけ先に探して――",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 536
+        "sourceLine": 542
       },
       {
         "kind": "action",
@@ -3712,7 +3760,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "棚の無数の名前を見る。彼は息を吸い直す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 537
+        "sourceLine": 543
       },
       {
         "kind": "dialogue",
@@ -3720,7 +3768,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……この棚も、あっちも持つ。うちの二人だけ選んだら、後ろの名前を見られん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 538
+        "sourceLine": 544
       },
       {
         "kind": "action",
@@ -3728,15 +3776,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "モニターにムガリアン社長。救援薬と、家族の解放を提示する。代価は台帳の返却。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 539
+        "sourceLine": 545
       },
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "薬も、ご家族も、こちらで手配します。台帳を返していただければ、ですがネ",
+        "text": "薬も、ご家族の解放も手配できます。先に台帳を、こちらへ",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 540
+        "sourceLine": 546
       },
       {
         "kind": "dialogue",
@@ -3744,7 +3792,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺の家族を、あんたの取引に入れるな",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 541
+        "sourceLine": 547
       },
       {
         "kind": "player-action",
@@ -3752,7 +3800,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が画面の音量を切り、最上段の紙箱を仲間へ渡す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 542
+        "sourceLine": 548
       },
       {
         "kind": "battle-marker",
@@ -3760,12 +3808,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "遠隔消去を止め、紙台帳を搬出せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 543
+        "sourceLine": 549
       }
     ],
     "source": {
-      "startLine": 534,
-      "endLine": 544
+      "startLine": 540,
+      "endLine": 550
     }
   },
   "v100:event:s18:post": {
@@ -3780,7 +3828,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "原本もデータも残った。いくらちゃんが検索結果をザキミヤへ見せる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 547
+        "sourceLine": 553
       },
       {
         "kind": "dialogue",
@@ -3788,7 +3836,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二人とも三日前に生存確認。臨床試験棟Cです",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 548
+        "sourceLine": 554
       },
       {
         "kind": "action",
@@ -3796,7 +3844,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤは床へ座る。写真を見て、掌で目を覆う。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 549
+        "sourceLine": 555
       },
       {
         "kind": "dialogue",
@@ -3804,7 +3852,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……まだ、間に合う",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 550
+        "sourceLine": 556
       },
       {
         "kind": "dialogue",
@@ -3812,7 +3860,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "三か所へ写して。紙だけでは、橋を越える前に奪われる",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 551
+        "sourceLine": 557
       },
       {
         "kind": "dialogue",
@@ -3820,7 +3868,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "消し方を知っとる顔やね",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 552
+        "sourceLine": 558
       },
       {
         "kind": "dialogue",
@@ -3828,7 +3876,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "消される名簿を、前に見た。だから紙を残した",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 553
+        "sourceLine": 559
       },
       {
         "kind": "player-action",
@@ -3836,12 +3884,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が原本を封じ、搬送車を海浜連絡橋へ向ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 554
+        "sourceLine": 560
       }
     ],
     "source": {
-      "startLine": 546,
-      "endLine": 555
+      "startLine": 552,
+      "endLine": 561
     }
   },
   "v100:event:s18:first-clear-post": {
@@ -3852,8 +3900,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 546,
-      "endLine": 555
+      "startLine": 552,
+      "endLine": 561
     }
   },
   "v100:event:s19:pre": {
@@ -3868,7 +3916,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "橋上を企業の装甲車両が塞ぐ。背後には台帳を積んだ搬送車。紙箱の角が、荷台から一つだけはみ出ている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 560
+        "sourceLine": 566
       },
       {
         "kind": "dialogue",
@@ -3876,7 +3924,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "保守車線は一度しか開けません。護送車が遮断機に着いたら、七秒だけ通します",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 561
+        "sourceLine": 567
       },
       {
         "kind": "dialogue",
@@ -3884,7 +3932,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺が運びます。箱、動かないように縛ってください",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 562
+        "sourceLine": 568
       },
       {
         "kind": "action",
@@ -3892,7 +3940,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "運転席に座り、パイセンはベルトの金具を一度落とす。拾い直して、今度は音を立てずに留めた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 563
+        "sourceLine": 569
       },
       {
         "kind": "dialogue",
@@ -3900,7 +3948,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺らの車が壁になる。秒を数えるな、前だけ見ろ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 564
+        "sourceLine": 570
       },
       {
         "kind": "dialogue",
@@ -3908,7 +3956,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "……向こう岸の標識で停まります。来てくださいよ",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 565
+        "sourceLine": 571
       },
       {
         "kind": "player-action",
@@ -3916,7 +3964,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が搬送車の扉を一度叩き、自分たちの車両を盾の位置へ出す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 566
+        "sourceLine": 572
       },
       {
         "kind": "action",
@@ -3924,7 +3972,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "遮断機は下りたまま。企業車両のエンジンが唸り、搬送車の行く手へ回り込む。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 567
+        "sourceLine": 573
       },
       {
         "kind": "battle-marker",
@@ -3932,12 +3980,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "証拠搬送車を橋の遮断機まで護衛し、敵車両を抑えよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 568
+        "sourceLine": 574
       }
     ],
     "source": {
-      "startLine": 559,
-      "endLine": 569
+      "startLine": 565,
+      "endLine": 575
     }
   },
   "v100:event:s19:post": {
@@ -3952,7 +4000,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "搬送車が遮断機へ着く。セガワの合図で保守車線が上がった。七秒。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 572
+        "sourceLine": 578
       },
       {
         "kind": "action",
@@ -3960,7 +4008,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "企業車両が横から割り込む。主人公の車両が鼻先を塞ぎ、パイセンが搬送車を滑り込ませる。遮断機が荷台の角を擦って落ちた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 573
+        "sourceLine": 579
       },
       {
         "kind": "action",
@@ -3968,7 +4016,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "無線に、パイセンの荒い呼吸と紙箱の揺れる音だけが残る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 574
+        "sourceLine": 580
       },
       {
         "kind": "dialogue",
@@ -3976,7 +4024,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院、区役所、外周。複製は三か所へ届いた",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 575
+        "sourceLine": 581
       },
       {
         "kind": "dialogue",
@@ -3984,7 +4032,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一箱、角を潰しました。中は無事っす",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 576
+        "sourceLine": 582
       },
       {
         "kind": "dialogue",
@@ -3992,7 +4040,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "お前も無事なら、あとで水飲んで叱る",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 577
+        "sourceLine": 583
       },
       {
         "kind": "action",
@@ -4000,7 +4048,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "河口防潮門から大型感染者が西新側へ流入したと知らせが入る。ザキミヤは試験棟の方を見る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 578
+        "sourceLine": 584
       },
       {
         "kind": "dialogue",
@@ -4008,7 +4056,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "先に門を閉めよう。二人を連れて帰る道まで、失くしたくない",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 579
+        "sourceLine": 585
       },
       {
         "kind": "player-action",
@@ -4016,12 +4064,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が車両を河口へ向け直す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 580
+        "sourceLine": 586
       }
     ],
     "source": {
-      "startLine": 571,
-      "endLine": 581
+      "startLine": 577,
+      "endLine": 587
     }
   },
   "v100:event:s19:first-clear-post": {
@@ -4032,8 +4080,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 571,
-      "endLine": 581
+      "startLine": 577,
+      "endLine": 587
     }
   },
   "v100:event:s20:pre": {
@@ -4048,7 +4096,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "開いた防潮門に大型感染体が身体を挟み、流入が止まらない。向こう側は病院へ続く生活道路。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 586
+        "sourceLine": 592
       },
       {
         "kind": "dialogue",
@@ -4056,7 +4104,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ここを閉めれば、商店街から病院まで歩いて薬を運べる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 587
+        "sourceLine": 593
       },
       {
         "kind": "dialogue",
@@ -4064,7 +4112,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "食べ物も、人も。取り戻すなら、その道からや",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 588
+        "sourceLine": 594
       },
       {
         "kind": "dialogue",
@@ -4072,7 +4120,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "門から引き剥がす。閉めるのは任せた",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 589
+        "sourceLine": 595
       },
       {
         "kind": "player-action",
@@ -4080,7 +4128,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が手動閉鎖盤を起動し、感染体を水路側へ誘う。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 590
+        "sourceLine": 596
       },
       {
         "kind": "boss-marker",
@@ -4088,7 +4136,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガイレン",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 591
+        "sourceLine": 597
       },
       {
         "kind": "battle-marker",
@@ -4096,12 +4144,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガイレンを退け、防潮門を閉鎖せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 592
+        "sourceLine": 598
       }
     ],
     "source": {
-      "startLine": 585,
-      "endLine": 593
+      "startLine": 591,
+      "endLine": 599
     }
   },
   "v100:event:s20:post": {
@@ -4116,7 +4164,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "門が閉じる。夜、仮設灯の下を薬を積んだ自転車が病院へ走る。発生以来初めて、住民がこの道を自分の足で渡る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 598,
+        "sourceLine": 604,
         "sceneTag": "corridor"
       },
       {
@@ -4125,16 +4173,16 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "後ろから缶詰を積んだ小さな台車。クレイジーキングはがたつく車輪を足で押さえ、一缶も落とさず運んでくる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 599,
+        "sourceLine": 605,
         "sceneTag": "corridor"
       },
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "我が道、奪還。缶詰半分、病院へ",
+        "text": "道は取り戻した。缶詰の半分を病院へ！",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
-        "sourceLine": 600,
+        "sourceLine": 606,
         "sceneTag": "corridor"
       },
       {
@@ -4143,16 +4191,16 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "もう半分は",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 601,
+        "sourceLine": 607,
         "sceneTag": "corridor"
       },
       {
         "kind": "dialogue",
         "speaker": "クレイジーキング",
-        "text": "王の朝飯。空腹では守れん",
+        "text": "残りは我らの朝飯。腹が鳴っては門を守れん",
         "portraitOwner": "unit-crazy-king",
         "portraitKind": "major",
-        "sourceLine": 602,
+        "sourceLine": 608,
         "sceneTag": "corridor"
       },
       {
@@ -4161,7 +4209,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "朝飯つきなら、俺も入れてください",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 603,
+        "sourceLine": 609,
         "sceneTag": "corridor"
       },
       {
@@ -4170,7 +4218,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "本社へ続く道には、首筋や胸を斬られた感染者が倒れている。二刀の男が路地から出てくる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 606,
+        "sourceLine": 612,
         "sceneTag": "musashi"
       },
       {
@@ -4179,7 +4227,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あの刃の人か",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 607,
+        "sourceLine": 613,
         "sceneTag": "musashi"
       },
       {
@@ -4188,7 +4236,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "血の流れは、あの黒い楼へ向かう。お主らも行くのか",
         "portraitOwner": "unit-miyamoto-musashi",
         "portraitKind": "major",
-        "sourceLine": 608,
+        "sourceLine": 614,
         "sceneTag": "musashi"
       },
       {
@@ -4197,7 +4245,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "名前を聞いてもいい？",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 609,
+        "sourceLine": 615,
         "sceneTag": "musashi"
       },
       {
@@ -4206,7 +4254,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "宮本武蔵",
         "portraitOwner": "unit-miyamoto-musashi",
         "portraitKind": "major",
-        "sourceLine": 610,
+        "sourceLine": 616,
         "sceneTag": "musashi"
       },
       {
@@ -4215,7 +4263,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "誰もすぐには返さない。武蔵はその沈黙を気にせず、遠くの塔を見上げる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 611,
+        "sourceLine": 617,
         "sceneTag": "musashi"
       },
       {
@@ -4224,7 +4272,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "道が同じなら、刃を貸す",
         "portraitOwner": "unit-miyamoto-musashi",
         "portraitKind": "major",
-        "sourceLine": 612,
+        "sourceLine": 618,
         "sceneTag": "musashi"
       },
       {
@@ -4233,7 +4281,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が空いた席を示す。武蔵は二刀を納めて乗る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 613,
+        "sourceLine": 619,
         "sceneTag": "musashi"
       },
       {
@@ -4242,13 +4290,13 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "宮本武蔵が合流。戦闘配備登録が解禁。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 614,
+        "sourceLine": 620,
         "sceneTag": "musashi"
       }
     ],
     "source": {
-      "startLine": 595,
-      "endLine": 615
+      "startLine": 601,
+      "endLine": 621
     }
   },
   "v100:event:s20:first-clear-post": {
@@ -4259,8 +4307,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 595,
-      "endLine": 615
+      "startLine": 601,
+      "endLine": 621
     }
   },
   "v100:event:s21:pre": {
@@ -4275,7 +4323,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ゲートには赤いレンズの回収班。背後の建物に「臨床試験棟C」の表示。運び出す箱より先に、収容者の名簿を燃やしている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 620
+        "sourceLine": 626
       },
       {
         "kind": "dialogue",
@@ -4283,7 +4331,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "記録を置いて退去しろ",
         "portraitOwner": "red-panther-commander",
         "portraitKind": "major",
-        "sourceLine": 621
+        "sourceLine": 627
       },
       {
         "kind": "dialogue",
@@ -4291,7 +4339,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中の人を出せ。四十三人、いるんやろ",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 622
+        "sourceLine": 628
       },
       {
         "kind": "action",
@@ -4299,7 +4347,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "隊員が音響誘導装置を構える。Mrs.チハが東塔を指した。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 623
+        "sourceLine": 629
       },
       {
         "kind": "dialogue",
@@ -4307,7 +4355,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "東塔の音響装置を止めて。鳴れば、この一帯の感染者が寄る",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 624
+        "sourceLine": 630
       },
       {
         "kind": "dialogue",
@@ -4315,7 +4363,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "装置の場所まで知っとるんやね",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 625
+        "sourceLine": 631
       },
       {
         "kind": "dialogue",
@@ -4323,7 +4371,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "設置図を見た。話す時には、そのことも話す",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 626
+        "sourceLine": 632
       },
       {
         "kind": "player-action",
@@ -4331,7 +4379,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が車両を避難路へ置き、東塔に照準を合わせる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 627
+        "sourceLine": 633
       },
       {
         "kind": "battle-marker",
@@ -4339,12 +4387,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "誘導装置を止め、臨床試験棟への道を開けよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 628
+        "sourceLine": 634
       }
     ],
     "source": {
-      "startLine": 619,
-      "endLine": 629
+      "startLine": 625,
+      "endLine": 635
     }
   },
   "v100:event:s21:post": {
@@ -4359,7 +4407,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "護送予定表に四十三人の名前。ザキミヤの妻子にも、今朝の確認時刻がある。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 632
+        "sourceLine": 638
       },
       {
         "kind": "dialogue",
@@ -4367,7 +4415,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "今朝、ここにおった",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 633
+        "sourceLine": 639
       },
       {
         "kind": "action",
@@ -4375,23 +4423,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "処分警報が鳴る。表示より先にMrs.チハが残り時間を口にする。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 634
+        "sourceLine": 640
       },
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "八分。私が知ってる処分手順なら、次は電源を落として焼く",
+        "text": "八分で焼却が始まる。電源を落とされる前に入って",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 635
+        "sourceLine": 641
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "知ってる理由、聞きます。でも八分後でいいっす",
+        "text": "なんで知ってるんすか。……いや、今はいい。扉、開けましょう",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 636
+        "sourceLine": 642
       },
       {
         "kind": "player-action",
@@ -4399,12 +4447,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が棟の扉へ走り、全員が続く。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 637
+        "sourceLine": 643
       }
     ],
     "source": {
-      "startLine": 631,
-      "endLine": 638
+      "startLine": 637,
+      "endLine": 644
     }
   },
   "v100:event:s21:first-clear-post": {
@@ -4415,8 +4463,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 631,
-      "endLine": 638
+      "startLine": 637,
+      "endLine": 644
     }
   },
   "v100:event:s22:pre": {
@@ -4431,7 +4479,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "白い廊下。「救命」「先進治療」の広告の下で、扉を叩く音が警報と重なる。C-4は一番奥。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 643
+        "sourceLine": 649
       },
       {
         "kind": "dialogue",
@@ -4439,7 +4487,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "C-4から開けられんのか",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 644
+        "sourceLine": 650
       },
       {
         "kind": "dialogue",
@@ -4447,7 +4495,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "東から電源を戻さないと、全部ロックされます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 645
+        "sourceLine": 651
       },
       {
         "kind": "action",
@@ -4455,7 +4503,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤはC-4へ走りかけ、最初の扉で止まる。中から、自分の娘ではない子どもの声がした。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 646
+        "sourceLine": 652
       },
       {
         "kind": "dialogue",
@@ -4463,7 +4511,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ここから開けよう。……俺に最後まで手伝わせて",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 647
+        "sourceLine": 653
       },
       {
         "kind": "dialogue",
@@ -4471,7 +4519,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "四十三人、全部開ける",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 648
+        "sourceLine": 654
       },
       {
         "kind": "player-action",
@@ -4479,7 +4527,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が最初の生命維持レバーを上げる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 649
+        "sourceLine": 655
       },
       {
         "kind": "battle-marker",
@@ -4487,12 +4535,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "処分手順を止め、四十三人を順に救出せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 650
+        "sourceLine": 656
       }
     ],
     "source": {
-      "startLine": 642,
-      "endLine": 651
+      "startLine": 648,
+      "endLine": 657
     }
   },
   "v100:event:s22:post": {
@@ -4507,7 +4555,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "最後のC-4が開く。ザキミヤの妻は娘を抱いて立っている。娘は彼を見ても、まだ父親と分からない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 654
+        "sourceLine": 660
       },
       {
         "kind": "dialogue",
@@ -4515,7 +4563,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "生きとったん",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 655
+        "sourceLine": 661
       },
       {
         "kind": "dialogue",
@@ -4523,7 +4571,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "うん。もっと早く来たかった",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 656
+        "sourceLine": 662
       },
       {
         "kind": "action",
@@ -4531,7 +4579,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "彼が両手を差し出す。妻は煤と血で黒い指を見て、娘を抱き直した。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 657
+        "sourceLine": 663
       },
       {
         "kind": "dialogue",
@@ -4539,7 +4587,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "洗って。ここに水がある",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 658
+        "sourceLine": 664
       },
       {
         "kind": "action",
@@ -4547,15 +4595,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤは流しで手を洗う。爪の下の黒が落ちるまで。妻もその間、娘を急かさない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 659
+        "sourceLine": 665
       },
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "父ちゃんや。知らん顔してもええ。これから覚えて",
+        "text": "父ちゃんや。……分からんよな。これから何回でも、名前呼んで",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 660
+        "sourceLine": 666
       },
       {
         "kind": "action",
@@ -4563,7 +4611,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "娘の指が、差し出した彼の指を握る。ザキミヤはようやく妻を見る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 661
+        "sourceLine": 667
       },
       {
         "kind": "dialogue",
@@ -4571,7 +4619,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "また行くんやろ",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 662
+        "sourceLine": 668
       },
       {
         "kind": "dialogue",
@@ -4579,7 +4627,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "行く。でも帰る。今度は、待たせる日を数えさせん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 663
+        "sourceLine": 669
       },
       {
         "kind": "action",
@@ -4587,7 +4635,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "無線に回収班の声。「エージェントCH-17、帰投しろ」。Mrs.チハが振り向く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 664
+        "sourceLine": 670
       },
       {
         "kind": "dialogue",
@@ -4595,7 +4643,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "チハ？",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 665
+        "sourceLine": 671
       },
       {
         "kind": "dialogue",
@@ -4603,7 +4651,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "私のこと。ここを出たら、全部話す",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 666
+        "sourceLine": 672
       },
       {
         "kind": "player-action",
@@ -4611,12 +4659,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が救出者を安全回廊経由で病院へ送り、Mrs.チハと共に追撃から離れる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 667
+        "sourceLine": 673
       }
     ],
     "source": {
-      "startLine": 653,
-      "endLine": 668
+      "startLine": 659,
+      "endLine": 674
     }
   },
   "v100:event:s22:first-clear-post": {
@@ -4627,8 +4675,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 653,
-      "endLine": 668
+      "startLine": 659,
+      "endLine": 674
     }
   },
   "v100:event:s23:pre": {
@@ -4643,15 +4691,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "防爆扉を閉めた作戦庫。遠くで追撃部隊の声がする。Mrs.チハはランチャー、拳銃、認証カードを主人公たちの前へ置いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 673
+        "sourceLine": 679
       },
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "表では会社員。裏ではムガリアンの専属エージェントだった",
+        "text": "ムガリアンの専属エージェントだった。あなたたちには、会社員だと嘘をついてた",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 674
+        "sourceLine": 680
       },
       {
         "kind": "dialogue",
@@ -4659,15 +4707,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "何を回収してたんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 675
+        "sourceLine": 681
       },
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "物資と、漏れた情報。発生前は、狭い区画で事故を起こして収める計画だと聞かされた",
+        "text": "物資と、外へ漏れた情報。発生前は、小さな区画で起こして収める事故だと聞かされた",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 676
+        "sourceLine": 682
       },
       {
         "kind": "dialogue",
@@ -4675,7 +4723,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "狭かったら、人を噛ませてよかったんか",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 677
+        "sourceLine": 683
       },
       {
         "kind": "dialogue",
@@ -4683,7 +4731,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "よくない。発生二日目に『損失は許容範囲』と読んでも、私は会社に残った",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 678
+        "sourceLine": 684
       },
       {
         "kind": "action",
@@ -4691,7 +4739,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "防爆扉が揺れる。彼女は床のカードを拾わない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 679
+        "sourceLine": 685
       },
       {
         "kind": "dialogue",
@@ -4699,7 +4747,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中から避難車の道を変えた。消す予定だった名簿を紙に戻した。湾岸の十二人も隠した",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 680
+        "sourceLine": 686
       },
       {
         "kind": "dialogue",
@@ -4707,7 +4755,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "それを、私たちに言わなかった",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 681
+        "sourceLine": 687
       },
       {
         "kind": "dialogue",
@@ -4715,7 +4763,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "言えば疑われると思った。……でも、疑われて当然だった",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 682
+        "sourceLine": 688
       },
       {
         "kind": "action",
@@ -4723,7 +4771,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ババヤガはカードではなく妻の顔を見る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 683
+        "sourceLine": 689
       },
       {
         "kind": "dialogue",
@@ -4731,7 +4779,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺が裏で人を撃っとったことも、知っとった？",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 684
+        "sourceLine": 690
       },
       {
         "kind": "dialogue",
@@ -4739,15 +4787,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "結婚する前から。最初は仕事で調べた。好きになってからも言えなかった",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 685
+        "sourceLine": 691
       },
       {
         "kind": "dialogue",
         "speaker": "ババヤガ",
-        "text": "俺が隠せとると思ってた間、ずっと",
+        "text": "俺だけが隠しとるつもりやった。ずっと",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 686
+        "sourceLine": 692
       },
       {
         "kind": "dialogue",
@@ -4755,7 +4803,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "うん。だから許してとは言わない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 687
+        "sourceLine": 693
       },
       {
         "kind": "action",
@@ -4763,7 +4811,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が認証カードを中央端末へ差す。内部記録を病院、区役所、外周へ送る画面で、実行キーから手を離した。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 688
+        "sourceLine": 694
       },
       {
         "kind": "dialogue",
@@ -4771,7 +4819,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "押せば私のカードは焼ける。会社へ戻る道も消える",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 689
+        "sourceLine": 695
       },
       {
         "kind": "player-action",
@@ -4779,7 +4827,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が防爆扉を支え、実行キーの前をMrs.チハへ譲る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 690
+        "sourceLine": 696
       },
       {
         "kind": "action",
@@ -4787,7 +4835,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "Mrs.チハが自分で押す。送信先が三つ点灯し、カードのICが焦げる。扉の向こうから帰投命令が響いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 691
+        "sourceLine": 697
       },
       {
         "kind": "dialogue",
@@ -4795,7 +4843,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "聞こえた。もう、そっちへは帰らない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 692
+        "sourceLine": 698
       },
       {
         "kind": "action",
@@ -4803,7 +4851,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "彼女はランチャーと拳銃を拾う。ババヤガは、その手元ではなく彼女の顔を見たまま、何も言わない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 693
+        "sourceLine": 699
       },
       {
         "kind": "battle-marker",
@@ -4811,12 +4859,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "追撃を退け、指揮車から本社塔の認証キーを奪え。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 694
+        "sourceLine": 700
       }
     ],
     "source": {
-      "startLine": 672,
-      "endLine": 695
+      "startLine": 678,
+      "endLine": 701
     }
   },
   "v100:event:s23:post": {
@@ -4831,7 +4879,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "指揮車の命令書。社長の承認を経ない「S特級権限」で、TAKUYAの再生と戦闘記録の複製が指示されていた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 698
+        "sourceLine": 704
       },
       {
         "kind": "dialogue",
@@ -4839,7 +4887,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "病院で私たちを見ていた回線と同じ署名です",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 699
+        "sourceLine": 705
       },
       {
         "kind": "dialogue",
@@ -4847,7 +4895,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "セガワさん。これは何ですか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 700
+        "sourceLine": 706
       },
       {
         "kind": "action",
@@ -4855,23 +4903,23 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "無線に返事が来るまで、長い間がある。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 701
+        "sourceLine": 707
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "原本は技術開発塔です。そこまで来れば、答えます",
+        "text": "原本は技術開発塔にあります。そこへ来れば、全部見せます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 702
+        "sourceLine": 708
       },
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "今でも答えられるやろ",
+        "text": "聞いとるのは、お前の口や",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 703
+        "sourceLine": 709
       },
       {
         "kind": "action",
@@ -4879,7 +4927,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "無線は切れない。ただ、セガワは答えない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 704
+        "sourceLine": 710
       },
       {
         "kind": "action",
@@ -4887,7 +4935,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ババヤガが弾倉をMrs.チハへ渡す。許したとは言わない。彼女も礼を言わず、受け取った。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 705
+        "sourceLine": 711
       },
       {
         "kind": "player-action",
@@ -4895,12 +4943,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が認証キーを抜き、技術開発塔へ向かう。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 706
+        "sourceLine": 712
       }
     ],
     "source": {
-      "startLine": 697,
-      "endLine": 707
+      "startLine": 703,
+      "endLine": 713
     }
   },
   "v100:event:s23:first-clear-post": {
@@ -4911,8 +4959,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 697,
-      "endLine": 707
+      "startLine": 703,
+      "endLine": 713
     }
   },
   "v100:event:s24:pre": {
@@ -4927,7 +4975,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "透明な隔壁に大型感染体が二体。片方が腕を上げると、もう片方も一拍遅れて同じ角度へ上げる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 712
+        "sourceLine": 718
       },
       {
         "kind": "action",
@@ -4935,7 +4983,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社長の映像が点く。左袖の下に黒い血がにじんでいる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 713
+        "sourceLine": 719
       },
       {
         "kind": "dialogue",
@@ -4943,7 +4991,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "小さな危機を当社が収めれば、街は戻り、契約だけが残る。……そのはずでした",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 714
+        "sourceLine": 720
       },
       {
         "kind": "dialogue",
@@ -4951,15 +4999,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "小さな危機に、うちの娘も入ってたんか",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 715
+        "sourceLine": 721
       },
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "あなたの娘を契約に書いた覚えはない。だが、最初の区画は私が選んだ。拡大は、私の承認を越えている",
+        "text": "あなたの娘を選んだ覚えはない。だが、西新を選んだのは私だ。ここまで広げる許可は出していない",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 716
+        "sourceLine": 722
       },
       {
         "kind": "dialogue",
@@ -4967,7 +5015,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "中央制御を切れば二体は連動しません。先に止めてください",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 717
+        "sourceLine": 723
       },
       {
         "kind": "action",
@@ -4975,7 +5023,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社長の映像と無線を切り、いくらちゃんが制御線を現物で確かめる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 718
+        "sourceLine": 724
       },
       {
         "kind": "dialogue",
@@ -4983,7 +5031,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "線はある。切れば二体が離れるかは、私たちで確かめる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 719
+        "sourceLine": 725
       },
       {
         "kind": "player-action",
@@ -4991,7 +5039,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が切断箇所を確認し、隔壁の開放に備える。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 720
+        "sourceLine": 726
       },
       {
         "kind": "boss-marker",
@@ -4999,7 +5047,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "フタゴ",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 721
+        "sourceLine": 727
       },
       {
         "kind": "battle-marker",
@@ -5007,12 +5055,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "制御を切り、二体の連携を崩して倒せ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 722
+        "sourceLine": 728
       }
     ],
     "source": {
-      "startLine": 711,
-      "endLine": 723
+      "startLine": 717,
+      "endLine": 729
     }
   },
   "v100:event:s24:post": {
@@ -5027,7 +5075,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "二体が離れて倒れる。役員研究所への昇降路が開いた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 726
+        "sourceLine": 732
       },
       {
         "kind": "dialogue",
@@ -5035,7 +5083,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社長は噛まれてる。あの腕を見た",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 727
+        "sourceLine": 733
       },
       {
         "kind": "dialogue",
@@ -5043,7 +5091,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "未承認の処置薬を持っているはずです。使わせないでください",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 728
+        "sourceLine": 734
       },
       {
         "kind": "dialogue",
@@ -5051,7 +5099,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あんたも、何を持っとるか後で聞く",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 729
+        "sourceLine": 735
       },
       {
         "kind": "dialogue",
@@ -5059,7 +5107,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ええ",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 730
+        "sourceLine": 736
       },
       {
         "kind": "player-action",
@@ -5067,12 +5115,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が昇降路に入り、仲間を呼ぶ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 731
+        "sourceLine": 737
       }
     ],
     "source": {
-      "startLine": 725,
-      "endLine": 732
+      "startLine": 731,
+      "endLine": 738
     }
   },
   "v100:event:s24:first-clear-post": {
@@ -5083,8 +5131,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 725,
-      "endLine": 732
+      "startLine": 731,
+      "endLine": 738
     }
   },
   "v100:event:s25:pre": {
@@ -5099,7 +5147,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガラスの向こうの社長は、左腕を机の下に隠す。未承認薬は一本だけ。彼の退路には医療設備が並ぶ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 737
+        "sourceLine": 743
       },
       {
         "kind": "dialogue",
@@ -5107,7 +5155,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "設備も薬も渡します。私の退路だけは保証してください",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 738
+        "sourceLine": 744
       },
       {
         "kind": "dialogue",
@@ -5115,7 +5163,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "設備は残す。働く人も守る。でも、あなたを逃がす約束はできない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 739
+        "sourceLine": 745
       },
       {
         "kind": "action",
@@ -5123,7 +5171,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社長が膝をつく。黒い変色が肩まで上がり、彼は薬を抜く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 740
+        "sourceLine": 746
       },
       {
         "kind": "dialogue",
@@ -5131,15 +5179,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "人間への試験は終わっていません。打てば感染組織が増えます",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 741
+        "sourceLine": 747
       },
       {
         "kind": "dialogue",
         "speaker": "ムガリアン社長",
-        "text": "なら、私はどうすればいい",
+        "text": "じゃあ、私には何が残っている",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 742
+        "sourceLine": 748
       },
       {
         "kind": "action",
@@ -5147,7 +5195,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "誰も答えない。社長は針を自分の腕へ刺す。数秒だけ変色が止まり、彼が安堵した顔をしたところでガラスに亀裂が走る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 743
+        "sourceLine": 749
       },
       {
         "kind": "player-action",
@@ -5155,7 +5203,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が仲間を退かせ、医療設備を守る位置へ出る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 744
+        "sourceLine": 750
       },
       {
         "kind": "boss-marker",
@@ -5163,7 +5211,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "変異ムガリアン社長",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 745
+        "sourceLine": 751
       },
       {
         "kind": "battle-marker",
@@ -5171,12 +5219,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "変異した社長を止め、薬と医療設備を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 746
+        "sourceLine": 752
       }
     ],
     "source": {
-      "startLine": 736,
-      "endLine": 747
+      "startLine": 742,
+      "endLine": 753
     }
   },
   "v100:event:s25:post": {
@@ -5191,7 +5239,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社長が倒れる。窓の外には、契約書で区画番号にした街の灯り。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 750
+        "sourceLine": 756
       },
       {
         "kind": "dialogue",
@@ -5199,7 +5247,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "封鎖線は、九本あったのに……",
         "portraitOwner": "mugarian-president",
         "portraitKind": "major",
-        "sourceLine": 751
+        "sourceLine": 757
       },
       {
         "kind": "dialogue",
@@ -5207,7 +5255,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "その線の内側に人がおる。最初から見えてなかったんやろ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 752
+        "sourceLine": 758
       },
       {
         "kind": "action",
@@ -5215,7 +5263,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "施設警報が静まる。病院へ、救出した人と薬が届いた知らせ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 753
+        "sourceLine": 759
       },
       {
         "kind": "action",
@@ -5223,7 +5271,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "夜。仮設の炊き出しで、全員が紙コップの味噌汁を持つ。ザキミヤは妻子のそばで哺乳瓶を冷まし、いくらちゃんは片手で配車表を見ている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 756,
+        "sourceLine": 762,
         "sceneTag": "soup"
       },
       {
@@ -5232,7 +5280,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "熱っ。……ちゃんと熱い",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 757,
+        "sourceLine": 763,
         "sceneTag": "soup"
       },
       {
@@ -5241,7 +5289,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "熱いなら、冷めるまで持っとけ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 758,
+        "sourceLine": 764,
         "sceneTag": "soup"
       },
       {
@@ -5250,7 +5298,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "Mrs.チハは湯気の向こうにいる。ババヤガは何も聞かず、彼女の分の椀をテーブルの端へ寄せた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 759,
+        "sourceLine": 765,
         "sceneTag": "soup"
       },
       {
@@ -5259,7 +5307,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "冷蔵車列の追跡信号が無線に入る。社長の台帳にはない車。湯気の向こうで、全員が顔を上げる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 760,
+        "sourceLine": 766,
         "sceneTag": "soup"
       },
       {
@@ -5268,13 +5316,13 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が残りを飲み、冷蔵車列の行き先を地図に示す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 761,
+        "sourceLine": 767,
         "sceneTag": "soup"
       }
     ],
     "source": {
-      "startLine": 749,
-      "endLine": 762
+      "startLine": 755,
+      "endLine": 768
     }
   },
   "v100:event:s25:first-clear-post": {
@@ -5285,8 +5333,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 749,
-      "endLine": 762
+      "startLine": 755,
+      "endLine": 768
     }
   },
   "v100:event:s26:pre": {
@@ -5301,7 +5349,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "社員と家族を乗せたバスは正門へ。番号のない冷蔵車三台だけが保守路へ逸れる。護衛の赤レンズも、バスではなく冷蔵車についた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 767
+        "sourceLine": 773
       },
       {
         "kind": "dialogue",
@@ -5309,7 +5357,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "バスは通して！　止めるのは冷蔵車です。撤収台帳にありません",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 768
+        "sourceLine": 774
       },
       {
         "kind": "dialogue",
@@ -5317,23 +5365,31 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "さっきの配車表、空欄が一台ありました。私が付けた追跡タグ、まだ生きてる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 769
+        "sourceLine": 775
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "味噌汁の横で見てたやつっすか",
+        "text": "さっき、味噌汁より見てたやつっすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 770
+        "sourceLine": 776
       },
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "冷める前に片づけたかったんです。汁の方は冷めました",
+        "text": "ええ。おかわり、後でできますかね",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 771
+        "sourceLine": 777
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "クマバーソン",
+        "text": "鍋は火に掛けとく。先に車を止めよう",
+        "portraitOwner": "unit-kumaverson",
+        "portraitKind": "major",
+        "sourceLine": 778
       },
       {
         "kind": "dialogue",
@@ -5341,7 +5397,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あれは社長の命令じゃない。研究部門だけの私設回収",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 772
+        "sourceLine": 779
       },
       {
         "kind": "player-action",
@@ -5349,7 +5405,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が社員バスを先に通し、冷蔵車へ進路を切る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 773
+        "sourceLine": 780
       },
       {
         "kind": "battle-marker",
@@ -5357,12 +5413,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "民間車両を巻き込まず、冷蔵車列を止めよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 774
+        "sourceLine": 781
       }
     ],
     "source": {
-      "startLine": 766,
-      "endLine": 775
+      "startLine": 772,
+      "endLine": 782
     }
   },
   "v100:event:s26:post": {
@@ -5377,15 +5433,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "荷室には薬局を出た日からの戦闘写真。救助した人数だけでなく、誰が誰を待ったかまで時刻が振られている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 778
+        "sourceLine": 785
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "区役所で俺が扉に戻った秒数まで。そんな顔、撮ってどうするんすか",
+        "text": "区役所で戻った時の俺まで写ってる。……あの人も、この写真にいるのに",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 779
+        "sourceLine": 786
       },
       {
         "kind": "action",
@@ -5393,7 +5449,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんは写真を伏せる。薬局で自分が笑った瞬間にも、時刻と観察番号が振られている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 780
+        "sourceLine": 787
       },
       {
         "kind": "dialogue",
@@ -5401,7 +5457,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あの時も、見てたんですね",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 781
+        "sourceLine": 788
       },
       {
         "kind": "dialogue",
@@ -5409,15 +5465,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "セガワ。薬を届けてくれた時からか",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 782
+        "sourceLine": 789
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "はい。薬も本物でした。助かった人も本物です",
+        "text": "はい。薬に細工はしていません。助けた人たちも、そのまま家へ帰しました",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 783
+        "sourceLine": 790
       },
       {
         "kind": "dialogue",
@@ -5425,15 +5481,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "それを先に言うな。今聞いとるのは、何をしたかや",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 784
+        "sourceLine": 791
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "あなたたちの選択を記録しました。許されると思っていません",
+        "text": "何を選ぶか、記録していました。謝って済むことではありません",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 785
+        "sourceLine": 792
       },
       {
         "kind": "action",
@@ -5441,7 +5497,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が通信を切る。紙の搬送命令書の裏に、会社台帳にない研究区画の座標と、セガワの署名。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 786
+        "sourceLine": 793
       },
       {
         "kind": "player-action",
@@ -5449,12 +5505,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が物理原本を押収し、自分の地図へ座標を写す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 787
+        "sourceLine": 794
       }
     ],
     "source": {
-      "startLine": 777,
-      "endLine": 788
+      "startLine": 784,
+      "endLine": 795
     }
   },
   "v100:event:s26:first-clear-post": {
@@ -5465,8 +5521,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 777,
-      "endLine": 788
+      "startLine": 784,
+      "endLine": 795
     }
   },
   "v100:event:s27:pre": {
@@ -5481,7 +5537,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "旧物流網の奥で企業標章が削られ、赤い豹の章だけが残る。ここまで来ても、警備兵のレンズだけは同じ赤だ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 793
+        "sourceLine": 800
       },
       {
         "kind": "system",
@@ -5489,7 +5545,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "SPECIAL OPERATIONS UNIT：RED PANTHER",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 794
+        "sourceLine": 801
       },
       {
         "kind": "dialogue",
@@ -5497,7 +5553,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "研究部門の直轄。社長より特級博士の命令を優先する",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 795
+        "sourceLine": 802
       },
       {
         "kind": "dialogue",
@@ -5505,15 +5561,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "セガワ特級博士の命令だ。ここから先へは通さない",
         "portraitOwner": "red-panther-commander",
         "portraitKind": "major",
-        "sourceLine": 796
+        "sourceLine": 803
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "本人が呼んだんすけど",
+        "text": "セガワさんが来いって言ったんすよ。通せよ",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 797
+        "sourceLine": 804
       },
       {
         "kind": "action",
@@ -5521,7 +5577,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "隊長は銃口を下げない。主人公は押収した命令書を示し、返答を待つ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 798
+        "sourceLine": 805
       },
       {
         "kind": "player-action",
@@ -5529,7 +5585,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が仲間を遮蔽物へ移し、前進する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 799
+        "sourceLine": 806
       },
       {
         "kind": "battle-marker",
@@ -5537,12 +5593,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "RED PANTHERの封鎖を突破せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 800
+        "sourceLine": 807
       }
     ],
     "source": {
-      "startLine": 792,
-      "endLine": 801
+      "startLine": 799,
+      "endLine": 808
     }
   },
   "v100:event:s27:post": {
@@ -5557,7 +5613,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "紙ファイルの表紙に「特級博士 セガワ／内部通称：ネコ殺し」。『初期動物試験記録に由来』と付箋がある。壁には発生前からの西新の地図。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 804
+        "sourceLine": 811
       },
       {
         "kind": "dialogue",
@@ -5565,7 +5621,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "なんで、うちの街やった",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 805
+        "sourceLine": 812
       },
       {
         "kind": "dialogue",
@@ -5573,15 +5629,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "歩ける距離に病院、駅、役所、住宅がある。逃げ道も、助けに戻る道も、同時に見える",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 806
+        "sourceLine": 813
       },
       {
         "kind": "dialogue",
         "speaker": "ザキミヤ",
-        "text": "人が住んどることを、便利な条件にしたんか",
+        "text": "俺の娘が寝とった街を、実験にちょうどええと思ったんか",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 807
+        "sourceLine": 814
       },
       {
         "kind": "dialogue",
@@ -5589,7 +5645,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ええ",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 808
+        "sourceLine": 815
       },
       {
         "kind": "action",
@@ -5597,7 +5653,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "別の映像には、西新の防衛線で倒したTAKUYAの遺骸を回収する赤レンズ部隊。再生処置の記録が続く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 809
+        "sourceLine": 816
       },
       {
         "kind": "dialogue",
@@ -5605,7 +5661,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あの日、終わったと思ってた",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 810
+        "sourceLine": 817
       },
       {
         "kind": "dialogue",
@@ -5613,7 +5669,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "終わらせなかった人がいる",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 811
+        "sourceLine": 818
       },
       {
         "kind": "player-action",
@@ -5621,12 +5677,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が映像を止め、次の管制室へ進む。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 812
+        "sourceLine": 819
       }
     ],
     "source": {
-      "startLine": 803,
-      "endLine": 813
+      "startLine": 810,
+      "endLine": 820
     }
   },
   "v100:event:s27:first-clear-post": {
@@ -5637,8 +5693,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 803,
-      "endLine": 813
+      "startLine": 810,
+      "endLine": 820
     }
   },
   "v100:event:s28:pre": {
@@ -5653,15 +5709,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "日本地図から各都市へ線が伸びる。噴霧器と医療設備に送る起動命令は、まだ待機中。西新で使った区画番号の続きが並ぶ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 818
+        "sourceLine": 825
       },
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "まだ実行されていない線は、ここから止められる",
+        "text": "まだ動いてない。ここで止めれば、街には届きません",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 819
+        "sourceLine": 826
       },
       {
         "kind": "dialogue",
@@ -5669,7 +5725,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "西新の次に、誰の家のそばで撒くつもりや",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 820
+        "sourceLine": 827
       },
       {
         "kind": "dialogue",
@@ -5677,7 +5733,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "水も土も、戻るには時間が要る。人間は、分かっていてその時間を奪う",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 821
+        "sourceLine": 828
       },
       {
         "kind": "dialogue",
@@ -5685,15 +5741,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "人を減らして、その時間を買うんか",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 822
+        "sourceLine": 829
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "それが、いま残った手段です",
+        "text": "そうです。人間が止まらないなら、止めるしかない",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 823
+        "sourceLine": 830
       },
       {
         "kind": "dialogue",
@@ -5701,7 +5757,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "うちの娘も、あんたの数字か",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 824
+        "sourceLine": 831
       },
       {
         "kind": "dialogue",
@@ -5709,7 +5765,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あの子に罪はありません",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 825
+        "sourceLine": 832
       },
       {
         "kind": "dialogue",
@@ -5717,7 +5773,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ほんなら撒くな。風は子どもを避けて通らん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 826
+        "sourceLine": 833
       },
       {
         "kind": "action",
@@ -5725,7 +5781,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "セガワは答えない。最初の保護カバーが閉まり始める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 827
+        "sourceLine": 834
       },
       {
         "kind": "dialogue",
@@ -5733,7 +5789,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "治すと称して民を斬る。いつの世も、言葉は変わらぬな",
         "portraitOwner": "unit-miyamoto-musashi",
         "portraitKind": "major",
-        "sourceLine": 828
+        "sourceLine": 835
       },
       {
         "kind": "player-action",
@@ -5741,7 +5797,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公がカバーを開き、物理停止レバーへ手を伸ばす。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 829
+        "sourceLine": 836
       },
       {
         "kind": "battle-marker",
@@ -5749,12 +5805,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "国内の散布装置を物理停止せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 830
+        "sourceLine": 837
       }
     ],
     "source": {
-      "startLine": 817,
-      "endLine": 831
+      "startLine": 824,
+      "endLine": 838
     }
   },
   "v100:event:s28:post": {
@@ -5769,7 +5825,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "国内の未実行線が消える。通信断の地域は、いまも状況が分からない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 834
+        "sourceLine": 841
       },
       {
         "kind": "dialogue",
@@ -5777,7 +5833,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ここから出す分は止めた。それは言い切れます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 835
+        "sourceLine": 842
       },
       {
         "kind": "action",
@@ -5785,7 +5841,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "地下への扉に三つの表示。「国外一斉起動」「感染源原株」「T-03最終収容区」。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 836
+        "sourceLine": 843
       },
       {
         "kind": "dialogue",
@@ -5793,7 +5849,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "外へ出る回線と原株を先に潰す。T-03の扉は、開けさせない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 837
+        "sourceLine": 844
       },
       {
         "kind": "player-action",
@@ -5801,12 +5857,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が仲間の位置を確かめ、地下扉を開ける。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 838
+        "sourceLine": 845
       }
     ],
     "source": {
-      "startLine": 833,
-      "endLine": 839
+      "startLine": 840,
+      "endLine": 846
     }
   },
   "v100:event:s28:first-clear-post": {
@@ -5817,8 +5873,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 833,
-      "endLine": 839
+      "startLine": 840,
+      "endLine": 846
     }
   },
   "v100:event:s29:pre": {
@@ -5833,7 +5889,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "国外の提携先へ伸びる起動線が、画面の端から一本ずつ赤くなる。壁には主人公たちの戦闘映像。薬局の老人を運ぶ姿、橋で停まった搬送車、顔を伏せたままのいくらちゃん。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 844
+        "sourceLine": 851
       },
       {
         "kind": "dialogue",
@@ -5841,7 +5897,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "区役所では、救援車を出す方が生存率は高かった。あなたたちは戻った",
         "portraitOwner": "segawa",
         "portraitKind": "major",
-        "sourceLine": 845
+        "sourceLine": 852
       },
       {
         "kind": "dialogue",
@@ -5849,15 +5905,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あの人を乗せて出した。その数字も書いとけ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 846
+        "sourceLine": 853
       },
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "書きました。だから、次に何を選ぶか見たかった",
+        "text": "書きました。あなたたちなら次も戻るのか、確かめたかった",
         "portraitOwner": "segawa",
         "portraitKind": "major",
-        "sourceLine": 847
+        "sourceLine": 854
       },
       {
         "kind": "action",
@@ -5865,7 +5921,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公はセガワのいるガラス室を見ず、起動回線と原株の位置を仲間へ示す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 848
+        "sourceLine": 855
       },
       {
         "kind": "dialogue",
@@ -5873,7 +5929,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "人を測るのは終わり。回線を切ってから、あなたを止める",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 849
+        "sourceLine": 856
       },
       {
         "kind": "dialogue",
@@ -5881,7 +5937,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "回線が先。原株も残せません。両方やります！",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 850
+        "sourceLine": 857
       },
       {
         "kind": "player-action",
@@ -5889,7 +5945,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が国外回線の前へ隊列を組み、原株への通路を確認する。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 851
+        "sourceLine": 858
       },
       {
         "kind": "battle-marker",
@@ -5897,12 +5953,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "国外起動回線を止め、続いて感染源原株を破壊せよ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 852
+        "sourceLine": 859
       }
     ],
     "source": {
-      "startLine": 843,
-      "endLine": 853
+      "startLine": 850,
+      "endLine": 860
     }
   },
   "v100:event:s29:post": {
@@ -5917,7 +5973,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "世界地図から予定線が消え、原株が高熱槽へ落ちる。いくらちゃんは停止した回線を一つずつ確認する。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 856
+        "sourceLine": 863
       },
       {
         "kind": "dialogue",
@@ -5925,7 +5981,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ここから外へ出す予定線は、全部止まった。返事のない土地のことは、まだ分からない",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 857
+        "sourceLine": 864
       },
       {
         "kind": "action",
@@ -5933,15 +5989,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ガラス室でセガワが物理鍵を回す。拘束具の外れる音が地下から響き、彼は非常通路へ消える。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 858
+        "sourceLine": 865
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "では、最後の観測です",
+        "text": "西新へ戻ってください。まだ、終わっていない",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 859
+        "sourceLine": 866
       },
       {
         "kind": "system",
@@ -5949,7 +6005,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "T-03／最終強化形態／個体名：TAKUYA-Ω",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 860
+        "sourceLine": 867
       },
       {
         "kind": "action",
@@ -5957,7 +6013,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "画面に、投薬管と鎖で拘束されたTAKUYA。進路は西新の安全回廊。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 861
+        "sourceLine": 868
       },
       {
         "kind": "dialogue",
@@ -5965,15 +6021,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "避難してる人の方へ、向かってる",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 862
+        "sourceLine": 869
       },
       {
         "kind": "dialogue",
         "speaker": "セガワの声",
-        "text": "あなたたちが教えました。人がどこへ集まるか",
+        "text": "あなたたちが道を開けた。人はそこへ集まる",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 863
+        "sourceLine": 870
       },
       {
         "kind": "player-action",
@@ -5981,12 +6037,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が車両の鍵を取り、崩れた研究区画を迂回して西新へ戻る。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 864
+        "sourceLine": 871
       }
     ],
     "source": {
-      "startLine": 855,
-      "endLine": 865
+      "startLine": 862,
+      "endLine": 872
     }
   },
   "v100:event:s29:first-clear-post": {
@@ -5997,8 +6053,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 855,
-      "endLine": 865
+      "startLine": 862,
+      "endLine": 872
     }
   },
   "v100:event:s30:pre": {
@@ -6013,15 +6069,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "最初にTAKUYAを止めた防衛線。最後尾の避難バスは、ここから見えない待機路で立ち往生している。無線から、ザキミヤの妻が娘をあやす声。仮設照明の陰から巨体が現れる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 870
+        "sourceLine": 877
       },
       {
         "kind": "action",
         "speaker": null,
-        "text": "頬の傷、後ろへ流した淡い髪、黒い防護眼鏡。傷跡だらけの胸を、古い革帯が斜めに走る。",
+        "text": "頬の傷、後ろへ流した淡い髪、黒い防護眼鏡。縫合痕のある裸の胸を、かつての黒い拘束帯が斜めに走る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 871
+        "sourceLine": 878
       },
       {
         "kind": "action",
@@ -6029,15 +6085,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "異様に肥大した片腕に縫合痕が走る。首から垂れた黒い鎖が揺れ、背の投薬管が脈打つ。剣とも槌ともつかない大刃が路面を削る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 872
+        "sourceLine": 879
       },
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "TAKUYAっす。あの眼鏡と頬の傷、間違いない。……何をされたんすか",
+        "text": "あの傷……TAKUYAさんだ。あの夜、俺らが止めた人っす",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 873
+        "sourceLine": 880
       },
       {
         "kind": "action",
@@ -6045,7 +6101,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が装甲車両でセガワの指揮車の退路を塞ぐ。セガワは携帯発信器を掲げる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 874
+        "sourceLine": 881
       },
       {
         "kind": "dialogue",
@@ -6053,7 +6109,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "停止",
         "portraitOwner": "segawa",
         "portraitKind": "major",
-        "sourceLine": 875
+        "sourceLine": 882
       },
       {
         "kind": "action",
@@ -6061,15 +6117,15 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "巨体が止まる。セガワが発信器を主人公たちへ向ける。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 876
+        "sourceLine": 883
       },
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "対象を除去",
+        "text": "前方の部隊を除去",
         "portraitOwner": "segawa",
         "portraitKind": "major",
-        "sourceLine": 877
+        "sourceLine": 884
       },
       {
         "kind": "dialogue",
@@ -6077,7 +6133,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "バス、あと三台。まだ後ろに人がいます！",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 878
+        "sourceLine": 885
       },
       {
         "kind": "player-action",
@@ -6085,63 +6141,55 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公がセガワを追わず、TAKUYA-Ωとバスの間へ立つ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 879
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "高い制御音が続く。TAKUYA-Ωは主人公たちを通り越し、音源へ踏み込む。発信器と握った手が、大刃の下で砕けた。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 880
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "RED PANTHERの隊員が一斉に撃つ。弾は装甲で火花を散らすだけ。大刃が横薙ぎに走り、隊員たちが指揮車の前へ倒れる。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 881
-      },
-      {
-        "kind": "dialogue",
-        "speaker": "セガワ",
-        "text": "停止。……命令音を、脅威と覚えたのか",
-        "portraitOwner": "segawa",
-        "portraitKind": "major",
-        "sourceLine": 882
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "背の投薬管がセガワを貫く。彼は巨体へ手を伸ばす。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 883
-      },
-      {
-        "kind": "dialogue",
-        "speaker": "セガワ",
-        "text": "待て……私の声が、分からないのか",
-        "portraitOwner": "segawa",
-        "portraitKind": "major",
-        "sourceLine": 884
-      },
-      {
-        "kind": "action",
-        "speaker": null,
-        "text": "セガワの呼吸が止まる。感染群が防壁の切れ目へ流れ込み、巨体は待機路のバスへ向きを変える。",
-        "portraitOwner": null,
-        "portraitKind": "stage-direction",
-        "sourceLine": 885
-      },
-      {
-        "kind": "system",
-        "speaker": "■ SYSTEM",
-        "text": "ネコ殺しのセガワ特級博士：死亡",
-        "portraitOwner": null,
-        "portraitKind": "system",
         "sourceLine": 886
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "制御音が高くなる。TAKUYA-Ωは主人公たちではなく、音の出る手へ向きを変えた。発信器が大刃の下で砕ける。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 887
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "セガワ",
+        "text": "停止。命令対象は、前だ",
+        "portraitOwner": "segawa",
+        "portraitKind": "major",
+        "sourceLine": 888
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "RED PANTHERの隊員が撃つ。弾は装甲で火花を散らし、大刃が指揮車の前を薙ぐ。セガワはなお、壊れた発信器のボタンを押した。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 889
+      },
+      {
+        "kind": "dialogue",
+        "speaker": "セガワ",
+        "text": "命令音を、脅威として覚えたのか……私まで",
+        "portraitOwner": "segawa",
+        "portraitKind": "major",
+        "sourceLine": 890
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "背の投薬管がセガワを貫く。差し出した手は巨体に届かず、路面へ落ちた。呼吸も止まる。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 891
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "防壁の切れ目へ感染群が流れ込み、TAKUYA-Ωは待機路のバスへ向きを変える。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 892
       },
       {
         "kind": "dialogue",
@@ -6149,7 +6197,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "あのバスが抜けるまで、俺は退かん",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 887
+        "sourceLine": 893
       },
       {
         "kind": "dialogue",
@@ -6157,7 +6205,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "門を開けて、病院までつないだんや。ここで切らせへん",
         "portraitOwner": "unit-tky",
         "portraitKind": "major",
-        "sourceLine": 888
+        "sourceLine": 894
       },
       {
         "kind": "dialogue",
@@ -6165,7 +6213,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "後ろの管が、再生を支えている。狙える時に狙って",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 889
+        "sourceLine": 895
       },
       {
         "kind": "dialogue",
@@ -6173,7 +6221,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}、群れが先や。バスが抜けるまで、ここを空けるな",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 890
+        "sourceLine": 896
       },
       {
         "kind": "dialogue",
@@ -6181,7 +6229,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "TAKUYA！　あの日も怖かった。今も怖えよ！　……それでも、あのバスには指一本触れさせねえ！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 891
+        "sourceLine": 897
       },
       {
         "kind": "player-action",
@@ -6189,7 +6237,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が仲間の配置を確かめ、巨体へ向かう。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 892
+        "sourceLine": 898
       },
       {
         "kind": "boss-marker",
@@ -6197,7 +6245,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "TAKUYA-Ω",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 893
+        "sourceLine": 899
       },
       {
         "kind": "battle-marker",
@@ -6205,12 +6253,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "TAKUYA-Ωを倒し、避難バスと安全回廊を守れ。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 894
+        "sourceLine": 900
       }
     ],
     "source": {
-      "startLine": 869,
-      "endLine": 895
+      "startLine": 876,
+      "endLine": 901
     }
   },
   "v100:event:s30:post": {
@@ -6225,7 +6273,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "巨体が防衛線の路面へ崩れる。誰もすぐには近づかない。いくらちゃんは測定器を二度見て、前へ出かけた足を止める。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 900,
+        "sourceLine": 906,
         "sceneTag": "defeat"
       },
       {
@@ -6234,7 +6282,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "再生反応、ゼロ。……もう一回測っても、ゼロです",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
-        "sourceLine": 901,
+        "sourceLine": 907,
         "sceneTag": "defeat"
       },
       {
@@ -6243,7 +6291,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "焼く前に、背中の投薬管、血液、骨髄を採ってください。中和因子が残っています",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 902,
+        "sourceLine": 908,
         "sceneTag": "defeat"
       },
       {
@@ -6252,7 +6300,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "人に使えるの？",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 903,
+        "sourceLine": 909,
         "sceneTag": "defeat"
       },
       {
@@ -6261,7 +6309,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "まだ分からない。初期感染を止める材料になるかもしれない。検査は病院で",
         "portraitOwner": null,
         "portraitKind": "offscreen",
-        "sourceLine": 904,
+        "sourceLine": 910,
         "sceneTag": "defeat"
       },
       {
@@ -6270,7 +6318,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が三種の試料を密閉し、回収を確認して残りの組織に火を入れる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 905,
+        "sourceLine": 911,
         "sceneTag": "defeat"
       },
       {
@@ -6279,7 +6327,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "最後の避難バスが安全回廊へ入る。いくらちゃんの地図から、大型反応が消えた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 908,
+        "sourceLine": 914,
         "sceneTag": "cleared"
       },
       {
@@ -6288,7 +6336,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "帰ろう。娘に、今日は遅くなるって言ってない",
         "portraitOwner": "unit-zakimiya",
         "portraitKind": "major",
-        "sourceLine": 909,
+        "sourceLine": 915,
         "sceneTag": "cleared"
       },
       {
@@ -6297,13 +6345,13 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が通行止めの標識を外し、西新側へ倒す。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 910,
+        "sourceLine": 916,
         "sceneTag": "cleared"
       }
     ],
     "source": {
-      "startLine": 897,
-      "endLine": 911
+      "startLine": 903,
+      "endLine": 917
     }
   },
   "v100:event:s30:first-clear-post": {
@@ -6314,8 +6362,8 @@ export const V100_STORY_EVENTS = Object.freeze({
     "nodes": [],
     "finalizeOnly": true,
     "source": {
-      "startLine": 897,
-      "endLine": 911
+      "startLine": 903,
+      "endLine": 917
     }
   },
   "v100:event:ending": {
@@ -6331,7 +6379,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "焼けた防衛線の路面に朝日が差す。試料を運ぶ車が病院へ先行する。武蔵は二刀を差し、別の道の前で立ち止まる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 916,
+        "sourceLine": 922,
         "sceneTag": "dawn"
       },
       {
@@ -6340,7 +6388,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "我が行くのは、こちららしい",
         "portraitOwner": "unit-miyamoto-musashi",
         "portraitKind": "major",
-        "sourceLine": 917,
+        "sourceLine": 923,
         "sceneTag": "dawn"
       },
       {
@@ -6349,7 +6397,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が歩み寄る。武蔵は礼をして、煙の向こうへ進む。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 918,
+        "sourceLine": 924,
         "sceneTag": "dawn"
       },
       {
@@ -6358,7 +6406,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "搬送車が一台横切る。通過後、そこに武蔵の姿はない。主人公はしばらく道を見てから病院へ向く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 919,
+        "sourceLine": 925,
         "sceneTag": "dawn"
       },
       {
@@ -6367,7 +6415,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "数日後。医師と研究員が、採取した中和因子を別々の検査器で確かめる。初期感染者の同意を得て、少量を投与する。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 922,
+        "sourceLine": 928,
         "sceneTag": "hospital"
       },
       {
@@ -6376,7 +6424,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一時間、六時間、二十四時間。腕の変色は広がらない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 923,
+        "sourceLine": 929,
         "sceneTag": "hospital"
       },
       {
@@ -6385,7 +6433,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "もう、戻らないんですか",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 924,
+        "sourceLine": 930,
         "sceneTag": "hospital"
       },
       {
@@ -6394,7 +6442,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "今は止まっています。治ったと言うには、まだ早い",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 925,
+        "sourceLine": 931,
         "sceneTag": "hospital"
       },
       {
@@ -6403,7 +6451,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "でも、明日を待てるんやね",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 926,
+        "sourceLine": 932,
         "sceneTag": "hospital"
       },
       {
@@ -6412,7 +6460,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ええ。明日、もう一度確かめられます",
         "portraitOwner": "minor-human-shared-event-silhouette",
         "portraitKind": "minor",
-        "sourceLine": 927,
+        "sourceLine": 933,
         "sceneTag": "hospital"
       },
       {
@@ -6421,7 +6469,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "連絡室では、いくらちゃんが西新の外へ呼びかける。返事のない回線にも時刻を記録し、翌日また呼ぶ。区役所で拾ったラジオは、今も机の端にある。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 930,
+        "sourceLine": 936,
         "sceneTag": "signal"
       },
       {
@@ -6430,7 +6478,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "くまやの裏口。ババヤガとMrs.チハが、別々の武器を同じ机で整備している。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 933,
+        "sourceLine": 939,
         "sceneTag": "kumaya"
       },
       {
@@ -6439,7 +6487,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "全部聞くって言った",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 934,
+        "sourceLine": 940,
         "sceneTag": "kumaya"
       },
       {
@@ -6448,7 +6496,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "一晩では終わらない",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 935,
+        "sourceLine": 941,
         "sceneTag": "kumaya"
       },
       {
@@ -6457,7 +6505,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "なら、明日も聞く",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 936,
+        "sourceLine": 942,
         "sceneTag": "kumaya"
       },
       {
@@ -6466,7 +6514,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "Mrs.チハが頷く。二人は手を動かし続ける。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 937,
+        "sourceLine": 943,
         "sceneTag": "kumaya"
       },
       {
@@ -6475,13 +6523,13 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}、明日はくまやのガスを見に来てくれ。暖簾も掛け直す",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 938,
+        "sourceLine": 944,
         "sceneTag": "kumaya"
       }
     ],
     "source": {
-      "startLine": 913,
-      "endLine": 939
+      "startLine": 919,
+      "endLine": 945
     }
   },
   "v100:event:credits": {
@@ -6498,7 +6546,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "薬局の二階に仮設診療所の札。シャッターが一枚ずつ上がる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 944
+        "sourceLine": 950
       },
       {
         "kind": "montage",
@@ -6507,7 +6555,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "紙の名簿へ帰還者の名前が書き足される。空欄も消さない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 945
+        "sourceLine": 951
       },
       {
         "kind": "montage",
@@ -6516,7 +6564,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "列車は止まったまま。改札の灯りだけが、人の歩く道を照らす。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 946
+        "sourceLine": 952
       },
       {
         "kind": "montage",
@@ -6525,7 +6573,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "試作血清が少量だけ冷蔵庫へ入る。翌日の検査予定が隣に貼られる。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 947
+        "sourceLine": 953
       },
       {
         "kind": "montage",
@@ -6534,7 +6582,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "クレイジーキングの台車から交代の見張りへ缶詰が届く。門は閉じたまま。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 948
+        "sourceLine": 954
       },
       {
         "kind": "montage",
@@ -6543,7 +6591,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "企業標章を覆い、救出した技術者が医療設備を再起動する。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 949
+        "sourceLine": 955
       },
       {
         "kind": "montage",
@@ -6552,7 +6600,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "赤いレンズと焼けた認証カードが、それぞれ証拠袋へ入る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 950
+        "sourceLine": 956
       },
       {
         "kind": "montage",
@@ -6561,7 +6609,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "手を洗い、妻から娘を受け取る。腰の瓶の代わりにおむつを持つ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 951
+        "sourceLine": 957
       },
       {
         "kind": "montage",
@@ -6570,7 +6618,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "色の違う新しい装甲板が付く。車内の地図には街の外へ一本の線。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 952
+        "sourceLine": 958
       },
       {
         "kind": "montage",
@@ -6579,7 +6627,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "撤去した標識の跡に、見張りの当番表が立つ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 953
+        "sourceLine": 959
       },
       {
         "kind": "montage",
@@ -6588,12 +6636,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}とクマバーソンが厨房のガス栓を開く。青い火が点く。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 954
+        "sourceLine": 960
       }
     ],
     "source": {
-      "startLine": 941,
-      "endLine": 955
+      "startLine": 947,
+      "endLine": 961
     }
   },
   "v100:event:epilogue": {
@@ -6609,7 +6657,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "西新奪還から三十日。補強板は半分残っているが、くまやの戸は開き、厨房に油の音が戻った。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 958
+        "sourceLine": 964
       },
       {
         "kind": "action",
@@ -6617,7 +6665,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が暖簾をくぐる。パイセンが席の荷物を急いでどける。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 959
+        "sourceLine": 965
       },
       {
         "kind": "dialogue",
@@ -6625,7 +6673,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}さん、こっち空いてます",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 960
+        "sourceLine": 966
       },
       {
         "kind": "dialogue",
@@ -6633,7 +6681,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "そこは最初から空けとった",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 961
+        "sourceLine": 967
       },
       {
         "kind": "player-action",
@@ -6641,7 +6689,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が席に着く。マヨちゃんが足元を一周して伏せる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 962
+        "sourceLine": 968
       },
       {
         "kind": "action",
@@ -6649,7 +6697,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ザキミヤの妻が娘を寝かせる。ザキミヤが「静かに」と言い、一番大きな声になった。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 963
+        "sourceLine": 969
       },
       {
         "kind": "action",
@@ -6657,7 +6705,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "ババヤガが牛乳を持って入る。Mrs.チハは受け取り、冷蔵庫を指す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 964
+        "sourceLine": 970
       },
       {
         "kind": "dialogue",
@@ -6665,7 +6713,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "今度は忘れなかったね",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 965
+        "sourceLine": 971
       },
       {
         "kind": "dialogue",
@@ -6673,7 +6721,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "だいぶ待たせたな",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 966
+        "sourceLine": 972
       },
       {
         "kind": "dialogue",
@@ -6681,7 +6729,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "残りの話も、忘れないで",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
-        "sourceLine": 967
+        "sourceLine": 973
       },
       {
         "kind": "dialogue",
@@ -6689,7 +6737,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "忘れん",
         "portraitOwner": "unit-babayaga",
         "portraitKind": "major",
-        "sourceLine": 968
+        "sourceLine": 974
       },
       {
         "kind": "action",
@@ -6697,7 +6745,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "いくらちゃんの無線は静かだ。壁の地図には、西新の外へ伸びる未確認の道が一本。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 969
+        "sourceLine": 975
       },
       {
         "kind": "dialogue",
@@ -6705,7 +6753,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "{{PLAYER_NAME}}、何食う？",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 970
+        "sourceLine": 976
       },
       {
         "kind": "player-action",
@@ -6713,7 +6761,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公が唐揚げを指す。クマバーソンは頷き、油の温度を確かめる。",
         "portraitOwner": null,
         "portraitKind": "system",
-        "sourceLine": 971
+        "sourceLine": 977
       },
       {
         "kind": "dialogue",
@@ -6721,7 +6769,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "俺も一皿、追加で",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
-        "sourceLine": 972
+        "sourceLine": 978
       },
       {
         "kind": "dialogue",
@@ -6729,7 +6777,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "まず自分のを食え",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
-        "sourceLine": 973
+        "sourceLine": 979
       },
       {
         "kind": "action",
@@ -6737,7 +6785,7 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "主人公の前へ烏龍茶が置かれる。外に停めた装甲車両は、今夜は動かない。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
-        "sourceLine": 974
+        "sourceLine": 980
       },
       {
         "kind": "title",
@@ -6745,12 +6793,12 @@ export const V100_STORY_EVENTS = Object.freeze({
         "text": "西新世紀末物語",
         "portraitOwner": null,
         "portraitKind": "title",
-        "sourceLine": 975
+        "sourceLine": 981
       }
     ],
     "source": {
-      "startLine": 957,
-      "endLine": 978
+      "startLine": 963,
+      "endLine": 984
     }
   }
 });
