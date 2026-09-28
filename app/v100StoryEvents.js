@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "c5c887ddb0688381327429648bfb07f65f81001a4d7d744c1de88ce1ef1ab7bd";
+export const V100_STORY_SOURCE_SHA256 = "e7156b185270e474db7780801601f56aeaf1b8979bc0566b61da3d1a38ba4638";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -1018,7 +1018,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "TAKUYAの大刃が地面へ落ちる。開いた手は何かを渡す形のままだった。クマバーソンが手首の鎖をそっと外す。",
+        "text": "TAKUYAの大刃が地面へ落ちる。開いた手は何かを渡す形のままだった。クマバーソンが胸元の鎖の留め具をそっと外す。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 148
@@ -6098,7 +6098,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "主人公が装甲車両を避難バスの前へ横付けする。離れたゲート脇では、セガワが指揮車を降り、携帯発信器を掲げた。いくらちゃんが監視映像を車内の画面へ送る。",
+        "text": "主人公が装甲車両を防壁の切れ目へ寄せ、待機路への入口を塞ぐ。離れたゲート脇では、セガワが指揮車を降り、携帯発信器を掲げた。いくらちゃんが見えないバスの監視映像を車内の画面へ送る。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 881
@@ -6138,7 +6138,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "player-action",
         "speaker": "▶ PLAYER",
-        "text": "主人公がセガワを追わず、TAKUYA-Ωとバスの間へ立つ。",
+        "text": "主人公がセガワを追わず、TAKUYA-Ωと待機路への入口の間へ立つ。",
         "portraitOwner": null,
         "portraitKind": "system",
         "sourceLine": 886

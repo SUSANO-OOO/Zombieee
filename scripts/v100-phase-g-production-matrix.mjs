@@ -4063,7 +4063,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   // available to that loop through the production UI.
   const bossDeploymentLimit = bossKind
     ? Math.min(
-      ordinaryTacticsAfterProof ? 3 : Number.POSITIVE_INFINITY,
+      ordinaryTacticsAfterProof || bossPresentationMode === "local-developer-boss-wave" ? 3 : Number.POSITIVE_INFINITY,
       new Set((save.formationSlots ?? []).filter(Boolean)).size,
     )
     : 0;
@@ -4398,16 +4398,27 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     if (!completedImpactProofEnabled) {
       if (bossKind && bossPresentationMode === "local-developer-boss-wave") {
-        invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
-          && proofActorAttackObserved && proofUnitAttackObserved && vehicleActionObserved,
-        "ordinary Stage 3 combat and vehicle proof must be sealed before developer boss-wave handoff");
+        if (tacticalStageNumber === 30) {
+          // The core visual matrix proves the real Omega actor and attack, not
+          // a passive QA player's ability to clear five late-game prewaves.
+          // Keep normal combat activity and real card deployment as the entry
+          // receipt, then use the localhost-only developer bridge for the
+          // authored boss wave. A separate normal-play run owns difficulty.
+          invariant(!proofActor && !proofUnitKind && !requireVehicleAction,
+            "Stage 30 visual handoff cannot replace a required combat proof");
+          await waitForCombatActivity(page);
+        } else {
+          invariant(sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
+            && proofActorAttackObserved && proofUnitAttackObserved && vehicleActionObserved,
+            "ordinary Stage 3 combat and vehicle proof must be sealed before developer boss-wave handoff");
+        }
         const liveHumanCount = await page.evaluate(() => (
           window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters ?? []
         ).filter((fighter) => fighter.side === "human" && fighter.hp > 0).length);
-        invariant(liveHumanCount > 0, "Stage 3 requires a naturally surviving human before boss-wave handoff");
+        invariant(liveHumanCount > 0, "boss-wave handoff requires a naturally surviving human");
         await prepareDeveloperBossWave();
         invariant(developerBossWaveEvidence?.fallbackHumanSpawned === false,
-          "Stage 3 boss-wave handoff cannot add a synthetic fallback human");
+          "boss-wave handoff cannot add a synthetic fallback human");
       }
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
       if (!bossKind || !waitForBossAttack) {
@@ -4593,7 +4604,7 @@ for (const viewport of requiredViewports) {
     };
   });
   await captureState("chromium", viewport, "battle-normal", async (page) => ({ ...(await battlePage(page, fullSave())), variant: "core-battle-normal" }));
-  await captureState("chromium", viewport, "battle-boss", async (page) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega" })), variant: "core-battle-boss" }));
+  await captureState("chromium", viewport, "battle-boss", async (page) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega", bossPresentationMode: "local-developer-boss-wave" })), variant: "core-battle-boss" }));
   await captureState("chromium", viewport, "result-win", async (page) => { await openRoute(page, resultSave(true)); await page.locator('[data-v100-surface="result-win"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });
