@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "e7156b185270e474db7780801601f56aeaf1b8979bc0566b61da3d1a38ba4638";
+export const V100_STORY_SOURCE_SHA256 = "ed15d68b1c355318cd0652d89dd5592e7671c8c919b8ba901288d45634eb4f7f";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -240,7 +240,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "はい。立てる人、俺の声を追って！",
+        "text": "立てる人から裏へ！　俺が最後に出ます！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 36,
@@ -258,10 +258,19 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "ババヤガの消火器が白く噴く。クマバーソンがフライパンで男を押さえ、最後の客が勝手口へ抜けた。",
+        "text": "ババヤガの消火器が白く噴く。クマバーソンがフライパンで男を押さえ、最後の客とともに退く。パイセンが外から勝手口を閉めた。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 38,
+        "sceneTag": "crisis"
+      },
+      {
+        "kind": "action",
+        "speaker": null,
+        "text": "クマバーソンが、消毒薬を取りに出たタクヤへ電話する。呼び出し音が三度鳴って切れた。",
+        "portraitOwner": null,
+        "portraitKind": "stage-direction",
+        "sourceLine": 39,
         "sceneTag": "crisis"
       },
       {
@@ -276,7 +285,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "あれは、戻って掛け直す。今日は人が先や",
+        "text": "暖簾はあとでよか。走れ！",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 42,
@@ -411,7 +420,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "帰る時は、乗せられるだけ乗せて帰る",
+        "text": "帰りは空席なしで帰る。それだけや",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 59,
@@ -505,7 +514,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "俺が上がります！　{{PLAYER_NAME}}さん、裏階段に車を寄せて！　降りてきた人、お願いっす！",
+        "text": "俺が上がります！　{{PLAYER_NAME}}さん、車を裏階段へ。降りてきた人、頼みます！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 74
@@ -565,7 +574,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "俺も運ぶものありますか",
+        "text": "まだ運べるもん、あります？",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 83
@@ -581,7 +590,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "いくらです。ライトを一回って言った人。見えたとき、みんなに『来た』って言っちゃいました",
+        "text": "いくらです。ライトが見えて、『来た』って叫びました。……間違ってなくてよかった",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 85
@@ -725,7 +734,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "こっちは出口を守る。戻ったら、車椅子を押す方に回れ",
+        "text": "こっちは出口を守る。安藤さんから離れるなよ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 105
@@ -785,7 +794,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "いくらちゃん、ラジオ受け取って！　俺、安藤さんを乗せる。乗ったら、すぐ出してください！",
+        "text": "いくらちゃん、ラジオ！　安藤さんは俺が運ぶ。運転手さん、乗ったら出して！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 114
@@ -934,7 +943,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "発生の日、あの人は薬を運んどった。俺が頼んだんや",
+        "text": "発生の日、薬を頼んだのは俺や。戻るまで待てんかった",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 136
@@ -942,7 +951,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "だったら、俺も覚えてます。受け取った方は、忘れんすよ",
+        "text": "裏口を閉めたの、俺っす。……今、目ぇ逸らしたら、また同じになる",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 137
@@ -958,7 +967,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "……分かってる。分かってるっす",
+        "text": "見えてる。右から来る！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 139
@@ -982,7 +991,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "あの人が来る前に、道を空ける。……怖いけど、足は動くっす",
+        "text": "先に人を通せ！　タクヤさんが出てきたら、俺が知らせる！",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 142
@@ -1026,7 +1035,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "すまん。運ぶもん、まだあるって言うてしまいそうや",
+        "text": "タクヤ、もう運ばんでええ。……遅うなって、すまん",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 149
@@ -1241,7 +1250,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "モンキー",
-        "text": "モンキー。非常電話を鳴らし続けたのは俺。シャッターも直せる。ホームを開けたら、こっちも見つかるけど",
+        "text": "電話、聞こえたろ。回線をつないだのは俺。シャッターも開けられる。ただし、音でこっちも見つかる",
         "portraitOwner": "unit-monkey",
         "portraitKind": "major",
         "sourceLine": 181
@@ -1509,7 +1518,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "いくらちゃん",
-        "text": "配送先は大学病院の地下搬入口。線路の先にあるんです。電車じゃなくて、保守扉の向こう",
+        "text": "配送先は大学病院の地下搬入口。線路沿いの保守扉から抜けられます",
         "portraitOwner": "guide-ikura",
         "portraitKind": "major",
         "sourceLine": 218

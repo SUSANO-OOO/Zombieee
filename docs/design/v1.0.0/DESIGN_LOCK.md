@@ -10,7 +10,7 @@
 - Reconstructed story SHA-256: `c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4`
 - Product target: `Version 1.0.0`
 
-2026-09-26 Producer実機試遊で更新された現行表示脚本は`docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md`（SHA-256 `aee233b8c47bc9991bea439a5a0a2eee1b910155c59c7a87d48740d8a837c625`）。上記の復元脚本SHAは旧全文と画像制作基準の来歴として維持する。戦闘密度、経済、通常ドラム缶、タイトルの権利・クレジット、最高画質の新規初期値、開発者モードによる全編確認の詳細はProducer Decisionsの2026-09-26追記を優先する。
+2026-09-26のProducer実機試遊を受けた現行表示脚本は`docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md`（2026-09-29序盤接続・台詞改稿後のSHA-256 `ed15d68b1c355318cd0652d89dd5592e7671c8c919b8ba901288d45634eb4f7f`）。上記の復元脚本SHAは旧全文と画像制作基準の来歴として維持する。戦闘密度、経済、通常ドラム缶、タイトルの権利・クレジット、最高画質の新規初期値、開発者モードによる全編確認の詳細はProducer Decisionsの2026-09-26追記を優先する。
 
 Current execution contract: Section 138, with latest active delta 138.10 and the live Issue #172 cursor. Earlier revision-specific execution sections are historical, not alternative resume paths.
 
