@@ -2244,7 +2244,7 @@ const stateContracts = Object.freeze({
   "dialogue-right": { phases: [dialogueEvidenceTargets.right.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
   "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
   "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
-  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
+  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-formation-focus", ".v100-formation-footer .v100-primary"] },
   personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
   "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-management-list", ".v100-support-management-card", ".v100-support-art img"] },
   "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -4491,7 +4491,15 @@ for (const viewport of requiredViewports) {
     await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
     await page.locator(".v100-boss-callout").waitFor({ state: "visible", timeout });
   });
-  await captureState("chromium", viewport, "formation", async (page) => formationPage(page, fullSave()));
+  await captureState("chromium", viewport, "formation", async (page) => {
+    await formationPage(page, fullSave());
+    if (viewport.safeArea) {
+      await click(page, page.locator(".v100-slot").first(), "formation position picker");
+      await page.locator(".v100-formation-panel.picker-open .v100-roster-card").first().waitFor({ state: "visible", timeout });
+      await click(page, page.locator(".v100-picker-close"), "formation picker return");
+      await page.locator(".v100-formation-focus").waitFor({ state: "visible", timeout });
+    }
+  });
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());
     await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "隊員", exact: true }), "personnel formation");

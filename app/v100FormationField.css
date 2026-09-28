@@ -218,7 +218,7 @@
   .v100-formation-panel .v100-formation-focus > .v100-kicker { padding-top: 11px; font-size: 11px; }
   .v100-formation-panel .v100-formation-focus > h3 { margin-top: 7px; font-size: 18px; }
   .v100-formation-panel .v100-formation-focus > strong { font-size: 12px; }
-  .v100-formation-panel .v100-formation-focus > button { left: 48%; bottom: 9px; min-height: 35px; font-size: 12px; }
+  .v100-formation-panel .v100-formation-focus > button { left: 48%; margin-left: 0; bottom: 9px; min-height: 35px; font-size: 12px; }
   .v100-formation-panel .v100-slot-rail { grid-column: 2; grid-row: 1; padding: 20px 6px 6px; }
   .v100-formation-panel .v100-slot-rail::before { content: "出撃登録 / 枠を押して隊員を変更"; font-size: 11px; top: 4px; }
   .v100-formation-panel .v100-slot-track { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 5px; }
