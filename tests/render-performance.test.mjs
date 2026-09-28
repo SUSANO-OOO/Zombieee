@@ -22,8 +22,11 @@ test("graphics profiles bound mobile DPR, render cadence, and visual-only densit
   );
   assert.deepEqual(
     [high.resolvedMode, high.dprCap, high.renderHz, high.simulationHz],
-    ["high", 2, 60, RUNTIME_SIMULATION_HZ],
+    ["high", 2, 45, RUNTIME_SIMULATION_HZ],
   );
+  assert.equal(high.effectDensity, 1);
+  assert.equal(high.smoothingQuality, "high");
+  assert.equal(resolveGraphicsProfile(GRAPHICS_QUALITY_MODES.HIGH, { width: 1280, height: 720 }).renderHz, 60);
   assert.deepEqual(
     [powerSave.resolvedMode, powerSave.dprCap, powerSave.renderHz, powerSave.simulationHz],
     ["power-save", 1, 30, RUNTIME_SIMULATION_HZ],

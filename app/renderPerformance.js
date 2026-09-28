@@ -72,6 +72,10 @@ export function resolveGraphicsProfile(requestedMode, hints = {}) {
     requestedMode: mode,
     simulationHz: RUNTIME_SIMULATION_HZ,
     ...QUALITY_PROFILES[profileKey],
+    // A short phone viewport retains High's full DPR, smoothing and effects.
+    // Its 60 Hz simulation is unchanged; present at a stable 45 Hz so WebKit
+    // has time to composite each full-detail canvas frame before the next.
+    renderHz: profileKey === "high" && mobileLandscape ? 45 : QUALITY_PROFILES[profileKey].renderHz,
   });
 }
 

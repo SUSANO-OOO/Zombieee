@@ -273,7 +273,7 @@ async function selectGraphicsQuality(page, quality, label) {
         ? "balanced"
         : "high";
   const expectedProfile = {
-    high: { renderHz: 60, dprCap: 2 },
+    high: { renderHz: Math.min(profile.width, profile.height) <= 500 ? 45 : 60, dprCap: 2 },
     balanced: { renderHz: 45, dprCap: 1.5 },
     "power-save": { renderHz: 30, dprCap: 1 },
   }[expectedResolved];
