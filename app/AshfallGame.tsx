@@ -4395,7 +4395,9 @@ function drawSpriteFighter(
   ctx.imageSmoothingEnabled = true;
   if (f.flash > 0) {
     ctx.shadowColor = "#fff1ad";
-    ctx.shadowBlur = 16;
+    // The full-sprite bloom dominated narrow WebKit battle frames when several
+    // units were hit together. Keep the warm impact rim without a wide blur.
+    ctx.shadowBlur = 6;
   } else if (compactScale > 1) {
     ctx.shadowColor = "rgba(0,0,0,.9)";
     ctx.shadowBlur = 4;

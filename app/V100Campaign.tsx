@@ -84,6 +84,7 @@ import { V100EquipmentView } from "./V100EquipmentView";
 import { V100ModesView } from "./V100ModesView";
 import "./v100Campaign.css";
 import "./v100Preparation.css";
+import "./v100FormationField.css";
 import "./v100BattlePresentation.css";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
