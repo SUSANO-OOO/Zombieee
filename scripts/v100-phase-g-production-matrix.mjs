@@ -58,7 +58,7 @@ const extraBattleContracts = Object.freeze([
   // The knife's late arrival needs living melee targets. A distant shooter
   // can kill the first knife before its authored close-range action begins.
   // Select two frontline cards and a healer through ordinary deployment.
-  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-knife", formationUnitIds: ["unit-tatara", "unit-gantetsu", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["guardian", "brawler", "medic"] },
+  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-knife", unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-tatara", "unit-gantetsu", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["guardian", "brawler", "medic"] },
   // The late-stage presentation proof uses trained player units so the real
   // Panther action and a subsequent completed impact remain observable. Earned
   // CAPS/difficulty acceptance is covered by separate normal-play routes.
