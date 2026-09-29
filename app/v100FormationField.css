@@ -685,25 +685,27 @@
     opacity: .2;
   }
   .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
-    content: "侵入口  ◀  防衛線";
-    top: 9px;
-    right: 12px;
-    padding: 3px 6px;
-    background: #210f0bcc;
-    color: #ffc398;
+    content: none;
   }
   .v100-field-map-title {
     top: 10px;
     left: 12px;
-    max-width: calc(100% - 220px);
-    gap: 9px;
+    display: grid;
+    grid-template-columns: max-content max-content;
+    grid-template-rows: 22px 15px;
+    column-gap: 9px;
+    row-gap: 0;
+    max-width: 70%;
     color: #ffe0a4;
-    font-size: 21px;
     white-space: nowrap;
   }
-  .v100-field-map-title small { font-size: 11px; }
+  .v100-field-map-title strong { grid-column: 1; grid-row: 1; font: 900 21px/1 Georgia, serif; }
+  .v100-field-map-title small { grid-column: 1 / -1; grid-row: 2; max-width: 100%; font-size: 12px; }
   .v100-field-map-title em {
+    grid-column: 2;
+    grid-row: 1;
     flex: none;
+    justify-self: start;
     padding: 3px 5px;
     border: 1px solid #c3a675;
     color: #ffe2ab;
@@ -711,7 +713,7 @@
     font: 800 10px/1 sans-serif;
   }
   .v100-field-map-intel {
-    top: 46px;
+    top: 53px;
     left: 12px;
     max-width: 36%;
     padding: 8px 10px;
@@ -773,10 +775,11 @@
   .v100-formation-panel:not(.picker-open) .v100-slot-meta em { font-size: 9px; }
 }
 @media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
-  .v100-field-map-title { top: 6px; font-size: 16px; max-width: calc(100% - 180px); }
-  .v100-field-map-title small { font-size: 9px; }
+  .v100-field-map-title { top: 6px; grid-template-rows: 18px 14px; }
+  .v100-field-map-title strong { font-size: 16px; }
+  .v100-field-map-title small { font-size: 11px; }
   .v100-field-map-title em { font-size: 9px; }
-  .v100-field-map-intel { top: 32px; padding: 4px 7px; }
+  .v100-field-map-intel { top: 42px; padding: 4px 7px; }
   .v100-field-map-intel strong { font-size: 12px; }
   .v100-field-map-intel span:last-child { display: block; font-size: 9px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-track { bottom: 5px; height: 49px; gap: 3px; }
