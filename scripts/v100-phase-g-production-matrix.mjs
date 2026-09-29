@@ -59,7 +59,10 @@ const extraBattleContracts = Object.freeze([
   // can kill the first knife before its authored close-range action begins.
   // Select two frontline cards and a healer through ordinary deployment.
   { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-knife", formationUnitIds: ["unit-tatara", "unit-gantetsu", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["guardian", "brawler", "medic"] },
-  { variant: "stage21-panther-smg", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["brute", "babayaga", "ranger"] },
+  // The late-stage presentation proof uses trained player units so the real
+  // Panther action and a subsequent completed impact remain observable. Earned
+  // CAPS/difficulty acceptance is covered by separate normal-play routes.
+  { variant: "stage21-panther-smg", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", unitLevels: MAXED_QA_UNIT_LEVELS, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"], openingKinds: ["brute", "babayaga", "ranger"] },
   // Keep the three deployed slots combat-active on the compact WebKit proof:
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
