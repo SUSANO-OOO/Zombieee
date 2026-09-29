@@ -555,3 +555,107 @@
   .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 18px; }
   .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 11px; }
 }
+
+/* The mission route and the seven call-in slots have separate reading areas.
+ * The route is context for the sortie; slot numbers are call-in order. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-formation-panel:not(.picker-open) .v100-formation-board {
+    display: block;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-formation-focus {
+    display: none;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+      linear-gradient(90deg, #07100dc9 0%, #14211d9a 39%, #08120ff4 40%, #08120fe8 100%),
+      var(--v100-stage-art) center / cover;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0 0 0 40%;
+    border-left: 2px solid #caa16a;
+    background: linear-gradient(95deg, #0c1b18a8, #101814a1);
+    pointer-events: none;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
+    content: "敵侵入  ◀";
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 12px;
+    font-size: 11px;
+  }
+  .v100-field-map-title {
+    top: 10px;
+    left: 12px;
+    max-width: calc(40% - 18px);
+    font-size: 16px;
+  }
+  .v100-field-map-title small { font-size: 11px; }
+  .v100-field-map-intel {
+    top: 47px;
+    left: 12px;
+    max-width: calc(40% - 20px);
+    gap: 5px;
+  }
+  .v100-field-map-intel span:first-child { font-size: 10px; }
+  .v100-field-map-intel strong {
+    overflow: visible;
+    font-size: 17px;
+    line-height: 1.25;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .v100-field-map-intel span:last-child {
+    overflow: visible;
+    font-size: 11px;
+    line-height: 1.2;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .v100-field-map-drawing {
+    top: 45%;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    height: 55%;
+    opacity: .62;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track {
+    inset: 34px 7px 7px calc(40% + 8px);
+    width: auto;
+    height: auto;
+    gap: 5px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
+    content: "出撃登録 01–07  /  枠を押して隊員を変更";
+    top: -28px;
+    bottom: auto;
+    left: -3px;
+    width: calc(100% + 6px);
+    padding: 4px 4px 5px;
+    background: transparent;
+    font-size: 11px;
+    letter-spacing: .02em;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait {
+    width: 41px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta {
+    width: calc(100% - 43px);
+  }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-field-map-title { top: 6px; font-size: 14px; }
+  .v100-field-map-intel { top: 32px; gap: 2px; }
+  .v100-field-map-intel strong { font-size: 14px; }
+  .v100-field-map-intel span:last-child { display: block; font-size: 10px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track { top: 26px; bottom: 4px; gap: 3px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before { top: -22px; font-size: 9px; }
+}

@@ -1062,7 +1062,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
     <div className="v100-formation-brief"><strong>今回の部隊</strong><span>枠を選び、隊員を配置</span><button type="button" onClick={onLoadout}>出撃装備</button></div>
     <div className="v100-formation-board">
     <div className="v100-slot-rail" aria-label="7枠の編成">
-      <span className="v100-field-map-title">作戦図 <small>{stage ? `S${String(stage.number).padStart(2, "0")} / ${missionLabelFor(stage)}` : "出撃準備"}</small></span>
+      <span className="v100-field-map-title">侵入方向の概略図 <small>{stage ? `S${String(stage.number).padStart(2, "0")} / ${missionLabelFor(stage)}` : "出撃準備"}</small></span>
       <div className="v100-field-map-intel"><span>作戦区域 / 作戦目標</span><strong>{objectiveLabelFor(stage)}</strong><span>脅威：{enemyPackLabelFor(stage?.enemyPack, stage?.number)}</span></div>
       <svg className="v100-field-map-drawing" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
         <path className="v100-field-map-blocks" d="M0 45H240V0 M0 132H126V64H354V0 M248 170V90H490V0 M383 170V145H610V0 M596 170V84H790V0 M762 170V116H1000 M855 0V54H1000" />
