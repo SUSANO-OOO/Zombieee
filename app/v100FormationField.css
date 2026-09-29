@@ -1,5 +1,5 @@
-/* Phone formation is a field plan: one featured operator, seven roster slots,
- * and a separate hand of recruit cards. The board itself never scrolls. */
+/* Phone formation keeps the field plan and seven call-in slots on one screen.
+ * The roster picker is a separate view so names and portraits stay legible. */
 @media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
   .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
     border: 0;
@@ -366,8 +366,7 @@
  * Slot order is registration order, never an implied battle position. */
 .v100-field-map-title,
 .v100-field-map-drawing,
-.v100-field-map-intel,
-.v100-field-map-signals { display: none; }
+.v100-field-map-intel { display: none; }
 @media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
   .v100-formation-panel:not(.picker-open) .v100-slot-rail {
     position: relative;
@@ -633,55 +632,6 @@
     height: 100%;
     opacity: .7;
   }
-  .v100-field-map-signals {
-    position: absolute;
-    z-index: 3;
-    inset: auto 7px 81px;
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 4px;
-    height: 44px;
-    border-top: 1px solid #8bb79b;
-    background: linear-gradient(180deg, #10271fdc, #091914ef);
-  }
-  .v100-field-map-signals::before {
-    content: "味方呼出枠 / 戦場位置ではない";
-    position: absolute;
-    right: 3px;
-    bottom: calc(100% + 2px);
-    padding: 2px 5px;
-    background: #0a1916e8;
-    color: #b9e0bd;
-    font: 800 10px/1.1 sans-serif;
-    pointer-events: none;
-  }
-  .v100-field-map-signals button {
-    display: grid;
-    place-items: center;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-  .v100-field-map-signals button span {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid #8dbca0;
-    border-radius: 50%;
-    background: #173429;
-    color: #d3e7cc;
-    box-shadow: 0 1px 6px #000c;
-    font: 800 9px/1 sans-serif;
-  }
-  .v100-field-map-signals button span::after { content: ""; position: absolute; top: 100%; left: 50%; height: 10px; border-left: 1px solid #8dbca099; }
-  .v100-field-map-signals button.filled span { border-color: #c3dcaa; background: #356d50; color: #fff1c9; }
-  .v100-field-map-signals button.selected span { border: 2px solid #ffe4a1; background: #b6672c; color: #fff; box-shadow: 0 0 0 2px #100e0b, 0 0 12px #ffbf6c; }
-  .v100-field-map-signals button:focus-visible { outline: 2px solid #ffe4a1; outline-offset: -2px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-track {
     inset: auto 7px 7px;
     display: grid;
@@ -715,13 +665,123 @@
   .v100-field-map-intel span:last-child { display: block; font-size: 9px; line-height: 1.1; }
   .v100-field-map-intel strong { font-size: 11px; line-height: 1.1; }
   .v100-formation-panel:not(.picker-open) .v100-slot-rail::after { top: 5px; font-size: 9px; }
-  .v100-field-map-signals { bottom: 61px; height: 44px; }
-  .v100-field-map-signals::before { font-size: 9px; }
-  .v100-field-map-signals button span { width: 19px; height: 19px; font-size: 8px; }
-  .v100-field-map-signals button span::after { height: 8px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-track { top: auto; bottom: 4px; height: 58px; gap: 3px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-track::before { top: -19px; font-size: 9px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 31px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 33px); }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong { font-size: 10px; }
+}
+
+/* Give the operation map the room previously taken by a duplicate number rail.
+ * The portraits remain call-in order; the route shows the battlefield, not spawn points. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-formation-panel:not(.picker-open) .v100-sortie-heading { display: none; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail {
+    background:
+      linear-gradient(90deg, #09120bc9 0%, #09190db2 40%, #10150f70 100%),
+      var(--v100-stage-art) center / cover;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::before {
+    opacity: .2;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
+    content: "侵入口  ◀  防衛線";
+    top: 9px;
+    right: 12px;
+    padding: 3px 6px;
+    background: #210f0bcc;
+    color: #ffc398;
+  }
+  .v100-field-map-title {
+    top: 10px;
+    left: 12px;
+    max-width: calc(100% - 220px);
+    gap: 9px;
+    color: #ffe0a4;
+    font-size: 21px;
+    white-space: nowrap;
+  }
+  .v100-field-map-title small { font-size: 11px; }
+  .v100-field-map-title em {
+    flex: none;
+    padding: 3px 5px;
+    border: 1px solid #c3a675;
+    color: #ffe2ab;
+    background: #1b291bbf;
+    font: 800 10px/1 sans-serif;
+  }
+  .v100-field-map-intel {
+    top: 46px;
+    left: 12px;
+    max-width: 36%;
+    padding: 8px 10px;
+    border-left: 4px solid #dfaa5f;
+    background: linear-gradient(90deg, #08120cf2, #08120cc4 80%, #08120c35);
+  }
+  .v100-field-map-intel strong { font-size: 16px; line-height: 1.17; }
+  .v100-field-map-intel span:last-child { font-size: 11px; }
+  .v100-field-map-drawing { opacity: .85; }
+  .v100-field-map-blocks { stroke: #c7d0a648; stroke-width: 5; }
+  .v100-field-map-perimeter { stroke: #a2e1b18c; stroke-width: 5; stroke-dasharray: 8 6; }
+  .v100-field-map-node { fill: #08110d; stroke-width: 5; }
+  .v100-field-map-node.ally { stroke: #b6e3ac; }
+  .v100-field-map-node.enemy { stroke: #ff8d67; }
+  .v100-field-map-route-shadow { stroke-width: 12; }
+  .v100-field-map-route { stroke-width: 5; stroke-dasharray: 18 9; }
+  .v100-field-map-arrow { stroke-width: 5; }
+  .v100-field-map-label {
+    paint-order: stroke;
+    stroke: #07100de6;
+    stroke-width: 5;
+    font: 800 15px/1 sans-serif;
+    letter-spacing: .06em;
+  }
+  .v100-field-map-label.ally { fill: #d3edbd; }
+  .v100-field-map-label.enemy { fill: #ffb48e; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track {
+    bottom: 7px;
+    height: 61px;
+    gap: 5px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
+    content: "呼出登録 01–07  /  戦場位置ではない";
+    top: -18px;
+    left: -3px;
+    bottom: auto;
+    display: block;
+    width: calc(100% + 6px);
+    padding: 3px 7px;
+    background: linear-gradient(90deg, #15291edb, #15291e45);
+    color: #d8eab9;
+    font-size: 9px;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel:not(.picker-open) .v100-slot {
+    border: 1px solid #b3a178;
+    border-left: 3px solid #d49b52;
+    border-radius: 1px 7px 1px 7px;
+    background: linear-gradient(145deg, #283c2aee, #0b180fef);
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 44px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 46px); }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong {
+    max-height: 2.2em;
+    font-size: 11px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta em { font-size: 9px; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-field-map-title { top: 6px; font-size: 16px; max-width: calc(100% - 180px); }
+  .v100-field-map-title small { font-size: 9px; }
+  .v100-field-map-title em { font-size: 9px; }
+  .v100-field-map-intel { top: 32px; padding: 4px 7px; }
+  .v100-field-map-intel strong { font-size: 12px; }
+  .v100-field-map-intel span:last-child { display: block; font-size: 9px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track { bottom: 5px; height: 49px; gap: 3px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before { top: -16px; padding: 2px 5px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 33px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 35px); }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta strong { font-size: 10px; }
 }
