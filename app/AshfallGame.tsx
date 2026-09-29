@@ -12545,7 +12545,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       ensureEnemyFacingProofAsset: async (kind: EnemyKind) => {
         const existing = spriteRefs.current[kind];
-        if (existing?.naturalWidth) {
+        if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {
           return { kind, path: spriteSheetPath(kind), width: existing.naturalWidth, height: existing.naturalHeight, reused: true };
         }
         const path = spriteSheetPath(kind);
@@ -12553,7 +12553,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         await loadImageWithTimeout({
           src: path,
           requireDecode: true,
+          decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+          decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
           onReady: (image: HTMLImageElement) => {
+            decodedBattleImagesRef.current.add(image);
             spriteRefs.current[kind] = image;
             loaded = image;
           },

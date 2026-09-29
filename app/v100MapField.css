@@ -55,6 +55,7 @@
     left: var(--node-x);
     top: var(--node-y);
     display: grid;
+    grid-template-columns: 1fr;
     place-items: center;
     width: 48px;
     height: 48px;

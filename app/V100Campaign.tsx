@@ -1001,6 +1001,17 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
     if (next) setChapterIndex(chapterIndexForStage(next.number));
     onSelect(stageId);
   };
+  const selectChapter = (index: number) => {
+    const nextChapter = V100_CHAPTERS[index];
+    if (!nextChapter) return;
+    setChapterIndex(index);
+    if (stage && stage.number >= nextChapter.start && stage.number <= nextChapter.end) return;
+    const stages = V100_STAGES.filter((entry) => entry.number >= nextChapter.start && entry.number <= nextChapter.end);
+    const nextStage = stages.find((entry) => save.availableStageIds.includes(entry.id) && !save.completedStageIds.includes(entry.id))
+      ?? stages.find((entry) => save.availableStageIds.includes(entry.id))
+      ?? stages[0];
+    if (nextStage) onSelect(nextStage.id);
+  };
   const routePoints = chapterStages.map((entry, index) => {
     const [x, y] = mapNodePosition(index, chapterStages.length);
     return `${x},${y}`;
@@ -1010,7 +1021,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
       <div className="v100-map-hero" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? PRODUCTION_VISUALS.command})` }}>
         <div className="v100-map-hero-copy"><span className="v100-kicker">作戦地図 / {save.postGameAvailable ? "全作戦解放" : `次の目的地 ${stageDisplayNameFor(nextStage)}`}</span><h2>{stageDisplayNameFor(stage)}</h2><p>{objectiveLabelFor(stage)} / 作戦 {stage ? `S${String(stage.number).padStart(2, "0")}` : "準備中"}</p><div className="v100-map-hero-meta"><span>{stage?.missionType === "boss" ? "脅威指定" : "出撃準備"}</span><strong>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "前作戦クリアで解放"}</strong><span>{stage ? `S${String(stage.number).padStart(2, "0")}` : "—"}</span></div></div>
       </div>
-      <nav className="v100-chapter-tabs" aria-label="作戦区域を選ぶ">{V100_CHAPTERS.map((entry, index) => <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => setChapterIndex(index)} aria-pressed={index === chapterIndex}><strong>{entry.label}</strong><small>S{entry.range}</small></button>)}</nav>
+      <nav className="v100-chapter-tabs" aria-label="作戦区域を選ぶ">{V100_CHAPTERS.map((entry, index) => <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex}><strong>{entry.label}</strong><small>S{entry.range}</small></button>)}</nav>
       <div className="v100-route-label" aria-label="作戦経路"><span>西新救助線</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>封鎖区域</span></div>
       <div className="v100-map-grid">
         <div className="v100-map-canvas-shell">
