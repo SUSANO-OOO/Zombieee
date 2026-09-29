@@ -53,17 +53,11 @@ function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | 
   document.documentElement.dataset.pwaManifestState = state;
 }
 
-/**
- * The manifest is metadata only and boot marks the game usable before this
- * lookup starts. Do not race it against a synthetic deadline: a slow hosted
- * WebKit response can turn the losing promise into a browser-level cancelled
- * request even though the production route mounted correctly. A genuinely
- * unavailable manifest is handled by the existing catch path without blocking
- * the title, map, or battle surfaces.
- */
-async function fetchPublishedManifestBounded(baseUrl: string) {
-  return fetchPublishedManifest({ baseUrl });
-}
+// Release metadata may be slow, but the request itself must not be aborted:
+// WebKit can report that as a failed production asset request. A separate UI
+// watchdog below releases a committed offline generation while the fetch keeps
+// running and can still apply a later successful update check.
+const PUBLISHED_MANIFEST_GATE_MS = 10_000;
 
 function readSafetyFromDocument() {
   if (typeof document === "undefined") return {};
@@ -198,6 +192,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const finalizeSessionRef = useRef<((final: { state?: string } | null | undefined) => Promise<unknown>) | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const commitRecoveryRef = useRef<Promise<unknown> | null>(null);
+  const manifestLookupRef = useRef(0);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
@@ -219,22 +214,34 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
    * panel with no way forward.
    */
   const loadPublishedManifest = useCallback(async () => {
+    const lookup = ++manifestLookupRef.current;
     setError(null);
+    setManifestUnreachable(false);
     setPublishedManifestState("loading");
+    const watchdog = window.setTimeout(() => {
+      if (manifestLookupRef.current !== lookup) return;
+      // Only local committed content can be playable without published
+      // metadata. The ordinary phase calculation still blocks a first install
+      // or an incomplete pack; a late response can update this state later.
+      setManifestUnreachable(true);
+      setPublishedManifestState("unreachable");
+      setPublishedChecked(true);
+    }, PUBLISHED_MANIFEST_GATE_MS);
     try {
-      // The shell is already usable while this metadata round trip runs; the
-      // fetch itself is never artificially aborted.
-      const published = await fetchPublishedManifestBounded(baseUrl);
+      const published = await fetchPublishedManifest({ baseUrl });
+      if (manifestLookupRef.current !== lookup) return false;
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
       setPublishedManifestState("ready");
       return true;
     } catch {
+      if (manifestLookupRef.current !== lookup) return false;
       setManifestUnreachable(true);
       setPublishedManifestState("unreachable");
       return false;
     } finally {
-      setPublishedChecked(true);
+      window.clearTimeout(watchdog);
+      if (manifestLookupRef.current === lookup) setPublishedChecked(true);
     }
   }, [baseUrl]);
 
@@ -284,10 +291,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setStorage(await import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator)));
 
       // Boot is complete once the local facts are known. The published manifest
-      // is a network round trip, and waiting for it here would hold an installed
-      // app's title screen hostage to the connection for as long as the fetch
-      // takes - the exact opposite of what an offline-capable app should do. It
-      // arrives on its own and fills in the size line when it does.
+      // is a network round trip. A standalone launch briefly waits for it so a
+      // fully cached candidate can finish commit recovery, then the watchdog
+      // releases the last committed pack if the request never settles.
       if (!cancelled) setBooted(true);
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
@@ -295,7 +301,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     }).finally(() => {
       if (!cancelled) setBooted(true);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; manifestLookupRef.current += 1; };
   }, [baseUrl, loadPublishedManifest]);
 
   // How long the counts have stood still. A stalled transfer produces no
