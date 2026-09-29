@@ -807,10 +807,12 @@ function placementReasonLabel(reason: string) {
   return shortReasons[normalized] ?? reason.replace(/です$/, "");
 }
 
-function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y: number, valid: boolean, reason: string): PlacementIndicator {
+function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y: number, valid: boolean, reason: string, v100SupportId?: string | null): PlacementIndicator {
   const kind = action?.startsWith("supply:") ? action.slice("supply:".length) as SupplyKind : null;
+  const footprintOnly = kind === "drum" && v100SupportId === "support-explosive-drum";
   const radius = kind === "pod" ? supplyDefs.pod.landingRadius ?? 92
-    : kind === "drum" ? supplyDefs.drum.blastRadius ?? 112
+    : footprintOnly ? 32
+      : kind === "drum" ? supplyDefs.drum.blastRadius ?? 112
       : kind === "medical" ? supplyDefs.medical.healRadius ?? 104
         : AIRSTRIKE_DEF.radius;
   return {
@@ -820,7 +822,8 @@ function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y:
     valid,
     reason,
     radius,
-    ...(kind === "drum" ? { innerRadius: supplyDefs.drum.burnRadius ?? 88 } : {}),
+    ...(kind === "drum" && !footprintOnly ? { innerRadius: supplyDefs.drum.burnRadius ?? 88 } : {}),
+    ...(footprintOnly ? { footprintOnly: true } : {}),
     action,
   };
 }
@@ -1226,7 +1229,7 @@ type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {
 type CrawlerRuntime = ReturnType<typeof createCrawlerAbilityRuntime>;
 type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
-type PlacementIndicator = { lane: Lane; x: number; y: number; valid: boolean; reason: string; radius: number; innerRadius?: number; action: SelectedAction };
+type PlacementIndicator = { lane: Lane; x: number; y: number; valid: boolean; reason: string; radius: number; innerRadius?: number; footprintOnly?: boolean; action: SelectedAction };
 
 type RoleMetrics = {
   naoHealing: number;
@@ -6677,13 +6680,19 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
   ctx.strokeStyle = indicator.valid ? "rgba(113,216,170,.7)" : "rgba(239,100,72,.76)";
   ctx.fillStyle = indicator.valid ? "rgba(74,180,135,.06)" : "rgba(221,73,52,.075)";
   ctx.lineWidth = 1.4; ctx.setLineDash([5, 5]);
-  ctx.beginPath(); ctx.ellipse(0, 4, radius, radius * .34, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  if (indicator.innerRadius && indicator.innerRadius < radius) {
+  if (indicator.footprintOnly) {
+    ctx.fillRect(-30, -62, 60, 68); ctx.strokeRect(-30, -62, 60, 68);
+  } else {
+    ctx.beginPath(); ctx.ellipse(0, 4, radius, radius * .34, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  if (!indicator.footprintOnly && indicator.innerRadius && indicator.innerRadius < radius) {
     ctx.globalAlpha = .38;
     ctx.beginPath(); ctx.ellipse(0, 4, indicator.innerRadius, indicator.innerRadius * .34, 0, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.setLineDash([]); ctx.globalAlpha = .62;
-  if (indicator.action?.startsWith("supply:")) {
+  if (indicator.footprintOnly) {
+    ctx.beginPath(); ctx.moveTo(-28, -45); ctx.lineTo(28, -45); ctx.moveTo(-28, -12); ctx.lineTo(28, -12); ctx.stroke();
+  } else if (indicator.action?.startsWith("supply:")) {
     ctx.strokeRect(-15, -24, 30, 24);
     ctx.beginPath(); ctx.moveTo(-7, -12); ctx.lineTo(7, -12); ctx.moveTo(0, -19); ctx.lineTo(0, -5); ctx.stroke();
   } else {
@@ -6691,8 +6700,9 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
   }
   ctx.restore();
 
-  const label = placementReasonLabel(indicator.reason);
-  const labelY = indicator.y - Math.min(52, radius * .34 + 16);
+  const label = indicator.footprintOnly && indicator.valid && indicator.reason === "配置できます"
+    ? "遮蔽物を配置" : placementReasonLabel(indicator.reason);
+  const labelY = indicator.y - (indicator.footprintOnly ? 74 : Math.min(52, radius * .34 + 16));
   ctx.save();
   ctx.font = "900 10px monospace";
   const labelWidth = Math.min(138, Math.ceil(ctx.measureText(label).width) + 14);
@@ -15269,7 +15279,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const target = placement.position ?? placement.requested;
     const lane = placement.legacyLane as Lane | null;
     if (!placement.ok || lane === null) {
-      g.placementIndicator = placementIndicatorFor(`supply:${kind}`, activeLaneForY(target.y), target.x, target.y, false, placement.reason);
+      g.placementIndicator = placementIndicatorFor(`supply:${kind}`, activeLaneForY(target.y), target.x, target.y, false, placement.reason, g.v100SupportId);
       g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playUiOperationCue("reject", `supply:${kind}:${placement.reason}`);
       return false;
     }
@@ -15282,7 +15292,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZones),
     });
     const placementReason = result.ok && placement.adjusted ? placement.reason : result.reason;
-    g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, target.x, target.y, result.ok, placementReason);
+    g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, target.x, target.y, result.ok, placementReason, g.v100SupportId);
     if (!result.ok) {
       g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playUiOperationCue("reject", `supply:${kind}:${result.reason}`);
       return false;
@@ -15320,7 +15330,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         });
       }
     }
-    emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
+    // The legacy drum recording explicitly calls this an explosive. Neither V1 drum may use it.
+    if (kind !== "drum" || g.v100SupportId === undefined) {
+      emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
+    }
     return true;
   }, [playBattleSemanticCue, playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
@@ -15496,7 +15509,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           lane: targetLane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,
         });
     const reason = check.ok && placement.adjusted ? placement.reason : check.reason;
-    g.placementIndicator = placementIndicatorFor(action, targetLane, target.x, target.y, check.ok, reason);
+    g.placementIndicator = placementIndicatorFor(action, targetLane, target.x, target.y, check.ok, reason, g.v100SupportId);
   }, [isBattleSaveBoundaryActive, pointerWorldPosition]);
 
   const handleBattlefieldPointerDown = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {

@@ -19,8 +19,12 @@ if (audioPolicy === "windows-storage-only") assert.equal(process.platform, "win3
 const lane = process.env.V100_SUPPORT_LANE ?? "acceptance";
 assert.ok(["acceptance", "diagnostic"].includes(lane));
 if (lane === "diagnostic") assert.deepEqual(engines, ["chromium"], "Bounded diagnostic is Chromium only");
+const diagnosticEdge = process.env.V100_SUPPORT_DIAGNOSTIC_EDGE === "1";
+if (diagnosticEdge) assert.equal(lane, "diagnostic", "Installed Edge may only substitute for bounded Chromium diagnostics");
 const viewports = lane === "diagnostic" ? [{ width: 844, height: 390 }] : [{ width: 1280, height: 720 }, { width: 844, height: 390 }, { width: 844, height: 340 }];
-const selectedSupports = lane === "diagnostic" ? V100_SUPPORTS.filter(s => s.id === "support-explosive-drum") : [null, ...V100_SUPPORTS];
+const diagnosticSupportId = process.env.V100_SUPPORT_DIAGNOSTIC_ID ?? "support-explosive-drum";
+const selectedSupports = lane === "diagnostic" ? V100_SUPPORTS.filter(s => s.id === diagnosticSupportId) : [null, ...V100_SUPPORTS];
+if (lane === "diagnostic") assert.equal(selectedSupports.length, 1, "Diagnostic support ID must be recognized");
 const report = { lane, audioPolicy, hostPlatform: process.platform, nodeVersion: process.version, fullAcceptance: false, build: await productionBuildIdentity(), scope: "actual support/vehicle actions from isolated owned-support saves; no battle mutation bridge", cases: [], error: null };
 const sha = b => crypto.createHash("sha256").update(b).digest("hex");
 async function waitAudioIdle(page, record) {
@@ -58,7 +62,8 @@ async function read(page) {
       failures: window.__ASHFALL_AUDIO_QA__.getFailureEvents(), status: window.__ASHFALL_AUDIO_QA__.getAudioStatus() } : null;
     return { audio, observedAt: Date.now(), stageId: s.stageId, time: s.time, paused: s.paused, over: s.over, scrap: s.scrap, supportGauge: s.supportGauge,
       v100SupportId: s.v100SupportId, supportItemCooldowns: s.supportItemCooldowns, battlefieldObjects: s.battlefieldObjects,
-      areaEffects: s.areaEffects, airstrike: s.airstrike, crawlerAbility: s.crawlerAbility, placementIndicator: s.placementIndicator };
+      areaEffects: s.areaEffects, airstrike: s.airstrike, crawlerAbility: s.crawlerAbility,
+      battleBarks: s.battleBarks, placementIndicator: s.placementIndicator };
   });
 }
 async function readyCampaign(page) {
@@ -93,6 +98,12 @@ async function clickWorld(page, x, y) {
   assert.ok(position.x > 0 && position.x < box.width && position.y > 0 && position.y < box.height, "Actual world target must be visible");
   await canvas.click({ position });
 }
+async function hoverWorld(page, x, y) {
+  const canvas = page.locator("canvas.battlefield");
+  const position = await canvas.evaluate((c, p) => ({ x: Number(c.dataset.worldOffsetX) + p.x * Number(c.dataset.worldScale), y: Number(c.dataset.worldOffsetY) + p.y * Number(c.dataset.worldScale) }), { x, y });
+  const box = await canvas.boundingBox();
+  await page.mouse.move(box.x + position.x, box.y + position.y);
+}
 async function tapCoolingControl(page, button) {
   // A physical tap must occur now; locator.click would wait until aria-disabled clears.
   const point = await button.evaluate(element => {
@@ -118,7 +129,7 @@ async function pauseCheck(page, record) {
 
 try {
   for (const engine of engines) {
-    const browser = await ({ chromium, webkit }[engine]).launch();
+    const browser = await ({ chromium, webkit }[engine]).launch(diagnosticEdge ? { channel: "msedge" } : {});
     try {
       for (const viewport of viewports) for (const support of selectedSupports) {
         const id = support?.id ?? null;
@@ -167,8 +178,20 @@ try {
             record.rejected = await read(page); assert.equal(record.rejected.scrap, 120); assert.deepEqual(record.rejected.battlefieldObjects, []);
             await pauseCheck(page, record);
           } else {
-            assert.match(await button.getAttribute("aria-label"), new RegExp(`${support.displayName} ${support.battleCost}スクラップ`));
-            await button.click(); await clickWorld(page, 490, 350);
+            assert.match(await button.getAttribute("aria-label"), new RegExp(`${support.displayName} ${support.battleCost}物資`));
+            await button.click();
+            await hoverWorld(page, 490, 350);
+            record.preview = await read(page);
+            if (id === "support-explosive-drum") {
+              assert.equal(record.preview.placementIndicator?.footprintOnly, true);
+              assert.equal(record.preview.placementIndicator?.innerRadius, undefined);
+            } else if (id === "support-incendiary-drum") {
+              assert.equal(record.preview.placementIndicator?.footprintOnly, undefined);
+              assert.ok(record.preview.placementIndicator?.innerRadius > 0);
+            }
+            if (id === "support-explosive-drum" || id === "support-incendiary-drum") await shot(page, record, "placement-preview");
+            record.previewAfterShot = await read(page);
+            await clickWorld(page, 490, 350);
             await page.waitForFunction(id => window.__ASHFALL_BATTLE_QA__.getSnapshot().battlefieldObjects.some(o => o.v100SupportId === id), id);
             record.placed = await read(page);
             assert.equal(record.placed.scrap, 120 - support.battleCost);
@@ -176,16 +199,24 @@ try {
             const timer = record.placed.supportItemCooldowns[kind];
             assert.ok(timer > support.cooldownSeconds - 1 && timer <= support.cooldownSeconds);
             assert.equal(object.v100SupportId, id);
+            if (kind === "drum") {
+              assert.ok(record.placed.battleBarks.active.every(b => !/爆薬ドラム|起爆線/.test(b.text)));
+            }
             await tapCoolingControl(page, button); await clickWorld(page, 630, 350);
             record.duplicate = await read(page); assert.equal(record.duplicate.battlefieldObjects.length, 1); assert.equal(record.duplicate.scrap, record.placed.scrap);
             assert.ok(record.duplicate.time - record.placed.time < 2, "Duplicate input must occur before the cooldown expires");
             if (kind === "drum") {
               await page.waitForFunction(oid => window.__ASHFALL_BATTLE_QA__.getSnapshot().battlefieldObjects.some(o => o.id === oid && o.phase === "active"), object.id);
               await clickWorld(page, object.x, object.y);
-              await page.waitForFunction(oid => window.__ASHFALL_BATTLE_QA__.getSnapshot().battlefieldObjects.some(o => o.id === oid && o.phase === "destroying" && o.detonationTriggered === true), object.id);
-              record.detonated = await read(page);
-              const burns = record.detonated.areaEffects.filter(e => e.kind === "burn" && e.sourceSupplyId === object.id);
-              assert.equal(burns.length, id === "support-incendiary-drum" ? 1 : 0);
+              if (id === "support-incendiary-drum") {
+                await page.waitForFunction(oid => window.__ASHFALL_BATTLE_QA__.getSnapshot().battlefieldObjects.some(o => o.id === oid && o.detonationTriggered === true), object.id);
+                record.detonated = await read(page);
+                assert.equal(record.detonated.areaEffects.filter(e => e.kind === "burn" && e.sourceSupplyId === object.id).length, 1);
+              } else {
+                record.ordinaryDrum = await read(page);
+                assert.ok(record.ordinaryDrum.battlefieldObjects.some(o => o.id === object.id && o.phase === "active" && !o.detonationTriggered));
+                assert.equal(record.ordinaryDrum.areaEffects.filter(e => e.sourceSupplyId === object.id).length, 0);
+              }
             } else assert.ok(record.placed.areaEffects.some(e => e.kind === "healing" && e.sourceSupplyId === object.id));
             await shot(page, record, "support-effect");
             if (id === "support-healing") {
