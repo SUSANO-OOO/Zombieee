@@ -1405,6 +1405,7 @@ type Hud = {
   bossPhase?: { phase: number; label: string };
   bossTwins?: { part: string; hp: number; maxHp: number; arriving: boolean }[];
   bossWorldX: number | null;
+  bossTelegraphWarning: string | null;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
@@ -5977,6 +5978,19 @@ function stationMissionFinalCanvasAudit(
   };
 }
 
+const COMPACT_BOSS_TELEGRAPH_LABELS: Record<string, string> = {
+  "brood-radial": "増殖域 // 範囲外へ退避",
+  "lane-rectangle": "捕食突進 // 上下へ退避",
+  "shell-sweep": "外殻展開 // 側面攻撃",
+  "cross-strike": "交差中心 // 離脱",
+};
+
+function bossTelegraphDisplayLabel(telegraph: { kind: string; displayName: string; counterplay: string }, compact: boolean) {
+  return compact && COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
+    ? COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
+    : `${telegraph.displayName} // ${telegraph.counterplay}`;
+}
+
 function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   const telegraph = bossTelegraphSnapshot(f, { fallbackTargetX: BASE_X + 48 });
   if (!telegraph) return;
@@ -6150,19 +6164,17 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
+  // Keep the geometric warning on the battlefield. Mobile V1 renders the
+  // counterplay text in a dedicated HUD lane so fighters cannot cover it.
+  if (g.definition.missionConfig.v100StageNumber && compactBattleViewport()) {
+    ctx.restore();
+    return;
+  }
   ctx.globalAlpha = .95;
   ctx.fillStyle = "#f4dfb8";
   ctx.font = "900 10px monospace";
   ctx.textAlign = "center";
-  const compactLabels: Record<string, string> = {
-    "brood-radial": "増殖域 // 範囲外へ退避",
-    "lane-rectangle": "捕食突進 // 上下へ退避",
-    "shell-sweep": "外殻展開 // 側面攻撃",
-    "cross-strike": "交差中心 // 離脱",
-  };
-  const label = compactBattleViewport() && compactLabels[telegraph.kind]
-    ? compactLabels[telegraph.kind]
-    : `${telegraph.displayName} // ${telegraph.counterplay}`;
+  const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport());
   const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
     ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
     : telegraph.kind === "lane-rectangle"
@@ -9086,7 +9098,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    deployQueue: 0, summonedCount: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
+    deployQueue: 0, summonedCount: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null, bossTelegraphWarning: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), banner: null, battleBarks: [], manualAbilityIcons: [],
@@ -16078,7 +16090,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
       deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase, airstrikeCooldownRemaining: fresh.airstrike.cooldownRemaining ?? 0,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
-      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null,
+      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning: null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, banner: fresh.bannerTime > 0 ? fresh.banner : null, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
@@ -23391,6 +23403,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
         const bossHud = bossBattleHudSnapshot(g);
+        let bossTelegraphWarning: string | null = null;
+        if (g.definition.missionConfig.v100StageNumber && compactBattleViewport()) {
+          for (const fighter of g.fighters) {
+            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
+            if (!telegraph) continue;
+            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, true);
+            break;
+          }
+        }
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
@@ -23464,7 +23485,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           deployQueue: g.deployQueue.length,
           summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
@@ -23761,6 +23782,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
             </div>
           </div>
+          {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
           {externalSessionActive && bossHealthPanel ? null : defenseObjective
             ? <div className="health-hud barrier-health defense-objective" data-defense-state={defenseObjective.phase} aria-label={`${defenseObjective.label} ${defenseObjective.statusLabel}`}>

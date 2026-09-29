@@ -5,6 +5,7 @@
 .v100-shell .boss-hud.v100-boss-center b { color: #fff6df; font-size: 12px; font-variant-numeric: tabular-nums; }
 .v100-shell .boss-hud.v100-boss-center > i { height: 6px; margin-top: 4px; transform: none; }
 .v100-shell .boss-hud.v100-boss-center .boss-twin-hp { grid-template-columns: 1fr 1fr; }
+.v100-shell .v100-boss-telegraph-warning { position:absolute; z-index:12; top:calc(var(--battle-hud-content-top, 0px) + var(--battle-hud-top-height, 54px) + 4px); left:50%; transform:translateX(-50%); width:min(340px,45%); min-height:27px; display:grid; place-items:center; padding:4px 8px; border:1px solid #e58b57; border-left:3px solid #ff6948; border-radius:3px; background:rgba(24,14,12,.94); box-shadow:0 4px 12px #000b; color:#ffe9c5; font:900 clamp(11px,1.5vw,13px)/1.15 system-ui,sans-serif; letter-spacing:.01em; text-align:center; white-space:nowrap; pointer-events:none; }
 .v100-shell .game-frame .support-btn { border-radius: 3px; padding: 5px 7px; text-align: left; background: linear-gradient(135deg,#233332,#151d20); }
 .v100-shell .game-frame .support-btn.barrage { background: linear-gradient(135deg,#3b3022,#211e18); }
 .v100-shell .game-frame .support-btn > b { display: block; font: 700 13px/1.25 system-ui,sans-serif; white-space: nowrap; max-height: none; color: #ffe7bc; }
