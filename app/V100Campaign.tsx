@@ -1091,6 +1091,12 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
   const selectedBaseStats = selectedCombatKind ? unitContentFor(selectedCombatKind) : null;
   const currentStats = selectedBaseStats ? v100LevelStats(selectedBaseStats, selectedLevel) : null;
   const nextStats = selectedBaseStats && selectedOwned && selectedNextCost > 0 ? v100LevelStats(selectedBaseStats, selectedLevel + 1) : null;
+  const nextGrowth = nextStats && currentStats ? [
+    nextStats.hp > currentStats.hp ? `HP +${nextStats.hp - currentStats.hp}` : null,
+    nextStats.defense > currentStats.defense ? `防御 +${((nextStats.defense - currentStats.defense) * 100).toFixed(2)}%` : null,
+    nextStats.damage > currentStats.damage ? `${selectedBaseStats.range >= 80 ? "射撃" : "近接"} +${nextStats.damage - currentStats.damage}` : null,
+    nextStats.healing > currentStats.healing ? `回復 +${nextStats.healing - currentStats.healing}` : null,
+  ].filter(Boolean).join(" / ") : "";
   const showStats = (name: string, value: number | string, next: number | string | null = null) => <div className="v100-unit-stat" key={name}><span>{name}</span><strong>{value}</strong>{next !== null && next !== value && <small>→ {next}</small>}</div>;
   return <section className={`v100-panel v100-management-panel v100-personnel-screen ${detailOpen ? "detail-open" : ""}`} data-v100-surface="personnel" aria-label="隊員">
     <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 隊員</span><h2>隊員</h2></div><button type="button" onClick={onBack}>{returnLabel}</button></div>
@@ -1108,7 +1114,7 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
       showStats("射撃ダメージ", selectedBaseStats.range >= 80 ? currentStats.damage : "—", selectedBaseStats.range >= 80 ? nextStats?.damage ?? null : null),
       showStats("移動速度", currentStats.speed),
       showStats("攻撃間隔", `${currentStats.attackEvery}秒`),
-    ]}</div>}{selectedOwned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, selectedLevel)} disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>{selectedNextCost <= 0 ? "強化上限" : save.caps < selectedNextCost ? `強化まであと ${selectedNextCost - save.caps} CAPS` : `強化 ${selectedNextCost} CAPS`}</button> : selectedRegistered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>{save.caps < selectedUnit.registrationCostCaps ? `配備登録まであと ${selectedUnit.registrationCostCaps - save.caps} CAPS` : `配備登録 ${selectedUnit.registrationCostCaps} CAPS`}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
+    ]}</div>}{nextStats && <div className="v100-growth-summary"><span>次Lv.{selectedLevel + 1}の成長</span><strong>{nextGrowth || "数値変化なし"}</strong></div>}{selectedOwned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, selectedLevel)} disabled={selectedNextCost <= 0 || save.caps < selectedNextCost}>{selectedNextCost <= 0 ? "強化上限" : save.caps < selectedNextCost ? `強化まであと ${selectedNextCost - save.caps} CAPS` : `強化 ${selectedNextCost} CAPS`}</button> : selectedRegistered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < selectedUnit.registrationCostCaps}>{save.caps < selectedUnit.registrationCostCaps ? `配備登録まであと ${selectedUnit.registrationCostCaps - save.caps} CAPS` : `配備登録 ${selectedUnit.registrationCostCaps} CAPS`}</button> : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")} クリアで解放</p>}</div></>}</aside></div>
   </section>;
 }
 

@@ -74,6 +74,15 @@ export function babayagaMarkerInputReady(runtime, ownerId) {
       && String(hit.targetId) === String(target.targetId));
 }
 
+export function manualMarkerDispatchStarted(before, after, ownerId, kind) {
+  const previousId = before?.fighters?.find((fighter) => String(fighter.id) === String(ownerId))?.manualAbility?.activationId;
+  return Number.isInteger(previousId) && after?.screen === "battle"
+    && before?.battleGeneration === after.battleGeneration && before?.stageId === after.stageId
+    && after.manualAbilityReceipts?.some((receipt) => String(receipt.ownerId) === String(ownerId)
+      && receipt.kind === kind && receipt.eventType === "start"
+      && receipt.activationId === previousId + 1 && receipt.at >= before.time) === true;
+}
+
 export function manualMarkerActivation(evidence, kind) {
   const before = evidence?.beforeInput;
   const after = evidence?.afterInput;

@@ -20,7 +20,7 @@ import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 import { createV100PhaseGProofMachine } from "./v100-phase-g-proof-machine.mjs";
 import { createVehicleCombatProofGate } from "./v100-vehicle-combat-proof-gate.mjs";
-import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerActivation, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
+import { deriveV100RuntimeObservation, setupActorObservation, setupEnemyCanAct, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerDispatchStarted, manualMarkerActivation, validateV100CaptureRepresentativeEvidence } from "./v100-phase-g-runtime-evidence.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 matrix is local-only; refusing ${baseUrl}`);
@@ -2659,7 +2659,11 @@ async function phaseGBrowser(engineName, isolation = "shared-per-engine") {
   const current = phaseGBrowsers.get(engineName);
   if (current?.isConnected?.()) return current;
   if (current) await current.close().catch(() => {});
-  const browser = await playwright[engineName].launch({ headless: true });
+  const localChromiumExecutable = engineName === "chromium" ? process.env.V100_PHASE_G_LOCAL_CHROMIUM_EXECUTABLE : null;
+  const browser = await playwright[engineName].launch({
+    headless: true,
+    ...(localChromiumExecutable ? { executablePath: localChromiumExecutable } : {}),
+  });
   phaseGBrowserSessionOrdinal += 1;
   phaseGBrowserMetadata.set(browser, {
     sessionId: `${engineName}-${phaseGBrowserSessionOrdinal}`,
@@ -4326,7 +4330,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           // exact activation, living target, and completed impact.
           if (!(await nativeBattleTap(page, ability))) return false;
           manualActionEvidence.afterInput = await readSetupRuntime();
-          return true;
+          // A pointer can land just as the owner is stunned or its target
+          // changes. Count an activation only when the game records its start;
+          // an ignored input may be retried inside the original 45-second
+          // window. Once a start exists, the exact-target proof below remains
+          // fail-closed and is never retried with another activation.
+          return manualMarkerDispatchStarted(runtime, manualActionEvidence.afterInput, ownerId, manualAbilityKind);
         });
         if (!activated) await page.waitForTimeout(100);
       }

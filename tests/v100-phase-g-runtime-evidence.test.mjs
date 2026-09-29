@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { setupEnemyCanAct } from "../scripts/v100-phase-g-runtime-evidence.mjs";
-import { selectV100EvidenceCapture, deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, validateV100ProofImageLink, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "../scripts/v100-phase-g-runtime-evidence.mjs";
+import { selectV100EvidenceCapture, deriveV100RuntimeObservation, setupActorObservation, setupVehicleActionObserved, babayagaMarkerInputReady, manualMarkerDispatchStarted, validateV100ProofImageLink, manualMarkerActivation, V100_MANUAL_MARKER_CLICK_TIMEOUT_MS, validateV100CaptureRepresentativeEvidence } from "../scripts/v100-phase-g-runtime-evidence.mjs";
 import { createManualAbilityRuntime, beginManualAbility, selectBabayagaAbilityTarget } from "../app/manualAbilities.js";
 import { createV100PhaseGProofMachine } from "../scripts/v100-phase-g-proof-machine.mjs";
 import { V100_REPRESENTATIVE_COMBAT_CONTRACT, representativeRuntimeObservationRule, validateV100RepresentativeCombatEvidence } from "../app/v100PhaseGContract.js";
@@ -301,6 +301,16 @@ test("manual dispatch uses the actual native target shape and unchanged click bu
   const before = JSON.stringify(evidence);
   manualMarkerActivation(evidence, "babayaga");
   assert.equal(JSON.stringify(evidence), before);
+});
+test("ignored native pointer does not consume the one real marker activation", () => {
+  const evidence = markerDispatchFacts();
+  const ignored = { ...evidence.beforeInput, time: 36.24, fighters: evidence.beforeInput.fighters.map((fighter) =>
+    fighter.id === 9 ? { ...fighter, stunned: .24 } : fighter), manualAbilityReceipts: [] };
+  assert.equal(manualMarkerDispatchStarted(evidence.beforeInput, ignored, 9, "babayaga"), false);
+  assert.equal(manualMarkerDispatchStarted(evidence.beforeInput, evidence.afterInput, 9, "babayaga"), true);
+  assert.equal(manualMarkerDispatchStarted(evidence.beforeInput, { ...evidence.afterInput, battleGeneration: 3 }, 9, "babayaga"), false);
+  assert.equal(manualMarkerDispatchStarted(evidence.beforeInput, { ...evidence.afterInput,
+    manualAbilityReceipts: [{ ...evidence.afterInput.manualAbilityReceipts[0], ownerId: 10 }] }, 9, "babayaga"), false);
 });
 test("actual red precommit windup and zero pending list cannot admit the marker click", () => {
   const evidence = markerDispatchFacts();

@@ -285,7 +285,8 @@
     border-left: 4px solid #c48a4d;
     background: linear-gradient(120deg, #24332d, #111b18);
   }
-  .v100-formation-panel.picker-open .v100-roster-card-art { flex-basis: 38%; width: 38%; }
+  .v100-formation-panel.picker-open .v100-roster-card-art { display: block; flex-basis: 38%; width: 38%; overflow: hidden; }
+  .v100-formation-panel.picker-open .v100-roster-card-art img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; object-position: center; }
   .v100-formation-panel.picker-open .v100-roster-card-copy strong { font-size: 16px; }
   .v100-formation-panel.picker-open .v100-roster-card-copy small { font-size: 12px; }
 
@@ -346,6 +347,9 @@
   .v100-personnel-screen.detail-open .v100-unit-stat span { font-size: 13px; white-space: normal; }
   .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 21px; }
   .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 12px; }
+  .v100-personnel-screen.detail-open .v100-growth-summary { display: flex; align-items: center; gap: 9px; min-height: 29px; margin: 2px 0; padding: 3px 8px; border-left: 3px solid #83c9a7; background: linear-gradient(90deg, #20382e, #14221c); color: #e9f4d8; }
+  .v100-personnel-screen.detail-open .v100-growth-summary span { flex: none; color: #b8d7b3; font-size: 11px; }
+  .v100-personnel-screen.detail-open .v100-growth-summary strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
   .v100-personnel-screen.detail-open .v100-personnel-focus-copy > button { min-height: 42px; margin-top: auto; font-size: 14px; }
 }
 @media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
@@ -425,8 +429,8 @@
     right: 0;
     display: block;
     width: 62%;
-    height: calc(100% - 72px);
-    opacity: .63;
+    height: calc(100% - 84px);
+    opacity: .78;
     pointer-events: none;
   }
   .v100-field-map-blocks { fill: none; stroke: #b3bc9d85; stroke-width: 12; }
@@ -439,11 +443,11 @@
     z-index: 3;
     inset: auto 5px 5px;
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    grid-template-rows: 1fr;
-    gap: 3px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 4px;
     width: auto;
-    height: clamp(62px, 35%, 73px);
+    height: clamp(95px, 56%, 122px);
   }
   .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
     content: "出撃登録 01–07 / 枠を押して隊員変更";
@@ -462,23 +466,23 @@
     position: relative;
     z-index: 2;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 0;
+    gap: 3px;
     grid-column: auto;
     width: 100%;
     height: 100%;
     min-width: 0;
     min-height: 44px;
-    padding: 2px 2px 1px;
+    padding: 2px 3px;
     border: 1px solid #a18d6c;
-    border-bottom: 3px solid #b28c50;
+    border-left: 4px solid #b28c50;
     border-radius: 2px;
     background: linear-gradient(#263630ef, #0c1714fa);
     box-shadow: inset 0 0 0 1px #e5d3a523, 0 3px 8px #000a;
     transform: none;
-    text-align: center;
+    text-align: left;
   }
   .v100-formation-panel:not(.picker-open) .v100-slot:nth-child(n) { left: auto; top: auto; grid-column: auto; }
   .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel:not(.picker-open) .v100-slot.selected {
@@ -491,8 +495,8 @@
   .v100-formation-panel:not(.picker-open) .v100-slot-portrait {
     display: block;
     flex: none;
-    width: 42px;
-    height: calc(100% - 18px);
+    width: 43px;
+    height: 100%;
     border: 0;
     border-radius: 0;
     background: #171d19;
@@ -502,35 +506,37 @@
   .v100-formation-panel:not(.picker-open) .v100-slot-portrait i { font-size: 24px; line-height: 39px; }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta {
     position: static;
-    display: block;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: calc(100% - 46px);
     min-width: 0;
     max-width: none;
-    height: 17px;
-    padding: 0 1px;
+    height: 100%;
+    padding: 0 2px;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
     transform: none;
   }
-  .v100-formation-panel:not(.picker-open) .v100-slot-meta small { position: absolute; top: 2px; left: 2px; display: block; padding: 1px 2px; background: #07100def; color: #f8d398; font-size: 8px; line-height: 1; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta small { position: static; display: block; padding: 0; background: transparent; color: #f8d398; font-size: 9px; line-height: 1; }
   .v100-formation-panel:not(.picker-open) .v100-slot-meta strong {
     display: block;
     overflow: hidden;
     color: #fff0cb;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 15px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .v100-formation-panel:not(.picker-open) .v100-slot-meta em { display: none; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta em { display: block; overflow: hidden; color: #d9ccb0; font-size: 9px; font-style: normal; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 }
 @media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
-  .v100-field-map-intel { top: 29px; gap: 0; }
+  .v100-field-map-intel { top: 24px; gap: 0; }
   .v100-field-map-intel span:first-child { display: none; }
   .v100-field-map-intel strong { font-size: 12px; }
-  .v100-field-map-intel span:last-child { font-size: 9px; }
+  .v100-field-map-intel span:last-child { display: none; }
 }
 @media (min-width: 640px) and (max-width: 1020px) and (min-height: 421px) and (max-height: 460px) and (orientation: landscape) {
   .v100-personnel-screen.detail-open .v100-personnel-focus-copy dl {
