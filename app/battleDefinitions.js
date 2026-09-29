@@ -147,6 +147,9 @@ export function objectiveForBattle(definition, state) {
   const control=v100CorporateControlLabel(definition);
   if(control)return state.barricadeHp<=0?"残る警備部隊を掃討":state.barricadeVulnerable?`${control}を破壊`:"異常個体を撃破して制御盤の防護を解除";
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
+  if (definition.missionConfig?.v100StageNumber === 3) {
+    return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
+  }
   const defense = v100DefenseStatus(definition, state);
   if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
@@ -202,7 +205,7 @@ export function battleOutcomeFor(definition, state) {
     : definition.baseMaxHp;
   const clearRatio = definition.starThresholds?.[1] ?? 0;
   const hasClearHp = Number(state.baseHp) / baseMaxHp >= clearRatio;
-  if (definition.missionConfig?.v100StageNumber === 30) {
+  if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     if (state.bossDefeated !== true || state.bossDefeatPending === true || state.barricadeVulnerable !== true) return null;
     return hasClearHp ? "won" : "lost";
   }

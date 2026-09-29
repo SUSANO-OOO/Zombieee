@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import ts from "typescript";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
-import { battleOutcomeFor } from "../app/battleDefinitions.js";
+import { battleOutcomeFor, objectiveForBattle } from "../app/battleDefinitions.js";
 import { V100_STAGES } from "../app/v100Registry.js";
 import { isBossFighter } from "../app/bossFoundation.js";
 import { v100AssaultObjectProfile } from "../app/v100AssaultObjects.js";
@@ -92,6 +92,26 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
     assert.deepEqual(queued.slice(7).map(event => event.units), [["runner", "shade", "walker"], ["spitter", "walker", "runner"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
+});
+
+test("Stage 3 ends after TAKUYA and his final reinforcements, without an empty gate march", () => {
+  const definition = createBattleDefinition(V100_STAGES[2].id, { v100: true });
+  const ready = {
+    baseHp: definition.baseMaxHp,
+    barricadeHp: definition.enemyBaseMaxHp,
+    barricadeVulnerable: true,
+    bossDefeated: true,
+    bossDefeatPending: false,
+    wavesResolved: true,
+  };
+  assert.equal(objectiveForBattle(definition, { ...ready, bossDefeated: false }), definition.objective);
+  assert.equal(objectiveForBattle(definition, ready), "残存感染体を掃討");
+  assert.equal(battleOutcomeFor(definition, ready), "won");
+  assert.equal(battleOutcomeFor(definition, { ...ready, bossDefeated: false }), null);
+  assert.equal(battleOutcomeFor(definition, { ...ready, bossDefeatPending: true }), null);
+  assert.equal(battleOutcomeFor(definition, { ...ready, wavesResolved: false }), null);
+  assert.equal(battleOutcomeFor(definition, { ...ready, barricadeVulnerable: false }), null);
+  assert.equal(battleOutcomeFor(definition, { ...ready, baseHp: 0 }), "lost");
 });
 
 test("Stage 3's final preboss contact flows into TAKUYA without an empty-lane timer", () => {

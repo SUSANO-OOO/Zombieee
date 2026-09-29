@@ -22985,6 +22985,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`
+                : g.definition.missionConfig.v100StageNumber === 3
+                ? "TAKUYA撃破 — 残存感染体を掃討"
                 : fighter.kind === "takuya"
                 ? "TAKUYA撃破 — 感染拠点が露出"
                 : `${defeatedBossName}撃破 — 感染核が露出`;
@@ -22992,6 +22994,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
               if (g.definition.operationCategory === "outbreak") {
                 emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
+              } else if (g.definition.missionConfig.v100StageNumber === 3) {
+                emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else {
@@ -23554,6 +23558,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const activeBossLabel = activeBossKind
     ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
     : "BOSS";
+  const isTakuyaInterception = gameRef.current.definition.missionConfig.v100StageNumber === 3;
   const omegaProtectedObjective = gameRef.current.definition.missionConfig.v100StageNumber === 30 && !hud.barricadeVulnerable;
   const bossHudSide = (hud.bossWorldX ?? (omegaProtectedObjective ? W : 0)) >= W * (omegaProtectedObjective ? .6 : .64) ? "boss-hud-left" : "boss-hud-right";
   // Research-core missions can continue after both enemy objectives collapse.
@@ -23764,7 +23769,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               {defenseObjective.recordCount && <div className="defense-room-records" aria-label="収容室の開放記録">{Array.from({length:defenseObjective.recordCount},(_,index)=><span key={index} data-opened={index < defenseObjective.openedRecords} aria-label={`収容室${index+1}・${index < defenseObjective.openedRecords ? "開放済" : "開放待ち"}`} />)}</div>}
               <small>{defenseObjective.statusLabel}</small>
             </div>
-            : stationMissionHud || selectedOutbreakMissionId
+            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) || gameRef.current.researchCoreTargets ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
