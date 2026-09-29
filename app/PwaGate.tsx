@@ -48,7 +48,7 @@ import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
-function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | "unsupported") {
+function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | "deferred" | "unsupported") {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.pwaManifestState = state;
 }
@@ -56,7 +56,8 @@ function setPublishedManifestState(state: "loading" | "ready" | "unreachable" | 
 // Release metadata may be slow, but the request itself must not be aborted:
 // WebKit can report that as a failed production asset request. A separate UI
 // watchdog below releases a committed offline generation while the fetch keeps
-// running and can still apply a later successful update check.
+// running. A response after that release waits for a safe game screen so it
+// cannot replace a live battle with a commit-recovery screen.
 const PUBLISHED_MANIFEST_GATE_MS = 10_000;
 
 function readSafetyFromDocument() {
@@ -164,6 +165,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [saveEnvironment, setSaveEnvironment] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
+  const [deferredPublishedManifest, setDeferredPublishedManifest] = useState<Manifest | null>(null);
   // The player chose to keep playing in the browser instead of installing.
   // Remembered for the visit only, so the invitation is never nagged twice in
   // one session.
@@ -193,6 +195,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const commitRecoveryRef = useRef<Promise<unknown> | null>(null);
   const manifestLookupRef = useRef(0);
+  const deferredManifestLookupRef = useRef(0);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
@@ -222,7 +225,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       if (manifestLookupRef.current !== lookup) return;
       // Only local committed content can be playable without published
       // metadata. The ordinary phase calculation still blocks a first install
-      // or an incomplete pack; a late response can update this state later.
+      // or an incomplete pack. Do not apply a later response over an already
+      // released active generation: a complete candidate could unmount battle.
+      if (installedManifestRef.current) deferredManifestLookupRef.current = lookup;
       setManifestUnreachable(true);
       setPublishedManifestState("unreachable");
       setPublishedChecked(true);
@@ -230,6 +235,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     try {
       const published = await fetchPublishedManifest({ baseUrl });
       if (manifestLookupRef.current !== lookup) return false;
+      if (deferredManifestLookupRef.current === lookup) {
+        setManifestUnreachable(false);
+        setPublishedManifestState("deferred");
+        setDeferredPublishedManifest(published as Manifest);
+        return true;
+      }
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
       setPublishedManifestState("ready");
@@ -750,6 +761,25 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     || phase === "commit-required"
     || phase === "committing"
     || (!playable && (phase === "install-required" || phase === "installing"));
+
+  // A delayed update check may finish after the committed generation started.
+  // Keep its manifest pending during battle, story, or a save write. Applying it
+  // on a safe screen preserves both update discovery and the active session.
+  useEffect(() => {
+    if (!deferredPublishedManifest) return;
+    const timer = window.setTimeout(() => {
+      const hasGameScreen = Boolean(document.documentElement.dataset.pwaScreen);
+      const currentSafety = evaluateActivationSafety({
+        ...readSafetyFromDocument(),
+        downloadActive: downloadState === "running",
+      });
+      if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;
+      setPublishedManifest(deferredPublishedManifest);
+      setDeferredPublishedManifest(null);
+      setPublishedManifestState("ready");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [blocking, deferredPublishedManifest, downloadState, safety]);
 
   return (
     <>

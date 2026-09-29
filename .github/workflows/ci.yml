@@ -118,6 +118,15 @@ jobs:
       - name: Verify installed PWA launch when update metadata stalls (Chromium)
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-held-manifest-browser-smoke.mjs
 
+      - name: Upload stalled PWA metadata browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-pwa-held-metadata
+          path: outputs/completion/v100-pwa-held-manifest
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Build exact base and candidate PWA sites for partial-update QA
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
