@@ -20642,7 +20642,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     hitIds.add(String(victim.id));
                     victim.flash = Math.max(victim.flash, .2);
                     victim.knock = Math.max(victim.knock, 22);
-                    addDamageText(g, victim.x, victim.y - 58, `捕食突進 -${Math.round(resolved.targetDamage)}`, .92, "#e5a06d");
+                    addDamageText(g, victim.x, victim.y - 58, `-${Math.round(resolved.targetDamage)}`, .92, "#e5a06d");
                   }
                   f.stationAbility = {
                     ...f.stationAbility,
@@ -20654,6 +20654,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (step.events.includes("activate")) {
                 if (anomalyKind === "ooguchi") {
                   g.banner = "オオグチ // 捕食突進";
+                  addDamageText(g, f.x, Math.max(110, f.y - 96), "捕食突進", .92, "#e5a06d");
                   addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
                   playBattleSemanticCue("boss-ooguchi-charge-impact", f.x, {
                     semantic: "boss-phase-impact",
@@ -20699,10 +20700,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     );
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
-                    // The boss banner names the move once. Repeating its long
-                    // name over every target obscures clustered fighters on a phone.
+                    // Keep each target's impact readable in a clustered phone battle.
                     addDamageText(g, victim.x, victim.y - 58, `-${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   }
+                  // V1 boss HP replaces the top banner. Name the move once at
+                  // activation, including a successful dodge, then show only
+                  // short damage values over the targets actually struck.
+                  const moveName = anomalyKind === "gairen" ? "外殻掃討"
+                    : anomalyKind === "futago" ? f.v100TwinPart ? f.stationAbility.split ? "激昂斬撃" : "交差斬撃" : "融合交差撃"
+                      : anomalyKind === "mugarian-president-mutated" ? "四腕制圧" : "Ω大剣薙ぎ払い";
+                  addDamageText(g, areaBoss.x, Math.max(110, areaBoss.y - 96), moveName, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   addParticles(
                     g,
                     areaBoss.x,
