@@ -85,6 +85,7 @@ import { V100ModesView } from "./V100ModesView";
 import "./v100Campaign.css";
 import "./v100Preparation.css";
 import "./v100FormationField.css";
+import "./v100MapField.css";
 import "./v100BattlePresentation.css";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -253,6 +254,7 @@ function chapterIndexForStage(stageNumber: number) {
 }
 
 function mapNodePosition(index: number, total: number) {
+  if (total === 1) return [50, 52];
   const positions = [
     [14, 56], [31, 35], [48, 58], [64, 34], [79, 57], [91, 35],
   ];
@@ -1022,7 +1024,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
               const [x, y] = mapNodePosition(index, chapterStages.length);
               const nodeState = completed ? "制圧済み" : available ? "出撃可" : "封鎖中";
               return <button type="button" key={entry.id} className={`v100-map-node ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${stageDisplayNameFor(entry)} ${nodeState}`}>
-                <span className="v100-map-node-marker"><i>{isBoss ? "◆" : completed ? "✓" : `S${String(entry.number).padStart(2, "0")}`}</i>{!available && <V100LockChain />}</span><strong>{stageDisplayNameFor(entry)}</strong><small>{!available ? `S${String(entry.number-1).padStart(2,"0")}クリアで解放` : nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : available ? ` / ${missionLabelFor(entry)}` : ""}</small>
+                <span className="v100-map-node-marker"><i>{`S${String(entry.number).padStart(2, "0")}`}</i>{!available && <V100LockChain />}</span><strong>{stageDisplayNameFor(entry)}</strong><small>{!available ? `S${String(entry.number-1).padStart(2,"0")}クリアで解放` : nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : available ? ` / ${missionLabelFor(entry)}` : ""}</small>
               </button>;
             })}
           </nav>
