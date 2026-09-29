@@ -20699,14 +20699,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     );
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
-                    const impactLabel = anomalyKind === "gairen"
-                      ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
-                      : anomalyKind === "futago"
-                        ? `${f.v100TwinPart ? "交差斬撃" : "融合交差撃"} -${Math.round(resolved.targetDamage)}`
-                        : anomalyKind === "mugarian-president-mutated"
-                          ? `四腕制圧 -${Math.round(resolved.targetDamage)}`
-                          : `Ω大剣薙ぎ払い -${Math.round(resolved.targetDamage)}`;
-                    addDamageText(g, victim.x, victim.y - 58, impactLabel, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
+                    // The boss banner names the move once. Repeating its long
+                    // name over every target obscures clustered fighters on a phone.
+                    addDamageText(g, victim.x, victim.y - 58, `-${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   }
                   addParticles(
                     g,
