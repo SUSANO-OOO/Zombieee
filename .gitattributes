@@ -36,3 +36,6 @@ tests/v0995-runtime-evidence-contract.test.mjs text eol=lf
 .gitattributes text eol=lf
 scripts/run-v099-hud-states-bounded.mjs text eol=lf
 tests/v099-hud-states-bounded.test.mjs text eol=lf
+
+# The displayed story source is hashed before generating its event registry.
+docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md text eol=lf

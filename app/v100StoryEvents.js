@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "3067731d970ba4725e5cd999e86886d0d277c4a3a30f49eea45c533d4127764d";
+export const V100_STORY_SOURCE_SHA256 = "f152a339db398e6434b848d4b8e9f14a5d765e09e33f33f0354d9f9e340d71ae";
 export const V100_STORY_SOURCE_LINE_COUNT = 984;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -1510,7 +1510,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "誰に",
+        "text": "誰が見てたんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 217
@@ -4525,7 +4525,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "四十三人、全部開ける",
+        "text": "四十三人、全員連れ出す",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 654
@@ -4925,7 +4925,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "聞いとるのは、お前の口や",
+        "text": "場所は聞いとらん。お前が答えろ",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 709
