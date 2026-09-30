@@ -279,6 +279,29 @@ test("marker input excludes the actual Stage21 committed contact race without re
   }
 });
 
+test("marker input waits past Stage21's impending direct ally hit on the selected target", () => {
+  // Run 36580000454, attempt 2: the hammer's next hit landed before the
+  // marker's .4-second windup. The target had 73 HP and the marker deals 65.
+  const owner = { id: 8, side: "human", kind: "babayaga", hp: 131, combatReady: true,
+    x: 392.06666666666433, y: 240, attackWindup: 0, cooldown: .7499999999999996 };
+  const target = { id: 6, side: "zombie", kind: "choir-knot", hp: 73, combatReady: true,
+    x: 608.3482105011101, y: 323.47648191450105 };
+  const ally = { id: 1, side: "human", kind: "brute", hp: 151.2627, combatReady: true,
+    targetId: 6, attackWindupTargetId: null, attackWindup: 0, cooldown: .20999999999999908, stunned: 0 };
+  const sample = { fighters: [owner, target, ally], pendingWeaponHits: [] };
+  const before = JSON.stringify(sample);
+  assert.equal(babayagaMarkerInputReady(sample, 8), false);
+  assert.equal(JSON.stringify(sample), before, "observation must not reserve, heal or retarget the enemy");
+  const ready = (changes) => babayagaMarkerInputReady({ ...sample,
+    fighters: [owner, target, { ...ally, ...changes }] }, 8);
+  assert.equal(ready({ cooldown: 1.2 }), true);
+  assert.equal(ready({ targetId: 99 }), true);
+  assert.equal(ready({ hp: 0 }), true);
+  assert.equal(ready({ combatReady: false }), true);
+  assert.equal(ready({ stunned: 1.5 }), true);
+  assert.equal(ready({ targetId: 99, cooldown: 1.2, attackWindupTargetId: 6, attackWindup: .2 }), false);
+});
+
 function markerDispatchFacts() {
   const owner = { id: 9, side: "human", kind: "babayaga", hp: 76, combatReady: true, x: 203, y: 262,
     attackWindup: 0, cooldown: .833333, attackSequence: 3, manualAbility: createManualAbilityRuntime("babayaga") };

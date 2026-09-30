@@ -66,9 +66,22 @@ export function babayagaMarkerInputReady(runtime, ownerId) {
   const fighters = runtime?.fighters ?? [];
   const owner = fighters.find((f) => String(f.id) === String(ownerId) && f.side === "human" && f.kind === "babayaga");
   const target = selectBabayagaAbilityTarget({ owner, fighters });
+  // A direct melee hit is not present in pendingWeaponHits until it commits.
+  // Leave enough time for the native pointer and the authored marker windup
+  // without another living ally reaching that same target first.
+  const contactWindow = V100_MANUAL_MARKER_CLICK_TIMEOUT_MS / 1000
+    + MANUAL_ABILITY_REGISTRY.babayaga.windupSeconds;
+  const competingContact = target && fighters.some((fighter) => fighter.side === "human"
+    && String(fighter.id) !== String(ownerId) && Number(fighter.hp) > 0
+    && fighter.combatReady === true && !(Number(fighter.stunned) > 0)
+    && ((String(fighter.targetId) === String(target.targetId)
+      && Number(fighter.cooldown) <= contactWindow)
+      || (String(fighter.attackWindupTargetId) === String(target.targetId)
+        && Number(fighter.attackWindup) > 0 && Number(fighter.attackWindup) <= contactWindow)));
   return Number(owner?.attackWindup) === 0
     && Number(owner?.cooldown) > V100_MANUAL_MARKER_CLICK_TIMEOUT_MS / 1000
     && Number(target?.hp) > MANUAL_ABILITY_REGISTRY.babayaga.impactDamage
+    && !competingContact
     && !(runtime?.pendingWeaponHits ?? []).some((hit) => hit.eventKind === "impact"
       && hit.applyDamage === true && Number(hit.damage) > 0 && hit.targetKind === "fighter"
       && String(hit.targetId) === String(target.targetId));
