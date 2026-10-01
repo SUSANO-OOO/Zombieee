@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { cpus, freemem, loadavg, uptime } from "node:os";
+import { cpus, freemem, loadavg, totalmem, uptime } from "node:os";
 import { pathToFileURL } from "node:url";
 
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
@@ -34,10 +34,43 @@ assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diag
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
+function darwinResourceSnapshot() {
+  if (process.platform !== "darwin") return { supported: false, reason: "darwin-only" };
+  const options = { encoding: "utf8", timeout: 2_000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: "C" } };
+  const result = { supported: true, rootPid: process.pid, parentPid: process.ppid, diagnosticOnly: true };
+  try {
+    // comm deliberately excludes arguments/environment; retain only the executable basename.
+    const output = execFileSync("/bin/ps", ["-axo", "pid=,ppid=,time=,pcpu=,rss=,comm="], options);
+    const lines = output.trim().split(/\r?\n/u);
+    const rows = lines.map((line) => {
+      const match = /^\s*(\d+)\s+(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(.+?)\s*$/u.exec(line);
+      return match ? { pid: Number(match[1]), ppid: Number(match[2]), cpuTime: match[3], cpuPercent: Number(match[4]), rssBytes: Number(match[5]) * 1024, executable: path.basename(match[6]) } : null;
+    });
+    result.processes = rows.filter(Boolean).slice(0, 1024);
+    result.processCount = lines.length;
+    result.unparsedProcessCount = rows.filter((row) => row === null).length;
+    result.processOverflow = rows.filter(Boolean).length > 1024;
+  } catch (error) {
+    result.processCollectionError = { code: error.code ?? null, status: error.status ?? null };
+  }
+  try {
+    const output = execFileSync("/usr/bin/vm_stat", [], options);
+    const pageSize = /page size of (\d+) bytes/u.exec(output);
+    const pages = Object.fromEntries(output.split(/\r?\n/u).flatMap((line) => {
+      const match = /^([^:]+):\s+(\d+)\.\s*$/u.exec(line);
+      return match ? [[match[1].trim().replaceAll('"', ""), Number(match[2])]] : [];
+    }));
+    result.vm = { pageSizeBytes: pageSize ? Number(pageSize[1]) : null, pages };
+  } catch (error) {
+    result.vmCollectionError = { code: error.code ?? null, status: error.status ?? null };
+  }
+  return result;
+}
 const hostLoadSnapshot = () => ({
   capturedAtUtc: new Date().toISOString(), uptimeSeconds: uptime(),
-  loadAverage: loadavg(), freeMemoryBytes: freemem(),
+  loadAverage: loadavg(), freeMemoryBytes: freemem(), totalMemoryBytes: totalmem(),
   cpuTimes: cpus().map(({ times }) => times),
+  darwin: darwinResourceSnapshot(),
 });
 const contextSyncDiagnostic = process.env.V100_DEVICE_RUNTIME_CONTEXT_SYNC_DIAGNOSTIC === "1";
 const observerlessDiagnostic = process.env.V100_DEVICE_RUNTIME_OBSERVERLESS === "1";
