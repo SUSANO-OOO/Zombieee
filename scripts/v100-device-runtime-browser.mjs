@@ -34,6 +34,8 @@ assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diag
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
+const hostControl = process.env.V100_DEVICE_RUNTIME_HOST_CONTROL ?? "none";
+assert.ok(["none", "spotlight-indexing-paused"].includes(hostControl), `invalid host control: ${hostControl}`);
 function darwinResourceSnapshot() {
   if (process.platform !== "darwin") return { supported: false, reason: "darwin-only" };
   const options = { encoding: "utf8", timeout: 2_000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: "C" } };
@@ -313,7 +315,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic, uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic },
+  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });

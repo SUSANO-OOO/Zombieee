@@ -345,6 +345,7 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Preserve measured WebKit performance before diagnostics
+        id: preserved_primary_perf
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -357,29 +358,38 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Diagnose 844x340 boss performance without QA polling
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
+      - name: Pause Spotlight indexing for same-host causal diagnosis
+        id: indexing_control
+        if: ${{ always() && steps.preserved_primary_perf.outcome == 'success' && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
+        run: node scripts/v100-macos-indexing-control.mjs pause
+
+      - name: Diagnose 844x340 boss performance with indexing paused
+        if: ${{ always() && steps.indexing_control.outcome == 'success' }}
         continue-on-error: true
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_VIEWPORT: 844x340
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-observerless
-          V100_DEVICE_RUNTIME_OBSERVERLESS: "1"
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-indexing-control
+          V100_DEVICE_RUNTIME_HOST_CONTROL: spotlight-indexing-paused
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
-      - name: Diagnose 844x390 boss performance without QA polling
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
+      - name: Diagnose 844x390 boss performance with indexing paused
+        if: ${{ always() && steps.indexing_control.outcome == 'success' }}
         continue-on-error: true
         env:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_VIEWPORT: 844x390
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-observerless
-          V100_DEVICE_RUNTIME_OBSERVERLESS: "1"
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-indexing-control
+          V100_DEVICE_RUNTIME_HOST_CONTROL: spotlight-indexing-paused
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Restore Spotlight indexing on ephemeral performance host
+        if: ${{ always() && (steps.indexing_control.outcome == 'success' || steps.indexing_control.outcome == 'failure') }}
+        run: node scripts/v100-macos-indexing-control.mjs restore
 
       - name: Diagnose narrow landscape canvas cost after performance failure
         if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
@@ -441,8 +451,9 @@ jobs:
             outputs/v100-device-runtime/webkit
             outputs/v100-device-runtime/webkit-844x340-repeat
             outputs/v100-device-runtime/webkit-844x390-repeat
-            outputs/v100-device-runtime/webkit-844x340-observerless
-            outputs/v100-device-runtime/webkit-844x390-observerless
+            outputs/v100-device-runtime/webkit-844x340-indexing-control
+            outputs/v100-device-runtime/webkit-844x390-indexing-control
+            outputs/v100-device-runtime/spotlight-indexing-control.json
             outputs/v100-device-runtime/webkit-844x340-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-raster-groups
