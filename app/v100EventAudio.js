@@ -103,6 +103,7 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
       owner: "v100-event-runtime",
       desired: desired?.presentation ?? null,
       active: activeScene?.presentation ?? null,
+      sceneState: mixer.getSceneState(),
       receipts: receipts.map((entry) => ({ ...entry })),
       diagnostics: mixer.getDiagnostics(),
       audioStatus: mixer.getAudioStatus(),

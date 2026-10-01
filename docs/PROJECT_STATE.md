@@ -1,5 +1,11 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-02 Version 1.0.0 — 音響・視覚・日本語の追加改善
+
+Producerの「全作業完了後に試遊」に従い、旧 `5d21327` 候補の試遊・最終承認依頼を保留した。30作品の公式資料と本作の全94イベント/767ノード・代表画面を照合し、回想の因果、編成名の収容、育成の情報階層、CAPS不足ボタン、登録用語、終幕の病院背景と環境音を修正する。調査の出典・観察範囲・適用は [30作品の記録](qa/v100/visual-japanese-research-20261002.md) に保存した。
+
+有限の残工程は、採用差分の実装→スマホ横画面・全story・対象他モード・音の遷移QAとfull tests/lint/build→新固定headの必要CIと独立read-only review High/Medium未解消0→同じ候補の全文・全実画面・遊べるURLの提示→明示的最終承認後の正式統合・tag・Release・公式Pages・公開後検証。最新値と失敗の原記録は [Issue #172の既存台帳](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5926641177) が持つ。以下の完了・SHA・試遊待ちの記載は当時の履歴である。
+
 ### 2026-10-01 Version 1.0.0 — 5視点の品質改善
 
 Producerの直接依頼により、台本・プロット・人物声・スマホ美術・ゲーム体験の5つの独立したAI視点で再評価した。旧候補 `efc5e7cdd2f363891efb25076ac8e6a7b3ac98c0` への最終承認依頼は失効。Producerは改善後にスマートフォンで試遊するとしており、正式公開の承認はまだない。最新head、採用差分、実行状態は [Issue #172の既存台帳](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5926641177) とDraft PR #171で再取得する。過去のCI成功・H/M 0は旧候補の技術的証拠で、改稿後の品質や新候補の合格ではない。

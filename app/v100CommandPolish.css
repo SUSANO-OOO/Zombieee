@@ -1,4 +1,5 @@
 /* One scoped presentation layer. Existing transaction, portrait and QA hooks stay intact. */
+#v100-campaign .v100-primary:disabled { opacity: 1; background: #b7ac92 !important; color: #574e3e !important; border-color: #8d8875 !important; box-shadow: none; }
 #v100-campaign .v100-command-notice {
   position: fixed; z-index: 320; top: max(6px, env(safe-area-inset-top)); left: 50%;
   transform: translateX(-50%); width: min(480px, calc(100vw - 24px)); max-height: 100px;
@@ -20,7 +21,7 @@
 #v100-campaign .v100-command-formation .v100-sortie-heading { display: none; }
 #v100-campaign .v100-command-formation .v100-formation-board { display: block; flex: 1; min-height: 0; height: auto; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-rail {
-  position: relative; inset: auto; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  position: relative; inset: auto; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
   grid-template-rows: minmax(0, 1fr); width: 100%; height: 100%; min-height: 0;
   gap: 8px; padding: 0; border: 0; background: none; overflow: hidden;
 }
@@ -48,14 +49,14 @@
 #v100-campaign .v100-callin-heading small { grid-column: 1 / -1; color: #ccd3bd; font-size: 11px; line-height: 1.2; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-track { position: static; inset: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); flex: 1; width: 100%; height: auto; min-height: 0; gap: 4px; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot:nth-child(n) { position: relative; inset: auto; grid-column: auto; grid-row: auto; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot { display: flex; min-height: 0; height: 100%; gap: 3px; padding: 3px; border: 1px solid #7f8f79; border-radius: 3px; background: #18271f; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot { display: grid; grid-template-columns: 36px minmax(0, 1fr); grid-template-rows: 20px minmax(0, 1fr); min-height: 0; height: 100%; gap: 2px 5px; padding: 3px; border: 1px solid #7f8f79; border-radius: 3px; background: #18271f; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot.selected { border-color: #f0c571; box-shadow: inset 0 0 0 1px #d9a14d; background: #36412b; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-portrait { display: block; flex: 0 0 36px; width: 36px; height: 100%; min-height: 0; overflow: hidden; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-portrait { display: block; grid-column: 1; grid-row: 2; width: 36px; height: 100%; min-height: 0; overflow: hidden; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta { display: flex; flex: 1; width: auto; min-width: 0; margin: 0; gap: 1px; justify-content: center; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta small { position: absolute; top: 2px; right: 3px; margin: 0; color: #d9c091; font-size: 9px; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta strong { display: block; max-height: none; font-size: 12px; line-height: 1.05; white-space: normal; overflow-wrap: anywhere; }
-#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta em { display: block; font-size: 12px; line-height: 1.1; white-space: normal; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta { display: contents; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta small { position: absolute; top: 26px; left: 3px; right: auto; min-width: 16px; margin: 0; padding: 0 2px; color: #ffe4ad; background: #09150de8; font-size: 12px; line-height: 16px; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta strong { display: block; grid-column: 1 / -1; grid-row: 1; min-width: 0; max-height: none; margin: 0; font-size: 13px; line-height: 20px; white-space: nowrap; overflow-wrap: normal; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-meta em { display: block; grid-column: 2; grid-row: 2; align-self: center; min-width: 0; font-size: 12px; line-height: 1.2; white-space: normal; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-formation-workspace { display: none; }
 #v100-campaign .v100-sortie-status { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); flex: none; gap: 6px; }
 #v100-campaign .v100-sortie-status button { min-height: 44px; margin: 0; padding: 3px 8px; border: 1px solid #6b7e70; background: #16221c; text-align: left; }
@@ -110,15 +111,15 @@
 #v100-campaign .v100-unit-level small { font-size: 12px; font-weight: 500; }
 #v100-campaign .v100-unit-registration { color: #365343; font-size: 12px; white-space: nowrap; }
 #v100-campaign .v100-command-personnel .v100-personnel-focus-copy > p.v100-unit-record-meta { display: block; flex: none; margin: 0; overflow: visible; white-space: normal; color: #344d3d; font-size: 12px; line-height: 1.25; }
-#v100-campaign .v100-command-personnel .v100-personnel-focus-copy > p.v100-unit-skill { display: block; flex: none; margin: 0; padding: 2px 0; overflow: visible; white-space: normal; color: #253e31; font-size: 12px; line-height: 1.25; }
-#v100-campaign .v100-unit-skill strong { color: #2c492f; font-size: 13px; }
+#v100-campaign .v100-command-personnel .v100-personnel-focus-copy > p.v100-unit-skill { display: block; flex: none; margin: 2px 0; padding: 4px 7px; border-left: 3px solid #557d68; background: #c4d4be; overflow: visible; white-space: normal; color: #253e31; font-size: 13px; line-height: 1.3; }
+#v100-campaign .v100-unit-skill strong { color: #254831; font-size: 14px; }
 #v100-campaign .v100-unit-skill span { margin-left: 10px; color: #5b523b; font-size: 12px; }
 #v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 42px; flex: none; gap: 4px; margin: 1px 0; }
 #v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats.is-healer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 #v100-campaign .v100-command-personnel .v100-unit-stat { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 15px minmax(0, 1fr); align-items: center; gap: 0 3px; min-height: 0; padding: 2px 6px; border: 0; border-bottom: 1px solid #a0ad91; border-left: 3px solid #719278; border-radius: 0; background: #eff0dc7a; }
 #v100-campaign .v100-command-personnel .v100-unit-stat span { grid-column: 1 / -1; color: #37503d; font-size: 13px; line-height: 1.1; white-space: normal; }
 #v100-campaign .v100-command-personnel .v100-unit-stat strong { grid-column: 1; grid-row: 2; color: #183a29; font-size: 20px; line-height: 1.05; font-variant-numeric: tabular-nums; }
-#v100-campaign .v100-command-personnel .v100-unit-stat small { grid-column: 2; grid-row: 2; color: #2c7351; font-size: 12px; line-height: 1.05; }
+#v100-campaign .v100-command-personnel .v100-unit-stat small { grid-column: 2; grid-row: 2; color: #216441; font-size: 13px; font-weight: 700; line-height: 1.05; }
 #v100-campaign .v100-unit-growth-notes { position: relative; display: block; grid-column: 1; grid-row: 2; min-height: 18px; font-size: 12px; line-height: 1.2; }
 #v100-campaign .v100-unit-growth-notes > strong { color: #2e6548; font-size: 12px; }
 #v100-campaign .v100-unit-growth-notes details { color: #324d3c; }
@@ -127,7 +128,7 @@
 #v100-campaign .v100-unit-transaction { position: sticky; bottom: 0; flex: none; margin-top: auto; padding-top: 1px; background: #ddd4b8; }
 #v100-campaign .v100-unit-transaction p { margin: 0; color: #5a4126; font-size: 12px; line-height: 1.2; }
 #v100-campaign .v100-unit-transaction .v100-primary { width: 100%; min-height: 44px; height: 44px; margin: 0; padding: 5px 9px; border: 1px solid #8d592a; background: linear-gradient(#a86832, #76401e); color: #fff0d0; font-size: 15px; }
-#v100-campaign .v100-unit-transaction .v100-primary:disabled { opacity: 1; background: #b7ac92; color: #574e3e; border-color: #8d8875; }
+#v100-campaign .v100-unit-transaction .v100-primary:disabled { opacity: 1; background: #b7ac92 !important; color: #574e3e !important; border-color: #8d8875 !important; box-shadow: none; }
 
 /* Supply inventory and the item being inspected have different visual jobs. */
 #v100-campaign .v100-command-equipment { display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: #17251e; }
@@ -158,7 +159,7 @@
 #v100-campaign .v100-command-equipment .v100-equipment-focus-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: none; gap: 4px; margin-top: auto; }
 #v100-campaign .v100-command-equipment .v100-equipment-focus-actions > button { min-height: 44px; padding: 5px; font-size: 14px; }
 #v100-campaign .v100-command-equipment .v100-equipment-focus-actions > button:only-of-type { grid-column: 1 / -1; }
-#v100-campaign .v100-command-equipment .v100-equipment-focus-actions .v100-primary:disabled { opacity: 1; color: #514731; background: #bcb39a; border-color: #8b866e; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus-actions .v100-primary:disabled { opacity: 1; color: #514731 !important; background: #bcb39a !important; border-color: #8b866e !important; box-shadow: none; }
 #v100-campaign .v100-equipment-price { grid-column: 1 / -1; margin: 0; color: #554125; font-size: 12px; line-height: 1.3; }
 #v100-campaign .v100-equipment-price strong { color: #8a3d24; }
 
@@ -234,10 +235,11 @@
 
 @media (min-width: 640px) and (max-height: 460px) and (orientation: landscape) {
   #v100-campaign:has(> .v100-command-tabs) { gap: 4px; padding: 4px max(6px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }
-  #v100-campaign:has(> .v100-command-tabs) > .v100-topbar { min-height: 36px; height: 36px; margin: 0; padding: 0 2px; }
-  #v100-campaign:has(> .v100-command-tabs) .v100-topbar h1 { font-size: 18px; }
-  #v100-campaign:has(> .v100-command-tabs) .v100-save-meta button { min-height: 36px; height: 36px; padding: 4px 9px; font-size: 12px; }
-  #v100-campaign:has(> .v100-command-tabs) .v100-command-tabs { gap: 4px; }
+  #v100-campaign:has(> .v100-command-tabs) > .v100-topbar { position: absolute; z-index: 3; top: 4px; right: max(6px, env(safe-area-inset-right)); width: 158px; min-height: 44px; height: 44px; margin: 0; padding: 0; justify-content: flex-end; border: 0; background: #0e1715; }
+  #v100-campaign:has(> .v100-command-tabs) .v100-topbar h1 { display: none; }
+  #v100-campaign:has(> .v100-command-tabs) .v100-save-meta { display: flex; flex: 1; flex-wrap: nowrap; align-items: center; gap: 6px; min-width: 0; max-width: none; width: 100%; justify-content: flex-end; }
+  #v100-campaign:has(> .v100-command-tabs) .v100-save-meta button { flex: 0 0 68px; width: 68px; min-width: 68px; min-height: 44px; height: 44px; padding: 4px 7px; font-size: 12px; line-height: 1.2; white-space: nowrap; }
+  #v100-campaign:has(> .v100-command-tabs) .v100-command-tabs { width: calc(100% - 164px); gap: 4px; }
   #v100-campaign:has(> .v100-command-tabs) .v100-command-tabs button { min-height: 44px; height: 44px; padding: 5px 8px; font-size: 14px; }
   #v100-campaign:has(> .v100-command-tabs) > .v100-panel { padding: 5px 6px; }
   #v100-campaign .v100-command-formation { gap: 4px; }
@@ -258,9 +260,14 @@
   #v100-campaign .v100-command-garage .v100-vehicle-upgrade-copy dd { font-size: 22px; }
   #v100-campaign .v100-command-garage .v100-vehicle-abilities > div { padding: 4px; }
 }
+/* The clinical ending uses a functioning, secured ward. Dialogue remains on
+ * its opaque reading panel while the recovered location stays visible. */
+#v100-campaign .v100-event-backdrop[data-v100-location="hospital"],
+#v100-campaign .v100-event-backdrop[data-v100-location="大学病院"] { filter: brightness(.98) saturate(.93); background-position: center 58%; }
 @media (max-width: 720px) and (orientation: landscape) {
-  #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-rail { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 5px; }
-  #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-portrait { flex-basis: 27px; width: 27px; }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-rail { grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 5px; }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-track { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-sortie-status { display: none; }
   #v100-campaign .v100-sortie-status strong { font-size: 13px; }
   #v100-campaign .v100-command-personnel .v100-personnel-focus { grid-template-columns: 118px minmax(0, 1fr); }
   #v100-campaign .v100-unit-record-heading { grid-template-columns: minmax(0, 1fr) auto; }

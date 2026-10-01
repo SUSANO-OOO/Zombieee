@@ -31,19 +31,19 @@ export function V100SurvivalView({ save, onSave }: Props) {
   const result = progress.lastResult;
   if (progress.view === "result" && result) return <section className="v100-panel v100-mode-result" data-v100-surface="survival-result" aria-label="防衛継続作戦の戦果">
     <span className="v100-kicker">防衛継続作戦 / 戦果</span><h2>{result.endReason === "withdrawal" ? "撤退完了" : "防衛終了"}</h2>
-    <dl><div><dt>到達wave</dt><dd>{result.reachedWave}</dd></div><div><dt>制圧wave</dt><dd>{result.completedWave}</dd></div><div><dt>ボス制圧</dt><dd>{result.clearedBosses}回</dd></div><div><dt>この作戦の獲得CAPS</dt><dd>+{result.totalCaps}</dd></div></dl>
+    <dl><div><dt>到達した波</dt><dd>第{result.reachedWave}波</dd></div><div><dt>制圧した波</dt><dd>第{result.completedWave}波</dd></div><div><dt>ボス制圧</dt><dd>{result.clearedBosses}回</dd></div><div><dt>この作戦の獲得CAPS</dt><dd>+{result.totalCaps}</dd></div></dl>
     <p>中間記録で受け取った報酬を含みます。終了時の追加精算は {result.finalCaps} CAPSです。</p>
     <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>作戦一覧へ</button>
   </section>;
   const highestStart = Math.floor(progress.highestCompletedWave / 10) * 10 + 1;
   return <section aria-label="防衛継続作戦" className="v100-equipment-card" data-v100-survival="hub">
     <span className="v100-kicker">サバイバル</span><h3>防衛継続作戦</h3>
-    <p>5waveごとにボスを迎撃し、報酬と中間記録を保存します。3つの強化から1つを選び、装甲車両を守り続けてください。</p>
-    <p>物語で撃破したボスだけが出現します。再読み込み時は最後の中間記録から再開します。途中の未制圧waveには報酬はありません。</p>
-    <p>最高制圧 {progress.highestCompletedWave}wave / 最高到達 {progress.highestReachedWave}wave / 終了した作戦 {progress.totalRuns}回</p>
+    <p>5波ごとにボスを迎撃し、報酬と中間記録を保存します。3つの強化から1つを選び、装甲車両を守り続けてください。</p>
+    <p>物語で撃破したボスだけが出現します。再読み込み時は最後の中間記録から再開します。途中の未制圧の波には報酬はありません。</p>
+    <p>最高制圧 {progress.highestCompletedWave}波 / 最高到達 {progress.highestReachedWave}波 / 終了した作戦 {progress.totalRuns}回</p>
     {v100SurvivalBossPool(save.receipts).length === 0 ? <p>物語で初めてボスを撃破すると出撃できます。</p> : <>
-      <label>開始wave <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
-      <p>開始可能：1から{highestStart}まで、10wave刻み。途中開始で飛ばしたwaveの報酬はありません。</p>
+      <label>開始する波 <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
+      <p>第1波から第{highestStart}波まで、10波刻みで開始できます。途中開始で飛ばした波の報酬はありません。</p>
       <button type="button" onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>防衛継続作戦へ出撃</button>
     </>}
   </section>;

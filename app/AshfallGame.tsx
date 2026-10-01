@@ -23768,7 +23768,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </button>;
         })}
         {!externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
-        {externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && !paused && !combatLocked && <div className="v100-manual-ability-guide" role="note">{selectedAction ? "支援を配置中。取り消すと技能を使えます" : "頭上の技能アイコンをタップで発動"}</div>}
+        {externalSessionActive && screen === "battle" && hud.manualAbilityIcons.some(icon => icon.available > 0) && !paused && !combatLocked && <div className="v100-manual-ability-guide" role="note">{selectedAction ? "支援を配置中。取り消すと技能を使えます" : "頭上の技能アイコンをタップで発動"}</div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -23834,7 +23834,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <small>{defenseObjective.statusLabel}</small>
             </div>
             : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception
-            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
+            ? externalSessionActive ? null : <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) || gameRef.current.researchCoreTargets ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}

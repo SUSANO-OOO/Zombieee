@@ -7,7 +7,7 @@ export function v100RewardPresentationFor(result) {
   if (!stage) return null;
   const unlocks = result.firstClear ? stage.firstClearPayload.flatMap(id => {
     const unit = V100_UNITS.find(unit => unit.id === id);
-    if (unit) return [`${unit.displayName}の配備登録`];
+    if (unit) return [`${unit.displayName}の配備登録が可能に`];
     const support = V100_SUPPORTS.find(support => support.id === id);
     if (support) return [`${support.displayName}の解禁`];
     const boss = V100_BOSSES.find(boss => boss.id === id);

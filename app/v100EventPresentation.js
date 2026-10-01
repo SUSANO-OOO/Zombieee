@@ -6,7 +6,7 @@ import { V100_STAGE_IDS, V100_STAGES } from "./v100Registry.js";
 import { v100StageAudioFor } from "./v100StageRuntime.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
-import { v100StoryScoreScene } from "./v100Music.js";
+import { v100EndingScoreScene, v100StoryScoreScene } from "./v100Music.js";
 
 const visuals = PRODUCTION_VISUALS.stages;
 const cuts = V100_RUNTIME_ASSET_MANIFEST.storyCuts;
@@ -14,7 +14,7 @@ export const V100_CREDITS_SCENES = Object.freeze({
   "西新商店街": { backgroundPath: visuals["stage-nishijin-shopping-street"], sceneId: "v100-credits-street" },
   "早良区役所": { backgroundPath: visuals["stage-sawara-ward-office"], sceneId: "v100-credits-room" },
   "西新駅": { backgroundPath: visuals["stage-nishijin-station-platform"], sceneId: "v100-credits-station" },
-  "大学病院": { backgroundPath: visuals["stage-hospital-emergency-ward"], sceneId: "v100-credits-medical" },
+  "大学病院": { backgroundPath: cuts.endingHospitalSecured, sceneId: "v100-credits-medical" },
   "河口防潮門": { backgroundPath: visuals["stage-estuary-floodgate-seal"], sceneId: "v100-credits-wind" },
   "ムガリアン施設": { backgroundPath: visuals["stage-mugarian-logistics-hq"], sceneId: "v100-credits-room" },
   "RED PANTHER装備庫": { backgroundPath: visuals["stage-mugarian-special-operations-armory"], sceneId: "v100-credits-room" },
@@ -35,7 +35,7 @@ function backdropFor(eventId, node) {
   if (eventId === "v100:event:s25:post" && sceneTag === "soup") return visuals["stage-nishijin-shopping-street"];
   if (eventId === "v100:event:s30:post" && sceneTag === "defeat") return cuts.takuyaOmegaEndingDefeat;
   if (eventId === "v100:event:ending") {
-    return sceneTag === "hospital" ? visuals["stage-hospital-emergency-ward"]
+    return sceneTag === "hospital" ? cuts.endingHospitalSecured
       : sceneTag === "signal" ? PRODUCTION_VISUALS.command
         : sceneTag === "kumaya" ? cuts.kumayaReopened
           : visuals["stage-nishijin-defense-line-takuya-omega"];
@@ -78,7 +78,7 @@ function sceneFor(eventId, phase, stage, category, node) {
     if (node?.sceneTag === "crisis") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS;
     return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
   }
-  if (category === "ending") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING;
+  if (category === "ending") return v100EndingScoreScene(node?.sceneTag);
   if (category === "epilogue") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
   if (eventId === "v100:event:s25:post" && node?.sceneTag === "soup") return "v100-story-soup-break";
   const scoreScene = v100StoryScoreScene(eventId, node?.sceneTag ?? null);

@@ -30,6 +30,16 @@ export const V100_STORY_SCORE_CUTS = Object.freeze([
   { stage: 3, tag: 'retrieval', role: 'horror' },
   { stage: 20, tag: 'musashi', role: 'preparation' },
 ]);
+export const V100_ENDING_SCORE_SCENES = Object.freeze([
+  { tag: 'dawn', id: 'v100-ending-dawn', sourceSceneId: 'v100-credits-wind' },
+  { tag: 'hospital', id: 'v100-ending-hospital', sourceSceneId: 'v100-credits-medical' },
+  { tag: 'signal', id: 'v100-ending-signal', sourceSceneId: 'story-crawler-signal' },
+  { tag: 'kumaya', id: 'v100-ending-kumaya', sourceSceneId: 'v100-credits-kumaya' },
+].map(scene => Object.freeze(scene)));
+export function v100EndingScoreScene(sceneTag) {
+  return (V100_ENDING_SCORE_SCENES.find(scene => scene.tag === sceneTag)
+    ?? V100_ENDING_SCORE_SCENES[0]).id;
+}
 export function v100StoryScoreScene(eventId, sceneTag = null) {
   const match = /^v100:event:s(\d{2}):(pre|post|first-clear-post)$/u.exec(eventId ?? '');
   if (!match || !V100_STORY_SCORE_ROLES[Number(match[1]) - 1]) return null;
@@ -67,6 +77,13 @@ export function withV100Music(base) {
       ?? (scene.bgm?.startsWith('music-v099-pressure-') ? 'pressure' : null);
     return role ? score(scene, role) : scene;
   });
+  // Keep the ending score continuous while its location ambience follows
+  // the same authored tags as the background. No new recordings are needed.
+  for (const location of V100_ENDING_SCORE_SCENES) {
+    const original = base.scenes.find(scene => scene.id === location.sourceSceneId);
+    if (!original) throw new Error('Missing ending ambience: ' + location.tag);
+    scenes.push(score(original, 'ending', location.id));
+  }
   V100_STORY_SCORE_ROLES.forEach((roles, index) => {
     for (const [phaseIndex, phase] of ['pre', 'post'].entries()) {
       const number = index + 1, id = 'v100-score-s' + String(number).padStart(2,'0') + '-' + phase;

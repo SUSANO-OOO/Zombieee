@@ -55,6 +55,27 @@ test("ending locations follow the source scenes and epilogue returns to the reop
   assert.equal(epilogue.sceneId, PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY);
 });
 
+test("ending location ambience follows every authored node without changing the ending score", () => {
+  const expected = {
+    dawn: ["ambience-v070-stage3-wind-loop"],
+    hospital: ["ambience-v070-medical-bay-loop"],
+    signal: ["ambience-v070-crawler-ops-loop", "ambience-v070-radio-signal-loop"],
+    kumaya: ["ambience-v070-kumaya-daily-loop"],
+  };
+  const visited = new Set();
+  for (const [nodeIndex, node] of V100_STORY_EVENTS["v100:event:ending"].nodes.entries()) {
+    const presentation = v100EventPresentationFor({ eventId: "v100:event:ending", phase: "ending", node, nodeIndex });
+    const scene = V100_AUDIO_MANIFEST.sceneById[presentation.sceneId];
+    assert.ok(expected[node.sceneTag], `unmapped ending location: ${node.sceneTag}`);
+    assert.deepEqual(scene.ambience, expected[node.sceneTag]);
+    assert.equal(scene.bgm, "music-v100-score-ending");
+    assert.equal(presentation.cueId, null);
+    assert.ok(!scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
+    visited.add(node.sceneTag);
+  }
+  assert.equal(visited.size, 4);
+});
+
 test("V1 event presentation maps canonical story phases to bounded runtime categories", () => {
   const cases = [
     ["v100:event:prologue", "event", "prologue"],

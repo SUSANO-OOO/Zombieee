@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "102842fc6dfc3387a73b6f7cccdae3c3c8d88372be59c4a639a336d0871cdcc8";
+export const V100_STORY_SOURCE_SHA256 = "169efcb030d1b44084fb390d35e4979260fba079efecbba30dfd0445fe950706";
 export const V100_STORY_SOURCE_LINE_COUNT = 1058;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -611,7 +611,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "主人公が老人を背負って降りる。パイセンは途中で足を滑らせた女性を支え、最下段まで手を離さなかった。",
+        "text": "階段の踊り場で、主人公がパイセンから老人を受け取り、背負って降りる。パイセンは途中で足を滑らせた女性を支え、最下段まで手を離さなかった。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 89
@@ -4968,7 +4968,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "ザキミヤは流しで手を洗う。爪の下の黒が落ちるまで。妻もその間、娘を急かさない。",
+        "text": "ザキミヤは流しで手を洗う。爪の下の黒が落ちるまで。妻は娘をあやしながら待っている。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 711
@@ -5838,7 +5838,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "パイセン",
-        "text": "区役所の写真……。安藤さんが待ってるのに、俺が迷った時間まで測ってたんすか",
+        "text": "区役所の写真……。安藤さんを連れ出すまでの時間も、測ってたんすか",
         "portraitOwner": "unit-paisen",
         "portraitKind": "major",
         "sourceLine": 835
@@ -6334,7 +6334,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "区役所では、救援車を出す方が生存率は高かった。あなたたちは戻った",
+        "text": "区役所では、安藤さんを待たずに救援車を出す方が、生存率は高かった。それでも、あなたたちはあの扉を開けた",
         "portraitOwner": "segawa",
         "portraitKind": "major",
         "sourceLine": 906
@@ -6350,7 +6350,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "セガワ",
-        "text": "ええ。次も戻ると思いました。人数が増えたらどうするか、そこも確かめたかった",
+        "text": "ええ。次も、誰かを待つと思いました。人数が増えたらどうするか、そこも確かめたかった",
         "portraitOwner": "segawa",
         "portraitKind": "major",
         "sourceLine": 908

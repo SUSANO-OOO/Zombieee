@@ -2,6 +2,7 @@ import { V100_MOTION_ATLAS_REPLACEMENTS, V100_PHONE_REVIEW_ASSET_ADDITIONS, V100
 // Source-bound additions for the 2026-09-07 completion pass. Published assets
 // retain their bytes; the Stage 21 HQ gate replaces its duplicate V1 plate.
 export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
+  Object.freeze({ path: "/art/v100/story/ending-hospital-secured-r1.webp", bytes: 197016, hash: "sha256-a3749bfa1e76eb20ded969344ed55bd0b6766f1c74bbbd2bd7dd3eea8ee82382", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/story/kumaya-before-outbreak-v1.webp", bytes: 158796, hash: "sha256-f209eb6b9dfee542e58b2dcd0a9ad32505e49eaff9c9b05d93de8fbe2d7fe9f1" }),
   Object.freeze({ path: "/art/v100/story/kumaya-reopened-v1.webp", bytes: 175738, hash: "sha256-5c388170fb89c3981a262aeaab4715e838d28d3b2cbaf61cc046b2d1d26b8eb8" }),
 ]);
@@ -91,12 +92,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 53_291_952,
+  bytesFromV0995: 53_488_968,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 142_970_285,
-  candidateDistinctHashBytes: 142_430_382,
-  updateFromV0982Bytes: 69_982_400,
-  updateFromV0993Bytes: 59_607_706,
+  candidateTotalBytes: 143_167_301,
+  candidateDistinctHashBytes: 142_627_398,
+  updateFromV0982Bytes: 70_179_416,
+  updateFromV0993Bytes: 59_804_722,
 });
