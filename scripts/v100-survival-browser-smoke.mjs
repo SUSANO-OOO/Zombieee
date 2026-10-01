@@ -92,6 +92,14 @@ try {
                 const kind = order[clicks % order.length];
                 const candidate = page.locator(`.unit-card[data-kind="${kind}"]:not([disabled]):not([aria-disabled="true"])`).first();
                 if (await candidate.isVisible()) { await candidate.click(); clicks++; record.deploymentClicksByKind[kind] = (record.deploymentClicksByKind[kind] ?? 0) + 1; }
+                const skill = page.locator('.manual-ability-ready[aria-disabled="false"]').first();
+                if (await skill.isVisible()) {
+                  const ownerId = Number(await skill.getAttribute("data-fighter-id"));
+                  const prior = await page.evaluate(id => Math.max(0, ...(window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.().manualAbilityReceipts ?? []).filter(receipt => receipt.ownerId === id).map(receipt => receipt.activationId)), ownerId);
+                  await skill.click();
+                  const proof = await page.waitForFunction(({ ownerId, prior }) => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.().manualAbilityReceipts.find(receipt => receipt.ownerId === ownerId && receipt.activationId > prior && receipt.eventType === "start"), { ownerId, prior }, { timeout: 5000 });
+                  (record.manualAbilityInputs ??= []).push(await proof.jsonValue());
+                }
                 await page.waitForTimeout(500);
               }
               await page.locator(".survival-save-retry button").waitFor({ timeout: 1000 }); record.deploymentClicks = clicks;

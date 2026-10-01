@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { cpus, freemem, loadavg, uptime } from "node:os";
 import { pathToFileURL } from "node:url";
 
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
@@ -33,6 +34,11 @@ assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diag
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
+const hostLoadSnapshot = () => ({
+  capturedAtUtc: new Date().toISOString(), uptimeSeconds: uptime(),
+  loadAverage: loadavg(), freeMemoryBytes: freemem(),
+  cpuTimes: cpus().map(({ times }) => times),
+});
 const contextSyncDiagnostic = process.env.V100_DEVICE_RUNTIME_CONTEXT_SYNC_DIAGNOSTIC === "1";
 const observerlessDiagnostic = process.env.V100_DEVICE_RUNTIME_OBSERVERLESS === "1";
 const suppressDebugDatasetDiagnostic = process.env.V100_DEVICE_RUNTIME_SUPPRESS_DEBUG_DATASET === "1";
@@ -397,6 +403,7 @@ try {
         }
       }
       await page.screenshot({ path: path.join(evidenceDir, `${name}-before.png`) });
+      if (blankBaselineDiagnostic) result.hostAtMeasurementStart = hostLoadSnapshot();
       measurementActive = true;
       const measurement = await beginMeasurement(page);
       result.measurementStarted = true;
@@ -426,6 +433,7 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      if (blankBaselineDiagnostic) result.hostAtMeasurementEnd = hostLoadSnapshot();
       measurementActive = false;
       result.measurementEnded = true;
       if (suppressDebugDatasetDiagnostic) {
@@ -474,6 +482,10 @@ try {
       result.debug = await page.evaluate(() => ({ phase: document.querySelector(".v100-shell")?.dataset.v100Phase ?? null, screen: document.querySelector(".game-shell")?.dataset.screen ?? null, snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null })).catch(() => null);
     } finally {
       await context.close();
+      if (blankBaselineDiagnostic) {
+        result.blankAfter = await measureBlankRaf(browser, viewport);
+        result.hostAfterControl = hostLoadSnapshot();
+      }
     }
   }
 } finally {
