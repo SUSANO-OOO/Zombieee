@@ -11,6 +11,7 @@ import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "./v100-runtime-observation.mjs";
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -193,13 +194,15 @@ async function waitForBattle(page, deadline) {
 async function beginMeasurement(page) {
   return page.evaluate(() => {
     window.__V100_RAF_CALLBACK_DIAG__?.start();
-    const state = { startedAt: performance.now(), times: [], overflow: 0, active: true, handle: 0, visibilityEvents: [] };
+    // A 120Hz phone produces about 3,600 samples in 30 seconds. Retain that
+    // complete window with bounded headroom; overflow still fails the gate.
+    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [] };
     const mark = (type) => state.visibilityEvents.push({ type, at: performance.now(), visibilityState: document.visibilityState });
     state.listeners = { visibilitychange: () => mark("visibilitychange"), blur: () => mark("blur"), pagehide: () => mark("pagehide") };
     for (const [type, listener] of Object.entries(state.listeners)) window.addEventListener(type, listener, { passive: true });
     const tick = (at) => {
       if (!state.active) return;
-      if (state.times.length < 2_400) state.times.push(at);
+      if (state.times.length < state.capacity) state.times.push(at);
       else state.overflow += 1;
       state.handle = requestAnimationFrame(tick);
     };
@@ -219,7 +222,7 @@ async function endMeasurement(page) {
     const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
     for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
+    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
   });
 }
 
@@ -249,6 +252,7 @@ const report = {
       battleAdapter: await fileSha256("app/v100BattleAdapter.js"),
       tacticalInput: await fileSha256("scripts/v100-normal-tactical-input.mjs"),
       runner: await fileSha256("scripts/v100-device-runtime-browser.mjs"),
+      runtimeObservation: await fileSha256("scripts/v100-runtime-observation.mjs"),
     },
   },
   fixture: {
@@ -323,36 +327,7 @@ try {
       });
     }
     if (callbackDiagnostic) {
-      await page.addInitScript(() => {
-        const original = window.requestAnimationFrame.bind(window);
-        const durations = [];
-        let active = false;
-        window.requestAnimationFrame = (callback) => original((timestamp) => {
-          const started = performance.now();
-          try { return callback(timestamp); }
-          finally {
-            if (active && durations.length < 8_000) durations.push(performance.now() - started);
-          }
-        });
-        window.__V100_RAF_CALLBACK_DIAG__ = {
-          start() { durations.length = 0; active = true; },
-          stop() {
-            active = false;
-            const sorted = [...durations].sort((a, b) => a - b);
-            const at = (fraction) => sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)] ?? null;
-            return {
-              diagnosticOnly: true,
-              count: sorted.length,
-              p50Ms: at(.5),
-              p95Ms: at(.95),
-              maxMs: sorted.at(-1) ?? null,
-              over8Ms: sorted.filter((duration) => duration > 8).length,
-              over16Ms: sorted.filter((duration) => duration > 16).length,
-              over33Ms: sorted.filter((duration) => duration > 33).length,
-            };
-          },
-        };
-      });
+      await page.addInitScript(installRuntimeObservationDiagnostics);
     }
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     report.results.push(result);
@@ -375,14 +350,13 @@ try {
       await page.locator(".v100-shell").waitFor({ state: "attached", timeout: setupTimeoutMs });
       const setupDeadline = Date.now() + setupTimeoutMs;
       await waitForBattle(page, setupDeadline);
-      const initial = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
-      const initialProjection = snapshotProjection(initial);
+      const initial = await page.evaluate(readRuntimeObservation);
+      const initialProjection = initial;
       assert.equal(initial?.stageId, V100_STAGE_IDS[24], "live fixture must be S25");
       assert.equal(initial?.operationId, expectedDefinition.operationId, "live V1 operation identity drifted");
       let latest = initialProjection;
       while (Date.now() < setupDeadline) {
-        const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
-        latest = snapshotProjection(snapshot);
+        latest = await page.evaluate(readRuntimeObservation);
         if (latest?.running && !latest.over && latest.boss.length > 0 && latest.humanCount > 0) break;
         if (!latest?.running || latest?.over) throw new Error("S25 ended before boss and human coverage were observed");
         await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea });
@@ -429,7 +403,7 @@ try {
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
       if (observerlessDiagnostic) {
         await page.waitForTimeout(measurementMs);
-        const final = snapshotProjection(await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null));
+        const final = await page.evaluate(readRuntimeObservation);
         if (!final?.running || final.over || final.humanCount <= 0 || final.boss.length === 0) {
           throw new Error("observerless diagnostic lost live battle, humans, or boss");
         }
@@ -479,7 +453,7 @@ try {
         medianFps: medianFps >= 50,
         renderCadence: renderCadenceToleranceHz !== null && effectiveRenderHz !== null && Math.abs(effectiveRenderHz - expectedRenderHz) <= renderCadenceToleranceHz,
       };
-      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
+      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, capacity: raf?.capacity, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
       await page.screenshot({ path: path.join(evidenceDir, `${name}-after.png`) });
       assert.ok(gates.sampleCount, "insufficient rAF samples for representative window");
       assert.ok(gates.overflow, "rAF observer overflowed");
