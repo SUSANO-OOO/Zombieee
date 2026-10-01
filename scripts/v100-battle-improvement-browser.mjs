@@ -7,6 +7,7 @@ const useCurrentWebKit=process.env.NEW_V100_NATIVE_CURRENT_WEBKIT==='1';
 const {chromium,webkit}=await import(useCurrentWebKit?'./pwa-native-runtime/node_modules/playwright/index.mjs':'playwright');
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {V100_INITIAL_UNIT_IDS,V100_STAGE_IDS} from '../app/v100Registry.js';
+import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
 import {normalTacticalInput,nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installMuzzleCanvasAudit} from './v100-muzzle-canvas-audit.mjs';
@@ -213,7 +214,15 @@ try{for(const number of numbers){
     }
    }
    if(!enemies.length&&last.time>20){emptySince??=last.time;maxEmpty=Math.max(maxEmpty,last.time-emptySince);}else emptySince=null;
-   assert.equal(await page.locator('.manual-ability-label,.manual-ability-legend').count(),0);
+   assert.equal(await page.locator('.manual-ability-legend').count(),0,'V1 uses character-linked skill names rather than the older mode legend');
+   const skillLabels=await page.locator('.manual-ability-ready').evaluateAll(buttons=>buttons.map(button=>{
+    const label=button.querySelector('.v100-manual-ability-label'),rect=label?.getBoundingClientRect(),style=label?getComputedStyle(label):null;
+    return {kind:button.dataset.abilityKind,ownerId:button.dataset.fighterId,name:label?.querySelector('b')?.textContent,
+     readable:Boolean(rect&&rect.width>0&&rect.height>0&&rect.left>=-1&&rect.top>=-1&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&style.visibility==='visible'&&style.display!=='none'),
+     preservesInput:style?.pointerEvents==='none'};
+   }));
+   for(const label of skillLabels){assert.equal(label.name,MANUAL_ABILITY_REGISTRY[label.kind]?.displayName,'Displayed skill name must match its actual owner ability');assert.ok(label.readable,'Character skill label must be readable within the viewport');assert.ok(label.preservesInput,'Skill text must not intercept the established native control');}
+   result.lastSkillLabelObservation={time:last.time,labels:skillLabels};
    if(number===3||number===5){
     const bossKind=number===3?'takuya':'gate-eater';
     if(last.time<(number===3?37:39))assert.ok(!enemies.some(f=>f.kind===bossKind));

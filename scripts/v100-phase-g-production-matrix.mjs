@@ -2250,7 +2250,7 @@ const stateContracts = Object.freeze({
   "dialogue-right": { phases: [dialogueEvidenceTargets.right.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
   "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
   "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
-  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-formation-focus", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
+  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-field-map-title", ".v100-field-map-intel", ".v100-callin-roster", ".v100-slot-track", ".v100-sortie-status", ".v100-formation-footer .v100-primary"] },
   personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
   "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-management-list", ".v100-support-management-card", ".v100-support-art img"] },
   "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -2267,15 +2267,7 @@ const stateContracts = Object.freeze({
 async function productionStateContract(page, state, contractOverride = null) {
   const contract = contractOverride ?? stateContracts[state];
   invariant(contract, `missing Phase G state contract: ${state}`);
-  const viewport = page.viewportSize();
-  const phoneFormation = state === "formation" && viewport?.width >= 640 && viewport.width <= 1020
-    && viewport.height <= 460 && viewport.width > viewport.height;
-  const expectedContract = phoneFormation
-    ? { ...contract, selectors: [
-      ...contract.selectors.filter((selector) => selector !== ".v100-roster-card" && selector !== ".v100-formation-focus"),
-      ".v100-field-map-title", ".v100-field-map-intel", ".v100-slot",
-    ] }
-    : contract;
+  const expectedContract = contract;
   const observed = await page.evaluate(({ expected, battleState }) => {
     const visible = (selector) => {
       const element = document.querySelector(selector);
@@ -4531,14 +4523,21 @@ for (const viewport of requiredViewports) {
   });
   await captureState("chromium", viewport, "formation", async (page) => {
     await formationPage(page, fullSave());
-    if (viewport.safeArea) {
-      await click(page, page.locator(".v100-slot").first(), "formation position picker");
-      await page.locator(".v100-formation-panel.picker-open .v100-roster-card").first().waitFor({ state: "visible", timeout });
-      await click(page, page.locator(".v100-picker-close"), "formation picker return");
-      await page.locator(".v100-formation-panel:not(.picker-open) .v100-slot-track").waitFor({ state: "visible", timeout });
-      invariant(await page.locator(".v100-formation-panel:not(.picker-open) .v100-slot:visible").count() === 7,
-        "formation picker return did not restore all seven call-in slots");
-    }
+    await click(page, page.locator(".v100-slot").first(), "formation position picker");
+    await page.locator(".v100-formation-panel.picker-open .v100-roster-card").first().waitFor({ state: "visible", timeout });
+    await click(page, page.locator(".v100-picker-close"), "formation picker return");
+    await page.locator(".v100-formation-panel:not(.picker-open) .v100-slot-track").waitFor({ state: "visible", timeout });
+    invariant(await page.locator(".v100-formation-panel:not(.picker-open) .v100-slot:visible").count() === 7,
+      "formation picker return did not restore all seven call-in slots");
+    await page.waitForFunction(() => {
+      const slots = [...document.querySelectorAll(".v100-formation-panel:not(.picker-open) .v100-slot")];
+      return slots.length === 7 && slots.every(slot => {
+        const image = slot.querySelector(".v100-slot-portrait img");
+        if (!slot.classList.contains("filled")) return slot.classList.contains("empty");
+        return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0
+          && image.dataset.loaded === "true" && getComputedStyle(image).visibility === "visible";
+      });
+    }, null, { timeout });
   });
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());

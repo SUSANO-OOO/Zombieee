@@ -35,7 +35,7 @@
 #v100-campaign .v100-field-map-title { position: relative; inset: auto; z-index: 2; display: block; max-width: 100%; margin: 0; white-space: normal; }
 #v100-campaign .v100-field-map-title strong { font: 800 19px/1.1 serif; }
 #v100-campaign .v100-field-map-title small { display: block; margin-top: 3px; font: 600 12px/1.2 system-ui, sans-serif; }
-#v100-campaign .v100-field-map-intel { position: relative; inset: auto; z-index: 2; max-width: 100%; margin-top: 7px; padding: 4px 7px; background: #07120cb8; border-left: 3px solid #dba55d; }
+#v100-campaign .v100-field-map-intel { display: block; position: relative; inset: auto; z-index: 2; max-width: 100%; margin-top: 7px; padding: 4px 7px; background: #07120cb8; border-left: 3px solid #dba55d; }
 #v100-campaign .v100-field-map-intel strong { display: block; font-size: 14px; line-height: 1.25; }
 #v100-campaign .v100-field-map-intel span:last-child { display: block; font-size: 12px; line-height: 1.25; }
 #v100-campaign .v100-field-map-drawing { position: absolute; inset: 10px 0 16px; width: 100%; height: calc(100% - 26px); opacity: .55; }
