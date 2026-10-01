@@ -23926,7 +23926,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
           <h2>3択強化を選択</h2>
-          <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次waveへ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
               const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
