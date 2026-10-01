@@ -16,6 +16,21 @@ import {installMetalCanvasAudit} from './v100-metal-canvas-audit.mjs';
 import {installClawCanvasAudit} from './v100-claw-canvas-audit.mjs';
 import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audit.mjs';
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
+function readBattleSkillLabelObservation() {
+ const snapshot=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+ const resultShown=Boolean(document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'));
+ const terminalTransition=snapshot?.over===true||resultShown;
+ const observation={time:snapshot?.time,snapshotPresent:Boolean(snapshot),terminalTransition,over:snapshot?.over,won:snapshot?.won,resultShown,labels:[]};
+ if(terminalTransition)return observation;
+ observation.labels=[...document.querySelectorAll('.manual-ability-ready')].map(button=>{
+  const label=button.querySelector('.v100-manual-ability-label'),rect=label?.getBoundingClientRect(),style=label?getComputedStyle(label):null;
+  return {kind:button.dataset.abilityKind,ownerId:button.dataset.fighterId,name:label?.querySelector('b')?.textContent,
+   rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null,
+   readable:Boolean(rect&&rect.width>0&&rect.height>0&&rect.left>=-1&&rect.top>=-1&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&style.visibility==='visible'&&style.display!=='none'),
+   preservesInput:style?.pointerEvents==='none'};
+ });
+ return observation;
+}
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_BATTLE_IMPROVEMENT_OUT??'outputs/v100-battle-improvement-r1';
 const engine=process.env.V100_BATTLE_IMPROVEMENT_ENGINE??'chromium';
@@ -215,14 +230,16 @@ try{for(const number of numbers){
    }
    if(!enemies.length&&last.time>20){emptySince??=last.time;maxEmpty=Math.max(maxEmpty,last.time-emptySince);}else emptySince=null;
    assert.equal(await page.locator('.manual-ability-legend').count(),0,'V1 uses character-linked skill names rather than the older mode legend');
-   const skillLabels=await page.locator('.manual-ability-ready').evaluateAll(buttons=>buttons.map(button=>{
-    const label=button.querySelector('.v100-manual-ability-label'),rect=label?.getBoundingClientRect(),style=label?getComputedStyle(label):null;
-    return {kind:button.dataset.abilityKind,ownerId:button.dataset.fighterId,name:label?.querySelector('b')?.textContent,
-     readable:Boolean(rect&&rect.width>0&&rect.height>0&&rect.left>=-1&&rect.top>=-1&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&style.visibility==='visible'&&style.display!=='none'),
-     preservesInput:style?.pointerEvents==='none'};
-   }));
-   for(const label of skillLabels){assert.equal(label.name,MANUAL_ABILITY_REGISTRY[label.kind]?.displayName,'Displayed skill name must match its actual owner ability');assert.ok(label.readable,'Character skill label must be readable within the viewport');assert.ok(label.preservesInput,'Skill text must not intercept the established native control');}
-   result.lastSkillLabelObservation={time:last.time,labels:skillLabels};
+   const skillObservation=await page.evaluate(readBattleSkillLabelObservation);
+   if(skillObservation.terminalTransition){
+    // A real win/loss tears down the battle HUD. Validate the natural result
+    // below; its already hidden skill labels are not an in-battle sample.
+    result.skillLabelTerminalTransition=skillObservation;
+   }else{
+    result.lastSkillLabelObservation={time:last.time,...skillObservation};
+    assert.ok(skillObservation.snapshotPresent,'Live skill observation requires the battle snapshot');
+    for(const label of skillObservation.labels){assert.equal(label.name,MANUAL_ABILITY_REGISTRY[label.kind]?.displayName,'Displayed skill name must match its actual owner ability');assert.ok(label.readable,'Character skill label must be readable within the viewport');assert.ok(label.preservesInput,'Skill text must not intercept the established native control');}
+   }
    if(number===3||number===5){
     const bossKind=number===3?'takuya':'gate-eater';
     if(last.time<(number===3?37:39))assert.ok(!enemies.some(f=>f.kind===bossKind));
