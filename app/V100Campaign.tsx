@@ -1156,6 +1156,7 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
       <aside className="v100-personnel-focus v100-unit-focus" aria-label="選択中の隊員" data-unit-id={selectedUnit?.id} data-unit-level={info?.level}>
         {selectedUnit && info && currentStats && <>
           <div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={selectedUnit.displayName + "の立ち絵"} />}</div>
+          <div className="v100-unit-growth-notes"><details><summary>装備込み・育成詳細</summary><p>{nextStats ? nextGrowth || "次レベルでは数値変化なし" : "現在の育成上限"}<br />{info.equipmentNames.length ? info.equipmentNames.join(" / ") : "装備なし"}{info.treatmentProtection && <><br />通常治療後は {Math.round(info.treatmentProtection.reduction * 100)}%の被害軽減が{info.treatmentProtection.seconds}秒間続きます。</>}</p></details></div>
           <button type="button" className="v100-personnel-detail-back" onClick={() => setDetailOpen(false)}>隊員一覧へ</button>
           <div className="v100-personnel-focus-copy">
             <div className="v100-unit-record-heading"><h3>{selectedUnit.displayName}</h3><span className="v100-unit-level">Lv.{info.level}{info.nextLevel !== null && <> → {info.nextLevel}</>} <small>/ 上限 {info.levelCap}</small></span><small className="v100-unit-registration">{info.status}</small></div>
@@ -1173,7 +1174,6 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
                 showStat("射程", formatV100Number(currentStats.range)),
               ] : []),
             ]}</div>
-            <div className="v100-unit-growth-notes"><span>装備込み</span><strong>{nextStats ? nextGrowth || "次レベルでは数値変化なし" : "現在の育成上限"}</strong><details><summary>装備・治療の詳細</summary><p>{info.equipmentNames.length ? info.equipmentNames.join(" / ") : "装備なし"}{info.treatmentProtection && <><br />通常治療後は {Math.round(info.treatmentProtection.reduction * 100)}%の被害軽減が{info.treatmentProtection.seconds}秒間続きます。</>}</p></details></div>
             <div className="v100-unit-transaction"><p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
               {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, info.level)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
                 : info.registered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < info.registrationCost}>配備登録 / {info.registrationCost} CAPS</button>
@@ -1196,7 +1196,7 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
     <div className="v100-vehicle-upgrade-hero v100-support-grid vehicle-grid">
       <div className="v100-vehicle-upgrade-art"><img src={V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path} alt="装甲車両" /><span className="v100-garage-vehicle-label">全作戦共通 / 装甲車両</span></div>
       <div className="v100-vehicle-upgrade-copy">
-        <span className="v100-kicker">整備記録 / 車体 Lv.{vehicleLevel}</span><h3>防衛線を支える装甲</h3>
+        <span className="v100-kicker">車体強化 / Lv.{vehicleLevel}</span><h3>防衛線を支える装甲</h3>
         <dl><div><dt>現在耐久</dt><dd>{save.vehicle.maxHp}</dd></div><div><dt>強化後</dt><dd>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "上限" : nextHp}</dd></div><div><dt>所持CAPS</dt><dd>{save.caps}</dd></div></dl>
         <div key={vehicleLevel} className="v100-vehicle-strength-meter" role="img" aria-label={"現在耐久" + save.vehicle.maxHp + "、強化後" + nextHp}><i style={{ width: (save.vehicle.maxHp / maximumHp * 100) + "%" }} /><b style={{ left: (save.vehicle.maxHp / maximumHp * 100) + "%", width: ((nextHp - save.vehicle.maxHp) / maximumHp * 100) + "%" }} /></div>
         <p className="v100-vehicle-quote">{vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? "耐久 +" + V100_VEHICLE.hpPerUpgrade + " / 必要 " + nextCost + " CAPS" : "車体の強化上限に到達"}{nextCost > save.caps && <strong> / あと {nextCost - save.caps} CAPS</strong>}</p>
