@@ -1112,7 +1112,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
           const info = v100UnitPresentation(save, unit.id);
           return <button type="button" className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
             <span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span>
-            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small>{v100RoleLabelFor(unit.role)} / 指揮 {info?.commandCost}</small><small>{info?.skill?.name} / 再使用 {info?.skill?.cooldownSeconds}秒</small></span>
+            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small>{v100RoleLabelFor(unit.role)} / 指揮 {info?.commandCost}</small><small>{info?.skill?.name} / 再使用 <span className="v100-time-value">{info?.skill?.cooldownSeconds}秒</span></small></span>
           </button>;
         })}</div></div>
       </div>

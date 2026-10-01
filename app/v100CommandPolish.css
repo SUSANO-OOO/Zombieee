@@ -79,6 +79,7 @@
 #v100-campaign .v100-command-formation.picker-open .v100-roster-card-copy strong { font-size: 16px; line-height: 1.15; }
 #v100-campaign .v100-command-formation.picker-open .v100-roster-card-copy strong b { font-size: 12px; font-weight: 500; }
 #v100-campaign .v100-command-formation.picker-open .v100-roster-card-copy small { display: block; font-size: 12px; line-height: 1.2; }
+#v100-campaign .v100-roster-card-copy .v100-time-value { white-space: nowrap; }
 
 /* Personnel records: one portrait beside a readable paper record. */
 #v100-campaign .v100-command-personnel { background: #151b17; }
