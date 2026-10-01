@@ -28,6 +28,7 @@ import {
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import { applyV100UnitLevelProgression } from "./v100Progression.js";
+import { applyUnitEquipmentEffects } from "./unitEquipmentStats.js";
 import { V100_FORMATION_MAX_SLOTS, V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
 import { humanDeploymentCapacity } from "./deploymentCapacity.js";
 import {
@@ -213,6 +214,7 @@ import {
   bossRenderKind,
   bossBattleHudSnapshot,
   bossTelegraphSnapshot,
+  v100BossActionGuidanceFor,
   enforceBossBodyBarrier,
   isBossEnemyKind,
   isBossFighter,
@@ -1161,7 +1163,49 @@ type ManualAbilityIconView = {
   anchorX: number;
   anchorY: number;
   available: boolean;
+  label?: { x: number; y: number; width: number; height: number };
 };
+
+type AbilityLabelRect = { x: number; y: number; width: number; height: number };
+
+// This positions text only. The established icon hitbox, actor anchor and
+// availability remain untouched, and labels never receive pointer events.
+function placeV100AbilityLabels(icons: ManualAbilityIconView[], obstacles: AbilityLabelRect[], width: number, height: number) {
+  const labelWidth = 96, labelHeight = 30, gap = 3;
+  const placed: AbilityLabelRect[] = [];
+  const intersects = (a: AbilityLabelRect, b: AbilityLabelRect) => a.x < b.x + b.width + gap
+    && a.x + a.width + gap > b.x && a.y < b.y + b.height + gap && a.y + a.height + gap > b.y;
+  const blocked = [...obstacles, ...icons.map(icon => ({ x: icon.x, y: icon.y, width: icon.hitSize, height: icon.hitSize }))];
+  return icons.map(icon => {
+    const centerX = icon.x + icon.hitSize / 2;
+    const candidates = [
+      { x: centerX - labelWidth / 2, y: icon.y - labelHeight - gap },
+      { x: centerX - labelWidth / 2, y: icon.y + icon.hitSize + gap },
+      { x: icon.x - labelWidth - gap, y: icon.y + (icon.hitSize - labelHeight) / 2 },
+      { x: icon.x + icon.hitSize + gap, y: icon.y + (icon.hitSize - labelHeight) / 2 },
+      ...[-labelWidth, labelWidth, -labelWidth / 2, labelWidth / 2].flatMap(offset => [
+        { x: centerX - labelWidth / 2 + offset, y: icon.y - labelHeight - gap },
+        { x: centerX - labelWidth / 2 + offset, y: icon.y + icon.hitSize + gap },
+      ]),
+    ].map(point => ({ ...point, x: Math.max(6, Math.min(width - labelWidth - 6, point.x)), width: labelWidth, height: labelHeight }));
+    const fits = (rect: AbilityLabelRect) => rect.y >= 6 && rect.y + rect.height <= height - 6
+      && ![...blocked, ...placed].some(other => intersects(rect, other));
+    let label = candidates.find(fits);
+    if (!label) {
+      const freeCells: AbilityLabelRect[] = [];
+      for (let y = 6; y + labelHeight <= height - 6; y += labelHeight + gap * 2) {
+        for (let x = 6; x + labelWidth <= width - 6; x += labelWidth + gap * 2) {
+          freeCells.push({ x, y, width: labelWidth, height: labelHeight });
+        }
+      }
+      freeCells.sort((a, b) => Math.hypot(a.x + labelWidth / 2 - centerX, a.y + labelHeight / 2 - icon.y - icon.hitSize / 2)
+        - Math.hypot(b.x + labelWidth / 2 - centerX, b.y + labelHeight / 2 - icon.y - icon.hitSize / 2));
+      label = freeCells.find(fits);
+    }
+    if (label) placed.push(label);
+    return { ...icon, label };
+  });
+}
 type Corpse = {
   v100TwinPart?: "a" | "b";
   v100TwinPair?: number;
@@ -2830,28 +2874,7 @@ function equippedCardForGame(g: Game, kind: UnitKind) {
     ...g.tacticalEquipmentIds,
   ], g.equipmentEnhancementLevels);
   const survivalEffects = survivalUpgradeEffects(g.survivalRun);
-  return {
-    ...progressedCard,
-    hp: Math.max(1, Math.round(progressedCard.hp * equipmentEffects.hpMultiplier)),
-    damage: progressedCard.damage
-      * survivalEffects.attackMultiplier
-      * equipmentEffects.damageMultiplier,
-    range: progressedCard.range
-      * survivalEffects.rangeMultiplier
-      * equipmentEffects.rangeMultiplier,
-    speed: progressedCard.speed * equipmentEffects.speedMultiplier,
-    laneSpeed: progressedCard.laneSpeed * equipmentEffects.speedMultiplier,
-    attackEvery: progressedCard.attackEvery * equipmentEffects.attackEveryMultiplier,
-    defense: Math.min(
-      .75,
-      1 - (1 - Math.min(.75, (progressedCard.defense ?? 0) + equipmentEffects.defenseFlat))
-        * survivalEffects.defenseMultiplier,
-    ),
-    healingMultiplier: (progressedCard.healingMultiplier ?? 1)
-      * survivalEffects.healingMultiplier
-      * equipmentEffects.healingMultiplier,
-    deployCooldown: progressedCard.deployCooldown * equipmentEffects.redeployMultiplier,
-  } as UnitCard & { progressionLevel: number; progressionRank: number };
+  return applyUnitEquipmentEffects(progressedCard, equipmentEffects, survivalEffects) as UnitCard & { progressionLevel: number; progressionRank: number };
 }
 
 function humanDeploymentCapacityForGame(g: Game) {
@@ -5985,7 +6008,8 @@ const COMPACT_BOSS_TELEGRAPH_LABELS: Record<string, string> = {
   "cross-strike": "交差中心 // 離脱",
 };
 
-function bossTelegraphDisplayLabel(telegraph: { kind: string; displayName: string; counterplay: string }, compact: boolean) {
+function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean, v100 = false) {
+  if (v100) return `${telegraph.displayName} // ${v100BossActionGuidanceFor(telegraph.bossId) ?? telegraph.counterplay}`;
   return compact && COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     ? COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     : `${telegraph.displayName} // ${telegraph.counterplay}`;
@@ -6174,7 +6198,7 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.fillStyle = "#f4dfb8";
   ctx.font = "900 10px monospace";
   ctx.textAlign = "center";
-  const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport());
+  const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), Boolean(g.definition.missionConfig?.v100StageNumber));
   const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
     ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
     : telegraph.kind === "lane-rectangle"
@@ -23411,7 +23435,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           for (const fighter of g.fighters) {
             const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
             if (!telegraph) continue;
-            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, true);
+            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, true, true);
             break;
           }
         }
@@ -23453,7 +23477,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           edge,
           viewportSafeAreaRef.current[edge as keyof typeof viewportSafeAreaRef.current] + 6,
         ]));
-        const manualAbilityIcons = layoutManualAbilityIcons({
+        let manualAbilityIcons: ManualAbilityIconView[] = layoutManualAbilityIcons({
           fighters: readyAbilityFighters,
           obstacles: obstacleRects,
           displayWidth: canvasRect.width,
@@ -23469,6 +23493,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           anchorY: icon.anchorY,
           available: Boolean(readyAbilityFighters.find((fighter) => fighter.id === icon.fighterId)?.available),
         }));
+        if (g.definition.missionConfig?.v100StageNumber) {
+          const insets = viewportSafeAreaRef.current;
+          const labelObstacles = [...obstacleRects,
+            { x: 0, y: 0, width: insets.left, height: canvasRect.height },
+            { x: canvasRect.width - insets.right, y: 0, width: insets.right, height: canvasRect.height },
+            { x: 0, y: 0, width: canvasRect.width, height: insets.top },
+            { x: 0, y: canvasRect.height - insets.bottom, width: canvasRect.width, height: insets.bottom },
+            ...[...(frameElement?.querySelectorAll(".v100-boss-telegraph-warning,.v100-manual-ability-guide") ?? [])].map(element => {
+            const rect = element.getBoundingClientRect();
+            return { x: rect.left - canvasRect.left, y: rect.top - canvasRect.top, width: rect.width, height: rect.height };
+          })];
+          manualAbilityIcons = placeV100AbilityLabels(manualAbilityIcons, labelObstacles, canvasRect.width, canvasRect.height);
+        }
         if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
           document.documentElement.dataset.manualAbilityLayoutDebug = JSON.stringify({
             fighters: readyAbilityFighters,
@@ -23726,10 +23763,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
-            {!externalSessionActive && <span className="manual-ability-label"><b>{ability.displayName}</b><small>{manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>}
+            {externalSessionActive && icon.label && <svg className="v100-ability-label-link" width="1" height="1" aria-hidden="true"><line x1={icon.hitSize / 2} y1={icon.hitSize / 2} x2={Math.max(icon.label.x, Math.min(icon.label.x + icon.label.width, icon.x + icon.hitSize / 2)) - icon.x} y2={Math.max(icon.label.y, Math.min(icon.label.y + icon.label.height, icon.y + icon.hitSize / 2)) - icon.y} /></svg>}
+            {(!externalSessionActive || icon.label) && <span className={`manual-ability-label ${externalSessionActive ? "v100-manual-ability-label" : ""}`} style={externalSessionActive && icon.label ? { left: icon.label.x - icon.x, top: icon.label.y - icon.y, width: icon.label.width, height: icon.label.height } : undefined}><b>{ability.displayName}</b><small>{externalSessionActive ? !icon.available ? "対象待ち" : paused ? "一時停止中" : selectedAction ? "支援操作中" : "使用可" : manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>}
           </button>;
         })}
         {!externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
+        {externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && !paused && !combatLocked && <div className="v100-manual-ability-guide" role="note">{selectedAction ? "支援を配置中。取り消すと技能を使えます" : "頭上の技能アイコンをタップで発動"}</div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}

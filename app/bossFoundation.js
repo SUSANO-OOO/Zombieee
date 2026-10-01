@@ -4,6 +4,25 @@ import { isKuromeClone } from "./kuromeBoss.js";
 
 export const BOSS_FOUNDATION_SCHEMA_VERSION = 1;
 
+// V1 players command deployment, support and character abilities. Free movement
+// is not an input; Kurome alone accepts a tap on the tracked ally to evade.
+// Keep the older mode's geometric counterplay contract separate from this help.
+const V100_BOSS_ACTION_GUIDANCE = deepFreeze({
+  "boss-takuya": "防御技で備え、被弾後は回復",
+  "boss-gate-eater": "防御技で備え、停止中に攻撃技",
+  "boss-kurome-prototype": "狙われた隊員をタップで回避",
+  "boss-mother": "召喚体へ範囲技や火炎支援",
+  "boss-ooguchi": "防御技で備え、停止中に攻撃技",
+  "boss-gairen": "外殻展開中に攻撃技や砲撃",
+  "boss-futago": "防御技で備え、被弾後は回復",
+  "boss-mugarian-president-mutated": "防御技で備え、攻撃後に砲撃",
+  "boss-takuya-omega": "防御技で備え、攻撃後に砲撃",
+});
+
+export function v100BossActionGuidanceFor(bossId) {
+  return V100_BOSS_ACTION_GUIDANCE[bossId === "boss-kurome" ? "boss-kurome-prototype" : bossId] ?? null;
+}
+
 const phase = (phaseNumber, label, startsAtRatio) => ({
   phase: phaseNumber,
   label,

@@ -20,6 +20,12 @@
 .v100-shell .battle-controls-zone .audio-unlock-inline { border-color: #e9bd62; color: #ffe2b5; }
 .v100-shell .battle-controls-zone .audio-unlock-inline[data-state="failed"] { border-color: #ff7055; color: #ffe2b5; }
 .v100-shell .battle-controls-zone .audio-unlock-inline small { font-size: 10px; white-space: nowrap; }
+.v100-shell .manual-ability-label.v100-manual-ability-label { transform: none; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 2px 4px; max-width: none; border-radius: 3px; pointer-events: none; }
+.v100-shell .manual-ability-label.v100-manual-ability-label b { font: 800 11px/1.1 system-ui,sans-serif; overflow: visible; text-overflow: clip; }
+.v100-shell .manual-ability-label.v100-manual-ability-label small { font: 600 10px/1.1 system-ui,sans-serif; color: #d0e0cf; }
+.v100-shell .v100-ability-label-link { position: absolute; left: 0; top: 0; overflow: visible; stroke: #d7b876; stroke-opacity: .7; stroke-width: 1; pointer-events: none; }
+.v100-shell .v100-manual-ability-guide { position: absolute; z-index: 12; left: calc(var(--battle-hud-content-left, 0px) + 6px); bottom: calc(var(--battle-hud-bottom-height, 82px) + var(--battle-hud-bottom-inset, 0px) + 5px); max-width: min(270px, 40%); padding: 4px 6px; border-left: 2px solid #ddad5f; background: #101915eb; color: #f3e8c8; font: 600 11px/1.2 system-ui,sans-serif; pointer-events: none; }
+.v100-shell .v100-boss-telegraph-warning { white-space: normal; }
 @media (max-height: 420px) and (orientation: landscape) {
  .v100-shell .battle-message-stack:has(.v100-boss-center) { padding: 3px 5px; }
  .v100-shell .boss-hud.v100-boss-center { padding: 4px 7px; }
