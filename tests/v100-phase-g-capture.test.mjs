@@ -23,6 +23,37 @@ const checkpointDeclaration = parsed.statements.find((node) => ts.isVariableStat
   && node.declarationList.declarations.some((entry) => entry.name.getText(parsed) === "BATTLE_EXTRA_CHECKPOINTS"));
 assert.ok(checkpointDeclaration, "actual checkpoint registry must exist");
 const registeredCheckpoints = Array.from(vm.runInNewContext(checkpointDeclaration.getText(parsed) + "\nBATTLE_EXTRA_CHECKPOINTS"));
+
+test("a fully visible identical clamped centering target skips only its no-op RPC", () => {
+  const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "noopDeploymentCardCentering");
+  assert.ok(declaration);
+  const plan = vm.runInNewContext(`${declaration.getText(parsed)}\nnoopDeploymentCardCentering`);
+  const identity = { nodeId: "deployment-card-2", kind: "ranger", slot: "1" };
+  const viewport = { x: 0, y: 0, width: 667, height: 375 };
+  const card = { ...identity, actionability: { eligible: true }, hitOwnerMatches: true, activeAnimations: [],
+    rect: { visible: true, x: 185.5, y: 295, width: 78.5, height: 60 },
+    rail: { scrollLeft: 0, scrollWidth: 568, clientWidth: 323,
+      rect: { visible: true, x: 104, y: 295, width: 323, height: 60 } } };
+  card.rawCenteringGeometry = { cardRect: { ...card.rect }, rail: { ...card.rail, rect: { ...card.rail.rect } } };
+  const result = plan(card, identity, viewport);
+  assert.equal(result.status, "centered"); assert.equal(result.targetLeft, 0);
+  assert.equal(result.method, "already-at-clamped-target");
+  const changed = overrides => ({ ...card, ...overrides, rawCenteringGeometry: {
+    cardRect: { ...card.rect, ...overrides.rect }, rail: { ...card.rail, ...overrides.rail },
+  } });
+  assert.equal(plan(changed({ rect: { ...card.rect, x: 300 } }), identity, viewport), null, "required movement still uses the existing RPC");
+  assert.equal(plan(changed({ rect: { ...card.rect, x: 420 } }), identity, viewport), null, "partially clipped card is not a no-op proof");
+  assert.equal(plan(card, { ...identity, nodeId: "other" }, viewport), null);
+  assert.equal(plan(changed({ hitOwnerMatches: false }), identity, viewport), null);
+  assert.equal(plan(changed({ activeAnimations: [{ running: true }] }), identity, viewport), null);
+  assert.equal(plan(changed({ rect: { ...card.rect, width: NaN } }), identity, viewport), null);
+  assert.equal(plan(card, identity, { ...viewport, height: 354 }), null, "one pixel outside the viewport requires live revalidation");
+  assert.equal(plan(changed({ actionability: { eligible: false } }), identity, viewport), null);
+  assert.equal(plan({ ...card, rawCenteringGeometry: null }, identity, viewport), null, "rounded diagnostics alone cannot prove a no-op");
+  assert.equal(plan({ ...card, rect: { ...card.rect, x: 226.25 }, rawCenteringGeometry: {
+    ...card.rawCenteringGeometry, cardRect: { ...card.rect, x: 226.254 },
+  } }, identity, viewport), null, "subpixel movement masked by rounded diagnostics still uses the existing RPC");
+});
 test("deployment pointer diagnostics are bounded, capture handler failures, and clean up both raw registrations", async () => {
   const install = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "installDeploymentPointerReceipt");
   const read = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "readDeploymentPointerReceipts");

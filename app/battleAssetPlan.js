@@ -1,6 +1,6 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { legacySpriteKinds, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import { FORMATION_CARD_ART, legacySpriteKinds, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
@@ -119,6 +119,8 @@ export function requiredBattleAssetPlan({
     })), ...guardSprite.map(frozenEntry)],
     stageObjects: Object.freeze(stageObjects),
     persistent: Object.freeze(persistent),
+    cards: Object.freeze(unique(formationKinds).filter(kind => FORMATION_CARD_ART[kind])
+      .map(kind => frozenEntry({ kind, path: FORMATION_CARD_ART[kind], category: "unit-card" }))),
   };
   return Object.freeze({
     ...plan,
@@ -128,6 +130,7 @@ export function requiredBattleAssetPlan({
       ...plan.sprites.map(({ path }) => path),
       ...plan.stageObjects.map(({ path }) => path),
       ...plan.persistent.map(({ path }) => path),
+      ...plan.cards.map(({ path }) => path),
     ])),
   });
 }

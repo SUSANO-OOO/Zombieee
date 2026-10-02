@@ -8,6 +8,16 @@ import {
 } from "../app/battleAssetPlan.js";
 import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
+import { FORMATION_CARD_ART } from "../app/spriteManifest.js";
+
+test("battle readiness includes each selected card image once and excludes unrelated card images", () => {
+  const plan = requiredBattleAssetPlan({ stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+    formationKinds: ["guardian", "medic", "guardian"], enemyKinds: ["walker"] });
+  assert.deepEqual(plan.cards.map(({ kind }) => kind), ["guardian", "medic"]);
+  for (const kind of ["guardian", "medic"]) assert.equal(plan.paths.filter(p => p === FORMATION_CARD_ART[kind]).length, 1);
+  assert.ok(!plan.paths.includes(FORMATION_CARD_ART.brawler));
+  assert.ok(Object.isFrozen(plan.cards) && plan.cards.every(Object.isFrozen));
+});
 
 test("all 20 campaign stages have a closed required visual plan", () => {
   assert.equal(CAMPAIGN_STAGES.length, 20);

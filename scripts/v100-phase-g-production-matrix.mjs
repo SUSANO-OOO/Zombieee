@@ -1175,6 +1175,29 @@ async function removeDeploymentSchedulerProbe(page, probeId) {
   }, probeId);
 }
 
+function noopDeploymentCardCentering(card, identity, viewport) {
+  if (!card || !identity || !viewport || !card.rail?.rect || !card.rect) return null;
+  if (["nodeId", "kind", "slot"].some(key => !identity[key] || identity[key] !== card[key])) return null;
+  if (card.actionability?.eligible !== true || card.hitOwnerMatches !== true
+    || card.rect.visible !== true || card.rail.rect.visible !== true
+    || !Array.isArray(card.activeAnimations) || card.activeAnimations.length) return null;
+  const geometry = card.rawCenteringGeometry;
+  if (!geometry?.cardRect || !geometry.rail?.rect) return null;
+  const r = geometry.cardRect, rail = geometry.rail, bounds = rail.rect;
+  if (![r.x, r.y, r.width, r.height, bounds.x, bounds.y, bounds.width, bounds.height,
+    rail.scrollLeft, rail.scrollWidth, rail.clientWidth, viewport.x, viewport.y, viewport.width, viewport.height].every(Number.isFinite)) return null;
+  if ([r.width, r.height, bounds.width, bounds.height, rail.clientWidth, viewport.width, viewport.height].some(value => value <= 0)) return null;
+  if (rail.scrollWidth < rail.clientWidth || rail.scrollLeft < 0 || rail.scrollLeft > rail.scrollWidth - rail.clientWidth) return null;
+  const contained = (outer) => r.x >= outer.x && r.y >= outer.y
+    && r.x + r.width <= outer.x + outer.width && r.y + r.height <= outer.y + outer.height;
+  if (!contained(bounds) || !contained(viewport)) return null;
+  const targetLeft = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth,
+    rail.scrollLeft + (r.x + r.width / 2) - (bounds.x + bounds.width / 2)));
+  return targetLeft === rail.scrollLeft
+    ? { status: "centered", targetLeft, method: "already-at-clamped-target", geometrySource: "preflight.initial.rawCenteringGeometry", identity: { ...identity } }
+    : null;
+}
+
 async function centerDeploymentCardInRail(page, identity) {
   return page.evaluate((expectedIdentity) => {
     const registry = window.__V100_PHASE_G_DEPLOYMENT_NODE_IDS__ ??= {
@@ -1564,7 +1587,9 @@ async function performVerifiedDeploymentPointer(page, {
     }
     const identity = deploymentCardIdentity(candidate);
     preflightEvidence.resolvedIdentity = identity;
-    const centered = await preflightStep(() => centerDeploymentCardInRail(page, identity));
+    const centered = noopDeploymentCardCentering(candidate, identity, initial.viewport)
+      ?? await preflightStep(() => centerDeploymentCardInRail(page, identity),
+        "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", { operation: "center-card-in-rail", identity });
     preflightEvidence.centered = centered;
     if (centered.status === "candidate-invalidated-before-pointer") {
       return recordPointerResult({
@@ -3257,8 +3282,7 @@ async function readBattleDeploymentDiagnostics(page, {
       if (!nodeRegistry.ids.has(node)) nodeRegistry.ids.set(node, `deployment-card-${nodeRegistry.next++}`);
       return nodeRegistry.ids.get(node);
     };
-    const visibleRect = (element) => {
-      const rect = element.getBoundingClientRect();
+    const visibleRect = (element, rect = element.getBoundingClientRect()) => {
       const style = window.getComputedStyle(element);
       return {
         visible: rect.width > 0
@@ -3273,10 +3297,14 @@ async function readBattleDeploymentDiagnostics(page, {
       };
     };
     const cards = [...document.querySelectorAll("button.unit-card")].map((card) => {
-      const rect = visibleRect(card);
+      const cardBounds = card.getBoundingClientRect();
+      const rect = visibleRect(card, cardBounds);
       const style = window.getComputedStyle(card);
       const rail = card.closest(".unit-cards");
-      const railRect = rail ? visibleRect(rail) : null;
+      const railBounds = rail?.getBoundingClientRect();
+      const railRect = rail ? visibleRect(rail, railBounds) : null;
+      const rawRect = bounds => ({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height });
+      const railScrollLeft = rail?.scrollLeft ?? null;
       const viewportRect = {
         x: window.visualViewport?.offsetLeft ?? 0,
         y: window.visualViewport?.offsetTop ?? 0,
@@ -3309,6 +3337,10 @@ async function readBattleDeploymentDiagnostics(page, {
         cost: cost === null ? null : Number(cost),
         text: (card.textContent ?? "").trim().replace(/\s+/gu, " ").slice(0, 180),
         rect,
+        rawCenteringGeometry: rail ? {
+          cardRect: rawRect(cardBounds),
+          rail: { scrollLeft: railScrollLeft, scrollWidth: rail.scrollWidth, clientWidth: rail.clientWidth, rect: rawRect(railBounds) },
+        } : null,
         center,
         centerInCard: center.x >= rect.x
           && center.x <= rect.x + rect.width
@@ -3348,7 +3380,7 @@ async function readBattleDeploymentDiagnostics(page, {
           classes: hitTarget.getAttribute("class"),
         } : null,
         rail: rail ? {
-          scrollLeft: Math.round(rail.scrollLeft * 100) / 100,
+          scrollLeft: Math.round(railScrollLeft * 100) / 100,
           scrollWidth: rail.scrollWidth,
           clientWidth: rail.clientWidth,
           rect: railRect,

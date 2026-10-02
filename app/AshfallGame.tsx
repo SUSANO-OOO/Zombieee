@@ -14052,7 +14052,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       requiredPlan.persistent.map(({ key, path }) => [key, path]),
     );
     const stageObjectAssets = requiredPlan.stageObjects;
-    const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
+    const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds,
+      ...requiredPlan.cards.map(({ kind }) => `card-${kind}`)]);
     const retainedSpriteImages = new Set(
       Object.entries(spriteRefs.current)
         .filter(([key]) => retainedSpriteKeys.has(key))
@@ -14106,6 +14107,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         category,
         spriteRefs.current[kind],
         (image) => { spriteRefs.current[kind] = image; },
+      )),
+      ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(
+        path, category, spriteRefs.current[`card-${kind}`],
+        (image) => { spriteRefs.current[`card-${kind}`] = image; },
       )),
       ...Object.entries(persistentPaths)
         .map(([key, src]) => imageJob(
@@ -14363,11 +14368,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const requestedMode = resolveLocalQaMode(window.location.hostname, window.location.search);
         const requiredStageId = requestedScenario?.stageId
           ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
-        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId });
+        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,
+          formationKinds: formationKindKey.split("|").filter(Boolean) });
         if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
           decodedPaths.add(activeRequiredPlan.enemyBase.path);
         }
-        const persistentPathsByKey = Object.fromEntries(activeRequiredPlan.persistent.map(({ key, path }) => [key, path]));
+        const persistentPathsByKey = Object.fromEntries([
+          ...activeRequiredPlan.persistent.map(({ key, path }) => [key, path]),
+          ...activeRequiredPlan.cards.map(({ kind, path }) => [`card-${kind}`, path]),
+        ]);
         for (const [kind, image] of Object.entries(spriteRefs.current)) {
           if (!image?.naturalWidth || !decodedBattleImagesRef.current.has(image)) continue;
           try {
@@ -23878,7 +23887,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "召喚限度到達" ? "full" : "blocked") : "ready";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
-                    <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                     {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
                       <span className="card-state-full">{cardBlockReason}</span>
