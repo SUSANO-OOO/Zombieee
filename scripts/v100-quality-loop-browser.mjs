@@ -194,9 +194,18 @@ for (const engine of engines) {
         assert.deepEqual(continued.receipts, saved.receipts);
         row.confirmation = { caps: continued.caps, rewardCaps: saved.lastResult.rewardCaps, receiptsUnchanged: true, resumed: true };
       });
-      const firstStageId = V100_STAGE_IDS[1];
-      const firstFixture = normalizeV100Save({ ...early, readStoryEventIds: [...new Set([...early.readStoryEventIds, 'v100:event:s02:post'])], flowState: { phase: 'first-clear-post', eventId: 'v100:event:s02:first-clear-post', stageId: firstStageId, stageNumber: 2, destination: 'first-clear-post', nodeIndex: 0, firstClear: true, finalized: false } });
-      await runCase(browser, engine, viewport, 'first-clear-reward', firstFixture, async (page, row, reload) => {
+      // S5/S20 have the most first-clear payloads; include both long unlock names.
+      for (const firstNumber of [2, 5, 20]) {
+      const firstStageId = V100_STAGE_IDS[firstNumber - 1];
+      const slug = 's' + String(firstNumber).padStart(2, '0');
+      const initial = normalizeV100Save({ ...early, completedStageIds: V100_STAGE_IDS.slice(0, firstNumber - 1), availableStageIds: V100_STAGE_IDS.slice(0, firstNumber), pendingResult: null });
+      const value = createV100BattleResult({ stageId: firstStageId, battleRunId: 'quality-first-reward-' + firstNumber, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: 408, vehicleMaxHp: 680 });
+      const pending = recordV100PendingResult(initial, value);
+      assert.equal(pending.applied, true);
+      const settled = finalizeV100PendingResult(pending.save);
+      assert.equal(settled.applied, true);
+      const firstFixture = normalizeV100Save({ ...settled.save, readStoryEventIds: [...new Set([...settled.save.readStoryEventIds, 'v100:event:' + slug + ':post'])], flowState: { phase: 'first-clear-post', eventId: 'v100:event:' + slug + ':first-clear-post', stageId: firstStageId, stageNumber: firstNumber, destination: 'first-clear-post', nodeIndex: 0, firstClear: true, finalized: false } });
+      await runCase(browser, engine, viewport, 'first-clear-reward-s' + firstNumber, firstFixture, async (page, row, reload) => {
         await page.locator('.v100-reward-summary').waitFor();
         const summary = page.locator('.v100-reward-breakdown summary');
         await within(summary, 44); await summary.tap();
@@ -212,6 +221,7 @@ for (const engine of engines) {
         await reload(); assert.deepEqual(await rawSave(page), saved);
         assert.equal(saved.lastResult.firstClear, true);
       });
+      }
     }
     for (const viewport of sections.includes('results') ? sizes : []) {
       for (const won of [true, false]) {
