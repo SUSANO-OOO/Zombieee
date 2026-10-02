@@ -1102,13 +1102,22 @@ html[data-pwa-screen="event"] .pwa-notice { display:none; }
 .v100-shell .unit-card:is(:disabled,[aria-disabled="true"]) { opacity:.86; filter:none; }
 .v100-shell .unit-card:is(:disabled,[aria-disabled="true"]) .portrait { opacity:.62; }
 .unit-card[data-kind="brute"] .portrait { width:78%; }
-.unit-card[data-state="cooldown"] .cooldown-mask {
+.v100-shell .unit-card[data-state="cooldown"] .cooldown-mask {
   background:linear-gradient(135deg,rgba(8,10,11,.35),rgba(17,22,24,.2));
 }
-.unit-card[data-state="cooldown"] .cooldown-mask small {
+.v100-shell .unit-card[data-state="cooldown"] .cooldown-mask small {
+  position:absolute;
+  top:3px;
+  right:4px;
+  margin:0;
+  box-sizing:content-box;
   padding:3px 5px;
   border:1px solid rgba(202,177,124,.45);
   background:rgba(6,10,12,.85);
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card .cost {
+  top:auto;
+  bottom:5% !important;
 }
 .unit-card .cost { display:inline-flex; align-items:baseline; gap:3px; white-space:nowrap; }
 .unit-card .cost-mark { margin-right:0; color:#d7ba79; font:800 clamp(7px,.38em,12px)/1 "Arial Narrow",sans-serif; font-style:normal; letter-spacing:.04em; vertical-align:baseline; }

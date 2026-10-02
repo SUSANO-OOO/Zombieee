@@ -13,6 +13,7 @@ import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "./v100-runtime-observation.mjs";
+import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -96,6 +97,21 @@ const formation = ["unit-gantetsu", "unit-nao", "unit-babayaga", "unit-mizuchi",
 const owned = formation.filter(Boolean);
 
 function sha256(value) { return createHash("sha256").update(value).digest("hex"); }
+let hostPreparation = null;
+if (process.env.V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION !== undefined) {
+  assert.equal(process.env.V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION, "spotlight-paused");
+  assert.equal(engine, "webkit"); assert.equal(hostControl, "none");
+  const recordPath = "outputs/v100-device-runtime/spotlight-benchmark-preparation.json";
+  const bytes = await readFile(recordPath);
+  const record = validateBenchmarkPreparationRecord(JSON.parse(bytes), process.env, process.platform, process.arch);
+  const live = parseIndexingStatus(execFileSync("/usr/bin/mdutil", ["-a", "-s"], {
+    encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024, env: { ...process.env, LC_ALL: "C" },
+  }));
+  const states = volumes => volumes.map(v => ({ mount: v.mount, enabled: v.enabled })).sort((a, b) => a.mount.localeCompare(b.mount));
+  assert.deepEqual(states(live), states(record.after));
+  hostPreparation = { kind: "spotlight-paused-on-ephemeral-performance-host", recordPath, recordSha256: sha256(bytes),
+    basis: record.basis, verifiedAt: new Date().toISOString(), originallyEnabledVolumes: record.before.filter(v => v.enabled).length, live };
+}
 async function fileSha256(relativePath) {
   return sha256(await readFile(path.resolve(relativePath)));
 }
@@ -315,7 +331,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
+  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });

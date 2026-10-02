@@ -313,6 +313,10 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Prepare isolated Mac benchmark environment
+        id: benchmark_preparation
+        run: node scripts/v100-macos-indexing-control.mjs prepare-benchmark
+
       - name: Measure V1 native boss battle performance (WebKit)
         id: primary_perf
         env:
@@ -320,6 +324,7 @@ jobs:
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Independently repeat narrow landscape boss performance (WebKit)
@@ -331,6 +336,7 @@ jobs:
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-repeat
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Independently repeat 844x390 boss performance (WebKit)
@@ -342,6 +348,7 @@ jobs:
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-repeat
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
       - name: Preserve measured WebKit performance before diagnostics
@@ -355,8 +362,13 @@ jobs:
             outputs/v100-device-runtime/webkit
             outputs/v100-device-runtime/webkit-844x340-repeat
             outputs/v100-device-runtime/webkit-844x390-repeat
+            outputs/v100-device-runtime/spotlight-benchmark-preparation.json
           if-no-files-found: error
           retention-days: 14
+
+      - name: Restore original indexing after primary performance measurements
+        if: ${{ always() && (steps.benchmark_preparation.outcome == 'success' || steps.benchmark_preparation.outcome == 'failure') }}
+        run: node scripts/v100-macos-indexing-control.mjs restore-benchmark
 
       - name: Pause Spotlight indexing for same-host causal diagnosis
         id: indexing_control
@@ -454,6 +466,7 @@ jobs:
             outputs/v100-device-runtime/webkit-844x340-indexing-control
             outputs/v100-device-runtime/webkit-844x390-indexing-control
             outputs/v100-device-runtime/spotlight-indexing-control.json
+            outputs/v100-device-runtime/spotlight-benchmark-preparation.json
             outputs/v100-device-runtime/webkit-844x340-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-draw-suppressed
             outputs/v100-device-runtime/webkit-844x390-raster-groups
