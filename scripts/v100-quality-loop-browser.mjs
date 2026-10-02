@@ -37,8 +37,25 @@ const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"),
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
-const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && document.documentElement.dataset.pwaSaveMutationPending === "false");
+const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,native').split(',');
+assert.ok(sections.length && sections.every(value => ['presentation', 'native'].includes(value)));
+report.sections = sections;
+const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
+const eventCheckpoint = () => {
+  const shell = document.querySelector('.v100-shell'), event = shell?.querySelector('[data-v100-event-id]');
+  return JSON.stringify([shell?.getAttribute('data-v100-phase'), event?.getAttribute('data-v100-event-id'), event?.getAttribute('data-v100-node-index')]);
+};
+async function advanceEvent(page) {
+  await ready(page);
+  const before = await page.evaluate(eventCheckpoint);
+  await page.locator('.v100-event-actions .v100-primary').tap();
+  await page.waitForFunction(({ before, key }) => {
+    const shell = document.querySelector('.v100-shell'), event = shell?.querySelector('[data-v100-event-id]');
+    const current = JSON.stringify([shell?.getAttribute('data-v100-phase'), event?.getAttribute('data-v100-event-id'), event?.getAttribute('data-v100-node-index')]);
+    return current !== before && !shell?.matches('[aria-busy="true"]') && document.documentElement.dataset[key] === 'false';
+  }, { before, key: 'pwaSaveMutationPending' });
+}
 const acknowledge = async page => {
   const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
   await play.or(page.locator(".v100-shell")).first().waitFor();
@@ -111,7 +128,7 @@ for (const engine of engines) {
   const type = await pwaBrowserType(engine);
   const browser = await type.launch({ headless: true });
   try {
-    for (const viewport of sizes) {
+    for (const viewport of sections.includes('presentation') ? sizes : []) {
       for (const number of [1, 2, 5, 6, 9, 16, 25, 26, 28, 29]) {
         const stageId = V100_STAGE_IDS[number - 1];
         const fixture = normalizeV100Save({ ...early, availableStageIds: V100_STAGE_IDS, formationSlots: [...early.formationSlots.slice(0, 4), "unit-nao", "unit-hachi", "unit-paisen"], flowState: { phase: "formation", eventId: null, stageId, stageNumber: number, destination: "battle", nodeIndex: 0, firstClear: false, finalized: false } });
@@ -144,7 +161,7 @@ for (const engine of engines) {
         });
       }
     }
-    await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
+    if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();
       await page.getByRole("dialog", { name: "データ管理", exact: true }).locator("input[type=file]").first().setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
       await page.locator(".v100-map-layout").waitFor(); await ready(page);
@@ -154,7 +171,7 @@ for (const engine of engines) {
       const offer = page.getByRole('button', { name: '後で決める', exact: true });
       if (await offer.isVisible()) { await offer.tap(); await ready(page); }
       await page.getByRole("button", { name: "この作戦を編成", exact: true }).tap();
-      for (let n = 0; n < 60 && !await page.locator(".v100-formation-panel").isVisible(); n++) await page.locator(".v100-event-actions .v100-primary").tap();
+      for (let n = 0; n < 60 && !await page.locator(".v100-formation-panel").isVisible(); n++) await advanceEvent(page);
       await page.locator(".v100-slot-track .v100-slot").nth(4).tap();
       await page.getByRole("button", { name: "ナオを枠5へ配置", exact: true }).tap();
       await page.locator(".v100-sortie-selected").tap();
@@ -189,7 +206,7 @@ for (const engine of engines) {
         assert.deepEqual(await rawSave(page), saved);
         if (row.won) {
           await page.getByRole("button", { name: "次の場面へ", exact: true }).tap();
-          for (let index = 0; index < 80 && !await page.locator(".v100-map-layout").isVisible(); index++) await page.locator(".v100-event-actions .v100-primary").tap();
+          for (let index = 0; index < 80 && !await page.locator(".v100-map-layout").isVisible(); index++) await advanceEvent(page);
           await page.locator(".v100-map-layout").waitFor();
           row.finalResult = (await rawSave(page)).lastResult;
           assert.ok(row.finalResult.rewardBreakdown);
