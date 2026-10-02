@@ -33,12 +33,12 @@ early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase:
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
-  scope: "Phone rendering and native inputs. Two early victories and the replay-reward cases are developer-synthetic production receipts; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Replay-reward cases prove reward presentation, save/resume and no duplicate payout, not real victories. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
+  scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
-const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,native').split(',');
-assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'native'].includes(value)));
+const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,results,native').split(',');
+assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'native'].includes(value)));
 report.sections = sections;
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
@@ -176,6 +176,10 @@ for (const engine of engines) {
         const summary = page.locator('.v100-reward-breakdown summary');
         await within(summary, 44); await summary.tap();
         await within(page.locator('.v100-reward-breakdown > p'));
+        row.totalBox = await within(page.locator('.v100-reward-summary .v100-result-rewards article').first());
+        await within(page.locator('.v100-reward-summary .v100-result-rewards strong').first());
+        await within(page.locator('.v100-reward-summary > p'));
+        await within(page.locator('.v100-event-actions .v100-primary'), 44);
         row.breakdown = await page.locator('.v100-reward-breakdown > p').innerText();
         assert.ok(row.breakdown.includes('再挑戦報酬'));
         await capture(page, row, 'settlement');
@@ -190,6 +194,61 @@ for (const engine of engines) {
         assert.deepEqual(continued.receipts, saved.receipts);
         row.confirmation = { caps: continued.caps, rewardCaps: saved.lastResult.rewardCaps, receiptsUnchanged: true, resumed: true };
       });
+      const firstStageId = V100_STAGE_IDS[1];
+      const firstFixture = normalizeV100Save({ ...early, readStoryEventIds: [...new Set([...early.readStoryEventIds, 'v100:event:s02:post'])], flowState: { phase: 'first-clear-post', eventId: 'v100:event:s02:first-clear-post', stageId: firstStageId, stageNumber: 2, destination: 'first-clear-post', nodeIndex: 0, firstClear: true, finalized: false } });
+      await runCase(browser, engine, viewport, 'first-clear-reward', firstFixture, async (page, row, reload) => {
+        await page.locator('.v100-reward-summary').waitFor();
+        const summary = page.locator('.v100-reward-breakdown summary');
+        await within(summary, 44); await summary.tap();
+        await within(page.locator('.v100-reward-breakdown > p'));
+        row.totalBox = await within(page.locator('.v100-reward-summary .v100-result-rewards strong').first());
+        await capture(page, row, 'settlement');
+        await page.locator('.v100-reward-summary > p').scrollIntoViewIfNeeded();
+        await within(page.locator('.v100-reward-summary > p'));
+        await within(page.locator('.v100-event-actions .v100-primary'), 44);
+        await capture(page, row, 'investment-note');
+        const saved = await rawSave(page);
+        await reload(); assert.deepEqual(await rawSave(page), saved);
+        assert.equal(saved.lastResult.firstClear, true);
+      });
+    }
+    for (const viewport of sections.includes('results') ? sizes : []) {
+      for (const won of [true, false]) {
+        const stageId = V100_STAGE_IDS[2];
+        const battleReport = { wave: 9, kills: 41, units: [
+          { unitId: 'unit-hachi', damage: 100, damageTaken: 82, healing: 0 },
+          { unitId: 'unit-paisen', damage: 88, damageTaken: 104, healing: 0 },
+          { unitId: 'unit-kumaverson', damage: 121, damageTaken: 44, healing: 0 },
+          { unitId: 'unit-babayaga', damage: 160, damageTaken: 21, healing: 0 },
+          { unitId: 'unit-nao', damage: 0, damageTaken: 33, healing: 144 },
+        ] };
+        const value = createV100BattleResult({ stageId, battleRunId: 'quality-report-' + won, won, objectiveComplete: won, bossDefeated: won, vehicleHp: won ? 340 : 0, vehicleMaxHp: 680, elapsedSeconds: 180, unitDeaths: 3, battleReport });
+        const pending = recordV100PendingResult(early, value);
+        assert.equal(pending.applied, true);
+        const fixture = normalizeV100Save({ ...pending.save, flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
+        await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
+          await page.locator('.v100-result-panel').waitFor();
+          await capture(page, row, 'result');
+          const summary = page.locator('.v100-battle-report summary');
+          await within(summary, 44); await summary.tap();
+          const body = page.locator('.v100-battle-report > div');
+          await within(body);
+          assert.equal(await body.locator('tbody tr').count(), 5);
+          row.reportText = await body.innerText();
+          assert.ok(row.reportText.includes('ハチ') && row.reportText.includes('ナオ') && row.reportText.includes('回復したHP'));
+          await body.evaluate(element => { element.scrollTop = element.scrollHeight; });
+          await within(body.locator('tbody tr').last().locator('td').last());
+          await capture(page, row, 'report'); await summary.tap();
+          const saved = await rawSave(page);
+          await reload(); assert.deepEqual(await rawSave(page), saved);
+          assert.deepEqual(saved.pendingResult.battleReport, battleReport);
+          const next = page.getByRole('button', { name: won ? '次の場面へ' : '編成へ戻る', exact: true });
+          await within(next, 44); await next.tap(); await ready(page);
+          if (won) await page.locator('[data-v100-event-id="v100:event:s03:post"]').waitFor();
+          else { await page.locator('.v100-formation-panel').waitFor(); assert.equal((await rawSave(page)).caps, early.caps); }
+          row.syntheticReport = true; row.resumed = true;
+        });
+      }
     }
     if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();

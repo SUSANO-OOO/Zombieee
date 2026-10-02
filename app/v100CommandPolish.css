@@ -11,8 +11,16 @@
 #v100-campaign .v100-battle-report th:first-child { text-align: left; }
 #v100-campaign .v100-battle-report thead th { color: #f4d99f; }
 #v100-campaign .v100-result-panel .v100-result-actions { grid-row: 5; }
-#v100-campaign .v100-reward-breakdown { position: relative; margin: 6px 0; text-align: left; }
-#v100-campaign .v100-reward-breakdown > p { position: absolute; z-index: 5; left: 0; right: 0; bottom: 48px; padding: 10px; border: 1px solid #a6af84; background: #102018; color: #efebd4; font-size: 14px; line-height: 1.5; }
+#v100-campaign .v100-reward-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 8px; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+#v100-campaign .v100-reward-summary > h2,
+#v100-campaign .v100-reward-summary > p { grid-column: 1 / -1; }
+#v100-campaign .v100-reward-summary .v100-result-rewards { grid-column: 1; grid-row: 2; grid-template-columns: 1fr; align-content: start; margin: 0; }
+#v100-campaign .v100-reward-summary .v100-result-rewards strong { font-size: 22px; line-height: 1.3; }
+#v100-campaign .v100-reward-summary .v100-result-rewards span { font-size: 14px; }
+#v100-campaign .v100-reward-breakdown { grid-column: 2; grid-row: 2; position: static; align-self: start; margin: 0; text-align: left; }
+#v100-campaign .v100-reward-breakdown summary::after { content: "+"; margin-left: auto; padding-left: 6px; font-size: 20px; }
+#v100-campaign .v100-reward-breakdown[open] summary::after { content: "−"; }
+#v100-campaign .v100-reward-breakdown > p { position: static; margin: 0; padding: 10px; border: 1px solid #a6af84; border-top: 0; background: #102018; color: #efebd4; font-size: 14px; line-height: 1.5; }
 #v100-campaign .v100-command-tabs,
 #v100-campaign .v100-command-formation,
 #v100-campaign .v100-command-personnel,
