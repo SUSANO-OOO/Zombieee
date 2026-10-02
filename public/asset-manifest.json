@@ -1379,6 +1379,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/combat-vfx/aircraft-support-r1.webp",
+      "bytes": 81744,
+      "hash": "sha256-21bf367dc290ebea90f8371a1d10b97410bc4e64e4e4880d4cf6b561428cccbc",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/combat-vfx/blackSmoke01.webp",
       "bytes": 4596,
       "hash": "sha256-37b254fa0ff594ca1b8f604783f4d2b854675fa3fa230b8c82d3352307adfec1",

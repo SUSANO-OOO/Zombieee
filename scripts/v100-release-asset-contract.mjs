@@ -46,6 +46,7 @@ export const V100_OBJECTIVE_STATE_ADDITIONS = Object.freeze([
 ]);
 export const V100_DEFENSE_PERIMETER_ADDITIONS = Object.freeze([Object.freeze({"path":"/art/v100/mission-objects/defense-perimeter-states-v1.webp","bytes":508180,"hash":"sha256-3b7a240eeff611e0ee7eb82a5ee2f771c0b8b559aabf28e1d0676c3db9673ec6"})]);
 export const V100_ADVANCED_COMBAT_VFX_ADDITIONS = Object.freeze([
+  Object.freeze({ path: "/art/v100/combat-vfx/aircraft-support-r1.webp", bytes: 81744, hash: "sha256-21bf367dc290ebea90f8371a1d10b97410bc4e64e4e4880d4cf6b561428cccbc", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/combat-vfx/lightblade-six-frames-r1.webp", bytes: 837874, hash: "sha256-ed4a8daaf82d6962caa3c61069033060a406b269e01c1fde30e88b882409a588", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/combat-vfx/countercut-six-frames-r1.webp", bytes: 349086, hash: "sha256-80f7b6ee1453ee292ea52033db63ea40334ac3a58d7b98e09ca9c567c9c1304a", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/combat-vfx/fire-whisky-projectile-r1.webp", bytes: 8646, hash: "sha256-79239e88afe4e1873c09958ad252ff5e8e5ac5ca3252996a5fa6160c76a5f296", criticality: "critical" }),
@@ -92,12 +93,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 53_488_968,
+  bytesFromV0995: 53_570_712,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 143_167_301,
-  candidateDistinctHashBytes: 142_627_398,
-  updateFromV0982Bytes: 70_179_416,
-  updateFromV0993Bytes: 59_804_722,
+  candidateTotalBytes: 143_249_045,
+  candidateDistinctHashBytes: 142_709_142,
+  updateFromV0982Bytes: 70_261_160,
+  updateFromV0993Bytes: 59_886_466,
 });

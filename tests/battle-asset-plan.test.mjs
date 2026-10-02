@@ -101,6 +101,7 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b", "kumaverson-guard"].sort());
   assert.deepEqual(full.stageObjects.filter(entry=>!legacy.stageObjects.some(old=>old.id===entry.id)).map(entry=>entry.path),[
     "/art/v100/mission-objects/boundary-gate-states-r1.webp",
+    "/art/v100/combat-vfx/aircraft-support-r1.webp",
     "/art/v100/combat-vfx/explosion-fire-smoke.webp",
     "/art/v100/combat-vfx/blackSmoke01.webp",
     "/art/v100/combat-vfx/blackSmoke05.webp",

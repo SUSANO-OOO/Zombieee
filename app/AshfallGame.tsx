@@ -7267,7 +7267,7 @@ function drawEnemyBase(
   ctx.restore();
 }
 
-function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
+function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap) {
   const runtime = g.airstrike;
   if (runtime.phase === "idle" || runtime.targetX === null) return;
   const y = Number.isFinite(runtime.targetY)
@@ -7288,6 +7288,16 @@ function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
     const jetX = -80 + progress * (W + 160);
     ctx.save();
     ctx.translate(jetX, 86);
+    const authoredAircraft = Boolean(g.definition.missionConfig.v100StageNumber);
+    if (authoredAircraft) {
+      const aircraft = stageObjects["v100-support-aircraft"];
+      if (!aircraft?.complete || !aircraft.naturalWidth || !aircraft.naturalHeight) {
+        throw new Error("V1 support aircraft must decode before battle");
+      }
+      const width = 110;
+      const height = width * aircraft.naturalHeight / aircraft.naturalWidth;
+      ctx.drawImage(aircraft, -width / 2, -height / 2, width, height);
+    } else {
     ctx.fillStyle = "#2b3436";
     ctx.strokeStyle = "#7f8985";
     ctx.lineWidth = 1.2;
@@ -7305,10 +7315,13 @@ function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
     ctx.stroke();
     ctx.fillStyle = "#9b4b30";
     ctx.fillRect(-24, -4, 7, 8);
+    }
     ctx.strokeStyle = "rgba(225,220,196,.34)";
+    ctx.lineWidth = 1.2;
+    const tail = authoredAircraft ? -54 : -31;
     ctx.beginPath();
-    ctx.moveTo(-31, -2); ctx.lineTo(-126, -8);
-    ctx.moveTo(-31, 2); ctx.lineTo(-116, 8);
+    ctx.moveTo(tail, -2); ctx.lineTo(tail - 95, -8);
+    ctx.moveTo(tail, 2); ctx.lineTo(tail - 85, 8);
     ctx.stroke();
     ctx.restore();
   }
@@ -8379,7 +8392,7 @@ function drawWorld(
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
   drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback);
-  drawEmergencySupport(ctx, g);
+  drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
   for (const corpse of g.corpses) {

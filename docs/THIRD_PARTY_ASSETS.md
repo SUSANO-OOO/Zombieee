@@ -293,6 +293,13 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 
 ## プロジェクト生成画像（第三者配布物ではない）
 
+### V1.0.0 航空支援機（2026-10-02候補）
+
+航空支援中の機体は、組み込み `image_gen.imagegen` による新規透過画像を使用する。第三者配布画像・人物画像は参照していない。生成画像の権利扱いは本節の既存契約に従う。生成元PNGを保全し、透明部分の余白整理とWebP変換のみ実施した。機体・主翼・尾翼・エンジンを目視確認済みで、文字・ロゴ・人物を採用要素に含めていない。実画面と最終製品の採否は候補QA・Producer承認で判断する。
+
+- 実行用：`public/art/v100/combat-vfx/aircraft-support-r1.webp`（768×295、81,744 bytes、SHA-256 `21bf367dc290ebea90f8371a1d10b97410bc4e64e4e4880d4cf6b561428cccbc`）。
+- 生成元・加工記録：`assets/source/v100/combat-vfx/aircraft-support-r1.provenance.json`。生成元PNGのSHA-256は `759430fa8398dae24c4828ecb6671c0cfb113c1b956154ab39034429b452f1ff`。
+
 以下は本タスク中に OpenAI の画像生成機能で新規生成した出力で、第三者サイトから取得した素材ではない。OpenAI の [Terms of Use](https://openai.com/policies/terms-of-use/) は、OpenAI と利用者の間では、適用法の許す範囲で利用者が Output を所有すると定める一方、出力が一意でない可能性と、適法性・適切性を利用者が評価する責任も明記している。したがって本表は CC0 宣言を行わず、生成由来と人手監査・加工内容を保守的に記録する。
 
 | Final path | 作者・生成/配布元 | Source URL / 権利根拠 | 商用・改変・再配布 | クレジット条件 | 生成日 | Final SHA-256 | 加工・監査 |
