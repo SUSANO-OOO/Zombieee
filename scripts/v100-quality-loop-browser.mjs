@@ -202,6 +202,7 @@ for (const engine of engines) {
         await within(summary, 44); await summary.tap();
         await within(page.locator('.v100-reward-breakdown > p'));
         row.totalBox = await within(page.locator('.v100-reward-summary .v100-result-rewards strong').first());
+        await within(page.locator('.v100-reward-summary .v100-result-rewards article').nth(1).locator('strong'));
         await capture(page, row, 'settlement');
         await page.locator('.v100-reward-summary > p').scrollIntoViewIfNeeded();
         await within(page.locator('.v100-reward-summary > p'));
@@ -223,9 +224,10 @@ for (const engine of engines) {
           { unitId: 'unit-nao', damage: 0, damageTaken: 33, healing: 144 },
         ] };
         const value = createV100BattleResult({ stageId, battleRunId: 'quality-report-' + won, won, objectiveComplete: won, bossDefeated: won, vehicleHp: won ? 340 : 0, vehicleMaxHp: 680, elapsedSeconds: 180, unitDeaths: 3, battleReport });
-        const pending = recordV100PendingResult(early, value);
-        assert.equal(pending.applied, true);
-        const fixture = normalizeV100Save({ ...pending.save, flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
+        // Production stores victories as pending settlements, defeats as lastResult.
+        const pending = won ? recordV100PendingResult(early, value) : null;
+        if (won) assert.equal(pending.applied, true);
+        const fixture = normalizeV100Save({ ...(won ? pending.save : { ...early, lastResult: value }), flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
         await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
           await page.locator('.v100-result-panel').waitFor();
           await capture(page, row, 'result');
@@ -241,7 +243,7 @@ for (const engine of engines) {
           await capture(page, row, 'report'); await summary.tap();
           const saved = await rawSave(page);
           await reload(); assert.deepEqual(await rawSave(page), saved);
-          assert.deepEqual(saved.pendingResult.battleReport, battleReport);
+          assert.deepEqual((won ? saved.pendingResult : saved.lastResult).battleReport, battleReport);
           const next = page.getByRole('button', { name: won ? '次の場面へ' : '編成へ戻る', exact: true });
           await within(next, 44); await next.tap(); await ready(page);
           if (won) await page.locator('[data-v100-event-id="v100:event:s03:post"]').waitFor();
