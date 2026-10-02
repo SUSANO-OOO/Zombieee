@@ -379,7 +379,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: definition\.enemyBaseMaxHp/);
-  assert.match(game, /if \(!deferredStructureImpact\) applyEnemyBaseDamage\(g, structureDamage, enemyBaseTarget\.researchTargetId\)/);
+  assert.match(game, /if \(!deferredStructureImpact\) recordUnitDamage\(g, f\.kind, applyEnemyBaseDamage\(g, structureDamage, enemyBaseTarget\.researchTargetId\)\)/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);

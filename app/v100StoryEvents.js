@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "169efcb030d1b44084fb390d35e4979260fba079efecbba30dfd0445fe950706";
+export const V100_STORY_SOURCE_SHA256 = "f55fe32e7e3d2355f09d41c5f2990b9157e6d73d0b3d718d1e03246995addfc3";
 export const V100_STORY_SOURCE_LINE_COUNT = 1058;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -5096,7 +5096,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "クマバーソン",
-        "text": "狭かったら、人を噛ませてよかったんか",
+        "text": "街の一部なら、人を噛ませてよかったんか",
         "portraitOwner": "unit-kumaverson",
         "portraitKind": "major",
         "sourceLine": 729
@@ -6666,7 +6666,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "dialogue",
         "speaker": "Mrs.チハ",
-        "text": "背中の管が再生を支えてる。回り込める人、そこを狙って！",
+        "text": "背中の管が再生を支えてる。大振りのあとに隙ができる。そこへ車両の砲撃を！",
         "portraitOwner": "unit-mrs-chiha",
         "portraitKind": "major",
         "sourceLine": 951

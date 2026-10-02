@@ -15,5 +15,10 @@ export function v100RewardPresentationFor(result) {
     if (id.startsWith("level-cap-")) return [`育成上限 Lv.${id.slice(10)}`];
     return [];
   }) : [];
-  return { stageNumber: stage.number, rewardCaps: Math.max(0, Number(result.rewardCaps) || 0), unlocks };
+  const rewardCaps = Math.max(0, Number(result.rewardCaps) || 0);
+  const breakdown = result.rewardBreakdown;
+  const components = ["firstClear", "replay", "star2", "star3"];
+  const validBreakdown = breakdown && components.every(key => Number.isSafeInteger(breakdown[key]) && breakdown[key] >= 0)
+    && components.reduce((sum, key) => sum + breakdown[key], 0) === rewardCaps;
+  return { stageNumber: stage.number, rewardCaps, unlocks, breakdown: validBreakdown ? Object.fromEntries(components.map(key => [key, breakdown[key]])) : null };
 }

@@ -41,6 +41,11 @@ test("vest quote includes the same rounded HP in current and next permanent leve
   assert.equal(formatV100Number(quote.current.defense * 100, 2), "2.45");
   assert.equal(formatV100Number(quote.next.defense * 100, 2), "2.6");
   assert.equal(formatV100Number((quote.next.defense - quote.current.defense) * 100, 2), "0.15");
+  assert.deepEqual(quote.nextOutputGrowth, { stat: "damage", level: 8, value: 13, withinCap: false });
+  save.levelCap = 10;
+  assert.equal(v100UnitPresentation(save, "unit-hachi").nextOutputGrowth.withinCap, true);
+  save.unitLevels["unit-hachi"] = 30;
+  assert.equal(v100UnitPresentation(save, "unit-hachi").nextOutputGrowth, null);
 });
 
 test("Nao treatment starts at 22 and applies level growth before enhanced rescue equipment", () => {

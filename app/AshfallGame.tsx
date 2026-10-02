@@ -886,6 +886,7 @@ type Fighter = {
   stunned: number;
   bleedRemaining: number;
   bleedDamagePerSecond: number;
+  bleedSourceKind?: UnitKind;
   aiDestinationX: number;
   aiMoveDirection: number;
   animationPresentation: ReturnType<typeof createCombatAnimationRuntime>;
@@ -1216,6 +1217,7 @@ type AreaEffect = {
   id: number;
   kind: "burn" | "healing";
   sourceSupplyId: number;
+  sourceUnitKind?: UnitKind;
   lane: Lane;
   x: number;
   y: number;
@@ -2606,7 +2608,7 @@ function applyIncomingHumanDamage(
     guardian.hp = appliedInterception.guardianHp;
     guardian.guardStandRemaining = appliedInterception.steadfast.remainingSeconds;
     guardian.guardStandAvailable = appliedInterception.steadfast.available;
-    recordUnitDamageTaken(g, guardian.kind, Math.max(0, guardianHpBefore - guardian.hp));
+    recordUnitDamageTaken(g, guardian.kind, Math.max(0, guardianHpBefore) - Math.max(0, guardian.hp));
     guardian.flash = Math.max(guardian.flash, .12);
     redirectedDamage = rawInterception.guardianDamage;
     targetDamage = rawInterception.targetDamage;
@@ -2642,7 +2644,7 @@ function applyIncomingHumanDamage(
   } else {
     target.hp -= protectedTarget.damage;
   }
-  recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore - target.hp));
+  recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore) - Math.max(0, target.hp));
   queueV100ClawContact(g, { attacker, target, hpBefore: targetHpBefore, attackKind });
   preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
@@ -18599,7 +18601,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     { targetType: "infected-base" },
                   ),
                 );
-                applyEnemyBaseDamage(g, structureDamage, structureTargetId.split(":")[2]);
+                const measuredStructureDamage = applyEnemyBaseDamage(g, structureDamage, structureTargetId.split(":")[2]);
+                recordUnitDamage(g, owner.kind, measuredStructureDamage);
                 g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
@@ -18736,6 +18739,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 id: g.nextAreaEffectId++,
                 kind: "burn",
                 sourceSupplyId: -(100000 + owner.id),
+                sourceUnitKind: owner.kind as UnitKind,
                 lane: (event.target.lane ?? activeLaneForY(event.target.y)) as Lane,
                 x: event.target.x,
                 y: event.target.y,
@@ -19032,6 +19036,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const beforeHit = g.barricadeHp;
             const appliedDamage = applyEnemyBaseDamage(g, hit.damage, hit.researchTargetId);
             if (appliedDamage <= 0) continue;
+            recordUnitDamage(g, hit.weapon, appliedDamage);
             g.barricadeHitFlash = .2;
             g.barricadeHitY = hit.targetY;
             addDamageText(g, hit.targetX + (hit.shotIndex - 1) * 7, hit.targetY - 14 - hit.shotIndex * 3, `-${Math.round(Math.min(beforeHit, hit.damage))}`, .62, "#ffd06b");
@@ -19881,6 +19886,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.battlefieldObjects = g.battlefieldObjects.filter((object) => object.phase !== "expired");
         const activeMedicalIds = g.battlefieldObjects.filter((object) => object.kind === "medical" && object.phase === "active" && object.hp > 0).map((object) => object.id);
         const areaStep = advanceAreaEffects({ areaEffects: g.areaEffects, fighters: g.fighters, seconds: dt, activeSupplyIds: activeMedicalIds });
+        for (const change of areaStep.changes) {
+          if (change.kind === "damage" && change.sourceUnitKind) recordUnitDamage(g, change.sourceUnitKind, change.measuredDamage);
+        }
         g.areaEffects = retainActiveAreaEffects(areaStep.areaEffects) as AreaEffect[];
         g.fighters = areaStep.fighters as Fighter[];
         if (areaStep.changes.some((change) => change.kind === "healing")) playCue("medical-heal");
@@ -20160,7 +20168,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             recordUnitHealing(g, f.kind, Math.max(0, f.hp - hpBeforeHealing));
           }
           if (f.bleedRemaining > 0) {
+            const hpBeforeBleed = f.hp;
             Object.assign(f, advanceBleedDamage(f, dt));
+            if (f.side === "human") recordUnitDamageTaken(g, f.kind, Math.max(0, hpBeforeBleed) - Math.max(0, f.hp));
+            else if (f.bleedSourceKind) recordUnitDamage(g, f.bleedSourceKind, Math.max(0, hpBeforeBleed) - Math.max(0, f.hp));
             if (f.hp <= 0) continue;
           }
           f.abilityCooldown = Math.max(0, f.abilityCooldown - dt * bossAbilityPressure(f));
@@ -21758,6 +21769,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   }
                 : null;
               const immediateAttackDamage = attackDamage;
+              const targetHpBeforeMetric = target.hp;
               let appliedAttack: { targetDamage: number };
               if (splitMachineGunBurst || deferredHumanProjectile || deferredEnemyProjectile) {
                 appliedAttack = { targetDamage: 0 };
@@ -21856,7 +21868,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
               if (f.side === "human" && appliedAttack.targetDamage > 0) {
-                recordUnitDamage(g, f.kind, appliedAttack.targetDamage);
+                recordUnitDamage(g, f.kind, Math.max(0, targetHpBeforeMetric) - Math.max(0, target.hp));
               }
               if (splitMachineGunBurst) {
                 const weaponProfile = weaponProfileForUnit(f.kind);
@@ -22138,12 +22150,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   areaRadius: crazyKingRadius,
                 });
                 Object.assign(target, newcomerEffects.target);
+                if (newcomerEffects.payload.damageOverTime) target.bleedSourceKind = f.kind as UnitKind;
                 for (const nextSecondary of newcomerEffects.secondaryTargets) {
                   const secondary = g.fighters.find((candidate) => candidate.id === nextSecondary.id && candidate.side === "zombie" && candidate.hp > 0);
                   if (!secondary) continue;
                   const secondaryHpBefore = secondary.hp;
                   Object.assign(secondary, nextSecondary);
-                  recordUnitDamage(g, f.kind, Math.max(0, secondaryHpBefore - secondary.hp));
+                  if (newcomerEffects.payload.damageOverTime) secondary.bleedSourceKind = f.kind as UnitKind;
+                  recordUnitDamage(g, f.kind, Math.max(0, secondaryHpBefore) - Math.max(0, secondary.hp));
                   if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
                   addDamageText(g, secondary.x, secondary.y - 43, String(Math.round(newcomerEffects.secondaryDamage)), .58, "#efb95f");
                 }
@@ -22376,7 +22390,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const deferredStructureImpact = f.kind === "gunner"
                   || f.kind === "mrs-chiha"
                   || DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind);
-                if (!deferredStructureImpact) applyEnemyBaseDamage(g, structureDamage, enemyBaseTarget.researchTargetId);
+                if (!deferredStructureImpact) recordUnitDamage(g, f.kind, applyEnemyBaseDamage(g, structureDamage, enemyBaseTarget.researchTargetId));
                 if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
                 if (f.kind === "gunner") {
                   const wasOverheated = f.overheated;
@@ -24035,8 +24049,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <article><small>獲得CAPS</small><b>+{survivalResult.earnedCaps}</b><span>所持 {survivalResult.capsAfter}</span></article>
           </div>
           <div className="survival-unit-result"><h2>隊員別戦闘記録</h2>{survivalResult.unitStats.length > 0
-            ? <table><thead><tr><th>隊員</th><th>与damage</th><th>被damage</th><th>回復</th></tr></thead><tbody>{survivalResult.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table>
-            : <p>このrunでは隊員別damage記録がありません。</p>}</div>
+            ? <table><thead><tr><th>隊員</th><th>与ダメージ</th><th>被ダメージ</th><th>回復したHP</th></tr></thead><tbody>{survivalResult.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table>
+            : <p>この戦闘では隊員別の記録がありません。</p>}</div>
           <div className="survival-equipment-result"><h2>装備報酬</h2>{survivalResult.earnedEquipmentGrants.length > 0
             ? <ul>{survivalResult.earnedEquipmentGrants.map((grant) => <li key={grant.equipmentId}><b>{grant.displayName}</b><span>×{grant.quantity}</span></li>)}</ul>
             : <p>今回の装備報酬はありません。</p>}</div>

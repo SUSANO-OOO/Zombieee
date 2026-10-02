@@ -18,6 +18,15 @@ export function v100DialogueSlots(nodes, nodeIndex) {
   return slots;
 }
 
+// Only these authored, on-screen actions name both spouses. Radio voices,
+// scene changes and unrelated narration must not inherit silent speakers.
+export function v100ActionPortraitSubjects(eventId, node) {
+  if (node?.kind !== "action" || typeof node.text !== "string") return [];
+  const reunion = eventId === "v100:event:s17:post" && node.text.startsWith("二人とも相手の腕を調べ、");
+  const confession = eventId === "v100:event:s23:pre" && node.text === "ババヤガはカードではなく妻の顔を見る。";
+  return reunion || confession ? ["unit-mrs-chiha", "unit-babayaga"] : [];
+}
+
 // Source-image framing: Ikura has 134 px of transparent headroom in a
 // 512 x 640 portrait; the three V1 authority portraits are full-body masters.
 // These offsets change composition only and preserve the identity pixels.

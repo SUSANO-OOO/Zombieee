@@ -98,6 +98,7 @@ export function advanceConvoyEvacuation({
  *   id: number,
  *   kind: "burn" | "healing",
  *   sourceSupplyId: number,
+ *   sourceUnitKind?: string,
  *   lane: number,
  *   x: number,
  *   y: number,
@@ -816,7 +817,9 @@ export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, a
         if (fighter.hp <= 0 || fighter.combatReady === false || !pointInGroundEffectEllipse(effect, { x: fighter.x, y })) return fighter;
         if (effect.kind === "burn" && fighter.side === "zombie") {
           const amount = effect.amountPerSecond * activeSeconds;
-          changes.push({ id: fighter.id, kind: "damage", amount });
+          changes.push({ id: fighter.id, kind: "damage", amount,
+            ...(effect.sourceUnitKind ? { sourceUnitKind: effect.sourceUnitKind, measuredDamage: Math.min(Math.max(0, fighter.hp), amount) } : {}),
+          });
           return { ...fighter, hp: Math.max(0, fighter.hp - amount), burning: true, slowMultiplier: effect.slowMultiplier };
         }
         if (effect.kind === "healing" && fighter.side === "human") {

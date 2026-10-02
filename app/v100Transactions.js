@@ -10,6 +10,7 @@ import {
   v100StageReward,
   v100StarsForVehicle,
 } from "./v100Registry.js";
+import { normalizeV100BattleReport } from "./v100BattleReport.js";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { applyV100LevelUpgrade, v100UnitLevelFor } from "./v100Progression.js";
 import { v100EquipmentFor, v100EquipmentQuantityCap, v100EquipmentPurchaseUnlocked, normalizeV100Equipment } from "./v100Equipment.js";
@@ -183,12 +184,14 @@ export function createV100BattleResult({
   elapsedSeconds = 0,
   unitDeaths = 0,
   researchCoreTargets = null,
+  battleReport = null,
 } = {}) {
   const stageNumber = stageNumberFor(stageId);
   if (!stageNumber) return { ok: false, reason: "unknown-stage" };
   const boss = bossPayloadForStage(stageNumber);
   if (boss && won === true && bossDefeated !== true) return { ok: false, reason: "boss-not-defeated" };
   const validVictory = won === true && objectiveComplete === true && Number(vehicleHp) > 0;
+  const report = normalizeV100BattleReport(battleReport);
   return Object.freeze({
     resultId: typeof battleRunId === "string" && battleRunId.length > 0 ? battleRunId : `v100:run:${stageNumber}:${Date.now()}`,
     battleRunId: battleRunId ?? null,
@@ -202,6 +205,7 @@ export function createV100BattleResult({
     stars: v100StarsForVehicle({ won: validVictory, vehicleHp, vehicleMaxHp }),
     elapsedSeconds: Math.max(0, Number(elapsedSeconds) || 0),
     unitDeaths: Math.max(0, integer(unitDeaths)),
+    ...(report ? { battleReport: report } : {}),
     ...(stageNumber === 29 && Array.isArray(researchCoreTargets)
       ? { researchCoreTargets: researchCoreTargets.map(({id,hp,maxHp})=>({id,hp,maxHp})) } : {}),
   });
@@ -264,26 +268,27 @@ export function finalizeV100PendingResult(save, { result = null, now } = {}) {
   const priorStars = integer(current.bestStars[stage.id], 0, 3);
   const stars = Math.max(priorStars, integer(pending.stars, 0, 3));
   let reward = 0;
+  const rewardBreakdown = { firstClear: 0, replay: 0, star2: 0, star3: 0 };
   let receipts = appendReceipt([...current.receipts], identity.receipt);
   if (firstClear) {
     const firstReceipt = stage.receipts.firstClear;
     if (!receipts.includes(firstReceipt)) {
-      reward += v100StageReward(stageNumber, "first-clear");
+      reward += (rewardBreakdown.firstClear = v100StageReward(stageNumber, "first-clear"));
       receipts = appendReceipt(receipts, firstReceipt);
     }
   } else if (typeof pending.battleRunId === "string" && pending.battleRunId.length > 0) {
     const replayReceipt = `v100:s${String(stageNumber).padStart(2, "0")}:replay:${pending.battleRunId}`;
     if (!receipts.includes(replayReceipt)) {
-      reward += v100StageReward(stageNumber, "replay");
+      reward += (rewardBreakdown.replay = v100StageReward(stageNumber, "replay"));
       receipts = appendReceipt(receipts, replayReceipt);
     }
   }
   if (stars >= 2 && priorStars < 2) {
-    reward += v100StageReward(stageNumber, "star:2");
+    reward += (rewardBreakdown.star2 = v100StageReward(stageNumber, "star:2"));
     receipts = appendReceipt(receipts, stage.receipts.star2);
   }
   if (stars >= 3 && priorStars < 3) {
-    reward += v100StageReward(stageNumber, "star:3");
+    reward += (rewardBreakdown.star3 = v100StageReward(stageNumber, "star:3"));
     receipts = appendReceipt(receipts, stage.receipts.star3);
   }
   const nextStage = V100_STAGE_IDS[stageNumber];
@@ -298,7 +303,7 @@ export function finalizeV100PendingResult(save, { result = null, now } = {}) {
       levelCap: Math.max(next.levelCap, v100LevelCapForStage(stageNumber)),
       receipts,
       pendingResult: null,
-      lastResult: { ...pending, firstClear, rewardCaps: reward, finalizedAt: new Date(now ?? Date.now()).toISOString() },
+      lastResult: { ...pending, firstClear, rewardCaps: reward, rewardBreakdown, finalizedAt: new Date(now ?? Date.now()).toISOString() },
     };
     updated = payloadForStage(stageNumber, updated);
     if (boss && pending.bossDefeated === true) {

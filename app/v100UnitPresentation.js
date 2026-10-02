@@ -38,6 +38,15 @@ export function v100UnitPresentation(save, unitId) {
   };
   const current = statsAt(level);
   const next = nextLevel === null ? null : statsAt(nextLevel);
+  const outputStat = kind === "medic" ? "healing" : "damage";
+  let nextOutputGrowth = null;
+  if (owned) for (let futureLevel = level + 1; futureLevel <= 30; futureLevel += 1) {
+    const value = statsAt(futureLevel)[outputStat];
+    if (value > current[outputStat]) {
+      nextOutputGrowth = Object.freeze({ stat: outputStat, level: futureLevel, value, withinCap: futureLevel <= levelCap });
+      break;
+    }
+  }
   const ability = MANUAL_ABILITY_REGISTRY[kind];
   return Object.freeze({
     unitId, kind, displayName: unit.displayName, role: unit.role,
@@ -48,7 +57,7 @@ export function v100UnitPresentation(save, unitId) {
     upgradeCost: nextLevel === null ? 0 : v100LevelCost(nextLevel),
     commandCost: base.cost, redeploySeconds: current.deployCooldown,
     attackType: base.range >= 80 ? "ranged" : "melee",
-    current, next,
+    current, next, nextOutputGrowth,
     equipmentNames: Object.freeze(equipmentIds.map((id) => EQUIPMENT_BY_ID[id]?.displayName).filter(Boolean)),
     skill: ability ? Object.freeze({ name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
     treatmentProtection: kind === "medic" ? Object.freeze({
