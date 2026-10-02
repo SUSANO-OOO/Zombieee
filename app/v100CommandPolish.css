@@ -281,10 +281,11 @@
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-slot-track { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-sortie-status { display: none; }
   #v100-campaign .v100-sortie-status strong { font-size: 13px; }
-  #v100-campaign .v100-command-personnel .v100-personnel-focus { grid-template-columns: 118px minmax(0, 1fr); }
-  #v100-campaign .v100-unit-record-heading { grid-template-columns: minmax(0, 1fr) auto; }
-  #v100-campaign .v100-unit-registration { grid-column: 1 / -1; }
-  #v100-campaign .v100-command-personnel .v100-personnel-stats.is-healer { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus { grid-template-columns: 118px minmax(0, 1fr); }
+  #v100-campaign .v100-unit-record-heading { height: auto; min-height: 26px; }
+  #v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats { grid-auto-rows: 68px; }
+  #v100-campaign .v100-command-personnel .v100-unit-stat { grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 25px 20px; padding: 2px 4px; }
+  #v100-campaign .v100-command-personnel .v100-unit-stat small { grid-column: 1; grid-row: 3; text-align: right; }
   #v100-campaign .v100-command-equipment .v100-equipment-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
   #v100-campaign .v100-command-equipment .v100-equipment-catalog { grid-template-columns: 1fr; }
   #v100-campaign .v100-command-garage .v100-vehicle-abilities small { font-size: 12px; }

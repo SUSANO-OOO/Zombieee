@@ -1170,7 +1170,7 @@ function PersonnelView({ save, returnLabel, onBack, onPurchase, onLevel }: { sav
               showStat("移動速度", formatV100Number(currentStats.speed)),
               showStat("攻撃間隔", formatV100Number(currentStats.attackEvery) + "秒"),
               ...(currentStats.healing > 0 ? [
-                showStat("回復量（HP/回）", formatV100Number(currentStats.healing), nextStats ? formatV100Number(nextStats.healing) : null),
+                showStat("回復量 HP/回", formatV100Number(currentStats.healing), nextStats ? formatV100Number(nextStats.healing) : null),
                 showStat("射程", formatV100Number(currentStats.range)),
               ] : []),
             ]}</div>
