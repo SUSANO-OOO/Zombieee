@@ -5049,7 +5049,11 @@ function drawEnemyCombatReadabilityVfx(
   const authoredMeleeWarning = v100Presentation && V100_CONTACT_ENEMY_KINDS.includes(f.kind)
     && (['idle','recovery'].includes(f.stationAbility.phase) || f.kind === 'sprinter');
   const authoredStationWarning = v100Presentation && V100_STATION_POSE_KINDS.includes(f.kind) && Boolean(v100StationAbilityPose(f.kind,f.stationAbility));
-  if (!snapshot.projectile && snapshot.phase === "warning" && !authoredMeleeWarning && !authoredStationWarning) {
+  // Boss windups already have an authored body pose and a dedicated attack
+  // footprint. The generic enemy ribbon also classified active abilities as
+  // warnings, drawing unrelated curves over the boss's chest after activation.
+  const authoredBossWarning = v100Presentation && Boolean(bossDefinitionForEnemyKind(f.kind));
+  if (!snapshot.projectile && snapshot.phase === "warning" && !authoredMeleeWarning && !authoredStationWarning && !authoredBossWarning) {
     const pulse = .5 + .5 * Math.sin(g.time * 18 + f.id);
     const warningY = f.y - Math.max(24, f.bodyRadius * 1.7);
     const role = snapshot.role;
@@ -6109,6 +6113,20 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
       : BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
     const pulse = .5 + .5 * Math.sin(g.time * 11);
     ctx.setLineDash([]);
+    if (g.definition.missionConfig.v100StageNumber) {
+      // Project the same sweep footprint onto the floor. The old five broad
+      // spokes resembled extra limbs and competed with the approved shell.
+      ctx.save(); ctx.translate(f.x, f.y); ctx.scale(1, halfHeight / radius);
+      const warning = ctx.createRadialGradient(0, 0, radius * .18, 0, 0, radius);
+      warning.addColorStop(0, "rgba(0,0,0,0)");
+      warning.addColorStop(.84, telegraph.color);
+      warning.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = .16 + pulse * .06;
+      ctx.fillStyle = warning; ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, Math.PI * .5, Math.PI * 1.5); ctx.closePath(); ctx.fill();
+      ctx.restore(); ctx.globalAlpha = .38 + pulse * .1; ctx.lineWidth = 1.25;
+      ctx.beginPath(); ctx.ellipse(f.x, f.y, radius, halfHeight, 0, Math.PI * .5, Math.PI * 1.5); ctx.stroke();
+    } else {
     ctx.globalAlpha = .18;
     ctx.fillStyle = telegraph.color;
     ctx.beginPath();
@@ -6143,6 +6161,7 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
       Math.PI * 1.5,
     );
     ctx.stroke();
+    }
   } else if (telegraph.kind === "cross-strike") {
     const radius = telegraph.radius ?? 0;
     const targetX = telegraph.targetX ?? f.x;
