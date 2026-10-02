@@ -549,6 +549,7 @@ import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
+import { drawV100BossAftermath } from "./v100BossAftermath.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
 import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirearmImpact, drawV100ManualMuzzles, getV100ManualMuzzleSnapshot, clearV100ManualFirearmVfx } from "./v100ManualFirearmVfx.js";
 import {v100BrawlerComboPose,v100BrawlerCanAct,v100BrawlerCanContact} from './v100BrawlerCombo.js';
@@ -1171,7 +1172,7 @@ type AbilityLabelRect = { x: number; y: number; width: number; height: number };
 // This positions text only. The established icon hitbox, actor anchor and
 // availability remain untouched, and labels never receive pointer events.
 function placeV100AbilityLabels(icons: ManualAbilityIconView[], obstacles: AbilityLabelRect[], width: number, height: number) {
-  const labelWidth = 96, labelHeight = 30, gap = 3;
+  const labelWidth = 96, labelHeight = 34, gap = 3;
   const placed: AbilityLabelRect[] = [];
   const intersects = (a: AbilityLabelRect, b: AbilityLabelRect) => a.x < b.x + b.width + gap
     && a.x + a.width + gap > b.x && a.y < b.y + b.height + gap && a.y + a.height + gap > b.y;
@@ -6024,10 +6025,25 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.strokeStyle = telegraph.color;
   if (telegraph.kind === "ground-ellipse") {
     const pulse = (telegraph.radius ?? 0) + Math.sin(g.time * 18) * 4;
+    if (g.definition.missionConfig.v100StageNumber) {
+      // Keep the attack footprint and pulse while projecting a soft warning
+      // onto the ground, rather than a thick dashed diagram over the actors.
+      ctx.save(); ctx.translate(f.x, f.y + 2); ctx.scale(1, .5);
+      const warning = ctx.createRadialGradient(0, 0, pulse * .25, 0, 0, pulse);
+      warning.addColorStop(0, "rgba(0,0,0,0)");
+      warning.addColorStop(.82, telegraph.color);
+      warning.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = .2 + Math.sin(g.time * 14) * .05;
+      ctx.fillStyle = warning; ctx.beginPath(); ctx.arc(0, 0, pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.restore(); ctx.setLineDash([]); ctx.lineWidth = 1.25;
+      ctx.globalAlpha = .38 + Math.sin(g.time * 14) * .1;
+      ctx.beginPath(); ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2); ctx.stroke();
+    } else {
     ctx.globalAlpha = .72 + Math.sin(g.time * 14) * .14;
     ctx.beginPath();
     ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2);
     ctx.stroke();
+    }
   } else if (telegraph.kind === "brood-radial") {
     const radius = telegraph.radius ?? 0;
     const pulse = .5 + .5 * Math.sin(g.time * 10);
@@ -6249,7 +6265,7 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game)
   ctx.restore();
 }
 
-function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game, stageObjects: SpriteMap) {
   if (!["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)
     || !["active", "recovery"].includes(f.stationAbility.phase)) return;
   const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega"];
@@ -6257,6 +6273,11 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
   const elapsed = active
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
+  if (g.definition.missionConfig.v100StageNumber) {
+    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, elapsed,
+      duration: active ? tuning.activeSeconds : tuning.recoverySeconds, phase: f.stationAbility.phase });
+    return;
+  }
   const intensity = active
     ? Math.min(1, elapsed / .16)
     : Math.max(0, 1 - elapsed / tuning.recoverySeconds);
@@ -8519,7 +8540,7 @@ function drawWorld(
       enemyGateOcclusionX: g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId) ? WORLD_GEOMETRY.enemyBase.drawX + 18 : undefined,
     });
     if (f.combatReady) drawMotherCombatVfx(ctx, f, g);
-    if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g);
+    if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g, stageObjects);
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
     drawEnemyCombatReadabilityVfx(ctx, f, g, graphicsProfile.effectDensity, stageObjects);
     drawKuromeVisionInterference(ctx, f, g);
