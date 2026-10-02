@@ -16,20 +16,34 @@ import {installMetalCanvasAudit} from './v100-metal-canvas-audit.mjs';
 import {installClawCanvasAudit} from './v100-claw-canvas-audit.mjs';
 import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audit.mjs';
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
-function readBattleSkillLabelObservation() {
- const snapshot=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
- const resultShown=Boolean(document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'));
- const terminalTransition=snapshot?.over===true||resultShown;
- const observation={time:snapshot?.time,snapshotPresent:Boolean(snapshot),terminalTransition,over:snapshot?.over,won:snapshot?.won,resultShown,labels:[]};
- if(terminalTransition)return observation;
- observation.labels=[...document.querySelectorAll('.manual-ability-ready')].map(button=>{
-  const label=button.querySelector('.v100-manual-ability-label'),rect=label?.getBoundingClientRect(),style=label?getComputedStyle(label):null;
-  return {kind:button.dataset.abilityKind,ownerId:button.dataset.fighterId,name:label?.querySelector('b')?.textContent,
-   rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null,
-   readable:Boolean(rect&&rect.width>0&&rect.height>0&&rect.left>=-1&&rect.top>=-1&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&style.visibility==='visible'&&style.display!=='none'),
-   preservesInput:style?.pointerEvents==='none'};
- });
- return observation;
+async function readBattleSkillIconObservation() {
+ const decoded=new Map();
+ const glyphUrl=button=>{const glyph=button.querySelector('.manual-ability-ready-icon');return glyph?getComputedStyle(glyph).backgroundImage.match(/url\(["']?([^"')]+)["']?\)/u)?.[1]:null;};
+ for(let round=0;round<32;round++){
+  const urls=[...new Set([...document.querySelectorAll('.manual-ability-ready')].map(glyphUrl))];
+  if(urls.some(url=>!url))throw new Error('Missing rendered skill glyph URL');
+  await Promise.all(urls.filter(url=>!decoded.has(url)).map(async url=>{const bitmap=new Image();bitmap.src=url;await bitmap.decode();decoded.set(url,{complete:bitmap.complete,naturalWidth:bitmap.naturalWidth,naturalHeight:bitmap.naturalHeight});}));
+  // Decode can span a natural result or owner disappearance. Re-read the live
+  // state and current DOM, then capture them without another await.
+  const snapshot=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+  const resultShown=Boolean(document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'));
+  const terminalTransition=snapshot?.over===true||resultShown;
+  const observation={time:snapshot?.time,snapshotPresent:Boolean(snapshot),terminalTransition,over:snapshot?.over,won:snapshot?.won,resultShown,persistentLabels:document.querySelectorAll('.manual-ability-label,.v100-manual-ability-guide,.v100-ability-label-link').length,icons:[]};
+  if(terminalTransition)return observation;
+  const buttons=[...document.querySelectorAll('.manual-ability-ready')];
+  if(buttons.some(button=>!decoded.has(glyphUrl(button))))continue;
+  observation.icons=buttons.map(button=>{
+   const glyph=button.querySelector('.manual-ability-ready-icon'),url=glyphUrl(button),bitmap=decoded.get(url);
+   const r=button.getBoundingClientRect(),g=glyph.getBoundingClientRect(),style=getComputedStyle(glyph),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+   let opacity=1;for(let element=glyph;element;element=element.parentElement)opacity*=Number(getComputedStyle(element).opacity);
+   return{kind:button.dataset.abilityKind,ownerId:button.dataset.fighterId,ariaLabel:button.getAttribute('aria-label'),visibleText:button.textContent.trim(),title:button.getAttribute('title'),rect:{x:r.x,y:r.y,width:r.width,height:r.height},
+    glyph:{src:url,...bitmap,width:g.width,height:g.height,display:style.display,visibility:style.visibility,effectiveOpacity:opacity},
+    readable:r.width>=44&&r.height>=44&&r.left>=-1&&r.top>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&bitmap.complete&&bitmap.naturalWidth>0&&bitmap.naturalHeight>0&&g.width>0&&g.height>0&&style.display!=='none'&&style.visibility==='visible'&&opacity>.1,
+    preservesInput:hit===button||button.contains(hit)};
+  });
+  return observation;
+ }
+ throw new Error('Skill glyph URLs did not stabilize within32 live observations');
 }
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_BATTLE_IMPROVEMENT_OUT??'outputs/v100-battle-improvement-r1';
@@ -229,16 +243,17 @@ try{for(const number of numbers){
     }
    }
    if(!enemies.length&&last.time>20){emptySince??=last.time;maxEmpty=Math.max(maxEmpty,last.time-emptySince);}else emptySince=null;
-   assert.equal(await page.locator('.manual-ability-legend').count(),0,'V1 uses character-linked skill names rather than the older mode legend');
-   const skillObservation=await page.evaluate(readBattleSkillLabelObservation);
+   assert.equal(await page.locator('.manual-ability-legend').count(),0,'V1 battle skills use icons without persistent explanatory copy');
+   const skillObservation=await page.evaluate(readBattleSkillIconObservation);
    if(skillObservation.terminalTransition){
     // A real win/loss tears down the battle HUD. Validate the natural result
-    // below; its already hidden skill labels are not an in-battle sample.
-    result.skillLabelTerminalTransition=skillObservation;
+    // below; its already hidden skill icons are not an in-battle sample.
+    result.skillIconTerminalTransition=skillObservation;
    }else{
-    result.lastSkillLabelObservation={time:last.time,...skillObservation};
+    result.lastSkillIconObservation={time:last.time,...skillObservation};
     assert.ok(skillObservation.snapshotPresent,'Live skill observation requires the battle snapshot');
-    for(const label of skillObservation.labels){assert.equal(label.name,MANUAL_ABILITY_REGISTRY[label.kind]?.displayName,'Displayed skill name must match its actual owner ability');assert.ok(label.readable,'Character skill label must be readable within the viewport');assert.ok(label.preservesInput,'Skill text must not intercept the established native control');}
+    assert.equal(skillObservation.persistentLabels,0,'No persistent V1 skill copy or connector');
+    for(const icon of skillObservation.icons){assert.ok(icon.ariaLabel.includes(MANUAL_ABILITY_REGISTRY[icon.kind]?.displayName),'Accessible skill name must match its actual owner');assert.equal(icon.visibleText,'');assert.equal(icon.title,null);assert.ok(icon.readable,'Skill icon must retain a decoded glyph and 44px in-viewport control');assert.ok(icon.preservesInput,'Skill icon center must reach its established native control');}
    }
    if(number===3||number===5){
     const bossKind=number===3?'takuya':'gate-eater';
