@@ -18,6 +18,7 @@ import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audi
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
 async function readBattleSkillIconObservation() {
  const decoded=new Map();
+ const arrivalWaits=[];
  const glyphUrl=button=>{const glyph=button.querySelector('.manual-ability-ready-icon');return glyph?getComputedStyle(glyph).backgroundImage.match(/url\(["']?([^"')]+)["']?\)/u)?.[1]:null;};
  for(let round=0;round<32;round++){
   const urls=[...new Set([...document.querySelectorAll('.manual-ability-ready')].map(glyphUrl))];
@@ -28,10 +29,25 @@ async function readBattleSkillIconObservation() {
   const snapshot=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
   const resultShown=Boolean(document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'));
   const terminalTransition=snapshot?.over===true||resultShown;
-  const observation={time:snapshot?.time,snapshotPresent:Boolean(snapshot),terminalTransition,over:snapshot?.over,won:snapshot?.won,resultShown,persistentLabels:document.querySelectorAll('.manual-ability-label,.v100-manual-ability-guide,.v100-ability-label-link').length,icons:[]};
+  const observation={time:snapshot?.time,snapshotPresent:Boolean(snapshot),terminalTransition,over:snapshot?.over,won:snapshot?.won,resultShown,persistentLabels:document.querySelectorAll('.manual-ability-label,.v100-manual-ability-guide,.v100-ability-label-link').length,arrivalWaits,icons:[]};
   if(terminalTransition)return observation;
   const buttons=[...document.querySelectorAll('.manual-ability-ready')];
   if(buttons.some(button=>!decoded.has(glyphUrl(button))))continue;
+  const arriving=buttons.flatMap(button=>{
+   const frame=button.querySelector('span:first-child');
+   if(!frame||Number(getComputedStyle(frame).opacity)>.1)return[];
+   return frame.getAnimations().filter(animation=>animation.animationName==='manual-ready-arrive'&&animation.playState==='running'&&typeof animation.currentTime==='number'&&Number.isFinite(animation.currentTime)&&animation.currentTime>=0&&animation.currentTime<=220&&animation.effect.getTiming().duration===220).map(animation=>({button,animation}));
+  });
+  if(arriving.length){
+   const waits=arriving.map(({button,animation})=>({ownerId:button.dataset.fighterId,kind:button.dataset.abilityKind,animationName:animation.animationName,at:performance.now(),currentTime:animation.currentTime,duration:animation.effect.getTiming().duration,result:'waiting'}));
+   arrivalWaits.push(...waits);
+   // The production glyph naturally fades in for 220ms. Wait only for that
+   // observed animation; a hidden glyph without it still fails below.
+   let timer;
+   try{await Promise.race([Promise.all(arriving.map(async({button,animation},index)=>{try{await animation.finished;waits[index].result='finished';}catch(error){if(error.name!=='AbortError')throw error;waits[index].result='cancelled';}finally{Object.assign(waits[index],{endedAt:performance.now(),ownerStillConnected:button.isConnected,ariaDisabled:button.getAttribute('aria-disabled')});}})),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Observed skill arrival animation did not settle within1000ms: '+JSON.stringify(waits))),1000);})]);}
+   finally{clearTimeout(timer);}
+   continue;
+  }
   observation.icons=buttons.map(button=>{
    const glyph=button.querySelector('.manual-ability-ready-icon'),url=glyphUrl(button),bitmap=decoded.get(url);
    const r=button.getBoundingClientRect(),g=glyph.getBoundingClientRect(),style=getComputedStyle(glyph),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
