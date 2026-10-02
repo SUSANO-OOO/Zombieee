@@ -1425,3 +1425,12 @@
   .v100-result-panel .v100-result-actions { grid-column: 1 / -1; grid-row: 5; margin-top: 5px; gap: 10px; }
   .v100-result-panel .v100-result-actions button { min-width: 0; min-height: 44px; flex: 1 1 0; padding: 8px 12px; font-size: 15px; white-space: nowrap; }
 }
+
+/* Compact headings and dialogue must keep the same phone touch target as the
+ * other campaign controls, including after the preparation styles load. */
+#v100-campaign.v100-shell:not([data-v100-phase="battle"]) .v100-event-actions button,
+#v100-campaign.v100-shell:not([data-v100-phase="battle"]) .v100-panel-heading button,
+#v100-campaign.v100-shell:not([data-v100-phase="battle"]) .v100-chapter-tabs button {
+  min-width: 44px;
+  min-height: 44px;
+}
