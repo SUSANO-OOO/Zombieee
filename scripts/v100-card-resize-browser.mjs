@@ -65,6 +65,12 @@ async function capture(page,row,name){
  const bitmap=await persist(Buffer.from(native.png.split(',')[1],'base64'),row.engine+'-'+name+'-canvas.png');
  row.canvasCaptures.push({...bitmap,name,width:native.width,height:native.height,css:native.css,battleTime:native.battleTime,scope:'Separate read-only native canvas sample after the page PNG, not asserted to be the same gameplay frame.'});return bytes;
 }
+function readStartBoundary(){
+ const shell=document.querySelector('.v100-shell'),snapshot=window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
+ return{phase:shell?.getAttribute('data-v100-phase'),stage:shell?.getAttribute('data-v100-stage'),assetLoadState:document.documentElement.dataset.assetLoadState,
+  snapshot:snapshot?{screen:snapshot.screen,stageId:snapshot.stageId,time:snapshot.time,running:snapshot.running,paused:snapshot.paused,over:snapshot.over}:null,
+  cards:[...document.querySelectorAll('button.unit-card')].map(card=>({kind:card.dataset.kind,state:card.dataset.state}))};
+}
 const matrix=engine==='all'?['chromium','webkit']:[engine];
 for(const browserName of matrix){
  const row={engine:browserName,status:'running',images:[],canvasCaptures:[],probes:[],errors:[],inputs:[],geometry:{}};report.cases.push(row);
@@ -79,8 +85,15 @@ for(const browserName of matrix){
   page.on('response',r=>{if(r.status()>=400)row.errors.push({kind:'http',url:r.url(),status:r.status()});});
   assert.equal((await page.goto(new URL('v100',base).href,{waitUntil:'domcontentloaded'})).status(),200);
   await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();
+  row.beforeStart=await page.evaluate(readStartBoundary);
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();row.inputs.push({action:'native-start-battle'});
-  await page.waitForFunction(()=>document.documentElement.dataset.assetLoadState==='ready');
+  // A ready flag can still belong to preparation while its save and the
+  // battlefield mount are pending. Require the actual fresh battle controls.
+  await page.waitForFunction(expected=>{
+   const shell=document.querySelector('.v100-shell'),snapshot=window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.(),cards=[...document.querySelectorAll('button.unit-card')];
+   return shell?.getAttribute('data-v100-phase')==='battle'&&shell.getAttribute('data-v100-stage')==='3'&&snapshot?.screen==='battle'&&snapshot.running===true&&snapshot.paused===false&&snapshot.over===false&&document.documentElement.dataset.assetLoadState==='ready'&&cards.length===expected.length&&cards.every((card,index)=>card.dataset.kind===expected[index]);
+  },kinds,{timeout:30000});
+  row.startBoundary=await page.evaluate(readStartBoundary);
   const actualKinds=await page.locator('button.unit-card').evaluateAll(cards=>cards.map(c=>c.dataset.kind));
   assert.deepEqual(actualKinds,kinds);
   await page.waitForFunction(()=>[...document.querySelectorAll('button.unit-card')].every(c=>c.dataset.state==='ready'));
@@ -105,7 +118,7 @@ for(const browserName of matrix){
   }
   await page.waitForFunction(()=>['__ASHFALL_AUDIO_QA__','__V100_EVENT_AUDIO_QA__'].every(key=>{const d=window[key]?.getDiagnostics?.();return !d||d.activePreloads===0&&d.queuedPreloads===0;}),undefined,{timeout:45000});
   await page.waitForLoadState('networkidle',{timeout:45000});assert.deepEqual(row.errors,[]);row.status='captured';
- }catch(error){row.status='failed';row.error=String(error);report.errors.push(row.error);process.exitCode=1;}
+ }catch(error){row.status='failed';row.error=String(error);report.errors.push(row.error);process.exitCode=1;if(page){row.failureBoundary=await page.evaluate(readStartBoundary).catch(()=>null);row.failureImage=await page.screenshot().then(bytes=>persist(bytes,row.engine+'-failure.png')).catch(()=>null);}}
  finally{try{await context?.close();}finally{await browser.close();}}
  if(row.errors.length){row.status='failed';process.exitCode=1;}else if(row.status==='captured')row.status='passed';
  console.log(JSON.stringify({engine:row.engine,status:row.status,images:row.images.length,probes:row.probes.length,errors:row.errors.length,error:row.error}));
