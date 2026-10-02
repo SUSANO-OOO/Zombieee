@@ -78,7 +78,7 @@ export function v100TacticalHintFor(stage) {
 }
 
 export function v100SupportPurposeFor(supportId) {
-  if (supportId === "support-healing") return "味方を回復し、前線を立て直す。";
+  if (supportId === "support-healing") return "味方を回復し、前線を維持。";
   if (supportId === "support-incendiary-drum") return "炎上する範囲で敵を継続して攻撃。";
   return "普通のドラム缶。遮蔽物として敵の進路を妨げる。";
 }

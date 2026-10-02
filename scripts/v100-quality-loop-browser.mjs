@@ -45,14 +45,37 @@ const acknowledge = async page => {
   if (await play.isVisible()) await play.tap();
   await ready(page);
 };
-async function within(locator, minimum = 0) {
+async function within(locator, minimum = 0, requireHit = true) {
   const state = await locator.evaluate(element => {
     const rect = element.getBoundingClientRect(), hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
     return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height, viewportWidth: innerWidth, viewportHeight: innerHeight, reachable: hit === element || element.contains(hit) };
   });
   assert.ok(state.x >= 0 && state.y >= 0 && state.right <= state.viewportWidth + 1 && state.bottom <= state.viewportHeight + 1, JSON.stringify(state));
-  assert.ok(state.height >= minimum && state.reachable, JSON.stringify(state));
+  assert.ok(state.height >= minimum && (!requireHit || state.reachable), JSON.stringify(state));
+  const clipped = await locator.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+      const style = getComputedStyle(parent), bounds = parent.getBoundingClientRect();
+      if (['hidden', 'clip', 'auto', 'scroll'].includes(style.overflowY) && (rect.y < bounds.y - 1 || rect.bottom > bounds.bottom + 1)) return parent.className;
+      if (['hidden', 'clip', 'auto', 'scroll'].includes(style.overflowX) && (rect.x < bounds.x - 1 || rect.right > bounds.right + 1)) return parent.className;
+    }
+    return null;
+  });
+  assert.equal(clipped, null, 'Clipped by ancestor: ' + clipped);
   return state;
+}
+async function diagramWithin(locator) {
+  const bounds = await within(locator, 0, false);
+  const diagram = await locator.evaluate(svg => {
+    const box = svg.viewBox.baseVal;
+    return { pointerEvents: getComputedStyle(svg).pointerEvents, clippedTexts: [...svg.querySelectorAll('text')].filter(text => {
+      const rect = text.getBBox(), pad = (parseFloat(getComputedStyle(text).strokeWidth) || 0) / 2;
+      return rect.x - pad < box.x || rect.y - pad < box.y || rect.x + rect.width + pad > box.x + box.width || rect.y + rect.height + pad > box.y + box.height;
+    }).map(text => text.textContent) };
+  });
+  assert.equal(diagram.pointerEvents, 'none', 'The mission diagram is static, not a touch control');
+  assert.deepEqual(diagram.clippedTexts, []);
+  return { ...bounds, ...diagram };
 }
 async function capture(page, row, name) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
@@ -89,13 +112,13 @@ for (const engine of engines) {
   const browser = await type.launch({ headless: true });
   try {
     for (const viewport of sizes) {
-      for (const number of [1, 2, 5, 6, 9, 16, 26, 28, 29]) {
+      for (const number of [1, 2, 5, 6, 9, 16, 25, 26, 28, 29]) {
         const stageId = V100_STAGE_IDS[number - 1];
         const fixture = normalizeV100Save({ ...early, availableStageIds: V100_STAGE_IDS, formationSlots: [...early.formationSlots.slice(0, 4), "unit-nao", "unit-hachi", "unit-paisen"], flowState: { phase: "formation", eventId: null, stageId, stageNumber: number, destination: "battle", nodeIndex: 0, firstClear: false, finalized: false } });
         await runCase(browser, engine, viewport, "briefing-s" + number, fixture, async (page, row) => {
           await page.locator(".v100-mission-diagram").waitFor();
           row.mission = await page.locator(".v100-mission-diagram").getAttribute("data-v100-mission-mode");
-          await within(page.locator(".v100-mission-diagram"));
+          row.diagram = await diagramWithin(page.locator(".v100-mission-diagram"));
           await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
           await capture(page, row, "board");
           const summary = page.locator(".v100-briefing-details > summary");
@@ -126,6 +149,10 @@ for (const engine of engines) {
       await page.getByRole("dialog", { name: "データ管理", exact: true }).locator("input[type=file]").first().setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
       await page.locator(".v100-map-layout").waitFor(); await ready(page);
       assert.equal((await rawSave(page)).caps, early.caps);
+      const restoredNotice = page.locator('.v100-notice button');
+      if (await restoredNotice.isVisible()) { await restoredNotice.tap(); await ready(page); }
+      const offer = page.getByRole('button', { name: '後で決める', exact: true });
+      if (await offer.isVisible()) { await offer.tap(); await ready(page); }
       await page.getByRole("button", { name: "この作戦を編成", exact: true }).tap();
       for (let n = 0; n < 60 && !await page.locator(".v100-formation-panel").isVisible(); n++) await page.locator(".v100-event-actions .v100-primary").tap();
       await page.locator(".v100-slot-track .v100-slot").nth(4).tap();

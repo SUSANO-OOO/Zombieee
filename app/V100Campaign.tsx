@@ -1076,7 +1076,7 @@ function MissionBriefingDiagram({ stageId }: { stageId: string | null }) {
   const briefing = v100MissionBriefingFor(stageId);
   if (!briefing) return null;
   const isHold = briefing.mode === "hold";
-  return <svg className={"v100-field-map-drawing v100-mission-diagram " + (isHold ? "is-hold" : "")} viewBox="0 0 320 84" role="img" aria-label="作戦の流れ" data-v100-mission-mode={briefing.mode}>
+  return <svg className={"v100-field-map-drawing v100-mission-diagram " + (isHold ? "is-hold" : "")} viewBox="0 -8 320 100" role="img" aria-label="作戦の流れ" data-v100-mission-mode={briefing.mode}>
     <defs><marker id="v100-briefing-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="none" stroke="currentColor" strokeWidth="1.5" /></marker></defs>
     <path className="v100-briefing-streets" d="M15 30H304M15 59H304M90 25V66M230 25V66" />
     {briefing.mode === "sequence" ? <>
@@ -1224,7 +1224,7 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
         <dl><div><dt>現在耐久</dt><dd>{save.vehicle.maxHp}</dd></div><div><dt>強化後</dt><dd>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "上限" : nextHp}</dd></div><div><dt>所持CAPS</dt><dd>{save.caps}</dd></div></dl>
         <div key={vehicleLevel} className="v100-vehicle-strength-meter" role="img" aria-label={"現在耐久" + save.vehicle.maxHp + "、強化後" + nextHp}><i style={{ width: (save.vehicle.maxHp / maximumHp * 100) + "%" }} /><b style={{ left: (save.vehicle.maxHp / maximumHp * 100) + "%", width: ((nextHp - save.vehicle.maxHp) / maximumHp * 100) + "%" }} /></div>
         <p className="v100-vehicle-quote">{vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? "耐久 +" + V100_VEHICLE.hpPerUpgrade + " / 必要 " + nextCost + " CAPS" : "車体の強化上限に到達"}{nextCost > save.caps && <strong> / あと {nextCost - save.caps} CAPS</strong>}</p>
-        <button className="v100-primary" type="button" data-ui-sound="transaction" onClick={onUpgradeVehicle} disabled={vehicleLevel >= V100_VEHICLE.maxUpgradeLevel || save.caps < nextCost}>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "強化上限" : "HPを強化 / " + nextCost + " CAPS"}</button>
+        <button className="v100-primary" type="button" data-ui-sound="transaction" onClick={onUpgradeVehicle} disabled={vehicleLevel >= V100_VEHICLE.maxUpgradeLevel || save.caps < nextCost}>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "強化上限" : "耐久を強化 / " + nextCost + " CAPS"}</button>
         <div className="v100-vehicle-abilities">{V100_VEHICLE.abilities.map(ability => <div key={ability.id}><strong>{ability.displayName}</strong><small>支援 {ability.battleCost} / 再使用 {ability.cooldownSeconds}秒</small></div>)}</div>
       </div>
     </div>

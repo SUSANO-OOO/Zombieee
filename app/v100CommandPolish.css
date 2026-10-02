@@ -48,6 +48,7 @@
   grid-template-rows: minmax(0, 1fr); width: 100%; height: 100%; min-height: 0;
   gap: 8px; padding: 0; border: 0; background: none; overflow: visible;
 }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-formation-board { overflow: visible; }
 #v100-campaign .v100-command-formation .v100-slot-rail::before,
 #v100-campaign .v100-command-formation .v100-slot-rail::after,
 #v100-campaign .v100-command-formation .v100-slot-track::before { content: none; }
