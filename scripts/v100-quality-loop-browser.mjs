@@ -9,7 +9,7 @@ import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
-import { V100_STAGE_IDS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
 
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", windowsHide: true }).trim();
 const head = git("rev-parse", "HEAD");
@@ -198,12 +198,14 @@ for (const engine of engines) {
       for (const firstNumber of [2, 5, 20]) {
       const firstStageId = V100_STAGE_IDS[firstNumber - 1];
       const slug = 's' + String(firstNumber).padStart(2, '0');
-      const initial = normalizeV100Save({ ...early, completedStageIds: V100_STAGE_IDS.slice(0, firstNumber - 1), availableStageIds: V100_STAGE_IDS.slice(0, firstNumber), pendingResult: null });
+      const initial = normalizeV100Save({ ...createDefaultV100Save({ playerName: '西新確認' }), campaignStarted: true, completedStageIds: V100_STAGE_IDS.slice(0, firstNumber - 1), availableStageIds: V100_STAGE_IDS.slice(0, firstNumber) });
       const value = createV100BattleResult({ stageId: firstStageId, battleRunId: 'quality-first-reward-' + firstNumber, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: 408, vehicleMaxHp: 680 });
+      assert.equal(value.stars, 1);
       const pending = recordV100PendingResult(initial, value);
       assert.equal(pending.applied, true);
       const settled = finalizeV100PendingResult(pending.save);
       assert.equal(settled.applied, true);
+      assert.equal(settled.save.lastResult.rewardCaps, v100StageReward(firstNumber, 'first-clear'));
       const firstFixture = normalizeV100Save({ ...settled.save, readStoryEventIds: [...new Set([...settled.save.readStoryEventIds, 'v100:event:' + slug + ':post'])], flowState: { phase: 'first-clear-post', eventId: 'v100:event:' + slug + ':first-clear-post', stageId: firstStageId, stageNumber: firstNumber, destination: 'first-clear-post', nodeIndex: 0, firstClear: true, finalized: false } });
       await runCase(browser, engine, viewport, 'first-clear-reward-s' + firstNumber, firstFixture, async (page, row, reload) => {
         await page.locator('.v100-reward-summary').waitFor();
@@ -248,6 +250,7 @@ for (const engine of engines) {
           assert.equal(await body.locator('tbody tr').count(), 5);
           row.reportText = await body.innerText();
           assert.ok(row.reportText.includes('ハチ') && row.reportText.includes('ナオ') && row.reportText.includes('回復したHP'));
+          await capture(page, row, 'report-heading');
           await body.evaluate(element => { element.scrollTop = element.scrollHeight; });
           await within(body.locator('tbody tr').last().locator('td').last());
           await capture(page, row, 'report'); await summary.tap();
