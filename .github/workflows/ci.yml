@@ -523,6 +523,9 @@ jobs:
       - name: Verify decoded and visible battle card portraits across native state transitions
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-card-portrait-browser.mjs
 
+      - name: Verify portrait fidelity after native viewport transitions
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-card-resize-browser.mjs
+
       - name: Capture and validate the full Phase G production matrix
         env:
           DEBUG: pw:browser
@@ -541,6 +544,7 @@ jobs:
             docs/qa/v100/phase-g-screenshot-manifest.json
             outputs/native-pointer-probe
             outputs/v100-native-music
+            outputs/v100-card-resize
             outputs/v100-card-portraits
           if-no-files-found: error
           retention-days: 14
@@ -921,7 +925,8 @@ jobs:
       - name: Checkout synthetic PR merge
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          # Both parents of the tested merge are enough for the exact-base worktree.
+          fetch-depth: 2
           persist-credentials: false
 
       - name: Setup Node.js

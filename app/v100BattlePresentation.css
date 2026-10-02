@@ -1,3 +1,10 @@
+.v100-shell .battlefield,
+.v100-shell .unit-card .portrait > img {
+ /* WebKit can temporarily reduce bitmap interpolation during live resizing.
+    Keep its normal interpolation rather than entering that resize heuristic. */
+ image-rendering: auto;
+ image-rendering: optimizeQuality;
+}
 .v100-shell .boss-hud.v100-boss-center { position: static; inset: auto; width: 100%; min-width: 0; margin: 0; padding: 5px 9px 6px; border: 1px solid #ce865c; border-left: 3px solid #f0b56e; border-radius: 4px; clip-path: none; background: linear-gradient(110deg,#271d19f5,#12191bef); box-shadow: 0 3px 12px #0008; }
 .v100-shell .boss-hud.v100-boss-center > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; font: 700 13px/1.15 system-ui,sans-serif; letter-spacing: 0; }
 .v100-shell .boss-hud.v100-boss-center span { min-width: 0; white-space: normal; color: #ffe0a7; }
