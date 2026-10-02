@@ -59,8 +59,8 @@ export function createV100StoryFlowState({
   const savedPhase = V100_FLOW_PHASES.includes(saved.phase) && !(saved.phase === "name" && playerName) ? saved.phase : null;
   const cursorEventId = typeof cursor?.eventId === "string" && cursor.eventId.startsWith("v100:event:") ? cursor.eventId : null;
   const savedEventId = typeof saved.eventId === "string" && saved.eventId.startsWith("v100:event:") ? saved.eventId : null;
-  const acknowledgedFirstClear = savedPhase === "first-clear-post"
-    && lastResult?.won === true && lastResult.firstClear === true
+  const acknowledgedReward = savedPhase === "first-clear-post"
+    && lastResult?.won === true && lastResult.firstClear === (saved.firstClear === true)
     && typeof lastResult.finalizedAt === "string" && lastResult.stageId === saved.stageId
     && completedStageIds.includes(saved.stageId)
     && readStoryEventIds.includes(`v100:event:s${String(stageNumberFor(saved.stageId)).padStart(2, "0")}:post`);
@@ -68,7 +68,7 @@ export function createV100StoryFlowState({
   // screen. Resume that screen from the matching durable result; never settle
   // it again or invent a result from an unbound cursor.
   const restoredResult = pendingResult
-    ?? (acknowledgedFirstClear || (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId) ? lastResult : null);
+    ?? (acknowledgedReward || (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId) ? lastResult : null);
   const restoredEventId = cursorEventId ?? savedEventId;
   const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId);
   const phase = savedPhase
@@ -158,9 +158,7 @@ export function completeV100Event(state, { skipped = false } = {}) {
   if (state.eventId === "v100:event:prologue") return { accepted: true, state: stateWith(state, { phase: "map", eventId: null, destination: "map", canSkip: false }) };
   if (state.eventId.endsWith(":pre")) return { accepted: true, skipped, state: stateWith(state, { phase: "formation", eventId: null, destination: "formation", canSkip: false }) };
   if (state.eventId.endsWith(":post")) {
-    return state.firstClear
-      ? { accepted: true, skipped, state: stateWith(state, { phase: "first-clear-post", eventId: `${state.eventId.replace(":post", ":first-clear-post")}`, destination: "first-clear-post", canSkip: true }) }
-      : { accepted: true, skipped, state: stateWith(state, { phase: "map", eventId: null, destination: "map", canSkip: false, finalized: true }) };
+    return { accepted: true, skipped, state: stateWith(state, { phase: "first-clear-post", eventId: `${state.eventId.replace(":post", ":first-clear-post")}`, destination: "first-clear-post", canSkip: true }) };
   }
   if (state.eventId.endsWith(":first-clear-post")) return finalizeV100Flow(state);
   if (state.eventId === "v100:event:ending") return { accepted: true, state: stateWith(state, { phase: "credits", eventId: "v100:event:credits", destination: "credits", canSkip: true }) };
@@ -198,7 +196,7 @@ export function enterV100PostResult(state) {
 export function finalizeV100Flow(state) {
   if (state.phase !== "first-clear-post" || !state.pendingResult) return { accepted: false, reason: "first-clear-finalize-required", state };
   const completed = state.completedStageIds.includes(state.stageId) ? [...state.completedStageIds] : [...state.completedStageIds, state.stageId];
-  if (state.stageNumber === 30) return { accepted: true, state: stateWith(state, {
+  if (state.stageNumber === 30 && state.firstClear) return { accepted: true, state: stateWith(state, {
     phase: "ending",
     eventId: "v100:event:ending",
     destination: "ending",

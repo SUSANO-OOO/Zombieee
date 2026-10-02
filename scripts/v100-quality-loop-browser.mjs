@@ -33,12 +33,12 @@ early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase:
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
-  scope: "Phone rendering and native inputs. Two early victories are developer-synthetic, one-star production receipts; Nao purchased with those CAPS. Subsequent upgrade/formation/battle inputs are native. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
+  scope: "Phone rendering and native inputs. Two early victories and the replay-reward cases are developer-synthetic production receipts; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Replay-reward cases prove reward presentation, save/resume and no duplicate payout, not real victories. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
-const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,native').split(',');
-assert.ok(sections.length && sections.every(value => ['presentation', 'native'].includes(value)));
+const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,native').split(',');
+assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'native'].includes(value)));
 report.sections = sections;
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
@@ -161,6 +161,36 @@ for (const engine of engines) {
         });
       }
     }
+    for (const viewport of sections.includes('rewards') ? sizes : []) {
+      const stageId = V100_STAGE_IDS[0];
+      const value = createV100BattleResult({ stageId, battleRunId: 'quality-reward-replay', won: true, objectiveComplete: true, vehicleHp: 680, vehicleMaxHp: 680 });
+      const pending = recordV100PendingResult(early, value);
+      assert.equal(pending.applied, true);
+      const settled = finalizeV100PendingResult(pending.save);
+      assert.equal(settled.applied, true);
+      const fixture = normalizeV100Save({ ...settled.save, readStoryEventIds: [...new Set([...settled.save.readStoryEventIds, 'v100:event:s01:post'])], flowState: { phase: 'first-clear-post', eventId: 'v100:event:s01:first-clear-post', stageId, stageNumber: 1, destination: 'first-clear-post', nodeIndex: 0, firstClear: false, finalized: false } });
+      await runCase(browser, engine, viewport, 'replay-reward', fixture, async (page, row, reload) => {
+        await page.locator('.v100-reward-summary').waitFor();
+        assert.ok((await page.locator('.v100-reward-summary').innerText()).includes('+' + settled.save.lastResult.rewardCaps));
+        assert.equal(settled.save.lastResult.rewardBreakdown.firstClear, 0);
+        const summary = page.locator('.v100-reward-breakdown summary');
+        await within(summary, 44); await summary.tap();
+        await within(page.locator('.v100-reward-breakdown > p'));
+        row.breakdown = await page.locator('.v100-reward-breakdown > p').innerText();
+        assert.ok(row.breakdown.includes('再挑戦報酬'));
+        await capture(page, row, 'settlement');
+        const saved = await rawSave(page);
+        await reload();
+        assert.deepEqual(await rawSave(page), saved);
+        await page.locator('.v100-reward-summary').waitFor();
+        await advanceEvent(page);
+        await page.locator('.v100-map-layout').waitFor();
+        const continued = await rawSave(page);
+        assert.equal(continued.caps, saved.caps);
+        assert.deepEqual(continued.receipts, saved.receipts);
+        row.confirmation = { caps: continued.caps, rewardCaps: saved.lastResult.rewardCaps, receiptsUnchanged: true, resumed: true };
+      });
+    }
     if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();
       await page.getByRole("dialog", { name: "データ管理", exact: true }).locator("input[type=file]").first().setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
@@ -179,13 +209,15 @@ for (const engine of engines) {
       await page.getByRole("button", { name: "隊員一覧へ", exact: true }).tap();
       await page.locator(".v100-personnel-card").first().tap();
       const growth = page.locator(".v100-unit-growth-notes summary");
-      await within(growth, 44); await growth.tap(); await within(page.locator(".v100-unit-growth-notes p"));
+      await within(growth, 44); await growth.tap(); row.growthBox = await within(page.locator(".v100-unit-growth-notes p"));
+      assert.ok(row.growthBox.width >= Math.min(320, 0.6 * row.growthBox.viewportWidth));
+      await page.locator('.v100-unit-growth-notes p').evaluate(element => { element.scrollTop = element.scrollHeight; });
       await capture(page, row, "growth"); await growth.tap();
       await page.locator(".v100-personnel-focus .v100-primary").tap(); await ready(page);
       row.afterUpgrade = await rawSave(page);
       assert.equal(row.afterUpgrade.unitLevels["unit-hachi"], 2);
       assert.equal(row.afterUpgrade.caps, early.caps - 30);
-      await page.getByRole("button", { name: "出撃編成へ", exact: true }).tap();
+      await page.getByRole('navigation', { name: '作戦準備メニュー' }).getByRole('button', { name: '編成', exact: true }).tap();
       await page.getByRole("button", { name: "戦闘へ", exact: true }).tap();
       row.native = { inputs: [], samples: [] };
       const deadline = Date.now() + 125000;

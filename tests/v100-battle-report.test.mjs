@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizeV100BattleReport, v100BattleReportFor } from "../app/v100BattleReport.js";
-import { createDefaultV100Save, deserializeV100Save, serializeV100Save } from "../app/v100Save.js";
+import { applyV100SaveMutation, createDefaultV100Save, deserializeV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { createV100BattleResult, finalizeV100PendingResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
 import { v100RewardPresentationFor } from "../app/v100RewardPresentation.js";
 import { advanceAreaEffects } from "../app/gameRules.js";
+import { beginV100StageAttempt, completeV100Event, createV100StoryFlowState, enterV100Battle, enterV100PostResult, finishV100Battle, markV100FlowEventRead, v100StoryFlowCheckpoint } from "../app/v100StoryFlow.js";
 
 const measured = () => v100BattleReportFor({
   wave: 6, kills: 31,
@@ -78,4 +79,41 @@ test("CAPS breakdown quotes the actual first and replay settlements, including o
   assert.deepEqual(v100RewardPresentationFor(replay.lastResult).breakdown, { firstClear: 0, replay: v100StageReward(1, "replay"), star2: 0, star3: 0 });
   assert.equal(v100RewardPresentationFor({ ...replay.lastResult, rewardBreakdown: undefined }).breakdown, null);
   assert.equal(v100RewardPresentationFor({ ...replay.lastResult, rewardBreakdown: { firstClear: 0, replay: 9999, star2: 0, star3: 0 } }).breakdown, null);
+});
+
+test("replay and improved stars show durable rewards, resume confirmation and never repeat the ending or payouts", () => {
+  for (const number of [1, 30]) {
+    const stageId = V100_STAGE_IDS[number - 1];
+    const initial = normalizeV100Save({ ...createDefaultV100Save({ playerName: "確認" }), completedStageIds: V100_STAGE_IDS.slice(0, number - 1), availableStageIds: V100_STAGE_IDS.slice(0, number) });
+    const victory = (run, hp) => createV100BattleResult({ stageId, battleRunId: run, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: hp, vehicleMaxHp: 680 });
+    const first = settle(initial, victory("first-" + number, 68));
+    let flow = createV100StoryFlowState({ ...first, flowState: { phase: "map" } });
+    flow = beginV100StageAttempt(flow, stageId).state;
+    flow = enterV100Battle(completeV100Event(flow).state).state;
+    const replayResult = victory("improved-" + number, 680);
+    flow = enterV100PostResult(finishV100Battle(flow, replayResult).state).state;
+    const settled = settle(first, replayResult);
+    flow = completeV100Event(markV100FlowEventRead(flow, flow.eventId)).state;
+    assert.equal(flow.phase, "first-clear-post");
+    assert.equal(flow.firstClear, false);
+    const point = v100StoryFlowCheckpoint(flow);
+    const checkpoint = applyV100SaveMutation(settled, draft => ({ ...draft, ...point, readStoryEventIds: flow.readStoryEventIds }));
+    assert.equal(checkpoint.applied, true);
+    const saved = reload(checkpoint.save);
+    const resumed = createV100StoryFlowState(saved);
+    assert.deepEqual(resumed.pendingResult, saved.lastResult);
+    const summary = v100RewardPresentationFor(resumed.pendingResult);
+    assert.deepEqual(summary.unlocks, []);
+    assert.deepEqual(summary.breakdown, { firstClear: 0, replay: v100StageReward(number, "replay"), star2: v100StageReward(number, "star:2"), star3: v100StageReward(number, "star:3") });
+    const continued = completeV100Event(resumed);
+    assert.equal(continued.accepted, true);
+    assert.equal(continued.state.phase, "map");
+    assert.equal(continued.state.eventId, null);
+    const repeated = recordV100PendingResult(saved, replayResult);
+    assert.equal(repeated.applied, false);
+    assert.equal(serializeV100Save(repeated.save), serializeV100Save(saved));
+    assert.deepEqual(saved.ownedUnitIds, first.ownedUnitIds);
+    assert.deepEqual(saved.unitLevels, first.unitLevels);
+    assert.deepEqual(saved.settings, first.settings);
+  }
 });
