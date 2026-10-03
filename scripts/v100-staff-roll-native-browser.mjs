@@ -49,6 +49,13 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
 async function readClock(page) {
   return page.locator(".v100-staff-roll").evaluate(root => { const audio = root.querySelector("audio"), track = root.querySelector(".v100-credit-roll-track"); return { time: audio.currentTime, paused: audio.paused, progress: root.getAttribute("data-v100-credit-progress"), transform: track.style.transform, state: root.getAttribute("data-v100-credit-audio") }; });
 }
+async function readNativeMedia(page) {
+  return page.locator(".v100-staff-roll audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused,
+    seeking: audio.seeking, ended: audio.ended, networkState: audio.networkState, readyState: audio.readyState,
+    error: audio.error && { code: audio.error.code, message: audio.error.message },
+    buffered: [...Array(audio.buffered.length)].map((_, i) => [audio.buffered.start(i), audio.buffered.end(i)]),
+    seekable: [...Array(audio.seekable.length)].map((_, i) => [audio.seekable.start(i), audio.seekable.end(i)]) }));
+}
 async function frozen(page, action) {
   const before = await readClock(page);
   await action();
@@ -135,26 +142,79 @@ try {
         assert.ok(result.initial.audio.currentTime > 170);
         await page.getByRole("button", { name: "スキップ", exact: true }).click();
       } else if (name === "ended-during-save") {
-        await page.evaluate(() => {
-          const original = IDBFactory.prototype.open, held = [];
-          window.__releaseCreditSave = () => { IDBFactory.prototype.open = original; for (const resume of held.splice(0)) resume(); };
+        // Prepare both native seek targets before holding a real save. Media
+        // readiness cannot consume the product's six-second storage timeout.
+        // Native engines may stop prebuffering halfway through a long track.
+        // A real preparatory seek loads its tail before the save is held.
+        result.prepareSeek = await page.locator(".v100-staff-roll audio").evaluate(audio => {
+          const target = audio.duration * 9.1 / 11; audio.currentTime = target; return { target, immediate: audio.currentTime };
+        });
+        await page.waitForFunction(target => {
+          const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
+          return !audio.seeking && !audio.paused && Math.abs(audio.currentTime - target) < 3 && root.dataset.v100NodeIndex === "9" && document.documentElement.dataset.pwaSaveMutationPending === "false";
+        }, result.prepareSeek.target, { timeout: 15000 });
+        await page.waitForFunction(() => {
+          const audio = document.querySelector(".v100-staff-roll audio");
+          const contains = (ranges, target) => [...Array(ranges.length)].some((_, i) => ranges.start(i) <= target && ranges.end(i) >= target);
+          return Number.isFinite(audio.duration) && [audio.duration * 10.1 / 11, audio.duration - .1]
+            .every(target => contains(audio.buffered, target) && contains(audio.seekable, target));
+        }, undefined, { timeout: 20000 });
+        result.beforeHold = await readNativeMedia(page);
+        result.seek = await page.evaluate(() => {
+          const original = IDBFactory.prototype.open, held = [], proof = { opens: [], successes: [], errors: [], ended: [], busy: [], releases: [] };
+          window.__creditSaveHoldProof = proof;
+          const observer = new MutationObserver(() => proof.busy.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending }));
+          observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-pwa-save-mutation-pending"] });
+          document.addEventListener("ended", event => {
+            if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) proof.ended.push({ at: performance.now(), time: event.target.currentTime, duration: event.target.duration, ended: event.target.ended, pending: document.documentElement.dataset.pwaSaveMutationPending });
+          }, { capture: true });
+          window.__releaseCreditSave = () => {
+            IDBFactory.prototype.open = original;
+            proof.releases.push({ at: performance.now(), held: held.length });
+            for (const resume of held.splice(0)) resume();
+            observer.disconnect();
+          };
           window.__heldCreditSaves = held;
           IDBFactory.prototype.open = function (...args) {
-            const request = original.apply(this, args);
+            const openedAt = performance.now();
+            let request;
+            try { request = original.apply(this, args); }
+            catch (error) { proof.errors.push({ at: openedAt, operation: "open", error: String(error) }); throw error; }
             if (!String(args[0]).includes("v100")) return request;
-            let handler;
-            Object.defineProperty(request, "onsuccess", { configurable: true, get: () => handler, set: value => { handler = value; } });
-            request.addEventListener("success", event => held.push(() => handler?.call(request, event)));
+            proof.opens.push({ at: openedAt, name: String(args[0]), nativeRequest: request instanceof IDBOpenDBRequest });
+            for (const type of ["error", "blocked"]) request.addEventListener(type, () => proof.errors.push({ at: performance.now(), operation: type, error: String(request.error) }));
+            // Preserve the native IDL onsuccess property. Stop delivery only
+            // after genuine native success, then invoke its actual handler once.
+            request.addEventListener("success", event => {
+              event.stopImmediatePropagation();
+              const handler = request.onsuccess;
+              proof.successes.push({ at: performance.now(), openedAt, handlerType: typeof handler });
+              held.push(() => { try { handler?.call(request, event); } catch (error) { proof.errors.push(String(error)); throw error; } });
+            }, { capture: true, once: true });
             return request;
           };
-          const audio = document.querySelector(".v100-staff-roll audio"); audio.currentTime = audio.duration * 9.1 / 11;
+          const audio = document.querySelector(".v100-staff-roll audio"), before = audio.currentTime, target = audio.duration * 10.1 / 11;
+          audio.currentTime = target;
+          return { before, target, immediate: audio.currentTime };
         });
-        await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0);
+        await page.waitForFunction(target => {
+          const audio = document.querySelector(".v100-staff-roll audio");
+          return !audio.seeking && Math.abs(audio.currentTime - target) < 2 && document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0;
+        }, result.seek.target, { timeout: 3000 });
+        result.afterHold = await readNativeMedia(page);
         await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.currentTime = audio.duration - .1; });
-        await page.waitForFunction(() => document.querySelector(".v100-staff-roll audio")?.ended === true);
-        result.busyAtEnd = await page.evaluate(() => document.documentElement.dataset.pwaSaveMutationPending);
+        await page.waitForFunction(() => window.__creditSaveHoldProof.ended.length === 1, undefined, { timeout: 2000 });
+        result.busyAtEnd = await page.evaluate(() => window.__creditSaveHoldProof.ended[0].pending);
         assert.equal(result.busyAtEnd, "true");
         await page.evaluate(() => window.__releaseCreditSave());
+        result.holdProof = await page.evaluate(() => window.__creditSaveHoldProof);
+        assert.deepEqual(result.holdProof.errors, []);
+        assert.equal(result.holdProof.ended[0].ended, true);
+        assert.ok(Math.abs(result.holdProof.ended[0].time - result.holdProof.ended[0].duration) < .5);
+        assert.ok(result.holdProof.opens.every(row => row.nativeRequest));
+        assert.ok(result.holdProof.successes.every(row => row.handlerType === "function"));
+        assert.equal(result.holdProof.releases[0].held, result.holdProof.successes.length);
+        assert.ok(result.holdProof.releases[0].at - result.holdProof.opens[0].at < 6000, JSON.stringify(result.holdProof));
       } else {
         await page.evaluate(() => {
           const set = Storage.prototype.setItem, put = IDBObjectStore.prototype.put;
@@ -181,6 +241,12 @@ try {
       assert.equal(saved.readStoryEventIds.filter(id => id === "v100:event:credits").length, 1);
       result.evidence = "seeded saved cursor or synthetic EOF seek and isolated storage fault; separate from full-song proof";
       assert.deepEqual(result.errors, []); result.status = "passed";
+    } catch (error) {
+      result.failureClock = await readClock(page).catch(() => null);
+      result.failureAudio = await readNativeMedia(page).catch(() => null);
+      result.failureHold = await page.evaluate(() => window.__creditSaveHoldProof ?? null).catch(() => null);
+      await page.screenshot({ path: path.join(out, `${engine}-${name}-failed.png`) }).catch(() => {});
+      throw error;
     } finally { await context.close(); }
   }
   report.status = "passed";

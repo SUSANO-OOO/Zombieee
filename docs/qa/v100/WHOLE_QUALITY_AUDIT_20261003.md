@@ -147,3 +147,11 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 固定候補`3b1dd967`の最終画像reviewでは、まとめた地の文と台詞が既存gridの同じcellへ配置されるMediumを1件検出した。外枠のfits検査だけでは本文同士の重なりを検出していなかった。本文を専用の縦配置要素へまとめ、話者あり・なしの双方を修正した。本文block同士の重なりと枠内表示を検査へ追加し、修正前のbuildで同じ不具合を検出するcontrolを保全した。修正後は12文字の主人公名、3サイズ×5イベントの15 fixtureで全文と非重複を確認し、全1721 tests・build・Lintを再実行した。撮り直した実画像と新HEADの独立review結果は既存台帳へ記録する。
 
 記録：`outputs/whole-quality-audit-20261003/`。これらはseeded presentation、native media、保存faultの証拠であり、全30作戦の通常クリア、物理iPhone、speaker聴感、発熱、Producer最終受入の完了を意味しない。新候補のexact HEAD CIと試遊URLは既存Issue #172台帳へ更新する。
+
+### Mac CIで判明した検証契約の修正
+
+候補`8945a141`のCI `37097483356`では、Mac固定WebKitの元MP3自然終了315.768秒・全11場面・pause/回転/pagehide、音なし、503、保存cursor復帰の4ケースが通った。保存中終了のfixtureはhold成立待ちで失敗した。元の記録にはseek後の媒体状態とIDB履歴がなく、原因は確定できない。元の失敗artifactを`mac-native-8945a14-failure/`へ保全し、合格へ読み替えない。
+
+長い曲をnative再生するとChromiumは途中で先読みを止めることを実測したため、fixtureで場面9へ実seekし、保存完了と場面10・末尾のbuffer/seekableを確認してから場面10の実保存を保留する。native requestの`onsuccess`をown propertyで置き換えず、実successのcapture listenerで実handlerの配送だけを一時保留する。native `ended`発生時のpending=true、open→解除6秒未満、EPILOGUEへの保存と既読1回を要求する。製品timeoutを延長せず、失敗時は媒体・IDB・busy履歴を保存する。製品非依存のnative IDB controlは旧方式とcapture方式を比較し、callback1回・実DB round trip・解除前未完了を検査する。Windows固定WebKitとChromiumでcontrolが通り、Chromiumの3保存境界ケースも通った。Macの保存中終了は新候補CIの実結果を要求する。
+
+同CIのPhase Gは、`controls`のないnative audioへ可視の幅・高さを求めて失敗した。画面5要素の可視性を維持し、audioの実要素数が正確に1個である契約へ修正した。manifest validatorでもこの証拠を必須にした。実Chromium DOMでaudio欠落・重複・画面操作非表示を拒否し、非表示audio1個と既存ENDINGは通るcontrol、credits3サイズ、関連49 testsを確認した。正式CIの55 captureとmanifest検証は維持する。

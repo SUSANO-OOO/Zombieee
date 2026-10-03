@@ -546,6 +546,7 @@ jobs:
           DEBUG: pw:browser
         run: |
           set -euo pipefail
+          V100_PHASE_G_STATE_CONTRACT_CONTROL=1 node scripts/v100-phase-g-production-matrix.mjs > outputs/v100-phase-g-state-contract-control.json
           npm run qa:v100-phase-g
           npm run qa:v100-phase-g-validate
 
@@ -556,6 +557,7 @@ jobs:
           name: v100-phase-g-production-matrix
           path: |
             outputs/v100-phase-g
+            outputs/v100-phase-g-state-contract-control.json
             docs/qa/v100/phase-g-screenshot-manifest.json
             outputs/native-pointer-probe
             outputs/v100-native-music
@@ -599,6 +601,9 @@ jobs:
 
       - name: Verify native persistent storage before loading either release
         run: node scripts/native-pwa-storage-probe.mjs
+
+      - name: Verify native IDB save hold and release control
+        run: node scripts/native-idb-save-hold-probe.mjs
 
       - name: Build production application
         run: npm run build

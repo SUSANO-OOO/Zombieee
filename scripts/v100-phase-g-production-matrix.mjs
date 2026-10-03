@@ -2283,7 +2283,7 @@ const stateContracts = Object.freeze({
   "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-actions"], forbiddenSelectors: [".v100-result-rewards", ".v100-reward-summary"] },
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
-  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-memory", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls", ".v100-staff-roll audio"] },
+  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-memory", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], elementCounts: { ".v100-staff-roll audio": 1 } },
   "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -2338,6 +2338,7 @@ async function productionStateContract(page, state, contractOverride = null) {
       phase: shell?.getAttribute("data-v100-phase") ?? null,
       surface: shell?.getAttribute("data-v100-surface") ?? null,
       selectorHits: Object.fromEntries(expected.selectors.map((selector) => [selector, visible(selector)])),
+      elementCounts: Object.fromEntries(Object.keys(expected.elementCounts ?? {}).map(selector => [selector, document.querySelectorAll(selector).length])),
       forbiddenVisible: (expected.forbiddenSelectors ?? []).filter(visible),
       buttonCount: buttons,
       bodyTextLength: document.body.innerText.trim().length,
@@ -2348,10 +2349,38 @@ async function productionStateContract(page, state, contractOverride = null) {
     };
   }, { expected: expectedContract, battleState: state.startsWith("battle") });
   const missingSelectors = expectedContract.selectors.filter((selector) => observed.selectorHits?.[selector] !== true);
+  const elementCountMismatches = Object.entries(expectedContract.elementCounts ?? {}).filter(([selector, count]) => observed.elementCounts?.[selector] !== count).map(([selector]) => selector);
   const phaseOk = expectedContract.phases.includes(observed.phase);
   const surfaceOk = !expectedContract.surfaces || expectedContract.surfaces.includes(observed.surface);
   const battleOk = !state.startsWith("battle") || (observed.screen === "battle" && observed.battleMounted === true && (observed.canvas?.visiblePixels ?? 0) > 0);
-  return { ok: missingSelectors.length === 0 && observed.forbiddenVisible.length === 0 && phaseOk && surfaceOk && battleOk, expected: expectedContract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
+  return { ok: missingSelectors.length === 0 && elementCountMismatches.length === 0 && observed.forbiddenVisible.length === 0 && phaseOk && surfaceOk && battleOk, expected: expectedContract, observed, missingSelectors, elementCountMismatches, phaseOk, surfaceOk, battleOk };
+}
+
+if (process.env.V100_PHASE_G_STATE_CONTRACT_CONTROL === "1") {
+  const browser = await playwright.chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const results = [];
+  try {
+    const visibleMarkup = '<main class="v100-shell" data-v100-phase="credits"><section class="v100-staff-roll" data-v100-surface="credits"><div class="v100-credit-memory">memory</div><div class="v100-credit-roll-window">window</div><div class="v100-credit-roll-track">staff</div><div class="v100-credit-controls">controls</div>';
+    for (const [name, audio, hiddenControls, expectedOk] of [
+      ["native-audio-without-visible-box", "<audio></audio>", false, true],
+      ["missing-native-audio", "", false, false],
+      ["duplicate-native-audio", "<audio></audio><audio></audio>", false, false],
+      ["hidden-visible-control", "<audio></audio>", true, false],
+    ]) {
+      await page.setContent(`${visibleMarkup}${audio}</section></main>`);
+      if (hiddenControls) await page.locator(".v100-credit-controls").evaluate(element => { element.style.display = "none"; });
+      const contract = await productionStateContract(page, "credits");
+      invariant(contract.ok === expectedOk, `${name}: ${JSON.stringify(contract)}`);
+      results.push({ name, expectedOk, contract });
+    }
+    await page.setContent('<main class="v100-shell" data-v100-phase="ending"><section data-v100-surface="ending"><div class="v100-event-panel">panel</div><div class="v100-story-node">story</div><div class="v100-event-actions">next</div></section></main>');
+    const contract = await productionStateContract(page, "ending");
+    invariant(contract.ok, JSON.stringify(contract));
+    results.push({ name: "unchanged-ending-visible-contract", expectedOk: true, contract });
+    console.log(JSON.stringify({ status: "passed", results }));
+  } finally { await browser.close(); }
+  process.exit(0);
 }
 
 function createCombatImpactReader(page, requiredActorKeys, expectedStageId = null) {
@@ -3600,6 +3629,7 @@ async function writePhaseGManifest(report) {
       productionContract: {
         ok: result.productionContract?.ok === true,
         selectors: result.productionContract?.expected?.selectors ?? [],
+        elementCounts: result.productionContract?.expected?.elementCounts ?? {},
         observed: result.productionContract?.observed ?? null,
       },
     };

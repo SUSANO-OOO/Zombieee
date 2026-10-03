@@ -78,6 +78,11 @@ for (const entry of entries) {
   fail(productionContract?.ok === true, `${entry.id} production state contract failed`);
   fail(Number(productionContract?.observed?.bodyTextLength) > 0, `${entry.id} production body is blank`);
   fail(Array.isArray(productionContract?.expected?.selectors) && productionContract.expected.selectors.every((selector) => productionContract.observed?.selectorHits?.[selector] === true), `${entry.id} required production selector missing`);
+  fail(Object.entries(productionContract?.expected?.elementCounts ?? {}).every(([selector, count]) => productionContract.observed?.elementCounts?.[selector] === count), `${entry.id} native element count mismatch`);
+  if (entry.state === "credits") fail(productionContract?.expected?.elementCounts?.[".v100-staff-roll audio"] === 1
+    && productionContract?.observed?.elementCounts?.[".v100-staff-roll audio"] === 1
+    && entry.productionContract?.elementCounts?.[".v100-staff-roll audio"] === 1
+    && entry.productionContract?.observed?.elementCounts?.[".v100-staff-roll audio"] === 1, `${entry.id} staff-roll native audio presence evidence missing`);
   if (battleStates.has(entry.state)) {
     const runtime = reportEntry?.runtime;
     fail(runtime?.screen === "battle", `${entry.id} is not an actual mounted battle screen`);
