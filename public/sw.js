@@ -182,11 +182,40 @@ async function storeAsset(asset, response) {
   return true;
 }
 
+// Native media seeks (including Safari offline resumes) request byte ranges.
+// Slice only the already verified whole object; never store a partial body
+// under the whole-file content hash.
+async function cachedAudioResponse(request, cached) {
+  const value = request.headers.get("range");
+  if (!value) return cached;
+  const match = /^bytes=(\d*)-(\d*)$/u.exec(value.trim());
+  // A server may ignore an unsupported multi-range or malformed field.
+  if (!match || (!match[1] && !match[2])) return cached;
+  const body = await cached.blob();
+  const size = body.size;
+  const suffix = !match[1];
+  const first = match[1] ? Number(match[1]) : Number(match[2]);
+  const last = match[2] ? Number(match[2]) : size - 1;
+  const start = suffix ? Math.max(0, size - first) : first;
+  const end = suffix ? size - 1 : Math.min(size - 1, last);
+  const headers = new Headers(cached.headers);
+  headers.set("accept-ranges", "bytes");
+  headers.delete("x-pwa-asset-hash");
+  if (!Number.isSafeInteger(first) || !Number.isSafeInteger(last) || size === 0 || (suffix && first === 0) || start >= size || end < start) {
+    headers.set("content-range", `bytes */${size}`);
+    headers.set("content-length", "0");
+    return new Response(null, { status: 416, headers });
+  }
+  headers.set("content-range", `bytes ${start}-${end}/${size}`);
+  headers.set("content-length", String(end - start + 1));
+  return new Response(body.slice(start, end + 1), { status: 206, headers });
+}
+
 async function respondForAsset(request, asset) {
   const cache = await caches.open(ASSET_CACHE);
   const cached = await cache.match(assetCacheKey(asset.hash));
   // Cache-first: a hashed asset is immutable, so a hit is always correct.
-  if (cached) return cached;
+  if (cached) return asset.category === "audio" ? cachedAudioResponse(request, cached) : cached;
 
   try {
     const networkRequest = asset.sourcePath

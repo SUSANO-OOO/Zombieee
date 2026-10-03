@@ -78,7 +78,14 @@ export const V100_WEBKIT_CARD_REPLACEMENT = Object.freeze({
 const restoredCandidatePaths = new Set(["/art/v100/mission-objects/station-relay-states-v1.webp"]);
 const removedCandidatePaths = new Set(V100_PHONE_REVIEW_ASSET_REMOVALS.filter(asset=>!restoredCandidatePaths.has(asset.path)).map(asset=>asset.path));
 const replacedMotionPaths = new Set(V100_MOTION_ATLAS_REPLACEMENTS.map(asset=>asset.newPath));
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT));
+// Original official MP3 requested by the Producer on 2026-10-03.
+export const V100_ENDING_MUSIC_ADDITION = Object.freeze({
+  path: "/audio/v100/credits/maou_31_tsuioku_no_gensosekai.mp3",
+  bytes: 6_309_936,
+  hash: "sha256-a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
+  criticality: "optional",
+});
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
@@ -93,12 +100,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 53_570_712,
+  bytesFromV0995: 59_880_648,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 143_249_045,
-  candidateDistinctHashBytes: 142_709_142,
-  updateFromV0982Bytes: 70_261_160,
-  updateFromV0993Bytes: 59_886_466,
+  candidateTotalBytes: 149_558_981,
+  candidateDistinctHashBytes: 149_019_078,
+  updateFromV0982Bytes: 76_571_096,
+  updateFromV0993Bytes: 66_196_402,
 });

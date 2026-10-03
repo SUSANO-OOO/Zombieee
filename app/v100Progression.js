@@ -60,7 +60,11 @@ export function v100LevelStats(base, level) {
   const safeLevel = Math.max(1, Math.min(30, Math.floor(Number(level) || 1)));
   return Object.freeze({
     hp: v100UnitStatAtLevel(base?.hp ?? 0, safeLevel, "hp"),
-    damage: v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"),
+    // Early Hachi upgrades retain their 2% attack gain before integer rounding
+    // would hide it. Combat already supports fractional equipment damage.
+    damage: base?.kind === "scout" && [2, 3].includes(safeLevel)
+      ? Math.max(v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"), Math.round((base.damage ?? 0) * (1 + (safeLevel - 1) * .02) * 100) / 100)
+      : v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"),
     healing: v100UnitStatAtLevel(base?.healing ?? 0, safeLevel, "healing"),
     defense: Math.min(.32, (base?.defense ?? V100_BASE_DEFENSE[base?.kind] ?? 0) + (safeLevel - 1) * .0015),
     speed: base?.speed ?? 0,

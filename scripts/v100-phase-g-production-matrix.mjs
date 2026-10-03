@@ -2274,7 +2274,7 @@ const stateContracts = Object.freeze({
   "dialogue-left": { phases: [dialogueEvidenceTargets.left.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-left"]', ".v100-event-actions .v100-primary"] },
   "dialogue-right": { phases: [dialogueEvidenceTargets.right.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
   "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
-  "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"] },
+  "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-command-tabs", ".v100-map-locked-focus", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-side > h3", ".v100-stage-intel", ".v100-map-side > .v100-primary"], forbiddenSelectors: [".v100-boss-callout"] },
   formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-field-map-title", ".v100-field-map-intel", ".v100-callin-roster", ".v100-slot-track", ".v100-sortie-status", ".v100-formation-footer .v100-primary"] },
   personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
   "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-management-list", ".v100-support-management-card", ".v100-support-art img"] },
@@ -2283,7 +2283,7 @@ const stateContracts = Object.freeze({
   "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-actions"], forbiddenSelectors: [".v100-result-rewards", ".v100-reward-summary"] },
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
-  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
+  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-memory", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls", ".v100-staff-roll audio"] },
   "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -4549,9 +4549,10 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "map-locked-boss", async (page) => {
     await mapPage(page, fullSave({ availableStageIds: [V100_STAGE_IDS[0]] }));
     await click(page, page.getByRole("button", { name: /最終章/u }), "final chapter tab");
-    await click(page, page.getByRole("button", { name: /TAKUYA-Ω/u }), "locked boss node");
+    await click(page, page.getByRole("button", { name: /未確認区域 S30/u }), "locked final node");
     await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
-    await page.locator(".v100-boss-callout").waitFor({ state: "visible", timeout });
+    await page.locator(".v100-map-locked-focus").waitFor({ state: "visible", timeout });
+    invariant(!/TAKUYA-Ω|RED PANTHER/u.test(await page.locator(".v100-map-layout").innerText()), "locked map disclosed future identities");
   });
   await captureState("chromium", viewport, "formation", async (page) => {
     await formationPage(page, fullSave());

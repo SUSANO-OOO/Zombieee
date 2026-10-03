@@ -5,19 +5,22 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_STORY_EVENTS, v100StoryEventView } from "../app/v100StoryEvents.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
+import { inspectStaffRoll, completeStaffRollByNativeEnd } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
 
-const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
-assert.ok(["127.0.0.1", "localhost"].includes(origin.hostname));
+const transport = await startNativeAudioQaOrigin(new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/"));
+const origin = transport.origin;
 const out = path.resolve(process.env.V100_BOOKENDS_EVIDENCE_DIR ?? "outputs/v100-story-bookends");
 await mkdir(out, { recursive: true });
 const report = { evidenceKind: "seeded presentation fixtures; no gameplay completion claim", build: await productionBuildIdentity(), cases: [] };
 const engineNames = (process.env.V100_BOOKENDS_ENGINES ?? "chromium,webkit").split(",");
-const eventSuffixes = (process.env.V100_BOOKENDS_EVENTS ?? "prologue,ending,credits,epilogue").split(",");
+const eventSuffixes = (process.env.V100_BOOKENDS_EVENTS ?? "prologue,s01:pre,ending,credits,epilogue").split(",");
 const sizes = (process.env.V100_BOOKENDS_VIEWPORTS ?? "1280x720,844x390,844x340").split(",").map(value => {
   const [width, height] = value.split("x").map(Number);
   assert.ok(width > 0 && height > 0);
@@ -25,7 +28,9 @@ const sizes = (process.env.V100_BOOKENDS_VIEWPORTS ?? "1280x720,844x390,844x340"
 });
 
 async function inspect(page, eventId, phase, index, result) {
-  const node = V100_STORY_EVENTS[eventId].nodes[index];
+  const storyPage = v100StoryPageFor(eventId, v100StoryEventView(eventId, "場面確認").nodes, index);
+  const node = storyPage.node;
+  index = storyPage.nodeIndex;
   const expected = v100EventPresentationFor({ eventId, phase, node, nodeIndex: index });
   const surface = page.locator(`[data-v100-event-id="${eventId}"][data-v100-node-index="${index}"]`);
   await surface.waitFor({ state: "visible", timeout: 15000 });
@@ -60,11 +65,13 @@ async function inspect(page, eventId, phase, index, result) {
   assert.equal(state.actionReachable, true, `${eventId}:${index} next action is occluded`);
   assert.ok(state.bodyOverflow <= 1);
   assert.ok(!state.text.includes("台詞は使わず"));
+  const compact = text => text.replace(/\s+/gu, "");
+  for (const original of [...storyPage.leadingActions, node]) assert.ok(compact(state.text).includes(compact(original.text)), `${eventId}:${original.sourceLine} authored text missing`);
   await page.waitForFunction((sceneId) => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.()?.desired?.sceneId === sceneId,
     expected.sceneId, { timeout: 15_000 });
   const audio = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
   assert.equal(audio?.desired?.sceneId, expected.sceneId);
-  result.observations.push({ index, sourceLine: node.sourceLine, expectedSceneId: expected.sceneId, ...state });
+  result.observations.push({ index, sourceLine: node.sourceLine, coveredSourceLines: [...storyPage.leadingActions, node].map(node => node.sourceLine), expectedSceneId: expected.sceneId, ...state });
   return expected;
 }
 
@@ -78,27 +85,39 @@ try {
           const eventId = `v100:event:${suffix}`;
           assert.ok(V100_STORY_EVENTS[eventId], `Unknown event ${eventId}`);
           const stageNumber = V100_STORY_EVENTS[eventId].stageNumber;
-          const phase = stageNumber ? "post" : suffix === "prologue" ? "event" : suffix;
+          const phase = stageNumber ? (suffix.endsWith(":pre") ? "event" : "post") : suffix === "prologue" ? "event" : suffix;
           const name = `${engine}-${viewport.width}x${viewport.height}-${suffix.replaceAll(":", "-")}`;
           const context = await browser.newContext({ viewport, hasTouch: viewport.width === 844, isMobile: viewport.width === 844 });
           const page = await context.newPage();
           const result = { name, status: "failed", observations: [], diagnostics: { console: [], page: [], request: [], http: [] } };
+          result.expectedNativeMediaAborts = [];
           report.cases.push(result);
           page.on("console", message => { if (message.type() === "error") result.diagnostics.console.push(message.text()); });
           page.on("pageerror", error => result.diagnostics.page.push(String(error)));
-          page.on("requestfailed", request => result.diagnostics.request.push({ url: request.url(), error: request.failure() }));
+          page.on("requestfailed", request => {
+            const failure = { url: request.url(), error: request.failure() };
+            // Native playback can cancel its metadata request when starting;
+            // scene seeks also cancel superseded range loads. Both lanes must
+            // independently prove the same media is ready and playing below.
+            // Full uninterrupted playback is verified in its separate lane.
+            if (["credits", "ending"].includes(suffix) && request.url().endsWith(transport.song.path) && /ERR_ABORTED|cancelled|canceled/iu.test(request.failure()?.errorText ?? "")) result.expectedNativeMediaAborts.push(failure);
+            else result.diagnostics.request.push(failure);
+          });
           page.on("response", response => { if (response.status() >= 400) result.diagnostics.http.push({ url: response.url(), status: response.status() }); });
           try {
             let save = normalizeV100Save({ ...createDefaultV100Save({ playerName: "場面確認" }), campaignStarted: true,
               flowState: { phase, eventId, stageId: null, stageNumber: null, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
             if (stageNumber) {
-              assert.ok(["s20:post", "s25:post"].includes(suffix));
+              assert.ok(["s01:pre", "s20:post", "s25:post"].includes(suffix));
               const stageId = V100_STAGE_IDS[stageNumber - 1];
               const initial = normalizeV100Save({ ...save, availableStageIds: V100_STAGE_IDS.slice(0, stageNumber), completedStageIds: V100_STAGE_IDS.slice(0, stageNumber - 1) });
+              if (suffix.endsWith(":pre")) save = normalizeV100Save({ ...initial, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
+              else {
               const result = createV100BattleResult({ stageId, battleRunId: name, won: true, bossDefeated: true, vehicleHp: 680, vehicleMaxHp: 680, objectiveComplete: true, elapsedSeconds: 120, unitDeaths: 0 });
               const pending = recordV100PendingResult(initial, result);
               assert.equal(pending.applied, true, pending.reason);
               save = normalizeV100Save({ ...pending.save, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, finalized: false, firstClear: true, destination: phase } });
+              }
             }
             await context.addInitScript(({ origin, serialized }) => {
               if (location.origin !== origin) return;
@@ -107,32 +126,43 @@ try {
             const response = await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
             assert.equal(response?.ok(), true);
             await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+            if (suffix === "credits") {
+              result.staffRollEvidence = "native media seeks through all 11 scenes; full-duration completion is verified separately";
+              for (let index = 0; index < 11; index++) {
+                result.observations.push(await inspectStaffRoll(page, { index, seek: index > 0 }));
+                if ([0, 5, 10].includes(index)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
+              }
+              await completeStaffRollByNativeEnd(page);
+              await inspect(page, "v100:event:epilogue", "epilogue", 0, result);
+              assert.equal(result.observations.filter(row => row.scene).length, 11);
+              for (const [kind, errors] of Object.entries(result.diagnostics)) assert.deepEqual(errors, [], `${name} ${kind}`);
+              result.status = "passed";
+              continue;
+            }
             await inspect(page, eventId, phase, 0, result);
             await page.screenshot({ path: path.join(out, `${name}-first.png`) });
             result.webAudioAvailable = await page.evaluate(() => typeof AudioContext === "function" || typeof webkitAudioContext === "function");
             result.audioEvidence = result.webAudioAvailable ? "scene-start receipt; no physical listening claim" : "unavailable on this browser; no audible-sound acceptance";
             const nodes = V100_STORY_EVENTS[eventId].nodes;
-            // Every credit shot is reached through the real Next action.
-            // The desktop lane also traverses every bookend node, including
+            // The desktop lane traverses every bookend node, including
             // crisis/blackout/location boundaries and the final title.
-            const last = stageNumber || suffix === "credits" || (engine === "chromium" && viewport.width === 1280) ? nodes.length - 1 : 1;
-            for (let index = 1; index <= last; index += 1) {
+            const last = stageNumber || suffix === "prologue" || (engine === "chromium" && viewport.width === 1280) ? nodes.length - 1 : 1;
+            for (let index = v100StoryPageFor(eventId, nodes, 0).endIndex + 1; index <= last; index = v100StoryPageFor(eventId, nodes, index).endIndex + 1) {
               await page.locator(".v100-event-actions .v100-primary").click();
               const expected = await inspect(page, eventId, phase, index, result);
               if (result.webAudioAvailable) {
                 await page.waitForFunction(({ eventId, index, sceneId }) => {
                   const snapshot = window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.();
                   return snapshot?.receipts?.some(receipt => receipt.action === "started" && receipt.eventId === eventId && receipt.nodeIndex === index && receipt.sceneId === sceneId);
-                }, { eventId, index, sceneId: expected.sceneId }, { timeout: 15000 });
+                }, { eventId, index: v100StoryPageFor(eventId, nodes, index).nodeIndex, sceneId: expected.sceneId }, { timeout: 15000 });
               }
               if (index === last || [1617, 1623, 2058, 2064].includes(nodes[index].sourceLine) || (suffix === "credits" && index === 5)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
             }
-            if (suffix === "credits") {
-              await page.locator(".v100-event-actions .v100-primary").click();
-              await inspect(page, "v100:event:epilogue", "epilogue", 0, result);
-              assert.equal(result.observations.filter(row => row.scene).length, 11);
-            }
             result.audio = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
+            if (suffix === "ending" && last === nodes.length - 1) {
+              await page.locator(".v100-event-actions .v100-primary").click();
+              result.automaticStaffRoll = await inspectStaffRoll(page);
+            }
             for (const [kind, errors] of Object.entries(result.diagnostics)) assert.deepEqual(errors, [], `${name} ${kind}`);
             result.status = "passed";
           } catch (error) {
@@ -148,6 +178,7 @@ try {
     } finally { await browser.close(); }
   }
 } finally {
+  await transport.close();
   await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));
 }
 console.log(JSON.stringify({ status: "passed", cases: report.cases.length, report: path.join(out, "report.json") }));

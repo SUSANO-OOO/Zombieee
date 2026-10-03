@@ -3,6 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
@@ -186,6 +187,12 @@ for (const engine of engines) {
           if (await offer.isVisible().catch(() => false)) await clickUsable(offer, "PWA browser play");
           const eventSelector = `[data-v100-event-id="${eventCase.eventId}"]`;
           await page.locator(eventSelector).waitFor({ state: "visible", timeout });
+          if (eventCase.id === "credits") {
+            result.staffRoll = await inspectStaffRoll(page, { playerName: "QAプレイヤー" });
+            await page.screenshot({ path: path.join(evidenceDir, `${name}.png`) });
+            result.status = "passed";
+            continue;
+          }
           const observed = await page.locator(eventSelector).evaluate((element) => ({
             category: element.getAttribute("data-v100-event-category"),
             phase: element.getAttribute("data-v100-transition"),

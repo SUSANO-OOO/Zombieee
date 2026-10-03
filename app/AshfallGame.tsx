@@ -1,5 +1,7 @@
 "use client";
 
+import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
+
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
@@ -1996,8 +1998,9 @@ function addDamageText(
     g.renderObjectPools.damageTexts,
     DAMAGE_TEXT_POOL_KEYS,
   ) as DamageText;
-  text.x = x;
-  text.y = y;
+  const position = v100DamageTextPosition(x, y, value, g.damageTexts);
+  text.x = position.x;
+  text.y = position.y;
   text.value = value;
   text.life = life;
   text.color = color;
@@ -4388,9 +4391,8 @@ function drawSpriteFighter(
     // units were hit together. Keep the warm impact rim without a wide blur.
     ctx.shadowBlur = 6;
   } else if (compactScale > 1) {
-    ctx.shadowColor = "rgba(0,0,0,.9)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetY = 1;
+    ctx.shadowColor = "rgba(232,222,188,.38)";
+    ctx.shadowBlur = 2;
   }
   const pose = animationSample.pose ?? {
     offsetX: 0,

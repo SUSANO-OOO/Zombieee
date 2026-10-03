@@ -63,7 +63,7 @@ test("reward presentation reads only the finalized transaction and never predict
   assert.equal(pending.save.caps, 0);
   const final = finalizeV100PendingResult(pending.save);
   assert.equal(final.applied, true);
-  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオの配備登録が可能に"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
+  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオの配備登録が可能に"], unlockedUnitIds: ["unit-nao"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
   assert.equal(finalizeV100PendingResult(final.save).applied, false);
   assert.equal(final.save.caps, 87);
   assert.equal(v100RewardPresentationFor({ ...final.save.lastResult, won: false }), null);

@@ -43,6 +43,7 @@ import {
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
 import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
 import { V100_ASSAULT_OBJECT_ART } from "../app/v100AssaultObjects.js";
 import { V100_DEFENSE_PERIMETER_ART } from "../app/v100DefensePerimeter.js";
@@ -272,6 +273,11 @@ for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
 }
 
 // --- Audio ----------------------------------------------------------------
+
+// The long ending song streams through HTMLAudioElement. Cache its original
+// file directly, without a second bundle copy or a full Web Audio PCM decode.
+record(V100_CREDITS_SONG.src, { pack: "audio", category: "audio", criticality: "optional",
+  audioChannel: "bgm", audioId: "music-v100-staff-roll", audioType: "audio/mpeg" });
 
 for (const asset of INSTALL_AUDIO_ASSETS) {
   const audioChannel = audioChannelFor(asset.category);

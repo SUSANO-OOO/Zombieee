@@ -23,6 +23,8 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   ? await import(pathToFileURL(path.resolve(process.env.PLAYWRIGHT_MODULE_PATH)).href)
   : await import("playwright");
 const engine = process.env.V100_DEVICE_RUNTIME_ENGINE ?? "chromium";
+const requestedDpr = Number(process.env.V100_DEVICE_RUNTIME_DPR ?? 1);
+assert.ok([1, 2].includes(requestedDpr), "V100_DEVICE_RUNTIME_DPR must be 1 or 2");
 assert.ok(["chromium", "webkit"].includes(engine), `unsupported engine: ${engine}`);
 const evidenceDir = path.resolve(process.env.V100_DEVICE_RUNTIME_OUT ?? "outputs/v100-device-runtime-browser-r1");
 const setupTimeoutMs = 8 * 60_000;
@@ -138,7 +140,7 @@ function percentile(values, fraction) {
 }
 function median(values) { return percentile(values, 0.5); }
 async function measureBlankRaf(browser, viewport) {
-  const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
+  const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr });
   try {
     const page = await context.newPage();
     await page.setContent("<!doctype html><html><body></body></html>");
@@ -298,6 +300,7 @@ const report = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
   engine,
+  requestedDpr,
   build,
   provenance: {
     head: gitValue(["rev-parse", "HEAD"]),
@@ -349,7 +352,7 @@ try {
   for (const viewport of viewports) {
     const name = `${engine}-${viewport.width}x${viewport.height}`;
     const blankBaseline = blankBaselineDiagnostic ? await measureBlankRaf(browser, viewport) : null;
-    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
+    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr });
     const page = await context.newPage();
     if (suppressDebugDatasetDiagnostic) {
       await page.addInitScript(() => {
@@ -433,6 +436,15 @@ try {
         dpr: window.devicePixelRatio,
         attributes: canvas.getContext("2d")?.getContextAttributes?.() ?? null,
       }));
+      assert.equal(result.canvasContext.dpr, requestedDpr, "browser DPR differs from requested device scale");
+      const initialProfile = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.()?.graphicsProfile);
+      result.canvasContext.requestedDpr = requestedDpr;
+      result.canvasContext.appliedDpr = result.canvasContext.width / result.canvasContext.cssWidth;
+      if (requestedDpr === 2 && qualityDiagnostic === "auto") {
+        assert.equal(initialProfile?.requestedMode, "high", "DPR2 gate must retain the player default high quality");
+        assert.equal(initialProfile?.dprCap, 2, "DPR2 gate may not lower the graphics DPR cap");
+        assert.ok(Math.abs(result.canvasContext.appliedDpr - 2) < .01, "canvas did not apply DPR2");
+      }
       if (paintIsolation !== "none") {
         if (paintIsolation === "draw-suppressed") {
           result.paintIsolation = await page.locator("canvas.battlefield").evaluate((canvas) => {
@@ -500,6 +512,9 @@ try {
       const renderDelta = measurement.performance && raf.performanceAfter ? raf.performanceAfter.renderFrames - measurement.performance.renderFrames : null;
       const effectiveRenderHz = renderDelta === null ? null : renderDelta / (elapsed / 1000);
       const expectedRenderHz = Number(raf.performanceAfter?.graphicsProfile?.renderHz);
+      result.canvasContextAfter = await page.locator("canvas.battlefield").evaluate(canvas => ({ width: canvas.width, height: canvas.height, cssWidth: canvas.getBoundingClientRect().width, cssHeight: canvas.getBoundingClientRect().height, dpr: window.devicePixelRatio }));
+      const finalDpr = result.canvasContextAfter.width / result.canvasContextAfter.cssWidth;
+      const finalDprY = result.canvasContextAfter.height / result.canvasContextAfter.cssHeight;
       const renderCadenceToleranceHz = Number.isFinite(expectedRenderHz) ? Math.max(3, expectedRenderHz * 0.1) : null;
       const gates = {
         sampleCount: (raf?.times?.length ?? 0) >= 300,
@@ -511,6 +526,7 @@ try {
         p95Raf: p95RafMs !== null && p95RafMs <= 33,
         medianFps: medianFps >= 50,
         renderCadence: renderCadenceToleranceHz !== null && effectiveRenderHz !== null && Math.abs(effectiveRenderHz - expectedRenderHz) <= renderCadenceToleranceHz,
+        dpr: requestedDpr !== 2 || qualityDiagnostic !== "auto" || (raf.performanceAfter?.graphicsProfile?.resolvedMode === "high" && raf.performanceAfter?.graphicsProfile?.dprCap === 2 && result.canvasContextAfter.dpr === 2 && Math.abs(finalDpr - 2) < .01 && Math.abs(finalDprY - 2) < .01),
       };
       result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, capacity: raf?.capacity, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
       await page.screenshot({ path: path.join(evidenceDir, `${name}-after.png`) });
@@ -523,6 +539,7 @@ try {
       assert.ok(gates.p95Raf, `p95 rAF ${p95RafMs}ms exceeds 33ms`);
       assert.ok(gates.medianFps, `median FPS ${medianFps} below 50`);
       assert.ok(gates.renderCadence, "render cadence differs from graphics profile");
+      assert.ok(gates.dpr, "DPR2 quality changed during the measured window");
       result.status = "passed";
     } catch (error) {
       result.error = String(error);

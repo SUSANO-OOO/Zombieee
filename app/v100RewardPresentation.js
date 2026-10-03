@@ -20,5 +20,6 @@ export function v100RewardPresentationFor(result) {
   const components = ["firstClear", "replay", "star2", "star3"];
   const validBreakdown = breakdown && components.every(key => Number.isSafeInteger(breakdown[key]) && breakdown[key] >= 0)
     && components.reduce((sum, key) => sum + breakdown[key], 0) === rewardCaps;
-  return { stageNumber: stage.number, rewardCaps, unlocks, breakdown: validBreakdown ? Object.fromEntries(components.map(key => [key, breakdown[key]])) : null };
+  const unlockedUnitIds = result.firstClear ? stage.firstClearPayload.filter(id => V100_UNITS.some(unit => unit.id === id)) : [];
+  return { stageNumber: stage.number, rewardCaps, unlocks, unlockedUnitIds, breakdown: validBreakdown ? Object.fromEntries(components.map(key => [key, breakdown[key]])) : null };
 }

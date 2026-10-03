@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, us
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { V100LockChain } from "./V100LockChain";
 import { V100AssetCredits } from "./V100AssetCredits";
+import { V100StaffRoll } from "./V100EndingRoll";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
 
 import {
@@ -58,6 +59,8 @@ import { normalizeV100BattleReport, v100BattleReportFor } from "./v100BattleRepo
 import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBriefing.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
+import { v100MapStageName, v100StageDiscovered } from "./v100MapDisclosure.js";
+import { v100StoryPageFor } from "./v100StoryPages.js";
 import { formatV100Number, v100SupportPurposeFor, v100TacticalHintFor, v100UnitPresentation } from "./v100UnitPresentation.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 import { campaignUnitIdToCombatKind } from "./campaign.js";
@@ -511,10 +514,11 @@ export function V100Campaign() {
   }, [flow.phase, surface]);
 
   const event = useMemo(() => flow.eventId ? v100StoryEventView(flow.eventId, save.playerName) : null, [flow.eventId, save.playerName]);
-  const currentNode = (event?.nodes?.[storyIndex] ?? null) as StoryNode | null;
+  const storyPage = useMemo(() => v100StoryPageFor(flow.eventId, event?.nodes ?? [], storyIndex), [event, flow.eventId, storyIndex]);
+  const currentNode = storyPage.node as StoryNode | null;
   const eventPresentation = useMemo(() => flow.eventId
-    ? v100EventPresentationFor({ eventId: flow.eventId, phase: flow.phase, node: currentNode, nodeIndex: storyIndex })
-    : null, [currentNode, flow.eventId, flow.phase, storyIndex]);
+    ? v100EventPresentationFor({ eventId: flow.eventId, phase: flow.phase, node: currentNode, nodeIndex: storyPage.nodeIndex })
+    : null, [currentNode, flow.eventId, flow.phase, storyPage.nodeIndex]);
   const eventRuntime = v100StageRuntimeFor(eventPresentation?.stageId ?? selectedStageId);
   const replayEvent = useMemo(() => replayEventId ? v100StoryEventView(replayEventId, save.playerName) : null, [replayEventId, save.playerName]);
   const replayNode = (replayEvent?.nodes?.[replayNodeIndex] ?? null) as StoryNode | null;
@@ -529,7 +533,7 @@ export function V100Campaign() {
     ready: hydrated && !loadFailure, battleActive: battleAudioActive, modeResult: modeScoreResult,
     phase: flow.phase, won: flow.pendingResult?.won ?? null,
   }), [hydrated, loadFailure, battleAudioActive, modeScoreResult, flow.phase, flow.pendingResult?.won]);
-  const audibleEventPresentation = battleAudioActive ? null
+  const audibleEventPresentation = battleAudioActive || flow.phase === "credits" || replayEventId === "v100:event:credits" ? null
     : replayPresentation ?? (isEventPhase(flow.phase) ? eventPresentation : surfacePresentation);
   useEffect(() => {
     const owner = eventAudioOwnerRef.current;
@@ -661,29 +665,28 @@ export function V100Campaign() {
     setNameError("");
   };
 
-  const markAndAdvanceEvent = (skipped = false) => {
-    if (!flow.eventId || !event) return;
-    void eventAudioOwnerRef.current?.activate(eventPresentation);
+  const markAndAdvanceEvent = async (skipped = false) => {
+    if (!flow.eventId || !event || saveBusy) return false;
+    if (flow.phase !== "credits") void eventAudioOwnerRef.current?.activate(eventPresentation);
     let workingSave = save;
-    const lastNode = storyIndex >= event.nodes.length - 1;
+    const lastNode = storyPage.endIndex >= event.nodes.length - 1;
     if (!lastNode && !skipped) {
-      updateFlow(flow, { baseSave: workingSave, nodeIndex: storyIndex + 1 });
-      return;
+      return Boolean(await updateFlow(flow, { baseSave: workingSave, nodeIndex: storyPage.endIndex + 1 }));
     }
     const marked = markV100EventRead(workingSave, flow.eventId).save;
     workingSave = marked;
     if (flow.phase === "post") {
       const finalized = finalizeV100PendingResult(workingSave);
-      if (!finalized.applied) { setNotice(formatReason(finalized.reason)); return; }
+      if (!finalized.applied) { setNotice(formatReason(finalized.reason)); return false; }
       workingSave = finalized.save;
     }
     const markedFlow = markV100FlowEventRead(flow, flow.eventId);
     const transition = completeV100Event(markedFlow, { skipped });
     if (!transition.accepted) {
       setNotice(formatReason(transition.reason));
-      return;
+      return false;
     }
-    updateFlow(transition.state, { baseSave: workingSave });
+    return Boolean(await updateFlow(transition.state, { baseSave: workingSave }));
   };
 
   const startStage = (stageId: string) => {
@@ -861,13 +864,15 @@ export function V100Campaign() {
         </section>
       )}
 
-      {isEventPhase(flow.phase) && event && (
+      {flow.phase === "credits" && event && <V100StaffRoll nodes={event.nodes} playerName={save.playerName} initialNodeIndex={storyIndex} settings={save.settings} busy={saveBusy} onScene={index => { void updateFlow(flow, { nodeIndex: index }); }} onComplete={() => markAndAdvanceEvent(true)} />}
+
+      {isEventPhase(flow.phase) && flow.phase !== "credits" && event && (
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定した作戦報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
           <div className="v100-event-backdrop" data-v100-scene={eventPresentation?.sceneLabel ?? undefined} data-v100-location={currentNode?.sceneTag ?? currentNode?.sceneLabel ?? undefined} data-v100-title-card={currentNode?.kind === "title" ? "true" : undefined} style={{ backgroundImage: currentNode?.kind === "title" ? "none" : `url(${eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")})` }} />
           <article className="v100-event-panel">
             <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" && !flow.firstClear ? `${V100_STAGE_BY_ID[flow.stageId ?? ""]?.displayName ?? "作戦"} / 作戦報酬` : eventDisplayLabel(flow.eventId)}</span></div>
-            {flow.phase === "first-clear-post" ? <><RewardSummaryView result={save.lastResult} /><div className="v100-event-actions"><button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>続ける</button></div></> : currentNode ? <StoryNodeView node={currentNode} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyIndex} presentation={eventPresentation} actions={<div className="v100-event-actions">
-              <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "次の場面へ" : "続ける"}</button>
+            {flow.phase === "first-clear-post" ? <><RewardSummaryView result={save.lastResult} /><div className="v100-event-actions"><button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>続ける</button></div></> : currentNode ? <StoryNodeView node={currentNode} leadingActions={storyPage.leadingActions} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyPage.nodeIndex} presentation={eventPresentation} actions={<div className="v100-event-actions">
+              <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyPage.endIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "次の場面へ" : "続ける"}</button>
               {flow.canSkip && <button type="button" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}
             </div>} /> : <p className="v100-action-node">このイベントを確認して次へ進みます。</p>}
           </article>
@@ -964,14 +969,14 @@ export function V100Campaign() {
       {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
       {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">新しい隊員 / 配備登録可能</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><dl><div><dt>配備登録</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSで登録できます。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで配備登録</button></div></section></div>}
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">Version 1.0.0</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
-      {replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
+      {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay"><V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { setReplayEventId(null); return true; }} /></div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
       {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
     </main>
   );
 }
 
-function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, presentation = null, actions = null }: { node: StoryNode; eventId?: string | null; phase?: string; nodeIndex?: number; presentation?: ReturnType<typeof v100EventPresentationFor> | null; actions?: ReactNode }) {
+function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, presentation = null, actions = null, leadingActions = [] }: { node: StoryNode; eventId?: string | null; phase?: string; nodeIndex?: number; presentation?: ReturnType<typeof v100EventPresentationFor> | null; actions?: ReactNode; leadingActions?: StoryNode[] }) {
   const actionSubjects = v100ActionPortraitSubjects(eventId, node);
   const displayOwner = node.portraitOwner ?? actionSubjects[0] ?? null;
   const portrait = portraitFor(displayOwner);
@@ -992,18 +997,19 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
     {secondaryPortrait && <div className="v100-portrait-frame v100-portrait-frame-secondary" style={framingStyle(secondaryOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={secondaryOwner ?? undefined} data-portrait-side={secondaryPortraitSide}><img className="v100-portrait v100-portrait-secondary" src={secondaryPortrait} alt="" aria-hidden="true" /></div>}
     {portrait && <div className="v100-portrait-frame" style={framingStyle(displayOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={displayOwner ?? undefined} data-portrait-side={portraitSide}><img className="v100-portrait" src={portrait} alt={`${node.speaker ?? UNIT_BY_ID.get(displayOwner ?? "")?.displayName ?? "登場人物"}の立ち絵`} /></div>}
-    <div className="v100-node-copy">{nodeLabel && <span className="v100-node-kind">{nodeLabel}</span>}<p>{playerFacingText}</p>{actions}</div>
+    <div className="v100-node-copy">{leadingActions.map((action, index) => <p className="v100-story-action-beat" key={index}>{publicDisplayText(action.text ?? "")}</p>)}{nodeLabel && <span className="v100-node-kind">{nodeLabel}</span>}<p>{playerFacingText}</p>{actions}</div>
   </div>;
 }
 
 function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup, onImport, onReplay, onOpenPersonnel, onOpenSupportVehicle, onOpenData }: { save: Save; selectedStageId: string; onSelect: (id: string) => void; onStart: (id: string) => void; onRename: () => void; onBackup: () => void; onImport: (file: File | undefined) => void; onReplay: (eventId: string) => void; onOpenPersonnel: () => void; onOpenSupportVehicle: () => void; onOpenData: () => void }) {
   const stage = V100_STAGE_BY_ID[selectedStageId];
-  const runtime = v100StageRuntimeFor(selectedStageId);
+  const discovered = v100StageDiscovered(save, selectedStageId);
+  const runtime = discovered ? v100StageRuntimeFor(selectedStageId) : null;
   const completedNumber = Math.max(0, ...save.completedStageIds.map(stageNumberFor));
   const [chapterIndex, setChapterIndex] = useState(() => chapterIndexForStage(stage?.number ?? 1));
   const chapter = V100_CHAPTERS[chapterIndex] ?? V100_CHAPTERS[0];
   const chapterStages = V100_STAGES.filter((entry) => entry.number >= chapter.start && entry.number <= chapter.end);
-  const boss = stage?.missionType === "boss" ? V100_BOSSES.find((entry) => entry.stageNumber === stage.number) : null;
+  const boss = discovered && stage?.missionType === "boss" ? V100_BOSSES.find((entry) => entry.stageNumber === stage.number) : null;
   const nextStage = V100_STAGES.find((entry) => entry.number === completedNumber + 1);
   const selectStage = (stageId: string) => {
     const next = V100_STAGE_BY_ID[stageId];
@@ -1026,9 +1032,9 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
     return `${x},${y}`;
   }).join(" ");
   return (
-    <section className={`v100-map-layout v100-command-map ${stage?.missionType === "boss" ? "v100-map-boss-focus" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "v100-map-locked-focus" : ""}`} aria-label="作戦地図" data-v100-surface="map" style={{ "--v100-selected-stage-art": `url(${runtime?.backgroundPath ?? PRODUCTION_VISUALS.command})` } as CSSProperties}>
+    <section className={`v100-map-layout v100-command-map ${discovered && stage?.missionType === "boss" ? "v100-map-boss-focus" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "v100-map-locked-focus" : ""}`} aria-label="作戦地図" data-v100-surface="map" style={{ "--v100-selected-stage-art": `url(${runtime?.backgroundPath ?? PRODUCTION_VISUALS.command})` } as CSSProperties}>
       <div className="v100-map-hero" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? PRODUCTION_VISUALS.command})` }}>
-        <div className="v100-map-hero-copy"><span className="v100-kicker">作戦地図 / {save.postGameAvailable ? "全作戦解放" : `次の目的地 ${stageDisplayNameFor(nextStage)}`}</span><h2>{stageDisplayNameFor(stage)}</h2><p>{objectiveLabelFor(stage)} / 作戦 {stage ? `S${String(stage.number).padStart(2, "0")}` : "準備中"}</p><div className="v100-map-hero-meta"><span>{stage?.missionType === "boss" ? "脅威指定" : "出撃準備"}</span><strong>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "前作戦クリアで解放"}</strong><span>{stage ? `S${String(stage.number).padStart(2, "0")}` : "—"}</span></div></div>
+        <div className="v100-map-hero-copy"><span className="v100-kicker">作戦地図 / {save.postGameAvailable ? "全作戦解放" : `次の目的地 ${v100MapStageName(nextStage, save)}`}</span><h2>{v100MapStageName(stage, save)}</h2><p>{discovered ? objectiveLabelFor(stage) : "現地情報は到達後に確認"} / 作戦 {stage ? `S${String(stage.number).padStart(2, "0")}` : "準備中"}</p><div className="v100-map-hero-meta"><span>{discovered && stage?.missionType === "boss" ? "脅威指定" : "出撃準備"}</span><strong>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "前作戦クリアで解放"}</strong><span>{stage ? `S${String(stage.number).padStart(2, "0")}` : "—"}</span></div></div>
       </div>
       <nav className="v100-chapter-tabs" aria-label="作戦区域を選ぶ">{V100_CHAPTERS.map((entry, index) => <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex}><strong>{entry.label}</strong><small>S{entry.range}</small></button>)}</nav>
       <div className="v100-route-label" aria-label="作戦経路"><span>西新救助線</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>封鎖区域</span></div>
@@ -1040,25 +1046,25 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
             {chapterStages.map((entry, index) => {
               const available = save.availableStageIds.includes(entry.id);
               const completed = save.completedStageIds.includes(entry.id);
-              const isBoss = entry.missionType === "boss";
+              const isBoss = v100StageDiscovered(save, entry.id) && entry.missionType === "boss";
               const [x, y] = mapNodePosition(index, chapterStages.length);
               const nodeState = completed ? "制圧済み" : available ? "出撃可" : "封鎖中";
-              return <button type="button" key={entry.id} className={`v100-map-node ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${stageDisplayNameFor(entry)} ${nodeState}`}>
-                <span className="v100-map-node-marker"><i>{`S${String(entry.number).padStart(2, "0")}`}</i>{!available && <V100LockChain />}</span><strong>{stageDisplayNameFor(entry)}</strong><small>{!available ? `S${String(entry.number-1).padStart(2,"0")}クリアで解放` : nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : available ? ` / ${missionLabelFor(entry)}` : ""}</small>
+              return <button type="button" key={entry.id} className={`v100-map-node ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${v100MapStageName(entry, save)} ${nodeState}`}>
+                <span className="v100-map-node-marker"><i>{`S${String(entry.number).padStart(2, "0")}`}</i>{!available && <V100LockChain />}</span><strong>{v100MapStageName(entry, save)}</strong><small>{!available ? `S${String(entry.number-1).padStart(2,"0")}クリアで解放` : nodeState}{completed ? ` ★${save.bestStars[entry.id] ?? 0}` : available ? ` / ${missionLabelFor(entry)}` : ""}</small>
               </button>;
             })}
           </nav>
           <div className="v100-map-canvas-legend"><span><i className="is-current" />選択地点</span><span><i className="is-clear" />制圧済み</span><span><i className="is-locked" />封鎖</span></div>
         </div>
-        <aside className={`v100-map-side ${stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`}>
+        <aside className={`v100-map-side ${discovered && stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`}>
           <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")}` : "作戦地図"}</span><span>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "封鎖中"}</span></div>
-          <h3>{stageDisplayNameFor(stage)}</h3>
+          <h3>{v100MapStageName(stage, save)}</h3>
           {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>作戦封鎖中</strong><span>前作戦クリアで解放</span></div>}
-          <div className="v100-stage-intel"><span>作戦目標</span><strong>{missionLabelFor(stage)}</strong><p>{objectiveLabelFor(stage)}</p></div>
-          <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>
+          <div className="v100-stage-intel"><span>作戦目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前作戦をクリアして、この区域を調査します。"}</p></div>
+          {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
           <details className="v100-map-detail"><summary>作戦詳細・記録</summary>
           {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
-          <dl><div><dt>脅威分類</dt><dd>{enemyPackLabelFor(stage?.enemyPack, stage?.number)}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
+          <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
           <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}>隊員</button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}>戦術支援</button></div>
           <div className="v100-map-briefs"><article><span>隊員</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
           <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
@@ -1162,7 +1168,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
     nextStats.damage > currentStats.damage ? (info?.attackType === "ranged" ? "射撃 +" : "近接 +") + formatV100Number(nextStats.damage - currentStats.damage) : null,
     nextStats.healing > currentStats.healing ? "治療 +" + formatV100Number(nextStats.healing - currentStats.healing) : null,
   ].filter(Boolean).join(" / ") : "";
-  const showStat = (name: string, value: number | string, next: number | string | null = null) => <div className="v100-unit-stat" key={name}><span>{name}</span><strong>{value}</strong>{next !== null && next !== value && <small>→ {next}</small>}</div>;
+  const showStat = (name: string, value: number | string, next: number | string | null = null) => <div className={`v100-unit-stat ${next !== null && next !== value ? "v100-stat-improves" : ""}`} key={name}><span>{name}</span><strong>{value}</strong>{next !== null && next !== value && <small>→ {next}</small>}</div>;
   const price = info?.owned ? info.upgradeCost : info?.registrationCost ?? 0;
   return <section className={"v100-panel v100-management-panel v100-personnel-screen v100-command-personnel " + (detailOpen ? "detail-open" : "")} data-v100-surface="personnel" aria-label="隊員">
     <div className="v100-panel-heading v100-management-heading"><h2>隊員記録</h2><button type="button" onClick={onBack}>{returnLabel}</button></div>
@@ -1245,14 +1251,29 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
 }
 
 function DataManagementView({ save, notice, onBack, onBackup, onImport, onLegacyHistory }: { save: Save; notice: string; onBack: () => void; onBackup: () => void; onImport: (file: File | undefined) => void; onLegacyHistory: (file: File | undefined) => void }) {
-  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" role="dialog" aria-modal="true" aria-labelledby="v100-data-title"><div className="v100-panel-heading"><div><span className="v100-kicker">作戦記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>{notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}<p>現在の進行はブラウザ内の作戦セーブへ保存されています。復元する時は、このゲームから書き出したセーブファイルを選んでください。</p><dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>到達作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl><div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div><small className="v100-data-note">復元に失敗した場合、現在のセーブは変更されません。</small><article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article></section></div>;
+  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
+    <div className="v100-panel-heading"><div><span className="v100-kicker">作戦記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
+    <div className="v100-data-scroll" tabIndex={0} aria-label="保存内容と過去のプレイ履歴">
+      {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
+      <p>現在の進行はブラウザ内の作戦セーブへ保存されています。復元する時は、このゲームから書き出したセーブファイルを選んでください。</p>
+      <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>到達作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
+      <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
+    </div>
+    <div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
+    <small className="v100-data-note">復元に失敗した場合、現在のセーブは変更されません。</small>
+  </section></div>;
 }
 
 function RewardSummaryView({ result }: { result: Record<string, unknown> | null }) {
   const summary = v100RewardPresentationFor(result);
   if (!summary) return null;
   const rewardLabels = { firstClear: "初回達成", replay: "再挑戦報酬", star2: "★2 初達成", star3: "★3 初達成" };
-  return <div className="v100-reward-summary" aria-label="確定した作戦報酬"><h2>作戦記録を保存しました</h2><div className="v100-result-rewards"><article><span>獲得CAPS</span><strong>+{summary.rewardCaps}</strong></article>{summary.unlocks.length > 0 && <article><span>新しい解禁・記録</span><strong>{summary.unlocks.join(" / ")}</strong></article>}</div>{summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><p>{Object.entries(summary.breakdown).filter(([, value]) => value > 0).map(([key, value]) => rewardLabels[key as keyof typeof rewardLabels] + " +" + value).join(" / ") || "支給なし"}</p></details>}<p>次の作戦に備え、隊員を育てるか、新しい役割を配備登録するか選べます。</p></div>;
+  return <div className="v100-reward-summary" aria-label="確定した作戦報酬"><h2>作戦 S{String(summary.stageNumber).padStart(2, "0")} 達成</h2>
+    <div className="v100-result-rewards"><article><span>獲得CAPS</span><strong>+{summary.rewardCaps}</strong></article>{summary.unlocks.length > 0 && <article className="v100-reward-unlocks">
+      {summary.unlockedUnitIds.map(id => formationCardForUnit(id) && <img key={id} src={formationCardForUnit(id) as string} alt={`${UNIT_BY_ID.get(id)?.displayName ?? "隊員"}の配備登録が解禁`} />)}
+      <div><span>新しい解禁・記録</span><strong>{summary.unlocks.join(" / ")}</strong></div></article>}</div>
+    {summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><p>{Object.entries(summary.breakdown).filter(([, value]) => value > 0).map(([key, value]) => rewardLabels[key as keyof typeof rewardLabels] + " +" + value).join(" / ") || "支給なし"}</p></details>}
+    <p>次の作戦に備え、隊員を育てるか、新しい役割を配備登録するか選べます。</p><small className="v100-reward-saved">報酬と作戦進行は保存済み</small></div>;
 }
 
 function ResultView({ result, onContinue, onRetry, onMap }: { result: Record<string, unknown> | null; onContinue: () => void; onRetry: () => void; onMap: () => void }) {

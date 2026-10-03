@@ -5881,6 +5881,17 @@
       "bundleLength": 32027668
     },
     {
+      "path": "/audio/v100/credits/maou_31_tsuioku_no_gensosekai.mp3",
+      "bytes": 6309936,
+      "hash": "sha256-a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm",
+      "audioId": "music-v100-staff-roll",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/v100/foley/body.mp3",
       "bytes": 2466,
       "hash": "sha256-c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1",

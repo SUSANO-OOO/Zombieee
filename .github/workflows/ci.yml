@@ -351,6 +351,19 @@ jobs:
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
+      - name: Measure 844x390 WebKit performance at DPR2
+        id: dpr2_perf
+        if: ${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x390
+          V100_DEVICE_RUNTIME_DPR: "2"
+          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-dpr2
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
       - name: Preserve measured WebKit performance before diagnostics
         id: preserved_primary_perf
         if: always()
@@ -362,6 +375,7 @@ jobs:
             outputs/v100-device-runtime/webkit
             outputs/v100-device-runtime/webkit-844x340-repeat
             outputs/v100-device-runtime/webkit-844x390-repeat
+            outputs/v100-device-runtime/webkit-844x390-dpr2
             outputs/v100-device-runtime/spotlight-benchmark-preparation.json
           if-no-files-found: error
           retention-days: 14
@@ -372,7 +386,7 @@ jobs:
 
       - name: Pause Spotlight indexing for same-host causal diagnosis
         id: indexing_control
-        if: ${{ always() && steps.preserved_primary_perf.outcome == 'success' && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
+        if: ${{ always() && steps.preserved_primary_perf.outcome == 'success' && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure' || steps.dpr2_perf.outcome == 'failure') }}
         run: node scripts/v100-macos-indexing-control.mjs pause
 
       - name: Diagnose 844x340 boss performance with indexing paused
@@ -463,6 +477,7 @@ jobs:
             outputs/v100-device-runtime/webkit
             outputs/v100-device-runtime/webkit-844x340-repeat
             outputs/v100-device-runtime/webkit-844x390-repeat
+            outputs/v100-device-runtime/webkit-844x390-dpr2
             outputs/v100-device-runtime/webkit-844x340-indexing-control
             outputs/v100-device-runtime/webkit-844x390-indexing-control
             outputs/v100-device-runtime/spotlight-indexing-control.json
@@ -587,6 +602,18 @@ jobs:
 
       - name: Build production application
         run: npm run build
+
+      - name: Verify complete staff roll with native WebKit audio
+        env:
+          V100_STAFF_ROLL_ENGINE: webkit
+          V100_STAFF_ROLL_OUT: outputs/v100-native-pwa/staff-roll
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-staff-roll-native-browser.mjs
+
+      - name: Verify cached native audio byte ranges and offline seeking
+        env:
+          PWA_AUDIO_RANGE_ENGINE: webkit
+          PWA_AUDIO_RANGE_OUT: outputs/v100-native-pwa/audio-range
+        run: node scripts/pwa-cached-audio-range-browser.mjs
 
       - name: Build the published old release and candidate for native WebKit PWA checks
         id: build_native_pwa_sites

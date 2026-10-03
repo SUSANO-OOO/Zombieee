@@ -1,5 +1,13 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-03 Version 1.0.0 — 全体監査の改善とスタッフロール
+
+Producerの改善指示を受け、修正前候補`22b3b7d`で確認した未発見地図の情報開示、音声保持、導入のページ数、育成の差、報酬、データ管理、戦闘表示を修正した。クリア後は魔王魂「追憶の幻想世界」の元音源と、戦後11場面の自動スタッフロールで締めくくる。曲名・作者・公式出典・規約を表示し、既存ENDING→credits→EPILOGUE、stable ID、既読、save、人物identityを維持する。詳細は[全体監査と改善記録](qa/v100/WHOLE_QUALITY_AUDIT_20261003.md)。
+
+全1721 tests、build、Lint 0 errors／15 warnings、Chromium全曲・11場面・保存境界・offline Range再生、3サイズの地図／隊員／データ表示を検証した。Windows WebKitの音声は直接配信controlでもMediaError 4となるため未合格。high／DPR2性能とMac native音声のCIを追加し、新固定候補の結果・試遊URL・最終reviewは[既存Issue #172台帳](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5926641177)とDraft PR #171で管理する。
+
+main・正式Release・公式Pagesは0.9.9.5／`55d796cc577d1d9f903a4d2c6b4382196511db27`。新候補の実機・聴感・Producer最終承認は未完了。Ready化、正式merge、tag、Release、正式deployment、Issue closeの承認境界を維持する。以下は当時の履歴である。
+
 ### 2026-10-02 Version 1.0.0 — 音響・視覚・日本語の追加改善
 
 Producerの「全作業完了後に試遊」に従い、旧 `5d21327` 候補の試遊・最終承認依頼を保留した。30作品の公式資料と本作の全94イベント/767ノード・代表画面を照合し、回想の因果、編成名の収容、育成の情報階層、CAPS不足ボタン、登録用語、終幕の病院背景と環境音を修正する。調査の出典・観察範囲・適用は [30作品の記録](qa/v100/visual-japanese-research-20261002.md) に保存した。

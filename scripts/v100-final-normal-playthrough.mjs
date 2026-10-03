@@ -9,6 +9,8 @@ import path from "node:path";
 import { chromium } from "playwright";
 import { V100_STAGES, V100_UNITS, V100_VEHICLE, v100LevelCost } from "../app/v100Registry.js";
 import { v100StoryEventView } from "../app/v100StoryEvents.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
+import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -213,12 +215,20 @@ try {
   } else if(phase==="formation") await configureFormation();
   else if(phase==="battle") await battle(V100_STAGES.find(stage=>stage.id===save.flowState.stageId));
   else if(phase==="result") await acceptResult(report.stages.at(-1));
-  else if(["event","post","first-clear-post","ending","credits","epilogue"].includes(phase)) {
+  else if(phase==="credits") {
+    report.staffRoll=await inspectStaffRoll(page,{playerName:save.playerName});
+    await page.screenshot({path:path.join(out,"staff-roll-start.png")});
+    await page.locator('[data-v100-surface="epilogue"]').waitFor({state:"visible",timeout:360000});
+    assert.ok((await saveAt()).readStoryEventIds.includes("v100:event:credits"));
+    report.events["v100:event:credits"]=11;
+  }
+  else if(["event","post","first-clear-post","ending","epilogue"].includes(phase)) {
     await ready();await page.waitForLoadState("networkidle");
     const shell=page.locator("section[data-v100-event-id]");
     const id=await shell.getAttribute("data-v100-event-id"), index=Number(await shell.getAttribute("data-v100-node-index")??0);
     const text=await shell.innerText();const event=v100StoryEventView(id,save.playerName);const node=event?.nodes[index];
-    if(node?.text)assert.ok(normalizeText(text).includes(normalizeText(node.text)),`${id}:${index} text missing`);
+    const storyPage=v100StoryPageFor(id,event?.nodes??[],save.eventCursor?.nodeIndex??index);
+    for(const original of [...storyPage.leadingActions,node].filter(Boolean))if(original.text)assert.ok(normalizeText(text).includes(normalizeText(original.text)),`${id}:${original.sourceLine} text missing`);
     report.events[id]=Math.max(report.events[id]??0,index+1);
     await appendFile(path.join(out,"story-observations.jsonl"),JSON.stringify({id,index,text})+"\n");
     if(index===0)await page.screenshot({path:path.join(out,`${id.replaceAll(":","-")}.png`)});
