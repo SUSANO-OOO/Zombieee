@@ -17,6 +17,7 @@ import { v100EquipmentFor, v100EquipmentQuantityCap, v100EquipmentPurchaseUnlock
 import { equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCEMENT } from "./equipment.js";
 import { v100DiscoveredBosses } from "./v100BossProgress.js";
 import { v100OutbreakEncounters, v100OutbreakRunIdValid } from "./v100Outbreak.js";
+import { storyResultIdentity, isSettledStoryResult, isValidStoryVictory } from "./v100ResultIntegrity.js";
 
 export function beginV100Outbreak(save, bossId, { runId, now } = {}) {
   const current = normalizeV100Save(save);
@@ -209,34 +210,6 @@ export function createV100BattleResult({
     ...(stageNumber === 29 && Array.isArray(researchCoreTargets)
       ? { researchCoreTargets: researchCoreTargets.map(({id,hp,maxHp})=>({id,hp,maxHp})) } : {}),
   });
-}
-
-function storyResultIdentity(result) {
-  const stage = V100_STAGE_IDS.includes(result?.stageId) ? V100_STAGE_BY_ID[result.stageId] : null;
-  const runId = result?.battleRunId;
-  if (!stage || result.stageNumber !== stage.number || typeof runId !== "string"
-    || runId.length === 0 || runId.length > 256 || runId.trim() !== runId || /[\u0000-\u001f]/.test(runId)
-    || (result.resultId !== undefined && result.resultId !== runId)) return null;
-  return { stage, runId, receipt: `v100:s${String(stage.number).padStart(2, "0")}:result:${runId}` };
-}
-
-function isSettledStoryResult(save, identity) {
-  if (!identity) return false;
-  const stagePrefix = `v100:s${String(identity.stage.number).padStart(2, "0")}`;
-  // Pre-fix draft saves retain the latest finalized run and explicit replay IDs.
-  // Earlier unrecorded first-run IDs cannot be reconstructed from a stage receipt.
-  return save.receipts.includes(identity.receipt)
-    || save.receipts.includes(`${stagePrefix}:replay:${identity.runId}`)
-    || (save.lastResult?.won === true && typeof save.lastResult.finalizedAt === "string"
-      && save.lastResult.stageId === identity.stage.id && save.lastResult.battleRunId === identity.runId);
-}
-
-function isValidStoryVictory(result, identity) {
-  return Boolean(identity && result.won === true && result.objectiveComplete === true
-    && Number.isFinite(result.vehicleHp) && result.vehicleHp > 0
-    && Number.isFinite(result.vehicleMaxHp) && result.vehicleMaxHp >= result.vehicleHp
-    && result.stars === v100StarsForVehicle({ won: true, vehicleHp: result.vehicleHp, vehicleMaxHp: result.vehicleMaxHp })
-    && (!bossPayloadForStage(identity.stage.number) || result.bossDefeated === true));
 }
 
 function sameStoryResult(left, right) {

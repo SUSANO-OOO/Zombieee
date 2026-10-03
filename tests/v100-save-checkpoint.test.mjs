@@ -47,12 +47,14 @@ test("all registered event checkpoints and both S30 ending checkpoint forms rema
 test("older cursor-only and default-name checkpoints infer the registered event phase", () => {
   for (const eventId of ["v100:event:prologue", "v100:event:s01:pre", "v100:event:s01:post", "v100:event:credits"]) {
     for (const flowState of [undefined, save.flowState]) {
-      const raw = { ...save, campaignStarted: true, flowState, eventCursor: { eventId, nodeIndex: 1 }, pendingResult: eventId.endsWith(":post") ? { stageId: V100_STAGE_IDS[0], won: true } : null };
+      const result = createV100BattleResult({ stageId: V100_STAGE_IDS[0], battleRunId: "old-cursor-post", won: true, objectiveComplete: true, vehicleHp: 680 });
+      const raw = { ...save, campaignStarted: true, flowState, eventCursor: { eventId, nodeIndex: 1 }, pendingResult: eventId.endsWith(":post") ? recordV100PendingResult(save, result).save.pendingResult : null };
       const parsed = deserializeV100Save(JSON.stringify(raw));
       assert.equal(parsed.ok, true);
       const flow = createV100StoryFlowState(parsed.save);
       assert.equal(flow.phase, v100EventPhaseForId(eventId));
       assert.equal(flow.nodeIndex, 1);
+      if (flow.phase === "post") assert.equal(finalizeV100PendingResult(parsed.save).applied, true);
       assert.equal(deserializeV100Save(serializeV100Save({ ...parsed.save, ...v100StoryFlowCheckpoint(flow) })).ok, true);
     }
   }
@@ -80,6 +82,9 @@ test("unknown, mismatched and incomplete active event checkpoints cannot reach I
     { flowState: checkpoint("v100:event:s01:post"), pendingResult: { stageId: V100_STAGE_IDS[0], won: false } },
     { flowState: checkpoint("v100:event:s01:post"), pendingResult: { stageId: V100_STAGE_IDS[1], won: true } },
     { flowState: checkpoint("v100:event:s01:first-clear-post"), pendingResult: { stageId: V100_STAGE_IDS[0], won: true } },
+    { flowState: checkpoint("v100:event:s01:post"), pendingResult: { stageId: V100_STAGE_IDS[0], won: true } },
+    { flowState: { phase: "result", stageId: V100_STAGE_IDS[0], eventId: null }, pendingResult: { stageId: V100_STAGE_IDS[0], won: true } },
+    { flowState: { phase: "result", stageId: V100_STAGE_IDS[0], eventId: null }, pendingResult: { stageId: V100_STAGE_IDS[0], won: false } },
   ];
   let opened = 0;
   const host = { indexedDB: { open() { opened += 1; throw new Error("unexpected IDB access"); } } };

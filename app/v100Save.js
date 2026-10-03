@@ -20,6 +20,7 @@ import { normalizeV100BossProgress } from "./v100BossProgress.js";
 import { normalizeV100OutbreakProgress } from "./v100Outbreak.js";
 import { normalizeV100SurvivalProgress } from "./v100Survival.js";
 import { createV100StoryFlowState } from "./v100StoryFlow.js";
+import { storyResultIdentity, isSettledStoryResult, isValidStoryVictory } from "./v100ResultIntegrity.js";
 import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
@@ -289,7 +290,17 @@ function validateStoryCheckpoint(raw, errors) {
     // The post transition durably settles the receipt before showing rewards.
     // An unsettled pending transaction cannot stand in for that confirmation.
     if (resumed.phase === "first-clear-post" && (raw.pendingResult != null || typeof result?.finalizedAt !== "string")) errors.push("reward-confirmation-not-settled");
+    if (result?.won === true) {
+      const identity = storyResultIdentity(result);
+      if (!isValidStoryVictory(result, identity)) errors.push("invalid-flow-victory");
+      if (resumed.phase !== "first-clear-post") {
+        if (!Array.isArray(raw.availableStageIds) || !raw.availableStageIds.includes(result.stageId)) errors.push("pending-flow-stage-locked");
+        if (isSettledStoryResult({ ...raw, receipts: Array.isArray(raw.receipts) ? raw.receipts : [] }, identity)) errors.push("pending-flow-result-already-settled");
+      }
+    }
   }
+  if (raw.pendingResult != null && !["result", "post"].includes(resumed.phase)) errors.push("pending-result-inactive-flow");
+  if (raw.pendingResult != null && !isValidStoryVictory(raw.pendingResult, storyResultIdentity(raw.pendingResult))) errors.push("invalid-pending-victory");
 }
 
 export function validateV100SavePayload(raw) {
