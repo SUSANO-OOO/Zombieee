@@ -308,6 +308,14 @@ S5の既存結果でも、ボス残59.92と1555.058の敗北がほぼ同じ「�
 - 監査helperの修正は製品の検証・数式・閾値を緩めていない。変更後の最終候補はfresh CIで確認し、結果とrun IDを既存台帳へ記録する。失敗したCIと旧HEADの成功を新候補の合格へ転用しない。
 - 読み取り専用のgameplay・integrity・visualレビューで、この修正範囲のHigh 0／Medium 0。integrityは保存契約と監査helperの保存順、gameplayは表示専用のボス計測と星境界、visualは案内と結果画面の3サイズを照合した。親が実装・Git・実browserを担当。
 
+候補`940b412`のCI `37138369438`では、全1728 tests、Phase Gの55画面、6性能窓（各30秒以上・p95 rAF19ms）、nativeスタッフロール6ケース、PWA更新18／部分失敗復旧22ケースが成功した。原曲の通常速度・全11場面・315.768秒のtrusted native EOFと、通信socket停止後の150秒seek1回から通常速度166.303秒でのEOFを確認した。保存故障の高倍速controlやseek診断は通常全曲の証拠と区別する。
+
+同CIのStage 3 final-candidateはsetupで失敗した。通信0の確認後、非同期の状態読取り中に効果音4件のfetchが始まり、直後のpending 4を拒否した。assetは55/55 ready、一時停止済み、console／page／request／HTTP errorsは0。通信の完了履歴がないため、製品の滞留・音声失敗とは断定しない。原summaryとlogを`outputs/zero-view-fixes-20261004/ci-940-audio-final-candidate/`に保全する。
+
+setupのnetworkidle開始からquiet・状態採取確定までを、既存timeout（default45秒／CI60秒）一つで制限する。request開始／完了／失敗のrevisionを採取前後で照合し、採取中に通信が増えた場合は同じsetup内で250msのquietを取り直す。error履歴をresetせず、pending 0・error 0・ready・一時停止、音声semantic、測定deadline、試行1回を保持する。有限controlで採取中の開始→完了、未完了fetch、遅い503、停止した状態採取を検査し、独立reviewで新規High／Mediumなし。新候補の全必須CIが終わるまで合格としない。
+
+変更後のローカル全1732 tests・build・Lint0 errors／既存15 warnings・diff checkが成功した。隔離ChromiumのStage 3 final routeは試行1回で完了し、setupのpending 0／error 0、ボス会話FIFO、boss→pressure BGMを確認した（`audio-setup-chromium/summary.json`）。このChromium結果をMac WebKitの代用にはしない。
+
 ### 残る受入
 
 「到達作戦」「新しい役割」、復元理由、呼出・出撃・作戦地図・波の表記を整えた。S7の搬出／搬入、S22の43人／43室は確定した矛盾ではなく、正史を変更していない。スタッフロールの演出の強さ、S5を含む人間の難易度・操作感、物理iPhone、作品全体のProducer最終実プレイ受入は残る。正式公開・Ready・最終merge・tag・Release・Issue closeはその承認まで行わない。

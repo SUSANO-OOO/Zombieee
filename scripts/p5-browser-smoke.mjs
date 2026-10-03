@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { captureQuietDiagnosticsBoundary } from "./p5-quiet-diagnostics-boundary.mjs";
 
 import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import {
@@ -625,6 +626,7 @@ function assertNoRetiredNames(text, label) {
 function createDiagnostics(page) {
   let currentPhase = "unassigned";
   let requestSequence = 0;
+  let networkActivityRevision = 0;
   let requestMetadata = new WeakMap();
   let failedRequestUrls = new Set();
   const detailPromises = new Set();
@@ -675,6 +677,7 @@ function createDiagnostics(page) {
     detailPromises.add(promise);
   };
   page.on("request", (request) => {
+    networkActivityRevision += 1;
     pendingRequests.add(request);
     let frameUrlAtStart = null;
     try {
@@ -696,6 +699,7 @@ function createDiagnostics(page) {
     requestMetadata.set(request, record);
   });
   page.on("requestfinished", (request) => {
+    networkActivityRevision += 1;
     pendingRequests.delete(request);
     const record = requestMetadata.get(request);
     if (!record) return;
@@ -713,6 +717,7 @@ function createDiagnostics(page) {
   });
   page.on("pageerror", (error) => current.pageErrors.push(String(error)));
   page.on("requestfailed", (request) => {
+    networkActivityRevision += 1;
     pendingRequests.delete(request);
     const record = requestMetadata.get(request);
     if (record) {
@@ -757,6 +762,7 @@ function createDiagnostics(page) {
     snapshot() {
       return {
         ...current,
+        networkActivityRevision,
         warnings: unexpectedWarnings(current.warnings),
         pendingRequestCount: pendingRequests.size,
         pendingRequestUrls: [...pendingRequests]
@@ -1082,24 +1088,6 @@ async function waitForNetworkQuiet(page) {
   await page.waitForTimeout(120);
 }
 
-async function waitForDiagnosticsQuiet(diagnostics, label) {
-  const deadline = Date.now() + timeout;
-  let zeroSince = null;
-  let last = diagnostics.snapshot();
-  while (Date.now() < deadline) {
-    await diagnostics.settleDetails();
-    last = diagnostics.snapshot();
-    if (last.pendingRequestCount === 0) {
-      zeroSince ??= Date.now();
-      if (Date.now() - zeroSince >= 250) return last;
-    } else {
-      zeroSince = null;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(`${label} network diagnostics did not drain: ${JSON.stringify(last.pendingRequestUrls)}`);
-}
-
 async function captureStage3AudioSetupBoundary(page, diagnostics, label) {
   await page.waitForFunction(
     ({ expectedStageId }) => {
@@ -1118,12 +1106,10 @@ async function captureStage3AudioSetupBoundary(page, diagnostics, label) {
     { timeout },
   );
   await pauseBattleForDiagnosticDrain(page, label);
-  await waitForNetworkQuiet(page);
-  await waitForDiagnosticsQuiet(diagnostics, `${label}/setup`);
-  await diagnostics.settleDetails();
-  const stableState = await diagnostics.captureState();
-  const raw = diagnostics.snapshot();
-  return { stableState, raw };
+  return captureQuietDiagnosticsBoundary({
+    diagnostics, label: `${label}/setup`, timeoutMs: timeout,
+    waitForNetworkIdle: (remaining) => page.waitForLoadState("networkidle", { timeout: remaining }),
+  });
 }
 
 function assertStage3AudioSetupBoundary(setupDiagnostics, label) {
