@@ -1,9 +1,19 @@
 import { campaignUnitIdToCombatKind } from "./campaign.js";
-import { V100_UNITS } from "./v100Registry.js";
+import { V100_BOSS_BY_ID, V100_UNITS } from "./v100Registry.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
 const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
+
+function normalizeBossProgress(value) {
+  const boss = V100_BOSS_BY_ID[value?.bossId];
+  if (!record(value) || !boss || !["not-encountered", "active", "defeated"].includes(value.state)) return null;
+  const base = { bossId: boss.id, displayName: boss.displayName, state: value.state };
+  if (value.state === "not-encountered") return Object.freeze({ ...base, hp: null, maxHp: null });
+  if (!amount(value.hp) || !amount(value.maxHp) || value.maxHp <= 0 || value.hp > value.maxHp
+    || (value.state === "defeated" && value.hp !== 0)) return null;
+  return Object.freeze({ ...base, hp: value.hp, maxHp: value.maxHp });
+}
 
 // Presentation-only measurements. They never determine victory, stars or CAPS.
 export function normalizeV100BattleReport(report) {
@@ -13,7 +23,8 @@ export function normalizeV100BattleReport(report) {
     return row && [row.damage, row.damageTaken, row.healing].every(amount)
       ? [Object.freeze({ unitId: unit.id, damage: row.damage, damageTaken: row.damageTaken, healing: row.healing })] : [];
   });
-  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units) });
+  const bossProgress = normalizeBossProgress(report.bossProgress);
+  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}) });
 }
 
 export function v100BattleReportFor(raw) {
@@ -27,5 +38,5 @@ export function v100BattleReportFor(raw) {
     if (!values.every(amount)) return [];
     return [{ unitId: unit.id, damage: values[0], damageTaken: values[1], healing: values[2] }];
   });
-  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units });
+  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress });
 }

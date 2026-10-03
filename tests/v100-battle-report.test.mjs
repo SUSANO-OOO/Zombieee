@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { normalizeV100BattleReport, v100BattleReportFor } from "../app/v100BattleReport.js";
 import { applyV100SaveMutation, createDefaultV100Save, deserializeV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { createV100BattleResult, finalizeV100PendingResult, recordV100PendingResult } from "../app/v100Transactions.js";
-import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, v100StageReward, v100StarsForVehicle, v100StarTargetsForVehicle } from "../app/v100Registry.js";
+import { bossBattleResultSnapshot } from "../app/bossFoundation.js";
 import { v100RewardPresentationFor } from "../app/v100RewardPresentation.js";
 import { advanceAreaEffects } from "../app/gameRules.js";
 import { beginV100StageAttempt, completeV100Event, createV100StoryFlowState, enterV100Battle, enterV100PostResult, finishV100Battle, markV100FlowEventRead, v100StoryFlowCheckpoint } from "../app/v100StoryFlow.js";
@@ -27,6 +28,55 @@ const settle = (save, value) => {
   assert.equal(settled.applied, true);
   return reload(settled.save);
 };
+
+test("result boss measurements preserve fractional HP, entering bodies and actual maximum without counting clones", () => {
+  const game = {
+    definition: { bossEnemyKind: "kurome", missionConfig: { v100StageNumber: 10 } },
+    fighters: [{ kind: "kurome", side: "zombie", hp: 59.92, maxHp: 4300, gateEntering: true },
+      { kind: "kurome", side: "zombie", hp: 430, maxHp: 430, summonSource: "kurome-clone" }],
+    enemyKindsSeen: ["kurome"], bossReportMaxHp: 4300,
+  };
+  const original = structuredClone(game);
+  const bossProgress = bossBattleResultSnapshot(game);
+  assert.deepEqual(game, original);
+  assert.equal(bossProgress.bossId, "boss-kurome");
+  assert.equal(bossProgress.hp, 59.92);
+  assert.equal(bossProgress.maxHp, 4300);
+  assert.equal(bossProgress.state, "active");
+  const report = normalizeV100BattleReport({ ...measured(), bossProgress });
+  const withReport = settle(createDefaultV100Save(), result("boss-measurement", 680, report));
+  const without = settle(createDefaultV100Save(), result("boss-measurement"));
+  assert.deepEqual(withReport.lastResult.battleReport.bossProgress, bossProgress);
+  assert.deepEqual(withReport.receipts, without.receipts);
+  assert.equal(withReport.caps, without.caps);
+  assert.equal(bossBattleResultSnapshot({ ...game, fighters: [], enemyKindsSeen: [] }).state, "not-encountered");
+  assert.deepEqual(bossBattleResultSnapshot({ ...game, fighters: [], bossDefeated: true }), { ...bossProgress, state: "defeated", hp: 0 });
+});
+
+test("FUTAGO result measurement includes the arriving second body and excludes an already defeated body", () => {
+  const first = { kind: "futago", side: "zombie", hp: 1200, maxHp: 3000, v100TwinPart: "a", v100TwinPair: 0 };
+  const game = { definition: { bossEnemyKind: "futago", missionConfig: { v100StageNumber: 21 } }, fighters: [first], enemyKindsSeen: ["futago"], bossReportMaxHp: 6000, v100TwinSpawnCount: 1 };
+  assert.equal(bossBattleResultSnapshot(game).hp, 4200);
+  const second = { ...first, hp: 875.25, v100TwinPart: "b" };
+  assert.equal(bossBattleResultSnapshot({ ...game, fighters: [second], v100TwinSpawnCount: 2 }).hp, 875.25);
+  const progress = bossBattleResultSnapshot({ ...game, fighters: [first, second], v100TwinSpawnCount: 2 });
+  assert.equal(progress.hp, 2075.25);
+  assert.equal(progress.maxHp, 6000);
+  assert.equal(bossBattleResultSnapshot({ ...game, fighters: [], bossDefeatPending: true }).hp, 0);
+  assert.equal(normalizeV100BattleReport({ ...measured(), bossProgress: { ...progress, hp: Infinity } }).bossProgress, undefined);
+});
+
+test("visible next-star HP targets meet the actual star boundary at every legal vehicle upgrade", () => {
+  for (let hp = 680; hp <= 1000; hp += 80) {
+    const targets = v100StarTargetsForVehicle(hp);
+    for (const stars of [2, 3]) {
+      assert.equal(v100StarsForVehicle({ won: true, vehicleHp: targets[stars], vehicleMaxHp: hp }), stars);
+      assert.equal(v100StarsForVehicle({ won: true, vehicleHp: targets[stars] - 1, vehicleMaxHp: hp }), stars - 1);
+      assert.equal(v100StarsForVehicle({ won: false, vehicleHp: targets[stars], vehicleMaxHp: hp }), 0);
+    }
+  }
+  assert.equal(v100StarTargetsForVehicle(680)[3] - 498, 114);
+});
 
 test("attributed burning measures actual HP loss without changing combat or crediting support", () => {
   const fighters = [{ id: 1, side: "zombie", hp: 6, maxHp: 6, x: 100, y: 100, worldY: 100, lane: 0, combatReady: true }];

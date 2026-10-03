@@ -309,6 +309,13 @@ export const V100_EVENT_BY_ID = deepFreeze(Object.fromEntries(V100_EVENT_IDS.map
   stageNumber: /^v100:event:s(\d{2}):/.exec(id)?.[1] ? Number(/^v100:event:s(\d{2}):/.exec(id)[1]) : null,
 }])));
 
+export function v100EventPhaseForId(eventId) {
+  if (!Object.hasOwn(V100_EVENT_BY_ID, eventId)) return null;
+  if (["ending", "credits", "epilogue"].includes(eventId.slice("v100:event:".length))) return eventId.slice("v100:event:".length);
+  if (eventId.endsWith(":first-clear-post")) return "first-clear-post";
+  return eventId.endsWith(":post") ? "post" : "event";
+}
+
 export const V100_LEGACY_GIFT = deepFreeze({
   amountCaps: 180,
   entitlementReceipt: "v100:release-gift:legacy-180:v1",
@@ -399,10 +406,17 @@ export function renderV100PlayerName(text, playerName) {
     .replace(/\*\*([^*\n]+)\*\*/gu, "$1");
 }
 
+export const V100_STAR_THRESHOLDS = Object.freeze({ 2: 0.70, 3: 0.90 });
+
+export function v100StarTargetsForVehicle(vehicleMaxHp = V100_VEHICLE.baseHp) {
+  return Object.freeze(Object.fromEntries(Object.entries(V100_STAR_THRESHOLDS)
+    .map(([stars, ratio]) => [stars, Math.ceil(Math.max(0, Number(vehicleMaxHp) || 0) * ratio)])));
+}
+
 export function v100StarsForVehicle({ won = false, vehicleHp = 0, vehicleMaxHp = V100_VEHICLE.baseHp } = {}) {
   if (won !== true || Number(vehicleHp) <= 0 || Number(vehicleMaxHp) <= 0) return 0;
   const ratio = Number(vehicleHp) / Number(vehicleMaxHp);
-  return ratio >= 0.90 ? 3 : ratio >= 0.70 ? 2 : 1;
+  return ratio >= V100_STAR_THRESHOLDS[3] ? 3 : ratio >= V100_STAR_THRESHOLDS[2] ? 2 : 1;
 }
 
 function roundToFive(value) {

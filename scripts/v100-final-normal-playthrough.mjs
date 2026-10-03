@@ -147,7 +147,7 @@ async function battle(stage) {
   while(await phaseAt()==="battle"){
     await continueRequested();if(report.errors.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error("The normal battle exceeded its observation window");
-    const text=(await page.locator(".bay-status").allTextContents()).join(" "),count=text.match(/召喚限度\s+(\d+)\/(\d+)/u);
+    const text=(await page.locator(".bay-status").allTextContents()).join(" "),count=text.match(/同時出撃\s+(\d+)\/(\d+)/u);
     if(count){assert.equal(Number(count[2]),7);assert.ok(Number(count[1])<=7);record.maximumObservedActive=Math.max(record.maximumObservedActive??0,Number(count[1]));}
     try{
       await nativeBattleTap(page,page.getByRole("button",{name:"音声を有効にする",exact:true}));

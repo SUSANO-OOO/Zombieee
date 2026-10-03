@@ -137,7 +137,7 @@ async function battle(stage) {
   while(await phaseAt()==="battle") {
     await continueRequested();
     const countText = await page.locator(".bay-status").allTextContents();
-    const count = countText.join(" ").match(/召喚限度\s+(\d+)\/(\d+)/u);
+    const count = countText.join(" ").match(/同時出撃\s+(\d+)\/(\d+)/u);
     if (count) {
       record.maximumObservedActive = Math.max(record.maximumObservedActive ?? 0,Number(count[1]));
       assert.equal(Number(count[2]),7);assert.ok(Number(count[1])<=7,`Live deployment cap exceeded: ${count[0]}`);
@@ -159,7 +159,7 @@ async function battle(stage) {
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
-      } else if (/召喚限度\s+0\/7/u.test(countText.join(" ")) && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
+      } else if (/同時出撃\s+0\/7/u.test(countText.join(" ")) && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
         // An empty defense line needs an affordable escort while the next
         // expensive role is funded. Keep the ordered role cursor unchanged.
         const scout=page.locator('button.unit-card[data-kind="scout"]');

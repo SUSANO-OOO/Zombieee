@@ -46,7 +46,7 @@ try {
    }
    item.before=await snapshot(page);assert.equal(item.before.humans.length,7);assert.equal(item.before.queue.length,0);
    assert.ok(item.before.humans.every(f=>f.kind==="scout"));
-   await page.waitForFunction(()=>document.querySelector('button.unit-card[data-kind="scout"]')?.getAttribute("data-block-reason")==="召喚限度到達");
+   await page.waitForFunction(()=>document.querySelector('button.unit-card[data-kind="scout"]')?.getAttribute("data-block-reason")==="同時出撃の上限");
    assert.equal(await card.isEnabled(),false);
    // An actual pointer still reaches an aria-disabled button's handler. It
    // must reject without charging, even if React's HUD is a frame behind.

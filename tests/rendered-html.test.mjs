@@ -281,7 +281,7 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
   assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
   assert.match(battleUi, /第\{hud\.phase\}段階/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
-  assert.match(battleUi, /召喚限度 \{hud\.summonedCount\}\/7/);
+  assert.match(battleUi, /同時出撃 \{hud\.summonedCount\}\/7/);
   assert.match(battleUi, /移動拠点一斉掃射/);
   assert.match(battleUi, />一時停止</);
   assert.doesNotMatch(battleUi, />CRAWLER<|>PAUSED<|>SEC<|aria-label="Survivor units"/);
@@ -484,7 +484,8 @@ test("keeps the battlefield centered in the visual viewport while routing across
     /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\);/,
   );
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
-  assert.doesNotMatch(game, /placement-hint|placement-cancel|戦場をタップ/);
+  assert.doesNotMatch(game, /placement-hint|placement-cancel/);
+  assert.match(game, /selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide"/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
   assert.match(game, /selectedAction === `supply:\$\{selectedSupply\}` \? null : `supply:\$\{selectedSupply\}`/);
   assert.match(game, /selectedAction === "airstrike" \? null : "airstrike"/);
@@ -584,10 +585,10 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
   assert.match(game, /g\.deployQueue\.length >= 3/);
-  assert.match(game, /召喚限度到達 \/\/ 3/);
+  assert.match(game, /出撃待機の上限 \/\/ 3体/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
   assert.match(game, /summonedCount: number/);
-  assert.match(game, /召喚限度 \{hud\.summonedCount\}\/7/);
+  assert.match(game, /同時出撃 \{hud\.summonedCount\}\/7/);
   assert.match(game, /advanceLimitFor\(g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /支援ゲージ/);
   assert.match(game, /移動拠点一斉掃射/);

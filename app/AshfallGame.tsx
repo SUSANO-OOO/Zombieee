@@ -215,6 +215,7 @@ import {
   futagoEnraged,
   bossRenderKind,
   bossBattleHudSnapshot,
+  bossBattleResultSnapshot,
   bossTelegraphSnapshot,
   v100BossActionGuidanceFor,
   enforceBossBodyBarrier,
@@ -1363,6 +1364,7 @@ type Game = {
   signalIds: string[];
   bossDefeated: boolean;
   bossDefeatPending: boolean;
+  bossReportMaxHp?: number;
   qaBarks: boolean;
   roleMetrics: RoleMetrics;
   combatMetrics: CombatMetrics;
@@ -1441,6 +1443,7 @@ export type AshfallBattleResult = {
   encounteredEnemyKinds: readonly string[];
   enemyDefeatsByKind: Readonly<Record<string, number>>;
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
+  bossProgress?: ReturnType<typeof bossBattleResultSnapshot>;
   missionRuntime?: StageMissionRuntime;
   researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
 };
@@ -2798,6 +2801,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   });
   const spawned = g.fighters[g.fighters.length - 1];
   registerV100Twin(g, spawned);
+  if (kind === g.definition.bossEnemyKind && g.bossReportMaxHp === undefined) {
+    g.bossReportMaxHp = spawned.maxHp * (spawned.v100TwinPart ? 2 : 1);
+  }
   return spawned;
 }
 
@@ -15313,12 +15319,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const capacity = humanDeploymentCapacityForGame(g);
     if (!capacity.canReserve) {
       playUiOperationCue("reject", `deploy:${kind}:formation-full`);
-      g.banner = `召喚限度到達 // ${capacity.limit}`; g.bannerTime = .9;
+      g.banner = `同時出撃の上限 // ${capacity.limit}体`; g.bannerTime = .9;
       return false;
     }
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
-      if (g.deployQueue.length >= 3) { g.banner = "召喚限度到達 // 3"; g.bannerTime = .9; }
+      if (g.deployQueue.length >= 3) { g.banner = "出撃待機の上限 // 3体"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
@@ -23357,6 +23363,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               maxCombo: g.maxCombo,
               unitsLost: g.unitsLost,
               bossDefeated: g.bossDefeated,
+              bossProgress: bossBattleResultSnapshot(g),
               enemyBaseDestroyed,
               encounteredEnemyKinds: [...g.enemyKindsSeen],
               enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23421,6 +23428,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             maxCombo: g.maxCombo,
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
+            bossProgress: bossBattleResultSnapshot(g),
             enemyBaseDestroyed: g.barricadeHp <= 0,
             encounteredEnemyKinds: [...g.enemyKindsSeen],
             enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23754,6 +23762,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         aria-label="西新世紀末物語 ゲーム"
       >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" && assetsReady && !assetError ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle" || !assetsReady || assetError} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
+        {externalSessionActive && screen === "battle" && selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide" role="status">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}
         {externalSessionActive && (!assetsReady || assetError) && <section className="v100-battle-asset-status" aria-label="戦闘データの準備">
           <div><h2>{assetError ? "戦闘データを準備できませんでした" : "戦闘データを準備しています"}</h2>
             <p role={assetError ? "alert" : "status"}>{assetError ? "戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。" : "必要な画像がそろうまで戦闘は始まりません。"}</p>
@@ -23870,7 +23879,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <span>討伐 {hud.kills}</span>
               {!isSurvivalBattle && <span title={externalSessionActive ? "回復・ドラム缶に使う物資。敵撃破で補充。" : undefined}>{externalSessionActive ? "物資" : "資材"} {hud.scrap}</span>}
               {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
-              <span className="bay-status">召喚限度 {hud.summonedCount}/7</span>
+              <span className="bay-status">同時出撃 {hud.summonedCount}/7</span>
               {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
             </div>
           </div>
@@ -23891,13 +23900,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
                   ?? ((externalSessionActive && hud.summonedCount + hud.deployQueue >= V100_FORMATION_MAX_SLOTS) || hud.deployQueue >= 3
-                    ? "召喚限度到達"
+                    ? "同時出撃の上限"
                     : cooldown > 0
                       ? `再準備 ${cooldown}秒`
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "召喚限度到達" ? "full" : "blocked") : "ready";
+                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "同時出撃の上限" ? "full" : "blocked") : "ready";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
@@ -23981,7 +23990,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <button className="primary" onClick={togglePause}>作戦を再開</button>
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>}
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
-            <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
+            <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "作戦地図へ撤退" : "エリアマップへ撤退"}</button>
           </div>
           {externalSettingsPending && <p role="status">設定を保存しています…</p>}
           {externalSettingsRetry && !externalSettingsPending && <p role="alert">設定を保存できませんでした。変更前の設定を維持しています。<button onClick={() => void commitExternalSettings(externalSettingsRetry)}>設定の保存を再試行</button></p>}
@@ -24009,8 +24018,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               </small>
             </button>
           </section>
-          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "完了済みwaveの未受取報酬を保存して作戦を終了します。" : "完了済みwaveの報酬を一括保存してrunを終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {!isSurvivalBattle && !externalSessionActive && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存して作戦を終了します。" : "制圧済みの波の報酬を一括保存して作戦を終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>

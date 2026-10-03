@@ -16,6 +16,7 @@ import {
   V100_UNITS,
   V100_VEHICLE,
   normalizeV100PlayerName,
+  v100StarTargetsForVehicle,
 } from "./v100Registry.js";
 import {
   createDefaultV100Save,
@@ -47,6 +48,7 @@ import {
   leaveV100Battle,
   leaveV100Preparation,
   markV100FlowEventRead,
+  shouldAutoSkipV100StoryEvent,
   v100StoryFlowCheckpoint,
 } from "./v100StoryFlow.js";
 import { v100StoryEventFor, v100StoryEventView } from "./v100StoryEvents.js";
@@ -120,6 +122,8 @@ function formatReason(reason: string | undefined) {
     "insufficient-caps": "CAPSが不足しています。",
     "support-not-owned": "先に支援装備を取得してください。",
     "upgrade-cap": "この装備は最大強化です。",
+    "level-cap": "現在の育成上限です。作戦を進めると上限が解放されます。",
+    "stale-level": "育成段階が更新されました。現在のレベルを確認してください。",
     "unknown-unit": "隊員情報を読み込めませんでした。",
     "boss-undiscovered": "物語での初回撃破後に再戦できます。",
     "activity-active": "現在の戦闘・戦果を先に完了してください。",
@@ -139,7 +143,18 @@ function formatReason(reason: string | undefined) {
     "pending-result-missing": "確定する戦果が見つかりません。保存データを確認してください。",
     "pending-result-mismatch": "保存済みの戦果と一致しません。保存データは保持しています。",
   };
-  return labels[reason ?? ""] ?? reason ?? "操作を完了できませんでした。";
+  return labels[reason ?? ""] ?? "操作を完了できませんでした。現在の進行を保持しています。";
+}
+
+function storageFailureMessage(reason: string | undefined) {
+  if (reason === "stale-writer" || reason === "popup-owned-by-another-tab") return "別のタブでセーブが更新されました。現在の画面を保持しています。再読み込みして確認してください。";
+  if (reason === "invalid-export-size") return "ファイルが空か、容量が大きすぎます。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
+  if (["invalid-export-json", "invalid-export-envelope"].includes(reason ?? "")) return "このファイルは復元できません。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
+  if (reason === "invalid-inner-save") return "セーブの内容を確認できませんでした。別のバックアップを選んでください。現在のセーブは変更していません。";
+  if (reason === "legacy-history-not-eligible") return "このファイルでは旧版のプレイ履歴を確認できません。旧版から書き出したデータを選んでください。現在の進行と残高は変更していません。";
+  if (reason === "recovery-source-changed") return "復旧対象のセーブが更新されました。再読み込みして確認してください。";
+  if (reason === "recovery-required") return "セーブの復旧が必要です。再読み込みして復旧画面を確認してください。";
+  return "セーブを書き込めませんでした。現在の画面と進行を保持します。";
 }
 
 function portraitFor(owner: string | null | undefined) {
@@ -286,6 +301,7 @@ function formationCardForUnit(unitId: string) {
 export function V100Campaign() {
   const [save, setSave] = useState<Save>(() => createDefaultV100Save());
   const [flow, setFlow] = useState<Flow>(() => createV100StoryFlowState());
+  const autoSkipAttemptRef = useRef<Flow | null>(null);
   const [storyIndex, setStoryIndex] = useState(0);
   const [battleRunId, setBattleRunId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState(V100_STAGE_IDS[0]);
@@ -355,9 +371,7 @@ export function V100Campaign() {
     try {
       const outcome = await operation();
       if (!outcome.ok || !outcome.save) {
-        setNotice(outcome.reason === "stale-writer" || outcome.reason === "popup-owned-by-another-tab"
-          ? "別のタブでセーブが更新されました。現在の画面を保持しています。再読み込みして確認してください。"
-          : "セーブを書き込めませんでした。現在の画面と進行を保持します。");
+        setNotice(storageFailureMessage(outcome.reason));
         return null;
       }
       publishSave(outcome.save);
@@ -665,7 +679,7 @@ export function V100Campaign() {
     setNameError("");
   };
 
-  const markAndAdvanceEvent = async (skipped = false) => {
+  const markAndAdvanceEvent = useCallback(async (skipped = false) => {
     if (!flow.eventId || !event || saveBusy) return false;
     if (flow.phase !== "credits") void eventAudioOwnerRef.current?.activate(eventPresentation);
     let workingSave = save;
@@ -687,7 +701,16 @@ export function V100Campaign() {
       return false;
     }
     return Boolean(await updateFlow(transition.state, { baseSave: workingSave }));
-  };
+  }, [event, eventPresentation, flow, save, saveBusy, storyPage.endIndex, updateFlow]);
+
+  useEffect(() => {
+    if (!hydrated || loadFailure || saveBusy || logOpen || !shouldAutoSkipV100StoryEvent(flow, { enabled: save.settings.autoSkipReadStory, replay: Boolean(replayEventId) })) return;
+    // A failed write keeps this flow object active. Leave its retry to the
+    // player instead of starting another automatic save on every render.
+    if (autoSkipAttemptRef.current === flow) return;
+    autoSkipAttemptRef.current = flow;
+    void markAndAdvanceEvent(true);
+  }, [flow, hydrated, loadFailure, logOpen, markAndAdvanceEvent, replayEventId, save.settings.autoSkipReadStory, saveBusy]);
 
   const startStage = (stageId: string) => {
     const transition = beginV100StageAttempt(flow, stageId);
@@ -966,7 +989,7 @@ export function V100Campaign() {
         <ResultView result={flow.pendingResult} onContinue={continueFromResult} onRetry={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
       )}
 
-      {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
+      {logOpen && <EventLogView save={save} busy={saveBusy} onAutoSkipChange={enabled => applySaveTransaction(applyV100SaveMutation(save, draft => ({ ...draft, settings: { ...draft.settings, autoSkipReadStory: enabled } })))} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
       {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">新しい隊員 / 配備登録可能</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><dl><div><dt>配備登録</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSで登録できます。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで配備登録</button></div></section></div>}
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">Version 1.0.0</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay"><V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { setReplayEventId(null); return true; }} /></div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
@@ -1065,6 +1088,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <details className="v100-map-detail"><summary>作戦詳細・記録</summary>
           {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
           <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
+          <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
           <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}>隊員</button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}>戦術支援</button></div>
           <div className="v100-map-briefs"><article><span>隊員</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
           <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
@@ -1114,7 +1138,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
   const support = V100_SUPPORTS.find((entry) => entry.id === save.equippedSupportId);
   const assignActiveSlot = (unitId: string) => { onSlotChange(activeSlot, unitId); setPickerOpen(false); };
   return <section className={"v100-panel v100-formation-panel v100-sortie-panel v100-command-formation " + (pickerOpen ? "picker-open" : "")} data-v100-surface="formation" style={{ "--v100-stage-art": "url(" + (stage ? stageVisualFor(stage.id) : PRODUCTION_VISUALS.command) + ")" } as CSSProperties}>
-    <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length}<small>/ 7 呼出登録</small></strong></div>
+    <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length}<small>/ 7 呼び出し枠</small></strong></div>
     <div className="v100-formation-board">
       <div className="v100-slot-rail" aria-label="7枠の編成">
         <div className="v100-field-map-pane">
@@ -1123,7 +1147,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
           <MissionBriefingDiagram stageId={stageId} />
         </div>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>呼出部隊 {save.formationSlots.filter(Boolean).length} / 7</strong><details className="v100-briefing-details"><summary>作戦情報</summary><div><strong>{objectiveLabelFor(stage)}</strong><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p>{threats.length > 0 && <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul>}<p>{v100TacticalHintFor(stage)}</p></div></details><small>戦闘中、指揮を使って隊員を呼び出す</small></div>
+          <div className="v100-callin-heading"><strong>呼び出し枠 {save.formationSlots.filter(Boolean).length} / 7</strong><details className="v100-briefing-details"><summary>作戦情報・操作</summary><div><strong>{objectiveLabelFor(stage)}</strong><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p>{threats.length > 0 && <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul>}<p>{v100TacticalHintFor(stage)}</p><p>同時出撃は全隊員合わせて7体まで。同じ隊員を複数枠に入れても、出撃ボタンの待ち時間は共通です。枠を増やしても、上限や再配備の速さは変わりません。</p><StarCriteria vehicleMaxHp={save.vehicle.maxHp} /></div></details><small>1枠で同じ隊員を繰り返し呼べます。重複枠は待ち時間を共有。</small></div>
           <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => {
             const art = unitId ? formationCardForUnit(unitId) : null;
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
@@ -1256,7 +1280,7 @@ function DataManagementView({ save, notice, onBack, onBackup, onImport, onLegacy
     <div className="v100-data-scroll" tabIndex={0} aria-label="保存内容と過去のプレイ履歴">
       {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
       <p>現在の進行はブラウザ内の作戦セーブへ保存されています。復元する時は、このゲームから書き出したセーブファイルを選んでください。</p>
-      <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>到達作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
+      <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済み作戦</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
       <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
     </div>
     <div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
@@ -1273,13 +1297,21 @@ function RewardSummaryView({ result }: { result: Record<string, unknown> | null 
       {summary.unlockedUnitIds.map(id => formationCardForUnit(id) && <img key={id} src={formationCardForUnit(id) as string} alt={`${UNIT_BY_ID.get(id)?.displayName ?? "隊員"}の配備登録が解禁`} />)}
       <div><span>新しい解禁・記録</span><strong>{summary.unlocks.join(" / ")}</strong></div></article>}</div>
     {summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><p>{Object.entries(summary.breakdown).filter(([, value]) => value > 0).map(([key, value]) => rewardLabels[key as keyof typeof rewardLabels] + " +" + value).join(" / ") || "支給なし"}</p></details>}
-    <p>次の作戦に備え、隊員を育てるか、新しい役割を配備登録するか選べます。</p><small className="v100-reward-saved">報酬と作戦進行は保存済み</small></div>;
+    <p>次の作戦に備え、隊員を育てるか、新しい隊員を配備登録するか選べます。</p><small className="v100-reward-saved">報酬と作戦進行は保存済み</small></div>;
+}
+
+function StarCriteria({ vehicleMaxHp }: { vehicleMaxHp: number }) {
+  const targets = v100StarTargetsForVehicle(vehicleMaxHp);
+  return <p className="v100-star-criteria">作戦達成・車両生存で★1。★2は耐久70%以上（{targets[2]}）、★3は90%以上（{targets[3]}）。</p>;
 }
 
 function ResultView({ result, onContinue, onRetry, onMap }: { result: Record<string, unknown> | null; onContinue: () => void; onRetry: () => void; onMap: () => void }) {
   const won = result?.won === true;
   const stageNumber = Number(result?.stageNumber) || 0;
   const report = normalizeV100BattleReport(result?.battleReport);
+  const nextStar = Number(result?.stars) === 1 ? 2 : Number(result?.stars) === 2 ? 3 : null;
+  const starTargets = v100StarTargetsForVehicle(Number(result?.vehicleMaxHp));
+  const boss = report?.bossProgress;
   const outcome = won ? "作戦目標を達成。部隊を回収し、作戦後の報告へ進みます。"
     : Number(result?.vehicleHp) <= 0 ? "装甲車両の耐久が尽き、作戦を中断しました。"
       : "作戦目標を達成できず、作戦を中断しました。";
@@ -1287,13 +1319,14 @@ function ResultView({ result, onContinue, onRetry, onMap }: { result: Record<str
     <span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{outcome}</p>
     <div className="v100-result-highlight"><strong>{won ? `★${String(result?.stars ?? 0)}` : "—"}</strong><span>{won ? "作戦評価" : "再編成可能"}</span></div>
     <dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{String(result?.vehicleHp ?? 0)} / {String(result?.vehicleMaxHp ?? 0)}</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
+    <div className="v100-result-feedback"><StarCriteria vehicleMaxHp={Number(result?.vehicleMaxHp)} />{won && nextStar && <p>次の★{nextStar}は耐久{starTargets[nextStar]}以上。今回より{Math.max(0, Math.ceil(starTargets[nextStar] - Number(result?.vehicleHp)))}多く残せれば達成です。</p>}{boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に作戦終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}</div>
     {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>隊員ごとの合計。再配備と自己回復を含み、支援・車両の実績は含みません。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">隊員</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>隊員の実績は記録されていません。</p>}</div></details>}
     <div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "編成へ戻る"}</button>{!won && <button type="button" onClick={onMap}>作戦地図へ</button>}</div>
   </section>;
 }
 
-function EventLogView({ save, onReplay, onClose }: { save: Save; onReplay: (eventId: string) => void; onClose: () => void }) {
-  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="会話記録"><div className="v100-panel-heading"><div><span className="v100-kicker">会話記録</span><h2>{save.readStoryEventIds.length}件を読了</h2></div><button type="button" onClick={onClose}>閉じる</button></div><div className="v100-log-list">{save.readStoryEventIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div></section></div>;
+function EventLogView({ save, busy, onAutoSkipChange, onReplay, onClose }: { save: Save; busy: boolean; onAutoSkipChange: (enabled: boolean) => void; onReplay: (eventId: string) => void; onClose: () => void }) {
+  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="会話記録"><div className="v100-panel-heading"><div><span className="v100-kicker">会話記録</span><h2>{save.readStoryEventIds.length}件を読了</h2></div><button type="button" onClick={onClose}>閉じる</button></div><label className="v100-read-story-setting"><input type="checkbox" checked={save.settings.autoSkipReadStory} disabled={busy} onChange={event => onAutoSkipChange(event.currentTarget.checked)} /><span>既読の会話を自動でスキップ<small>この記録から選んだ会話は、いつでも再生できます。</small></span></label><div className="v100-log-list">{save.readStoryEventIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div></section></div>;
 }
 
 function ReplayView({ event, node, index, onNext, onClose }: { event: ReturnType<typeof v100StoryEventView>; node: StoryNode | null; index: number; onNext: () => void; onClose: () => void }) {

@@ -1,5 +1,5 @@
 /* One scoped presentation layer. Existing transaction, portrait and QA hooks stay intact. */
-#v100-campaign .v100-battle-report { position: relative; grid-column: 1 / -1; grid-row: 4; margin: 2px 0; text-align: left; font-family: var(--v100-reading-font); }
+#v100-campaign .v100-battle-report { position: relative; grid-column: 1 / -1; grid-row: 5; margin: 2px 0; text-align: left; font-family: var(--v100-reading-font); }
 #v100-campaign .v100-battle-report summary,
 #v100-campaign .v100-reward-breakdown summary { display: flex; align-items: center; min-height: 44px; padding: 5px 10px; border: 1px solid #8b936e; background: #15281f; color: #f0e2bf; font: 600 14px/1.3 var(--v100-reading-font); cursor: pointer; }
 #v100-campaign .v100-battle-report[open] summary { color: #233b2c; background: #e3d4b0; }
@@ -10,7 +10,13 @@
 #v100-campaign .v100-battle-report td { padding: 7px 8px; border-bottom: 1px solid #536549; text-align: right; }
 #v100-campaign .v100-battle-report th:first-child { text-align: left; }
 #v100-campaign .v100-battle-report thead th { color: #f4d99f; }
-#v100-campaign .v100-result-panel .v100-result-actions { grid-row: 5; }
+#v100-campaign .v100-result-panel .v100-result-actions { grid-row: 6; }
+#v100-campaign .v100-result-feedback { grid-column: 1 / -1; grid-row: 4; text-align: left; }
+#v100-campaign .v100-result-feedback p, #v100-campaign .v100-star-criteria { margin: 2px 0; font-size: 12px; line-height: 1.4; color: #d7dfc5; }
+#v100-campaign .v100-result-feedback .v100-result-boss { color: #f2dab3; }
+#v100-campaign .v100-read-story-setting { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 8px 0 12px; padding: 8px; border: 1px solid #7f8f79; color: #efe4c7; font-size: 14px; cursor: pointer; }
+#v100-campaign .v100-read-story-setting input { flex: none; width: 20px; height: 20px; accent-color: #d7b875; }
+#v100-campaign .v100-read-story-setting small { display: block; margin-top: 4px; font-size: 12px; color: #b9c7b8; }
 #v100-campaign .v100-reward-summary { inset: 40px 8% 56px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 8px; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
 #v100-campaign .v100-reward-summary h2 { font: 700 22px/1.2 var(--v100-reading-font); }
 #v100-campaign .v100-reward-summary > h2,

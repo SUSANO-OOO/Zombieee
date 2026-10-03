@@ -664,6 +664,28 @@ export function bossBattleHudSnapshot(game) {
   return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members });
 }
 
+// Result measurements also include a boss still entering the gate when the
+// player's vehicle is destroyed. They do not depend on HUD visibility.
+export function bossBattleResultSnapshot(game) {
+  const definition = bossDefinitionForEnemyKind(game.definition?.bossEnemyKind);
+  if (!definition || !game.definition?.missionConfig?.v100StageNumber) return null;
+  const actors = game.fighters.filter(fighter => fighter.side === "zombie"
+    && fighter.kind === definition.enemyKind && !isKuromeClone(fighter));
+  const encountered = actors.length > 0 || game.enemyKindsSeen?.includes(definition.enemyKind) === true;
+  const defeated = game.bossDefeated === true || game.bossDefeatPending === true;
+  const bossId = definition.id === "boss-kurome-prototype" ? "boss-kurome" : definition.id;
+  const base = { bossId, displayName: V100_BOSS_BY_ID[bossId]?.displayName ?? definition.displayName };
+  if (!encountered && !defeated) return Object.freeze({ ...base, state: "not-encountered", hp: null, maxHp: null });
+  const maxHp = game.bossReportMaxHp;
+  if (!(Number.isFinite(maxHp) && maxHp > 0)) return null;
+  if (defeated) return Object.freeze({ ...base, state: "defeated", hp: 0, maxHp });
+  if (actors.length === 0) return null;
+  const pair = actors.find(actor => actor.v100TwinPart);
+  const arrivingHp = pair ? Math.max(0, (pair.v100TwinPair + 1) * 2 - (game.v100TwinSpawnCount ?? 0)) * pair.maxHp : 0;
+  const hp = Math.min(maxHp, actors.reduce((sum, actor) => sum + Math.max(0, actor.hp), 0) + arrivingHp);
+  return Object.freeze({ ...base, state: "active", hp, maxHp });
+}
+
 export function bossHudSnapshot(fighter) {
   const definition = bossDefinitionForEnemyKind(fighter?.kind);
   if (!definition

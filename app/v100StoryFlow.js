@@ -1,4 +1,4 @@
-import { V100_EVENT_IDS, V100_STAGE_BY_ID, V100_STAGE_IDS } from "./v100Registry.js";
+import { V100_EVENT_IDS, V100_STAGE_BY_ID, V100_STAGE_IDS, v100EventPhaseForId } from "./v100Registry.js";
 import { v100StoryEventFor, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
 
 export const V100_FLOW_PHASES = Object.freeze([
@@ -57,8 +57,8 @@ export function createV100StoryFlowState({
   const saved = flowState && typeof flowState === "object" ? flowState : {};
   const cursor = eventCursor && typeof eventCursor === "object" ? eventCursor : null;
   const savedPhase = V100_FLOW_PHASES.includes(saved.phase) && !(saved.phase === "name" && playerName) ? saved.phase : null;
-  const cursorEventId = typeof cursor?.eventId === "string" && cursor.eventId.startsWith("v100:event:") ? cursor.eventId : null;
-  const savedEventId = typeof saved.eventId === "string" && saved.eventId.startsWith("v100:event:") ? saved.eventId : null;
+  const cursorEventId = v100EventPhaseForId(cursor?.eventId) ? cursor.eventId : null;
+  const savedEventId = v100EventPhaseForId(saved.eventId) ? saved.eventId : null;
   const acknowledgedReward = savedPhase === "first-clear-post"
     && lastResult?.won === true && lastResult.firstClear === (saved.firstClear === true)
     && typeof lastResult.finalizedAt === "string" && lastResult.stageId === saved.stageId
@@ -70,9 +70,10 @@ export function createV100StoryFlowState({
   const restoredResult = pendingResult
     ?? (acknowledgedReward || (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId) ? lastResult : null);
   const restoredEventId = cursorEventId ?? savedEventId;
-  const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId);
+  const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId) ?? restoredResult?.stageId;
   const phase = savedPhase
-    ?? (pendingResult && typeof pendingResult === "object" && playerName ? "result" : playerName ? "event" : "name");
+    ?? (playerName && restoredEventId ? v100EventPhaseForId(restoredEventId)
+      : pendingResult && typeof pendingResult === "object" && playerName ? "result" : playerName ? "event" : "name");
   const eventId = EVENT_PHASES.includes(phase)
     ? restoredEventId ?? (phase === "event" ? "v100:event:prologue" : null)
     : null;
@@ -96,6 +97,11 @@ export function createV100StoryFlowState({
     destination: typeof saved.destination === "string" ? saved.destination : destinationForPhase(safePhase, safeEventId, stageId),
     nodeIndex,
   });
+}
+
+export function shouldAutoSkipV100StoryEvent(state, { enabled = false, replay = false } = {}) {
+  return enabled === true && !replay && ["event", "post", "ending", "epilogue"].includes(state?.phase)
+    && v100EventPhaseForId(state?.eventId) === state.phase && state.readStoryEventIds?.includes(state.eventId) === true;
 }
 
 export function v100StoryFlowCheckpoint(state, nodeIndex = state?.nodeIndex ?? 0) {

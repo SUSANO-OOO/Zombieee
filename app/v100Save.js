@@ -2,6 +2,7 @@ import {
   V100_CAMPAIGN_GENERATION,
   V100_CAMPAIGN_NAMESPACE,
   V100_DEFAULT_PLAYER_NAME,
+  V100_EVENT_BY_ID,
   V100_FORMATION_MAX_SLOTS,
   V100_INITIAL_UNIT_IDS,
   V100_LEGACY_GIFT,
@@ -11,12 +12,14 @@ import {
   V100_UNITS,
   V100_VEHICLE,
   normalizeV100PlayerName,
+  v100EventPhaseForId,
 } from "./v100Registry.js";
 import { inspectCampaignSaveCandidate } from "./campaign.js";
 import { normalizeV100Equipment } from "./v100Equipment.js";
 import { normalizeV100BossProgress } from "./v100BossProgress.js";
 import { normalizeV100OutbreakProgress } from "./v100Outbreak.js";
 import { normalizeV100SurvivalProgress } from "./v100Survival.js";
+import { createV100StoryFlowState } from "./v100StoryFlow.js";
 import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
@@ -245,6 +248,50 @@ function isRecord(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
+function validateStoryCheckpoint(raw, errors) {
+  const flow = isRecord(raw.flowState) ? raw.flowState : null;
+  const cursor = isRecord(raw.eventCursor) ? raw.eventCursor : null;
+  for (const [label, checkpoint] of [["flow", flow], ["cursor", cursor]]) {
+    if (!checkpoint) continue;
+    if (checkpoint.phase != null && !V100_SAVE_FLOW_PHASES.includes(checkpoint.phase)) errors.push(`unknown-${label}-phase`);
+    if (checkpoint.eventId != null && !v100EventPhaseForId(checkpoint.eventId)) errors.push(`unknown-${label}-event`);
+    if (checkpoint.nodeIndex != null && (!Number.isSafeInteger(checkpoint.nodeIndex) || checkpoint.nodeIndex < 0 || checkpoint.nodeIndex > 10_000)) errors.push(`invalid-${label}-node-index`);
+    if (checkpoint.eventId != null && checkpoint.phase != null && !(label === "flow" && checkpoint.phase === "name")
+      && v100EventPhaseForId(checkpoint.eventId) !== checkpoint.phase) errors.push(`${label}-event-phase-mismatch`);
+  }
+  if (flow?.eventId != null && cursor?.eventId != null && flow.eventId !== cursor.eventId) errors.push("flow-cursor-event-mismatch");
+  // Older saves may have only a cursor, or the default name checkpoint.
+  // Resolve their event phase from the registered ID instead of rejecting them.
+  const phase = flow?.phase === "name" || flow?.phase == null ? null : flow.phase;
+  const eventId = cursor?.eventId ?? flow?.eventId;
+  if (phase && ["event", "post", "first-clear-post", "ending", "credits", "epilogue"].includes(phase)) {
+    if (!eventId || v100EventPhaseForId(eventId) !== phase) errors.push("flow-event-required");
+  } else if (phase && eventId != null) errors.push("inactive-flow-event");
+  if (flow?.stageId != null && !V100_STAGE_IDS.includes(flow.stageId)) errors.push("unknown-flow-stage");
+  if (flow?.stageNumber != null && (!Number.isInteger(flow.stageNumber) || flow.stageNumber < 1 || flow.stageNumber > 30)) errors.push("invalid-flow-stage-number");
+  const stageNumber = flow?.stageId != null ? V100_STAGE_IDS.indexOf(flow.stageId) + 1 : null;
+  const eventStage = V100_EVENT_BY_ID[eventId]?.stageNumber;
+  if (stageNumber && flow?.stageNumber != null && stageNumber !== flow.stageNumber) errors.push("flow-stage-number-mismatch");
+  if (eventStage && ((stageNumber && eventStage !== stageNumber) || (flow?.stageNumber != null && eventStage !== flow.stageNumber))) errors.push("flow-event-stage-mismatch");
+  const resumed = createV100StoryFlowState({
+    playerName: typeof raw.playerName === "string" ? raw.playerName : "",
+    completedStageIds: Array.isArray(raw.completedStageIds) ? raw.completedStageIds : [],
+    readStoryEventIds: Array.isArray(raw.readStoryEventIds) ? raw.readStoryEventIds : [],
+    flowState: flow, eventCursor: cursor,
+    pendingResult: isRecord(raw.pendingResult) ? raw.pendingResult : null,
+    lastResult: isRecord(raw.lastResult) ? raw.lastResult : null,
+  });
+  if (["formation", "battle", "result", "post", "first-clear-post"].includes(resumed.phase) && !V100_STAGE_IDS.includes(resumed.stageId)) errors.push("active-flow-stage-required");
+  if (["result", "post", "first-clear-post"].includes(resumed.phase)) {
+    const result = resumed.pendingResult;
+    if (!result || result.stageId !== resumed.stageId || typeof result.won !== "boolean") errors.push("active-flow-result-required");
+    else if (resumed.phase !== "result" && !result.won) errors.push("post-requires-victory");
+    // The post transition durably settles the receipt before showing rewards.
+    // An unsettled pending transaction cannot stand in for that confirmation.
+    if (resumed.phase === "first-clear-post" && (raw.pendingResult != null || typeof result?.finalizedAt !== "string")) errors.push("reward-confirmation-not-settled");
+  }
+}
+
 export function validateV100SavePayload(raw) {
   const errors = [];
   if (!isRecord(raw)) errors.push("payload-not-object");
@@ -265,6 +312,7 @@ export function validateV100SavePayload(raw) {
     if (raw.flowState !== undefined && !isRecord(raw.flowState)) errors.push("invalid-flow-state");
     if (raw.pendingResult !== null && !isRecord(raw.pendingResult)) errors.push("invalid-pending-result");
     if (raw.lastResult !== null && !isRecord(raw.lastResult)) errors.push("invalid-last-result");
+    validateStoryCheckpoint(raw, errors);
   }
   return Object.freeze({ ok: errors.length === 0, errors: Object.freeze(errors) });
 }
