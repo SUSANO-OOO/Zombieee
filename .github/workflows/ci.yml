@@ -557,8 +557,8 @@ jobs:
           name: v100-phase-g-production-matrix
           path: |
             outputs/v100-phase-g
-            outputs/v100-phase-g-state-contract-control.json
             docs/qa/v100/phase-g-screenshot-manifest.json
+            outputs/v100-phase-g-state-contract-control.json
             outputs/native-pointer-probe
             outputs/v100-native-music
             outputs/v100-card-resize

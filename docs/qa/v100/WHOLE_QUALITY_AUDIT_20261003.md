@@ -155,3 +155,5 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 長い曲をnative再生するとChromiumは途中で先読みを止めることを実測したため、fixtureで場面9へ実seekし、保存完了と場面10・末尾のbuffer/seekableを確認してから場面10の実保存を保留する。native requestの`onsuccess`をown propertyで置き換えず、実successのcapture listenerで実handlerの配送だけを一時保留する。native `ended`発生時のpending=true、open→解除6秒未満、EPILOGUEへの保存と既読1回を要求する。製品timeoutを延長せず、失敗時は媒体・IDB・busy履歴を保存する。製品非依存のnative IDB controlは旧方式とcapture方式を比較し、callback1回・実DB round trip・解除前未完了を検査する。Windows固定WebKitとChromiumでcontrolが通り、Chromiumの3保存境界ケースも通った。Macの保存中終了は新候補CIの実結果を要求する。
 
 同CIのPhase Gは、`controls`のないnative audioへ可視の幅・高さを求めて失敗した。画面5要素の可視性を維持し、audioの実要素数が正確に1個である契約へ修正した。manifest validatorでもこの証拠を必須にした。実Chromium DOMでaudio欠落・重複・画面操作非表示を拒否し、非表示audio1個と既存ENDINGは通るcontrol、credits3サイズ、関連49 testsを確認した。正式CIの55 captureとmanifest検証は維持する。
+
+次候補`f2f621c`のPR Verifyでは、1720/1721 tests成功、既存CI契約testがartifact一覧の隣接順を検査する1件で失敗した。追加したcontrol artifactを元のreport/manifestの後へ移し、元の契約testを変更せず維持した。反映後の全1721 testsは成功した。この失敗ログも`pr-verify-f2f621c-failure.log`へ保全する。
