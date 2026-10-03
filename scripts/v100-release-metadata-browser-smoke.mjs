@@ -56,7 +56,7 @@ try {
           record.upgradeCopy = await page.locator(".survival-upgrade-choices").innerText(); assert.doesNotMatch(record.upgradeCopy, /移動拠点|CRAWLER-REPAIR|BOSS-DAMAGE/u);
           await shot(page, record, "upgrade"); await action(page, () => repair.click());
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().paused === false);
-          await page.getByRole("button", { name: "一時停止", exact: true }).click(); await page.getByRole("button", { name: "エリアマップへ撤退", exact: true }).click();
+          await page.getByRole("button", { name: "一時停止", exact: true }).click(); await page.getByRole("button", { name: "作戦地図へ撤退", exact: true }).click();
           await action(page, () => page.getByRole("button", { name: "実行する", exact: true }).click());
           await page.getByRole("region", { name: "防衛継続作戦の戦果", exact: true }).waitFor();
           assert.equal(await page.locator(".v100-topbar h1").innerText(), "戦果"); assert.ok((await page.locator(".v100-save-meta").innerText()).includes(RELEASE_LABEL));

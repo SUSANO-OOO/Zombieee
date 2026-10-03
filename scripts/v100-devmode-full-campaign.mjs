@@ -33,7 +33,7 @@ function accepted(transition, step) {
 
 function reload() {
   const decoded = deserializeV100Save(serializeV100Save(save));
-  assert.equal(decoded.ok, true);
+  assert.equal(decoded.ok, true, `${flow.phase}: ${decoded.errors?.join(", ") ?? decoded.reason ?? "invalid save"}`);
   save = decoded.save;
   flow = createV100StoryFlowState(save);
 }
@@ -52,7 +52,7 @@ function checkpoint() {
   reload();
 }
 
-function visitEvent(expectedId) {
+function visitEvent(expectedId, beforeComplete) {
   assert.equal(flow.eventId, expectedId);
   const view = v100StoryEventView(expectedId, playerName);
   assert.ok(view && (view.nodes.length > 0 || view.finalizeOnly === true), `empty event ${expectedId}`);
@@ -67,6 +67,7 @@ function visitEvent(expectedId) {
   const read = markV100EventRead(save, expectedId, { now });
   assert.equal(read.applied, true);
   save = read.save;
+  beforeComplete?.();
   flow = accepted(completeV100Event(flow), `complete ${expectedId}`);
 }
 
@@ -91,17 +92,21 @@ for (let index = 0; index < V100_STAGE_IDS.length; index += 1) {
   const pending = recordV100PendingResult(save, result, { now });
   assert.equal(pending.applied, true, `pending ${slug}: ${pending.reason ?? ""}`);
   save = pending.save;
-  checkpoint();
   flow = accepted(finishV100Battle(flow, result), `result ${slug}`);
+  // The application commits the result and result checkpoint together.
+  // A battle checkpoint with an already pending victory is not durable state.
+  checkpoint();
   flow = accepted(enterV100PostResult(flow), `post ${slug}`);
-  visitEvent(`v100:event:${slug}:post`);
+  visitEvent(`v100:event:${slug}:post`, () => {
+    // Production settles rewards before entering their confirmation screen.
+    const finalized = finalizeV100PendingResult(save, { result, now });
+    assert.equal(finalized.applied, true, `settle ${slug}: ${finalized.reason ?? ""}`);
+    save = finalized.save;
+    assert.equal(save.completedStageIds.includes(stageId), true);
+    assert.equal(save.pendingResult, null);
+    assert.equal(finalizeV100PendingResult(save, { result, now }).applied, false);
+  });
   visitEvent(`v100:event:${slug}:first-clear-post`);
-  const finalized = finalizeV100PendingResult(save, { result, now });
-  assert.equal(finalized.applied, true, `settle ${slug}: ${finalized.reason ?? ""}`);
-  save = finalized.save;
-  assert.equal(save.completedStageIds.includes(stageId), true);
-  assert.equal(save.pendingResult, null);
-  assert.equal(finalizeV100PendingResult(save, { result, now }).applied, false);
   checkpoint();
   assert.equal(flow.phase, number === 30 ? "ending" : "map");
   stages.push({ number, stageId, caps: save.caps, rewardCaps: save.lastResult.rewardCaps });

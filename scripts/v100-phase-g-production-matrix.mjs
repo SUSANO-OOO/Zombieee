@@ -7,7 +7,8 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
 import { nativeBattleTap, normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
-import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
+import { createDefaultV100Save, deserializeV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
+import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
@@ -888,21 +889,23 @@ function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds =
 
 function resultSave(won) {
   const stageId = V100_STAGE_IDS[0];
-  const pendingResult = {
-    resultId: `qa-result-${won ? "win" : "lose"}`,
+  const result = createV100BattleResult({
     battleRunId: `qa-run-${won ? "win" : "lose"}`,
     stageId,
-    stageNumber: 1,
     won,
     objectiveComplete: won,
     bossDefeated: false,
     vehicleHp: won ? 612 : 0,
     vehicleMaxHp: 920,
-    stars: won ? 3 : 0,
     elapsedSeconds: won ? 74 : 51,
     unitDeaths: won ? 1 : 4,
-  };
-  return fullSave({ flowState: { phase: "result", eventId: null, stageId, stageNumber: 1, destination: "result", nodeIndex: 0, firstClear: won, finalized: false }, pendingResult });
+  });
+  invariant(result.won === won, "result fixture must satisfy the production result contract");
+  const save = fullSave({ flowState: { phase: "result", eventId: null, stageId, stageNumber: 1, destination: "result", nodeIndex: 0, firstClear: won, finalized: false } });
+  if (!won) return normalizeV100Save({ ...save, lastResult: result });
+  const pending = recordV100PendingResult(save, result);
+  invariant(pending.applied, `result fixture transaction rejected: ${pending.reason ?? "unknown"}`);
+  return pending.save;
 }
 
 function eventSave(phase, eventId, { nodeIndex = 0, stageNumber = 30 } = {}) {
@@ -917,6 +920,8 @@ function eventSave(phase, eventId, { nodeIndex = 0, stageNumber = 30 } = {}) {
 
 async function seedPage(page, save) {
   const serialized = serializeV100Save(save);
+  const decoded = deserializeV100Save(serialized);
+  invariant(decoded.ok, `invalid Phase G save fixture: ${decoded.errors?.join(", ") ?? decoded.reason ?? "unknown"}`);
   await page.addInitScript(({ keys, value }) => {
     for (const key of keys) localStorage.removeItem(key);
     for (const key of keys.slice(0, 3)) localStorage.setItem(key, value);

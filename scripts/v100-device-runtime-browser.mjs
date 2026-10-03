@@ -334,7 +334,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
+  measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });
@@ -471,17 +471,22 @@ try {
       const measurement = await beginMeasurement(page);
       result.measurementStarted = true;
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
+      // The elapsed gate uses this browser clock. Node's wall clock can finish
+      // first, so use the same monotonic clock to decide when the window ends.
+      const stillMeasuring = () => page.evaluate(({ startedAt, durationMs }) => (
+        performance.now() - startedAt < durationMs
+      ), { startedAt: measurement.startedAt, durationMs: measurementMs });
       if (observerlessDiagnostic) {
         await page.waitForTimeout(measurementMs);
+        while (await stillMeasuring()) await page.waitForTimeout(50);
         const final = await page.evaluate(readRuntimeObservation);
         if (!final?.running || final.over || final.humanCount <= 0 || final.boss.length === 0) {
           throw new Error("observerless diagnostic lost live battle, humans, or boss");
         }
         result.measurementSamples.push(final);
       } else {
-        const started = Date.now();
         let previousSample = 0;
-        while (Date.now() - started < measurementMs) {
+        while (await stillMeasuring()) {
           await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {

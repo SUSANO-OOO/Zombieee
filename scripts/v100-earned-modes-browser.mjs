@@ -86,7 +86,7 @@ try{
  await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).waitFor();assert.deepEqual(await save(),survival.checkpoint);
  survival.checkpointReadback=await durableReadback(survival.checkpoint);await persist();
  survival.choice=await page.locator('.survival-upgrade-choices button').first().innerText();await page.locator('.survival-upgrade-choices button').first().click();await ready();survival.upgraded=await save();
- await click('一時停止');await click('エリアマップへ撤退');await click('実行する');await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).waitFor();
+ await click('一時停止');await click('作戦地図へ撤退');await click('実行する');await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).waitFor();
  const final=await save();survival.result=final.survival.lastResult;campaignPreserved(final);assert.equal(final.survival.active,null);assert.equal(final.survival.totalRuns,seed.survival.totalRuns+1);assert.equal(final.caps,afterOutbreak.caps+survival.result.totalCaps);
  await shot('survival-result');await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).waitFor();assert.deepEqual(await save(),final);survival.finalReadback=await durableReadback(final);survival.status='passed';assert.deepEqual(report.errors,[]);report.status='passed';
 }catch(e){report.status='failed';report.error=String(e.stack??e);await shot('failure').catch(()=>{});process.exitCode=1;}

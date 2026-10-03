@@ -263,7 +263,7 @@ try {
           await pauseAction(page, "編成画面へ戻る"); await confirm(page); await phase(page, "formation");
           await shot(page, record, "loadout-return");
           await record.reload(); await phase(page, "formation");
-          await battle(page); await pauseAction(page, "エリアマップへ撤退");
+          await battle(page); await pauseAction(page, "作戦地図へ撤退");
           const beforeFailure = await saveAt(page);
           await fault(page, true); await confirm(page);
           await page.getByRole("status").filter({ hasText: "セーブ" }).waitFor();

@@ -1,7 +1,7 @@
 // Generated from the Version 1.0.0 Producer rewrite. Do not hand-edit.
 import { V100_EVENT_IDS, V100_EVENT_BY_ID, renderV100PlayerName } from "./v100Registry.js";
 
-export const V100_STORY_SOURCE_SHA256 = "f55fe32e7e3d2355f09d41c5f2990b9157e6d73d0b3d718d1e03246995addfc3";
+export const V100_STORY_SOURCE_SHA256 = "88110351eaa4b597d221828c49f4c29abb8a77bf8180a3c128e6db9c5aa2978f";
 export const V100_STORY_SOURCE_LINE_COUNT = 1058;
 export const V100_STORY_SCRIPT_VERSION = "v10-producer-rewrite";
 
@@ -1707,7 +1707,7 @@ export const V100_STORY_EVENTS = Object.freeze({
       {
         "kind": "action",
         "speaker": null,
-        "text": "中継器が一瞬だけ電波を戻し、発生二日目に送られた未着信メッセージがババヤガの端末へ届く。差出人はMrs.チハ。",
+        "text": "中継器が一瞬だけ電波を戻し、発生二日目に送られた未受信のメッセージがババヤガの端末へ届く。差出人はMrs.チハ。",
         "portraitOwner": null,
         "portraitKind": "stage-direction",
         "sourceLine": 245
