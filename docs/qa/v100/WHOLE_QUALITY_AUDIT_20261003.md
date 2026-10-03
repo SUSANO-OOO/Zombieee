@@ -183,3 +183,13 @@ Chromiumの`natural-eof-race-controls-chromium/report.json`は、診断2条件�
 Offline音声は実SW／Cache Storageと通信socket停止を維持し、初回play前の150秒seek1回の後、元のcache音源を16倍速でnative EOFまで連続再生する。追加の末尾seekは除き、15秒のEOF上限、206/416のbytes/hash、trusted native ended、元cache200・6,309,936 bytesを要求する。`offline-native-rate16-chromium/report.json`が成功した。これはRangeとoffline再生の固定fixtureであり、通常速度の聴感や全曲検証とは区別する。
 
 変更したQA3fileの独立read-only reviewは未解消High0／Medium0。関連15 tests、Lint0 errors／既存15 warnings、`git diff --check`が成功した。製品・曲・SW・配布assetは変更していない。新HEADのfresh Mac CIで通常全曲・通常cursor再開・保存境界・offlineとPWAを要求し、物理iPhone、speaker聴感、発熱、Producer最終受入は引き続き別の未完了項目とする。
+
+### Macの全曲・保存合格とoffline条件の区別
+
+候補`58f6d1a`のCI `37104620147`で、Mac固定WebKitのnative staff rollは6/6ケースが成功した。元MP3を1倍速・seekなしで315.768秒まで再生し、trusted native ended、全11場面、中断・回転・pagehide、音なし、503を確認した。通常の保存cursor再開は172秒付近から実時刻が増加した。保存中終了は8倍速の実EOF時pending=true、native IDB open→解除3,718ms、EPILOGUEと既読1回を確認。16倍速の保存失敗は1回の試行後に待機して手動復旧した。必須のseekなし8/16倍controlと、停止後／初回play前seekの診断2条件も全て成功した。原reportは`mac-native-58f6d1a/staff-roll/report.json`、buildは`40af04463d367394c06c6646650362434e18e3eb6398f2101b553c11bf1a7358`である。
+
+次のoffline工程は、通信socket停止、実SWからの206/416、部分bytes/hash、150秒位置からの再生が通り、16倍速でのEOF待ち15秒で失敗した。最終記録は299.893／315.768秒、readyState4・networkState1・errorなし。途中時刻のsamplesがなかったため、高倍速のdecode遅延と途中停止を断定していない。元の失敗は`mac-native-58f6d1a/audio-range/report.json`に保全し、旧16倍速・15秒以内完了の条件は失敗のままとする。後続のPWA更新・復旧は未実行である。
+
+新しいoffline条件はゲームと同じ通常1倍速で、paused状態の150秒seek完了後に実gestureでplayし、残り約166秒を追加seekなしで連続再生する。play要求からtrusted native EOFまで総180秒以内、実media clockの残り1秒到達からEOFまで15秒以内を要求する。全区間rate1、seek1回、媒体エラー0、元cache200・hash/bytes、通信socket停止、206/416を維持し、成功時・失敗時のeventと250ms間隔の媒体時刻を保存する。旧高倍速条件と同じgateだとは扱わない。停止した時刻やnative endedを模擬しない。
+
+Chromiumの初回1倍速fixtureは、約165.712秒の連続再生から315.616秒のtrusted EOFまで成功し、663 samplesが全てrate1、150秒seek1回、追加seek0、元cache200・6,309,936 bytesを確認した。総180秒のassertを追加した最終fixtureも165,719.6msで成功した。記録は`offline-native-rate1-chromium/report.json`と`offline-native-rate1-total-bound-chromium/report.json`。関連Range3 tests、Lint0 errors／既存15 warnings、`git diff --check`も成功。これはローカルの証拠であり、Macのoffline成功ではない。新HEADのfresh Mac全工程を台帳へ記録する。製品・音源・SWの変更はない。
