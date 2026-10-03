@@ -373,3 +373,19 @@
 #v100-campaign .v100-data-actions > * { min-height: 44px; display: flex; align-items: center; justify-content: center; }
 #v100-campaign .v100-data-note { margin: 0; font-size: 12px; }
 @media (max-height: 400px) { #v100-campaign .v100-data-modal { gap: 6px; padding: 10px; } #v100-campaign .v100-reward-unlocks img { flex-basis: 54px; width: 54px; height: 65px; } }
+
+@media (max-height: 420px) and (min-width: 640px) and (orientation: landscape) {
+  #v100-campaign[data-v100-phase="result"] { padding: 4px max(6px, env(safe-area-inset-right)) 4px max(6px, env(safe-area-inset-left)); gap: 4px; }
+  #v100-campaign[data-v100-phase="result"] .v100-topbar { min-height: 44px; height: 44px; margin: 0 0 4px; padding: 0 6px; }
+  #v100-campaign[data-v100-phase="result"] .v100-topbar-title { gap: 8px; }
+  #v100-campaign[data-v100-phase="result"] .v100-topbar h1 { font-size: 18px; }
+  #v100-campaign .v100-result-panel { padding: 6px 12px; gap: 3px 14px; }
+  #v100-campaign .v100-result-panel > h2 { font-size: 20px; }
+  #v100-campaign .v100-result-panel .v100-result-highlight { margin: 2px 0; padding: 4px; gap: 4px; }
+  #v100-campaign .v100-result-panel .v100-result-highlight strong { font-size: 30px; }
+  #v100-campaign .v100-result-panel .v100-result-records { margin: 2px 0 !important; gap: 3px 10px; }
+  #v100-campaign .v100-result-panel .v100-result-records > div { padding: 2px 6px; gap: 1px; }
+  #v100-campaign .v100-result-panel .v100-result-records dt, #v100-campaign .v100-result-panel .v100-result-records dd { line-height: 1.1; }
+  #v100-campaign .v100-result-feedback p { margin: 1px 0; line-height: 1.25; }
+  #v100-campaign .v100-result-panel .v100-result-actions { margin-top: 2px; }
+}
