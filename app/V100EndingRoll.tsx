@@ -79,6 +79,7 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
     } catch (error) {
       if (attempt !== playAttemptRef.current) return;
       playbackAllowedRef.current = false;
+      audio.pause();
       playingRef.current = false;
       waitingAtRef.current = null;
       setSoundState(error instanceof DOMException && error.name === "NotAllowedError" ? "gesture" : "unavailable");
@@ -190,7 +191,7 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       onWaiting={() => { waitingAtRef.current ??= performance.now(); }}
       onCanPlay={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; } }}
       onSeeked={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
-      onError={() => { playbackAllowedRef.current = false; playAttemptRef.current += 1; playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable"); }}
+      onError={event => { playbackAllowedRef.current = false; playAttemptRef.current += 1; event.currentTarget.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable"); }}
       onEnded={() => { elapsedRef.current = durationRef.current; setFrame(v100StaffRollFrame(durationRef.current, durationRef.current, nodes.length)); void finish(); }} />
     <div className="v100-credit-landscape" aria-hidden="true"><div key={frame.index} className="v100-credit-shot" style={{ backgroundImage: `url(${background(current)})` }} /><div key={`next-${frame.nextIndex}`} className="v100-credit-shot v100-credit-shot-next" style={{ backgroundImage: `url(${background(next)})` }} /></div>
     <div className="v100-credit-memory"><span>西新の、その後</span><h2>{current?.sceneLabel}</h2><p>{current?.text}</p></div>

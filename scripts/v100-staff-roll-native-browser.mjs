@@ -15,10 +15,12 @@ let holdSong = false, failSongResponse = false;
 const transport = await startNativeAudioQaOrigin(upstreamOrigin, { mode: () => failSongResponse ? "fail" : holdSong ? "hold" : "ready" });
 const origin = transport.origin;
 const engine = process.env.V100_STAFF_ROLL_ENGINE ?? "webkit";
-const onlyRegression = process.env.V100_STAFF_ROLL_ONLY === "regression";
+const selection = process.env.V100_STAFF_ROLL_ONLY ?? "all";
+assert.ok(["all", "regression", "fallback", "unavailable"].includes(selection), `Unknown staff-roll selection: ${selection}`);
+const onlyRegression = selection === "regression";
 const out = path.resolve(process.env.V100_STAFF_ROLL_OUT ?? "outputs/v100-staff-roll-native");
 await mkdir(out, { recursive: true });
-const report = { engine, status: "failed", onlyRegression, build: await productionBuildIdentity(), evidenceKind: "seeded staff-roll media and lifecycle QA; no campaign or physical-device completion claim", cases: [] };
+const report = { engine, status: "failed", selection, onlyRegression, build: await productionBuildIdentity(), evidenceKind: "seeded staff-roll media and lifecycle QA; no campaign or physical-device completion claim", cases: [] };
 const browser = await (await pwaBrowserType(engine)).launch({ headless: true });
 
 async function openCase(name, { muted = false, reducedMotion = false, failSong = false, delaySong = false, nodeIndex = 0 } = {}) {
@@ -70,7 +72,7 @@ async function frozen(page, action) {
 }
 
 try {
-  if (!onlyRegression) {
+  if (selection === "all") {
   const { page, context, result, releaseSong } = await openCase("full-song-with-loading-pause-rotation-pagehide", { delaySong: true });
   try {
     await page.waitForTimeout(3500);
@@ -117,7 +119,9 @@ try {
     throw error;
   } finally { releaseSong(); await context.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
 
-  for (const [name, options] of [["muted-reduced-motion", { muted: true, reducedMotion: true }], ["audio-unavailable", { failSong: true }]]) {
+  }
+  if (!onlyRegression) for (const [name, options] of [["muted-reduced-motion", { muted: true, reducedMotion: true }], ["audio-unavailable", { failSong: true }]]) {
+    if (selection === "unavailable" && !options.failSong) continue;
     const { page, context, result } = await openCase(name, options);
     try {
       await page.waitForFunction(expected => document.querySelector(".v100-staff-roll")?.getAttribute("data-v100-credit-audio") === expected, options.muted ? "muted" : "unavailable");
@@ -130,10 +134,14 @@ try {
       await page.getByRole("button", { name: "スキップ", exact: true }).click();
       await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible" });
       assert.deepEqual(result.errors, []); result.status = "passed";
+    } catch (error) {
+      result.failureClock = await readClock(page).catch(() => null);
+      result.failureAudio = await readNativeMedia(page).catch(() => null);
+      await page.screenshot({ path: path.join(out, `${engine}-${name}-failed.png`) }).catch(() => {});
+      throw error;
     } finally { await context.close(); }
   }
-  }
-  for (const name of ["saved-scene-resume", "ended-during-save", "completion-save-failure"]) {
+  if (["all", "regression"].includes(selection)) for (const name of ["saved-scene-resume", "ended-during-save", "completion-save-failure"]) {
     const { page, context, result } = await openCase(name, { nodeIndex: name === "saved-scene-resume" ? 6 : 0 });
     try {
       result.initial = await inspectStaffRoll(page, { index: name === "saved-scene-resume" ? 6 : 0, playerName: "１２文字の主人公名です" });
@@ -249,6 +257,7 @@ try {
       throw error;
     } finally { await context.close(); }
   }
+  assert.equal(report.cases.length, { all: 6, regression: 3, fallback: 2, unavailable: 1 }[selection]);
   report.status = "passed";
 } catch (error) { report.error = String(error); throw error; }
 finally { await browser.close(); await transport.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }

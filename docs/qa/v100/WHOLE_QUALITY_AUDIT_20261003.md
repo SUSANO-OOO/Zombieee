@@ -157,3 +157,7 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 同CIのPhase Gは、`controls`のないnative audioへ可視の幅・高さを求めて失敗した。画面5要素の可視性を維持し、audioの実要素数が正確に1個である契約へ修正した。manifest validatorでもこの証拠を必須にした。実Chromium DOMでaudio欠落・重複・画面操作非表示を拒否し、非表示audio1個と既存ENDINGは通るcontrol、credits3サイズ、関連49 testsを確認した。正式CIの55 captureとmanifest検証は維持する。
 
 次候補`f2f621c`のPR Verifyでは、1720/1721 tests成功、既存CI契約testがartifact一覧の隣接順を検査する1件で失敗した。追加したcontrol artifactを元のreport/manifestの後へ移し、元の契約testを変更せず維持した。反映後の全1721 testsは成功した。この失敗ログも`pr-verify-f2f621c-failure.log`へ保全する。
+
+`1cf4eaf`のMac検証では原曲の自然終了と音なしケースが通り、503ケースでnative audioのpaused=falseが残る不具合を検出した。保存3ケースとoffline/PWA工程は未実行であり、保存中終了の再失敗とは扱わない。Windows固定WebKitでも503単独の同じassert失敗を旧buildで再現し、controlを保全した。`play()`失敗はattempt一致確認の後、media errorはattempt無効化の後にaudioを明示pauseする。プレイヤーのpause状態を変えず、音なしスタッフロールは進む。新QAは503単独の範囲を明記し、defaultは元の6ケースを必須にする。各fallback失敗にも媒体状態と画像を保全する。
+
+修正後build `7ed54c0557e35f9dd2138f855caca013812e0c580af49974a39be2b97d087d3c`で、同じWindows固定WebKitの503単独controlが成功した。これは故障音源の停止・音なしロール進行・スキップ後の保存接続の証拠であり、Windows WebKitの元MP3再生成功とは扱わない。全1721 tests・build・Lint0 errors/15 warningsと独立read-onlyの変更範囲High0/Medium0を確認し、Macのdefault6ケースとoffline/PWAは新HEADのfresh CIで要求する。
