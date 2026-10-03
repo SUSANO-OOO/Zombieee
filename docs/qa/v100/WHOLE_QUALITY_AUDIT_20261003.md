@@ -193,3 +193,7 @@ Offline音声は実SW／Cache Storageと通信socket停止を維持し、初回p
 新しいoffline条件はゲームと同じ通常1倍速で、paused状態の150秒seek完了後に実gestureでplayし、残り約166秒を追加seekなしで連続再生する。play要求からtrusted native EOFまで総180秒以内、実media clockの残り1秒到達からEOFまで15秒以内を要求する。全区間rate1、seek1回、媒体エラー0、元cache200・hash/bytes、通信socket停止、206/416を維持し、成功時・失敗時のeventと250ms間隔の媒体時刻を保存する。旧高倍速条件と同じgateだとは扱わない。停止した時刻やnative endedを模擬しない。
 
 Chromiumの初回1倍速fixtureは、約165.712秒の連続再生から315.616秒のtrusted EOFまで成功し、663 samplesが全てrate1、150秒seek1回、追加seek0、元cache200・6,309,936 bytesを確認した。総180秒のassertを追加した最終fixtureも165,719.6msで成功した。記録は`offline-native-rate1-chromium/report.json`と`offline-native-rate1-total-bound-chromium/report.json`。関連Range3 tests、Lint0 errors／既存15 warnings、`git diff --check`も成功。これはローカルの証拠であり、Macのoffline成功ではない。新HEADのfresh Mac全工程を台帳へ記録する。製品・音源・SWの変更はない。
+
+候補`52dbebf`のCI `37106403311`でもMac staff roll6/6が成功した。Offlineの通常1倍速は、150秒から追加seekなしで315.768秒まで進み、660 samples、媒体error0、全buffer、`audio.ended=true`を記録したが、検証の結果読取でTypeErrorとなった。`audio.ended`だけで待ちを終了し、未確認のnative ended eventの`.at`を読む順序の不備である。記録時のevent一覧にはplayingまでしかなく、native eventの配送後まで観測していない。この試行をnative EOF event合格へ読み替えず、`mac-native-52dbebf/audio-range/report.json`と元ログに保全する。後続PWA工程は未実行である。
+
+結果読取の前に、実listenerが記録したnative endedが正確に1件になるまで待つよう修正する。残り1秒からの15秒deadlineと、実play要求からの総180秒上限、trusted event、媒体のended状態、全rate1、seek1回、原本cacheの条件を維持する。失敗時もevent/sampleを再取得し、先に読んだ不完全なsnapshotを使い続けない。製品ソース、media状態、event配送を変更・模擬して通過させない。修正後のMac結果を新HEADで要求する。

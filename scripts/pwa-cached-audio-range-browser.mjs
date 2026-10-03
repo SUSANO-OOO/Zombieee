@@ -105,8 +105,11 @@ try {
   // Bound that 166s continuous-play setup, then keep the 15s EOF deadline.
   await page.waitForFunction(() => { const audio = document.querySelector("audio"); return audio.currentTime >= audio.duration - 1 && !audio.error; }, undefined, { timeout: 180000 });
   report.beforeNativeEof = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, paused: audio.paused, seeking: audio.seeking, error: audio.error }));
-  await page.waitForFunction(() => document.querySelector("audio").ended, undefined, { timeout: 15000 });
+  // The ended property can become true before its native event is delivered.
+  // Wait for the event itself before reading its trusted timestamp.
+  await page.waitForFunction(() => window.__offlineNativeMedia.ended.length === 1, undefined, { timeout: 15000 });
   report.nativeEnded = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, ended: audio.ended, error: audio.error }));
+  assert.equal(report.nativeEnded.ended, true);
   report.nativeMediaEvents = await page.evaluate(() => window.__offlineNativeMedia);
   report.continuousPlayback = { totalMs: report.nativeMediaEvents.events.find(event => event.type === "ended").at - report.nativeMediaEvents.playRequestedAt, rate: 1, totalLimitMs: 180000, tailArrivalLimitMs: 180000, nativeEofLimitMs: 15000 };
   assert.ok(report.continuousPlayback.totalMs <= report.continuousPlayback.totalLimitMs, JSON.stringify(report.continuousPlayback));
@@ -124,6 +127,6 @@ try {
   report.cache = await page.evaluate(async ({ scope, song }) => { const cache = await caches.open("zombieee-assets-v1"), response = await cache.match(new URL(`__pwa-asset__/${song.hash}`, scope)); return { status: response.status, hash: response.headers.get("x-pwa-asset-hash"), bytes: (await response.arrayBuffer()).byteLength }; }, { scope, song });
   assert.deepEqual(report.cache, { status: 200, hash: song.hash, bytes: song.bytes });
   assert.deepEqual(report.pageErrors, []); report.status = "passed";
-} catch (error) { report.error = String(error); report.nativeMediaEvents ??= await page.evaluate(() => window.__offlineNativeMedia ?? null).catch(() => null); report.failureAudio = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, paused: audio.paused, seeking: audio.seeking, ended: audio.ended, readyState: audio.readyState, networkState: audio.networkState, src: audio.currentSrc, buffered: [...Array(audio.buffered.length)].map((_, index) => [audio.buffered.start(index), audio.buffered.end(index)]), error: audio.error && { code: audio.error.code, message: audio.error.message } })).catch(() => null); throw error; }
+} catch (error) { report.error = String(error); report.nativeMediaEvents = await page.evaluate(() => window.__offlineNativeMedia ?? null).catch(() => null); report.failureAudio = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, paused: audio.paused, seeking: audio.seeking, ended: audio.ended, readyState: audio.readyState, networkState: audio.networkState, src: audio.currentSrc, buffered: [...Array(audio.buffered.length)].map((_, index) => [audio.buffered.start(index), audio.buffered.end(index)]), error: audio.error && { code: audio.error.code, message: audio.error.message } })).catch(() => null); throw error; }
 finally { await context.close(); await browser.close(); if (server.listening) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
 console.log(JSON.stringify({ status: report.status, engine, report: path.join(out, "report.json") }));
