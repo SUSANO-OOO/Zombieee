@@ -83,15 +83,29 @@ try {
   assert.equal(report.range.invalidStatus, 416); assert.equal(report.range.invalidContentRange, `bytes */${song.bytes}`);
   await page.evaluate(({ scope, song }) => {
     const audio = document.createElement("audio"); audio.id = "native-audio"; audio.crossOrigin = "anonymous"; audio.preload = "auto"; audio.src = new URL(song.path.slice(1) + "?offline-native=1", scope); document.body.append(audio);
-    document.getElementById("play").onclick = () => { audio.currentTime = 150; void audio.play(); };
+    window.__offlineNativeMedia = { seeks: [], ended: [] };
+    audio.addEventListener("seeking", () => window.__offlineNativeMedia.seeks.push({ time: audio.currentTime, rate: audio.playbackRate }));
+    audio.addEventListener("ended", event => window.__offlineNativeMedia.ended.push({ trusted: event.isTrusted, time: audio.currentTime, rate: audio.playbackRate }));
+    // One native seek before first play, then continuous original media to EOF.
+    // This isolated cache/Range fixture is accelerated; normal song proof is
+    // separately required at rate 1 in the complete staff-roll lane.
+    document.getElementById("play").onclick = () => { audio.currentTime = 150; audio.playbackRate = 16; void audio.play(); };
   }, { scope, song });
   await page.waitForFunction(() => document.querySelector("audio").readyState >= 2, undefined, { timeout: 20000 });
   await page.getByRole("button", { name: "音楽を再生", exact: true }).click();
   await page.waitForFunction(() => { const a = document.querySelector("audio"); return !a.paused && a.currentTime > 150.2 && !a.error; }, undefined, { timeout: 15000 });
-  report.offlinePlayback = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused, error: audio.error }));
-  await page.locator("audio").evaluate(audio => { audio.currentTime = audio.duration - .2; });
+  report.offlinePlayback = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, paused: audio.paused, seeking: audio.seeking, error: audio.error }));
+  assert.equal(report.offlinePlayback.seeking, false);
+  assert.equal(report.offlinePlayback.rate, 16);
   await page.waitForFunction(() => document.querySelector("audio").ended, undefined, { timeout: 15000 });
-  report.nativeEnded = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, ended: audio.ended, error: audio.error }));
+  report.nativeEnded = await page.locator("audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, rate: audio.playbackRate, ended: audio.ended, error: audio.error }));
+  report.nativeMediaEvents = await page.evaluate(() => window.__offlineNativeMedia);
+  assert.equal(report.nativeMediaEvents.seeks.length, 1);
+  assert.ok(Math.abs(report.nativeMediaEvents.seeks[0].time - 150) < 1);
+  assert.equal(report.nativeMediaEvents.ended.length, 1);
+  assert.equal(report.nativeMediaEvents.ended[0].trusted, true);
+  assert.equal(report.nativeEnded.rate, 16);
+  report.playbackEvidence = "native pre-play seek to 150 seconds, then rate-16 original cached media to trusted EOF with no further seek; separate from rate-1 listening";
   assert.equal(report.nativeEnded.error, null); assert.ok(report.nativeEnded.time > 315);
   report.cache = await page.evaluate(async ({ scope, song }) => { const cache = await caches.open("zombieee-assets-v1"), response = await cache.match(new URL(`__pwa-asset__/${song.hash}`, scope)); return { status: response.status, hash: response.headers.get("x-pwa-asset-hash"), bytes: (await response.arrayBuffer()).byteLength }; }, { scope, song });
   assert.deepEqual(report.cache, { status: 200, hash: song.hash, bytes: song.bytes });

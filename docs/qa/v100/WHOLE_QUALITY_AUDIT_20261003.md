@@ -164,8 +164,22 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 
 候補`57df637`のCI `37101141170`では、PR Verify、Phase Gの55 capture、Mac WebKit性能窓（high/DPR2を含む）と敵shard02〜06が成功した。native staff rollは自然終了315.768秒・音なし・503・保存cursor復帰の4ケースが成功し、保存中終了のEOF待ちで失敗した。native IDBは正常にopenし、実successを保留してpending=trueを保持していた。曲の`duration-.1`へのseek後は315.699／315.768秒、paused=false、seeking=false、readyState4、全buffer、errorなしで止まり、native endedは発生しなかった。前回のIDB hold不成立と区別し、元のreport・媒体・busy履歴・画像を保全する。残る保存失敗ケースとoffline/PWAは未実行である。
 
-新fixtureは製品を含まないaudioで、元MP3と同じ9.1／10.1場面相当のseek順を、末尾0.1秒／1秒とnative IDB保留あり／なしの固定4条件で比較する。0.1秒条件の結果は診断として保存し、1秒条件は両方ともtrusted native ended、実DBのwrite/read、callback1回、解除前pending、open→解除6秒未満を要求する。これが成功した場合だけ、実スタッフロールの2件のEOF fixtureを末尾1秒へ変更して実終了を観測する。EOF待ち2000ms、製品保存6000ms、全曲seekなしの別証拠、native ended時busy=true、EPILOGUE・既読1回は維持する。Chromiumの固定4controlと保存境界3ケースは成功。Mac controlと実保存境界の成功、native側の原因確定は新候補の結果を要求する。
+候補`46687b4`のCI `37102906308`では、製品を含まないaudioで元MP3の9.1／10.1場面相当のseek順を、末尾0.1秒／1秒とnative IDB保留あり／なしの固定条件で比較した。0.1秒の2条件に続き、IDBなし・末尾1秒でも314.829／315.768秒で時刻が止まり、trusted native endedは発生しなかった。paused=false、seeking=false、readyState4、errorなしであり、アプリと保存処理を含まない条件でも再現した。4番目のcontrolと実スタッフロール6ケースは未実行。元のreportと媒体履歴を`mac-native-46687b4-failure/`に保全し、末尾を1秒へ変更するだけでは解消しないことを記録した。Native側の内部原因は未確定である。
 
 同CIの敵shard01は、1280×720のspitter攻撃fixtureで失敗した。直前の移動・撮影中には実描画が進んでいたが、攻撃の55 poll／2.646秒ではnative rAF request、製品render、simulation、battle timeがすべて不変だった。visible・ready・running、pause/over/saveBoundary=false、diagnostics0であり、敵の攻撃行だけの失敗とせず、元の全停止記録を保全した。撮影が原因とは断定しない。
 
 各phaseのsetupでowned QA pageを前面化し、製品から独立したnative rAFと製品描画・simulationが各2 frame進み、ゲーム時間が増加してからactorを1回prepareする。前面化前／後とsetup成立の記録を残し、測定中は前面化・再prepare・retryを行わない。元のattack2600ms／他1500ms、asset-backed semantic、strict capture、1 attempt、全coverageを維持する。実predicateを使うWindows WebKitのcontrolは、通常進行を受理し、全rAF停止・製品のみ停止を有限12秒で拒否し、ready後の停止も元のsemantic assertで拒否した。代表spitter／1280×720の4動作は1 attemptで成功。製品コードを変えず、新候補Macの代表場面と全shardを要求する。新QAの関連15 testsとLint0 errors／既存15 warningsが成功した。
+
+同じ`46687b4`のfresh Mac CIでは敵shard01〜06、Phase Gの55 capture、high/DPR2を含む性能窓、PR Verifyが成功した。停止した測定を合格へ読み替えず、setupの進行確認を加えた新しい1 attemptの結果で検証した。Hosted Runnerの最終集約とnative PWA工程の完了は、その時点で未確認である。
+
+### シークに依存しない保存・EOFの検証
+
+末尾offsetを繰り返し変える代わりに、元MP3を途中seekせず、QAだけで固定8倍／16倍速にしてnative EOFまで連続再生する。製品と通常の全曲検証は1倍速を維持する。製品非依存controlは、停止後seek／初回play前seekを診断として記録し、seekなし8倍／16倍の2条件でtrusted native ended、EOF時の実IDB保留、callback1回、実DBのwrite/read、open→解除6秒未満を必須にする。媒体の時刻・ended・storageを模擬しない。
+
+実スタッフロールの保存中終了は、8倍速で実場面9と保存cursor9が一致してから、場面10のnative IDB successを保留する。実media clockが残り1秒相当へ進むのを待ち、元の2000msのEOF待ちと6000msの保存上限内で、trusted native ended・busy=true・seek0・EPILOGUE・既読1回を確認する。保存失敗は16倍速で場面10の保存完了を確認してから故障を注入し、実EOF、再試行の自動ループなし、手動の「続ける」での復旧を要求する。通常速度の保存cursor復帰にも、2秒以内のmedia clock増加を追加する。全曲ケースは1倍速・seek0・trusted native ended・全11場面を必須にする。
+
+Chromiumの`natural-eof-race-controls-chromium/report.json`は、診断2条件と必須control2条件、保存境界3ケースが成功した。Controlの実IDB保留は約3,617.5ms／1,801.7ms。製品保存中終了は約3,623ms、315.742秒のtrusted EOF時pending=trueで、保存失敗は1回の試行後に待機し手動復旧した。保存位置からの通常再開も172秒付近から実時刻が増加した。これらは同じbuild `7ed54c0557e35f9dd2138f855caca013812e0c580af49974a39be2b97d087d3c`のローカル証拠であり、Macの成功とは扱わない。
+
+Offline音声は実SW／Cache Storageと通信socket停止を維持し、初回play前の150秒seek1回の後、元のcache音源を16倍速でnative EOFまで連続再生する。追加の末尾seekは除き、15秒のEOF上限、206/416のbytes/hash、trusted native ended、元cache200・6,309,936 bytesを要求する。`offline-native-rate16-chromium/report.json`が成功した。これはRangeとoffline再生の固定fixtureであり、通常速度の聴感や全曲検証とは区別する。
+
+変更したQA3fileの独立read-only reviewは未解消High0／Medium0。関連15 tests、Lint0 errors／既存15 warnings、`git diff --check`が成功した。製品・曲・SW・配布assetは変更していない。新HEADのfresh Mac CIで通常全曲・通常cursor再開・保存境界・offlineとPWAを要求し、物理iPhone、speaker聴感、発熱、Producer最終受入は引き続き別の未完了項目とする。

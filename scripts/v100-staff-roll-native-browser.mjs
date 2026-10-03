@@ -6,7 +6,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
-import { nativeAudioTailSeekControl } from "./native-audio-tail-seek-control.mjs";
+import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
 
 const upstreamOrigin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 assert.ok(["127.0.0.1", "localhost"].includes(upstreamOrigin.hostname));
@@ -40,7 +40,9 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
     if (location.origin !== origin) return;
     for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, serialized);
     window.__creditMediaProof = { ended: [], samples: [] };
-    document.addEventListener("ended", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.ended.push({ time: event.target.currentTime, duration: event.target.duration, ended: event.target.ended }); }, true);
+    document.addEventListener("ended", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.ended.push({ time: event.target.currentTime, duration: event.target.duration, rate: event.target.playbackRate, trusted: event.isTrusted, ended: event.target.ended }); }, true);
+    window.__creditMediaProof.seeks = [];
+    document.addEventListener("seeking", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.seeks.push({ time: event.target.currentTime, rate: event.target.playbackRate }); }, true);
     setInterval(() => { const root = document.querySelector(".v100-staff-roll"), audio = root?.querySelector("audio"); if (audio) window.__creditMediaProof.samples.push({ scene: root.getAttribute("data-v100-node-index"), time: audio.currentTime, duration: audio.duration, paused: audio.paused, progress: root.getAttribute("data-v100-credit-progress") }); }, 1000);
   }, { origin: origin.origin, serialized: serializeV100Save(save) });
   await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
@@ -74,8 +76,8 @@ async function frozen(page, action) {
 
 try {
   if (["all", "regression"].includes(selection)) {
-    report.nativeTailControl = {};
-    await nativeAudioTailSeekControl(browser, origin, transport.song.path, report.nativeTailControl);
+    report.nativeEofControl = {};
+    await nativeAudioEofControl(browser, origin, transport.song.path, report.nativeEofControl);
   }
   if (selection === "all") {
   const { page, context, result, releaseSong } = await openCase("full-song-with-loading-pause-rotation-pagehide", { delaySong: true });
@@ -111,6 +113,8 @@ try {
     const proof = await page.evaluate(() => ({ ...window.__creditMediaProof, save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));
     result.nativeEnded = proof.ended; result.mediaSamples = proof.samples;
     assert.equal(proof.ended.length, 1); assert.equal(proof.ended[0].ended, true);
+    assert.equal(proof.ended[0].trusted, true); assert.equal(proof.ended[0].rate, 1);
+    assert.deepEqual(proof.seeks, []);
     assert.ok(proof.ended[0].time > 315 && proof.ended[0].time < 317);
     assert.equal(new Set(proof.samples.map(row => row.scene)).size, 11);
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
@@ -153,33 +157,30 @@ try {
       await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "false");
       if (name === "saved-scene-resume") {
         assert.ok(result.initial.audio.currentTime > 170);
+        await page.waitForFunction(start => {
+          const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
+          return !audio.paused && !audio.seeking && !audio.error && root.dataset.v100CreditAudio === "playing" && audio.currentTime > start + .5;
+        }, result.initial.audio.currentTime, { timeout: 2000 });
+        result.resumedPlayback = await readNativeMedia(page);
         await page.getByRole("button", { name: "スキップ", exact: true }).click();
       } else if (name === "ended-during-save") {
-        // Prepare both native seek targets before holding a real save. Media
-        // readiness cannot consume the product's six-second storage timeout.
-        // Native engines may stop prebuffering halfway through a long track.
-        // A real preparatory seek loads its tail before the save is held.
-        result.prepareSeek = await page.locator(".v100-staff-roll audio").evaluate(audio => {
-          const target = audio.duration * 9.1 / 11; audio.currentTime = target; return { target, immediate: audio.currentTime };
-        });
-        await page.waitForFunction(target => {
-          const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
-          return !audio.seeking && !audio.paused && Math.abs(audio.currentTime - target) < 3 && root.dataset.v100NodeIndex === "9" && document.documentElement.dataset.pwaSaveMutationPending === "false";
-        }, result.prepareSeek.target, { timeout: 15000 });
+        // Original native media runs continuously at a fixed fixture rate.
+        // Its final scene lasts about 3.6s, allowing the real onScene save to
+        // remain held through EOF within the unchanged six-second save limit.
+        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.playbackRate = 8; });
         await page.waitForFunction(() => {
-          const audio = document.querySelector(".v100-staff-roll audio");
-          const contains = (ranges, target) => [...Array(ranges.length)].some((_, i) => ranges.start(i) <= target && ranges.end(i) >= target);
-          return Number.isFinite(audio.duration) && [audio.duration * 10.1 / 11, audio.duration - 1]
-            .every(target => contains(audio.buffered, target) && contains(audio.seekable, target));
-        }, undefined, { timeout: 20000 });
+          const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
+          const saved = JSON.parse(localStorage.getItem("nishijin-campaign-v100"));
+          return !audio.seeking && !audio.paused && audio.playbackRate === 8 && root.dataset.v100NodeIndex === "9" && document.documentElement.dataset.pwaSaveMutationPending === "false" && saved.flowState.nodeIndex === 9;
+        }, undefined, { timeout: 60000 });
         result.beforeHold = await readNativeMedia(page);
-        result.seek = await page.evaluate(() => {
+        await page.evaluate(() => {
           const original = IDBFactory.prototype.open, held = [], proof = { opens: [], successes: [], errors: [], ended: [], busy: [], releases: [] };
           window.__creditSaveHoldProof = proof;
           const observer = new MutationObserver(() => proof.busy.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending }));
           observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-pwa-save-mutation-pending"] });
           document.addEventListener("ended", event => {
-            if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) proof.ended.push({ at: performance.now(), time: event.target.currentTime, duration: event.target.duration, ended: event.target.ended, pending: document.documentElement.dataset.pwaSaveMutationPending });
+            if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) proof.ended.push({ at: performance.now(), time: event.target.currentTime, duration: event.target.duration, rate: event.target.playbackRate, trusted: event.isTrusted, ended: event.target.ended, pending: document.documentElement.dataset.pwaSaveMutationPending });
           }, { capture: true });
           window.__releaseCreditSave = () => {
             IDBFactory.prototype.open = original;
@@ -206,38 +207,46 @@ try {
             }, { capture: true, once: true });
             return request;
           };
-          const audio = document.querySelector(".v100-staff-roll audio"), before = audio.currentTime, target = audio.duration * 10.1 / 11;
-          audio.currentTime = target;
-          return { before, target, immediate: audio.currentTime };
         });
-        await page.waitForFunction(target => {
+        await page.waitForFunction(() => {
           const audio = document.querySelector(".v100-staff-roll audio");
-          return !audio.seeking && Math.abs(audio.currentTime - target) < 2 && document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0;
-        }, result.seek.target, { timeout: 3000 });
+          return !audio.seeking && document.querySelector(".v100-staff-roll").dataset.v100NodeIndex === "10" && document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0;
+        }, undefined, { timeout: 6000 });
         result.afterHold = await readNativeMedia(page);
-        // The independent controls require real EOF after a one-second tail.
-        // Keep the native-ended wait and product storage timeout unchanged.
-        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.currentTime = audio.duration - 1; });
+        await page.waitForFunction(() => { const audio = document.querySelector(".v100-staff-roll audio"); return audio.currentTime >= audio.duration - 8; }, undefined, { timeout: 3000 });
         await page.waitForFunction(() => window.__creditSaveHoldProof.ended.length === 1, undefined, { timeout: 2000 });
         result.busyAtEnd = await page.evaluate(() => window.__creditSaveHoldProof.ended[0].pending);
         assert.equal(result.busyAtEnd, "true");
+        result.atEnd = await readNativeMedia(page);
+        assert.equal(result.atEnd.error, null);
         await page.evaluate(() => window.__releaseCreditSave());
         result.holdProof = await page.evaluate(() => window.__creditSaveHoldProof);
         assert.deepEqual(result.holdProof.errors, []);
         assert.equal(result.holdProof.ended[0].ended, true);
+        assert.equal(result.holdProof.ended[0].trusted, true);
+        assert.equal(result.holdProof.ended[0].rate, 8);
+        result.nativeSeeks = await page.evaluate(() => window.__creditMediaProof.seeks);
+        assert.deepEqual(result.nativeSeeks, []);
         assert.ok(Math.abs(result.holdProof.ended[0].time - result.holdProof.ended[0].duration) < .5);
         assert.ok(result.holdProof.opens.every(row => row.nativeRequest));
         assert.ok(result.holdProof.successes.every(row => row.handlerType === "function"));
         assert.equal(result.holdProof.releases[0].held, result.holdProof.successes.length);
         assert.ok(result.holdProof.releases[0].at - result.holdProof.opens[0].at < 6000, JSON.stringify(result.holdProof));
       } else {
+        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.playbackRate = 16; });
+        await page.waitForFunction(() => {
+          const saved = JSON.parse(localStorage.getItem("nishijin-campaign-v100"));
+          return document.querySelector(".v100-staff-roll")?.dataset.v100NodeIndex === "10" && document.documentElement.dataset.pwaSaveMutationPending === "false" && saved.flowState.nodeIndex === 10;
+        }, undefined, { timeout: 30000 });
+        result.beforeFault = await readNativeMedia(page);
+        assert.equal(result.beforeFault.error, null);
+        assert.ok(result.beforeFault.time < result.beforeFault.duration);
         await page.evaluate(() => {
           const set = Storage.prototype.setItem, put = IDBObjectStore.prototype.put;
           window.__creditSaveFailures = 0;
           window.__restoreCreditStorage = () => { Storage.prototype.setItem = set; IDBObjectStore.prototype.put = put; };
           Storage.prototype.setItem = function (key, value) { if (String(key).startsWith("nishijin-campaign-v100")) { window.__creditSaveFailures++; throw new DOMException("expected save failure fixture", "QuotaExceededError"); } return set.call(this, key, value); };
           IDBObjectStore.prototype.put = function (...args) { if (this.transaction.db.name.includes("v100")) { window.__creditSaveFailures++; throw new DOMException("expected save failure fixture", "QuotaExceededError"); } return put.apply(this, args); };
-          const audio = document.querySelector(".v100-staff-roll audio"); audio.currentTime = audio.duration - 1;
         });
         await page.locator(".v100-staff-roll").getByRole("button", { name: "続ける", exact: true }).waitFor({ state: "visible" });
         await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "false");
@@ -246,6 +255,12 @@ try {
         assert.equal(await page.evaluate(() => window.__creditSaveFailures), attempts);
         assert.ok(attempts > 0);
         result.failedSaveAttempts = attempts;
+        result.nativeEnded = await page.evaluate(() => window.__creditMediaProof.ended);
+        result.nativeSeeks = await page.evaluate(() => window.__creditMediaProof.seeks);
+        assert.deepEqual(result.nativeSeeks, []);
+        assert.equal(result.nativeEnded.length, 1);
+        assert.equal(result.nativeEnded[0].trusted, true);
+        assert.equal(result.nativeEnded[0].rate, 16);
         await page.screenshot({ path: path.join(out, `${engine}-save-failure.png`) });
         await page.evaluate(() => window.__restoreCreditStorage());
         await page.locator(".v100-staff-roll").getByRole("button", { name: "続ける", exact: true }).click();
@@ -254,7 +269,7 @@ try {
       const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
       assert.equal(saved.flowState.phase, "epilogue");
       assert.equal(saved.readStoryEventIds.filter(id => id === "v100:event:credits").length, 1);
-      result.evidence = "seeded saved cursor or synthetic EOF seek and isolated storage fault; separate from full-song proof";
+      result.evidence = "seeded saved cursor, or fixed-rate original native media without seeking and isolated storage fault; separate from rate-1 full-song proof";
       assert.deepEqual(result.errors, []); result.status = "passed";
     } catch (error) {
       result.failureClock = await readClock(page).catch(() => null);
