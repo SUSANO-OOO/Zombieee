@@ -5,17 +5,21 @@ import { AshfallGame, type UnitKind, type AshfallExternalSession } from "./Ashfa
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { v100SurvivalBossPool, v100SurvivalSession } from "./v100Survival.js";
 import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, settleV100Survival, dismissV100SurvivalResult } from "./v100SurvivalTransactions.js";
+import { v100EquipmentFor } from "./v100Equipment.js";
+import { V100_UNITS } from "./v100Registry.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
-type Props = { save: Save; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
+type Props = { save: Save; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
 
-export function V100SurvivalView({ save, onSave }: Props) {
+export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
   const [startWave, setStartWave] = useState(1);
   const [unexpected, setUnexpected] = useState(false);
   const progress = save.survival, active = progress.active;
   const session = active ? v100SurvivalSession(active, save.settings) : null;
+  const checkpoint = active?.run.phase === "upgrade-selection" ? active.run.checkpointRewards.at(-1) : null;
   if (active && session) return <>
     <AshfallGame key={active.run.runId} externalSession={{ ...session,
+      survivalCheckpointReward: checkpoint && active.equipmentRewardsTracked ? { caps: checkpoint.reward.caps, equipmentText: checkpoint.reward.equipmentGrants.map((grant: { equipmentId: string; quantity: number }) => `${v100EquipmentFor(grant.equipmentId)?.displayName} ×${grant.quantity}`).join(" / ") || "追加なし（所持上限を含む）" } : undefined,
       // The persisted snapshot accepts only registered V1 unit IDs; the pure
       // adapter maps that finite registry to the exported production kinds.
       formationKinds: session.formationKinds as UnitKind[],
@@ -33,7 +37,11 @@ export function V100SurvivalView({ save, onSave }: Props) {
     <span className="v100-kicker">防衛継続作戦 / 戦果</span><h2>{result.endReason === "withdrawal" ? "撤退完了" : "防衛終了"}</h2>
     <dl><div><dt>到達した波</dt><dd>第{result.reachedWave}波</dd></div><div><dt>制圧した波</dt><dd>第{result.completedWave}波</dd></div><div><dt>ボス制圧</dt><dd>{result.clearedBosses}回</dd></div><div><dt>この作戦の獲得CAPS</dt><dd>+{result.totalCaps}</dd></div></dl>
     <p>中間記録で受け取った報酬を含みます。終了時の追加精算は {result.finalCaps} CAPSです。</p>
+    {result.newHighestCompletedWave && <strong className="v100-survival-best">最高制圧記録を更新 / 第{result.completedWave}波</strong>}
+    <h3>獲得した装備</h3>{result.equipmentRewardsTracked ? <p>{Object.entries(result.receivedEquipmentById).map(([id, quantity]) => `${v100EquipmentFor(id)?.displayName} ×${quantity}`).join(" / ") || "今回は追加なし（所持上限を含む）"}</p> : <p>以前の作戦は装備の獲得内訳を保存していません。</p>}
+    {result.battleReport?.units.length > 0 && <details className="v100-survival-contribution"><summary>隊員の貢献</summary><div className="v100-contribution-scroll"><table><thead><tr><th>隊員</th><th>与ダメージ</th><th>被ダメージ</th><th>回復</th></tr></thead><tbody>{result.battleReport.units.map((unit: { unitId: string; damage: number; damageTaken: number; healing: number }) => <tr key={unit.unitId}><th>{V100_UNITS.find(member => member.id === unit.unitId)?.displayName}</th><td>{Math.round(unit.damage).toLocaleString("ja-JP")}</td><td>{Math.round(unit.damageTaken).toLocaleString("ja-JP")}</td><td>{Math.round(unit.healing).toLocaleString("ja-JP")}</td></tr>)}</tbody></table></div></details>}
     <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>作戦一覧へ</button>
+    {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
   </section>;
   const highestStart = Math.floor(progress.highestCompletedWave / 10) * 10 + 1;
   return <section aria-label="防衛継続作戦" className="v100-equipment-card" data-v100-survival="hub">

@@ -633,6 +633,10 @@ self.addEventListener("message", (event) => {
         return reply(event, { type: "pwa:pong", scope: scopeUrl.toString() });
 
       case "pwa:get-state": {
+        // Read after earlier commit/rollback/clear operations finish. This is
+        // a read barrier only: do not create a new mutation intent or abort a
+        // shell warm merely because the page is confirming its local pack.
+        await stateMutationTail;
         const state = await readState();
         const present = await storedHashes();
         // The whole manifest, assets included. The page needs the installed

@@ -2019,6 +2019,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/story/mugarian-reclaimed-r1.webp",
+      "bytes": 431026,
+      "hash": "sha256-67209367699d5e9effdb903384333d454e359882989a6e1c45a2f89212359351",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/support/incendiary-drum-r1.webp",
       "bytes": 45714,
       "hash": "sha256-1269796f7ff379fd856d8e2ad8e89c02c2a4a4aacfecef0aeafde10d1db22871",

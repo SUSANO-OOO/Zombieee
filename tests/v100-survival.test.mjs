@@ -5,10 +5,34 @@ import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializ
 import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, settleV100Survival, dismissV100SurvivalResult } from "../app/v100SurvivalTransactions.js";
 import { v100SurvivalBossPool } from "../app/v100Survival.js";
 import { beginV100Outbreak } from "../app/v100Transactions.js";
+import { v100EquipmentQuantityCap } from "../app/v100Equipment.js";
 import { createSurvivalRun, normalizeSurvivalRun, beginSurvivalWave, completeSurvivalWave, endSurvivalRun, normalizeSurvivalBossPool, SURVIVAL_END_REASONS } from "../app/survival.js";
 import { survivalWaveReward, selectSurvivalBossKind, survivalWaveSpawnPlan, advanceSurvivalCombat, createSurvivalCombatRuntime, captureUnfinishedSurvivalCombatStats } from "../app/survivalBattleRuntime.js";
 
 const reload = save => deserializeV100Save(serializeV100Save(save)).save;
+test("survival discloses only equipment actually received, contribution and a new best across reload", () => {
+  const prepared = ready();
+  const full = survivalWaveReward(5).equipmentGrants[0];
+  prepared.equipment.inventory[full.equipmentId] = v100EquipmentQuantityCap(full.equipmentId);
+  const begun = beginV100Survival(normalizeV100Save(prepared), { runId: "reward-disclosure" }).save;
+  const incoming = completeThrough(begun.survival.active.run, 5);
+  incoming.stats.damageByUnit = { gunner: 160 };
+  incoming.stats.damageTakenByUnit = { gunner: 45 };
+  incoming.stats.healingByUnit = { medic: 70 };
+  const checkpointed = reload(checkpointV100Survival(begun, incoming).save);
+  assert.equal(checkpointed.survival.active.run.checkpointRewards.at(-1).reward.equipmentGrants.some(grant => grant.equipmentId === full.equipmentId), false);
+  assert.equal(checkpointed.survival.active.receivedEquipmentById[full.equipmentId], undefined);
+  assert.equal(checkpointV100Survival(checkpointed, incoming).applied, false);
+  const selected = choose(checkpointed).save;
+  const ended = endSurvivalRun(selected.survival.active.run, SURVIVAL_END_REASONS.WITHDRAWAL);
+  const final = reload(settleV100Survival(selected, ended).save).survival.lastResult;
+  assert.equal(final.equipmentRewardsTracked, true); assert.equal(final.newHighestCompletedWave, true);
+  assert.ok(final.battleReport.units.some(unit => unit.damage === 160 && unit.damageTaken === 45));
+  assert.ok(final.battleReport.units.some(unit => unit.healing === 70));
+  const empty = beginV100Survival(ready(), { runId: "equipment-received" }).save;
+  const gained = reload(checkpointV100Survival(empty, completeThrough(empty.survival.active.run, 5)).save);
+  for (const grant of gained.survival.active.run.checkpointRewards.at(-1).reward.equipmentGrants) assert.equal(gained.survival.active.receivedEquipmentById[grant.equipmentId], gained.equipment.inventory[grant.equipmentId]);
+});
 function ready(boss = V100_BOSSES[0]) { const save = createDefaultV100Save(); save.campaignStarted = true; save.flowState.phase = "map"; save.receipts = [boss.firstDefeatReceipt]; save.formationSlots = Array(7).fill(save.ownedUnitIds[0]); return normalizeV100Save(save); }
 function completeThrough(run, finalWave, hp = 540) {
   let current = run;

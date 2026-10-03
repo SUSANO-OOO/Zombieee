@@ -3,8 +3,11 @@
 #v100-campaign > .v100-staff-roll-replay { position: fixed; inset: 0; z-index: 900; }
 .v100-credit-landscape { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
 .v100-credit-landscape::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 9, 12, .14), rgba(3, 9, 12, .15) 43%, rgba(3, 9, 12, .9) 67%), linear-gradient(0deg, rgba(3, 9, 12, .9), transparent 43%); }
-.v100-credit-shot { position: absolute; inset: -4%; background-size: cover; background-position: 35% center; transform: translate3d(calc(var(--credit-pan, 0) * -1.5%), 0, 0) scale(calc(1.04 + var(--credit-pan, 0) * .07)); will-change: transform; }
-.v100-credit-shot-next { opacity: var(--credit-blend, 0); transform: translate3d(0, 0, 0) scale(1.04); }
+.v100-credit-shot { position: absolute; inset: -4%; background-size: cover; background-position: 35% center; transform: translate3d(var(--credit-x, 0), var(--credit-y, 0), 0) scale(var(--credit-scale, 1.04)); will-change: transform; }
+.v100-credit-shot-next { opacity: var(--credit-blend, 0); }
+.v100-credit-brand { opacity: 0; transition: opacity 1.2s; pointer-events: none; }
+[data-v100-credit-bookend="true"] .v100-credit-brand { opacity: 1; }
+.v100-staff-roll::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: #070c0e; opacity: var(--credit-curtain, 0); }
 .v100-credit-brand { position: absolute; left: 5%; top: 7%; width: 52%; text-shadow: 0 2px 12px #000; }
 .v100-credit-brand small { display: block; color: #d9c293; font-size: clamp(12px, 1.35vw, 19px); letter-spacing: .14em; }
 .v100-credit-brand strong { display: block; margin-top: 8px; font-size: clamp(28px, 4.3vw, 64px); letter-spacing: .03em; font-weight: 900; }

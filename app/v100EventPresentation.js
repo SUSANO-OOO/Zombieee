@@ -16,7 +16,7 @@ export const V100_CREDITS_SCENES = Object.freeze({
   "西新駅": { backgroundPath: visuals["stage-nishijin-station-platform"], sceneId: "v100-credits-station" },
   "大学病院": { backgroundPath: cuts.endingHospitalSecured, sceneId: "v100-credits-medical" },
   "河口防潮門": { backgroundPath: visuals["stage-estuary-floodgate-seal"], sceneId: "v100-credits-wind" },
-  "ムガリアン施設": { backgroundPath: visuals["stage-mugarian-logistics-hq"], sceneId: "v100-credits-room" },
+  "ムガリアン施設": { backgroundPath: cuts.mugarianReclaimed, sceneId: "v100-credits-room" },
   "RED PANTHER装備庫": { backgroundPath: visuals["stage-mugarian-special-operations-armory"], sceneId: "v100-credits-room" },
   "ザキミヤ": { backgroundPath: cuts.kumayaReopened, sceneId: "v100-credits-kumaya" },
   "装甲車両": { backgroundPath: PRODUCTION_VISUALS.command, sceneId: "v100-credits-room" },

@@ -5,6 +5,7 @@ export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
   Object.freeze({ path: "/art/v100/story/ending-hospital-secured-r1.webp", bytes: 197016, hash: "sha256-a3749bfa1e76eb20ded969344ed55bd0b6766f1c74bbbd2bd7dd3eea8ee82382", criticality: "critical" }),
   Object.freeze({ path: "/art/v100/story/kumaya-before-outbreak-v1.webp", bytes: 158796, hash: "sha256-f209eb6b9dfee542e58b2dcd0a9ad32505e49eaff9c9b05d93de8fbe2d7fe9f1" }),
   Object.freeze({ path: "/art/v100/story/kumaya-reopened-v1.webp", bytes: 175738, hash: "sha256-5c388170fb89c3981a262aeaab4715e838d28d3b2cbaf61cc046b2d1d26b8eb8" }),
+  Object.freeze({ path: "/art/v100/story/mugarian-reclaimed-r1.webp", bytes: 431026, hash: "sha256-67209367699d5e9effdb903384333d454e359882989a6e1c45a2f89212359351" }),
 ]);
 export const V100_MISSION_VEHICLE_ADDITIONS = Object.freeze([
   Object.freeze({path:"/art/v100/mission-objects/sealed-transport-intact-v1.webp",bytes:1157784,hash:"sha256-f1bde18daf10dc41a5c67ba783b198dd4aa7707370d7b9b655de326b75be33af"}),
@@ -100,12 +101,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 59_880_648,
+  bytesFromV0995: 60_311_674,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 149_558_981,
-  candidateDistinctHashBytes: 149_019_078,
-  updateFromV0982Bytes: 76_571_096,
-  updateFromV0993Bytes: 66_196_402,
+  candidateTotalBytes: 149_990_007,
+  candidateDistinctHashBytes: 149_450_104,
+  updateFromV0982Bytes: 77_002_122,
+  updateFromV0993Bytes: 66_627_428,
 });

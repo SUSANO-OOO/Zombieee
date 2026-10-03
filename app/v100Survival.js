@@ -4,8 +4,11 @@ import { V100_BATTLE_ADAPTER, v100FormationCombatKinds, v100SupportSupplyFor } f
 import { V100_STAGE_IDS, V100_UNITS, v100SupportFor } from './v100Registry.js';
 import { v100EquipmentFor, v100OpeningSupportGauge } from './v100Equipment.js';
 import { SURVIVAL_NORMAL_ENEMY_KINDS } from './survivalBattleRuntime.js';
+import { normalizeV100BattleReport } from './v100BattleReport.js';
 
 const kinds = V100_BATTLE_ADAPTER.BOSS_KIND_BY_V100_ID;
+const equipmentCounts = value => Object.fromEntries(Object.entries(value && typeof value === 'object' ? value : {})
+  .filter(([id, quantity]) => v100EquipmentFor(id) && Number.isSafeInteger(quantity) && quantity > 0 && quantity <= 999));
 const number = value => Number.isFinite(Number(value)) ? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.floor(Number(value)))) : 0;
 const wave = value => Math.min(1_000_000, number(value));
 export const v100SurvivalRunIdValid = id => typeof id === 'string' && id.length > 0 && id.length <= 160 && id.trim() === id && !/[\u0000-\u001f]/.test(id);
@@ -33,12 +36,17 @@ export function normalizeV100SurvivalProgress(raw, receipts, ownedUnitIds) {
   const active = validSnapshot(run, receipts, ownedUnitIds) && hasStart && !finalized && hasCheckpoint
     && [SURVIVAL_RUN_PHASES.WAVE_READY, SURVIVAL_RUN_PHASES.UPGRADE_SELECTION].includes(run.phase)
     ? { run, equippedSupportId: v100SupportFor(source.active.equippedSupportId)?.id ?? null,
-      initialSupportGauge: v100OpeningSupportGauge(run.formation) } : null;
+      initialSupportGauge: v100OpeningSupportGauge(run.formation),
+      equipmentRewardsTracked: source.active.equipmentRewardsTracked === true,
+      receivedEquipmentById: equipmentCounts(source.active.receivedEquipmentById),
+      previousHighestCompletedWave: wave(source.active.previousHighestCompletedWave ?? source.highestCompletedWave) } : null;
   const prior = source.lastResult;
   const lastResult = v100SurvivalRunIdValid(prior?.runId) && committed.has(v100SurvivalReceipt(prior.runId, 'result'))
     ? { runId: prior.runId, endReason: String(prior.endReason ?? ''), reachedWave: wave(prior.reachedWave), completedWave: wave(prior.completedWave),
       kills: number(prior.kills), clearedBosses: number(prior.clearedBosses), elapsedSeconds: number(prior.elapsedSeconds),
-      totalCaps: number(prior.totalCaps), finalCaps: number(prior.finalCaps), finishedAt: String(prior.finishedAt ?? '') } : null;
+      totalCaps: number(prior.totalCaps), finalCaps: number(prior.finalCaps), finishedAt: String(prior.finishedAt ?? ''),
+      equipmentRewardsTracked: prior.equipmentRewardsTracked === true, receivedEquipmentById: equipmentCounts(prior.receivedEquipmentById),
+      newHighestCompletedWave: prior.newHighestCompletedWave === true, battleReport: normalizeV100BattleReport(prior.battleReport) } : null;
   return { active, lastResult, view: active ? 'battle' : source.view === 'result' && lastResult ? 'result' : 'hub',
     highestCompletedWave: wave(source.highestCompletedWave), highestReachedWave: wave(source.highestReachedWave), totalRuns: number(source.totalRuns),
     clearCounts: Object.fromEntries(v100DiscoveredBosses(receipts).map(boss => [boss.id,

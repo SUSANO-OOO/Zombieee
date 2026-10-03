@@ -1470,6 +1470,7 @@ export type AshfallExternalSession = {
   onBattleResult: (result: AshfallBattleResult) => void;
   onBattleAction?: (action: "withdraw" | "loadout" | "restart") => boolean | Promise<boolean>;
   survivalRun?: ReturnType<typeof createSurvivalRun>;
+  survivalCheckpointReward?: { caps: number; equipmentText: string };
   onSurvivalCheckpoint?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
   onSurvivalUpgrade?: (upgradeId: string) => Promise<boolean>;
   onSurvivalSettlement?: (run: ReturnType<typeof createSurvivalRun>) => Promise<boolean>;
@@ -23957,6 +23958,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
           <h2>3択強化を選択</h2>
+          {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
           <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {

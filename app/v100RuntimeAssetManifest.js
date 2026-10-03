@@ -18,6 +18,7 @@ const portraits = freezeRecord({
 });
 
 const storyCuts = freezeRecord({
+  mugarianReclaimed: `${V100_ROOT}/story/mugarian-reclaimed-r1.webp`,
   endingHospitalSecured: `${V100_ROOT}/story/ending-hospital-secured-r1.webp`,
   kumayaBeforeOutbreak: `${V100_ROOT}/story/kumaya-before-outbreak-v1.webp`,
   kumayaReopened: `${V100_ROOT}/story/kumaya-reopened-v1.webp`,

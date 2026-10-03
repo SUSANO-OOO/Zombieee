@@ -10,7 +10,9 @@ import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100UnitPresentation } from "../app/v100UnitPresentation.js";
 import { v100DamageTextPosition } from "../app/v100DamageTextPlacement.js";
 import { v100RewardPresentationFor } from "../app/v100RewardPresentation.js";
-import { V100_CREDITS_SONG, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "../app/v100StaffRoll.js";
+import { V100_CREDITS_SONG, V100_CREDITS_CUES, v100StaffRollCamera, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "../app/v100StaffRoll.js";
+import { v100MissionThreatsFor } from "../app/v100MissionBriefing.js";
+import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 
 test("a fresh map discloses no future operation names; S27 reveals the formal unit only on arrival", () => {
   const save = createDefaultV100Save();
@@ -105,6 +107,32 @@ test("the full song visits all 11 canonical montage scenes and ends at its bound
   assert.equal(v100StaffRollFrame(0, 0, 0).progress, 0);
   const credits = v100StaffRollSections("あなた").flatMap(section => section.lines).join("\n");
   assert.match(credits, /音楽：魔王魂/u); assert.match(credits, /追憶の幻想世界/u); assert.match(credits, /あなた/u);
+});
+
+test("montage resume follows the same cue boundary when a decoder reports a different duration", () => {
+  const duration = 315.82;
+  assert.ok(V100_CREDITS_CUES.every((time, index) => index === 0 || time > V100_CREDITS_CUES[index - 1]));
+  for (let index = 1; index < 11; index++) {
+    const start = v100StaffRollResumeSeconds(index, 11, duration);
+    assert.equal(v100StaffRollFrame(start - .001, duration, 11).index, index - 1);
+    assert.equal(v100StaffRollFrame(start + .001, duration, 11).index, index);
+  }
+  for (let index = 0; index < 11; index++) {
+    assert.deepEqual(v100StaffRollCamera(index, 0), v100StaffRollCamera(index, .08));
+    assert.deepEqual(v100StaffRollCamera(index, .8), v100StaffRollCamera(index, 1));
+  }
+});
+
+test("sortie threats describe enemies that actually enter the stage, including the S5 charge", () => {
+  for (const stage of V100_STAGES) {
+    const enemies = new Set(v100BattleDefinitionFor(stage.id).timeline.flatMap(wave => wave.units));
+    for (const threat of v100MissionThreatsFor(stage.id)) {
+      assert.ok(enemies.has(threat.id), `${stage.id}: ${threat.id}`);
+      if (stage.number < 27) assert.doesNotMatch(threat.name, /RED PANTHER/u);
+    }
+  }
+  const fifth = v100MissionThreatsFor(V100_STAGES[4].id);
+  assert.ok(fifth.some(threat => threat.id === "sprinter" && threat.purpose.includes("固有技")));
 });
 
 test("the ending song is the official original and one optional offline asset with attribution", async () => {

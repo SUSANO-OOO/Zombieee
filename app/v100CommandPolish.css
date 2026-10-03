@@ -308,7 +308,7 @@
   #v100-campaign:has(> .v100-command-tabs) .v100-command-tabs button { min-height: 44px; height: 44px; padding: 5px 8px; font-size: 14px; }
   #v100-campaign[data-v100-phase="map"]:has(> .v100-command-tabs) > .v100-topbar { width: 286px; }
   #v100-campaign[data-v100-phase="map"]:has(> .v100-command-tabs) .v100-command-tabs { width: calc(100% - 292px); }
-  #v100-campaign[data-v100-phase="map"]:has(> .v100-command-tabs) .v100-save-meta button:last-child { flex-basis: 112px; width: 112px; min-width: 112px; }
+  #v100-campaign[data-v100-phase="map"]:has(> .v100-command-tabs) .v100-save-meta button.v100-modes-launch { flex-basis: 112px; width: 112px; min-width: 112px; }
   #v100-campaign:has(> .v100-command-tabs) > .v100-panel { padding: 5px 6px; }
   #v100-campaign .v100-command-formation { gap: 4px; }
   #v100-campaign .v100-command-formation .v100-field-map-pane { padding: 5px 7px; }

@@ -3,6 +3,7 @@ import { createSurvivalRun, normalizeSurvivalRun, selectSurvivalUpgrade, SURVIVA
 import { selectSurvivalBossKind, survivalWaveReward } from './survivalBattleRuntime.js';
 import { v100EquipmentSnapshot, v100EquipmentQuantityCap } from './v100Equipment.js';
 import { v100SurvivalRunIdValid, v100SurvivalBossPool, v100SurvivalBossForKind, v100SurvivalReceipt } from './v100Survival.js';
+import { v100BattleReportFor } from './v100BattleReport.js';
 
 const reject = (save, reason = 'invalid-mode-run') => ({ applied: false, reason, save });
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -33,7 +34,8 @@ export function beginV100Survival(save, { runId, startWave = 1, now } = {}) {
     unlockedStartWaves: [1, highestStart], bossPool, crawlerMaxHp: current.vehicle.maxHp,
     formation: { presetId: 'v100-active', unitIds, unitLevelsByUnit: { ...current.unitLevels }, ...v100EquipmentSnapshot(current) } });
   return applyV100SaveMutation(current, next => ({ ...next, receipts: [...next.receipts, receipt],
-    survival: { ...next.survival, active: { run, equippedSupportId: next.equippedSupportId }, view: 'battle' } }), { now });
+    survival: { ...next.survival, active: { run, equippedSupportId: next.equippedSupportId,
+      equipmentRewardsTracked: true, receivedEquipmentById: {}, previousHighestCompletedWave: next.survival.highestCompletedWave }, view: 'battle' } }), { now });
 }
 
 export function checkpointV100Survival(save, rawRun, { now } = {}) {
@@ -51,15 +53,25 @@ export function checkpointV100Survival(save, rawRun, { now } = {}) {
   const bossReward = survivalWaveReward(completed);
   const caps = sumCaps(prior.lastCompletedWave + 1, completed) + 25;
   const reward = { caps, equipmentGrants: bossReward.equipmentGrants };
-  const run = normalizeSurvivalRun({ ...incoming, manualAbilityCooldownsByKind: {},
-    checkpointRewards: [...prior.checkpointRewards, { checkpointWave: completed, reward }], pendingReward: {} });
   const inventory = { ...current.equipment.inventory };
-  for (const grant of reward.equipmentGrants) inventory[grant.equipmentId] = Math.min(v100EquipmentQuantityCap(grant.equipmentId), (inventory[grant.equipmentId] ?? 0) + grant.quantity);
+  const receivedEquipmentById = { ...current.survival.active.receivedEquipmentById };
+  const actualGrants = [];
+  for (const grant of reward.equipmentGrants) {
+    const before = inventory[grant.equipmentId] ?? 0;
+    inventory[grant.equipmentId] = Math.min(v100EquipmentQuantityCap(grant.equipmentId), before + grant.quantity);
+    const received = inventory[grant.equipmentId] - before;
+    if (received > 0) {
+      receivedEquipmentById[grant.equipmentId] = (receivedEquipmentById[grant.equipmentId] ?? 0) + received;
+      actualGrants.push({ equipmentId: grant.equipmentId, quantity: received });
+    }
+  }
+  const run = normalizeSurvivalRun({ ...incoming, manualAbilityCooldownsByKind: {},
+    checkpointRewards: [...prior.checkpointRewards, { checkpointWave: completed, reward: { caps, equipmentGrants: actualGrants } }], pendingReward: {} });
   return applyV100SaveMutation(current, next => ({ ...next, caps: next.caps + caps,
     receipts: [...next.receipts, receipt, v100SurvivalReceipt(prior.runId, `checkpoint:${completed}:boss:${boss.id}`)],
     equipment: { ...next.equipment, inventory },
     bosses: { ...next.bosses, defeatCounts: { ...next.bosses.defeatCounts, [boss.id]: next.bosses.defeatCounts[boss.id] + 1 } },
-    survival: { ...next.survival, active: { ...next.survival.active, run },
+    survival: { ...next.survival, active: { ...next.survival.active, run, receivedEquipmentById },
       highestCompletedWave: Math.max(next.survival.highestCompletedWave, completed), highestReachedWave: Math.max(next.survival.highestReachedWave, incoming.reachedWave) },
   }), { now });
 }
@@ -89,7 +101,11 @@ export function settleV100Survival(save, rawRun, { now } = {}) {
       highestReachedWave: Math.max(next.survival.highestReachedWave, incoming.reachedWave),
       lastResult: { runId: prior.runId, endReason: incoming.endReason, reachedWave: incoming.reachedWave, completedWave: incoming.lastCompletedWave,
         kills: incoming.stats.kills, clearedBosses: prior.checkpointRewards.length, elapsedSeconds: incoming.stats.battleSeconds,
-        totalCaps, finalCaps, finishedAt: new Date(now ?? Date.now()).toISOString() } },
+        totalCaps, finalCaps, receivedEquipmentById: current.survival.active.receivedEquipmentById,
+        equipmentRewardsTracked: current.survival.active.equipmentRewardsTracked,
+        newHighestCompletedWave: incoming.lastCompletedWave > current.survival.active.previousHighestCompletedWave,
+        battleReport: v100BattleReportFor({ wave: incoming.reachedWave, kills: incoming.stats.kills, unitStats: incoming.stats }),
+        finishedAt: new Date(now ?? Date.now()).toISOString() } },
   }), { now });
 }
 

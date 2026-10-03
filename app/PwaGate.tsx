@@ -16,6 +16,9 @@
 // for in-battle asset retry.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { readPwaBootState } from "./pwaBoot.js";
+import { useGameModalScope } from "./useGameModalScope";
 
 import {
   ASSET_CATEGORY_LABELS,
@@ -67,7 +70,7 @@ function readSafetyFromDocument() {
     screen: data.pwaScreen ?? "title",
     battleActive: data.pwaBattleActive === "true",
     resultSaving: data.pwaResultSaving === "true",
-    saveMutationPending: data.pwaSaveMutationPending === "true",
+    saveMutationPending: data.pwaSaveMutationPending === "true" || data.pwaMaintenancePending === "true",
   };
 }
 
@@ -145,6 +148,7 @@ function InstallSteps({ steps }: { steps: Array<Record<string, unknown>> }) {
 }
 
 export function PwaGate({ children }: { children: React.ReactNode }) {
+  useGameModalScope();
   const [supported, setSupported] = useState(false);
   const [registrationFailed, setRegistrationFailed] = useState(false);
   const [standalone, setStandalone] = useState(false);
@@ -179,6 +183,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
   const [installPromptUsed, setInstallPromptUsed] = useState(false);
   const [booted, setBooted] = useState(false);
+  const [bootFailure, setBootFailure] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const [storageHost, setStorageHost] = useState<HTMLElement | null>(null);
+  const [maintenance, setMaintenance] = useState<"clearing" | "failed" | null>(null);
   // A standalone launch cannot decide whether a fully cached candidate still
   // needs its generation pointer until the published manifest has either
   // arrived or failed its lookup. This closes the reload-time gap where
@@ -235,7 +243,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     try {
       const published = await fetchPublishedManifest({ baseUrl });
       if (manifestLookupRef.current !== lookup) return false;
-      if (deferredManifestLookupRef.current === lookup) {
+      const gameMounted = Boolean(document.documentElement.dataset.pwaScreen);
+      if (deferredManifestLookupRef.current === lookup || (gameMounted && !evaluateActivationSafety(readSafetyFromDocument()).safe)) {
         setManifestUnreachable(false);
         setPublishedManifestState("deferred");
         setDeferredPublishedManifest(published as Manifest);
@@ -271,7 +280,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const store = createAssetStore({ caches: window.caches, scope: baseUrl });
       storeRef.current = store;
 
-      registrationRef.current = await registerServiceWorker(window, { baseUrl });
+      const local = await readPwaBootState({
+        register: () => registerServiceWorker(window, { baseUrl }),
+        readState: (registration: ServiceWorkerRegistration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
+        readHashes: () => store.storedHashes(),
+      });
+      if (cancelled) return;
+      registrationRef.current = local.registration;
       if (!registrationRef.current) {
         // API presence does not guarantee registration. A standalone first run
         // cannot commit a pack without a worker, so release the network game
@@ -285,8 +300,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const state = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
-      if (cancelled) return;
+      const state = local.state;
       // Only accept a manifest that carries its asset list: everything below
       // plans repairs and update diffs from it, and a summary would both crash
       // the plan and make an update look like a full reinstall.
@@ -298,8 +312,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       }
       setRegistrationScope(registrationRef.current?.scope ?? null);
 
-      setStoredHashes(await store.storedHashes());
-      setStorage(await import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator)));
+      setStoredHashes(local.hashes);
+      // Capacity is advisory. A browser refusing its estimate must not block
+      // a verified local generation or keep the player on a loading screen.
+      void import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator))
+        .then(value => { if (!cancelled) setStorage(value); }).catch(() => {});
 
       // Boot is complete once the local facts are known. The published manifest
       // is a network round trip. A standalone launch briefly waits for it so a
@@ -308,12 +325,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       if (!cancelled) setBooted(true);
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
-      if (!cancelled) setError(String(cause?.message ?? cause));
+      if (!cancelled) { setBootFailure(true); setError(String(cause?.message ?? cause)); }
     }).finally(() => {
       if (!cancelled) setBooted(true);
     });
     return () => { cancelled = true; manifestLookupRef.current += 1; };
-  }, [baseUrl, loadPublishedManifest]);
+  }, [baseUrl, loadPublishedManifest, bootAttempt]);
 
   // How long the counts have stood still. A stalled transfer produces no
   // progress callbacks by definition, so the only way to notice one is to look
@@ -353,11 +370,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const read = () => {
       setSafety(readSafetyFromDocument());
       setSaveEnvironment(readSaveEnvironmentFromDocument());
+      setStorageHost(document.querySelector<HTMLElement>("[data-v100-pwa-storage]"));
     };
     read();
     const observer = new MutationObserver(read);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: [
-      "data-pwa-screen", "data-pwa-battle-active", "data-pwa-result-saving", "data-pwa-save-mutation-pending",
+      "data-pwa-screen", "data-pwa-battle-active", "data-pwa-result-saving", "data-pwa-save-mutation-pending", "data-pwa-maintenance-pending",
       "data-save-environment-kind", "data-save-environment-origin", "data-save-environment-scope",
       "data-save-environment-label", "data-save-environment-isolation",
     ] });
@@ -678,7 +696,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     })();
   }, [commitRecovery.required, recoverCommittedPack]);
 
+  const readMaintenancePack = useCallback(async () => {
+    const local = await readPwaBootState({
+      register: async () => registrationRef.current ?? {},
+      readState: (registration: ServiceWorkerRegistration) => registrationRef.current ? requestFromServiceWorker(registration, { type: "pwa:get-state" }) : Promise.resolve({ type: "pwa:state" }),
+      readHashes: () => storeRef.current!.storedHashes(),
+    });
+    setStoredHashes(local.hashes);
+  }, []);
   const clearAssets = useCallback(async () => {
+    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" }).safe) return;
+    document.documentElement.dataset.pwaMaintenancePending = "true";
+    setMaintenance("clearing");
     try {
       if (registrationRef.current) {
         // The worker serializes this with commit and rollback. Clearing from
@@ -692,11 +721,21 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       } else {
         await storeRef.current?.clearAssets();
       }
-      await refreshStored();
+      await readMaintenancePack();
+      delete document.documentElement.dataset.pwaMaintenancePending;
+      setMaintenance(null);
     } catch (cause) {
+      setMaintenance("failed");
       setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);
     }
-  }, [refreshStored]);
+  }, [readMaintenancePack, downloadState]);
+  const confirmMaintenance = useCallback(async () => {
+    setMaintenance("clearing");
+    try {
+      await readMaintenancePack();
+      setError(null); delete document.documentElement.dataset.pwaMaintenancePending; setMaintenance(null);
+    } catch { setMaintenance("failed"); }
+  }, [readMaintenancePack]);
 
   // Bytes held that neither the active nor the rollback generation references.
   // Null until both manifests are known, because guessing from a partial view
@@ -753,8 +792,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // otherwise a complete uncommitted candidate could slip through on reload.
   // If the lookup fails offline, `publishedChecked` still releases the retained
   // active generation rather than treating a network absence as data loss.
-  const settling = !booted || (supported && standalone && !publishedChecked);
-  const blocking = settling
+  const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked));
+  const blocking = bootFailure || settling
     || phase === "install-offer"
     || phase === "download-complete"
     || phase === "download-incomplete"
@@ -781,9 +820,32 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [blocking, deferredPublishedManifest, downloadState, safety]);
 
+  const storagePanel = <aside className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
+    <h3>アプリの容量・更新</h3>
+    <dl>
+      <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? "ブラウザでプレイ中"}</dd></div>
+      <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
+      <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
+      <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未インストール"}</dd></div>
+      <div><dt>不足・破損</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未インストール"}</dd></div>
+      <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? "なし" : `${orphanCount}件`}</dd></div>
+    </dl>
+    <details><summary>保存先と診断情報</summary><dl>
+      <div><dt>release SHA</dt><dd>{installedManifest?.releaseSha ?? "未インストール"}</dd></div>
+      <div><dt>origin</dt><dd>{typeof window === "undefined" ? "確認中" : window.location.origin}</dd></div>
+      <div><dt>scope</dt><dd>{registrationScope ?? baseUrl}</dd></div>
+    </dl></details>
+    {diagnostics && <div className="pwa-failure-summary"><p className="pwa-warning">直近の失敗：{diagnostics.kind}／{diagnostics.failureCount}件{diagnostics.failures[0] ? `／${diagnostics.failures[0].reason}` : ""}</p><div className="pwa-actions"><button type="button" onClick={copyDiagnostics}>{copied ? "コピーしました" : "診断情報をコピー"}</button><button type="button" onClick={() => setDiagnostics(null)}>診断を消去</button></div></div>}
+    {saveEnvironment && <aside className="save-environment-badge" data-save-environment={saveEnvironment.kind} data-save-origin={saveEnvironment.origin} aria-label="セーブ保存環境"><span><b>{saveEnvironment.label}</b><code>{saveEnvironment.origin}</code></span><small>{saveEnvironment.storageScope}　{saveEnvironment.isolationNotice}</small></aside>}
+    {error && <p role="alert" className="pwa-warning">{error}</p>}
+    <p className="pwa-hint">アセットを削除すると、ゲームデータの再取得が必要です。セーブデータは保持されます。</p>
+    {!activation.safe && <p className="pwa-hint">更新と削除は、会話・戦闘・保存を終えてから操作できます。</p>}
+    <div className="pwa-actions"><button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
+  </aside>;
   return (
     <>
       {!blocking && children}
+      {maintenance && <div className="pwa-maintenance" role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
       {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
         <aside className="pwa-notice" role="status">
@@ -796,8 +858,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
           <div className="pwa-gate-panel">
             <h1>西新世紀末物語</h1>
+            {bootFailure && <><h2>保存中のゲームデータを確認できませんでした</h2><p role="alert">データは削除していません。もう一度、保存内容を確認してください。</p><button type="button" className="pwa-primary" onClick={() => { setBooted(false); setBootFailure(false); setPublishedChecked(false); setError(null); setBootAttempt(value => value + 1); }}>保存内容を再確認</button></>}
 
-            {phase === "install-required" && !installCopy && (
+            {!bootFailure && phase === "install-required" && !installCopy && (
               <>
                 <h2>ゲームデータを準備できません</h2>
                 <p className="pwa-warning" role="alert">
@@ -819,7 +882,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <p className="pwa-hint" role="status">配信データを確認しています…</p>
             )}
 
-            {!settling && phase === "install-offer" && (
+            {!bootFailure && !settling && phase === "install-offer" && (
               <>
                 <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
                 <p>{offerCopy?.body ?? "ホーム画面に追加すると、アプリのように全画面で起動できます。"}</p>
@@ -895,7 +958,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {phase === "install-required" && installCopy && (
+            {!bootFailure && phase === "install-required" && installCopy && (
               <>
                 <h2>{installCopy.headline}</h2>
                 <ul>{installCopy.lines.map((line) => <li key={line}>{line}</li>)}</ul>
@@ -1016,82 +1079,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {/*
-        Data management is a maintenance tool, not part of playing. It used to
-        sit on every screen, which put a developer-facing button over the map,
-        the loadout, dialogue, battle and the result. It now appears only where
-        a player would go looking for it, and stays put while its own panel is
-        open so the close button never moves out from under the cursor.
-      */}
-      {!blocking && supported && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && (
-        <>
-          <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage((open) => !open)}>
-            データ管理
-          </button>
-          {showStorage && (
-            <aside className="pwa-notice pwa-storage" role="dialog" aria-label="データ管理">
-              <dl>
-                <div><dt>現在のVersion</dt><dd>{installedManifest?.version ?? "未インストール"}</dd></div>
-                <div><dt>ひとつ前のVersion</dt><dd>{previousManifest?.version ?? "-"}</dd></div>
-                <div><dt>release SHA</dt><dd>{installedManifest?.releaseSha ?? "-"}</dd></div>
-                <div><dt>origin</dt><dd>{typeof window === "undefined" ? "-" : window.location.origin}</dd></div>
-                <div><dt>scope</dt><dd>{registrationScope ?? baseUrl}</dd></div>
-                <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
-                <div>
-                  <dt>このVersionが使用中</dt>
-                  <dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "-"}</dd>
-                </div>
-                <div>
-                  <dt>不足・破損</dt>
-                  <dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "-"}</dd>
-                </div>
-                <div>
-                  {/*
-                    Bytes held that no retained generation references. Kept
-                    visible rather than swept silently: a number a player can
-                    watch is what tells us whether repeated version testing is
-                    accumulating anything, and clearing the cache wholesale is
-                    never the answer we want them reaching for.
-                  */}
-                  <dt>参照されていないデータ</dt>
-                  <dd>{orphanCount == null ? "確認中" : `${orphanCount}件`}</dd>
-                </div>
-              </dl>
-
-              {diagnostics && (
-                <div className="pwa-failure-summary">
-                  <p className="pwa-warning">
-                    直近の失敗：{diagnostics.kind}／{diagnostics.failureCount}件
-                    {diagnostics.failures[0] ? `／${diagnostics.failures[0].reason}` : ""}
-                  </p>
-                  <div className="pwa-actions">
-                    <button type="button" onClick={copyDiagnostics}>
-                      {copied ? "コピーしました" : "診断情報をコピー"}
-                    </button>
-                    <button type="button" onClick={() => setDiagnostics(null)}>診断を消去</button>
-                  </div>
-                </div>
-              )}
-              {saveEnvironment && (
-                <aside
-                  className="save-environment-badge"
-                  data-save-environment={saveEnvironment.kind}
-                  data-save-origin={saveEnvironment.origin}
-                  aria-label="セーブ保存環境"
-                >
-                  <span><b>{saveEnvironment.label}</b><code>{saveEnvironment.origin}</code></span>
-                  <small>{saveEnvironment.storageScope}　{saveEnvironment.isolationNotice}</small>
-                </aside>
-              )}
-              <p className="pwa-hint">アセットの削除はセーブデータに影響しません。</p>
-              <div className="pwa-actions">
-                <button type="button" onClick={() => { void clearAssets(); }}>アセットを削除</button>
-                <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>
-              </div>
-            </aside>
-          )}
-        </>
-      )}
+      {!blocking && supported && storageHost && createPortal(storagePanel, storageHost)}
+      {!blocking && supported && !storageHost && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && <>
+        <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage(open => !open)}>データ管理</button>
+        {showStorage && storagePanel}
+      </>}
     </>
   );
 }
