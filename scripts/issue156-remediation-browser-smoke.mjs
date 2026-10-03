@@ -172,8 +172,8 @@ async function runCase(engine, viewport, safeAreaMode) {
     }
 
     const metadata = await page.locator('meta[name="description"]').getAttribute("content");
-    invariant(metadata?.startsWith("大型移動拠点と"), `${engine}: public metadata prefix drifted`);
-    invariant(!/crawler|クローラー/iu.test(metadata ?? ""), `${engine}: retired public wording remains`);
+    invariant(metadata?.startsWith("装甲車両と"), `${engine}: public metadata prefix drifted`);
+    invariant(!/crawler|クローラー|移動拠点/iu.test(metadata ?? ""), `${engine}: retired public wording remains`);
 
     for (const [kind, profile] of Object.entries(EVENT_PORTRAIT_PROFILES)) {
       const geometry = await page.evaluate(async ({ portraitKind, portraitProfile, source }) => {

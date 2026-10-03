@@ -117,8 +117,10 @@ export class AudioMixer {
     maxWarningsTotal = 12,
     maxWarningsPerKey = 1,
     closeContextOnDispose = true,
+    enableAcknowledgementTone = true,
     gestureDedupeMs = 750,
     maxPreloadConcurrency = 4,
+    maxCacheBytes = 64 * 1024 * 1024,
     unlockTimeoutMs = 2000,
     assetLoadTimeoutMs = 8000,
     assetDecodeTimeoutMs = 3000,
@@ -134,10 +136,12 @@ export class AudioMixer {
     this.maxWarningsTotal = Math.max(0, Math.floor(maxWarningsTotal));
     this.maxWarningsPerKey = Math.max(0, Math.floor(maxWarningsPerKey));
     this.closeContextOnDispose = closeContextOnDispose;
+    this.enableAcknowledgementTone = enableAcknowledgementTone;
     this.gestureDedupeMs = Math.max(0, Number.isFinite(gestureDedupeMs) ? gestureDedupeMs : 750);
     this.maxPreloadConcurrency = Math.max(1, Math.min(16, Math.floor(
       Number.isFinite(maxPreloadConcurrency) ? maxPreloadConcurrency : 4,
     )));
+    this.maxCacheBytes = Math.max(1, Math.floor(Number.isFinite(maxCacheBytes) ? maxCacheBytes : 64 * 1024 * 1024));
     this.unlockTimeoutMs = Math.max(1, Math.min(30000, Math.floor(
       Number.isFinite(unlockTimeoutMs) ? unlockTimeoutMs : 2000,
     )));
@@ -167,6 +171,7 @@ export class AudioMixer {
     this.unlockTarget = null;
     this.lifecycleCleanup = null;
     this.lifecycleHidden = false;
+    this.navigationPending = false;
     this.lifecycleGeneration = 0;
     this.contextStateCleanup = null;
     this.unlockPromise = null;
@@ -181,6 +186,9 @@ export class AudioMixer {
       error: null,
     });
     this.assetCache = new Map();
+    this.cacheAccessSequence = 0;
+    this.cacheEvictions = 0;
+    this.pendingAssetPlays = new Map();
     this.preloadQueue = [];
     this.preloadTasks = new Map();
     this.activePreloads = 0;
@@ -324,8 +332,32 @@ export class AudioMixer {
       void Promise.resolve(context.suspend()).catch(() => undefined);
     };
     const onPageShow = () => {
+      clearNavigationPending();
       this.lifecycleHidden = readHidden();
       recover("pageshow");
+    };
+    // WebKit can reject new fetches between beforeunload and pagehide even
+    // though visibilityState is still visible. This listener never prompts.
+    const onReturnInput = () => {
+      if (!this.navigationPending || readHidden()) return;
+      clearNavigationPending();
+      // A real new input in the same document means a pending navigation was
+      // cancelled. Existing playback was not stopped; retry a deferred scene.
+      const desired = this.desiredScene;
+      if (desired) void this.setScene(desired.sceneId, desired.options).catch((error) => {
+        this.#warn("scene-after-navigation-cancel", "The pending audio scene could not resume after navigation cancellation.", error);
+      });
+      recover("navigation-cancelled-input");
+    };
+    const clearNavigationPending = () => {
+      this.navigationPending = false;
+      windowTarget?.removeEventListener?.("pointerdown", onReturnInput, { capture: true });
+      windowTarget?.removeEventListener?.("keydown", onReturnInput, { capture: true });
+    };
+    const onBeforeUnload = () => {
+      this.navigationPending = true;
+      windowTarget?.addEventListener?.("pointerdown", onReturnInput, { capture: true, passive: true });
+      windowTarget?.addEventListener?.("keydown", onReturnInput, { capture: true, passive: true });
     };
     const onPageHide = () => {
       markHidden();
@@ -347,13 +379,18 @@ export class AudioMixer {
       this.lifecycleHidden = false;
     }
     windowTarget?.addEventListener?.("pagehide", onPageHide, { capture: true, passive: true });
+    windowTarget?.addEventListener?.("beforeunload", onBeforeUnload, { capture: true, passive: true });
     windowTarget?.addEventListener?.("pageshow", onPageShow, { capture: true, passive: true });
     documentTarget?.addEventListener?.("visibilitychange", onVisibilityChange, { capture: true, passive: true });
     const cleanup = () => {
       if (!active) return;
       active = false;
       this.lifecycleHidden = false;
+      this.navigationPending = false;
       windowTarget?.removeEventListener?.("pagehide", onPageHide, { capture: true });
+      windowTarget?.removeEventListener?.("beforeunload", onBeforeUnload, { capture: true });
+      windowTarget?.removeEventListener?.("pointerdown", onReturnInput, { capture: true });
+      windowTarget?.removeEventListener?.("keydown", onReturnInput, { capture: true });
       windowTarget?.removeEventListener?.("pageshow", onPageShow, { capture: true });
       documentTarget?.removeEventListener?.("visibilitychange", onVisibilityChange, { capture: true });
       if (this.lifecycleCleanup === cleanup) this.lifecycleCleanup = null;
@@ -504,9 +541,9 @@ export class AudioMixer {
         if (this.context.state !== "running") throw new Error(`AudioContext remained ${String(this.context.state)}`);
         this.unlockCleanup?.();
         const pendingScene = this.pendingScene;
-        // This oscillator starts synchronously on the resumed production graph,
-        // providing an audible enable acknowledgement without another context.
-        if (!this.playTestTone({ respectSettings: false })) {
+        // Callers that expose an audio-test control can request a synchronous
+        // acknowledgement on this graph. Menu owners use their authored SFX.
+        if (this.enableAcknowledgementTone && !this.playTestTone({ respectSettings: false })) {
           throw new Error("The audio confirmation tone could not start");
         }
         this.pendingScene = null;
@@ -739,12 +776,14 @@ export class AudioMixer {
   }
 
   async #fetchAsset(assetId) {
+    if (this.disposed || this.lifecycleHidden || this.navigationPending) return null;
     const asset = this.manifest.assetById[assetId];
     if (!asset) {
       this.#warn(`unknown-asset:${String(assetId)}`, `Unknown audio asset ${String(assetId)} was ignored.`);
       return null;
     }
     let entry = this.assetCache.get(assetId);
+    if (entry) entry.lastAccess = ++this.cacheAccessSequence;
     if (entry?.raw || entry?.buffer) return entry;
     if (entry?.status === "failed") return null;
     if (entry?.fetchPromise) return entry.fetchPromise;
@@ -756,6 +795,7 @@ export class AudioMixer {
       nextSourceIndex: 0,
       fetchPromise: null,
       decodePromise: null,
+      lastAccess: ++this.cacheAccessSequence,
     };
     this.assetCache.set(assetId, entry);
     entry.status = "loading";
@@ -790,6 +830,14 @@ export class AudioMixer {
           entry.status = "fetched";
           return entry;
         } catch (error) {
+          // A navigation/background interruption is not a broken audio format.
+          // Do not start the next format from a hidden or disposed document;
+          // keep this source retryable when the player returns.
+          if (this.disposed || this.lifecycleHidden || this.navigationPending) {
+            entry.status = "idle";
+            entry.nextSourceIndex = sourceIndex;
+            return null;
+          }
           lastError = error;
         } finally {
           if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
@@ -801,6 +849,7 @@ export class AudioMixer {
       return null;
     })().finally(() => {
       entry.fetchPromise = null;
+      this.#trimAssetCache();
     });
     return entry.fetchPromise;
   }
@@ -848,7 +897,11 @@ export class AudioMixer {
         try {
           const buffer = await this.#decodeRaw(entry.raw);
           entry.buffer = buffer;
+          // AudioBuffer is reusable across context recovery. Keep one decoded
+          // copy; an evicted, idle cue can fetch its source again on demand.
+          entry.raw = null;
           entry.status = "ready";
+          entry.lastAccess = ++this.cacheAccessSequence;
           return buffer;
         } catch (error) {
           lastError = error;
@@ -866,12 +919,48 @@ export class AudioMixer {
       return null;
     })().finally(() => {
       cacheEntry.decodePromise = null;
+      this.#trimAssetCache();
     });
     return cacheEntry.decodePromise;
   }
 
   #sortPreloadQueue() {
     this.preloadQueue.sort((left, right) => right.priority - left.priority || left.sequence - right.sequence);
+  }
+
+  #assetBytes(entry) {
+    return (entry.raw?.byteLength ?? 0)
+      + (Number(entry.buffer?.length) || 0) * (Number(entry.buffer?.numberOfChannels) || 0) * 4;
+  }
+
+  #protectedAssetIds() {
+    const ids = new Set(this.pendingAssetPlays.keys());
+    for (const voice of this.activeVoices.values()) {
+      // Fading sources still own their PCM until onended cleans them up.
+      if (!voice.cleaned) ids.add(voice.assetId);
+    }
+    for (const [id, entry] of this.assetCache) {
+      if (entry.fetchPromise || entry.decodePromise || this.preloadTasks.has(id)) ids.add(id);
+    }
+    for (const sceneId of [this.sceneState.sceneId, this.pendingScene?.sceneId, this.desiredScene?.sceneId]) {
+      const scene = this.manifest.sceneById[sceneId];
+      if (scene) this.#expandCueIds([scene.bgm, ...scene.ambience].filter(Boolean)).forEach(id => ids.add(id));
+    }
+    return ids;
+  }
+
+  #trimAssetCache() {
+    let bytes = [...this.assetCache.values()].reduce((sum, entry) => sum + this.#assetBytes(entry), 0);
+    if (bytes <= this.maxCacheBytes) return;
+    const protectedIds = this.#protectedAssetIds();
+    const idle = [...this.assetCache].filter(([id, entry]) => !protectedIds.has(id) && this.#assetBytes(entry) > 0)
+      .sort(([, left], [, right]) => left.lastAccess - right.lastAccess);
+    for (const [id, entry] of idle) {
+      if (bytes <= this.maxCacheBytes) break;
+      bytes -= this.#assetBytes(entry);
+      this.assetCache.delete(id);
+      this.cacheEvictions += 1;
+    }
   }
 
   #settlePreloadTask(item, loaded) {
@@ -881,6 +970,7 @@ export class AudioMixer {
     if (this.preloadTasks.get(item.assetId) === item) this.preloadTasks.delete(item.assetId);
     item.resolve(Boolean(loaded));
     this.#drainPreloadQueue();
+    this.#trimAssetCache();
   }
 
   #drainPreloadQueue() {
@@ -1075,6 +1165,7 @@ export class AudioMixer {
     safeDisconnect(voice.panner);
     if (this.sceneState.bgm?.id === voice.id) this.sceneState.bgm = null;
     this.sceneState.ambience = this.sceneState.ambience.filter((candidate) => candidate.id !== voice.id);
+    this.#trimAssetCache();
   }
 
   #stopVoice(voice, fadeMs = 0) {
@@ -1203,6 +1294,9 @@ export class AudioMixer {
       return null;
     }
     const categoryGeneration = this.categoryGenerations[resolved.asset.category];
+    const assetId = resolved.asset.id;
+    this.pendingAssetPlays.set(assetId, (this.pendingAssetPlays.get(assetId) ?? 0) + 1);
+    try {
     const buffer = await this.#decodeAsset(resolved.asset.id);
     if (!buffer
       || this.disposed
@@ -1233,6 +1327,12 @@ export class AudioMixer {
     if (!handle && this.lastPlayedAt.get(cueId)?.reservation === reservation) this.lastPlayedAt.delete(cueId);
     if (handle && options.duck) this.duckMusic(options.duck);
     return handle;
+    } finally {
+      const remaining = (this.pendingAssetPlays.get(assetId) ?? 1) - 1;
+      if (remaining > 0) this.pendingAssetPlays.set(assetId, remaining);
+      else this.pendingAssetPlays.delete(assetId);
+      this.#trimAssetCache();
+    }
   }
 
   async play(cueId, options = {}) {
@@ -1329,6 +1429,7 @@ export class AudioMixer {
     if (previous.bgm?.id !== nextBgm?.id) previous.bgm?.stop(fadeMs);
     previous.ambience.filter((handle) => !nextAmbience.some((next) => next.id === handle.id)).forEach((handle) => handle.stop(Math.min(400, fadeMs)));
     void this.preloadAssets(scene.preload, { priority: "background" });
+    this.#trimAssetCache();
     return this.getSceneState();
   }
 
@@ -1340,6 +1441,7 @@ export class AudioMixer {
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     previous.bgm?.stop(fadeMs);
     previous.ambience.forEach((handle) => handle.stop(fadeMs));
+    this.#trimAssetCache();
   }
 
   getSceneState() {
@@ -1392,6 +1494,7 @@ export class AudioMixer {
       this.desiredScene = null;
       this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     }
+    this.#trimAssetCache();
   }
 
   stopInstance(instanceKey, { fadeMs = 0 } = {}) {
@@ -1419,6 +1522,9 @@ export class AudioMixer {
   }
 
   getDiagnostics() {
+    const protectedAssets = this.#protectedAssetIds();
+    const retainedBytes = [...this.assetCache.values()].reduce((sum, entry) => sum + this.#assetBytes(entry), 0);
+    const protectedBytes = [...this.assetCache].reduce((sum, [id, entry]) => sum + (protectedAssets.has(id) ? this.#assetBytes(entry) : 0), 0);
     const cache = { loading: 0, fetched: 0, ready: 0, failed: 0, idle: 0 };
     const categoryCache = {};
     const failedAssets = [];
@@ -1487,6 +1593,11 @@ export class AudioMixer {
       },
       cache,
       categoryCache,
+      retainedBytes,
+      protectedBytes,
+      maxCacheBytes: this.maxCacheBytes,
+      overBudgetBytes: Math.max(0, retainedBytes - this.maxCacheBytes),
+      cacheEvictions: this.cacheEvictions,
       failedAssets,
       maxPreloadConcurrency: this.maxPreloadConcurrency,
       activePreloads: this.activePreloads,

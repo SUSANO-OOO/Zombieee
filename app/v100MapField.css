@@ -1,0 +1,140 @@
+/* The phone operation index is a route on the selected battlefield.
+ * Pins select missions; the briefing carries the readable name and objective. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-shell:has(> .v100-command-tabs) .v100-map-grid {
+    grid-template-columns: minmax(0, 1.65fr) minmax(255px, 1fr);
+    gap: 6px;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-canvas-shell {
+    position: relative;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid #ad8b58;
+    border-radius: 0;
+    background: linear-gradient(100deg, #1017139c, #0c14109c), var(--v100-selected-stage-art) center / cover;
+    box-shadow: inset 0 0 0 3px #0b120fb3, inset 0 0 42px #000b;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-canvas-shell::before {
+    z-index: 0;
+    background: repeating-linear-gradient(0deg, #e9bf7312 0 1px, transparent 1px 27px),
+      repeating-linear-gradient(90deg, #e9bf7312 0 1px, transparent 1px 27px),
+      linear-gradient(90deg, #111a13b3, transparent 70%);
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-route-art {
+    display: block;
+    z-index: 1;
+    opacity: .95;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-route-art polyline {
+    stroke: #f2b66d;
+    stroke-width: 3;
+    stroke-dasharray: 5 4;
+    filter: drop-shadow(0 1px 3px #080a07);
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node {
+    position: absolute;
+    z-index: 2;
+    left: var(--node-x);
+    top: var(--node-y);
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    max-width: none;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+    transform: translate(-50%, -50%);
+    border: 2px solid #d0b77f;
+    border-radius: 50%;
+    background: #101914ed;
+    box-shadow: 0 2px 0 #000, 0 5px 12px #000c, inset 0 0 0 2px #273529;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node:hover:not(:disabled) {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node strong,
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node small {
+    display: none;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node-marker {
+    display: grid;
+    grid-row: auto;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    border: 0;
+    border-radius: 50%;
+    background: #253326;
+    color: #f4e1b1;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node-marker i {
+    font-family: Georgia, serif;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: -.06em;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node-marker .v100-lock-chain {
+    display: none;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.selected {
+    z-index: 4;
+    border-color: #ffe0a3;
+    background: #49301add;
+    box-shadow: 0 0 0 3px #e8a2538c, 0 0 18px #df6c35, 0 6px 14px #000d;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.selected .v100-map-node-marker {
+    background: #df9d55;
+    color: #21120b;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.completed {
+    border-color: #a9c394;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.locked {
+    border-style: dashed;
+    opacity: .68;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.boss-node {
+    border-color: #e88864;
+    border-radius: 9px;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.boss-node .v100-map-node-marker {
+    border-radius: 6px;
+    background: #5c3027;
+  }
+
+  .v100-shell:has(> .v100-command-tabs) .v100-map-node.boss-node.selected .v100-map-node-marker {
+    background: #df9d55;
+    color: #21120b;
+  }
+}

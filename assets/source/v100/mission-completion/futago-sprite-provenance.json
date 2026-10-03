@@ -1,0 +1,35 @@
+{
+  "identityPath": "public/art/v090/bosses/futago-identity-master-r1.webp",
+  "identitySha256": "667cf49c513831481c5ba8e7d85b322a68232867900efa49e9f840806901270b",
+  "atlases": [
+    {
+      "part": "a",
+      "sourcePath": "assets/source/v100/mission-completion/futago-separated-a-spaced-cutout-r5.png",
+      "sourceSha256": "ab7b456109fd4e3ea1ffea94dbce00d0f410f03894abdf3e64d3e80bc82b6cb2",
+      "runtimePath": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "runtimeSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "runtimeBytes": 811268,
+      "width": 1909,
+      "height": 824,
+      "conversion": "lossless WebP encoding only; original RGBA pixels and dimensions retained"
+    },
+    {
+      "part": "b",
+      "sourcePath": "assets/source/v100/mission-completion/futago-separated-b-spaced-cutout-r4.png",
+      "sourceSha256": "534ad238c589da673b9f8c91d5c29d2900d6d84f9faac82981b582d5f5293761",
+      "runtimePath": "/art/v100/bosses/futago-separated-b-battle-v1.webp",
+      "runtimeSha256": "800b062ce9b8225d45fd82fba6e5310d8131b5ebc30fd1f53761d9bba02ed609",
+      "runtimeBytes": 968436,
+      "width": 1888,
+      "height": 833,
+      "conversion": "lossless WebP encoding only; original RGBA pixels and dimensions retained"
+    }
+  ],
+  "prompts": [
+    "futago-split-prompts.json",
+    "futago-split-edit-r2-prompt.json",
+    "futago-split-body-b-prompt.json",
+    "futago-atlas-layout-prompt.json"
+  ],
+  "discardedCandidates": "Preserved locally beside final source files; RGB checkerboard and neighboring-frame overlap candidates are not runtime assets."
+}

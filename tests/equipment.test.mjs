@@ -92,7 +92,7 @@ test("fixed effects are deterministic, bounded, and same-ID buffs never stack", 
   assert.deepEqual(first, second);
   assert.equal(first.damageMultiplier, 1.095);
   assert.equal(first.redeployMultiplier, .91);
-  assert.match(equipmentEffectSummary("field-machete", 3), /攻撃 10%/u);
+  assert.match(equipmentEffectSummary("field-machete", 3), /攻撃ダメージ \+10%/u);
   assert.equal(equipmentEnhancementCost("field-machete", EQUIPMENT_MAX_ENHANCEMENT), null);
 });
 

@@ -1,0 +1,14 @@
+{
+  "generator": "built-in image_gen edit",
+  "useCase": "precise-object-edit",
+  "editTarget": "public/art/v100/cuts/takuya-omega-ending-defeat-vest-v3.webp",
+  "identityReference": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+  "prompt": "Use case: precise-object-edit. Asset type: landscape 16:9 game story cutscene, final defeat of TAKUYA-Ω. Image 1 is the EDIT TARGET; retain its kneeling/defeated pose, exact backdrop composition, camera, lighting, proportions, face, pale hair, black eyewear, chains, tubes, massive arm, black shorts, boots, and fallen cleaver. Image 2 is the authoritative original character identity and CLOTHING reference. Remove ONLY the newly invented torn orange emergency vest and reflective silver stripes from Image 1. Restore the character's bare, scarred, stitched chest and shoulders with original diagonal black straps and chain placement matching Image 2. Do not add any new clothing, colors, armor, badges, fabric, accessories or characters. Preserve Image 1 background and all non-costume elements as faithfully as possible; no text or watermark. Output a finished cinematic cut at same wide aspect ratio.",
+  "sourcePath": "assets/source/v100/cuts/takuya-omega-defeat-original-costume-source-v4.png",
+  "sourceSha256": "871ac6dcecba27601b6c62c90107dbd3ee64d81239955e71c21631cd35aa4281",
+  "transportPath": "public/art/v100/cuts/takuya-omega-ending-defeat-original-costume-v4.webp",
+  "transportSha256": "38990db5462245588e09fb7e38b14daf08e7a14549803a5683b2fdef820c5966",
+  "transportBytes": 1504212,
+  "conversion": "sharp lossless WebP, source and transport decoded pixels identical",
+  "review": "local visual inspection; Producer acceptance pending"
+}

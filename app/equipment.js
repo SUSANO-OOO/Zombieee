@@ -368,16 +368,18 @@ export function equipmentEffectSummary(equipmentId, enhancementLevel = 0) {
   });
   const labels = [];
   const percent = (value) => Math.round((value - 1) * 100 + 1e-9);
-  if (effects.damageMultiplier !== 1) labels.push(`攻撃 ${percent(effects.damageMultiplier)}%`);
-  if (effects.hpMultiplier !== 1) labels.push(`HP ${percent(effects.hpMultiplier)}%`);
-  if (effects.rangeMultiplier !== 1) labels.push(`射程 ${percent(effects.rangeMultiplier)}%`);
-  if (effects.attackEveryMultiplier !== 1) labels.push(`攻撃間隔 ${percent(effects.attackEveryMultiplier)}%`);
-  if (effects.speedMultiplier !== 1) labels.push(`移動 ${percent(effects.speedMultiplier)}%`);
-  if (effects.healingMultiplier !== 1) labels.push(`回復 ${percent(effects.healingMultiplier)}%`);
+  const signedPercent = (value) => `${percent(value) > 0 ? "+" : ""}${percent(value)}%`;
+  const durationChange = (value) => `${Math.abs(percent(value))}%${percent(value) < 0 ? "短縮" : "延長"}`;
+  if (effects.damageMultiplier !== 1) labels.push(`攻撃ダメージ ${signedPercent(effects.damageMultiplier)}`);
+  if (effects.hpMultiplier !== 1) labels.push(`HP ${signedPercent(effects.hpMultiplier)}`);
+  if (effects.rangeMultiplier !== 1) labels.push(`射程 ${signedPercent(effects.rangeMultiplier)}`);
+  if (effects.attackEveryMultiplier !== 1) labels.push(`攻撃間隔 ${durationChange(effects.attackEveryMultiplier)}`);
+  if (effects.speedMultiplier !== 1) labels.push(`移動速度 ${signedPercent(effects.speedMultiplier)}`);
+  if (effects.healingMultiplier !== 1) labels.push(`治療量 ${signedPercent(effects.healingMultiplier)}`);
   if (effects.defenseFlat > 0) labels.push(`防御 +${Math.round(effects.defenseFlat * 1000) / 10}%`);
-  if (effects.redeployMultiplier !== 1) labels.push(`再出撃 ${percent(effects.redeployMultiplier)}%`);
+  if (effects.redeployMultiplier !== 1) labels.push(`再配備 ${durationChange(effects.redeployMultiplier)}`);
   if (effects.startingEnergyFlat > 0) labels.push(`初期指揮 +${effects.startingEnergyFlat}`);
   if (effects.supportGaugeFlat > 0) labels.push(`初期支援 +${effects.supportGaugeFlat}`);
-  if (effects.baseHpMultiplier !== 1) labels.push(`防衛対象HP ${percent(effects.baseHpMultiplier)}%`);
+  if (effects.baseHpMultiplier !== 1) labels.push(`防衛対象HP ${signedPercent(effects.baseHpMultiplier)}`);
   return labels.join(" / ");
 }

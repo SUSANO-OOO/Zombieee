@@ -214,7 +214,7 @@ test("the rights ledger covers every retained Version 0.8.0 visual with its exac
     ...await filesBelow(path.join(ROOT, "assets", "source", "v080")),
     ...await filesBelow(path.join(ROOT, "public", "art", "v080")),
   ].sort();
-  assert.equal(files.length, 31);
+  assert.equal(files.length, 32);
   const ledger = await readFile(path.join(ROOT, "docs", "THIRD_PARTY_ASSETS.md"), "utf8");
   for (const absolute of files) {
     const relative = path.relative(ROOT, absolute).split(path.sep).join("/");
@@ -222,4 +222,21 @@ test("the rights ledger covers every retained Version 0.8.0 visual with its exac
     assert.match(ledger, new RegExp(`\\| \`${relative.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\` \\| \`${digest}\` \\|`));
   }
   assert.match(ledger, /制作途中のformation card R1 11件とMonkey event portrait R1.*repositoryから除外/);
+});
+
+test("Kumaverson's phone WebKit PNG preserves the approved card pixels and PNG transport", async () => {
+  const source = "/art/v080/characters/cards/kumaverson-formation-card-r2.webp";
+  const replacement = "/art/v080/characters/cards/kumaverson-formation-card-r2.png";
+  const [webp, png] = await Promise.all([
+    sharp(publicFile(source)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+    sharp(publicFile(replacement)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+  ]);
+  assert.deepEqual(png.info, webp.info);
+  assert.deepEqual(png.data, webp.data);
+  assert.equal(FORMATION_CARD_ART.kumaverson, replacement);
+  const manifest = JSON.parse(await readFile(path.join(ROOT, "public", "asset-manifest.json"), "utf8"));
+  assert.equal(manifest.assets.some(({ path: assetPath }) => assetPath === source), false);
+  const installed = manifest.assets.find(({ path: assetPath }) => assetPath === replacement);
+  assert.ok(installed);
+  assert.equal(installed.sourcePath, undefined, "PWA transport must not re-encode this PNG to WebP");
 });

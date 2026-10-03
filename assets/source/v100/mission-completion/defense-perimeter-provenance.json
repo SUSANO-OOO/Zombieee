@@ -1,0 +1,17 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "defense-perimeter-prompt.json",
+  "encoding": "Format conversion only. Original alpha and visible RGB values retained losslessly. No resizing, cropping or painting.",
+  "record": {
+    "source": "assets/source/v100/mission-completion/defense-perimeter-states-r1.png",
+    "sourceSha256": "177219ee52da5f73e3fb918d4d70e16e7fca93ca524a442f84bf4521d2f59fb0",
+    "output": "public/art/v100/mission-objects/defense-perimeter-states-v1.webp",
+    "path": "/art/v100/mission-objects/defense-perimeter-states-v1.webp",
+    "bytes": 508180,
+    "hash": "sha256-3b7a240eeff611e0ee7eb82a5ee2f771c0b8b559aabf28e1d0676c3db9673ec6",
+    "width": 1983,
+    "height": 793,
+    "visibleRgbaLossless": true,
+    "transparentPixels": 1300436
+  }
+}

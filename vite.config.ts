@@ -50,6 +50,8 @@ export default defineConfig(async () => {
     build: {
       rolldownOptions: {
         output: {
+          // Distribute vendored and dependency copyright/permission notices.
+          comments: { legal: true },
           codeSplitting: {
             minSize: 40_000,
             maxSize: 450_000,

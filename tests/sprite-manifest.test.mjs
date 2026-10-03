@@ -19,10 +19,12 @@ import {
   fitSpriteBattleDisplaySize,
   fitSpriteDisplaySize,
   spriteFrameFor,
+  spriteBattleDisplaySizeFor,
   spriteKinds,
   spriteSheetPath,
   spriteStatesFor,
 } from "../app/spriteManifest.js";
+import { V100_TAKUYA_SPRITE_GEOMETRY } from "../app/v100TakuyaSpriteGeometry.js";
 import {
   alphaBounds,
   decodeRgbaPng,
@@ -74,6 +76,58 @@ test("battle display boxes preserve every authored source aspect ratio", () => {
   }
 });
 
+test("TAKUYA-Ω keeps a giant final-form envelope through attack and death", () => {
+  const maximum = spriteBattleDisplaySizeFor("takuya-omega");
+  assert.deepEqual(maximum, { w: 320, h: 260 });
+  const bodyHeight = (state) => {
+    const frame = spriteFrameFor("takuya-omega", state, "left");
+    return fitSpriteBattleDisplaySize("takuya-omega", frame, maximum).h
+      * frame.contentRect.h / frame.sourceRect.h;
+  };
+  const idle = spriteFrameFor("takuya-omega", "idle", "left");
+  const attack = spriteFrameFor("takuya-omega", "attack-a", "left");
+  const death = spriteFrameFor("takuya-omega", "death", "left");
+  const fittedAttack = fitSpriteBattleDisplaySize("takuya-omega", attack, maximum);
+  const fittedDeath = fitSpriteBattleDisplaySize("takuya-omega", death, maximum);
+  assert.ok(bodyHeight("idle") >= 259);
+  assert.ok(fittedAttack.w >= fittedDeath.w - 1e-9);
+  assert.ok(attack.contentRect.w >= idle.contentRect.w);
+  assert.ok(death.contentRect.w >= idle.contentRect.w);
+  assert.equal(attack.flipX, false);
+  assert.equal(death.flipX, false);
+});
+
+test("repaired TAKUYA atlas keeps six measured cells, mirrored facing, and the legacy source", async () => {
+  const entry = SPRITE_MANIFEST.takuya;
+  assert.equal(entry.path, "/art/v100/bosses/takuya-battle-repaired-v1.png");
+  assert.deepEqual(entry.sheet, {
+    width: 3072,
+    height: 757,
+    layout: "v100-six-horizontal-source-facing-right",
+    cellWidth: 512,
+    cellHeight: 757,
+  });
+  assert.equal(V100_TAKUYA_SPRITE_GEOMETRY.atlasSha256, await sha256(publicFile(entry.path)));
+  assert.equal(await sha256(publicFile("/takuya-boss-sprites-v2.png")), V100_TAKUYA_SPRITE_GEOMETRY.sourceSha256);
+  const expectedGround = [604, 609, 607, 606, 617, 608];
+  const sourceIndexes = [0, 1, 2, 3, 4, 5, 5];
+  for (const [index, state] of SPRITE_STATES.entries()) {
+    const sourceIndex = sourceIndexes[index];
+    for (const direction of SPRITE_DIRECTIONS) {
+      const frame = spriteFrameFor("takuya", state, direction);
+      assert.deepEqual(frame.sourceRect, { x: sourceIndex * 512, y: 0, w: 512, h: 757 });
+      assert.equal(frame.groundAnchorPixels, expectedGround[sourceIndex]);
+      assert.equal(frame.flipX, direction === "right");
+      assert.equal(frame.authoredCell.w, 362);
+      assert.equal(frame.authoredCell.h, 724);
+      assert.ok(frame.contentRect.w > 0 && frame.contentRect.h > 0);
+    }
+  }
+  assert.equal(spriteFrameFor("takuya", "idle", "right").anchorX, V100_TAKUYA_SPRITE_GEOMETRY.anchorX);
+  assert.equal(spriteFrameFor("takuya", "idle", "left").anchorX, V100_TAKUYA_SPRITE_GEOMETRY.anchorX);
+  assert.equal(spriteFrameFor("takuya", "death", "left").derivedFrom, "hit");
+});
+
 test("sprite audit uses the same battle-size fitting path as runtime", async () => {
   const source = await readFile(new URL("../app/SpriteAuditScreen.tsx", import.meta.url), "utf8");
   assert.match(source, /fitSpriteBattleDisplaySize\(selection\.kind, frame, \{ w: battleWidth, h: battleHeight \}\)/);
@@ -94,10 +148,13 @@ test("sprite manifest enumerates all playable units, Mayo's feral atlas, bosses,
     "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
     "grappler", "ooze", "sprinter", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago",
+    "futago-separated-a", "futago-separated-b",
     "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
+    "red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander",
+    "mugarian-president-mutated", "takuya-omega",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 40);
+  assert.equal(spriteKinds.length, 48);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -112,7 +169,9 @@ test("every kind/state/direction resolves to an in-bounds audited source and con
   for (const kind of spriteKinds) {
     const entry = SPRITE_MANIFEST[kind];
     if (!decodedByPath.has(entry.path)) {
-      const decoded = decodeRgbaPng(await readFile(publicFile(entry.path)));
+      const bytes = await readFile(publicFile(entry.path));
+      const raw = entry.path.endsWith(".webp") ? await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true }) : null;
+      const decoded = raw ? { width: raw.info.width, height: raw.info.height, data: raw.data } : decodeRgbaPng(bytes);
       assert.equal(decoded.width, entry.sheet.width, `${kind} sheet width`);
       assert.equal(decoded.height, entry.sheet.height, `${kind} sheet height`);
       decodedByPath.set(entry.path, decoded);
@@ -121,19 +180,30 @@ test("every kind/state/direction resolves to an in-bounds audited source and con
     for (const state of SPRITE_STATES) {
       for (const direction of SPRITE_DIRECTIONS) {
         const frame = spriteFrameFor(kind, state, direction);
+        // Apply the same integer source rectangles that the production canvas
+        // draws. The bitmap remains unchanged; neighboring poses are excluded
+        // by authored draw fragments, preserving the full 16px gutter test.
+        const effective = frame.drawSlices ? { ...decoded, data: Buffer.alloc(decoded.data.length) } : decoded;
+        if (frame.drawSlices) for (const slice of frame.drawSlices) {
+          assert.ok(slice.x >= 0 && slice.y >= 0 && slice.x + slice.w <= frame.w && slice.y + slice.h <= frame.h);
+          for (let y = frame.y + slice.y; y < frame.y + slice.y + slice.h; y++) {
+            const start = (y * decoded.width + frame.x + slice.x) * 4;
+            decoded.data.copy(effective.data, start, start, start + slice.w * 4);
+          }
+        }
         assert.equal(frame.path, entry.path);
         assert.ok(frame.x >= 0 && frame.y >= 0 && frame.w > 0 && frame.h > 0);
         assert.ok(frame.x + frame.w <= decoded.width && frame.y + frame.h <= decoded.height);
         assert.ok(frame.contentRect.x >= frame.x && frame.contentRect.y >= frame.y);
         assert.ok(frame.contentRect.x + frame.contentRect.w <= frame.x + frame.w);
         assert.ok(frame.contentRect.y + frame.contentRect.h <= frame.y + frame.h);
-        assert.deepEqual(alphaBounds(decoded, frame.sourceRect), frame.contentRect, `${kind}/${state}/${direction} alpha audit`);
+        assert.deepEqual(alphaBounds(effective, frame.sourceRect), frame.contentRect, `${kind}/${state}/${direction} alpha audit`);
         assert.equal(frame.gutter.left, frame.contentRect.x - frame.x);
         assert.equal(frame.gutter.top, frame.contentRect.y - frame.y);
         assert.equal(frame.gutter.right, frame.x + frame.w - frame.contentRect.x - frame.contentRect.w);
         assert.equal(frame.gutter.bottom, frame.y + frame.h - frame.contentRect.y - frame.contentRect.h);
-        assert.equal(hasTransparentPerimeter(decoded, frame.sourceRect, 16), true, `${kind}/${state}/${direction} transparent gutter`);
-        const measuredBottom = frame.contentRect.y + frame.contentRect.h - frame.y;
+        assert.equal(hasTransparentPerimeter(effective, frame.sourceRect, 16), true, `${kind}/${state}/${direction} transparent gutter`);
+        const measuredBottom = frame.groundAnchorPixels ?? frame.contentRect.y + frame.contentRect.h - frame.y;
         assert.equal(frame.anchorY, measuredBottom / frame.h, `${kind}/${state}/${direction} measured baseline`);
       }
     }
@@ -180,7 +250,7 @@ test("legacy gutter atlases preserve every source-cell pixel without scaling or 
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];
-  assert.equal(uniqueEntries.length, 6);
+  assert.equal(uniqueEntries.length, 5);
   for (const entry of uniqueEntries) {
     assert.notEqual(entry.sourceSheet.path, "/takuya-boss-sprites-v1.png", "retired TAKUYA sheet cannot be a runtime source");
     assert.equal(entry.sourceSheet.cellEdges[0], 0);
@@ -337,7 +407,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 43);
+  assert.equal(productionWebps.length, 53);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);
