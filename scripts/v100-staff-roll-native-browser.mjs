@@ -6,6 +6,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
+import { nativeAudioTailSeekControl } from "./native-audio-tail-seek-control.mjs";
 
 const upstreamOrigin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 assert.ok(["127.0.0.1", "localhost"].includes(upstreamOrigin.hostname));
@@ -72,6 +73,10 @@ async function frozen(page, action) {
 }
 
 try {
+  if (["all", "regression"].includes(selection)) {
+    report.nativeTailControl = {};
+    await nativeAudioTailSeekControl(browser, origin, transport.song.path, report.nativeTailControl);
+  }
   if (selection === "all") {
   const { page, context, result, releaseSong } = await openCase("full-song-with-loading-pause-rotation-pagehide", { delaySong: true });
   try {
@@ -164,7 +169,7 @@ try {
         await page.waitForFunction(() => {
           const audio = document.querySelector(".v100-staff-roll audio");
           const contains = (ranges, target) => [...Array(ranges.length)].some((_, i) => ranges.start(i) <= target && ranges.end(i) >= target);
-          return Number.isFinite(audio.duration) && [audio.duration * 10.1 / 11, audio.duration - .1]
+          return Number.isFinite(audio.duration) && [audio.duration * 10.1 / 11, audio.duration - 1]
             .every(target => contains(audio.buffered, target) && contains(audio.seekable, target));
         }, undefined, { timeout: 20000 });
         result.beforeHold = await readNativeMedia(page);
@@ -210,7 +215,9 @@ try {
           return !audio.seeking && Math.abs(audio.currentTime - target) < 2 && document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0;
         }, result.seek.target, { timeout: 3000 });
         result.afterHold = await readNativeMedia(page);
-        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.currentTime = audio.duration - .1; });
+        // The independent controls require real EOF after a one-second tail.
+        // Keep the native-ended wait and product storage timeout unchanged.
+        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.currentTime = audio.duration - 1; });
         await page.waitForFunction(() => window.__creditSaveHoldProof.ended.length === 1, undefined, { timeout: 2000 });
         result.busyAtEnd = await page.evaluate(() => window.__creditSaveHoldProof.ended[0].pending);
         assert.equal(result.busyAtEnd, "true");
@@ -230,7 +237,7 @@ try {
           window.__restoreCreditStorage = () => { Storage.prototype.setItem = set; IDBObjectStore.prototype.put = put; };
           Storage.prototype.setItem = function (key, value) { if (String(key).startsWith("nishijin-campaign-v100")) { window.__creditSaveFailures++; throw new DOMException("expected save failure fixture", "QuotaExceededError"); } return set.call(this, key, value); };
           IDBObjectStore.prototype.put = function (...args) { if (this.transaction.db.name.includes("v100")) { window.__creditSaveFailures++; throw new DOMException("expected save failure fixture", "QuotaExceededError"); } return put.apply(this, args); };
-          const audio = document.querySelector(".v100-staff-roll audio"); audio.currentTime = audio.duration - .1;
+          const audio = document.querySelector(".v100-staff-roll audio"); audio.currentTime = audio.duration - 1;
         });
         await page.locator(".v100-staff-roll").getByRole("button", { name: "続ける", exact: true }).waitFor({ state: "visible" });
         await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "false");

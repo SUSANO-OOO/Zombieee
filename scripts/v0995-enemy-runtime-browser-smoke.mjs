@@ -160,6 +160,11 @@ async function observeStrictCanvasClip(page, viewport, label) {
 
 async function readRuntimeLiveness(page) {
   return page.evaluate(() => {
+    if (!window.__enemyNativeFrameClock) {
+      const clock = window.__enemyNativeFrameClock = { callbacks: 0, lastAt: null };
+      const tick = at => { clock.callbacks++; clock.lastAt = at; requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
     const performanceSnapshot = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
@@ -168,6 +173,7 @@ async function readRuntimeLiveness(page) {
       at: performance.now(),
       visibilityState: document.visibilityState,
       hidden: document.hidden,
+      nativeFrames: { ...window.__enemyNativeFrameClock },
       assetLoadState: document.documentElement.dataset.assetLoadState ?? null,
       mount,
       canvas: canvas ? { connected: canvas.isConnected, active: canvas.classList.contains("active") } : null,
@@ -192,6 +198,10 @@ async function readRuntimeLiveness(page) {
 async function waitForActiveRuntime(page, label) {
   // Asset decode can finish before WebKit resumes live frames. Keep each phase's
   // original audit window, but require real simulation and paint first.
+  // Require the owned page to be foregrounded after setup/capture, before
+  // measuring the next phase. Do not refocus or restart inside measurement.
+  const preFocus = await readRuntimeLiveness(page);
+  await page.bringToFront();
   const before = await readRuntimeLiveness(page);
   const deadline = Date.now() + Math.min(timeout, 12_000);
   let after = before;
@@ -199,13 +209,14 @@ async function waitForActiveRuntime(page, label) {
     await page.waitForTimeout(100);
     after = await readRuntimeLiveness(page);
     if (after.visibilityState === "visible" && after.battle?.running && !after.battle.paused
+      && after.nativeFrames.callbacks >= before.nativeFrames.callbacks + 2
       && after.frames?.renderFrames >= before.frames?.renderFrames + 2
       && after.frames?.simulationTicks >= before.frames?.simulationTicks + 2
       && after.battle.time > before.battle?.time) {
-      return { before, after };
+      return { preFocus, before, after };
     }
   }
-  throw new Error(`${label}: live renderer did not advance after asset setup ${JSON.stringify({ before, after })}`);
+  throw new Error(`${label}: live renderer did not advance after asset setup ${JSON.stringify({ preFocus, before, after })}`);
 }
 
 function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
@@ -291,6 +302,7 @@ for (const engine of engines) {
           const runtimeReady = await waitForActiveRuntime(page, `${engine}/${viewport.width}x${viewport.height}/${kind}`);
           for (const phase of phases) {
             activeEvidence = { engine, viewport, kind, phase, assetSetupBoundary, runtimeReady, prepared: null, livenessBefore: null, livenessAfter: null, samples: [], capture: null };
+            activeEvidence.phaseRuntimeReady = await waitForActiveRuntime(page, `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}/setup`);
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
             activeEvidence.prepared = prepared;
             activeEvidence.livenessBefore = await readRuntimeLiveness(page);
@@ -347,7 +359,7 @@ for (const engine of engines) {
               },
             };
             if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-            results.push({ engine, viewport, kind, phase, prepared, samples, livenessBefore: activeEvidence.livenessBefore, livenessAfter: activeEvidence.livenessAfter, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+            results.push({ engine, viewport, kind, phase, prepared, phaseRuntimeReady: activeEvidence.phaseRuntimeReady, samples, livenessBefore: activeEvidence.livenessBefore, livenessAfter: activeEvidence.livenessAfter, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
           const postReady = diagnosticControl.diagnostics;
           invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);

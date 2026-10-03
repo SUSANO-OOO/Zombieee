@@ -161,3 +161,11 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 `1cf4eaf`のMac検証では原曲の自然終了と音なしケースが通り、503ケースでnative audioのpaused=falseが残る不具合を検出した。保存3ケースとoffline/PWA工程は未実行であり、保存中終了の再失敗とは扱わない。Windows固定WebKitでも503単独の同じassert失敗を旧buildで再現し、controlを保全した。`play()`失敗はattempt一致確認の後、media errorはattempt無効化の後にaudioを明示pauseする。プレイヤーのpause状態を変えず、音なしスタッフロールは進む。新QAは503単独の範囲を明記し、defaultは元の6ケースを必須にする。各fallback失敗にも媒体状態と画像を保全する。
 
 修正後build `7ed54c0557e35f9dd2138f855caca013812e0c580af49974a39be2b97d087d3c`で、同じWindows固定WebKitの503単独controlが成功した。これは故障音源の停止・音なしロール進行・スキップ後の保存接続の証拠であり、Windows WebKitの元MP3再生成功とは扱わない。全1721 tests・build・Lint0 errors/15 warningsと独立read-onlyの変更範囲High0/Medium0を確認し、Macのdefault6ケースとoffline/PWAは新HEADのfresh CIで要求する。
+
+候補`57df637`のCI `37101141170`では、PR Verify、Phase Gの55 capture、Mac WebKit性能窓（high/DPR2を含む）と敵shard02〜06が成功した。native staff rollは自然終了315.768秒・音なし・503・保存cursor復帰の4ケースが成功し、保存中終了のEOF待ちで失敗した。native IDBは正常にopenし、実successを保留してpending=trueを保持していた。曲の`duration-.1`へのseek後は315.699／315.768秒、paused=false、seeking=false、readyState4、全buffer、errorなしで止まり、native endedは発生しなかった。前回のIDB hold不成立と区別し、元のreport・媒体・busy履歴・画像を保全する。残る保存失敗ケースとoffline/PWAは未実行である。
+
+新fixtureは製品を含まないaudioで、元MP3と同じ9.1／10.1場面相当のseek順を、末尾0.1秒／1秒とnative IDB保留あり／なしの固定4条件で比較する。0.1秒条件の結果は診断として保存し、1秒条件は両方ともtrusted native ended、実DBのwrite/read、callback1回、解除前pending、open→解除6秒未満を要求する。これが成功した場合だけ、実スタッフロールの2件のEOF fixtureを末尾1秒へ変更して実終了を観測する。EOF待ち2000ms、製品保存6000ms、全曲seekなしの別証拠、native ended時busy=true、EPILOGUE・既読1回は維持する。Chromiumの固定4controlと保存境界3ケースは成功。Mac controlと実保存境界の成功、native側の原因確定は新候補の結果を要求する。
+
+同CIの敵shard01は、1280×720のspitter攻撃fixtureで失敗した。直前の移動・撮影中には実描画が進んでいたが、攻撃の55 poll／2.646秒ではnative rAF request、製品render、simulation、battle timeがすべて不変だった。visible・ready・running、pause/over/saveBoundary=false、diagnostics0であり、敵の攻撃行だけの失敗とせず、元の全停止記録を保全した。撮影が原因とは断定しない。
+
+各phaseのsetupでowned QA pageを前面化し、製品から独立したnative rAFと製品描画・simulationが各2 frame進み、ゲーム時間が増加してからactorを1回prepareする。前面化前／後とsetup成立の記録を残し、測定中は前面化・再prepare・retryを行わない。元のattack2600ms／他1500ms、asset-backed semantic、strict capture、1 attempt、全coverageを維持する。実predicateを使うWindows WebKitのcontrolは、通常進行を受理し、全rAF停止・製品のみ停止を有限12秒で拒否し、ready後の停止も元のsemantic assertで拒否した。代表spitter／1280×720の4動作は1 attemptで成功。製品コードを変えず、新候補Macの代表場面と全shardを要求する。新QAの関連15 testsとLint0 errors／既存15 warningsが成功した。
