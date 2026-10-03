@@ -144,4 +144,6 @@ Producerの「それも含めて改善」と、クリア後に魔王魂「追憶
 
 ローカルのvinextは音声Range非対応でnative seekableが`[0,0]`になるため、音声検証は元MP3のbytes/hashを確認する専用loopback配信を使用する。これは正式Pagesの配信証拠と別である。全testがbuildを更新して撮影と競合した試行、旧fixture・旧selector・duration推定差・意図したseekのcancelは失敗／診断記録として保全した。
 
+固定候補`3b1dd967`の最終画像reviewでは、まとめた地の文と台詞が既存gridの同じcellへ配置されるMediumを1件検出した。外枠のfits検査だけでは本文同士の重なりを検出していなかった。本文を専用の縦配置要素へまとめ、話者あり・なしの双方を修正した。本文block同士の重なりと枠内表示を検査へ追加し、修正前のbuildで同じ不具合を検出するcontrolを保全した。修正後は12文字の主人公名、3サイズ×5イベントの15 fixtureで全文と非重複を確認し、全1721 tests・build・Lintを再実行した。撮り直した実画像と新HEADの独立review結果は既存台帳へ記録する。
+
 記録：`outputs/whole-quality-audit-20261003/`。これらはseeded presentation、native media、保存faultの証拠であり、全30作戦の通常クリア、物理iPhone、speaker聴感、発熱、Producer最終受入の完了を意味しない。新候補のexact HEAD CIと試遊URLは既存Issue #172台帳へ更新する。

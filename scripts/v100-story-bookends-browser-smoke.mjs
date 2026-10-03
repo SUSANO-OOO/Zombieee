@@ -18,7 +18,9 @@ const transport = await startNativeAudioQaOrigin(new URL(process.env.V100_CAMPAI
 const origin = transport.origin;
 const out = path.resolve(process.env.V100_BOOKENDS_EVIDENCE_DIR ?? "outputs/v100-story-bookends");
 await mkdir(out, { recursive: true });
-const report = { evidenceKind: "seeded presentation fixtures; no gameplay completion claim", build: await productionBuildIdentity(), cases: [] };
+const playerName = process.env.V100_BOOKENDS_PLAYER_NAME ?? "場面確認";
+assert.ok([...playerName].length > 0 && [...playerName].length <= 12);
+const report = { evidenceKind: "seeded presentation fixtures; no gameplay completion claim", playerName, build: await productionBuildIdentity(), cases: [] };
 const engineNames = (process.env.V100_BOOKENDS_ENGINES ?? "chromium,webkit").split(",");
 const eventSuffixes = (process.env.V100_BOOKENDS_EVENTS ?? "prologue,s01:pre,ending,credits,epilogue").split(",");
 const sizes = (process.env.V100_BOOKENDS_VIEWPORTS ?? "1280x720,844x390,844x340").split(",").map(value => {
@@ -28,7 +30,7 @@ const sizes = (process.env.V100_BOOKENDS_VIEWPORTS ?? "1280x720,844x390,844x340"
 });
 
 async function inspect(page, eventId, phase, index, result) {
-  const storyPage = v100StoryPageFor(eventId, v100StoryEventView(eventId, "場面確認").nodes, index);
+  const storyPage = v100StoryPageFor(eventId, v100StoryEventView(eventId, playerName).nodes, index);
   const node = storyPage.node;
   index = storyPage.nodeIndex;
   const expected = v100EventPresentationFor({ eventId, phase, node, nodeIndex: index });
@@ -43,12 +45,21 @@ async function inspect(page, eventId, phase, index, result) {
     const hit = button && document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
     const creditText = copy?.matches(".v100-credits-shot") ? copy.querySelector("p")?.getBoundingClientRect() : null;
     const creditActions = copy?.matches(".v100-credits-shot") ? copy.querySelector(".v100-event-actions")?.getBoundingClientRect() : null;
+    const textBlocks = [...(copy?.querySelectorAll(".v100-node-kind, p") ?? [])].map(block => {
+      const bounds = block.getBoundingClientRect();
+      return { text: block.textContent, top: bounds.top, bottom: bounds.bottom, left: bounds.left, right: bounds.right };
+    });
+    const textOverlaps = textBlocks.flatMap((block, index) => textBlocks.slice(index + 1).filter(other =>
+      Math.min(block.right, other.right) - Math.max(block.left, other.left) > .5 && Math.min(block.bottom, other.bottom) - Math.max(block.top, other.top) > .5
+    ).map(other => [block.text, other.text]));
     return {
       background: backdrop ? getComputedStyle(backdrop).backgroundImage : null,
       titleCard: backdrop?.getAttribute("data-v100-title-card") === "true",
       text: copy?.textContent ?? "", scene: copy?.getAttribute("data-v100-credit-scene"),
       copyFits: Boolean(rect && rect.top >= 0 && rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight),
       actionReachable: Boolean(action && hit && (hit === action || action.contains(hit))),
+      textBlocks, textOverlaps,
+      textInsideCard: textBlocks.every(block => rect && block.top >= rect.top - 1 && block.bottom <= rect.bottom + 1 && block.left >= rect.left - 1 && block.right <= rect.right + 1),
       creditTextActionGapPx: creditText && creditActions ? creditActions.top - creditText.bottom : null,
       creditActionsInsideCard: creditActions && rect ? creditActions.top >= rect.top && creditActions.bottom <= rect.bottom + 1 : null,
       bodyOverflow: Math.max(document.documentElement.scrollWidth - innerWidth, document.body.scrollWidth - innerWidth),
@@ -63,6 +74,8 @@ async function inspect(page, eventId, phase, index, result) {
   }
   assert.equal(state.copyFits, true, `${eventId}:${index} text outside viewport`);
   assert.equal(state.actionReachable, true, `${eventId}:${index} next action is occluded`);
+  assert.deepEqual(state.textOverlaps, [], `${eventId}:${index} authored text overlaps`);
+  assert.equal(state.textInsideCard, true, `${eventId}:${index} authored text leaves its card`);
   assert.ok(state.bodyOverflow <= 1);
   assert.ok(!state.text.includes("台詞は使わず"));
   const compact = text => text.replace(/\s+/gu, "");
@@ -105,7 +118,7 @@ try {
           });
           page.on("response", response => { if (response.status() >= 400) result.diagnostics.http.push({ url: response.url(), status: response.status() }); });
           try {
-            let save = normalizeV100Save({ ...createDefaultV100Save({ playerName: "場面確認" }), campaignStarted: true,
+            let save = normalizeV100Save({ ...createDefaultV100Save({ playerName }), campaignStarted: true,
               flowState: { phase, eventId, stageId: null, stageNumber: null, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
             if (stageNumber) {
               assert.ok(["s01:pre", "s20:post", "s25:post"].includes(suffix));
@@ -129,7 +142,7 @@ try {
             if (suffix === "credits") {
               result.staffRollEvidence = "native media seeks through all 11 scenes; full-duration completion is verified separately";
               for (let index = 0; index < 11; index++) {
-                result.observations.push(await inspectStaffRoll(page, { index, seek: index > 0 }));
+                result.observations.push(await inspectStaffRoll(page, { index, seek: index > 0, playerName }));
                 if ([0, 5, 10].includes(index)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
               }
               await completeStaffRollByNativeEnd(page);
@@ -156,12 +169,12 @@ try {
                   return snapshot?.receipts?.some(receipt => receipt.action === "started" && receipt.eventId === eventId && receipt.nodeIndex === index && receipt.sceneId === sceneId);
                 }, { eventId, index: v100StoryPageFor(eventId, nodes, index).nodeIndex, sceneId: expected.sceneId }, { timeout: 15000 });
               }
-              if (index === last || [1617, 1623, 2058, 2064].includes(nodes[index].sourceLine) || (suffix === "credits" && index === 5)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
+              if (index === last || [1617, 1623, 2058, 2064].includes(nodes[index].sourceLine) || (suffix === "prologue" && [1, 24, 43].includes(index)) || (suffix === "s01:pre" && [7, 9].includes(index))) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
             }
             result.audio = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
             if (suffix === "ending" && last === nodes.length - 1) {
               await page.locator(".v100-event-actions .v100-primary").click();
-              result.automaticStaffRoll = await inspectStaffRoll(page);
+              result.automaticStaffRoll = await inspectStaffRoll(page, { playerName });
             }
             for (const [kind, errors] of Object.entries(result.diagnostics)) assert.deepEqual(errors, [], `${name} ${kind}`);
             result.status = "passed";

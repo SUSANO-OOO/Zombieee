@@ -354,6 +354,9 @@
 #v100-campaign .v100-command-personnel .v100-unit-stat.v100-stat-improves span { color: #d3dacb; }
 #v100-campaign .v100-command-personnel .v100-unit-stat.v100-stat-improves strong { color: #f5f0dd; }
 #v100-campaign .v100-node-copy p.v100-story-action-beat { margin: 0 0 7px; color: #c6cbbb; font-size: .85em; line-height: 1.45; }
+#v100-campaign .v100-node-copy .v100-story-prose { grid-column: 1; grid-row: 2; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#v100-campaign .v100-node-copy:not(:has(.v100-node-kind)) .v100-story-prose { grid-row: 1 / 3; }
+#v100-campaign .v100-node-copy .v100-story-prose p { margin: 0; }
 #v100-campaign .v100-result-rewards .v100-reward-unlocks { display: flex; align-items: center; gap: 12px; overflow: hidden; }
 #v100-campaign .v100-reward-unlocks img { flex: 0 0 72px; width: 72px; height: 88px; object-fit: contain; filter: drop-shadow(0 2px 5px #000); }
 #v100-campaign .v100-reward-unlocks > div { display: grid; gap: 7px; min-width: 0; }
