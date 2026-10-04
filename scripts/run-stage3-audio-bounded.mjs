@@ -71,7 +71,7 @@ export async function runStage3AudioBounded({
   }
   await mkdir(evidenceRoot, { recursive: true });
   const attempts = [];
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 1; attempt += 1) {
     const attemptDir = path.join(evidenceRoot, `attempt-${attempt}`);
     await mkdir(attemptDir, { recursive: true });
     const execution = await executeAttempt(baseRoot, attemptDir);
@@ -85,8 +85,7 @@ export async function runStage3AudioBounded({
       console.log(JSON.stringify({ status: report.status, mode, attempts: attempts.length, baseRoot }, null, 2));
       return report;
     }
-    if (attempt !== 1 || !retryableTargetClosed) break;
-    console.warn("Retrying once after a clean hosted-WebKit target-closed incident; all product assertions remain required.");
+    break;
   }
   const report = { status: "failed", mode, baseRoot, attempts };
   await writeFile(path.join(evidenceRoot, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`);

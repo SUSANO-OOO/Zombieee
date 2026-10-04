@@ -1,7 +1,10 @@
 ﻿import assert from "node:assert/strict";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
-import { isRetryableTargetClosed } from "../scripts/run-stage3-audio-bounded.mjs";
+import { isRetryableTargetClosed, runStage3AudioBounded } from "../scripts/run-stage3-audio-bounded.mjs";
 
 function cleanDiagnostics() {
   return {
@@ -93,4 +96,22 @@ test("Stage 3 bounded entrance rejects dirty or unstable target-close incidents"
     mutate(summary.results[0]);
     assert.equal(isRetryableTargetClosed(summary, "entrance"), false);
   }
+});
+
+test("Stage 3 runner preserves a clean target-close failure without retrying", async () => {
+  const evidenceRoot = await mkdtemp(path.join(os.tmpdir(), "stage3-single-attempt-"));
+  const calls = [];
+  await assert.rejects(() => runStage3AudioBounded({
+    evidenceRoot,
+    executeAttempt: async (_baseRoot, attemptDir) => {
+      calls.push(attemptDir);
+      await writeFile(path.join(attemptDir, "summary.json"), JSON.stringify(navigationFailure()));
+      return { code: 1, signal: null };
+    },
+  }), /failed after 1 attempt/u);
+  const report = JSON.parse(await readFile(path.join(evidenceRoot, "bounded-summary.json"), "utf8"));
+  assert.equal(report.status, "failed");
+  assert.equal(report.attempts.length, 1);
+  assert.equal(report.attempts[0].retryableTargetClosed, true);
+  assert.deepEqual(calls, [path.join(evidenceRoot, "attempt-1")]);
 });

@@ -68,7 +68,7 @@ export async function runCanonicalDeploymentUnits({
   const units = [];
   for (const kind of kinds) {
     const attempts = [];
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = 1; attempt <= 1; attempt += 1) {
       const attemptDir = path.join(root, kind, `attempt-${attempt}`);
       await mkdir(attemptDir, { recursive: true });
       const execution = await (runAttempt ?? runProcess)({ cwd, env, kind, attempt, attemptDir });
@@ -81,8 +81,7 @@ export async function runCanonicalDeploymentUnits({
       const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
       attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
       if (passed) break;
-      if (attempt !== 1 || !retryableTargetClosed) break;
-      console.warn(`Retrying ${kind} once after an exact hosted-WebKit target-closed incident.`);
+      break;
     }
     const passed = attempts.at(-1)?.passed === true;
     units.push({ kind, passed, attempts });

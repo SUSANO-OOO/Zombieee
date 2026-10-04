@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
+import { CANONICAL_HUD_STATES } from "../scripts/run-v099-hud-states-bounded.mjs";
 
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
@@ -18,6 +19,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /fetch-depth: 0/u);
   assert.match(workflow, /PR_BASE_SHA/u);
   assert.match(workflow, /PR_HEAD_SHA/u);
+  assert.match(workflow, /id: pwa_update_scope[\s\S]*?run: node scripts\/classify-pwa-update-scope\.mjs/u);
   assert.match(workflow, /PR_BASE_REF/u);
   assert.match(workflow, /git merge-base --is-ancestor "\$PR_BASE_SHA" "\$PR_MERGE_SHA"/u);
   assert.match(workflow, /git merge-base --is-ancestor "\$PR_HEAD_SHA" "\$PR_MERGE_SHA"/u);
@@ -46,17 +48,17 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT:/u);
   assert.match(workflow, /node scripts\/run-v099-hud-states-bounded\.mjs/u);
   const hudJob = workflow.match(/  webkit-viewport:\n([\s\S]*?)\n  webkit-deployment-viewport:/u)?.[1] ?? "";
-  const hudViewports = hudJob.match(/viewport:\r?\n([\s\S]*?)\r?\n        hud_state:/u)?.[1]
+  const hudViewports = hudJob.match(/viewport:\r?\n([\s\S]*?)\r?\n\r?\n    steps:/u)?.[1]
     .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
-  const hudStates = hudJob.match(/hud_state:\r?\n([\s\S]*?)\r?\n\r?\n    steps:/u)?.[1]
-    .match(/^\s+- ([a-z0-9-]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
   assert.deepEqual(hudViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
-  assert.deepEqual(hudStates, [
+  assert.deepEqual(CANONICAL_HUD_STATES, [
     "stage1-normal", "five-units", "deployment-banner", "manual-ability-banner",
     "objective-full", "support-disabled", "banner-bark-boss", "stage3-boss",
   ]);
-  assert.equal(hudViewports.length * hudStates.length, 48);
-  assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
+  assert.equal(hudViewports.length * CANONICAL_HUD_STATES.length, 48);
+  assert.doesNotMatch(hudJob, /matrix\.hud_state|ISSUE156_WEBKIT_HUD_STATE/u);
+  assert.match(hudJob, /node scripts\/run-v099-hud-states-bounded\.mjs/u);
+  assert.match(await readFile("scripts/run-v099-hud-states-bounded.mjs", "utf8"), /for \(const stateId of stateIds\)/u);
   assert.match(hudJob, /needs: webkit-deployment-viewport/u);
   assert.match(hudJob, /fail-fast: false/u);
   assert.match(hudJob, /max-parallel: 1/u);
@@ -83,6 +85,23 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.doesNotMatch(stage3Job, /npm run qa:p5/u);
   assert.equal((stage3Job.match(/node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
+  assert.match(stage3Job, /brew install coreutils/u);
+  assert.equal((stage3Job.match(/gtimeout --signal=TERM --kill-after=30s 15m node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
+  assert.doesNotMatch(stage3Job, /(?<!g)timeout --signal=TERM/u);
+  for (const [jobName, boundary] of [
+    ["webkit-hosted", "webkit-enemy-runtime-shard"],
+    ["webkit-enemy-runtime-shard", "webkit-viewport"],
+    ["webkit-viewport", "webkit-deployment-viewport"],
+    ["webkit-deployment-viewport", "webkit-stage3-audio"],
+  ]) {
+    const job = workflow.match(new RegExp(`  ${jobName}:\\n([\\s\\S]*?)\\n  ${boundary}:`, "u"))?.[1] ?? "";
+    assert.match(job, /^    runs-on: macos-15-intel$/mu, jobName);
+    assert.match(job, /npx playwright install webkit/u, jobName);
+    assert.match(job, /node scripts\/verify-playwright-container-runtime\.mjs --macos/u, jobName);
+    assert.doesNotMatch(job, /--with-deps webkit/u, jobName);
+  }
+  assert.match(stage3Job, /^    runs-on: macos-15-intel$/mu);
+  assert.match(stage3Job, /node scripts\/verify-playwright-container-runtime\.mjs --macos/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -122,7 +141,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(shardJob, /name: issue165-webkit-enemy-runtime-\$\{\{ matrix\.shard\.name \}\}/u);
   const enemyBoundedRunner = await readFile("scripts/run-v0995-enemy-runtime-bounded.mjs", "utf8");
   assert.match(enemyBoundedRunner, /attempt <= maxAttempts/u);
-  assert.match(enemyBoundedRunner, /maxAttempts !== 2/u);
+  assert.match(enemyBoundedRunner, /maxAttempts !== 1/u);
   assert.match(enemyBoundedRunner, /isRetryableTargetClosedLog/u);
   assert.match(enemyBoundedRunner, /attempt-\$\{attempt\}/u);
   assert.doesNotMatch(enemyBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
@@ -130,7 +149,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   for (const kind of ["scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic"]) {
     assert.match(deploymentBoundedRunner, new RegExp(`"${kind}"`, "u"));
   }
-  assert.match(deploymentBoundedRunner, /attempt <= 2/u);
+  assert.match(deploymentBoundedRunner, /attempt <= 1/u);
   assert.match(deploymentBoundedRunner, /isRetryableTargetClosedLog/u);
   assert.match(deploymentBoundedRunner, /checkpoints\?\.length === 6/u);
   assert.match(deploymentBoundedRunner, /new Set\(kinds\)\.size !== kinds\.length/u);
@@ -142,8 +161,9 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   ]) {
     assert.match(hudBoundedRunner, new RegExp(`"${stateId}"`, "u"));
   }
-  assert.match(hudBoundedRunner, /attempt <= 2/u);
-  assert.match(hudBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(hudBoundedRunner, /attempt <= 1/u);
+  assert.match(hudBoundedRunner, /cleanUnexpectedHudCrashRetryable/u);
+  assert.match(hudBoundedRunner, /normalCleanupStarted === true/u);
   assert.match(hudBoundedRunner, /new Set\(stateIds\)\.size !== stateIds\.length/u);
   assert.match(hudBoundedRunner, /result\.states\?\.length === 1/u);
   assert.doesNotMatch(hudBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
@@ -165,7 +185,7 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.equal((stage3Job.match(/- final-base/gmu) ?? []).length, 1);
   assert.match(stage3Job, /Build exact PR base[\s\S]*if: matrix\.audio_case == 'final-base'/u);
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
-  assert.match(boundedRunner, /attempt <= 2/);
+  assert.match(boundedRunner, /attempt <= 1/);
   assert.match(boundedRunner, /isRetryableTargetClosedLog\(failure\.error/);
   assert.match(boundedRunner, /failure\.phase === "navigation"[\s\S]*setupState/u);
   assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);

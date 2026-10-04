@@ -11,22 +11,30 @@ const passingSummary = (kind) => ({
   results: [{ type: "deployment", status: "passed", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] }, units: [{ kind, status: "passed", checkpoints: Array.from({ length: 6 }, (_, index) => ({ index })), contactSheet: `${kind}.png` }] }],
 });
 
-test("deployment aggregator runs every canonical kind once in fresh bounded attempts", async () => {
+test("deployment aggregator runs every canonical kind exactly once", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "deployment-units-"));
   const calls = [];
   const report = await runCanonicalDeploymentUnits({ evidenceRoot: root, runAttempt: async ({ kind, attempt, attemptDir }) => {
     calls.push({ kind, attempt });
     await mkdir(attemptDir, { recursive: true });
-    if (kind === "ranger" && attempt === 1) {
-      await writeFile(path.join(attemptDir, "summary.json"), JSON.stringify({ total: 1, passed: 0, failed: 1, results: [{ error: "Error: page.screenshot: Target page, context or browser has been closed" }] }));
-      return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" };
-    }
     await writeFile(path.join(attemptDir, "summary.json"), JSON.stringify(passingSummary(kind)));
     return { code: 0, output: "passed\n" };
   } });
   assert.equal(report.status, "passed");
   assert.deepEqual(report.units.map(({ kind }) => kind), CANONICAL_DEPLOYMENT_KINDS);
-  assert.deepEqual(calls.filter(({ kind }) => kind === "ranger").map(({ attempt }) => attempt), [1, 2]);
+  assert.deepEqual(calls.map(({ attempt }) => attempt), Array(CANONICAL_DEPLOYMENT_KINDS.length).fill(1));
+});
+
+test("deployment aggregator preserves target-closed failure without a retry", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "deployment-target-closed-"));
+  const calls = [];
+  await assert.rejects(() => runCanonicalDeploymentUnits({ evidenceRoot: root, runAttempt: async ({ kind, attempt, attemptDir }) => {
+    calls.push({ kind, attempt });
+    await mkdir(attemptDir, { recursive: true });
+    await writeFile(path.join(attemptDir, "summary.json"), JSON.stringify({ total: 1, passed: 0, failed: 1, results: [{ error: "Error: page.screenshot: Target page, context or browser has been closed" }] }));
+    return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" };
+  } }), /failed at scout/u);
+  assert.deepEqual(calls, [{ kind: "scout", attempt: 1 }]);
 });
 
 test("deployment aggregator stops without retry on product assertion", async () => {
