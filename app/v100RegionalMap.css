@@ -542,9 +542,16 @@
   padding: 6px 8px;
   line-height: 32px;
 }
+#v100-campaign .v100-map-detail-content .v100-asset-credits > summary {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 8px;
+  line-height: 18px;
+}
 @media (max-height: 420px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="map"] .v100-map-side {
     display: flex;
+    align-items: stretch;
     flex-direction: column;
     min-height: 0;
     gap: 3px;
