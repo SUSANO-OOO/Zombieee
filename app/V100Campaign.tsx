@@ -260,7 +260,7 @@ function stageDisplayNameFor(stage: (typeof V100_STAGES)[number] | undefined) {
   return stage.number < 27 ? stage.displayName.replace(/RED PANTHER/gu, "赤レンズ部隊") : stage.displayName;
 }
 
-const V100_PROLOGUE_SYNOPSIS = PROLOGUE_SYNOPSIS.short.replace("放置車両CRAWLERを確保", "放置された装甲車両を確保");
+const V100_PROLOGUE_SYNOPSIS = PROLOGUE_SYNOPSIS.short.replace("放置車両CRAWLERを確保", "放置された装甲車両を確保").replace("あなたは西新で", "西新で");
 
 const V100_CHAPTERS = Object.freeze([
   { id: "chapter-1", label: "第一章", range: "1–6", start: 1, end: 6 },
@@ -892,7 +892,7 @@ export function V100Campaign() {
             <p className="v100-title-synopsis">{V100_PROLOGUE_SYNOPSIS}</p>
             <div className="v100-name-card">
               <h2 id="v100-name-title">名前を入力</h2>
-              <p>この名前は、物語の中で仲間たちがあなたを呼ぶ名前になります。</p>
+              <p>物語の中で仲間たちに呼ばれる名前です。</p>
               <form onSubmit={startCampaign}>
                 <label htmlFor="v100-player-name">呼ばれたい名前</label>
                 <input id="v100-player-name" value={nameInput} onChange={(event) => setNameInput(event.currentTarget.value)} autoComplete="nickname" />
@@ -940,7 +940,7 @@ export function V100Campaign() {
       {flow.phase === "map" && surface === "rename" && (
         <section className="v100-panel v100-name-card v100-rename-panel" aria-labelledby="v100-rename-title" data-v100-surface="rename">
           <h2 id="v100-rename-title">呼ばれたい名前を変更</h2>
-          <p>仲間があなたを呼ぶ名前です。12文字以内で入力してください。</p>
+          <p>仲間たちに呼ばれる名前です。12文字以内で入力してください。</p>
           <form onSubmit={rename} onKeyDown={event => { if (event.key === "Escape") openSurface("campaign"); }}>
             <label htmlFor="v100-rename-input">呼ばれたい名前</label>
             <input id="v100-rename-input" value={nameInput} onChange={event => { setNameInput(event.currentTarget.value); setNameError(""); }} autoComplete="nickname" aria-describedby={nameError ? "v100-rename-error" : undefined} />
