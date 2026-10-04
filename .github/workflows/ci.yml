@@ -677,6 +677,7 @@ jobs:
 
       - name: Verify pinned macOS WebKit runtime
         id: webkit-runtime
+        timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
@@ -694,6 +695,7 @@ jobs:
         run: npm run qa:records
 
       - name: Capture Version 0.9.9.5 station final-canvas evidence (WebKit)
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           DEBUG: pw:browser
           V0995_VISUAL_QA_ENGINES: webkit
@@ -761,10 +763,12 @@ jobs:
         run: npx playwright install webkit
 
       - name: Verify pinned macOS WebKit runtime
+        id: webkit-runtime
         timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           V0995_ENEMY_QA_ENGINES: webkit
         run: |
@@ -832,13 +836,15 @@ jobs:
         run: npx playwright install webkit
 
       - name: Verify pinned macOS WebKit runtime
+        id: webkit-runtime
         timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Capture canonical HUD evidence
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           DEBUG: pw:browser
-          ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/hud
+          ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/hud/${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_ENGINES: webkit
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
@@ -892,11 +898,13 @@ jobs:
       - name: Install locked Playwright browsers
         run: npx playwright install webkit
       - name: Verify pinned macOS WebKit runtime
+        id: webkit-runtime
         timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
       - name: Build production application
         run: npm run build
       - name: Capture final-canvas deployment evidence
+        if: ${{ !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           DEBUG: pw:browser
           ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/deployment
@@ -951,6 +959,8 @@ jobs:
       - name: Install locked Playwright browsers
         run: npx playwright install webkit
       - name: Verify pinned macOS WebKit runtime
+        id: webkit-runtime
+        timeout-minutes: 3
         run: node scripts/verify-playwright-container-runtime.mjs --macos
 
       - name: Install and verify GNU timeout
@@ -964,7 +974,7 @@ jobs:
         run: npm run build
 
       - name: Capture bounded candidate Stage 3 audio route
-        if: matrix.audio_case != 'final-base'
+        if: ${{ matrix.audio_case != 'final-base' && !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: webkit
@@ -992,7 +1002,7 @@ jobs:
           )
 
       - name: Capture exact-base bounded Stage 3 final route
-        if: matrix.audio_case == 'final-base'
+        if: ${{ matrix.audio_case == 'final-base' && !cancelled() && steps.webkit-runtime.outcome == 'success' }}
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: webkit

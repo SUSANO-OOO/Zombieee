@@ -31,9 +31,7 @@ test("bounded enemy runner preserves native target-close and never retries it", 
     evidenceRoot: root,
     runAttempt: async ({ attempt, attemptDir }) => {
       calls.push({ attempt, attemptDir });
-      return attempt === 1
-        ? { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" }
-        : { code: 0, output: "{\"status\":\"passed\",\"cases\":4}\n" };
+      return { code: 1, output: "page.screenshot: Target page, context or browser has been closed\n" };
     },
   }), /failed after 1 attempt/u);
   const report = JSON.parse(await readFile(path.join(root, "bounded-summary.json"), "utf8"));

@@ -30,6 +30,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /fetch-depth: 0/u);
   assert.match(workflow, /PR_BASE_SHA/u);
   assert.match(workflow, /PR_HEAD_SHA/u);
+  assert.match(workflow, /id: pwa_update_scope[\s\S]*?run: node scripts\/classify-pwa-update-scope\.mjs/u);
   assert.match(workflow, /PR_BASE_REF/u);
   assert.match(workflow, /git merge-base --is-ancestor "\$PR_BASE_SHA" "\$PR_MERGE_SHA"/u);
   assert.match(workflow, /git merge-base --is-ancestor "\$PR_HEAD_SHA" "\$PR_MERGE_SHA"/u);
@@ -65,7 +66,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
     .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
   const hudStates = CANONICAL_HUD_STATES;
   assert.deepEqual(hudViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
-  assert.deepEqual(hudStates, [
+  assert.deepEqual(CANONICAL_HUD_STATES, [
     "stage1-normal", "five-units", "deployment-banner", "manual-ability-banner",
     "objective-full", "support-disabled", "banner-bark-boss", "stage3-boss",
   ]);
@@ -103,7 +104,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.doesNotMatch(stage3Job, /npm run qa:p5/u);
   assert.equal((stage3Job.match(/node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
-  const assertMacRuntime = (job, engines) => {
+  const assertMacRuntime = (job, engines, { requirePreflightGate = true } = {}) => {
     assert.match(job, /runs-on: macos-15-intel/u);
     assert.doesNotMatch(job, /container:|V100_PLAYWRIGHT_CONTAINER_|WEBKIT_SKIA/u);
     const parsedJob = loadYaml(job);
@@ -115,9 +116,16 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
     const build = steps.findIndex(step => step.run === "npm run build");
     const capture = steps.findIndex(step => step.name.startsWith("Capture "));
     assert.ok(install >= 0 && install < browsers && browsers < preflight && preflight < capture);
+    if (requirePreflightGate) {
+      assert.equal(steps[preflight]?.id, "webkit-runtime");
+      assert.equal(steps[preflight]?.["timeout-minutes"], 3);
+      for (const step of steps.filter(candidate => candidate.name.startsWith("Capture "))) {
+        assert.match(step.if, /!cancelled().*steps.webkit-runtime.outcome == 'success'/u);
+      }
+    }
     assert.ok(build > install && build < capture);
   };
-  assertMacRuntime(phaseGJob, "chromium webkit");
+  assertMacRuntime(phaseGJob, "chromium webkit", { requirePreflightGate: false });
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
   assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
   assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 1);
