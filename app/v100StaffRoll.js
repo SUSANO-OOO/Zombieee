@@ -29,7 +29,6 @@ export function v100StaffRollSections(playerName = "") {
     { title: "場面別の音楽", lines: ["Scott Buckley / CC BY 4.0", ...V100_MUSIC_TRACKS.filter((track, index, all) => all.findIndex(other => other.file === track.file) === index).map(track => track.title)] },
     ...V100_SOUND_CREDITS.map(credit => ({ title: credit.role, lines: [credit.author, ...credit.works, credit.license] })),
     { title: "旧版から継承・同梱した音源", lines: V100_BUNDLED_LEGACY_CREDITS.flatMap(credit => [credit.author, credit.work]) },
-    { title: "THANK YOU FOR PLAYING", lines: ["西新世紀末物語"] },
   ];
 }
 
