@@ -73,11 +73,19 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const v100ApprovedPaths = new Set(current.assets
     .filter(({ path }) => path.startsWith("/art/v100/"))
     .map(({ path }) => path));
-  const { V100_RELEASE_ASSET_CONTRACT, V100_PRODUCER_FEEDBACK_ART_ADDITIONS, V100_WEBKIT_CARD_REPLACEMENT, V100_ENDING_MUSIC_ADDITION } = await import("../scripts/v100-release-asset-contract.mjs");
+  const { V100_RELEASE_ASSET_CONTRACT, V100_PRODUCER_FEEDBACK_ART_ADDITIONS, V100_WEBKIT_CARD_REPLACEMENT, V100_ENDING_MUSIC_ADDITION, V100_DESIGN_ASSET_ADDITIONS } = await import("../scripts/v100-release-asset-contract.mjs");
   assert.equal(v100ApprovedPaths.size, V100_RELEASE_ASSET_CONTRACT.artAdditionsFromV0995, "V1 adds exactly the source-bound runtime art");
   const { V100_PHONE_REVIEW_ASSET_ADDITIONS } = await import("../scripts/v100-phone-review-asset-contract.mjs");
   const phoneReviewPaths = new Set(V100_PHONE_REVIEW_ASSET_ADDITIONS.map(asset=>asset.path));
   const producerFeedbackPaths = new Set(V100_PRODUCER_FEEDBACK_ART_ADDITIONS.map(asset=>asset.path));
+  const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
+  assert.equal(designAssetPaths.size, 9, "six regional maps and three licensed fonts are explicit candidate additions");
+  for (const expected of V100_DESIGN_ASSET_ADDITIONS) {
+    const actual = current.assets.find(asset => asset.path === expected.path);
+    assert.ok(actual, expected.path);
+    assert.deepEqual({ path: actual.path, bytes: actual.bytes, hash: actual.hash, criticality: actual.criticality }, expected);
+  }
+  assert.deepEqual(new Set(current.assets.filter(({ path }) => designAssetPaths.has(path)).map(({ path }) => path)), designAssetPaths);
   const finalRemediationPaths = new Set([
     "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
     "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
@@ -132,6 +140,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => !v100ApprovedPaths.has(path))
     .filter(({ path }) => !phoneReviewPaths.has(path))
     .filter(({ path }) => !producerFeedbackPaths.has(path))
+    .filter(({ path }) => !designAssetPaths.has(path))
     .filter(({ path }) => path !== V100_ENDING_MUSIC_ADDITION.path)
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))

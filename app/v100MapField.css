@@ -92,7 +92,7 @@
   }
 
   .v100-shell:has(> .v100-command-tabs) .v100-map-node-marker i {
-    font-family: Georgia, serif;
+    font-family: var(--v100-numeric-font);
     font-size: 12px;
     font-weight: 900;
     letter-spacing: -.06em;

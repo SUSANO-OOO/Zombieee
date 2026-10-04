@@ -1,6 +1,7 @@
 "use client";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
+import { V100_CANVAS_FONT } from "./v100Typography.js";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
@@ -3947,7 +3948,7 @@ function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
     ctx.beginPath(); ctx.arc(23, -20, 6, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.fillStyle = "#fff4d4";
-  ctx.font = "900 13px monospace";
+  ctx.font = V100_CANVAS_FONT.display(13);
   ctx.textAlign = "center";
   ctx.fillText(guardian ? "G" : "M", guardian ? -2 : 0, -35);
   ctx.restore();
@@ -4002,7 +4003,7 @@ function drawDiagnosticStationEnemy(ctx: CanvasRenderingContext2D, f: Fighter) {
     ctx.stroke();
   }
   ctx.fillStyle = "#fff4d4";
-  ctx.font = `900 ${gateEater ? 17 : 14}px monospace`;
+  ctx.font = V100_CANVAS_FONT.display(gateEater ? 17 : 14);
   ctx.textAlign = "center";
   ctx.fillText(gateEater ? "改" : grappler ? "絡" : ooze ? "泥" : "走", 0, gateEater ? -46 : -32);
   ctx.restore();
@@ -6201,7 +6202,7 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   }
   ctx.globalAlpha = .95;
   ctx.fillStyle = "#f4dfb8";
-  ctx.font = "900 10px monospace";
+  ctx.font = V100_CANVAS_FONT.display(10);
   ctx.textAlign = "center";
   const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), Boolean(g.definition.missionConfig?.v100StageNumber));
   const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
@@ -6696,7 +6697,7 @@ function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: Battlefiel
     ctx.fillStyle = hpRatio <= .3 ? "#512b25" : "#783e2c";
     ctx.fillRect(-15, -36, 30, 42);
     ctx.fillStyle = "#c17642"; ctx.fillRect(-17, -31, 34, 5); ctx.fillRect(-17, -8, 34, 5);
-    ctx.fillStyle = "#e7b94e"; ctx.font = "900 17px monospace"; ctx.textAlign = "center"; ctx.fillText("!", 0, -14);
+    ctx.fillStyle = "#e7b94e"; ctx.font = V100_CANVAS_FONT.display(17); ctx.textAlign = "center"; ctx.fillText("!", 0, -14);
   } else if (allowDiagnosticFallback && object.kind === "medical") {
     ctx.fillStyle = hpRatio <= .3 ? "#6f765f" : "#d0c6a5";
     ctx.fillRect(-23, -29, 46, 34);
@@ -6750,7 +6751,7 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
     ? "遮蔽物を配置" : placementReasonLabel(indicator.reason);
   const labelY = indicator.y - (indicator.footprintOnly ? 74 : Math.min(52, radius * .34 + 16));
   ctx.save();
-  ctx.font = "900 10px monospace";
+  ctx.font = V100_CANVAS_FONT.display(10);
   const labelWidth = Math.min(138, Math.ceil(ctx.measureText(label).width) + 14);
   const labelX = Math.max(labelWidth / 2 + 8, Math.min(W - labelWidth / 2 - 8, indicator.x));
   ctx.fillStyle = "rgba(12,14,14,.78)";
@@ -7219,7 +7220,7 @@ function drawEnemyBase(
     }
     ctx.globalAlpha = 1;
     if (collapse >= .82) {
-      ctx.fillStyle = "#d36b42"; ctx.font = "900 14px monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#d36b42"; ctx.font = V100_CANVAS_FONT.display(14); ctx.textAlign = "center";
       ctx.fillText("感染拠点 破壊", barrier.drawX + barrier.width / 2, barrier.drawY + barrier.height - 42);
       ctx.textAlign = "left";
     }
@@ -7581,7 +7582,7 @@ function drawDiagnosticStationBackground(ctx: CanvasRenderingContext2D, g: Game)
     }
   }
   ctx.fillStyle = "rgba(255,255,255,.58)";
-  ctx.font = "900 11px monospace";
+  ctx.font = V100_CANVAS_FONT.display(11);
   ctx.fillText("STATION ART LOAD FALLBACK // CHECK ASSET MANIFEST", 18, 24);
 }
 
@@ -7631,7 +7632,7 @@ function drawStageGeometryDebug(ctx: CanvasRenderingContext2D, g: Game) {
   ctx.fillStyle = "rgba(8,12,13,.88)";
   ctx.fillRect(14, H - 42, 300, 28);
   ctx.fillStyle = audit.offFloorCount === 0 ? "#9fe1b5" : "#ff7d70";
-  ctx.font = "900 12px monospace";
+  ctx.font = V100_CANVAS_FONT.numeric(12);
   ctx.fillText(`GEOMETRY ${geometry.viewport.id} // OFF-FLOOR ${audit.offFloorCount}`, 24, H - 24);
   ctx.restore();
 }
@@ -7670,7 +7671,7 @@ function drawCachedStageBackground(
     background.naturalWidth,
     background.naturalHeight,
     profile.smoothingQuality,
-    "output-grade-v1",
+    g.definition.missionConfig.v100StageNumber ? "output-grade-v100-2" : "output-grade-v1",
     outputWidth,
     outputHeight,
     worldTransform.a.toFixed(6),
@@ -7701,11 +7702,24 @@ function drawCachedStageBackground(
     cacheContext.imageSmoothingQuality = profile.smoothingQuality as ImageSmoothingQuality;
     drawStageBackground(cacheContext, g, background);
     const grade = cacheContext.createLinearGradient(0, 0, W, 0);
-    grade.addColorStop(0, "rgba(23,28,31,.18)");
-    grade.addColorStop(.55, "rgba(15,13,12,.04)");
-    grade.addColorStop(1, "rgba(58,18,12,.2)");
+    const v100Presentation = Boolean(g.definition.missionConfig.v100StageNumber);
+    grade.addColorStop(0, v100Presentation ? "rgba(37,57,65,.07)" : "rgba(23,28,31,.18)");
+    grade.addColorStop(.55, v100Presentation ? "rgba(31,41,44,.015)" : "rgba(15,13,12,.04)");
+    grade.addColorStop(1, v100Presentation ? "rgba(68,39,30,.08)" : "rgba(58,18,12,.2)");
     cacheContext.fillStyle = grade;
     cacheContext.fillRect(0, 0, W, H);
+    if (v100Presentation) {
+      // Light only the cached environment. Authored people, weapons and attack
+      // poses keep their original pixels and remain in front of this grade.
+      const floorLight = cacheContext.createLinearGradient(0, 0, 0, H);
+      floorLight.addColorStop(0, "rgba(173,187,190,0)");
+      floorLight.addColorStop(.22, "rgba(173,187,190,.025)");
+      floorLight.addColorStop(.49, "rgba(173,187,190,.13)");
+      floorLight.addColorStop(.76, "rgba(173,187,190,.065)");
+      floorLight.addColorStop(1, "rgba(173,187,190,0)");
+      cacheContext.fillStyle = floorLight;
+      cacheContext.fillRect(0, 0, W, H);
+    }
     cache.key = key;
     cache.rebuilds += 1;
     if (typeof createImageBitmap === "function") {
@@ -7863,7 +7877,7 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
       ctx.ellipse(effect.x, effect.y - 22, snapshot.focusRadius, snapshot.focusRadius * .48, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillStyle = "#ffd3aa";
-      ctx.font = "900 16px monospace";
+      ctx.font = V100_CANVAS_FONT.display(16);
       ctx.textAlign = "center";
       ctx.fillText(effect.label || "BOSS SIGNAL", effect.x, Math.max(30, effect.y - 118));
       ctx.restore();
@@ -8709,7 +8723,7 @@ function drawWorld(
   ctx.globalAlpha = 1;
   for (const d of g.damageTexts) {
     if (!visibleRenderPoint(d.x, d.y, graphicsProfile.cullingMargin)) continue;
-    ctx.globalAlpha = Math.min(1, d.life * 2); ctx.fillStyle = d.color; ctx.font = "bold 14px monospace"; ctx.textAlign = "center";
+    ctx.globalAlpha = Math.min(1, d.life * 2); ctx.fillStyle = d.color; ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = "center";
     ctx.shadowColor = "#000"; ctx.shadowBlur = 3; ctx.fillText(d.value, d.x, d.y);
   }
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left";
@@ -23877,11 +23891,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
             <div className="stats-strip battle-stats">
+              {externalSessionActive && !isSurvivalBattle ? <>
+                <span className="v100-supply-readout" title="回復・ドラム缶に使う物資。敵撃破で補充。" aria-label={`物資 ${hud.scrap}`}>物資 <b>{hud.scrap}</b></span>
+                <span className="bay-status v100-deployed-count" aria-label={`同時出撃 ${hud.summonedCount} / 7`} title="同時出撃人数 / 上限7人"><svg viewBox="0 0 16 20" aria-hidden="true"><circle cx="8" cy="4" r="3" /><path d="M4 8h8l2 7h-3v5H5v-5H2Z" /></svg><b>{hud.summonedCount}/7</b></span>
+              </> : <>
               <span>討伐 {hud.kills}</span>
               {!isSurvivalBattle && <span title={externalSessionActive ? "回復・ドラム缶に使う物資。敵撃破で補充。" : undefined}>{externalSessionActive ? "物資" : "資材"} {hud.scrap}</span>}
               {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
               <span className="bay-status">同時出撃 {hud.summonedCount}/7</span>
               {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
+              </>}
             </div>
           </div>
 
@@ -23942,7 +23961,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               >
                 <span className="support-key">{(selectedSupplyDefinition?.key ?? "—")}</span>
                 <b>{externalSessionActive ? selectedSupplyDefinition ? selectedSupplyName : "戦術支援" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : selectedSupplyName}</b>
-                <small>{externalSessionActive ? <span className="v100-support-status">{!selectedSupplyDefinition ? "出撃前に装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再使用 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></>}</small>
+                <small>{externalSessionActive ? <span className="v100-support-status">{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再使用 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></>}</small>
                  <em>{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${selectedSupplyCost}`}</em>
                </button>
                <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-cooldown={Math.ceil(airstrikeCooldown)} data-state={airstrikeCooldown > 0 ? "cooldown" : hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={Boolean(airstrikeBlockReason)} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${airstrikeCost}支援ゲージ`}>

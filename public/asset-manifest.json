@@ -2271,6 +2271,54 @@
       "sourcePath": "/pwa-optimized/art/v100/vfx/stage30-dawn-damage-v1.webp"
     },
     {
+      "path": "/assets/v100/maps/chapter-1-nishijin.webp",
+      "bytes": 501520,
+      "hash": "sha256-64ae41f1de9c6b17c7b5ada52e9346ba3ea8195b9f749ad2c631aa379399b4e4",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/assets/v100/maps/chapter-2-hospital.webp",
+      "bytes": 492596,
+      "hash": "sha256-3d133eb7a5066ac8a8fd3bf4f0262ebcd849fb9a0370ebd713001d1f96cc8ea7",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/assets/v100/maps/chapter-3-coast.webp",
+      "bytes": 484980,
+      "hash": "sha256-1e064e95839a1e7413c21d8a86586a5fdfc8b1c19d46acfd80c119d9da30ab53",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/assets/v100/maps/chapter-4-corporate.webp",
+      "bytes": 576826,
+      "hash": "sha256-b366ea3884fd7758ba56fdd228f1de795db29b9e3ac715f503d5eff495b58c7e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/assets/v100/maps/chapter-5-bay.webp",
+      "bytes": 500786,
+      "hash": "sha256-1739cb27cde2b4c2715ba59c3c1947743deb66e3e41dc3f42e8bcb02d6ec62d7",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/assets/v100/maps/chapter-6-defense.webp",
+      "bytes": 528944,
+      "hash": "sha256-2690eea7b5db5405b064e90f58e9abb54ef366225a34538eb05fa865008e5f79",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",
@@ -6459,6 +6507,30 @@
       "category": "object",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/explosive-drum-v1.webp"
+    },
+    {
+      "path": "/fonts/v100/BIZUDPGothic-Regular.woff2",
+      "bytes": 2199640,
+      "hash": "sha256-1c946054094a84b08b1c99b2239cec57f9fa0611031e4634cb3ab202784629a1",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/fonts/v100/Rajdhani-Bold.woff2",
+      "bytes": 104768,
+      "hash": "sha256-952240444fafbfebed25797408c6fb9088267a8cdd0b28e2c478b694db3bf407",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/fonts/v100/ZenKakuGothicNew-Bold.woff2",
+      "bytes": 1083376,
+      "hash": "sha256-751171e0c0e30d0b51c2f51ddc54362f082fcb49d6f0d144b9ae119a4ec3a978",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
     },
     {
       "path": "/icons/v099/infected-face-a2-1024.png",

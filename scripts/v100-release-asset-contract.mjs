@@ -87,7 +87,20 @@ export const V100_ENDING_MUSIC_ADDITION = Object.freeze({
   hash: "sha256-a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
   criticality: "optional",
 });
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS));
+// OpenAI-generated campaign map plates created under Producer direction and the licensed Japanese type family
+// are exact, hash-pinned additions to this release candidate.
+export const V100_DESIGN_ASSET_ADDITIONS = Object.freeze([
+  Object.freeze({ path: "/assets/v100/maps/chapter-1-nishijin.webp", bytes: 501520, hash: "sha256-64ae41f1de9c6b17c7b5ada52e9346ba3ea8195b9f749ad2c631aa379399b4e4", criticality: "critical" }),
+  Object.freeze({ path: "/assets/v100/maps/chapter-2-hospital.webp", bytes: 492596, hash: "sha256-3d133eb7a5066ac8a8fd3bf4f0262ebcd849fb9a0370ebd713001d1f96cc8ea7", criticality: "critical" }),
+  Object.freeze({ path: "/assets/v100/maps/chapter-3-coast.webp", bytes: 484980, hash: "sha256-1e064e95839a1e7413c21d8a86586a5fdfc8b1c19d46acfd80c119d9da30ab53", criticality: "critical" }),
+  Object.freeze({ path: "/assets/v100/maps/chapter-4-corporate.webp", bytes: 576826, hash: "sha256-b366ea3884fd7758ba56fdd228f1de795db29b9e3ac715f503d5eff495b58c7e", criticality: "critical" }),
+  Object.freeze({ path: "/assets/v100/maps/chapter-5-bay.webp", bytes: 500786, hash: "sha256-1739cb27cde2b4c2715ba59c3c1947743deb66e3e41dc3f42e8bcb02d6ec62d7", criticality: "critical" }),
+  Object.freeze({ path: "/assets/v100/maps/chapter-6-defense.webp", bytes: 528944, hash: "sha256-2690eea7b5db5405b064e90f58e9abb54ef366225a34538eb05fa865008e5f79", criticality: "critical" }),
+  Object.freeze({ path: "/fonts/v100/BIZUDPGothic-Regular.woff2", bytes: 2199640, hash: "sha256-1c946054094a84b08b1c99b2239cec57f9fa0611031e4634cb3ab202784629a1", criticality: "critical" }),
+  Object.freeze({ path: "/fonts/v100/ZenKakuGothicNew-Bold.woff2", bytes: 1083376, hash: "sha256-751171e0c0e30d0b51c2f51ddc54362f082fcb49d6f0d144b9ae119a4ec3a978", criticality: "critical" }),
+  Object.freeze({ path: "/fonts/v100/Rajdhani-Bold.woff2", bytes: 104768, hash: "sha256-952240444fafbfebed25797408c6fb9088267a8cdd0b28e2c478b694db3bf407", criticality: "critical" }),
+]);
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 const creditsFilmBytes = V100_CREDITS_FILM_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
@@ -103,12 +116,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 60_311_674 + creditsFilmBytes,
+  bytesFromV0995: 60_311_674 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 149_990_007 + creditsFilmBytes,
-  candidateDistinctHashBytes: 149_450_104 + creditsFilmBytes,
-  updateFromV0982Bytes: 77_002_122 + creditsFilmBytes,
-  updateFromV0993Bytes: 66_627_428 + creditsFilmBytes,
+  candidateTotalBytes: 149_990_007 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  candidateDistinctHashBytes: 149_450_104 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  updateFromV0982Bytes: 77_002_122 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  updateFromV0993Bytes: 66_627_428 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
 });

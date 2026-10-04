@@ -11,8 +11,14 @@
 *.ogg -text
 *.mp3 -text
 *.wav -text
+*.woff2 -text
 *.bin -text
 public/pwa-bundles/*.json -text
+
+# Preserve the upstream OFL notices byte-for-byte, including their trailing space.
+public/fonts/v100/OFL-BIZUDPGothic.txt -text whitespace=-blank-at-eol
+public/fonts/v100/OFL-Rajdhani.txt -text whitespace=-blank-at-eol
+public/fonts/v100/OFL-ZenKakuGothicNew.txt -text whitespace=-blank-at-eol
 
 # The generated distribution manifest itself must stay byte-identical across
 # platforms so its drift check is meaningful.

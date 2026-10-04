@@ -48,6 +48,9 @@ export default function RootLayout({
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/BIZUDPGothic-Regular.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/ZenKakuGothicNew-Bold.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/Rajdhani-Bold.woff2" crossOrigin="anonymous" />
         {/*
           Absolute paths here on purpose: the GitHub Pages build rewrites
           root-absolute references to the /Zombieee base path and then verifies

@@ -55,6 +55,8 @@ import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js"
 import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
 import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
 import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
+import { V100_FONT_ASSETS } from "../app/v100Typography.js";
+import { v100RegionalMapPaths } from "../app/v100RegionalMap.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -66,7 +68,7 @@ const checkOnly = process.argv.includes("--check");
 // pass always requires and records the lossless WebP derivative.
 const allowMissingDerivatives = process.argv.includes("--allow-missing-derivatives");
 
-const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav)$/i;
+const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav|woff2)$/i;
 
 function optimizedRasterPath(assetPath) {
   // WebKit corrupts this transparent card when decoded from WebP, including
@@ -168,6 +170,12 @@ function categoryForKind(kind) {
 
 record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
 record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
+for (const fontPath of V100_FONT_ASSETS) {
+  record(fontPath, { pack: "app-shell", category: "app", criticality: "critical" });
+}
+for (const mapPath of Object.values(v100RegionalMapPaths())) {
+  record(mapPath, { pack: "campaign-core", category: "background", criticality: "critical" });
+}
 // Every icon the web app manifest or the document head points at. An icon that
 // is referenced but not registered here is absent from the offline pack, so an
 // installed app would go looking for it over a network it may not have.

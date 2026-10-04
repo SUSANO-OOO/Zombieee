@@ -17,6 +17,7 @@ export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
       <a href={credit.license === "CC0" ? "https://creativecommons.org/publicdomain/zero/1.0/" : "https://creativecommons.org/licenses/by/3.0/"} target="_blank" rel="noreferrer">{credit.license}</a>
     </li>)}</ul>
     <p>戦闘ボイス・効果音は切り出し、フィルター、音量、フェードを調整。エフェクト画像はゲーム用の配置・再生時間・煙の重なりを調整。</p>
+    <p>画面本文：BIZ UDPGothic。見出し・ボタン：Zen Kaku Gothic New。英数字：Rajdhani。Google Fontsで配布される書体を使用。著作権表示とSIL Open Font License 1.1全文を同梱。</p>
     <p>旧版から継承・同梱した音源（CC0）：</p>
     <ul>{V100_BUNDLED_LEGACY_CREDITS.map(credit => <li key={credit.author}><a href={credit.page} target="_blank" rel="noreferrer">{credit.author} — {credit.work}</a></li>)}</ul>
     <p>制作・監修：SUSANO-OOO。開発・シナリオ構成・品質確認：Codex / ChatGPT。背景・人物・エフェクト画像制作支援：OpenAI ImageGen。</p>

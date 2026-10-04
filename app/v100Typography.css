@@ -1,0 +1,53 @@
+@font-face {
+  font-family: "BIZ UDPGothic";
+  src: url("/fonts/v100/BIZUDPGothic-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  src: url("/fonts/v100/ZenKakuGothicNew-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Rajdhani;
+  src: url("/fonts/v100/Rajdhani-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+.v100-shell.v100-shell {
+  --v100-reading-font: "BIZ UDPGothic", "Yu Gothic UI", Meiryo, sans-serif;
+  --v100-display-font: "Zen Kaku Gothic New", "BIZ UDPGothic", "Yu Gothic UI", Meiryo, sans-serif;
+  --v100-numeric-font: Rajdhani, "BIZ UDPGothic", "Yu Gothic UI", Meiryo, sans-serif;
+  font-family: var(--v100-reading-font);
+}
+
+.v100-shell.v100-shell * {
+  font-family: var(--v100-reading-font);
+}
+
+.v100-shell.v100-shell :is(h1, h2, h3, h4, button, strong, b, [role="button"]) {
+  font-family: var(--v100-display-font);
+}
+
+.v100-shell.v100-shell :is(.v100-sortie-count, .v100-result-highlight strong, .v100-map-node-marker, .v100-map-hero-meta span:last-child, .v100-management-hero > b, .v100-vehicle-readout strong) {
+  font-family: var(--v100-numeric-font);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.v100-shell.v100-shell .v100-map-node-marker i {
+  font-family: var(--v100-numeric-font);
+}
+
+.v100-shell .game-frame :is(.unit-card .cost, .v100-boss-center b) {
+  font-family: var(--v100-numeric-font);
+  font-variant-numeric: tabular-nums;
+}
