@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { V100_CREDITS_SCENES } from "./v100EventPresentation.js";
+import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { V100AssetCredits } from "./V100AssetCredits";
-import { V100_CREDITS_SONG, v100StaffRollCamera, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "./v100StaffRoll.js";
+import { V100_CREDITS_SONG, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "./v100StaffRoll.js";
 import "./v100StaffRoll.css";
 
 type Shot = { sceneLabel?: string; text?: string };
@@ -160,23 +160,17 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
         if (roll && viewport) {
           const footer = roll.querySelector("footer");
           const finalCenter = footer ? footer.offsetTop + footer.clientHeight / 2 : roll.scrollHeight;
-          const travel = finalCenter + viewport.clientHeight / 2;
-          const rollProgress = Math.min(1, next.elapsed / Math.max(1, durationRef.current - 20));
-          roll.style.transform = `translate3d(0, ${viewport.clientHeight - rollProgress * travel}px, 0)`;
-        }
-        const shot = shotRef.current;
-        if (shot) {
-          const shotIndex = Number(shot.dataset.creditCameraIndex);
-          const camera = v100StaffRollCamera(shotIndex, shotIndex === next.index ? next.withinScene : 1);
-          shot.style.setProperty("--credit-x", `${camera.x}%`);
-          shot.style.setProperty("--credit-y", `${camera.y}%`);
-          shot.style.setProperty("--credit-scale", String(camera.scale));
+          const header = roll.querySelector("header");
+          const start = Math.max(0, (viewport.clientHeight - (header?.clientHeight ?? 0)) / 2);
+          const travel = start + finalCenter - viewport.clientHeight / 2;
+          const rollProgress = Math.min(1, Math.max(0, (next.elapsed - 4) / Math.max(1, durationRef.current - 24)));
+          roll.style.transform = `translate3d(0, ${start - rollProgress * travel}px, 0)`;
         }
         if (next.index !== lastSceneRef.current && !callbacksRef.current.busy) {
           lastSceneRef.current = next.index;
           callbacksRef.current.onScene?.(next.index);
         }
-        if (next.index !== Number(shotRef.current?.dataset.creditCameraIndex) || at - lastPaint >= 100) { setFrame(next); lastPaint = at; }
+        if (next.shotIndex !== Number(shotRef.current?.dataset.creditShotIndex) || at - lastPaint >= 100) { setFrame(next); lastPaint = at; }
         // MP3 duration can be an estimate until its last frame is decoded.
         // Let native ended finish a playing song without cutting its tail.
         if (next.ended && (!soundEnabledRef.current || ["muted", "unavailable"].includes(soundStateRef.current))) beginOutro();
@@ -190,6 +184,9 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       window.removeEventListener("pagehide", pageHide);
       window.removeEventListener("pageshow", visibility);
       rotationBlocker.removeEventListener("change", visibility);
+      playbackAllowedRef.current = false;
+      playAttemptRef.current += 1;
+      playingRef.current = false;
       audio?.pause();
     };
   }, [finish, beginOutro, nodes.length, play]);
@@ -210,10 +207,9 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
     if (next) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audioRef.current?.pause(); playingRef.current = false; }
     else void play();
   };
-  const current = nodes[frame.index], next = nodes[frame.nextIndex];
-  const cameraStyle = (index: number, progress: number) => { const camera = v100StaffRollCamera(index, progress); return { "--credit-x": `${camera.x}%`, "--credit-y": `${camera.y}%`, "--credit-scale": camera.scale } as CSSProperties; };
-  const background = (shot: Shot | undefined) => V100_CREDITS_SCENES[shot?.sceneLabel ?? ""]?.backgroundPath;
-  return <section ref={stageRef} className={`v100-staff-roll ${settings.reducedMotion ? "v100-credits-reduced" : ""} ${outro ? "v100-credits-outro" : ""}`} aria-label="スタッフロール" data-v100-surface="credits" data-v100-event-id="v100:event:credits" data-v100-event-category="credits" data-v100-audio-owner="v100-staff-roll" data-v100-credit-scene={current?.sceneLabel} data-v100-node-index={frame.index} data-v100-credit-audio={soundState} data-v100-credit-progress={frame.progress.toFixed(4)} data-v100-credit-bookend={frame.elapsed < 12 || frame.index === nodes.length - 1 ? "true" : "false"} style={{ "--credit-blend": 0 } as CSSProperties}>
+  const current = nodes[frame.index];
+  const currentShot = V100_CREDITS_FILM[frame.shotIndex], nextShot = V100_CREDITS_FILM[frame.nextShotIndex];
+  return <section ref={stageRef} className={`v100-staff-roll ${settings.reducedMotion ? "v100-credits-reduced" : ""} ${outro ? "v100-credits-outro" : ""}`} aria-label="スタッフロール" data-v100-surface="credits" data-v100-event-id="v100:event:credits" data-v100-event-category="credits" data-v100-audio-owner="v100-staff-roll" data-v100-credit-scene={current?.sceneLabel} data-v100-credit-shot={currentShot?.id} data-v100-credit-shot-index={frame.shotIndex} data-v100-node-index={frame.index} data-v100-credit-audio={soundState} data-v100-credit-progress={frame.progress.toFixed(4)} style={{ "--credit-blend": 0 } as CSSProperties}>
     <audio ref={audioRef} src={V100_CREDITS_SONG.src} preload="metadata" crossOrigin="anonymous"
       onDurationChange={event => { const length = event.currentTarget.duration; if (Number.isFinite(length) && length > 0) durationRef.current = length; }}
       onLoadedMetadata={event => {
@@ -232,15 +228,16 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       onSeeked={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
       onError={event => { playbackAllowedRef.current = false; playAttemptRef.current += 1; event.currentTarget.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable"); }}
       onEnded={beginOutro} />
-    <div className="v100-credit-landscape" aria-hidden="true"><div ref={shotRef} key={frame.index} data-credit-camera-index={frame.index} className="v100-credit-shot" style={{ backgroundImage: `url(${background(current)})`, ...cameraStyle(frame.index, 0) }} /><div key={`next-${frame.nextIndex}`} className="v100-credit-shot v100-credit-shot-next" style={{ backgroundImage: `url(${background(next)})`, ...cameraStyle(frame.nextIndex, 0) }} /></div>
-    <div className="v100-credit-memory"><span>西新の、その後</span><h2>{current?.sceneLabel}</h2><p>{current?.text}</p></div>
-    <div className="v100-credit-brand"><small>西新をつないだ、すべての人へ</small><strong>西新世紀末物語</strong>{frame.progress > .9 && <p>{playerName}、ありがとう。</p>}</div>
-    <div ref={viewportRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track"><header><small>THE END</small><h1>西新世紀末物語</h1><p>STAFF & CREDITS</p></header>{v100StaffRollSections(playerName).map(section => <section key={section.title}><h2>{section.title}</h2>{section.lines.map((line, index) => <p key={`${section.title}-${index}`}>{line}</p>)}</section>)}<footer><strong>あなたの物語は、ここに残る。</strong><p>Version 1.0.0</p></footer></div></div>
+    <div className="v100-credit-landscape" role="img" aria-label={currentShot?.description}>
+      <div ref={shotRef} key={frame.shotIndex} data-credit-shot-index={frame.shotIndex} className="v100-credit-shot" style={{ backgroundImage: `url(${currentShot?.src})` }} />
+      <div key={`next-${frame.nextShotIndex}`} className="v100-credit-shot v100-credit-shot-next" style={{ backgroundImage: `url(${nextShot?.src})` }} />
+    </div>
+    <div ref={viewportRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track"><header><small>THE END</small><h1>西新世紀末物語</h1><p>STAFF & CREDITS</p></header>{v100StaffRollSections(playerName).map(section => <section key={section.title}><h2>{section.title}</h2>{section.lines.map((line, index) => <p key={`${section.title}-${index}`}>{line}</p>)}</section>)}<footer><strong>西新世紀末物語</strong><p>Version 1.0.0</p></footer></div></div>
     <div ref={controlsRef} className="v100-credit-controls"><div className="v100-credit-song"><span>音楽：魔王魂</span><a href={V100_CREDITS_SONG.page} target="_blank" rel="noreferrer">「追憶の幻想世界」</a></div><div className="v100-credit-buttons">
-      {soundState === "gesture" && <button className="v100-primary" type="button" onClick={() => void play()}>曲を再生して始める</button>}
-      {soundState === "unavailable" && <button type="button" onClick={() => { audioRef.current?.load(); void play(); }}>曲を再試行</button>}
+      {soundState === "gesture" && <button className="v100-primary v100-credit-audio-action" type="button" onClick={() => void play()}>曲を再生して始める</button>}
+      {soundState === "unavailable" && <button className="v100-credit-audio-action" type="button" onClick={() => { audioRef.current?.load(); void play(); }}>曲を再試行</button>}
       {!ended && <button type="button" onClick={togglePause}>{paused ? "再開" : "一時停止"}</button>}
-      <button type="button" onClick={() => { if (!pauseRef.current) togglePause(); setShowRights(true); }}>素材クレジット</button>
+      <button type="button" onClick={() => { if (!pauseRef.current) togglePause(); setShowRights(true); }}>クレジット</button>
       <button type="button" disabled={busy} onClick={() => void finish()}>{ended ? "続ける" : "スキップ"}</button>
     </div>{soundState === "unavailable" && <small role="status">曲を読み込めませんでした。音なしで続けています。</small>}</div>
     {showRights && <div className="v100-modal-backdrop"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-roll-rights-title"><div className="v100-panel-heading"><h2 id="v100-roll-rights-title">制作・素材クレジット</h2><button type="button" onClick={() => setShowRights(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}

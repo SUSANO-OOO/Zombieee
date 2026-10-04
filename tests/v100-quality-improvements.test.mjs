@@ -10,7 +10,9 @@ import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100UnitPresentation } from "../app/v100UnitPresentation.js";
 import { v100DamageTextPosition } from "../app/v100DamageTextPlacement.js";
 import { v100RewardPresentationFor } from "../app/v100RewardPresentation.js";
-import { V100_CREDITS_SONG, V100_CREDITS_CUES, v100StaffRollCamera, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "../app/v100StaffRoll.js";
+import { V100_CREDITS_SONG, V100_CREDITS_CUES, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "../app/v100StaffRoll.js";
+import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
+import { V100_SOUND_CREDITS } from "../app/v100CreditSources.js";
 import { v100MissionThreatsFor } from "../app/v100MissionBriefing.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 
@@ -95,7 +97,7 @@ test("only a durable first-clear result presents a newly unlocked unit", () => {
 });
 
 test("the full song visits all 11 canonical montage scenes and ends at its boundary", () => {
-  const event = v100StoryEventView("v100:event:credits", "あなた");
+  const event = v100StoryEventView("v100:event:credits", "花影");
   assert.equal(event.nodes.length, 11);
   for (let index = 0; index < event.nodes.length; index++) {
     const resume = v100StaffRollResumeSeconds(index, event.nodes.length);
@@ -105,8 +107,12 @@ test("the full song visits all 11 canonical montage scenes and ends at its bound
   const final = v100StaffRollFrame(V100_CREDITS_SONG.duration + 10, V100_CREDITS_SONG.duration, event.nodes.length);
   assert.equal(final.index, 10); assert.equal(final.progress, 1); assert.equal(final.ended, true);
   assert.equal(v100StaffRollFrame(0, 0, 0).progress, 0);
-  const credits = v100StaffRollSections("あなた").flatMap(section => section.lines).join("\n");
-  assert.match(credits, /音楽：魔王魂/u); assert.match(credits, /追憶の幻想世界/u); assert.match(credits, /あなた/u);
+  const credits = v100StaffRollSections("花影").flatMap(section => section.lines).join("\n");
+  assert.match(credits, /音楽：魔王魂/u); assert.match(credits, /追憶の幻想世界/u); assert.match(credits, /花影/u);
+  assert.doesNotMatch(JSON.stringify(v100StaffRollSections()), /あなた/u);
+  assert.equal(v100StaffRollSections().some(section => section.title === "指揮官"), false);
+  for (const source of V100_SOUND_CREDITS) assert.ok(credits.includes(source.author));
+  for (const name of ["いくらちゃん", "宮本武蔵", "TKY", "タクヤ", "セガワ特級博士", "ザキミヤの娘"]) assert.ok(credits.includes(name));
 });
 
 test("montage resume follows the same cue boundary when a decoder reports a different duration", () => {
@@ -117,10 +123,14 @@ test("montage resume follows the same cue boundary when a decoder reports a diff
     assert.equal(v100StaffRollFrame(start - .001, duration, 11).index, index - 1);
     assert.equal(v100StaffRollFrame(start + .001, duration, 11).index, index);
   }
-  for (let index = 0; index < 11; index++) {
-    assert.deepEqual(v100StaffRollCamera(index, 0), v100StaffRollCamera(index, .08));
-    assert.deepEqual(v100StaffRollCamera(index, .8), v100StaffRollCamera(index, 1));
+  const visited = new Set();
+  for (let time = 0; time <= duration; time += .1) {
+    const frame = v100StaffRollFrame(time, duration, 11);
+    visited.add(frame.shotIndex);
+    assert.equal(V100_CREDITS_FILM[frame.shotIndex].sceneIndex, frame.index);
   }
+  assert.equal(visited.size, V100_CREDITS_FILM.length);
+  assert.ok(V100_CREDITS_FILM.every(shot => !shot.actors.includes("unit-miyamoto-musashi")));
 });
 
 test("sortie threats describe enemies that actually enter the stage, including the S5 charge", () => {

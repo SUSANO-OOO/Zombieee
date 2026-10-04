@@ -1,4 +1,5 @@
 import { V100_MOTION_ATLAS_REPLACEMENTS, V100_PHONE_REVIEW_ASSET_ADDITIONS, V100_PHONE_REVIEW_ASSET_REMOVALS } from "./v100-phone-review-asset-contract.mjs";
+import { V100_CREDITS_FILM_ASSET_ADDITIONS } from "./v100-credits-film-asset-contract.mjs";
 // Source-bound additions for the 2026-09-07 completion pass. Published assets
 // retain their bytes; the Stage 21 HQ gate replaces its duplicate V1 plate.
 export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
@@ -86,8 +87,9 @@ export const V100_ENDING_MUSIC_ADDITION = Object.freeze({
   hash: "sha256-a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
   criticality: "optional",
 });
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION));
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
+const creditsFilmBytes = V100_CREDITS_FILM_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
 const bundledAudioAdditionsFromV0995 = 28;
@@ -101,12 +103,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 60_311_674,
+  bytesFromV0995: 60_311_674 + creditsFilmBytes,
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 149_990_007,
-  candidateDistinctHashBytes: 149_450_104,
-  updateFromV0982Bytes: 77_002_122,
-  updateFromV0993Bytes: 66_627_428,
+  candidateTotalBytes: 149_990_007 + creditsFilmBytes,
+  candidateDistinctHashBytes: 149_450_104 + creditsFilmBytes,
+  updateFromV0982Bytes: 77_002_122 + creditsFilmBytes,
+  updateFromV0993Bytes: 66_627_428 + creditsFilmBytes,
 });

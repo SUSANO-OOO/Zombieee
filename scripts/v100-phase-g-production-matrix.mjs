@@ -2288,7 +2288,7 @@ const stateContracts = Object.freeze({
   "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-actions"], forbiddenSelectors: [".v100-result-rewards", ".v100-reward-summary"] },
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
-  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-memory", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], elementCounts: { ".v100-staff-roll audio": 1 } },
+  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-landscape", ".v100-credit-shot", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], forbiddenSelectors: [".v100-credit-memory", ".v100-credit-brand"], elementCounts: { ".v100-staff-roll audio": 1 } },
   "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
@@ -2366,7 +2366,7 @@ if (process.env.V100_PHASE_G_STATE_CONTRACT_CONTROL === "1") {
   const page = await browser.newPage();
   const results = [];
   try {
-    const visibleMarkup = '<main class="v100-shell" data-v100-phase="credits"><section class="v100-staff-roll" data-v100-surface="credits"><div class="v100-credit-memory">memory</div><div class="v100-credit-roll-window">window</div><div class="v100-credit-roll-track">staff</div><div class="v100-credit-controls">controls</div>';
+    const visibleMarkup = '<main class="v100-shell" data-v100-phase="credits"><section class="v100-staff-roll" data-v100-surface="credits"><div class="v100-credit-landscape">film<div class="v100-credit-shot">shot</div></div><div class="v100-credit-roll-window">window</div><div class="v100-credit-roll-track">staff</div><div class="v100-credit-controls">controls</div>';
     for (const [name, audio, hiddenControls, expectedOk] of [
       ["native-audio-without-visible-box", "<audio></audio>", false, true],
       ["missing-native-audio", "", false, false],

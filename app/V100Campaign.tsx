@@ -306,6 +306,7 @@ export function V100Campaign() {
   const [flow, setFlow] = useState<Flow>(() => createV100StoryFlowState());
   const autoSkipAttemptRef = useRef<Flow | null>(null);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [saveAdoptionEpoch, setSaveAdoptionEpoch] = useState(0);
   const [battleRunId, setBattleRunId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState(V100_STAGE_IDS[0]);
   const [nameInput, setNameInput] = useState("");
@@ -357,6 +358,7 @@ export function V100Campaign() {
   const publishSave = useCallback((next: Save) => { saveRef.current = next; setSave(next); }, []);
   const adoptSave = useCallback((next: Save) => {
     publishSave(next);
+    setSaveAdoptionEpoch(epoch => epoch + 1);
     const restored = createV100StoryFlowState({
       playerName: next.campaignStarted ? next.playerName : "",
       completedStageIds: next.completedStageIds, readStoryEventIds: next.readStoryEventIds,
@@ -904,7 +906,7 @@ export function V100Campaign() {
         </section>
       )}
 
-      {flow.phase === "credits" && event && <V100StaffRoll nodes={event.nodes} playerName={save.playerName} initialNodeIndex={storyIndex} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onScene={index => { void updateFlow(flow, { nodeIndex: index }); }} onComplete={() => markAndAdvanceEvent(true)} />}
+      {flow.phase === "credits" && event && <V100StaffRoll key={saveAdoptionEpoch} nodes={event.nodes} playerName={save.playerName} initialNodeIndex={storyIndex} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onScene={index => { void updateFlow(flow, { nodeIndex: index }); }} onComplete={() => markAndAdvanceEvent(true)} />}
 
       {isEventPhase(flow.phase) && flow.phase !== "credits" && event && (
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定した作戦報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>

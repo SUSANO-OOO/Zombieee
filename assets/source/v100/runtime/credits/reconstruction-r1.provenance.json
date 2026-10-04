@@ -1,0 +1,972 @@
+{
+  "createdAt": "2026-10-04",
+  "purpose": "Producer-directed reconstruction, daily life, varied composition and original-model expression",
+  "originalModels": "Source-bound references from the approved visual profiles; no new character identities",
+  "records": [
+    {
+      "id": "street-community",
+      "sceneIndex": 0,
+      "sceneLabel": "西新商店街",
+      "actors": [
+        "unit-hachi",
+        "unit-paisen",
+        "unit-raider",
+        "unit-mizuchi",
+        "unit-mayo-chan"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 approved Nishijin street location; 2 an original-model reference board labeled HACHI, PAISEN, RAIDER, MIZUCHI, four different adults; 3 Mayo the tiny cream Chihuahua. Preserve each labeled person's individual design, do not merge their identities. Establishing shot looking diagonally down from an upper shop window onto the street, broad deep perspective, all four adults distributed naturally at different depths across the frame. Foreground right Mizuchi in her exact purple suit, black asymmetric bob, yellow goggles and glove stacks salvaged supplies with a stern tired brow. Midground center Paisen, muscular dark short hair navy T-shirt, strains lifting a bent shutter with arms overhead, face tense from effort. Hachi, exact black/orange hair and orange coat with blue map bag, crouches beside the opposite shutter rail guiding it, grinning loudly at Paisen with expressive eyebrows, mouth open in a lively call. Left further back Raider, exact short sandy-blond female and sleeveless tactical kit/headphones, sweeps debris with a focused expression. Mayo waits near a swept doorway, tiny relative to people. Low early morning sun catches dusty air, patched shops, swept strip amid damaged paving. No identical pair framing: wide living street, different depth, actual work and clear personalities.",
+      "references": [
+        {
+          "path": "public/art/v060/battle-nishijin-shopping-street-v1.webp",
+          "sha256": "ebf06a6c88b82bf66bd3656df53ba7ee173e61eb6a9fddff234869781c557b12"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/street.png",
+          "sha256": "cc4671ed093b9818153c603ba24833b29c406616ea5c13556179f1bc589f1825"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        }
+      ],
+      "generated": {
+        "sha256": "5de5bd56632f36376cde3cbbf1bc862862050ac86b487f27e69b2929a4247c5c",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/street-community-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/street-community-r1.webp",
+        "sha256": "7a3614c3515b7e0403d2e4bc81ab83413c12134f969aa6b74b8c7ca6531b1a62",
+        "bytes": 345594,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "street-shutter",
+      "sceneIndex": 0,
+      "sceneLabel": "西新商店街",
+      "actors": [
+        "unit-hachi",
+        "unit-paisen"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 damaged Nishijin street, 2 Hachi original full-body identity, 3 Paisen identity. Low view from INSIDE a small closed shop through a stubborn bent shutter being lifted diagonally upward. Paisen at right has both hands overhead on the shutter and strains, jaw clenched, brows pinched, exact short dark hair and muscular body in a plain navy T-shirt. Hachi near left-center leans deeply on his original blue-gripped crowbar to free the stuck track, eyes narrowed at the rail, mouth open in an impatient call, not looking at viewer. Exact Hachi black/orange asymmetrical spiky hair, nose bandage and freckles, ragged orange hooded coat, blue map bag with red bike helmet, SLIM BLACK TROUSERS with the original black lower-leg protective panels and black sneakers: emphatically no brown, khaki, camouflage, loose military cargo pants or gaiters. Clear full legs of Hachi and his planted working stance. The shutter and crossing tool create a strong diagonal through the frame. Dust, warm shafts of morning light, spare battered room in near shadows. Two people absorbed in the difficult work rather than arranged waist-up portraits or similar relaxed smiles.",
+      "references": [
+        {
+          "path": "public/art/v060/battle-nishijin-shopping-street-v1.webp",
+          "sha256": "ebf06a6c88b82bf66bd3656df53ba7ee173e61eb6a9fddff234869781c557b12"
+        },
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        }
+      ],
+      "generated": {
+        "sha256": "506d6e11addbf14149ae59c6ccdbaf3dfe21279027625935edcd8a6ca2a5afea",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/street-shutter-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/street-shutter-r2.webp",
+        "sha256": "6f1a06e9e0273bcb7c42502dd936d64a9b3c7975accf21dbf3383c875aebf4f0",
+        "bytes": 235866,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "street-doorstep",
+      "sceneIndex": 0,
+      "sceneLabel": "西新商店街",
+      "actors": [
+        "unit-hachi",
+        "unit-mayo-chan"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 Nishijin street; 2 Hachi original full-body identity; 3 Mayo original dog identity. A candid low close shot from the sidewalk of Hachi alone sitting on a swept shop step, his ONE tiny cream Chihuahua Mayo climbing onto his knee to lick his cheek. Hachi recoils slightly with scrunched nose and wide surprised eyes that are beginning to laugh, mouth open in an unguarded delighted reaction. He looks toward the dog, never at viewer. Preserve the original asymmetrical black spiky hair with orange accent, nose bandage/freckles, orange ragged coat, blue map bag and red bicycle helmet, original slim BLACK trousers and black lower-leg protective panels/black sneakers. Do not replace pants with brown or camouflage army cargo pants. His legs and one resting gloved hand are visible across the lower frame; the other gently supports the tiny dog. Mayo exact cream fur, triangular ears, yellow bandanna, olive medical harness/pouches. Single human with dog, not two standing people. Intimate eye contact and clear physical interaction, late morning soft light, broom propped behind, newly swept step amid damaged street, composition fills the frame rather than leaving an empty right side.",
+      "references": [
+        {
+          "path": "public/art/v060/battle-nishijin-shopping-street-v1.webp",
+          "sha256": "ebf06a6c88b82bf66bd3656df53ba7ee173e61eb6a9fddff234869781c557b12"
+        },
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ],
+      "generated": {
+        "sha256": "9f2a6316df3c8314367939871179404610fe099276d58b478fbcb0b076e0a103",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/street-doorstep-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/street-doorstep-r2.webp",
+        "sha256": "6afdff46e38d650a7b7155d1d1295120a1cfd18e33ccec9ea7ed616eec1f4fc7",
+        "bytes": 300714,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "ward-radio",
+      "sceneIndex": 1,
+      "sceneLabel": "早良区役所",
+      "actors": [
+        "guide-ikura",
+        "unit-paisen"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative IKURA character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative PAISEN character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: In the repaired ward-office communications room, Ikura adjusts an old tabletop radio with her exact headset while Paisen brings a cup of tea to the desk. A pencilled paper returnee ledger remains open beside the radio, with untouched blank lines; no legible invented words. The room retains boarded windows and a battered supply shelf. Both look quietly occupied rather than posing. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9.",
+      "references": [
+        {
+          "path": "public/art/v060/battle-sawara-ward-office-v1.webp",
+          "sha256": "6e170fe465bac7e4c8b6bd7fc7604ab27d18839f90991b162c924a83d86ab9d8"
+        },
+        {
+          "path": "public/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
+          "sha256": "9fdc78abe6f192235e433fb96221625a7082c3d0fa310868b7ea6b7bccba11c3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        }
+      ],
+      "generated": {
+        "sha256": "8e51ba4e42faeff480c59f90bae0a08428bc142cf997a3f9418d7464d5bce0b8",
+        "width": 1672,
+        "height": 940,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/ward-radio-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/ward-radio-r1.webp",
+        "sha256": "41ff9b434e3bbed3121974fca594dfc62e65f23142f00e980fd7b9a736f318c1",
+        "bytes": 250648,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "ward-supplies",
+      "sceneIndex": 1,
+      "sceneLabel": "早良区役所",
+      "actors": [
+        "guide-ikura",
+        "unit-mizuchi",
+        "unit-monkey",
+        "unit-gantetsu",
+        "unit-crazy-king"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 approved Sawara ward office; 2 an original-model reference board labeled IKURA, MIZUCHI, MONKEY, GANTETSU, CRAZY KING, five distinct individuals. Preserve every labeled person's individual identity, do not merge their faces or costumes. Five distinct original adults working around a long improvised supply table in the damaged municipal office. Low camera from beside a crate, a diagonal table runs from foreground left to rear right; occupy the whole width and depth. Foreground center Ikura, pink twin buns and long twin tails, exact teal cropped jacket/white structured top and black/amber headset, counts supplies on a clipboard, pursed lips, furrowed concentration, fatigue under her amber eyes rather than her usual smile. Mizuchi at the far left leans against the table checking a crate, yellow-gloved hand rubbing her brow in exhaustion. Monkey, silver-gray layered hair black/tan tactical kit, squats at the center rear repairing a crate hinge with intense thoughtful focus. Right foreground Gantetsu's exact sealed helmet, long green coat and broad frame carries a heavy supply box, face completely covered. Behind him Crazy King in exact yellow cylindrical smile mask with dark lid and green hoodie balances a tall stack of blankets with a comic tilted, struggling posture; his painted mask is rigid, never a human face. Realistic hand grips and feet on floor, no lineup, no group portrait. Afternoon window light, broken municipal fittings and incomplete paperwork remain. Leave every board without readable names or words; specifically no 中央区 sign. Ordinary relief work, not a resumption of normal municipal services.",
+      "references": [
+        {
+          "path": "public/art/v060/battle-sawara-ward-office-v1.webp",
+          "sha256": "6e170fe465bac7e4c8b6bd7fc7604ab27d18839f90991b162c924a83d86ab9d8"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/ward.png",
+          "sha256": "00ecb5b22f5b709df89bac52cd123c24c926196a059bfa6c3246ac248ad2309c"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        }
+      ],
+      "generated": {
+        "sha256": "2da04dc314366e56ccac8c4f903732665e90b1809b6ae2f806987c71c4b5aeba",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/ward-supplies-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/ward-supplies-r2.webp",
+        "sha256": "0c3d10f6b708e02153256eab6be6f88b97f671dad8271df2b7203f6531514c5a",
+        "bytes": 237624,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "station-repair",
+      "sceneIndex": 2,
+      "sceneLabel": "西新駅",
+      "actors": [
+        "unit-monkey",
+        "unit-tatara"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative MONKEY character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative TATARA character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: Monkey kneels with a screwdriver to repair a compact ticket-gate lamp while Tatara holds the heavy bent gate cover steady at chest height. The train in the distance stays stopped, no miraculous resumption of rail service. Warm repaired gate lights begin to mark a pedestrian path through the damaged station. Their exact recognizable faces, hair, costume and builds stay unchanged. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9.",
+      "references": [
+        {
+          "path": "public/art/v070/stages/station-platform-background-v1.webp",
+          "sha256": "deb6f827f5013d349b46d348536bfc870774fd7c7712fba3ac1b819ed2deef89"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/engineer-portrait-v1.webp",
+          "sha256": "f0fc8f45f86c395ea604515444df3fbedd541faabbf749a4fbc6e4d70990f3e3"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/brute-portrait-v1.webp",
+          "sha256": "2793315bff2633cdc7640bd7423ab109a3a860524aba028c223e374d7a8127fe"
+        }
+      ],
+      "generated": {
+        "sha256": "e438a53efd1dd5ca2c8623050e671ddd91d85326e0be4ef2877ced1133204ab9",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/station-repair-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/station-repair-r1.webp",
+        "sha256": "91955f19b73698d01029b98a1827acf59b3051202da739144795a2ad812b157b",
+        "bytes": 243008,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "station-bench",
+      "sceneIndex": 2,
+      "sceneLabel": "西新駅",
+      "actors": [
+        "unit-gantetsu",
+        "unit-tky"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative GANTETSU character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative TKY character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: Gantetsu and TKY set a repaired wooden bench onto a damaged station platform, supporting opposite ends. Gantetsu keeps his exact sealed dark helmet and long green coat; NEVER expose or invent his face. TKY keeps his slim build, black hair and long black coat with burgundy accents. An unpowered stationary train and a few warm gate lamps remain behind them. No crowd of invented heroes. This is a patient everyday reconstruction task, natural hands and weight. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9. Gantetsu always keeps his full sealed dark visor helmet; do not invent a bare face.",
+      "references": [
+        {
+          "path": "public/art/v070/stages/station-platform-background-v1.webp",
+          "sha256": "deb6f827f5013d349b46d348536bfc870774fd7c7712fba3ac1b819ed2deef89"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/guardian-portrait-v1.webp",
+          "sha256": "3c326404e28d94b22a5423e29d4d11d018f831009b16ed863bd5cdd96c41c65d"
+        },
+        {
+          "path": "public/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+          "sha256": "bcb28022021c8b3765f0a32ec706ea8ba5903034cc787a919d30fca3765f5f97"
+        }
+      ],
+      "generated": {
+        "sha256": "89c9c815c6906e1732d871e3f1a5a3531f295894e9f6cfc25f4ec872c12a4e8d",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/station-bench-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/station-bench-r1.webp",
+        "sha256": "a2ca22519bb787d9d2ecc887ca4093cd3d3bd35a2c9e1f0a552afc3caed575fd",
+        "bytes": 285994,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "hospital-bandage",
+      "sceneIndex": 3,
+      "sceneLabel": "大学病院",
+      "actors": [
+        "unit-nao",
+        "unit-hachi",
+        "unit-mayo-chan"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 secured hospital, 2 Nao original model, 3 Hachi original model, 4 Mayo. Tight candid eye-level shot centered on Hachi sitting on a hospital bed while Nao wraps a fresh bandage around his forearm. Hachi's exact black/orange asymmetrical hair, freckles/nose bandage and orange coat are intact; he scrunches one eye and bites his lip against a sting, trying not to show embarrassment, eyebrows expressive. Nao with exact long brown braid, teal/orange jacket and white high-neck looks at the wound with a concerned focused brow, lips slightly parted as she gives instructions, not smiling at the viewer. Hachi's wounded arm crosses the foreground, fingers natural. Mayo, tiny cream Chihuahua in original medical harness, rests on the blanket at the lower edge watching him with ears tilted. Close framing with faces, braid, hands and bandage as focus; tight right-to-left triangle, not a waist-up pair arranged on the left. Warm bedside lamp, quiet hospital behind, no theatrical gore.",
+      "references": [
+        {
+          "path": "public/art/v100/story/ending-hospital-secured-r1.webp",
+          "sha256": "a3749bfa1e76eb20ded969344ed55bd0b6766f1c74bbbd2bd7dd3eea8ee82382"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        },
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ],
+      "generated": {
+        "sha256": "8a0946e78975eaa1a88199356ec9b8d41809505af7f76403f932f282a91fccba",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/hospital-bandage-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/hospital-bandage-r2.webp",
+        "sha256": "9c22e584b4433695e78e55d8c2dc764d7d2a65ff9b68f75e81be17087adbba29",
+        "bytes": 254742,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "hospital-serum",
+      "sceneIndex": 3,
+      "sceneLabel": "大学病院",
+      "actors": [
+        "unit-nao"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 approved secured university hospital environment and materials, 2 Nao identity and teal/orange jacket/white high neck/medical bag. Intimate overhead close-up of Nao's two anatomically correct hands carefully checking exactly THREE small sealed serum vials in a modest foam case on a worn hospital desk. Her teal jacket cuffs with orange lining, white knit inner sleeve and familiar teal/orange medical bag identify her without showing a face; there is only one person, no other character. One hand gently supports a vial, the other rests beside the case, precisely rendered fingers. Three vials total, including the one held. Their contents are clear/pale, no magical glow, no labels that promise a cure. A notebook with incomplete grids, capped pen and a few bandage packs around the frame. Cool dawn window light against a warm task lamp, glass reflections, careful scarcity. Crop close enough that this is a true insert of fragile research and careful work, not another pair of smiling waist-up people. Treatment remains unfinished and the small supply only delays early infection; do not show mass production, cured crowds or exuberant triumph.",
+      "references": [
+        {
+          "path": "public/art/v100/story/ending-hospital-secured-r1.webp",
+          "sha256": "a3749bfa1e76eb20ded969344ed55bd0b6766f1c74bbbd2bd7dd3eea8ee82382"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        }
+      ],
+      "generated": {
+        "sha256": "959669e719fc45eabcfc08b99738d7095ce572287431c88125bcc02b9d7fe1a7",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/hospital-serum-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/hospital-serum-r2.webp",
+        "sha256": "300dfe499afb3dc1efbd265eacec7ddaff1051d89e83e3d09fd1b1b76aa0f777",
+        "bytes": 204042,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "floodgate-rations",
+      "sceneIndex": 4,
+      "sceneLabel": "河口防潮門",
+      "actors": [
+        "unit-crazy-king",
+        "unit-monkey"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative CRAZY KING character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative MONKEY character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: Crazy King pushes an ordinary low handcart loaded with ration cans and a water canister toward a floodgate guard post while Monkey walks alongside holding the cart steady. Keep Crazy King's exact yellow cylindrical smiling mask, black round top, green hoodie and dark trousers; NEVER unmask or turn him into a different face. Chainsaw switched off and safely stowed, crossbow slung away. The huge floodgate remains closed. Wind, late sunlight and a small patched awning show relief within ongoing duty. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9.",
+      "references": [
+        {
+          "path": "public/art/v090/stages/estuary-floodgate-background-v1.webp",
+          "sha256": "0ec7070894b8b398db0bbbab09ebb2ea2b0b36839e20664e7f61ae7214ce813d"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/engineer-portrait-v1.webp",
+          "sha256": "f0fc8f45f86c395ea604515444df3fbedd541faabbf749a4fbc6e4d70990f3e3"
+        }
+      ],
+      "generated": {
+        "sha256": "838a07b05da8653ea50669f89a9c5dbc956d78bb13dacd3c5b3afab00a4092de",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/floodgate-rations-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/floodgate-rations-r1.webp",
+        "sha256": "3468f1da98e570cf784060e41295804a72c101a7bd34859b847c747a5864133e",
+        "bytes": 375526,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "floodgate-watch",
+      "sceneIndex": 4,
+      "sceneLabel": "河口防潮門",
+      "actors": [
+        "unit-gantetsu"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the attached original generated game illustration. Remove ONLY the small spurious white/gray signature-like scribble at the extreme bottom-left corner, replacing those few pixels naturally with the continuation of the existing dark wet ground and crate surface. This is our own newly generated illustration; the scribble is unwanted generated content. Preserve every other visual element exactly: full 16:9 frame, Gantetsu's sealed helmet, green coat, silhouette and shield, railing, huge closed damaged floodgate, inert old remains, water, sunset, lighting, color, perspective, texture and painterly detail. Do not crop or recompose, do not change any character or architecture, and do not add any text, signature, logo or watermark anywhere.",
+      "references": [
+        {
+          "path": "../../../../../../.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-3cec496d-793f-4803-802c-87366cccf971.png",
+          "sha256": "f0cfda921125d52dca8de3cf972771a729224088706416abd5c8cd9ddeb9e020"
+        }
+      ],
+      "generated": {
+        "sha256": "f3e873372c6b7c5447176b73985cdd7ae30cd77a6f78759ca23ec6d649c84aed",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/floodgate-watch-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/floodgate-watch-r2.webp",
+        "sha256": "2432df3a342e2d015dfb29486ca281e3ba5cc0910b5c9911441c06c95c406054",
+        "bytes": 201894,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "facility-power",
+      "sceneIndex": 5,
+      "sceneLabel": "ムガリアン施設",
+      "actors": [
+        "unit-tky",
+        "unit-mrs-chiha"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative TKY character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative MRS. CHIHA character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: In the recovered Mugarian facility now used as a temporary clinic, TKY reconnects a rugged cabinet's power cable while Mrs. Chiha holds a work light for him. The old corporation sign is covered by a plain cloth, medical machines are used cautiously, no red-cross symbols. Actual character faces/builds/costume from the identity references, no lab-coat redesign. Practical grounded repair at a warm dim workbench, no magical glowing machinery. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9.",
+      "references": [
+        {
+          "path": "public/art/v100/story/mugarian-reclaimed-r1.webp",
+          "sha256": "67209367699d5e9effdb903384333d454e359882989a6e1c45a2f89212359351"
+        },
+        {
+          "path": "public/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+          "sha256": "bcb28022021c8b3765f0a32ec706ea8ba5903034cc787a919d30fca3765f5f97"
+        },
+        {
+          "path": "public/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+          "sha256": "eac852cbce801871e04c68fece726ea381f33bdfd52b44b7b9845faed75a44a5"
+        }
+      ],
+      "generated": {
+        "sha256": "ce919f35b74d94d2a264ed2ae72ba35e51cc6b860752add4a29f172ec1f9c9f6",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/facility-power-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/facility-power-r1.webp",
+        "sha256": "e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
+        "bytes": 300926,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "facility-linen",
+      "sceneIndex": 5,
+      "sceneLabel": "ムガリアン施設",
+      "actors": [
+        "unit-nao"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 the already reclaimed Mugarian facility now an improvised clinic, 2 Nao original model. High oblique view from near a ceiling corner of a spare patched clinic room. One Nao, full body, near center-right, bends over a repaired metal bed to pull a clean white sheet taut. Her long braid falls forward, exact teal jacket with orange lining and white knit top, slim original build. Brow tired and serious, mouth set in concentration, slightly slumped shoulders show a long day. Both hands visibly grip different corners of one sheet, no duplicate limb. Empty neighboring bed, folded linen, familiar medical bag at her feet, exposed safe repairs and temporary cabling. Small afternoon window casts a diagonal rectangle of light; the room occupies the whole frame, including the empty bed and corners. Nobody else, no celebratory hospital reopening or active corporate machinery.",
+      "references": [
+        {
+          "path": "public/art/v100/story/mugarian-reclaimed-r1.webp",
+          "sha256": "67209367699d5e9effdb903384333d454e359882989a6e1c45a2f89212359351"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        }
+      ],
+      "generated": {
+        "sha256": "2452b1427b747ddd1e6ceab4013f3832f53469e47775acf4e99747da6e2b69c8",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/facility-linen-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/facility-linen-r2.webp",
+        "sha256": "d180862f0a003bf6808a4fa31d5f190f4e6595ec6e2a345296f6f16946226bcd",
+        "bytes": 223276,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "armory-evidence",
+      "sceneIndex": 6,
+      "sceneLabel": "RED PANTHER装備庫",
+      "actors": [
+        "unit-babayaga",
+        "unit-raider",
+        "unit-tatara"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 RED PANTHER armory, 2 Babayaga, 3 Raider, 4 Tatara original models. Over Babayaga's shoulder at a scarred evidence table: his dark side-parted hair, white shirt, dark tie and tactical harness fill the near left edge from behind, his two precise hands seal an evidence bag containing ONE damaged red optical lens and ONE scorched card. Lens is dark red inert glass reflecting ambient light, emphatically NO EMISSIVE GLOW or powered eye. Across the table at center-right Raider's short sandy-blond hair, headphones and sleeveless dark tactical top are exact; she looks down intently with jaw tight, eyes serious, one hand braces the paperwork. Farther behind on the right, tall heavy Tatara in dark blue armor waits beside the open armory doorway, watchful stern face, hammer resting safely against his shoulder. Foreground hands/object detail and three people at different depths, full frame composition, cool dusty shafts of light, caution instead of smiling for the viewer. No living RED PANTHER opponent.",
+      "references": [
+        {
+          "path": "public/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp",
+          "sha256": "bbbd0a72799729eaa90f72a83538cd419b8ec6cd6527e36c6bf4d4d0a0d82b63"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        }
+      ],
+      "generated": {
+        "sha256": "58c9ea08e20393e27c55de028b7cfaac7b2864915f855b70e59241a92b6b62be",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/armory-evidence-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/armory-evidence-r2.webp",
+        "sha256": "a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7",
+        "bytes": 220458,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "armory-shelves",
+      "sceneIndex": 6,
+      "sceneLabel": "RED PANTHER装備庫",
+      "actors": [
+        "unit-tatara",
+        "unit-gantetsu"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: ONE finished 16:9 narrative cinematic illustration for the Japanese game 西新世紀末物語 ending film. Image 1 is the environment/style reference; it can be reframed and cautiously repaired for the AFTERMATH. Image 2: authoritative TATARA character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Image 3: authoritative GANTETSU character identity (face, hair, age, body, costume, colours and unique accessories must stay recognizable). Scene: Tatara lifts a repaired wooden storage shelf into place while Gantetsu tightens its bracket with a hand tool, both unmistakably the exact characters from the references. Gantetsu's shield and Tatara's hammer rest safely at the side. The confiscated armory is being secured and tidied, ammunition boxes remain closed, no battle. Warm practical lamp light and patched industrial walls. Match the game's detailed gritty painterly character art, tactile practical surfaces and cinematic lighting; real narrative action, not combat-pose portraits pasted on scenery. Clearly show faces and meaningful hands/props at a natural medium-wide distance. Keep all important subjects in the LEFT 62 percent; the right 35 percent stays a subdued continuation of the room/street for scrolling credits. Leave headroom and room below hands, whole meaningful action must fit with no cropped face. No staged lineup, generic replacement hero, altered hair/costume, glossy anime redesign, giant weapon, extra named character, gore, zombies, fire disaster, dialogue, narration, captions, speech bubbles, interface, logo, watermark or title. Do not magically fully restore the city; repairs and scars remain. Full opaque background, wide landscape 16:9. Gantetsu always keeps his full sealed dark visor helmet; do not invent a bare face.",
+      "references": [
+        {
+          "path": "public/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp",
+          "sha256": "bbbd0a72799729eaa90f72a83538cd419b8ec6cd6527e36c6bf4d4d0a0d82b63"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/brute-portrait-v1.webp",
+          "sha256": "2793315bff2633cdc7640bd7423ab109a3a860524aba028c223e374d7a8127fe"
+        },
+        {
+          "path": "public/art/v070/characters/portraits/guardian-portrait-v1.webp",
+          "sha256": "3c326404e28d94b22a5423e29d4d11d018f831009b16ed863bd5cdd96c41c65d"
+        }
+      ],
+      "generated": {
+        "sha256": "d96127192418e079af229db5f97000a6f1a0c1a84a3cdd01ae0b0b62323681df",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/armory-shelves-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/armory-shelves-r1.webp",
+        "sha256": "9407d6f9a3e7e67fe82918323859ec82beee41c304a591b62a2a30ec9abf1464",
+        "bytes": 278230,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "zakimiya-family",
+      "sceneIndex": 7,
+      "sceneLabel": "ザキミヤ",
+      "actors": [
+        "unit-zakimiya"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Edit image 1, the approved candidate of Zakimiya gently holding his sleeping baby in Kumaya; image 2 is the original identity model for fidelity. Preserve the father's exact face, age, lean build, hair, clothes, tender downward gaze, both arms and neck-supporting cradle pose, lighting, perspective and the entire restaurant scene. Change only the swaddled baby's visible detail: show a small natural dark-haired BACK of the baby's head above the blanket, facing inward toward his chest with the face completely hidden, and ONE tiny relaxed baby's hand emerging from the wrap near his shirt. The head and hand make this unmistakably a sleeping infant, not an undifferentiated towel bundle. His forearm must support the baby neck safely. No baby's face, no new mother, no identity substitution, no extra limbs, text or added prop. Keep the original rich cinematic painterly/realistic game illustration and whole 16:9 composition.",
+      "references": [
+        {
+          "path": "../../../../../../.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-829e320d-83bb-4788-9153-8290aed4487a.png",
+          "sha256": "b878421dfd4f73a354fad964cbdaf26defff54fe6b91039614011defa4a2ffb3"
+        },
+        {
+          "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+          "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+        }
+      ],
+      "generated": {
+        "sha256": "fe3bd82dc94bbd12b81817504a073428583f4e4a8efface7bdff82e1b0e7357c",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/zakimiya-family-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/zakimiya-family-r2.webp",
+        "sha256": "449ff990e97d7aa227e8368b695c97d4971c9afd23a0193757ee3f0f80c74860",
+        "bytes": 170482,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "zakimiya-bottles",
+      "sceneIndex": 7,
+      "sceneLabel": "ザキミヤ",
+      "actors": [
+        "unit-zakimiya"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 reopened Kumaya, 2 Zakimiya original face and full-body model. Close elevated side view of Zakimiya ALONE washing a baby's clear feeding bottle in an improvised washbasin at the restaurant back counter. Preserve original lean middle-aged Japanese face, messy dark hair, fine creases, light stubble, weathered patched dark/brown jacket, dirty off-white V-neck and wrapped wrist; not a young anime replacement. He looks DOWN at the task with heavy tired eyelids and a quietly determined tender expression, no camera smile. BOTH hands visible: one holds ONE uncapped clear bottle tilted with its open narrow mouth DOWN over the basin so the water visibly drains FROM THE OPEN MOUTH, never through the sealed wide bottom; the other holds a simple cleaning brush beside it. A small separate screw ring and teat rest on a towel, a second clean upright bottle dries at the far edge. All bottle parts geometrically clear, plausible brush, no cap attached to the draining opening. Warm subdued lamplight, water droplets and real rough hands. Only Zakimiya, no Nao, no new wife or daughter face. The simple task of caring for a child after the battles is the moment, composition across the whole counter with face in upper right, hands in center foreground.",
+      "references": [
+        {
+          "path": "assets/source/v100/story/kumaya-reopened-v1.png",
+          "sha256": "446975e675f715977f9041cea9593fa6c73ce36293b5bcd5f6e893ffc42d882e"
+        },
+        {
+          "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+          "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+        }
+      ],
+      "generated": {
+        "sha256": "68cdb58627e17b02a2b8414a93eff8b3d4e977dec899fad7f698ad54fb2eabd3",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/zakimiya-bottles-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/zakimiya-bottles-r2.webp",
+        "sha256": "3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
+        "bytes": 215678,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "vehicle-patch",
+      "sceneIndex": 8,
+      "sceneLabel": "装甲車両",
+      "actors": [
+        "unit-tky",
+        "unit-gantetsu"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve. Edit image 1, the candidate of TKY and Gantetsu repairing the armored vehicle. References 2 TKY original full-body identity, 3 Gantetsu original identity, 4 the ACTUAL eight-wheel armored command vehicle. Keep image 1's camera, two working body poses, all arms/hands, repair plate, original vehicle architecture, wheel count/design, original outfits and light. The only change is TKY's head, eye direction and expression: turn his head DOWN and toward the repair plate and Gantetsu's wrench, so he is visibly concentrating on holding the heavy metal plate steady. His lips are slightly tense from the effort, no advertising pose looking at the camera. Maintain the exact slim Japanese TKY facial structure, parted black hair, black long coat with dark burgundy accents and gloves. Keep Gantetsu's fully closed dark helmet/visor and green coat, face never exposed; his wrench grips remain anatomically plausible. No smile cloned from another person, no glow blade, no added characters, no lettering. Preserve all other pixels and the rich coherent style as closely as possible.",
+      "references": [
+        {
+          "path": "../../../../../../.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-dc5bbf88-f9a2-4b31-a70f-8a4a42e77799.png",
+          "sha256": "4783622403f2d218b307017e78d58c97142e310afd8df852add4db904ba580c6"
+        },
+        {
+          "path": "assets/source/v090/characters/tky-identity-master-r1.png",
+          "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        },
+        {
+          "path": "public/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png",
+          "sha256": "a5f774f3e8b5ac4bb185b024eab2f367b9cd0aa415c1e28135fd7b5678287281"
+        }
+      ],
+      "generated": {
+        "sha256": "fa871e2a9a27f8d021cd7fca5212423c1ed1f04a5cbdbf0237287cb44695cda6",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/vehicle-patch-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/vehicle-patch-r2.webp",
+        "sha256": "e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+        "bytes": 229286,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "vehicle-map",
+      "sceneIndex": 8,
+      "sceneLabel": "装甲車両",
+      "actors": [
+        "unit-hachi",
+        "unit-mizuchi"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 Hachi, 2 Mizuchi original costumes/hands, 3 original eight-wheel armored vehicle. Direct overhead close-up of a large creased street map on an improvised work surface beside the parked original armored vehicle. Hachi's orange sleeve and black fingerless glove enter from lower left, pointing at one short marked path; Mizuchi's original yellow protective glove and purple cuff enter from upper right, bracing the opposite map corner. Hands belong to just these two people, no faces in frame. Map uses abstract street grids and incomplete pencil markings with a wide unmarked margin, absolutely no claims that outer roads are safe and no invented legible place names. A keyring, capped marker, folded paper and dented metal cup, sliver of original vehicle wheel/armor in one edge. Morning light and realistic shadows, paper texture, strong diagonal visual direction through the two hands. A real decision with incomplete information, not another pair of waist-up people looking at each other.",
+      "references": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png",
+          "sha256": "a5f774f3e8b5ac4bb185b024eab2f367b9cd0aa415c1e28135fd7b5678287281"
+        }
+      ],
+      "generated": {
+        "sha256": "0fbf284104fec4153588ea49e65109eb6ca817497c2e8e0a70db2a57f02b2615",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/vehicle-map-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/vehicle-map-r2.webp",
+        "sha256": "c2a3f4b6aa2fba22f6815b293b06851a4545da764937933a6972a7b159e83d3a",
+        "bytes": 365544,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "defense-watch",
+      "sceneIndex": 9,
+      "sceneLabel": "TAKUYA撃破地点",
+      "actors": [
+        "unit-babayaga"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 actual aftermath of TAKUYA's defeat at the defense line, 2 Babayaga original model. Low wide road-level view along a repaired narrow passage through the barricades. Babayaga alone walks away in three-quarter back view at the center-right, glancing toward the makeshift watch post with a grave tired face visible in profile; exact black side-parted hair, lean build, white shirt, dark tie and black shoulder harness, pistol holstered safely. One hand steadies a small clipboard of incomplete watch shifts with no readable text. Road stretches into the far left distance, battered concrete, burnt debris and unlit damaged machinery remain. Cool dawn with thin warm light, deep perspective and long solitary shadow. No other people, no living TAKUYA, no revived monster, no triumph pose, no additional battle, no claim that the entire outside world is now safe.",
+      "references": [
+        {
+          "path": "public/art/v100/stages/s30-defense-line-aftermath-background-v1.webp",
+          "sha256": "964dc168c6f3e1932e0d572a38bacadfea819d1078d90db260e9eeaed8303706"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        }
+      ],
+      "generated": {
+        "sha256": "09325cb4e10538d4aa8c6292755292274345e5452eac2908be9fe019ced3746a",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/defense-watch-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/defense-watch-r1.webp",
+        "sha256": "71de3a013e9d3a01f02b766deb83fd7279167f7a69c6158d97ec5227eb51e3d8",
+        "bytes": 276070,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "defense-bench",
+      "sceneIndex": 9,
+      "sceneLabel": "TAKUYA撃破地点",
+      "actors": [
+        "unit-tatara",
+        "unit-crazy-king",
+        "unit-raider",
+        "unit-monkey"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 canonical battered defense line after TAKUYA is gone; 2 original model board labeled TATARA, CRAZY KING, RAIDER, MONKEY. Four distinct adults clearing a place to rest, shot low from beside the foot of a repaired bench, full width and deep perspective. Foreground left strong Tatara with exact wavy dark hair, dark blue heavy armor strains to lift a big rubble slab with a tense face, hammer set safely against barricade. Center Crazy King in unchanged yellow cylindrical rigid smile mask, dark lid, green hoodie leans comically under a too-large sack of rubble, body language exuberant; never unmask or alter painted eyes/mouth. Raider at right, original short sandy-blond hair and sleeveless tactical kit/headphones, laughs with an open mouth at his antics while steadying the sack; no generic coy smile. Monkey crouched by the bench near center rear, original silver-gray layered hair/black-and-tan equipment, looks up with a small amused grin while tightening a leg bolt. Different expressions, heights, gesture directions and distances; actually working together, not lined up. Warm slanting evening light on scarred ground, rubble still remains, clear space around bench, no monster or new battle.",
+      "references": [
+        {
+          "path": "public/art/v100/stages/s30-defense-line-aftermath-background-v1.webp",
+          "sha256": "964dc168c6f3e1932e0d572a38bacadfea819d1078d90db260e9eeaed8303706"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/defense.png",
+          "sha256": "6ed8880b057064e4c4a007e07003ea20890baab4eec6994dc771ee12e5f9ae05"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        }
+      ],
+      "generated": {
+        "sha256": "a3c9757850bf2cc11ddf26d4b7f455d028a8249fe66bb1c0f79f4647263ff2da",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/defense-bench-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/defense-bench-r1.webp",
+        "sha256": "651e31d7982127f246035c729c89a021fd9ab9233d8cfcc0f11cced54d0474f8",
+        "bytes": 305634,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "kumaya-cooking",
+      "sceneIndex": 10,
+      "sceneLabel": "くまや",
+      "actors": [
+        "unit-kumaverson",
+        "unit-mayo-chan"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve and compositing. Asset type: one final 16:9 cinematic illustration for the ending film of the Japanese survival game 西新世紀末物語. Image 1 is the established reopened izakaya KUMAYA interior and art-style/environment reference. Image 2 is the exact approved character KUMAVERSON identity reference. Image 3 is the exact approved tiny cream long-haired chihuahua MAYO-CHAN identity reference. Make a new everyday-life shot in this same recently repaired wooden izakaya, after the fighting. Kumaverson, unmistakably the same Japanese man (same face, messy dark hair, build, worn plain white short-sleeved T-shirt, dark trousers), is quietly cooking real karaage in his battered black frying pan over a small blue gas flame, lifting a freshly fried piece onto a plate with cooking chopsticks. His expression shows tired concentration and a slight relieved smile; NOT the reference's combat grimace. Mayo-chan, unmistakably the same small cream chihuahua with the same yellow bandanna and olive medical harness, sits beside a dry wooden stool looking up at him. The dog is a natural tiny chihuahua, never a human, wolf or large dog. Real tactile cooking: amber oil glistens, a faint natural steam wisp, plates drying, repaired shutters, warm hanging lamp, the wet twilight street glimpsed through the door. No combat, enemies or weapons pointed at anyone. Match the game's gritty detailed painterly character art and cinematic environment; faces remain faithful, not photoreal strangers or glossy anime. Wide 16:9 composition. The main man, dog, stove and meaningful hand action must be clearly visible in the LEFT 58 percent, with heads and cooking action between 15 and 70 percent of image height. Keep the right 38 percent as unobtrusive dark wooden wall/counter and warm soft background to accommodate scrolling credits. The lower 18 percent is only environment, so the game controls will not cover faces or action. This is a substantial new narrative drawing, not standing portraits pasted over a background. Correct coherent hands and perspective. No narration, captions, speech bubbles, logos, watermark, title, interface, written text or extra named characters. Opaque full background.",
+      "references": [
+        {
+          "path": "assets/source/v100/story/kumaya-reopened-v1.png",
+          "sha256": "446975e675f715977f9041cea9593fa6c73ce36293b5bcd5f6e893ffc42d882e"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ],
+      "generated": {
+        "sha256": "cb27180c9b994584b12d0e1c424472de9996b369da832ca8d066e30e2bd97dd6",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/kumaya-cooking-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/kumaya-cooking-r1.webp",
+        "sha256": "5c6d3ca3e8807950722aabd7b1899572c0b8a0a14582d831fbbf4371b9c2eaa1",
+        "bytes": 186910,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "kumaya-dog",
+      "sceneIndex": 10,
+      "sceneLabel": "くまや",
+      "actors": [
+        "unit-mayo-chan"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: a finished 16:9 cinematic epilogue still for the game 西新世紀末物語. Use the supplied original identity models faithfully: same individual facial structure, age, build, hair, clothing, distinctive accessories and colors; adapt poses and expressions to the action. Rich painterly game illustration, precise anatomy and materials, coherent perspective and cinematic light. Compose across the entire frame, with no reserved text area. No captions, logos, watermark, visible invented readable signs, collage, duplicate character, posing for the viewer, or universally identical smiles. Reconstruction has begun but damage remains; no miraculous complete restoration, enemies or new battles.\nReferences: 1 original reopened Kumaya restaurant layout/light, 2 Mayo identity master. A very low intimate floor-level shot under a shared wooden restaurant table. The ONE tiny cream Chihuahua Mayo sleeps curled gently near a chair leg in the center foreground, exact cream coat, large triangular ears, yellow bandanna and olive/black medical harness with pouches preserved, muzzle relaxed, eyes shut. Warm golden restaurant light from above draws a soft edge around the fur. Chair and table legs across the full frame, a few safely resting boots and shoes in background indicate companions eating upstairs, but no invented visible human faces. Texture of worn floorboards and small patched marks, a quietly sheltered place after turmoil. No second dog, cartoon plush toy, kitten or giant dog. This is a moment of rest and trust, a true close insert, not another standing pair. Restaurant is patched and modest, not completely renovated.",
+      "references": [
+        {
+          "path": "assets/source/v100/story/kumaya-reopened-v1.png",
+          "sha256": "446975e675f715977f9041cea9593fa6c73ce36293b5bcd5f6e893ffc42d882e"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ],
+      "generated": {
+        "sha256": "10a97422ca1e67d2ac12cfc1d88ed2a0a2ec6cc9c4c814bb387c835021b96ff0",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/kumaya-dog-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/kumaya-dog-r1.webp",
+        "sha256": "04e3959e61767f75c1d789c10c8ba96b422274a9267a22a4612d402e088a6eeb",
+        "bytes": 144588,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    },
+    {
+      "id": "kumaya-table",
+      "sceneIndex": 10,
+      "sceneLabel": "くまや",
+      "actors": [
+        "unit-hachi",
+        "unit-paisen",
+        "unit-kumaverson",
+        "unit-babayaga",
+        "unit-mrs-chiha",
+        "unit-nao"
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the attached finished game epilogue illustration with one precise local anatomical correction. Keep the entire 16:9 image, composition, all six original people, their individual faces, hair, costumes, emotional expressions, the food, table, rainy window, warm light and painterly style unchanged. Hachi is the young man left of center, wearing the orange coat with the blue map bag and red helmet. His raised right hand with the black fingerless glove currently has an extra finger. Redraw ONLY that hand and its fingers with exactly five digits total, ONE thumb and FOUR fingers, anatomically correct joints, natural connected wrist, realistic perspective, four distinct nonduplicated fingers in the same lively storytelling gesture. No sixth finger, no fused fingertips or added hand. Preserve the black fingerless glove. Keep his smiling face and everyone else's expressions exactly as supplied. Do not add captions, signatures, text, watermarks or new props.",
+      "references": [
+        {
+          "path": "../../../../../../.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-b6fc4935-bc82-4778-8322-1e1e992e950c.png",
+          "sha256": "93ed82433b423351bd1ab80c36b6bde9c02fb1cbbb4024b037cec009706a6fc0"
+        }
+      ],
+      "generated": {
+        "sha256": "d41da0affa57484b59a5fe1ede22eb255a9cf3abd9c869adbbedd797e3d6f9ab",
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/reconstruction-sources/kumaya-table-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/kumaya-table-r2.webp",
+        "sha256": "d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f",
+        "bytes": 239900,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp resize with contain to 1600x900 and WebP quality86 effort6; no painted or semantic content changes"
+      }
+    }
+  ]
+}

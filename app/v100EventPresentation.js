@@ -7,10 +7,11 @@ import { v100StageAudioFor } from "./v100StageRuntime.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { v100EndingScoreScene, v100StoryScoreScene } from "./v100Music.js";
+import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 
 const visuals = PRODUCTION_VISUALS.stages;
 const cuts = V100_RUNTIME_ASSET_MANIFEST.storyCuts;
-export const V100_CREDITS_SCENES = Object.freeze({
+export const V100_CREDITS_SCENES = Object.freeze(Object.fromEntries(Object.entries({
   "西新商店街": { backgroundPath: visuals["stage-nishijin-shopping-street"], sceneId: "v100-credits-street" },
   "早良区役所": { backgroundPath: visuals["stage-sawara-ward-office"], sceneId: "v100-credits-room" },
   "西新駅": { backgroundPath: visuals["stage-nishijin-station-platform"], sceneId: "v100-credits-station" },
@@ -22,7 +23,7 @@ export const V100_CREDITS_SCENES = Object.freeze({
   "装甲車両": { backgroundPath: PRODUCTION_VISUALS.command, sceneId: "v100-credits-room" },
   "TAKUYA撃破地点": { backgroundPath: visuals["stage-nishijin-defense-line-takuya-omega"], sceneId: "v100-credits-wind" },
   "くまや": { backgroundPath: cuts.kumayaReopened, sceneId: "v100-credits-kumaya" },
-});
+}).map(([label, scene]) => [label, Object.freeze({ ...scene, backgroundPath: V100_CREDITS_FILM.find(shot => shot.sceneLabel === label)?.src ?? scene.backgroundPath })])));
 
 function backdropFor(eventId, node) {
   const sceneTag = node?.sceneTag ?? null;
