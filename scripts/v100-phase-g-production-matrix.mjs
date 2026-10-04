@@ -4584,7 +4584,7 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "map-locked-boss", async (page) => {
     await mapPage(page, fullSave({ availableStageIds: [V100_STAGE_IDS[0]] }));
     await click(page, page.getByRole("button", { name: /最終章/u }), "final chapter tab");
-    await click(page, page.getByRole("button", { name: /未確認区域 S30/u }), "locked final node");
+    await click(page, page.locator(".v100-stage-list").getByRole("button", { name: /^封鎖地点 S30 封鎖中、記録星 0\/3$/u }), "locked final node");
     await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
     await page.locator(".v100-map-locked-focus").waitFor({ state: "visible", timeout });
     invariant(!/TAKUYA-Ω|RED PANTHER/u.test(await page.locator(".v100-map-layout").innerText()), "locked map disclosed future identities");
