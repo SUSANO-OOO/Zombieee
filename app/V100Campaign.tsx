@@ -1126,20 +1126,24 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <div className="v100-map-canvas-legend"><span><i className="is-current" />選択地点</span><span><i className="is-clear" />制圧済み</span><span><i className="is-locked" />封鎖</span></div>
         </div>
         <aside className={`v100-map-side ${discovered && stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`}>
-          <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")}` : "作戦地図"}</span><span>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "封鎖中"}</span></div>
-          <h3>{v100MapStageName(stage, save)}</h3>
-          {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>作戦封鎖中</strong><span>前作戦クリアで解放</span></div>}
-          <div className="v100-stage-intel"><span>作戦目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前作戦をクリアして、この区域を調査します。"}</p></div>
-          {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
+          <div className="v100-map-briefing">
+            <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")}` : "作戦地図"}</span><span>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "封鎖中"}</span></div>
+            <h3>{v100MapStageName(stage, save)}</h3>
+            {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>作戦封鎖中</strong><span>前作戦クリアで解放</span></div>}
+            <div className="v100-stage-intel"><span>作戦目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前作戦をクリアして、この区域を調査します。"}</p></div>
+            {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
+          </div>
           <details className="v100-map-detail"><summary>作戦詳細・記録</summary>
-          {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
-          <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
-          <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
-          <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}>隊員</button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}>戦術支援</button></div>
-          <div className="v100-map-briefs"><article><span>隊員</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
-          <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
-          <div className="v100-replay-list"><span className="v100-kicker">会話記録</span>{save.readStoryEventIds.slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div>
-          <V100AssetCredits />
+            <div className="v100-map-detail-content">
+              {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
+              <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
+              <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
+              <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="隊員を編成" onClick={onOpenPersonnel}>隊員</button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}>戦術支援</button></div>
+              <div className="v100-map-briefs"><article><span>隊員</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
+              <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
+              <div className="v100-replay-list"><span className="v100-kicker">会話記録</span>{save.readStoryEventIds.slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div>
+              <V100AssetCredits />
+            </div>
           </details>
           <button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "この作戦を編成"}</button>
         </aside>

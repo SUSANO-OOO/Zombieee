@@ -531,3 +531,86 @@
   #v100-campaign[data-v100-phase="formation"] .v100-command-formation:not(.picker-open) .v100-slot-meta em { font-size: 14px; }
   #v100-campaign[data-v100-phase="formation"] .v100-command-formation:not(.picker-open) .v100-slot-meta b { font-size: 14px; }
 }
+
+
+/* Keep the map briefing intact on desktop, but allocate real touch and scroll space on short landscapes. */
+#v100-campaign .v100-map-briefing,
+#v100-campaign .v100-map-detail-content { display: contents; }
+#v100-campaign .v100-map-detail > summary {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 6px 8px;
+  line-height: 32px;
+}
+@media (max-height: 420px) and (orientation: landscape) {
+  #v100-campaign[data-v100-phase="map"] .v100-map-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 3px;
+    padding: 7px;
+    overflow: hidden;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-briefing {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-detail {
+    display: flex;
+    flex: 0 0 44px;
+    flex-direction: column;
+    min-height: 44px;
+    overflow: hidden;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-detail > summary {
+    flex: 0 0 44px;
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 8px;
+    line-height: 32px;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-detail-content { display: none; }
+  #v100-campaign[data-v100-phase="map"] .v100-map-detail[open] {
+    flex: 1 1 0;
+    min-height: 88px;
+    overflow: hidden;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-detail[open] > .v100-map-detail-content {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 44px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-side:has(> .v100-map-detail[open]) .v100-map-briefing {
+    flex: 0 0 auto;
+    min-height: 18px;
+    overflow: visible;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-side:has(> .v100-map-detail[open]) .v100-map-briefing > :not(h3) {
+    display: none;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-side:has(> .v100-map-detail[open]) .v100-map-briefing h3 {
+    flex: none;
+    margin: 0;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #v100-campaign[data-v100-phase="map"] .v100-map-side:has(> .v100-map-detail[open]) { gap: 3px; padding: 4px; }
+  #v100-campaign[data-v100-phase="map"] .v100-map-side > .v100-primary {
+    flex: 0 0 44px;
+    min-height: 44px;
+    margin: 0;
+  }
+}
