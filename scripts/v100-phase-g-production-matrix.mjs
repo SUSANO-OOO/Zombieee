@@ -4727,8 +4727,8 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "epilogue-postgame", async (page) => { await openRoute(page, eventSave("epilogue", "v100:event:epilogue")); await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
-    await click(page, page.getByRole("button", { name: "データ管理", exact: true }), "data management");
+    await click(page, page.getByRole("button", { name: "メニュー", exact: true }), "player menu");
+    await click(page, page.getByRole("dialog", { name: "メニュー" }).getByRole("button", { name: "データ管理", exact: true }), "data management");
     await page.getByRole("dialog", { name: "データ管理" }).waitFor({ state: "visible", timeout });
   });
 }

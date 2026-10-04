@@ -280,7 +280,8 @@ for (const engine of engines) {
       await page.getByRole("button", { name: "ナオを枠5へ配置", exact: true }).tap();
       await page.locator(".v100-sortie-selected").tap();
       assert.equal(await page.locator(".v100-personnel-focus").getAttribute("data-unit-id"), "unit-nao");
-      await page.getByRole("button", { name: "隊員一覧へ", exact: true }).tap();
+      await page.getByRole("button", { name: "出撃編成へ", exact: true }).tap();
+      await page.getByRole('navigation', { name: '作戦準備メニュー' }).getByRole('button', { name: '隊員', exact: true }).tap();
       await page.locator(".v100-personnel-card").first().tap();
       const growth = page.locator(".v100-unit-growth-notes summary");
       await within(growth, 44); await growth.tap(); row.growthBox = await within(page.locator(".v100-unit-growth-notes p"));
