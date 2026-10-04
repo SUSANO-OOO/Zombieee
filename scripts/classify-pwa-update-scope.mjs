@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { appendFileSync } from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const execFileAsync = promisify(execFile);
 
@@ -21,7 +23,14 @@ const VERIFICATION_ONLY_PATHS = new Set([
   "tests/v099-hud-states-bounded.test.mjs",
   "tests/stage3-final-bounded.test.mjs",
   "tests/ci-contract.test.mjs",
+  "tests/station-mission-native-pixels.test.mjs",
 ]);
+
+const STATION_AUDIT_APP_PATH = "app/AshfallGame.tsx";
+const STATION_AUDIT_TEST_PATH = "tests/station-mission-native-pixels.test.mjs";
+const STATION_AUDIT_BASE_FUNCTION_SHA256 = "8e04c566df962e77c81d31b338653eda37d069581ae6cd8d2d8613394a6dadc2";
+const STATION_AUDIT_APPROVED_FUNCTION_SHA256 = "7739a897c5e1ff77525a59acd0b1634a4222de03984d28478d1f2d1182502e6d";
+const STATION_AUDIT_ASSET_MANIFEST_PATH = "public/asset-manifest.json";
 
 function assertFullCommitSha(value, name) {
   assert.match(value ?? "", /^[0-9a-f]{40}$/iu, `${name} must be a full 40-character commit SHA`);
@@ -53,6 +62,76 @@ export function classifyPwaUpdatePaths(changedPaths) {
     applicable: changedPaths.some(isPwaUpdatePathApplicable),
     changedPaths: Object.freeze([...changedPaths]),
   });
+}
+
+function stationAuditFunctionRange(sourceBytes) {
+  const sourceText = sourceBytes.toString("utf8");
+  if (!Buffer.from(sourceText, "utf8").equals(sourceBytes)) return null;
+  const sourceFile = ts.createSourceFile("app/AshfallGame.tsx", sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  if (sourceFile.parseDiagnostics.length > 0) return null;
+  const matches = [];
+  function visit(node) {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === "stationMissionFinalCanvasAudit") matches.push(node);
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  if (matches.length !== 1) return null;
+  const start = Buffer.byteLength(sourceText.slice(0, matches[0].getStart(sourceFile)), "utf8");
+  const end = Buffer.byteLength(sourceText.slice(0, matches[0].end), "utf8");
+  return {
+    prefix: sourceBytes.subarray(0, start),
+    body: sourceBytes.subarray(start, end),
+    suffix: sourceBytes.subarray(end),
+  };
+}
+
+async function readCommitBlob(commitSha, filePath, runExecFile) {
+  const { stdout } = await runExecFile("git", ["show", `${commitSha}:${filePath}`], {
+    encoding: "buffer",
+    maxBuffer: 32 * 1024 * 1024,
+    shell: false,
+    windowsHide: true,
+  });
+  return Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
+}
+
+async function isExactStationAuditException(baseSha, headSha, runExecFile) {
+  await verifyCommitSha(baseSha, "PR_BASE_SHA", runExecFile);
+  await verifyCommitSha(headSha, "PR_HEAD_SHA", runExecFile);
+  const [baseApp, candidateApp, baseManifest, candidateManifest] = await Promise.all([
+    readCommitBlob(baseSha, STATION_AUDIT_APP_PATH, runExecFile),
+    readCommitBlob(headSha, STATION_AUDIT_APP_PATH, runExecFile),
+    readCommitBlob(baseSha, STATION_AUDIT_ASSET_MANIFEST_PATH, runExecFile),
+    readCommitBlob(headSha, STATION_AUDIT_ASSET_MANIFEST_PATH, runExecFile),
+  ]);
+  const before = stationAuditFunctionRange(baseApp);
+  const after = stationAuditFunctionRange(candidateApp);
+  if (!before || !after) return false;
+  const beforeSha256 = createHash("sha256").update(before.body).digest("hex");
+  const afterSha256 = createHash("sha256").update(after.body).digest("hex");
+  return beforeSha256 === STATION_AUDIT_BASE_FUNCTION_SHA256
+    && afterSha256 === STATION_AUDIT_APPROVED_FUNCTION_SHA256
+    && before.prefix.equals(after.prefix)
+    && before.suffix.equals(after.suffix)
+    && baseManifest.equals(candidateManifest);
+}
+
+export async function classifyPwaUpdateCandidate(baseSha, headSha, changedPaths, runExecFile = execFileAsync) {
+  if (!Array.isArray(changedPaths) || changedPaths.length === 0 || changedPaths.some((changedPath) => typeof changedPath !== "string" || changedPath.length === 0)) {
+    throw new Error("PWA update scope cannot classify an empty diff or empty path");
+  }
+  const appPathCount = changedPaths.filter((changedPath) => changedPath === STATION_AUDIT_APP_PATH).length;
+  if (appPathCount === 0) return classifyPwaUpdatePaths(changedPaths);
+  if (appPathCount !== 1 || !changedPaths.includes(STATION_AUDIT_TEST_PATH)) {
+    return Object.freeze({ applicable: true, changedPaths: Object.freeze([...changedPaths]) });
+  }
+  const otherApplicablePaths = changedPaths.filter((changedPath) => changedPath !== STATION_AUDIT_APP_PATH)
+    .filter(isPwaUpdatePathApplicable);
+  if (otherApplicablePaths.length > 0) {
+    return Object.freeze({ applicable: true, changedPaths: Object.freeze([...changedPaths]) });
+  }
+  const exactException = await isExactStationAuditException(baseSha, headSha, runExecFile);
+  return Object.freeze({ applicable: !exactException, changedPaths: Object.freeze([...changedPaths]) });
 }
 
 export async function readChangedPaths(baseSha, headSha, runExecFile = execFileAsync) {
@@ -90,7 +169,7 @@ async function main() {
   const baseSha = process.env.PR_BASE_SHA;
   const headSha = process.env.PR_HEAD_SHA;
   const paths = await readChangedPaths(baseSha, headSha);
-  const result = classifyPwaUpdatePaths(paths);
+  const result = await classifyPwaUpdateCandidate(baseSha, headSha, paths);
   writeGitHubScopeResult({
     applicable: result.applicable,
     changedPaths: result.changedPaths,
