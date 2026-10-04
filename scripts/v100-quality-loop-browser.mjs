@@ -270,10 +270,10 @@ for (const engine of engines) {
       await page.getByRole("dialog", { name: "データ管理", exact: true }).getByLabel("セーブを復元", { exact: true }).setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
       await page.locator(".v100-map-layout").waitFor(); await ready(page);
       assert.equal((await rawSave(page)).caps, early.caps);
-      const restoredNotice = page.locator('.v100-notice button');
-      if (await restoredNotice.isVisible()) { await restoredNotice.tap(); await ready(page); }
       const offer = page.getByRole('button', { name: '後で決める', exact: true });
       if (await offer.isVisible()) { await offer.tap(); await ready(page); }
+      const restoredNotice = page.locator('.v100-notice button');
+      if (await restoredNotice.isVisible()) { await restoredNotice.tap(); await ready(page); }
       await page.getByRole("button", { name: "この作戦を編成", exact: true }).tap();
       for (let n = 0; n < 60 && !await page.locator(".v100-formation-panel").isVisible(); n++) await advanceEvent(page);
       await page.locator(".v100-slot-track .v100-slot").nth(4).tap();

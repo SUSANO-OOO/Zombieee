@@ -82,6 +82,23 @@ const diagnostics = {
 };
 const audioRequests = [];
 const candidateTransportRequests = [];
+const candidateBrowserTransportRequests = [];
+const transportOwnershipDiagnostics = {
+  measurementStatus: "not-reached",
+  candidateTransportWindows: {
+    candidateInitialEntry: { start: 0, end: null },
+    incidentUpdate: { start: null, end: null },
+    candidateRecoveryEntry: { start: null, end: null },
+    recoveryUpdate: { start: null, end: null },
+    fullRun: { start: 0, end: null },
+  },
+  completeUpdateTransportRequests: [],
+  completeChangedRequests: [],
+  completeChangedRequestBreakdown: [],
+  candidateEntryChangedRequests: [],
+  candidateEntryChangedRequestBreakdown: [],
+  allCandidateChangedRequestCount: null,
+};
 let diagnosticPhase = "setup";
 let teardown = false;
 
@@ -287,7 +304,17 @@ const server = createServer(async (request, response) => {
       && (/\/(?:art|audio|icons|assets\/v100|fonts|pwa-bundles|pwa-optimized)\//.test(url.pathname)
         || /\/(?:explosive-drum|medical-supply-station|tactical-drop-pod)-v1/.test(url.pathname))
     ) {
-      candidateTransportRequests.push({ pathname: url.pathname, audioMode, at: Date.now() });
+      candidateTransportRequests.push({
+        pathname: url.pathname,
+        audioMode,
+        diagnosticPhase,
+        method: request.method,
+        secFetchDest: request.headers["sec-fetch-dest"] ?? null,
+        secFetchMode: request.headers["sec-fetch-mode"] ?? null,
+        cacheControl: request.headers["cache-control"] ?? null,
+        pragma: request.headers.pragma ?? null,
+        at: Date.now(),
+      });
     }
     if (currentLabel === "candidate" && url.pathname === bundlePathname && audioMode !== "normal") {
       await serveCandidateAudio(response);
@@ -442,6 +469,21 @@ const address = server.address();
 const baseUrl = `http://127.0.0.1:${address.port}${scopePath}`;
 
 function attachDiagnostics(page) {
+  page.on("request", (request) => {
+    if (currentLabel !== "candidate") return;
+    let url;
+    try { url = new URL(request.url()); } catch { return; }
+    if (url.origin !== new URL(baseUrl).origin
+      || !(/\/(?:art|audio|icons|assets\/v100|fonts|pwa-bundles|pwa-optimized)\//.test(url.pathname)
+        || /\/(?:explosive-drum|medical-supply-station|tactical-drop-pod)-v1/.test(url.pathname))) return;
+    candidateBrowserTransportRequests.push({
+      pathname: url.pathname,
+      diagnosticPhase,
+      at: Date.now(),
+      resourceType: request.resourceType(),
+      isNavigationRequest: request.isNavigationRequest(),
+    });
+  });
   page.on("console", (message) => {
     if (message.type() === "error") {
       const entry = { phase: diagnosticPhase, message: message.text() };
@@ -991,6 +1033,9 @@ try {
   });
 
   await closeContext("close-cancelled-incident");
+  // Keep entry-time HTML font preloads separate from the explicit updater
+  // windows below; they share transport paths but are not update downloads.
+  const incidentTransportEnd = candidateTransportRequests.length;
   setAudioMode("recovery");
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "candidate-unqualified-recovery-entry";
@@ -1071,12 +1116,103 @@ try {
     candidateCommitCount: await commitCountFor(page, candidateManifest),
   });
 
+  const recoveryTransportEnd = candidateTransportRequests.length;
   const recoveryAssetRequests = candidateTransportRequests
     .slice(recoveryTransportStart)
     .map((request) => request.pathname);
-  const completeChangedRequests = candidateTransportRequests
+  const completeUpdateTransportRequests = [
+    ...candidateTransportRequests.slice(incidentTransportStart, incidentTransportEnd),
+    ...candidateTransportRequests.slice(recoveryTransportStart),
+  ];
+  const candidateEntryTransportRequests = [
+    ...candidateTransportRequests.slice(0, incidentTransportStart),
+    ...candidateTransportRequests.slice(incidentTransportEnd, recoveryTransportStart),
+  ];
+  const candidateEntryChangedRequests = candidateEntryTransportRequests
+    .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname));
+  const candidateWoff2TransportPaths = new Set(candidateManifest.assets
+    .filter((asset) => /\.woff2$/i.test(asset.path))
+    .map(transportPathFor));
+  const candidateEntryPhaseNames = new Set([
+    "candidate-unqualified-incident-entry",
+    "candidate-unqualified-recovery-entry",
+  ]);
+  const countRequestsByPathAndPhase = (requests) => {
+    const counts = new Map();
+    for (const request of requests) {
+      const key = JSON.stringify([request.pathname, request.diagnosticPhase]);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  };
+  const candidateEntryBrowserFontRequests = candidateBrowserTransportRequests
+    .filter((request) => candidateEntryPhaseNames.has(request.diagnosticPhase)
+      && candidatePendingReleaseDeltaTransportPaths.has(request.pathname)
+      && request.resourceType === "font");
+  const candidateEntryServerCounts = countRequestsByPathAndPhase(candidateEntryChangedRequests);
+  const candidateEntryBrowserCounts = countRequestsByPathAndPhase(candidateEntryBrowserFontRequests);
+  const candidateEntryCountKeys = new Set([
+    ...candidateEntryServerCounts.keys(),
+    ...candidateEntryBrowserCounts.keys(),
+  ]);
+  const candidateEntryChangedRequestBreakdown = [...candidateEntryCountKeys].map((key) => {
+    const [pathname, phase] = JSON.parse(key);
+    return {
+      pathname,
+      diagnosticPhase: phase,
+      serverCount: candidateEntryServerCounts.get(key) ?? 0,
+      browserFontCount: candidateEntryBrowserCounts.get(key) ?? 0,
+    };
+  });
+  const allCandidateChangedRequestCount = candidateTransportRequests
+    .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname)).length;
+  Object.assign(transportOwnershipDiagnostics, {
+    measurementStatus: "captured",
+    candidateTransportWindows: {
+      candidateInitialEntry: { start: 0, end: incidentTransportStart },
+      incidentUpdate: { start: incidentTransportStart, end: incidentTransportEnd },
+      candidateRecoveryEntry: { start: incidentTransportEnd, end: recoveryTransportStart },
+      recoveryUpdate: { start: recoveryTransportStart, end: recoveryTransportEnd },
+      fullRun: { start: 0, end: null },
+    },
+    completeUpdateTransportRequests,
+    candidateEntryChangedRequests,
+    candidateEntryChangedRequestBreakdown,
+    allCandidateChangedRequestCount,
+  });
+  record("candidate entry transports of changed assets are manifest WOFF2 font preloads, not extra update downloads", (
+    candidateEntryChangedRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname)
+      && candidateEntryPhaseNames.has(request.diagnosticPhase))
+    && candidateEntryBrowserFontRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname))
+    && candidateEntryChangedRequestBreakdown.every((entry) => entry.serverCount <= 1
+      && entry.serverCount === entry.browserFontCount)
+  ), {
+    candidateEntryChangedRequests,
+    candidateEntryChangedRequestBreakdown,
+    candidateEntryBrowserFontRequests,
+    candidateWoff2TransportPaths: [...candidateWoff2TransportPaths],
+  });
+  const completeChangedRequests = completeUpdateTransportRequests
     .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
     .map(({ pathname }) => pathname);
+  const completeChangedRequestBreakdown = [...candidatePendingReleaseDeltaTransportPaths].map((pathname) => {
+    const requests = completeUpdateTransportRequests.filter((request) => request.pathname === pathname);
+    const countBy = (key) => Object.fromEntries([...new Set(requests.map((request) => request[key] ?? "(none)"))]
+      .map((value) => [value, requests.filter((request) => (request[key] ?? "(none)") === value).length]));
+    const phaseDestinationCounts = Object.fromEntries([...new Set(requests.map((request) => `${request.diagnosticPhase ?? "(none)"} / ${request.secFetchDest ?? "(none)"}`))]
+      .map((value) => [value, requests.filter((request) => `${request.diagnosticPhase ?? "(none)"} / ${request.secFetchDest ?? "(none)"}` === value).length]));
+    return {
+      pathname,
+      count: requests.length,
+      phases: countBy("diagnosticPhase"),
+      destinations: countBy("secFetchDest"),
+      phaseDestinations: phaseDestinationCounts,
+    };
+  });
+  Object.assign(transportOwnershipDiagnostics, {
+    completeChangedRequests,
+    completeChangedRequestBreakdown,
+  });
   const completeDirectChangedRequests = completeChangedRequests.filter((pathname) => pathname !== bundlePathname);
   const expectedDirectChangedRequests = [...candidatePendingReleaseDeltaTransportPaths].filter((pathname) => pathname !== bundlePathname);
   const successfulRefetches = recoveryAssetRequests.filter((pathname) => (
@@ -1096,8 +1232,14 @@ try {
     successfulBeforeRecoveryHashes: hashesBeforeRecovery.size,
     successfulBeforeRecoveryLogicalAssets: successfulBeforeRecoveryAssets.length,
     recoveryAssetRequests,
+    completeUpdateTransportRequests,
     downloadTargetTransportPaths: [...candidateDownloadTransportPaths],
+    completeChangedRequests,
+    completeChangedRequestBreakdown,
     completeChangedRequestCount: completeChangedRequests.length,
+    allCandidateChangedRequestCount,
+    candidateEntryChangedRequests,
+    candidateEntryChangedRequestBreakdown,
     expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
     successfulRefetches,
     unchangedHashRefetches,
@@ -1224,6 +1366,7 @@ try {
   for (const file of sourceFiles) {
     sources.push({ file, sha256: sha256(await readFile(new URL(`../${file}`, import.meta.url))) });
   }
+  transportOwnershipDiagnostics.candidateTransportWindows.fullRun.end = candidateTransportRequests.length;
   await writeFile(path.join(evidenceDir, `pwa-partial-failed-update-${browserName}.json`), `${JSON.stringify({
     browser: browserName,
     baseUrl,
@@ -1250,7 +1393,14 @@ try {
       manifestRemoved: manifestDelta.removed.length,
       saveSha256: saveFixtureHash,
     },
-    transport: { stallDurationMs, slowDurationMs, audioRequests },
+    transport: {
+      stallDurationMs,
+      slowDurationMs,
+      audioRequests,
+      ...transportOwnershipDiagnostics,
+      candidateTransportRequests,
+      candidateBrowserTransportRequests,
+    },
     results,
     failures,
   }, null, 2)}\n`, "utf8");

@@ -1,10 +1,12 @@
 # 西新世紀末物語 — プロジェクト状態
 
-### 2026-10-03 Version 1.0.0 — 全体監査の改善とスタッフロール
+### 2026-10-04 Version 1.0.0 — 画面全体の再制作とスタッフロール
 
-Producerの改善指示を受け、修正前候補`22b3b7d`で確認した未発見地図の情報開示、音声保持、導入のページ数、育成の差、報酬、データ管理、戦闘表示を修正した。クリア後は魔王魂「追憶の幻想世界」の元音源と、戦後11場面の自動スタッフロールで締めくくる。曲名・作者・公式出典・規約を表示し、既存ENDING→credits→EPILOGUE、stable ID、既読、save、人物identityを維持する。詳細は[全体監査と改善記録](qa/v100/WHOLE_QUALITY_AUDIT_20261003.md)。
+Producerの全体監査と視覚面の指摘を受け、6章の地形と経路を描いた作戦地図、地点ごとの星と封鎖表示、元の人物画像を活かした7枠の編成、戦闘HUD、結果画面の星・耐久・報酬を再制作した。本文・見出し・数値の書体を分け、短い横画面では結果の詳細をスクロールしながら次の操作を表示する。未発見区域の情報開示、導入、育成、データ管理、日本語の改善も保持する。
 
-全1721 tests、build、Lint 0 errors／15 warnings、Chromium全曲・11場面・保存境界・offline Range再生、3サイズの地図／隊員／データ表示を検証した。Windows WebKitの音声は直接配信controlでもMediaError 4となるため未合格。high／DPR2性能とMac native音声のCIを追加し、新固定候補の結果・試遊URL・最終reviewは[既存Issue #172台帳](https://github.com/SUSANO-OOO/Zombieee/issues/172#issuecomment-5926641177)とDraft PR #171で管理する。
+クリア後は魔王魂「追憶の幻想世界」の元音源に合わせ、元モデルを参照した24カットの復興・日常描写、登場人物と実使用素材の制作creditで締めくくる。場面の説明panelと固定の「あなた」を削除し、単独・手元・群像、表情と構図を使い分けた。曲名・作者・公式出典・規約を表示し、ENDING→credits→EPILOGUE、stable ID、既読、save、報酬receipt、人物identityを維持する。以前の監査は[全体監査と改善記録](qa/v100/WHOLE_QUALITY_AUDIT_20261003.md)、今回の方向は[Producer Decisions](story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md)に記録する。
+
+24カットのスタッフロールはEdgeで通常1倍・seekなしの曲末と暗転、3サイズ78画面の表示を確認した。画面再制作後の固定候補について、全tests・Lint・build、実ブラウザ操作、旧saveとPWA更新・復旧、必要CI、独立read-only reviewを検証する。最新headと結果、試遊URL、残る受入は[Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)とDraft PR #171が管理する。過去の候補の成功を新候補の合格へ転用しない。
 
 main・正式Release・公式Pagesは0.9.9.5／`55d796cc577d1d9f903a4d2c6b4382196511db27`。新候補の実機・聴感・Producer最終承認は未完了。Ready化、正式merge、tag、Release、正式deployment、Issue closeの承認境界を維持する。以下は当時の履歴である。
 

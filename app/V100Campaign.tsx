@@ -1386,20 +1386,24 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
     : Number(result?.vehicleHp) <= 0 ? "装甲車両の耐久が尽き、作戦を中断しました。"
       : "作戦目標を達成できず、作戦を中断しました。";
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="作戦結果">
-    <span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{outcome}</p>
-    <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
-    <dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
-    <div className="v100-result-feedback">
-      <div className="v100-vehicle-hp-meter" role="meter" aria-label="車両耐久" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
-        <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
+    <div className="v100-result-scroll" role="region" aria-label="作戦結果の詳細" tabIndex={0}>
+      <span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{outcome}</p>
+      <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
+      <dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
+      <div className="v100-result-feedback">
+        <div className="v100-vehicle-hp-meter" role="meter" aria-label="車両耐久" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
+          <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
+        </div>
+        <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div>
+        {won && nextStar && <p className="v100-result-next-star">次の★{nextStar}まであと {Math.max(0, Math.ceil(starTargets[nextStar] - vehicleHp))} HP（耐久{starTargets[nextStar]}以上）</p>}
+        {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回達成"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
+        {boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に作戦終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}
       </div>
-      <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div>
-      {won && nextStar && <p className="v100-result-next-star">次の★{nextStar}まであと {Math.max(0, Math.ceil(starTargets[nextStar] - vehicleHp))} HP（耐久{starTargets[nextStar]}以上）</p>}
-      {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回達成"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
-      {boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に作戦終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}
     </div>
-    {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>隊員ごとの合計。再配備と自己回復を含み、支援・車両の実績は含みません。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">隊員</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>隊員の実績は記録されていません。</p>}</div></details>}
-    <div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "編成へ戻る"}</button>{!won && <button type="button" onClick={onMap}>作戦地図へ</button>}</div>
+    <div className="v100-result-footer">
+      {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>隊員ごとの合計。再配備と自己回復を含み、支援・車両の実績は含みません。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">隊員</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>隊員の実績は記録されていません。</p>}</div></details>}
+      <div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "編成へ戻る"}</button>{!won && <button type="button" onClick={onMap}>作戦地図へ</button>}</div>
+    </div>
   </section>;
 }
 
