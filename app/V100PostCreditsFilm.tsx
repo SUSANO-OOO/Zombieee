@@ -104,7 +104,9 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
         if (wavesRef.current) wavesRef.current.volume = (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * .5) * next.wavesGain;
         if (laughRef.current) laughRef.current.volume = (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * .82) * next.laughGain;
         const displayed = imageRef.current?.querySelector<HTMLElement>("[data-credit-rendered-shot-index]");
-        if (!laughStartedRef.current && next.elapsed >= V100_POST_CREDITS_LAUGH_CUE && next.elapsed < 38 && displayed?.dataset.creditRenderedShotIndex === String(V100_POST_CREDITS_SHOTS.length - 1)) { laughStartedRef.current = true; void playLaugh(); }
+        const displayedShot = V100_POST_CREDITS_SHOTS[Number(displayed?.dataset.creditRenderedShotIndex)];
+        const smiling = displayedShot && ["crooked-smile", "ogata-grin"].includes(displayedShot.id);
+        if (!laughStartedRef.current && next.elapsed >= V100_POST_CREDITS_LAUGH_CUE && next.elapsed < 38 && smiling) { laughStartedRef.current = true; void playLaugh(); }
         if (laughStartedRef.current && !laughFinishedRef.current && next.elapsed >= 38) { laughFinishedRef.current = true; laughRef.current?.pause(); setLaughState("skipped"); }
         if (imageRef.current) { imageRef.current.style.opacity = String(next.imageOpacity); imageRef.current.style.transform = `scale(${next.scale})`; imageRef.current.style.transformOrigin = next.focus; imageRef.current.style.filter = `brightness(${next.brightness})`; }
         if (titleRef.current) titleRef.current.style.opacity = String(next.titleOpacity);

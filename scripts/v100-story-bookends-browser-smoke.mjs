@@ -7,7 +7,7 @@ import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STORY_EVENTS, v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
-import { inspectStaffRoll, completeStaffRollByNativeEnd } from "./v100-staff-roll-audit.mjs";
+import { inspectStaffRoll, completeStaffRollByFilmEnd } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
@@ -145,7 +145,7 @@ try {
                 result.observations.push(await inspectStaffRoll(page, { index, seek: index > 0, playerName }));
                 if ([0, 5, 10].includes(index)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
               }
-              await completeStaffRollByNativeEnd(page);
+              await completeStaffRollByFilmEnd(page);
               await inspect(page, "v100:event:epilogue", "epilogue", 0, result);
               assert.equal(result.observations.filter(row => row.scene).length, 11);
               for (const [kind, errors] of Object.entries(result.diagnostics)) assert.deepEqual(errors, [], `${name} ${kind}`);

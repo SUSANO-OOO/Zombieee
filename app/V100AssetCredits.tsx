@@ -1,6 +1,6 @@
 import { V100_MUSIC_TRACKS } from "./v100Music.js";
 import { V100_CREDITS_SONG } from "./v100StaffRoll.js";
-import { V100_SOUND_CREDITS, V100_BUNDLED_LEGACY_CREDITS } from "./v100CreditSources.js";
+import { V100_SOUND_CREDITS, V100_BUNDLED_LEGACY_CREDITS, V100_PRODUCTION_TOOLS } from "./v100CreditSources.js";
 export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
   return <details className="v100-asset-credits" open={expanded}><summary>制作・素材クレジット</summary>
     <p>エンディングテーマ：<a href={V100_CREDITS_SONG.page} target="_blank" rel="noreferrer">「追憶の幻想世界」</a>。
@@ -11,8 +11,11 @@ export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
       抜粋、ループの継ぎ目、音量をゲーム用に調整。</p>
     <ul>{V100_MUSIC_TRACKS.filter((track, index, all) => all.findIndex(other => other.file === track.file) === index).map(track =>
       <li key={track.file}><a href={`https://www.scottbuckley.com.au/library/${track.page}/`} target="_blank" rel="noreferrer">{track.title}</a></li>)}</ul>
-    <ul>{V100_SOUND_CREDITS.map(credit => <li key={credit.author}>
-      {credit.role}：<a href={credit.page} target="_blank" rel="noreferrer">{credit.author}</a>
+    <h3>音楽素材</h3>
+    <ul>{V100_SOUND_CREDITS.filter(credit => credit.role === "ボス戦音楽").map(credit => <li key={credit.author}><a href={credit.page} target="_blank" rel="noreferrer">{credit.author} — {credit.works.join(" / ")}</a> ／ <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noreferrer">{credit.license}</a></li>)}</ul>
+    <h3>効果音・ボイス・エフェクト素材</h3>
+    <ul>{V100_SOUND_CREDITS.filter(credit => credit.role !== "ボス戦音楽").map(credit => <li key={credit.author}>
+      <a href={credit.page} target="_blank" rel="noreferrer">{credit.author}</a>
       <br />{credit.works.join(" / ")} ／
       <a href={credit.license === "CC0" ? "https://creativecommons.org/publicdomain/zero/1.0/" : "https://creativecommons.org/licenses/by/3.0/"} target="_blank" rel="noreferrer">{credit.license}</a>
     </li>)}</ul>
@@ -20,6 +23,8 @@ export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
     <p>画面本文：BIZ UDPGothic。見出し・ボタン：Zen Kaku Gothic New。英数字：Rajdhani。Google Fontsで配布される書体を使用。著作権表示とSIL Open Font License 1.1全文を同梱。</p>
     <p>旧版から継承・同梱した音源（CC0）：</p>
     <ul>{V100_BUNDLED_LEGACY_CREDITS.map(credit => <li key={credit.author}><a href={credit.page} target="_blank" rel="noreferrer">{credit.author} — {credit.work}</a></li>)}</ul>
-    <p>制作・監修：SUSANO-OOO。開発・シナリオ構成・品質確認：Codex / ChatGPT。背景・人物・エフェクト画像制作支援：OpenAI ImageGen。</p>
+    <p>企画・制作・監修：K4ITo。開発・シナリオ構成・品質確認：Codex / ChatGPT。背景・人物・エフェクト画像制作支援：OpenAI ImageGen。</p>
+    <h3>使用ツール</h3>
+    {V100_PRODUCTION_TOOLS.map(section => <p key={section.title}><strong>{section.title}</strong><br />{section.lines.join(" / ")}</p>)}
   </details>;
 }

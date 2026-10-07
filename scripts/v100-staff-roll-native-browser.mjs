@@ -3,7 +3,7 @@ import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
-import { v100StaffRollResumeSeconds } from "../app/v100StaffRoll.js";
+import { V100_CREDITS_DURATION, V100_CREDITS_FADE_SECONDS, v100StaffRollResumeSeconds } from "../app/v100StaffRoll.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
@@ -50,9 +50,17 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
     document.addEventListener("ended", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.ended.push({ time: event.target.currentTime, duration: event.target.duration, rate: event.target.playbackRate, trusted: event.isTrusted, ended: event.target.ended }); }, true);
     window.__creditMediaProof.seeks = [];
     document.addEventListener("seeking", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.seeks.push({ time: event.target.currentTime, rate: event.target.playbackRate }); }, true);
-    setInterval(() => { const root = document.querySelector(".v100-staff-roll"), audio = root?.querySelector("audio"); if (audio) window.__creditMediaProof.samples.push({ scene: root.getAttribute("data-v100-node-index"), shot: root.getAttribute("data-v100-credit-shot-index"), time: audio.currentTime, duration: audio.duration, paused: audio.paused, progress: root.getAttribute("data-v100-credit-progress") }); }, 1000);
+    setInterval(() => {
+      const root = document.querySelector(".v100-staff-roll");
+      if (root?.querySelector("audio")) window.__lastCreditAudio = root.querySelector("audio");
+      const audio = window.__lastCreditAudio;
+      if (audio) window.__creditMediaProof.samples.push({ at: performance.now(), scene: root?.dataset.v100NodeIndex ?? null,
+        shot: root?.dataset.v100CreditShotIndex ?? null, time: audio.currentTime, duration: audio.duration,
+        rate: audio.playbackRate, volume: audio.volume, paused: audio.paused, connected: audio.isConnected,
+        outro: root?.classList.contains("v100-credits-outro") ?? false, progress: root?.dataset.v100CreditProgress ?? null });
+    }, 100);
   }, { origin: origin.origin, serialized: serializeV100Save(save) });
-  if (name === "full-song-with-loading-pause-rotation-pagehide") await installCreditTransitionAudit(page);
+  if (name === "106-second-edit-with-loading-pause-rotation-pagehide") await installCreditTransitionAudit(page);
   await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
   await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
@@ -62,12 +70,32 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
 async function readClock(page) {
   return page.locator(".v100-staff-roll").evaluate(root => { const audio = root.querySelector("audio"), track = root.querySelector(".v100-credit-roll-track"); return { time: audio.currentTime, paused: audio.paused, progress: root.getAttribute("data-v100-credit-progress"), transform: track.style.transform, state: root.getAttribute("data-v100-credit-audio") }; });
 }
+async function readReducedFilmFrame(page) {
+  return page.locator(".v100-credit-landscape").evaluate(root => {
+    const shotIndex = Number(root.dataset.creditRenderedShotIndex);
+    const images = [...root.querySelectorAll(".v100-credit-shot")];
+    const active = images.filter(image => Number(image.dataset.creditShotIndex) === shotIndex && Number(getComputedStyle(image).opacity) > .99);
+    if (active.length !== 1) return null;
+    const image = active[0], style = getComputedStyle(image), matrix = new DOMMatrixReadOnly(style.transform);
+    return { shotIndex, src: image.currentSrc, decoded: image.dataset.creditDecoded === "true" && image.complete && image.naturalWidth > 0,
+      imageCount: images.length, matrix: [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f],
+      origin: style.transformOrigin, position: style.objectPosition,
+      hiddenBufferOpacity: images.filter(other => other !== image).map(other => Number(getComputedStyle(other).opacity)) };
+  });
+}
 async function readNativeMedia(page) {
   return page.locator(".v100-staff-roll audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused,
-    seeking: audio.seeking, ended: audio.ended, networkState: audio.networkState, readyState: audio.readyState,
+    seeking: audio.seeking, ended: audio.ended, rate: audio.playbackRate, volume: audio.volume, networkState: audio.networkState, readyState: audio.readyState,
     error: audio.error && { code: audio.error.code, message: audio.error.message },
     buffered: [...Array(audio.buffered.length)].map((_, i) => [audio.buffered.start(i), audio.buffered.end(i)]),
     seekable: [...Array(audio.seekable.length)].map((_, i) => [audio.seekable.start(i), audio.seekable.end(i)]) }));
+}
+async function setVisualSpeed(page, speed) {
+  const root = page.locator(".v100-staff-roll");
+  for (let attempt = 0; attempt < 3 && await root.getAttribute("data-v100-credit-speed") !== String(speed); attempt++)
+    await root.getByRole("button", { name: /映像と文字の速さ/u }).click();
+  assert.equal(await root.getAttribute("data-v100-credit-speed"), String(speed));
+  assert.equal(await root.locator("audio").evaluate(audio => audio.playbackRate), 1);
 }
 async function frozen(page, action) {
   const before = await readClock(page);
@@ -88,7 +116,7 @@ try {
     await nativeAudioEofControl(browser, origin, transport.song.path, report.nativeEofControl);
   }
   if (selection === "all") {
-  const { page, context, result, releaseSong } = await openCase("full-song-with-loading-pause-rotation-pagehide", { delaySong: true });
+  const { page, context, result, releaseSong } = await openCase("106-second-edit-with-loading-pause-rotation-pagehide", { delaySong: true });
   try {
     await page.waitForTimeout(3500);
     result.loading = await readClock(page);
@@ -116,16 +144,22 @@ try {
     await page.screenshot({ path: path.join(out, `${engine}-rights.png`) });
     await dialog.getByRole("button", { name: "閉じる", exact: true }).click();
     await page.getByRole("button", { name: "再開", exact: true }).click();
-    console.log(JSON.stringify({ engine, status: "listening-to-full-song", seeks: 0 }));
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 360000 });
+    console.log(JSON.stringify({ engine, status: "playing-106-second-edit-at-original-music-speed", seeks: 0 }));
+    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 150000 });
     const proof = await page.evaluate(() => ({ ...window.__creditMediaProof, save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));
     result.nativeEnded = proof.ended; result.mediaSamples = proof.samples;
-    assert.equal(proof.ended.length, 1); assert.equal(proof.ended[0].ended, true);
-    assert.equal(proof.ended[0].trusted, true); assert.equal(proof.ended[0].rate, 1);
+    assert.deepEqual(proof.ended, [], "The edit fades before the unmodified full song reaches EOF");
     assert.deepEqual(proof.seeks, []);
-    assert.ok(proof.ended[0].time > 315 && proof.ended[0].time < 317);
-    assert.equal(new Set(proof.samples.map(row => row.scene)).size, 11);
-    assert.equal(new Set(proof.samples.map(row => row.shot)).size, V100_CREDITS_FILM.length);
+    assert.ok(proof.samples.every(row => row.rate === 1));
+    const nominal = result.initial.audio.volume;
+    const fade = proof.samples.filter(row => row.outro && row.volume < nominal - .00001);
+    assert.ok(fade.length >= 15, "Observe the gradual native volume fade");
+    assert.ok(fade[0].time >= V100_CREDITS_DURATION - .1 && fade[0].time < V100_CREDITS_DURATION + .35);
+    assert.ok(fade.some(row => row.volume === 0 && row.paused && row.time >= V100_CREDITS_DURATION + V100_CREDITS_FADE_SECONDS - .3));
+    assert.ok(fade.every((row, index) => index === 0 || row.volume <= fade[index - 1].volume));
+    assert.equal(new Set(proof.samples.filter(row => row.scene !== null).map(row => row.scene)).size, 11);
+    assert.equal(new Set(proof.samples.filter(row => row.shot !== null).map(row => row.shot)).size, V100_CREDITS_FILM.length);
+    result.fade = { startedAtMusicSeconds: fade[0].time, stopped: fade.find(row => row.volume === 0 && row.paused), samples: fade.length, nominal };
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
     assert.equal(proof.save.flowState.phase, "epilogue");
     result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof);
@@ -146,9 +180,24 @@ try {
     const { page, context, result } = await openCase(name, options);
     try {
       await page.waitForFunction(expected => document.querySelector(".v100-staff-roll")?.getAttribute("data-v100-credit-audio") === expected, options.muted ? "muted" : "unavailable");
+      if (options.reducedMotion) await page.waitForFunction(() => {
+        const root = document.querySelector(".v100-credit-landscape");
+        return root && [...root.querySelectorAll(".v100-credit-shot")].some(image => image.dataset.creditShotIndex === root.dataset.creditRenderedShotIndex && image.dataset.creditDecoded === "true" && image.complete && image.naturalWidth > 0 && Number(getComputedStyle(image).opacity) > .99);
+      });
+      const filmBefore = options.reducedMotion ? await readReducedFilmFrame(page) : null;
       const before = await readClock(page); await page.waitForTimeout(1300); const after = await readClock(page);
       assert.equal(after.paused, true); assert.ok(Number(after.progress) > Number(before.progress));
-      if (options.reducedMotion) assert.equal(await page.locator(".v100-credit-shot").first().evaluate(element => getComputedStyle(element).transform), "none");
+      if (options.reducedMotion) {
+        const filmAfter = await readReducedFilmFrame(page);
+        assert.ok(filmBefore?.decoded && filmAfter?.decoded, "The displayed reduced-motion image must be decoded");
+        assert.equal(filmBefore.imageCount, 2);
+        assert.equal(filmBefore.shotIndex, 0, "Observe the opening composition before the first cut");
+        assert.deepEqual(filmBefore.hiddenBufferOpacity, [0]);
+        const scale = V100_CREDITS_FILM[filmBefore.shotIndex].camera?.from ?? 1;
+        assert.deepEqual(filmBefore.matrix, [scale, 0, 0, scale, 0, 0], "Reduced motion preserves the chosen static framing");
+        assert.deepEqual(filmAfter, filmBefore, "The displayed image, framing and hidden buffer must stay fixed while the roll advances");
+        result.reducedMotion = { before: filmBefore, after: filmAfter, observationMs: 1300 };
+      }
       result.geometry = await page.locator(".v100-credit-buttons").evaluate(root => [...root.querySelectorAll("button")].map(button => { const r = button.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { label: button.textContent, height: r.height, fits: r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth, reachable: hit === button || button.contains(hit) }; }));
       assert.ok(result.geometry.every(row => row.height >= 44 && row.fits && row.reachable));
       await page.screenshot({ path: path.join(out, `${engine}-${name}.png`) });
@@ -169,7 +218,7 @@ try {
       result.initial = await inspectStaffRoll(page, { index: nodeIndex, playerName: "１２文字の主人公名です" });
       await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "false");
       if (name === "saved-scene-resume") {
-        assert.ok(result.initial.audio.currentTime > 170);
+        assert.ok(Math.abs(result.initial.audio.currentTime - v100StaffRollResumeSeconds(6, 11)) < 3);
         await page.waitForFunction(start => {
           const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
           return !audio.paused && !audio.seeking && !audio.error && root.dataset.v100CreditAudio === "playing" && audio.currentTime > start + .5;
@@ -193,7 +242,8 @@ try {
           audioElements: document.querySelectorAll(".v100-staff-roll audio").length,
         }));
         assert.deepEqual(result.replacedMedia, { replaced: true, oldPaused: true, oldConnected: false, audioElements: 1 });
-        await page.locator(".v100-staff-roll audio").evaluate(audio => { window.__audioAfterRestore = audio; audio.playbackRate = 4; });
+        await page.locator(".v100-staff-roll audio").evaluate(audio => { window.__audioAfterRestore = audio; });
+        await setVisualSpeed(page, 4);
         await page.waitForFunction(() => {
           const saved = JSON.parse(localStorage.getItem("nishijin-campaign-v100"));
           return document.querySelector(".v100-staff-roll")?.dataset.v100NodeIndex === "3" && saved.flowState.nodeIndex === 3 && document.documentElement.dataset.pwaSaveMutationPending === "false";
@@ -201,24 +251,32 @@ try {
         result.afterRestoreCheckpoint = await readNativeMedia(page);
         assert.equal(await page.locator(".v100-staff-roll audio").evaluate(audio => audio === window.__audioAfterRestore), true);
         assert.equal(result.afterRestoreCheckpoint.paused, false);
-        assert.ok(result.afterRestoreCheckpoint.time > result.restored.audio.currentTime + 20);
+        assert.ok(result.afterRestoreCheckpoint.time > result.restored.audio.currentTime + 1);
+        assert.equal(result.afterRestoreCheckpoint.rate, 1);
         await page.getByRole("button", { name: "スキップ", exact: true }).click();
       } else if (name === "ended-during-save") {
-        // Original native media runs continuously at a fixed fixture rate.
-        // Its final scene lasts about 3.6s, allowing the real onScene save to
-        // remain held through EOF within the unchanged six-second save limit.
-        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.playbackRate = 8; });
+        // Use the real four-times visual control while music remains at 1x.
+        // Final scene plus fade is under the unchanged six-second save limit.
+        await setVisualSpeed(page, 4);
         await page.waitForFunction(() => {
           const root = document.querySelector(".v100-staff-roll"), audio = root.querySelector("audio");
           const saved = JSON.parse(localStorage.getItem("nishijin-campaign-v100"));
-          return !audio.seeking && !audio.paused && audio.playbackRate === 8 && root.dataset.v100NodeIndex === "9" && document.documentElement.dataset.pwaSaveMutationPending === "false" && saved.flowState.nodeIndex === 9;
+          return !audio.seeking && !audio.paused && audio.playbackRate === 1 && root.dataset.v100CreditSpeed === "4" && root.dataset.v100NodeIndex === "9" && document.documentElement.dataset.pwaSaveMutationPending === "false" && saved.flowState.nodeIndex === 9;
         }, undefined, { timeout: 60000 });
         result.beforeHold = await readNativeMedia(page);
         await page.evaluate(() => {
-          const original = IDBFactory.prototype.open, held = [], proof = { opens: [], successes: [], errors: [], ended: [], busy: [], releases: [] };
+          const original = IDBFactory.prototype.open, held = [], proof = { opens: [], successes: [], errors: [], ended: [], filmComplete: [], busy: [], releases: [] };
           window.__creditSaveHoldProof = proof;
           const observer = new MutationObserver(() => proof.busy.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending }));
           observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-pwa-save-mutation-pending"] });
+          const film = document.querySelector(".v100-staff-roll");
+          const filmObserver = new MutationObserver(() => {
+            if (proof.filmComplete.length === 0 && film.dataset.v100CreditProgress === "1.0000" && Number(film.style.getPropertyValue("--credit-curtain")) > .999) {
+              const audio = film.querySelector("audio");
+              proof.filmComplete.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending, rate: audio.playbackRate, time: audio.currentTime, paused: audio.paused, volume: audio.volume });
+            }
+          });
+          filmObserver.observe(film, { attributes: true, attributeFilter: ["style", "data-v100-credit-progress"] });
           document.addEventListener("ended", event => {
             if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) proof.ended.push({ at: performance.now(), time: event.target.currentTime, duration: event.target.duration, rate: event.target.playbackRate, trusted: event.isTrusted, ended: event.target.ended, pending: document.documentElement.dataset.pwaSaveMutationPending });
           }, { capture: true });
@@ -226,7 +284,7 @@ try {
             IDBFactory.prototype.open = original;
             proof.releases.push({ at: performance.now(), held: held.length });
             for (const resume of held.splice(0)) resume();
-            observer.disconnect();
+            observer.disconnect(); filmObserver.disconnect();
           };
           window.__heldCreditSaves = held;
           IDBFactory.prototype.open = function (...args) {
@@ -253,27 +311,26 @@ try {
           return !audio.seeking && document.querySelector(".v100-staff-roll").dataset.v100NodeIndex === "10" && document.documentElement.dataset.pwaSaveMutationPending === "true" && window.__heldCreditSaves.length > 0;
         }, undefined, { timeout: 6000 });
         result.afterHold = await readNativeMedia(page);
-        await page.waitForFunction(() => { const audio = document.querySelector(".v100-staff-roll audio"); return audio.currentTime >= audio.duration - 8; }, undefined, { timeout: 3000 });
-        await page.waitForFunction(() => window.__creditSaveHoldProof.ended.length === 1, undefined, { timeout: 2000 });
-        result.busyAtEnd = await page.evaluate(() => window.__creditSaveHoldProof.ended[0].pending);
+        await page.waitForFunction(() => window.__creditSaveHoldProof.filmComplete.length === 1, undefined, { timeout: 6000 });
+        result.busyAtEnd = await page.evaluate(() => window.__creditSaveHoldProof.filmComplete[0].pending);
         assert.equal(result.busyAtEnd, "true");
         result.atEnd = await readNativeMedia(page);
         assert.equal(result.atEnd.error, null);
         await page.evaluate(() => window.__releaseCreditSave());
         result.holdProof = await page.evaluate(() => window.__creditSaveHoldProof);
         assert.deepEqual(result.holdProof.errors, []);
-        assert.equal(result.holdProof.ended[0].ended, true);
-        assert.equal(result.holdProof.ended[0].trusted, true);
-        assert.equal(result.holdProof.ended[0].rate, 8);
+        assert.deepEqual(result.holdProof.ended, []);
+        assert.equal(result.holdProof.filmComplete[0].rate, 1);
+        assert.equal(result.holdProof.filmComplete[0].paused, true);
+        assert.equal(result.holdProof.filmComplete[0].volume, 0);
         result.nativeSeeks = await page.evaluate(() => window.__creditMediaProof.seeks);
         assert.deepEqual(result.nativeSeeks, []);
-        assert.ok(Math.abs(result.holdProof.ended[0].time - result.holdProof.ended[0].duration) < .5);
         assert.ok(result.holdProof.opens.every(row => row.nativeRequest));
         assert.ok(result.holdProof.successes.every(row => row.handlerType === "function"));
         assert.equal(result.holdProof.releases[0].held, result.holdProof.successes.length);
         assert.ok(result.holdProof.releases[0].at - result.holdProof.opens[0].at < 6000, JSON.stringify(result.holdProof));
       } else {
-        await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.playbackRate = 16; });
+        await setVisualSpeed(page, 4);
         await page.waitForFunction(() => {
           const saved = JSON.parse(localStorage.getItem("nishijin-campaign-v100"));
           return document.querySelector(".v100-staff-roll")?.dataset.v100NodeIndex === "10" && document.documentElement.dataset.pwaSaveMutationPending === "false" && saved.flowState.nodeIndex === 10;
@@ -298,9 +355,8 @@ try {
         result.nativeEnded = await page.evaluate(() => window.__creditMediaProof.ended);
         result.nativeSeeks = await page.evaluate(() => window.__creditMediaProof.seeks);
         assert.deepEqual(result.nativeSeeks, []);
-        assert.equal(result.nativeEnded.length, 1);
-        assert.equal(result.nativeEnded[0].trusted, true);
-        assert.equal(result.nativeEnded[0].rate, 16);
+        assert.deepEqual(result.nativeEnded, []);
+        assert.equal(await page.locator(".v100-staff-roll audio").evaluate(audio => audio.playbackRate), 1);
         await page.screenshot({ path: path.join(out, `${engine}-save-failure.png`) });
         await page.evaluate(() => window.__restoreCreditStorage());
         await page.locator(".v100-staff-roll").getByRole("button", { name: "続ける", exact: true }).click();
@@ -309,7 +365,7 @@ try {
       const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
       assert.equal(saved.flowState.phase, "epilogue");
       assert.equal(saved.readStoryEventIds.filter(id => id === "v100:event:credits").length, 1);
-      result.evidence = "seeded saved cursor, or fixed-rate original native media without seeking and isolated storage fault; separate from rate-1 full-song proof";
+      result.evidence = "seeded saved cursor, or real visual speed control with original native music at 1x and isolated storage fault; separate from the normal 106-second edit proof";
       assert.deepEqual(result.errors, []); result.status = "passed";
     } catch (error) {
       result.failureClock = await readClock(page).catch(() => null);

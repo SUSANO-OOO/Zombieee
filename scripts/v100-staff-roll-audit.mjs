@@ -62,7 +62,8 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   assert.equal(observed.audioElements, 1); assert.equal(observed.audio.loop, false);
   assert.ok(observed.audio.src.endsWith(V100_CREDITS_SONG.src));
   // Chromium estimates this headerless CBR MP3 from byte rate (315.4968s);
-  // encoded MPEG frames total 315.7682s. Completion must use native ended.
+  // encoded MPEG frames total 315.7682s. The 106s edit fades this original;
+  // decoder metadata must not extend the film or change its saved cursor.
   assert.ok(Math.abs(observed.audio.duration - V100_CREDITS_SONG.duration) < .5, JSON.stringify(observed.audio));
   assert.equal(observed.audio.paused, false); assert.ok(observed.audio.currentTime > 0);
   assert.equal(observed.pictureFits, true); assert.equal(observed.cinemaUsesFullFrame, true);
@@ -75,7 +76,10 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   return observed;
 }
 
-export async function completeStaffRollByNativeEnd(page) {
-  await page.locator(".v100-staff-roll audio").evaluate(audio => { audio.currentTime = audio.duration - .08; });
-  await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 15000 });
+export async function completeStaffRollByFilmEnd(page) {
+  const root = page.locator(".v100-staff-roll");
+  for (let attempt = 0; attempt < 3 && await root.getAttribute("data-v100-credit-speed") !== "4"; attempt++)
+    await root.getByRole("button", { name: /映像と文字の速さ/u }).click();
+  assert.equal(await root.locator("audio").evaluate(audio => audio.playbackRate), 1);
+  await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 40000 });
 }

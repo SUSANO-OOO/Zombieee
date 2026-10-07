@@ -1,4 +1,6 @@
-// Shot choices are editorial: keep the 11 saved scene IDs, vary framing within them.
+// The 106-second edit retains all eleven saved scenes and uses distinct
+// drawings with enough time for the action in each one to read.
+export const V100_CREDITS_SCENE_STARTS = Object.freeze([0, 9.714286, 19.238095, 28.761905, 38.285714, 47.809524, 57.333333, 66.857143, 76.380952, 85.904762, 97.333333]);
 const camera = (from, to, x = 40, y = 45, positionX = 35, positionY = 42) =>
   Object.freeze({ from, to, x, y, positionX, positionY });
 const choices = {
@@ -38,19 +40,21 @@ const choices = {
   "kumaya-mayo-selfie": camera(1.04, 1.09, 44, 45),
   "kumaya-table": camera(1.09, 1.02, 44, 45),
 };
-const inserts = {
-  "ward-radio": { id: "ward-radio-hands", description: "いくらちゃんの手が、何度も直した無線のつまみを回す。", camera: camera(1.34, 1.40, 30, 58), durationWeight: .55 },
-  "station-repair": { id: "station-repair-lamp", description: "工具と手元の向こうで、小さな改札の灯りが戻る。", camera: camera(1.30, 1.36, 32, 63), durationWeight: .55 },
-  "hospital-bandage": { id: "hospital-bandage-expression", description: "包帯を巻かれるハチが顔をしかめる。ナオの表情も少し緩む。", camera: camera(1.28, 1.36, 57, 35), durationWeight: .55 },
-  "hospital-serum": { id: "hospital-serum-vials", description: "ナオの手と、貴重な三本の血清。翌日の治療へ慎重に備える。", camera: camera(1.30, 1.36, 49, 48, 48, 48), durationWeight: .5 },
-  "floodgate-king-riceball": { id: "floodgate-king-riceball-detail", description: "バケツの目に押しつけられたおにぎりを見て、モンキーが吹き出す。", camera: camera(1.29, 1.34, 37, 40), durationWeight: .55 },
-  "facility-chiha-baba-tender": { id: "chiha-baba-hands", description: "Mrs.チハとババヤガの手が重なる。二人の距離が近づく。", camera: camera(1.28, 1.36, 36, 47), durationWeight: .65 },
-  "zakimiya-family": { id: "zakimiya-daughter", description: "ザキミヤの腕の中で、娘が眠る。彼は動かず、その顔を見守る。", camera: camera(1.32, 1.39, 32, 49), durationWeight: .65 },
-  "zakimiya-bottles": { id: "zakimiya-washing-hands", description: "戦いで荒れたザキミヤの手が、小さな哺乳瓶を洗う。", camera: camera(1.28, 1.34, 48, 60), durationWeight: .55 },
-  "vehicle-map": { id: "vehicle-map-road", description: "修理した車両の地図に、街の外へ向かう道が残されている。", camera: camera(1.26, 1.33, 43, 55, 43, 45), durationWeight: .55 },
-  "kumaya-cooking": { id: "kumaya-cooking-pan", description: "油のはねる鍋と、料理を仕上げるクマバーソンの手元。", camera: camera(1.28, 1.34, 45, 63), durationWeight: .45 },
-  "kumaya-mayo-selfie": { id: "kumaya-mayo-nose", description: "集合写真のど真ん中を、マヨちゃんの鼻が占領する。", camera: camera(1.24, 1.30, 52, 68, 45, 55), durationWeight: .4 },
-};
+// Offsets are seconds inside their canonical scene; the last drawing in
+// each scene holds until the next scene boundary.
+const selected = [
+  ["street-community", 0], ["street-shutter", 3], ["street-paisen-broom", 6],
+  ["ward-supplies", 0], ["ward-king-fan", 5],
+  ["station-repair", 0], ["station-cart-parade", 5],
+  ["hospital-serum", 0], ["hospital-courtyard", 3.2],
+  ["floodgate-rations", 0], ["floodgate-king-riceball", 4],
+  ["facility-power", 0], ["facility-chiha-baba-tender", 4.2],
+  ["armory-evidence", 0], ["segawa-record", 2.5], ["armory-couple-dance", 6.5],
+  ["zakimiya-bottles", 0], ["zakimiya-family-morning", 3.2],
+  ["vehicle-patch", 0], ["vehicle-mayo-splash", 4.2],
+  ["defense-watch", 0], ["defense-bench", 2.5], ["defense-paisen-kuma-kiss", 7],
+  ["kumaya-cooking", 0], ["kumaya-table", 2.5],
+];
 const newShots = {
   "hospital-serum": { id: "hospital-courtyard", sceneIndex: 3, sceneLabel: "大学病院", actors: ["unit-hachi","unit-nao","unit-mayo-chan"], src: "/art/v100/credits/hospital-courtyard-r3.webp", description: "翌朝の病院。仲間と職員が窓や花壇を直す中、マヨちゃんが包帯を引っ張り、ハチとナオに笑いが戻る。", durationWeight: 1.2, camera: camera(1.11, 1.02, 39, 48) },
   "armory-evidence": { id: "segawa-record", sceneIndex: 6, sceneLabel: "RED PANTHER装備庫", actors: ["segawa"], src: "/art/v100/credits/segawa-record-r2.webp", description: "回収された研究記録の中で、セガワが暴走したプリンターの紙に埋もれ、呆れた顔でコーヒーを持っている。", durationWeight: 1.15, transition: "cut", camera: camera(1.03, 1.10, 38, 43) },
@@ -58,13 +62,12 @@ const newShots = {
 };
 const hardCuts = new Set(["street-paisen-broom","street-paisen-flirt","ward-king-fan","station-cart-parade","floodgate-king-riceball","defense-bench","kumaya-omelet-chaos","kumaya-mayo-selfie"]);
 export function v100EditedCreditsFilm(shots) {
-  return Object.freeze(shots.flatMap(shot => {
-    const wide = { ...shot, camera: choices[shot.id], transition: hardCuts.has(shot.id) ? "cut" : "dissolve" };
-    if (shot.id === "kumaya-table") wide.durationWeight = 2.3;
-    const edit = [wide];
-    if (inserts[shot.id]) edit.push({ ...shot, ...inserts[shot.id], transition: "cut" });
-    if (newShots[shot.id]) edit.push(newShots[shot.id]);
-    return edit.map(frame => Object.freeze({ ...frame, actors: Object.freeze(frame.actors) }));
+  const available = new Map(shots.flatMap(shot => [shot, ...(newShots[shot.id] ? [newShots[shot.id]] : [])]).map(shot => [shot.id, shot]));
+  return Object.freeze(selected.map(([id, sceneOffset]) => {
+    const shot = available.get(id);
+    if (!shot) throw new Error("Missing selected credits drawing: " + id);
+    return Object.freeze({ ...shot, sceneOffset, camera: shot.camera ?? choices[id],
+      transition: shot.transition ?? (hardCuts.has(id) ? "cut" : "dissolve"), actors: Object.freeze(shot.actors) });
   }));
 }
 export function v100CreditsCameraStyle(camera, progress, reducedMotion = false) {
@@ -72,5 +75,7 @@ export function v100CreditsCameraStyle(camera, progress, reducedMotion = false) 
   const time = Math.max(0, Math.min(1, Number(progress) || 0));
   const eased = time * time * (3 - 2 * time);
   const scale = reducedMotion ? camera.from : camera.from + (camera.to - camera.from) * eased;
-  return { transform: `scale(${scale})`, origin: `${camera.x}% ${camera.y}%`, position: `${camera.positionX}% ${camera.positionY}%` };
+  const interpolate = (from, to = from) => reducedMotion ? from : from + (to - from) * eased;
+  return { transform: `scale(${scale})`, origin: `${interpolate(camera.x, camera.toX)}% ${interpolate(camera.y, camera.toY)}%`,
+    position: `${interpolate(camera.positionX, camera.toPositionX)}% ${interpolate(camera.positionY, camera.toPositionY)}%` };
 }

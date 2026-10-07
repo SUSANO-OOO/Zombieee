@@ -1,4 +1,4 @@
-// Exact selected ending assets; original identity and provenance are source-bound.
+// Exact selected drawings for the 106-second ending edit; original masters remain preserved.
 export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
   {
     "path": "/art/v100/credits/street-community-r1.webp",
@@ -13,27 +13,9 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/street-doorstep-r2.webp",
-    "bytes": 300714,
-    "hash": "sha256-6afdff46e38d650a7b7155d1d1295120a1cfd18e33ccec9ea7ed616eec1f4fc7",
-    "criticality": "critical"
-  },
-  {
     "path": "/art/v100/credits/street-paisen-broom-r1.webp",
     "bytes": 292750,
     "hash": "sha256-f4fbcfe07a040abebbf7a61deb3e1bf0d5df92ac710125d8151082585e4d4796",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/street-paisen-flirt-r1.webp",
-    "bytes": 341856,
-    "hash": "sha256-aa1a4383f216d9015fa6b112e872e032c08db7d1b12f1e09420c03be70e284be",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/ward-radio-r1.webp",
-    "bytes": 250648,
-    "hash": "sha256-41ff9b434e3bbed3121974fca594dfc62e65f23142f00e980fd7b9a736f318c1",
     "criticality": "critical"
   },
   {
@@ -55,21 +37,9 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/station-bench-r1.webp",
-    "bytes": 285994,
-    "hash": "sha256-a2ca22519bb787d9d2ecc887ca4093cd3d3bd35a2c9e1f0a552afc3caed575fd",
-    "criticality": "critical"
-  },
-  {
     "path": "/art/v100/credits/station-cart-parade-r1.webp",
     "bytes": 337952,
     "hash": "sha256-145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/hospital-bandage-r2.webp",
-    "bytes": 254742,
-    "hash": "sha256-9c22e584b4433695e78e55d8c2dc764d7d2a65ff9b68f75e81be17087adbba29",
     "criticality": "critical"
   },
   {
@@ -97,21 +67,9 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/floodgate-watch-r2.webp",
-    "bytes": 201894,
-    "hash": "sha256-2432df3a342e2d015dfb29486ca281e3ba5cc0910b5c9911441c06c95c406054",
-    "criticality": "critical"
-  },
-  {
     "path": "/art/v100/credits/facility-power-r1.webp",
     "bytes": 300926,
     "hash": "sha256-e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/facility-linen-r2.webp",
-    "bytes": 223276,
-    "hash": "sha256-d180862f0a003bf6808a4fa31d5f190f4e6595ec6e2a345296f6f16946226bcd",
     "criticality": "critical"
   },
   {
@@ -133,21 +91,9 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/armory-shelves-r1.webp",
-    "bytes": 278230,
-    "hash": "sha256-9407d6f9a3e7e67fe82918323859ec82beee41c304a591b62a2a30ec9abf1464",
-    "criticality": "critical"
-  },
-  {
     "path": "/art/v100/credits/armory-couple-dance-r1.webp",
     "bytes": 286970,
     "hash": "sha256-b62271385452e9aa13ffac6f11ec75f548001435a5ab218607f83c11a8efa95e",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/zakimiya-family-r2.webp",
-    "bytes": 170482,
-    "hash": "sha256-449ff990e97d7aa227e8368b695c97d4971c9afd23a0193757ee3f0f80c74860",
     "criticality": "critical"
   },
   {
@@ -175,12 +121,6 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/vehicle-map-r2.webp",
-    "bytes": 365544,
-    "hash": "sha256-c2a3f4b6aa2fba22f6815b293b06851a4545da764937933a6972a7b159e83d3a",
-    "criticality": "critical"
-  },
-  {
     "path": "/art/v100/credits/defense-watch-r1.webp",
     "bytes": 276070,
     "hash": "sha256-71de3a013e9d3a01f02b766deb83fd7279167f7a69c6158d97ec5227eb51e3d8",
@@ -202,24 +142,6 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "path": "/art/v100/credits/kumaya-cooking-r1.webp",
     "bytes": 186910,
     "hash": "sha256-5c6d3ca3e8807950722aabd7b1899572c0b8a0a14582d831fbbf4371b9c2eaa1",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/kumaya-dog-r1.webp",
-    "bytes": 144588,
-    "hash": "sha256-04e3959e61767f75c1d789c10c8ba96b422274a9267a22a4612d402e088a6eeb",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/kumaya-omelet-chaos-r1.webp",
-    "bytes": 268694,
-    "hash": "sha256-69db77a9bde8cdc82f9d2617e0fe0ea698b9238137fa8a184568219144a7270c",
-    "criticality": "critical"
-  },
-  {
-    "path": "/art/v100/credits/kumaya-mayo-selfie-r1.webp",
-    "bytes": 237638,
-    "hash": "sha256-0c79faab640c823d188591c7303c6f4f270c0020b6f3d28bcd591a8a40a6e370",
     "criticality": "critical"
   },
   {

@@ -96,7 +96,7 @@ test("only a durable first-clear result presents a newly unlocked unit", () => {
   assert.equal(v100RewardPresentationFor({ ...result, won: false }), null);
 });
 
-test("the full song visits all 11 canonical montage scenes and ends at its boundary", () => {
+test("the 106-second edit visits all 11 canonical montage scenes", () => {
   const event = v100StoryEventView("v100:event:credits", "花影");
   assert.equal(event.nodes.length, 11);
   for (let index = 0; index < event.nodes.length; index++) {

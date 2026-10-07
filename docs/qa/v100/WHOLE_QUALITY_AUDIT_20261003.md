@@ -1,5 +1,17 @@
 # Version 1.0.0 全体品質監査 — 2026-10-03
 
+## 2026-10-08 106秒の編集とスクロールへの改訂
+
+Producerの1分46秒からフェードする指定と、全クレジットをスクロールに保つ指定に合わせて編集した。106秒、音量係数0.48、2.4秒の消音、3.2秒の暗転を採用し、元の音源hashと速度1を保持。25枚の異なる絵を25カットで置き、11場面の保存位置と描写済みの17人物を残す。以前も描かれていなかった宮本武蔵を画像に含むとは報告しない。41項目のcast、33実使用ツール、音楽・効果音・ボイス・同梱素材の全作品とライセンスは一本の縦スクロールに表示する。
+
+クレジット後は10枚を同じ描画で新規制作。後ろ姿4枚、波間のヘルメット、振り返る肩、顔、目、笑い始める口、笑った顔を並べる。顔から笑いまで共通のカメラ曲線・明度を維持する。画像生成の全prompt、既存イラスト参照、加工、runtime hashは`assets/source/v100/runtime/ending/film-art-r3.provenance.json`。写真原本を今回の加工・配信へ追加していない。提供された顔立ちのillustrated identityを使った生成・編集であり、人間100%制作と説明しない。
+
+production buildと1771 tests、Lint 0 errors／18 warnings、content、diff checkが成功。実IABの1280×720はtrack 4998px／window 555px、844×340は4367px／182pxで、連続スクロールとボタン高44px・画面内・原速曲を確認した。停止して画面の高さを変えても保存や曲を巻き戻さず、再開後は最後の視聴終了画面まで進んだ。これはブラウザ操作の証拠であり、物理端末やspeakerの確認ではない。
+
+Windows WebKit 26.6で独立音源controlの1倍末尾seekと8倍EOFは成功、16倍は時計が1倍で進み期限60秒に失敗。証拠`ending-native-production-r16/report.json`は保全する。製品native fallbackではResizeObserverの「undelivered notifications」を捕捉。観測callback内で文字枠のCSS高さを変え、別observerを同じdelivery中に発火させる組み合わせを修正し、計測・CSS更新を次のRAFへ送り、同じ高さの再書き込みを防ぐ。元失敗を消さず、修正後のnative媒体・保存・表示回帰を再検証する。
+
+今回の静止画採否、作品全体のProducer試遊、新HEADの必要CI、正式リリースは未完了。以下は以前の候補の監査履歴である。
+
 ## 2026-10-07 美術と映画編集の改訂
 
 採用候補は病院、家族の翌朝、物資整理、セガワ記録、終幕の顔と笑みの6画像。正式identity参照・私的顔参照と採用hashはassets/source/v100/runtime/ending/film-art-r2.provenance.jsonへ保存。写真原本や私的pathはGit・公開・CI evidenceへ入れない。目・鼻・頬幅・髪と元衣装、ナオの結い髪と一本の編み込み、セガワの死亡前という因果を確認した。静止美術の独立review H/M0は画像採否や実映画の受入と区別する。

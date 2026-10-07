@@ -161,7 +161,7 @@ export const V100_STORY_CAST_CREDITS = Object.freeze([
     ]
   },
   {
-    "title": "立ちはだかった者たち",
+    "title": "敵対勢力",
     "lines": [
       "タクヤ — TAKUYA / TAKUYA-Ω",
       "改札喰い",
@@ -176,3 +176,12 @@ export const V100_STORY_CAST_CREDITS = Object.freeze([
     ]
   }
 ].map(credit => Object.freeze({ ...credit, lines: Object.freeze(credit.lines) })));
+
+// Only tools with an actual production, build or validation record are listed.
+export const V100_PRODUCTION_TOOLS = Object.freeze([
+  { title: "制作支援", lines: ["ChatGPT", "Codex", "OpenAI ImageGen"] },
+  { title: "画像・音源加工", lines: ["Sharp", "Python", "Pillow", "NumPy", "FFmpeg", "fontTools", "Brotli"] },
+  { title: "ゲーム実装・ビルド", lines: ["React", "TypeScript", "Node.js", "npm", "Vinext", "Vite", "esbuild", "Tailwind CSS", "PostCSS", "Cloudflare Vite plugin"] },
+  { title: "検証", lines: ["Playwright", "Node.js Test Runner", "ESLint", "Chromium", "WebKit", "Microsoft Edge"] },
+  { title: "制作管理・配信", lines: ["Git", "GitHub", "GitHub CLI", "GitHub Actions", "GitHub Pages", "PowerShell", "Cloudflared"] },
+].map(section => Object.freeze({ ...section, lines: Object.freeze(section.lines) })));
