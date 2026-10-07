@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { emittedPwaShellFiles } from "./pwa-shell-files.mjs";
 
 const cliPath = fileURLToPath(new URL("../node_modules/vinext/dist/cli.js", import.meta.url));
 
@@ -37,12 +38,7 @@ if (process.argv[2] === "start") {
     // The worker must cache every emitted JS/CSS chunk before it calls a PWA
     // generation offline-ready. HTML references omit lazy route/game chunks.
     const clientDir = path.resolve("dist/client");
-    const manifest = JSON.parse(await readFile(path.join(clientDir, ".vite/manifest.json"), "utf8"));
-    const files = [...new Set(Object.values(manifest).flatMap((entry) => [
-      entry.file,
-      ...(entry.css ?? []),
-    ]).filter((file) => /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)))].sort();
-    if (files.length === 0) throw new Error("Build emitted no PWA shell JS/CSS files");
+    const files = await emittedPwaShellFiles(clientDir);
     await writeFile(path.join(clientDir, "pwa-shell.json"), `${JSON.stringify({ files }, null, 2)}\n`, "utf8");
   }
 }

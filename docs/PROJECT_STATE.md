@@ -1,5 +1,13 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-07 追試 — 終幕の通し確認とオフラインCSSの修正
+
+`09d4e15`の固定試遊版で名前入力から全94イベント・767ノード、35カットのスタッフロール、7カットの終幕、27ノードの従来エピローグ回想、作戦地図への復帰を通した。30戦は検証用のsynthetic結果で、通常戦闘の達成とは区別する。実UIの報酬確定、35回の保存・再読込、原曲1倍・seekなし・trusted EOF、同じ2画像要素による全切替、指定4行の表示、browser error 0を確認した。同じheadのMac WebKitの原曲・キャッシュ・保存境界・旧版更新18/18・部分失敗復旧23/23もsource hashで確認。現行23チェックには追加されたfont preload確認を含め、旧集計22へ丸めない。記録は`full-ui-09-r2/report.json`／`ci-09d4e15-native-pwa-integrity-r2.json`。
+
+追加の実オフライン再起動で、RSC生成の`assets/index-*.css`をVite manifestが省略し、PWA保存一覧から漏れる不具合を発見。全生成JS／MJS／CSSを同じ関数で列挙し、両HTMLの依存が一覧にあることもbuildで検証する。修正後のローカルbuildで17 shell files、終幕7画像・2音声のキャッシュhash、サーバーの実socket切断・接続不能、オフライン再起動・native SWからの全終幕asset取得・曲速度1・7画像6切替・地図復帰・save保持・browser error 0を確認した。全1758 tests／build、Lint 0 errors・既存18 warnings、content、diff check、今回4ファイルの独立read-only review H/M未解消0。画像・音声・人物・ストーリー・save・配信asset589件は変更していない。
+
+証拠は`outputs/projectwide-brushup-20261004/design-rebuild/`。修正前の`ending-offline-09-r1`を保持し、修正後の`ending-offline-shell-r2`は未commitのbuild差分を検証したローカル証拠として区別する。最新head・必要CI・固定試遊URLはIssue #172／Draft PR #171で再取得する。新候補CI、Producerの最終画像採否・作品全体の試遊、物理iPhoneの操作・聴感・発熱は別の受入であり、正式公開の承認境界を維持する。
+
 ### 2026-10-07 Version 1.0.0 — スタッフロールの追加制作と姪浜の終幕
 
 Producerの追加指示に沿い、復興・日常・群像・恋愛・喜劇を35カットに増やした。ちはとババヤガ、成人男性のパイセンとクマバーソン、料理・配給・駅・車両の場面を追加した。金髪短髪のレイダーは女性として統一し、クレイジーキングの緑のパーカー・黒いプリーツスカート・赤い長靴を9画像で修正した。元の人物モデルを参照した採用画像と原本・加工・hashをprovenanceで結び付ける。

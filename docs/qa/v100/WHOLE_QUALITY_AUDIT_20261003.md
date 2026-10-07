@@ -396,3 +396,15 @@ Producerの「本プロジェクトを通してのあらゆる指摘」を、直
 ### 残る受入
 
 固定した候補の必要CIと、全体のProducer試遊・画像採否・音響受入を台帳へ残す。旧`32dd96c`の26/26を新候補のCIへ繰り上げない。物理iPhoneの操作・speaker・発熱は未確認。ローカル試遊の起動を公式公開と扱わない。成人限定という指定を理由に未生成・未採用の要求を完了にせず、100%人間制作・AI感ゼロ・以後の指摘ゼロを保証しない。正式公開前の承認境界を維持する。
+
+## 終幕への通し確認とオフライン再起動の追試 — 2026-10-07
+
+- 固定`09d4e15`の`full-ui-09-r2/report.json`は全94イベント／767ノード／30 synthetic結果／35保存・再読込／error 0。名前入力から、全作戦の本編会話・実UI報酬確定・ENDING・通常速度のnative staff roll・新しい7カットの終幕・postgame-map・旧27ノードの回想へ到達。原曲は1倍、seek 0、trusted EOF 315.742041秒。映画は35／7画像、34／6切替、同じ2画像要素、巻戻り・remount・未decode表示0。指定4行を実表示し、回想でも保存進行を保持した。通常30戦の勝利・物理端末の受入を意味しない。
+- r1の失敗は、authored nodeが0のfirst-clear-post報酬画面に会話nodeの範囲条件を当てたharness fault。報酬画面の正確な初期checkpoint、canonical finalization、重複receipt拒否、実UI buttonを検査し、同じ候補のnative保存地点からr2へ再開。元report、保存、画像とdriverを保持し、会話全文・画像・音声・error条件を変更していない。
+- CI run`37602748111`のMac WebKit native PWA artifact`11474695862`を取得し、`ci-09d4e15-native-pwa-integrity-r2.json`で10 source hashesと6 reportsを確認した。Cache Storage 2ケース、native save hold 2ケース、staff roll 7ケース、元MP3のcached native range／1倍EOF、旧版415→新589の更新18/18、部分失敗復旧23/23。新終幕7画像と波音も更新transportに含まれ、全589 logical assetsが保持・復旧される。23番目を含む現行sourceの全チェックを検査し、旧集計22へ丸めない。旧版はimmutable tagのlocal rebuild、Mac CI buildはMac内で一致するdist hashであり、公開済みPagesバイトやWindows buildのバイト同一性を装わない。
+- `ending-offline-09-r1/report.json`では完全pack保存後にサーバーを実切断し、終幕7画像と2音声のnative SW取得・再生・地図復帰を確認したが、HTMLが読むRSC生成`assets/index-D9BHNL8D.css`が16件のshell listから漏れて`ERR_FAILED`になったため全体failed。さらに検証用hard reloadによるオンライン2音声の`ERR_ABORTED`を記録した。映画の成功でCSSの失敗を隠さない。
+- 修正は`pwa-shell-files.mjs`で実生成JS／MJS／CSSを列挙し、buildとPages検証で同じ集合を使う。両HTMLのJS/CSS依存がその集合に含まれることも必須にした。画像・音声・app source・save・589配信assetは維持。回帰testはVite manifestから省略されたRSC CSS、shell空集合、不正filenameを検査する。
+- `ending-offline-shell-r2/report.json`は修正後ローカルbuildの17 shell filesと終幕9 assetsのCache Storage内bytes/hash、接続不能negative control、native SW offline relaunch、7画像6切替・2常設要素・巻戻り0、波音／不穏曲のnative時刻・速度1、終了後の地図復帰・既読1回・CAPS／receipt等保持、error 0を確認。media mount前に通信を切り、検証側のhard reloadで演奏中の音声を中断しない。全errorを記録し、filterやdeadline延長で合格にしていない。未commitのbuild差分を使った証拠であり、次候補のCIではない。
+- `ending-test-r7.log`はproduction buildと1758/1758、`ending-lint-r7.log`は0 errors／既存18 warnings。content・diffも成功。最初の31 focused testsはWindows sandboxのMSYS object作成権限により1件を開始できず、製品のfailureではない。許可済み通常権限のfull testsで同じstrict shell testを含めて成功。4ファイルの独立read-only reviewはH0／M0／L0。
+
+新固定headの必要CIとProducer最終受入は引き続き台帳で管理する。露骨な性行為・半顔の皮膚剥離と筋肉露出は未反映で、要求全体の完了を装わない。

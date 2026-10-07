@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { normalizeReleaseTitle } from "./pages-release-identity.mjs";
+import { emittedPwaShellFiles } from "./pwa-shell-files.mjs";
 
 const root = process.cwd();
 const clientDir = path.join(root, "dist", "client");
@@ -160,15 +161,15 @@ const v100Index = await readFile(path.join(outputDir, "v100", "index.html"), "ut
 const requiredReferences = await verifyHtmlReferences(path.join(outputDir, "index.html"));
 const v100References = await verifyHtmlReferences(path.join(outputDir, "v100", "index.html"));
 const shellList = JSON.parse(await readFile(path.join(outputDir, "pwa-shell.json"), "utf8"));
-const viteManifest = JSON.parse(await readFile(path.join(clientDir, ".vite", "manifest.json"), "utf8"));
-const expectedShellFiles = [...new Set(Object.values(viteManifest).flatMap((entry) => [
-  entry.file,
-  ...(entry.css ?? []),
-]).filter((file) => /^assets\/[A-Za-z0-9_./-]+\.(?:js|mjs|css)$/u.test(file)))].sort();
+const expectedShellFiles = await emittedPwaShellFiles(clientDir);
 if (expectedShellFiles.length === 0 || JSON.stringify(shellList.files) !== JSON.stringify(expectedShellFiles)) {
   throw new Error("PWA shell list does not match the emitted JS/CSS chunks");
 }
 for (const file of expectedShellFiles) await stat(path.join(outputDir, file));
+for (const reference of [...requiredReferences, ...v100References]) {
+  if (!reference.startsWith(`${basePath}/assets/`) || !/\.(?:js|mjs|css)$/u.test(reference)) continue;
+  if (!shellList.files.includes(reference.slice(basePath.length + 1))) throw new Error(`HTML shell dependency is missing from the offline pack: ${reference}`);
+}
 
 // --- PWA distribution manifest -------------------------------------------
 //
