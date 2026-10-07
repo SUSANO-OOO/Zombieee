@@ -4585,9 +4585,43 @@ for (const viewport of requiredViewports) {
     await mapPage(page, fullSave({ availableStageIds: [V100_STAGE_IDS[0]] }));
     await click(page, page.getByRole("button", { name: /最終章/u }), "final chapter tab");
     await click(page, page.locator(".v100-stage-list").getByRole("button", { name: /^封鎖地点 S30 封鎖中、記録星 0\/3$/u }), "locked final node");
+    const briefingContract = await productionStateContract(page, "map-locked-boss");
+    invariant(briefingContract.ok, `locked map briefing contract failed: ${JSON.stringify(briefingContract)}`);
+    const savedBeforeDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
+      Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),
+    )));
     await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
+    await page.locator(".v100-map-detail[open]").waitFor({ state: "visible", timeout });
+    const contentVisible = await page.locator(".v100-map-detail[open]").evaluate(details => {
+      const detailRect = details.getBoundingClientRect();
+      const summaryRect = details.querySelector(":scope > summary").getBoundingClientRect();
+      const sideRect = details.closest(".v100-map-side").getBoundingClientRect();
+      const bounds = { left: Math.max(0, detailRect.left, sideRect.left), right: Math.min(innerWidth, detailRect.right, sideRect.right), top: Math.max(0, summaryRect.bottom, sideRect.top), bottom: Math.min(innerHeight, detailRect.bottom, sideRect.bottom) };
+      return [...details.querySelector(".v100-map-detail-content").children].some(element => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== "none" && style.visibility !== "hidden"
+          && rect.width > 0 && rect.height > 0
+          && rect.right > bounds.left && rect.left < bounds.right
+          && rect.bottom > bounds.top && rect.top < bounds.bottom;
+      });
+    });
+    invariant(contentVisible, "locked map details opened without visible content");
     await page.locator(".v100-map-locked-focus").waitFor({ state: "visible", timeout });
     invariant(!/TAKUYA-Ω|RED PANTHER/u.test(await page.locator(".v100-map-layout").innerText()), "locked map disclosed future identities");
+    invariant(/情報未取得/u.test(await page.locator(".v100-map-detail dl").innerText()), "locked map details disclosed an unvisited threat");
+    invariant(await page.locator(".v100-map-side > .v100-primary").isDisabled(), "locked map details enabled departure");
+    const disclosureLabel = `chromium-${viewportLabel(viewport)}-map-locked-boss-details`;
+    const disclosureScreenshot = await saveScreenshot(page, imagePath(disclosureLabel), disclosureLabel);
+    // Compact details deliberately fold the briefing. Keep its visible state
+    // contract intact and record the native disclosure as separate evidence.
+    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details return to briefing");
+    invariant(await page.locator(".v100-map-detail[open]").count() === 0, "locked map details did not close");
+    const savedAfterDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
+      Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),
+    )));
+    invariant(savedAfterDisclosure === savedBeforeDisclosure, "locked map disclosure changed save");
+    return { lockedMapDisclosure: { briefingContract, screenshot: disclosureScreenshot, contentVisible, localStorageUnchanged: true, threatUndiscovered: true, departureDisabled: true } };
   });
   await captureState("chromium", viewport, "formation", async (page) => {
     await formationPage(page, fullSave());
