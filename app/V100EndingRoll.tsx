@@ -119,6 +119,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
   const completingRef = useRef(false);
   const completionRequestedRef = useRef(false);
   const playingRef = useRef(false);
+  const mountedRef = useRef(false);
   const playbackAllowedRef = useRef(false);
   const playAttemptRef = useRef(0);
   const startupAtRef = useRef<number | null>(null);
@@ -152,6 +153,19 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     blockedRef.current = blocked;
   }, [onScene, onComplete, busy, soundState, soundEnabled, blocked]);
 
+  useLayoutEffect(() => {
+    const audio = audioRef.current;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      playbackAllowedRef.current = false;
+      playAttemptRef.current += 1;
+      playingRef.current = false;
+      // Retain the element itself: React clears media refs on unmount.
+      audio?.pause();
+    };
+  }, []);
+
   const finish = useCallback(async () => {
     if (completingRef.current) return;
     if (callbacksRef.current.busy) { completionRequestedRef.current = true; return; }
@@ -172,7 +186,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) return;
+    if (!mountedRef.current || !audio || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) return;
     const attempt = ++playAttemptRef.current;
     playbackAllowedRef.current = true;
     startupAtRef.current = performance.now();
@@ -188,12 +202,13 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       // Preserve the previous sample across pauses. Resampling here discards
       // the last media slice and delays the 106-second edit after each resume.
       await audio.play();
+      if (!mountedRef.current || audioRef.current !== audio || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
       if (attempt !== playAttemptRef.current) return;
-      if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
       playingRef.current = true;
       waitingAtRef.current = null;
       setSoundState("playing");
     } catch (error) {
+      if (!mountedRef.current || audioRef.current !== audio) { audio.pause(); return; }
       if (attempt !== playAttemptRef.current) return;
       playbackAllowedRef.current = false;
       audio.pause();
@@ -203,15 +218,13 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     }
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     musicVolumeRef.current = Math.max(0, Math.min(1, (settings.bgmVolume ?? .8) * V100_CREDITS_MIX_GAIN));
     audio.volume = musicVolumeRef.current * (outroRef.current === null ? 1 : v100CreditsOutroFrame(outroRef.current).gain);
-    const handle = requestAnimationFrame(() => {
-      if (soundEnabled) void play();
-      else { playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; setSoundState("muted"); }
-    });
+    if (!soundEnabled) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; }
+    const handle = requestAnimationFrame(() => { if (soundEnabled) void play(); else setSoundState("muted"); });
     return () => cancelAnimationFrame(handle);
   }, [soundEnabled, settings.bgmVolume, play]);
   useEffect(() => {
@@ -366,7 +379,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
           }
         }
       }}
-      onPlaying={event => { if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || endedRef.current) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
+      onPlaying={event => { if (!mountedRef.current || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || endedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS)) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
       onWaiting={() => { waitingAtRef.current ??= performance.now(); }}
       onCanPlay={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; } }}
       onSeeked={event => { musicCursorRef.current = event.currentTarget.currentTime; musicSampleRef.current = event.currentTarget.currentTime; if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}

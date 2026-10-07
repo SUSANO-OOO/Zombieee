@@ -14,7 +14,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   const paintRef = useRef<((frame: V100VisualFrame) => void) | null>(null);
   const secondsRef = useRef(0), pausedRef = useRef(false), blockedRef = useRef(blocked), hiddenRef = useRef(false);
   const readyRef = useRef(false), completeRef = useRef(false), completingRef = useRef(false), attemptRef = useRef(0);
-  const audioStateRef = useRef("loading"), startupAtRef = useRef(0), mountedRef = useRef(true);
+  const audioStateRef = useRef("loading"), startupAtRef = useRef(0), mountedRef = useRef(false);
   const configRef = useRef({ settings, busy, onComplete });
   const [initialFrame] = useState(() => v100PostCreditsFrame(0));
   const [frame, setFrame] = useState(initialFrame), [paused, setPaused] = useState(false);
@@ -23,10 +23,22 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   const updateAudioState = useCallback((state: string) => { audioStateRef.current = state; setAudioState(state); }, []);
   const reducedMediaRef = useRef<MediaQueryList | null>(null);
   useLayoutEffect(() => { configRef.current = { settings, busy, onComplete }; blockedRef.current = blocked; }, [settings, busy, onComplete, blocked]);
+  useLayoutEffect(() => {
+    const media = [musicRef.current, wavesRef.current, laughRef.current];
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      attemptRef.current += 1;
+      laughAttemptRef.current += 1;
+      // Passive cleanup runs after React has cleared these refs. Keep the
+      // original elements so detached music, waves and voice all stop.
+      for (const audio of media) audio?.pause();
+    };
+  }, []);
   const pauseAudio = useCallback(() => { attemptRef.current += 1; laughAttemptRef.current += 1; musicRef.current?.pause(); wavesRef.current?.pause(); laughRef.current?.pause(); }, []);
   const playLaugh = useCallback(async () => {
     const audio = laughRef.current, current = configRef.current.settings;
-    if (!audio || !laughStartedRef.current || laughFinishedRef.current || completeRef.current || pausedRef.current || blockedRef.current || hiddenRef.current) return;
+    if (!mountedRef.current || !audio || !laughStartedRef.current || laughFinishedRef.current || completeRef.current || pausedRef.current || blockedRef.current || hiddenRef.current) return;
     if (secondsRef.current >= 38) { laughFinishedRef.current = true; audio.pause(); setLaughState("skipped"); return; }
     if (current.sfxEnabled === false || (current.sfxVolume ?? .9) <= 0) { audio.pause(); setLaughState("muted"); return; }
     const token = ++laughAttemptRef.current;
@@ -36,9 +48,8 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
       // Preserve its native cursor across a pause, lock or menu. Never seek
       // back to the start of the one-shot laugh on a resume.
       await audio.play();
-      if (!mountedRef.current) { audio.pause(); return; }
+      if (!mountedRef.current || laughRef.current !== audio || pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current || laughFinishedRef.current || configRef.current.settings.sfxEnabled === false || (configRef.current.settings.sfxVolume ?? .9) <= 0) { audio.pause(); return; }
       if (token !== laughAttemptRef.current) return;
-      if (pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current || laughFinishedRef.current) { audio.pause(); return; }
       setLaughState("playing");
     } catch (error) {
       if (!mountedRef.current || token !== laughAttemptRef.current) return;
@@ -49,7 +60,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
     }
   }, []);
   const play = useCallback(async () => {
-    if (completeRef.current || pausedRef.current || blockedRef.current || hiddenRef.current) return;
+    if (!mountedRef.current || completeRef.current || pausedRef.current || blockedRef.current || hiddenRef.current) return;
     const token = ++attemptRef.current, current = configRef.current.settings;
     startupAtRef.current = performance.now();
     if (!readyRef.current) updateAudioState("loading");
@@ -61,7 +72,12 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
       audio.playbackRate = 1;
       audio.volume = audio === musicRef.current ? (current.bgmVolume ?? .8) * .55 * volumeFrame.musicGain : (current.sfxVolume ?? .9) * .5 * volumeFrame.wavesGain;
       if (audio.readyState > 0 && Math.abs(audio.currentTime - secondsRef.current) > .75) audio.currentTime = Math.min(audio.duration || V100_POST_CREDITS_DURATION, secondsRef.current);
-      try { await audio.play(); }
+      try {
+        await audio.play();
+        const latest = configRef.current.settings;
+        const stillEnabled = audio === musicRef.current ? latest.bgmEnabled !== false && (latest.bgmVolume ?? .8) > 0 : latest.sfxEnabled !== false && (latest.sfxVolume ?? .9) > 0;
+        if (!mountedRef.current || ![musicRef.current, wavesRef.current].includes(audio) || !stillEnabled || pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current) audio.pause();
+      }
       catch (error) { if (error instanceof DOMException && error.name === "NotAllowedError") gesture = true; else unavailable = true; }
     }));
     if (!mountedRef.current) { for (const [audio] of pairs) audio?.pause(); return; }
@@ -82,7 +98,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
     finally { completingRef.current = false; }
   }, [pauseAudio]);
   useEffect(() => {
-    mountedRef.current = true;
+    const media = [musicRef.current, wavesRef.current, laughRef.current];
     const rotation = window.matchMedia("(orientation: portrait) and (max-width: 800px)");
     reducedMediaRef.current = window.matchMedia("(prefers-reduced-motion: reduce)");
     let pageHidden = false;
@@ -117,7 +133,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
       animation = requestAnimationFrame(tick);
     };
     animation = requestAnimationFrame(tick); void play();
-    return () => { mountedRef.current = false; cancelAnimationFrame(animation); document.removeEventListener("visibilitychange", visibility); window.removeEventListener("pagehide", pageHide); window.removeEventListener("pageshow", pageShow); rotation.removeEventListener("change", visibility); pauseAudio(); };
+    return () => { cancelAnimationFrame(animation); document.removeEventListener("visibilitychange", visibility); window.removeEventListener("pagehide", pageHide); window.removeEventListener("pageshow", pageShow); rotation.removeEventListener("change", visibility); pauseAudio(); for (const audio of media) audio?.pause(); };
   }, [play, playLaugh, pauseAudio, finish, updateAudioState]);
   useEffect(() => { if (blocked || paused) pauseAudio(); else void play(); }, [blocked, paused, settings.bgmEnabled, settings.bgmVolume, settings.sfxEnabled, settings.sfxVolume, play, pauseAudio]);
   const togglePause = () => { const next = !pausedRef.current; pausedRef.current = next; setPaused(next); if (next) pauseAudio(); else void play(); };

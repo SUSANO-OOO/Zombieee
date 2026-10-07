@@ -28,7 +28,9 @@ const onlyRegression = selection === "regression";
 const out = path.resolve(process.env.V100_STAFF_ROLL_OUT ?? "outputs/v100-staff-roll-native");
 await mkdir(out, { recursive: true });
 const report = { engine, status: "failed", selection, onlyRegression, build: await productionBuildIdentity(), evidenceKind: "seeded staff-roll media and lifecycle QA; no campaign or physical-device completion claim", cases: [] };
-const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(channel ? { channel } : {}) });
+// Native media clocks and volume checks stay active while automated QA is
+// silent on the developer's speakers. Listening tests use the audio capture.
+const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(channel ? { channel } : {}), ...(engine === "chromium" ? { args: ["--mute-audio"] } : {}) });
 report.browser = { engine, channel, version: browser.version() };
 
 async function openCase(name, { muted = false, reducedMotion = false, failSong = false, delaySong = false, nodeIndex = 0 } = {}) {
