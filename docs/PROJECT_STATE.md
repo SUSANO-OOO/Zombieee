@@ -12,6 +12,10 @@ Producerの指定に合わせ、通常106秒で音楽のフェードを開始し
 
 WebKit fallbackで捕捉したResizeObserverの再通知は、計測とCSS更新を次のRAFへ送り、同じ高さの再書き込みを防ぐことで修正。修正後の`ending-native-production-webkit-fallback-r17`は2ケース・page／console error 0。修正後production build、全1771 tests、Lint／content／diff checkも成功。独立音源controlの16倍の失敗を消去せず、原速の製品QAと分けて残す。
 
+追加確認：固定候補69a32acの匿名HTTPSで583項目の取得・hash一致、3画面サイズのfresh導線、原速曲と1／2／4倍の映像・文字、WebKitの10画像と3タイトルが成功。productionのEdgeは媒体・復帰・保存7ケース、WebKit fallbackは2ケース成功。ただし同候補のrequired CIには、WebKitの人物カード比較3.935185%と、復帰を繰り返した曲のフェード開始106.427699秒の2件の失敗が残った。両artifactと元ログを保全し、全チェック成功とは扱わない。
+
+フェードの遅れは、再開時に直前の媒体sampleを更新して未計測の末尾時間を捨てる実装が原因。明示seek時だけsampleを更新し、停止・復帰を挟んでも次のframeで同じ媒体時刻を引き継ぐよう修正した。長い日本語の役職名は文字欄の全幅へ広げる。修正後のbuild、1771 tests、Lint 0 errors／18 warnings、content、diff checkは成功。sandbox内で捕捉したローカル接続・test shellの拒否3件は元記録を残し、通常環境の同一テストでは1771件が成功。修正後の固定候補の原速・早送り・保存・native WebKitとfresh CIは検証を継続する。
+
 配信対象は583項目、logical bytes 166,705,526、distinct bytes 166,165,623。旧35／38枚の画像と旧固定試遊版は保持し、写真原本・生成masterは配信しない。最新候補、実行証拠、試遊URLはIssue #172／Draft PR #171で管理する。画像採否・作品全体の最終試遊・物理iPhoneの聴感と操作・発熱は未了。Ready、正式merge、tag、Release、公式Pages、Issue closeの承認境界を維持する。以下は以前の状態の履歴である。
 
 ### 2026-10-07 追加改訂 — 美術・映画編集・起動時の注釈

@@ -10,6 +10,10 @@ production buildと1771 tests、Lint 0 errors／18 warnings、content、diff che
 
 Windows WebKit 26.6で独立音源controlの1倍末尾seekと8倍EOFは成功、16倍は時計が1倍で進み期限60秒に失敗。証拠`ending-native-production-r16/report.json`は保全する。製品native fallbackではResizeObserverの「undelivered notifications」を捕捉。観測callback内で文字枠のCSS高さを変え、別observerを同じdelivery中に発火させる組み合わせを修正し、計測・CSS更新を次のRAFへ送り、同じ高さの再書き込みを防ぐ。元失敗を消さず、修正後のnative媒体・保存・表示回帰を再検証する。
 
+69a32acの匿名HTTPSでは583項目のhash取得、3画面サイズのfresh導線、原速曲と1／2／4倍の映画、WebKitの10枚と3タイトルが成功。production Edgeの媒体・復帰・保存7ケース、WebKit fallbackの2ケースも成功。ただしrequired CIでは、人物カード比較3.935185%と106.427699秒のフェード開始が失敗した。元artifactはそれぞれ`ci-69-phaseg-r1`、`ci-69-native-r1`へ保全する。
+
+媒体の停止から再開までに最後のframe以後の時間を捨てる原因を特定し、再開時のsample初期化を明示seek時だけへ限定した。長い日本語の役職名も全幅へ変更。build・全1771 tests・Lint 0 errors／18 warnings・content・diff checkは成功し、新sourceの固定候補とnative媒体の再検証へ進む。sandbox内の接続とtest shell拒否で失敗した元3件は記録を維持し、通常環境で同一suiteが成功したことと区別する。人物カードの未解消差分をこの修正で解消したとは扱わない。
+
 今回の静止画採否、作品全体のProducer試遊、新HEADの必要CI、正式リリースは未完了。以下は以前の候補の監査履歴である。
 
 ## 2026-10-07 美術と映画編集の改訂

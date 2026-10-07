@@ -181,8 +181,12 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       // Film speed is independent of the original music. Resume the music at
       // its own cursor, never at the accelerated film cursor.
       audio.playbackRate = 1;
-      if (audio.readyState > 0 && Math.abs(audio.currentTime - musicCursorRef.current) > .75) audio.currentTime = musicCursorRef.current;
-      musicSampleRef.current = audio.currentTime;
+      if (audio.readyState > 0 && Math.abs(audio.currentTime - musicCursorRef.current) > .75) {
+        audio.currentTime = musicCursorRef.current;
+        musicSampleRef.current = musicCursorRef.current;
+      }
+      // Preserve the previous sample across pauses. Resampling here discards
+      // the last media slice and delays the 106-second edit after each resume.
       await audio.play();
       if (attempt !== playAttemptRef.current) return;
       if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
@@ -375,7 +379,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       {creditSections.map((section, index) => <section key={index} className={"v100-credit-section v100-credit-section-" + section.kind}>
         <h2>{section.title}</h2>
         {section.entries ? <div className="v100-credit-materials">{section.entries.map(entry => <p key={entry.author}><strong>{entry.author} · {entry.license}</strong><span>{entry.works.join(" / ")}</span></p>)}</div>
-          : <div className={"v100-credit-lines v100-credit-columns-" + section.columns}>{section.lines.map((line, lineIndex) => <p key={lineIndex} className={line.length > 14 ? "v100-credit-wide" : undefined}>{line}</p>)}</div>}
+          : <div className={"v100-credit-lines v100-credit-columns-" + section.columns}>{section.lines.map((line, lineIndex) => <p key={lineIndex} className={line.length > 14 || (line.length >= 9 && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(line)) ? "v100-credit-wide" : undefined}>{line}</p>)}</div>}
       </section>)}
       <footer ref={rollFooterRef}><span>西新世紀末物語</span><strong>K4ITo</strong></footer>
     </div></div>
