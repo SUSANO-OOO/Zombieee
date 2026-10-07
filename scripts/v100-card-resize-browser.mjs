@@ -26,7 +26,7 @@ const fixture=normalizeV100Save({...initial,campaignStarted:true,caps:0,
 const raw=serializeV100Save(fixture);await writeFile(path.join(out,'fixture.json'),raw,{flag:'wx'});
 const kinds=initial.ownedUnitIds.map(campaignUnitIdToCombatKind);
 const sourceFiles=['app/AshfallGame.tsx','app/globals.css','app/v100BattlePresentation.css','app/battleAssetPlan.js','app/campaign.js','scripts/v100-card-resize-browser.mjs'];
-const report={schema:'v100-card-resize-fidelity/v1',status:'running',head:git('rev-parse','HEAD'),tree:git('rev-parse','HEAD^{tree}'),
+const report={schema:'v100-card-resize-fidelity/v2',status:'running',head:git('rev-parse','HEAD'),tree:git('rev-parse','HEAD^{tree}'),
  dirty:git('status','--porcelain=v1'),build:await productionBuildIdentity(),
  sourceFiles:Object.fromEntries(await Promise.all(sourceFiles.map(async file=>[file,hash((await readFile(file,'utf8')).replaceAll('\r\n','\n'))]))),
  scope:'Fresh isolated Stage3 fixture, four early identities at their default levels. Native formation-to-battle input and 844x340→844x390→1280x720→844x340 viewport transitions. No clock/actor/HP/result setters, CSS/image hiding, animation disabling or visual-quality overrides. Native PNG comparison covers unchanged ready portrait pixels; not difficulty, natural campaign victory or physical-device acceptance.',
@@ -55,6 +55,7 @@ async function imageGeometry(page,kind){
    naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,imageRendering:getComputedStyle(img).imageRendering,
    optimizeQualitySupported:CSS.supports('image-rendering','optimizeQuality'),
    opacity:{image:getComputedStyle(img).opacity,portrait:getComputedStyle(img.parentElement).opacity,card:getComputedStyle(card).opacity},clip,
+   unroundedRects:{image:{x:r.x,y:r.y,width:r.width,height:r.height},card:{x:c.x,y:c.y,width:c.width,height:c.height}},
    masks:[...card.querySelectorAll('.cost,.card-state,.cooldown-mask small')].map(e=>{const b=e.getBoundingClientRect();return{x:b.x-x,y:b.y-y,width:b.width,height:b.height};}).concat([{x:c.x-x,y:c.bottom-y-13,width:c.width,height:13}])};
  });
 }
@@ -73,7 +74,7 @@ function readStartBoundary(){
 }
 const matrix=engine==='all'?['chromium','webkit']:[engine];
 for(const browserName of matrix){
- const row={engine:browserName,status:'running',images:[],canvasCaptures:[],probes:[],errors:[],inputs:[],geometry:{}};report.cases.push(row);
+ const row={engine:browserName,status:'running',images:[],canvasCaptures:[],probes:[],noResizeControl:[],fidelityViolations:[],errors:[],inputs:[],geometry:{}};report.cases.push(row);
  const browser=await({chromium,webkit}[browserName]).launch({headless:true});let context,page;
  try{
   row.browserVersion=browser.version();context=await browser.newContext({viewport:{width:844,height:340},deviceScaleFactor:1,isMobile:true,hasTouch:true});
@@ -101,6 +102,11 @@ for(const browserName of matrix){
   const decoded=await page.evaluate(()=>window.__ASHFALL_ASSET_QA__?.getDecodedRequiredPaths?.());assert.ok(Array.isArray(decoded));
   const before=await capture(page,row,'before');const baseline=new Map();
   for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,FORMATION_CARD_ART[kind]);assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;baseline.set(kind,await cropPortrait(before,g.clip));}
+  // Keep a native control before any resize. It distinguishes unstable
+  // sampling from a resize regression without changing the fidelity gate.
+  await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+  const control=await capture(page,row,'no-resize-control');
+  for(const kind of kinds){const g=await imageGeometry(page,kind),original=row.geometry[kind];assert.deepEqual(g.clip,original.clip);const comparison=await changedPixels(baseline.get(kind),await cropPortrait(control,g.clip),original.masks);row.noResizeControl.push({kind,geometry:g,comparison});}
   for(const size of [{width:844,height:390},{width:1280,height:720},{width:844,height:340}]){
    await page.setViewportSize(size);row.inputs.push({action:'native-setViewportSize',...size});
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
@@ -113,9 +119,12 @@ for(const browserName of matrix){
    for(const kind of kinds){
     const g=await imageGeometry(page,kind),original=row.geometry[kind];assert.equal(g.state,'ready');assert.deepEqual(g.clip,original.clip,'Native portrait geometry did not return');assert.deepEqual(g.opacity,original.opacity,'Native state opacity changed');assert.equal(g.imageRendering,original.imageRendering);
     const after=await cropPortrait(bytes,g.clip),comparison=await changedPixels(baseline.get(kind),after,original.masks);
-    row.probes.push({kind,delay,geometry:g,comparison});assert.ok(comparison.fraction<=.01,`${browserName}/${kind}/${delay}ms portrait fidelity changed: ${comparison.fraction}`);
+    row.probes.push({kind,delay,geometry:g,comparison});
+    if(comparison.fraction>.01)row.fidelityViolations.push({kind,delay,fraction:comparison.fraction});
    }
   }
+  // Preserve all four original observations before reporting a failed gate.
+  assert.deepEqual(row.fidelityViolations,[],`${browserName} portrait fidelity changed after resize`);
   await page.waitForFunction(()=>['__ASHFALL_AUDIO_QA__','__V100_EVENT_AUDIO_QA__'].every(key=>{const d=window[key]?.getDiagnostics?.();return !d||d.activePreloads===0&&d.queuedPreloads===0;}),undefined,{timeout:45000});
   await page.waitForLoadState('networkidle',{timeout:45000});assert.deepEqual(row.errors,[]);row.status='captured';
  }catch(error){row.status='failed';row.error=String(error);report.errors.push(row.error);process.exitCode=1;if(page){row.failureBoundary=await page.evaluate(readStartBoundary).catch(()=>null);row.failureImage=await page.screenshot().then(bytes=>persist(bytes,row.engine+'-failure.png')).catch(()=>null);}}

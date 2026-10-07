@@ -130,12 +130,9 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 1.0.0 release identity and the PWA gate", async () => {
-  // Since 0.9.8.1 the first painted screen is the PWA gate, not the title: a
-  // visitor is invited to install before anything decides to fetch the game for
-  // them. The game shell therefore mounts on the client once the gate resolves,
-  // and the title screen's own markup is covered by the browser matrix, which
-  // reaches it through the gate.
+test("server-renders the 1.0.0 identity and fiction notice before the PWA gate", async () => {
+  // The opening notice is already present before hydration. Installation and
+  // game mounting follow it. Existing artwork/font preloads remain in the head.
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -158,8 +155,10 @@ test("server-renders the 1.0.0 release identity and the PWA gate", async () => {
   assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 
   // The entry screen is what the document actually paints first.
-  assert.match(html, /class="pwa-gate"/);
-  assert.match(html, /aria-label="ゲームデータの準備"/);
+  assert.match(html, /class="fiction-notice"/);
+  assert.match(html, /本作品はフィクションです。/u);
+  assert.match(html, /実在するものとは関係ありません。/u);
+  assert.doesNotMatch(html, /class="pwa-gate"/);
   assert.doesNotMatch(html, /<main class="game-shell"/);
 
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);

@@ -31,15 +31,15 @@ export const V100_POST_CREDITS_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/epilogue/meinohama-ogata-reveal-r2.webp",
-    "bytes": 225616,
-    "hash": "sha256-9416d555c07506441ade77b2f840f6df5faf57a44d6d933e07722d0be65d3e5a",
+    "path": "/art/v100/epilogue/king-monster-reveal-r5.webp",
+    "bytes": 154212,
+    "hash": "sha256-b8f450268cbe06e5a35eab4931539f04213a1f0e1d4daa69b7e423741dfee097",
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/epilogue/meinohama-ogata-grin-r1.webp",
-    "bytes": 234652,
-    "hash": "sha256-d40e951b0ed97cebbfb6647475560aee35bd43f406eba6b4fa855ea5b092736d",
+    "path": "/art/v100/epilogue/king-monster-grin-r4.webp",
+    "bytes": 147220,
+    "hash": "sha256-0c46ad42dd127d995cafc803083011c509ddd7facbc54fb66227b9cd76446a88",
     "criticality": "critical"
   },
   {
@@ -47,5 +47,11 @@ export const V100_POST_CREDITS_ASSET_ADDITIONS = Object.freeze([
     "bytes": 768358,
     "hash": "sha256-e89b86cb5f2cfe4c9736fcc43c1af68d78e8b9b2c3fe9a22fcf75eaef2b9297b",
     "criticality": "optional"
+  },
+  {
+    "path": "/audio/v100/epilogue/king-laugh-r1.mp3",
+    "bytes": 48109,
+    "hash": "sha256-988a67ff68d67445174cb080ed168082e957eaf6c9dc6370ac5d37b72a26cbbf",
+    "criticality": "optional"
   }
-].map(Object.freeze));
+]);

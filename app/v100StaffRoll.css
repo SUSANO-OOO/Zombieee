@@ -24,5 +24,14 @@
 .v100-credit-audio-action { grid-column: 1 / -1; }
 .v100-credit-controls > small { font-size: 12px; line-height: 1.5; text-align: center; color: #ebd6b5; }
 .v100-credits-reduced .v100-credit-shot-next { opacity: 0; }
+.v100-credit-landscape.v100-credit-cinema { inset: 0; }
+.v100-credit-cinema .v100-credit-shot { object-fit: contain; will-change: transform; }
+.v100-credit-cinema-shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, #0207080a 35%, #02070826 58%, #020708b8 80%, #020708d9), linear-gradient(0deg, #020708b8, transparent 22%, transparent 82%, #0207084d); }
+.v100-credit-roll-window { z-index: 2; }
+.v100-credit-roll-track { text-shadow: 0 2px 5px #000; }
+.v100-credit-roll-track h1, .v100-credit-roll-track h2 { font-family: var(--v100-display-font, "Zen Kaku Gothic New"), sans-serif; }
+.v100-credit-controls { z-index: 5; background: #060b10db; border-color: #b4935740; backdrop-filter: blur(6px); }
+#v100-campaign .v100-credit-buttons button { background: #172029ba; border-color: #b4935766; color: #f5e9d2; }
+@media (max-width: 1000px) { #v100-campaign .v100-staff-roll { --credits-side: clamp(210px, 27vw, 280px); } .v100-credit-cinema-shade { background: linear-gradient(90deg, transparent 34%, #02070820 54%, #020708b8 78%, #020708d9); } }
 @media (max-height: 400px) { .v100-credit-roll-track header { padding-block: 20px 40px; } .v100-credit-roll-track section { padding-block: 12px 24px; } .v100-credit-roll-track h2 { margin-bottom: 14px; } .v100-credit-roll-track p { margin-bottom: 10px; } .v100-credit-controls { padding-top: 6px; gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .v100-credit-shot-next { opacity: 0; } }

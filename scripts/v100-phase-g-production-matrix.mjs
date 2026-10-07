@@ -2289,7 +2289,7 @@ const stateContracts = Object.freeze({
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-landscape", ".v100-credit-shot", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], forbiddenSelectors: [".v100-credit-memory", ".v100-credit-brand"], elementCounts: { ".v100-staff-roll audio": 1 } },
-  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-post-credits-film", ".v100-post-credit-picture", ".v100-post-credit-landscape", ".v100-post-credit-controls"], elementCounts: { ".v100-post-credits-film audio": 2, ".v100-post-credits-film .v100-credit-shot": 2 } },
+  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-post-credits-film", ".v100-post-credit-picture", ".v100-post-credit-landscape", ".v100-post-credit-controls"], elementCounts: { ".v100-post-credits-film audio": 3, ".v100-post-credits-film .v100-credit-shot": 2 } },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
 });

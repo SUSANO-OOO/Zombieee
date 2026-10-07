@@ -81,7 +81,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
   const { V100_POST_CREDITS_ASSET_ADDITIONS } = await import("../scripts/v100-post-credits-asset-contract.mjs");
   const finaleAudioAssets = V100_POST_CREDITS_ASSET_ADDITIONS.filter(asset => asset.path.startsWith("/audio/"));
-  assert.equal(finaleAudioAssets.length, 1, "only the source-bound CC0 waves are additional ending audio");
+  assert.deepEqual(finaleAudioAssets.map(asset=>asset.path).sort(), ["/audio/v100/epilogue/king-laugh-r1.mp3", "/audio/v100/epilogue/meinohama-waves-r1.mp3"], "exactly the source-bound CC0 waves and laugh are additional ending audio");
   const finaleAudioPaths = new Set(finaleAudioAssets.map(asset => asset.path));
   for (const expected of finaleAudioAssets) {
     const actual = current.assets.find(asset => asset.path === expected.path);

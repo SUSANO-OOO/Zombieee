@@ -13,8 +13,7 @@ export const V100_CREDITS_SONG = Object.freeze({
   sha256: "a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
 });
 
-export function v100StaffRollSections(playerName = "") {
-  const name = String(playerName ?? "").trim();
+export function v100StaffRollSections() {
   return [
     { title: "企画・原案・制作・監修", lines: ["SUSANO-OOO"] },
     { title: "シナリオ構成・編集", lines: ["SUSANO-OOO", "ChatGPT", "Codex"] },
@@ -24,7 +23,6 @@ export function v100StaffRollSections(playerName = "") {
     { title: "品質確認", lines: ["Codex"] },
     { title: "西新で出会った仲間たち", lines: V100_UNITS.map(unit => unit.displayName) },
     ...V100_STORY_CAST_CREDITS,
-    ...(name ? [{ title: "指揮官", lines: [name] }] : []),
     { title: "エンディングテーマ", lines: ["追憶の幻想世界", "音楽：魔王魂", "作詞・作曲・歌・ベース・ギター", "森田交一", "ドラム", "与野裕史", "ピアノ", "佐藤まさみ"] },
     { title: "場面別の音楽", lines: ["Scott Buckley / CC BY 4.0", ...V100_MUSIC_TRACKS.filter((track, index, all) => all.findIndex(other => other.file === track.file) === index).map(track => track.title)] },
     ...V100_SOUND_CREDITS.map(credit => ({ title: credit.role, lines: [credit.author, ...credit.works, credit.license] })),
@@ -68,10 +66,11 @@ export function v100StaffRollFrame(elapsed, duration, sceneCount) {
   const shotIndex = Math.max(0, filmStarts.findLastIndex(start => start <= time));
   const shotSpan = (filmStarts[shotIndex + 1] ?? length) - filmStarts[shotIndex];
   const withinShot = Math.min(1, (time - filmStarts[shotIndex]) / shotSpan);
-  const dissolve = shotIndex === filmStarts.length - 2 ? 2.4 : 1.15;
+  // Each shot chooses how it enters, including the close-ups and visual gags.
+  const dissolve = V100_CREDITS_FILM[shotIndex + 1]?.transition === "cut" ? 0 : shotIndex === filmStarts.length - 2 ? 2.4 : .75;
   return { elapsed: time, progress: time / length, index, nextIndex: Math.min(count - 1, index + 1),
     shotIndex, nextShotIndex: Math.min(filmStarts.length - 1, shotIndex + 1), withinShot,
-    blend: shotIndex === filmStarts.length - 1 ? 0 : Math.max(0, Math.min(1, (withinShot * shotSpan - (shotSpan - dissolve)) / dissolve)),
+    blend: shotIndex === filmStarts.length - 1 || dissolve === 0 ? 0 : Math.max(0, Math.min(1, (withinShot * shotSpan - (shotSpan - dissolve)) / dissolve)),
     withinScene, ended: time >= length };
 }
 

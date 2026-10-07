@@ -1,6 +1,7 @@
 // Public credits match the adopted material ledger; no private identity sources are distributed.
 export const V100_SOUND_CREDITS = Object.freeze([
-  { role: "終幕の波音", author: "transitking", works: ["Water Waves"], page: "https://opengameart.org/content/water-waves", license: "CC0" },
+  { role: "男性の笑い声", author: "adiantheman", works: ["Evil Laugh"], page: "https://freesound.org/people/adiantheman/sounds/829881/", license: "CC0" },
+  { role: "波音", author: "transitking", works: ["Water Waves"], page: "https://opengameart.org/content/water-waves", license: "CC0" },
   {
     "role": "ボス戦音楽",
     "author": "nene",
@@ -129,7 +130,6 @@ export const V100_BUNDLED_LEGACY_CREDITS = Object.freeze([
   }
 ].map(Object.freeze));
 export const V100_STORY_CAST_CREDITS = Object.freeze([
-  { title: "姪浜の終幕", lines: ["緒方海人"] },
   {
     "title": "通信",
     "lines": [

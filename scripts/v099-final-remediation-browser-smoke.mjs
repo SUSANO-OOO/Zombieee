@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import sharp from "sharp";
+import { manualAbilityReceiptProof } from "./manual-ability-receipt-proof.mjs";
 
 import {
   MOBILE_BATTLE_HUD_TYPOGRAPHY,
@@ -1635,6 +1636,7 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
         .filter((fighter) => fighter.side === "zombie" && ["takuya", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago"].includes(fighter.kind))
         .map((fighter) => fighter.kind),
       manualAbilityReceiptCount: snapshot.manualAbilityReceipts?.length ?? 0,
+      manualAbilityReceipts: snapshot.manualAbilityReceipts ?? [],
       bannerText: banner?.textContent?.trim() ?? "",
       barkText: bark?.textContent?.trim() ?? "",
       bossText: boss?.textContent?.trim() ?? "",
@@ -1876,16 +1878,17 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
       await button.waitFor({ state: "visible", timeout });
       await button.click({ timeout });
       await page.waitForFunction(
-        () => document.querySelector(".battle-banner")?.textContent?.includes("//")
-          && (window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts?.length ?? 0) === 1,
-        undefined, { timeout },
+        ownerId => document.querySelector(".battle-banner")?.textContent?.includes("//")
+          && window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts?.some(receipt=>receipt.ownerId===ownerId&&receipt.kind==="medic"&&receipt.eventType==="start"),
+        proof.ownerIds[0], { timeout },
       );
       await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
       const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
-      invariant(state.semantic.manualAbilityReceiptCount === 1
+      state.manualAbilityActivation=manualAbilityReceiptProof(state.semantic.manualAbilityReceipts,{ownerId:proof.ownerIds[0],kind:"medic"});
+      result.states.push(state);
+      invariant(state.manualAbilityActivation.valid
         && state.semantic.bannerText.includes("緊急処置"),
       `${name}: manual ability banner did not use the production activation path`);
-      result.states.push(state);
     } else if (stateId === "objective-full") {
       await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
       const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
@@ -2067,17 +2070,18 @@ async function runFullHudCase(browserType, engine, viewport) {
     await abilityButton.waitFor({ state: "visible", timeout });
     await abilityButton.click({ timeout });
     await page.waitForFunction(
-      () => document.querySelector(".battle-banner")?.textContent?.includes("//")
-        && (window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts?.length ?? 0) === 1,
-      undefined,
+      ownerId => document.querySelector(".battle-banner")?.textContent?.includes("//")
+        && window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts?.some(receipt=>receipt.ownerId===ownerId&&receipt.kind==="medic"&&receipt.eventType==="start"),
+      abilityProof.ownerIds[0],
       { timeout },
     );
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
     const abilityBanner = await captureHudState(page, viewport, name, "manual-ability-banner", lifecycle);
-    invariant(abilityBanner.semantic.manualAbilityReceiptCount === 1
+    abilityBanner.manualAbilityActivation=manualAbilityReceiptProof(abilityBanner.semantic.manualAbilityReceipts,{ownerId:abilityProof.ownerIds[0],kind:"medic"});
+    result.states.push(abilityBanner);
+    invariant(abilityBanner.manualAbilityActivation.valid
       && abilityBanner.semantic.bannerText.includes("緊急処置"),
     `${name}: manual ability banner did not use the production activation path`);
-    result.states.push(abilityBanner);
 
     stage1.stop();
     lifecycle.markPageCloseBegin(page);

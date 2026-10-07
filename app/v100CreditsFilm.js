@@ -1,5 +1,6 @@
+import { v100EditedCreditsFilm } from "./v100CreditsFilmEdit.js";
 // Visual cuts can vary within each of the 11 canonical scenes. Saved cursors stay at 0–10.
-export const V100_CREDITS_FILM = Object.freeze([
+export const V100_CREDITS_FILM = v100EditedCreditsFilm([
   {
     "id": "street-community",
     "sceneIndex": 0,
@@ -84,7 +85,7 @@ export const V100_CREDITS_FILM = Object.freeze([
       "unit-gantetsu",
       "unit-crazy-king"
     ],
-    "src": "/art/v100/credits/ward-supplies-r3.webp",
+    "src": "/art/v100/credits/ward-supplies-r4.webp",
     "description": "区役所に届いた物資を、いくらちゃんたちが仕分ける。"
   },
   {
@@ -415,5 +416,4 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "くまやに料理と仲間が集まる。笑う者、話に耳を傾ける者、それぞれの夜が続いていく。",
     "durationWeight": 1.4
   }
-]
-.map(shot => Object.freeze({ ...shot, actors: Object.freeze(shot.actors) })));
+]);

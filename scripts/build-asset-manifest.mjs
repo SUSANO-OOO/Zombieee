@@ -290,6 +290,7 @@ for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
 // file directly, without a second bundle copy or a full Web Audio PCM decode.
 record(V100_CREDITS_SONG.src, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "bgm", audioId: "music-v100-staff-roll", audioType: "audio/mpeg" });
+record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId: "sfx-v100-king-laugh", audioType: "audio/mpeg" });
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
 

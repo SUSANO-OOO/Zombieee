@@ -1603,6 +1603,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/credits/hospital-courtyard-r3.webp",
+      "bytes": 404742,
+      "hash": "sha256-25cc9fd4de96b20cebe55431af2a4ebc9b0b02d6483236552fc7e8e46e939c26",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/credits/hospital-serum-r2.webp",
       "bytes": 204042,
       "hash": "sha256-300dfe499afb3dc1efbd265eacec7ddaff1051d89e83e3d09fd1b1b76aa0f777",
@@ -1646,6 +1654,14 @@
       "path": "/art/v100/credits/kumaya-table-r2.webp",
       "bytes": 239900,
       "hash": "sha256-d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/segawa-record-r2.webp",
+      "bytes": 220206,
+      "hash": "sha256-ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1755,9 +1771,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/ward-supplies-r3.webp",
-      "bytes": 216512,
-      "hash": "sha256-47fbc7a7af92beb1e788a7b6a913557fcfbaa9a7eafca23e2f30455e447c68f5",
+      "path": "/art/v100/credits/ward-supplies-r4.webp",
+      "bytes": 280084,
+      "hash": "sha256-cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1766,6 +1782,14 @@
       "path": "/art/v100/credits/zakimiya-bottles-r2.webp",
       "bytes": 215678,
       "hash": "sha256-3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/zakimiya-family-morning-r2.webp",
+      "bytes": 316374,
+      "hash": "sha256-d85c1086b40a5e92de5cdf9c5eb3299bae9aed6afde98525aa2d4f488df6722a",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1847,6 +1871,22 @@
       "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-smg-battle-v2.webp"
     },
     {
+      "path": "/art/v100/epilogue/king-monster-grin-r4.webp",
+      "bytes": 147220,
+      "hash": "sha256-0c46ad42dd127d995cafc803083011c509ddd7facbc54fb66227b9cd76446a88",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/king-monster-reveal-r5.webp",
+      "bytes": 154212,
+      "hash": "sha256-b8f450268cbe06e5a35eab4931539f04213a1f0e1d4daa69b7e423741dfee097",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/epilogue/meinohama-helmet-afloat-r1.webp",
       "bytes": 171080,
       "hash": "sha256-bc62b84836e929a4cc33a50324ae5d07a20d691fab12d141a2f232bb2c25f692",
@@ -1882,22 +1922,6 @@
       "path": "/art/v100/epilogue/meinohama-king-throw-r2.webp",
       "bytes": 167070,
       "hash": "sha256-6ca39d22f0f5b57934b652f0073e7ef8dc4515c9ec79161dcbfcf5109bed4818",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/epilogue/meinohama-ogata-grin-r1.webp",
-      "bytes": 234652,
-      "hash": "sha256-d40e951b0ed97cebbfb6647475560aee35bd43f406eba6b4fa855ea5b092736d",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/epilogue/meinohama-ogata-reveal-r2.webp",
-      "bytes": 225616,
-      "hash": "sha256-9416d555c07506441ade77b2f840f6df5faf57a44d6d933e07722d0be65d3e5a",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -6281,6 +6305,17 @@
       "criticality": "optional",
       "audioChannel": "bgm",
       "audioId": "music-v100-staff-roll",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/v100/epilogue/king-laugh-r1.mp3",
+      "bytes": 48109,
+      "hash": "sha256-988a67ff68d67445174cb080ed168082e957eaf6c9dc6370ac5d37b72a26cbbf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "sfx-v100-king-laugh",
       "audioType": "audio/mpeg"
     },
     {

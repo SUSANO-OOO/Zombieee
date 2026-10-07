@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
+import { v100CreditsCameraStyle } from "./v100CreditsFilmEdit.js";
 import { V100AssetCredits } from "./V100AssetCredits";
 import { V100_CREDITS_SONG, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "./v100StaffRoll.js";
 import "./v100StaffRoll.css";
@@ -10,10 +11,11 @@ type Shot = { sceneLabel?: string; text?: string };
 type Props = { nodes: Shot[]; playerName: string; initialNodeIndex?: number; settings: { bgmEnabled?: boolean; bgmVolume?: number; reducedMotion?: boolean }; busy?: boolean; blocked?: boolean;
   onScene?: (index: number) => void; onComplete: () => Promise<boolean> | boolean };
 
-export type V100VisualFrame = { shotIndex: number; nextShotIndex: number; blend: number };
+export type V100VisualFrame = { shotIndex: number; nextShotIndex: number; blend: number; withinShot?: number };
+type ShotCamera = { from: number; to: number; x: number; y: number; positionX: number; positionY: number };
 type FilmLayer = { index: number; decoded: boolean; failed: boolean; token: number };
 
-export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, film = V100_CREDITS_FILM, className = "" }: { initialFrame: V100VisualFrame; paintRef: RefObject<((frame: V100VisualFrame) => void) | null>; reducedMotion?: boolean; film?: readonly { src: string; description: string }[]; className?: string }) {
+export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, film = V100_CREDITS_FILM, className = "" }: { initialFrame: V100VisualFrame; paintRef: RefObject<((frame: V100VisualFrame) => void) | null>; reducedMotion?: boolean; film?: readonly { src: string; description: string; camera?: ShotCamera }[]; className?: string }) {
   const landscapeRef = useRef<HTMLDivElement>(null);
   const firstRef = useRef<HTMLImageElement>(null), secondRef = useRef<HTMLImageElement>(null);
   const layersRef = useRef<FilmLayer[]>([{ index: -1, decoded: false, failed: false, token: 0 }, { index: -1, decoded: false, failed: false, token: 0 }]);
@@ -54,10 +56,16 @@ export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, fil
     current.style.opacity = layers[active].decoded ? "1" : "0";
     standby.className = "v100-credit-shot v100-credit-shot-next"; standby.style.zIndex = "1";
     standby.style.opacity = "0";
+    const reduced = reducedRef.current || reducedMediaRef.current?.matches;
+    const cameraPaint = (image: HTMLImageElement, index: number, progress: number) => {
+      const camera = v100CreditsCameraStyle(film[index]?.camera, progress, reduced);
+      image.style.transformOrigin = camera.origin; image.style.objectPosition = camera.position; image.style.transform = camera.transform;
+    };
     if (layers[active].index === next.shotIndex) {
+      cameraPaint(current, layers[active].index, next.withinShot ?? 0);
       if (next.nextShotIndex !== next.shotIndex) prepare(incoming, next.nextShotIndex);
       else if (!layers[active].decoded && layers[active].failed && film.length > 1) prepare(incoming, Math.max(0, next.shotIndex - 1));
-      const reduced = reducedRef.current || reducedMediaRef.current?.matches;
+      cameraPaint(standby, layers[incoming].index, 0);
       if (!reduced && layers[incoming].decoded && layers[incoming].index === next.nextShotIndex && next.nextShotIndex !== next.shotIndex) standby.style.opacity = String(next.blend);
     }
     landscape.dataset.creditRenderedShotIndex = String(layers[active].index);
@@ -89,7 +97,7 @@ export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, fil
   </div>;
 }
 
-export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, settings, busy = false, blocked = false, onScene, onComplete }: Props) {
+export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = false, blocked = false, onScene, onComplete }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const rollRef = useRef<HTMLDivElement>(null);
@@ -337,8 +345,9 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       onSeeked={event => { musicCursorRef.current = event.currentTarget.currentTime; musicSampleRef.current = event.currentTarget.currentTime; if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
       onError={event => { playbackAllowedRef.current = false; playAttemptRef.current += 1; event.currentTarget.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable"); }}
       onEnded={beginOutro} />
-    <V100CreditsFilmView initialFrame={initialFilmFrame} paintRef={filmPaintRef} reducedMotion={settings.reducedMotion} />
-    <div ref={viewportRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track"><header><small>THE END</small><h1>西新世紀末物語</h1><p>STAFF & CREDITS</p></header>{v100StaffRollSections(playerName).map(section => <section key={section.title}><h2>{section.title}</h2>{section.lines.map((line, index) => <p key={`${section.title}-${index}`}>{line}</p>)}</section>)}<footer><h2>THANK YOU FOR PLAYING</h2><strong>西新世紀末物語</strong><p>Version 1.0.0</p></footer></div></div>
+    <V100CreditsFilmView initialFrame={initialFilmFrame} paintRef={filmPaintRef} reducedMotion={settings.reducedMotion} className="v100-credit-cinema" />
+    <div className="v100-credit-cinema-shade" aria-hidden="true" />
+    <div ref={viewportRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track"><header><small>THE END</small><h1>西新世紀末物語</h1><p>STAFF & CREDITS</p></header>{v100StaffRollSections().map(section => <section key={section.title}><h2>{section.title}</h2>{section.lines.map((line, index) => <p key={`${section.title}-${index}`}>{line}</p>)}</section>)}<footer><h2>THANK YOU FOR PLAYING</h2><strong>西新世紀末物語</strong></footer></div></div>
     <div ref={controlsRef} className="v100-credit-controls"><div className="v100-credit-song"><span>音楽：魔王魂</span><a href={V100_CREDITS_SONG.page} target="_blank" rel="noreferrer">「追憶の幻想世界」</a></div><div className="v100-credit-buttons">
       {soundState === "gesture" && <button className="v100-primary v100-credit-audio-action" type="button" onClick={() => void play()}>曲を再生して始める</button>}
       {soundState === "unavailable" && <button className="v100-credit-audio-action" type="button" onClick={() => { audioRef.current?.load(); void play(); }}>曲を再試行</button>}

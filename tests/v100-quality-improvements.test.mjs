@@ -108,7 +108,8 @@ test("the full song visits all 11 canonical montage scenes and ends at its bound
   assert.equal(final.index, 10); assert.equal(final.progress, 1); assert.equal(final.ended, true);
   assert.equal(v100StaffRollFrame(0, 0, 0).progress, 0);
   const credits = v100StaffRollSections("花影").flatMap(section => section.lines).join("\n");
-  assert.match(credits, /音楽：魔王魂/u); assert.match(credits, /追憶の幻想世界/u); assert.match(credits, /花影/u);
+  assert.match(credits, /音楽：魔王魂/u); assert.match(credits, /追憶の幻想世界/u); assert.doesNotMatch(credits, /花影/u);
+  assert.doesNotMatch(JSON.stringify(v100StaffRollSections("花影")), /姪浜の終幕|\u7dd2\u65b9\u6d77\u4eba/u);
   assert.doesNotMatch(JSON.stringify(v100StaffRollSections()), /あなた/u);
   assert.equal(v100StaffRollSections().some(section => section.title === "指揮官"), false);
   for (const source of V100_SOUND_CREDITS) assert.ok(credits.includes(source.author));

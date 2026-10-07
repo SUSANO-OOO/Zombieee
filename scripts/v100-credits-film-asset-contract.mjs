@@ -37,9 +37,9 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
-    "path": "/art/v100/credits/ward-supplies-r3.webp",
-    "bytes": 216512,
-    "hash": "sha256-47fbc7a7af92beb1e788a7b6a913557fcfbaa9a7eafca23e2f30455e447c68f5",
+    "path": "/art/v100/credits/ward-supplies-r4.webp",
+    "bytes": 280084,
+    "hash": "sha256-cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b",
     "criticality": "critical"
   },
   {
@@ -76,6 +76,12 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "path": "/art/v100/credits/hospital-serum-r2.webp",
     "bytes": 204042,
     "hash": "sha256-300dfe499afb3dc1efbd265eacec7ddaff1051d89e83e3d09fd1b1b76aa0f777",
+    "criticality": "critical"
+  },
+  {
+    "path": "/art/v100/credits/hospital-courtyard-r3.webp",
+    "bytes": 404742,
+    "hash": "sha256-25cc9fd4de96b20cebe55431af2a4ebc9b0b02d6483236552fc7e8e46e939c26",
     "criticality": "critical"
   },
   {
@@ -121,6 +127,12 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "criticality": "critical"
   },
   {
+    "path": "/art/v100/credits/segawa-record-r2.webp",
+    "bytes": 220206,
+    "hash": "sha256-ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f",
+    "criticality": "critical"
+  },
+  {
     "path": "/art/v100/credits/armory-shelves-r1.webp",
     "bytes": 278230,
     "hash": "sha256-9407d6f9a3e7e67fe82918323859ec82beee41c304a591b62a2a30ec9abf1464",
@@ -142,6 +154,12 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "path": "/art/v100/credits/zakimiya-bottles-r2.webp",
     "bytes": 215678,
     "hash": "sha256-3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
+    "criticality": "critical"
+  },
+  {
+    "path": "/art/v100/credits/zakimiya-family-morning-r2.webp",
+    "bytes": 316374,
+    "hash": "sha256-d85c1086b40a5e92de5cdf9c5eb3299bae9aed6afde98525aa2d4f488df6722a",
     "criticality": "critical"
   },
   {
@@ -210,4 +228,4 @@ export const V100_CREDITS_FILM_ASSET_ADDITIONS = Object.freeze([
     "hash": "sha256-d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f",
     "criticality": "critical"
   }
-].map(Object.freeze));
+]);

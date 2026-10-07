@@ -1,6 +1,6 @@
 {
   "createdAt": "2026-10-07T08:15:48.340Z",
-  "purpose": "Producer-directed cinematic after staff roll: midnight Meinohama, helmet removal, throwing and floating insert, illustrated Ogata Kaito reveal and stained-teeth grin, sequel cards and thank-you",
+  "purpose": "Producer-directed cinematic after staff roll: midnight Meinohama, helmet removal, throwing and floating insert, illustrated unnamed face reveal and stained-teeth grin, sequel cards and thank-you",
   "license": {
     "image": {
       "creator": "OpenAI ImageGen",
@@ -405,5 +405,6 @@
       }
     }
   ],
-  "currentSelectionProvenance": "assets/source/v100/runtime/ending/king-costume-r1.provenance.json"
+  "currentSelectionProvenance": "assets/source/v100/runtime/ending/king-costume-r1.provenance.json",
+  "selectionStatus": "Historical generation record; current selected face assets are in ending/film-art-r2.provenance.json"
 }
