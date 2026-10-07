@@ -1,0 +1,473 @@
+{
+  "createdAt": "2026-10-07T08:52:28.925Z",
+  "purpose": "Restore original Crazy King costume in five credits scenes and four consecutive Meinohama shots",
+  "license": {
+    "creator": "OpenAI ImageGen",
+    "name": "OpenAI Terms of Use; output ownership subject to applicable terms",
+    "url": "https://openai.com/policies/terms-of-use/",
+    "verifiedAt": "2026-10-07",
+    "inputPermissions": "Producer-authorized original project identity and derivative scenes",
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "purelyHumanAuthorship": false
+  },
+  "producerApproval": {
+    "creation": "Requested original model fidelity in this conversation",
+    "finalImageAdoption": "Pending Producer viewing"
+  },
+  "storage": {
+    "masterPNGsInGit": false,
+    "masterPNGsInRuntime": false,
+    "retainedMasterCount": 9,
+    "retainedMasterBytes": 21623680,
+    "largestMasterBytes": 2870565,
+    "runtimeCount": 9,
+    "logicalBytes": 2010274,
+    "distinctBytes": 2010274,
+    "archiveLocationRelativeToPrimaryWorkspace": "outputs/asset-archive/v100-king-costume-20261007",
+    "readOnlyDesignReview": "Required for combined retained PNG family above100MiB before commit"
+  },
+  "preservedContracts": {
+    "creditsCuts": 35,
+    "canonicalCreditSceneIndices": "0–10",
+    "postCreditsCuts": 7,
+    "stableEventIDs": true,
+    "songPlaybackRate": 1,
+    "privateProducerSelfPhotographsDistributed": false
+  },
+  "records": [
+    {
+      "id": "meinohama-king-back-r2",
+      "replaces": "meinohama-king-back-r1",
+      "src": "/art/v100/epilogue/meinohama-king-back-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Correct ONLY the lower-body COSTUME of the adult fictional Crazy King in the FIRST image, according to his original model in references 2 and 3. His canonical costume is a green hooded zip-up jacket, BLACK PLEATED SKIRT ending above the knee, and RED TALL BOOTS. The first image wrongly dressed him in dark cargo trousers. Replace those trousers with the original BLACK PLEATED SKIRT and RED KNEE-HIGH BOOTS; legs between skirt and boots follow the original sprite. Preserve adult male identity, stature and rear silhouette. Nonsexual game costume correction. The yellow bucket helmet remains on his head, arms down, the exact green jacket, locked rear camera, moon/horizon, boats, quai ropes, rail edge and nocturnal painted illustration remain pixel-composition faithful. Do not redesign the character or scene, do not add weapons or face visibility. Match original worn practical skirt and scratched red boots, no fashion glamour. Keep frame 16:9.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-back-r1.png",
+          "sha256": "2ea15f0446afa08a8e0bededd2b4c1c038c174db673e4ef25004f67c92eac0e2",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "c4343a9a795b822374965aea33e64f98688d5d3e97c8621202d9530a4fe35a65",
+        "bytes": 2202788,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-back-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/meinohama-king-back-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/epilogue/meinohama-king-back-r2.webp",
+        "sha256": "416b97e945945460ae20404424b84493def0f178982190932a5ec3a81f5c409f",
+        "bytes": 171926,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "meinohama-king-reach-r2",
+      "replaces": "meinohama-king-reach-r1",
+      "src": "/art/v100/epilogue/meinohama-king-reach-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Correct ONLY the lower-body costume of adult Crazy King in the FIRST illustration. The second illustration shows the corrected costume in the EXACT SAME locked camera: green hoodie, BLACK PLEATED SKIRT above knees, RED TALL BOOTS, bare leg interval between skirt and boots matching original sprite in reference3. Replace the wrong dark cargo trousers in image1 with that black pleated skirt and red tall boots. Preserve image1's EXACT both hands reaching/gripping helmet still on head pose, adult male anatomy and identity, hoodie folds, bucket shape and all objects. No new face visibility. Keep every background landmark, moon, fishing boats, ropes, horizon and sea reflection fixed. Match skirt length, pleats and boot height/color from image2 so these consecutive rear shots cut smoothly. This is a nonsexual costume continuity correction in a painted mature game illustration. 16:9, no texts or extra people, no change to pose or camera.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-reach-r1.png",
+          "sha256": "9d13a5097129c79d85ba4a1b8f22919b00520478446cc92e5a4939fdaf726de2",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-back-r2.png",
+          "sha256": "c4343a9a795b822374965aea33e64f98688d5d3e97c8621202d9530a4fe35a65",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "ed48a6bcad253fd24f928ffe4c00964619c2eeba80b9f7101944b5c64475c497",
+        "bytes": 2111210,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-reach-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/meinohama-king-reach-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/epilogue/meinohama-king-reach-r2.webp",
+        "sha256": "277cef3e06a5e36b13033562b7798193e8f5d54d7be686953fbcdf765bdc1911",
+        "bytes": 159838,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "meinohama-king-remove-r2",
+      "replaces": "meinohama-king-remove-r1",
+      "src": "/art/v100/epilogue/meinohama-king-remove-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Correct ONLY the lower-body costume of adult Crazy King in the FIRST illustration. The second illustration shows the corrected costume in the EXACT SAME locked camera: green hoodie, BLACK PLEATED SKIRT above knees, RED TALL BOOTS, bare leg interval between skirt and boots matching original sprite in reference3. Replace the wrong dark cargo trousers in image1 with that black pleated skirt and red tall boots. Preserve image1's EXACT both hands holding helmet lifted off head, rear black hair/nape exposed pose, adult male anatomy and identity, hoodie folds, bucket shape and all objects. No new face visibility. Keep every background landmark, moon, fishing boats, ropes, horizon and sea reflection fixed. Match skirt length, pleats and boot height/color from image2 so these consecutive rear shots cut smoothly. This is a nonsexual costume continuity correction in a painted mature game illustration. 16:9, no texts or extra people, no change to pose or camera.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-remove-r1.png",
+          "sha256": "04a2a99d8ab7d7d0429ed3fc87025864f0b817778484c3c8010c83b53cce4397",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-back-r2.png",
+          "sha256": "c4343a9a795b822374965aea33e64f98688d5d3e97c8621202d9530a4fe35a65",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "e0179ccc40df533d83ff3b35d7ce0b660fff8c1e40f9cb657a2d174440f74dd9",
+        "bytes": 2135556,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-remove-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/meinohama-king-remove-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/epilogue/meinohama-king-remove-r2.webp",
+        "sha256": "e78e49bf6ca8dcaedd3808733cd3dcd97dd767fd89019271b371df66b7da86bf",
+        "bytes": 163808,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "meinohama-king-throw-r2",
+      "replaces": "meinohama-king-throw-r1",
+      "src": "/art/v100/epilogue/meinohama-king-throw-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Correct ONLY the lower-body costume of adult Crazy King in the FIRST illustration. The second illustration shows the corrected costume in the EXACT SAME locked camera: green hoodie, BLACK PLEATED SKIRT above knees, RED TALL BOOTS, bare leg interval between skirt and boots matching original sprite in reference3. Replace the wrong dark cargo trousers in image1 with that black pleated skirt and red tall boots. Preserve image1's EXACT throwing follow-through, right arm extended with ONE yellow helmet airborne beyond quay pose, adult male anatomy and identity, hoodie folds, bucket shape and all objects. No new face visibility. Keep every background landmark, moon, fishing boats, ropes, horizon and sea reflection fixed. Match skirt length, pleats and boot height/color from image2 so these consecutive rear shots cut smoothly. This is a nonsexual costume continuity correction in a painted mature game illustration. 16:9, no texts or extra people, no change to pose or camera.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-throw-r1.png",
+          "sha256": "7ac1d58b3d398ed99fa4c23fb4e82e4db43a86f0cb762135d9bcd420ce1527e5",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-back-r2.png",
+          "sha256": "c4343a9a795b822374965aea33e64f98688d5d3e97c8621202d9530a4fe35a65",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "9651c79807061b061e08d766eb307324a4ef4469538c4b8735421827f8cf9fa1",
+        "bytes": 2155262,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/meinohama-king-throw-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/meinohama-king-throw-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/epilogue/meinohama-king-throw-r2.webp",
+        "sha256": "6ca39d22f0f5b57934b652f0073e7ef8dc4515c9ec79161dcbfcf5109bed4818",
+        "bytes": 167070,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "ward-supplies-r3",
+      "replaces": "ward-supplies-r2",
+      "src": "/art/v100/credits/ward-supplies-r3.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST game illustration, a LOCAL costume correction only. Original Crazy King in images2/3 wears green zipped hoodie, a BLACK PLEATED SKIRT above knees, and scratched RED TALL BOOTS. Image1 has mistakenly changed him to dark trousers. King is the background adult man on the far RIGHT holding blankets behind the helmeted dark-coated man. Correct only the partial lower legs and shoes visible behind the supplies. Maintain all occlusion. Preserve the precise 16:9 framing, all other characters' faces/hair/body/clothes, gestures, expressions, props, background, light, painterly illustration and comedy. Adult fictional character in original nonsexual game costume, natural anatomy and usable stance. Keep black pleats, red boot silhouette and bare knee interval faithful to original sprite where visible. No new people, no words, no changes beyond King's lower-body costume.",
+      "references": [
+        {
+          "path": "public/art/v100/credits/ward-supplies-r2.webp",
+          "sha256": "0c3d10f6b708e02153256eab6be6f88b97f671dad8271df2b7203f6531514c5a",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "6c328aa3afd2e96e33d9627966eb28d16a29529c1bfca0e6dab43939784db637",
+        "bytes": 2425228,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/ward-supplies-r3.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/ward-supplies-r3.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/ward-supplies-r3.webp",
+        "sha256": "47fbc7a7af92beb1e788a7b6a913557fcfbaa9a7eafca23e2f30455e447c68f5",
+        "bytes": 216512,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "floodgate-rations-r2",
+      "replaces": "floodgate-rations-r1",
+      "src": "/art/v100/credits/floodgate-rations-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST game illustration, a LOCAL costume correction only. Original Crazy King in images2/3 wears green zipped hoodie, a BLACK PLEATED SKIRT above knees, and scratched RED TALL BOOTS. Image1 has mistakenly changed him to dark trousers. King is the adult man on the LEFT pushing the supply cart. Correct his entire lower-body outfit below the green hoodie while preserving his walking stance, pushing hands and chainsaw carried on the back. Preserve the precise 16:9 framing, all other characters' faces/hair/body/clothes, gestures, expressions, props, background, light, painterly illustration and comedy. Adult fictional character in original nonsexual game costume, natural anatomy and usable stance. Keep black pleats, red boot silhouette and bare knee interval faithful to original sprite where visible. No new people, no words, no changes beyond King's lower-body costume.",
+      "references": [
+        {
+          "path": "public/art/v100/credits/floodgate-rations-r1.webp",
+          "sha256": "3468f1da98e570cf784060e41295804a72c101a7bd34859b847c747a5864133e",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "fb711d423b3f67ea427cfc67b7b5571682512f8e06d99f90c1a80b49a5ae48a8",
+        "bytes": 2870565,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/floodgate-rations-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/floodgate-rations-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/floodgate-rations-r2.webp",
+        "sha256": "e33883a9a22d878ea034b003341e9dfad7e30f970227bd9ec5948648c2010847",
+        "bytes": 320154,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "ward-king-fan-r2",
+      "replaces": "ward-king-fan-r1",
+      "src": "/art/v100/credits/ward-king-fan-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST game illustration, a LOCAL costume correction only. Original Crazy King in images2/3 wears green zipped hoodie, a BLACK PLEATED SKIRT above knees, and scratched RED TALL BOOTS. Image1 has mistakenly changed him to dark trousers. King is the adult man on the RIGHT with silver emergency blanket lifted by the fan. Correct the lower body and extended legs under the green hoodie to the black pleated skirt, with red tall boots only where naturally visible. Keep every fold/occlusion of the silver blanket, comic pose and the two women's faces. Preserve the precise 16:9 framing, all other characters' faces/hair/body/clothes, gestures, expressions, props, background, light, painterly illustration and comedy. Adult fictional character in original nonsexual game costume, natural anatomy and usable stance. Keep black pleats, red boot silhouette and bare knee interval faithful to original sprite where visible. No new people, no words, no changes beyond King's lower-body costume.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/ward-king-fan-r1.webp",
+          "sha256": "13b799ab72b1f5cf070ec54e0799a4476bf51efe652f439629c012d5d91b9af0",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "7e9da32282c7ea3e3c322acd7f17a9f02c67341bb6ef83f95fcabef96908493d",
+        "bytes": 2625887,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/ward-king-fan-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/ward-king-fan-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/ward-king-fan-r2.webp",
+        "sha256": "0a022b8fff3da29b65aa97678f09b5cb0a10247e2b892222cb6315fb13e32dd7",
+        "bytes": 272778,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "floodgate-king-riceball-r2",
+      "replaces": "floodgate-king-riceball-r1",
+      "src": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST game illustration, a LOCAL costume correction only. Original Crazy King in images2/3 wears green zipped hoodie, a BLACK PLEATED SKIRT above knees, and scratched RED TALL BOOTS. Image1 has mistakenly changed him to dark trousers. King is the adult man seated on the LEFT pressing the riceball against the bucket eye. Correct only the visible upper leg garment at the lower left above the table edge to the original black pleated skirt. Boots are hidden by the table: do NOT reveal or add hidden feet. Preserve the hilariously mistaken riceball pose, rice grains and everyone's laughing expression. Preserve the precise 16:9 framing, all other characters' faces/hair/body/clothes, gestures, expressions, props, background, light, painterly illustration and comedy. Adult fictional character in original nonsexual game costume, natural anatomy and usable stance. Keep black pleats, red boot silhouette and bare knee interval faithful to original sprite where visible. No new people, no words, no changes beyond King's lower-body costume.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/floodgate-king-riceball-r1.webp",
+          "sha256": "c3934576534b02dffef168032f16f6b59f0bf7bfaafd09301c93e34ae020d88a",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "15c3d337e655cfceb084e7ddb85b3c875441b169950580837ca646534e8c4ea4",
+        "bytes": 2634942,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/floodgate-king-riceball-r2.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/floodgate-king-riceball-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/floodgate-king-riceball-r2.webp",
+        "sha256": "c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
+        "bytes": 285510,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "defense-bench-r3",
+      "replaces": "defense-bench-r2",
+      "src": "/art/v100/credits/defense-bench-r3.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST game illustration, a LOCAL costume correction only. Original Crazy King in images2/3 wears green zipped hoodie, a BLACK PLEATED SKIRT above knees, and scratched RED TALL BOOTS. Image1 has mistakenly changed him to dark trousers. King is the adult man center-right carrying the sack on his shoulder. Correct waist, both knees/legs and shoes to the original black pleated skirt and red tall boots, preserving the carrying stance. CRITICAL: preserve the short sandy-blond adult WOMAN Raider at far right, her female face/neck/arms/bust/waist/hips, headset and tactical clothes exactly. Do not turn her male again. Preserve the precise 16:9 framing, all other characters' faces/hair/body/clothes, gestures, expressions, props, background, light, painterly illustration and comedy. Adult fictional character in original nonsexual game costume, natural anatomy and usable stance. Keep black pleats, red boot silhouette and bare knee interval faithful to original sprite where visible. No new people, no words, no changes beyond King's lower-body costume.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/defense-bench-r2.webp",
+          "sha256": "cd831b0cb7df63f4a0629360b1ad11d71a3ce549c3833544b03c6c73c2ca4610",
+          "kind": "retained-generation",
+          "distributed": false
+        },
+        {
+          "path": "public/art/v060/characters/crazy-king-battle-v1.png",
+          "sha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "kind": "project-identity-or-scene",
+          "distributed": true
+        }
+      ],
+      "identityConstraints": [
+        "Original green zip hoodie, black pleated skirt and red tall boots",
+        "Existing adult male character; original helmet and pose",
+        "Other cast and scenery retained; Raider remains an adult woman"
+      ],
+      "generated": {
+        "sha256": "e460a5dc62172cff03c0e4db56e00c0445384da49ffe49e646de3a50068c3ab1",
+        "bytes": 2462242,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/king-costume-sources/defense-bench-r3.png",
+        "archive": "outputs/asset-archive/v100-king-costume-20261007/defense-bench-r3.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/defense-bench-r3.webp",
+        "sha256": "a3e71d403251f2a0b6f5fa4e5b56ba455e7757743403f734d325bad9623302c5",
+        "bytes": 252678,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    }
+  ]
+}

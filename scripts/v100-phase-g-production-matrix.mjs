@@ -2289,7 +2289,7 @@ const stateContracts = Object.freeze({
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-landscape", ".v100-credit-shot", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], forbiddenSelectors: [".v100-credit-memory", ".v100-credit-brand"], elementCounts: { ".v100-staff-roll audio": 1 } },
-  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
+  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-post-credits-film", ".v100-post-credit-picture", ".v100-post-credit-landscape", ".v100-post-credit-controls"], elementCounts: { ".v100-post-credits-film audio": 2, ".v100-post-credits-film .v100-credit-shot": 2 } },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
 });
@@ -4758,7 +4758,17 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "credits", async (page) => { await openRoute(page, eventSave("credits", "v100:event:credits")); await page.locator('[data-v100-surface="credits"]').waitFor({ state: "visible", timeout }); });
-  await captureState("chromium", viewport, "epilogue-postgame", async (page) => { await openRoute(page, eventSave("epilogue", "v100:event:epilogue")); await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout }); });
+  await captureState("chromium", viewport, "epilogue-postgame", async (page) => {
+    const save = eventSave("epilogue", "v100:event:epilogue");
+    // This visual capture runs muted; native-media QA covers the audible film.
+    // Avoid waiting forever for a browser autoplay gesture before the fade-in.
+    await openRoute(page, { ...save, settings: { ...save.settings, bgmEnabled: false, sfxEnabled: false } });
+    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout });
+    await page.waitForFunction(() => {
+      const film = document.querySelector(".v100-post-credits-film"), image = film?.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
+      return Number(film?.getAttribute("data-v100-film-elapsed")) >= 4.3 && image instanceof HTMLImageElement && image.dataset.creditDecoded === "true" && image.naturalWidth > 0;
+    }, null, { timeout });
+  });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());
     await click(page, page.getByRole("button", { name: "メニュー", exact: true }), "player menu");

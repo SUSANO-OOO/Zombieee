@@ -1,0 +1,993 @@
+{
+  "createdAt": "2026-10-07T07:37:18.275Z",
+  "purpose": "Producer-directed affectionate couples, expressive absurd daily-life comedy, varied group framing, and correcting Raider to her original adult female model",
+  "source": "Original project character identity models and built-in OpenAI ImageGen outputs",
+  "creator": "OpenAI ImageGen; game-ready encoding and source binding by Codex",
+  "license": {
+    "name": "OpenAI Terms of Use, output ownership subject to applicable terms",
+    "url": "https://openai.com/policies/terms-of-use/",
+    "verifiedAt": "2026-10-07",
+    "inputPermissions": "Producer-authorized use of the existing project identity masters",
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "limitations": "Applicable law and service terms; no claim of exclusive output or purely human authorship"
+  },
+  "producerApproval": {
+    "creation": "Requested in this conversation",
+    "finalImageAdoption": "Pending Producer viewing and final acceptance"
+  },
+  "storage": {
+    "masterPNGsInGit": false,
+    "masterPNGsInRuntime": false,
+    "retainedMasterCount": 12,
+    "retainedMasterBytes": 33021768,
+    "largestMasterBytes": 3153735,
+    "runtimeCount": 12,
+    "logicalBytes": 3556642,
+    "distinctBytes": 3556642,
+    "selectedFilmCount": 35,
+    "newSelectedFilmCount": 11,
+    "replacementCount": 1,
+    "sourceFamilyDesignReview": {
+      "reviewer": "Independent read-only audit_integrity",
+      "date": "2026-10-07",
+      "initialResult": "High0 / Medium0 / Low1",
+      "lowResolution": "Original PNGs copied and hash-verified in the primary workspace outside the managed worktree; preserved before any checkout archival. Final selected-runtime/manifest verification pending.",
+      "retainedFamilyFiles": 54,
+      "retainedFamilyBytes": 138208686,
+      "distinctMasterBytes": 120361116
+    }
+  },
+  "preservedContracts": {
+    "canonicalSceneCount": 11,
+    "savedNodeIndices": "0–10",
+    "music": "Original 魔王魂 song bytes unchanged; normal playback at1x retains full native EOF; Producer-requested film/text2x/4x keeps music at1x and fades its unfinished remainder when the film ends",
+    "finalShot": "kumaya-table"
+  },
+  "records": [
+    {
+      "id": "facility-chiha-baba-tender",
+      "sceneIndex": 5,
+      "sceneLabel": "ムガリアン施設",
+      "actors": [
+        "unit-mrs-chiha",
+        "unit-babayaga"
+      ],
+      "description": "Mrs.チハがババヤガのネクタイを直し、頬にキスをする。彼の手がそっと重なる。",
+      "src": "/art/v100/credits/chiha-baba-tender-r1.webp",
+      "sourceId": "chiha-baba-tender-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story, identity-preserve references. Create ONE finished 16:9 landscape illustration for the ending montage of the Japanese post-apocalyptic game 西新世紀末物語. Reference 1 locks the fictional adult man BABAYAGA: clean-shaven Japanese face, neatly parted swept black hair, white shirt, dark burgundy tie, black shoulder holster. Reference 2 locks the fictional adult woman MRS CHIHA: same mature Japanese face, black hair in bun with thin headband, black long leather coat, cream ruffled blouse, dark trousers and gloves. Reference 3 is ONLY the painterly game illustration style, textured materials, light, world and mood; don't copy its table composition. Show BABAYAGA and CHIHA genuinely in love after surviving the battle: an intimate three-quarter medium close shot beside a repaired clinic window at dusk. CHIHA lightly straightens his crooked tie with one gloved hand and kisses his cheek; his composed expression cracks into a shy, helpless delighted smile, one hand tenderly resting over hers. Natural believable fingers, clear unambiguous affection and contact. Warm lantern reflected in the window, out-of-focus empty clean clinic beds and newly hung linen inside, broken city beyond the glass. Adults fully clothed; guns holstered or set aside safely, nobody aiming. Expressive faces instead of identical broad smiles. Premium hand-painted cinematic RPG ending art with controlled anatomy, subtle brush texture and specific facial likeness. Original composition, full image with no UI, no words, no panels, no watermark, no logos. This is a new romantic scene, not a montage reference sheet. Preserve both original identities exactly.",
+      "references": [
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "public/art/v090/characters/reference/mrs-chiha-identity-master-r1.png",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v100/credits/kumaya-table-r2.webp",
+          "sha256": "d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f"
+        }
+      ],
+      "referenceBoardMembers": [],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "8bc588275c36a611ea6e8e52ec607d062be51bd322b3502b39a79a9e34504ef9",
+        "bytes": 2638388,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/chiha-baba-tender-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/chiha-baba-tender-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/chiha-baba-tender-r1.webp",
+        "sha256": "9c53b335820c0d574fa611e9ebec8a21249f5067a291cb345a35d8d3b2ad7c50",
+        "bytes": 251756,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "facility-linen"
+    },
+    {
+      "id": "street-paisen-flirt",
+      "sceneIndex": 0,
+      "sceneLabel": "西新商店街",
+      "actors": [
+        "unit-paisen",
+        "unit-kumaverson",
+        "unit-tatara",
+        "unit-mizuchi"
+      ],
+      "description": "工具を花束にして、パイセンがクマバーソンへ大げさにひざまずく。タタラは笑い、ミズチは冷静に見守る。",
+      "src": "/art/v100/credits/street-paisen-flirt-r1.webp",
+      "sourceId": "defense-paisen-flirt-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Make ONE 16:9 polished painterly cinematic game ending illustration, an absurd cheeky romantic COMEDY between fictional grown adult Japanese survivors, fully clothed, playful camp overacting. The labeled references LOCK original character identities and clothing; don't reproduce their layout or labels. PAISEN is the muscular short-black-haired man in the NAVY BLUE T-SHIRT in reference 1. KUMAVERSON is the messy-black-haired grown adult man in the worn cream t-shirt holding a frying pan in reference 1. TATARA is the muscular black-haired armored hammer user in reference 2. MIZUCHI is the short black asymmetrical-haired woman in the purple suit and headphones in reference 3. At a cleared sheltered rebuilding yard in Nishijin, PAISEN has improvised an outrageously theatrical love confession as a joke: kneeling extravagantly on one knee, a ridiculous white towel pinned as a princely cape over his navy t-shirt, presenting a bouquet made of polished spanners tied with a ribbon to KUMAVERSON. PAISEN gives a comically intense flirtatious wink and exaggerated puckered lips, chest puffed, still recognizably his exact original face. KUMAVERSON blushes and recoils with a baffled crooked smile, shielding himself with his FRYING PAN. Behind and across the frame, TATARA doubles over laughing and MIZUCHI stares with a perfectly deadpan raised eyebrow while holding a mug. Four adults, different distinct reactions. Wide low viewpoint with foreground wrench-bouquet very readable, diagonal action, plenty of depth, grounded rubble cleared aside, repaired bench, salvaged work light. Warm dusk, detailed cloth and worn metal, painterly game art and rich natural expressions. The joke is the embarrassingly overblown acting and the inappropriate bouquet, not an explicit sexual act. No sexual activity, no nudity, no real adult-film actors or copied video frame. No writing, no subtitles, no watermarks, no reference grid.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/defense.png",
+          "sha256": "6ed8880b057064e4c4a007e07003ea20890baab4eec6994dc771ee12e5f9ae05"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/ward.png",
+          "sha256": "00ecb5b22f5b709df89bac52cd123c24c926196a059bfa6c3246ac248ad2309c"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        },
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "label": "TATARA",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "label": "RAIDER",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        },
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "label": "IKURA",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "label": "MIZUCHI",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "label": "GANTETSU",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "839d397375a23b62d90167f306ea7669a2b2bb59c76c998c8cb285778aa05525",
+        "bytes": 2991552,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/street-paisen-flirt-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/street-paisen-flirt-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/street-paisen-flirt-r1.webp",
+        "sha256": "aa1a4383f216d9015fa6b112e872e032c08db7d1b12f1e09420c03be70e284be",
+        "bytes": 341856,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "street-paisen-broom"
+    },
+    {
+      "id": "street-paisen-broom",
+      "sceneIndex": 0,
+      "sceneLabel": "西新商店街",
+      "actors": [
+        "unit-paisen",
+        "unit-hachi",
+        "unit-raider"
+      ],
+      "description": "ほうきをギターに見立て、パイセンが熱唱する。ハチは腹を抱え、レイダーはあきれながら笑う。",
+      "src": "/art/v100/credits/street-paisen-broom-r1.webp",
+      "sourceId": "street-paisen-broom-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 high-quality textured hand-painted cinematic ending illustration. Character identity references: first labeled board shows HACHI, spiky black hair orange streak, orange hooded coat and backpack; PAISEN, muscular grown adult short black hair navy blue tee. Second board shows adult woman RAIDER, cropped sandy hair, dark sleeveless military clothing and headphones. Third image is painterly style and Nishijin rebuilding setting only. After clearing rubble from a shop entrance, PAISEN climbs on a low sturdy repair crate and launches a ludicrously grandiose AIR-GUITAR solo using an ordinary long broom: bent knees, pursed lips and eyes screwed shut like a rock star, wearing his exact navy tee, ordinary trousers. HACHI is below in foreground folded over belly-laughing, orange coat unmistakable. RAIDER stands several paces away with one hand covering her face and a resigned amused smirk, her mop still in the other hand. Three adults in different positions and levels, not a line-up. Dynamic wide low tilted viewpoint through a repaired shutter, diagonal broom, loose dust caught in the evening beam, stacked salvaged goods. Absurd triumph over trivial housework, affectionate human comedy. Retain exact original faces/hair/body/clothes, make facial reactions individually readable. No weapons aimed, no zombies, no injury, no writing or UI or panels or watermark. A fully realized original scene, not posed reference art.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/defense.png",
+          "sha256": "6ed8880b057064e4c4a007e07003ea20890baab4eec6994dc771ee12e5f9ae05"
+        },
+        {
+          "path": "public/art/v100/credits/street-community-r1.webp",
+          "sha256": "7a3614c3515b7e0403d2e4bc81ab83413c12134f969aa6b74b8c7ca6531b1a62"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        },
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "label": "TATARA",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "label": "RAIDER",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        }
+      ],
+      "identityConstraints": [
+        "Raider is an adult woman; same original face, sandy-blond short hair, female athletic body, headset, tactical outfit and LMG identity"
+      ],
+      "generated": {
+        "sha256": "15171bebda756986501571eac54db2ed256280d5e7c1397cd8e7e4dd171ed3d7",
+        "bytes": 2722529,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/street-paisen-broom-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/street-paisen-broom-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/street-paisen-broom-r1.webp",
+        "sha256": "f4fbcfe07a040abebbf7a61deb3e1bf0d5df92ac710125d8151082585e4d4796",
+        "bytes": 292750,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "street-doorstep"
+    },
+    {
+      "id": "ward-king-fan",
+      "sceneIndex": 1,
+      "sceneLabel": "早良区役所",
+      "actors": [
+        "guide-ikura",
+        "unit-mizuchi",
+        "unit-crazy-king"
+      ],
+      "description": "直した扇風機がキングの毛布を巻き上げる。いくらちゃんは笑い、ミズチは点検の手を止める。",
+      "src": "/art/v100/credits/ward-king-fan-r1.webp",
+      "sourceId": "ward-king-fan-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE finished 16:9 painterly cinematic RPG ending illustration, funny absurd slice of life while a damaged Japanese ward office is being restored. The labeled first reference fixes IKURA: adult woman with vivid pink twin-bun long hair and headset, teal cropped utility jacket; MIZUCHI: mature adult black asymmetrical bob hair, purple fitted suit, headphones around neck, yellow glove; CRAZY KING: a REAL YELLOW CYLINDRICAL BUCKET HELMET with two big circular black eyes, little red smiling mouth and black round cap, green hoodie, NO human face replacement. Second input is setting and painting style only. From a high three-quarter angle over an open supplies table: CRAZY KING proudly stands beside the repaired pedestal fan and his absurdly enormous makeshift cape made from an emergency silver blanket has blown forward and wrapped around his BUCKET FACE like a dramatic metallic cocoon; his arms flail in mock royal indignation, bucket still partly visible and identifiable. IKURA nearly snorts her tea and clamps a hand over her laughing mouth; MIZUCHI sits sideways balancing a clipboard, raises one eyebrow with dry exhausted amusement. Three different reactions, clear physical cause and readable visual punchline, scattered but intact supply cartons, receipts blank without legible text, late sunlight and task lamp. Preserve outfits and face identities, painterly detailed worn materials, controlled anatomy, humor without injury. No chainsaw operating, no erotic content, no text, no UI, no panels, no watermarks.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/ward.png",
+          "sha256": "00ecb5b22f5b709df89bac52cd123c24c926196a059bfa6c3246ac248ad2309c"
+        },
+        {
+          "path": "public/art/v100/credits/ward-supplies-r2.webp",
+          "sha256": "0c3d10f6b708e02153256eab6be6f88b97f671dad8271df2b7203f6531514c5a"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "label": "IKURA",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "label": "MIZUCHI",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "label": "GANTETSU",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "96ba4af35c25b80b51353ce88ca559d2a6cc1116855fca591a84ffc35a59025d",
+        "bytes": 2791406,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/ward-king-fan-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/ward-king-fan-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/ward-king-fan-r1.webp",
+        "sha256": "13b799ab72b1f5cf070ec54e0799a4476bf51efe652f439629c012d5d91b9af0",
+        "bytes": 308902,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/ward-king-fan-r1.webp"
+      },
+      "after": "ward-supplies",
+      "selected": false,
+      "supersededBy": "/art/v100/credits/ward-king-fan-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "station-cart-parade",
+      "sceneIndex": 2,
+      "sceneLabel": "西新駅",
+      "actors": [
+        "unit-monkey",
+        "unit-tatara",
+        "unit-gantetsu"
+      ],
+      "description": "動かない整備台車の上で、モンキーが車掌気取り。タタラが一礼し、ガンテツは小さな飾りをつけて立つ。",
+      "src": "/art/v100/credits/station-cart-parade-r1.webp",
+      "sourceId": "station-cart-parade-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 finished painterly cinematic game ending scene, absurd improvised victory parade during cleanup of NISHIJIN STATION. Reference 1 locks MONKEY (adult silver-gray tousled hair, black tactical shirt/trousers), TATARA (adult dark wavy hair, muscular build, dark armored work clothes). Reference 2 locks GANTETSU (adult fully concealed face behind BLACK RIOT HELMET and long olive coat, shield). Reference 3 is location/style only. Wide overhead three-quarter composition with strong perspective down the platform, not a frontal two-person pose. A small rusty MAINTENANCE HANDCART is parked beside a fixed bench, its wheels visibly chocked. MONKEY balances on it in a flamboyant conductor pose with a rolled cleaning cloth as baton, one boot raised, mischievous grin. TATARA kneels at the side giving a ridiculous grand bow as if presenting a king, trying not to laugh. GANTETSU stands rigid nearby holding a tiny cleaning brush and wearing a paper rosette pinned to his long coat, utterly deadpan faceless helmet. A few adult evacuees laugh from benches in the distance. The trains remain shut down, dark tunnels and empty rails, repaired small orange platform lights; nobody moving a train. Rich brush texture, warm and cool lighting, believable hands and limbs, distinct silhouettes, original identities preserved. No weapon threat, no injuries, no writing, no captions, no reference sheet, no watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/defense.png",
+          "sha256": "6ed8880b057064e4c4a007e07003ea20890baab4eec6994dc771ee12e5f9ae05"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/ward.png",
+          "sha256": "00ecb5b22f5b709df89bac52cd123c24c926196a059bfa6c3246ac248ad2309c"
+        },
+        {
+          "path": "public/art/v100/credits/station-repair-r1.webp",
+          "sha256": "91955f19b73698d01029b98a1827acf59b3051202da739144795a2ad812b157b"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "label": "TATARA",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "label": "RAIDER",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        },
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "label": "IKURA",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "label": "MIZUCHI",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "label": "GANTETSU",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "950940125f581abdcf43a3b0f1af17e7c08c93595c431e3ec7bd8dd5b550f827",
+        "bytes": 2898792,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/station-cart-parade-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/station-cart-parade-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/station-cart-parade-r1.webp",
+        "sha256": "145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
+        "bytes": 337952,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "station-bench"
+    },
+    {
+      "id": "floodgate-king-riceball",
+      "sceneIndex": 4,
+      "sceneLabel": "河口防潮門",
+      "actors": [
+        "unit-crazy-king",
+        "unit-monkey",
+        "unit-gantetsu"
+      ],
+      "description": "キングがおにぎりをバケツの目に押しつける。モンキーが吹き出し、ガンテツが弁当箱を差し出す。",
+      "src": "/art/v100/credits/floodgate-king-riceball-r1.webp",
+      "sourceId": "floodgate-king-riceball-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 painterly cinematic RPG ending illustration: a ridiculous visual gag at the food break outside the still CLOSED river floodgate. First reference locks CRAZY KING: yellow cylindrical bucket helmet with black circular eye holes/red cartoon mouth/black cap, green hoodie; MONKEY: silver-gray-haired grown adult man in black tactical clothes; GANTETSU: fully helmeted grown adult guard in black riot helmet and olive long coat. Second input fixes location and art style only. Lively medium-wide SIDE ANGLE across the ration bench, large readable gestures. CRAZY KING, still keeping the bucket firmly on his head, tries to solemnly push a triangular rice ball through the WRONG tiny eye hole; rice crumbles onto his green sleeve. His empty free hand is making an unnecessarily dignified royal gesture. MONKEY beside him has burst into helpless laughter and leans back with a mug held carefully away from the food. GANTETSU reaches across with an open lunchbox as though patiently offering a practical solution; his opaque helmet remains utterly deadpan. Three adults, the absurd contrast of a bucket-faced monarch with the simplest meal is the joke. Closed massive gate and guarded coastal ruin in background, bright repaired task light and sunset, intact supplies, nobody injured or starving, no chainsaw running. Preserve all three original designs exactly. Warm human foolishness, nuanced natural cloth, hand-painted facial anatomy on MONKEY, strong readable composition, no words, no UI, no panels, no watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/ward.png",
+          "sha256": "00ecb5b22f5b709df89bac52cd123c24c926196a059bfa6c3246ac248ad2309c"
+        },
+        {
+          "path": "public/art/v100/credits/floodgate-rations-r1.webp",
+          "sha256": "3468f1da98e570cf784060e41295804a72c101a7bd34859b847c747a5864133e"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "label": "IKURA",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        },
+        {
+          "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+          "label": "MIZUCHI",
+          "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        },
+        {
+          "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+          "label": "GANTETSU",
+          "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "62b3228d7b610358c53caaffcbf37756622b18b794a88c2467826cff8aa11673",
+        "bytes": 2869236,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/floodgate-king-riceball-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/floodgate-king-riceball-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/floodgate-king-riceball-r1.webp",
+        "sha256": "c3934576534b02dffef168032f16f6b59f0bf7bfaafd09301c93e34ae020d88a",
+        "bytes": 342522,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/floodgate-king-riceball-r1.webp"
+      },
+      "after": "floodgate-rations",
+      "selected": false,
+      "supersededBy": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "armory-couple-dance",
+      "sceneIndex": 6,
+      "sceneLabel": "RED PANTHER装備庫",
+      "actors": [
+        "unit-babayaga",
+        "unit-mrs-chiha",
+        "unit-tatara",
+        "unit-paisen"
+      ],
+      "description": "片づけの合間に、ババヤガとMrs.チハが手を取り踊る。パイセンが歌い、タタラが横目で見守る。",
+      "src": "/art/v100/credits/armory-couple-dance-r1.webp",
+      "sourceId": "armory-couple-dance-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE finished 16:9 hand-painted cinematic RPG ending illustration. First labeled board locks original BABAYAGA (clean-shaven adult Japanese man, neat swept black hair, WHITE SHIRT, burgundy tie, black holster) and MRS CHIHA (mature adult Japanese woman, dark bun with headband, black long leather coat, cream ruffled blouse, black trousers/gloves), plus PAISEN (short black hair, navy tee). Second board fixes TATARA (muscular dark-haired armored hammer user). Third reference is reclaimed armory setting and painted style only. Genuine affectionate love between CHIHA and BABAYAGA, an impromptu slow dance during a work break in a safely reclaimed armory entrance at evening. Wide shot seen obliquely from behind a nearby crate: CHIHA laughs warmly with eyes crinkled, one hand lightly on his shoulder; BABAYAGA leads her clumsily with a shy relieved grin, their free hands held together. Faces must match the original references precisely. Both full figures visible, long coat moving slightly in the turn. TATARA sits in foreground on an unopened crate, lifting an eyebrow with an amused groan at the lovestruck couple; far to the side PAISEN jokingly hums into a broom as a ridiculous lounge singer with eyes closed. Four distinct adults at different depths, avoid a posed two-person portrait. Warm overhead repair bulb, locked weapons cabinets and sealed evidence boxes in background, no guns held, no new conflict. Affection is the main emotion; understated comic reaction gives warmth. High-quality detailed painterly materials, anatomically clear joined hands, no subtitles, no signs, no text, no panels, no watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/defense.png",
+          "sha256": "6ed8880b057064e4c4a007e07003ea20890baab4eec6994dc771ee12e5f9ae05"
+        },
+        {
+          "path": "public/art/v100/credits/armory-evidence-r2.webp",
+          "sha256": "a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        },
+        {
+          "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+          "label": "TATARA",
+          "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "label": "CRAZY KING",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "label": "RAIDER",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+          "label": "MONKEY",
+          "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "557c4d2e28926e33f78bc157b61ca0004db7d3dfc8e3e30ff8cf33f4f09fce1c",
+        "bytes": 2680519,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/armory-couple-dance-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/armory-couple-dance-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/armory-couple-dance-r1.webp",
+        "sha256": "b62271385452e9aa13ffac6f11ec75f548001435a5ab218607f83c11a8efa95e",
+        "bytes": 286970,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "armory-shelves"
+    },
+    {
+      "id": "vehicle-mayo-splash",
+      "sceneIndex": 8,
+      "sceneLabel": "装甲車両",
+      "actors": [
+        "unit-mayo-chan",
+        "unit-hachi",
+        "unit-tky",
+        "unit-gantetsu"
+      ],
+      "description": "洗い終えたマヨちゃんが水を振りまく。ハチは笑い、TKYは顔をしかめ、ガンテツはタオルを用意する。",
+      "src": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+      "sourceId": "vehicle-mayo-splash-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 landscape finished cinematic hand-painted RPG ending scene, exuberant visual slapstick beside the patched armored vehicle in Nishijin. First labeled board fixes adult HACHI: orange streak in black spiky hair, nose bandage, freckles, ragged ORANGE HOODED COAT, blue map bag, slim black trousers and black shoes. Second reference fixes TKY: adult Japanese man with BLACK parted fringe, original BLACK LONG LEATHER COAT with distinctive BURGUNDY straps and armband, black trousers, NOT blond. Third reference fixes MAYO: TINY cream long-haired Chihuahua with triangular ears, yellow bandanna, olive medical harness and pouches, never a large dog. Fourth image is vehicle location/style only. Close WIDE low view across a wash bucket: MAYO shakes water off after stepping in a small clean puddle and sprays a dramatic arch of tiny droplets. HACHI crouches near foreground trying to shield his face with a sponge, laughing with one eye shut, exact orange coat visible. TKY beside the vehicle is caught just as he lifts a rag to wipe a lamp: wet fringe droops over one eye, his mouth is a hilarious offended grimace, shoulders hunched in surprise. A fully helmeted olive-coated GANTETSU is further back calmly untouched, holding an absurdly small drying towel for the tiny dog, black riot helmet hides his face. Four distinct figures including dog, dynamic splash through depth, rich evening highlights on droplets, subtle humor without harm. Keep all original identities/accessories, no energized blade, no weapons aimed, no running battle, damage and patchwork still remain. Detailed painterly art, plausible paws/hands, no words or UI or captions or watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "public/art/v090/characters/reference/tky-identity-master-r1.png",
+          "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8"
+        },
+        {
+          "path": "public/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        },
+        {
+          "path": "public/art/v100/credits/vehicle-patch-r2.webp",
+          "sha256": "e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "fac98bcc8c53c6d4141c71690105907d6f90f4fcaf43c4783dde40c82613882a",
+        "bytes": 3153735,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/vehicle-mayo-splash-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/vehicle-mayo-splash-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/vehicle-mayo-splash-r1.webp",
+        "sha256": "d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+        "bytes": 395446,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "vehicle-patch"
+    },
+    {
+      "id": "kumaya-omelet-chaos",
+      "sceneIndex": 10,
+      "sceneLabel": "くまや",
+      "actors": [
+        "unit-kumaverson",
+        "unit-paisen",
+        "unit-hachi",
+        "unit-babayaga",
+        "unit-mrs-chiha",
+        "unit-mayo-chan"
+      ],
+      "description": "クマバーソンの卵料理が宙を舞う。パイセンが口を開けて追いかけ、食卓から笑いが起こる。",
+      "src": "/art/v100/credits/kumaya-omelet-chaos-r1.webp",
+      "sourceId": "kumaya-omelet-chaos-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 full-frame high-quality painterly cinematic game ending illustration, a genuinely ridiculous cooking mishap with the original cast at KUMAYA. First labeled board fixes KUMAVERSON: grown adult Japanese man with messy black hair, worn cream t-shirt, frying pan; PAISEN: short black hair muscular adult in navy tee; HACHI: adult orange/black spiky hair, orange hooded coat and black trousers; BABAYAGA: neat swept black hair white shirt burgundy tie; MRS CHIHA: mature black-haired bun/headband woman black long leather coat and cream blouse. Second reference fixes the TINY cream Chihuahua MAYO, yellow bandanna and olive medical harness. Third input is kumaya kitchen and painting style. An overhead DIAGONAL view across the compact restaurant counter catches a glorious failed omelet flip: a single folded egg omelet is in midair slightly above KUMAVERSON's frying pan and heading toward his own forehead as he looks up in horrified comic realization. Beside the counter PAISEN absurdly tilts his head back and opens his mouth to volunteer as the catching plate, hands raised like an incompetent goalkeeper. HACHI at a table is laughing so hard he almost folds out of his chair. BABAYAGA and CHIHA sit close together holding hands beneath the tabletop, BABAYAGA has a reluctant smile and CHIHA laughs into her free hand. MAYO peers between chair legs at the commotion, NOT reaching hot food. SIX distinct cast figures, different expressions and depth; no cloned faces, preserve outfits/identities, utensils safe, no huge fire, no destroyed scarce food, no injuries. Lantern warmth, patched restaurant still scarred but lived in, painterly realistic cloth and readable facial reaction, cinematic depth, no words, no speech bubbles, no UI, no collage, no watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "public/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        },
+        {
+          "path": "public/art/v100/credits/kumaya-cooking-r1.webp",
+          "sha256": "5c6d3ca3e8807950722aabd7b1899572c0b8a0a14582d831fbbf4371b9c2eaa1"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "b2a97e78496ea1080f17084b51a5fc70f0069bcb0040ff66bf11f839de25338f",
+        "bytes": 2643579,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/kumaya-omelet-chaos-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/kumaya-omelet-chaos-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/kumaya-omelet-chaos-r1.webp",
+        "sha256": "69db77a9bde8cdc82f9d2617e0fe0ea698b9238137fa8a184568219144a7270c",
+        "bytes": 268694,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "kumaya-dog"
+    },
+    {
+      "id": "kumaya-mayo-selfie",
+      "sceneIndex": 10,
+      "sceneLabel": "くまや",
+      "actors": [
+        "unit-mayo-chan",
+        "unit-hachi",
+        "unit-paisen",
+        "unit-kumaverson",
+        "unit-nao",
+        "unit-babayaga",
+        "unit-mrs-chiha"
+      ],
+      "description": "集合写真にマヨちゃんの鼻が割り込む。変顔のパイセン、不機嫌なクマバーソン、肩を寄せ合うババヤガとMrs.チハが写る。",
+      "src": "/art/v100/credits/kumaya-mayo-selfie-r1.webp",
+      "sourceId": "kumaya-mayo-selfie-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. ONE 16:9 painterly cinematic game ending image, an absurdly BOTCHED GROUP SELFIE in the repaired Kumaya restaurant. First labeled board precisely locks original adult HACHI (black/orange spiky hair nose bandage orange coat), PAISEN (short black crewcut muscular navy tee), KUMAVERSON (messy dark hair cream tee), BABAYAGA (neat swept black hair white shirt burgundy tie), MRS CHIHA (mature Japanese face dark bun thin headband black leather coat cream blouse), and NAO (brown braid, teal medical utility jacket, red strap). Second fixes MAYO, tiny cream Chihuahua with triangular ears, yellow bandanna and olive medical pouches. Third sets art style/interior only. Perspective is a WIDE-ANGLE selfie camera close to the low table: MAYO's curious fluffy face and giant black nose suddenly photobomb the near foreground, taking about one quarter of the frame, while the SIX adults cluster at staggered depths behind, visibly surprised and laughing, recognizable faces large enough to read. PAISEN makes the world's stupidest scrunched fish-lip face. HACHI laughs open-mouthed trying to gently hold the wriggling dog away. KUMAVERSON caught mid-blink looks hilariously bewildered with one hand still holding a wooden spoon. CHIHA leans lovingly into BABAYAGA's shoulder smiling with crinkled eyes; normally stern BABAYAGA is finally laughing with a relaxed head tilt. NAO behind them rolls her eyes affectionately and keeps an amused half-smile. Not everybody performs the same smile; no identical face, no extra or missing limbs. Dog remains tiny, not oversized body, only perspective makes its nose closer. Warm lanterns and simple shared food in patched Japanese restaurant, rich painterly RPG art, exact identities and colors, one seamless candid image, no displayed phone UI, no lettering, no text, no panels, no watermark.",
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/reconstruction-reference-boards/table.png",
+          "sha256": "74860b1cdf62113818d7daed79c0174c348702f65c049ac48035dba3fca7aa20"
+        },
+        {
+          "path": "public/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        },
+        {
+          "path": "public/art/v100/credits/kumaya-table-r2.webp",
+          "sha256": "d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f"
+        }
+      ],
+      "referenceBoardMembers": [
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "label": "HACHI",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "label": "PAISEN",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "label": "KUMAVERSON",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+          "label": "BABAYAGA",
+          "sha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+        },
+        {
+          "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+          "label": "MRS CHIHA",
+          "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+        },
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "label": "NAO",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        }
+      ],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "b403d6c7b0840f482f86b4f21c124bca30c7a7d3452cca0ae6cc3a3a6df7464d",
+        "bytes": 2539267,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/kumaya-mayo-selfie-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/kumaya-mayo-selfie-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/kumaya-mayo-selfie-r1.webp",
+        "sha256": "0c79faab640c823d188591c7303c6f4f270c0020b6f3d28bcd591a8a40a6e370",
+        "bytes": 237638,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "kumaya-omelet-chaos"
+    },
+    {
+      "id": "defense-bench",
+      "sceneIndex": 9,
+      "sceneLabel": "TAKUYA撃破地点",
+      "actors": [
+        "unit-tatara",
+        "unit-crazy-king",
+        "unit-raider",
+        "unit-monkey"
+      ],
+      "description": "タタラたちが瓦礫を運び出す。レイダーの笑い声が響き、道端に休める場所が戻る。",
+      "src": "/art/v100/credits/defense-bench-r2.webp",
+      "sourceId": "defense-bench-r2",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve. Asset type: finished widescreen painterly game end-roll illustration, 16:9. Image 1 is the edit target; image 2 is the authoritative original identity of Raider, an ADULT WOMAN. Correct ONLY the sandy-blond short-haired person at the far right of image 1. She was incorrectly drawn as a man. Restore her original female face, neck, athletic female shoulders, arms, torso and hips and her original sleeveless dark tactical vest, headset around her neck, webbing and trousers from image 2. Respect the natural body shape of the original female character; do not exaggerate or sexualize it. Keep her laughing expression and helping lift the rubble, both hands anatomically correct, and maintain the same position and sunlight. Preserve absolutely the other THREE adult characters: black-haired heavily armored Tatara on the left, yellow bucket-helmet Crazy King in green hoodie at center, silver-haired Monkey lower center. Preserve their identities, gestures, the rubble, repaired bench, foreground tools, sunset and dramatic composition, game-painted texture and palette. No extra characters, no text, no logos, no watermark. This is an identity correction only; do not repaint the other faces or redesign the scene.",
+      "references": [
+        {
+          "path": "public/art/v100/credits/defense-bench-r1.webp",
+          "sha256": "651e31d7982127f246035c729c89a021fd9ab9233d8cfcc0f11cced54d0474f8"
+        },
+        {
+          "path": "public/art/v070/characters/reference/raider-base-r10.png",
+          "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+        }
+      ],
+      "referenceBoardMembers": [],
+      "identityConstraints": [
+        "Raider is an adult woman; same original face, sandy-blond short hair, female athletic body, headset, tactical outfit and LMG identity"
+      ],
+      "generated": {
+        "sha256": "9bdd633c31f3d34fdd4557817afed4209f739047552d93fe9e43050ceb7a983e",
+        "bytes": 2529472,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/defense-bench-r2.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/defense-bench-r2.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/defense-bench-r2.webp",
+        "sha256": "cd831b0cb7df63f4a0629360b1ad11d71a3ce549c3833544b03c6c73c2ca4610",
+        "bytes": 264818,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/defense-bench-r2.webp"
+      },
+      "replace": "defense-bench",
+      "selected": false,
+      "supersededBy": "/art/v100/credits/defense-bench-r3.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "defense-paisen-kuma-kiss",
+      "sceneIndex": 9,
+      "sceneLabel": "TAKUYA撃破地点",
+      "actors": [
+        "unit-paisen",
+        "unit-kumaverson"
+      ],
+      "description": "クマバーソンがパイセンの頬にキスをする。パイセンは肩を抱き、大げさな身ぶりで喜ぶ。",
+      "src": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+      "sourceId": "defense-paisen-kuma-kiss-r1",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset type: finished 16:9 painterly game credits scene. Reference 1 is the original adult Japanese man Paisen: muscular build, short black crew-cut, navy blue T-shirt. Reference 2 is the original adult Japanese man Kumaverson: messy black hair, cream T-shirt and frying pan. Reference 3 supplies the game illustration style only. Create a clear, joyful, consensual male-male romantic scene: Kumaverson gives Paisen a kiss on the cheek, while Paisen embraces his shoulders, grinning with his eyes happily shut and one hand making an absurdly grand theatrical flourish. Kumaverson has a warm smiling expression, a slight blush, his other hand holding his harmless frying pan down at his side. Both men are recognizably the SAME fully clothed adult characters from the original models. A rumpled white towel tied over Paisen's navy T-shirt acts as a ridiculous little opera cape. Medium close-up from a slightly low diagonal angle, faces and affectionate gesture unmistakably readable, repaired barricade and sunset softly blurred behind them. Detailed expressive eyebrows, cheeks and natural hands, textured mature manga painted illustration matching the credits, warm late light and cool shadow. This is affectionate romance and playful theatrical comedy, not sexual activity. No nudity, no sexualized pose, no AV actor or real-person likeness, no aggressive or unwilling reactions, no extra characters, no text or watermarks.",
+      "references": [
+        {
+          "path": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+          "sha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+          "sha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+        },
+        {
+          "path": "public/art/v100/credits/kumaya-table-r2.webp",
+          "sha256": "d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f"
+        }
+      ],
+      "referenceBoardMembers": [],
+      "identityConstraints": [],
+      "generated": {
+        "sha256": "727734f78774782a474d8ac4fc828e2cebf0937959abfbb1edb20045cb2e3e42",
+        "bytes": 2563293,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/comedy-sources/defense-paisen-kuma-kiss-r1.png",
+        "durableBackup": "primary-workspace/outputs/asset-archive/v100-credits-comedy-20261007/defense-paisen-kuma-kiss-r1.png"
+      },
+      "runtime": {
+        "path": "public/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+        "sha256": "5812ef67e127d5e3c4891f5f03bcea5112020fcfd5ceaa1903a4dfa7db2a6408",
+        "bytes": 227338,
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain resize to1600x900; WebP quality86 effort6; no semantic image edits"
+      },
+      "after": "defense-bench"
+    }
+  ],
+  "currentSelectionProvenance": "assets/source/v100/runtime/ending/king-costume-r1.provenance.json"
+}

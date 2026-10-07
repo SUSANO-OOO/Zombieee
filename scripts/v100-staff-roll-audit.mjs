@@ -21,15 +21,22 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   }
   try { await page.locator(`.v100-staff-roll[data-v100-node-index="${index}"]`).waitFor({ state: "visible", timeout: 15000 }); }
   catch (error) { const probe = await surface.evaluate(root => { const a = root.querySelector("audio"); return { index: root.dataset.v100NodeIndex, progress: root.dataset.v100CreditProgress, state: root.dataset.v100CreditAudio, time: a.currentTime, duration: a.duration, paused: a.paused, seeking: a.seeking, readyState: a.readyState, networkState: a.networkState, buffered: [...Array(a.buffered.length)].map((_, i) => [a.buffered.start(i), a.buffered.end(i)]), error: a.error?.code }; }); throw new Error(`${error}\n${JSON.stringify(probe)}`); }
+  await page.waitForFunction(() => {
+    const root = document.querySelector(".v100-staff-roll"), movie = root?.querySelector(".v100-credit-landscape");
+    const image = movie?.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
+    return image?.dataset.creditDecoded === "true" && movie?.dataset.creditRenderedShotIndex === root?.dataset.v100CreditShotIndex;
+  }, undefined, { timeout: 15000 });
   const observed = await surface.evaluate(element => {
     const audio = element.querySelector("audio"), movie = element.querySelector(".v100-credit-landscape");
+    const image = movie.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
     const picture = movie.getBoundingClientRect(), roll = element.querySelector(".v100-credit-roll-window").getBoundingClientRect();
     return { index: Number(element.getAttribute("data-v100-node-index")), scene: element.getAttribute("data-v100-credit-scene"),
       owner: element.getAttribute("data-v100-audio-owner"), credits: element.textContent,
       shotIndex: Number(element.dataset.v100CreditShotIndex), shotId: element.dataset.v100CreditShot,
       description: movie.getAttribute("aria-label"), captionCount: element.querySelectorAll(".v100-credit-memory, .v100-credit-brand").length,
-      imageSizing: getComputedStyle(element.querySelector(".v100-credit-shot")).backgroundSize,
-      background: getComputedStyle(element.querySelector(".v100-credit-shot")).backgroundImage,
+      imageSizing: getComputedStyle(image).objectFit,
+      background: image.currentSrc,
+      imageDecoded: image.complete && image.naturalWidth > 0,
       audio: { src: audio.currentSrc, currentTime: audio.currentTime, duration: audio.duration, paused: audio.paused, loop: audio.loop, volume: audio.volume, readyState: audio.readyState },
       audioElements: document.querySelectorAll(".v100-staff-roll audio").length,
       pictureFits: picture.top >= 0 && picture.left >= 0 && picture.bottom <= innerHeight && picture.right <= innerWidth,
@@ -48,6 +55,7 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   assert.ok(observed.background.includes(shot.src));
   assert.equal(observed.captionCount, 0);
   assert.equal(observed.imageSizing, "contain");
+  assert.equal(observed.imageDecoded, true);
   assert.equal(observed.owner, "v100-staff-roll");
   assert.equal(observed.audioElements, 1); assert.equal(observed.audio.loop, false);
   assert.ok(observed.audio.src.endsWith(V100_CREDITS_SONG.src));

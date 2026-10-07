@@ -10,6 +10,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
 import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
+import { installCreditTransitionAudit, assertCreditTransitionProof } from "./v100-staff-roll-transition-audit.mjs";
 
 const upstreamOrigin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 assert.ok(["127.0.0.1", "localhost"].includes(upstreamOrigin.hostname));
@@ -51,6 +52,7 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
     document.addEventListener("seeking", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.seeks.push({ time: event.target.currentTime, rate: event.target.playbackRate }); }, true);
     setInterval(() => { const root = document.querySelector(".v100-staff-roll"), audio = root?.querySelector("audio"); if (audio) window.__creditMediaProof.samples.push({ scene: root.getAttribute("data-v100-node-index"), shot: root.getAttribute("data-v100-credit-shot-index"), time: audio.currentTime, duration: audio.duration, paused: audio.paused, progress: root.getAttribute("data-v100-credit-progress") }); }, 1000);
   }, { origin: origin.origin, serialized: serializeV100Save(save) });
+  if (name === "full-song-with-loading-pause-rotation-pagehide") await installCreditTransitionAudit(page);
   await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
   await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
@@ -126,9 +128,12 @@ try {
     assert.equal(new Set(proof.samples.map(row => row.shot)).size, V100_CREDITS_FILM.length);
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
     assert.equal(proof.save.flowState.phase, "epilogue");
+    result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof);
+    assertCreditTransitionProof(result.filmTransitions, { shots: V100_CREDITS_FILM.length, cuts: V100_CREDITS_FILM.length - 1 });
     assert.deepEqual(result.errors, []); result.status = "passed";
     await page.screenshot({ path: path.join(out, `${engine}-epilogue.png`) });
   } catch (error) {
+    result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof).catch(() => null);
     result.failureClock = await readClock(page).catch(() => null);
     result.failureAudio = await page.locator(".v100-staff-roll audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused, networkState: audio.networkState, readyState: audio.readyState, error: audio.error && { code: audio.error.code, message: audio.error.message }, buffered: [...Array(audio.buffered.length)].map((_, i) => [audio.buffered.start(i), audio.buffered.end(i)]) })).catch(() => null);
     await page.screenshot({ path: path.join(out, `${engine}-failed.png`) }).catch(() => {});

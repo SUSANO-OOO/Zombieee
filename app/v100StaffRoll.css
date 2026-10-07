@@ -3,8 +3,8 @@
 #v100-campaign > .v100-staff-roll-replay { position: fixed; inset: 0; z-index: 900; }
 #v100-campaign:has(> .v100-menu-launch) .v100-staff-roll { --credits-top: calc(max(6px, env(safe-area-inset-top)) + 54px); }
 .v100-credit-landscape { position: absolute; top: max(8px, env(safe-area-inset-top)); bottom: max(8px, env(safe-area-inset-bottom)); left: var(--credits-edge-left); right: calc(var(--credits-side) + var(--credits-edge-right) + 12px); overflow: hidden; }
-.v100-credit-shot { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; }
-.v100-credit-shot-next { opacity: var(--credit-blend, 0); }
+.v100-credit-shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.v100-credit-shot-next { opacity: 0; }
 .v100-staff-roll::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: #070c0e; opacity: var(--credit-curtain, 0); }
 .v100-credit-roll-window { position: absolute; top: var(--credits-top); right: var(--credits-edge-right); width: var(--credits-side); bottom: calc(var(--credits-control-height, 96px) + max(8px, env(safe-area-inset-bottom)) + 12px); overflow: hidden; mask-image: linear-gradient(0deg, transparent, #000 7%, #000 93%, transparent); }
 .v100-credit-roll-track { text-align: center; will-change: transform; transform: translate3d(0, 100vh, 0); padding-inline: 6px; }
@@ -19,7 +19,7 @@
 .v100-credit-song { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; font-size: 12px; line-height: 1.6; }
 .v100-credit-song span { color: #dfc493; }
 .v100-credit-song a { color: #fff0ce; text-decoration: underline; text-underline-offset: 3px; }
-.v100-credit-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.v100-credit-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 #v100-campaign .v100-credit-buttons button { min-height: 44px; padding: 6px 3px; font-size: 12px; line-height: 1.4; background: #152027; border: 1px solid #746243; }
 .v100-credit-audio-action { grid-column: 1 / -1; }
 .v100-credit-controls > small { font-size: 12px; line-height: 1.5; text-align: center; color: #ebd6b5; }

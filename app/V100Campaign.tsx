@@ -5,6 +5,7 @@ import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { V100LockChain } from "./V100LockChain";
 import { V100AssetCredits } from "./V100AssetCredits";
 import { V100StaffRoll } from "./V100EndingRoll";
+import { V100PostCreditsFilm } from "./V100PostCreditsFilm";
 import { V100PlayerMenu } from "./V100PlayerMenu";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
@@ -335,6 +336,7 @@ export function V100Campaign() {
   const [modeTab, setModeTab] = useState<"outbreak" | "survival" | "compendium" | "records">("outbreak");
   const [replayEventId, setReplayEventId] = useState<string | null>(null);
   const [replayNodeIndex, setReplayNodeIndex] = useState(0);
+  const [replayFinale, setReplayFinale] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [saveOwnerId] = useState(() => createV100SaveOwnerId());
   const [surface, setSurface] = useState<CampaignSurface>("campaign");
@@ -566,7 +568,7 @@ export function V100Campaign() {
     ready: hydrated && !loadFailure, battleActive: battleAudioActive, modeResult: modeScoreResult,
     phase: flow.phase, won: flow.pendingResult?.won ?? null,
   }), [hydrated, loadFailure, battleAudioActive, modeScoreResult, flow.phase, flow.pendingResult?.won]);
-  const audibleEventPresentation = battleAudioActive || flow.phase === "credits" || replayEventId === "v100:event:credits" ? null
+  const audibleEventPresentation = battleAudioActive || flow.phase === "credits" || flow.phase === "epilogue" || replayEventId === "v100:event:credits" ? null
     : replayPresentation ?? (isEventPhase(flow.phase) ? eventPresentation : surfacePresentation);
   useEffect(() => {
     const owner = eventAudioOwnerRef.current;
@@ -703,7 +705,7 @@ export function V100Campaign() {
 
   const markAndAdvanceEvent = useCallback(async (skipped = false) => {
     if (!flow.eventId || !event || saveBusy) return false;
-    if (flow.phase !== "credits") void eventAudioOwnerRef.current?.activate(eventPresentation);
+    if (flow.phase !== "credits" && flow.phase !== "epilogue") void eventAudioOwnerRef.current?.activate(eventPresentation);
     let workingSave = save;
     const lastNode = storyPage.endIndex >= event.nodes.length - 1;
     if (!lastNode && !skipped) {
@@ -911,8 +913,9 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "credits" && event && <V100StaffRoll key={saveAdoptionEpoch} nodes={event.nodes} playerName={save.playerName} initialNodeIndex={storyIndex} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onScene={index => { void updateFlow(flow, { nodeIndex: index }); }} onComplete={() => markAndAdvanceEvent(true)} />}
+      {flow.phase === "epilogue" && event && <V100PostCreditsFilm key={saveAdoptionEpoch} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onComplete={() => markAndAdvanceEvent(true)} />}
 
-      {isEventPhase(flow.phase) && flow.phase !== "credits" && event && (
+      {isEventPhase(flow.phase) && flow.phase !== "credits" && flow.phase !== "epilogue" && event && (
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定した作戦報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
           <div className="v100-event-backdrop" data-v100-scene={eventPresentation?.sceneLabel ?? undefined} data-v100-location={currentNode?.sceneTag ?? currentNode?.sceneLabel ?? undefined} data-v100-title-card={currentNode?.kind === "title" ? "true" : undefined} style={{ backgroundImage: currentNode?.kind === "title" ? "none" : `url(${eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")})` }} />
           <article className="v100-event-panel">
@@ -1022,7 +1025,7 @@ export function V100Campaign() {
       }} />}
       {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">新しい隊員 / 配備登録可能</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><dl><div><dt>配備登録</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSで登録できます。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで配備登録</button></div></section></div>}
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">Version 1.0.0</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
-      {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay"><V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { setReplayEventId(null); return true; }} /></div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
+      {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay">{replayFinale ? <V100PostCreditsFilm settings={save.settings} onComplete={() => { setReplayFinale(false); setReplayEventId(null); return true; }} /> : <V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { setReplayFinale(true); return true; }} />}</div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
       {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
     </main>

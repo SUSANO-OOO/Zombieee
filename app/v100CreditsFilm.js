@@ -38,6 +38,31 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "マヨちゃんが膝によじ登る。頬をなめられたハチから、驚きと笑いがこぼれる。"
   },
   {
+    "id": "street-paisen-broom",
+    "sceneIndex": 0,
+    "sceneLabel": "西新商店街",
+    "actors": [
+      "unit-paisen",
+      "unit-hachi",
+      "unit-raider"
+    ],
+    "src": "/art/v100/credits/street-paisen-broom-r1.webp",
+    "description": "ほうきをギターに見立て、パイセンが熱唱する。ハチは腹を抱え、レイダーはあきれながら笑う。"
+  },
+  {
+    "id": "street-paisen-flirt",
+    "sceneIndex": 0,
+    "sceneLabel": "西新商店街",
+    "actors": [
+      "unit-paisen",
+      "unit-kumaverson",
+      "unit-tatara",
+      "unit-mizuchi"
+    ],
+    "src": "/art/v100/credits/street-paisen-flirt-r1.webp",
+    "description": "工具を花束にして、パイセンがクマバーソンへ大げさにひざまずく。タタラは笑い、ミズチは冷静に見守る。"
+  },
+  {
     "id": "ward-radio",
     "sceneIndex": 1,
     "sceneLabel": "早良区役所",
@@ -59,8 +84,20 @@ export const V100_CREDITS_FILM = Object.freeze([
       "unit-gantetsu",
       "unit-crazy-king"
     ],
-    "src": "/art/v100/credits/ward-supplies-r2.webp",
+    "src": "/art/v100/credits/ward-supplies-r3.webp",
     "description": "区役所に届いた物資を、いくらちゃんたちが仕分ける。"
+  },
+  {
+    "id": "ward-king-fan",
+    "sceneIndex": 1,
+    "sceneLabel": "早良区役所",
+    "actors": [
+      "guide-ikura",
+      "unit-mizuchi",
+      "unit-crazy-king"
+    ],
+    "src": "/art/v100/credits/ward-king-fan-r2.webp",
+    "description": "直した扇風機がキングの毛布を巻き上げる。いくらちゃんは笑い、ミズチは点検の手を止める。"
   },
   {
     "id": "station-repair",
@@ -83,6 +120,18 @@ export const V100_CREDITS_FILM = Object.freeze([
     ],
     "src": "/art/v100/credits/station-bench-r1.webp",
     "description": "ガンテツとTKYが、駅のホームに直したベンチを置く。"
+  },
+  {
+    "id": "station-cart-parade",
+    "sceneIndex": 2,
+    "sceneLabel": "西新駅",
+    "actors": [
+      "unit-monkey",
+      "unit-tatara",
+      "unit-gantetsu"
+    ],
+    "src": "/art/v100/credits/station-cart-parade-r1.webp",
+    "description": "動かない整備台車の上で、モンキーが車掌気取り。タタラが一礼し、ガンテツは小さな飾りをつけて立つ。"
   },
   {
     "id": "hospital-bandage",
@@ -114,8 +163,20 @@ export const V100_CREDITS_FILM = Object.freeze([
       "unit-crazy-king",
       "unit-monkey"
     ],
-    "src": "/art/v100/credits/floodgate-rations-r1.webp",
+    "src": "/art/v100/credits/floodgate-rations-r2.webp",
     "description": "クレイジーキングとモンキーが、防潮門の詰所へ食料を運ぶ。"
+  },
+  {
+    "id": "floodgate-king-riceball",
+    "sceneIndex": 4,
+    "sceneLabel": "河口防潮門",
+    "actors": [
+      "unit-crazy-king",
+      "unit-monkey",
+      "unit-gantetsu"
+    ],
+    "src": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+    "description": "キングがおにぎりをバケツの目に押しつける。モンキーが吹き出し、ガンテツが弁当箱を差し出す。"
   },
   {
     "id": "floodgate-watch",
@@ -149,6 +210,17 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "ナオが一人、臨時診療所のベッドに清潔なシーツを敷く。"
   },
   {
+    "id": "facility-chiha-baba-tender",
+    "sceneIndex": 5,
+    "sceneLabel": "ムガリアン施設",
+    "actors": [
+      "unit-mrs-chiha",
+      "unit-babayaga"
+    ],
+    "src": "/art/v100/credits/chiha-baba-tender-r1.webp",
+    "description": "Mrs.チハがババヤガのネクタイを直し、頬にキスをする。彼の手がそっと重なる。"
+  },
+  {
     "id": "armory-evidence",
     "sceneIndex": 6,
     "sceneLabel": "RED PANTHER装備庫",
@@ -170,6 +242,19 @@ export const V100_CREDITS_FILM = Object.freeze([
     ],
     "src": "/art/v100/credits/armory-shelves-r1.webp",
     "description": "タタラとガンテツが、装備庫の棚を直す。"
+  },
+  {
+    "id": "armory-couple-dance",
+    "sceneIndex": 6,
+    "sceneLabel": "RED PANTHER装備庫",
+    "actors": [
+      "unit-babayaga",
+      "unit-mrs-chiha",
+      "unit-tatara",
+      "unit-paisen"
+    ],
+    "src": "/art/v100/credits/armory-couple-dance-r1.webp",
+    "description": "片づけの合間に、ババヤガとMrs.チハが手を取り踊る。パイセンが歌い、タタラが横目で見守る。"
   },
   {
     "id": "zakimiya-family",
@@ -203,6 +288,19 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "TKYが車両の補修板を支え、ガンテツがボルトを締める。"
   },
   {
+    "id": "vehicle-mayo-splash",
+    "sceneIndex": 8,
+    "sceneLabel": "装甲車両",
+    "actors": [
+      "unit-mayo-chan",
+      "unit-hachi",
+      "unit-tky",
+      "unit-gantetsu"
+    ],
+    "src": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+    "description": "洗い終えたマヨちゃんが水を振りまく。ハチは笑い、TKYは顔をしかめ、ガンテツはタオルを用意する。"
+  },
+  {
     "id": "vehicle-map",
     "sceneIndex": 8,
     "sceneLabel": "装甲車両",
@@ -233,8 +331,19 @@ export const V100_CREDITS_FILM = Object.freeze([
       "unit-raider",
       "unit-monkey"
     ],
-    "src": "/art/v100/credits/defense-bench-r1.webp",
-    "description": "タタラたちが瓦礫を運び出す。冗談に笑いが漏れ、道端に休める場所が戻る。"
+    "src": "/art/v100/credits/defense-bench-r3.webp",
+    "description": "タタラたちが瓦礫を運び出す。レイダーの笑い声が響き、道端に休める場所が戻る。"
+  },
+  {
+    "id": "defense-paisen-kuma-kiss",
+    "sceneIndex": 9,
+    "sceneLabel": "TAKUYA撃破地点",
+    "actors": [
+      "unit-paisen",
+      "unit-kumaverson"
+    ],
+    "src": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+    "description": "クマバーソンがパイセンの頬にキスをする。パイセンは肩を抱き、大げさな身ぶりで喜ぶ。"
   },
   {
     "id": "kumaya-cooking",
@@ -260,6 +369,37 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "食卓の下で、マヨちゃんが眠る。椅子の向こうから仲間たちの声が届く。"
   },
   {
+    "id": "kumaya-omelet-chaos",
+    "sceneIndex": 10,
+    "sceneLabel": "くまや",
+    "actors": [
+      "unit-kumaverson",
+      "unit-paisen",
+      "unit-hachi",
+      "unit-babayaga",
+      "unit-mrs-chiha",
+      "unit-mayo-chan"
+    ],
+    "src": "/art/v100/credits/kumaya-omelet-chaos-r1.webp",
+    "description": "クマバーソンの卵料理が宙を舞う。パイセンが口を開けて追いかけ、食卓から笑いが起こる。"
+  },
+  {
+    "id": "kumaya-mayo-selfie",
+    "sceneIndex": 10,
+    "sceneLabel": "くまや",
+    "actors": [
+      "unit-mayo-chan",
+      "unit-hachi",
+      "unit-paisen",
+      "unit-kumaverson",
+      "unit-nao",
+      "unit-babayaga",
+      "unit-mrs-chiha"
+    ],
+    "src": "/art/v100/credits/kumaya-mayo-selfie-r1.webp",
+    "description": "集合写真にマヨちゃんの鼻が割り込む。変顔のパイセン、不機嫌なクマバーソン、肩を寄せ合うババヤガとMrs.チハが写る。"
+  },
+  {
     "id": "kumaya-table",
     "sceneIndex": 10,
     "sceneLabel": "くまや",
@@ -275,4 +415,5 @@ export const V100_CREDITS_FILM = Object.freeze([
     "description": "くまやに料理と仲間が集まる。笑う者、話に耳を傾ける者、それぞれの夜が続いていく。",
     "durationWeight": 1.4
   }
-].map(shot => Object.freeze({ ...shot, actors: Object.freeze(shot.actors) })));
+]
+.map(shot => Object.freeze({ ...shot, actors: Object.freeze(shot.actors) })));

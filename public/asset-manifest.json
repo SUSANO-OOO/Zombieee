@@ -1499,6 +1499,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/credits/armory-couple-dance-r1.webp",
+      "bytes": 286970,
+      "hash": "sha256-b62271385452e9aa13ffac6f11ec75f548001435a5ab218607f83c11a8efa95e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/credits/armory-evidence-r2.webp",
       "bytes": 220458,
       "hash": "sha256-a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7",
@@ -1515,9 +1523,25 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/defense-bench-r1.webp",
-      "bytes": 305634,
-      "hash": "sha256-651e31d7982127f246035c729c89a021fd9ab9233d8cfcc0f11cced54d0474f8",
+      "path": "/art/v100/credits/chiha-baba-tender-r1.webp",
+      "bytes": 251756,
+      "hash": "sha256-9c53b335820c0d574fa611e9ebec8a21249f5067a291cb345a35d8d3b2ad7c50",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/defense-bench-r3.webp",
+      "bytes": 252678,
+      "hash": "sha256-a3e71d403251f2a0b6f5fa4e5b56ba455e7757743403f734d325bad9623302c5",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+      "bytes": 227338,
+      "hash": "sha256-5812ef67e127d5e3c4891f5f03bcea5112020fcfd5ceaa1903a4dfa7db2a6408",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1547,9 +1571,17 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/floodgate-rations-r1.webp",
-      "bytes": 375526,
-      "hash": "sha256-3468f1da98e570cf784060e41295804a72c101a7bd34859b847c747a5864133e",
+      "path": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+      "bytes": 285510,
+      "hash": "sha256-c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/floodgate-rations-r2.webp",
+      "bytes": 320154,
+      "hash": "sha256-e33883a9a22d878ea034b003341e9dfad7e30f970227bd9ec5948648c2010847",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1595,6 +1627,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/credits/kumaya-mayo-selfie-r1.webp",
+      "bytes": 237638,
+      "hash": "sha256-0c79faab640c823d188591c7303c6f4f270c0020b6f3d28bcd591a8a40a6e370",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/kumaya-omelet-chaos-r1.webp",
+      "bytes": 268694,
+      "hash": "sha256-69db77a9bde8cdc82f9d2617e0fe0ea698b9238137fa8a184568219144a7270c",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/credits/kumaya-table-r2.webp",
       "bytes": 239900,
       "hash": "sha256-d9b98429a23a75569b34d9212f7087dd6876948e8e973b9bcfa1e9cbfbe8989f",
@@ -1606,6 +1654,14 @@
       "path": "/art/v100/credits/station-bench-r1.webp",
       "bytes": 285994,
       "hash": "sha256-a2ca22519bb787d9d2ecc887ca4093cd3d3bd35a2c9e1f0a552afc3caed575fd",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/station-cart-parade-r1.webp",
+      "bytes": 337952,
+      "hash": "sha256-145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1635,6 +1691,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/credits/street-paisen-broom-r1.webp",
+      "bytes": 292750,
+      "hash": "sha256-f4fbcfe07a040abebbf7a61deb3e1bf0d5df92ac710125d8151082585e4d4796",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/street-paisen-flirt-r1.webp",
+      "bytes": 341856,
+      "hash": "sha256-aa1a4383f216d9015fa6b112e872e032c08db7d1b12f1e09420c03be70e284be",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/credits/street-shutter-r2.webp",
       "bytes": 235866,
       "hash": "sha256-6f1a06e9e0273bcb7c42502dd936d64a9b3c7975accf21dbf3383c875aebf4f0",
@@ -1651,9 +1723,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+      "bytes": 395446,
+      "hash": "sha256-d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/credits/vehicle-patch-r2.webp",
       "bytes": 229286,
       "hash": "sha256-e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/ward-king-fan-r2.webp",
+      "bytes": 272778,
+      "hash": "sha256-0a022b8fff3da29b65aa97678f09b5cb0a10247e2b892222cb6315fb13e32dd7",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1667,9 +1755,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/ward-supplies-r2.webp",
-      "bytes": 237624,
-      "hash": "sha256-0c3d10f6b708e02153256eab6be6f88b97f671dad8271df2b7203f6531514c5a",
+      "path": "/art/v100/credits/ward-supplies-r3.webp",
+      "bytes": 216512,
+      "hash": "sha256-47fbc7a7af92beb1e788a7b6a913557fcfbaa9a7eafca23e2f30455e447c68f5",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -1757,6 +1845,62 @@
       "category": "enemy",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-smg-battle-v2.webp"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-helmet-afloat-r1.webp",
+      "bytes": 171080,
+      "hash": "sha256-bc62b84836e929a4cc33a50324ae5d07a20d691fab12d141a2f232bb2c25f692",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-king-back-r2.webp",
+      "bytes": 171926,
+      "hash": "sha256-416b97e945945460ae20404424b84493def0f178982190932a5ec3a81f5c409f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-king-reach-r2.webp",
+      "bytes": 159838,
+      "hash": "sha256-277cef3e06a5e36b13033562b7798193e8f5d54d7be686953fbcdf765bdc1911",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-king-remove-r2.webp",
+      "bytes": 163808,
+      "hash": "sha256-e78e49bf6ca8dcaedd3808733cd3dcd97dd767fd89019271b371df66b7da86bf",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-king-throw-r2.webp",
+      "bytes": 167070,
+      "hash": "sha256-6ca39d22f0f5b57934b652f0073e7ef8dc4515c9ec79161dcbfcf5109bed4818",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-ogata-grin-r1.webp",
+      "bytes": 234652,
+      "hash": "sha256-d40e951b0ed97cebbfb6647475560aee35bd43f406eba6b4fa855ea5b092736d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/epilogue/meinohama-ogata-reveal-r2.webp",
+      "bytes": 225616,
+      "hash": "sha256-9416d555c07506441ade77b2f840f6df5faf57a44d6d933e07722d0be65d3e5a",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
     },
     {
       "path": "/art/v100/equipment/inventory-atlas-r1.webp",
@@ -6137,6 +6281,17 @@
       "criticality": "optional",
       "audioChannel": "bgm",
       "audioId": "music-v100-staff-roll",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/v100/epilogue/meinohama-waves-r1.mp3",
+      "bytes": 768358,
+      "hash": "sha256-e89b86cb5f2cfe4c9736fcc43c1af68d78e8b9b2c3fe9a22fcf75eaef2b9297b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "ambience-v100-meinohama-waves",
       "audioType": "audio/mpeg"
     },
     {

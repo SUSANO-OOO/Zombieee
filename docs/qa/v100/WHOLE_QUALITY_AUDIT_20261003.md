@@ -362,3 +362,37 @@ Producerの「本プロジェクトを通してのあらゆる指摘」を、直
 ソース検証は全1740 tests成功、Lint 0 errors／16 warnings、production build、content validator、`git diff --check`成功。新規警告1件は編成欄の既存portraitを表示する`img`へのframework推奨で、画面画像は実decodeを確認した。PWA管理の追加不具合は修正後の独立読み取り専用reviewでHigh 0／Medium 0。新候補の必須CI、Mac WebKit／DPR2、native全曲とPWA実pack更新をfresh HEADで確認してから、実際に起動する試遊候補を提示する。旧21ae21dのCI成功を新HEADの受入へ流用しない。
 
 **残る受入は作品全体のProducer試遊と、物理iPhoneの操作・聴感・発熱。** Edgeのfixture確認、合格test数、独立reviewのH／M 0を「今後一切指摘が出ない保証」へ広げない。正式公開の承認境界は維持する。
+
+## スタッフロールの追加指示と姪浜の終幕 — 2026-10-07
+
+### 実装した内容
+
+- 復興・日常の35カットへ、ちはとババヤガの親密な場面、成人男性のパイセンとクマバーソンの頬へのキス、駅の台車・料理・配給・車両などの喜劇を加えた。人数・視点・顔の表情・人物の位置を変え、固定の「あなた」と場面説明panelは再導入しない。露骨な性行為の要求は未反映であり、親密さ・喜劇の追加で要求全体の完了を装わない。
+- 元モデルを参照し、短髪金髪のLMGを持つレイダーを女性として描いた。キングの緑パーカー・黒プリーツスカート・赤い長靴をcredits 5枚／終幕4枚で揃えた。以前の不採用原本とtracked画像は保全し、採用manifestは新しいruntimeだけを参照する。
+- 画像のdecode完了を確認してから同じnative画像要素を次のcurrentへ昇格させる。画像要素は2個を保持し、遅延・不正画像では最後にdecodeできた絵を残す。古い画像の遅着errorはtokenを照合して無視する。
+- 1／2／4倍は映画・文字だけに適用。曲のplaybackRateは1、早送りでseekしない。早送りで映像が先に終わる場合とスキップは曲を1.8秒でfadeし、2.8秒で次の映画へ渡す。通常1倍はnativeの曲末を待つ。
+- creditsから64秒の終幕へ進む。夜の姪浜、背後→手を伸ばす→脱ぐ→投げる→海に浮かぶヘルメット→緒方海人の正面→血の付いた歯の笑みを7カットに分けた。最初の背後4カットは同じ位置と構図を保ち、動作の重複像を作らない切替と穏やかな寄りを使う。
+- 「物語は、まだまだ続く...」「西新世紀末物語Ⅱ(仮称)」「COMING SOON - WINTER 2026」「最後まで遊んでくれてありがとう！！」を指定文字列のまま表示。波音と不穏曲を段階的に上げ下げし、reduced motionでは画像の寄りを止める。
+- 終幕の終了後は既存のepilogue完了保存を通してpostgame-mapへ戻る。stable ID・報酬receipt・星を維持し、旧27ノードのエピローグは会話記録に保持。保存失敗では最後のお礼と「続ける」を残し、手動再試行できる。
+
+### 素材と参照
+
+採用35枚のcreditsは9,161,882 bytes、7枚の終幕は1,293,990 bytes。全て1600×900。追加波音はtransitkingのCC0録音4本を原本保存し、64.03秒・44.1kHz stereo・96kbps MP3へ編集、768,358 bytes／SHA256 `e89b86cb5f2cfe4c9736fcc43c1af68d78e8b9b2c3fe9a22fcf75eaef2b9297b`。既存Scott Buckley「The Old Ones」のCC BY 4.0 credit、魔王魂の作者・曲名・演奏者・規約を保持した。既存279音声と32,027,668-byte voice bundle、6,309,936-byte魔王魂音源は変更していない。
+
+配信manifestは589件／logical 167,687,673 bytes、587 distinct hashes／167,147,770 bytes。PNG原本群71 files／178,288,428 bytes、64 distinct hashes／160,440,858 bytesはGit/PWAへ入れず、workspace内と別のprimary archiveへhash照合して保存。100MiB超の保存群を独立read-onlyで確認し、最大単体3,153,735 bytes。remote原本バックアップは未確認。provenanceは `assets/source/v100/runtime/credits/comedy-r1.provenance.json`、`ending/king-costume-r1.provenance.json`、`epilogue/post-credits-r1.provenance.json`。旧不採用WebP7枚もhashを照合してarchiveへ残した。
+
+提供写真は本人の顔の参照として使い、正面の顔を他キャラクターと共通の描画へ作り直した。写真の公開・Git追加・別用途の採用を行っていない。半顔の皮膚剥離と筋肉露出はbuilt-in ImageGenが`400 moderation_blocked violence`を返し、生成・採用していない。拒否された生成の再試行や回避を行わない。採用中の感染の傷と血の付いた歯を、未実装の要求への合格として報告しない。
+
+### 検証と失敗controlの区分
+
+- `ending-test-r5.log`で変更後production buildと全1755 tests成功。`ending-lint-r6.log`は0 errors／18 warnings（既存16と常設native imgのframework推奨2）。最後のPhase G差分は該当7ファイル／133 tests成功。content validatorとdiff check成功。出力は `outputs/projectwide-brushup-20261004/design-rebuild/`。
+- `ending-campaign-edge-r3/report.json`、`ending-campaign-webkit-r3/report.json`は各1280×720／844×390／844×340を成功。製品ビルドのcredits→終幕→保存→postgame-map、pause／menu／portrait／pagehide／pageshow、既読の一度限り確定、CAPS・receipt・所有・星・装備・車両の保持、旧エピローグの回想を検査した。30作戦の進行はQA所有の合成saveであり、通常30戦クリアや利用者データの操作ではない。
+- Edge 844×340のlocalStorage／IDB書込故障で、お礼と「続ける」を維持し、自動再試行が増えないことと故障解除後の手動復帰を確認した。物理端末・speaker聴感・発熱の証拠ではない。
+- 初回campaign reportはEdge 3サイズ成功後、未配置のWebKit revision2359により全体failed。固定Playwright1.63.0／WebKit26.6だけを準備して取り直したr2は、844×390でportrait復帰後のpagehide停止が解除されてfailed。遅着orientation通知がpagehideを上書きする製品不具合であり、独立latchを持ちpageshowだけが解除するよう両映画を修正。r3はpagehide後に回転・visibility通知を重ねても映像と音声が止まり、復帰後のみ進むことを確認した。元failed reportを保持。
+- `ending-phase-g-r2/phase-g-report.json`はローカルEdgeで終幕の3画面・3 distinct hash成功。映画のfade-in完了（4.3秒以上）とcurrent画像decodeを必須にし、2 audio／2 imgの契約を維持。視覚fixtureだけ音なし。r1は配置されていないChromium headless1194で開始前failedであり、画面成功へ含めない。自動再生gestureを要求するブラウザで待ち続けるレビューMediumを解消した。
+- native r2は全35枚の通常速度・seekなし・trusted曲末を確認したが、補助スクリーンショットの取得が短い1カットを飛ばしてnormal全体failed。fast4は終了後のdetached DOMを採寸してfailed。連続RAFでの全画像・cut・同じ2要素を一次条件に保持し、expected終了coverを確認してからdetached測定を止めるharness修正でr3の限定ケースを通した。元の失敗を削除せず、thresholdを下げない。lifecycle修正後の`ending-native-r4/report.json`は8ケース成功。通常1280×720と4倍844×340の35画像／34切替、各終幕の7画像／6切替、画像要素2個の維持・巻戻り／remount 0、通常原曲のtrusted EOF・seek 0、早送り時も曲速度1・途中fade、844×390の終幕カード、先頭／末尾／途中の不正画像・遅延・reduced motionを確認した。native media観測と画面記録であり、物理speaker聴感ではない。
+- 独立read-onlyのvisual／integrity／typography integrationレビューの今回範囲はHigh／Medium未解消0。216原本/runtime/archive参照、42採用画像、589配信件数、旧音声hash、原本の非配信を照合。最終画像採否・台本・音の印象はProducerの試遊で判断する。
+
+### 残る受入
+
+固定した候補の必要CIと、全体のProducer試遊・画像採否・音響受入を台帳へ残す。旧`32dd96c`の26/26を新候補のCIへ繰り上げない。物理iPhoneの操作・speaker・発熱は未確認。ローカル試遊の起動を公式公開と扱わない。成人限定という指定を理由に未生成・未採用の要求を完了にせず、100%人間制作・AI感ゼロ・以後の指摘ゼロを保証しない。正式公開前の承認境界を維持する。

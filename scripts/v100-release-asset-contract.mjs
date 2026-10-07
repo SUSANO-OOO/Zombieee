@@ -1,5 +1,6 @@
 import { V100_MOTION_ATLAS_REPLACEMENTS, V100_PHONE_REVIEW_ASSET_ADDITIONS, V100_PHONE_REVIEW_ASSET_REMOVALS } from "./v100-phone-review-asset-contract.mjs";
 import { V100_CREDITS_FILM_ASSET_ADDITIONS } from "./v100-credits-film-asset-contract.mjs";
+import { V100_POST_CREDITS_ASSET_ADDITIONS } from "./v100-post-credits-asset-contract.mjs";
 // Source-bound additions for the 2026-09-07 completion pass. Published assets
 // retain their bytes; the Stage 21 HQ gate replaces its duplicate V1 plate.
 export const V100_STORY_BACKGROUND_ADDITIONS = Object.freeze([
@@ -100,9 +101,9 @@ export const V100_DESIGN_ASSET_ADDITIONS = Object.freeze([
   Object.freeze({ path: "/fonts/v100/ZenKakuGothicNew-Bold.woff2", bytes: 1083376, hash: "sha256-751171e0c0e30d0b51c2f51ddc54362f082fcb49d6f0d144b9ae119a4ec3a978", criticality: "critical" }),
   Object.freeze({ path: "/fonts/v100/Rajdhani-Bold.woff2", bytes: 104768, hash: "sha256-952240444fafbfebed25797408c6fb9088267a8cdd0b28e2c478b694db3bf407", criticality: "critical" }),
 ]);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS));
+export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_POST_CREDITS_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
-const creditsFilmBytes = V100_CREDITS_FILM_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
+const endingAssetsBytes = [...V100_CREDITS_FILM_ASSET_ADDITIONS, ...V100_POST_CREDITS_ASSET_ADDITIONS].reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
 const bundledAudioAdditionsFromV0995 = 28;
@@ -116,12 +117,12 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
-  bytesFromV0995: 60_311_674 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  bytesFromV0995: 60_311_674 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
   storyBytes: V100_STORY_BACKGROUND_ADDITIONS.reduce((sum,asset)=>sum+asset.bytes,0),
   completionBytes: addedBytes,
   motionAtlasReplacements: V100_MOTION_ATLAS_REPLACEMENTS,
-  candidateTotalBytes: 149_990_007 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
-  candidateDistinctHashBytes: 149_450_104 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
-  updateFromV0982Bytes: 77_002_122 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
-  updateFromV0993Bytes: 66_627_428 + creditsFilmBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  candidateTotalBytes: 149_990_007 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  candidateDistinctHashBytes: 149_450_104 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  updateFromV0982Bytes: 77_002_122 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
+  updateFromV0993Bytes: 66_627_428 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0),
 });

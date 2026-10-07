@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { V100AssetCredits } from "./V100AssetCredits";
 import { V100_CREDITS_SONG, v100StaffRollFrame, v100StaffRollResumeSeconds, v100StaffRollSections } from "./v100StaffRoll.js";
@@ -10,14 +10,98 @@ type Shot = { sceneLabel?: string; text?: string };
 type Props = { nodes: Shot[]; playerName: string; initialNodeIndex?: number; settings: { bgmEnabled?: boolean; bgmVolume?: number; reducedMotion?: boolean }; busy?: boolean; blocked?: boolean;
   onScene?: (index: number) => void; onComplete: () => Promise<boolean> | boolean };
 
+export type V100VisualFrame = { shotIndex: number; nextShotIndex: number; blend: number };
+type FilmLayer = { index: number; decoded: boolean; failed: boolean; token: number };
+
+export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, film = V100_CREDITS_FILM, className = "" }: { initialFrame: V100VisualFrame; paintRef: RefObject<((frame: V100VisualFrame) => void) | null>; reducedMotion?: boolean; film?: readonly { src: string; description: string }[]; className?: string }) {
+  const landscapeRef = useRef<HTMLDivElement>(null);
+  const firstRef = useRef<HTMLImageElement>(null), secondRef = useRef<HTMLImageElement>(null);
+  const layersRef = useRef<FilmLayer[]>([{ index: -1, decoded: false, failed: false, token: 0 }, { index: -1, decoded: false, failed: false, token: 0 }]);
+  const activeRef = useRef(0), latestRef = useRef(initialFrame), reducedRef = useRef(reducedMotion);
+  const reducedMediaRef = useRef<MediaQueryList | null>(null);
+  const imageAt = useCallback((slot: number) => slot === 0 ? firstRef.current : secondRef.current, []);
+  const prepare = useCallback((slot: number, index: number) => {
+    const layer = layersRef.current[slot], image = imageAt(slot), shot = film[index];
+    if (!image || !shot || layer.index === index) return;
+    // Only the hidden buffer changes source. Keep the displayed image alive
+    // until the incoming buffer has loaded and decoded.
+    image.style.opacity = "0";
+    layer.index = index; layer.decoded = false; layer.failed = false; layer.token += 1;
+    image.dataset.creditShotIndex = String(index);
+    image.dataset.creditDecoded = "false";
+    image.src = shot.src;
+  }, [film, imageAt]);
+  const paint = useCallback((next: V100VisualFrame) => {
+    latestRef.current = next;
+    const layers = layersRef.current;
+    let active = activeRef.current, incoming = 1 - active;
+    if (layers[active].index < 0) prepare(active, next.shotIndex);
+    if (!layers[active].decoded && layers[active].failed && layers[incoming].decoded) {
+      activeRef.current = incoming; active = incoming; incoming = 1 - active;
+    }
+    if (layers[active].index !== next.shotIndex) {
+      prepare(incoming, next.shotIndex);
+      if (layers[incoming].decoded) {
+        // Promote the same decoded element used by the dissolve. Source,
+        // opacity and layer order change together before the browser paints.
+        activeRef.current = incoming; active = incoming; incoming = 1 - active;
+      }
+    }
+    const displayed = film[layers[active].index];
+    const current = imageAt(active), standby = imageAt(incoming), landscape = landscapeRef.current;
+    if (!current || !standby || !landscape || !displayed) return;
+    current.className = "v100-credit-shot"; current.style.zIndex = "0";
+    current.style.opacity = layers[active].decoded ? "1" : "0";
+    standby.className = "v100-credit-shot v100-credit-shot-next"; standby.style.zIndex = "1";
+    standby.style.opacity = "0";
+    if (layers[active].index === next.shotIndex) {
+      if (next.nextShotIndex !== next.shotIndex) prepare(incoming, next.nextShotIndex);
+      else if (!layers[active].decoded && layers[active].failed && film.length > 1) prepare(incoming, Math.max(0, next.shotIndex - 1));
+      const reduced = reducedRef.current || reducedMediaRef.current?.matches;
+      if (!reduced && layers[incoming].decoded && layers[incoming].index === next.nextShotIndex && next.nextShotIndex !== next.shotIndex) standby.style.opacity = String(next.blend);
+    }
+    landscape.dataset.creditRenderedShotIndex = String(layers[active].index);
+    landscape.setAttribute("aria-label", displayed.description);
+  }, [film, imageAt, prepare]);
+  const decoded = useCallback(async (slot: number) => {
+    const image = imageAt(slot), layer = layersRef.current[slot], token = layer.token;
+    if (!image) return;
+    try { await image.decode(); }
+    catch {
+      if (imageAt(slot) === image && layer.token === token) { layer.failed = true; paint(latestRef.current); }
+      return;
+    }
+    if (imageAt(slot) !== image || layer.token !== token || !image.complete || image.naturalWidth === 0) return;
+    layer.decoded = true;
+    image.dataset.creditDecoded = "true";
+    paint(latestRef.current);
+  }, [imageAt, paint]);
+  useLayoutEffect(() => {
+    reducedMediaRef.current = window.matchMedia("(prefers-reduced-motion: reduce)");
+    paintRef.current = paint;
+    paint(latestRef.current);
+    return () => { paintRef.current = null; };
+  }, [paint, paintRef]);
+  useLayoutEffect(() => { reducedRef.current = reducedMotion; paint(latestRef.current); }, [reducedMotion, paint]);
+  return <div ref={landscapeRef} className={`v100-credit-landscape ${className}`} role="img">
+    <img ref={firstRef} className="v100-credit-shot" alt="" aria-hidden="true" decoding="async" onLoad={() => void decoded(0)} onError={() => void decoded(0)} />
+    <img ref={secondRef} className="v100-credit-shot v100-credit-shot-next" alt="" aria-hidden="true" decoding="async" onLoad={() => void decoded(1)} onError={() => void decoded(1)} />
+  </div>;
+}
+
 export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, settings, busy = false, blocked = false, onScene, onComplete }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const rollRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLElement>(null);
-  const shotRef = useRef<HTMLDivElement>(null);
+  const filmPaintRef = useRef<((frame: V100VisualFrame) => void) | null>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
-  const elapsedRef = useRef(v100StaffRollResumeSeconds(initialNodeIndex, nodes.length));
+  const [initialSeconds] = useState(() => v100StaffRollResumeSeconds(initialNodeIndex, nodes.length));
+  const elapsedRef = useRef(initialSeconds);
+  const musicCursorRef = useRef(initialSeconds);
+  const musicSampleRef = useRef(initialSeconds);
+  const speedRef = useRef(1);
+  const musicVolumeRef = useRef(.576);
   const durationRef = useRef(V100_CREDITS_SONG.duration);
   const initialIndexRef = useRef(initialNodeIndex);
   const lastSceneRef = useRef(initialNodeIndex);
@@ -36,11 +120,14 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
   const outroRef = useRef<number | null>(null);
   const [outro, setOutro] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState(1);
   const [soundState, setSoundState] = useState("loading");
   const soundStateRef = useRef(soundState);
   const [ended, setEnded] = useState(false);
   const [showRights, setShowRights] = useState(false);
-  const [frame, setFrame] = useState(() => v100StaffRollFrame(v100StaffRollResumeSeconds(initialNodeIndex, nodes.length), V100_CREDITS_SONG.duration, nodes.length));
+  const [initialFilmFrame] = useState(() => v100StaffRollFrame(initialSeconds, V100_CREDITS_SONG.duration, nodes.length));
+  const [frame, setFrame] = useState(initialFilmFrame);
+  const lastFrameShotRef = useRef(frame.shotIndex);
   const soundEnabled = settings.bgmEnabled !== false && (settings.bgmVolume ?? .8) > 0;
   const soundEnabledRef = useRef(soundEnabled);
   useLayoutEffect(() => {
@@ -70,16 +157,20 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || outroRef.current !== null || endedRef.current) return;
+    if (!audio || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= 1.8) || endedRef.current) return;
     const attempt = ++playAttemptRef.current;
     playbackAllowedRef.current = true;
     startupAtRef.current = performance.now();
     setSoundState("loading");
     try {
-      if (audio.readyState > 0 && Math.abs(audio.currentTime - elapsedRef.current) > .75) audio.currentTime = elapsedRef.current;
+      // Film speed is independent of the original music. Resume the music at
+      // its own cursor, never at the accelerated film cursor.
+      audio.playbackRate = 1;
+      if (audio.readyState > 0 && Math.abs(audio.currentTime - musicCursorRef.current) > .75) audio.currentTime = musicCursorRef.current;
+      musicSampleRef.current = audio.currentTime;
       await audio.play();
       if (attempt !== playAttemptRef.current) return;
-      if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || outroRef.current !== null || endedRef.current) { audio.pause(); return; }
+      if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= 1.8) || endedRef.current) { audio.pause(); return; }
       playingRef.current = true;
       waitingAtRef.current = null;
       setSoundState("playing");
@@ -96,7 +187,8 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = Math.max(0, Math.min(1, (settings.bgmVolume ?? .8) * .72));
+    musicVolumeRef.current = Math.max(0, Math.min(1, (settings.bgmVolume ?? .8) * .72));
+    audio.volume = musicVolumeRef.current * (outroRef.current === null ? 1 : Math.max(0, 1 - outroRef.current / 1.8));
     const handle = requestAnimationFrame(() => {
       if (soundEnabled) void play();
       else { playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; setSoundState("muted"); }
@@ -112,26 +204,28 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
     if (outroRef.current !== null || endedRef.current) return;
     outroRef.current = 0;
     elapsedRef.current = durationRef.current;
-    playbackAllowedRef.current = false;
-    playAttemptRef.current += 1;
-    playingRef.current = false;
+    pauseRef.current = false;
+    setPaused(false);
     setFrame(v100StaffRollFrame(durationRef.current, durationRef.current, nodes.length));
     setOutro(true);
-  }, [nodes.length]);
+    if (audioRef.current?.paused && !audioRef.current.ended) void play();
+  }, [nodes.length, play]);
 
   useEffect(() => {
     const audio = audioRef.current;
     const rotationBlocker = window.matchMedia("(orientation: portrait) and (max-width: 800px)");
+    let pageHidden = false;
     occludedRef.current = document.hidden || rotationBlocker.matches;
     const visibility = () => {
-      occludedRef.current = document.hidden || rotationBlocker.matches;
+      occludedRef.current = pageHidden || document.hidden || rotationBlocker.matches;
       if (occludedRef.current) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audio?.pause(); playingRef.current = false; }
       else void play();
     };
-    const pageHide = () => { occludedRef.current = true; playbackAllowedRef.current = false; playAttemptRef.current += 1; audio?.pause(); playingRef.current = false; };
+    const pageHide = () => { pageHidden = true; visibility(); };
+    const pageShow = () => { pageHidden = false; visibility(); };
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", pageHide);
-    window.addEventListener("pageshow", visibility);
+    window.addEventListener("pageshow", pageShow);
     rotationBlocker.addEventListener("change", visibility);
     let animation = 0;
     let lastAt = performance.now();
@@ -142,20 +236,28 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       if (!document.hidden && !occludedRef.current && !pauseRef.current && !blockedRef.current && !endedRef.current) {
         if (outroRef.current !== null) {
           outroRef.current += delta;
+          if (audio) audio.volume = musicVolumeRef.current * Math.max(0, 1 - outroRef.current / 1.8);
           stageRef.current?.style.setProperty("--credit-curtain", String(Math.max(0, Math.min(1, (outroRef.current - 1.4) / 1.4))));
           if (outroRef.current >= 2.8) void finish();
-        }
-        if (playingRef.current && audio && !audio.paused && !audio.ended) {
-          if (waitingAtRef.current === null) elapsedRef.current = Math.max(elapsedRef.current, audio.currentTime);
+        } else if (playingRef.current && audio && !audio.paused && !audio.ended) {
+          if (waitingAtRef.current === null) {
+            const musicDelta = Math.max(0, audio.currentTime - musicSampleRef.current);
+            musicCursorRef.current = audio.currentTime;
+            musicSampleRef.current = audio.currentTime;
+            elapsedRef.current += musicDelta * speedRef.current;
+          }
           else if (at - waitingAtRef.current > 8000) {
             playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable");
           }
-        } else if (!soundEnabledRef.current || ["muted", "unavailable"].includes(soundStateRef.current)) elapsedRef.current += delta;
+        } else if (!soundEnabledRef.current || ["muted", "unavailable"].includes(soundStateRef.current)) {
+          musicCursorRef.current = Math.min(durationRef.current, musicCursorRef.current + delta);
+          elapsedRef.current += delta * speedRef.current;
+        }
         else if (soundStateRef.current === "loading" && startupAtRef.current !== null && at - startupAtRef.current > 8000) {
           playbackAllowedRef.current = false; playAttemptRef.current += 1; audio?.pause(); setSoundState("unavailable");
         }
         const next = v100StaffRollFrame(elapsedRef.current, durationRef.current, nodes.length);
-        stageRef.current?.style.setProperty("--credit-blend", String(next.blend));
+        filmPaintRef.current?.(next);
         const roll = rollRef.current, viewport = viewportRef.current;
         if (roll && viewport) {
           const footer = roll.querySelector("footer");
@@ -170,10 +272,10 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
           lastSceneRef.current = next.index;
           callbacksRef.current.onScene?.(next.index);
         }
-        if (next.shotIndex !== Number(shotRef.current?.dataset.creditShotIndex) || at - lastPaint >= 100) { setFrame(next); lastPaint = at; }
+        if (next.shotIndex !== lastFrameShotRef.current || at - lastPaint >= 100) { setFrame(next); lastFrameShotRef.current = next.shotIndex; lastPaint = at; }
         // MP3 duration can be an estimate until its last frame is decoded.
         // Let native ended finish a playing song without cutting its tail.
-        if (next.ended && (!soundEnabledRef.current || ["muted", "unavailable"].includes(soundStateRef.current))) beginOutro();
+        if (next.ended && (speedRef.current !== 1 || elapsedRef.current > musicCursorRef.current + .5 || !soundEnabledRef.current || ["muted", "unavailable"].includes(soundStateRef.current))) beginOutro();
       }
       animation = requestAnimationFrame(tick);
     };
@@ -182,7 +284,7 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
       cancelAnimationFrame(animation);
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", pageHide);
-      window.removeEventListener("pageshow", visibility);
+      window.removeEventListener("pageshow", pageShow);
       rotationBlocker.removeEventListener("change", visibility);
       playbackAllowedRef.current = false;
       playAttemptRef.current += 1;
@@ -207,9 +309,14 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
     if (next) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audioRef.current?.pause(); playingRef.current = false; }
     else void play();
   };
+  const cycleSpeed = () => {
+    const next = speedRef.current === 1 ? 2 : speedRef.current === 2 ? 4 : 1;
+    speedRef.current = next;
+    setSpeed(next);
+  };
   const current = nodes[frame.index];
-  const currentShot = V100_CREDITS_FILM[frame.shotIndex], nextShot = V100_CREDITS_FILM[frame.nextShotIndex];
-  return <section ref={stageRef} className={`v100-staff-roll ${settings.reducedMotion ? "v100-credits-reduced" : ""} ${outro ? "v100-credits-outro" : ""}`} aria-label="スタッフロール" data-v100-surface="credits" data-v100-event-id="v100:event:credits" data-v100-event-category="credits" data-v100-audio-owner="v100-staff-roll" data-v100-credit-scene={current?.sceneLabel} data-v100-credit-shot={currentShot?.id} data-v100-credit-shot-index={frame.shotIndex} data-v100-node-index={frame.index} data-v100-credit-audio={soundState} data-v100-credit-progress={frame.progress.toFixed(4)} style={{ "--credit-blend": 0 } as CSSProperties}>
+  const currentShot = V100_CREDITS_FILM[frame.shotIndex];
+  return <section ref={stageRef} className={`v100-staff-roll ${settings.reducedMotion ? "v100-credits-reduced" : ""} ${outro ? "v100-credits-outro" : ""}`} aria-label="スタッフロール" data-v100-surface="credits" data-v100-event-id="v100:event:credits" data-v100-event-category="credits" data-v100-audio-owner="v100-staff-roll" data-v100-credit-speed={speed} data-v100-credit-scene={current?.sceneLabel} data-v100-credit-shot={currentShot?.id} data-v100-credit-shot-index={frame.shotIndex} data-v100-node-index={frame.index} data-v100-credit-audio={soundState} data-v100-credit-progress={frame.progress.toFixed(4)}>
     <audio ref={audioRef} src={V100_CREDITS_SONG.src} preload="metadata" crossOrigin="anonymous"
       onDurationChange={event => { const length = event.currentTarget.duration; if (Number.isFinite(length) && length > 0) durationRef.current = length; }}
       onLoadedMetadata={event => {
@@ -218,27 +325,27 @@ export function V100StaffRoll({ nodes, playerName, initialNodeIndex = 0, setting
           durationRef.current = audio.duration;
           if (audio.currentTime === 0) {
             elapsedRef.current = Math.max(elapsedRef.current, v100StaffRollResumeSeconds(initialIndexRef.current, nodes.length, audio.duration));
-            if (elapsedRef.current > 0) audio.currentTime = elapsedRef.current;
+            musicCursorRef.current = v100StaffRollResumeSeconds(initialIndexRef.current, nodes.length, audio.duration);
+            musicSampleRef.current = musicCursorRef.current;
+            if (musicCursorRef.current > 0) audio.currentTime = musicCursorRef.current;
           }
         }
       }}
-      onPlaying={event => { if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || outroRef.current !== null || endedRef.current) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
+      onPlaying={event => { if (!playbackAllowedRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || endedRef.current) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
       onWaiting={() => { waitingAtRef.current ??= performance.now(); }}
       onCanPlay={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; } }}
-      onSeeked={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
+      onSeeked={event => { musicCursorRef.current = event.currentTarget.currentTime; musicSampleRef.current = event.currentTarget.currentTime; if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
       onError={event => { playbackAllowedRef.current = false; playAttemptRef.current += 1; event.currentTarget.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable"); }}
       onEnded={beginOutro} />
-    <div className="v100-credit-landscape" role="img" aria-label={currentShot?.description}>
-      <div ref={shotRef} key={frame.shotIndex} data-credit-shot-index={frame.shotIndex} className="v100-credit-shot" style={{ backgroundImage: `url(${currentShot?.src})` }} />
-      <div key={`next-${frame.nextShotIndex}`} className="v100-credit-shot v100-credit-shot-next" style={{ backgroundImage: `url(${nextShot?.src})` }} />
-    </div>
+    <V100CreditsFilmView initialFrame={initialFilmFrame} paintRef={filmPaintRef} reducedMotion={settings.reducedMotion} />
     <div ref={viewportRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track"><header><small>THE END</small><h1>西新世紀末物語</h1><p>STAFF & CREDITS</p></header>{v100StaffRollSections(playerName).map(section => <section key={section.title}><h2>{section.title}</h2>{section.lines.map((line, index) => <p key={`${section.title}-${index}`}>{line}</p>)}</section>)}<footer><h2>THANK YOU FOR PLAYING</h2><strong>西新世紀末物語</strong><p>Version 1.0.0</p></footer></div></div>
     <div ref={controlsRef} className="v100-credit-controls"><div className="v100-credit-song"><span>音楽：魔王魂</span><a href={V100_CREDITS_SONG.page} target="_blank" rel="noreferrer">「追憶の幻想世界」</a></div><div className="v100-credit-buttons">
       {soundState === "gesture" && <button className="v100-primary v100-credit-audio-action" type="button" onClick={() => void play()}>曲を再生して始める</button>}
       {soundState === "unavailable" && <button className="v100-credit-audio-action" type="button" onClick={() => { audioRef.current?.load(); void play(); }}>曲を再試行</button>}
-      {!ended && <button type="button" onClick={togglePause}>{paused ? "再開" : "一時停止"}</button>}
-      <button type="button" onClick={() => { if (!pauseRef.current) togglePause(); setShowRights(true); }}>クレジット</button>
-      <button type="button" disabled={busy} onClick={() => void finish()}>{ended ? "続ける" : "スキップ"}</button>
+      {!ended && <button type="button" disabled={outro} onClick={togglePause}>{paused ? "再開" : "一時停止"}</button>}
+      {!ended && <button type="button" disabled={outro} onClick={cycleSpeed} aria-label={`映像と文字の速さ：${speed === 1 ? "通常" : `${speed}倍`}。曲は通常速度`}>{speed === 1 ? "通常 ▶▶" : `${speed}倍 ▶▶`}</button>}
+      <button type="button" disabled={outro} onClick={() => { if (!pauseRef.current) togglePause(); setShowRights(true); }}>クレジット</button>
+      <button type="button" disabled={busy || (outro && !ended)} onClick={() => ended ? void finish() : beginOutro()}>{ended ? "続ける" : "スキップ"}</button>
     </div>{soundState === "unavailable" && <small role="status">曲を読み込めませんでした。音なしで続けています。</small>}</div>
     {showRights && <div className="v100-modal-backdrop"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-roll-rights-title"><div className="v100-panel-heading"><h2 id="v100-roll-rights-title">制作・素材クレジット</h2><button type="button" onClick={() => setShowRights(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
   </section>;

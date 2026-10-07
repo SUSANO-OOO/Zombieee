@@ -79,6 +79,14 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const phoneReviewPaths = new Set(V100_PHONE_REVIEW_ASSET_ADDITIONS.map(asset=>asset.path));
   const producerFeedbackPaths = new Set(V100_PRODUCER_FEEDBACK_ART_ADDITIONS.map(asset=>asset.path));
   const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
+  const { V100_POST_CREDITS_ASSET_ADDITIONS } = await import("../scripts/v100-post-credits-asset-contract.mjs");
+  const finaleAudioAssets = V100_POST_CREDITS_ASSET_ADDITIONS.filter(asset => asset.path.startsWith("/audio/"));
+  assert.equal(finaleAudioAssets.length, 1, "only the source-bound CC0 waves are additional ending audio");
+  const finaleAudioPaths = new Set(finaleAudioAssets.map(asset => asset.path));
+  for (const expected of finaleAudioAssets) {
+    const actual = current.assets.find(asset => asset.path === expected.path);
+    assert.deepEqual({ path: actual?.path, bytes: actual?.bytes, hash: actual?.hash, criticality: actual?.criticality }, expected);
+  }
   assert.equal(designAssetPaths.size, 9, "six regional maps and three licensed fonts are explicit candidate additions");
   for (const expected of V100_DESIGN_ASSET_ADDITIONS) {
     const actual = current.assets.find(asset => asset.path === expected.path);
@@ -142,6 +150,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => !producerFeedbackPaths.has(path))
     .filter(({ path }) => !designAssetPaths.has(path))
     .filter(({ path }) => path !== V100_ENDING_MUSIC_ADDITION.path)
+    .filter(({ path }) => !finaleAudioPaths.has(path))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))
     .filter(({ path }) => path !== V100_WEBKIT_CARD_REPLACEMENT.path)
