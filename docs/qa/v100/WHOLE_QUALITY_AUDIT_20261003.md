@@ -1,5 +1,13 @@
 # Version 1.0.0 全体品質監査 — 2026-10-03
 
+## 2026-10-08 最終レビュー版の音量と波音終了
+
+クレジットgainを0.24、終幕BGMを0.95、波音を0.30、笑い声を0.72へ調整。画像の消える39秒と波音の終了を揃え、native pauseを追加。設定変更、停止／再開、画面復帰、スキップ、保留されたplayの完了でも終了済み音源を再開しない。BGMは55.5秒で停止。自動遷移後の音が携帯の再生規則で拒否されても、映像時計を進めて音の再生操作を残す。予告・続編名・時期・お礼の全表示は維持する。
+
+原音をFFmpegでデコードしてクレジット／BGM／波音の平均−9.9／−23.7／−24.8dBを計測。初期設定と新gainで約−24.2／−26.1／−36.2dB。音源速度・素材bytes・保存契約は変更なし。全1773/1773、production build、Lint 0 errors／既存18 warnings、限定source独立review H/M0。音を消した実ブラウザ検査と固定共有版での確認を続ける。物理端末の聴感・全作品のProducer試遊・正式リリースの合格を意味しない。
+
+固定630の全UI r4失敗は保全。`ui-630-tail-r1/report.json` は同じrevision1044のepilogueから補完した `passed-resumed-tail`。旧740ノードと新27ノード、旧33 reloadと新2 reloadを区別。全10画像・予告・お礼、終了後の3媒体停止、hard reload後の27ノードの会話記録を確認した。旧クレジットの取消時点に欠けるtrusted pause因果・detached検査は、全体合格へ読み替えない。
+
 ## 2026-10-08 音源停止と固定630のQA原因分類
 
 Producerの停止指示を受け、所有検証ブラウザと残留Windows WebKitを停止。現ローカル確認はEdgeの `--mute-audio` 出力で行い、native媒体のdecoder時計、原速、volume、pauseを実測する。共有R16のゲーム・画像・音声と視聴画面は固定630であり、写真原本は配信しない。Mac native PWAの合成merge source209app blobは630と一致し、既存・部分更新・修復・音声range・保存保持の6reportを独立照合した（`ci-630-native-pwa-integrity-r1.json`）。これを物理iPhone・実speaker・全CI合格へ読み替えない。

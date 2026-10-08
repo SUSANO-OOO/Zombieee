@@ -17,6 +17,9 @@ export const V100_POST_CREDITS_AUDIO = Object.freeze({
   laugh: "/audio/v100/epilogue/king-laugh-r1.mp3",
 });
 export const V100_POST_CREDITS_LAUGH_CUE = 32.5;
+export const V100_POST_CREDITS_PICTURE_END = 39;
+export const V100_POST_CREDITS_MUSIC_END = 55.5;
+export const V100_POST_CREDITS_MIX = Object.freeze({ music: .95, waves: .3, laugh: .72 });
 export const V100_POST_CREDITS_TITLES = Object.freeze({
   continuation: "物語は、まだまだ続く...",
   sequel: "西新世紀末物語Ⅱ(仮称)",
@@ -42,14 +45,15 @@ export function v100PostCreditsFrame(seconds, reducedMotion = false) {
   // The close-ups are separately drawn performances. One restrained camera
   // movement continues through them; no rapid magnification or black flash.
   const scale = 1 + cameraProgress * (shotIndex < 4 ? .025 : shotIndex === 4 ? .02 : .035);
-  const laughDucking = elapsed >= V100_POST_CREDITS_LAUGH_CUE && elapsed < 36 ? .55 : 1;
+  const laughGain = envelope(elapsed, V100_POST_CREDITS_LAUGH_CUE, 38, .1, 1.5);
+  const laughDucking = 1 - .45 * laughGain;
   return { elapsed, shotIndex, nextShotIndex, blend: 0, text, titleOpacity,
-    imageOpacity: envelope(elapsed, 2.2, 39, 2, 2.2),
+    imageOpacity: envelope(elapsed, 2.2, V100_POST_CREDITS_PICTURE_END, 2, 2.2),
     scale: reducedMotion ? 1 : scale,
     focus: "50% 50%",
     brightness: 1,
-    wavesGain: envelope(elapsed, 0, 40, 2.2, 3) * (laughDucking === 1 ? 1 : .7),
-    musicGain: envelope(elapsed, 0, 55.5, 5, 3.5) * laughDucking,
-    laughGain: envelope(elapsed, V100_POST_CREDITS_LAUGH_CUE, 38, .1, 1.5),
+    wavesGain: envelope(elapsed, 0, V100_POST_CREDITS_PICTURE_END, 2.2, 2.2) * (1 - .3 * laughGain),
+    musicGain: envelope(elapsed, 0, V100_POST_CREDITS_MUSIC_END, 5, 3.5) * laughDucking,
+    laughGain,
     ended: elapsed >= V100_POST_CREDITS_DURATION };
 }

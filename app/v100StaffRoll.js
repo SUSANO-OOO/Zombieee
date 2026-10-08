@@ -19,7 +19,7 @@ export const V100_CREDITS_SONG = Object.freeze({
 export const V100_CREDITS_DURATION = 106;
 export const V100_CREDITS_FADE_SECONDS = 2.4;
 export const V100_CREDITS_OUTRO_SECONDS = 3.2;
-export const V100_CREDITS_MIX_GAIN = .48;
+export const V100_CREDITS_MIX_GAIN = .24;
 export function v100CreditsOutroFrame(seconds) {
   const time = Math.max(0, Number(seconds) || 0);
   const phase = Math.min(1, time / V100_CREDITS_FADE_SECONDS);

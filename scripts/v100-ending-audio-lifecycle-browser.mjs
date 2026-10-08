@@ -6,11 +6,14 @@ import { mkdir, writeFile, lstat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { build } from "esbuild";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
-import { V100_POST_CREDITS_TITLES } from "../app/v100PostCreditsData.js";
+import { V100_POST_CREDITS_TITLES, V100_POST_CREDITS_PICTURE_END, V100_POST_CREDITS_MUSIC_END, V100_POST_CREDITS_MIX } from "../app/v100PostCreditsData.js";
+import { V100_CREDITS_MIX_GAIN } from "../app/v100StaffRoll.js";
 
 const root = process.cwd();
 const selection = process.env.V100_ENDING_LIFECYCLE_ONLY ?? "all";
-assert.ok(["all", "motion", "skip"].includes(selection), "Unknown ending lifecycle selection");
+assert.ok(["all", "motion", "skip", "balance"].includes(selection), "Unknown ending lifecycle selection");
+const engines = process.env.V100_ENDING_LIFECYCLE_ENGINE ? [process.env.V100_ENDING_LIFECYCLE_ENGINE] : ["chromium", "webkit"];
+assert.ok(engines.every(engine => ["chromium", "webkit"].includes(engine)), "Unknown ending lifecycle engine");
 const out = path.resolve(process.env.V100_ENDING_LIFECYCLE_OUT ?? "outputs/v100-ending-audio-lifecycle");
 await mkdir(out, { recursive: true });
 assert.equal(await lstat(path.join(out, "report.json")).then(() => true, () => false), false, "Keep previous evidence");
@@ -25,7 +28,7 @@ function Fixture(){
  const [view,setView]=useState('ready'),[enabled,setEnabled]=useState(true),[reducedMotion,setReducedMotion]=useState(false),[blocked,setBlocked]=useState(false);
  const settings={bgmEnabled:enabled,bgmVolume:.8,sfxEnabled:enabled,sfxVolume:.9,reducedMotion};
  return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button><button onClick={()=>setReducedMotion(!reducedMotion)}>Toggle motion</button><button onClick={()=>setBlocked(!blocked)}>Toggle credits menu</button></nav>
- {view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} blocked={blocked} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
+ {view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} blocked={blocked} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} blocked={blocked} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
 }
 createRoot(document.getElementById('root')).render(<Fixture/>);`);
 await build({ entryPoints: [entry], bundle: true, outfile: path.join(out, "fixture.js"), platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, external: ["/fonts/v100/BIZUDPGothic-Regular.woff2", "/fonts/v100/ZenKakuGothicNew-Bold.woff2", "/fonts/v100/Rajdhani-Bold.woff2"] });
@@ -48,6 +51,92 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const report = { status: "failed", selection, head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, evidenceKind: "Actual React ending components and native media; captured detached elements and delayed play promises. Test output is muted; no speaker acceptance.", cases: [] };
 for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
 const sample = page => page.evaluate(() => window.__endingMedia.map(audio => ({ paused: audio.paused, connected: audio.isConnected, time: audio.currentTime, rate: audio.playbackRate, volume: audio.volume })));
+async function balanceCase(browser, engine, mode) {
+  const result = { engine, mode, status: "failed", errors: [] };
+  report.cases.push(result);
+  const context = await browser.newContext({ viewport: { width: 844, height: 390 } }), page = await context.newPage();
+  page.on("pageerror", error => result.errors.push(String(error)));
+  await context.addInitScript(deny => {
+    window.__endingMedia = [];
+    window.__denyFilmAudio = deny;
+    const nativePlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      this.muted = true;
+      if (!window.__endingMedia.includes(this)) window.__endingMedia.push(this);
+      if (window.__denyFilmAudio && this.closest('.v100-post-credits-film')) return Promise.reject(new DOMException('Owned autoplay-policy fixture', 'NotAllowedError'));
+      return nativePlay.call(this);
+    };
+  }, mode === "autoplay");
+  try {
+    await page.goto(origin, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: mode === "mix" ? "Open film" : "Open credits", exact: true }).click();
+    if (mode !== "mix") {
+      await page.waitForFunction(() => document.querySelector('.v100-staff-roll audio')?.currentTime > .2);
+      result.credits = await sample(page);
+      assert.ok(Math.abs(result.credits[0].volume - .8 * V100_CREDITS_MIX_GAIN) < .001);
+      if (mode === "autoplay") await page.getByRole("button", { name: "スキップ", exact: true }).click();
+      await page.locator('.v100-post-credits-film').waitFor({ state: "visible", timeout: 120000 });
+      result.handoff = await sample(page);
+      assert.ok(result.handoff.filter(audio => !audio.connected).every(audio => audio.paused && audio.volume === 0));
+    }
+    const film = page.locator('.v100-post-credits-film');
+    await page.waitForFunction(() => Number(document.querySelector('.v100-post-credits-film')?.dataset.v100FilmElapsed) > 6, undefined, { timeout: 15000 });
+    result.opening = await sample(page);
+    if (mode === "autoplay") {
+      assert.equal(await film.getAttribute('data-v100-film-audio'), 'gesture');
+      assert.ok(result.opening.every(audio => audio.paused));
+      result.automaticSilentProgress = await film.getAttribute('data-v100-film-elapsed');
+      await page.evaluate(() => { window.__denyFilmAudio = false; });
+      await page.getByRole('button', { name: '音を再生', exact: true }).click();
+      await page.waitForFunction(() => !document.querySelector('.v100-post-credits-film audio').paused);
+    } else {
+      const media = result.opening.filter(audio => audio.connected);
+      assert.ok(Math.abs(media[0].volume - .8 * V100_POST_CREDITS_MIX.music) < .001);
+      assert.ok(Math.abs(media[1].volume - .9 * V100_POST_CREDITS_MIX.waves) < .001);
+    }
+    await page.waitForFunction(end => Number(document.querySelector('.v100-post-credits-film')?.dataset.v100FilmElapsed) >= end + .1, V100_POST_CREDITS_PICTURE_END, { timeout: 45000 });
+    result.afterFace = await sample(page);
+    const current = result.afterFace.filter(audio => audio.connected);
+    assert.equal(current[1].paused, true); assert.equal(current[1].volume, 0);
+    assert.equal(await film.locator('.v100-post-credit-picture').evaluate(element => Number(getComputedStyle(element).opacity)), 0);
+    assert.equal(current[0].paused, false);
+    if (mode === "mix") {
+      await page.getByRole('button', { name: '一時停止', exact: true }).click();
+      await page.getByRole('button', { name: '再開', exact: true }).click();
+      await page.getByRole('button', { name: 'Toggle sound', exact: true }).click();
+      await page.getByRole('button', { name: 'Toggle sound', exact: true }).click();
+      await page.evaluate(() => { window.dispatchEvent(new Event('pagehide')); window.dispatchEvent(new Event('pageshow')); });
+      await page.waitForTimeout(300);
+      result.afterResume = await sample(page);
+      const resumed = result.afterResume.filter(audio => audio.connected);
+      assert.equal(resumed[1].paused, true); assert.equal(resumed[1].volume, 0);
+      assert.ok(Math.abs(resumed[1].time - current[1].time) < .1, 'Retired waves must not resume on sound, pause or visibility changes');
+    }
+    result.titles = [];
+    for (const title of ['continuation', 'sequel', 'thanks']) {
+      await page.waitForFunction(expected => {
+        const root = document.querySelector('.v100-post-credits-film');
+        return root?.dataset.v100FilmTitle === expected && Number(getComputedStyle(root.querySelector('.v100-post-credit-title')).opacity) > .8;
+      }, title, { timeout: 15000 });
+      const text = await film.locator('.v100-post-credit-title').innerText();
+      assert.ok(text.includes(V100_POST_CREDITS_TITLES[title]));
+      if (title === 'sequel') assert.ok(text.includes(V100_POST_CREDITS_TITLES.season));
+      result.titles.push(title);
+      if (title === 'thanks') {
+        result.afterScore = await sample(page);
+        assert.ok(result.afterScore.every(audio => audio.paused));
+        assert.ok(Number(await film.getAttribute('data-v100-film-elapsed')) >= V100_POST_CREDITS_MUSIC_END);
+      }
+    }
+    await page.getByRole('heading', { name: 'Playback stopped', exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+    result.settled = await sample(page);
+    assert.ok(result.settled.every(audio => audio.paused && !audio.connected && audio.rate === 1));
+    assert.deepEqual(result.errors, []);
+    result.status = 'passed';
+  } catch (error) { result.failure = String(error); }
+  finally { await context.close(); }
+  console.log(JSON.stringify({ engine, mode, status: result.status, failure: result.failure }));
+}
 async function checkSkippedTitles(page, result) {
   await page.getByRole("button", { name: "スキップ", exact: true }).click();
   result.titles = [];
@@ -72,9 +161,10 @@ async function checkSkippedTitles(page, result) {
   assert.ok(result.settled.every(audio => audio.paused && !audio.connected), "Completing the retained titles stops every detached media element");
 }
 try {
-  for (const engine of ["chromium", "webkit"]) {
+  for (const engine of engines) {
     const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(engine === "chromium" ? { channel: "msedge", args: ["--mute-audio"] } : {}) });
     try {
+      if (selection === "balance") { await Promise.all(['auto', 'mix', 'autoplay'].map(mode => balanceCase(browser, engine, mode))); continue; }
       for (const view of (selection === "skip" ? ["film"] : ["credits", "film"])) for (const mode of (selection === "skip" ? ["skip"] : selection === "motion" ? ["reduced-motion"] : ["exit", "delayed-exit", "delayed-pause", "delayed-mute", "delayed-hide", "remount", "delayed-remount", "reduced-motion", ...(view === "film" ? ["laugh-exit", "skip"] : [])])) {
         const result = { engine, browserVersion: browser.version(), view, mode, status: "failed", errors: [] };
         report.cases.push(result);

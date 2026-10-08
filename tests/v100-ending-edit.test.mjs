@@ -164,10 +164,13 @@ test('helmet afloat precedes the face and the laugh window ends before the title
   assert.ok(v100PostCreditsFrame(V100_POST_CREDITS_LAUGH_CUE+.5).laughGain>0);
   assert.equal(v100PostCreditsFrame(38).laughGain,0);
   assert.equal(v100PostCreditsFrame(39).imageOpacity,0);
+  assert.equal(v100PostCreditsFrame(39).wavesGain,0);
+  assert.ok(v100PostCreditsFrame(38.9).wavesGain>0);
   assert.equal(v100PostCreditsFrame(40).text,'continuation');
   assert.equal(v100PostCreditsFrame(48).text,'sequel');
   assert.equal(v100PostCreditsFrame(57).text,'thanks');
   assert.equal(v100PostCreditsFrame(56).musicGain,0);
+  for (const time of [39, 40, 48, 57, 64]) assert.equal(v100PostCreditsFrame(time).wavesGain,0);
   for(let seconds=0;seconds<=64;seconds+=.1){
     const frame=v100PostCreditsFrame(seconds);
     for(const key of ['imageOpacity','titleOpacity','wavesGain','musicGain','laughGain'])assert.ok(Number.isFinite(frame[key])&&frame[key]>=0&&frame[key]<=1,key);
