@@ -165,6 +165,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [storage, setStorage] = useState<{ available: number } | null>(null);
   const [showStorage, setShowStorage] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [repairDismissed, setRepairDismissed] = useState(false);
   const [safety, setSafety] = useState<Record<string, unknown>>({});
   const [saveEnvironment, setSaveEnvironment] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -439,10 +440,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     manifest: Manifest,
     kind: "install" | "repair" | "update",
   ) => {
+    // A repair can also activate a newer generation. Read the current game
+    // state at the action boundary so a stale notice cannot discard a run.
+    if (!evaluateActivationSafety(readSafetyFromDocument()).safe) return;
     const store = storeRef.current;
     if (!store) return;
     setError(null);
     setDiagnostics(null);
+    // Hold the safe screen before waiting for a worker activation; otherwise
+    // the player could start a battle before the first download progress event.
+    setDownloadState("running");
     const startedAt = Date.now();
     let lastProgressAt = startedAt;
     let lastCompleted = -1;
@@ -840,7 +847,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     {error && <p role="alert" className="pwa-warning">{error}</p>}
     <p className="pwa-hint">アセットを削除すると、ゲームデータの再取得が必要です。セーブデータは保持されます。</p>
     {!activation.safe && <p className="pwa-hint">更新と削除は、会話・戦闘・保存を終えてから操作できます。</p>}
-    <div className="pwa-actions"><button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
+    <div className="pwa-actions">{phase === "repair-required" && installPlan && <button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button>}<button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
   </aside>;
   return (
     <>
@@ -1051,10 +1058,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Repair and update notices never block play; they sit above the game. */}
-      {!blocking && phase === "repair-required" && installPlan && !deferAssetNoticeForEvent && (
-        <aside className="pwa-notice" role="status">
+      {!blocking && phase === "repair-required" && installPlan && activation.safe && !repairDismissed && (
+        <aside className="pwa-notice pwa-repair" role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
-          <button type="button" onClick={startInstall}>不足分だけ再取得</button>
+          <div className="pwa-actions"><button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button><button type="button" onClick={() => setRepairDismissed(true)}>今はしない</button></div>
         </aside>
       )}
 

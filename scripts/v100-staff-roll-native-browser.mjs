@@ -162,8 +162,10 @@ try {
     releaseSong();
     result.initial = await inspectStaffRoll(page, { playerName: "１２文字の主人公名です" });
     await page.screenshot({ path: path.join(out, `${engine}-initial.png`) });
-    result.pause = await frozen(page, () => page.getByRole("button", { name: "一時停止", exact: true }).click());
-    await page.getByRole("button", { name: "再開", exact: true }).click();
+    // The cinematic transport only contains speed and skip. The game's
+    // existing menu still blocks media and the scroll until the player returns.
+    result.menu = await frozen(page, () => page.getByRole("button", { name: "メニュー", exact: true }).click());
+    await page.getByRole("dialog", { name: "メニュー", exact: true }).getByRole("button", { name: "ゲームに戻る", exact: true }).click();
     await page.waitForFunction(() => !document.querySelector(".v100-staff-roll audio").paused);
     result.rotation = await frozen(page, () => page.setViewportSize({ width: 390, height: 844 }));
     await page.screenshot({ path: path.join(out, `${engine}-portrait-paused.png`) });
@@ -173,13 +175,13 @@ try {
     result.pageHide.evidence = "synthetic lifecycle event; no physical screen-lock claim";
     await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow")));
     await page.waitForFunction(() => !document.querySelector(".v100-staff-roll audio").paused);
-    await page.getByRole("button", { name: "クレジット", exact: true }).click();
-    const dialog = page.getByRole("dialog");
+    await page.getByRole("button", { name: "メニュー", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "メニュー", exact: true });
     await dialog.waitFor({ state: "visible" });
+    await dialog.getByRole("button", { name: "権利・クレジット", exact: true }).click();
     assert.ok((await dialog.innerText()).includes("追憶の幻想世界"));
     await page.screenshot({ path: path.join(out, `${engine}-rights.png`) });
-    await dialog.getByRole("button", { name: "閉じる", exact: true }).click();
-    await page.getByRole("button", { name: "再開", exact: true }).click();
+    await dialog.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
     console.log(JSON.stringify({ engine, status: "playing-106-second-edit-at-original-music-speed", seeks: 0 }));
     await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 150000 });
     const proof = await page.evaluate(() => ({ ...window.__creditMediaProof, save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));

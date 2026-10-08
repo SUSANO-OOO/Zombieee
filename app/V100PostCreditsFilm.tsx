@@ -137,7 +137,17 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   }, [play, playLaugh, pauseAudio, finish, updateAudioState]);
   useEffect(() => { if (blocked || paused) pauseAudio(); else void play(); }, [blocked, paused, settings.bgmEnabled, settings.bgmVolume, settings.sfxEnabled, settings.sfxVolume, play, pauseAudio]);
   const togglePause = () => { const next = !pausedRef.current; pausedRef.current = next; setPaused(next); if (next) pauseAudio(); else void play(); };
-  const skip = () => { laughFinishedRef.current = true; laughAttemptRef.current += 1; laughRef.current?.pause(); setLaughState("skipped"); secondsRef.current = 56.5; pausedRef.current = false; setPaused(false); readyRef.current = true; setFrame(v100PostCreditsFrame(56.5)); };
+  const skip = () => {
+    laughFinishedRef.current = true;
+    laughAttemptRef.current += 1;
+    laughRef.current?.pause();
+    setLaughState("skipped");
+    // Skip the shots while retaining the continuation, sequel and thanks.
+    // Repeated presses during the titles must not rewind their timeline.
+    secondsRef.current = Math.max(secondsRef.current, 40);
+    pausedRef.current = false; setPaused(false); readyRef.current = true;
+    setFrame(v100PostCreditsFrame(secondsRef.current));
+  };
   return <section ref={stageRef} className={`v100-post-credits-film ${done ? "v100-post-credits-done" : ""}`} aria-label="クレジット後の映像" data-v100-surface="epilogue" data-v100-event-id="v100:event:epilogue" data-v100-audio-owner="v100-post-credits-film" data-v100-film-shot={V100_POST_CREDITS_SHOTS[frame.shotIndex].id} data-v100-film-title={frame.text ?? ""} data-v100-film-audio={audioState} data-v100-laugh-state={laughState}>
     <audio ref={musicRef} src={V100_POST_CREDITS_AUDIO.music} preload="metadata" crossOrigin="anonymous" />
     <audio ref={wavesRef} src={V100_POST_CREDITS_AUDIO.waves} preload="metadata" crossOrigin="anonymous" />

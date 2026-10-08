@@ -44,7 +44,8 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
       rollFits: roll.top >= 0 && roll.left >= 0 && roll.bottom <= innerHeight && roll.right <= innerWidth,
       rollLeavesMainFilmVisible: roll.width <= picture.width * .34 && roll.left >= picture.left + picture.width * .64,
       readingFont: Number.parseFloat(getComputedStyle(element.querySelector(".v100-credit-roll-track p")).fontSize),
-      controls: [...element.querySelectorAll(".v100-credit-buttons button")].map(button => { const rect = button.getBoundingClientRect(); const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2); return { text: button.textContent, height: rect.height, fits: rect.top >= 0 && rect.left >= 0 && rect.bottom <= innerHeight && rect.right <= innerWidth, reachable: hit === button || button.contains(hit) }; }),
+      controlPanel: (() => { const rect = element.querySelector(".v100-credit-controls").getBoundingClientRect(); return { width: rect.width, height: rect.height }; })(),
+      controls: [...element.querySelectorAll(".v100-credit-buttons button")].map(button => { const rect = button.getBoundingClientRect(); const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2); return { text: button.textContent, width: rect.width, height: rect.height, fits: rect.top >= 0 && rect.left >= 0 && rect.bottom <= innerHeight && rect.right <= innerWidth, reachable: hit === button || button.contains(hit) }; }),
       overflow: Math.max(document.body.scrollWidth - innerWidth, document.documentElement.scrollWidth - innerWidth),
       mixer: window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.()?.diagnostics ?? null,
     };
@@ -69,7 +70,10 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   assert.equal(observed.pictureFits, true); assert.equal(observed.cinemaUsesFullFrame, true);
   assert.equal(observed.rollFits, true); assert.equal(observed.rollLeavesMainFilmVisible, true);
   assert.ok(observed.readingFont >= 14);
-  assert.ok(observed.controls.every(button => button.height >= 44 && button.fits && button.reachable), JSON.stringify(observed.controls));
+  assert.equal(observed.controls.length, 2);
+  assert.ok(observed.controls.every(button => button.width >= 44 && button.height >= 44 && button.fits && button.reachable), JSON.stringify(observed.controls));
+  assert.ok(observed.controlPanel.width <= 164 && observed.controlPanel.height === 44, JSON.stringify(observed.controlPanel));
+  assert.ok(observed.controls.every(button => !["クレジット", "一時停止"].includes(button.text)));
   assert.ok(observed.overflow <= 1);
   assert.ok(observed.credits.includes("音楽：魔王魂") && observed.credits.includes("追憶の幻想世界"));
   assert.equal(observed.mixer?.activeBgmVoices ?? 0, 0, "another BGM overlaps the staff roll");

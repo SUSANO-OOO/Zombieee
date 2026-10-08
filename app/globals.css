@@ -796,6 +796,11 @@ button[aria-disabled="true"]:focus-visible {
 /* V1 publishes this fact in its layout effect. Hide synchronously while the
    MutationObserver-to-React safety state catches up with a newly shown event. */
 html[data-pwa-screen="event"] .pwa-notice { display:none; }
+html[data-pwa-battle-active="true"] .pwa-repair,
+html[data-pwa-result-saving="true"] .pwa-repair,
+html[data-pwa-save-mutation-pending="true"] .pwa-repair,
+html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
+.pwa-repair button { min-height:44px; }
 .pwa-update-headline { font-weight:700; color:#f0bb65; }
 .pwa-storage dl { margin:0; display:flex; flex-direction:column; gap:3px; }
 .pwa-storage dl div { display:flex; justify-content:space-between; gap:12px; }

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { v100CreditsCameraStyle } from "./v100CreditsFilmEdit.js";
-import { V100AssetCredits } from "./V100AssetCredits";
 import { V100_CREDITS_SONG, V100_CREDITS_DURATION, V100_CREDITS_FADE_SECONDS, V100_CREDITS_MIX_GAIN, v100CreditsOutroFrame, v100CreditScrollFrame, v100StaffRollSections, v100StaffRollFrame, v100StaffRollResumeSeconds } from "./v100StaffRoll.js";
 import "./v100StaffRoll.css";
 
@@ -123,18 +122,15 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
   const playbackAllowedRef = useRef(false);
   const playAttemptRef = useRef(0);
   const startupAtRef = useRef<number | null>(null);
-  const pauseRef = useRef(false);
   const occludedRef = useRef(false);
   const waitingAtRef = useRef<number | null>(null);
   const blockedRef = useRef(blocked);
   const outroRef = useRef<number | null>(null);
   const [outro, setOutro] = useState(false);
-  const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [soundState, setSoundState] = useState("loading");
   const soundStateRef = useRef(soundState);
   const [ended, setEnded] = useState(false);
-  const [showRights, setShowRights] = useState(false);
   const [initialFilmFrame] = useState(() => v100StaffRollFrame(initialSeconds, V100_CREDITS_DURATION, nodes.length));
   const [frame, setFrame] = useState(initialFilmFrame);
   const [creditSections] = useState(v100StaffRollSections);
@@ -186,7 +182,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
-    if (!mountedRef.current || !audio || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) return;
+    if (!mountedRef.current || !audio || !soundEnabledRef.current || document.hidden || occludedRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) return;
     const attempt = ++playAttemptRef.current;
     playbackAllowedRef.current = true;
     startupAtRef.current = performance.now();
@@ -202,7 +198,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       // Preserve the previous sample across pauses. Resampling here discards
       // the last media slice and delays the 106-second edit after each resume.
       await audio.play();
-      if (!mountedRef.current || audioRef.current !== audio || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
+      if (!mountedRef.current || audioRef.current !== audio || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
       if (attempt !== playAttemptRef.current) return;
       playingRef.current = true;
       waitingAtRef.current = null;
@@ -236,8 +232,6 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     if (outroRef.current !== null || endedRef.current) return;
     outroRef.current = 0;
     elapsedRef.current = V100_CREDITS_DURATION;
-    pauseRef.current = false;
-    setPaused(false);
     setFrame(v100StaffRollFrame(V100_CREDITS_DURATION, V100_CREDITS_DURATION, nodes.length));
     setOutro(true);
     if (audioRef.current?.paused && !audioRef.current.ended) void play();
@@ -265,7 +259,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     const tick = (at: number) => {
       const delta = Math.max(0, Math.min(.25, (at - lastAt) / 1000));
       lastAt = at;
-      if (!document.hidden && !occludedRef.current && !pauseRef.current && !blockedRef.current && !endedRef.current) {
+      if (!document.hidden && !occludedRef.current && !blockedRef.current && !endedRef.current) {
         if (outroRef.current !== null) {
           outroRef.current += delta;
           const closing = v100CreditsOutroFrame(outroRef.current);
@@ -351,12 +345,6 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     return () => { observer.disconnect(); cancelAnimationFrame(resizeFrame); };
   }, []);
 
-  const togglePause = () => {
-    const next = !pauseRef.current;
-    pauseRef.current = next; setPaused(next);
-    if (next) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audioRef.current?.pause(); playingRef.current = false; }
-    else void play();
-  };
   const cycleSpeed = () => {
     const next = speedRef.current === 1 ? 2 : speedRef.current === 2 ? 4 : 1;
     speedRef.current = next;
@@ -377,7 +365,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
           }
         }
       }}
-      onPlaying={event => { if (!mountedRef.current || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || pauseRef.current || blockedRef.current || endedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS)) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
+      onPlaying={event => { if (!mountedRef.current || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || blockedRef.current || endedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS)) { event.currentTarget.pause(); return; } playingRef.current = true; waitingAtRef.current = null; setSoundState("playing"); }}
       onWaiting={() => { waitingAtRef.current ??= performance.now(); }}
       onCanPlay={event => { if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; } }}
       onSeeked={event => { musicCursorRef.current = event.currentTarget.currentTime; musicSampleRef.current = event.currentTarget.currentTime; if (playbackAllowedRef.current && !event.currentTarget.paused) { playingRef.current = true; waitingAtRef.current = null; elapsedRef.current = Math.max(elapsedRef.current, event.currentTarget.currentTime); } }}
@@ -396,14 +384,11 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       </section>)}
       <footer ref={rollFooterRef}><span>西新世紀末物語</span><strong>K4ITo</strong></footer>
     </div></div>
-    <div ref={controlsRef} className="v100-credit-controls"><div className="v100-credit-song"><span>音楽：魔王魂</span><a href={V100_CREDITS_SONG.page} target="_blank" rel="noreferrer">「追憶の幻想世界」</a></div><div className="v100-credit-buttons">
+    <div ref={controlsRef} className="v100-credit-controls"><div className="v100-credit-buttons">
       {soundState === "gesture" && <button className="v100-primary v100-credit-audio-action" type="button" onClick={() => void play()}>曲を再生して始める</button>}
       {soundState === "unavailable" && <button className="v100-credit-audio-action" type="button" onClick={() => { audioRef.current?.load(); void play(); }}>曲を再試行</button>}
-      {!ended && <button type="button" disabled={outro} onClick={togglePause}>{paused ? "再開" : "一時停止"}</button>}
-      {!ended && <button type="button" disabled={outro} onClick={cycleSpeed} aria-label={`映像と文字の速さ：${speed === 1 ? "通常" : `${speed}倍`}。曲は通常速度`}>{speed === 1 ? "通常 ▶▶" : `${speed}倍 ▶▶`}</button>}
-      <button type="button" disabled={outro} onClick={() => { if (!pauseRef.current) togglePause(); setShowRights(true); }}>クレジット</button>
+      {!ended && <button type="button" disabled={outro} onClick={cycleSpeed} aria-label={`映像と文字の速さ：${speed === 1 ? "通常" : `${speed}倍`}。曲は通常速度`}>▶▶ ×{speed}</button>}
       <button type="button" disabled={busy || (outro && !ended)} onClick={() => ended ? void finish() : beginOutro()}>{ended ? "続ける" : "スキップ"}</button>
     </div>{soundState === "unavailable" && <small role="status">曲を読み込めませんでした。音なしで続けています。</small>}</div>
-    {showRights && <div className="v100-modal-backdrop"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-roll-rights-title"><div className="v100-panel-heading"><h2 id="v100-roll-rights-title">制作・素材クレジット</h2><button type="button" onClick={() => setShowRights(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
   </section>;
 }

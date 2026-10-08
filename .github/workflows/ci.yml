@@ -637,6 +637,15 @@ jobs:
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/partial
         run: node scripts/pwa-partial-failed-update-browser-smoke.mjs
 
+      - name: Preserve active play when an installed asset needs repair
+        if: ${{ !cancelled() && steps.build_native_pwa_sites.outcome == 'success' }}
+        env:
+          PWA_ACTIVE_REPAIR_ROOT: ${{ github.workspace }}/_site
+          PWA_ACTIVE_REPAIR_EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+          PWA_ACTIVE_REPAIR_ENGINE: webkit
+          PWA_ACTIVE_REPAIR_OUT: outputs/v100-native-pwa/active-repair
+        run: node scripts/pwa-active-repair-browser-smoke.mjs
+
       - name: Upload native WebKit PWA evidence
         if: always()
         uses: actions/upload-artifact@v4
