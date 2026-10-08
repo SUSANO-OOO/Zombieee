@@ -1,5 +1,15 @@
 # Version 1.0.0 全体品質監査 — 2026-10-03
 
+## 2026-10-08 音源停止と固定630のQA原因分類
+
+Producerの停止指示を受け、所有検証ブラウザと残留Windows WebKitを停止。現ローカル確認はEdgeの `--mute-audio` 出力で行い、native媒体のdecoder時計、原速、volume、pauseを実測する。共有R16のゲーム・画像・音声と視聴画面は固定630であり、写真原本は配信しない。Mac native PWAの合成merge source209app blobは630と一致し、既存・部分更新・修復・音声range・保存保持の6reportを独立照合した（`ci-630-native-pwa-integrity-r1.json`）。これを物理iPhone・実speaker・全CI合格へ読み替えない。
+
+required CI `37720353913` のPhase G、chromium844×340-battle-boss capture42は失敗として保全。元log1142行のsustain-redeployは候補なし・pointer0だったがscheduler probeを作り、削除の1000ms timeout後にQAがcontextを270msで閉じた。直前pageClosed=false、browserConnected=true、independentLifecycleLoss=false、閉鎖後もbrowserConnected=true。transaction保存後のkillは外部crash起点の証拠ではない。独立read-only調査でH0/M1を確認し、初回診断→候補判定→必要時のみprobe設置へ修正した。入力mutex・5秒予算、1000ms診断、rAF・安定性、直前identity／座標確認、dispatch／acceptance期限と失敗停止を維持。並行sustainの構造化一次原因もsetupEvidenceへ保存する。
+
+追加2回帰を原630へ適用したnegative controlは両方失敗、修正版は対象47/47・全1773/1773、production build、Lint 0 errors／既存18 warnings、content／diff成功。全test初回1770/1773はsandboxのlocalhost EACCES2件とGit Bash起動拒否1件。元logと条件を保全し、必要権限で全件成功。限定独立review H/M0。新candidateの実ブラウザ・fresh CIは別途必要。
+
+全UI r1は旧movie audio2個という検証契約が誤り、現sourceの3個へ訂正。r2のMP3 ERR_ABORTEDは生記録を残した。r3では106秒fade後・paused・volume0・detached・原速1・decoder errorなし・exact URLが実native elementに一致する取消だけを別分類したが、hard reloadで失った旧movie refsを最後に検査しexit1になったため全体合格へ変更しない。r4はmap handoffでその3媒体を観測し保存してからreloadする修正を入れたが、曲108.410秒・原速1・pause・volume0・decoder正常の取消をunmount前にfatal判定して失敗。30synthetic結果・740nodes・33reloadsまでの実観測とnative保存・原logを保全し、取消の所有境界を独立分類する。94event・全node・receipt・保存と実mediaの残りを確認し、閾値を下げない。
+
 ## 2026-10-08 操作欄・予告の欠落・修復中断の改善
 
 Producerの携帯画面の指摘を受け、スタッフロールの操作を早送りとスキップへ絞り、専用一時停止・クレジットと重複音楽パネルを除去した。Edge実媒体の通常844×390／4倍844×340で操作欄114.5×44px、全134項目のスクロール、25画像・10枚の追加映像、原速曲と106秒のフェード、error 0を確認（`compact-credit-native-edge-r1/report.json`）。この記録は未commitのsource hashへ結び付き、固定HEADの全体受入ではない。

@@ -1,5 +1,13 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-08 固定630の音源停止とPhase G診断
+
+確認用ブラウザの音をProducerの指示で停止し、所有QA・Windows WebKitの残留0を再確認。以後のローカル実媒体確認は出力を消音する。固定630の共有R16は `https://onion-poultry-tied-represented.trycloudflare.com/staff-roll/viewer.html?v=630c972`。本文・134項目・予告・お礼、PWA修復保護の限定確認とMac native PWAは成功だが、全体完成・実speaker受入ではない。
+
+630のrequired CI `37720353913` のPhase Gは失敗。原logとcapture transactionの独立調査で、再出撃候補が全て使用不可にもかかわらず作ったscheduler probeの削除RPCが1000msでtimeoutし、QA自身がcontextを閉じたと確定。後のliveHumanCountのTarget closedは二次例外。RPC遅延の内部原因は未確定で、製品障害・外部browser crashとは断定しない。入力mutex内の初回診断と候補判定を先にし、候補なしではprobe・pointer・cleanupを0へ限定修正。候補ありの安定性・直前確認・各期限・失敗停止を保ち、sustainの構造化原因をtransactionへ残す。
+
+原630では追加2回帰がともに失敗、修正版の対象47/47と全1773/1773が成功。production build、Lint 0 errors／既存18 warnings、content／diff検査成功。全test初回のsandbox拒否3件は原logを保全し、localhostとGit Bashの必要権限を与え同じ条件で成功。限定独立review H/M 0。固定630の全UI検証r3は最後のhard reload後に旧movie elementを確認して失敗したため合格にしない。native106秒fade→pause・volume0・unmountに一致するMP3取消だけを生の記録と一緒に分類した。r4は108.410秒・原速1・pause・volume0・decoder正常の取消をunmount前に判定して失敗し、保存と生logを保全。EPILOGUE以降の未完確認、取消の所有境界の独立分類、新候補の実ブラウザ・fresh CI、代表通常戦闘、Producerの作品受入は継続する。正式公開の承認境界は維持する。
+
 ### 2026-10-08 携帯の操作欄・終幕のスキップ・修復中の進行保護
 
 スタッフロールの大きな操作パネル、専用一時停止・クレジットボタン、重複した音楽表記を外し、早送りとスキップへ整理。携帯横画面の実測は114.5×44px。134項目の一本のスクロール、原速曲、106秒からのフェードをEdgeの通常844×390／4倍844×340で確認した（`compact-credit-native-edge-r1`）。通常再生では終幕の3タイトルが存在する一方、元版のスキップは56.5秒のお礼へ飛び、続く物語と続編予告を省いていた。映像だけを飛ばして40秒から3タイトルを残し、再操作でも巻き戻さないよう修正。消音したEdge／Windows WebKitの2ケースと、元467の再現＋修正版3画面サイズで実表示・終了後の媒体停止が成功した（`ending-skip-native-r1`、`ending-skip-preview-r2`）。

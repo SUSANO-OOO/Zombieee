@@ -1552,19 +1552,6 @@ async function performVerifiedDeploymentPointer(page, {
       }
     };
     const executePointer = async () => {
-    preflightEvidence.schedulerProbe.installation = await preflightStep(
-      () => installDeploymentSchedulerProbe(page, schedulerProbeId),
-      "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
-      { operation: "scheduler-probe-install", schedulerProbeId },
-    );
-    schedulerProbeInstalled = ["pending", "observed"].includes(preflightEvidence.schedulerProbe.installation?.status);
-    if (!schedulerProbeInstalled) {
-      throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", {
-        phase,
-        reason: "scheduler-probe-installation-missing",
-        schedulerProbe: preflightEvidence.schedulerProbe.installation,
-      }, 0);
-    }
     const initial = await preflightStep(() => readBattleDeploymentDiagnostics(page, {
       requestedKind,
       requestedSlot,
@@ -1589,6 +1576,22 @@ async function performVerifiedDeploymentPointer(page, {
         diagnostics: initial,
         evidence: { preflight: preflightEvidence },
       });
+    }
+    // A recovered card can become unavailable before this locked requery.
+    // With no possible input, do not create an observer whose cleanup could
+    // close the shared capture page after a diagnostic timeout.
+    preflightEvidence.schedulerProbe.installation = await preflightStep(
+      () => installDeploymentSchedulerProbe(page, schedulerProbeId),
+      "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      { operation: "scheduler-probe-install", schedulerProbeId },
+    );
+    schedulerProbeInstalled = ["pending", "observed"].includes(preflightEvidence.schedulerProbe.installation?.status);
+    if (!schedulerProbeInstalled) {
+      throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", {
+        phase,
+        reason: "scheduler-probe-installation-missing",
+        schedulerProbe: preflightEvidence.schedulerProbe.installation,
+      }, 0);
     }
     const identity = deploymentCardIdentity(candidate);
     preflightEvidence.resolvedIdentity = identity;
@@ -4541,7 +4544,17 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     };
     sustainActive = false;
     await sustainDone;
-    if (sustainFailure && sustainFailure !== error) error.phaseGSustainFailure = String(sustainFailure);
+    if (sustainFailure && sustainFailure !== error) {
+      const sustainFailureEvidence = {
+        code: sustainFailure.code ?? null,
+        error: String(sustainFailure),
+        pointerCount: sustainFailure.pointerCount ?? null,
+        terminalInputFailure: sustainFailure.phaseGTerminalInputFailure === true,
+        pointerEvidence: cloneDiagnosticValue(sustainFailure.phaseGPointerEvidence ?? null),
+      };
+      error.phaseGSustainFailure = sustainFailureEvidence;
+      error.phaseGBattleSetup.sustainFailure = sustainFailureEvidence;
+    }
     throw error;
   } finally {
     sustainActive = false;

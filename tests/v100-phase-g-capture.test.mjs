@@ -24,6 +24,75 @@ const checkpointDeclaration = parsed.statements.find((node) => ts.isVariableStat
 assert.ok(checkpointDeclaration, "actual checkpoint registry must exist");
 const registeredCheckpoints = Array.from(vm.runInNewContext(checkpointDeclaration.getText(parsed) + "\nBATTLE_EXTRA_CHECKPOINTS"));
 
+test("an unavailable redeploy candidate leaves the shared capture page and scheduler untouched", async () => {
+  const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node)
+    && node.name?.text === "performVerifiedDeploymentPointer");
+  assert.ok(declaration);
+  for (const requestedKind of [null, "scout"]) {
+    const calls = [], attempts = [];
+    const diagnostics = { pageClosed: false, cards: [
+      { kind: "scout", actionability: { eligible: false, reason: "command-insufficient" } },
+      { kind: "medic", actionability: { eligible: false, reason: "cooldown" } },
+    ] };
+    const input = vm.runInNewContext(`${declaration.getText(parsed)}\nperformVerifiedDeploymentPointer`, {
+      withPhaseGPageInputLock: async (_page, action) => action(),
+      checkpointRecorderFor: () => ({ recordDeploymentAttempt: entry => attempts.push(entry), setLatestReadableState() {} }),
+      DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS: 5000,
+      DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS: 1000,
+      withDeploymentPreinputDeadline: async (_page, operation) => operation,
+      readBattleDeploymentDiagnostics: async () => { calls.push("requery"); return diagnostics; },
+      deploymentCandidatesFromDiagnostics: sample => sample.cards.filter(card => card.actionability.eligible),
+      installDeploymentSchedulerProbe: async () => { calls.push("install"); return { status: "observed" }; },
+      removeDeploymentSchedulerProbe: async () => { calls.push("cleanup"); throw new Error("unnecessary cleanup would terminate the capture"); },
+      phaseGPointerFailure: (code, evidence, pointerCount) => Object.assign(new Error(code), { code, phaseGPointerEvidence: evidence, pointerCount }),
+    });
+    const result = await input({}, { requestedKind, phase: "sustain-redeploy" });
+    assert.equal(result.status, "candidate-invalidated-before-pointer");
+    assert.equal(result.pointerCount, 0);
+    assert.equal(result.accepted, false);
+    assert.deepEqual(calls, ["requery"]);
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0].diagnostics, diagnostics);
+    assert.equal(result.evidence.preflight.schedulerProbe.installation, null);
+    assert.equal(result.evidence.preflight.schedulerProbe.cleanup, null);
+  }
+});
+
+test("a secondary page closure retains the structured sustain input failure in its capture setup", async () => {
+  const battle = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "battlePage");
+  let handler;
+  const visit = node => {
+    if (ts.isCatchClause(node) && node.getText(parsed).includes("error.phaseGSustainFailure")) handler = node;
+    ts.forEachChild(node, visit);
+  };
+  visit(battle);
+  assert.ok(handler);
+  const primary = new Error("Target page, context or browser has been closed");
+  const sustain = Object.assign(new Error("scheduler probe cleanup timed out"), {
+    code: "QA_HARNESS_POINTER_SCHEDULER_CLEANUP_DIVERGENCE", pointerCount: 0,
+    phaseGTerminalInputFailure: true,
+    phaseGPointerEvidence: { cancellation: { method: "context-close", independentLifecycleLoss: false, browserConnected: true } },
+  });
+  const run = vm.runInNewContext(`async () => { try { throw primary; } ${handler.getText(parsed)} }`, {
+    primary, sustainFailure: sustain, sustainDone: Promise.resolve(), sustainActive: true,
+    expectedStageId: "stage30", bossKind: "takuya-omega", proofActor: null, proofUnitKind: null,
+    deployedKinds: new Set(), proofActorAttackObserved: false, proofUnitDeployed: false,
+    proofUnitAttackObserved: false, vehicleActionObserved: false, deploymentTrace: [],
+    setupObservations: {}, manualActionEvidence: null, tacticalRecord: null,
+    sealedCombatCausalProof: null, developerBossWaveEvidence: null,
+    cloneDiagnosticValue: value => structuredClone(value),
+  });
+  await assert.rejects(run(), error => {
+    assert.equal(error, primary);
+    assert.equal(error.phaseGSustainFailure.code, sustain.code);
+    assert.equal(error.phaseGSustainFailure.pointerCount, 0);
+    assert.equal(error.phaseGSustainFailure.terminalInputFailure, true);
+    assert.deepEqual(error.phaseGSustainFailure.pointerEvidence, sustain.phaseGPointerEvidence);
+    assert.equal(error.phaseGBattleSetup.sustainFailure, error.phaseGSustainFailure);
+    return true;
+  });
+});
+
 test("a fully visible identical clamped centering target skips only its no-op RPC", () => {
   const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "noopDeploymentCardCentering");
   assert.ok(declaration);
