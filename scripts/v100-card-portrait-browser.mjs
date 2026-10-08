@@ -10,6 +10,7 @@ import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { FORMATION_CARD_ART } from "../app/spriteManifest.js";
 import { nativeBattleTap } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -151,6 +152,7 @@ try {
       page.on("response", r => { if (r.status() >= 400) row.errors.push({ kind: "http", url: r.url(), status: r.status() }); });
       assert.equal((await page.goto(new URL("v100", baseUrl).href, { waitUntil: "domcontentloaded" })).status(), 200);
       await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+      await enterV100FromTitle(page);
       await page.locator(".v100-shell").waitFor({ state: "attached" });
       await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
       await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready");

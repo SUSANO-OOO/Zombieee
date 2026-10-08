@@ -7,7 +7,7 @@ export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
       音楽：魔王魂。作詞・作曲・歌・ベース・ギター：森田交一、ドラム：与野裕史、ピアノ：佐藤まさみ。
       <a href={V100_CREDITS_SONG.terms} target="_blank" rel="noreferrer">魔王魂の利用規約</a>に基づいて使用。原曲を使用し、再生音量をゲーム用に調整。</p>
     <p>タイトルコール：K4ITo。制作者提供の録音を使用。</p>
-    <p>場面別BGM：Scott Buckley ／
+    <p>タイトル・場面別BGM：Scott Buckley ／
       <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>。
       抜粋、ループの継ぎ目、音量をゲーム用に調整。</p>
     <ul>{V100_MUSIC_TRACKS.filter((track, index, all) => all.findIndex(other => other.file === track.file) === index).map(track =>

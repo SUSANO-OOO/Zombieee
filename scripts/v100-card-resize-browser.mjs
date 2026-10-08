@@ -10,6 +10,7 @@ import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {FORMATION_CARD_ART} from '../app/spriteManifest.js';
 import {campaignUnitIdToCombatKind} from '../app/campaign.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',windowsHide:true}).trim();
@@ -86,6 +87,7 @@ for(const browserName of matrix){
   page.on('response',r=>{if(r.status()>=400)row.errors.push({kind:'http',url:r.url(),status:r.status()});});
   assert.equal((await page.goto(new URL('v100',base).href,{waitUntil:'domcontentloaded'})).status(),200);
   await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();
+  await enterV100FromTitle(page);
   row.beforeStart=await page.evaluate(readStartBoundary);
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();row.inputs.push({action:'native-start-battle'});
   // A ready flag can still belong to preparation while its save and the

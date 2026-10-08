@@ -16,6 +16,7 @@ import {installMetalCanvasAudit} from './v100-metal-canvas-audit.mjs';
 import {installClawCanvasAudit} from './v100-claw-canvas-audit.mjs';
 import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audit.mjs';
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 async function readBattleSkillIconObservation() {
  const decoded=new Map();
  const arrivalWaits=[];
@@ -168,6 +169,7 @@ try{for(const number of numbers){
   await page.goto(new URL('v100',origin).href);
   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),start=page.getByRole('button',{name:'戦闘へ',exact:true});
   await play.or(start).first().waitFor();if(await play.isVisible())await play.click();
+  await enterV100FromTitle(page,{timeout:15000});
   await start.click();await page.locator('.game-shell canvas').waitFor();
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){

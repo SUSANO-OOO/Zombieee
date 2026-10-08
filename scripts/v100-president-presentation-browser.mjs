@@ -10,6 +10,7 @@ import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 const engineName = process.env.V100_PRESIDENT_PRESENTATION_ENGINE ?? "chromium";
 const output = process.env.V100_PRESIDENT_PRESENTATION_OUT;
@@ -449,7 +450,7 @@ try {
   await page.addInitScript(installSaveFixture, { save });
   if (!baselineOnly) await page.addInitScript(installCanvasAudit, { save, sourcePath });
   await page.goto(new URL("v100", origin).href);
-  const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); const start = page.getByRole("button", { name: "戦闘へ", exact: true }); await play.or(start).first().waitFor(); if (await play.isVisible().catch(() => false)) await play.click(); await start.click();
+  const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); const start = page.getByRole("button", { name: "戦闘へ", exact: true }); await play.or(start).first().waitFor(); if (await play.isVisible().catch(() => false)) await play.click(); await enterV100FromTitle(page, { timeout: 15000 }); await start.click();
   await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   const timelineEnd = Math.max(...createBattleDefinition(V100_STAGE_IDS[24], { v100: true }).timeline.map(event => Number(event.at) || 0), 0); const deadline = Date.now() + (timelineEnd + 180) * 1000;
   while (Date.now() < deadline) {

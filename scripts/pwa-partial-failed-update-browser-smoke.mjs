@@ -22,6 +22,7 @@ import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js"
 import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry } from "./pwa-expected-abort.mjs";
 
@@ -667,6 +668,7 @@ async function waitForV100Ready(page) {
     document.querySelector(".v100-shell")
     && document.documentElement.dataset.pwaSaveMutationPending === "false"
   ), null, { timeout: 60_000 });
+  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
 }
 
 async function closeContext(label) {

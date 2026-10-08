@@ -12,6 +12,7 @@ import { execFileSync } from "node:child_process";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 const root = path.resolve(process.env.PWA_ACTIVE_REPAIR_ROOT ?? "_site");
 const out = path.resolve(process.env.PWA_ACTIVE_REPAIR_OUT ?? "outputs/v100-native-pwa/active-repair");
@@ -83,6 +84,7 @@ const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("nishiji
 const button = name => page.getByRole("button", { name, exact: true });
 async function ready() {
   await page.waitForFunction(() => document.querySelector(".v100-shell") && document.documentElement.dataset.pwaSaveMutationPending === "false" && !document.querySelector('.v100-shell[aria-busy="true"]'));
+  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 20000 });
 }
 async function shot(name) {
   const file = name + ".png"; await page.screenshot({ path: path.join(out, file) });

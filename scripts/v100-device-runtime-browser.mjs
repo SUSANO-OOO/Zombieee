@@ -14,6 +14,7 @@ import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "./v100-runtime-observation.mjs";
 import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -407,6 +408,7 @@ try {
       const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout: setupTimeoutMs });
       assert.ok(response?.ok(), `navigation HTTP ${response?.status()}`);
       await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click().catch(() => {});
+      await enterV100FromTitle(page, { timeout: setupTimeoutMs });
       await page.locator(".v100-shell").waitFor({ state: "attached", timeout: setupTimeoutMs });
       const setupDeadline = Date.now() + setupTimeoutMs;
       await waitForBattle(page, setupDeadline);

@@ -6,11 +6,12 @@ import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { createEndingAudioMix } from "./endingAudioMix.js";
 import { LANDSCAPE_BLOCK_QUERY } from "./landscapePolicy.js";
 import { V100_TITLE_VOICE, V100_TITLE_INTRO_END, v100TitleIntroFrame } from "./v100TitleIntro.js";
+import { V100TitleMusic } from "./V100TitleMusic";
 import "./v100TitleScreen.css";
 
 type Props = {
   canContinue: boolean; canOpenModes: boolean; busy: boolean; reducedMotion: boolean;
-  settings: { sfxEnabled: boolean; sfxVolume: number };
+  settings: { sfxEnabled: boolean; sfxVolume: number; bgmEnabled: boolean; bgmVolume: number };
   onNew: () => void; onContinue: () => void; onSettings: () => void;
   onCredits: () => void; onModes: () => void; onData: () => void;
 };
@@ -134,13 +135,14 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
   } as CSSProperties;
   return <section className="v100-start-screen" data-v100-surface="title" data-reduced-motion={quietMotion} data-title-intro={phase} data-title-time={elapsed.toFixed(3)} style={style} aria-labelledby="v100-start-title">
     <audio ref={audioRef} src={V100_TITLE_VOICE.src} preload="auto" data-v100-title-voice="true" />
+    <V100TitleMusic settings={settings} voiceActive={phase !== "complete"} />
     <img className="v100-start-art" src={PRODUCTION_VISUALS.title} alt="" fetchPriority="high" />
     <div className="v100-start-shade" aria-hidden="true" />
     <div className="v100-start-haze" aria-hidden="true" />
     <div className="v100-start-content">
       <header className="v100-start-heading">
         <div className="v100-start-wordmark">
-          <h1 id="v100-start-title" data-title="西新世紀末物語">西新世紀末物語</h1>
+          <h1 id="v100-start-title" aria-label="西新世紀末物語" data-title="西新世紀末物語">西新世紀末物語</h1>
           <svg className="v100-start-blood" viewBox="0 0 760 150" preserveAspectRatio="none" aria-hidden="true">
             <path d="M48 69l21 6-16 5 4 12-11-8-13 4 8-12-11-9zM596 38l17 5-7 10 12 7-17-1-10 12 2-15-13-8 13-2zM705 87l12-1 8-9 1 13 13 5-12 4-4 13-6-11-12-3z" />
             <path d="M121 105l54-7-28 8 11 4-35 2zM485 103l63 5-19 4 7 4-42-8zM257 26l39 6-11 3-33-6z" />
