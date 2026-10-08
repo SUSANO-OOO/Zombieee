@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { finishV100TitleIntro } from "./v100-title-qa-entry.mjs";
 
 const root = process.cwd();
 const url = new URL(process.env.V100_TITLE_QA_URL ?? "http://127.0.0.1:62075/v100");
@@ -33,6 +34,7 @@ async function entry(page) {
   await ready(page);
   await page.locator(".v100-start-screen").waitFor({ state: "visible" });
   await dismissFixtureNotice(page);
+  await finishV100TitleIntro(page);
 }
 async function helper(page, action) {
   return page.evaluate(async action => {

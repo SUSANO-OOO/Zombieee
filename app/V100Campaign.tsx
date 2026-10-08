@@ -884,7 +884,7 @@ export function V100Campaign() {
   if (entryOpen) return <main id="v100-campaign" className="v100-shell v100-entry-shell" data-v100-phase="title" aria-busy={saveBusy}>
     {titleRollOpen ? <><V100StaffRoll nodes={v100StoryEventView("v100:event:credits", save.playerName)?.nodes ?? []} playerName={save.playerName} settings={save.settings} onComplete={() => { setTitleRollOpen(false); return true; }} /><button type="button" className="v100-title-credits-close" onClick={() => setTitleRollOpen(false)}>タイトルへ</button></> : <V100TitleScreen
       canContinue={save.campaignStarted} canOpenModes={save.campaignStarted && flow.phase === "map" && save.outbreak.view === "hub" && save.survival.view === "hub"}
-      busy={saveBusy} reducedMotion={save.settings.reducedMotion}
+      busy={saveBusy} reducedMotion={save.settings.reducedMotion} settings={save.settings}
       onNew={() => { setNotice(""); if (save.campaignStarted) setNewGameConfirm(true); else { setSurface("campaign"); setEntryOpen(false); } }}
       onContinue={() => { setNotice(""); setEntryOpen(false); }} onSettings={() => setMenuOpen(true)} onCredits={() => setTitleRollOpen(true)}
       onModes={() => { setModeTab("overview"); openSurface("modes"); setEntryOpen(false); }} onData={() => openSurface("data")} />}

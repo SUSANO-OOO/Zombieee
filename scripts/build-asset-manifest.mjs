@@ -44,6 +44,7 @@ import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js"
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
 import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
+import { V100_TITLE_VOICE } from "../app/v100TitleIntro.js";
 import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
 import { V100_POST_CREDITS_AUDIO, V100_POST_CREDITS_SHOTS } from "../app/v100PostCreditsData.js";
 import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
@@ -290,6 +291,8 @@ for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
 // file directly, without a second bundle copy or a full Web Audio PCM decode.
 record(V100_CREDITS_SONG.src, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "bgm", audioId: "music-v100-staff-roll", audioType: "audio/mpeg" });
+record(V100_TITLE_VOICE.src, { pack: "audio", category: "audio", criticality: "optional",
+  audioChannel: "se", audioId: "voice-v100-title", audioType: "audio/wav" });
 record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId: "sfx-v100-king-laugh", audioType: "audio/mpeg" });
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });

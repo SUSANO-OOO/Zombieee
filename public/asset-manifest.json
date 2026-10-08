@@ -6535,6 +6535,17 @@
       "bundleLength": 32027668
     },
     {
+      "path": "/audio/v100/title/k4ito-title-call-r1.wav",
+      "bytes": 250294,
+      "hash": "sha256-70c351145b92e108f5fc7ff879dd5c70de014fe99bff7ff385673a06fac471f2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "voice-v100-title",
+      "audioType": "audio/wav"
+    },
+    {
       "path": "/audio/v100/ui/v100-ui-advance.mp3",
       "bytes": 1635,
       "hash": "sha256-934249280f387eab6c34b6a7820ce9d726a59080e7bb45017b784f2ba96a5686",

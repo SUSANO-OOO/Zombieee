@@ -34,6 +34,7 @@ export function v100StaffRollSections() {
     credits.flatMap(credit => [credit.author + " · " + credit.license, ...credit.works]), 1, "materials", credits);
   return [
     section("企画・原案・制作・監修", ["K4ITo"], 1, "producer"),
+    section("タイトルコール", ["K4ITo"]),
     paragraphs("制作支援", [
       { kind: "name-first", lines: ["ChatGPT / Codex", "シナリオ構成・実装・演出・音響・品質確認"] },
       { kind: "name-first", lines: ["OpenAI ImageGen", "背景・人物・エフェクト画像"] },

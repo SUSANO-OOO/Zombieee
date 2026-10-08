@@ -69,10 +69,10 @@ test("the published0.9.9.5 pack reuses414 assets and replaces the broken WebKit 
 test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_710_458,
-    candidateDistinctHashBytes: 166_170_555,
-    updateFromV0982Bytes: 93_722_573,
-    updateFromV0993Bytes: 83_347_879,
+    candidateTotalBytes: 166_960_752,
+    candidateDistinctHashBytes: 166_420_849,
+    updateFromV0982Bytes: 93_972_867,
+    updateFromV0993Bytes: 83_598_173,
   });
   assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);

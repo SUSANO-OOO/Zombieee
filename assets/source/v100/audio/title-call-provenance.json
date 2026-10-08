@@ -1,0 +1,28 @@
+{
+  "author": "K4ITo",
+  "work": "西新世紀末物語 タイトルコール",
+  "rights": "Producer supplied his own recording and explicitly requested use in the game start screen on 2026-10-08.",
+  "source": {
+    "fileName": "レコーディング (50).m4a",
+    "bytes": 73414,
+    "sha256": "e6b455c0b081dea598f2e774e780fea1fb65dcf34894c7bdbeab5e3ed56162ba"
+  },
+  "processing": {
+    "decoder": "Native Edge Web Audio decodeAudioData",
+    "format": "Mono 44100 Hz PCM16 WAV",
+    "pitch": 1,
+    "speed": 1,
+    "gain": 1,
+    "tailFadeSeconds": 0.018,
+    "preservedLeadSilenceSeconds": 0.5,
+    "duration": 2.8373015873015874,
+    "peakDb": -5.506100069318457,
+    "rmsDb": -16.71843609464195
+  },
+  "asset": {
+    "path": "/audio/v100/title/k4ito-title-call-r1.wav",
+    "bytes": 250294,
+    "sha256": "70c351145b92e108f5fc7ff879dd5c70de014fe99bff7ff385673a06fac471f2"
+  },
+  "sourceOriginalDistributed": false
+}
