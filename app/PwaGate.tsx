@@ -187,6 +187,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [bootFailure, setBootFailure] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
   const [storageHost, setStorageHost] = useState<HTMLElement | null>(null);
+  const [campaignStorageMenu, setCampaignStorageMenu] = useState(false);
   const [maintenance, setMaintenance] = useState<"clearing" | "failed" | null>(null);
   // A standalone launch cannot decide whether a fully cached candidate still
   // needs its generation pointer until the published manifest has either
@@ -372,6 +373,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setSafety(readSafetyFromDocument());
       setSaveEnvironment(readSaveEnvironmentFromDocument());
       setStorageHost(document.querySelector<HTMLElement>("[data-v100-pwa-storage]"));
+      setCampaignStorageMenu(Boolean(document.querySelector(".v100-start-screen")));
     };
     read();
     const observer = new MutationObserver(read);
@@ -1087,7 +1089,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {!blocking && supported && storageHost && createPortal(storagePanel, storageHost)}
-      {!blocking && supported && !storageHost && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && <>
+      {!blocking && supported && !storageHost && !campaignStorageMenu && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && <>
         <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage(open => !open)}>データ管理</button>
         {showStorage && storagePanel}
       </>}

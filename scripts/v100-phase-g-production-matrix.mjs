@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
@@ -2049,6 +2050,7 @@ async function openRoute(page, save = null) {
     await click(page, offer, "PWA browser play");
   }
   await page.locator(".v100-shell").waitFor({ state: "attached", timeout });
+  await enterV100FromTitle(page, { timeout });
 }
 
 async function activateStoryControl(page, control, label, stopSelector) {

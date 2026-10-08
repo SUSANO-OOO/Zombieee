@@ -12,11 +12,11 @@ import { V100_UNITS, V100_SUPPORTS } from "./v100Registry.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Encounter = { id: string; displayName: string; stageNumber: number; stageId: string; rewardCaps: number; rewardEquipment: { id: string; displayName: string } | null };
-type ModeTab = "outbreak" | "survival" | "compendium" | "records";
+type ModeTab = "overview" | "outbreak" | "survival" | "compendium" | "records";
 type Props = { save: Save; onBack: () => void; onLoadout: (tab?: ModeTab) => void; initialTab?: ModeTab; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
 const runId = () => `v100-outbreak:${crypto.randomUUID()}`;
 
-export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "outbreak" }: Props) {
+export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "overview" }: Props) {
   const [tab, setTab] = useState<ModeTab>(initialTab);
   const [unsaved, setUnsaved] = useState<AshfallBattleResult | null>(null);
   const bosses: Encounter[] = v100OutbreakEncounters(save);
@@ -53,15 +53,21 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     <dl><div><dt>獲得CAPS</dt><dd>+{result.rewardCaps}</dd></div><div><dt>装甲車両</dt><dd>{result.vehicleHp} / {result.vehicleMaxHp}</dd></div><div><dt>経過時間</dt><dd>{result.elapsedSeconds}秒</dd></div><div><dt>装備</dt><dd>{v100EquipmentFor(result.grantedEquipmentId)?.displayName ?? "なし"}</dd></div></dl>
     <button type="button" onClick={() => void onSave(dismissV100OutbreakResult(save))}>異常発生一覧へ</button>
   </section>;
-  return <section className="v100-panel v100-modes-screen" data-v100-surface="modes" aria-label="異常発生・記録">
-    <div className="v100-panel-heading"><div><span className="v100-kicker">作戦地図</span><h2>異常発生・記録</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
-    <nav className="v100-equipment-tabs" aria-label="記録の種類">{([ ["outbreak", "異常発生"], ["survival", "サバイバル"], ["compendium", "ボス図鑑"], ["records", "戦績"] ] as const).map(([id, name]) => <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{name}</button>)}</nav>
+  return <section className="v100-panel v100-modes-screen" data-v100-surface="modes" data-mode-tab={tab} aria-label="モード選択">
+    <div className="v100-panel-heading"><h2>{tab === "overview" ? "モード選択" : tab === "outbreak" ? "異常発生" : tab === "survival" ? "サバイバル" : tab === "compendium" ? "ボス図鑑" : "戦績"}</h2><button type="button" onClick={tab === "overview" ? onBack : () => setTab("overview")}>{tab === "overview" ? "作戦地図へ" : "モード選択へ"}</button></div>
+    {tab === "overview" && <>
+      <div className="v100-mode-catalog">
+        <button type="button" className="v100-mode-entry v100-mode-outbreak" onClick={() => setTab("outbreak")}><span className="v100-mode-entry-copy"><strong>異常発生</strong><span>撃破済みのボスと再戦</span><small>ボスを選んで出撃。CAPSと初回装備を獲得。</small><b>{bosses.length ? `${bosses.length}体と再戦可能` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
+        <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => setTab("survival")}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? `最高制圧 第${save.survival.highestCompletedWave}波` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
+      </div>
+      <nav className="v100-mode-record-links" aria-label="プレイ記録"><button type="button" onClick={() => setTab("compendium")}>ボス図鑑</button><button type="button" onClick={() => setTab("records")}>戦績</button></nav>
+    </>}
     {(tab === "outbreak" || tab === "survival") && <aside className="v100-mode-loadout" aria-label="今回の出撃編成"><div><strong>{save.formationSlots.filter(Boolean).map((id: string) => V100_UNITS.find(unit => unit.id === id)?.displayName).join("・") || "隊員を選んでください"}</strong><p>支援：{V100_SUPPORTS.find(support => support.id === save.equippedSupportId)?.displayName ?? "未選択"} / 装甲車両 耐久 {save.vehicle.maxHp}</p></div><button type="button" onClick={() => onLoadout(tab)}>出撃編成を変更</button></aside>}
     {tab === "survival" && <V100SurvivalView save={save} onSave={onSave} onLoadout={() => onLoadout("survival")} />}
     {tab === "outbreak" && <p>物語で撃破した異常個体との再戦です。現在の編成・装備で出撃します。</p>}
     {tab === "records" && <div className="v100-mode-totals"><span>物語制圧 {save.completedStageIds.length} / 30</span><span>獲得した星 {Object.values(save.bestStars).reduce((sum: number, value) => sum + Number(value), 0)}</span><span>所持 {save.caps} CAPS</span></div>}
-    {tab !== "survival" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
-    {tab !== "survival" && <div className="v100-equipment-catalog">{bosses.map(boss => {
+    {tab !== "overview" && tab !== "survival" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
+    {tab !== "overview" && tab !== "survival" && <div className="v100-equipment-catalog">{bosses.map(boss => {
       const item = boss.rewardEquipment;
       const rewardOwned = item && (save.equipment.inventory[item.id] ?? 0) >= v100EquipmentQuantityCap(item.id);
       const clears = save.outbreak.clearCounts[boss.id] ?? 0;

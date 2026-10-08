@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { V100CreditsFilmView, type V100VisualFrame } from "./V100EndingRoll";
+import { createEndingAudioMix } from "./endingAudioMix.js";
 import { V100_POST_CREDITS_AUDIO, V100_POST_CREDITS_DURATION, V100_POST_CREDITS_LAUGH_CUE, V100_POST_CREDITS_PICTURE_END, V100_POST_CREDITS_MUSIC_END, V100_POST_CREDITS_MIX, V100_POST_CREDITS_SHOTS, V100_POST_CREDITS_TITLES, v100PostCreditsFrame } from "./v100PostCreditsData.js";
 import "./v100PostCreditsFilm.css";
 
@@ -15,6 +16,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   const secondsRef = useRef(0), pausedRef = useRef(false), blockedRef = useRef(blocked), hiddenRef = useRef(false);
   const readyRef = useRef(false), completeRef = useRef(false), completingRef = useRef(false), attemptRef = useRef(0);
   const audioStateRef = useRef("loading"), startupAtRef = useRef(0), mountedRef = useRef(false);
+  const mixRef = useRef<ReturnType<typeof createEndingAudioMix> | null>(null);
   const configRef = useRef({ settings, busy, onComplete });
   const [initialFrame] = useState(() => v100PostCreditsFrame(0));
   const [frame, setFrame] = useState(initialFrame), [paused, setPaused] = useState(false);
@@ -25,6 +27,8 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   useLayoutEffect(() => { configRef.current = { settings, busy, onComplete }; blockedRef.current = blocked; }, [settings, busy, onComplete, blocked]);
   useLayoutEffect(() => {
     const media = [musicRef.current, wavesRef.current, laughRef.current];
+    const mix = createEndingAudioMix(media);
+    mixRef.current = mix;
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
@@ -32,6 +36,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
       laughAttemptRef.current += 1;
       // Passive cleanup runs after React has cleared these refs. Keep the
       // original elements so detached music, waves and voice all stop.
+      mix.dispose();
       for (const audio of media) audio?.pause();
     };
   }, []);
@@ -43,11 +48,11 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
     if (current.sfxEnabled === false || (current.sfxVolume ?? .9) <= 0) { audio.pause(); setLaughState("muted"); return; }
     const token = ++laughAttemptRef.current;
     audio.playbackRate = 1;
-    audio.volume = (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.laugh * v100PostCreditsFrame(secondsRef.current).laughGain;
+    mixRef.current?.setVolume(audio, (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.laugh * v100PostCreditsFrame(secondsRef.current).laughGain);
     try {
       // Preserve its native cursor across a pause, lock or menu. Never seek
       // back to the start of the one-shot laugh on a resume.
-      await audio.play();
+      await mixRef.current?.play(audio);
       if (!mountedRef.current || laughRef.current !== audio || pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current || laughFinishedRef.current || configRef.current.settings.sfxEnabled === false || (configRef.current.settings.sfxVolume ?? .9) <= 0) { audio.pause(); return; }
       if (token !== laughAttemptRef.current) return;
       setLaughState("playing");
@@ -68,15 +73,15 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
     const pairs = [[musicRef.current, current.bgmEnabled !== false && (current.bgmVolume ?? .8) > 0 && secondsRef.current < V100_POST_CREDITS_MUSIC_END], [wavesRef.current, current.sfxEnabled !== false && (current.sfxVolume ?? .9) > 0 && secondsRef.current < V100_POST_CREDITS_PICTURE_END]] as const;
     let gesture = false, unavailable = false;
     const results = await Promise.allSettled(pairs.map(async ([audio, enabled]) => {
-      if (!audio || !enabled) { if (audio) { audio.volume = 0; audio.pause(); } return; }
+      if (!audio || !enabled) { if (audio) { mixRef.current?.setVolume(audio, 0); audio.pause(); } return; }
       audio.playbackRate = 1;
-      audio.volume = audio === musicRef.current ? (current.bgmVolume ?? .8) * V100_POST_CREDITS_MIX.music * volumeFrame.musicGain : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.waves * volumeFrame.wavesGain;
+      mixRef.current?.setVolume(audio, audio === musicRef.current ? (current.bgmVolume ?? .8) * V100_POST_CREDITS_MIX.music * volumeFrame.musicGain : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.waves * volumeFrame.wavesGain);
       if (audio.readyState > 0 && Math.abs(audio.currentTime - secondsRef.current) > .75) audio.currentTime = Math.min(audio.duration || V100_POST_CREDITS_DURATION, secondsRef.current);
       try {
-        await audio.play();
+        await mixRef.current?.play(audio);
         const latest = configRef.current.settings;
         const stillEnabled = audio === musicRef.current ? latest.bgmEnabled !== false && (latest.bgmVolume ?? .8) > 0 && secondsRef.current < V100_POST_CREDITS_MUSIC_END : latest.sfxEnabled !== false && (latest.sfxVolume ?? .9) > 0 && secondsRef.current < V100_POST_CREDITS_PICTURE_END;
-        if (!mountedRef.current || ![musicRef.current, wavesRef.current].includes(audio) || !stillEnabled || pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current) { if (!stillEnabled) audio.volume = 0; audio.pause(); }
+        if (!mountedRef.current || ![musicRef.current, wavesRef.current].includes(audio) || !stillEnabled || pausedRef.current || blockedRef.current || hiddenRef.current || completeRef.current) { if (!stillEnabled) mixRef.current?.setVolume(audio, 0); audio.pause(); }
       }
       catch (error) { if (error instanceof DOMException && error.name === "NotAllowedError") gesture = true; else unavailable = true; }
     }));
@@ -121,9 +126,9 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
         const next = v100PostCreditsFrame(secondsRef.current, configRef.current.settings.reducedMotion || reducedMediaRef.current?.matches);
         paintRef.current?.(next);
         const current = configRef.current.settings;
-        if (musicRef.current) { musicRef.current.volume = (current.bgmEnabled === false ? 0 : (current.bgmVolume ?? .8) * V100_POST_CREDITS_MIX.music) * next.musicGain; if (next.elapsed >= V100_POST_CREDITS_MUSIC_END) musicRef.current.pause(); }
-        if (wavesRef.current) { wavesRef.current.volume = (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.waves) * next.wavesGain; if (next.elapsed >= V100_POST_CREDITS_PICTURE_END) wavesRef.current.pause(); }
-        if (laughRef.current) laughRef.current.volume = (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.laugh) * next.laughGain;
+        if (musicRef.current) { mixRef.current?.setVolume(musicRef.current, (current.bgmEnabled === false ? 0 : (current.bgmVolume ?? .8) * V100_POST_CREDITS_MIX.music) * next.musicGain); if (next.elapsed >= V100_POST_CREDITS_MUSIC_END) musicRef.current.pause(); }
+        if (wavesRef.current) { mixRef.current?.setVolume(wavesRef.current, (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.waves) * next.wavesGain); if (next.elapsed >= V100_POST_CREDITS_PICTURE_END) wavesRef.current.pause(); }
+        if (laughRef.current) mixRef.current?.setVolume(laughRef.current, (current.sfxEnabled === false ? 0 : (current.sfxVolume ?? .9) * V100_POST_CREDITS_MIX.laugh) * next.laughGain);
         const displayed = imageRef.current?.querySelector<HTMLElement>("[data-credit-rendered-shot-index]");
         const displayedShot = V100_POST_CREDITS_SHOTS[Number(displayed?.dataset.creditRenderedShotIndex)];
         const smiling = displayedShot && ["crooked-smile", "ogata-grin"].includes(displayedShot.id);
@@ -150,8 +155,8 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
     // Skip the shots while retaining the continuation, sequel and thanks.
     // Repeated presses during the titles must not rewind their timeline.
     secondsRef.current = Math.max(secondsRef.current, 40);
-    if (wavesRef.current) { wavesRef.current.volume = 0; wavesRef.current.pause(); }
-    if (secondsRef.current >= V100_POST_CREDITS_MUSIC_END && musicRef.current) { musicRef.current.volume = 0; musicRef.current.pause(); }
+    if (wavesRef.current) { mixRef.current?.setVolume(wavesRef.current, 0); wavesRef.current.pause(); }
+    if (secondsRef.current >= V100_POST_CREDITS_MUSIC_END && musicRef.current) { mixRef.current?.setVolume(musicRef.current, 0); musicRef.current.pause(); }
     pausedRef.current = false; setPaused(false); readyRef.current = true;
     setFrame(v100PostCreditsFrame(secondsRef.current));
   };

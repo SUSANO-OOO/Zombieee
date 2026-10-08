@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { v100CreditsCameraStyle } from "./v100CreditsFilmEdit.js";
+import { createEndingAudioMix } from "./endingAudioMix.js";
 import { V100_CREDITS_SONG, V100_CREDITS_DURATION, V100_CREDITS_FADE_SECONDS, V100_CREDITS_MIX_GAIN, v100CreditsOutroFrame, v100CreditScrollFrame, v100StaffRollSections, v100StaffRollFrame, v100StaffRollResumeSeconds } from "./v100StaffRoll.js";
 import "./v100StaffRoll.css";
 
@@ -119,6 +120,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
   const completionRequestedRef = useRef(false);
   const playingRef = useRef(false);
   const mountedRef = useRef(false);
+  const mixRef = useRef<ReturnType<typeof createEndingAudioMix> | null>(null);
   const playbackAllowedRef = useRef(false);
   const playAttemptRef = useRef(0);
   const startupAtRef = useRef<number | null>(null);
@@ -151,6 +153,8 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
 
   useLayoutEffect(() => {
     const audio = audioRef.current;
+    const mix = createEndingAudioMix([audio]);
+    mixRef.current = mix;
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
@@ -158,6 +162,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       playAttemptRef.current += 1;
       playingRef.current = false;
       // Retain the element itself: React clears media refs on unmount.
+      mix.dispose();
       audio?.pause();
     };
   }, []);
@@ -197,7 +202,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       }
       // Preserve the previous sample across pauses. Resampling here discards
       // the last media slice and delays the 106-second edit after each resume.
-      await audio.play();
+      await mixRef.current?.play(audio);
       if (!mountedRef.current || audioRef.current !== audio || !playbackAllowedRef.current || !soundEnabledRef.current || document.hidden || occludedRef.current || blockedRef.current || (outroRef.current !== null && outroRef.current >= V100_CREDITS_FADE_SECONDS) || endedRef.current) { audio.pause(); return; }
       if (attempt !== playAttemptRef.current) return;
       playingRef.current = true;
@@ -218,7 +223,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     const audio = audioRef.current;
     if (!audio) return;
     musicVolumeRef.current = Math.max(0, Math.min(1, (settings.bgmVolume ?? .8) * V100_CREDITS_MIX_GAIN));
-    audio.volume = musicVolumeRef.current * (outroRef.current === null ? 1 : v100CreditsOutroFrame(outroRef.current).gain);
+    mixRef.current?.setVolume(audio, musicVolumeRef.current * (outroRef.current === null ? 1 : v100CreditsOutroFrame(outroRef.current).gain));
     if (!soundEnabled) { playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; }
     const handle = requestAnimationFrame(() => { if (soundEnabled) void play(); else setSoundState("muted"); });
     return () => cancelAnimationFrame(handle);
@@ -263,7 +268,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
         if (outroRef.current !== null) {
           outroRef.current += delta;
           const closing = v100CreditsOutroFrame(outroRef.current);
-          if (audio) { audio.volume = musicVolumeRef.current * closing.gain; if (closing.gain === 0) audio.pause(); }
+          if (audio) { mixRef.current?.setVolume(audio, musicVolumeRef.current * closing.gain); if (closing.gain === 0) audio.pause(); }
           stageRef.current?.style.setProperty("--credit-curtain", String(closing.curtain));
           if (closing.ended) void finish();
         } else if (playingRef.current && audio && !audio.paused && !audio.ended) {

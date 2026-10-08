@@ -1,4 +1,5 @@
 "use client";
+import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -131,6 +132,7 @@ import {
   acknowledgeCampaignMigrationNotice,
   acknowledgeEmploymentNotice,
   campaignUnitIdToCombatKind,
+  combatKindToCampaignUnitId,
   campaignUnitLevelUpgradeQuote,
   checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
@@ -23917,7 +23919,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                    ><span className="empty-slot-label">空き枠</span><small>編成待ち</small></div>;
                 }
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
-                const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
+                const portraitArt = (externalSessionActive ? v100StoryPortraitPath(combatKindToCampaignUnitId(card.kind)) : null)
+                  ?? (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
                   ?? ((externalSessionActive && hud.summonedCount + hud.deployQueue >= V100_FORMATION_MAX_SLOTS) || hud.deployQueue >= 3
                     ? "同時出撃の上限"
@@ -23930,7 +23933,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
-                    <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
+                    <span className="card-copy" aria-hidden="true"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                     {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
                       <span className="card-state-full">{cardBlockReason}</span>
                       <span className="card-state-compact" aria-hidden="true">{cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>

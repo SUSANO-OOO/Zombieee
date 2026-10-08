@@ -37,7 +37,7 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
       imageSizing: getComputedStyle(image).objectFit,
       background: image.currentSrc,
       imageDecoded: image.complete && image.naturalWidth > 0,
-      audio: { src: audio.currentSrc, currentTime: audio.currentTime, duration: audio.duration, paused: audio.paused, loop: audio.loop, volume: audio.volume, readyState: audio.readyState },
+      audio: { src: audio.currentSrc, currentTime: audio.currentTime, duration: audio.duration, paused: audio.paused, loop: audio.loop, volume: audio.volume, gain: window.__endingOutputGain?.(audio) ?? audio.volume, readyState: audio.readyState },
       audioElements: document.querySelectorAll(".v100-staff-roll audio").length,
       pictureFits: picture.top >= 0 && picture.left >= 0 && picture.bottom <= innerHeight && picture.right <= innerWidth,
       cinemaUsesFullFrame: movie.classList.contains("v100-credit-cinema") && picture.left <= 1 && picture.right >= innerWidth - 1,

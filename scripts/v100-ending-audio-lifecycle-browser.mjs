@@ -23,6 +23,7 @@ await writeFile(entry, `import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {V100StaffRoll} from ${modulePath("V100EndingRoll.tsx")};
 import {V100PostCreditsFilm} from ${modulePath("V100PostCreditsFilm.tsx")};
+import {endingAudioState} from ${modulePath("endingAudioMix.js")};
 import {v100StoryEventView} from ${modulePath("v100StoryEvents.js")};
 function Fixture(){
  const [view,setView]=useState('ready'),[enabled,setEnabled]=useState(true),[reducedMotion,setReducedMotion]=useState(false),[blocked,setBlocked]=useState(false);
@@ -30,6 +31,7 @@ function Fixture(){
  return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button><button onClick={()=>setReducedMotion(!reducedMotion)}>Toggle motion</button><button onClick={()=>setBlocked(!blocked)}>Toggle credits menu</button></nav>
  {view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} blocked={blocked} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} blocked={blocked} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
 }
+window.__endingAudioState=endingAudioState;
 createRoot(document.getElementById('root')).render(<Fixture/>);`);
 await build({ entryPoints: [entry], bundle: true, outfile: path.join(out, "fixture.js"), platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, external: ["/fonts/v100/BIZUDPGothic-Regular.woff2", "/fonts/v100/ZenKakuGothicNew-Bold.woff2", "/fonts/v100/Rajdhani-Bold.woff2"] });
 await writeFile(path.join(out, "index.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="/fixture.css"><style>html,body,#root{height:100%;margin:0;overflow:hidden}nav{position:fixed;z-index:99999;top:0;left:0}button{padding:10px}</style></head><body><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');
@@ -49,16 +51,17 @@ const server = createServer(async (request, response) => {
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const report = { status: "failed", selection, head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, evidenceKind: "Actual React ending components and native media; captured detached elements and delayed play promises. Test output is muted; no speaker acceptance.", cases: [] };
-for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
-const sample = page => page.evaluate(() => window.__endingMedia.map(audio => ({ paused: audio.paused, connected: audio.isConnected, time: audio.currentTime, rate: audio.playbackRate, volume: audio.volume })));
+for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "app/endingAudioMix.js", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
+const sample = page => page.evaluate(() => window.__endingMedia.map(audio => ({ paused: audio.paused, connected: audio.isConnected, time: audio.currentTime, rate: audio.playbackRate, nativeVolume: audio.volume, gain: window.__endingAudioState(audio)?.gain ?? audio.volume, contextState: window.__endingAudioState(audio)?.context ?? null })));
 async function balanceCase(browser, engine, mode) {
   const result = { engine, mode, status: "failed", errors: [] };
   report.cases.push(result);
   const context = await browser.newContext({ viewport: { width: 844, height: 390 } }), page = await context.newPage();
   page.on("pageerror", error => result.errors.push(String(error)));
-  await context.addInitScript(deny => {
+  await context.addInitScript(mode => {
     window.__endingMedia = [];
-    window.__denyFilmAudio = deny;
+    window.__denyFilmAudio = mode === 'autoplay';
+    if (mode === 'locked-volume') Object.defineProperty(HTMLMediaElement.prototype, 'volume', { configurable: true, get: () => 1, set: () => {} });
     const nativePlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       this.muted = true;
@@ -66,18 +69,30 @@ async function balanceCase(browser, engine, mode) {
       if (window.__denyFilmAudio && this.closest('.v100-post-credits-film')) return Promise.reject(new DOMException('Owned autoplay-policy fixture', 'NotAllowedError'));
       return nativePlay.call(this);
     };
-  }, mode === "autoplay");
+  }, mode);
   try {
     await page.goto(origin, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: mode === "mix" ? "Open film" : "Open credits", exact: true }).click();
     if (mode !== "mix") {
-      await page.waitForFunction(() => document.querySelector('.v100-staff-roll audio')?.currentTime > .2);
+      // Native muted media can advance before Web Audio renders its first
+      // quantum. Inspect the actual running graph, then assert its gain.
+      await page.waitForFunction(() => {
+        const audio = document.querySelector('.v100-staff-roll audio');
+        const graph = audio && window.__endingAudioState(audio);
+        return audio?.currentTime > .5 && document.querySelector('.v100-staff-roll')?.dataset.v100CreditAudio === 'playing'
+          && (!(window.AudioContext || window.webkitAudioContext) || graph?.context === 'running');
+      }, undefined, { timeout: 5000 });
       result.credits = await sample(page);
-      assert.ok(Math.abs(result.credits[0].volume - .8 * V100_CREDITS_MIX_GAIN) < .001);
+      assert.ok(Math.abs(result.credits[0].gain - .8 * V100_CREDITS_MIX_GAIN) < .001);
+      if (mode === 'locked-volume') {
+        assert.equal(result.credits[0].nativeVolume, 1);
+        await page.getByRole('button', { name: /映像と文字の速さ/ }).click();
+        await page.getByRole('button', { name: /映像と文字の速さ/ }).click();
+      }
       if (mode === "autoplay") await page.getByRole("button", { name: "スキップ", exact: true }).click();
       await page.locator('.v100-post-credits-film').waitFor({ state: "visible", timeout: 120000 });
       result.handoff = await sample(page);
-      assert.ok(result.handoff.filter(audio => !audio.connected).every(audio => audio.paused && audio.volume === 0));
+      assert.ok(result.handoff.filter(audio => !audio.connected).every(audio => audio.paused && audio.gain === 0));
     }
     const film = page.locator('.v100-post-credits-film');
     await page.waitForFunction(() => Number(document.querySelector('.v100-post-credits-film')?.dataset.v100FilmElapsed) > 6, undefined, { timeout: 15000 });
@@ -91,13 +106,14 @@ async function balanceCase(browser, engine, mode) {
       await page.waitForFunction(() => !document.querySelector('.v100-post-credits-film audio').paused);
     } else {
       const media = result.opening.filter(audio => audio.connected);
-      assert.ok(Math.abs(media[0].volume - .8 * V100_POST_CREDITS_MIX.music) < .001);
-      assert.ok(Math.abs(media[1].volume - .9 * V100_POST_CREDITS_MIX.waves) < .001);
+      assert.ok(Math.abs(media[0].gain - .8 * V100_POST_CREDITS_MIX.music) < .001);
+      assert.ok(Math.abs(media[1].gain - .9 * V100_POST_CREDITS_MIX.waves) < .001);
+      if (mode === 'locked-volume') assert.ok(media.every(audio => audio.nativeVolume === 1));
     }
     await page.waitForFunction(end => Number(document.querySelector('.v100-post-credits-film')?.dataset.v100FilmElapsed) >= end + .1, V100_POST_CREDITS_PICTURE_END, { timeout: 45000 });
     result.afterFace = await sample(page);
     const current = result.afterFace.filter(audio => audio.connected);
-    assert.equal(current[1].paused, true); assert.equal(current[1].volume, 0);
+    assert.equal(current[1].paused, true); assert.equal(current[1].gain, 0);
     assert.equal(await film.locator('.v100-post-credit-picture').evaluate(element => Number(getComputedStyle(element).opacity)), 0);
     assert.equal(current[0].paused, false);
     if (mode === "mix") {
@@ -109,7 +125,7 @@ async function balanceCase(browser, engine, mode) {
       await page.waitForTimeout(300);
       result.afterResume = await sample(page);
       const resumed = result.afterResume.filter(audio => audio.connected);
-      assert.equal(resumed[1].paused, true); assert.equal(resumed[1].volume, 0);
+      assert.equal(resumed[1].paused, true); assert.equal(resumed[1].gain, 0);
       assert.ok(Math.abs(resumed[1].time - current[1].time) < .1, 'Retired waves must not resume on sound, pause or visibility changes');
     }
     result.titles = [];
@@ -164,7 +180,14 @@ try {
   for (const engine of engines) {
     const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(engine === "chromium" ? { channel: "msedge", args: ["--mute-audio"] } : {}) });
     try {
-      if (selection === "balance") { await Promise.all(['auto', 'mix', 'autoplay'].map(mode => balanceCase(browser, engine, mode))); continue; }
+      if (selection === "balance") {
+        const probe = await browser.newContext(), page = await probe.newPage();
+        const webAudio = await page.evaluate(() => Boolean(window.AudioContext || window.webkitAudioContext));
+        await probe.close();
+        (report.capabilities ??= {})[engine] = { webAudio, lockedVolumeRegression: webAudio ? 'native GainNode' : 'unavailable in this browser port; native-volume fallback tested' };
+        await Promise.all((webAudio ? ['auto', 'mix', 'autoplay', 'locked-volume'] : ['auto', 'mix', 'autoplay']).map(mode => balanceCase(browser, engine, mode)));
+        continue;
+      }
       for (const view of (selection === "skip" ? ["film"] : ["credits", "film"])) for (const mode of (selection === "skip" ? ["skip"] : selection === "motion" ? ["reduced-motion"] : ["exit", "delayed-exit", "delayed-pause", "delayed-mute", "delayed-hide", "remount", "delayed-remount", "reduced-motion", ...(view === "film" ? ["laugh-exit", "skip"] : [])])) {
         const result = { engine, browserVersion: browser.version(), view, mode, status: "failed", errors: [] };
         report.cases.push(result);

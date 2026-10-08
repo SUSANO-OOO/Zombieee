@@ -1,0 +1,79 @@
+/* Keep portrait geometry and copy in independent, bounded grid cells. */
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot {
+  grid-template-columns: 64px minmax(0,1fr);
+  grid-template-rows: minmax(0,1fr);
+  min-height: 106px;
+  gap: 7px;
+  padding: 5px;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait {
+  grid-column: 1; grid-row: 1; align-self: stretch !important;
+  width: 64px; height: 100%; min-height: 90px; max-height: none;
+  aspect-ratio: auto !important; border: 0; border-radius: 2px;
+  background: radial-gradient(ellipse at 50% 25%,#536458,#12201b);
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait img {
+  display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%;
+  min-height: 0; max-height: none; aspect-ratio: auto !important;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta {
+  display: flex !important; flex-direction: column; justify-content: center;
+  grid-column: 2; grid-row: 1; gap: 4px; padding: 0; overflow: hidden;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta :is(small,strong,em,b) {
+  display: block !important; position: static !important; grid-column: auto !important; grid-row: auto !important;
+  margin: 0; min-width: 0; max-height: none; line-height: 1.25; white-space: normal; overflow-wrap: anywhere;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta small { font-size: 10px; color: #aebdb0; background: none; padding: 0; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta strong { font-size: 15px; color: #f2dfb1; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta em { font-size: 12px; color: #c5d3c8; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { font-size: 11px; color: #d9c58f; font-weight: 500; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-art img { width: 100%; height: 100%; object-fit: contain; }
+#v100-campaign .v100-save-meta .v100-caps-balance { position: static; flex: 0 0 auto; min-width: 78px; padding: 3px 5px; text-align: right; font-size: 14px; color: #e0cf9d; }
+#v100-campaign .v100-topbar-title:empty { display: none; }
+#v100-campaign .v100-topbar .v100-save-meta { flex-wrap: nowrap; }
+
+#v100-campaign .v100-modes-screen { display: flex; flex-direction: column; gap: 12px; }
+#v100-campaign .v100-modes-screen .v100-panel-heading { flex: none; margin: 0; }
+#v100-campaign .v100-mode-catalog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 170px; }
+#v100-campaign .v100-mode-entry { position: relative; overflow: hidden; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 170px; padding: 26px; border-radius: 4px; border: 1px solid #9d8370; color: #f1e9d7; }
+#v100-campaign .v100-mode-outbreak { background: linear-gradient(100deg,#211917f5,#3f201acc),url("/art/v060/battle-nishijin-defense-line-v1.webp") center / cover; }
+#v100-campaign .v100-mode-survival { border-color: #638b8b; background: linear-gradient(100deg,#112326f5,#17363bba),url("/art/v070/stages/station-gate-background-v1.webp") center / cover; }
+#v100-campaign .v100-mode-entry-copy { display: flex; flex-direction: column; gap: 14px; }
+#v100-campaign .v100-mode-entry-copy strong { font-size: clamp(23px,3vw,34px); letter-spacing: .04em; }
+#v100-campaign .v100-mode-entry-copy > span { font-size: 16px; color: #e6d9bd; }
+#v100-campaign .v100-mode-entry-copy small { font-size: 13px; line-height: 1.5; color: #c3cbc3; }
+#v100-campaign .v100-mode-entry-copy b { font-size: 12px; font-weight: 500; color: #e0ba78; }
+#v100-campaign .v100-mode-entry-arrow { font-size: 36px; color: #ceba92; }
+#v100-campaign .v100-mode-entry:hover,#v100-campaign .v100-mode-entry:focus-visible { border-color: #f0d39a; outline: 2px solid #f0d39a; outline-offset: -3px; }
+#v100-campaign .v100-mode-record-links { display: flex; justify-content: flex-end; gap: 10px; flex: none; }
+#v100-campaign .v100-mode-record-links button { min-height: 44px; min-width: 116px; font-size: 14px; }
+.v100-title-feedback { position: fixed; z-index: 130; top: 10px; left: 50%; transform: translateX(-50%); max-width: 90%; padding: 10px 16px; background: #112421; border: 1px solid #b59b68; color: #ebdfc3; font-size: 14px; }
+
+/* The unit face, name, command cost and wait state share no positioning cells. */
+.v100-shell .game-frame .unit-card .portrait { left: 0; top: 0; bottom: 0; width: 44%; height: 100%; background: none; overflow: hidden; }
+.v100-shell .game-frame .unit-card .portrait > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+.v100-shell .game-frame .unit-card .card-copy { display: block; position: absolute; left: 46%; top: 3px; right: 3px; z-index: 3; }
+.v100-shell .game-frame .unit-card .card-copy b { display: block; font: 700 12px/1.2 var(--v100-reading-font); color: #f6e7c6; overflow-wrap: anywhere; white-space: normal; }
+.v100-shell .game-frame .unit-card .card-copy small { display: none; }
+.v100-shell .game-frame .unit-card .cost { right: 4px; bottom: 3px !important; top: auto; font-size: 14px; }
+.v100-shell .game-frame .unit-card .card-state { left: 0; right: 56%; top: auto; bottom: 2px; padding: 1px; width: auto; font-size: 10px; }
+.v100-shell .game-frame .unit-card[data-state="cooldown"] .cooldown-mask small { left: 0; right: 56%; top: auto; bottom: 2px; font-size: 10px; padding: 2px 1px; }
+@media (max-height: 460px) and (orientation: landscape) {
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-track { grid-auto-flow: column; grid-auto-columns: minmax(170px,42%); grid-template-columns: none; grid-template-rows: minmax(106px,1fr); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; touch-action: pan-x; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot { width: auto; height: 100%; min-height: 106px; grid-template-columns: 64px minmax(0,1fr); grid-template-rows: minmax(0,1fr); scroll-snap-align: start; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait { width: 64px; height: 100%; min-height: 90px; max-height: none; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta { grid-column: 2; grid-row: 1; justify-content: center; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta :is(strong,em,b) { font-size: 12px; line-height: 1.25; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta strong { font-size: 14px; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta small { display: none !important; }
+  #v100-campaign .v100-mode-catalog { min-height: 148px; gap: 10px; }
+  #v100-campaign .v100-mode-entry { min-height: 148px; padding: 14px 18px; }
+  #v100-campaign .v100-mode-entry-copy { gap: 8px; }
+  #v100-campaign .v100-mode-entry-copy strong { font-size: 26px; }
+  #v100-campaign .v100-mode-entry-copy > span { font-size: 14px; }
+  #v100-campaign .v100-mode-record-links button { min-width: 100px; }
+}
+@media (max-width: 640px) and (orientation: portrait) {
+  #v100-campaign .v100-mode-catalog { grid-template-columns: 1fr; }
+}

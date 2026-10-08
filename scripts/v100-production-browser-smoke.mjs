@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
@@ -183,6 +184,7 @@ for (const engine of engines) {
         });
 
         const nameTitle = page.locator("#v100-name-title");
+        await enterV100FromTitle(page, { timeout });
         await page.waitForFunction(() => Boolean(document.querySelector("#v100-name-title, .v100-map-layout")), null, { timeout });
         if (await visible(nameTitle)) {
           await page.locator("#v100-player-name").fill("QAプレイヤー");

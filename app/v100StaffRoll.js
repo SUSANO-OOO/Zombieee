@@ -51,7 +51,7 @@ export function v100StaffRollSections() {
     materials("効果音・ボイス・エフェクト素材", V100_SOUND_CREDITS.filter(credit => credit.role !== "ボス戦音楽")),
     materials("旧版から継承・同梱した音源", V100_BUNDLED_LEGACY_CREDITS.map(credit => ({ ...credit, works: [credit.work], license: "CC0" }))),
     ...V100_PRODUCTION_TOOLS.slice(1).map(credit => section("使用ツール — " + credit.title, [...credit.lines], 2)),
-    section("使用書体", ["BIZ UDPGothic", "Zen Kaku Gothic New", "Rajdhani", "SIL Open Font License 1.1"]),
+    section("使用書体", ["BIZ UDPGothic", "Zen Kaku Gothic New", "Rajdhani", "New Tegomin", "SIL Open Font License 1.1"]),
   ];
 }
 

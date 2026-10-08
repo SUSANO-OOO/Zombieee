@@ -11,6 +11,8 @@ import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
 import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
 import { installCreditTransitionAudit, assertCreditTransitionProof } from "./v100-staff-roll-transition-audit.mjs";
+import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 const upstreamOrigin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 assert.ok(["127.0.0.1", "localhost"].includes(upstreamOrigin.hostname));
@@ -37,6 +39,7 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
   holdSong = delaySong; failSongResponse = failSong;
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
+  await installEndingAudioGainObserver(page);
   const result = { name, status: "failed", errors: [], mediaSamples: [], nativeEnded: [] };
   report.cases.push(result);
   page.on("pageerror", error => result.errors.push(String(error)));
@@ -92,13 +95,14 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
       const audio = window.__lastCreditAudio;
       if (audio) window.__creditMediaProof.samples.push({ at: performance.now(), scene: root?.dataset.v100NodeIndex ?? null,
         shot: root?.dataset.v100CreditShotIndex ?? null, time: audio.currentTime, duration: audio.duration,
-        rate: audio.playbackRate, volume: audio.volume, paused: audio.paused, connected: audio.isConnected,
+        rate: audio.playbackRate, volume: audio.volume, gain: window.__endingOutputGain(audio), paused: audio.paused, connected: audio.isConnected,
         outro: root?.classList.contains("v100-credits-outro") ?? false, progress: root?.dataset.v100CreditProgress ?? null });
     }, 100);
   }, { origin: origin.origin, serialized: serializeV100Save(save) });
   if (name === "106-second-edit-with-loading-pause-rotation-pagehide") await installCreditTransitionAudit(page);
   await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+  await enterV100FromTitle(page);
   await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
   return { page, context, result, releaseSong: () => { holdSong = false; transport.release(); } };
 }
@@ -121,7 +125,7 @@ async function readReducedFilmFrame(page) {
 }
 async function readNativeMedia(page) {
   return page.locator(".v100-staff-roll audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused,
-    seeking: audio.seeking, ended: audio.ended, rate: audio.playbackRate, volume: audio.volume, networkState: audio.networkState, readyState: audio.readyState,
+    seeking: audio.seeking, ended: audio.ended, rate: audio.playbackRate, volume: audio.volume, gain: window.__endingOutputGain(audio), networkState: audio.networkState, readyState: audio.readyState,
     error: audio.error && { code: audio.error.code, message: audio.error.message },
     buffered: [...Array(audio.buffered.length)].map((_, i) => [audio.buffered.start(i), audio.buffered.end(i)]),
     seekable: [...Array(audio.seekable.length)].map((_, i) => [audio.seekable.start(i), audio.seekable.end(i)]) }));
@@ -189,15 +193,15 @@ try {
     assert.deepEqual(proof.ended, [], "The edit fades before the unmodified full song reaches EOF");
     assert.deepEqual(proof.seeks, []);
     assert.ok(proof.samples.every(row => row.rate === 1));
-    const nominal = result.initial.audio.volume;
-    const fade = proof.samples.filter(row => row.outro && row.volume < nominal - .00001);
-    assert.ok(fade.length >= 15, "Observe the gradual native volume fade");
+    const nominal = result.initial.audio.gain;
+    const fade = proof.samples.filter(row => row.outro && row.gain < nominal - .00001);
+    assert.ok(fade.length >= 15, "Observe the gradual actual output gain fade");
     assert.ok(fade[0].time >= V100_CREDITS_DURATION - .1 && fade[0].time < V100_CREDITS_DURATION + .35);
-    assert.ok(fade.some(row => row.volume === 0 && row.paused && row.time >= V100_CREDITS_DURATION + V100_CREDITS_FADE_SECONDS - .3));
-    assert.ok(fade.every((row, index) => index === 0 || row.volume <= fade[index - 1].volume));
+    assert.ok(fade.some(row => row.gain === 0 && row.paused && row.time >= V100_CREDITS_DURATION + V100_CREDITS_FADE_SECONDS - .3));
+    assert.ok(fade.every((row, index) => index === 0 || row.gain <= fade[index - 1].gain));
     assert.equal(new Set(proof.samples.filter(row => row.scene !== null).map(row => row.scene)).size, 11);
     assert.equal(new Set(proof.samples.filter(row => row.shot !== null).map(row => row.shot)).size, V100_CREDITS_FILM.length);
-    result.fade = { startedAtMusicSeconds: fade[0].time, stopped: fade.find(row => row.volume === 0 && row.paused), samples: fade.length, nominal };
+    result.fade = { startedAtMusicSeconds: fade[0].time, stopped: fade.find(row => row.gain === 0 && row.paused), samples: fade.length, nominal };
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
     assert.equal(proof.save.flowState.phase, "epilogue");
     result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof);
@@ -317,7 +321,7 @@ try {
           const filmObserver = new MutationObserver(() => {
             if (proof.filmComplete.length === 0 && film.dataset.v100CreditProgress === "1.0000" && Number(film.style.getPropertyValue("--credit-curtain")) > .999) {
               const audio = film.querySelector("audio");
-              proof.filmComplete.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending, rate: audio.playbackRate, time: audio.currentTime, paused: audio.paused, volume: audio.volume });
+              proof.filmComplete.push({ at: performance.now(), pending: document.documentElement.dataset.pwaSaveMutationPending, rate: audio.playbackRate, time: audio.currentTime, paused: audio.paused, volume: audio.volume, gain: window.__endingOutputGain(audio) });
             }
           });
           filmObserver.observe(film, { attributes: true, attributeFilter: ["style", "data-v100-credit-progress"] });
@@ -366,7 +370,7 @@ try {
         assert.deepEqual(result.holdProof.ended, []);
         assert.equal(result.holdProof.filmComplete[0].rate, 1);
         assert.equal(result.holdProof.filmComplete[0].paused, true);
-        assert.equal(result.holdProof.filmComplete[0].volume, 0);
+        assert.equal(result.holdProof.filmComplete[0].gain, 0);
         result.nativeSeeks = await page.evaluate(() => window.__creditMediaProof.seeks);
         assert.deepEqual(result.nativeSeeks, []);
         assert.ok(result.holdProof.opens.every(row => row.nativeRequest));

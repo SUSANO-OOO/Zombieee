@@ -87,7 +87,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     const actual = current.assets.find(asset => asset.path === expected.path);
     assert.deepEqual({ path: actual?.path, bytes: actual?.bytes, hash: actual?.hash, criticality: actual?.criticality }, expected);
   }
-  assert.equal(designAssetPaths.size, 9, "six regional maps and three licensed fonts are explicit candidate additions");
+  assert.equal(designAssetPaths.size, 10, "six regional maps and four licensed fonts are explicit candidate additions");
   for (const expected of V100_DESIGN_ASSET_ADDITIONS) {
     const actual = current.assets.find(asset => asset.path === expected.path);
     assert.ok(actual, expected.path);

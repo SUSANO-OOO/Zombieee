@@ -15,6 +15,7 @@ export const V100_POPUP_LEASE_MS = 30_000;
 export const V100_STORAGE_EVENT_KEYS = Object.freeze([V100_PRIMARY_STORAGE_KEY, V100_MIRROR_STORAGE_KEY, V100_BACKUP_STORAGE_KEY]);
 const CURRENT = "current";
 const PREVIOUS = "last-known-good";
+const NEW_GAME_ARCHIVE = "new-game:latest-backup";
 const MIRROR_CORRUPTION = "bootstrap-corrupt-mirrors";
 const GIFT = V100_LEGACY_GIFT.entitlementReceipt;
 const CHANNEL = `${V100_PRIMARY_STORAGE_KEY}:changed`;
@@ -95,12 +96,12 @@ async function transaction(host, action) {
         tx = db.transaction(["saves", "entitlements"], "readwrite");
         const saves = tx.objectStore("saves");
         const gifts = tx.objectStore("entitlements");
-        const values = { current: null, previous: null, gift: null, mirrorCorruption: null };
-        let waiting = 4;
+        const values = { current: null, previous: null, gift: null, mirrorCorruption: null, newGameArchive: null };
+        let waiting = 5;
         tx.oncomplete = () => finish(outcome);
         tx.onabort = () => finish(result(false, null, tx.error?.name ?? "transaction-aborted"));
         tx.onerror = () => { /* Native error aborts the transaction; never publish partial success. */ };
-        for (const [key, request] of [["current", saves.get(CURRENT)], ["previous", saves.get(PREVIOUS)], ["gift", gifts.get(GIFT)], ["mirrorCorruption", saves.get(MIRROR_CORRUPTION)]]) {
+        for (const [key, request] of [["current", saves.get(CURRENT)], ["previous", saves.get(PREVIOUS)], ["gift", gifts.get(GIFT)], ["mirrorCorruption", saves.get(MIRROR_CORRUPTION)], ["newGameArchive", saves.get(NEW_GAME_ARCHIVE)]]) {
           request.onsuccess = () => {
             values[key] = request.result ?? null;
             waiting -= 1;
@@ -223,6 +224,34 @@ export async function persistV100BrowserSave(nextSave, host = globalThis, { expe
     return result(true, carried.save, "", { changed: true });
   });
   return mirrorAndNotify(outcome, host);
+}
+
+/** Explicit title-menu action. The archived campaign survives later autosaves. */
+export async function startNewV100BrowserCampaign(host = globalThis, { confirmed = false, expectedRevision = null, ownerId = null } = {}) {
+  if (confirmed !== true) return result(false, null, "new-game-confirmation-required");
+  const outcome = await transaction(host, (values, saves, gifts) => {
+    const state = currentState(values);
+    if (!state.ok) return state;
+    if (expectedRevision !== state.save.revision) return result(false, state.save, "stale-writer");
+    if (popupHeldByOther(values.gift, ownerId)) return result(false, state.save, "popup-owned-by-another-tab");
+    if (!state.save.campaignStarted) return state;
+    // Archive and replace within one transaction: aborting either keeps the old campaign.
+    saves.add(values.current, `new-game:revision:${state.save.revision}`);
+    saves.put(values.current, NEW_GAME_ARCHIVE);
+    const fresh = createDefaultV100Save({ settings: state.save.settings });
+    const carried = carryGift({ ...fresh, revision: state.save.revision + 1 }, values.gift);
+    if (carried.gift) gifts.put(carried.gift, GIFT);
+    putSave(saves, values, carried.save, values.current.legacyVerified);
+    return result(true, carried.save, "", { changed: true });
+  });
+  return mirrorAndNotify(outcome, host);
+}
+
+export async function readV100NewGameArchive(host = globalThis) {
+  return transaction(host, values => {
+    const archive = unpack(values.newGameArchive);
+    return archive ? result(true, archive, "", { source: "new-game-archive" }) : result(false, null, "new-game-archive-unavailable");
+  });
 }
 export async function claimV100BrowserGift(host = globalThis, { ownerId = createV100SaveOwnerId(host), screen = "" } = {}) {
   const outcome = await transaction(host, (values, saves, gifts) => {

@@ -6627,6 +6627,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/fonts/v100/NewTegomin-Title.woff2",
+      "bytes": 4932,
+      "hash": "sha256-692443c5dca0f0178f81cf83bfbaf5317c151c79fbc6970889966ef1d2908d4c",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
       "path": "/fonts/v100/Rajdhani-Bold.woff2",
       "bytes": 104768,
       "hash": "sha256-952240444fafbfebed25797408c6fb9088267a8cdd0b28e2c478b694db3bf407",

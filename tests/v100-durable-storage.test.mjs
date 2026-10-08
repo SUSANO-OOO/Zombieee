@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDefaultV100Save, claimV100LegacyGift, acknowledgeV100LegacyGiftPopup } from "../app/v100Save.js";
-import { readV100BrowserSave, persistV100BrowserSave, restoreV100BrowserSave, exportV100BrowserSave, importV100BrowserSave } from "../app/v100CampaignStorage.js";
+import { readV100BrowserSave, persistV100BrowserSave, restoreV100BrowserSave, exportV100BrowserSave, importV100BrowserSave, startNewV100BrowserCampaign } from "../app/v100CampaignStorage.js";
 
 test("unavailable or denied IDB fails closed and never writes a localStorage fallback", async () => {
   for (const host of [{}, { get indexedDB() { throw new Error("SecurityError"); } }, { indexedDB: { open() { throw new Error("SecurityError"); } } }]) {
@@ -12,6 +12,17 @@ test("unavailable or denied IDB fails closed and never writes a localStorage fal
     assert.equal((await persistV100BrowserSave(createDefaultV100Save(), host, { expectedRevision: 0 })).ok, false);
     assert.equal(writes, 0);
   }
+});
+
+test("new game requires an explicit confirmation before opening or writing storage", async () => {
+  let opens = 0;
+  const host = { indexedDB: { open() { opens += 1; throw new Error("should-not-open"); } } };
+  for (const confirmed of [undefined, false, "true", 1]) {
+    const outcome = await startNewV100BrowserCampaign(host, { confirmed });
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.reason, "new-game-confirmation-required");
+  }
+  assert.equal(opens, 0);
 });
 
 test("import rejects foreign envelopes, generations, schema, invalid amounts and oversized input", () => {

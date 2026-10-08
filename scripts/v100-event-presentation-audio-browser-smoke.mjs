@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
@@ -186,6 +187,7 @@ for (const engine of engines) {
           await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
           if (await offer.isVisible().catch(() => false)) await clickUsable(offer, "PWA browser play");
           const eventSelector = `[data-v100-event-id="${eventCase.eventId}"]`;
+          await enterV100FromTitle(page, { timeout });
           await page.locator(eventSelector).waitFor({ state: "visible", timeout });
           if (eventCase.id === "credits") {
             result.staffRoll = await inspectStaffRoll(page, { playerName: "QAプレイヤー" });
