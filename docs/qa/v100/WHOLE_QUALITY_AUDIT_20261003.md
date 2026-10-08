@@ -1,5 +1,15 @@
 # Version 1.0.0 全体品質監査 — 2026-10-03
 
+## 2026-10-08 再生の所有者と起動手順
+
+86f0015の終了後残留音は、取り外したnative媒体と遅延play promiseを含む30／30ケース、固定候補のEdge／Windows WebKit、匿名HTTPSで確認した。証拠indexは`ending-86f0015-acceptance-evidence-r13.json`。同じHEADのCIではPhase G、Frame and Boss Performance、Enemy Runtime全6、Deployment Viewport全6が成功した。
+
+RecordsのCI失敗は起動前のQA手順にある。6秒のfiction注釈中に5秒のinstall待機が終わり、次のinstall invitationが未操作となる状態を実UIで2エンジンに再現した。`records-boot-baseline-r1/report.json`へ保存し、共通入口に注釈の「続ける」を加えた。受入期限を延ばさず、記録と全図鑑の10／10ケースが成功（`records-entry-fix-r1/report.json`）。
+
+動きを減らす設定の変更でクレジットの曲まで止まる不具合を別に再現した。映像のeffect更新から音声の終了処理を外し、安定したlayout cleanupだけが終了を所有するよう修正。旧媒体・再生待ち・停止・設定・非表示・再視聴・笑い声の30ケースと動き設定4ケース、34／34が成功（`ending-audio-lifecycle-r4/report.json`）。build、全1771 tests、Lint 0 errors／既存18 warningsも成功した。
+
+Mac native WebKitでは、バックアップ復元後の新媒体の時計が停止した失敗が残る。paused=false、readyState=4、曲は全buffer済、error=nullであり、Windowsの成功で代替しない。元artifactを保全し、native呼出し・promise・イベントと画面状態を記録する観測を加えた。時計を模擬化せず、元の15秒の復元条件を維持する。新HEADのrequired CI・独立review・Producerの全体試遊・実機の確認が完了するまで、完成版・正式公開とは扱わない。
+
 ## 2026-10-08 視聴後の音声停止
 
 Producerの「ずっと音楽が流れてうるさい」という指摘に対応。IABの旧62066視聴画面を再読込して再生待ちへ戻し、もう一つの共有視聴画面も再生待ち・audio要素なしを確認した。native部品QAで、クレジット後の映像を取り外しても旧音楽と波音が再生を続ける不具合を両engineで再現。passive cleanupが消去済みrefを参照するため停止対象がなくなるのが原因だった。

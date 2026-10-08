@@ -8,6 +8,8 @@ import { build } from "esbuild";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 
 const root = process.cwd();
+const selection = process.env.V100_ENDING_LIFECYCLE_ONLY ?? "all";
+assert.ok(["all", "motion"].includes(selection), "Unknown ending lifecycle selection");
 const out = path.resolve(process.env.V100_ENDING_LIFECYCLE_OUT ?? "outputs/v100-ending-audio-lifecycle");
 await mkdir(out, { recursive: true });
 assert.equal(await lstat(path.join(out, "report.json")).then(() => true, () => false), false, "Keep previous evidence");
@@ -19,9 +21,9 @@ import {V100StaffRoll} from ${modulePath("V100EndingRoll.tsx")};
 import {V100PostCreditsFilm} from ${modulePath("V100PostCreditsFilm.tsx")};
 import {v100StoryEventView} from ${modulePath("v100StoryEvents.js")};
 function Fixture(){
- const [view,setView]=useState('ready'),[enabled,setEnabled]=useState(true);
- const settings={bgmEnabled:enabled,bgmVolume:.8,sfxEnabled:enabled,sfxVolume:.9};
- return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button></nav>
+ const [view,setView]=useState('ready'),[enabled,setEnabled]=useState(true),[reducedMotion,setReducedMotion]=useState(false);
+ const settings={bgmEnabled:enabled,bgmVolume:.8,sfxEnabled:enabled,sfxVolume:.9,reducedMotion};
+ return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button><button onClick={()=>setReducedMotion(!reducedMotion)}>Toggle motion</button></nav>
  {view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
 }
 createRoot(document.getElementById('root')).render(<Fixture/>);`);
@@ -42,14 +44,14 @@ const server = createServer(async (request, response) => {
 });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
-const report = { status: "failed", head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, evidenceKind: "Actual React ending components and native media; captured detached elements and delayed play promises. Test output is muted; no speaker acceptance.", cases: [] };
+const report = { status: "failed", selection, head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, evidenceKind: "Actual React ending components and native media; captured detached elements and delayed play promises. Test output is muted; no speaker acceptance.", cases: [] };
 for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
 const sample = page => page.evaluate(() => window.__endingMedia.map(audio => ({ paused: audio.paused, connected: audio.isConnected, time: audio.currentTime, rate: audio.playbackRate, volume: audio.volume })));
 try {
   for (const engine of ["chromium", "webkit"]) {
     const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(engine === "chromium" ? { channel: "msedge", args: ["--mute-audio"] } : {}) });
     try {
-      for (const view of ["credits", "film"]) for (const mode of ["exit", "delayed-exit", "delayed-pause", "delayed-mute", "delayed-hide", "remount", "delayed-remount", ...(view === "film" ? ["laugh-exit"] : [])]) {
+      for (const view of ["credits", "film"]) for (const mode of (selection === "motion" ? ["reduced-motion"] : ["exit", "delayed-exit", "delayed-pause", "delayed-mute", "delayed-hide", "remount", "delayed-remount", "reduced-motion", ...(view === "film" ? ["laugh-exit"] : [])])) {
         const result = { engine, browserVersion: browser.version(), view, mode, status: "failed", errors: [] };
         report.cases.push(result);
         const context = await browser.newContext({ viewport: { width: 844, height: 390 } });
@@ -74,7 +76,8 @@ try {
           if (mode.startsWith("delayed")) await page.waitForFunction(() => window.__endingRelease.length > 0);
           if (mode === "laugh-exit") await page.waitForFunction(() => document.querySelector("[data-v100-laugh-state='playing']") && window.__endingMedia.length === 3, null, { timeout: 45000 });
           result.before = await sample(page);
-          if (mode === "delayed-pause") await page.getByRole("button", { name: "一時停止", exact: true }).click();
+          if (mode === "reduced-motion") await page.getByRole("button", { name: "Toggle motion", exact: true }).click();
+          else if (mode === "delayed-pause") await page.getByRole("button", { name: "一時停止", exact: true }).click();
           else if (mode === "delayed-mute") await page.getByRole("button", { name: "Toggle sound", exact: true }).click();
           else if (mode === "delayed-hide") await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
           else await page.getByRole("button", { name: "Exit player", exact: true }).click();
@@ -89,9 +92,15 @@ try {
           result.afterRelease = await sample(page);
           await page.waitForTimeout(650);
           result.settled = await sample(page);
-          assert.ok(result.immediate.every(audio => audio.paused), "Leaving, pausing or muting must stop all captured media immediately");
-          assert.ok(result.settled.filter(audio => !audio.connected || !mode.endsWith("remount")).every(audio => audio.paused), "An old play promise must not leave audio playing");
-          result.settled.forEach((audio, index) => { if (!audio.connected || !mode.endsWith("remount")) assert.ok(Math.abs(audio.time - result.afterRelease[index].time) < .1, "Stopped media clock must stay still"); });
+          if (mode === "reduced-motion") {
+            assert.equal(result.settled.length, result.before.length, "A motion preference must retain the same media elements");
+            assert.ok(result.settled.every(audio => audio.connected && !audio.paused), "A motion preference must not stop music or waves");
+            result.settled.forEach((audio, index) => assert.ok(audio.time > result.afterRelease[index].time + .4, "Retained native media must keep advancing"));
+          } else {
+            assert.ok(result.immediate.every(audio => audio.paused), "Leaving, pausing or muting must stop all captured media immediately");
+            assert.ok(result.settled.filter(audio => !audio.connected || !mode.endsWith("remount")).every(audio => audio.paused), "An old play promise must not leave audio playing");
+            result.settled.forEach((audio, index) => { if (!audio.connected || !mode.endsWith("remount")) assert.ok(Math.abs(audio.time - result.afterRelease[index].time) < .1, "Stopped media clock must stay still"); });
+          }
           if (mode.endsWith("remount")) assert.ok(result.settled.some(audio => audio.connected && !audio.paused), "A new player must still be able to play");
           assert.equal(result.errors.length, 0);
           assert.ok(result.settled.every(audio => audio.rate === 1));

@@ -49,6 +49,40 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
     if (location.origin !== origin) return;
     for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, serialized);
     window.__creditMediaProof = { ended: [], samples: [] };
+    // Observe actual media handover without replacing native clocks,
+    // events, promises or the existing acceptance deadlines.
+    window.__creditMediaTrace = { calls: [], promises: [], events: [] };
+    const mediaIds = new WeakMap(); let nextMediaId = 1;
+    const mediaState = audio => {
+      if (!mediaIds.has(audio)) mediaIds.set(audio, nextMediaId++);
+      const root = document.querySelector(".v100-staff-roll");
+      return { at: performance.now(), mediaId: mediaIds.get(audio), connected: audio.isConnected,
+        current: root?.querySelector("audio") === audio, time: audio.currentTime,
+        paused: audio.paused, seeking: audio.seeking, readyState: audio.readyState,
+        rate: audio.playbackRate, hidden: document.hidden,
+        scene: root?.dataset.v100NodeIndex ?? null, state: root?.dataset.v100CreditAudio ?? null,
+        surface: document.querySelector("#v100-campaign")?.dataset.v100Surface ?? null,
+        dialogs: [...document.querySelectorAll('[role="dialog"]')].filter(node => node.getClientRects().length > 0).map(node => node.getAttribute("aria-label")),
+        savePending: document.documentElement.dataset.pwaSaveMutationPending };
+    };
+    const isSong = audio => audio instanceof HTMLAudioElement && audio.src.includes("/audio/v100/credits/");
+    const append = (type, item) => { if (window.__creditMediaTrace[type].length < 4000) window.__creditMediaTrace[type].push(item); };
+    const nativePlay = HTMLMediaElement.prototype.play, nativePause = HTMLMediaElement.prototype.pause;
+    HTMLMediaElement.prototype.play = function () {
+      if (!isSong(this)) return nativePlay.call(this);
+      const call = { type: "play", ...mediaState(this) }; append("calls", call);
+      const promise = nativePlay.call(this);
+      promise.then(() => append("promises", { callAt: call.at, result: "resolved", ...mediaState(this) }),
+        error => append("promises", { callAt: call.at, result: "rejected", error: String(error), ...mediaState(this) }));
+      return promise;
+    };
+    HTMLMediaElement.prototype.pause = function () {
+      if (isSong(this)) append("calls", { type: "pause", ...mediaState(this) });
+      return nativePause.call(this);
+    };
+    for (const type of ["loadstart", "loadedmetadata", "play", "playing", "pause", "waiting", "canplay", "stalled", "suspend", "seeking", "seeked", "timeupdate", "error", "ended"]) {
+      document.addEventListener(type, event => { if (isSong(event.target)) append("events", { type, trusted: event.isTrusted, ...mediaState(event.target) }); }, true);
+    }
     document.addEventListener("ended", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.ended.push({ time: event.target.currentTime, duration: event.target.duration, rate: event.target.playbackRate, trusted: event.isTrusted, ended: event.target.ended }); }, true);
     window.__creditMediaProof.seeks = [];
     document.addEventListener("seeking", event => { if (event.target instanceof HTMLAudioElement && event.target.closest(".v100-staff-roll")) window.__creditMediaProof.seeks.push({ time: event.target.currentTime, rate: event.target.playbackRate }); }, true);
@@ -174,7 +208,10 @@ try {
     result.failureAudio = await page.locator(".v100-staff-roll audio").evaluate(audio => ({ time: audio.currentTime, duration: audio.duration, paused: audio.paused, networkState: audio.networkState, readyState: audio.readyState, error: audio.error && { code: audio.error.code, message: audio.error.message }, buffered: [...Array(audio.buffered.length)].map((_, i) => [audio.buffered.start(i), audio.buffered.end(i)]) })).catch(() => null);
     await page.screenshot({ path: path.join(out, `${engine}-failed.png`) }).catch(() => {});
     throw error;
-  } finally { releaseSong(); await context.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
+  } finally {
+    result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
+    releaseSong(); await context.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));
+  }
 
   }
   if (!onlyRegression) for (const [name, options] of [["muted-reduced-motion", { muted: true, reducedMotion: true }], ["audio-unavailable", { failSong: true }]]) {
@@ -211,7 +248,10 @@ try {
       result.failureAudio = await readNativeMedia(page).catch(() => null);
       await page.screenshot({ path: path.join(out, `${engine}-${name}-failed.png`) }).catch(() => {});
       throw error;
-    } finally { await context.close(); }
+    } finally {
+      result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
+      await context.close();
+    }
   }
   if (["all", "regression"].includes(selection)) for (const name of ["saved-scene-resume", "backup-restores-playing-scene", "ended-during-save", "completion-save-failure"]) {
     const nodeIndex = name === "saved-scene-resume" ? 6 : name === "backup-restores-playing-scene" ? 9 : 0;
@@ -375,7 +415,10 @@ try {
       result.failureHold = await page.evaluate(() => window.__creditSaveHoldProof ?? null).catch(() => null);
       await page.screenshot({ path: path.join(out, `${engine}-${name}-failed.png`) }).catch(() => {});
       throw error;
-    } finally { await context.close(); }
+    } finally {
+      result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
+      await context.close();
+    }
   }
   assert.equal(report.cases.length, { all: 7, regression: 4, fallback: 2, unavailable: 1 }[selection]);
   report.status = "passed";

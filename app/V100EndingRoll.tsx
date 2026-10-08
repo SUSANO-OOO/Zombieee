@@ -308,12 +308,10 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       window.removeEventListener("pagehide", pageHide);
       window.removeEventListener("pageshow", pageShow);
       rotationBlocker.removeEventListener("change", visibility);
-      playbackAllowedRef.current = false;
-      playAttemptRef.current += 1;
-      playingRef.current = false;
-      audio?.pause();
+      // Media belongs to the stable layout cleanup. Replacing the visual
+      // clock or changing motion preferences must retain live playback.
     };
-  }, [finish, beginOutro, nodes.length, play, settings.reducedMotion, paintCredits]);
+  }, [finish, beginOutro, nodes.length, play, paintCredits]);
 
   useLayoutEffect(() => {
     const track = rollRef.current, viewport = rollWindowRef.current, footer = rollFooterRef.current;

@@ -1,5 +1,15 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-08 継続修正 — 再生の所有者とQA起動手順
+
+86f0015の固定候補では、終了後の残留音の修正、134項目・25画像・10枚の追加映像、106秒の原速音楽とフェードをEdge／Windows WebKitで確認した。匿名HTTPSの現bundleと42asset、3画面サイズも成功。証拠は`ending-86f0015-acceptance-evidence-r13.json`に固定し、既存実行台帳へ反映した。CI `37660009137`はPhase G、Frame and Boss Performance、Enemy Runtime全6、Deployment Viewport全6が成功。以下の失敗を全体成功へ読み替えない。
+
+RecordsのChromium／Hosted WebKitは、6秒のfiction注釈に対し旧QA入口が5秒でinstall invitationの待機を終え、タイトルへ到達できなかった。EdgeとWindows WebKitで実UIの同じ未操作状態を再現し、元記録を`records-boot-baseline-r1/report.json`へ保全。共通入口で「続ける」と「ブラウザで遊ぶ」を操作するよう修正し、元の待機期限を維持した。記録・人物・敵・ボス図鑑の5画面サイズ×2エンジン、10／10ケースが成功した（`records-entry-fix-r1/report.json`）。EdgeとWindows WebKit 26.6の証拠をMac CIの結果とは区別する。
+
+動きの設定変更でクレジットの媒体まで停止する不具合も、2エンジンで再現した（`ending-motion-baseline-r1/report.json`）。音声の終了処理を安定したlayout cleanupへ揃え、映像側のeffect再設定で旧音声を重複停止しないようにした。既存30ケースと動き設定4ケース、34／34が成功（`ending-audio-lifecycle-r4/report.json`）。production build、全1771 tests、Lint 0 errors／18 warningsが成功。曲の速度・音量・演出の時間・保存receiptは維持する。
+
+Mac native WebKitのバックアップ復元では、旧媒体は停止・取外し済み、新媒体はpaused=false／rate=1／readyState=4なのに時計が19.255775秒で停止した。`ci-86f-native-r1/staff-roll/report.json`と元PNGを保全。native play／pause／promise／seek／playing／timeupdateと画面状態の観測を追加し、元の15秒の復元条件を維持する。今回のローカル修正をMacでの解消と未確認で断定しない。新候補のrequired CI、独立read-only review、Producer受入、実機・聴感・発熱は残件。正式公開の境界は維持する。
+
 ### 2026-10-08 追加修正 — 視聴後に残る音声
 
 視聴済み画面でも音が残るというProducerの指摘を受け、現在のブラウザを再生待ちへ戻した。クレジット後の映像を閉じた際、Reactがrefを消した後のcleanupでは音声要素を停止できず、画面から取り外した音楽と波音が再生を続ける不具合をEdgeとWebKitで再現。取り外す前のlayout cleanupで保持した要素を停止し、遅れて完了するplayでも、画面・設定・停止状態を確認して旧音声を止める。クレジットと笑い声にも同じ保護を加え、音楽OFFは次の描画を待たず停止する。
