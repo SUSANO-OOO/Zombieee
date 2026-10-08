@@ -1,5 +1,11 @@
 # 西新世紀末物語 — プロジェクト状態
 
+### 2026-10-08 クレジットの段落と余白
+
+担当名と説明、曲名と作者、作詞・演奏の役割と名前を意味のある段落へまとめた。段落内は3px、次の段落へは16px。章同士はPCで32px、低い携帯画面で28pxとし、素材欄は作者と作品の間を4px、次の作者へ18px空ける。重複していた旧CSSを整理し、一つの指定で余白を管理する。一本のスクロール、曲の原速、106秒からのフェード、102秒の制作名静止、全表記と保存位置を維持する。
+
+元版`ending-spacing-baseline-r3`と実部品の修正版`ending-spacing-preview-check-r1`を1280×720／844×390／844×340で比較。134表示項目と全文章の順序が一致し、最低14px、横の文字切れ0、各6箇所の実スクロール撮影が成功した。計測用子要素の重複集計と速度ボタンのアクセシブル名を誤ったQA初回2記録は保全し、製品の欠落として扱わない。production build、対象21 tests、全1771 tests、Lint 0 errors／既存18 warnings、content validator、diff checkが成功。全testの最初の実行はsandboxがlocal socket 2件とGit Bash 1件を拒否したため失敗。元logを保全し、検証条件を変えず必要なローカル接続権限で再実行して全件成功した。固定候補の実媒体と共有URLの確認は継続中。独立review、全体実プレイ受入、実機と聴感、正式公開の境界は維持する。
+
 ### 2026-10-08 継続修正 — 再生の所有者とQA起動手順
 
 86f0015の固定候補では、終了後の残留音の修正、134項目・25画像・10枚の追加映像、106秒の原速音楽とフェードをEdge／Windows WebKitで確認した。匿名HTTPSの現bundleと42asset、3画面サイズも成功。証拠は`ending-86f0015-acceptance-evidence-r13.json`に固定し、既存実行台帳へ反映した。CI `37660009137`はPhase G、Frame and Boss Performance、Enemy Runtime全6、Deployment Viewport全6が成功。以下の失敗を全体成功へ読み替えない。
@@ -8,7 +14,7 @@ RecordsのChromium／Hosted WebKitは、6秒のfiction注釈に対し旧QA入口
 
 動きの設定変更でクレジットの媒体まで停止する不具合も、2エンジンで再現した（`ending-motion-baseline-r1/report.json`）。音声の終了処理を安定したlayout cleanupへ揃え、映像側のeffect再設定で旧音声を重複停止しないようにした。既存30ケースと動き設定4ケース、34／34が成功（`ending-audio-lifecycle-r4/report.json`）。production build、全1771 tests、Lint 0 errors／18 warningsが成功。曲の速度・音量・演出の時間・保存receiptは維持する。
 
-Mac native WebKitのバックアップ復元では、旧媒体は停止・取外し済み、新媒体はpaused=false／rate=1／readyState=4なのに時計が19.255775秒で停止した。`ci-86f-native-r1/staff-roll/report.json`と元PNGを保全。native play／pause／promise／seek／playing／timeupdateと画面状態の観測を追加し、元の15秒の復元条件を維持する。今回のローカル修正をMacでの解消と未確認で断定しない。新候補のrequired CI、独立read-only review、Producer受入、実機・聴感・発熱は残件。正式公開の境界は維持する。
+Mac native WebKitのバックアップ復元では、旧媒体は停止・取外し済み、新媒体はpaused=false／rate=1／readyState=4なのに時計が19.255775秒で停止した。`ci-86f-native-r1/staff-roll/report.json`と元PNGを保全。native play／pause／promise／seek／playing／timeupdateと画面状態の観測を追加し、元の15秒の復元条件を維持する。後続91478d9のCI `37707311170`でPR VerifyとNative WebKit PWA Update and Recoveryは成功した。一方、Phase G Production Matrixの失敗を保存・調査中で、CI全体成功とはしない。新候補のrequired CI、独立read-only review、Producer受入、実機・聴感・発熱は残件。正式公開の境界は維持する。
 
 ### 2026-10-08 追加修正 — 視聴後に残る音声
 

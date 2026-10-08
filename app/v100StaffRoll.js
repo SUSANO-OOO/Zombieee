@@ -28,15 +28,24 @@ export function v100CreditsOutroFrame(seconds) {
 }
 
 export function v100StaffRollSections() {
-  const section = (title, lines, columns = 1, kind = "names", entries = null) => ({ title, lines, columns, kind, entries });
+  const section = (title, lines, columns = 1, kind = "names", entries = null) => ({ title, lines, columns, kind, entries, groups: null });
+  const paragraphs = (title, groups) => ({ ...section(title, groups.flatMap(group => group.lines), 1, "paragraphs"), groups });
   const materials = (title, credits) => section(title,
     credits.flatMap(credit => [credit.author + " · " + credit.license, ...credit.works]), 1, "materials", credits);
   return [
     section("企画・原案・制作・監修", ["K4ITo"], 1, "producer"),
-    section("制作支援", ["ChatGPT / Codex", "シナリオ構成・実装・演出・音響・品質確認", "OpenAI ImageGen", "背景・人物・エフェクト画像"]),
+    paragraphs("制作支援", [
+      { kind: "name-first", lines: ["ChatGPT / Codex", "シナリオ構成・実装・演出・音響・品質確認"] },
+      { kind: "name-first", lines: ["OpenAI ImageGen", "背景・人物・エフェクト画像"] },
+    ]),
     section("登場人物", V100_UNITS.map(unit => unit.displayName), 2),
     ...V100_STORY_CAST_CREDITS.map(credit => section(credit.title, [...credit.lines], 2)),
-    section("エンディングテーマ", ["追憶の幻想世界", "音楽：魔王魂", "作詞・作曲・歌・ベース・ギター", "森田交一", "ドラム：与野裕史", "ピアノ：佐藤まさみ", "魔王魂の利用規約に基づいて使用"]),
+    paragraphs("エンディングテーマ", [
+      { kind: "song", lines: ["追憶の幻想世界", "音楽：魔王魂"] },
+      { kind: "role-first", lines: ["作詞・作曲・歌・ベース・ギター", "森田交一"] },
+      { kind: "contributors", lines: ["ドラム：与野裕史", "ピアノ：佐藤まさみ"] },
+      { kind: "note", lines: ["魔王魂の利用規約に基づいて使用"] },
+    ]),
     section("音楽素材", ["Scott Buckley · CC BY 4.0", ...V100_MUSIC_TRACKS.filter((track, index, all) => all.findIndex(other => other.file === track.file) === index).map(track => track.title)], 1),
     materials("音楽素材", V100_SOUND_CREDITS.filter(credit => credit.role === "ボス戦音楽")),
     materials("効果音・ボイス・エフェクト素材", V100_SOUND_CREDITS.filter(credit => credit.role !== "ボス戦音楽")),

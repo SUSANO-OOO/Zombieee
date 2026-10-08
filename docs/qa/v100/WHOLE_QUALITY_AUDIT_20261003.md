@@ -1,5 +1,11 @@
 # Version 1.0.0 全体品質監査 — 2026-10-03
 
+## 2026-10-08 クレジットの段落と余白
+
+役割・名前・説明の間隔が均一だったため、制作支援と楽曲欄の関係が弱かった。実部品に段落を加え、内部3px／段落間16px、章間32px（携帯28px）、素材作者と作品4px／次の作者18pxへ整理。全文章と順序を変更せず、一続きの縦スクロールと106秒の音楽編集を保持した。
+
+`ending-spacing-baseline-r3`と`ending-spacing-preview-check-r1`の3画面サイズで、134表示項目・151文字要素の完全一致、最低14px、横の文字切れ0、各6場面のスクロール撮影を確認。151は素材の作者と作品を別要素として計測した数であり、134表示項目の重複ではない。元のQA集計誤りと速度ボタンの誤ラベルで失敗した2記録を保存し、製品の失敗と分ける。production build、対象21 tests、Lint 0 errors／既存18 warnings、content validator、diff check成功。全testの最初の実行はlocal socket EACCES 2件とGit BashのNtCreateDirectoryObject拒否1件、1768／1771で停止した。元logを保全し、検証条件を変えず必要なローカル接続権限で再実行した`ending-spacing-r2-tests.log`で1771／1771が成功。固定候補・共有URL・必要CIと最終受入は継続中。
+
 ## 2026-10-08 再生の所有者と起動手順
 
 86f0015の終了後残留音は、取り外したnative媒体と遅延play promiseを含む30／30ケース、固定候補のEdge／Windows WebKit、匿名HTTPSで確認した。証拠indexは`ending-86f0015-acceptance-evidence-r13.json`。同じHEADのCIではPhase G、Frame and Boss Performance、Enemy Runtime全6、Deployment Viewport全6が成功した。
@@ -8,7 +14,7 @@ RecordsのCI失敗は起動前のQA手順にある。6秒のfiction注釈中に5
 
 動きを減らす設定の変更でクレジットの曲まで止まる不具合を別に再現した。映像のeffect更新から音声の終了処理を外し、安定したlayout cleanupだけが終了を所有するよう修正。旧媒体・再生待ち・停止・設定・非表示・再視聴・笑い声の30ケースと動き設定4ケース、34／34が成功（`ending-audio-lifecycle-r4/report.json`）。build、全1771 tests、Lint 0 errors／既存18 warningsも成功した。
 
-Mac native WebKitでは、バックアップ復元後の新媒体の時計が停止した失敗が残る。paused=false、readyState=4、曲は全buffer済、error=nullであり、Windowsの成功で代替しない。元artifactを保全し、native呼出し・promise・イベントと画面状態を記録する観測を加えた。時計を模擬化せず、元の15秒の復元条件を維持する。新HEADのrequired CI・独立review・Producerの全体試遊・実機の確認が完了するまで、完成版・正式公開とは扱わない。
+Mac native WebKitでは、86f0015のバックアップ復元後の新媒体の時計が停止した原失敗を保存。paused=false、readyState=4、曲は全buffer済、error=nullであり、Windowsの成功で代替しなかった。native呼出し・promise・イベントと画面状態を記録する観測を加え、時計を模擬化せず元の15秒の復元条件を維持した。後続91478d9のCI `37707311170`でPR VerifyとNative WebKit PWA Update and Recoveryは成功。Phase G Production Matrixは失敗し、原ログを保存・調査中。新HEADのrequired CI・独立review・Producerの全体試遊・実機の確認が完了するまで、完成版・正式公開とは扱わない。
 
 ## 2026-10-08 視聴後の音声停止
 

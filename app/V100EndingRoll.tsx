@@ -390,7 +390,9 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
       {creditSections.map((section, index) => <section key={index} className={"v100-credit-section v100-credit-section-" + section.kind}>
         <h2>{section.title}</h2>
         {section.entries ? <div className="v100-credit-materials">{section.entries.map(entry => <p key={entry.author}><strong>{entry.author} · {entry.license}</strong><span>{entry.works.join(" / ")}</span></p>)}</div>
-          : <div className={"v100-credit-lines v100-credit-columns-" + section.columns}>{section.lines.map((line, lineIndex) => <p key={lineIndex} className={line.length > 14 || (line.length >= 9 && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(line)) ? "v100-credit-wide" : undefined}>{line}</p>)}</div>}
+          : <div className={"v100-credit-lines v100-credit-columns-" + section.columns}>{section.groups
+            ? section.groups.map((group, groupIndex) => <div key={groupIndex} className="v100-credit-group" data-credit-group={group.kind}>{group.lines.map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}</div>)
+            : section.lines.map((line, lineIndex) => <p key={lineIndex} className={line.length > 14 || (line.length >= 9 && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(line)) ? "v100-credit-wide" : undefined}>{line}</p>)}</div>}
       </section>)}
       <footer ref={rollFooterRef}><span>西新世紀末物語</span><strong>K4ITo</strong></footer>
     </div></div>
