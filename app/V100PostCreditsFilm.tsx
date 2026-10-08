@@ -109,7 +109,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   }, [pauseAudio]);
   useEffect(() => {
     const media = [musicRef.current, wavesRef.current, laughRef.current];
-    const rotation = window.matchMedia("(orientation: portrait) and (max-width: 800px)");
+    const rotation = window.matchMedia("(orientation: portrait)");
     reducedMediaRef.current = window.matchMedia("(prefers-reduced-motion: reduce)");
     let pageHidden = false;
     hiddenRef.current = document.hidden || rotation.matches;

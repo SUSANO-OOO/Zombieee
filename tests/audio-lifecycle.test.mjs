@@ -395,6 +395,48 @@ test("backgrounding during decode cancels the delayed cue without fallback or so
   await mixer.dispose();
 });
 
+test("portrait rotation cancels a delayed cue and cannot override a hidden page", async () => {
+  const context = new FakeContext();
+  let releaseDecode;
+  context.decodeAudioData = () => new Promise(resolve => { releaseDecode = () => resolve({ duration: 1 }); });
+  const rotation = new EventTarget();
+  rotation.matches = false;
+  const rotate = portrait => { rotation.matches = portrait; rotation.dispatchEvent(new Event("change")); };
+  const windowTarget = new FakeWindow();
+  windowTarget.matchMedia = query => { assert.equal(query, "(orientation: portrait)"); return rotation; };
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context });
+  mixer.attachUnlock(windowTarget);
+  assert.equal(await mixer.enableAudio(), true);
+  const pending = mixer.play("logical-loop");
+  while (!releaseDecode) await Promise.resolve();
+  rotate(true);
+  releaseDecode();
+  assert.equal(await pending, null);
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.sources.length, 0);
+  windowTarget.fire("pageshow");
+  await flush();
+  assert.equal(context.state, "suspended");
+  windowTarget.fire("pagehide");
+  rotate(false);
+  await flush();
+  assert.equal(context.state, "suspended");
+  windowTarget.fire("pageshow");
+  await flush();
+  assert.equal(context.state, "running");
+  assert.ok(await mixer.play("logical-loop"));
+  assert.equal(context.sources.length, 1);
+  rotate(false);
+  await flush();
+  assert.equal(context.sources.length, 1);
+  await mixer.dispose();
+  const resumes = context.resumeCount;
+  rotate(true); rotate(false);
+  await flush();
+  assert.equal(context.resumeCount, resumes);
+});
+
 test("failed recovery reports a gesture requirement and the manual enable API can recover", async () => {
   const context = new FakeContext();
   context.failResume = true;

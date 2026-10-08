@@ -317,7 +317,9 @@ export class AudioMixer {
       if (!active || this.disposed || this.lifecycleHidden) return;
       void this.recoverAudio({ reason });
     };
-    const readHidden = () => documentTarget?.visibilityState === "hidden";
+    const rotation = windowTarget?.matchMedia?.("(orientation: portrait)");
+    let pageHidden = false;
+    const readHidden = () => pageHidden || documentTarget?.visibilityState === "hidden" || Boolean(rotation?.matches);
     const markHidden = () => {
       if (!this.lifecycleHidden) {
         this.lifecycleGeneration += 1;
@@ -332,6 +334,7 @@ export class AudioMixer {
       void Promise.resolve(context.suspend()).catch(() => undefined);
     };
     const onPageShow = () => {
+      pageHidden = false;
       clearNavigationPending();
       this.lifecycleHidden = readHidden();
       recover("pageshow");
@@ -360,6 +363,7 @@ export class AudioMixer {
       windowTarget?.addEventListener?.("keydown", onReturnInput, { capture: true, passive: true });
     };
     const onPageHide = () => {
+      pageHidden = true;
       markHidden();
       suspendForBackground();
     };
@@ -382,6 +386,7 @@ export class AudioMixer {
     windowTarget?.addEventListener?.("beforeunload", onBeforeUnload, { capture: true, passive: true });
     windowTarget?.addEventListener?.("pageshow", onPageShow, { capture: true, passive: true });
     documentTarget?.addEventListener?.("visibilitychange", onVisibilityChange, { capture: true, passive: true });
+    rotation?.addEventListener?.("change", onVisibilityChange);
     const cleanup = () => {
       if (!active) return;
       active = false;
@@ -393,6 +398,7 @@ export class AudioMixer {
       windowTarget?.removeEventListener?.("keydown", onReturnInput, { capture: true });
       windowTarget?.removeEventListener?.("pageshow", onPageShow, { capture: true });
       documentTarget?.removeEventListener?.("visibilitychange", onVisibilityChange, { capture: true });
+      rotation?.removeEventListener?.("change", onVisibilityChange);
       if (this.lifecycleCleanup === cleanup) this.lifecycleCleanup = null;
     };
     this.lifecycleCleanup = cleanup;

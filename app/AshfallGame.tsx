@@ -9732,8 +9732,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [updateAudioAvailability, playbackManifest]);
 
   useEffect(() => {
-    const applyVisibility = (forcedHidden: boolean | null = null) => {
-      const hidden = forcedHidden ?? document.visibilityState === "hidden";
+    const rotation = window.matchMedia("(orientation: portrait)");
+    let pageAway = false;
+    const applyVisibility = () => {
+      const hidden = pageAway || document.visibilityState === "hidden" || rotation.matches;
       if (pageHiddenRef.current === hidden) return;
       pageHiddenRef.current = hidden;
       const counters = runtimePerformanceRef.current;
@@ -9757,16 +9759,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       fallbackAudioSuspendedRef.current = false;
     };
     const onVisibilityChange = () => applyVisibility();
-    const onPageHide = () => applyVisibility(true);
-    const onPageShow = () => applyVisibility(false);
+    const onPageHide = () => { pageAway = true; applyVisibility(); };
+    const onPageShow = () => { pageAway = false; applyVisibility(); };
     applyVisibility();
     document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
     window.addEventListener("pagehide", onPageHide, { passive: true });
     window.addEventListener("pageshow", onPageShow, { passive: true });
+    rotation.addEventListener("change", onVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
+      rotation.removeEventListener("change", onVisibilityChange);
     };
   }, []);
 
@@ -23605,15 +23609,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       runtimePerformanceRef.current.rafCancellations += 1;
       frame = null;
     };
+    const rotation = window.matchMedia("(orientation: portrait)");
     const resumeFrames = () => {
-      if (pageHiddenRef.current || document.visibilityState === "hidden") return;
+      if (pageHiddenRef.current || document.visibilityState === "hidden" || rotation.matches) return;
       const now = performance.now();
       frameSchedule = resetRuntimeFrameSchedule(frameSchedule, now);
       gameRef.current.last = now;
       requestFrame();
     };
     const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden") suspendFrames();
+      if (document.visibilityState === "hidden" || rotation.matches) suspendFrames();
       else resumeFrames();
     };
     const onPageHide = () => suspendFrames();
@@ -23621,6 +23626,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
     window.addEventListener("pagehide", onPageHide, { passive: true });
     window.addEventListener("pageshow", onPageShow, { passive: true });
+    rotation.addEventListener("change", onVisibilityChange);
     requestFrame();
     return () => {
       active = false;
@@ -23630,6 +23636,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
+      rotation.removeEventListener("change", onVisibilityChange);
     };
   }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 

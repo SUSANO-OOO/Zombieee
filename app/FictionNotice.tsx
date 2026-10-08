@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import "./FictionNotice.css";
+import { LANDSCAPE_BLOCK_QUERY } from "./landscapePolicy.js";
 
 export function FictionNotice({ children }: { children: ReactNode }) {
   const [dismissed, setDismissed] = useState(false);
@@ -13,6 +14,7 @@ export function FictionNotice({ children }: { children: ReactNode }) {
     let started = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pageHidden = false;
+    const rotation = window.matchMedia(LANDSCAPE_BLOCK_QUERY);
     const pause = () => {
       if (timer === undefined) return;
       clearTimeout(timer);
@@ -21,7 +23,7 @@ export function FictionNotice({ children }: { children: ReactNode }) {
     };
     const visibility = () => {
       pause();
-      if (document.hidden || pageHidden) return;
+      if (document.hidden || pageHidden || rotation.matches) return;
       started = performance.now();
       timer = setTimeout(() => { timer = undefined; setLeaving(true); }, remaining);
     };
@@ -30,19 +32,29 @@ export function FictionNotice({ children }: { children: ReactNode }) {
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", hide);
     window.addEventListener("pageshow", show);
+    rotation.addEventListener("change", visibility);
     visibility();
     return () => {
       pause();
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", hide);
       window.removeEventListener("pageshow", show);
+      rotation.removeEventListener("change", visibility);
     };
   }, [leaving, dismissed]);
 
   useEffect(() => {
     if (!leaving) return;
-    const timer = setTimeout(() => setDismissed(true), 500);
-    return () => clearTimeout(timer);
+    const rotation = window.matchMedia(LANDSCAPE_BLOCK_QUERY);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const advance = () => {
+      clearTimeout(timer);
+      if (!document.hidden && !rotation.matches) timer = setTimeout(() => setDismissed(true), 500);
+    };
+    document.addEventListener("visibilitychange", advance);
+    rotation.addEventListener("change", advance);
+    advance();
+    return () => { clearTimeout(timer); document.removeEventListener("visibilitychange", advance); rotation.removeEventListener("change", advance); };
   }, [leaving]);
 
   if (dismissed) return children;

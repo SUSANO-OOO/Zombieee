@@ -13,7 +13,7 @@ const out = path.resolve(process.env.V100_TITLE_QA_OUT ?? "outputs/v100-title-mo
 await mkdir(out, { recursive: true });
 await assert.rejects(readFile(path.join(out, "report.json")), "Preserve earlier reports");
 const engines = (process.env.V100_TITLE_QA_ENGINES ?? "chromium,webkit").split(",");
-const dimensions = (process.env.V100_TITLE_QA_SIZES ?? "1280x720,844x390,844x340,390x844").split(",").map(size => {
+const dimensions = (process.env.V100_TITLE_QA_SIZES ?? "1280x720,844x390,844x340").split(",").map(size => {
   const [width, height] = size.split("x").map(Number); return { width, height };
 });
 const report = { status: "failed", url: url.href, sourceKind: "Current compiled production game and native IndexedDB; service workers blocked in this UI fixture to route source modules. Setup progress is synthetic. No PWA installation, natural victory or physical speaker claim.", head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, cases: [] };

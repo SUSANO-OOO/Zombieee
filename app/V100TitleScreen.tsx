@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { RELEASE_VERSION } from "./releaseIdentity.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { createEndingAudioMix } from "./endingAudioMix.js";
+import { LANDSCAPE_BLOCK_QUERY } from "./landscapePolicy.js";
 import { V100_TITLE_VOICE, V100_TITLE_INTRO_END, v100TitleIntroFrame } from "./v100TitleIntro.js";
 import "./v100TitleScreen.css";
 
@@ -50,7 +51,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
 
   const begin = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !mountedRef.current || doneRef.current || document.hidden) return;
+    if (!audio || !mountedRef.current || doneRef.current || document.hidden || window.matchMedia(LANDSCAPE_BLOCK_QUERY).matches) return;
     const attempt = ++attemptRef.current;
     cancelAnimationFrame(rafRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -99,11 +100,14 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
     motion();
     media.addEventListener("change", motion);
     const hide = () => finish();
+    const rotation = window.matchMedia(LANDSCAPE_BLOCK_QUERY);
+    const rotate = () => { if (rotation.matches) hide(); };
     const visibility = () => { if (document.hidden) hide(); };
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", hide);
+    rotation.addEventListener("change", rotate);
     if (!doneRef.current) {
-      if (document.hidden) finish();
+      if (document.hidden || rotation.matches) finish();
       else begin();
     }
     return () => {
@@ -116,6 +120,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
       media.removeEventListener("change", motion);
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", hide);
+      rotation.removeEventListener("change", rotate);
     };
   }, [begin, finish]);
 

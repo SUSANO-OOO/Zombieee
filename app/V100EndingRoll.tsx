@@ -244,7 +244,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
 
   useEffect(() => {
     const audio = audioRef.current;
-    const rotationBlocker = window.matchMedia("(orientation: portrait) and (max-width: 800px)");
+    const rotationBlocker = window.matchMedia("(orientation: portrait)");
     let pageHidden = false;
     occludedRef.current = document.hidden || rotationBlocker.matches;
     const visibility = () => {
