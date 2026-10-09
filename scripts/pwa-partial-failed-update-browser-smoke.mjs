@@ -688,12 +688,12 @@ async function v100State(page) {
   }, { key: v100SaveKey, oldKey: saveKey });
 }
 
-async function waitForV100Ready(page) {
+async function waitForV100Ready(page, { enterTitle = true } = {}) {
   await page.waitForFunction(() => (
     document.querySelector(".v100-shell")
     && document.documentElement.dataset.pwaSaveMutationPending === "false"
   ), null, { timeout: 60_000 });
-  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
+  if (enterTitle && await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
 }
 
 async function closeContext(label) {
@@ -1071,12 +1071,19 @@ try {
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "candidate-unqualified-recovery-entry";
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  await waitForV100Ready(page);
+  // Compare the persisted cache before Continue can legitimately fetch the
+  // uncached confirm/navigation sounds. The relaunch invariant remains exact;
+  // UI input and its cache writes happen after this persistence observation.
+  await waitForV100Ready(page, { enterTitle: false });
   const relaunchedBefore = await workerState(page);
   const relaunchedBeforeV100 = await v100State(page);
+  const relaunchedHashes = new Set(await cacheHashes(page));
+  const relaunchAddedHashes = [...relaunchedHashes].filter(hash => !hashesBeforeRecovery.has(hash));
+  const relaunchMissingHashes = [...hashesBeforeRecovery].filter(hash => !relaunchedHashes.has(hash));
   record("close/relaunch retains the partial cache, old active manifest, and exact raw save", (
     activeMatchesManifest(relaunchedBefore.state?.active, oldManifest, oldVersion)
     && (await cacheState(page)).logicalSatisfied === cancelledCache.logicalSatisfied
+    && relaunchAddedHashes.length === 0 && relaunchMissingHashes.length === 0
     && (await currentSave(page)) === oldSaveRaw
     && relaunchedBeforeV100.raw === beforeUpdateV100.raw
     && relaunchedBeforeV100.legacyWrites.length === 0
@@ -1084,9 +1091,13 @@ try {
   ), {
     activeVersion: relaunchedBefore.state?.active?.version,
     cache: await cacheState(page),
+    relaunchAddedHashes,
+    relaunchMissingHashes,
     v100SavePreserved: relaunchedBeforeV100.raw === beforeUpdateV100.raw,
     legacyWrites: relaunchedBeforeV100.legacyWrites,
   });
+
+  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
 
   const recoveryTransportStart = candidateTransportRequests.length;
   const recoveryBrowserTransportStart = candidateBrowserTransportRequests.length;
