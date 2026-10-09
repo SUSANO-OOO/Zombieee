@@ -113,5 +113,5 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
       window.removeEventListener("keydown", request);
     };
   }, []);
-  return <audio ref={audioRef} src={TITLE_MUSIC_SRC} loop preload="auto" data-title-music="true" />;
+  return <audio ref={audioRef} src={TITLE_MUSIC_SRC} loop preload={settings.bgmEnabled && settings.bgmVolume > 0 ? "auto" : "none"} data-title-music="true" />;
 }

@@ -8,7 +8,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
-import { enterV100FromBufferedTitle as enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { enterV100FromTitle, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
@@ -27,6 +27,7 @@ assert.ok(["127.0.0.1", "localhost"].includes(base.hostname), "Owned local conte
 const out = path.resolve(process.env.V100_QUALITY_LOOP_OUT ?? "outputs/v100-quality-loop");
 await mkdir(out, { recursive: false });
 let early = createDefaultV100Save({ playerName: "西新確認" });
+early = normalizeV100Save({ ...early, settings: { ...early.settings, bgmEnabled: false } });
 for (const index of [0, 1]) {
   const result = createV100BattleResult({ stageId: V100_STAGE_IDS[index], battleRunId: "quality-budget-" + index, won: true, objectiveComplete: true, vehicleHp: 408, vehicleMaxHp: 680 });
   const pending = recordV100PendingResult(early, result);
@@ -41,6 +42,7 @@ const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
   audioOutput: "Forced silent output on hosted Linux/macOS. Local Windows game-browser QA is disabled after reported audible output.",
+  audioScope: "BGM is disabled in these visual/UI fixtures, including the initial title and imported backup. SFX settings remain unchanged. Enabled native audio, title departure, recovery, R5 and staff-roll playback are verified by the separate unchanged CI audio lanes.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
@@ -150,14 +152,17 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, acceptDownloads: true });
   if (id === 'early-budget-native') await context.addInitScript(observePlayerAbilityText);
   let navigating = false;
-  if (seed) {
-    const decoded = deserializeV100Save(serializeV100Save(seed));
-    assert.equal(decoded.ok, true, `${row.id}: invalid QA seed ${decoded.errors?.join(',')}`);
-  }
-  if (seed) await context.addInitScript(raw => {
-    for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, raw);
-  }, serializeV100Save(seed));
+  // UI fixtures isolate BGM before the first title mount, including the case
+  // that imports its budget through native input. Dedicated audio lanes keep it enabled.
+  const initial = seed ?? createDefaultV100Save();
+  const uiSeed = normalizeV100Save({ ...initial, settings: { ...initial.settings, bgmEnabled: false } });
+  const decoded = deserializeV100Save(serializeV100Save(uiSeed));
+  assert.equal(decoded.ok, true, `${row.id}: invalid QA seed ${decoded.errors?.join(',')}`);
+  row.audioSettings = { bgmEnabled: uiSeed.settings.bgmEnabled, sfxEnabled: uiSeed.settings.sfxEnabled };
+  await context.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(uiSeed));
   const page = await context.newPage();
+  let titleMusicRequests = 0;
+  page.on("request", request => { if (new URL(request.url()).pathname.endsWith('/audio/v100/score/horror.mp3')) titleMusicRequests++; });
   await silenceBrowserOutput(page);
   page.setDefaultTimeout(30000);
   page.on("pageerror", error => row.errors.push({ kind: "page", message: String(error) }));
@@ -172,6 +177,8 @@ async function runCase(browser, engine, viewport, id, seed, work) {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
     await acknowledge(page, Boolean(seed));
+    row.initialTitleMusicRequests = titleMusicRequests;
+    assert.equal(titleMusicRequests, 0, 'Disabled title music must not start a media request');
     await work(page, row, async () => { navigating = true; try { await page.reload({ waitUntil: "networkidle" }); await acknowledge(page); } finally { navigating = false; } });
     row.silentOutput = await page.evaluate(() => {
       const proof = globalThis.__CODEX_SILENT_QA__;
