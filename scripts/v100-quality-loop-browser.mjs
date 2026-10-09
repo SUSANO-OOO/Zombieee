@@ -105,7 +105,7 @@ async function capture(page, row, name) {
   row.captures.push({ file, sha256: createHash("sha256").update(await readFile(path.join(out, file))).digest("hex") });
 }
 async function runCase(browser, engine, viewport, id, seed, work) {
-  const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], captures: [] };
+  const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], titleOwnerAborts: [], captures: [] };
   report.cases.push(row);
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, acceptDownloads: true });
   let navigating = false;
@@ -119,15 +119,30 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   const page = await context.newPage();
   await silenceBrowserOutput(page);
   page.setDefaultTimeout(30000);
+  let enteringTitle = true;
+  const titleRequests = new Set();
+  page.on("request", request => {
+    if (enteringTitle && request.resourceType() === "media" && new URL(request.url()).pathname === new URL("audio/v100/score/horror.mp3", base).pathname) titleRequests.add(request);
+  });
   page.on("pageerror", error => row.errors.push({ kind: "page", message: String(error) }));
   page.on("console", message => { if (message.type() === "error") row.errors.push({ kind: "console", message: message.text() }); });
   page.on("response", response => { if (response.status() >= 400) row.errors.push({ kind: "http", url: response.url(), status: response.status() }); });
-  page.on("requestfailed", request => { const failure = { kind: "request", url: request.url(), message: request.failure()?.errorText }; if (navigating && /abort|cancel/i.test(failure.message ?? "")) row.navigationAborts.push(failure); else row.errors.push(failure); });
+  page.on("requestfailed", request => {
+    const failure = { kind: "request", url: request.url(), message: request.failure()?.errorText };
+    if (navigating && /abort|cancel/i.test(failure.message ?? "")) row.navigationAborts.push(failure);
+    else if (titleRequests.has(request) && /abort|cancel/i.test(failure.message ?? "")) row.titleOwnerAborts.push(failure);
+    else row.errors.push(failure);
+  });
   try {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
     await acknowledge(page, Boolean(seed));
+    enteringTitle = false;
     await work(page, row, async () => { navigating = true; try { await page.reload({ waitUntil: "networkidle" }); await acknowledge(page); } finally { navigating = false; } });
+    // A native title stream can be cancelled when its React owner is removed
+    // by Continue or save import. Only the exact request begun during entry is
+    // classified here; later scene audio, HTTP failures and other requests fail.
+    if (row.titleOwnerAborts.length) assert.equal(await page.locator('[data-title-music]').count(), 0, "Cancelled title stream must have left its owner");
     assert.deepEqual(row.errors, []);
     row.status = "passed";
   } catch (error) { row.status = "failed"; row.error = String(error); await page.screenshot({ path: path.join(out, row.id + "-failure.png") }).catch(() => {}); }
