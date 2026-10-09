@@ -43,7 +43,7 @@ const fixtures = [
 const report = { localRehearsal, url: publicUrl, expectedVersion, expectedReleaseSha, expectedRequestId, expectedIssueNumber,
   scope: "Anonymous network-origin V1 root/save/Stage entry. Disclosed save and fault fixtures; service workers blocked. Not installed-PWA, natural campaign, native audio or physical-device acceptance.", sources: [], results: [], build: localRehearsal ? await productionBuildIdentity() : null };
 for (const file of ["scripts/github-pages-public-smoke.mjs", "app/campaign.js", "app/campaignStorage.js", "app/v100Save.js", "app/v100CampaignStorage.js", "app/AshfallGame.tsx", "app/globals.css"]) report.sources.push({ file, sha256: sha(await readFile(new URL(`../${file}`, import.meta.url))) });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && document.documentElement.dataset.pwaSaveMutationPending === "false", null, { timeout: 30000 });
 const mirror = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), key);
 async function shot(page, record, label) { const file = path.join(evidenceDir, `${record.name}-${label}.png`), bytes = await page.screenshot({ path: file, animations: "disabled" }); record.images.push({ file, sha256: sha(bytes), width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }); }

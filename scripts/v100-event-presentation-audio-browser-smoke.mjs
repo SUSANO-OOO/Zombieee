@@ -10,6 +10,7 @@ import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializ
 import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
+import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
 
 const baseUrl = new URL(process.env.V100_EVENT_AUDIO_QA_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 event QA is local-only; refusing ${baseUrl}`);
@@ -140,26 +141,23 @@ async function portraitAuditFor(page, selector) {
   if (await page.locator(selector).count() === 0) return null;
   const portrait = page.locator(`${selector} .v100-portrait:not(.v100-portrait-secondary)`).first();
   if (await portrait.count() === 0) return null;
-  await page.waitForFunction(selector => [...document.querySelectorAll(selector)].every(image =>
-    image.complete && image.naturalWidth > 0 && getComputedStyle(image).opacity === "1"),
-    `${selector} .v100-portrait`, { timeout });
-  return portrait.evaluate((element) => {
-    const style = getComputedStyle(element);
-    const rect = element.getBoundingClientRect();
-    const frame = element.closest(".v100-portrait-frame");
-    const frameRect = frame?.getBoundingClientRect();
-    return {
-      opacity: style.opacity,
-      objectFit: style.objectFit,
-      backgroundColor: style.backgroundColor,
-      width: rect.width,
-      height: rect.height,
-      frameWidth: frameRect?.width ?? 0,
-      frameHeight: frameRect?.height ?? 0,
-      frameOverflow: frame ? getComputedStyle(frame).overflow : "missing",
-      frameFraming: frame?.getAttribute("data-portrait-framing") ?? "missing",
-    };
-  });
+  const identity = await page.locator(selector).evaluate(surface => ({
+    nodeIndex: surface.getAttribute("data-v100-node-index"),
+    identities: [...surface.querySelectorAll(".v100-portrait")].map(element => ({
+      src: element.getAttribute("src"),
+      owner: element.closest(".v100-portrait-frame")?.getAttribute("data-portrait-owner") ?? null,
+    })),
+  }));
+  const settled = await page.waitForFunction(v100EventPortraitSnapshot, {selector, ...identity}, { timeout });
+  try { return await settled.jsonValue(); }
+  finally { await settled.dispose(); }
+}
+
+async function writeEvidenceReport(cases) {
+  const report = { generatedAt: new Date().toISOString(), build: await productionBuildIdentity(), baseUrl: String(baseUrl), evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases };
+  const reportPath = path.join(evidenceDir, "report.json");
+  await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+  return reportPath;
 }
 
 async function dialogueSurfaceAuditFor(page, selector) {
@@ -306,6 +304,8 @@ for (const engine of engines) {
         } catch (error) {
           result.error = String(error);
           result.debug = await page.evaluate(() => ({ url: location.href, body: document.body.innerText.slice(0, 1000), audio: window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null })).catch(() => null);
+          result.diagnostics = diagnostics;
+          await writeEvidenceReport([...results, result]).catch(writeError => { result.evidenceWriteError = String(writeError); });
           throw new Error(`${String(error)} debug=${JSON.stringify(result.debug)}`);
         } finally {
           result.diagnostics = diagnostics;
@@ -319,9 +319,7 @@ for (const engine of engines) {
   }
 }
 
-const report = { generatedAt: new Date().toISOString(), build: await productionBuildIdentity(), baseUrl: String(baseUrl), evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases: results };
-const reportPath = path.join(evidenceDir, "report.json");
-await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+const reportPath = await writeEvidenceReport(results);
 const failures = results.filter((result) => result.status !== "passed"
   || result.diagnostics.consoleErrors.length > 0
   || result.diagnostics.pageErrors.length > 0

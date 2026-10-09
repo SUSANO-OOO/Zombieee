@@ -4,9 +4,11 @@
 
 最新版はProducer提供のR5原稿で、767台詞・94イベントを反映した。状況に沿う腰上の表情差分と8枚の場面カットを追加し、ENDING・EPILOGUE・スタッフロールはTKY、ザキミヤを含むメイン7人を中心に構成した。操作音は紙・木・金具等の短い録音へ更新した。クレジットは全134項目のスクロール、原速の音楽を106秒からフェードし、R5の27ノードのEPILOGUEと終幕映像へ自動移行する。制作名K4ITo、音源・素材・書体・使用ツールの表記を保持する。
 
-固定runtime `2d97be9bca8fe1ced915f27b2d25254e2a911254` は、実際に表示する隊員portraitの事前decodeと共通書体の重複読込を修正した。全1790 tests、Lint・production/static build、独立read-only review H/M 0。現ビルドのカード4画面、Chromium PWA更新・復旧23ケース、nativeクレジット4ケースが成功。CIの開発者モード通しでは30作戦・94イベント・767ノード・保存復帰を確認した。通常UIでは取得済みCAPS・育成を使って第10作戦までクリアし、続行中。開発者モードの結果は通常戦闘の勝利や物理端末・実スピーカーの確認とは区別する。
+固定runtime `2d97be9bca8fe1ced915f27b2d25254e2a911254` は、実際に表示する隊員portraitの事前decodeと共通書体の重複読込を修正した。全1796 tests、Lint・production/static build、独立read-only review H/M 0。現ビルドのカード4画面、Chromium PWA更新・復旧23ケース、nativeクレジット4ケースが成功。CIの開発者モード通しでは30作戦・94イベント・767ノード・保存復帰を確認した。通常UIでは取得済みCAPS・育成を使って第10作戦までクリアした。追加の第11作戦の敗北は保全し、操作driverの出撃人数・役割の制約を分類した。開発者モードの結果は通常戦闘の勝利や物理端末・実スピーカーの確認とは区別する。
 
 CI `37866131657` はPR Verify、WebKit frame/boss performanceと敵runtime6 shardが成功。native PWA jobのcheckoutはGitHub接続エラーで未実行。Phase Gは入力API完了後にDOMイベントが届かず停止した。検証補助の背景入力をordered native入力へ揃え、元の500/700ms期限・キャンセル完了・後続入力停止を維持した。3画面のboss操作検証が成功し、診断は出撃順番から実カードidentityへ修正した。元の失敗記録を保全し、製品挙動と合格条件は変えていない。
+
+CI `37869739404` はMac native WebKitのクレジット7ケース・音声byte range・frame/boss performanceが成功。R5イベント検証はフェード完了の待機と測定を別RPCで行って競合し、Phase GはR5の会話を進めず終幕を待って停止した。検証側を同じ会話位置・画像identityの完了判定と同時測定、正規の会話操作から映像へ進む経路へ修正。描画・入力・期限・性能の基準を維持し、ChromiumのR5イベント24ケース・終幕3画面が成功。限定差分の独立review H/M 0、製品app/publicの追加変更はない。
 
 Producerの「もうレビューはしないので最終リリースまでやってください」により追加のProducer確認待ちは解除済み。残る技術検証後、PR統合、merge result SHAへの固定tag・Release、明示的Pages request、公開後QAを行う。正式公開版は現在0.9.9.5のまま。以下の古い承認待ち・旧リンク・旧候補は当時の記録である。
 

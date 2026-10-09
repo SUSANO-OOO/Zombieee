@@ -4799,6 +4799,9 @@ for (const viewport of requiredViewports) {
     // Avoid waiting forever for a browser autoplay gesture before the fade-in.
     await openRoute(page, { ...save, settings: { ...save.settings, bgmEnabled: false, sfxEnabled: false } });
     await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout });
+    // R5 epilogue dialogue precedes the film. Use the product's story control
+    // to enter the cinematic surface; the full dialogue is checked separately.
+    await advanceStory(page, ".v100-post-credits-film");
     await page.waitForFunction(() => {
       const film = document.querySelector(".v100-post-credits-film"), image = film?.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
       return Number(film?.getAttribute("data-v100-film-elapsed")) >= 4.3 && image instanceof HTMLImageElement && image.dataset.creditDecoded === "true" && image.naturalWidth > 0;
