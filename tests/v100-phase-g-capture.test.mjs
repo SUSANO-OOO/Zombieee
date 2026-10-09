@@ -96,7 +96,10 @@ test("background observations wait for fresh pointer preflight and retain the pa
   const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "readPhaseGSustainState"];
   const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
   const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
-    + "\n({ withPhaseGPageInputLock, readPhaseGSustainState })", { phaseGPageInputTails: new WeakMap() });
+    + "\n({ withPhaseGPageInputLock, readPhaseGSustainState })", { phaseGPageInputTails: new WeakMap(),
+    DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS: 5000,
+    withDeploymentPreinputDeadline: async (_page, observation) => observation,
+  });
   const events = [];
   let releasePreflight, releaseObservation, runtimeEntered;
   const preflight = new Promise(resolve => { releasePreflight = resolve; });
@@ -125,6 +128,32 @@ test("background observations wait for fresh pointer preflight and retain the pa
   assert.equal(result.liveHumanTargetCount, 2);
   assert.equal(result.bossEngaged, true);
   assert.deepEqual(events, ["visibility", "boss", "live-count", "runtime", "actor", "unit", "vehicle", "next-pointer"]);
+});
+
+test("a stalled background read closes the page before queued pointer work and retains its terminal timeout", async () => {
+  const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "readPhaseGSustainState", "phaseGPointerFailure", "withDeploymentPreinputDeadline"];
+  const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  let timeoutCallback, entered;
+  const enteredRead = new Promise(resolve => { entered = resolve; });
+  const calls = [];
+  const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
+    + "\n({ withPhaseGPageInputLock, readPhaseGSustainState })", {
+    phaseGPageInputTails: new WeakMap(), DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS: 5000,
+    setTimeout: (callback, budget) => { assert.equal(budget,5000); timeoutCallback=callback; return 1; },
+    clearTimeout() {},
+    terminateTimedOutDeploymentPreinput: async () => { calls.push("context-closed"); return { terminalLifecycleVerified:true }; },
+  });
+  const page = { locator: () => ({ isVisible: async () => true }),
+    evaluate: () => { entered(); return new Promise(() => {}); } };
+  const background = harness.readPhaseGSustainState(page, {
+    bossIsLive: async () => false, readSetupRuntime: async () => { calls.push("unexpected-runtime-read"); },
+  });
+  const queued = harness.withPhaseGPageInputLock(page, () => { calls.push("unexpected-pointer"); });
+  const expected = error => error.code === "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT"
+    && error.phaseGTerminalInputFailure && error.phaseGPointerEvidence.deadlineMs === 5000;
+  const rejected = [assert.rejects(background, expected),assert.rejects(queued,expected)];
+  await enteredRead;timeoutCallback();await Promise.all(rejected);
+  assert.deepEqual(calls,["context-closed"]);
 });
 
 test("a cancelled diagnostic returning evaluateError is recorded as a failed late read", async () => {

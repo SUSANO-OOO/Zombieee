@@ -982,17 +982,21 @@ async function withPhaseGPageInputLock(page, operation) {
 async function readPhaseGSustainState(page, { bossIsLive, readSetupRuntime,
   observeProofActorAttack, observeProofUnitAttack, observeVehicleAction }) {
   return withPhaseGPageInputLock(page, async () => {
-    if (!await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false)) return null;
-    const bossEngaged = await bossIsLive();
-    const liveHumanTargetCount = await page.evaluate(() => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
-      return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
-    }).catch(() => 0);
-    const setupRuntime = await readSetupRuntime();
-    await observeProofActorAttack(setupRuntime);
-    await observeProofUnitAttack(setupRuntime);
-    await observeVehicleAction(setupRuntime);
-    return { bossEngaged, liveHumanTargetCount };
+    const observation = (async () => {
+      if (!await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false)) return null;
+      const bossEngaged = await bossIsLive();
+      const liveHumanTargetCount = await page.evaluate(() => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
+        return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
+      }).catch(() => 0);
+      const setupRuntime = await readSetupRuntime();
+      await observeProofActorAttack(setupRuntime);
+      await observeProofUnitAttack(setupRuntime);
+      await observeVehicleAction(setupRuntime);
+      return { bossEngaged, liveHumanTargetCount };
+    })();
+    return withDeploymentPreinputDeadline(page, observation, DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS,
+      "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT", { phase: "sustain-observation" });
   });
 }
 

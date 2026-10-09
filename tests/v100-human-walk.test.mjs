@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {v100PaisenWalkPose,v100PaisenWalkCycleDistance,v100HumanWalkPhase,v100UsesHumanWalk,v100HumanWalkCycleDistance,createV100HumanWalkRenderer} from '../app/v100HumanWalk.js';
+import {v100PaisenWalkPose,v100PaisenWalkCycleDistance,v100HumanWalkPhase,v100UsesHumanWalk,v100HumanWalkCycleDistance,createV100HumanWalkRenderer,v100HumanWalkFrame} from '../app/v100HumanWalk.js';
 import {V100_MAIN_HUMAN_WALK_KINDS,V100_MAIN_HUMAN_WALK_ASSETS,v100MainHumanWalkPose} from '../app/v100MainHumanWalk.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime,sampleAnimationClip,sampleAttackPresentation,animationClipFor} from '../app/combatPresentation.js';
@@ -76,6 +76,18 @@ test('main cast gait keeps original atlas identities, alternating support, segme
   }
  }
  assert.equal(v100UsesHumanWalk('raider',{requestedState:'move'}),false,'the blonde gunner keeps her own authored art');
+});
+
+test('left locomotion mirrors the assembled right-facing source and retains its anchor and dimensions',()=>{
+ for(const kind of ['brawler',...V100_MAIN_HUMAN_WALK_KINDS]) {
+  const right=spriteFrameFor(kind,'walk-a','right');
+  const left=v100HumanWalkFrame(right,'left');
+  assert.equal(left.flipX,true,kind);
+  assert.equal(v100HumanWalkFrame(right,'right').flipX,false,kind);
+  assert.deepEqual(left.sourceRect,right.sourceRect,kind);
+  assert.equal(left.path,right.path);assert.equal(left.anchorY,right.anchorY);
+  assert.equal(left.anchorX,right.anchorX);assert.equal(right.flipX,false,'source stays immutable');
+ }
 });
 
 test('gait render cache builds once per source, draws one cached frame and releases every surface',()=>{

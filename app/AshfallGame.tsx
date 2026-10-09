@@ -1,7 +1,7 @@
 "use client";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
-import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance } from "./v100HumanWalk.js";
+import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -4356,7 +4356,7 @@ function drawSpriteFighter(
   const state = animationSample.spriteState;
   const articulatedWalk = Boolean(options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
-  const frame = articulatedWalk ? spriteFrameFor(renderKind,'walk-a',direction) : tataraGroundCandidate
+  const frame = articulatedWalk ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
     ? { sourceRect: TATARA_GROUND_ART.sourceRect, anchorX: TATARA_GROUND_ART.anchorX, anchorY: TATARA_GROUND_ART.anchorY, flipX: direction === 'right', path: TATARA_GROUND_ART.path }
     : kumaGuardArtPose
     ? { sourceRect: V100_KUMAVERSON_GUARD_ART.sourceRect, anchorX: V100_KUMAVERSON_GUARD_ART.anchorX, anchorY: V100_KUMAVERSON_GUARD_ART.anchorY, flipX: direction === 'left', path: V100_KUMAVERSON_GUARD_ART.path }

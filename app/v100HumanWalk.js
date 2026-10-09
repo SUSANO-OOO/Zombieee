@@ -42,6 +42,11 @@ export function v100PaisenWalkPose(phase) {
 export function v100HumanWalkPhase(runtime) {
   return Number(runtime?.locomotionPhase)||0;
 }
+export function v100HumanWalkFrame(rightFacingFrame, direction) {
+  // The rig masks are authored on the right-facing cell. Mirror the complete
+  // assembled pose, rather than applying those masks to an unrelated left cell.
+  return { ...rightFacingFrame, flipX: direction === 'left' };
+}
 export function v100UsesHumanWalk(kind,sample,{manualAbilityActive=false}={}) {
   // An attack may move the fighter while its limbs still own an attack pose.
   return (kind==='brawler' || V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) && !manualAbilityActive
