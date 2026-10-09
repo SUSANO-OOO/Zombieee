@@ -7,6 +7,7 @@ import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
+import { inspectFormationPortraits } from "./formation-portrait-readiness.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
 import { enterV100FromTitle, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
@@ -142,9 +143,12 @@ async function capture(page, row, name) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
   await page.waitForFunction(() => [...document.querySelectorAll('.v100-portrait-frame img')]
     .every(image => Number(getComputedStyle(image).opacity) >= 0.99));
+  await page.waitForFunction(inspectFormationPortraits, "wait", { timeout: 15000 });
+  const formationPortraits = await page.evaluate(inspectFormationPortraits);
+  assert.equal(formationPortraits.ready, true, "Every formation portrait is actually displayed before capture");
   const file = row.id + "-" + name + ".png";
   await page.screenshot({ path: path.join(out, file) });
-  row.captures.push({ file, sha256: createHash("sha256").update(await readFile(path.join(out, file))).digest("hex") });
+  row.captures.push({ file, sha256: createHash("sha256").update(await readFile(path.join(out, file))).digest("hex"), formationPortraits });
 }
 async function runCase(browser, engine, viewport, id, seed, work) {
   const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], captures: [] };
