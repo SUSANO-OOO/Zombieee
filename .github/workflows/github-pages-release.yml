@@ -77,7 +77,7 @@ jobs:
       request_id: ${{ steps.release.outputs.request_id }}
     steps:
       - name: Checkout release control plane
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -193,7 +193,7 @@ jobs:
 
       - name: Checkout immutable application source
         if: steps.release.outputs.requested == 'true' || github.event_name == 'pull_request'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.release.outputs.release_sha }}
           path: release-source
