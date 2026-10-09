@@ -164,8 +164,8 @@ for (const engine of engines) {
         const isPost = eventId.endsWith(':post');
         const stageSave = normalizeV100Save({ ...early, availableStageIds: [...new Set([...early.availableStageIds, stageId])] });
         const pending = isPost ? recordV100PendingResult(stageSave, createV100BattleResult({ stageId,
-          battleRunId: 'quality-event-' + stageNumber, won: true, objectiveComplete: true, vehicleHp: 408, vehicleMaxHp: 680 })) : null;
-        if (isPost) assert.equal(pending.applied, true);
+          battleRunId: 'quality-event-' + stageNumber, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: 408, vehicleMaxHp: 680 })) : null;
+        if (isPost) assert.equal(pending.applied, true, `Post-event QA receipt: ${pending.reason}`);
         const fixture = normalizeV100Save({ ...(pending?.save ?? stageSave), eventCursor: null,
           flowState: { phase: isPost ? "post" : "event", eventId, stageId, stageNumber, destination: "map", nodeIndex: index, firstClear: isPost, finalized: false } });
         await runCase(browser, engine, viewport, eventId.replaceAll(":", "-"), fixture, async (page, row) => {
