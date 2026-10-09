@@ -11,6 +11,8 @@ import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
+import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_R5_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
+import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
 import {
   ASSET_MANIFEST_SCHEMA,
   RELEASE_SHA_PLACEHOLDER,
@@ -34,7 +36,7 @@ import {
   spriteKinds,
   spriteSheetPath,
 } from "../app/spriteManifest.js";
-import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS } from "../app/productionVisuals.js";
+import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, V100_STAGE_BACKGROUND_OVERRIDES } from "../app/productionVisuals.js";
 import {
   V075_VISUAL_PROFILES,
   V080_UNIT_VISUAL_PROFILES,
@@ -42,8 +44,23 @@ import {
 } from "../app/visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
-import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
+import { V100_TITLE_VOICE } from "../app/v100TitleIntro.js";
+import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
+import { V100_POST_CREDITS_AUDIO, V100_POST_CREDITS_SHOTS } from "../app/v100PostCreditsData.js";
+import { V100_MISSION_VEHICLE_ART } from "../app/v100MissionVehicles.js";
+import { V100_ASSAULT_OBJECT_ART } from "../app/v100AssaultObjects.js";
+import { V100_DEFENSE_PERIMETER_ART } from "../app/v100DefensePerimeter.js";
+import { V100_NODE_ART } from "../app/v100MissionNodes.js";
+import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
+import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
+import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
+import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
+import { V100_FONT_ASSETS } from "../app/v100Typography.js";
+import { v100RegionalMapPaths } from "../app/v100RegionalMap.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -55,9 +72,12 @@ const checkOnly = process.argv.includes("--check");
 // pass always requires and records the lossless WebP derivative.
 const allowMissingDerivatives = process.argv.includes("--allow-missing-derivatives");
 
-const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav)$/i;
+const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav|woff2)$/i;
 
 function optimizedRasterPath(assetPath) {
+  // WebKit corrupts this transparent card when decoded from WebP, including
+  // the otherwise lossless PWA transport derivative.
+  if (assetPath === "/art/v080/characters/cards/kumaverson-formation-card-r2.png") return null;
   if (!assetPath.endsWith(".png") || assetPath.startsWith("/icons/")) return null;
   return `/pwa-optimized${assetPath.replace(/\.png$/i, ".webp")}`;
 }
@@ -146,7 +166,7 @@ if (playableKinds.has("mayo-chan")) playableKinds.add("mayo-chan-feral");
 
 function categoryForKind(kind) {
   if (playableKinds.has(kind)) return "unit";
-  if (isBossEnemyKind(kind)) return "boss";
+  if (isBossEnemyKind(kind) || ["futago-separated-a", "futago-separated-b"].includes(kind)) return "boss";
   return "enemy";
 }
 
@@ -154,6 +174,12 @@ function categoryForKind(kind) {
 
 record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
 record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
+for (const fontPath of V100_FONT_ASSETS) {
+  record(fontPath, { pack: "app-shell", category: "app", criticality: "critical" });
+}
+for (const mapPath of Object.values(v100RegionalMapPaths())) {
+  record(mapPath, { pack: "campaign-core", category: "background", criticality: "critical" });
+}
 // Every icon the web app manifest or the document head points at. An icon that
 // is referenced but not registered here is absent from the offline pack, so an
 // installed app would go looking for it over a network it may not have.
@@ -164,11 +190,14 @@ for (const icon of V099_APP_ICON_PATHS) {
 // --- Campaign core --------------------------------------------------------
 
 sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
+sweep(V100_STAGE_BACKGROUND_OVERRIDES, { pack: "campaign-core", category: "background", criticality: "critical" });
 sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
-sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // Some campaign missions render these overlays directly instead of looking
 // through STAGE_OBJECT_MANIFEST. They are still real gameplay assets.
 sweep(PRODUCTION_VISUALS.missionObjects, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(V100_PREPARATION_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(V100_COMBAT_VFX_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // These three supplies are direct renderer dependencies rather than entries in
 // STAGE_OBJECT_MANIFEST. They are part of the full first-install pack because
 // the battle UI can request them on any supported campaign stage.
@@ -191,6 +220,15 @@ for (const kind of spriteKinds) {
     criticality: "critical",
   });
 }
+// The Takuya renderer now uses the repaired V1 atlas, while the published
+// legacy battle gutter remains a released compatibility asset. It is not a
+// runtime sprite registration, so retain it explicitly in the distribution
+// manifest with its source-bound transport derivative.
+record("/art/v060/characters/legacy/takuya-battle-gutter-v1.png", {
+  pack: "units",
+  category: "boss",
+  criticality: "critical",
+});
 
 // CRAWLER and the infected base are persistent battlefield fixtures.
 sweep(V075_VISUAL_PROFILES.crawler, { pack: "units", category: "unit", criticality: "critical" });
@@ -211,9 +249,62 @@ for (const boss of BOSS_DEFINITIONS) {
   record(boss.compendium?.assetPath, { pack: "units", category: "boss", criticality: "critical" });
 }
 
+// --- Version 1.0.0 campaign runtime assets -------------------------------
+// The V1 route is a gameplay route, so every asset it can reach is part of the
+// first-install pack and is critical for a complete V1 offline generation.
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.portraits)) {
+  record(assetPath, { pack: "units", category: "portrait", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.bosses)) {
+  record(assetPath, { pack: "units", category: "boss", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.redPanther)) {
+  record(assetPath, { pack: "units", category: "enemy", criticality: "critical" });
+}
+for (const shot of V100_CREDITS_FILM) record(shot.src, { pack: "campaign-core", category: "background", criticality: "critical" });
+for (const shot of V100_POST_CREDITS_SHOTS) record(shot.src, { pack: "campaign-core", category: "background", criticality: "critical" });
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
+  record(assetPath, { pack: "campaign-core", category: "background", criticality: "critical" });
+}
+for (const owner of Object.keys(V100_EVENT_PORTRAIT_PROFILES)) for (const expression of V100_EVENT_EXPRESSIONS) {
+  record(v100EventPortraitPath(owner, expression), {pack:"units",category:"portrait",criticality:"critical"});
+}
+for (const assetPath of Object.values(V100_R5_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
+record(V100_RETREAT_DOOR_ART,{pack:"campaign-core",category:"object",criticality:"critical"});
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+record(V100_KUMAVERSON_GUARD_ART.path, { pack: "units", category: "unit", criticality: "critical" });
+record("/art/v100/characters/tatara-ground-strike-r1.webp", { pack: "units", category: "unit", criticality: "critical" });
+for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), ...Object.values(V100_ASSAULT_OBJECT_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART, V100_DEFENSE_PERIMETER_ART]) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
+  record(stage.background, { pack: "campaign-core", category: "background", criticality: "critical" });
+  for (const assetPath of stage.missionObjects) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
+  for (const assetPath of stage.vfx) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
+}
+
 // --- Audio ----------------------------------------------------------------
 
-for (const asset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
+// The long ending song streams through HTMLAudioElement. Cache its original
+// file directly, without a second bundle copy or a full Web Audio PCM decode.
+record(V100_CREDITS_SONG.src, { pack: "audio", category: "audio", criticality: "optional",
+  audioChannel: "bgm", audioId: "music-v100-staff-roll", audioType: "audio/mpeg" });
+record(V100_TITLE_VOICE.src, { pack: "audio", category: "audio", criticality: "optional",
+  audioChannel: "se", audioId: "voice-v100-title", audioType: "audio/wav" });
+record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId: "sfx-v100-king-laugh", audioType: "audio/mpeg" });
+record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
+  audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
+
+for (const asset of INSTALL_AUDIO_ASSETS) {
   const audioChannel = audioChannelFor(asset.category);
   const source = selectPreferredAudioSource(asset.sources);
   if (!source) continue;

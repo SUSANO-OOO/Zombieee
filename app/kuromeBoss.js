@@ -1,4 +1,31 @@
 import { deepFreeze } from "./content/freeze.js";
+import { V100_BOSS_BY_ID } from "./v100Registry.js";
+
+export const V100_KUROME_CLONE_TUNING = deepFreeze({ liveCap: 2, hpRatio: .1, damageRatio: .5, bodyScale: .7, opacity: .58 });
+export const isKuromeClone = fighter => fighter?.kind === "kurome" && fighter?.summonSource === "kurome-clone";
+
+export function kuromeCloneSpawnPlan(boss, candidates = []) {
+  if (boss?.v100BossId !== "boss-kurome" || isKuromeClone(boss) || boss.hp <= 0) return deepFreeze({ phase: 1, clones: [] });
+  const definition = V100_BOSS_BY_ID["boss-kurome"];
+  const phase = Math.max(boss.v100ClonePhase ?? 1, 1 + definition.phaseThresholds.filter(ratio => boss.hp / boss.maxHp <= ratio).length);
+  if (phase <= (boss.v100ClonePhase ?? 1)) return deepFreeze({ phase, clones: [] });
+  const living = candidates.filter(fighter => isKuromeClone(fighter) && fighter.summonOwnerId === boss.id && fighter.hp > 0);
+  const count = Math.max(0, V100_KUROME_CLONE_TUNING.liveCap - living.length);
+  return deepFreeze({ phase, clones: Array.from({ length: count }, (_, index) => ({
+    laneOffset: index % 2 === 0 ? -1 : 1, xOffset: index % 2 === 0 ? -58 : 58,
+    hp: Math.round(definition.hp * V100_KUROME_CLONE_TUNING.hpRatio),
+    damage: Math.round(definition.damage * V100_KUROME_CLONE_TUNING.damageRatio),
+    abilityCooldown: 1.8 + index * 1.1,
+  })) });
+}
+
+export function dissolveOrphanedKuromeClones(fighters) {
+  for (const clone of fighters) if (isKuromeClone(clone) && clone.hp > 0
+    && !fighters.some(owner => owner.id === clone.summonOwnerId && owner.v100BossId === "boss-kurome" && owner.hp > 0)) {
+    clone.hp = 0;
+    clone.kuromeCloneDissolved = true;
+  }
+}
 
 export const KUROME_PROTOTYPE_TUNING = deepFreeze({
   warningSeconds: 1.25,

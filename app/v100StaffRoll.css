@@ -1,0 +1,50 @@
+#v100-campaign .v100-staff-roll { --credits-side: clamp(240px, 32vw, 380px); --credits-edge-left: max(8px, env(safe-area-inset-left)); --credits-edge-right: max(8px, env(safe-area-inset-right)); --credits-top: max(8px, env(safe-area-inset-top)); position: relative; isolation: isolate; height: 100%; min-height: 0; overflow: hidden; color: #f7eee0; background: #070c0e; font-family: var(--v100-reading-font, "Yu Gothic", Meiryo, sans-serif); }
+#v100-campaign[data-v100-phase="credits"] { padding: 0; overflow: hidden; scrollbar-gutter: auto; }
+#v100-campaign > .v100-staff-roll-replay { position: fixed; inset: 0; z-index: 900; }
+#v100-campaign:has(> .v100-menu-launch) .v100-staff-roll { --credits-top: calc(max(6px, env(safe-area-inset-top)) + 54px); }
+.v100-credit-landscape { position: absolute; top: max(8px, env(safe-area-inset-top)); bottom: max(8px, env(safe-area-inset-bottom)); left: var(--credits-edge-left); right: calc(var(--credits-side) + var(--credits-edge-right) + 12px); overflow: hidden; }
+.v100-credit-shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.v100-credit-shot-next { opacity: 0; }
+.v100-staff-roll::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: #070c0e; opacity: var(--credit-curtain, 0); }
+.v100-credit-roll-window { position: absolute; z-index: 2; top: var(--credits-top); right: var(--credits-edge-right); width: var(--credits-side); bottom: calc(var(--credits-control-height, 44px) + max(8px, env(safe-area-inset-bottom)) + 8px); overflow: hidden; mask-image: linear-gradient(0deg, transparent, #000 6%, #000 94%, transparent); }
+.v100-credit-roll-track { width: 100%; text-align: center; will-change: transform; transform: translate3d(0, 100vh, 0); padding-inline: 5px; text-shadow: 0 2px 5px #000; }
+.v100-credit-roll-track header { padding: 14px 0 28px; }
+.v100-credit-roll-track header small { font-size: 14px; letter-spacing: .24em; color: #cfb680; }
+.v100-credit-roll-track header h1 { margin: 12px 0 0; font-size: clamp(21px, 2.2vw, 28px); line-height: 1.45; }
+.v100-credit-roll-track .v100-credit-section { padding: 0; }
+.v100-credit-section + .v100-credit-section { margin-top: 32px; }
+.v100-credit-roll-track .v100-credit-section h2 { margin: 0 0 12px; font-size: clamp(15px, 1.5vw, 20px); line-height: 1.5; color: #ddc596; overflow-wrap: anywhere; }
+.v100-credit-lines { display: grid; gap: 8px 12px; align-items: start; }
+.v100-credit-columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v100-credit-wide { grid-column: 1 / -1; }
+.v100-credit-roll-track .v100-credit-section p { font-size: clamp(14px, 1.3vw, 18px); line-height: 1.55; margin: 0; overflow-wrap: anywhere; }
+.v100-credit-roll-track .v100-credit-section-producer p { font-family: var(--v100-numeric-font, sans-serif); font-size: clamp(36px, 4vw, 54px); letter-spacing: .08em; color: #f4e8d1; }
+.v100-credit-section-paragraphs .v100-credit-lines { gap: 16px; }
+.v100-credit-group { display: grid; gap: 3px; }
+.v100-credit-roll-track .v100-credit-group[data-credit-group="name-first"] p:first-child,
+.v100-credit-roll-track .v100-credit-group[data-credit-group="role-first"] p:last-child { font-weight: 700; }
+.v100-credit-roll-track .v100-credit-group[data-credit-group="name-first"] p:last-child,
+.v100-credit-roll-track .v100-credit-group[data-credit-group="role-first"] p:first-child,
+.v100-credit-roll-track .v100-credit-group[data-credit-group="note"] p,
+.v100-credit-roll-track .v100-credit-materials span { font-size: clamp(14px, 1.15vw, 16px); color: #dbcdb8; }
+.v100-credit-roll-track .v100-credit-group[data-credit-group="song"] p:first-child { font-family: var(--v100-display-font, sans-serif); font-size: clamp(18px, 1.6vw, 22px); font-weight: 700; }
+.v100-credit-materials { display: grid; gap: 18px; }
+.v100-credit-materials p { display: grid; gap: 4px; }
+.v100-credit-materials strong, .v100-credit-materials span { display: block; }
+.v100-credit-materials strong { font-weight: 700; color: #f7eee0; }
+.v100-credit-roll-track footer { padding: 36px 0 12px; font-size: clamp(17px, 1.7vw, 24px); line-height: 1.6; }
+.v100-credit-roll-track footer span, .v100-credit-roll-track footer strong { display: block; }
+.v100-credit-roll-track footer strong { font-family: var(--v100-numeric-font, sans-serif); font-size: 32px; letter-spacing: .08em; }
+.v100-credit-roll-track h1, .v100-credit-roll-track h2 { font-family: var(--v100-display-font, "Zen Kaku Gothic New"), sans-serif; }
+.v100-credit-controls { position: absolute; z-index: 5; right: var(--credits-edge-right); width: max-content; max-width: var(--credits-side); bottom: max(8px, env(safe-area-inset-bottom)); display: grid; gap: 4px; }
+.v100-credit-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+#v100-campaign .v100-credit-buttons button { min-width: 44px; min-height: 44px; padding: 6px 8px; font-size: 12px; line-height: 1.4; background: #070c0e80; border: 0; border-radius: 2px; color: #dbcdb8; }
+.v100-credit-audio-action { flex-basis: 100%; }
+.v100-credit-controls > small { font-size: 12px; line-height: 1.5; text-align: center; color: #ebd6b5; }
+.v100-credits-reduced .v100-credit-shot-next { opacity: 0; }
+.v100-credit-landscape.v100-credit-cinema { inset: 0; }
+.v100-credit-cinema .v100-credit-shot { object-fit: contain; will-change: transform; }
+.v100-credit-cinema-shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, #0207080a 35%, #02070826 58%, #020708b8 80%, #020708d9), linear-gradient(0deg, #020708b8, transparent 22%, transparent 82%, #0207084d); }
+@media (max-width: 1000px) { .v100-credit-cinema-shade { background: linear-gradient(90deg, transparent 34%, #02070820 54%, #020708b8 78%, #020708d9); } }
+@media (max-height: 400px) { .v100-credit-roll-track .v100-credit-section h2 { margin-bottom: 10px; font-size: 15px; } .v100-credit-section + .v100-credit-section { margin-top: 28px; } }
+@media (prefers-reduced-motion: reduce) { .v100-credit-shot-next { opacity: 0; } }

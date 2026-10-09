@@ -111,7 +111,7 @@ TAKUYAの主目標：
 
 セガワ原写真をrepository、Issue、PR、artifact、evidenceへ保存しない。
 
-TAKUYA-Ωは既存TAKUYAの顔・頭部・体格・特徴、橙色安全vest残骸、人工armor、背面投薬管を継承し、不均衡な異常肥大、左右非対称、肉体とarmorの融合、投薬暴走、崩れたsilhouetteを加える。単なる巨大化、色違い、無関係な別monster、綺麗な近未来robotは不合格。exact scaleは連続性、ラスボス圧力、mobile readability、telegraph、hitbox、performanceを満たす値をSolが決定する。
+TAKUYA-Ωは既存TAKUYAの顔・頭部・体格・特徴、裸の上半身の縫合痕と黒い拘束帯、黒い短パンとブーツ、大型の刃を継承する。その上で人工armor、背面投薬管、不均衡な異常肥大、左右非対称、肉体とarmorの融合、投薬暴走、崩れたsilhouetteを加える。橙色の安全vestは追加しない。単なる巨大化、色違い、無関係な別monster、綺麗な近未来robotは不合格。exact scaleは連続性、ラスボス圧力、mobile readability、telegraph、hitbox、performanceを満たす値をSolが決定する。
 
 ## 9. Save・QA
 

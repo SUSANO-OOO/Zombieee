@@ -81,6 +81,17 @@ function storyUrl(withSafeArea) {
   return String(url);
 }
 
+async function enterStory(page) {
+  const notice = page.locator(".fiction-notice");
+  if (await notice.isVisible()) {
+    const proceed = notice.getByRole("button", { name: "続ける", exact: true });
+    if (await proceed.isEnabled()) await proceed.click();
+    await notice.waitFor({ state: "hidden", timeout: 5_000 });
+  }
+  await dismissInstallOffer(page, { timeout: 5_000 });
+  await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
+}
+
 async function contactSheet(engine, viewport, safeAreaProfile, entries) {
   const tileWidth = 320;
   const tileHeight = 180;
@@ -130,8 +141,7 @@ async function runCase(engine, viewport, safeAreaMode) {
   try {
     attachDiagnostics(page);
     await page.goto(storyUrl(false), { waitUntil: "domcontentloaded" });
-    await dismissInstallOffer(page, { timeout: 5_000 });
-    await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
+    await enterStory(page);
     const productionSafeArea = await page.evaluate(() => {
       const root = document.documentElement;
       return {
@@ -154,8 +164,7 @@ async function runCase(engine, viewport, safeAreaMode) {
       page = await context.newPage();
       attachDiagnostics(page);
       await page.goto(storyUrl(true), { waitUntil: "domcontentloaded" });
-      await dismissInstallOffer(page, { timeout: 5_000 });
-      await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
+      await enterStory(page);
       presetSafeArea = await page.evaluate(() => {
         const root = document.documentElement;
         return {
@@ -172,8 +181,8 @@ async function runCase(engine, viewport, safeAreaMode) {
     }
 
     const metadata = await page.locator('meta[name="description"]').getAttribute("content");
-    invariant(metadata?.startsWith("大型移動拠点と"), `${engine}: public metadata prefix drifted`);
-    invariant(!/crawler|クローラー/iu.test(metadata ?? ""), `${engine}: retired public wording remains`);
+    invariant(metadata?.startsWith("装甲車両と"), `${engine}: public metadata prefix drifted`);
+    invariant(!/crawler|クローラー|移動拠点/iu.test(metadata ?? ""), `${engine}: retired public wording remains`);
 
     for (const [kind, profile] of Object.entries(EVENT_PORTRAIT_PROFILES)) {
       const geometry = await page.evaluate(async ({ portraitKind, portraitProfile, source }) => {

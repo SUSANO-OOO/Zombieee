@@ -1,0 +1,263 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "repair": "explicit-reviewed-gap-seeds-local-palette",
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 2720,
+    "height": 1024
+  },
+  "commonScale": 0.3103448275862069,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "noClipping": true,
+  "groundAnchorPixels": 496,
+  "identityMaster": "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png",
+  "identityMasterSha256": "3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8",
+  "sources": [
+    {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
+      "sha256": "ce770f1d2eb5027ecda5f9dc41c06505cd96882838963554ca536974842ac685",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 71,
+        "y": 14,
+        "width": 759,
+        "height": 1508,
+        "alphaPixels": 484359
+      },
+      "alphaAuthored": true,
+      "repair": {
+        "alphaAuthored": true,
+        "seedPalette": "luma>=205/chroma<=12",
+        "edgePixels": 0,
+        "seedPixels": 0,
+        "seedCount": 0,
+        "seedResults": [],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 0,
+        "allowedMaskPixels": 0,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",
+      "sha256": "b12bfb916b85545c61449276b98ef18d9b3cebe24cb0983b027647686f128e7c",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 43,
+        "y": 5,
+        "width": 967,
+        "height": 1484,
+        "alphaPixels": 530058
+      },
+      "alphaAuthored": true,
+      "repair": {
+        "alphaAuthored": true,
+        "seedPalette": "luma>=205/chroma<=12",
+        "edgePixels": 0,
+        "seedPixels": 0,
+        "seedCount": 0,
+        "seedResults": [],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 0,
+        "allowedMaskPixels": 0,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png",
+      "sha256": "d1979c875a82667c9f002214c7e7d8b756c857d8be07923ce5743412559a5baf",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 34,
+        "y": 126,
+        "width": 944,
+        "height": 1310,
+        "alphaPixels": 418199
+      },
+      "alphaAuthored": false,
+      "repair": {
+        "alphaAuthored": false,
+        "seedPalette": "luma>=205/chroma<=12",
+        "edgePixels": 1154212,
+        "seedPixels": 453,
+        "seedCount": 2,
+        "seedResults": [
+          {
+            "seed": [
+              116,
+              324
+            ],
+            "removed": 257
+          },
+          {
+            "seed": [
+              790,
+              592
+            ],
+            "removed": 196
+          }
+        ],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 1154665,
+        "allowedMaskPixels": 1154665,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png",
+      "sha256": "465c691c737361fa5b194ac8c358fc29b340e2d5e5ce38c374caa2136037438f",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 0,
+        "y": 19,
+        "width": 1002,
+        "height": 1501,
+        "alphaPixels": 577500
+      },
+      "alphaAuthored": true,
+      "repair": {
+        "alphaAuthored": true,
+        "seedPalette": "luma>=205/chroma<=12",
+        "edgePixels": 0,
+        "seedPixels": 0,
+        "seedCount": 0,
+        "seedResults": [],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 0,
+        "allowedMaskPixels": 0,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    },
+    {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png",
+      "sha256": "33953f27356a6706d6864533a1f82b5aa7635799effd64c618e683cbe2e568b8",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 14,
+        "y": 9,
+        "width": 1504,
+        "height": 991,
+        "alphaPixels": 487039
+      },
+      "alphaAuthored": true,
+      "repair": {
+        "alphaAuthored": true,
+        "seedPalette": "luma>=205/chroma<=12",
+        "edgePixels": 0,
+        "seedPixels": 0,
+        "seedCount": 0,
+        "seedResults": [],
+        "zeroRemovalSeeds": [],
+        "changedPixels": 0,
+        "allowedMaskPixels": 0,
+        "alphaChangesOutsideAllowedMask": 0,
+        "rgbChangesOutsideAllowedMask": 0
+      }
+    }
+  ],
+  "frames": [
+    {
+      "state": "idle",
+      "contentRect": {
+        "x": 195,
+        "y": 28,
+        "width": 195,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 236,
+        "height": 468
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "contentRect": {
+        "x": 122,
+        "y": 35,
+        "width": 300,
+        "height": 461
+      },
+      "renderedSize": {
+        "width": 300,
+        "height": 461
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "contentRect": {
+        "x": 125,
+        "y": 89,
+        "width": 293,
+        "height": 407
+      },
+      "renderedSize": {
+        "width": 293,
+        "height": 407
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "contentRect": {
+        "x": 116,
+        "y": 37,
+        "width": 307,
+        "height": 455
+      },
+      "renderedSize": {
+        "width": 311,
+        "height": 466
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "contentRect": {
+        "x": 38,
+        "y": 198,
+        "width": 467,
+        "height": 297
+      },
+      "renderedSize": {
+        "width": 467,
+        "height": 308
+      },
+      "groundAnchorPixels": 496,
+      "clipped": false
+    }
+  ],
+  "sha256": "e53916e676884631618b8e5cff8f53506451299fcec52638b77724ab724cc5c5"
+}

@@ -104,9 +104,11 @@ function normalizeUnitLevelsByUnit(value, unitIds) {
   ]));
 }
 
-function normalizeFormationSnapshot(value) {
+function normalizeFormationSnapshot(value, preserveSlots = false) {
   const source = isRecord(value) ? value : {};
-  const unitIds = uniqueStrings(source.unitIds, 7);
+  const unitIds = preserveSlots
+    ? (Array.isArray(source.unitIds) ? source.unitIds : []).filter(isSafeDictionaryKey).map(id => id.trim()).slice(0, 7)
+    : uniqueStrings(source.unitIds, 7);
   const equipment = normalizeEquipmentSnapshot(source, unitIds);
   return {
     presetId: typeof source.presetId === "string" ? source.presetId.trim() : "",
@@ -299,8 +301,9 @@ export const SURVIVAL_UPGRADE_BY_ID = deepFreeze(Object.fromEntries(
   SURVIVAL_UPGRADES.map((upgrade) => [upgrade.id, upgrade]),
 ));
 
-export function normalizeSurvivalBossPool(value) {
+export function normalizeSurvivalBossPool(value, { strict = false } = {}) {
   const normalized = uniqueStrings(value, 32).filter(isBossEnemyKind);
+  if (strict) return normalized;
   if (normalized.length === 0) return [...SURVIVAL_DEFAULT_BOSS_KINDS];
   if (normalized.length === 1) {
     const fallback = SURVIVAL_DEFAULT_BOSS_KINDS.find((kind) => kind !== normalized[0]);
@@ -445,13 +448,15 @@ export function normalizeSurvivalRun(value) {
     && storedUpgradeChoices.length !== 3
     ? survivalUpgradeChoices(runId, lastCompletedWave)
     : storedUpgradeChoices;
-  const bossPool = normalizeSurvivalBossPool(source.bossPool);
+  const v100 = source.modePolicy === "v100";
+  const bossPool = normalizeSurvivalBossPool(source.bossPool, { strict: v100 });
   const lastBossKind = typeof source.lastBossKind === "string"
     && bossPool.includes(source.lastBossKind)
     ? source.lastBossKind
     : null;
   return {
     schemaVersion: SURVIVAL_RUN_SCHEMA_VERSION,
+    ...(v100 ? { modePolicy: "v100" } : {}),
     runId,
     startedAt: normalizedTimestamp(source.startedAt),
     updatedAt: normalizedTimestamp(source.updatedAt),
@@ -469,7 +474,7 @@ export function normalizeSurvivalRun(value) {
     bossEntrancePending,
     bossPool,
     lastBossKind,
-    formation: normalizeFormationSnapshot(source.formation),
+    formation: normalizeFormationSnapshot(source.formation, v100),
     crawler: {
       hp: clampInteger(source.crawler?.hp, 0, crawlerMaxHp, crawlerMaxHp),
       maxHp: crawlerMaxHp,
@@ -485,6 +490,10 @@ export function normalizeSurvivalRun(value) {
   };
 }
 
+/**
+ * @param {{runId?: string, startedAt?: string, startWave?: number, unlockedStartWaves?: number[], formation?: object, crawlerMaxHp?: number, bossPool?: string[], modePolicy?: "v100" | null}} options
+ * @returns {NonNullable<ReturnType<typeof normalizeSurvivalRun>> & {runId: string}}
+ */
 export function createSurvivalRun({
   runId,
   startedAt = new Date().toISOString(),
@@ -493,6 +502,7 @@ export function createSurvivalRun({
   formation = {},
   crawlerMaxHp = 700,
   bossPool = SURVIVAL_DEFAULT_BOSS_KINDS,
+  modePolicy = null,
 } = {}) {
   const stableRunId = normalizedId(runId, "Survival run");
   const requestedStartWave = clampInteger(startWave, 1, SURVIVAL_MAX_SAFE_WAVE, 1);
@@ -508,6 +518,7 @@ export function createSurvivalRun({
   const maxHp = clampInteger(crawlerMaxHp, 1, Number.MAX_SAFE_INTEGER, 700);
   return {
     schemaVersion: SURVIVAL_RUN_SCHEMA_VERSION,
+    ...(modePolicy === "v100" ? { modePolicy: "v100" } : {}),
     runId: stableRunId,
     startedAt: normalizedTimestamp(startedAt, new Date().toISOString()),
     updatedAt: normalizedTimestamp(startedAt, new Date().toISOString()),
@@ -519,9 +530,9 @@ export function createSurvivalRun({
     reachedWave: requestedStartWave - 1,
     speed: 1,
     bossEntrancePending: false,
-    bossPool: normalizeSurvivalBossPool(bossPool),
+    bossPool: normalizeSurvivalBossPool(bossPool, { strict: modePolicy === "v100" }),
     lastBossKind: null,
-    formation: normalizeFormationSnapshot(formation),
+    formation: normalizeFormationSnapshot(formation, modePolicy === "v100"),
     crawler: { hp: maxHp, maxHp },
     manualAbilityCooldownsByKind: {},
     temporaryUpgradeStacks: survivalLateStartUpgradeStacks(requestedStartWave),

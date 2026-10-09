@@ -1,3 +1,4 @@
+import { legacyQaUrl } from "./legacy-qa-url.mjs";
 import { once } from "node:events";
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -100,7 +101,7 @@ async function measurePage(page, origin, cacheState) {
     serialized: JSON.stringify(save),
   });
   const startedAt = performance.now();
-  await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await page.goto(legacyQaUrl(origin), { waitUntil: "domcontentloaded", timeout: 30_000 });
   await page.locator('.game-shell:not([data-save-persistence="checking"])').waitFor({ state: "visible", timeout: 30_000 });
   await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 30_000 });
   const titleReadyMs = performance.now() - startedAt;

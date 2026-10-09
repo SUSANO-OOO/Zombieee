@@ -1,0 +1,8 @@
+.landscape-gate,.landscape-gate-content { min-height: 100dvh; width: 100%; }
+.landscape-gate[data-landscape-ready="false"] > .landscape-gate-content { visibility: hidden; pointer-events: none; }
+.landscape-gate-content[inert] * { animation-play-state: paused !important; }
+.landscape-rotate-message { display: none; position: fixed; inset: 0; z-index: 2147483000; padding: max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); align-content: center; justify-items: center; gap: 18px; text-align: center; background: radial-gradient(ellipse at 50% 35%,#1a292e,#050b0e 72%); color: #eadcc4; font-family: "BIZ UDPGothic",sans-serif; touch-action: none; }
+.landscape-rotate-message svg { width: 88px; height: 88px; fill: none; stroke: #c49c70; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.landscape-rotate-message h1 { margin: 0; font-size: clamp(18px,5vw,24px); line-height: 1.6; }
+.landscape-rotate-message p { margin: 0; font-size: 13px; line-height: 1.7; color: #a8b7b6; }
+@media (orientation: portrait) { .landscape-rotate-message { display: grid; } .landscape-gate > .landscape-gate-content { visibility: hidden; pointer-events: none; } }

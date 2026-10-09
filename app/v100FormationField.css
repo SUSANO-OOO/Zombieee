@@ -1,0 +1,790 @@
+/* Phone formation keeps the field plan and seven call-in slots on one screen.
+ * The roster picker is a separate view so names and portraits stay legible. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
+    border: 0;
+    border-radius: 0;
+    background: linear-gradient(90deg, #08100fee 0%, #091411ce 42%, #0a1010b8 100%), var(--v100-stage-art) center / cover;
+    box-shadow: inset 0 1px #ddae68, inset 0 -1px #685c47, 0 12px 28px #0009;
+  }
+  .v100-formation-panel .v100-sortie-heading {
+    border-bottom: 1px solid #b17e50;
+    background: linear-gradient(90deg, #100f0bd9, #1017149c 70%, transparent);
+  }
+  .v100-formation-panel .v100-formation-board {
+    display: grid;
+    grid-template-columns: minmax(158px, 23%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 54px;
+    gap: 5px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .v100-formation-panel .v100-formation-workspace,
+  .v100-formation-panel .v100-formation-columns { display: contents; }
+  .v100-formation-panel .v100-formation-loadout { display: none; }
+  .v100-formation-panel .v100-formation-focus {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-left: 3px solid #c47a43;
+    background: linear-gradient(100deg, #2c2619b0, #07100ed5 63%, #0a1410bb);
+    box-shadow: inset 0 0 26px #0009;
+  }
+  .v100-formation-panel .v100-formation-focus::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 4px;
+    background: linear-gradient(90deg, #b45737, #eac075 55%, transparent);
+  }
+  .v100-formation-panel .v100-formation-focus-art {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 53%;
+    height: 100%;
+    min-height: 0;
+    mask-image: linear-gradient(90deg, #000 70%, transparent);
+  }
+  .v100-formation-panel .v100-formation-focus-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+  .v100-formation-panel .v100-formation-focus > .v100-kicker,
+  .v100-formation-panel .v100-formation-focus > h3,
+  .v100-formation-panel .v100-formation-focus > strong,
+  .v100-formation-panel .v100-formation-focus > p,
+  .v100-formation-panel .v100-formation-focus > button {
+    position: relative;
+    z-index: 1;
+    display: block;
+    margin-left: 45%;
+    width: 53%;
+    text-shadow: 0 1px 3px #000;
+  }
+  .v100-formation-panel .v100-formation-focus > .v100-kicker { padding-top: 4px; color: #e5be7a; font-size: 9px; line-height: 1; }
+  .v100-formation-panel .v100-formation-focus > h3 { margin-top: 4px; margin-bottom: 1px; color: #ffebba; font-size: 16px; line-height: 1.1; overflow-wrap: anywhere; }
+  .v100-formation-panel .v100-formation-focus > strong { color: #e3d8b8; font-size: 10px; }
+  .v100-formation-panel .v100-formation-focus > p { display: none; }
+  .v100-formation-panel .v100-formation-focus > button {
+    position: absolute;
+    left: 45%;
+    bottom: 7px;
+    width: 53%;
+    min-height: 29px;
+    margin: 0;
+    padding: 2px;
+    border: 1px solid #c69c62;
+    border-radius: 0;
+    background: #182522e9;
+    color: #ffe2a6;
+    font-size: 11px;
+  }
+  .v100-formation-panel .v100-empty-focus { display: block; margin-left: 45%; color: #f7d491; font-size: 11px; }
+  .v100-formation-panel .v100-empty-focus i { display: none; }
+  .v100-formation-panel .v100-slot-rail {
+    grid-column: 2;
+    grid-row: 1;
+    order: initial;
+    position: relative;
+    height: auto;
+    min-height: 0;
+    padding: 16px 5px 5px;
+    background: linear-gradient(90deg, #0d1410d4, #0b1612a8 50%, #0b1210c8);
+    border: 0;
+    border-top: 1px solid #948260;
+    border-bottom: 1px solid #948260;
+    box-shadow: inset 0 8px 18px #0005;
+  }
+  .v100-formation-panel .v100-slot-rail::before { content: "出撃登録 / 戦闘中に呼び出す隊員"; top: 2px; left: 7px; font-size: 10px; }
+  .v100-formation-panel .v100-slot-track {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .v100-formation-panel .v100-slot:nth-child(7) { grid-column: span 2; }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-slot {
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid #746b54;
+    border-left: 3px solid #b48a52;
+    border-radius: 0;
+    background: linear-gradient(100deg, #26352edc, #101c18d3);
+    box-shadow: inset 0 0 0 1px #0d1512, 0 2px 5px #0008;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-slot.selected {
+    border-color: #ffe0a0;
+    border-left-color: #e79240;
+    background: linear-gradient(100deg, #6c4825, #283327d9);
+    box-shadow: inset 0 0 0 1px #e4b065, 0 0 10px #e7aa5866;
+  }
+  .v100-formation-panel .v100-slot-portrait { flex: 0 0 35%; width: 35%; }
+  .v100-formation-panel .v100-slot-meta small { font-size: 9px; }
+  .v100-formation-panel .v100-slot-meta strong { font-size: 12px; }
+  .v100-formation-panel .v100-slot-meta em { font-size: 9px; }
+  .v100-formation-panel .v100-roster-heading {
+    display: flex;
+    grid-column: 1;
+    grid-row: 2;
+    align-items: center;
+    height: auto;
+    margin: 0;
+    padding: 5px 7px;
+    border: 1px solid #ad804b;
+    border-left: 4px solid #c96740;
+    background: #15211bf0;
+  }
+  .v100-formation-panel .v100-roster-heading h3 { color: #ffe0a1; font-size: 14px; }
+  .v100-formation-panel .v100-roster-heading span { font-size: 10px; }
+  .v100-formation-panel .v100-roster-grid {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    gap: 4px;
+    padding: 0 1px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-roster-card {
+    flex: 0 0 max(118px, calc((100% - 16px) / 5));
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    gap: 3px;
+    padding: 2px;
+    border-color: #697967;
+    background: linear-gradient(115deg, #333d32ee, #15201ce8);
+  }
+  .v100-formation-panel .v100-roster-card-art { flex: 0 0 39%; width: 39%; }
+  .v100-formation-panel .v100-roster-card-copy strong { font-size: 12px; line-height: 1.1; }
+  .v100-formation-panel .v100-roster-card-copy small { font-size: 10px; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-formation-panel .v100-formation-board { grid-template-rows: minmax(0, 1fr) 44px; }
+  .v100-formation-panel .v100-formation-focus > h3 { font-size: 14px; margin-top: 2px; }
+  .v100-formation-panel .v100-formation-focus > button { display: none; }
+  .v100-formation-panel .v100-slot-rail { padding-top: 15px; padding-bottom: 0; }
+  .v100-formation-panel .v100-slot-rail::before { font-size: 9px; }
+  .v100-formation-panel .v100-slot-meta em { display: none; }
+  .v100-formation-panel .v100-roster-heading { padding: 3px 5px; }
+  .v100-formation-panel .v100-roster-heading h3 { font-size: 12px; }
+  .v100-formation-panel .v100-roster-heading span { font-size: 9px; }
+  .v100-formation-panel .v100-roster-card-copy strong { font-size: 11px; }
+}
+
+/* In landscape the deployment board and the roster are separate, full-size
+ * decisions. Showing both at once made every face and label too small. */
+.v100-picker-close,
+.v100-personnel-detail-back { display: none; }
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-shell:has(> .v100-command-tabs) > .v100-formation-panel {
+    padding: 4px 7px;
+    background: linear-gradient(90deg, #070c0be8, #0b1714c8 54%, #09100de0), var(--v100-stage-art) center / cover;
+  }
+  .v100-formation-panel .v100-sortie-heading { min-height: 26px; margin-bottom: 4px; }
+  .v100-formation-panel .v100-sortie-heading h2 { font-size: 17px; }
+  .v100-formation-panel .v100-formation-board {
+    grid-template-columns: minmax(155px, 25%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 7px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-roster-heading,
+  .v100-formation-panel:not(.picker-open) .v100-roster-grid { display: none; }
+  .v100-formation-panel .v100-formation-focus {
+    grid-column: 1;
+    grid-row: 1;
+    border-left-width: 4px;
+    background: linear-gradient(90deg, #291b14a6, #0b1411e5 68%);
+  }
+  .v100-formation-panel .v100-formation-focus-art { width: 62%; }
+  .v100-formation-panel .v100-formation-focus > .v100-kicker,
+  .v100-formation-panel .v100-formation-focus > h3,
+  .v100-formation-panel .v100-formation-focus > strong,
+  .v100-formation-panel .v100-formation-focus > p,
+  .v100-formation-panel .v100-formation-focus > button { margin-left: 48%; width: 50%; }
+  .v100-formation-panel .v100-formation-focus > .v100-kicker { padding-top: 11px; font-size: 11px; }
+  .v100-formation-panel .v100-formation-focus > h3 { margin-top: 7px; font-size: 18px; }
+  .v100-formation-panel .v100-formation-focus > strong { font-size: 12px; }
+  .v100-formation-panel .v100-formation-focus > button { left: 48%; margin-left: 0; bottom: 9px; min-height: 35px; font-size: 12px; }
+  .v100-formation-panel .v100-slot-rail { grid-column: 2; grid-row: 1; padding: 20px 6px 6px; }
+  .v100-formation-panel .v100-slot-rail::before { content: "出撃登録 / 枠を押して隊員を変更"; font-size: 11px; top: 4px; }
+  .v100-formation-panel .v100-slot-track { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel .v100-slot { border-left-width: 4px; }
+  .v100-formation-panel .v100-slot-portrait { flex-basis: 42%; width: 42%; }
+  .v100-formation-panel .v100-slot-meta small { font-size: 11px; }
+  .v100-formation-panel .v100-slot-meta strong { font-size: 14px; }
+  .v100-formation-panel .v100-slot-meta em { font-size: 10px; }
+  .v100-formation-panel .v100-formation-footer { height: 45px; }
+  .v100-formation-panel .v100-formation-footer button { min-height: 43px; }
+
+  .v100-formation-panel.picker-open .v100-sortie-heading,
+  .v100-formation-panel.picker-open .v100-slot-rail,
+  .v100-formation-panel.picker-open .v100-formation-focus,
+  .v100-formation-panel.picker-open .v100-formation-footer { display: none; }
+  .v100-formation-panel.picker-open .v100-formation-board { display: block; height: 100%; }
+  .v100-formation-panel.picker-open .v100-formation-workspace { display: flex; flex-direction: column; height: 100%; }
+  .v100-formation-panel.picker-open .v100-formation-columns { display: flex; min-height: 0; flex: 1; }
+  .v100-formation-panel.picker-open .v100-roster-heading {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    height: 41px;
+    padding: 3px 8px;
+    border: 0;
+    border-bottom: 2px solid #d2a562;
+    background: linear-gradient(90deg, #3b2519, #121b16);
+  }
+  .v100-formation-panel.picker-open .v100-roster-heading h3 { font-size: 18px; }
+  .v100-formation-panel.picker-open .v100-roster-heading span { font-size: 12px; }
+  .v100-formation-panel.picker-open .v100-picker-close,
+  .v100-personnel-screen .v100-personnel-detail-back {
+    display: block;
+    min-width: 116px;
+    min-height: 37px;
+    margin-left: auto;
+    padding: 4px 9px;
+    border: 1px solid #d3ae77;
+    background: #172522;
+    color: #ffe6b5;
+    font-size: 13px;
+  }
+  .v100-formation-panel.picker-open .v100-roster-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(72px, 1fr);
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+    padding: 6px 2px 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel.picker-open .v100-roster-card {
+    display: flex;
+    width: 100%;
+    min-height: 72px;
+    height: 100%;
+    padding: 4px;
+    gap: 8px;
+    border-left: 4px solid #c48a4d;
+    background: linear-gradient(120deg, #24332d, #111b18);
+  }
+  .v100-formation-panel.picker-open .v100-roster-card-art { display: block; flex-basis: 38%; width: 38%; overflow: hidden; }
+  .v100-formation-panel.picker-open .v100-roster-card-art img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; object-position: center; }
+  .v100-formation-panel.picker-open .v100-roster-card-copy strong { font-size: 16px; }
+  .v100-formation-panel.picker-open .v100-roster-card-copy small { font-size: 12px; }
+
+  .v100-shell:has(> .v100-command-tabs) > .v100-personnel-screen {
+    padding: 6px 8px;
+    background: linear-gradient(110deg, #17130ff2, #101b17ec), var(--v100-command-art) center / cover;
+  }
+  .v100-personnel-screen .v100-personnel-workspace { display: block; height: 100%; }
+  .v100-personnel-screen:not(.detail-open) .v100-personnel-focus,
+  .v100-personnel-screen.detail-open .v100-personnel-roster { display: none; }
+  .v100-personnel-screen:not(.detail-open) .v100-personnel-roster { height: 100%; }
+  .v100-personnel-screen .v100-roster-heading { height: 32px; min-height: 32px; padding: 3px 7px; background: #2f251aec; border-bottom: 2px solid #cf9b52; }
+  .v100-personnel-screen .v100-roster-heading h3 { font-size: 16px; }
+  .v100-personnel-screen:not(.detail-open) .v100-personnel-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(76px, 1fr));
+    grid-auto-rows: minmax(76px, 1fr);
+    height: calc(100% - 32px);
+    padding: 5px 0 0;
+    gap: 6px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+  }
+  .v100-personnel-screen .v100-personnel-card.game-unit-card {
+    display: flex;
+    height: 100%;
+    min-height: 76px;
+    padding: 4px;
+    gap: 5px;
+    border-left: 4px solid #ab7643;
+    background: linear-gradient(110deg, #27372e, #111b18);
+  }
+  .v100-personnel-screen .v100-personnel-art { flex-basis: 43%; width: 43%; height: 100%; }
+  .v100-personnel-screen .v100-personnel-copy h3 { font-size: 15px; }
+  .v100-personnel-screen .v100-personnel-copy span,
+  .v100-personnel-screen .v100-personnel-copy small { font-size: 11px; }
+
+  .v100-personnel-screen.detail-open .v100-personnel-focus {
+    position: relative;
+    display: grid;
+    grid-template-columns: 174px minmax(0, 1fr);
+    height: 100%;
+    padding: 5px;
+    gap: 8px;
+    background: linear-gradient(100deg, #3b281ae8, #111d18ee 37%);
+  }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-art { grid-column: 1; grid-row: 1; display: block; width: 174px; height: 100%; }
+  .v100-personnel-screen.detail-open .v100-personnel-detail-back { position: absolute; z-index: 2; left: 8px; bottom: 8px; width: 154px; min-width: 0; margin: 0; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy { grid-column: 2; grid-row: 1; height: 100%; gap: 2px; overflow-y: auto; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy h3 { font-size: 19px; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy > strong { display: block; font-size: 12px; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy > p { display: none; }
+  .v100-personnel-screen.detail-open .v100-personnel-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 3px 0; }
+  .v100-personnel-screen.detail-open .v100-unit-stat { min-height: 60px; padding: 6px 9px; border-left-width: 3px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat span { font-size: 13px; white-space: normal; }
+  .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 21px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 12px; }
+  .v100-personnel-screen.detail-open .v100-growth-summary { display: flex; align-items: center; gap: 9px; min-height: 29px; margin: 2px 0; padding: 3px 8px; border-left: 3px solid #83c9a7; background: linear-gradient(90deg, #20382e, #14221c); color: #e9f4d8; }
+  .v100-personnel-screen.detail-open .v100-growth-summary span { flex: none; color: #b8d7b3; font-size: 11px; }
+  .v100-personnel-screen.detail-open .v100-growth-summary strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy > button { min-height: 42px; margin-top: auto; font-size: 14px; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-formation-panel .v100-formation-focus > h3 { font-size: 16px; }
+  .v100-formation-panel .v100-formation-focus > button { display: block; min-height: 30px; bottom: 5px; font-size: 11px; }
+  .v100-formation-panel .v100-slot-meta em { display: block; font-size: 9px; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy h3 { font-size: 16px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat { min-height: 50px; padding: 4px 6px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 18px; }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy > button { min-height: 37px; }
+}
+
+/* The route and mission briefing are separate from the seven call-in slots.
+ * Slot order is registration order, never an implied battle position. */
+.v100-field-map-title,
+.v100-field-map-drawing,
+.v100-field-map-intel { display: none; }
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 0;
+    border: 2px solid #9e8052;
+    background:
+      linear-gradient(90deg, #07100df2 0%, #14211dde 39%, #08120fb8 100%),
+      var(--v100-stage-art) center / cover;
+    box-shadow: inset 0 0 0 1px #d1a86b8c, inset 0 0 32px #000c, 0 7px 15px #0009;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::before { content: none; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
+    content: "敵侵入方向  ◀";
+    position: absolute;
+    z-index: 1;
+    right: 14px;
+    top: 8px;
+    color: #f39b72;
+    font: 800 10px/1.2 sans-serif;
+    letter-spacing: .08em;
+    text-shadow: 0 1px 3px #000;
+  }
+  .v100-field-map-title {
+    position: absolute;
+    z-index: 3;
+    top: 6px;
+    left: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    max-width: calc(100% - 140px);
+    overflow: hidden;
+    color: #f9d9a0;
+    font: 900 14px/1.2 Georgia, serif;
+    text-shadow: 0 1px 3px #000;
+    pointer-events: none;
+  }
+  .v100-field-map-title small { overflow: hidden; color: #e6dcc2; font: 700 10px/1.2 sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .v100-field-map-intel {
+    position: absolute;
+    z-index: 2;
+    top: 32px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-width: min(58%, 380px);
+    color: #f3e9d5;
+    text-shadow: 0 1px 3px #000;
+    pointer-events: none;
+  }
+  .v100-field-map-intel span:first-child { color: #d5ac70; font: 800 9px/1.1 sans-serif; letter-spacing: .1em; }
+  .v100-field-map-intel strong { overflow: hidden; font: 800 15px/1.2 sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .v100-field-map-intel span:last-child { overflow: hidden; color: #ddc8a9; font: 700 10px/1.2 sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .v100-field-map-drawing {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: block;
+    width: 62%;
+    height: calc(100% - 84px);
+    opacity: .78;
+    pointer-events: none;
+  }
+  .v100-field-map-blocks { fill: none; stroke: #b3bc9d85; stroke-width: 12; }
+  .v100-field-map-perimeter { fill: none; stroke: #91b3a882; stroke-width: 24; }
+  .v100-field-map-route-shadow { fill: none; stroke: #250f0e; stroke-width: 14; stroke-linejoin: round; }
+  .v100-field-map-route { fill: none; stroke: #ff6549; stroke-width: 6; stroke-linejoin: round; stroke-dasharray: 22 9; }
+  .v100-field-map-arrow { fill: none; stroke: #ff6549; stroke-width: 8; stroke-linecap: round; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track {
+    position: absolute;
+    z-index: 3;
+    inset: auto 5px 5px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    width: auto;
+    height: clamp(95px, 56%, 122px);
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
+    content: "出撃登録 01–07 / 枠を押して隊員変更";
+    position: absolute;
+    left: -5px;
+    bottom: calc(100% + 2px);
+    width: calc(100% + 10px);
+    padding: 2px 7px;
+    background: linear-gradient(90deg, #101b18ec, #101b1855);
+    color: #f4cc8e;
+    font: 800 9px/1.1 sans-serif;
+    letter-spacing: .08em;
+    pointer-events: none;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel:not(.picker-open) .v100-slot {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3px;
+    grid-column: auto;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 2px 3px;
+    border: 1px solid #a18d6c;
+    border-left: 4px solid #b28c50;
+    border-radius: 2px;
+    background: linear-gradient(#263630ef, #0c1714fa);
+    box-shadow: inset 0 0 0 1px #e5d3a523, 0 3px 8px #000a;
+    transform: none;
+    text-align: left;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot:nth-child(n) { left: auto; top: auto; grid-column: auto; }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel:not(.picker-open) .v100-slot.selected {
+    z-index: 4;
+    border-color: #ffe4a7;
+    border-bottom-color: #f59b56;
+    background: linear-gradient(#714128, #251b15);
+    box-shadow: 0 0 0 1px #ffe4a7, 0 0 15px #e6894899, 0 5px 9px #000c;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait {
+    display: block;
+    flex: none;
+    width: 43px;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    background: #171d19;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait img { visibility: hidden; object-fit: cover; object-position: center 12%; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait img[data-loaded="true"] { visibility: visible; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait i { font-size: 24px; line-height: 39px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: calc(100% - 46px);
+    min-width: 0;
+    max-width: none;
+    height: 100%;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta small { position: static; display: block; padding: 0; background: transparent; color: #f8d398; font-size: 9px; line-height: 1; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong {
+    display: block;
+    overflow: hidden;
+    color: #fff0cb;
+    font-size: 12px;
+    line-height: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta em { display: block; overflow: hidden; color: #d9ccb0; font-size: 9px; font-style: normal; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-field-map-intel { top: 24px; gap: 0; }
+  .v100-field-map-intel span:first-child { display: none; }
+  .v100-field-map-intel strong { font-size: 12px; }
+  .v100-field-map-intel span:last-child { display: none; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (min-height: 421px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy dl {
+    position: absolute;
+    top: 7px;
+    right: 12px;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    margin: 0;
+    font-size: 10px;
+  }
+  .v100-personnel-screen.detail-open .v100-personnel-focus-copy dl div { gap: 5px; padding: 0; border: 0; }
+  .v100-personnel-screen.detail-open .v100-personnel-stats { gap: 4px; margin: 2px 0; }
+  .v100-personnel-screen.detail-open .v100-unit-stat { min-height: 54px; padding: 3px 6px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat strong { font-size: 18px; }
+  .v100-personnel-screen.detail-open .v100-unit-stat small { font-size: 11px; }
+}
+
+/* The seven call-in slots sit on the same field plan as the mission route.
+ * Their numbers are call-in order, not fixed combat coordinates. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-formation-panel:not(.picker-open) .v100-formation-board {
+    display: block;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-formation-focus {
+    display: none;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+      linear-gradient(180deg, #09130fca 0%, #0d2018a3 45%, #08130ec9 70%, #070c0af2 100%),
+      var(--v100-stage-art) center / cover;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 23px, #d0bb8040 24px, transparent 25px),
+      repeating-linear-gradient(90deg, transparent 0 43px, #d0bb8030 44px, transparent 45px);
+    opacity: .38;
+    pointer-events: none;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
+    content: "敵侵入  ◀  西新防衛線";
+    top: 10px;
+    right: 12px;
+    bottom: auto;
+    left: auto;
+    font-size: 11px;
+  }
+  .v100-field-map-title {
+    top: 10px;
+    left: 12px;
+    max-width: 56%;
+    font-size: 19px;
+  }
+  .v100-field-map-title small { font-size: 11px; }
+  .v100-field-map-intel {
+    top: 36px;
+    left: 12px;
+    max-width: 43%;
+    gap: 1px;
+    padding: 4px 7px;
+    border-left: 3px solid #d99e5c;
+    background: linear-gradient(90deg, #081310df, #08131038);
+  }
+  .v100-field-map-intel span:first-child { display: none; }
+  .v100-field-map-intel strong {
+    overflow: visible;
+    font-size: 14px;
+    line-height: 1.15;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .v100-field-map-intel span:last-child {
+    overflow: visible;
+    font-size: 10px;
+    line-height: 1.2;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .v100-field-map-drawing {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .7;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track {
+    inset: auto 7px 7px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    width: auto;
+    height: 74px;
+    gap: 4px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
+    content: none;
+    top: -21px;
+    bottom: auto;
+    left: -3px;
+    width: calc(100% + 6px);
+    padding: 3px 6px;
+    background: linear-gradient(90deg, #131c15ed, #131c155e);
+    font-size: 10px;
+    letter-spacing: .02em;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait {
+    width: 37px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta {
+    width: calc(100% - 39px);
+  }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-field-map-title { top: 5px; font-size: 15px; }
+  .v100-field-map-intel { top: 22px; gap: 0; padding: 1px 5px; }
+  .v100-field-map-intel span:last-child { display: block; font-size: 9px; line-height: 1.1; }
+  .v100-field-map-intel strong { font-size: 11px; line-height: 1.1; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after { top: 5px; font-size: 9px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track { top: auto; bottom: 4px; height: 58px; gap: 3px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before { top: -19px; font-size: 9px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 31px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 33px); }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong { font-size: 10px; }
+}
+
+/* Give the operation map the room previously taken by a duplicate number rail.
+ * The portraits remain call-in order; the route shows the battlefield, not spawn points. */
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 460px) and (orientation: landscape) {
+  .v100-formation-panel:not(.picker-open) .v100-sortie-heading { display: none; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail {
+    background:
+      linear-gradient(90deg, #09120bc9 0%, #09190db2 40%, #10150f70 100%),
+      var(--v100-stage-art) center / cover;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::before {
+    opacity: .2;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-rail::after {
+    content: none;
+  }
+  .v100-field-map-title {
+    top: 10px;
+    left: 12px;
+    display: grid;
+    grid-template-columns: max-content max-content;
+    grid-template-rows: 22px 15px;
+    column-gap: 9px;
+    row-gap: 0;
+    max-width: 70%;
+    color: #ffe0a4;
+    white-space: nowrap;
+  }
+  .v100-field-map-title strong { grid-column: 1; grid-row: 1; font: 900 21px/1 Georgia, serif; }
+  .v100-field-map-title small { grid-column: 1 / -1; grid-row: 2; max-width: 100%; font-size: 12px; }
+  .v100-field-map-title em {
+    grid-column: 2;
+    grid-row: 1;
+    flex: none;
+    justify-self: start;
+    padding: 3px 5px;
+    border: 1px solid #c3a675;
+    color: #ffe2ab;
+    background: #1b291bbf;
+    font: 800 10px/1 sans-serif;
+  }
+  .v100-field-map-intel {
+    top: 53px;
+    left: 12px;
+    max-width: 36%;
+    padding: 8px 10px;
+    border-left: 4px solid #dfaa5f;
+    background: linear-gradient(90deg, #08120cf2, #08120cc4 80%, #08120c35);
+  }
+  .v100-field-map-intel strong { font-size: 16px; line-height: 1.17; }
+  .v100-field-map-intel span:last-child { font-size: 11px; }
+  .v100-field-map-drawing { opacity: .85; }
+  .v100-field-map-blocks { stroke: #c7d0a648; stroke-width: 5; }
+  .v100-field-map-perimeter { stroke: #a2e1b18c; stroke-width: 5; stroke-dasharray: 8 6; }
+  .v100-field-map-node { fill: #08110d; stroke-width: 5; }
+  .v100-field-map-node.ally { stroke: #b6e3ac; }
+  .v100-field-map-node.enemy { stroke: #ff8d67; }
+  .v100-field-map-route-shadow { stroke-width: 12; }
+  .v100-field-map-route { stroke-width: 5; stroke-dasharray: 18 9; }
+  .v100-field-map-arrow { stroke-width: 5; }
+  .v100-field-map-label {
+    paint-order: stroke;
+    stroke: #07100de6;
+    stroke-width: 5;
+    font: 800 15px/1 sans-serif;
+    letter-spacing: .06em;
+  }
+  .v100-field-map-label.ally { fill: #d3edbd; }
+  .v100-field-map-label.enemy { fill: #ffb48e; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track {
+    bottom: 7px;
+    height: 61px;
+    gap: 5px;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before {
+    content: "呼出登録 01–07  /  戦場位置ではない";
+    top: -18px;
+    left: -3px;
+    bottom: auto;
+    display: block;
+    width: calc(100% + 6px);
+    padding: 3px 7px;
+    background: linear-gradient(90deg, #15291edb, #15291e45);
+    color: #d8eab9;
+    font-size: 9px;
+  }
+  .v100-shell:not([data-v100-phase="battle"]) .v100-formation-panel:not(.picker-open) .v100-slot {
+    border: 1px solid #b3a178;
+    border-left: 3px solid #d49b52;
+    border-radius: 1px 7px 1px 7px;
+    background: linear-gradient(145deg, #283c2aee, #0b180fef);
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 44px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 46px); }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong {
+    max-height: 2.2em;
+    font-size: 11px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta em { font-size: 9px; }
+}
+@media (min-width: 640px) and (max-width: 1020px) and (max-height: 360px) and (orientation: landscape) {
+  .v100-field-map-title { top: 6px; grid-template-rows: 18px 14px; }
+  .v100-field-map-title strong { font-size: 16px; }
+  .v100-field-map-title small { font-size: 11px; }
+  .v100-field-map-title em { font-size: 9px; }
+  .v100-field-map-intel { top: 42px; padding: 4px 7px; }
+  .v100-field-map-intel strong { font-size: 12px; }
+  .v100-field-map-intel span:last-child { display: block; font-size: 9px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track { bottom: 5px; height: 49px; gap: 3px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-track::before { top: -16px; padding: 2px 5px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-portrait { width: 33px; }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta { width: calc(100% - 35px); }
+  .v100-formation-panel:not(.picker-open) .v100-slot-meta strong { font-size: 10px; }
+}

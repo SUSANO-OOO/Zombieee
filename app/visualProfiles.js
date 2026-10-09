@@ -248,7 +248,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     identityRevision: "v2",
     eventPath: "/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
     eventRevision: "v2",
-    cardPath: "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
+    cardPath: "/art/v080/characters/cards/kumaverson-formation-card-r2.png",
     battlePath: "/art/v060/characters/kumaverson-battle-v1.png",
     battleRevision: "v1",
     cardRead: V080_CARD_READ_CONTRACTS.kumaverson,

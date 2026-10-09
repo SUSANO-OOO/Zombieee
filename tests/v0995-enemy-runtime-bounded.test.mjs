@@ -13,6 +13,7 @@ test("target-closed classifier accepts only exact infrastructure failure lines",
   assert.equal(isRetryableTargetClosedLog("page.screenshot: Target page, context or browser has been closed\n"), true);
   assert.equal(isRetryableTargetClosedLog("Error: webkit-844x390/brawler: Error: page.evaluate: Target page, context or browser has been closed\n"), true);
   assert.equal(isRetryableTargetClosedLog("Error: webkit-667x375/stage3-boss/settle: Error: page.waitForFunction: Target page, context or browser has been closed\n"), true);
+  assert.equal(isRetryableTargetClosedLog("Error: webkit-736x414/stage1-normal/settle: battle messages did not clear: Error: page.waitForFunction: Target page, context or browser has been closed\n"), true);
   assert.equal(isRetryableTargetClosedLog("Error: webkit-667x375-stage3-boss/settle: Error: page.waitForFunction: Target page, context or browser has been closed\n"), false);
   assert.equal(isRetryableTargetClosedLog("Error: webkit-1280x720/tatara/three-quarters: Error: page.evaluate: Target page, context or browser has been closed\n"), true);
   assert.equal(isRetryableTargetClosedLog("Error: webkit/1280x720/tatara/three-quarters/final-canvas: Error: page.evaluate: Target page, context or browser has been closed\n"), true);
@@ -23,8 +24,8 @@ test("target-closed classifier accepts only exact infrastructure failure lines",
   assert.equal(isRetryableTargetClosedLog("Error: webkit-1280x720/tatara/three-quarters: Error: page.evaluate: Target page, context or browser has been closed after geometry failed\n"), false);
 });
 
-test("bounded enemy runner records target-closed and does not retry the failed evidence", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "enemy-bounded-fail-"));
+test("bounded enemy runner preserves native target-close and never retries it", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "enemy-bounded-pass-"));
   const calls = [];
   await assert.rejects(() => runBoundedEnemyRuntime({
     evidenceRoot: root,
@@ -36,9 +37,17 @@ test("bounded enemy runner records target-closed and does not retry the failed e
   const report = JSON.parse(await readFile(path.join(root, "bounded-summary.json"), "utf8"));
   assert.equal(report.status, "failed");
   assert.equal(report.attempts.length, 1);
-  assert.deepEqual(calls.map(({ attempt }) => attempt), [1]);
   assert.equal(report.attempts[0].retryableTargetClosed, true);
+  assert.deepEqual(calls.map(({ attempt }) => attempt), [1]);
   assert.match(await readFile(path.join(root, "attempt-1", "runner.log"), "utf8"), /Target page/u);
+});
+
+test("bounded enemy runner allows one real pass and rejects an expanded attempt budget", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "enemy-single-pass-"));
+  const report = await runBoundedEnemyRuntime({ evidenceRoot: root, runAttempt: async () => ({ code: 0, output: "passed" }) });
+  assert.equal(report.status, "passed");
+  assert.equal(report.attempts.length, 1);
+  await assert.rejects(() => runBoundedEnemyRuntime({ evidenceRoot: root, maxAttempts: 2 }), /exactly one attempt/);
 });
 
 test("bounded enemy runner never retries a product assertion failure", async () => {

@@ -293,6 +293,13 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 
 ## プロジェクト生成画像（第三者配布物ではない）
 
+### V1.0.0 航空支援機（2026-10-02候補）
+
+航空支援中の機体は、組み込み `image_gen.imagegen` による新規透過画像を使用する。第三者配布画像・人物画像は参照していない。生成画像の権利扱いは本節の既存契約に従う。生成元PNGを保全し、透明部分の余白整理とWebP変換のみ実施した。機体・主翼・尾翼・エンジンを目視確認済みで、文字・ロゴ・人物を採用要素に含めていない。実画面と最終製品の採否は候補QA・Producer承認で判断する。
+
+- 実行用：`public/art/v100/combat-vfx/aircraft-support-r1.webp`（768×295、81,744 bytes、SHA-256 `21bf367dc290ebea90f8371a1d10b97410bc4e64e4e4880d4cf6b561428cccbc`）。
+- 生成元・加工記録：`assets/source/v100/combat-vfx/aircraft-support-r1.provenance.json`。生成元PNGのSHA-256は `759430fa8398dae24c4828ecb6671c0cfb113c1b956154ab39034429b452f1ff`。
+
 以下は本タスク中に OpenAI の画像生成機能で新規生成した出力で、第三者サイトから取得した素材ではない。OpenAI の [Terms of Use](https://openai.com/policies/terms-of-use/) は、OpenAI と利用者の間では、適用法の許す範囲で利用者が Output を所有すると定める一方、出力が一意でない可能性と、適法性・適切性を利用者が評価する責任も明記している。したがって本表は CC0 宣言を行わず、生成由来と人手監査・加工内容を保守的に記録する。
 
 | Final path | 作者・生成/配布元 | Source URL / 権利根拠 | 商用・改変・再配布 | クレジット条件 | 生成日 | Final SHA-256 | 加工・監査 |
@@ -462,6 +469,7 @@ finalは`build-v080-character-assets.mjs`または`build-v080-stage-assets.mjs`�
 | `public/art/v080/characters/cards/guardian-formation-card-r2.webp` | `94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9` | 既存正式portrait＋自作SHIELD badge |
 | `public/art/v080/characters/cards/gunner-formation-card-r2.webp` | `f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24` | 既存正式portrait＋自作LMG badge |
 | `public/art/v080/characters/cards/kumaverson-formation-card-r2.webp` | `5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7` | 既存正式portrait＋自作PAN badge |
+| `public/art/v080/characters/cards/kumaverson-formation-card-r2.png` | `fc36119a1af2eff154380fc9ca821370edae06825e50250e4565683a0bb241ba` | 上記カードの表示画素を保ったPNG派生。スマートフォンWebKitでWebP表示が破綻するため採用 |
 | `public/art/v080/characters/cards/medic-formation-card-r2.webp` | `a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730` | 既存正式portrait＋自作MED badge |
 | `public/art/v080/characters/cards/monkey-formation-card-r2.webp` | `95b1704c0cb3ba9351bb16bebb4a27ef92e115d1d58861c53abbb5427213166f` | Monkey cutout source＋自作CARBINE badge |
 | `public/art/v080/characters/cards/ranger-formation-card-r2.webp` | `9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639` | 既存正式portrait＋自作RIFLE badge |

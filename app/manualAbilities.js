@@ -1,4 +1,5 @@
 import { deepFreeze } from "./content/freeze.js";
+import {advanceV100BrawlerCombo,v100BrawlerComboTiming} from './v100BrawlerCombo.js';
 
 export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brawler: {
@@ -289,6 +290,7 @@ export function createManualAbilityRuntime(kind) {
     activeRemaining: 0,
     salvoIndex: 0,
     abilityElapsed: 0,
+    sequentialBrawler: false,
     activationId: 0,
     target: null,
   });
@@ -358,6 +360,9 @@ export function manualAbilityCheckpointCooldown(runtime) {
     return Math.max(0, Number(runtime.cooldownRemaining) || 0);
   }
   let remaining = Math.max(0, Number(definition.cooldownSeconds) || 0);
+  if(runtime.kind==='brawler'&&runtime.sequentialBrawler){
+    return Math.round((remaining+Math.max(0,v100BrawlerComboTiming(definition).recoveryEnd-(runtime.abilityElapsed??0)))*1000)/1000;
+  }
   if (runtime.phase === "windup") {
     remaining += Math.max(0, Number(runtime.windupRemaining) || 0);
     remaining += Math.max(0, Number(definition.recoverySeconds) || 0);
@@ -867,7 +872,7 @@ export function manualAbilityLocksNormalAction(runtime) {
   return ["windup", "salvo", "guard", "recovery"].includes(runtime?.phase);
 }
 
-export function beginManualAbility(runtime, target) {
+export function beginManualAbility(runtime, target, {sequentialBrawler=false}={}) {
   const definition = manualAbilityDefinitionFor(runtime?.kind);
   if (!definition || definition.runtimeStatus !== "integrated" || runtime.phase !== "ready" || !target) {
     return Object.freeze({ ok: false, runtime, activationId: runtime?.activationId ?? 0 });
@@ -884,6 +889,7 @@ export function beginManualAbility(runtime, target) {
       activeRemaining: 0,
       salvoIndex: 0,
       abilityElapsed: 0,
+      sequentialBrawler: runtime.kind==='brawler'&&sequentialBrawler,
       activationId,
       target: Object.freeze({ ...target }),
     }),
@@ -898,6 +904,9 @@ export function advanceManualAbility(runtime, seconds) {
   const elapsed = Math.max(0, Number(seconds) || 0);
   if (elapsed === 0 || runtime.phase === "ready") {
     return Object.freeze({ runtime, events: Object.freeze([]) });
+  }
+  if(runtime.kind==='brawler'&&runtime.sequentialBrawler){
+    return deepFreeze(advanceV100BrawlerCombo(runtime,elapsed,definition));
   }
   if (runtime.kind === "mrs-chiha") {
     return advanceMrsChihaAbility(runtime, elapsed);

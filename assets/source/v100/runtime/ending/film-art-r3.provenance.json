@@ -1,0 +1,332 @@
+{
+  "schema": "v100-ending-art-selection/v3",
+  "createdAt": "2026-10-07T15:34:55.658Z",
+  "purpose": "Consistent ink, midnight harbor geography, costume, facial likeness and lighting across ten separate drawings; three new performances bridge the helmet and facial reveal.",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in referenced-image generation/edit",
+    "purelyHumanAuthorship": false
+  },
+  "license": {
+    "creator": "OpenAI ImageGen",
+    "name": "Output subject to applicable OpenAI Terms",
+    "url": "https://openai.com/policies/terms-of-use/",
+    "inputPermissions": "Producer-authorized project character artwork and previously illustrated fictional facial identity"
+  },
+  "producerApproval": {
+    "creation": "Requested in this conversation",
+    "finalImageAdoption": "Pending Producer viewing"
+  },
+  "privacy": {
+    "rawPhotosInRepository": false,
+    "rawPhotosInRuntime": false,
+    "rawPhotosInQAArtifacts": false,
+    "privatePhotoPathsInProvenance": false,
+    "rawPhotoInputsThisPass": false
+  },
+  "derivatives": {
+    "resize": {
+      "width": 1600,
+      "height": 900,
+      "fit": "fill"
+    },
+    "format": "WebP",
+    "quality": 89,
+    "library": "sharp"
+  },
+  "invariants": {
+    "wardrobe": "Green zip hoodie, black skirt, red boots, yellow bucket helmet",
+    "infection": "His own left temple and cheek; skin intact",
+    "lighting": "Cool navy moonlight and narrow amber rim from camera-left",
+    "geography": "Moon above right, boats and harbor lamps on left",
+    "creditsSavedSceneIndices": "0-10",
+    "finaleDurationSeconds": 64
+  },
+  "selected": [
+    {
+      "id": "meinohama-king-back-r3",
+      "runtime": {
+        "path": "/art/v100/epilogue/meinohama-king-back-r3.webp",
+        "bytes": 263042,
+        "sha256": "93a4ef0537dfe17c7358f120e10dc1f4858987ebd5d4db3de23efabba212d7c3",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+        "bytes": 2410867,
+        "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "public/art/v100/epilogue/meinohama-king-back-r2.webp",
+          "bytes": 171926,
+          "sha256": "416b97e945945460ae20404424b84493def0f178982190932a5ec3a81f5c409f"
+        },
+        {
+          "path": "public/art/v100/epilogue/king-monster-reveal-r5.webp",
+          "bytes": 154212,
+          "sha256": "b8f450268cbe06e5a35eab4931539f04213a1f0e1d4daa69b7e423741dfee097"
+        },
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "bytes": 268064,
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        }
+      ],
+      "finalPrompt": "Use case: style-transfer. Asset type: 16:9 illustrated cinematic still for an existing Japanese post-apocalyptic game. Image 1 is the edit target (rear harbor shot); image 2 is the required coherent ink-and-paint style and facial character reference; image 3 is the canonical outfit reference.\nRepaint image 1 entirely as an authored dark illustrated frame, so it belongs to the SAME scene as image 2: controlled dark ink contours, angular simplified cloud shapes, broad navy water masses with sparse horizontal strokes, muted olive hoodie, few deliberate brush marks and grain. Keep the EXACT rear pose, figure location and size, bucket helmet silhouette and yellow color, olive green zipped hoodie with hood down, black pleated skirt, red rubber boots, fishing harbor orientation, boats on left, moon upper right, shoreline and fixed lights. Lighting: cold gray-blue moon rim from upper right, thin amber edges from left quay lamps. Reflections simplified, no photographic rain texture. No extra people, no lettering, no title, no logo. Preserve composition so hands/helmet pose variations can match cut without background jumping. Not a photograph; deliberate hand-inked graphic narrative, not smooth glossy CGI. Skin intact."
+    },
+    {
+      "id": "meinohama-king-reach-r3",
+      "runtime": {
+        "path": "/art/v100/epilogue/meinohama-king-reach-r3.webp",
+        "bytes": 236314,
+        "sha256": "b5ade0474f9517f2c2d854280af596f3e14898f9d1f9fdd35695fd8987427e9f",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-reach-r3.png",
+        "bytes": 2238921,
+        "sha256": "4b6021e4e4ce6bd0290699ec22ae7e1436a127943b418737335288f196e35efc",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+          "bytes": 2410867,
+          "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a"
+        },
+        {
+          "path": "public/art/v100/epilogue/meinohama-king-reach-r2.webp",
+          "bytes": 159838,
+          "sha256": "277cef3e06a5e36b13033562b7798193e8f5d54d7be686953fbcdf765bdc1911"
+        }
+      ],
+      "finalPrompt": "Use case: precise-object-edit. Asset type: single 16:9 illustrated movie still. Image1 is the exact base/edit target. Change ONLY the adult figure's arms/hands pose to match image2: both arms bend upward and both hands touch the sides of the yellow bucket helmet, about to remove it. Keep ALL of image1's background, camera, boats, clouds, moon, lights, palette, linework, figure silhouette/height, green zipped hoodie, hood down, black pleated skirt and red boots IDENTICAL. Image2 is pose reference only; never transfer its photographic texture. Hands correctly touch one helmet; keep the helmet on the head and no visible face. Same dark ink-and-paint graphic narrative, limited navy/olive/amber, broad shadow planes. No text, no extra objects."
+    },
+    {
+      "id": "meinohama-king-remove-r3",
+      "runtime": {
+        "path": "/art/v100/epilogue/meinohama-king-remove-r3.webp",
+        "bytes": 226140,
+        "sha256": "61fd75c6199b1f9e7b049edd5313bcbd3af4d0bd7a5935ec8a0a0dd5d26aa62b",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-remove-r3.png",
+        "bytes": 2158740,
+        "sha256": "bd90053722b7775664f9ed52d53c1303023fc0ee6091c57d938ffd18296a0c5e",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-reach-r3.png",
+          "bytes": 2238921,
+          "sha256": "4b6021e4e4ce6bd0290699ec22ae7e1436a127943b418737335288f196e35efc"
+        },
+        {
+          "path": "public/art/v100/epilogue/meinohama-king-remove-r2.webp",
+          "bytes": 163808,
+          "sha256": "e78e49bf6ca8dcaedd3808733cd3dcd97dd767fd89019271b371df66b7da86bf"
+        }
+      ],
+      "finalPrompt": "Use case: precise-object-edit. Asset type: single 16:9 dark illustrated cinematic still. Image1 is the exact illustrated base/edit target; image2 is only a pose reference. Alter image1's hands/helmet/head ONLY to match the removing motion in image2: both arms lifted, yellow cylindrical bucket helmet raised clearly ABOVE the black-haired head, no face shown from rear. Keep every background element at identical coordinates, the same camera, moon upper right, boats left, wet quay, lights, olive zipped hoodie with hood down, black pleated skirt, red boots and figure height. Character hair dark center-part, short-to-medium; retain believable five fingers and one helmet. Use image1's controlled ink outlines, broad color planes, muted navy/olive/amber and deliberate brush texture. Do not borrow image2's photographic finish. No lettering, no extra people, no new objects."
+    },
+    {
+      "id": "meinohama-king-throw-r3",
+      "runtime": {
+        "path": "/art/v100/epilogue/meinohama-king-throw-r3.webp",
+        "bytes": 253218,
+        "sha256": "b474e8bcfc492a5c02c0d19e58c7ff9c1a5c92144524aa70b48ad27adf8b144f",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-throw-r3.png",
+        "bytes": 2303393,
+        "sha256": "0ac1f9966f260f3f82ee2ede21b594c28741949d49ea257a604cce99a9a4fb0c",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+          "bytes": 2410867,
+          "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a"
+        },
+        {
+          "path": "public/art/v100/epilogue/meinohama-king-throw-r2.webp",
+          "bytes": 167070,
+          "sha256": "6ca39d22f0f5b57934b652f0073e7ef8dc4515c9ec79161dcbfcf5109bed4818"
+        }
+      ],
+      "finalPrompt": "Use case: precise-object-edit. Asset type: 16:9 game movie still. Image1 is the exact dark ink-and-paint base; image2 gives the throwing pose only. Change the figure to that natural final throw motion: body still facing the sea, right arm extending diagonally out to release the yellow bucket helmet into the water at image right, left arm lowering. One helmet suspended just after release, physically follows the throwing arc. Black center-part hair, olive green zip hoodie/hood down, black pleated skirt, red rubber boots unchanged. Do not copy photograph texture from image2. Keep image1's identical camera, left fishing boats, cloud pattern, moon, shoreline lamp coordinates, limited navy/olive/amber palette and deliberate ink linework. No new lights, no glow, no text, no extra people."
+    },
+    {
+      "id": "meinohama-helmet-afloat-r2",
+      "runtime": {
+        "path": "/art/v100/epilogue/meinohama-helmet-afloat-r2.webp",
+        "bytes": 265654,
+        "sha256": "57ef07f4c158c2cb750612c70ecfa8e822fffbf01496bac912d3a6629c2adeff",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/helmet-afloat-r2.png",
+        "bytes": 2305634,
+        "sha256": "de68c5b17ac01110991241261cb623afb05a4c02ec574c73ff1786be0ea5026c",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "public/art/v100/epilogue/meinohama-helmet-afloat-r1.webp",
+          "bytes": 171080,
+          "sha256": "bc62b84836e929a4cc33a50324ae5d07a20d691fab12d141a2f232bb2c25f692"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+          "bytes": 2410867,
+          "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a"
+        }
+      ],
+      "finalPrompt": "Use case: style-transfer. Asset type: single 16:9 illustrated cinematic insert. Image1 is edit target: yellow helmet afloat close-up; image2 is REQUIRED art style and harbor environment. Redraw image1 in image2's same coherent ink-and-paint graphic narrative. Keep the bucket helmet's EXACT yellow scratched cylinder, black cap, two circular black eyes with white rims, small red smile, angle and waterline. Floating weight half-submerged, natural dark ripples. Wide left foreground helmet, empty dark water to right, fishing boats left far shore; gray-blue moon upper-right and tiny amber port lights reflected as sparse strokes. Broad navy water masses, deliberate ink contours and simplified cloud blocks, same olive/navy/amber muted palette. No photographic texture, no lens blur/bokeh, no lettering, no characters."
+    },
+    {
+      "id": "king-turn-r1",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-turn-r1.webp",
+        "bytes": 277854,
+        "sha256": "d796a52cc35dd2a64c5a94bbd17fc096b47837bf7ba766ebf4ce67dacee6d3cd",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-turn-r1.png",
+        "bytes": 2446150,
+        "sha256": "d9e6617c7a52960b358af08571e6c8e774570588dc9193a4c80bc2d0f2e9c266",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+          "bytes": 2410867,
+          "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-reveal-r6.png",
+          "bytes": 2337452,
+          "sha256": "eda23b2a0c0e0dfe698f94a9bf9119282ec77858badb25c2fce02fe1feb359ed"
+        }
+      ],
+      "finalPrompt": "Use-case: stylized illustration, cinematic game ending insert. References: Image 1 is the rear harbor shot and wardrobe/spatial continuity. Image 2 is the illustrated facial identity and exact ink, palette and facial infection design; retain that same person.\nCreate one full-frame 16:9 drawing of the next moment after this man threw his yellow bucket helmet into the harbor. Camera is three-quarter over his right shoulder at medium distance: his body still faces the water, but he slowly turns his head to look back toward the camera. He occupies the right half; moon, dark fishing boats, low hills and amber harbor lamps have the same geography as Image 1. His green worn hoodie, black skirt, red boots and black center-parted hair remain unchanged. Mouth closed, expression calm but unnervingly watchful, just part of the pale cloudy eye catches light. His own left temple and cheek have the purple raised cracked-skin pattern from Image 2. Facial skin remains intact. Preserve broad cheekbones, horizontal brows, rounded nose and jaw of Image 2. This is a restrained suspense shot before the frontal reveal, not the frontal image reused at a different crop.\nMatch the hand drawn game art: deliberate heavy black ink contours, dry brush shadow shapes, desaturated olive cloth, deep navy sea and sky, narrow amber rim light from camera-left, cool moonlight. Avoid photographic skin, glossy 3D rendering, airbrushed softness, excessive micro-detail or random new marks. Clear anatomical silhouette; one man, no helmet on his head, no text, captions, collage, watermarks or UI."
+    },
+    {
+      "id": "king-monster-reveal-r6",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-monster-reveal-r6.webp",
+        "bytes": 220514,
+        "sha256": "75421b882372f28e25aaf67373a26ef8f71cc2725d11f328e6aec832dd18801a",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-reveal-r6.png",
+        "bytes": 2337452,
+        "sha256": "eda23b2a0c0e0dfe698f94a9bf9119282ec77858badb25c2fce02fe1feb359ed",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "public/art/v100/epilogue/king-monster-reveal-r5.webp",
+          "bytes": 154212,
+          "sha256": "b8f450268cbe06e5a35eab4931539f04213a1f0e1d4daa69b7e423741dfee097"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-back-r3.png",
+          "bytes": 2410867,
+          "sha256": "ec2f12626f4c1ba965e39a9b5d3768e2f1136c55b14e6f12958ebf01f1e1036a"
+        }
+      ],
+      "finalPrompt": "Use case: style-transfer. Asset type: 16:9 fictional horror game's illustrated frontal reveal. Image1 is edit target and facial identity master; image2 is the REQUIRED exact movie's painting/linework/palette. Improve ONLY the drawing and lighting continuity: same adult man's broad cheeks, rounded nose, horizontal eyebrows, black parted hair, cloudy non-emissive eyes, asymmetrical intact raised violet infection scars on HIS LEFT side (viewer right), olive zipped hoodie. Same medium frontal composition with figure at right, boats at left. Use image2's dark navy sky planes, more deliberate etched ink line texture and matte brush shading with 2-3 shadow values; LESS flat tan face and eliminate the warm studio-like face exposure. Dim gray-blue moon rim from upper right, thin muted amber rim from left quay lights, face mostly in shadow with legible expression. Strong uncomfortable calm, mouth closed. Preserve identity, not handsome substitution. No photo skin, no glossyCG, no glow, no gore, no skin peeling, no visible muscle, no lettering."
+    },
+    {
+      "id": "king-infected-eyes-r1",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-infected-eyes-r1.webp",
+        "bytes": 338024,
+        "sha256": "f31f6b194ae97543280ff06429c892cbc64ba124594b538743312e4a2618e287",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-infected-eyes-r1.png",
+        "bytes": 2771648,
+        "sha256": "25ccabe7e3fdcf85f7d78458c576daf34f9756107a852a0eb0006cdb5dee8cc6",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-reveal-r6.png",
+          "bytes": 2337452,
+          "sha256": "eda23b2a0c0e0dfe698f94a9bf9119282ec77858badb25c2fce02fe1feb359ed"
+        }
+      ],
+      "finalPrompt": "Use-case: stylized game illustration, close-up cut for this same horror ending. Reference image is the exact illustrated character, ink and harbor lighting. Draw a new 16:9 extreme close-up of both eyes, brow, upper nose and temple of this same adult man at the instant his eyes settle on the viewer. The view is frontal with a slight downward tilt; one eyebrow remains almost horizontal, the eyelid on his own left side is a little narrower. Keep the broad eyebrow spacing and rounded nose root from the reference. Pale cloudy eyes without emitted glow; hair wisps cross the upper frame. The purple raised infection is on his own LEFT temple, on the RIGHT side of the image, exactly like the reference. Skin is intact.\nThe cropped composition itself is intentionally much closer than the full face, a fresh deliberate ink drawing, not a photograph or collage. Same dry black hatching, broad navy shadow planes, muted olive-brown skin and thin amber light along the camera-left brow; cold moonlight at the opposite hair edge. Dark navy harbor and one softly simplified amber light remain behind, no shifted sunset or warmer palette. Natural anatomy and asymmetric human watchfulness, unnerving restraint. No smile yet. No text, subtitles, UI, watermark, exposed flesh, gore, bright eye glow or 3D render. Match the referenced drawing exactly in visual language."
+    },
+    {
+      "id": "king-crooked-smile-r1",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-crooked-smile-r1.webp",
+        "bytes": 289664,
+        "sha256": "66886303ce38566a3a812959e10f7f714ea1f7c528446a6ca6d8f8f2f8ef698a",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-crooked-smile-r1.png",
+        "bytes": 2625231,
+        "sha256": "120a083626f8bd35bd7f11497ac56613b902bfeb76d366f353f1f1dbee229bbf",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-reveal-r6.png",
+          "bytes": 2337452,
+          "sha256": "eda23b2a0c0e0dfe698f94a9bf9119282ec77858badb25c2fce02fe1feb359ed"
+        }
+      ],
+      "finalPrompt": "Use-case: stylized cinematic game illustration, a newly drawn mouth close-up between the eye insert and full-face grin. Reference image defines the same man, asymmetric infection, ink and moonlit harbor. Create one full-frame 16:9 close-up from the rounded nose tip down to the chin and green hoodie collar. His mouth has JUST begun a crooked, unsettling smile: his own left corner rises slightly first, the lips part enough to show a narrow line of uneven yellowish teeth, with old dark red stains on a few teeth. Cheeks tense differently on each side. Do not make an open scream or a broad comic laugh yet. Keep his broad cheeks, rounded jaw and infection on his own left cheek, viewer RIGHT. The purple cracked raised skin remains intact. No exposed muscle or torn flesh.\nMatch the previous shot's black ink outlines, fine deliberate hatching, controlled large shadow areas, olive-brown skin, deep navy shadows and thin amber rim light on camera-left. The green jacket zipper and collar from the reference remain anatomically consistent. A sliver of dark navy harbor reflection can stay at far left; keep the background nearly black and subordinate. This insert is its own drawing and expression, not a photo crop. Film composition with sharp readable mouth silhouette, no glossy skin, artificial symmetry, white glow, mist effects, new scars, caption, words, montage or UI."
+    },
+    {
+      "id": "king-monster-grin-r5",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-monster-grin-r5.webp",
+        "bytes": 212716,
+        "sha256": "c140ddbf62b8892c73bd54a0af5d5afe3f6e4d5cdd13893c0b6d15d1db6ad0b0",
+        "width": 1600,
+        "height": 900
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-grin-r5.png",
+        "bytes": 2253675,
+        "sha256": "bbf934ae372aaefb63d8b00f10b2ba89aca2fbc741f16913cde7547df10a8a59",
+        "storedInRepository": false
+      },
+      "references": [
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-monster-reveal-r6.png",
+          "bytes": 2337452,
+          "sha256": "eda23b2a0c0e0dfe698f94a9bf9119282ec77858badb25c2fce02fe1feb359ed"
+        },
+        {
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r11/masters/king-crooked-smile-r1.png",
+          "bytes": 2625231,
+          "sha256": "120a083626f8bd35bd7f11497ac56613b902bfeb76d366f353f1f1dbee229bbf"
+        }
+      ],
+      "finalPrompt": "Use-case: stylized game ending full-face performance illustration. Image 1 is the exact neutral frontal identity, wardrobe, harbor composition, ink and lighting. Image 2 is the first subtle crooked mouth smile just preceding this frame. Create a new 16:9 image at the same chest-up camera and harbor location as image 1, showing the next expression: this adult man now smiles broadly and eerily, revealing uneven stained teeth; one mouth corner higher and his cloudy eyes narrowed in private amusement. Keep the smile anatomically believable, with tension in cheeks, slight change in brow, not a pasted mouth or a screaming jaw. His broad cheeks, rounded nose, eyebrow spacing, center-parted black hair, rounded jaw, green zipped hoodie and own LEFT-side purple raised cracked skin (viewer RIGHT) match image 1 exactly. Skin is intact; no torn skin or exposed tissue.\nMatch image 1's deliberate black ink, dry hatching, desaturated olive-brown skin, navy shadows and narrow amber rim light on camera-left. Same moon in upper-right background, dark fishing boats at left, sea and lamp reflections, no bright neutral face fill light. It is a single composed drawing that completes the eye and mouth close-ups; make the expression fully different from neutral but recognizably the same man. No photographic face, soft airbrush, glossy render, eye glow, horror caption, personal name, text, UI, collage or watermark."
+    }
+  ]
+}

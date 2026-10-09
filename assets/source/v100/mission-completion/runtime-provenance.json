@@ -1,0 +1,66 @@
+{
+  "generator": "built-in image_gen",
+  "promptSet": "assets/source/v100/mission-completion/prompt-set.json",
+  "encoding": "vehicle states: lossless WebP; clean background: quality92 WebP; no resizing or painting outside image_gen",
+  "composition": "damaged RGB authored state composited through the intact RGBA silhouette at runtime",
+  "records": [
+    {
+      "state": "intact",
+      "source": "assets/source/v100/mission-completion/sealed-refrigerated-truck-intact-v1.png",
+      "sourceSha256": "0861806c0a904efd1eb83ef23391fa49033fe73e55e48f750a84625056b1ee75",
+      "output": "public/art/v100/mission-objects/sealed-transport-intact-v1.webp",
+      "path": "/art/v100/mission-objects/sealed-transport-intact-v1.webp",
+      "bytes": 1157784,
+      "hash": "sha256-f1bde18daf10dc41a5c67ba783b198dd4aa7707370d7b9b655de326b75be33af",
+      "width": 1672,
+      "height": 941,
+      "sourceHasAlpha": true
+    },
+    {
+      "state": "damaged",
+      "source": "assets/source/v100/mission-completion/sealed-refrigerated-truck-damaged-r1.png",
+      "sourceSha256": "c5a23fd1f2693fd4422676e50abc7a815ca16dd8bfb7c2aa1ea7a32a3743be2c",
+      "output": "public/art/v100/mission-objects/sealed-transport-damaged-v1.webp",
+      "path": "/art/v100/mission-objects/sealed-transport-damaged-v1.webp",
+      "bytes": 1342174,
+      "hash": "sha256-f5dde41efd128d5ac735835ed5fefe26ac449b8b82b01c7a02c4826a1dcd12f5",
+      "width": 1672,
+      "height": 941,
+      "sourceHasAlpha": false
+    },
+    {
+      "state": "clean-battlefield",
+      "source": "assets/source/v100/mission-completion/s26-bay-evacuation-yard-clean-v1.png",
+      "sourceSha256": "e4345e2191099030d6c672017a27c851969577730ec7825fd659927e869f6ba6",
+      "output": "public/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
+      "path": "/art/v100/stages/s26-bay-evacuation-yard-clean-v1.webp",
+      "bytes": 294056,
+      "hash": "sha256-595837341ec8d20229441d7e775ec2c3ed0f600759e1803fb0e23bf7443f9964"
+    },
+    {
+      "state": "research-core-two-targets-four-states",
+      "source": "assets/source/v100/mission-completion/research-core-targets-v1.png",
+      "promptRecord": "assets/source/v100/mission-completion/research-core-prompt.json",
+      "sourceSha256": "3c030dfe2990d9ec7b46650e3d1aa67296dad71bf70a9e151ff9177d0a973924",
+      "output": "public/art/v100/mission-objects/research-core-targets-v1.webp",
+      "path": "/art/v100/mission-objects/research-core-targets-v1.webp",
+      "bytes": 1362558,
+      "hash": "sha256-fce826389e3a8a65d82ca0fb82033addfda2a3ff120fa193ca74a5f05115855c",
+      "width": 1774,
+      "height": 887,
+      "columns": 4,
+      "rows": 2,
+      "sourceHasAlpha": true
+    },
+    {
+      "state": "underground-research-core-background",
+      "source": "assets/source/v100/mission-completion/research-core-background-v1.png",
+      "promptRecord": "assets/source/v100/mission-completion/research-core-background-prompt.json",
+      "sourceSha256": "7ceb5504bf59b4e75ceb157f197e3ec14cf2970fc6bed019ae909cbeeeef7f66",
+      "output": "public/art/v100/stages/s29-underground-research-core-v1.webp",
+      "path": "/art/v100/stages/s29-underground-research-core-v1.webp",
+      "bytes": 226744,
+      "hash": "sha256-575ef05c2dc0a37f553422b1d3badb88133535dfd0b31e39b1532f8e920ef4a8"
+    }
+  ]
+}

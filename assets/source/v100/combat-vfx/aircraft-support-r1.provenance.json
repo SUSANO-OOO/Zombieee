@@ -1,0 +1,26 @@
+{
+  "schema": "v100-authored-aircraft-v1",
+  "generatedAtUtc": "2026-10-02T04:07:04.241Z",
+  "tool": "image_gen.imagegen",
+  "usage": "Built-in fresh transparent raster generation; non-character support aircraft",
+  "request": "One complete weathered fictional ground-support jet, shallow three-quarter side view, nose right, readable at 68 screen pixels, painted ruined-city style, transparent background; no characters, text, logos, trails, targeting marks or extra objects.",
+  "source": {
+    "path": "assets/source/v100/combat-vfx/aircraft-support-r1.png",
+    "bytes": 1286991,
+    "sha256": "759430fa8398dae24c4828ecb6671c0cfb113c1b956154ab39034429b452f1ff",
+    "width": 1774,
+    "height": 887
+  },
+  "output": {
+    "path": "public/art/v100/combat-vfx/aircraft-support-r1.webp",
+    "bytes": 81744,
+    "sha256": "21bf367dc290ebea90f8371a1d10b97410bc4e64e4e4880d4cf6b561428cccbc",
+    "width": 768,
+    "height": 295
+  },
+  "conversion": "sharp alpha-bound trim, resize width768 without enlargement, WebP quality94 alphaQuality100 effort6; no content repaint",
+  "identityMasterChanges": 0,
+  "clothingChanges": 0,
+  "gameplayChanges": 0,
+  "originalSourcePreserved": true
+}

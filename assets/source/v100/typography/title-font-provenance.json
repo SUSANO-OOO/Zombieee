@@ -1,0 +1,14 @@
+{
+  "family": "New Tegomin",
+  "designer": "Kousuke Nagai",
+  "copyright": "Copyright 2020 The New Tegomin Project Authors (https://github.com/nagamaki008/NewTegomin)",
+  "license": "SIL Open Font License 1.1",
+  "licenseFile": "/fonts/v100/NewTegomin-OFL.txt",
+  "metadataSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/newtegomin/METADATA.pb",
+  "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/newtegomin/OFL.txt",
+  "source": "https://fonts.gstatic.com/l/font?kit=SLXMc1fV7Gd9USdBAfPlqfNxW2uBKb3q17xxRDfQzeATMKiV3usqg5k&skey=d113efec482a36a4&v=v13",
+  "subsetRequest": "https://fonts.googleapis.com/css2?family=New+Tegomin&display=swap&text=%E8%A5%BF%E6%96%B0%E4%B8%96%E7%B4%80%E6%9C%AB%E7%89%A9%E8%AA%9E",
+  "characters": "西新世紀末物語",
+  "scope": "Title wordmark only; official Google Fonts text subset; no local font editing",
+  "asset": { "path": "/fonts/v100/NewTegomin-Title.woff2", "bytes": 4932, "sha256": "692443c5dca0f0178f81cf83bfbaf5317c151c79fbc6970889966ef1d2908d4c" }
+}

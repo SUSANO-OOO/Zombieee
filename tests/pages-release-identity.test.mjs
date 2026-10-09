@@ -33,3 +33,17 @@ test("fails closed for missing or ambiguous rendered titles", () => {
     /Expected one rendered title/u,
   );
 });
+
+test("V1 normalizes both title families and preserves old-release rollback titles", () => {
+  const title = "西新世紀末物語｜Version 1.0.0";
+  for (const previous of [oldTitle, title]) {
+    const input = `<title>${previous}</title><script>"${previous}"</script>`;
+    assert.equal(normalizeReleaseTitle(input, "1.0.0"), `<title>${title}</title><script>"${title}"</script>`);
+    const rollback = "西新世紀末物語｜アーリーアクセス版 0.9.9.5";
+    assert.equal(normalizeReleaseTitle(input, "0.9.9.5"), `<title>${rollback}</title><script>"${rollback}"</script>`);
+  }
+});
+
+test("a mixed legacy/V1 duplicate document title remains ambiguous", () => {
+  assert.throws(() => normalizeReleaseTitle(`<title>${oldTitle}</title><title>西新世紀末物語｜Version 1.0.0</title>`, "1.0.0"), /Expected one rendered title/u);
+});

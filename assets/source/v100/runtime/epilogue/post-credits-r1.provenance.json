@@ -1,0 +1,410 @@
+{
+  "createdAt": "2026-10-07T08:15:48.340Z",
+  "purpose": "Producer-directed cinematic after staff roll: midnight Meinohama, helmet removal, throwing and floating insert, illustrated unnamed face reveal and stained-teeth grin, sequel cards and thank-you",
+  "license": {
+    "image": {
+      "creator": "OpenAI ImageGen",
+      "name": "OpenAI Terms of Use; output ownership subject to applicable terms",
+      "url": "https://openai.com/policies/terms-of-use/",
+      "verifiedAt": "2026-10-07",
+      "inputPermissions": "Original project identity plus Producer explicitly authorized his own face photographs for this fictional illustrated character",
+      "purelyHumanAuthorship": false,
+      "commercialUse": true,
+      "modification": true,
+      "redistribution": true
+    },
+    "waves": {
+      "author": "transitking",
+      "submittedBy": "qubodup",
+      "work": "Water Waves",
+      "license": "CC0",
+      "page": "https://opengameart.org/content/water-waves",
+      "terms": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "commercialUse": true,
+      "modification": true,
+      "redistribution": true
+    },
+    "score": {
+      "author": "Scott Buckley",
+      "work": "The Old Ones",
+      "license": "CC BY4.0",
+      "existingRuntime": "/audio/v100/score/horror.mp3",
+      "modified": false
+    }
+  },
+  "producerApproval": {
+    "creation": "Requested in this conversation",
+    "finalAdoption": "Pending Producer viewing"
+  },
+  "storage": {
+    "masterPNGsInGit": false,
+    "privateSelfPhotographsInGit": false,
+    "masterPNGsInRuntime": false,
+    "archiveLocationRelativeToPrimaryWorkspace": "outputs/asset-archive/v100-post-credits-20261007",
+    "selectedMasterCount": 7,
+    "rejectedMasterCount": 1,
+    "selectedMasterBytes": 16301034,
+    "runtimeCount": 8,
+    "largestMasterBytes": 2660219,
+    "readOnlyDesignReview": "Required for combined retained reconstruction PNG family above100MiB before commit",
+    "logicalBytes": 2088428,
+    "distinctBytes": 2088428
+  },
+  "rejected": [
+    {
+      "id": "meinohama-ogata-reveal-r1",
+      "reason": "Producer rejected the live-action appearance; replaced by an explicitly illustrated likeness",
+      "sha256": "ca6d930536a747e5b19c4a91cfcae1d3d529135bcbfb04dd27684cbd18d96e4e",
+      "bytes": 2155028,
+      "runtime": false
+    }
+  ],
+  "limitations": [
+    "Requested half-face skin removal and exposed muscles rejected by image-generation safety system; no such frame was produced or adopted. The selected illustrated injury and grin are the disclosed alternative."
+  ],
+  "audio": {
+    "sources": [
+      {
+        "name": "wave_01_cc0-11505__transitking__wavesound.flac",
+        "bytes": 265335,
+        "sha256": "0bd84b2061a82c234470bd4e16efc6ab24851928d3f93e1757bfea048b2d7a33",
+        "url": "https://opengameart.org/sites/default/files/wave_01_cc0-11505__transitking__wavesound.flac"
+      },
+      {
+        "name": "wave_02_cc0-11505__transitking__wavesound.flac",
+        "bytes": 583157,
+        "sha256": "afa112a66c4cafe06ef76d5e2d4d00a701d4520c58eef63b862afa771991d77a",
+        "url": "https://opengameart.org/sites/default/files/wave_02_cc0-11505__transitking__wavesound.flac"
+      },
+      {
+        "name": "wave_03_cc0-11505__transitking__wavesound.flac",
+        "bytes": 401955,
+        "sha256": "1657a0002367e6e97eb34fc9f4d841f4a910981450c634bdc6c09ae1978049c1",
+        "url": "https://opengameart.org/sites/default/files/wave_03_cc0-11505__transitking__wavesound.flac"
+      },
+      {
+        "name": "wave_04_cc0-11505__transitking__wavesound.flac",
+        "bytes": 338969,
+        "sha256": "6c5b59562bf9b00e77f7bd8d6550912b6326e190ce97e9b8c1a1faa887bb4fac",
+        "url": "https://opengameart.org/sites/default/files/wave_04_cc0-11505__transitking__wavesound.flac"
+      }
+    ],
+    "sequence": [
+      "02",
+      "01",
+      "03",
+      "02",
+      "04",
+      "03",
+      "01",
+      "04",
+      "02",
+      "01",
+      "03",
+      "02",
+      "04",
+      "03",
+      "01",
+      "04",
+      "02",
+      "01",
+      "03",
+      "02",
+      "04",
+      "03",
+      "01",
+      "04",
+      "02",
+      "01",
+      "03",
+      "02",
+      "04",
+      "03",
+      "01",
+      "04",
+      "02",
+      "01",
+      "03",
+      "02",
+      "04",
+      "03",
+      "01",
+      "04"
+    ],
+    "crossfadeSeconds": 0.4,
+    "filter": "[0:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a0];[1:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a1];[2:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a2];[3:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a3];[4:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a4];[5:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a5];[6:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a6];[7:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a7];[8:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a8];[9:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a9];[10:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a10];[11:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a11];[12:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a12];[13:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a13];[14:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a14];[15:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a15];[16:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a16];[17:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a17];[18:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a18];[19:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a19];[20:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a20];[21:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a21];[22:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a22];[23:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a23];[24:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a24];[25:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a25];[26:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a26];[27:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a27];[28:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a28];[29:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a29];[30:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a30];[31:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a31];[32:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a32];[33:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a33];[34:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a34];[35:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a35];[36:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a36];[37:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a37];[38:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a38];[39:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a39];[a0][a1]acrossfade=d=0.4:c1=tri:c2=tri[x1];[x1][a2]acrossfade=d=0.4:c1=tri:c2=tri[x2];[x2][a3]acrossfade=d=0.4:c1=tri:c2=tri[x3];[x3][a4]acrossfade=d=0.4:c1=tri:c2=tri[x4];[x4][a5]acrossfade=d=0.4:c1=tri:c2=tri[x5];[x5][a6]acrossfade=d=0.4:c1=tri:c2=tri[x6];[x6][a7]acrossfade=d=0.4:c1=tri:c2=tri[x7];[x7][a8]acrossfade=d=0.4:c1=tri:c2=tri[x8];[x8][a9]acrossfade=d=0.4:c1=tri:c2=tri[x9];[x9][a10]acrossfade=d=0.4:c1=tri:c2=tri[x10];[x10][a11]acrossfade=d=0.4:c1=tri:c2=tri[x11];[x11][a12]acrossfade=d=0.4:c1=tri:c2=tri[x12];[x12][a13]acrossfade=d=0.4:c1=tri:c2=tri[x13];[x13][a14]acrossfade=d=0.4:c1=tri:c2=tri[x14];[x14][a15]acrossfade=d=0.4:c1=tri:c2=tri[x15];[x15][a16]acrossfade=d=0.4:c1=tri:c2=tri[x16];[x16][a17]acrossfade=d=0.4:c1=tri:c2=tri[x17];[x17][a18]acrossfade=d=0.4:c1=tri:c2=tri[x18];[x18][a19]acrossfade=d=0.4:c1=tri:c2=tri[x19];[x19][a20]acrossfade=d=0.4:c1=tri:c2=tri[x20];[x20][a21]acrossfade=d=0.4:c1=tri:c2=tri[x21];[x21][a22]acrossfade=d=0.4:c1=tri:c2=tri[x22];[x22][a23]acrossfade=d=0.4:c1=tri:c2=tri[x23];[x23][a24]acrossfade=d=0.4:c1=tri:c2=tri[x24];[x24][a25]acrossfade=d=0.4:c1=tri:c2=tri[x25];[x25][a26]acrossfade=d=0.4:c1=tri:c2=tri[x26];[x26][a27]acrossfade=d=0.4:c1=tri:c2=tri[x27];[x27][a28]acrossfade=d=0.4:c1=tri:c2=tri[x28];[x28][a29]acrossfade=d=0.4:c1=tri:c2=tri[x29];[x29][a30]acrossfade=d=0.4:c1=tri:c2=tri[x30];[x30][a31]acrossfade=d=0.4:c1=tri:c2=tri[x31];[x31][a32]acrossfade=d=0.4:c1=tri:c2=tri[x32];[x32][a33]acrossfade=d=0.4:c1=tri:c2=tri[x33];[x33][a34]acrossfade=d=0.4:c1=tri:c2=tri[x34];[x34][a35]acrossfade=d=0.4:c1=tri:c2=tri[x35];[x35][a36]acrossfade=d=0.4:c1=tri:c2=tri[x36];[x36][a37]acrossfade=d=0.4:c1=tri:c2=tri[x37];[x37][a38]acrossfade=d=0.4:c1=tri:c2=tri[x38];[x38][a39]acrossfade=d=0.4:c1=tri:c2=tri[x39];[x39]highpass=f=55,lowpass=f=11000,volume=2.3,alimiter=limit=0.82:level=false,atrim=duration=64,afade=t=in:d=0.4,afade=t=out:st=63.5:d=0.5[out]",
+    "encoder": "@ffmpeg-installer/ffmpeg@1.1.0 / win32-x64@4.1.0",
+    "codec": "libmp3lame96kbps stereo44100Hz",
+    "src": "/audio/v100/epilogue/meinohama-waves-r1.mp3",
+    "bytes": 768358,
+    "sha256": "e89b86cb5f2cfe4c9736fcc43c1af68d78e8b9b2c3fe9a22fcf75eaef2b9297b",
+    "durationSeconds": 64,
+    "levelDecision": "Balanced against the existing The Old Ones excerpt using decoded RMS/peak measurements; physical speaker audition is pending"
+  },
+  "records": [
+    {
+      "id": "meinohama-king-back-r1",
+      "src": "/art/v100/epilogue/meinohama-king-back-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset type: finished widescreen16:9 cinematic post-credits horror frame for the Japanese post-apocalyptic game 西新世紀末物語. Reference1 is the EXACT established adult character Crazy King; reference2 supplies the game's mature detailed painted illustration style only. At midnight on the weathered concrete quay of Meinohama fishing harbor in west Fukuoka, show ONE Crazy King standing still with his BACK directly to the camera, facing the black water. Locked camera at his shoulder height, medium-wide shot framed from upper calves to above his helmet, his silhouette slightly right of center, generous dark harbor space at left. Preserve his exact mustard-yellow CYLINDRICAL bucket helmet with the small black round lid on top, battered green zippered hoodie, hood DOWN outside the helmet, dirty dark trousers and original sturdy human build. The back of the helmet is plain worn yellow metal; its painted eyes and mouth face AWAY and are not visible. Both arms are relaxed at his sides. No chainsaw in the hands. Grounded fishing harbor, moored small Japanese fishing boats at left, quiet sea and low island silhouette in the distance, low quay lamps, wet concrete, scattered nets and a rope coil, empty night. Restrained steel-blue moonlit shadows, a few distant amber practical lights, credible darkness but the bucket silhouette and green jacket remain clearly readable. Hand-painted texture and deliberate brushwork, clear physical materials and coherent perspective, intimate suspense, slight imperfect clothing folds. Not photoreal CGI, not generic glossy anime face, not plastic, no excessive cinematic lens flares, no neon fantasy. No text, credits, signage, logos, borders or watermark. This is the master fixed composition; its exact background and body position will be reused for the next helmet-removal poses.",
+      "references": [
+        {
+          "kind": "project-identity",
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "distributed": true
+        },
+        {
+          "kind": "project-identity",
+          "path": "public/art/v100/credits/floodgate-watch-r2.webp",
+          "sha256": "2432df3a342e2d015dfb29486ca281e3ba5cc0910b5c9911441c06c95c406054",
+          "distributed": true
+        }
+      ],
+      "generated": {
+        "sha256": "2ea15f0446afa08a8e0bededd2b4c1c038c174db673e4ef25004f67c92eac0e2",
+        "bytes": 2296086,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-back-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-king-back-r1.png"
+      },
+      "runtime": {
+        "bytes": 176532,
+        "sha256": "0e2bdfbb8e90569caa93db6d89dc5715ea92eb599c7e66dec86fa2f3e09bdb0f",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/meinohama-king-back-r1.webp"
+      },
+      "selected": false,
+      "supersededBy": "/art/v100/epilogue/meinohama-king-back-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "meinohama-king-reach-r1",
+      "src": "/art/v100/epilogue/meinohama-king-reach-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve. This is shot2 of the SAME locked-camera game cinematic. Edit the supplied finished midnight Meinohama harbor illustration. Change ONLY Crazy King's arms and hands: he now raises both arms, with both BARE hands reaching up to grip the lower sides of his yellow cylindrical bucket helmet, beginning to remove it. The helmet is STILL ON his head at exactly its current position. Anatomically natural bent elbows, plausible green hoodie sleeve folds, one thumb and four fingers per hand. Preserve exactly the body position, stature, trouser folds, green hoodie, bucket dimensions and plain back surface, original fixed camera, scale, horizon, quay, ALL boats, ropes, nets, lamps, island silhouette, water, moon, clouds, night lighting and game-painted texture. Do not move the camera, change the time or redraw the harbor. His back stays directly to camera and his face remains fully concealed. No extra person, chainsaw, text, borders or watermark. Match frame1 as closely as possible outside the changed arm area, so these frames cut together without any background jump.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-back-r1.png",
+          "sha256": "2ea15f0446afa08a8e0bededd2b4c1c038c174db673e4ef25004f67c92eac0e2",
+          "distributed": false
+        }
+      ],
+      "generated": {
+        "sha256": "9d13a5097129c79d85ba4a1b8f22919b00520478446cc92e5a4939fdaf726de2",
+        "bytes": 2190482,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-reach-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-king-reach-r1.png"
+      },
+      "runtime": {
+        "bytes": 168246,
+        "sha256": "69ce2ae3ddcca72d5ee1547b002e3301461617a46fb4d8d199e61f8cf4aa4f97",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/meinohama-king-reach-r1.webp"
+      },
+      "selected": false,
+      "supersededBy": "/art/v100/epilogue/meinohama-king-reach-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "meinohama-king-remove-r1",
+      "src": "/art/v100/epilogue/meinohama-king-remove-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: identity-preserve. Edit image1 into shot3 of the SAME fixed-camera midnight harbor cinematic. Change ONLY the helmet-removal action: Crazy King has now lifted his yellow cylindrical bucket helmet fully clear of his head with BOTH raised bare hands. Hold it just above and slightly left of his now-exposed head, still visibly gripped by both hands, black round lid intact. His head stays facing AWAY from the camera; show only the BACK of his natural medium-black hair and nape. Image2 is the real adult man's original identity; use ONLY his black hair thickness, length and head shape for the back of the head, not his face or photographed clothing. Preserve exactly his green hoodie, hood DOWN at the neck, shoulders, body scale, feet, fixed framing, all boats, moon, clouds, distant island, quay, nets, ropes, water, night lighting and painted texture. The bucket must not float unsupported or merge into the head; no duplicate helmet, no hands with extra fingers, no front face, no new people. Fit the lifted helmet and both complete hands inside the existing frame without moving the camera. No text, borders, watermark. Outside the hands/helmet/head area leave the scene unchanged, so the original three consecutive shots match.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-reach-r1.png",
+          "sha256": "9d13a5097129c79d85ba4a1b8f22919b00520478446cc92e5a4939fdaf726de2",
+          "distributed": false
+        },
+        {
+          "kind": "private-producer-self-portrait",
+          "path": "private-producer-self-portrait",
+          "sha256": "abad5f24312a12be7a22df98e14f6de988c37ed3a39a78b60d1c953be40de307",
+          "distributed": false
+        }
+      ],
+      "generated": {
+        "sha256": "04a2a99d8ab7d7d0429ed3fc87025864f0b817778484c3c8010c83b53cce4397",
+        "bytes": 2164111,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-remove-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-king-remove-r1.png"
+      },
+      "runtime": {
+        "bytes": 166750,
+        "sha256": "9c40502940209f22b7ac2ed9581646de0251e972b18e89acbe5fc575c0c673f5",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/meinohama-king-remove-r1.webp"
+      },
+      "selected": false,
+      "supersededBy": "/art/v100/epilogue/meinohama-king-remove-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "meinohama-king-throw-r1",
+      "src": "/art/v100/epilogue/meinohama-king-throw-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the first image into the next single full-width 16:9 cinematic illustrated game frame. Preserve the exact locked camera, horizon, moon, fishing boats, quay, framing, green hoodie, worn clothing, black hair, height and adult male identity of Crazy King. He is still seen entirely from behind: no face visible. Now he throws his removed yellow cylindrical bucket helmet out over the sea to the right. A natural throwing follow-through of his right bare hand and arm, left hand lowered, both anatomically correct. ONE helmet only, same black lid and yellow cylinder, just airborne beyond the edge of the quay on an understandable trajectory toward the water. Do not leave another helmet on his head or in his hand. Rear of the airborne helmet visible. Hand drawn mature game illustration, ink and painted texture consistent with both reference frames. Retain every fixed background landmark and the nocturnal amber/moonlight. Convincing weight and staging, dramatic but no motion smear or camera jump. No words, no panels, no logos.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-remove-r1.png",
+          "sha256": "04a2a99d8ab7d7d0429ed3fc87025864f0b817778484c3c8010c83b53cce4397",
+          "distributed": false
+        },
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-back-r1.png",
+          "sha256": "2ea15f0446afa08a8e0bededd2b4c1c038c174db673e4ef25004f67c92eac0e2",
+          "distributed": false
+        }
+      ],
+      "generated": {
+        "sha256": "7ac1d58b3d398ed99fa4c23fb4e82e4db43a86f0cb762135d9bcd420ce1527e5",
+        "bytes": 2218880,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-throw-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-king-throw-r1.png"
+      },
+      "runtime": {
+        "bytes": 177194,
+        "sha256": "ad9305933a94e9c6bdcd1c4a35a7b773ab9281801c2f92bf0af672fa7e239412",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits",
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/superseded-runtime/meinohama-king-throw-r1.webp"
+      },
+      "selected": false,
+      "supersededBy": "/art/v100/epilogue/meinohama-king-throw-r2.webp",
+      "supersededReason": "Original Crazy King costume correction"
+    },
+    {
+      "id": "meinohama-helmet-afloat-r1",
+      "src": "/art/v100/epilogue/meinohama-helmet-afloat-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: illustration-story. Asset: finished16:9 atmospheric insert frame for the SAME midnight Meinohama harbor cinematic. Reference1 fixes location, water color, moonlight, boats and game-painted style. Reference2 is the EXACT yellow cylindrical bucket helmet from the established character Crazy King. Close low-angle view of ONLY that discarded bucket helmet floating on the dark sea close to the quay. Its worn yellow metal cylinder is tilted naturally on a passing small wave, with black small round lid still attached on top and the two black round eyes in pale rims and red simple smiling mouth now rotated toward the camera. Original proportions and design, no Lego head, no different helmet or new icon. Waterline crosses the LOWER quarter of the cylinder, believable buoyancy, tiny droplets and circles of ripples around it; gentle silver-blue moon highlights, warm harbor-light streaks behind. The moored Japanese fishing boats and quay lights from reference1 are distant soft shapes in the same direction, restrained ominous darkness. Slightly asymmetrical composition with helmet left of center and empty black water at right, close but full helmet and lid intact inside frame. Detailed hand-painted manga/game materials matching the existing world, no photographic CGI look, no person or visible body in the water, no sharks, no blood in the sea, no text, logo or watermark.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-king-back-r1.png",
+          "sha256": "2ea15f0446afa08a8e0bededd2b4c1c038c174db673e4ef25004f67c92eac0e2",
+          "distributed": false
+        },
+        {
+          "kind": "project-identity",
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+          "distributed": true
+        }
+      ],
+      "generated": {
+        "sha256": "595a47d84421b0b2f84ad376112cb109867e8101dbcba80604dc1574aac20d91",
+        "bytes": 2143043,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-helmet-afloat-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-helmet-afloat-r1.png"
+      },
+      "runtime": {
+        "bytes": 171080,
+        "sha256": "bc62b84836e929a4cc33a50324ae5d07a20d691fab12d141a2f232bb2c25f692",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "meinohama-ogata-reveal-r2",
+      "src": "/art/v100/epilogue/meinohama-ogata-reveal-r2.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Use case: style-transfer and identity-preserve. Image1 is the edit target, a post-credits character reveal that is TOO PHOTOGRAPHIC. Re-render it as the clearly DRAWN mature manga/painted game illustration in image2, matching the other cast, with deliberate ink contours, simplified designed shadow planes, subtle painted grain, expressive line work and believable but illustrated anatomy. No photographic pores, photo pasted into a painting, CGI or live-action head. Image3 is the original real adult person's identity; preserve his broad softly angular face, full cheeks, natural rounded nose, eye shape and spacing, straight brows, wide natural lips, center-parted black hair and recognizable likeness. Do not replace him with the man or woman in image2; image2 is STYLE ONLY. Keep image1's exact front-facing camera, chest-up framing, green hoodie and its folds, harbor at midnight, moon/boats/night palette, bloody scratches, bruises and dark infection veins. He has a strange thin asymmetric almost-smile with lips still nearly closed, a quietly disturbing gaze. Clearly illustrated in the SAME visual world as image2 but still unmistakably the same person as image3. Avoid generic narrow handsome anime faces, giant eyes, overly smooth plastic skin, glamorous beautification, glowing eyes, exaggerated monster anatomy. No extra injuries or extreme gore, no text or watermark.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-ogata-reveal-r1.png",
+          "sha256": "ca6d930536a747e5b19c4a91cfcae1d3d529135bcbfb04dd27684cbd18d96e4e",
+          "distributed": false
+        },
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/comedy-sources/armory-couple-dance-r1.png",
+          "sha256": "557c4d2e28926e33f78bc157b61ca0004db7d3dfc8e3e30ff8cf33f4f09fce1c",
+          "distributed": false
+        },
+        {
+          "kind": "private-producer-self-portrait",
+          "path": "private-producer-self-portrait",
+          "sha256": "483e2cdfb2f34f37eb6948ee52a20f511db601634db7b9081ecb1f5056a402b0",
+          "distributed": false
+        }
+      ],
+      "generated": {
+        "sha256": "5454bf2d81012a46b98ddef51595b79e8b30a36fa67169052e9dd3e39a21f725",
+        "bytes": 2660219,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-ogata-reveal-r2.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-ogata-reveal-r2.png"
+      },
+      "runtime": {
+        "bytes": 225616,
+        "sha256": "9416d555c07506441ade77b2f840f6df5faf57a44d6d933e07722d0be65d3e5a",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    },
+    {
+      "id": "meinohama-ogata-grin-r1",
+      "src": "/art/v100/epilogue/meinohama-ogata-grin-r1.webp",
+      "tool": "image_gen.imagegen",
+      "prompt": "Edit the FIRST DRAWN game illustration into the next single cinematic frame. Preserve the same recognizable adult user likeness from both references: full cheeks, broad rounded nose, natural dark almond eyes, black parted hair, same battered green hoodie, same midnight fishing harbor. Preserve the ink line contours, flat designed shadow planes, painted texture; no live-action or photographic skin. He now makes a chilling unnatural asymmetric smile, both corners visibly lifted and normal HUMAN teeth visible with a small dark blood stain on the front teeth and lip. No fangs, no exposed flesh, no ripped skin, no loose tissue. On the viewer-right half of his face, intact skin is more discolored gray-purple with branching dark infected veins and existing shallow scratch marks. Keep skin intact. Character's eyes stare directly forward, menace through expression rather than gratuitous gore. Face and head identity must remain the same, same camera direction and lighting with slightly tighter face framing to make the smile readable. Strong purposeful mature horror comic illustration. No typography, no panels, no extra characters.",
+      "references": [
+        {
+          "kind": "generated-image",
+          "path": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-ogata-reveal-r2.png",
+          "sha256": "5454bf2d81012a46b98ddef51595b79e8b30a36fa67169052e9dd3e39a21f725",
+          "distributed": false
+        },
+        {
+          "kind": "private-producer-self-portrait",
+          "path": "private-producer-self-portrait",
+          "sha256": "483e2cdfb2f34f37eb6948ee52a20f511db601634db7b9081ecb1f5056a402b0",
+          "distributed": false
+        }
+      ],
+      "generated": {
+        "sha256": "099f6807fb329cc797a5669e7d399439748f1f1fcc8579f6c04d047def69cf2d",
+        "bytes": 2628213,
+        "width": 1672,
+        "height": 941,
+        "retainedIn": "outputs/projectwide-brushup-20261004/design-rebuild/post-credits-sources/meinohama-ogata-grin-r1.png",
+        "archive": "outputs/asset-archive/v100-post-credits-20261007/meinohama-ogata-grin-r1.png"
+      },
+      "runtime": {
+        "bytes": 234652,
+        "sha256": "d40e951b0ed97cebbfb6647475560aee35bd43f406eba6b4fa855ea5b092736d",
+        "width": 1600,
+        "height": 900,
+        "encoding": "Sharp contain1600x900 WebP quality86 effort6; no semantic pixel edits"
+      }
+    }
+  ],
+  "currentSelectionProvenance": "assets/source/v100/runtime/ending/king-costume-r1.provenance.json",
+  "selectionStatus": "Historical generation record; current selected face assets are in ending/film-art-r2.provenance.json"
+}
