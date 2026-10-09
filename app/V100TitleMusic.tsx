@@ -9,6 +9,7 @@ export const TITLE_MUSIC_SRC = "/audio/v100/score/horror.mp3";
 type Settings = { bgmEnabled: boolean; bgmVolume: number };
 
 export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; voiceActive: boolean }) {
+  const musicEnabled = settings.bgmEnabled && settings.bgmVolume > 0;
   const audioRef = useRef<HTMLAudioElement>(null);
   const stateRef = useRef({ settings, voiceActive });
   const refreshRef = useRef<(() => void) | null>(null);
@@ -64,6 +65,8 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
     const request = () => {
       if (!allowed()) { silence(); return; }
       if (pending || (!audio.paused && !mix.needsRecovery(audio))) return;
+      // Attach once, only when enabled. Muting later retains the native cursor.
+      if (!audio.getAttribute("src")) audio.src = TITLE_MUSIC_SRC;
       pending = true;
       const token = ++generation;
       mix.setVolume(audio, 0);
@@ -113,5 +116,5 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
       window.removeEventListener("keydown", request);
     };
   }, []);
-  return <audio ref={audioRef} src={TITLE_MUSIC_SRC} loop preload={settings.bgmEnabled && settings.bgmVolume > 0 ? "auto" : "none"} data-title-music="true" />;
+  return <audio ref={audioRef} loop preload={musicEnabled ? "auto" : "none"} data-title-music="true" />;
 }

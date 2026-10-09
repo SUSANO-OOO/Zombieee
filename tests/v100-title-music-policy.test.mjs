@@ -9,7 +9,7 @@ import { enterV100FromTitle, seedV100BrowserSaveOnce } from '../scripts/v100-tit
 async function titleFixture() {
   const source = await readFile(new URL('../app/V100TitleMusic.tsx', import.meta.url), 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  const audio = { paused: true, dataset: {}, plays: 0, gain: 0, pause() { this.paused = true; } };
+  const audio = { paused: true, dataset: {}, plays: 0, gain: 0, currentTime: 0, getAttribute(name) { return name === 'src' ? this.src ?? null : null; }, pause() { this.paused = true; } };
   const refs = [], dependencies = [], effects = [], cleanup = [];
   let cursor = 0, disposed = false;
   const surface = { addEventListener() {}, removeEventListener() {} };
@@ -53,15 +53,23 @@ async function titleFixture() {
 test('disabled title BGM avoids preload and resumes through the same owner when enabled', async () => {
   const fixture = await titleFixture();
   const off = await fixture.render({ bgmEnabled: false, bgmVolume: .8 });
-  assert.equal(off.props.preload, 'none'); assert.equal(fixture.audio.plays, 0);
+  assert.equal(off.props.preload, 'none'); assert.equal(off.props.src, undefined); assert.equal(fixture.audio.src, undefined); assert.equal(fixture.audio.plays, 0);
   assert.equal(fixture.audio.paused, true); assert.equal(fixture.audio.gain, 0);
   const on = await fixture.render({ bgmEnabled: true, bgmVolume: .8 });
-  assert.equal(on.props.preload, 'auto'); assert.equal(fixture.audio.plays, 1); assert.equal(fixture.audio.paused, false);
+  assert.equal(on.props.preload, 'auto'); assert.equal(fixture.audio.src, '/audio/v100/score/horror.mp3'); assert.equal(fixture.audio.plays, 1); assert.equal(fixture.audio.paused, false);
+  fixture.audio.currentTime = 19;
   const zero = await fixture.render({ bgmEnabled: true, bgmVolume: 0 });
-  assert.equal(zero.props.preload, 'none'); assert.equal(fixture.audio.paused, true); assert.equal(fixture.audio.gain, 0);
+  assert.equal(zero.props.preload, 'none'); assert.equal(fixture.audio.currentTime, 19); assert.equal(fixture.audio.paused, true); assert.equal(fixture.audio.gain, 0);
   await fixture.render({ bgmEnabled: true, bgmVolume: .5 });
-  assert.equal(fixture.audio.plays, 2);
+  assert.equal(fixture.audio.plays, 2); assert.equal(fixture.audio.currentTime, 19);
   fixture.unmount(); assert.equal(fixture.disposed, true); assert.equal(fixture.audio.paused, true);
+});
+
+test('a title opened at volume zero never receives the music URL', async () => {
+  const fixture = await titleFixture();
+  const element = await fixture.render({ bgmEnabled: true, bgmVolume: 0 });
+  assert.equal(element.props.preload, 'none'); assert.equal(fixture.audio.src, undefined); assert.equal(fixture.audio.plays, 0);
+  fixture.unmount();
 });
 
 test('normal title entry uses the actual intro gesture without requiring full media prefetch', async () => {
