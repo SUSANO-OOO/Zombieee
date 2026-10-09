@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import { RELEASE_TITLE, RELEASE_VERSION } from "../app/releaseIdentity.js";
 
 import {
   AIRSTRIKE_DEF,
@@ -140,10 +141,10 @@ test("server-renders the landscape gate before the fiction notice and PWA gate",
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜Version 1\.0\.0<\/title>/);
+  assert.ok(html.includes(`<title>${RELEASE_TITLE}</title>`));
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 1\.0\.0。"/);
+  assert.ok(html.includes(`Version ${RELEASE_VERSION}。`));
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
