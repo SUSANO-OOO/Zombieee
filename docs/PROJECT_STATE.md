@@ -1,5 +1,21 @@
 # 西新世紀末物語 — プロジェクト状態
 
+## 現在の公開状態
+
+- [正式URL](https://susano-ooo.github.io/Zombieee/)のHTML release metadataを、公開中のversion・release SHAの正本とする。
+- [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
+- Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。
+
+以下の日時見出しは、その時点の記録である。過去の「現在」「承認待ち」や一時共有リンクを、最新状態として扱わない。
+
+### 2026-10-09 R5最終候補の技術検証成功
+
+実装head `5cba8b975d907b5c3ab181a73f03fc43b121d02f`の[必要CI 37877111964](https://github.com/SUSANO-OOO/Zombieee/actions/runs/37877111964)は26工程すべて成功。全1810 tests、Lint 0 errors／既存25 warnings、production/static build、独立read-only review High 0／Medium 0を確認した。製品app/publicは固定runtime `2d97be9bca8fe1ced915f27b2d25254e2a911254`と同じである。
+
+同候補のMac native WebKitでR5音響24、スタッフロール7、音声byte range、PWA更新18、部分失敗復旧23、実戦中の修復保護5ケース、Phase Gの55場面、Stage 25の着弾proof COMPLETE、描画性能、敵runtime6 shard、音声3ルート、配備・canonical画面6サイズずつが成功した。開発者モードの30作戦／94イベント／767ノード、通常UIでの第10作戦までのクリア、過去の失敗原記録も保持する。物理iPhone・実speaker聴感・発熱は未確認であり、PC QAは消音している。
+
+最新R5節の正式リリース指示に従って通常PR統合を開始した。正式公開のmerge result SHA、固定tag・Release、明示Pages request、公開後QAはIssue #172で追跡する。
+
 ### 2026-10-09 R5脚本と最終公開の検証
 
 最新版はProducer提供のR5原稿で、767台詞・94イベントを反映した。状況に沿う腰上の表情差分と8枚の場面カットを追加し、ENDING・EPILOGUE・スタッフロールはTKY、ザキミヤを含むメイン7人を中心に構成した。操作音は紙・木・金具等の短い録音へ更新した。クレジットは全134項目のスクロール、原速の音楽を106秒からフェードし、R5の27ノードのEPILOGUEと終幕映像へ自動移行する。制作名K4ITo、音源・素材・書体・使用ツールの表記を保持する。
