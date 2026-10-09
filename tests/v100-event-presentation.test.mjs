@@ -3,6 +3,7 @@ import test from "node:test";
 import { access } from "node:fs/promises";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { V100_AUDIO_MANIFEST, PRODUCTION_AUDIO_SCENE_IDS } from "../app/productionAudio.js";
+import { V100_R5_STORY_CUTS, v100StoryDirectionFor } from "../app/v100StoryDirection.js";
 
 import {
   V100_EVENT_PRESENTATION_CATEGORIES,
@@ -51,7 +52,8 @@ test("ending locations follow the source scenes and epilogue returns to the reop
   assert.ok(backgrounds.every(background => background && !background.includes("ending-defeat")));
   const node = V100_STORY_EVENTS["v100:event:epilogue"].nodes[0];
   const epilogue = v100EventPresentationFor({ eventId: "v100:event:epilogue", node });
-  assert.match(epilogue.backgroundPath, /kumaya-reopened/u);
+  assert.equal(epilogue.backgroundPath, V100_R5_STORY_CUTS['epilogue-main-table']);
+  assert.equal(epilogue.cinematic,true);
   assert.equal(epilogue.sceneId, PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY);
 });
 
@@ -69,7 +71,8 @@ test("ending location ambience follows every authored node without changing the 
     assert.ok(expected[node.sceneTag], `unmapped ending location: ${node.sceneTag}`);
     assert.deepEqual(scene.ambience, expected[node.sceneTag]);
     assert.equal(scene.bgm, "music-v100-score-ending");
-    assert.equal(presentation.cueId, null);
+    assert.equal(presentation.cueId, v100StoryDirectionFor('v100:event:ending',nodeIndex,node).cueId);
+    if(presentation.cueId) assert.ok(V100_AUDIO_MANIFEST.assetById[presentation.cueId]);
     assert.ok(!scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
     visited.add(node.sceneTag);
   }
@@ -97,15 +100,17 @@ test("V1 event presentation maps canonical story phases to bounded runtime categ
 
 test("canonical interludes leave the floodgate/lab for their actual locations", () => {
   const view = (eventId, sceneTag) => {
-    const node = V100_STORY_EVENTS[eventId].nodes.find(node => node.sceneTag === sceneTag);
-    assert.ok(node); return v100EventPresentationFor({ eventId, phase:"post", node });
+    const nodeIndex = V100_STORY_EVENTS[eventId].nodes.findIndex(node => node.sceneTag === sceneTag);
+    assert.ok(nodeIndex >= 0);
+    const node = V100_STORY_EVENTS[eventId].nodes[nodeIndex];
+    return v100EventPresentationFor({ eventId, phase:"post", node, nodeIndex });
   };
   assert.match(view("v100:event:s20:post","corridor").backgroundPath,/shopping-street/u);
   assert.match(view("v100:event:s20:post","musashi").backgroundPath,/mugarian-hq/u);
   const soup=view("v100:event:s25:post","soup");
-  assert.match(soup.backgroundPath,/shopping-street/u);
+  assert.match(soup.backgroundPath,/ending-hospital-secured/u);
   const scene=V100_AUDIO_MANIFEST.sceneById[soup.sceneId];
-  assert.ok(scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
+  assert.ok(scene.ambience.includes("ambience-v070-medical-bay-loop"));
   assert.equal(scene.bgm,"music-v100-score-daily");
   assert.notEqual(v100EventPresentationFor({ eventId:"v100:event:s25:post", phase:"post", node:V100_STORY_EVENTS["v100:event:s25:post"].nodes[0] }).sceneId,soup.sceneId);
 });

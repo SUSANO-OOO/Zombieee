@@ -48,7 +48,7 @@ test("introductory pages preserve text, order, boundaries and every old resume c
       index = page.endIndex + 1;
     }
     assert.deepEqual(covered, event.nodes);
-    assert.ok(pages.length < event.nodes.length);
+    assert.ok(pages.length <= event.nodes.length, "R5's longer action beats retain their own readable pages");
     for (let oldCursor = 0; oldCursor < event.nodes.length; oldCursor += 1) {
       const resumed = v100StoryPageFor(eventId, event.nodes, oldCursor);
       assert.equal(resumed.startIndex, oldCursor);

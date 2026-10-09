@@ -45,3 +45,5 @@ tests/v099-hud-states-bounded.test.mjs text eol=lf
 
 # The displayed story source is hashed before generating its event registry.
 docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md text eol=lf
+# The supplied R5 manuscript is an immutable byte-for-byte source snapshot.
+docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R5.md -text

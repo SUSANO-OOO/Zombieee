@@ -11,6 +11,8 @@ import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
+import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_R5_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
+import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
 import {
   ASSET_MANIFEST_SCHEMA,
   RELEASE_SHA_PLACEHOLDER,
@@ -264,6 +266,11 @@ for (const shot of V100_POST_CREDITS_SHOTS) record(shot.src, { pack: "campaign-c
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
   record(assetPath, { pack: "campaign-core", category: "background", criticality: "critical" });
 }
+for (const owner of Object.keys(V100_EVENT_PORTRAIT_PROFILES)) for (const expression of V100_EVENT_EXPRESSIONS) {
+  record(v100EventPortraitPath(owner, expression), {pack:"units",category:"portrait",criticality:"critical"});
+}
+for (const assetPath of Object.values(V100_R5_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
+record(V100_RETREAT_DOOR_ART,{pack:"campaign-core",category:"object",criticality:"critical"});
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }

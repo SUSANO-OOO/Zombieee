@@ -57,7 +57,10 @@ test("name and recruitment introductions are present before their release gates"
     const id = `v100:event:s${String(stage).padStart(2, "0")}:post`;
     assert.ok(V100_STORY_EVENTS[id].nodes.some((node) => node.text.includes(name) || node.speaker === name), `${name} must be introduced before the Stage ${stage} registration offer`);
   }
-  assert.ok(V100_STORY_EVENTS["v100:event:prologue"].nodes.some((node) => node.speaker === "ハチ" && node.portraitOwner === "unit-hachi"));
+  for(const [speaker,portraitOwner] of [['パイセン','unit-paisen'],['クマバーソン','unit-kumaverson'],['ババヤガ','unit-babayaga']]) {
+    assert.ok(V100_STORY_EVENTS['v100:event:prologue'].nodes.some(node=>node.speaker===speaker&&node.portraitOwner===portraitOwner));
+  }
+  assert.equal(V100_STORY_EVENTS["v100:event:prologue"].nodes.some((node) => node.speaker === "ハチ"),false);
 });
 
 test("V1.0.0 stage flow cannot bypass battle/result/finalize and routes defeat safely", () => {

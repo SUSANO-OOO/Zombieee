@@ -273,6 +273,222 @@
       "adaptation": "atrim=0:2.1,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=6500,volume=0.8,afade=t=out:st=2.02:d=0.08,alimiter=limit=0.85:level=false"
     },
     {
+      "file": "public/audio/v100/foley/story-dish.ogg",
+      "bytes": 8473,
+      "sha256": "418f855b2f7f040bd1bec22ac385a4e957c6baf1f20c295064e3d74404c644d5",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd"
+        }
+      ],
+      "adaptation": "atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5800,volume=0.38,afade=t=out:st=0.47000000000000003:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-dish.mp3",
+      "bytes": 7264,
+      "sha256": "802ae8b0a8fa45e2fd9bda6dd1a97f01060ae17b17e9343277e619a7cdbdfc1a",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd"
+        }
+      ],
+      "adaptation": "atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5800,volume=0.38,afade=t=out:st=0.47000000000000003:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-door-open.ogg",
+      "bytes": 11587,
+      "sha256": "2976d47e310ebb09393302ebf1dfd8a66ad749b4ad4249589644b2ee39ca7afb",
+      "sources": [
+        {
+          "file": "kenney-rpg/doorOpen_1.ogg",
+          "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b"
+        }
+      ],
+      "adaptation": "atrim=0:0.9,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5600,volume=0.55,afade=t=out:st=0.8200000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-door-open.mp3",
+      "bytes": 10366,
+      "sha256": "61b8e0816213a2b61b55deda8444c3649c7610c96e2c14a4a4dca0a706b04a4c",
+      "sources": [
+        {
+          "file": "kenney-rpg/doorOpen_1.ogg",
+          "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b"
+        }
+      ],
+      "adaptation": "atrim=0:0.9,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5600,volume=0.55,afade=t=out:st=0.8200000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-door-close.ogg",
+      "bytes": 8934,
+      "sha256": "819df0e8ae8f4eae2909c123759c57d9604d7e6889ca9ddc2b8eaaadba283424",
+      "sources": [
+        {
+          "file": "kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb"
+        }
+      ],
+      "adaptation": "atrim=0:0.75,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4800,volume=0.5,afade=t=out:st=0.67:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-door-close.mp3",
+      "bytes": 7732,
+      "sha256": "df438a46614dcc8cdcab4039f0cce642f3386b5e28397f8f2ea7446c06986284",
+      "sources": [
+        {
+          "file": "kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb"
+        }
+      ],
+      "adaptation": "atrim=0:0.75,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4800,volume=0.5,afade=t=out:st=0.67:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-glass.ogg",
+      "bytes": 5430,
+      "sha256": "cda6bb5390d7cbe68c0181e26a39a1bf84c544f39cb9b9d2585aef145cab4251",
+      "sources": [
+        {
+          "file": "kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+        }
+      ],
+      "adaptation": "atrim=0:0.65,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=6500,volume=0.5,afade=t=out:st=0.5700000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-glass.mp3",
+      "bytes": 2859,
+      "sha256": "68e354b79d23036c36ead7862ff083e0491b6d42cfa3f7cdf397151104ab95aa",
+      "sources": [
+        {
+          "file": "kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+        }
+      ],
+      "adaptation": "atrim=0:0.65,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=6500,volume=0.5,afade=t=out:st=0.5700000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-paper.ogg",
+      "bytes": 7467,
+      "sha256": "9d9715c2c85c12e622b6280ac6332bcec2174b7204c0af759d4b52bd86d4f326",
+      "sources": [
+        {
+          "file": "kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c"
+        }
+      ],
+      "adaptation": "atrim=0:0.45,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5000,volume=0.4,afade=t=out:st=0.37:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-paper.mp3",
+      "bytes": 5781,
+      "sha256": "79498d1b502b2290ecb617a3a6dbeff7afa91cdbeb3266c8bc10abaa2c9c0a22",
+      "sources": [
+        {
+          "file": "kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c"
+        }
+      ],
+      "adaptation": "atrim=0:0.45,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5000,volume=0.4,afade=t=out:st=0.37:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-fabric.ogg",
+      "bytes": 7167,
+      "sha256": "50f9d8f2c13f99e9d70d1b986018500863ca5781d46e708ba7d9b695cab3a6a5",
+      "sources": [
+        {
+          "file": "kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b"
+        }
+      ],
+      "adaptation": "atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4000,volume=0.4,afade=t=out:st=0.47000000000000003:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-fabric.mp3",
+      "bytes": 4890,
+      "sha256": "4e85796b1ad8e0f89db9bb6903a3294324f44d89ae011a2fbabe6e7152da8a51",
+      "sources": [
+        {
+          "file": "kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b"
+        }
+      ],
+      "adaptation": "atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4000,volume=0.4,afade=t=out:st=0.47000000000000003:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-pan.ogg",
+      "bytes": 9381,
+      "sha256": "c1d776359a1aafe7e855fedb53d9857a0fbd83abcb80d16699d8d0af1f371dcf",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+        }
+      ],
+      "adaptation": "atrim=0:0.65,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=6000,volume=0.42,afade=t=out:st=0.5700000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-pan.mp3",
+      "bytes": 8935,
+      "sha256": "c1a677dbf7f30e8aa7a584ad06a2ee353f2700c36a76b8ea161b427db59452da",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+        }
+      ],
+      "adaptation": "atrim=0:0.65,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=6000,volume=0.42,afade=t=out:st=0.5700000000000001:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-latch.ogg",
+      "bytes": 6129,
+      "sha256": "1964660669e9a114e3e5b007561408828ccd5ac8d7905d6a1bed57da745656a2",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+        }
+      ],
+      "adaptation": "atrim=0:0.4,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5000,volume=0.45,afade=t=out:st=0.32:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-latch.mp3",
+      "bytes": 3798,
+      "sha256": "41020d23b95ab6ac1a454a719452ef555641c6f88bb14ba1f4a51343b080f81b",
+      "sources": [
+        {
+          "file": "kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+        }
+      ],
+      "adaptation": "atrim=0:0.4,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=5000,volume=0.45,afade=t=out:st=0.32:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-footsteps.ogg",
+      "bytes": 4505,
+      "sha256": "adfe7caf0f223e1289d7cb370124e497894ca7d8a2d25da85d5e17382bbe958d",
+      "sources": [
+        {
+          "file": "kenney-impact/footstep_concrete_000.ogg",
+          "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe"
+        }
+      ],
+      "adaptation": "atrim=0:0.45,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4300,volume=0.5,afade=t=out:st=0.37:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
+      "file": "public/audio/v100/foley/story-footsteps.mp3",
+      "bytes": 1634,
+      "sha256": "9b17e9eb68bc359252c2f5c1eca07334018b4a84c278d50728cf46e701a183f7",
+      "sources": [
+        {
+          "file": "kenney-impact/footstep_concrete_000.ogg",
+          "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe"
+        }
+      ],
+      "adaptation": "atrim=0:0.45,asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=4300,volume=0.5,afade=t=out:st=0.37:d=0.08,alimiter=limit=0.85:level=false"
+    },
+    {
       "file": "public/audio/v100/ambience/room.ogg",
       "bytes": 133911,
       "sha256": "7ef0c57688b4b1ffb82a74d70129eeaf76353ce764d9ffc12f1a9664363dc145",

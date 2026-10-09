@@ -10,6 +10,7 @@ import { RELEASE_SHA_PLACEHOLDER } from "../app/pwaAssetManifest.js";
 import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js";
 import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_COMPLETION_ASSET_ADDITIONS, V100_TAKUYA_DEFEAT_CUT_REMOVAL } from "../scripts/v100-release-asset-contract.mjs";
 import { V100_MOTION_ATLAS_REPLACEMENTS as motionReplacements } from "../scripts/v100-phone-review-asset-contract.mjs";
+import { V100_R5_ASSET_DELTA } from "../scripts/v100-r5-asset-contract.mjs";
 
 const PUBLISHED_V0982_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
 const PUBLISHED_V0993_SHA = "827e1b7942221d24901332bdaa543704fbc730cc";
@@ -69,10 +70,10 @@ test("the published0.9.9.5 pack reuses414 assets and replaces the broken WebKit 
 test("the Version 1.0.0 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_960_752,
-    candidateDistinctHashBytes: 166_420_849,
-    updateFromV0982Bytes: 93_972_867,
-    updateFromV0993Bytes: 83_598_173,
+    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes,
+    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes,
+    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes,
+    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes,
   });
   assert.equal(RELEASE_VERSION, "1.0.0");
   assert.equal(candidate.version, RELEASE_VERSION);

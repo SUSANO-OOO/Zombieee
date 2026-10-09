@@ -3,8 +3,14 @@
 export function v100DialogueSlots(nodes, nodeIndex) {
   const slots = { left: null, right: null };
   const lastSpoken = { left: -1, right: -1 };
+  let location = null;
   for (let index = 0; index <= nodeIndex; index += 1) {
     const node = nodes[index];
+    if (node?.sceneTag && node.sceneTag !== location) {
+      slots.left = null; slots.right = null;
+      lastSpoken.left = -1; lastSpoken.right = -1;
+      location = node.sceneTag;
+    }
     if (node?.kind !== "dialogue" || !node.portraitOwner) continue;
     let side = ["left", "right"].find(key => slots[key]?.portraitOwner === node.portraitOwner);
     if (!side) {
@@ -20,10 +26,10 @@ export function v100DialogueSlots(nodes, nodeIndex) {
 
 // Only these authored, on-screen actions name both spouses. Radio voices,
 // scene changes and unrelated narration must not inherit silent speakers.
-export function v100ActionPortraitSubjects(eventId, node) {
+export function v100ActionPortraitSubjects(eventId, node, nodeIndex = null) {
   if (node?.kind !== "action" || typeof node.text !== "string") return [];
-  const reunion = eventId === "v100:event:s17:post" && node.text.startsWith("二人とも相手の腕を調べ、");
-  const confession = eventId === "v100:event:s23:pre" && node.text === "ババヤガはカードではなく妻の顔を見る。";
+  const reunion = eventId === "v100:event:s17:post" && nodeIndex === 3;
+  const confession = eventId === "v100:event:s23:pre" && nodeIndex === 10;
   return reunion || confession ? ["unit-mrs-chiha", "unit-babayaga"] : [];
 }
 

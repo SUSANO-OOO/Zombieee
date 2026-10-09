@@ -863,7 +863,7 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   assert.match(source, /createAudioMixer\(\{[\s\S]*manifest: playbackManifest/);
   assert.match(source, /const productionCue = LEGACY_SFX_CUE_MAP\[cueId\]/);
-  assert.match(source, /const fallback = \(\) => productionMixer\.playTestTone\(\{/);
+  assert.match(source, /const fallback = \(\) => externalSessionActive \? null : productionMixer\.playTestTone\(\{/);
   assert.match(source, /if \(!productionMixer\) return false/);
   assert.match(source, /if \(!productionCue\) return fallback\(\)/);
   assert.match(source, /audioActivationPendingRef\.current = true[\s\S]*mixer\.playTestTone\(\{ respectSettings: true \}\)[\s\S]*await mixer\.enableAudio\(\)[\s\S]*void mixer\.retryFailedAudio\(\)\.then/);

@@ -788,10 +788,14 @@ button[aria-disabled="true"]:focus-visible {
 .pwa-progress-track { width:100%; height:8px; border-radius:4px; background:#2a2521; overflow:hidden; }
 .pwa-progress-fill { height:100%; background:linear-gradient(90deg,#e7663f,#f0c56a); transition:width .2s ease-out; }
 .pwa-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-.pwa-gate button, .pwa-notice button, .pwa-storage-toggle { min-height:40px; padding:0 14px; border:1px solid #4a3f36; border-radius:6px; background:#1b1815; color:#f2e9dd; cursor:pointer; }
+.pwa-gate button, .pwa-notice button, .pwa-storage-toggle { min-height:44px; padding:0 14px; border:1px solid #4a3f36; border-radius:6px; background:#1b1815; color:#f2e9dd; cursor:pointer; }
 .pwa-gate button:disabled, .pwa-notice button:disabled { opacity:.45; cursor:not-allowed; }
 .pwa-primary { background:#e7663f !important; border-color:#e7663f !important; color:#140f0c !important; font-weight:700; }
-.pwa-notice { position:fixed; z-index:55; left:50%; transform:translateX(-50%); bottom:calc(12px + var(--app-viewport-safe-bottom,0px)); width:min(520px,calc(100% - 24px)); display:flex; flex-direction:column; gap:6px; padding:12px 14px; border:1px solid #4a3f36; border-radius:8px; background:rgba(12,11,10,.94); color:#f2e9dd; font-size:13px; box-shadow:0 8px 28px rgba(0,0,0,.55); }
+.pwa-notice-stack { position:fixed; z-index:55; left:50%; transform:translateX(-50%); bottom:calc(60px + var(--app-viewport-safe-bottom,0px)); width:min(520px,calc(100% - 24px)); max-height:calc(100dvh - 80px - var(--app-viewport-safe-top,0px) - var(--app-viewport-safe-bottom,0px)); display:flex; flex-direction:column; gap:10px; overflow:auto; overscroll-behavior:contain; }
+.pwa-notice-stack:empty { display:none; }
+.pwa-notice { position:relative; flex:0 0 auto; width:100%; display:flex; flex-direction:column; gap:6px; padding:12px 14px; border:1px solid #4a3f36; border-radius:8px; background:rgba(12,11,10,.96); color:#f2e9dd; font-size:13px; box-shadow:0 8px 28px rgba(0,0,0,.55); }
+html:has(.v100-start-screen):has(.pwa-notice-stack:not(:empty)) { --v100-notice-rail:min(360px,42vw); }
+html:has(.v100-start-screen) .pwa-notice-stack { left:auto; right:calc(12px + var(--app-viewport-safe-right,0px)); transform:none; width:min(360px,42vw); }
 .pwa-notice p { margin:0; }
 /* V1 publishes this fact in its layout effect. Hide synchronously while the
    MutationObserver-to-React safety state catches up with a newly shown event. */

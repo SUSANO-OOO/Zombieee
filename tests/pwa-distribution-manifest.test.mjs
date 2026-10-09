@@ -235,7 +235,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 278);
+  assert.equal(bundled.length, 287, "the nine source-bound R5 scene recordings join the same physical audio transport");
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));

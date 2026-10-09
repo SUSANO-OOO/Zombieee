@@ -17,7 +17,7 @@ test('approved normal/daily music is separate from other scene roles and keeps t
   for(const id of ['silence-prologue-title','silence-station-seal']) assert.equal(current.sceneById[id].bgm??null,null);
 });
 
-test('every canonical stage event has a playable scene score; dialogue never emits an automatic cue', () => {
+test('every canonical stage event has a playable scene score; only authored physical actions emit recorded foley', () => {
   const visited=new Set();
   for(const [eventId,event] of Object.entries(V100_STORY_EVENTS)) {
     if(!/^v100:event:s\d{2}:/.test(eventId))continue;
@@ -25,7 +25,11 @@ test('every canonical stage event has a playable scene score; dialogue never emi
       const view=v100EventPresentationFor({eventId,nodeIndex,node,phase:eventId.endsWith(':pre')?'event':'post'});
       const scene=current.sceneById[view.sceneId];
       assert.ok(scene,eventId+' '+node.sourceLine);
-      assert.equal(view.cueId,null);
+      if(node.kind==='dialogue') assert.equal(view.cueId,null);
+      else if(view.cueId) {
+        assert.match(view.cueId,/^v100-story-(fabric|door-close|paper|latch)$/u);
+        assert.equal(current.assetById[view.cueId].loop,false);
+      }
       if(node.kind!=='title')assert.ok(current.assetById[scene.bgm],eventId+' '+node.sourceLine);
       visited.add(eventId);
     }

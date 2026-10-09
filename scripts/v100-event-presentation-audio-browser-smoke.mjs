@@ -1,20 +1,18 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
-import { V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
-import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
+import { V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_STAGE_IDS, V100_EVENT_BY_ID } from "../app/v100Registry.js";
+import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save } from "../app/v100Save.js";
+import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
+import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 
 const baseUrl = new URL(process.env.V100_EVENT_AUDIO_QA_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 event QA is local-only; refusing ${baseUrl}`);
-const playwright = process.env.PLAYWRIGHT_MODULE_PATH
-  ? await import(pathToFileURL(path.resolve(process.env.PLAYWRIGHT_MODULE_PATH)).href)
-  : await import("playwright");
-const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const engines = (process.env.V100_EVENT_AUDIO_QA_ENGINES ?? "chromium,webkit").split(",").map((value) => value.trim()).filter(Boolean);
 const viewports = (process.env.V100_EVENT_AUDIO_QA_VIEWPORTS ?? "1280x720,844x390").split(",").map((value) => {
   const match = value.match(/^(\d+)x(\d+)$/u);
@@ -31,8 +29,8 @@ const eventCases = Object.freeze([
   { id: "prologue", eventId: "v100:event:prologue", phase: "event" },
   { id: "boss-reveal", eventId: bossStage.eventIds.pre, phase: "event" },
   { id: "battle-post", eventId: bossStage.eventIds.post, phase: "post" },
-  { id: "two-speaker", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 2, advance: false },
-  { id: "speaker-switch", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 1, expectedInitialSide: "left", expectedPostActionSide: "right" },
+  { id: "two-speaker", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 3, advance: false },
+  { id: "speaker-switch", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 2, expectedInitialSide: "left", expectedPostActionSide: "right" },
   { id: "ending", eventId: "v100:event:ending", phase: "ending" },
   { id: "credits", eventId: "v100:event:credits", phase: "credits" },
   { id: "epilogue", eventId: "v100:event:epilogue", phase: "epilogue" },
@@ -59,7 +57,9 @@ function diagnosticsFor(page) {
 
 function eventSave(eventCase) {
   const base = createDefaultV100Save({ playerName: "QAプレイヤー" });
-  return normalizeV100Save({
+  const stageNumber = V100_EVENT_BY_ID[eventCase.eventId].stageNumber ?? null;
+  const stageId = stageNumber ? V100_STAGE_IDS[stageNumber - 1] : null;
+  let save = normalizeV100Save({
     ...base,
     revision: 7,
     campaignStarted: true,
@@ -73,25 +73,54 @@ function eventSave(eventCase) {
     ownedSupportIds: V100_SUPPORTS.map((support) => support.id),
     equippedSupportId: V100_SUPPORTS[0]?.id ?? null,
     formationSlots: V100_UNITS.slice(0, 7).map((unit) => unit.id),
+  });
+  if (eventCase.phase === "post") {
+    const result = createV100BattleResult({ stageId, battleRunId: "explicit-event-audio-fixture-" + eventCase.id, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: 680 });
+    const pending = recordV100PendingResult(save, result);
+    invariant(pending.applied, "post-event fixture requires its own pending result");
+    save = pending.save;
+  }
+  save = normalizeV100Save({
+    ...save,
     flowState: {
       phase: eventCase.phase,
       eventId: eventCase.eventId,
-      stageId: bossStage.id,
-      stageNumber: bossStage.number,
+      stageId,
+      stageNumber,
       destination: eventCase.phase,
       nodeIndex: eventCase.nodeIndex ?? 0,
       firstClear: false,
-      finalized: true,
+      finalized: false,
     },
+    eventCursor: { phase: eventCase.phase, eventId: eventCase.eventId, nodeIndex: eventCase.nodeIndex ?? 0 },
   });
+  invariant(deserializeV100Save(serializeV100Save(save)).ok, "event fixture must pass the product save reader");
+  return save;
 }
 
 async function seedPage(page, save) {
   const serialized = serializeV100Save(save);
   await page.addInitScript(({ keys, value }) => {
+    if (localStorage.getItem("event-audio-fixture-seeded")) return;
     for (const key of keys) localStorage.removeItem(key);
     for (const key of keys.slice(0, 3)) localStorage.setItem(key, value);
+    localStorage.setItem("event-audio-fixture-seeded", "yes");
   }, { keys: storageKeys, value: serialized });
+  // Silence only the final hardware output. Product gain and playback clocks
+  // remain observable; this is browser QA, not a speaker listening test.
+  await page.addInitScript(() => {
+    const connect = AudioNode.prototype.connect, muters = new WeakMap();
+    AudioNode.prototype.connect = function(target, ...args) {
+      if (target === this.context.destination) {
+        let quiet = muters.get(this.context);
+        if (!quiet) { quiet = this.context.createGain(); quiet.gain.value = 0; connect.call(quiet, this.context.destination); muters.set(this.context, quiet); }
+        return connect.call(this, quiet, ...args);
+      }
+      return connect.call(this, target, ...args);
+    };
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() { this.muted = true; return play.call(this); };
+  });
 }
 
 async function clickUsable(locator, label) {
@@ -109,6 +138,9 @@ async function portraitAuditFor(page, selector) {
   if (await page.locator(selector).count() === 0) return null;
   const portrait = page.locator(`${selector} .v100-portrait:not(.v100-portrait-secondary)`).first();
   if (await portrait.count() === 0) return null;
+  await page.waitForFunction(selector => [...document.querySelectorAll(selector)].every(image =>
+    image.complete && image.naturalWidth > 0 && getComputedStyle(image).opacity === "1"),
+    `${selector} .v100-portrait`, { timeout });
   return portrait.evaluate((element) => {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
@@ -167,8 +199,8 @@ function assertDialogueSurfaceAudit(name, audit) {
 }
 
 for (const engine of engines) {
-  if (!browserTypes[engine]) throw new Error(`Unknown V100 event QA engine: ${engine}`);
-  const browser = await browserTypes[engine].launch({ headless: true });
+  const browserType = await pwaBrowserType(engine);
+  const browser = await browserType.launch({ headless: true, ...(engine === "chromium" ? { args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) } : {}) });
   try {
     for (const viewport of viewports) {
       for (const eventCase of eventCases) {
@@ -183,6 +215,8 @@ for (const engine of engines) {
           url.searchParams.set("event-audio-qa", "1");
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation HTTP ${response?.status()}`);
+          const fiction = page.getByRole("button", { name: "続ける", exact: true });
+          if (await fiction.isVisible().catch(() => false)) await clickUsable(fiction, "fiction notice");
           const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
           await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
           if (await offer.isVisible().catch(() => false)) await clickUsable(offer, "PWA browser play");
@@ -211,7 +245,7 @@ for (const engine of engines) {
           }));
           const initialPortraitAudit = await portraitAuditFor(page, eventSelector);
           const initialDialogueSurfaceAudit = await dialogueSurfaceAuditFor(page, eventSelector);
-          const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: { kind: "action" }, nodeIndex: eventCase.nodeIndex ?? 0 });
+          const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: V100_STORY_EVENTS[eventCase.eventId].nodes[eventCase.nodeIndex ?? 0], nodeIndex: eventCase.nodeIndex ?? 0 });
           invariant(observed.category === expected.category, `${name} category ${observed.category} !== ${expected.category}`);
           invariant(observed.audioOwner === "v100-event-runtime", `${name} event audio owner missing`);
           invariant(observed.portraitFrames.every(({ framing }) => framing === "waist-up-common"), `${name} portrait framing contract missing`);
@@ -280,7 +314,7 @@ for (const engine of engines) {
   }
 }
 
-const report = { generatedAt: new Date().toISOString(), build: await productionBuildIdentity(), baseUrl: String(baseUrl), cases: results };
+const report = { generatedAt: new Date().toISOString(), build: await productionBuildIdentity(), baseUrl: String(baseUrl), evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases: results };
 const reportPath = path.join(evidenceDir, "report.json");
 await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
 const failures = results.filter((result) => result.status !== "passed"

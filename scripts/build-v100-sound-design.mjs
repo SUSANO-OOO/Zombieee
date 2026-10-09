@@ -2,8 +2,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
-import { V100_FOLEY_RECIPES, V100_AMBIENCE_RECIPES } from '../app/v100SoundDesign.js';
-const root = 'assets/source/v100/audio', records = [];
+import { V100_FOLEY_RECIPES, V100_AMBIENCE_RECIPES, V100_EVENT_FOLEY_RECIPES } from '../app/v100SoundDesign.js';
+const root = 'assets/source/v100/audio';
+const storyOnly = process.argv.includes('--story-only');
+const records = storyOnly ? JSON.parse(await readFile(root+'/sound-design-provenance.json','utf8')).records.filter(row=>!row.file.includes('/story-')) : [];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const run = args => execFileSync(ffmpeg.path, ['-y', '-hide_banner', '-loglevel', 'error', ...args], { stdio: 'pipe' });
 async function encode(folder, name, args, sources, adaptation) {
@@ -15,13 +17,13 @@ async function encode(folder, name, args, sources, adaptation) {
     records.push({ file, bytes: bytes.length, sha256: hash(bytes), sources: await Promise.all(sources.map(async source => ({ file: source, sha256: hash(await readFile(root + '/' + source)) }))), adaptation });
   }
 }
-for (const [name, [source, duration, gain, cutoff]] of Object.entries(V100_FOLEY_RECIPES)) {
+for (const [name, [source, duration, gain, cutoff]] of Object.entries({ ...(storyOnly ? {} : V100_FOLEY_RECIPES), ...Object.fromEntries(Object.entries(V100_EVENT_FOLEY_RECIPES).map(([name, recipe]) => ['story-'+name, recipe])) })) {
   // Strip lead-in room noise from recorded weapons before taking one shot.
   const trim = source.endsWith('.wav') ? 'silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,' : '';
   const filters = `${trim}atrim=0:${duration},asetpts=PTS-STARTPTS,highpass=f=70,lowpass=f=${cutoff},volume=${gain},afade=t=out:st=${duration - .08}:d=0.08,alimiter=limit=0.85:level=false`;
   await encode('foley', name, ['-i', root + '/' + source, '-af', filters], [source], filters);
 }
-for (const [name, recipe] of Object.entries(V100_AMBIENCE_RECIPES)) {
+for (const [name, recipe] of Object.entries(storyOnly ? {} : V100_AMBIENCE_RECIPES)) {
   const inputs = ['-f', 'lavfi', '-i', 'anoisesrc=color=brown:sample_rate=44100:amplitude=0.22:duration=24:seed=113'];
   for (const [file] of recipe.foley) inputs.push('-i', root + '/' + file);
   const filters = [`[0:a]highpass=f=70,lowpass=f=${recipe.lowpass},volume=${recipe.gain}[bed]`];

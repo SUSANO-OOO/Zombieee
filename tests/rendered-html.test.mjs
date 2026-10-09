@@ -1793,7 +1793,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /"airstrike-impact"[\s\S]*priority: 100[\s\S]*duck:/);
   assert.match(game, /"crawler-barrage"[\s\S]*priority: 95[\s\S]*duck:/);
   assert.match(game, /"takuya-slam"[\s\S]*priority: 95[\s\S]*duck:/);
-  assert.match(game, /const fallback = \(\) => productionMixer\.playTestTone\(/);
+  assert.match(game, /const fallback = \(\) => externalSessionActive \? null : productionMixer\.playTestTone\(/);
   assert.match(game, /maxInstances: cue\.category === "major" \? 2 : 5/);
   assert.match(game, /duck: cue\.duck \?/);
   assert.match(game, /onLoadFailure: guardedFallback/);

@@ -18,6 +18,8 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
   let desired = null;
   let activeScene = null;
   let disposed = false;
+  let cueAttemptKey = null;
+  const cueInstance = "v100-event-arrival-cue";
   const publish = (state) => {
     try { onState?.(state, snapshot()); } catch { /* QA/UI observers are optional. */ }
   };
@@ -45,11 +47,42 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     ? Promise.resolve(true)
     : mixer.unlock({ reason });
 
+  async function playDesiredCue() {
+    const request = desired;
+    const settings = mixer.getSettings();
+    if (disposed || !request?.presentation.cueId || request.key === cueAttemptKey
+      || windowTarget?.document?.visibilityState === "hidden" || !mixer.unlocked
+      || mixer.getAudioStatus().state !== "running" || settings.muted
+      || !settings.sfxEnabled || settings.masterVolume <= 0 || settings.sfxVolume <= 0) return null;
+    // Mark before the asynchronous decode so a gesture and the scene effect
+    // cannot emit the same arrival twice. Every departure cancels pending play.
+    cueAttemptKey = request.key;
+    const presentation = request.presentation;
+    record("cue-requested", presentation, {cueId:presentation.cueId});
+    const handle = await mixer.play(presentation.cueId, {
+      dedupeKey:`v100-event:${request.key}:${presentation.cueId}`, instanceKey:cueInstance,
+    });
+    if (disposed || desired?.key !== request.key || windowTarget?.document?.visibilityState === "hidden") {
+      handle?.stop(40); return null;
+    }
+    if(handle) record("cue-started",presentation,{cueId:presentation.cueId});
+    return handle;
+  }
+  const cancelCue = () => {
+    mixer.stopInstance(cueInstance,{fadeMs:40});
+    cueAttemptKey = desired?.key ?? null;
+  };
+  const onVisibility = () => { if(windowTarget?.document?.visibilityState === "hidden") cancelCue(); };
+  windowTarget?.addEventListener?.("pagehide",cancelCue);
+  windowTarget?.document?.addEventListener?.("visibilitychange",onVisibility);
+
   async function present(presentation, reason = "node") {
     if (disposed || !presentation?.sceneId) return null;
     const key = `${presentation.eventId}:${presentation.nodeIndex}:${presentation.sceneId}`;
     if (desired?.key === key) return mixer.getSceneState();
     const previous = desired;
+    mixer.stopInstance(cueInstance, {fadeMs:40});
+    cueAttemptKey = null;
     desired = { key, presentation };
     if (previous && previous.presentation.sceneId !== presentation.sceneId) {
       record("transitioned", presentation, { fromSceneId: previous.presentation.sceneId, reason });
@@ -64,6 +97,7 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     } else {
       record("queued", presentation, { audioState: mixer.getAudioStatus().state });
     }
+    await playDesiredCue();
     return state;
   }
 
@@ -74,17 +108,8 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
       record("unlock-failed", presentation, { audioState: mixer.getAudioStatus().state });
       return false;
     }
-    // React owns scene presentation through the event effect. The click path
-    // only unlocks the already-requested scene and emits the node cue; calling
-    // present here could re-apply a stale node after the state transition.
-    if (presentation?.cueId) {
-      record("cue-requested", presentation, { cueId: presentation.cueId });
-      const handle = await mixer.play(presentation.cueId, {
-        dedupeKey: `v100-event:${presentation.eventId}:${presentation.nodeIndex}:${presentation.cueId}`,
-        instanceKey: `v100-event-cue:${presentation.eventId}`,
-      });
-      if (handle) record("cue-started", presentation, { cueId: presentation.cueId });
-    }
+    // Use the current desired arrival, never the departing button's stale node.
+    await playDesiredCue();
     return true;
   }
 
@@ -93,6 +118,7 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     const previous = activeScene ?? desired;
     if (previous) record("stopped", previous.presentation, { reason });
     activeScene = null;
+    cancelCue();
     desired = null;
     mixer.setDialogueDucking(false, { fadeMs: 120 });
     await mixer.stopScene({ fadeMs: 120 });
@@ -145,6 +171,8 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
       disposed = true;
       unsubscribe();
       detachUnlock();
+      windowTarget?.removeEventListener?.("pagehide",cancelCue);
+      windowTarget?.document?.removeEventListener?.("visibilitychange",onVisibility);
       if (windowTarget?.__V100_EVENT_AUDIO_QA__ === qaBridge) delete windowTarget.__V100_EVENT_AUDIO_QA__;
       await mixer.dispose();
     },

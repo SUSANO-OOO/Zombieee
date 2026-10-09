@@ -20,6 +20,7 @@ import { diffAssetManifests, validateAssetManifest } from "../app/pwaAssetManife
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
 import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
+import { V100_TITLE_VOICE } from "../app/v100TitleIntro.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
@@ -469,6 +470,7 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const address = server.address();
 const baseUrl = `http://127.0.0.1:${address.port}${scopePath}`;
 
+const nativeTitleBindings = [];
 function attachDiagnostics(page) {
   page.on("request", (request) => {
     if (currentLabel !== "candidate") return;
@@ -477,13 +479,19 @@ function attachDiagnostics(page) {
     if (url.origin !== new URL(baseUrl).origin
       || !(/\/(?:art|audio|icons|assets\/v100|fonts|pwa-bundles|pwa-optimized)\//.test(url.pathname)
         || /\/(?:explosive-drum|medical-supply-station|tactical-drop-pod)-v1/.test(url.pathname))) return;
-    candidateBrowserTransportRequests.push({
+    const entry = {
       pathname: url.pathname,
       diagnosticPhase,
       at: Date.now(),
       resourceType: request.resourceType(),
       isNavigationRequest: request.isNavigationRequest(),
-    });
+      nativeTitlePreload: false,
+    };
+    candidateBrowserTransportRequests.push(entry);
+    if (url.pathname === new URL(V100_TITLE_VOICE.src.slice(1), baseUrl).pathname
+      && ["other", "media"].includes(entry.resourceType) && !entry.isNavigationRequest) {
+      nativeTitleBindings.push(page.locator('audio[data-v100-title-voice="true"]').evaluateAll((elements, expected) => elements.some(element => element instanceof HTMLAudioElement && element.preload === "auto" && element.src === expected), request.url()).then(bound => { entry.nativeTitlePreload = bound; }).catch(() => {}));
+    }
   });
   page.on("console", (message) => {
     if (message.type() === "error") {
@@ -1135,6 +1143,11 @@ try {
   const candidateWoff2TransportPaths = new Set(candidateManifest.assets
     .filter((asset) => /\.woff2$/i.test(asset.path))
     .map(transportPathFor));
+  const titleVoiceAsset = candidateManifest.assets.find(asset => asset.path === V100_TITLE_VOICE.src);
+  const titleVoiceBound = titleVoiceAsset?.category === "audio" && titleVoiceAsset?.criticality === "optional"
+    && titleVoiceAsset?.bytes === V100_TITLE_VOICE.bytes && titleVoiceAsset?.hash === `sha256-${V100_TITLE_VOICE.sha256}`;
+  const titleVoiceTransportPath = titleVoiceBound ? transportPathFor(titleVoiceAsset) : null;
+  await Promise.all(nativeTitleBindings);
   const candidateEntryPhaseNames = new Set([
     "candidate-unqualified-incident-entry",
     "candidate-unqualified-recovery-entry",
@@ -1151,8 +1164,12 @@ try {
     .filter((request) => candidateEntryPhaseNames.has(request.diagnosticPhase)
       && candidatePendingReleaseDeltaTransportPaths.has(request.pathname)
       && request.resourceType === "font");
+  const candidateEntryBrowserTitleRequests = candidateBrowserTransportRequests.filter(request =>
+    titleVoiceBound && request.pathname === titleVoiceTransportPath
+    && candidateEntryPhaseNames.has(request.diagnosticPhase) && request.nativeTitlePreload
+    && ["other", "media"].includes(request.resourceType) && !request.isNavigationRequest);
   const candidateEntryServerCounts = countRequestsByPathAndPhase(candidateEntryChangedRequests);
-  const candidateEntryBrowserCounts = countRequestsByPathAndPhase(candidateEntryBrowserFontRequests);
+  const candidateEntryBrowserCounts = countRequestsByPathAndPhase([...candidateEntryBrowserFontRequests, ...candidateEntryBrowserTitleRequests]);
   const candidateEntryCountKeys = new Set([
     ...candidateEntryServerCounts.keys(),
     ...candidateEntryBrowserCounts.keys(),
@@ -1163,7 +1180,7 @@ try {
       pathname,
       diagnosticPhase: phase,
       serverCount: candidateEntryServerCounts.get(key) ?? 0,
-      browserFontCount: candidateEntryBrowserCounts.get(key) ?? 0,
+      browserPreloadCount: candidateEntryBrowserCounts.get(key) ?? 0,
     };
   });
   const allCandidateChangedRequestCount = candidateTransportRequests
@@ -1182,16 +1199,19 @@ try {
     candidateEntryChangedRequestBreakdown,
     allCandidateChangedRequestCount,
   });
-  record("candidate entry transports of changed assets are manifest WOFF2 font preloads, not extra update downloads", (
-    candidateEntryChangedRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname)
+  record("candidate entry transports are manifest font or exact native title voice preloads, not extra update downloads", (
+    candidateEntryChangedRequests.every((request) => (candidateWoff2TransportPaths.has(request.pathname)
+      || (request.pathname === titleVoiceTransportPath && request.method === "GET" && request.secFetchMode === "no-cors"))
       && candidateEntryPhaseNames.has(request.diagnosticPhase))
     && candidateEntryBrowserFontRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname))
     && candidateEntryChangedRequestBreakdown.every((entry) => entry.serverCount <= 1
-      && entry.serverCount === entry.browserFontCount)
+      && entry.serverCount === entry.browserPreloadCount)
   ), {
     candidateEntryChangedRequests,
     candidateEntryChangedRequestBreakdown,
     candidateEntryBrowserFontRequests,
+    candidateEntryBrowserTitleRequests,
+    titleVoiceBound,
     candidateWoff2TransportPaths: [...candidateWoff2TransportPaths],
   });
   const completeChangedRequests = completeUpdateTransportRequests

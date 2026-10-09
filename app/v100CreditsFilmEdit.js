@@ -53,12 +53,14 @@ const selected = [
   ["zakimiya-bottles", 0], ["zakimiya-family-morning", 3.2],
   ["vehicle-patch", 0], ["vehicle-mayo-splash", 4.2],
   ["defense-watch", 0], ["defense-bench", 2.5], ["defense-paisen-kuma-kiss", 7],
-  ["kumaya-cooking", 0], ["kumaya-table", 2.5],
+  ["kumaya-tky-receipt", 0], ["kumaya-main-table", 2.5],
 ];
 const newShots = {
-  "hospital-serum": { id: "hospital-courtyard", sceneIndex: 3, sceneLabel: "大学病院", actors: ["unit-hachi","unit-nao","unit-mayo-chan"], src: "/art/v100/credits/hospital-courtyard-r3.webp", description: "翌朝の病院。仲間と職員が窓や花壇を直す中、マヨちゃんが包帯を引っ張り、ハチとナオに笑いが戻る。", durationWeight: 1.2, camera: camera(1.11, 1.02, 39, 48) },
+  "hospital-serum": { id: "hospital-courtyard", sceneIndex: 3, sceneLabel: "大学病院", actors: ["unit-paisen","unit-kumaverson","unit-babayaga","unit-mrs-chiha","unit-zakimiya","unit-mayo-chan"], src: "/art/v100/story-r5/cuts/ending-medical-progress.webp", description: "病院で進行の止まった腕を確かめる。仲間たちは医師の説明を聞き、次の診察を待つ。", durationWeight: 1.2, camera: camera(1.02, 1.05, 40, 43) },
   "armory-evidence": { id: "segawa-record", sceneIndex: 6, sceneLabel: "RED PANTHER装備庫", actors: ["segawa"], src: "/art/v100/credits/segawa-record-r2.webp", description: "回収された研究記録の中で、セガワが暴走したプリンターの紙に埋もれ、呆れた顔でコーヒーを持っている。", durationWeight: 1.15, transition: "cut", camera: camera(1.03, 1.10, 38, 43) },
-  "zakimiya-bottles": { id: "zakimiya-family-morning", sceneIndex: 7, sceneLabel: "ザキミヤ", actors: ["unit-zakimiya"], src: "/art/v100/credits/zakimiya-family-morning-r2.webp", description: "翌朝、ザキミヤの妻が夫と娘を抱き寄せる。疲れた顔に、涙と笑みが戻る。", durationWeight: 1.3, camera: camera(1.02, 1.10, 35, 41) },
+  "zakimiya-bottles": { id: "zakimiya-family-morning", sceneIndex: 7, sceneLabel: "ザキミヤ", actors: ["unit-zakimiya"], src: "/art/v100/story-r5/cuts/ending-zakimiya-family.webp", description: "病院で再会したザキミヤの家族。妻が眠る息子を抱き、ザキミヤがそっと顔を寄せる。", durationWeight: 1.3, camera: camera(1.02, 1.05, 35, 41) },
+  "kumaya-cooking": { id:"kumaya-tky-receipt",sceneIndex:10,sceneLabel:"くまや",actors:["unit-tky","unit-paisen","unit-kumaverson"],src:"/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",description:"パイセンの伝票をTKYが返し、店主が皿洗いを言いつける。",camera:camera(1.02,1.05,43,44) },
+  "kumaya-table": { id:"kumaya-main-table",sceneIndex:10,sceneLabel:"くまや",actors:["unit-paisen","unit-kumaverson","unit-babayaga","unit-mrs-chiha","unit-tky","unit-zakimiya","unit-mayo-chan"],src:"/art/v100/story-r5/cuts/epilogue-main-table.webp",description:"揚げたての唐揚げが届く。TKYとザキミヤにも笑いが戻り、くまやに仲間の食卓が揃う。",camera:camera(1.02,1.04,44,42) },
 };
 const hardCuts = new Set(["street-paisen-broom","street-paisen-flirt","ward-king-fan","station-cart-parade","floodgate-king-riceball","defense-bench","kumaya-omelet-chaos","kumaya-mayo-selfie"]);
 export function v100EditedCreditsFilm(shots) {

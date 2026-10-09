@@ -1,6 +1,7 @@
 {
   "creator": "Kenney",
   "pack": "Interface Sounds 1.0",
+  "status": "Superseded output history. Original source sounds retained; current five UI roles are recorded in ../interface-foley-provenance.json",
   "sourceUrl": "https://kenney.nl/assets/interface-sounds",
   "downloadUrl": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
   "license": "CC0-1.0",

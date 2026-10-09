@@ -80,6 +80,8 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const producerFeedbackPaths = new Set(V100_PRODUCER_FEEDBACK_ART_ADDITIONS.map(asset=>asset.path));
   const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
   const { V100_POST_CREDITS_ASSET_ADDITIONS } = await import("../scripts/v100-post-credits-asset-contract.mjs");
+  const { V100_R5_ASSET_ADDITIONS } = await import("../scripts/v100-r5-asset-contract.mjs");
+  const r5AudioPaths = new Set(V100_R5_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/audio/")).map(asset=>asset.path));
   const finaleAudioAssets = V100_POST_CREDITS_ASSET_ADDITIONS.filter(asset => asset.path.startsWith("/audio/"));
   assert.deepEqual(finaleAudioAssets.map(asset=>asset.path).sort(), ["/audio/v100/epilogue/king-laugh-r1.mp3", "/audio/v100/epilogue/meinohama-waves-r1.mp3"], "exactly the source-bound CC0 waves and laugh are additional ending audio");
   const finaleAudioPaths = new Set(finaleAudioAssets.map(asset => asset.path));
@@ -150,7 +152,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => !producerFeedbackPaths.has(path))
     .filter(({ path }) => !designAssetPaths.has(path) && path !== V100_TITLE_AUDIO_ADDITION.path)
     .filter(({ path }) => path !== V100_ENDING_MUSIC_ADDITION.path)
-    .filter(({ path }) => !finaleAudioPaths.has(path))
+    .filter(({ path }) => !finaleAudioPaths.has(path) && !r5AudioPaths.has(path))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))
     .filter(({ path }) => path !== V100_WEBKIT_CARD_REPLACEMENT.path)

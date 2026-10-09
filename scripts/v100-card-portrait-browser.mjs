@@ -7,7 +7,7 @@ import sharp from "sharp";
 import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
-import { FORMATION_CARD_ART } from "../app/spriteManifest.js";
+import { CHARACTER_PORTRAIT_ART } from "../app/spriteManifest.js";
 import { nativeBattleTap } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
@@ -77,7 +77,7 @@ async function probe(page, row, state, targets) {
   assert.ok(Array.isArray(decodedPaths), "production decode boundary must be observable");
   assert.equal(decoded.length, 4);
   for (const item of decoded) {
-    assert.equal(item.src, FORMATION_CARD_ART[item.kind]);
+    assert.equal(item.src, new URL(CHARACTER_PORTRAIT_ART[item.kind].slice(1), baseUrl).pathname, "battle cards retain the approved original character portrait");
     assert.equal(item.currentSrc, new URL(item.src, baseUrl).href);
     assert.ok(decodedPaths.includes(item.src), `card omitted from critical decode jobs: ${item.kind}`);
     assert.ok(item.complete && item.naturalWidth > 0 && item.naturalHeight > 0 && item.width > 20 && item.height > 30);

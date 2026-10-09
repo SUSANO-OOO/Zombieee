@@ -8,6 +8,9 @@ import { V100StaffRoll } from "./V100EndingRoll";
 import { V100PostCreditsFilm } from "./V100PostCreditsFilm";
 import { V100PlayerMenu } from "./V100PlayerMenu";
 import { V100TitleScreen } from "./V100TitleScreen";
+import { V100EventBackdrop } from "./V100EventBackdrop";
+import { v100EventPortraitPath, v100StoryExpressionFor } from "./v100StoryDirection.js";
+import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
 
@@ -563,6 +566,9 @@ export function V100Campaign() {
     ? v100EventPresentationFor({ eventId: flow.eventId, phase: flow.phase, node: currentNode, nodeIndex: storyPage.nodeIndex })
     : null, [currentNode, flow.eventId, flow.phase, storyPage.nodeIndex]);
   const eventRuntime = v100StageRuntimeFor(eventPresentation?.stageId ?? selectedStageId);
+  // The durable cursor after the last R5 epilogue line owns the film. It is
+  // still unread until the film completes, so a close/relaunch resumes it.
+  const postCreditsFilmActive = flow.phase === "epilogue" && Boolean(event) && storyIndex >= (event?.nodes.length ?? Infinity);
   const replayEvent = useMemo(() => replayEventId ? v100StoryEventView(replayEventId, save.playerName) : null, [replayEventId, save.playerName]);
   const replayNode = (replayEvent?.nodes?.[replayNodeIndex] ?? null) as StoryNode | null;
   const replayPresentation = useMemo(() => replayEventId ? v100EventPresentationFor({
@@ -576,7 +582,7 @@ export function V100Campaign() {
     ready: hydrated && !loadFailure, battleActive: battleAudioActive, modeResult: modeScoreResult,
     phase: flow.phase, won: flow.pendingResult?.won ?? null,
   }), [hydrated, loadFailure, battleAudioActive, modeScoreResult, flow.phase, flow.pendingResult?.won]);
-  const audibleEventPresentation = entryOpen || battleAudioActive || flow.phase === "credits" || flow.phase === "epilogue" || replayEventId === "v100:event:credits" ? null
+  const audibleEventPresentation = entryOpen || battleAudioActive || flow.phase === "credits" || postCreditsFilmActive || replayEventId === "v100:event:credits" ? null
     : replayPresentation ?? (isEventPhase(flow.phase) ? eventPresentation : surfacePresentation);
   useEffect(() => {
     const owner = eventAudioOwnerRef.current;
@@ -713,11 +719,14 @@ export function V100Campaign() {
 
   const markAndAdvanceEvent = useCallback(async (skipped = false) => {
     if (!flow.eventId || !event || saveBusy) return false;
-    if (flow.phase !== "credits" && flow.phase !== "epilogue") void eventAudioOwnerRef.current?.activate(eventPresentation);
+    if (flow.phase !== "credits" && !postCreditsFilmActive) void eventAudioOwnerRef.current?.activate(eventPresentation);
     let workingSave = save;
     const lastNode = storyPage.endIndex >= event.nodes.length - 1;
     if (!lastNode && !skipped) {
       return Boolean(await updateFlow(flow, { baseSave: workingSave, nodeIndex: storyPage.endIndex + 1 }));
+    }
+    if (flow.phase === "epilogue" && !postCreditsFilmActive) {
+      return Boolean(await updateFlow(flow, { baseSave: workingSave, nodeIndex: event.nodes.length }));
     }
     const marked = markV100EventRead(workingSave, flow.eventId).save;
     workingSave = marked;
@@ -733,7 +742,7 @@ export function V100Campaign() {
       return false;
     }
     return Boolean(await updateFlow(transition.state, { baseSave: workingSave }));
-  }, [event, eventPresentation, flow, save, saveBusy, storyPage.endIndex, updateFlow]);
+  }, [event, eventPresentation, flow, postCreditsFilmActive, save, saveBusy, storyPage.endIndex, updateFlow]);
 
   useEffect(() => {
     if (entryOpen || !hydrated || loadFailure || saveBusy || logOpen || menuOpen || creditsOpen || surface !== "campaign" || !shouldAutoSkipV100StoryEvent(flow, { enabled: save.settings.autoSkipReadStory, replay: Boolean(replayEventId) })) return;
@@ -859,7 +868,7 @@ export function V100Campaign() {
   };
   const onInterfaceClick = (event: FormEvent<HTMLElement>) => {
     blockPendingInput(event);
-    if (event.defaultPrevented || flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle") return;
+    if (event.defaultPrevented || (!entryOpen && (flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle"))) return;
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button");
     if (!button || button.disabled || button.getAttribute("aria-disabled") === "true") return;
     const role = button.dataset.uiSound ?? (button.closest(".v100-event-actions") ? "advance" : "navigate");
@@ -881,7 +890,7 @@ export function V100Campaign() {
     </section>}
   </main>;
 
-  if (entryOpen) return <main id="v100-campaign" className="v100-shell v100-entry-shell" data-v100-phase="title" aria-busy={saveBusy}>
+  if (entryOpen) return <main id="v100-campaign" className="v100-shell v100-entry-shell" data-v100-phase="title" aria-busy={saveBusy} onClickCapture={onInterfaceClick}>
     {titleRollOpen ? <><V100StaffRoll nodes={v100StoryEventView("v100:event:credits", save.playerName)?.nodes ?? []} playerName={save.playerName} settings={save.settings} onComplete={() => { setTitleRollOpen(false); return true; }} /><button type="button" className="v100-title-credits-close" onClick={() => setTitleRollOpen(false)}>タイトルへ</button></> : <V100TitleScreen
       canContinue={save.campaignStarted} canOpenModes={save.campaignStarted && flow.phase === "map" && save.outbreak.view === "hub" && save.survival.view === "hub"}
       busy={saveBusy} reducedMotion={save.settings.reducedMotion} settings={save.settings}
@@ -947,11 +956,11 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "credits" && event && <V100StaffRoll key={saveAdoptionEpoch} nodes={event.nodes} playerName={save.playerName} initialNodeIndex={storyIndex} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onScene={index => { void updateFlow(flow, { nodeIndex: index }); }} onComplete={() => markAndAdvanceEvent(true)} />}
-      {flow.phase === "epilogue" && event && <V100PostCreditsFilm key={saveAdoptionEpoch} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onComplete={() => markAndAdvanceEvent(true)} />}
+      {postCreditsFilmActive && event && <V100PostCreditsFilm key={saveAdoptionEpoch} settings={save.settings} busy={saveBusy} blocked={menuOpen || logOpen || Boolean(replayEventId) || Boolean(giftPopup) || surface === "data"} onComplete={() => markAndAdvanceEvent(true)} />}
 
-      {isEventPhase(flow.phase) && flow.phase !== "credits" && flow.phase !== "epilogue" && event && (
+      {isEventPhase(flow.phase) && flow.phase !== "credits" && !postCreditsFilmActive && event && (
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定した作戦報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
-          <div className="v100-event-backdrop" data-v100-scene={eventPresentation?.sceneLabel ?? undefined} data-v100-location={currentNode?.sceneTag ?? currentNode?.sceneLabel ?? undefined} data-v100-title-card={currentNode?.kind === "title" ? "true" : undefined} style={{ backgroundImage: currentNode?.kind === "title" ? "none" : `url(${eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")})` }} />
+          <V100EventBackdrop src={eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")} scene={eventPresentation?.sceneLabel} location={currentNode?.sceneTag ?? currentNode?.sceneLabel} title={currentNode?.kind === "title"} cinematic={eventPresentation?.cinematic} />
           <article className="v100-event-panel">
             <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" && !flow.firstClear ? `${V100_STAGE_BY_ID[flow.stageId ?? ""]?.displayName ?? "作戦"} / 作戦報酬` : eventDisplayLabel(flow.eventId)}</span></div>
             {flow.phase === "first-clear-post" ? <><RewardSummaryView result={save.lastResult} /><div className="v100-event-actions"><button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>続ける</button></div></> : currentNode ? <StoryNodeView node={currentNode} leadingActions={storyPage.leadingActions} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyPage.nodeIndex} presentation={eventPresentation} actions={<div className="v100-event-actions">
@@ -1067,26 +1076,29 @@ export function V100Campaign() {
 }
 
 function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, presentation = null, actions = null, leadingActions = [] }: { node: StoryNode; eventId?: string | null; phase?: string; nodeIndex?: number; presentation?: ReturnType<typeof v100EventPresentationFor> | null; actions?: ReactNode; leadingActions?: StoryNode[] }) {
-  const actionSubjects = v100ActionPortraitSubjects(eventId, node);
+  const actionSubjects = v100ActionPortraitSubjects(eventId, node, nodeIndex);
   const displayOwner = node.portraitOwner ?? actionSubjects[0] ?? null;
-  const portrait = portraitFor(displayOwner);
   const resolvedPresentation = presentation ?? v100EventPresentationFor({ eventId, phase, node, nodeIndex });
+  const expression = v100StoryExpressionFor(eventId, nodeIndex, node, displayOwner);
+  const portrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(displayOwner, expression) ?? portraitFor(displayOwner);
   const slots = v100DialogueSlots(eventId ? v100StoryEventFor(eventId)?.nodes ?? [node] : [node], nodeIndex);
   const portraitSide = portrait ? slots.right?.portraitOwner === displayOwner ? "right" : "left" : "none";
   // An offscreen/radio voice has no on-screen speaker. Do not leave the
   // previous interlocutor's portrait beside that voice as a false speaker.
   const secondaryNode = node.kind === "dialogue" && portrait ? slots[portraitSide === "right" ? "left" : "right"] : null;
   const secondaryOwner = secondaryNode?.portraitOwner ?? actionSubjects[1] ?? null;
-  const secondaryPortrait = portraitFor(secondaryOwner);
+  const secondaryIndex = secondaryNode && eventId ? v100StoryEventFor(eventId)?.nodes.indexOf(secondaryNode) ?? nodeIndex : nodeIndex;
+  const secondaryExpression = v100StoryExpressionFor(eventId, secondaryIndex, secondaryNode ?? node, secondaryOwner);
+  const secondaryPortrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(secondaryOwner, secondaryExpression) ?? portraitFor(secondaryOwner);
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
-  const framingStyle = (owner: string | null | undefined) => { const framing = v100PortraitFraming(owner); return { "--portrait-scale": framing.scale, "--portrait-shift": framing.shift, "--portrait-headroom": framing.headroom } as CSSProperties; };
+  const framingStyle = (owner: string | null | undefined) => { const framing = v100EventPortraitPath(owner) ? {scale:"100%",shift:"0%",headroom:"0px"} : v100PortraitFraming(owner); return { "--portrait-scale": framing.scale, "--portrait-shift": framing.shift, "--portrait-headroom": framing.headroom } as CSSProperties; };
   if (node.kind === "title") return <div className="v100-story-node v100-node-title" data-v100-node-kind="title"><h2>{playerFacingText}</h2>{actions}</div>;
   if (node.kind === "montage") return <div className="v100-story-node v100-credits-shot" data-v100-node-kind="montage" data-v100-credit-scene={node.sceneLabel}><span className="v100-kicker">西新の、その後</span><h2>{node.sceneLabel}</h2><p>{playerFacingText}</p>{actions}</div>;
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
-    {secondaryPortrait && <div className="v100-portrait-frame v100-portrait-frame-secondary" style={framingStyle(secondaryOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={secondaryOwner ?? undefined} data-portrait-side={secondaryPortraitSide}><img className="v100-portrait v100-portrait-secondary" src={secondaryPortrait} alt="" aria-hidden="true" /></div>}
-    {portrait && <div className="v100-portrait-frame" style={framingStyle(displayOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={displayOwner ?? undefined} data-portrait-side={portraitSide}><img className="v100-portrait" src={portrait} alt={`${node.speaker ?? UNIT_BY_ID.get(displayOwner ?? "")?.displayName ?? "登場人物"}の立ち絵`} /></div>}
+    {secondaryPortrait && <div className="v100-portrait-frame v100-portrait-frame-secondary" style={framingStyle(secondaryOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={secondaryOwner ?? undefined} data-portrait-side={secondaryPortraitSide} data-v100-expression={secondaryExpression}><img key={secondaryPortrait} className="v100-portrait v100-portrait-secondary" src={secondaryPortrait} alt="" aria-hidden="true" decoding="async" /></div>}
+    {portrait && <div className="v100-portrait-frame" style={framingStyle(displayOwner)} data-portrait-framing="waist-up-common" data-portrait-owner={displayOwner ?? undefined} data-portrait-side={portraitSide} data-v100-expression={expression}><img key={portrait} className="v100-portrait" src={portrait} alt={`${node.speaker ?? UNIT_BY_ID.get(displayOwner ?? "")?.displayName ?? "登場人物"}の立ち絵`} decoding="async" /></div>}
     <div className="v100-node-copy">{nodeLabel && <span className="v100-node-kind">{nodeLabel}</span>}{leadingActions.length ? <div className="v100-story-prose">{leadingActions.map((action, index) => <p className="v100-story-action-beat" key={index}>{publicDisplayText(action.text ?? "")}</p>)}<p>{playerFacingText}</p></div> : <p>{playerFacingText}</p>}{actions}</div>
   </div>;
 }
@@ -1224,6 +1236,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
   const [activeSlot, setActiveSlot] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
+  const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const activeUnitId = save.formationSlots[activeSlot] ?? null;
@@ -1270,7 +1283,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
     </div>
     <div className="v100-sortie-status">
       <button type="button" className="v100-sortie-selected" onClick={() => onPersonnel(activeUnitId)}><strong>{activeUnit?.displayName ?? "枠 " + (activeSlot + 1) + " は空き"}{activePresentation && <span> Lv.{activePresentation.level} / {activePresentation.description}</span>}</strong><small>{activePresentation ? "指揮 " + activePresentation.commandCost + " / 再配備 " + formatV100Number(activePresentation.redeploySeconds) + "秒 / 育成を見る" : "空き枠を押して隊員を編成"}</small></button>
-      <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>装甲車両 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
+      <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>{basePresentation.label} 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
     </div>
     <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "作戦一覧へ" : "作戦地図へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成で作戦を選ぶ" : "戦闘へ"} disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>{modePreparation ? "この編成で作戦を選ぶ" : "出撃"}</button></div>
   </section>;
@@ -1417,6 +1430,7 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
   const report = normalizeV100BattleReport(result?.battleReport);
   const nextStar = runStars === 1 ? 2 : runStars === 2 ? 3 : null;
   const maxHp = Math.max(0, Number(result?.vehicleMaxHp) || 0);
+  const basePresentation = v100BasePresentationFor(stageNumber);
   const vehicleHp = Math.max(0, Number(result?.vehicleHp) || 0);
   const hpPercent = maxHp > 0 ? Math.max(0, Math.min(100, vehicleHp / maxHp * 100)) : 0;
   const starTargets = v100StarTargetsForVehicle(maxHp);
@@ -1425,15 +1439,15 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
   const bonusStar3 = runStars >= 3 && previousBestStars < 3 ? v100StageReward(stageNumber, "star:3") : 0;
   const boss = report?.bossProgress;
   const outcome = won ? "作戦目標を達成。部隊を回収し、作戦後の報告へ進みます。"
-    : Number(result?.vehicleHp) <= 0 ? "装甲車両の耐久が尽き、作戦を中断しました。"
+    : Number(result?.vehicleHp) <= 0 ? `${basePresentation.label}の耐久が尽き、作戦を中断しました。`
       : "作戦目標を達成できず、作戦を中断しました。";
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="作戦結果">
     <div className="v100-result-scroll" role="region" aria-label="作戦結果の詳細" tabIndex={0}>
       <span className="v100-kicker">作戦結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
       <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
-      <dl className="v100-result-records"><div><dt>車両耐久</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
+      <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
       <div className="v100-result-feedback">
-        <div className="v100-vehicle-hp-meter" role="meter" aria-label="車両耐久" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
+        <div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
         </div>
         <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div>

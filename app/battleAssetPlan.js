@@ -14,6 +14,7 @@ import { V100_COMBAT_VFX_ART } from "./v100CombatVfx.js";
 import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
 import { V100_KUMAVERSON_GUARD_ART } from "./v100KumaversonPresentation.js";
 import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
+import { v100BasePresentationFor } from "./v100BasePresentation.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -48,6 +49,7 @@ export function requiredBattleAssetPlan({
   enemyKinds = [],
   includeAllSprites = false,
   includeV100Sprites = true,
+  basePresentationStageNumber = null,
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -100,7 +102,8 @@ export function requiredBattleAssetPlan({
       runtimeUsage: entry.runtimeUsage ?? "battle-overlay",
     }));
   const persistent = [
-    ...Object.entries(BATTLE_CRAWLER_ASSET_PATHS)
+    ...Object.entries(includeV100Sprites && v100BasePresentationFor(basePresentationStageNumber).onFoot
+      ? { retreatDoor: v100BasePresentationFor(basePresentationStageNumber).assetPath } : BATTLE_CRAWLER_ASSET_PATHS)
       .map(([key, path]) => frozenEntry({ key, path, category: "crawler" })),
     ...Object.entries(BATTLE_SUPPORT_ASSET_PATHS)
       .map(([key, path]) => frozenEntry({ key, path, category: "support" })),

@@ -1,0 +1,109 @@
+{
+  "creator": "Kenney",
+  "packs": [
+    "RPG Audio",
+    "Impact Sounds"
+  ],
+  "sourceUrls": [
+    "https://kenney.nl/assets/rpg-audio",
+    "https://kenney.nl/assets/impact-sounds"
+  ],
+  "license": "CC0-1.0",
+  "licenseFiles": [
+    "kenney-rpg/License.txt",
+    "kenney-impact/License.txt"
+  ],
+  "adaptation": "Recorded paper, wood, cloth and latch sounds, shortened, filtered, lowered gain and faded. No synthesized acknowledgement tones.",
+  "files": [
+    {
+      "role": "advance",
+      "path": "public/audio/v100/ui/v100-ui-advance.ogg",
+      "bytes": 5440,
+      "sha256": "abcb6fa9acaaf74243e655bfd0b89a2aab8e39493d2d6072ad8bd8c5c7b56df0",
+      "source": "kenney-rpg/bookFlip2.ogg",
+      "sourceSha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.18,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.45,afade=t=in:d=0.002,afade=t=out:st=0.145:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "advance",
+      "path": "public/audio/v100/ui/v100-ui-advance.mp3",
+      "bytes": 3044,
+      "sha256": "f42dca1d2e0d506e5db5413bf72f1fb2cb0825d7e1408f78511bbf04e57623ef",
+      "source": "kenney-rpg/bookFlip2.ogg",
+      "sourceSha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.18,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.45,afade=t=in:d=0.002,afade=t=out:st=0.145:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "navigate",
+      "path": "public/audio/v100/ui/v100-ui-navigate.ogg",
+      "bytes": 4316,
+      "sha256": "0b4912dcff4625bba0459aff5aceb2f53285af797f122779ced2d2e940c0f87f",
+      "source": "kenney-impact/impactWood_light_000.ogg",
+      "sourceSha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.12,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.45,afade=t=in:d=0.002,afade=t=out:st=0.085:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "navigate",
+      "path": "public/audio/v100/ui/v100-ui-navigate.mp3",
+      "bytes": 1530,
+      "sha256": "6baf05ebb6281577e5d60a554c450cb7cb48de0d315e57de3b16e9624ddeb697",
+      "source": "kenney-impact/impactWood_light_000.ogg",
+      "sourceSha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.12,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.45,afade=t=in:d=0.002,afade=t=out:st=0.085:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "cancel",
+      "path": "public/audio/v100/ui/v100-ui-cancel.ogg",
+      "bytes": 5216,
+      "sha256": "57861374ec9ffb6bed4dfbd04ed1b09a961f70a5279da1cdd919ff14c32a556c",
+      "source": "kenney-rpg/cloth3.ogg",
+      "sourceSha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.18,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.35,afade=t=in:d=0.002,afade=t=out:st=0.145:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "cancel",
+      "path": "public/audio/v100/ui/v100-ui-cancel.mp3",
+      "bytes": 2704,
+      "sha256": "6b03673df1c5fc971956cc2e012531fb7a91fbdb6883c146d1df44a68b61c17e",
+      "source": "kenney-rpg/cloth3.ogg",
+      "sourceSha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.18,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.35,afade=t=in:d=0.002,afade=t=out:st=0.145:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "confirm",
+      "path": "public/audio/v100/ui/v100-ui-confirm.ogg",
+      "bytes": 5311,
+      "sha256": "b56ad70f207c11e5fe611d20b51b0e9c6b00adedfeb1984278370bd669206bd6",
+      "source": "kenney-rpg/metalLatch.ogg",
+      "sourceSha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.17,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.4,afade=t=in:d=0.002,afade=t=out:st=0.135:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "confirm",
+      "path": "public/audio/v100/ui/v100-ui-confirm.mp3",
+      "bytes": 2939,
+      "sha256": "0257fcad63f0663dd20c9d81d9a76ed891be646120806bc0b2fdd614c882832a",
+      "source": "kenney-rpg/metalLatch.ogg",
+      "sourceSha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.17,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=6000,volume=0.4,afade=t=in:d=0.002,afade=t=out:st=0.135:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "reject",
+      "path": "public/audio/v100/ui/v100-ui-reject.ogg",
+      "bytes": 4142,
+      "sha256": "4dc2ff60e3dba1d729c5bd11ef0a635d6ddbd38847dacdd9f969dca6c2b93f4c",
+      "source": "kenney-impact/impactWood_heavy_000.ogg",
+      "sourceSha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.2,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=2400,volume=0.22,afade=t=in:d=0.002,afade=t=out:st=0.165:d=0.035,alimiter=limit=0.6:level=false"
+    },
+    {
+      "role": "reject",
+      "path": "public/audio/v100/ui/v100-ui-reject.mp3",
+      "bytes": 1685,
+      "sha256": "9d07a5dcd18e56bdd15d9248f87729cf9f07b4f7fbf146fba21d8e07a9246127",
+      "source": "kenney-impact/impactWood_heavy_000.ogg",
+      "sourceSha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "filters": "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.001,atrim=0:0.2,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=2400,volume=0.22,afade=t=in:d=0.002,afade=t=out:st=0.165:d=0.035,alimiter=limit=0.6:level=false"
+    }
+  ]
+}

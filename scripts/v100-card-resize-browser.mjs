@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import {chromium,webkit} from 'playwright';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
-import {FORMATION_CARD_ART} from '../app/spriteManifest.js';
+import {CHARACTER_PORTRAIT_ART} from '../app/spriteManifest.js';
 import {campaignUnitIdToCombatKind} from '../app/campaign.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
@@ -103,7 +103,7 @@ for(const browserName of matrix){
   await page.waitForLoadState('networkidle',{timeout:45000});
   const decoded=await page.evaluate(()=>window.__ASHFALL_ASSET_QA__?.getDecodedRequiredPaths?.());assert.ok(Array.isArray(decoded));
   const before=await capture(page,row,'before');const baseline=new Map();
-  for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,FORMATION_CARD_ART[kind]);assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;baseline.set(kind,await cropPortrait(before,g.clip));}
+   for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,new URL(CHARACTER_PORTRAIT_ART[kind].slice(1),base).pathname,'battle cards retain the approved original character portrait');assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;baseline.set(kind,await cropPortrait(before,g.clip));}
   // Keep a native control before any resize. It distinguishes unstable
   // sampling from a resize regression without changing the fidelity gate.
   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));

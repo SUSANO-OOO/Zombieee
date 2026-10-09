@@ -8,6 +8,7 @@ import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { v100EndingScoreScene, v100StoryScoreScene } from "./v100Music.js";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
+import { v100StoryDirectionFor } from "./v100StoryDirection.js";
 
 const visuals = PRODUCTION_VISUALS.stages;
 const cuts = V100_RUNTIME_ASSET_MANIFEST.storyCuts;
@@ -33,7 +34,7 @@ function backdropFor(eventId, node) {
   if (eventId === "v100:event:epilogue") return cuts.kumayaReopened;
   if (eventId === "v100:event:s20:post") return sceneTag === "musashi"
     ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
-  if (eventId === "v100:event:s25:post" && sceneTag === "soup") return visuals["stage-nishijin-shopping-street"];
+  if (eventId === "v100:event:s25:post" && sceneTag === "soup") return cuts.endingHospitalSecured;
   if (eventId === "v100:event:s30:post" && sceneTag === "defeat") return cuts.takuyaOmegaEndingDefeat;
   if (eventId === "v100:event:ending") {
     return sceneTag === "hospital" ? cuts.endingHospitalSecured
@@ -97,15 +98,6 @@ function transitionFor(node, nodeIndex) {
   return "dialogue-cut";
 }
 
-function cueFor(category) {
-  if (category === "credits") return null;
-  // UI acknowledgement is owned by the actual button gesture, not a story
-  // node category. Authored scene cues can be assigned explicitly when needed.
-  // A player action is not necessarily a radio transmission. Generic action
-  // beats used to replay the radio chirp throughout otherwise quiet scenes.
-  return null;
-}
-
 /**
  * Derives bounded presentation metadata from the canonical event/node. This
  * is intentionally a view contract: it never changes the event text, order,
@@ -119,13 +111,17 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     ? "right"
     : "left";
   const sceneId = sceneFor(eventId, phase, stage, category, node);
+  const direction = v100StoryDirectionFor(eventId, nodeIndex, node);
   return Object.freeze({
     eventId: eventId ?? null,
     phase: phase ?? null,
     stageId: stage?.id ?? (eventId === "v100:event:epilogue" ? V100_STAGE_IDS[29] : null),
     stageNumber: stage?.number ?? null,
     category,
-    backgroundPath: backdropFor(eventId, node),
+    backgroundPath: direction.backgroundPath ?? backdropFor(eventId, node),
+    cinematic: direction.cinematic,
+    cutId: direction.cut,
+    expression: direction.expression,
     sceneLabel: node?.sceneLabel ?? null,
     nodeIndex: Math.max(0, Math.floor(Number(nodeIndex) || 0)),
     nodeKind: node?.kind ?? "action",
@@ -135,7 +131,7 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     portraitMode: node?.portraitOwner ? (node?.portraitKind ?? "major") : "silhouette",
     transition: transitionFor(node, nodeIndex),
     sceneId,
-    cueId: cueFor(category),
+    cueId: category === "credits" ? null : direction.cueId,
     dialogueDucking: node?.kind === "dialogue",
     audioOwner: "v100-event-runtime",
   });

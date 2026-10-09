@@ -65,7 +65,7 @@ test('the shorter film removes duplicate zoom inserts and gives each drawing tim
   for (let index = 0; index < starts.length; index++) {
     assert.ok((starts[index + 1] ?? 106) - starts[index] >= 2.5, V100_CREDITS_FILM[index].id);
   }
-  assert.equal(V100_CREDITS_FILM.at(-1).id, 'kumaya-table');
+  assert.equal(V100_CREDITS_FILM.at(-1).id, 'kumaya-main-table');
   assert.ok(106 - starts.at(-1) >= 6);
 });
 

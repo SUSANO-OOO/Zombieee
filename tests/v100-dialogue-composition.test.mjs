@@ -6,7 +6,7 @@ import {v100EventPresentationFor} from '../app/v100EventPresentation.js';
 const says=owner=>({kind:'dialogue',portraitOwner:owner});
 test('only the two explicitly on-screen couple actions retain both subjects',()=>{
  const subjects=Object.entries(V100_STORY_EVENTS).flatMap(([id,event])=>event.nodes.flatMap((node,index)=>{
-  const owners=v100ActionPortraitSubjects(id,node);
+  const owners=v100ActionPortraitSubjects(id,node,index);
   return owners.length?[{id,index,owners}]:[];
  }));
  assert.deepEqual(subjects,[

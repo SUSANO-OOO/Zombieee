@@ -856,13 +856,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       {!blocking && children}
       {maintenance && <div className="pwa-maintenance" role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
-      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
-        <aside className="pwa-notice" role="status">
-          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
-          <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
-        </aside>
-      )}
-
       {blocking && (
         <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
           <div className="pwa-gate-panel">
@@ -1060,6 +1053,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Repair and update notices never block play; they sit above the game. */}
+      <div className="pwa-notice-stack">
+      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
+        <aside className="pwa-notice" role="status">
+          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
+          <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
+        </aside>
+      )}
       {!blocking && phase === "repair-required" && installPlan && activation.safe && !repairDismissed && (
         <aside className="pwa-notice pwa-repair" role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
@@ -1088,10 +1088,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
+      {!blocking && supported && !storageHost && !campaignStorageMenu && showStorage && storagePanel}
+      </div>
+
       {!blocking && supported && storageHost && createPortal(storagePanel, storageHost)}
       {!blocking && supported && !storageHost && !campaignStorageMenu && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && <>
         <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage(open => !open)}>データ管理</button>
-        {showStorage && storagePanel}
       </>}
     </>
   );

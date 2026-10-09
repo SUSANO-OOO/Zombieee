@@ -1,5 +1,6 @@
 "use client";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
+import { v100BasePresentationFor } from "./v100BasePresentation.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -33,7 +34,7 @@ import {
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import { applyV100UnitLevelProgression } from "./v100Progression.js";
 import { applyUnitEquipmentEffects } from "./unitEquipmentStats.js";
-import { V100_FORMATION_MAX_SLOTS, V100_STAGE_IDS, v100UnitStatAtLevel } from "./v100Registry.js";
+import { V100_FORMATION_MAX_SLOTS, V100_STAGE_IDS, V100_STAGE_BY_ID, v100UnitStatAtLevel } from "./v100Registry.js";
 import { humanDeploymentCapacity } from "./deploymentCapacity.js";
 import {
   battleAudioRuntimeSnapshot,
@@ -6884,6 +6885,20 @@ function drawCrawler(
   graphicsProfile: GraphicsProfile,
   allowDiagnosticFallback = false,
 ) {
+  if (v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot) {
+    const door = sprites.retreatDoor;
+    const bounds = WORLD_GEOMETRY.crawler;
+    if (door?.complete && door.naturalWidth) {
+      const scale = Math.min(bounds.width / door.naturalWidth, bounds.height / door.naturalHeight);
+      const width = door.naturalWidth * scale, height = door.naturalHeight * scale;
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(door, bounds.x + bounds.width - width, bounds.y + bounds.height - height, width, height);
+      ctx.restore();
+    }
+    return;
+  }
   const crawlerClosedSprite = sprites.crawlerHostClosed ?? sprites.crawlerClosed ?? sprites.crawler;
   const crawlerOpenSprite = sprites.crawlerDeploymentBase ?? crawlerClosedSprite;
   const crawler = WORLD_GEOMETRY.crawler;
@@ -7033,6 +7048,7 @@ function drawCrawlerForegroundMask(
   graphicsProfile: GraphicsProfile,
   forceOpaque = false,
 ) {
+  if (v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot) return;
   if (g.crawlerDoor.doorProgress <= 0) return;
   const crawler = WORLD_GEOMETRY.crawler;
   const foregroundMask = sprites.crawlerForegroundMask;
@@ -9079,7 +9095,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
   const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : PRODUCTION_AUDIO_MANIFEST;
-  const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? "装甲車両" : "移動拠点" });
+  const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "移動拠点" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
   const externalEnemyKindsKey = externalSession?.enemyKinds.join("|") ?? "";
@@ -9447,6 +9463,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const mixer = createAudioMixer({
       manifest: playbackManifest,
       maxVoices: 28,
+      enableAcknowledgementTone: !externalSessionActive,
       maxWarningsTotal: 12,
       maxWarningsPerKey: 1,
       onAssetFailure: (failure: { assetId?: string; category?: string; optional?: boolean; phase?: string; reason?: string; error?: string }) => {
@@ -14078,6 +14095,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // become one, independent of the authored enemy roster.
     const requiredPlan = requiredBattleAssetPlan({
       stageId: assetStageId,
+      basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
       includeAllSprites: localQaRequested
@@ -14412,6 +14430,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const requiredStageId = requestedScenario?.stageId
           ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
         const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,
+          basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requiredStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean) });
         if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
           decodedPaths.add(activeRequiredPlan.enemyBase.path);
@@ -14456,6 +14475,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const exhaustive = localRequested && !finiteEnemy && !finiteVisual && !finiteHud;
         return requiredBattleAssetPlan({
           stageId: requestedStageId,
+          basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requestedStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean),
           enemyKinds: selectedOutbreakMissionId
             ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
@@ -14615,7 +14635,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       ].slice(-128);
     }
     const cue = SFX_CUES[cueId];
-    const fallback = () => productionMixer.playTestTone({
+    const fallback = () => externalSessionActive ? null : productionMixer.playTestTone({
       frequency: options?.frequency ?? cue.frequency,
       duration: cue.duration,
       volume: Math.min(.08, cue.volume),
@@ -14677,7 +14697,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return false;
     }
     if (sfxMutedRef.current) return true;
-    const fallback = options.fallbackCue ? () => {
+    const fallback = options.fallbackCue && !externalSessionActive ? () => {
       const definition = SFX_CUES[options.fallbackCue as SfxCueId];
       return productionMixer.playTestTone({
         frequency: definition.frequency,
@@ -15472,7 +15492,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
     g.supportGauge = result.supportGauge;
     g.crawlerAbility = result.runtime as CrawlerRuntime;
-    g.banner = "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
+    g.banner = v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot ? "援護射撃を開始" : "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
@@ -17967,7 +17987,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     audioActivationPendingRef.current = true;
     const test = (async () => {
       const played = mixer.unlocked && mixer.getAudioStatus().state === "running"
-        ? mixer.playTestTone({ respectSettings: true })
+        ? externalSessionActive ? await mixer.play("ui-select", { instanceKey: "v100-audio-check" }) : mixer.playTestTone({ respectSettings: true })
         : await mixer.enableAudio();
       return Boolean(played);
     })();
@@ -23666,8 +23686,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
   const enemyBaseLabel = v100CorporateControlLabel(gameRef.current.definition) ?? (gameRef.current.researchCoreTargets ? "目標耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点");
   const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
-  const vehicleDisplayLabel = externalSessionActive ? "装甲車両" : PUBLIC_CRAWLER_LABEL;
-  const vehicleBarrageControlLabel = externalSessionActive ? `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";
+  const basePresentation = v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber);
+  const vehicleDisplayLabel = externalSessionActive ? basePresentation.label : PUBLIC_CRAWLER_LABEL;
+  const vehicleBarrageControlLabel = externalSessionActive ? basePresentation.onFoot ? basePresentation.barrageLabel : `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";
   const selectedStageBossKind = selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
     : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
@@ -23864,7 +23885,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <div className="top-hud">
             <div className="battle-brand-zone">
               <div className="brand-block"><div><b>{compactBattleStageName(selectedOperationView.displayName)}</b></div></div>
-              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>{basePresentation.onFoot ? basePresentation.healthLabel : "耐久"}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
               {externalSessionActive && bossHealthPanel ? bossHealthPanel : <>
@@ -23954,7 +23975,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               })}
           </div>
           <div className="support-zone">
-            <div className="support-row" aria-label="戦場物資・航空支援・車両砲撃">
+            <div className="support-row" aria-label={`戦場物資・航空支援・${basePresentation.barrageLabel}`}>
               <span className="support-label">物資<br />支援</span>
                <button
                  className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
@@ -23978,7 +23999,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{externalSessionActive ? <span className="v100-support-status">{airstrikeCooldown > 0 ? `再使用 ${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== "idle" ? "飛来・着弾" : `支援 ${airstrikeCost}`}</span> : <><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>
                </button>
               <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                 <span className="support-key">G</span><b>{externalSessionActive ? "車両砲撃" : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{externalSessionActive ? <span className="v100-support-status">{hud.crawlerPhase !== "ready" ? `装填 ${Math.round(hud.crawlerCharge*100)}%` : `支援 ${barrageCost}`}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : "車両"}</em>
+                 <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{externalSessionActive ? <span className="v100-support-status">{hud.crawlerPhase !== "ready" ? `装填 ${Math.round(hud.crawlerCharge*100)}%` : `支援 ${barrageCost}`}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>
                </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}</div>
