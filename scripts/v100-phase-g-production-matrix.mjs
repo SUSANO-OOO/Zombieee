@@ -979,6 +979,23 @@ async function withPhaseGPageInputLock(page, operation) {
   }
 }
 
+async function readPhaseGSustainState(page, { bossIsLive, readSetupRuntime,
+  observeProofActorAttack, observeProofUnitAttack, observeVehicleAction }) {
+  return withPhaseGPageInputLock(page, async () => {
+    if (!await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false)) return null;
+    const bossEngaged = await bossIsLive();
+    const liveHumanTargetCount = await page.evaluate(() => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
+      return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
+    }).catch(() => 0);
+    const setupRuntime = await readSetupRuntime();
+    await observeProofActorAttack(setupRuntime);
+    await observeProofUnitAttack(setupRuntime);
+    await observeVehicleAction(setupRuntime);
+    return { bossEngaged, liveHumanTargetCount };
+  });
+}
+
 function phaseGPointerFailure(code, evidence = {}, pointerCount = 0) {
   const error = new Error(`${code}: ${JSON.stringify(evidence)}`);
   error.name = "PhaseGPointerContractError";
@@ -1070,14 +1087,19 @@ async function terminateTimedOutDeploymentPreinput(page, operationPromise) {
   const operationSettlement = await observePromiseWithin(operationPromise, 250);
   return {
     lifecycle,
-    operationSettlement: { ...operationSettlement, value: undefined },
+    operationSettlement: {
+      ...operationSettlement,
+      value: undefined,
+      readError: operationSettlement.value?.evaluateError ?? null,
+      readableState: operationSettlement.value?.evaluateError ? null : cloneDiagnosticValue(operationSettlement.value),
+    },
     pageClosedBeforeCancellation,
     browserConnectedBeforeCancellation,
     independentLifecycleLoss,
     pageClosed: page.isClosed(),
     browserConnected: browser?.isConnected() ?? null,
     terminalLifecycleVerified: closed,
-    lateOperationFulfillment: operationSettlement.status === "fulfilled",
+    lateOperationFulfillment: operationSettlement.status === "fulfilled" && !operationSettlement.value?.evaluateError,
   };
 }
 
@@ -2693,6 +2715,7 @@ async function writePhaseGCaptureTransaction({
   browserSession = null,
   hostResourceTelemetry = null,
   terminalPersistenceError = null,
+  primaryFailure = null,
 }) {
   const receiptPath = path.join(evidenceDir, `${label}.capture-transaction.json`);
   const receipt = {
@@ -2717,6 +2740,7 @@ async function writePhaseGCaptureTransaction({
         : null,
     proofCleanupOutcome: completedImpactProof?.cleanupReceipt?.observerStopped === true ? "success" : null,
     terminalPersistenceError: cloneDiagnosticValue(terminalPersistenceError),
+    primaryFailure: cloneDiagnosticValue(primaryFailure),
   };
   await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
   const bytes = await readFile(receiptPath);
@@ -3225,6 +3249,13 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
           browserSession,
           hostResourceTelemetry: hostResourceTelemetry?.reference() ?? null,
           terminalPersistenceError: failureDiagnosticsPersistenceError,
+          primaryFailure: {
+            code: primaryError?.code ?? null,
+            error: String(primaryError),
+            pointerCount: primaryError?.pointerCount ?? null,
+            pointerEvidence: primaryError?.phaseGPointerEvidence ?? null,
+            lastReadableState: checkpointRecorder?.snapshot()?.latestReadableState ?? null,
+          },
         });
       } catch (persistenceError) {
         phaseGCaptureTransactionPersistenceError = {
@@ -4008,17 +4039,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     // evidence run alive long enough to reach the authored boss wave without
     // mutating HP, clocks, enemy state, or battle definitions.
     while (sustainActive) {
-      const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
-      if (!battleVisible) break;
-      const bossEngaged = await bossIsLive();
-      const liveHumanTargetCount = await page.evaluate(() => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
-        return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
-      }).catch(() => 0);
-      const setupRuntime = await readSetupRuntime();
-      await observeProofActorAttack(setupRuntime);
-      await observeProofUnitAttack(setupRuntime);
-      await observeVehicleAction(setupRuntime);
+      // Background observation shares the same page lane as pointer preflight.
+      // Otherwise its RPCs can run during the bounded fresh-state read.
+      const backgroundState = await readPhaseGSustainState(page, {
+        bossIsLive, readSetupRuntime, observeProofActorAttack, observeProofUnitAttack, observeVehicleAction,
+      });
+      if (!backgroundState) break;
+      const { bossEngaged, liveHumanTargetCount } = backgroundState;
       if (ordinaryTacticsAfterProof && bossDeploymentFinished
         && sealedCombatCausalProof?.completedImpactProof?.state === "COMPLETE"
         && (!requireVehicleAction || (proofActorAttackObserved && proofUnitAttackObserved))) {

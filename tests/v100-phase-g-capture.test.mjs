@@ -92,6 +92,58 @@ test("an unavailable redeploy candidate leaves the shared capture page and sched
   }
 });
 
+test("background observations wait for fresh pointer preflight and retain the page lane through all reads", async () => {
+  const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "readPhaseGSustainState"];
+  const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
+    + "\n({ withPhaseGPageInputLock, readPhaseGSustainState })", { phaseGPageInputTails: new WeakMap() });
+  const events = [];
+  let releasePreflight, releaseObservation, runtimeEntered;
+  const preflight = new Promise(resolve => { releasePreflight = resolve; });
+  const observation = new Promise(resolve => { releaseObservation = resolve; });
+  const runtimeStarted = new Promise(resolve => { runtimeEntered = resolve; });
+  const page = {
+    locator: () => ({ isVisible: async () => { events.push("visibility"); return true; } }),
+    evaluate: async () => { events.push("live-count"); return 2; },
+  };
+  const first = harness.withPhaseGPageInputLock(page, () => preflight);
+  const background = harness.readPhaseGSustainState(page, {
+    bossIsLive: async () => { events.push("boss"); return true; },
+    readSetupRuntime: async () => { events.push("runtime"); runtimeEntered(); await observation; return { fixture: true }; },
+    observeProofActorAttack: async value => { assert.equal(value.fixture, true); events.push("actor"); },
+    observeProofUnitAttack: async () => { events.push("unit"); },
+    observeVehicleAction: async () => { events.push("vehicle"); },
+  });
+  const next = harness.withPhaseGPageInputLock(page, () => { events.push("next-pointer"); });
+  await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(events, []);
+  releasePreflight(); await first;
+  await runtimeStarted;
+  assert.deepEqual(events, ["visibility", "boss", "live-count", "runtime"]);
+  releaseObservation();
+  const result = await background; await next;
+  assert.equal(result.liveHumanTargetCount, 2);
+  assert.equal(result.bossEngaged, true);
+  assert.deepEqual(events, ["visibility", "boss", "live-count", "runtime", "actor", "unit", "vehicle", "next-pointer"]);
+});
+
+test("a cancelled diagnostic returning evaluateError is recorded as a failed late read", async () => {
+  const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "terminateTimedOutDeploymentPreinput");
+  const error = "Target page, context or browser has been closed";
+  let closed = false;
+  const cancel = vm.runInNewContext(`${declaration.getText(parsed)}\nterminateTimedOutDeploymentPreinput`, {
+    Date, observePromiseWithin: async () => ({ status: "fulfilled", value: { evaluateError: error } }),
+    cloneDiagnosticValue: value => structuredClone(value),
+  });
+  const browser = { isConnected: () => true };
+  const context = { browser: () => browser, close: async () => { closed = true; } };
+  const result = await cancel({ context: () => context, isClosed: () => closed }, Promise.resolve());
+  assert.equal(result.terminalLifecycleVerified, true);
+  assert.equal(result.lateOperationFulfillment, false);
+  assert.equal(result.operationSettlement.readError, error);
+  assert.equal(result.operationSettlement.readableState, null);
+});
+
 test("a secondary page closure retains the structured sustain input failure in its capture setup", async () => {
   const battle = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "battlePage");
   let handler;
@@ -505,6 +557,7 @@ async function fixture(t, options = {}) {
   };
   const globals = {
     evidenceDir, path, process, readFile, stat, createHash, results,
+    silenceBrowserOutput: async () => {},
     validateV100CaptureRepresentativeEvidence,
     writeFile: async (filePath, bytes) => {
       events.push("transaction-write");
@@ -532,7 +585,7 @@ async function fixture(t, options = {}) {
   };
   const capture = vm.runInNewContext(`${actualFunctions}\ncaptureStateImpl`, globals);
   const run = () => capture("webkit", { width: 667, height: 375 }, "battle-extra", async (_page, captureAction) => {
-    if (options.setupFailure) throw Object.assign(new Error("fixture setup failure"), { phaseGBattleSetup: options.setupFailure });
+    if (options.setupFailure) throw Object.assign(new Error("fixture setup failure"), { phaseGBattleSetup: options.setupFailure, ...options.primaryFailure });
     if (options.fatal === "console") page.emit("console", { type: () => "error", text: () => "fixture error" });
     if (options.fatal === "page") page.emit("pageerror", new Error("fixture page error"));
     if (options.fatal === "http") page.emit("response", { status: () => 404, url: () => "fixture://404" });
@@ -568,6 +621,19 @@ test("a rejected incomplete collection still persists its original actor failure
   assert.equal(receipt.completedImpactProof.state,"FAILED");
   assert.equal(receipt.completedImpactProof.failure.code,"MISSING_REQUIRED_ACTOR");
   assert.deepEqual(receipt.completedImpactProof.failure.detail.missing,["zombie:spitter"]);
+});
+
+test("capture failure receipt retains the primary preflight code and cancellation evidence", async t => {
+  const pointerEvidence = { reason: "preinput-operation-timeout", deadlineMs: 1000,
+    cancellation: { terminalLifecycleVerified: true, operationSettlement: { readError: "Target closed" } } };
+  const f = await fixture(t, { setupFailure: { fixture: true }, primaryFailure: {
+    code: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", pointerCount: 0, phaseGPointerEvidence: pointerEvidence,
+  } });
+  await assert.rejects(f.run(), /fixture setup failure/u);
+  const receipt = await f.receipt();
+  assert.equal(receipt.primaryFailure.code, "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE");
+  assert.equal(receipt.primaryFailure.pointerCount, 0);
+  assert.deepEqual(receipt.primaryFailure.pointerEvidence, pointerEvidence);
 });
 
 test("a prepared proof for different required actors cannot satisfy this capture", async (t) => {

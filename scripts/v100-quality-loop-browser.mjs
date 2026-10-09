@@ -8,7 +8,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
-import { createDefaultV100Save, normalizeV100Save, serializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
+import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
 import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
@@ -109,6 +109,10 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   report.cases.push(row);
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, acceptDownloads: true });
   let navigating = false;
+  if (seed) {
+    const decoded = deserializeV100Save(serializeV100Save(seed));
+    assert.equal(decoded.ok, true, `${row.id}: invalid QA seed ${decoded.errors?.join(',')}`);
+  }
   if (seed) await context.addInitScript(raw => {
     for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, raw);
   }, serializeV100Save(seed));
@@ -154,13 +158,26 @@ for (const engine of engines) {
           await capture(page, row, "board");
         });
       }
-      for (const [eventId, index, count] of [["v100:event:s17:post", 3, 2], ["v100:event:s23:pre", 10, 2], ["v100:event:s28:pre", 3, 0], ["v100:event:s30:pre", 18, 2]]) {
-        const fixture = normalizeV100Save({ ...early, flowState: { phase: "event", eventId, stageId: null, stageNumber: null, destination: "map", nodeIndex: index, firstClear: false, finalized: true } });
+      for (const [eventId, index, count] of [["v100:event:s17:post", 3, 2], ["v100:event:s23:pre", 10, 0], ["v100:event:s28:pre", 3, 0], ["v100:event:s30:pre", 18, 2]]) {
+        const stageNumber = Number(eventId.split(':')[2].slice(1));
+        const stageId = V100_STAGE_IDS[stageNumber - 1];
+        const isPost = eventId.endsWith(':post');
+        const stageSave = normalizeV100Save({ ...early, availableStageIds: [...new Set([...early.availableStageIds, stageId])] });
+        const pending = isPost ? recordV100PendingResult(stageSave, createV100BattleResult({ stageId,
+          battleRunId: 'quality-event-' + stageNumber, won: true, objectiveComplete: true, vehicleHp: 408, vehicleMaxHp: 680 })) : null;
+        if (isPost) assert.equal(pending.applied, true);
+        const fixture = normalizeV100Save({ ...(pending?.save ?? stageSave), eventCursor: null,
+          flowState: { phase: isPost ? "post" : "event", eventId, stageId, stageNumber, destination: "map", nodeIndex: index, firstClear: isPost, finalized: false } });
         await runCase(browser, engine, viewport, eventId.replaceAll(":", "-"), fixture, async (page, row) => {
           await page.locator(".v100-story-node").waitFor();
           row.owners = await page.locator(".v100-portrait-frame").evaluateAll(elements => elements.map(element => ({ owner: element.dataset.portraitOwner, side: element.dataset.portraitSide })));
           assert.equal(row.owners.length, count);
-          if (eventId.includes("s17") || eventId.includes("s23")) assert.deepEqual(row.owners.map(owner => owner.owner).sort(), ["unit-babayaga", "unit-mrs-chiha"]);
+          if (eventId.includes("s17") || eventId.includes("s30")) assert.deepEqual(row.owners.map(owner => owner.owner).sort(), ["unit-babayaga", "unit-mrs-chiha"]);
+          if (eventId.includes("s23")) {
+            const backdrop = page.locator('.v100-event-backdrop');
+            assert.equal(await backdrop.getAttribute('data-v100-cinematic'), 'true');
+            await page.locator('img[src$="chiha-confession.webp"]').waitFor();
+          }
           await within(page.locator(".v100-node-copy p"));
           await within(page.getByRole("button", { name: "次へ", exact: true }), 44);
           await capture(page, row, "scene");
