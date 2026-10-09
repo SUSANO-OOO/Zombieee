@@ -24,6 +24,40 @@ const checkpointDeclaration = parsed.statements.find((node) => ts.isVariableStat
 assert.ok(checkpointDeclaration, "actual checkpoint registry must exist");
 const registeredCheckpoints = Array.from(vm.runInNewContext(checkpointDeclaration.getText(parsed) + "\nBATTLE_EXTRA_CHECKPOINTS"));
 
+test("a timed-out background input settles cancellation before queued input can acquire the page", async () => {
+  const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "phaseGPointerFailure", "withDeploymentPreinputDeadline", "phaseGOrderedControlInput"];
+  const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  assert.ok(declarations.every(Boolean));
+  const calls = [];
+  let timeoutCallback, rejectNative;
+  const nativeInput = new Promise((_resolve, reject) => { rejectNative = reject; });
+  const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
+    + "\n({ withPhaseGPageInputLock, phaseGOrderedControlInput })", {
+    phaseGPageInputTails: new WeakMap(),
+    setTimeout: (callback, budget) => { calls.push(["deadline", budget]); timeoutCallback = callback; return 1; },
+    clearTimeout: () => {},
+    terminateTimedOutDeploymentPreinput: async (_page, pending) => {
+      calls.push(["cancel"]);
+      rejectNative(new Error("context closed"));
+      await pending.catch(() => {});
+      calls.push(["settled"]);
+      return { terminalLifecycleVerified: true };
+    },
+  });
+  const page = {};
+  const first = harness.withPhaseGPageInputLock(page, () => harness.phaseGOrderedControlInput(page, () => nativeInput, 500, "airstrike"));
+  const queued = harness.withPhaseGPageInputLock(page, () => { calls.push(["unexpected-input"]); });
+  const firstRejected = assert.rejects(first, error => error.code === "QA_HARNESS_CONTROL_INPUT_TIMEOUT"
+    && error.phaseGTerminalInputFailure === true && error.phaseGPointerEvidence.deadlineMs === 500);
+  const queuedRejected = assert.rejects(queued, error => error.code === "QA_HARNESS_CONTROL_INPUT_TIMEOUT");
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(typeof timeoutCallback, "function");
+  timeoutCallback();
+  await Promise.all([firstRejected, queuedRejected]);
+  assert.deepEqual(calls, [["deadline", 500], ["cancel"], ["settled"]]);
+});
+
 test("an unavailable redeploy candidate leaves the shared capture page and scheduler untouched", async () => {
   const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node)
     && node.name?.text === "performVerifiedDeploymentPointer");

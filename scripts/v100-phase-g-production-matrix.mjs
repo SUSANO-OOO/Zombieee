@@ -1014,6 +1014,16 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
   }
 }
 
+async function phaseGOrderedControlInput(page, operation, deadlineMs, control) {
+  try {
+    return await withDeploymentPreinputDeadline(page, operation(), deadlineMs,
+      "QA_HARNESS_CONTROL_INPUT_TIMEOUT", { control });
+  } catch (error) {
+    if (error?.phaseGTerminalInputFailure === true) throw error;
+    throw phaseGPointerFailure("QA_HARNESS_CONTROL_INPUT_FAILURE", { control, error: String(error) }, 0);
+  }
+}
+
 async function observePromiseWithin(promise, timeoutMs) {
   const boundedMs = Math.max(1, Math.floor(Number(timeoutMs) || 1));
   let timeoutId;
@@ -1395,6 +1405,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
     for (const type of ["pointerdown", "pointerup", "click"]) document.addEventListener(type, handler, true);
     receiptRegistry.set(receiptAttemptId, {
       receipts, handler, rawEventHandler, rawEventTrail, handlerExceptions,
+      expectedIdentity: identity,
       diagnosticSnapshot,
       diagnostics: { rawEventTrail, handlerExceptions, before: diagnosticSnapshot(), after: null },
       dispatchStartedAtPerformanceMs: null,
@@ -2724,6 +2735,7 @@ async function phaseGBrowser(engineName, isolation = "shared-per-engine") {
   const localChromiumExecutable = engineName === "chromium" ? process.env.V100_PHASE_G_LOCAL_CHROMIUM_EXECUTABLE : null;
   const browser = await playwright[engineName].launch({
     headless: true,
+    ...(engineName === "chromium" ? { args: ["--mute-audio"] } : {}),
     ...(localChromiumExecutable ? { executablePath: localChromiumExecutable } : {}),
   });
   phaseGBrowserSessionOrdinal += 1;
@@ -3438,7 +3450,9 @@ async function readBattleDeploymentDiagnostics(page, {
     )].map((element) => (element.textContent ?? "").trim()).filter(Boolean);
     if (dispatchReceipt) {
       dispatchReceipt.dispatchStartedAtPerformanceMs = performance.now();
-      const diagnosticCard = cards.find((card) => card.kind === kind && String(card.slot) === String(slot)) ?? null;
+      const diagnosticIdentity = dispatchReceipt.expectedIdentity;
+      const diagnosticCard = cards.find((card) => card.nodeId === diagnosticIdentity?.nodeId
+        && card.kind === diagnosticIdentity.kind && String(card.slot) === String(diagnosticIdentity.slot)) ?? null;
       const point = diagnosticCard?.center ?? null;
       dispatchReceipt.diagnostics.before = dispatchReceipt.diagnosticSnapshot(point);
     }
@@ -4031,7 +4045,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
           await withPhaseGPageInputLock(page, async () => {
             const lockedAbility = page.locator(sustainAbilitySelector).nth(index);
-            if (await lockedAbility.count().catch(() => 0)) await lockedAbility.click({ timeout: 500 }).catch(() => {});
+            if (await lockedAbility.count().catch(() => 0)) await phaseGOrderedControlInput(page,
+              () => nativeBattleTap(page, lockedAbility), 500, "sustain-ability");
           });
           await page.waitForTimeout(85);
         }
@@ -4041,7 +4056,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (proofCombatReady && !vehicleActionObserved && await crawler.count().catch(() => 0)) {
         await withPhaseGPageInputLock(page, async () => {
           const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
-          if (await lockedCrawler.count().catch(() => 0)) await lockedCrawler.click({ timeout: 500 }).catch(() => {});
+          if (await lockedCrawler.count().catch(() => 0)) await phaseGOrderedControlInput(page,
+            () => nativeBattleTap(page, lockedCrawler), 500, "sustain-barrage");
         });
       }
 
@@ -4054,8 +4070,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
             const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
             if (lockedBox && await airstrike.count().catch(() => 0)) {
-              await airstrike.click({ timeout: 500 }).catch(() => {});
-              await lockedCanvas.click({ position: { x: lockedBox.width * .67, y: lockedBox.height * .5 }, timeout: 700 }).catch(() => {});
+              if (await phaseGOrderedControlInput(page, () => nativeBattleTap(page, airstrike), 500, "sustain-airstrike")) {
+                await phaseGOrderedControlInput(page, () => orderedNativePointer(page,
+                  { x: lockedBox.x + lockedBox.width * .67, y: lockedBox.y + lockedBox.height * .5 }), 700, "sustain-airstrike-target");
+              }
             }
           });
         }
@@ -4078,8 +4096,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const medicalY = proofActorContactPlanPending && Number.isFinite(Number(proofActorContactState?.actorLane))
             ? (Number(proofActorContactState?.actorLane) >= 1 ? lockedBox.height * .3 : lockedBox.height * .7)
             : lockedBox.height * .5;
-          await medical.click({ timeout: 500 }).catch(() => {});
-          await lockedCanvas.click({ position: { x: lockedBox.width * .34, y: medicalY }, timeout: 700 }).catch(() => {});
+          if (await phaseGOrderedControlInput(page, () => nativeBattleTap(page, medical), 500, "sustain-medical")) {
+            await phaseGOrderedControlInput(page, () => orderedNativePointer(page,
+              { x: lockedBox.x + lockedBox.width * .34, y: lockedBox.y + medicalY }), 700, "sustain-medical-target");
+          }
         });
       }
       // Late ordinary enemy waves also need a real living opponent. Complete
