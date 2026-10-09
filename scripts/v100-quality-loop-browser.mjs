@@ -58,12 +58,12 @@ async function advanceEvent(page) {
     return current !== before && !shell?.matches('[aria-busy="true"]') && document.documentElement.dataset[key] === 'false';
   }, { before, key: 'pwaSaveMutationPending' });
 }
-const acknowledge = async page => {
+const acknowledge = async (page, enter = true) => {
   const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
   await play.or(page.locator(".v100-shell")).first().waitFor();
   if (await play.isVisible()) await play.tap();
   await ready(page);
-  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page);
+  if (enter && await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page);
   await ready(page);
 };
 async function within(locator, minimum = 0, requireHit = true) {
@@ -122,7 +122,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   try {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
-    await acknowledge(page);
+    await acknowledge(page, Boolean(seed));
     await work(page, row, async () => { navigating = true; try { await page.reload({ waitUntil: "networkidle" }); await acknowledge(page); } finally { navigating = false; } });
     assert.deepEqual(row.errors, []);
     row.status = "passed";
