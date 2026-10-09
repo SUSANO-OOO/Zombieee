@@ -6,15 +6,15 @@
   grid-auto-flow: row; grid-auto-columns: auto; min-width: 0; overflow: hidden;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot {
-  grid-template-columns: 64px minmax(0,1fr);
-  grid-template-rows: minmax(0,1fr);
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: minmax(40px,1fr) 60px;
   min-height: 106px;
   gap: 7px;
   padding: 5px;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait {
   grid-column: 1; grid-row: 1; align-self: stretch !important;
-  width: 64px; height: 100%; min-height: 90px; max-height: none;
+  width: 100%; height: 100%; min-height: 40px; max-height: none;
   aspect-ratio: auto !important; border: 0; border-radius: 2px;
   background: radial-gradient(ellipse at 50% 25%,#536458,#12201b);
 }
@@ -24,7 +24,7 @@
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta {
   display: flex !important; flex-direction: column; justify-content: center;
-  grid-column: 2; grid-row: 1; gap: 4px; padding: 0; overflow: hidden;
+  grid-column: 1; grid-row: 2; gap: 2px; padding: 0; overflow: hidden; text-align: center;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta :is(small,strong,em,b) {
   display: block !important; position: static !important; grid-column: auto !important; grid-row: auto !important;

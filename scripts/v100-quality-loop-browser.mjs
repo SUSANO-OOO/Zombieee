@@ -179,6 +179,18 @@ for (const engine of engines) {
           await capture(page, row, "intel");
           await summary.tap();
           await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
+          row.formationCards = await page.locator('.v100-slot.filled').evaluateAll(cards => cards.map(card => {
+            const rectangle = element => { const { x, y, width, height } = element.getBoundingClientRect(); return { x, y, width, height }; };
+            return { card: rectangle(card), portrait: rectangle(card.querySelector('.v100-slot-portrait')),
+              metadata: rectangle(card.querySelector('.v100-slot-meta')), cost: rectangle(card.querySelector('.v100-slot-meta b')) };
+          }));
+          for (const { card, portrait, metadata, cost } of row.formationCards) {
+            assert.ok(portrait.width >= card.width - 12, 'Portrait uses the card width without a narrow vertical crop');
+            assert.ok(portrait.height >= 40, 'Portrait remains large enough to identify the unit');
+            if (viewport.height > 460) assert.ok(portrait.width / portrait.height >= 0.75, 'Desktop face area retains both sides of the head');
+            assert.ok(portrait.y + portrait.height <= metadata.y + 1, 'Portrait and unit details have separate rows');
+            assert.ok(cost.y >= metadata.y && cost.y + cost.height <= card.y + card.height, 'Command cost stays visible in the card');
+          }
           await capture(page, row, "board");
         });
       }
