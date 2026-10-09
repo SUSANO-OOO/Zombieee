@@ -35,6 +35,7 @@ early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase:
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
+  audioOutput: "Forced silent output. Windows WebKit native play is blocked before the browser port; its cases provide UI evidence, not native audio clocks or recovery.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
@@ -63,7 +64,15 @@ const acknowledge = async (page, enter = true) => {
   await play.or(page.locator(".v100-shell")).first().waitFor();
   if (await play.isVisible()) await play.tap();
   await ready(page);
-  if (enter && await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page);
+  if (enter && await page.locator('.v100-start-screen').isVisible()) {
+    // Finish the local preload before dismissing its owner. Cancellation on a
+    // fast departure is covered by the dedicated audio lifecycle fixture.
+    await page.waitForFunction(() => {
+      const audio = document.querySelector('[data-title-music]');
+      return audio && !audio.error && audio.networkState === HTMLMediaElement.NETWORK_IDLE && audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    });
+    await enterV100FromTitle(page);
+  }
   await ready(page);
 };
 async function within(locator, minimum = 0, requireHit = true) {
@@ -105,7 +114,7 @@ async function capture(page, row, name) {
   row.captures.push({ file, sha256: createHash("sha256").update(await readFile(path.join(out, file))).digest("hex") });
 }
 async function runCase(browser, engine, viewport, id, seed, work) {
-  const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], titleOwnerAborts: [], captures: [] };
+  const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], captures: [] };
   report.cases.push(row);
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, acceptDownloads: true });
   let navigating = false;
@@ -119,30 +128,24 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   const page = await context.newPage();
   await silenceBrowserOutput(page);
   page.setDefaultTimeout(30000);
-  let enteringTitle = true;
-  const titleRequests = new Set();
-  page.on("request", request => {
-    if (enteringTitle && request.resourceType() === "media" && new URL(request.url()).pathname === new URL("audio/v100/score/horror.mp3", base).pathname) titleRequests.add(request);
-  });
   page.on("pageerror", error => row.errors.push({ kind: "page", message: String(error) }));
   page.on("console", message => { if (message.type() === "error") row.errors.push({ kind: "console", message: message.text() }); });
   page.on("response", response => { if (response.status() >= 400) row.errors.push({ kind: "http", url: response.url(), status: response.status() }); });
   page.on("requestfailed", request => {
     const failure = { kind: "request", url: request.url(), message: request.failure()?.errorText };
     if (navigating && /abort|cancel/i.test(failure.message ?? "")) row.navigationAborts.push(failure);
-    else if (titleRequests.has(request) && /abort|cancel/i.test(failure.message ?? "")) row.titleOwnerAborts.push(failure);
     else row.errors.push(failure);
   });
   try {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
     await acknowledge(page, Boolean(seed));
-    enteringTitle = false;
     await work(page, row, async () => { navigating = true; try { await page.reload({ waitUntil: "networkidle" }); await acknowledge(page); } finally { navigating = false; } });
-    // A native title stream can be cancelled when its React owner is removed
-    // by Continue or save import. Only the exact request begun during entry is
-    // classified here; later scene audio, HTTP failures and other requests fail.
-    if (row.titleOwnerAborts.length) assert.equal(await page.locator('[data-title-music]').count(), 0, "Cancelled title stream must have left its owner");
+    row.silentOutput = await page.evaluate(() => {
+      const proof = globalThis.__CODEX_SILENT_QA__;
+      return proof && { blockNativePlayback: proof.blockNativePlayback, nativePlayCalls: proof.nativePlayCalls, blockedNativePlays: proof.blockedNativePlays };
+    });
+    if (row.silentOutput?.blockNativePlayback) assert.equal(row.silentOutput.nativePlayCalls, 0);
     assert.deepEqual(row.errors, []);
     row.status = "passed";
   } catch (error) { row.status = "failed"; row.error = String(error); await page.screenshot({ path: path.join(out, row.id + "-failure.png") }).catch(() => {}); }
