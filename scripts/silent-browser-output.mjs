@@ -1,12 +1,14 @@
-// Keep QA silent. Chromium and hosted macOS retain real audio clocks;
-// local Windows WebKit provides UI evidence with native playback blocked.
+// Run game browser QA on hosted Linux/macOS. Local Windows QA is disabled:
+// blocking explicit play calls did not prevent the reported audible output.
+export function assertSilentQaHost(platform) {
+  if (platform === 'win32') throw new Error('Local Windows game-browser QA is disabled after audible output. Use hosted CI.');
+}
+
 export function installSilentBrowserOutput({ blockNativePlayback }) {
   if (globalThis.__CODEX_SILENT_QA__) return;
   const proof = { blockNativePlayback, nativePlayCalls: 0, blockedNativePlays: 0, guard: null };
   globalThis.__CODEX_SILENT_QA__ = proof;
-  // Local WebKit produced audible title calls despite the muted flag. Its
-  // runs are UI evidence only; reject native play before it reaches the port.
-  // Audio clocks and recovery are verified in Chromium and hosted macOS.
+  // This explicit-call guard is not evidence that browser preload is silent.
   if (typeof AudioNode !== 'undefined') {
     const connect = AudioNode.prototype.connect;
     const sinks = new WeakMap();
@@ -39,10 +41,9 @@ export function installSilentBrowserOutput({ blockNativePlayback }) {
 }
 
 export async function silenceBrowserOutput(page) {
-  const blockNativePlayback = process.platform === 'win32'
-    && page.context().browser()?.browserType().name() === 'webkit';
-  const options = { blockNativePlayback };
   try {
+    assertSilentQaHost(process.platform);
+    const options = { blockNativePlayback: false };
     await page.addInitScript(installSilentBrowserOutput, options);
     // Verify the guard on the empty page before any game URL is opened.
     await page.evaluate(installSilentBrowserOutput, options);

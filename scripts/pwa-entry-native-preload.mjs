@@ -9,6 +9,8 @@ export function verifyEntryNativePreload({ browserRequests, serverRequests, cach
     const cachedBeforeNavigation = before?.has(hash) ?? null;
     return { phase, cachedBeforeNavigation, browserCount: browser.length, serverCount: server.length,
       valid: Boolean(before) && browser.length <= 1
+        && browser.every(r => r.nativeTitlePreload === true
+          && ['other', 'media'].includes(r.resourceType) && r.isNavigationRequest === false)
         && server.every(r => r.method === 'GET' && [null, 'no-cors'].includes(r.secFetchMode))
         && server.length === (cachedBeforeNavigation ? 0 : browser.length) };
   });

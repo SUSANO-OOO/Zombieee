@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { installSilentBrowserOutput, silenceBrowserOutput } from '../scripts/silent-browser-output.mjs';
+import { assertSilentQaHost, installSilentBrowserOutput, silenceBrowserOutput } from '../scripts/silent-browser-output.mjs';
 
 function environment(locked = false) {
   const context = vm.createContext({ DOMException });
@@ -17,7 +17,7 @@ function environment(locked = false) {
 }
 const evaluate = (context, fn, argument) => vm.runInContext(`'use strict'; (${fn.toString()})(${JSON.stringify(argument) ?? 'undefined'})`, context);
 
-test('silent Windows UI mode never calls native play, even when a caller unmutes media', async () => {
+test('the explicit-play guard rejects calls even when a caller unmutes media', async () => {
   const context = environment();
   evaluate(context, installSilentBrowserOutput, { blockNativePlayback: true });
   vm.runInContext('globalThis.media = new HTMLMediaElement()', context);
@@ -29,6 +29,12 @@ test('silent Windows UI mode never calls native play, even when a caller unmutes
   assert.equal(vm.runInContext('__CODEX_SILENT_QA__.blockedNativePlays', context), 3);
   evaluate(context, installSilentBrowserOutput, { blockNativePlayback: true });
   assert.equal(vm.runInContext('HTMLMediaElement.prototype.play === __CODEX_SILENT_QA__.guard', context), true);
+});
+
+test('Windows game-browser QA is denied; hosted Linux/macOS remain available', () => {
+  assert.throws(() => assertSilentQaHost('win32'), /Local Windows game-browser QA is disabled/);
+  assert.doesNotThrow(() => assertSilentQaHost('linux'));
+  assert.doesNotThrow(() => assertSilentQaHost('darwin'));
 });
 
 test('a page whose native play cannot be guarded is closed before game navigation', async () => {

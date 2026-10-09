@@ -1190,10 +1190,10 @@ try {
     .filter((request) => candidateEntryPhaseNames.has(request.diagnosticPhase)
       && candidatePendingReleaseDeltaTransportPaths.has(request.pathname)
       && request.resourceType === "font");
-  const candidateEntryBrowserTitleRequests = candidateEntryBrowserTransportRequests.filter(request =>
-    titleVoiceBound && request.pathname === titleVoiceTransportPath
-    && candidateEntryPhaseNames.has(request.diagnosticPhase) && request.nativeTitlePreload
-    && ["other", "media"].includes(request.resourceType) && !request.isNavigationRequest);
+  // Keep every request to this title path in the entry windows. Unbound,
+  // duplicated or unexpected requests must reach validation and fail there.
+  const candidateEntryBrowserTitleRequests = candidateEntryBrowserTransportRequests
+    .filter(request => request.pathname === titleVoiceTransportPath);
   // Classify by the actual pre-navigation cache, including unchanged objects
   // removed by this partial-cache fixture. The post-entry planner snapshot
   // can already include a voice that native preload fetched and verified.

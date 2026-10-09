@@ -1,0 +1,83 @@
+name: V1 Quality Acceptance
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "integration/**"
+      - "codex/v1.0.0-sol-design"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Linux WPE backend only; no application or Chromium rendering flag changes.
+jobs:
+  quality-ui-play:
+    name: V1 Quality UI and Play (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies and browser
+        run: |
+          npm ci
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install --with-deps webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Build exact candidate Pages site
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_PAGES_REQUEST_ID: v101-quality-ci
+          GITHUB_PAGES_ISSUE_NUMBER: "175"
+        run: |
+          npm run build
+          export GITHUB_PAGES_RELEASE_VERSION="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({RELEASE_VERSION})=>process.stdout.write(RELEASE_VERSION))')"
+          node scripts/build-github-pages.mjs
+      - name: Check three viewports, rewards, recovery and native inputs
+        env:
+          V100_CAMPAIGN_QA_BASE_URL: http://127.0.0.1:8787/Zombieee/
+          V100_QUALITY_LOOP_ENGINES: ${{ matrix.engine }}
+          V100_QUALITY_LOOP_SIZES: 1280x720,844x390,844x340
+          V100_QUALITY_LOOP_OUT: quality-ui-evidence/${{ matrix.engine }}
+        run: |
+          set -euo pipefail
+          mkdir -p quality-ui-evidence
+          node scripts/serve-pages-candidate.mjs _site > quality-ui-evidence/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8787/Zombieee/ > /dev/null; then break; fi
+            sleep 1
+          done
+          timeout --signal=TERM --kill-after=30s 35m node scripts/v100-quality-loop-browser.mjs
+      - name: Preserve quality evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v101-quality-ui-${{ matrix.engine }}
+          path: quality-ui-evidence
+          if-no-files-found: warn
+          retention-days: 14
+

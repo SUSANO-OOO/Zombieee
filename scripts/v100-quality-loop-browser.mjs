@@ -6,13 +6,17 @@ import path from "node:path";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
-import { silenceBrowserOutput } from "./silent-browser-output.mjs";
+import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
-import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
+import { V100_BOSSES, V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
+import { beginV100Survival, checkpointV100Survival } from "../app/v100SurvivalTransactions.js";
+import { beginSurvivalWave, completeSurvivalWave } from "../app/survival.js";
+import { selectSurvivalBossKind, survivalWaveReward, survivalUpgradePreview } from "../app/survivalBattleRuntime.js";
 
+assertSilentQaHost(process.platform);
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", windowsHide: true }).trim();
 const head = git("rev-parse", "HEAD");
 assert.equal(git("diff", "--name-only"), "");
@@ -35,13 +39,13 @@ early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase:
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
-  audioOutput: "Forced silent output. Windows WebKit native play is blocked before the browser port; its cases provide UI evidence, not native audio clocks or recovery.",
+  audioOutput: "Forced silent output on hosted Linux/macOS. Local Windows game-browser QA is disabled after reported audible output.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
-const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,results,native').split(',');
-assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'native'].includes(value)));
+const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,results,survival,native').split(',');
+assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'survival', 'native'].includes(value)));
 report.sections = sections;
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
@@ -109,6 +113,8 @@ async function diagramWithin(locator) {
 }
 async function capture(page, row, name) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
+  await page.waitForFunction(() => [...document.querySelectorAll('.v100-portrait-frame img')]
+    .every(image => Number(getComputedStyle(image).opacity) >= 0.99));
   const file = row.id + "-" + name + ".png";
   await page.screenshot({ path: path.join(out, file) });
   row.captures.push({ file, sha256: createHash("sha256").update(await readFile(path.join(out, file))).digest("hex") });
@@ -265,6 +271,50 @@ for (const engine of engines) {
         assert.equal(saved.lastResult.firstClear, true);
       });
       }
+    }
+    for (const viewport of sections.includes('survival') ? sizes : []) {
+      const initial = createDefaultV100Save();
+      const seed = normalizeV100Save({ ...initial, campaignStarted: true,
+        receipts: [V100_BOSSES[0].firstDefeatReceipt], flowState: { ...initial.flowState, phase: 'map' },
+        settings: { ...initial.settings, bgmEnabled: false, sfxEnabled: false } });
+      const begun = beginV100Survival(seed, { runId: 'v101-survival-preview-fixture' });
+      assert.equal(begun.applied, true, begun.reason);
+      let run = begun.save.survival.active.run;
+      for (let wave = 1; wave <= 5; wave++) {
+        run = beginSurvivalWave(run);
+        const boss = selectSurvivalBossKind({ waveNumber: wave, bossPool: run.bossPool, lastBossKind: run.lastBossKind, strictBossPool: true });
+        if (boss) run = { ...run, lastBossKind: boss };
+        run = completeSurvivalWave(run, { kills: 3, bossKills: boss ? 1 : 0, crawlerHp: 540, battleSeconds: 10,
+          enemyDefeatsByKind: boss ? { [boss]: 1, walker: 2 } : { walker: 3 }, reward: survivalWaveReward(wave) });
+      }
+      const checkpoint = checkpointV100Survival(begun.save, run);
+      assert.equal(checkpoint.applied, true, checkpoint.reason);
+      await runCase(browser, engine, viewport, 'survival-upgrade-preview', checkpoint.save, async (page, row) => {
+        row.scope = 'Synthetic valid Wave 5 checkpoint; native upgrade selection and Wave 6 resume, not an earned boss victory.';
+        const dialog = page.getByRole('dialog', { name: 'ボス撃破強化選択', exact: true });
+        await dialog.waitFor();
+        const buttons = dialog.locator('.survival-upgrade-choices button');
+        assert.equal(await buttons.count(), 3);
+        row.text = await dialog.innerText();
+        assert.match(row.text, /次は第6波/u);
+        assert.match(row.text, /→/u);
+        row.choiceBoxes = [];
+        for (let index = 0; index < 3; index++) {
+          await buttons.nth(index).scrollIntoViewIfNeeded();
+          row.choiceBoxes.push(await within(buttons.nth(index), 44));
+        }
+        await capture(page, row, 'choices');
+        const choice = checkpoint.save.survival.active.run.pendingUpgradeChoices[0];
+        row.preview = survivalUpgradePreview(checkpoint.save.survival.active.run, choice);
+        await buttons.first().tap();
+        await dialog.waitFor({ state: 'hidden' });
+        await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === 'false'
+          && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.running);
+        const saved = await rawSave(page);
+        assert.equal(saved.survival.active.run.upgradeStacks[choice], (run.upgradeStacks[choice] ?? 0) + 1);
+        assert.equal(saved.caps, checkpoint.save.caps);
+        row.savedChoice = { choice, stacks: saved.survival.active.run.upgradeStacks[choice], caps: saved.caps };
+      });
     }
     for (const viewport of sections.includes('results') ? sizes : []) {
       for (const won of [true, false]) {
