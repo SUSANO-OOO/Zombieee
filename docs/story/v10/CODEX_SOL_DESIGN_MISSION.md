@@ -152,7 +152,7 @@ supportは回復支援、爆薬ドラム缶、火炎ドラム缶から1種装備
 - 通常ムガリアン社長はevent portrait必須です。必要な場合は独立identity masterを作り、変異ムガリアン社長はその通常identityから派生させます。
 - 変異ムガリアン社長は通常社長とのidentity連続性を維持したboss assetが必要です。
 
-TAKUYA-Ωは既存TAKUYAを明確に基礎にします。既存TAKUYAの顔・頭部・体格・特徴、橙色安全vest残骸、人工armor、背面の複数投薬管を継承し、不均衡な異常肥大、左右非対称、肉体とarmorの侵食・融合、投薬暴走、崩れたsilhouetteを加え、ラスボスにふさわしいカオスで制御不能な最終形態にします。
+TAKUYA-Ωは既存TAKUYAを明確に基礎にします。既存TAKUYAの顔・頭部・体格・特徴、裸の上半身の縫合痕と黒い拘束帯、黒い短パンとブーツ、大型の刃を継承します。その上で人工armor、背面の複数投薬管、不均衡な異常肥大、左右非対称、肉体とarmorの侵食・融合、投薬暴走、崩れたsilhouetteを加え、ラスボスにふさわしいカオスで制御不能な最終形態にします。橙色の安全vestは追加しません。
 
 単なる巨大化、色違い、装甲追加、genericなAI怪物、無関係な別monster、綺麗すぎる近未来robotは不合格です。authoring masterとboss presentationは、既存TAKUYAの全高／占有silhouetteに対して**約2倍（目安1.8〜2.2倍）**を維持します。camera、hitbox、animation上のexact値はSolが調整して構いませんが、通常boss程度へ縮小してはなりません。既存TAKUYAとの連続性、final boss圧力、mobile readability、telegraph、performanceを同時に満たしてください。
 

@@ -1,0 +1,31 @@
+{
+  "generator": "Built-in image_gen",
+  "prompt": "Six chronological frames of grounded tan-gray blunt impact dust and grit. Three columns and two rows, 1536x1024. Organic practical particulate turbulence. No fire, electric glow, vector shapes, characters, weapons, text or frame borders. Transparent PNG with real alpha; otherwise black preview void. Small readable 35-60px bursts for mobile.",
+  "source": {
+    "file": "assets/source/v100/vfx/generated/ground-impact-six-frames-r1.png",
+    "bytes": 1857159,
+    "sha256": "bdb6bdc55beca4bce9cb0afb2802b724cb86efdf7ee7acf33c2a64d5039e8f81"
+  },
+  "output": {
+    "file": "public/art/v100/combat-vfx/ground-impact-six-frames-r1.webp",
+    "bytes": 914600,
+    "sha256": "11497b0a0f63a88c29b57ec60cebb18253377d7498565884508caf9f8f6f4f0b"
+  },
+  "geometry": {
+    "columns": 3,
+    "rows": 2,
+    "cellSize": 512,
+    "contactAnchor": {
+      "x": 256,
+      "y": 360
+    }
+  },
+  "alpha": {
+    "min": 0,
+    "max": 253,
+    "edgeVisibleMax": 0.20392156862745098,
+    "edgeVisibleMean": 0.0011212690631806025
+  },
+  "adaptation": "Original fractional alpha and visible RGB retained; lossless WebP encoding only. No background removal or pixel painting.",
+  "status": "Local candidate. Runtime, actual-play visual acceptance and release are recorded separately."
+}

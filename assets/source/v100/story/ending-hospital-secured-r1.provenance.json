@@ -1,0 +1,24 @@
+{
+  "schema": "v100-authored-environment-derivative-v1",
+  "generatedAtUtc": "2026-10-01T19:47:12.891Z",
+  "tool": "image_gen.imagegen",
+  "usage": "precise-object-edit of existing hospital background",
+  "reference": "public/art/v080/stages/hospital-emergency-ward-background-v1.webp",
+  "referenceSha256": "d9d900e00d4eede807dd6e964bc561e9a5c296b60be0511fd1b98e051422d712",
+  "request": "Secured functioning hospital several days after recapture. Same architecture and visual style. Remove infected red growth, blood and baked health bar; restore clinical curtains, bed, sampling workbench, small monitor and morning light. No people, text or UI.",
+  "source": {
+    "path": "assets/source/v100/story/ending-hospital-secured-r1.png",
+    "bytes": 2133193,
+    "sha256": "9d9c6f432ee65015376abaadec868834625bc343919ae3c9fbc6bc971caca8c3"
+  },
+  "output": {
+    "path": "public/art/v100/story/ending-hospital-secured-r1.webp",
+    "bytes": 197016,
+    "sha256": "a3749bfa1e76eb20ded969344ed55bd0b6766f1c74bbbd2bd7dd3eea8ee82382",
+    "width": 1600,
+    "height": 900
+  },
+  "conversion": "sharp resize(1600,900,cover,centre), WebP quality88 effort6",
+  "identityMasterChanges": 0,
+  "originalBattleBackgroundChanges": 0
+}

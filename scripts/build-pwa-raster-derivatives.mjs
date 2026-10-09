@@ -18,6 +18,7 @@ const checkOnly = process.argv.includes("--check");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const pngAssets = (manifest.assets ?? []).filter((asset) => (
   asset.path.endsWith(".png") && !asset.path.startsWith("/icons/")
+  && asset.path !== "/art/v080/characters/cards/kumaverson-formation-card-r2.png"
 ));
 
 let generated = 0;

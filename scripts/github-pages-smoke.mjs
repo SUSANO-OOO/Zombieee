@@ -3,13 +3,15 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { chromium } from "playwright";
+import { releaseTitleForVersion } from "../app/releaseIdentity.js";
 
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { finishV100TitleIntro } from "./v100-title-qa-entry.mjs";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
-const expectedTitle = expectedVersion ? `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}` : null;
+const expectedTitle = expectedVersion ? releaseTitleForVersion(expectedVersion) : null;
 const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
@@ -20,6 +22,8 @@ const contentTypes = {
   ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
   ".ogg": "audio/ogg",
+  ".wav": "audio/wav",
+  ".woff2": "font/woff2",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
@@ -56,7 +60,8 @@ const address = server.address();
 if (!address || typeof address === "string") throw new Error("Unable to start the Pages smoke server");
 const url = `http://127.0.0.1:${address.port}${basePath}/`;
 
-const browser = await chromium.launch({ headless: true });
+const channel = process.env.GITHUB_PAGES_BROWSER_CHANNEL;
+const browser = await chromium.launch({ headless: true, args: ["--mute-audio"], ...(channel ? { channel } : {}) });
 const results = [];
 try {
   for (const viewport of [
@@ -65,6 +70,10 @@ try {
     { width: 844, height: 340 },
   ]) {
     const context = await browser.newContext({ viewport });
+    await context.addInitScript(() => {
+      const play = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function () { this.muted = true; return play.call(this); };
+    });
     const page = await context.newPage();
     const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] };
     page.on("console", (message) => {
@@ -85,8 +94,11 @@ try {
     // carry on. The invitation has its own coverage in the PWA matrix.
     await dismissInstallOffer(page);
 
-    await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
-    const startButton = page.locator(".title-start");
+    await finishV100TitleIntro(page);
+    const freshStart = page.getByRole("button", { name: "初めから", exact: true });
+    await freshStart.click();
+    await page.locator("#v100-name-title").waitFor({ state: "visible", timeout: 120_000 });
+    const startButton = page.getByRole("button", { name: "この名前で作戦を始める", exact: true });
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
     const initialTitle = await page.title();
     if (expectedTitle && initialTitle !== expectedTitle) {
@@ -106,8 +118,9 @@ try {
     }
 
     await page.screenshot({ path: path.join(evidenceDir, `github-pages-title-${viewport.width}x${viewport.height}.png`), fullPage: true });
+    await page.locator("#v100-player-name").fill("公開確認");
     await startButton.click();
-    await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator('[data-v100-event-id="v100:event:prologue"]').waitFor({ state: "visible", timeout: 30_000 });
     const postInteractionTitle = await page.title();
     if (expectedTitle && postInteractionTitle !== expectedTitle) {
       throw new Error(`Post-interaction title does not equal "${expectedTitle}": ${postInteractionTitle}`);

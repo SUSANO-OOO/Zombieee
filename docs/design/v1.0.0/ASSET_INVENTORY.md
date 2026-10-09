@@ -92,3 +92,13 @@ Reuse existing approved production portraits for the base cast and v0.9.9.5 iden
 - Verify every required runtime asset decodes before the playable route mounts; failure/corruption blocks play and same-screen retry fetches only failed assets.
 
 Any hash, identity, limb count, alpha, license, or speaker-boundary mismatch is a stop condition, not an invitation for Luna to select a substitute.
+
+## 7. Kumaya story backgrounds — completion correction, 2026-09-07
+
+The September 7 whole-game playtest found that the peaceful prologue used a ruined shopping street and the epilogue used an unrelated boss defeat. Two project-original environment assets now represent the same room before the outbreak and after reopening. They contain no people and do not replace any approved character identity. The reopened room is an ImageGen edit of the first composition, preserving its architecture and viewpoint.
+
+- Sources: `assets/source/v100/story/kumaya-before-outbreak-v1.png` and `kumaya-reopened-v1.png`, each 1672x941.
+- Runtime: `public/art/v100/story/kumaya-before-outbreak-v1.webp` (158,796 bytes) and `kumaya-reopened-v1.webp` (175,738 bytes).
+- Exact requests: `assets/source/v100/story/imagegen-requests.txt`. Source/output hashes and dimensions: `assets/source/v100/story/provenance.json`.
+- Re-encoding: `node scripts/build-v100-story-backgrounds.mjs`; no composition edits in the encoder. Release manifest includes both as campaign-critical assets. No third-party art or private photo was used.
+- Visual checks: the warm intact room and repaired room retain the same counter, kitchen and entrance; browser fixtures at 1280x720, 844x390 and 844x340 preserve dialogue/control readability. Full-game visual acceptance and Producer final acceptance remain outstanding.

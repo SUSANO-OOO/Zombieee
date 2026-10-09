@@ -6,8 +6,32 @@ import {
   BATTLE_SUPPORT_ASSET_PATHS,
   requiredBattleAssetPlan,
 } from "../app/battleAssetPlan.js";
-import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
+import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_IDS, campaignUnitIdToCombatKind } from "../app/campaign.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
+import { CHARACTER_PORTRAIT_ART, FORMATION_CARD_ART } from "../app/spriteManifest.js";
+import { V100_UNITS } from "../app/v100Registry.js";
+import { v100StoryPortraitPath } from "../app/v100StoryPortraitPaths.js";
+
+test("battle readiness includes each selected card image once and excludes unrelated card images", () => {
+  const plan = requiredBattleAssetPlan({ stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+    formationKinds: ["guardian", "medic", "guardian"], enemyKinds: ["walker"] });
+  assert.deepEqual(plan.cards.map(({ kind }) => kind), ["guardian", "medic"]);
+  for (const kind of ["guardian", "medic"]) assert.equal(plan.paths.filter(p => p === FORMATION_CARD_ART[kind]).length, 1);
+  assert.ok(!plan.paths.includes(FORMATION_CARD_ART.brawler));
+  assert.ok(Object.isFrozen(plan.cards) && plan.cards.every(Object.isFrozen));
+});
+
+test("V1 readiness decodes the same approved portrait that each battle card displays", () => {
+  for (const unit of V100_UNITS) {
+    const kind = campaignUnitIdToCombatKind(unit.id);
+    const plan = requiredBattleAssetPlan({ stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+      formationKinds: [kind, kind], useCharacterPortraitCards: true });
+    const expected = v100StoryPortraitPath(unit.id) ?? FORMATION_CARD_ART[kind];
+    if (v100StoryPortraitPath(unit.id)) assert.equal(CHARACTER_PORTRAIT_ART[kind], expected, unit.id);
+    assert.deepEqual(plan.cards.map(({ path }) => path), [expected], unit.id);
+    assert.equal(plan.paths.filter(path => path === expected).length, 1, unit.id);
+  }
+});
 
 test("all 20 campaign stages have a closed required visual plan", () => {
   assert.equal(CAMPAIGN_STAGES.length, 20);
@@ -75,4 +99,41 @@ test("a finite HUD runtime plan loads the selected formation and authored stage 
     "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned",
   ]);
   assert.ok(!plan.sprites.some(({ kind }) => kind === "spindle"));
+});
+
+test("legacy exhaustive QA can exclude V1 atlases without changing V1 production plans", () => {
+  const stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+  const full = requiredBattleAssetPlan({ stageId, includeAllSprites: true });
+  const legacy = requiredBattleAssetPlan({
+    stageId,
+    includeAllSprites: true,
+    includeV100Sprites: false,
+  });
+  assert.ok(full.sprites.some(({ kind }) => kind === "red-panther-smg"));
+  assert.ok(!legacy.sprites.some(({ kind }) => kind === "red-panther-smg"));
+  assert.deepEqual(full.sprites.filter(({ kind }) => !legacy.sprites.some(sprite => sprite.kind === kind)).map(({ kind }) => kind).sort(),
+    ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b", "kumaverson-guard"].sort());
+  assert.deepEqual(full.stageObjects.filter(entry=>!legacy.stageObjects.some(old=>old.id===entry.id)).map(entry=>entry.path),[
+    "/art/v100/mission-objects/boundary-gate-states-r1.webp",
+    "/art/v100/combat-vfx/aircraft-support-r1.webp",
+    "/art/v100/combat-vfx/explosion-fire-smoke.webp",
+    "/art/v100/combat-vfx/blackSmoke01.webp",
+    "/art/v100/combat-vfx/blackSmoke05.webp",
+    "/art/v100/combat-vfx/whitePuff00.webp",
+    "/art/v100/combat-vfx/muzzle-six-frames-r1.webp",
+    "/art/v100/combat-vfx/contact-six-frames-r1.webp",
+    "/art/v100/combat-vfx/ground-impact-six-frames-r1.webp",
+    "/art/v100/combat-vfx/metal-impact-six-r1.webp",
+    "/art/v100/combat-vfx/claw-contact-six-r1.webp",
+    "/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png",
+    "/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png",
+    "/art/v100/combat-vfx/grenade-projectile-r1.webp",
+    "/art/v100/combat-vfx/fire-whisky-projectile-r1.webp",
+    "/art/v100/combat-vfx/lightblade-six-frames-r1.webp",
+    "/art/v100/combat-vfx/countercut-six-frames-r1.webp",
+    "/art/v100/combat-vfx/ground-fire-smoke-r1.webp",
+    "/art/v100/characters/tatara-ground-strike-r1.webp",
+  ]);
+  assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
+  assert.equal(full.persistent.length, legacy.persistent.length);
 });

@@ -2,8 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { V099_APP_ICON_IDENTITY } from "./appIconIdentity.js";
 import { RELEASE_TITLE, RELEASE_VERSION } from "./releaseIdentity.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+import { FictionNotice } from "./FictionNotice";
+import { LandscapeGate } from "./LandscapeGate";
 import "./globals.css";
 import "./campaign.css";
+import "./v100Typography.css";
 
 export const viewport: Viewport = {
   // vinext 0.0.50 serializes the standard viewport fields but currently omits
@@ -23,7 +26,7 @@ const SHARE_DESCRIPTION =
 export const metadata: Metadata = {
   title: RELEASE_TITLE,
   description:
-    "大型移動拠点と生存者部隊を率いるリアルタイム戦略・防衛ゲーム。全16名の戦闘アニメーション、VFX、スマートフォン描画、雇用導線を刷新。",
+    "装甲車両と16人の生存者を率い、西新の全30作戦を戦い抜くリアルタイム戦略・防衛ゲーム。",
   icons: {
     icon: [{ url: V099_APP_ICON_IDENTITY.paths.favicon48, type: "image/png", sizes: "48x48" }],
     shortcut: V099_APP_ICON_IDENTITY.paths.favicon48,
@@ -48,6 +51,9 @@ export default function RootLayout({
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/BIZUDPGothic-Regular.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/ZenKakuGothicNew-Bold.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/Rajdhani-Bold.woff2" crossOrigin="anonymous" />
         {/*
           Absolute paths here on purpose: the GitHub Pages build rewrites
           root-absolute references to the /Zombieee base path and then verifies
@@ -63,7 +69,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="西新世紀末" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body>{children}</body>
+      <body><LandscapeGate><FictionNotice>{children}</FictionNotice></LandscapeGate></body>
     </html>
   );
 }

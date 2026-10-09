@@ -18,6 +18,7 @@ import {
 } from "../app/content/generator.js";
 import { CONTENT_REGISTRY } from "../app/content/registry.js";
 import { validateContentRegistry } from "../app/content/validator.js";
+import { validateV100CanonicalContent } from "../app/v100CanonicalContent.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "..");
@@ -93,6 +94,7 @@ async function cleanGeneratedFiles(files) {
 async function validationReport() {
   const physicalAssetPaths = await collectPhysicalAssetPaths(path.join(repositoryRoot, "public"));
   const production = validateContentRegistry(CONTENT_REGISTRY, { physicalAssetPaths });
+  const v100 = validateV100CanonicalContent({ physicalAssetPaths });
   const syntheticRegistry = createSyntheticContentRegistry({
     unitCount: 100,
     enemyCount: 100,
@@ -101,8 +103,9 @@ async function validationReport() {
   const synthetic = validateContentRegistry(syntheticRegistry);
   const audits = runContentPipelineAudits();
   return {
-    ok: production.ok && synthetic.ok && audits.ok,
+    ok: production.ok && v100.ok && synthetic.ok && audits.ok,
     production,
+    v100,
     synthetic: {
       ok: synthetic.ok,
       errors: synthetic.errors,

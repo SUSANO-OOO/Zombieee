@@ -70,6 +70,32 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060:public/asset-manifest.json",
   ], { encoding: "utf8" }));
   const current = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+  const v100ApprovedPaths = new Set(current.assets
+    .filter(({ path }) => path.startsWith("/art/v100/"))
+    .map(({ path }) => path));
+  const { V100_RELEASE_ASSET_CONTRACT, V100_PRODUCER_FEEDBACK_ART_ADDITIONS, V100_WEBKIT_CARD_REPLACEMENT, V100_ENDING_MUSIC_ADDITION, V100_DESIGN_ASSET_ADDITIONS, V100_TITLE_AUDIO_ADDITION } = await import("../scripts/v100-release-asset-contract.mjs");
+  assert.equal(v100ApprovedPaths.size, V100_RELEASE_ASSET_CONTRACT.artAdditionsFromV0995, "V1 adds exactly the source-bound runtime art");
+  const { V100_PHONE_REVIEW_ASSET_ADDITIONS } = await import("../scripts/v100-phone-review-asset-contract.mjs");
+  const phoneReviewPaths = new Set(V100_PHONE_REVIEW_ASSET_ADDITIONS.map(asset=>asset.path));
+  const producerFeedbackPaths = new Set(V100_PRODUCER_FEEDBACK_ART_ADDITIONS.map(asset=>asset.path));
+  const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
+  const { V100_POST_CREDITS_ASSET_ADDITIONS } = await import("../scripts/v100-post-credits-asset-contract.mjs");
+  const { V100_R5_ASSET_ADDITIONS } = await import("../scripts/v100-r5-asset-contract.mjs");
+  const r5AudioPaths = new Set(V100_R5_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/audio/")).map(asset=>asset.path));
+  const finaleAudioAssets = V100_POST_CREDITS_ASSET_ADDITIONS.filter(asset => asset.path.startsWith("/audio/"));
+  assert.deepEqual(finaleAudioAssets.map(asset=>asset.path).sort(), ["/audio/v100/epilogue/king-laugh-r1.mp3", "/audio/v100/epilogue/meinohama-waves-r1.mp3"], "exactly the source-bound CC0 waves and laugh are additional ending audio");
+  const finaleAudioPaths = new Set(finaleAudioAssets.map(asset => asset.path));
+  for (const expected of finaleAudioAssets) {
+    const actual = current.assets.find(asset => asset.path === expected.path);
+    assert.deepEqual({ path: actual?.path, bytes: actual?.bytes, hash: actual?.hash, criticality: actual?.criticality }, expected);
+  }
+  assert.equal(designAssetPaths.size, 10, "six regional maps and four licensed fonts are explicit candidate additions");
+  for (const expected of V100_DESIGN_ASSET_ADDITIONS) {
+    const actual = current.assets.find(asset => asset.path === expected.path);
+    assert.ok(actual, expected.path);
+    assert.deepEqual({ path: actual.path, bytes: actual.bytes, hash: actual.hash, criticality: actual.criticality }, expected);
+  }
+  assert.deepEqual(new Set(current.assets.filter(({ path }) => designAssetPaths.has(path)).map(({ path }) => path)), designAssetPaths);
   const finalRemediationPaths = new Set([
     "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
     "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
@@ -102,6 +128,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "/art/v0995/enemies/spindle-battle-v2.png",
   ]);
   const replacedVisualPaths = new Set([
+    "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
     "/art/v080/characters/monkey-battle-r2.png",
     "/art/v080/characters/cards/monkey-formation-card-r2.webp",
     "/art/v080/characters/portraits/monkey-event-portrait-r2.webp",
@@ -120,10 +147,21 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .map(({ path, hash }) => [path, hash]));
   const currentNonIcons = new Map(current.assets
     .filter(({ path }) => !path.startsWith("/icons/"))
+    .filter(({ path }) => !v100ApprovedPaths.has(path))
+    .filter(({ path }) => !phoneReviewPaths.has(path))
+    .filter(({ path }) => !producerFeedbackPaths.has(path))
+    .filter(({ path }) => !designAssetPaths.has(path) && path !== V100_TITLE_AUDIO_ADDITION.path)
+    .filter(({ path }) => path !== V100_ENDING_MUSIC_ADDITION.path)
+    .filter(({ path }) => !finaleAudioPaths.has(path) && !r5AudioPaths.has(path))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))
+    .filter(({ path }) => path !== V100_WEBKIT_CARD_REPLACEMENT.path)
     .map(({ path, hash }) => [path, hash]));
   assert.deepEqual(currentNonIcons, previousNonIcons);
+  const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
+  assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);
+  assert.equal(current.assets.some(({ path }) => path === "/art/v080/characters/cards/kumaverson-formation-card-r2.webp"), false);
+  assert.deepEqual(current.assets.find(({ path }) => path === V100_WEBKIT_CARD_REPLACEMENT.path)?.hash, V100_WEBKIT_CARD_REPLACEMENT.hash);
 
   const finalRemediationAssets = current.assets.filter(({ path }) => finalRemediationPaths.has(path));
   assert.deepEqual(new Set(finalRemediationAssets.map(({ path }) => path)), finalRemediationPaths);

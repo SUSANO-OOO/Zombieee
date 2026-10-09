@@ -245,6 +245,73 @@ async function flushAsyncWork() {
   for (let index = 0; index < 6; index += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
+function largeMusicMixer({ maxCacheBytes = 64 * 1024 * 1024, pcmBytes = 40 * 1024 * 1024 } = {}) {
+  const context = new FakeAudioContext();
+  context.decodeAudioData = async () => ({ length: pcmBytes / 8, numberOfChannels: 2, duration: 120 });
+  const network = makeFetcher();
+  const assets = Array.from({ length: 7 }, (_, index) => ({ id: `song-${index}`, category: "bgm", loop: true, sources: [{ src: `/song-${index}.mp3` }] }));
+  const manifest = createAudioManifest({ assets, scenes: assets.map(asset => ({ id: asset.id, bgm: asset.id, crossfadeMs: 100 })) });
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher: network.fetcher, maxCacheBytes, enableAcknowledgementTone: false });
+  return { mixer, context, network };
+}
+
+test("seven long songs retain bounded PCM, release compressed copies and refetch an evicted scene", async () => {
+  const { mixer, context, network } = largeMusicMixer();
+  await mixer.unlock();
+  for (let index = 0; index < 7; index += 1) {
+    await mixer.setScene(`song-${index}`);
+    for (const voice of context.sources.slice(0, -1)) voice.end();
+    assert.ok(mixer.getDiagnostics().retainedBytes <= 64 * 1024 * 1024);
+    assert.equal(mixer.assetCache.get(`song-${index}`).raw, null);
+  }
+  assert.ok(mixer.getDiagnostics().cacheEvictions >= 6);
+  await mixer.setScene("song-0");
+  assert.equal(network.paths.filter(path => path === "/song-0.mp3").length, 2);
+  await mixer.dispose();
+});
+
+test("PCM over budget stays protected until both a crossfade and current scene stop", async () => {
+  const { mixer, context } = largeMusicMixer();
+  await mixer.unlock();
+  await mixer.setScene("song-0");
+  await mixer.setScene("song-1");
+  assert.equal(mixer.getDiagnostics().retainedBytes, 80 * 1024 * 1024);
+  assert.equal(mixer.getDiagnostics().protectedBytes, 80 * 1024 * 1024);
+  assert.ok(mixer.assetCache.has("song-0"));
+  context.sources[0].end();
+  assert.equal(mixer.getDiagnostics().retainedBytes, 40 * 1024 * 1024);
+  assert.ok(mixer.assetCache.has("song-1"));
+  await mixer.dispose();
+});
+
+test("a large lazy cue survives decode-to-play handoff and is evicted only after it ends", async () => {
+  const { mixer, context } = largeMusicMixer({ maxCacheBytes: 1 });
+  await mixer.unlock();
+  const voice = await mixer.play("song-0");
+  assert.ok(voice);
+  assert.equal(context.sources.length, 1);
+  assert.equal(mixer.getDiagnostics().overBudgetBytes, 40 * 1024 * 1024 - 1);
+  assert.ok(mixer.assetCache.has("song-0"));
+  voice.stop();
+  assert.equal(mixer.getDiagnostics().retainedBytes, 0);
+  assert.equal(mixer.getDiagnostics().activeVoices, 0);
+  await mixer.dispose();
+});
+
+test("loading preload and pending playback cannot be evicted by an unrelated completed cue", async () => {
+  const { mixer, context } = largeMusicMixer({ maxCacheBytes: 1 });
+  await mixer.unlock();
+  const preload = mixer.preloadAssets(["song-0", "song-1"]);
+  const play = mixer.play("song-0");
+  await preload;
+  const voice = await play;
+  assert.ok(voice);
+  assert.equal(context.sources[0].buffer.length, 40 * 1024 * 1024 / 8);
+  assert.ok(mixer.assetCache.has("song-0"));
+  assert.ok(!mixer.assetCache.has("song-1"));
+  await mixer.dispose();
+});
+
 test("scene assets preload without AudioContext and pending music starts only after a user gesture", async () => {
   const context = new FakeAudioContext();
   const target = new FakeEventTarget();

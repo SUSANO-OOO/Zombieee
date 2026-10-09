@@ -26,6 +26,9 @@ import {
   combatWeaponAnchor,
   combatClipEventsBetween,
   combatClipEventsFor,
+  completedAttackAudioReceiptId,
+  COMPLETED_ATTACK_IMPACT_SCHEMA,
+  createCompletedAttackImpactReceipt,
   createCombatAnimationRuntime,
   linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
@@ -558,7 +561,8 @@ test("Mrs. Chiha's normal grenade uses a locked impact point, delayed AoE, and m
   assert.match(source, /mrsLauncherBash[\s\S]{0,240}launcherBashRange/);
   assert.match(source, /eventKind: "muzzle"[\s\S]{0,500}remainingSeconds: grenadeRound\.offsetSeconds[\s\S]{0,500}eventKind: "impact"[\s\S]{0,500}remainingSeconds: grenadeRound\.hitOffsetSeconds/);
   assert.match(source, /hit\.damageMode === "grenade"[\s\S]{0,900}effectDistance\(splashTarget, impactPoint\)[\s\S]{0,600}grenadeSplashMultiplier/);
-  assert.match(source, /f\.kind === "mrs-chiha"[\s\S]{0,250}mrsLauncherBash \? "bash" : "shot"/);
+  assert.match(source, /if \(fighter\.kind === "mrs-chiha" && !mrsLauncherBash\)/);
+  assert.match(source, /fighter\.kind === "mrs-chiha"\s*\? "bash"/);
   assert.match(source, /attackVariant = f\.kind === "mrs-chiha" && mrsLauncherBash \? "launcher-bash" : null/);
   assert.match(source, /locksGrenadeLandingPoint[\s\S]{0,260}hit\.targetX/);
   const scheduledGrenadeIndex = source.indexOf('else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash');
@@ -636,6 +640,107 @@ test("linked muzzle and impact transactions cancel and cap atomically", () => {
     ...linked,
   ], 2);
   assert.deepEqual(capped, linked);
+});
+
+test("completed impact receipt binds one attack, exact target, reaction, and production cue request", () => {
+  const audioReceiptId = completedAttackAudioReceiptId({
+    battleGeneration: 4,
+    sourceId: 12,
+    attackSequence: 7,
+  });
+  assert.equal(audioReceiptId, "combat-attack:4:12:7");
+  const receipt = createCompletedAttackImpactReceipt({
+    battleGeneration: 4,
+    sourceId: 12,
+    sourceSide: "human",
+    sourceKind: "ranger",
+    attackSequence: 7,
+    targetId: 31,
+    targetSide: "zombie",
+    targetKind: "spitter",
+    impactOrdinal: 0,
+    mode: "projectile",
+    committedAtBattleTime: 8.25,
+    contactAtBattleTime: 8.61,
+    reactionOutcome: "hit",
+    audioCueId: "ranger-rifle-shot",
+    audioReceiptId,
+    audioRequestObserved: true,
+  });
+  assert.ok(Object.isFrozen(receipt));
+  assert.deepEqual(receipt, {
+    schema: COMPLETED_ATTACK_IMPACT_SCHEMA,
+    battleGeneration: 4,
+    sourceId: 12,
+    attackSequence: 7,
+    targetId: 31,
+    impactOrdinal: 0,
+    committedAtBattleTime: 8.25,
+    contactAtBattleTime: 8.61,
+    sourceSide: "human",
+    sourceKind: "ranger",
+    targetSide: "zombie",
+    targetKind: "spitter",
+    mode: "projectile",
+    reactionOutcome: "hit",
+    audioCueId: "ranger-rifle-shot",
+    audioReceiptId,
+    audioRequestObserved: true,
+  });
+});
+
+test("completed impact receipt separates multi-hit impacts and permits lethal contact", () => {
+  const base = {
+    battleGeneration: 9,
+    sourceId: 5,
+    sourceSide: "zombie",
+    sourceKind: "machine-gunner",
+    attackSequence: 3,
+    targetId: 8,
+    targetSide: "human",
+    targetKind: "brawler",
+    mode: "delayed",
+    committedAtBattleTime: 1.2,
+    contactAtBattleTime: 1.5,
+    reactionOutcome: "defeated",
+    audioCueId: "machine-gunner-attack",
+    audioReceiptId: "combat-attack:9:5:3",
+    audioRequestObserved: true,
+  };
+  const first = createCompletedAttackImpactReceipt({ ...base, impactOrdinal: 0 });
+  const second = createCompletedAttackImpactReceipt({ ...base, impactOrdinal: 1 });
+  assert.ok(first);
+  assert.ok(second);
+  assert.notEqual(first.impactOrdinal, second.impactOrdinal);
+  assert.equal(second.reactionOutcome, "defeated");
+});
+
+test("completed impact receipt fails closed for mixed or incomplete evidence", () => {
+  const base = {
+    battleGeneration: 2,
+    sourceId: 1,
+    sourceSide: "human",
+    sourceKind: "ranger",
+    attackSequence: 2,
+    targetId: 6,
+    targetSide: "zombie",
+    targetKind: "spitter",
+    impactOrdinal: 0,
+    mode: "direct",
+    committedAtBattleTime: 4,
+    contactAtBattleTime: 4.1,
+    reactionOutcome: "hit",
+    audioCueId: "ranger-rifle-shot",
+    audioReceiptId: "combat-attack:2:1:2",
+    audioRequestObserved: true,
+  };
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, targetSide: "human" }), null);
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, contactAtBattleTime: 3.9 }), null);
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, attackSequence: 0 }), null);
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, mode: "render-frame" }), null);
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, audioReceiptId: "combat-attack:2:9:2" }), null);
+  assert.equal(createCompletedAttackImpactReceipt({ ...base, audioRequestObserved: false }), null);
+  assert.equal(completedAttackAudioReceiptId({ battleGeneration: 2, sourceId: 1, attackSequence: 0 }), null);
 });
 
 test("runtime cancels an unfired burst transaction instead of applying its orphan impact", async () => {

@@ -7,13 +7,15 @@ const OPERATION_TARGET_CLOSED = "(?:page|browser|browserContext|context|locator|
 const DIRECT_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
 const LABELED_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+|[a-z]+\\/\\d+x\\d+)\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)*:\\s*(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
 const TARGET_CRASHED_LINE = /^(?:Error:\s*)?Target crashed$/u;
+const NESTED_SETTLE_TARGET_CLOSED_LINE = new RegExp("^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+|[a-z]+\\/\\d+x\\d+)\\/[a-z0-9-]+\\/settle:\\s*[^\\n]*:\\s*(?:Error:\\s*)?" + OPERATION_TARGET_CLOSED + "$", "u");
 
 export function isRetryableTargetClosedLog(log) {
   return String(log).split(/\r?\n/u)
     .map((line) => line.trim())
     .some((line) => TARGET_CRASHED_LINE.test(line)
       || DIRECT_TARGET_CLOSED_LINE.test(line)
-      || LABELED_TARGET_CLOSED_LINE.test(line));
+      || LABELED_TARGET_CLOSED_LINE.test(line)
+      || NESTED_SETTLE_TARGET_CLOSED_LINE.test(line));
 }
 
 function runProcess({ cwd, env, command, args, onOutput }) {
@@ -37,11 +39,11 @@ export async function runBoundedEnemyRuntime({
   cwd = process.cwd(),
   env = process.env,
   evidenceRoot = env.V0995_ENEMY_QA_EVIDENCE_DIR,
-  maxAttempts = 2,
+  maxAttempts = 1,
   runAttempt,
 } = {}) {
   if (!evidenceRoot) throw new Error("V0995_ENEMY_QA_EVIDENCE_DIR is required");
-  if (maxAttempts !== 2) throw new Error("enemy runtime bounded runner requires exactly two maximum attempts");
+  if (maxAttempts !== 1) throw new Error("enemy runtime requires exactly one attempt; a failure returns to SOL");
   const root = path.resolve(cwd, evidenceRoot);
   await mkdir(root, { recursive: true });
   const attempts = [];
@@ -68,8 +70,7 @@ export async function runBoundedEnemyRuntime({
       await writeFile(path.join(root, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
       return report;
     }
-    if (attempt !== 1 || !retryableTargetClosed) break;
-    console.warn("Retrying once after an exact hosted-WebKit target-closed incident; every product assertion remains required.");
+    break;
   }
   const report = { status: "failed", attempts };
   await writeFile(path.join(root, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");

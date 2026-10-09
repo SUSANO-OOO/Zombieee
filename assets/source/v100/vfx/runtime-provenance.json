@@ -1,0 +1,176 @@
+{
+  "sources": [
+    {
+      "creator": "rubberduck",
+      "title": "25 special effects rendered with blender",
+      "license": "CC0-1.0",
+      "url": "https://opengameart.org/content/25-special-effects-rendered-with-blender",
+      "archive": "outputs/completion/rubberduck-volumetrics.zip",
+      "selected": "effect-images/explosion/fire+smoke/0001.png through 0030.png"
+    },
+    {
+      "creator": "Kenney",
+      "title": "Smoke Particles",
+      "license": "CC0-1.0",
+      "url": "https://kenney.nl/assets/smoke-particles",
+      "notice": "kenney-smoke/license.txt"
+    }
+  ],
+  "adaptation": "Original alpha preserved. Atlas packing, uniform resize and WebP encoding only. Timing, placement and opacity are runtime animation.",
+  "sourceFiles": [
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0001.png",
+      "sha256": "eea6cc5d766633167066ab9768a7301dce26f7a33a71779502321448b2299d8d"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0002.png",
+      "sha256": "0f1ea14270dbeb6a2008526cd130e4d01518b8b21352a15f01bae3095149ab4c"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0003.png",
+      "sha256": "f364a1515db4f755fce1089ca1a2af537eca3120afe0b2e5456d36ae2eab74a9"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0004.png",
+      "sha256": "68c636cdd17d12958143e7876d2d2a5cc47d9e06bd61b841f59f4d288d0acf96"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0005.png",
+      "sha256": "09345f7a572c88e442a5b80d3cc9317c41f1cf6fa6587d317746510d9a923f4c"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0006.png",
+      "sha256": "c4f074d932ce87089e517b9b188715ff1b5210eec28f6ddaafd0a25d56ca217b"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0007.png",
+      "sha256": "1fd9eb052bdff53910232796819a6944951afa3d6c1e5ca989f11aabf7468cbb"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0008.png",
+      "sha256": "5ee5522be258a3a3d912b00d8aaec1ce675961b650b0962c3714cb7ced784b5d"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0009.png",
+      "sha256": "7bd49bb044856ba26a97ce3454286608b44b4eb719302c8e147addbbd5173ca9"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0010.png",
+      "sha256": "5fd5cd39349a47c16ad69151a12defc53a630c5d8fe8be26e905df44e3adca59"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0011.png",
+      "sha256": "c430f05ab615cb9ef7d45207ce71235d99da3b679db1c66b6c9a4b1983edd44f"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0012.png",
+      "sha256": "4571c216fec82509fe0a6a8a7d52f555c4e860b12c171320432dea60621f1ca5"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0013.png",
+      "sha256": "4077a7448f9a1ad2e41f2ac06eb56c15e19b018a5776dd5eac99ee39beddc2a8"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0014.png",
+      "sha256": "7fce05dfd7d0615fa245e8022c4ce93e6c4a130ec389b39234d5a0b35d515b70"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0015.png",
+      "sha256": "d84fada9dc428d3b7b552eed0395c6cf26c28e130ef5d1640fbea41cc5134162"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0016.png",
+      "sha256": "c02fb9947c86049cbc2495cd019bf4887cf104a8047199dea059285db53a8a98"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0017.png",
+      "sha256": "0c514564a1f024e464c83f10ff8db99249259d7b9a2e3be1530e9a980eb4a598"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0018.png",
+      "sha256": "22e653827349b2220249649be3a723b7be93bccfcc26fe045555c8ffcd8cfbe1"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0019.png",
+      "sha256": "1d074469f333f71978eb19ddd4bfd2feda9166da1d3f7611934809f807333440"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0020.png",
+      "sha256": "9abb0665353eb0c1d94f18e8e1076247defbd670a3f9669daa202a09f9688f16"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0021.png",
+      "sha256": "c2d77bab1f501059e11650f46daa27d353df916a4c3810d3f07d58fb6f6862b8"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0022.png",
+      "sha256": "7fcb2c44604696c1144e2d0361418d0e210488a7b1f60e152a109746c71858a8"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0023.png",
+      "sha256": "1e15dac54c8e20e6f17cee20ac312ffe556c8f474bb4e130a1578390d984290e"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0024.png",
+      "sha256": "9ccbcf00a1dda4f9054cb9aa6b56df916b262905e722bb4e6e6e9b7ea6fa3717"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0025.png",
+      "sha256": "612cc5c8042e13c93681477c9c335abe1581b38a97a7b49abb3e9f219004ce95"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0026.png",
+      "sha256": "183e1d58e99f614f7f6f18fdd6322c8f8e6cb403534f03c23df4b99126133d5d"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0027.png",
+      "sha256": "5a6e7264a3c4b58d347ce474fd6cb70b1541f6b44eb6ba6f755e209fee8e9b0c"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0028.png",
+      "sha256": "6e1edfdfb2a4b53599dfd99fe0f1f2276931e9ef6152e257bb944fbadcf7f403"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0029.png",
+      "sha256": "1da8581d9df73f0f1d3f391e549ff0f713f09715b60fd09118e99adf071d5c88"
+    },
+    {
+      "file": "assets/source/v100/vfx/rubberduck/0030.png",
+      "sha256": "6f9aca8eaa3f11ca8cbb070e93d46b0aed64af41a2edf845c911d59a2a919f43"
+    },
+    {
+      "file": "assets/source/v100/vfx/kenney-smoke/blackSmoke01.png",
+      "sha256": "b5450964cdadbbb6125e4a6c5b2b0a5634cb242936d0188354f447ac781d017e"
+    },
+    {
+      "file": "assets/source/v100/vfx/kenney-smoke/blackSmoke05.png",
+      "sha256": "e379a9ada464bc06d7d98fa4c98203a6bee5adc34b77c0fb11c1de37af2184b4"
+    },
+    {
+      "file": "assets/source/v100/vfx/kenney-smoke/whitePuff00.png",
+      "sha256": "33f894c2279bee9f77874dbfa3c0e9f071a0ee5e1a7065dcc40196029d699f58"
+    }
+  ],
+  "files": [
+    {
+      "file": "public/art/v100/combat-vfx/explosion-fire-smoke.webp",
+      "bytes": 83754,
+      "sha256": "e50eb4eec450aa4afc7173ce1e606cc0b7c489de4831f92ec025dd5d440f07d6"
+    },
+    {
+      "file": "public/art/v100/combat-vfx/blackSmoke01.webp",
+      "bytes": 4596,
+      "sha256": "37b254fa0ff594ca1b8f604783f4d2b854675fa3fa230b8c82d3352307adfec1"
+    },
+    {
+      "file": "public/art/v100/combat-vfx/blackSmoke05.webp",
+      "bytes": 5302,
+      "sha256": "9fff72b85a70d9be9b4e4fd3dd9af9c7a1540fcb39f9c40405c9d394a0e7a52b"
+    },
+    {
+      "file": "public/art/v100/combat-vfx/whitePuff00.webp",
+      "bytes": 6110,
+      "sha256": "62ff29d2d893c95c26c7e043fd16885edfbe370f587dd43c6a4bf749a1f41fd7"
+    }
+  ]
+}
