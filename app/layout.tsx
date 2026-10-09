@@ -6,6 +6,7 @@ import { FictionNotice } from "./FictionNotice";
 import { LandscapeGate } from "./LandscapeGate";
 import "./globals.css";
 import "./campaign.css";
+import "./v100Typography.css";
 
 export const viewport: Viewport = {
   // vinext 0.0.50 serializes the standard viewport fields but currently omits

@@ -14095,6 +14095,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // become one, independent of the authored enemy roster.
     const requiredPlan = requiredBattleAssetPlan({
       stageId: assetStageId,
+      useCharacterPortraitCards: externalSessionActive,
       basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
@@ -14430,6 +14431,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const requiredStageId = requestedScenario?.stageId
           ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
         const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,
+          useCharacterPortraitCards: externalSessionActive,
           basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requiredStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean) });
         if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
@@ -14475,6 +14477,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const exhaustive = localRequested && !finiteEnemy && !finiteVisual && !finiteHud;
         return requiredBattleAssetPlan({
           stageId: requestedStageId,
+          useCharacterPortraitCards: externalSessionActive,
           basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requestedStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean),
           enemyKinds: selectedOutbreakMissionId

@@ -1,4 +1,4 @@
-import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, combatKindToCampaignUnitId } from "./campaign.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { FORMATION_CARD_ART, legacySpriteKinds, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
@@ -15,6 +15,7 @@ import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
 import { V100_KUMAVERSON_GUARD_ART } from "./v100KumaversonPresentation.js";
 import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
+import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -50,6 +51,7 @@ export function requiredBattleAssetPlan({
   includeAllSprites = false,
   includeV100Sprites = true,
   basePresentationStageNumber = null,
+  useCharacterPortraitCards = false,
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -111,6 +113,10 @@ export function requiredBattleAssetPlan({
   const guardSprite = includeV100Sprites && v100Stage && requiredKinds.includes("kumaverson")
     ? [{ kind: "kumaverson-guard", path: V100_KUMAVERSON_GUARD_ART.path, category: "unit" }]
     : [];
+  const cardArt = useCharacterPortraitCards
+    ? Object.fromEntries(unique(formationKinds).map(kind => [kind,
+      v100StoryPortraitPath(combatKindToCampaignUnitId(kind)) ?? FORMATION_CARD_ART[kind]]))
+    : FORMATION_CARD_ART;
   const plan = {
     stageId,
     background: frozenEntry({ path: stageVisualFor(stageId), category: "background" }),
@@ -122,8 +128,8 @@ export function requiredBattleAssetPlan({
     })), ...guardSprite.map(frozenEntry)],
     stageObjects: Object.freeze(stageObjects),
     persistent: Object.freeze(persistent),
-    cards: Object.freeze(unique(formationKinds).filter(kind => FORMATION_CARD_ART[kind])
-      .map(kind => frozenEntry({ kind, path: FORMATION_CARD_ART[kind], category: "unit-card" }))),
+    cards: Object.freeze(unique(formationKinds).filter(kind => cardArt[kind])
+      .map(kind => frozenEntry({ kind, path: cardArt[kind], category: "unit-card" }))),
   };
   return Object.freeze({
     ...plan,

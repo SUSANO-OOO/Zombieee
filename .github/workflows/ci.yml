@@ -597,6 +597,13 @@ jobs:
           PWA_AUDIO_RANGE_OUT: outputs/v100-native-pwa/audio-range
         run: node scripts/pwa-cached-audio-range-browser.mjs
 
+      - name: Verify R5 event presentation and audio with native WebKit
+        env:
+          V100_EVENT_AUDIO_QA_ENGINES: webkit
+          V100_EVENT_AUDIO_QA_VIEWPORTS: 1280x720,844x390,844x340
+          V100_EVENT_AUDIO_QA_EVIDENCE_DIR: outputs/v100-native-pwa/r5-events
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-event-presentation-audio-browser-smoke.mjs
+
       - name: Build the published old release and candidate for native WebKit PWA checks
         id: build_native_pwa_sites
         env:

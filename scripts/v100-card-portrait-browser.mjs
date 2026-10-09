@@ -79,7 +79,7 @@ async function probe(page, row, state, targets) {
   for (const item of decoded) {
     assert.equal(item.src, new URL(CHARACTER_PORTRAIT_ART[item.kind].slice(1), baseUrl).pathname, "battle cards retain the approved original character portrait");
     assert.equal(item.currentSrc, new URL(item.src, baseUrl).href);
-    assert.ok(decodedPaths.includes(item.src), `card omitted from critical decode jobs: ${item.kind}`);
+    assert.ok(decodedPaths.includes(CHARACTER_PORTRAIT_ART[item.kind]), `card omitted from critical decode jobs: ${item.kind}`);
     assert.ok(item.complete && item.naturalWidth > 0 && item.naturalHeight > 0 && item.width > 20 && item.height > 30);
   }
   const record = { state, decoded, decodedPaths, probes: [], screenshot: await persist(await page.screenshot({ animations: "disabled" }), `${row.name}-${state}.png`) };
@@ -140,10 +140,26 @@ try {
   for (const config of matrix) {
     const row = { ...config, name: `${config.engine}-${config.width}x${config.height}`, status: "running", states: [], inputs: [], errors: [] };
     report.cases.push(row);
-    const browser = await ({ chromium, webkit })[config.engine].launch({ headless: true });
+    const browser = await ({ chromium, webkit })[config.engine].launch({ headless: true,
+      ...(config.engine === "chromium" ? { args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) } : {}) });
     let context;
     try {
       context = await browser.newContext({ viewport: { width: config.width, height: config.height }, deviceScaleFactor: 1, hasTouch: config.height <= 430, isMobile: config.height <= 430 });
+      await context.addInitScript(() => {
+        if (typeof AudioNode !== "undefined") {
+          const connect = AudioNode.prototype.connect, muters = new WeakMap();
+          AudioNode.prototype.connect = function(target, ...args) {
+            if (target === this.context.destination) {
+              let quiet = muters.get(this.context);
+              if (!quiet) { quiet = this.context.createGain(); quiet.gain.value = 0; connect.call(quiet, this.context.destination); muters.set(this.context, quiet); }
+              return connect.call(this, quiet, ...args);
+            }
+            return connect.call(this, target, ...args);
+          };
+        }
+        const play = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function() { this.muted = true; return play.call(this); };
+      });
       await context.addInitScript(saveRaw => { for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, saveRaw); }, raw);
       const page = currentPage = await context.newPage(); page.setDefaultTimeout(30_000);
       page.on("console", m => { if (m.type() === "error") row.errors.push({ kind: "console", text: m.text() }); });

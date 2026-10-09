@@ -109,6 +109,7 @@ async function seedPage(page, save) {
   // Silence only the final hardware output. Product gain and playback clocks
   // remain observable; this is browser QA, not a speaker listening test.
   await page.addInitScript(() => {
+    if (typeof AudioNode !== "undefined") {
     const connect = AudioNode.prototype.connect, muters = new WeakMap();
     AudioNode.prototype.connect = function(target, ...args) {
       if (target === this.context.destination) {
@@ -118,6 +119,7 @@ async function seedPage(page, save) {
       }
       return connect.call(this, target, ...args);
     };
+    }
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function() { this.muted = true; return play.call(this); };
   });
@@ -268,7 +270,10 @@ for (const engine of engines) {
           const primary = page.locator(".v100-event-actions .v100-primary");
           if (eventCase.advance !== false && await primary.isVisible().catch(() => false)) {
             await clickUsable(primary, `${name} event action`);
-            await page.waitForTimeout(220);
+            await page.waitForFunction(({ selector, previousIndex }) => {
+              const surface = document.querySelector(selector);
+              return !surface || surface.getAttribute("data-v100-node-index") !== previousIndex;
+            }, { selector: eventSelector, previousIndex: observed.nodeIndex }, { timeout });
           }
           const postActionEvent = page.locator(eventSelector);
           const postActionObserved = await postActionEvent.count() > 0

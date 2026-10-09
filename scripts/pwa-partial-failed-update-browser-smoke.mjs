@@ -523,9 +523,25 @@ function attachDiagnostics(page) {
 async function openPersistent(userDataDir) {
   const context = await browserType.launchPersistentContext(userDataDir, {
     headless: true,
+    ...(browserName === "chromium" ? { args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) } : {}),
     viewport: { width: 844, height: 390 },
     deviceScaleFactor: 3,
     hasTouch: true,
+  });
+  await context.addInitScript(() => {
+    if (typeof AudioNode !== "undefined") {
+      const connect = AudioNode.prototype.connect, muters = new WeakMap();
+      AudioNode.prototype.connect = function(target, ...args) {
+        if (target === this.context.destination) {
+          let quiet = muters.get(this.context);
+          if (!quiet) { quiet = this.context.createGain(); quiet.gain.value = 0; connect.call(quiet, this.context.destination); muters.set(this.context, quiet); }
+          return connect.call(this, quiet, ...args);
+        }
+        return connect.call(this, target, ...args);
+      };
+    }
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() { this.muted = true; return play.call(this); };
   });
   await context.addInitScript(({ key, raw, commitKey, legacyKeys }) => {
     Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
@@ -886,6 +902,7 @@ try {
     && (await v100State(page)).raw === beforeUpdateV100.raw
   ));
   const incidentTransportStart = candidateTransportRequests.length;
+  const incidentBrowserTransportStart = candidateBrowserTransportRequests.length;
   await page.evaluate(()=>{
     const trace=[];window.__PWA_PARTIAL_PROGRESS_TRACE__=trace;
     let last="";
@@ -915,6 +932,7 @@ try {
   const failureCounter = await failedSliceCounter.count();
   const failedSliceCount = Number(/^失敗 (\d+)件$/u.exec(await failedSliceCounter.textContent() ?? "")?.[1]);
   const incidentChangedRequests = candidateTransportRequests
+    .slice(incidentTransportStart)
     .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
     .map(({ pathname }) => pathname);
   const incidentAssetRequests = candidateTransportRequests
@@ -1046,6 +1064,7 @@ try {
   // Keep entry-time HTML font preloads separate from the explicit updater
   // windows below; they share transport paths but are not update downloads.
   const incidentTransportEnd = candidateTransportRequests.length;
+  const incidentBrowserTransportEnd = candidateBrowserTransportRequests.length;
   setAudioMode("recovery");
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "candidate-unqualified-recovery-entry";
@@ -1068,6 +1087,7 @@ try {
   });
 
   const recoveryTransportStart = candidateTransportRequests.length;
+  const recoveryBrowserTransportStart = candidateBrowserTransportRequests.length;
   await page.getByRole("button", { name: "不足分だけ再取得" }).click();
   const recoveryRequests = await waitForAudioRequests("recovery", 2, 90_000);
   record("a real no-progress interval over 30 seconds aborts one shared bundle transport and starts one retry", (
@@ -1138,6 +1158,10 @@ try {
     ...candidateTransportRequests.slice(0, incidentTransportStart),
     ...candidateTransportRequests.slice(incidentTransportEnd, recoveryTransportStart),
   ];
+  const candidateEntryBrowserTransportRequests = [
+    ...candidateBrowserTransportRequests.slice(0, incidentBrowserTransportStart),
+    ...candidateBrowserTransportRequests.slice(incidentBrowserTransportEnd, recoveryBrowserTransportStart),
+  ];
   const candidateEntryChangedRequests = candidateEntryTransportRequests
     .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname));
   const candidateWoff2TransportPaths = new Set(candidateManifest.assets
@@ -1160,11 +1184,11 @@ try {
     }
     return counts;
   };
-  const candidateEntryBrowserFontRequests = candidateBrowserTransportRequests
+  const candidateEntryBrowserFontRequests = candidateEntryBrowserTransportRequests
     .filter((request) => candidateEntryPhaseNames.has(request.diagnosticPhase)
       && candidatePendingReleaseDeltaTransportPaths.has(request.pathname)
       && request.resourceType === "font");
-  const candidateEntryBrowserTitleRequests = candidateBrowserTransportRequests.filter(request =>
+  const candidateEntryBrowserTitleRequests = candidateEntryBrowserTransportRequests.filter(request =>
     titleVoiceBound && request.pathname === titleVoiceTransportPath
     && candidateEntryPhaseNames.has(request.diagnosticPhase) && request.nativeTitlePreload
     && ["other", "media"].includes(request.resourceType) && !request.isNavigationRequest);

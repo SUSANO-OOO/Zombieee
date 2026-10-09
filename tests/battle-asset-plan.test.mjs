@@ -6,9 +6,11 @@ import {
   BATTLE_SUPPORT_ASSET_PATHS,
   requiredBattleAssetPlan,
 } from "../app/battleAssetPlan.js";
-import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
+import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_IDS, campaignUnitIdToCombatKind } from "../app/campaign.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
-import { FORMATION_CARD_ART } from "../app/spriteManifest.js";
+import { CHARACTER_PORTRAIT_ART, FORMATION_CARD_ART } from "../app/spriteManifest.js";
+import { V100_UNITS } from "../app/v100Registry.js";
+import { v100StoryPortraitPath } from "../app/v100StoryPortraitPaths.js";
 
 test("battle readiness includes each selected card image once and excludes unrelated card images", () => {
   const plan = requiredBattleAssetPlan({ stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
@@ -17,6 +19,18 @@ test("battle readiness includes each selected card image once and excludes unrel
   for (const kind of ["guardian", "medic"]) assert.equal(plan.paths.filter(p => p === FORMATION_CARD_ART[kind]).length, 1);
   assert.ok(!plan.paths.includes(FORMATION_CARD_ART.brawler));
   assert.ok(Object.isFrozen(plan.cards) && plan.cards.every(Object.isFrozen));
+});
+
+test("V1 readiness decodes the same approved portrait that each battle card displays", () => {
+  for (const unit of V100_UNITS) {
+    const kind = campaignUnitIdToCombatKind(unit.id);
+    const plan = requiredBattleAssetPlan({ stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+      formationKinds: [kind, kind], useCharacterPortraitCards: true });
+    const expected = v100StoryPortraitPath(unit.id) ?? FORMATION_CARD_ART[kind];
+    if (v100StoryPortraitPath(unit.id)) assert.equal(CHARACTER_PORTRAIT_ART[kind], expected, unit.id);
+    assert.deepEqual(plan.cards.map(({ path }) => path), [expected], unit.id);
+    assert.equal(plan.paths.filter(path => path === expected).length, 1, unit.id);
+  }
 });
 
 test("all 20 campaign stages have a closed required visual plan", () => {
