@@ -36,6 +36,8 @@ import {
   survivalHudSnapshot,
   selectSurvivalBossKind,
   survivalUpgradeEffects,
+  survivalUpgradePreview,
+  survivalNextWavePreview,
   survivalWaveReward,
   survivalWaveSpawnPlan,
 } from "../app/survivalBattleRuntime.js";
@@ -57,6 +59,37 @@ function newRun(runId = "survival-runtime-test") {
     formation: formation(),
   });
 }
+
+test("checkpoint previews show actual capped effects, repair and the exact next wave without changing the run", () => {
+  for (const id of ["assault-drill", "layered-armor", "field-triage", "range-calibration", "rapid-redeployment", "crawler-field-repair", "boss-breaker"]) {
+    const alternatives = ["assault-drill", "layered-armor", "field-triage"].filter(other => other !== id).slice(0, 2);
+    const run = { ...newRun(), phase: SURVIVAL_RUN_PHASES.UPGRADE_SELECTION, currentWave: 6, lastCompletedWave: 5,
+      pendingUpgradeChoices: [id, ...alternatives], crawler: { hp: 200, maxHp: 700 }, temporaryUpgradeStacks: { [id]: 2 } };
+    const original = structuredClone(run), preview = survivalUpgradePreview(run, id);
+    const selected = selectSurvivalUpgrade(run, id), effects = survivalUpgradeEffects(selected);
+    assert.deepEqual(run, original);
+    assert.ok(preview, id);
+    if (id === "crawler-field-repair") assert.equal(preview.after, selected.crawler.hp);
+    if (id === "layered-armor") assert.equal(preview.after, Math.round((1 - effects.defenseMultiplier) * 100));
+    if (id === "rapid-redeployment") assert.equal(preview.after, Math.round((1 - effects.redeployMultiplier) * 100));
+    const plan = survivalWaveSpawnPlan(6, { bossPool: run.bossPool, lastBossKind: run.lastBossKind });
+    assert.equal(survivalNextWavePreview(run).wave, plan.wave);
+    assert.equal(survivalNextWavePreview(run).total, plan.units.length);
+    assert.equal(survivalHudSnapshot(run).upgradePreviews[id].after, preview.after);
+    const capped = survivalUpgradePreview({ ...run, temporaryUpgradeStacks: { [id]: 100 } }, id);
+    if (["layered-armor", "rapid-redeployment"].includes(id)) {
+      assert.equal(capped.before, capped.after);
+      assert.match(capped.note, /上限/u);
+    }
+    if (id === "crawler-field-repair") {
+      const full = survivalUpgradePreview({ ...run, crawler: { hp: 700, maxHp: 700 } }, id);
+      assert.equal(full.after, full.before);
+      assert.match(full.note, /満タン/u);
+    }
+  }
+  assert.equal(survivalNextWavePreview(newRun()), null);
+  assert.equal(survivalUpgradePreview(newRun(), "layered-armor"), null);
+});
 
 function completeWave(run, reward = survivalWaveReward(run.currentWave)) {
   let active = beginSurvivalWave(run);

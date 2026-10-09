@@ -34,6 +34,7 @@ import {
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  combatGroundLift,
   sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
@@ -231,8 +232,45 @@ test("all sixteen walking cycles advance from real travel distance rather than w
     assert.equal(fastTick.state, "move", kind);
     assert.equal(slowTick.stateTravelDistance, fastTick.stateTravelDistance, kind);
     assert.equal(slowTick.elapsedSeconds, fastTick.elapsedSeconds, kind);
-    const pose = sampleAnimationClip(kind, "move", slowTick.elapsedSeconds).pose;
-    assert.ok(Math.abs(pose.offsetX) >= .1 || Math.abs(pose.rotationRadians) >= .005, `${kind} readable gait`);
+    const walking = sampleAnimationClip(kind, "move", slowTick.elapsedSeconds);
+    assert.match(walking.spriteState, /^walk-/, `${kind} travel uses an authored walking pose`);
+    const cycle = animationClipFor(kind, "move");
+    assert.notEqual(sampleAnimationClip(kind, "move", 0).spriteState,
+      sampleAnimationClip(kind, "move", cycle.durationSeconds / 2).spriteState, `${kind} alternates walking drawings`);
+  }
+});
+
+test("human walking preserves body proportions and does not lift its ground anchor", () => {
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    const duration = animationClipFor(kind, "move").durationSeconds;
+    for (let i = 0; i < 16; i++) {
+      const sample = sampleAnimationClip(kind, "move", duration * i / 16);
+      assert.equal(sample.pose.scaleX, 1, kind);
+      assert.equal(sample.pose.scaleY, 1, kind);
+      assert.equal(sample.pose.offsetX, 0, `${kind} has no second sliding motion`);
+      assert.equal(sample.pose.rotationRadians, 0, `${kind} does not rock around its feet`);
+      if (kind !== "mayo-chan") assert.equal(combatGroundLift(kind, sample), 0, `${kind} planted foot stays on the ground`);
+      assert.equal(combatGroundLift(kind, sampleAttackPresentation(kind, duration * i / 16)), 0, `${kind} impact never applies a walk bounce`);
+    }
+  }
+});
+
+test("normal attack recovery continues from recoil and settles without a second thrust", () => {
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    const active = animationClipFor(kind, "active").durationSeconds;
+    const recovery = animationClipFor(kind, "recovery").durationSeconds;
+    const contactEnd = sampleAnimationClip(kind, "active", active).pose;
+    const ready = sampleAnimationClip(kind, "idle", 0).pose;
+    let previous = contactEnd;
+    for (let i = 0; i <= 16; i++) {
+      const next = sampleAttackPresentation(kind, active + recovery * i / 16).pose;
+      for (const field of ["offsetX", "offsetY", "rotationRadians", "scaleX", "scaleY"]) {
+        if (i === 0) assert.ok(Math.abs(next[field] - contactEnd[field]) < 1e-8, `${kind}/${field} recoil boundary`);
+        assert.ok(Math.abs(next[field] - ready[field]) <= Math.abs(previous[field] - ready[field]) + 1e-8, `${kind}/${field} settles towards ready`);
+        if (i === 16) assert.ok(Math.abs(next[field] - ready[field]) < 1e-8, `${kind}/${field} ready boundary`);
+      }
+      previous = next;
+    }
   }
 });
 

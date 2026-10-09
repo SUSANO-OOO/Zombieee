@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeV100BattleReport, v100BattleReportFor } from "../app/v100BattleReport.js";
+import { normalizeV100BattleReport, v100BattleReportFor, v100VehicleHitFor, v100LastVehicleHitText } from "../app/v100BattleReport.js";
 import { applyV100SaveMutation, createDefaultV100Save, deserializeV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { createV100BattleResult, finalizeV100PendingResult, recordV100PendingResult } from "../app/v100Transactions.js";
 import { V100_STAGE_IDS, v100StageReward, v100StarsForVehicle, v100StarTargetsForVehicle } from "../app/v100Registry.js";
@@ -28,6 +28,30 @@ const settle = (save, value) => {
   assert.equal(settled.applied, true);
   return reload(settled.save);
 };
+
+test("last vehicle damage records only actual HP loss and survives settlement without changing rewards", () => {
+  const hit = v100VehicleHitFor({ enemyKind: "runner", time: 24.5, beforeHp: 9, afterHp: 0 });
+  assert.deepEqual(hit, { enemyKind: "runner", time: 24.5, damage: 9 });
+  for (const input of [
+    { enemyKind: "unknown", time: 1, beforeHp: 9, afterHp: 0 },
+    { enemyKind: "runner", time: Infinity, beforeHp: 9, afterHp: 0 },
+    { enemyKind: "runner", time: 1, beforeHp: 9, afterHp: 10 },
+  ]) assert.equal(v100VehicleHitFor(input), null);
+  const report = normalizeV100BattleReport({ ...measured(), lastVehicleHit: hit });
+  const saved = settle(createDefaultV100Save(), result("hit-report", 680, report));
+  const control = settle(createDefaultV100Save(), result("hit-report"));
+  assert.deepEqual(saved.lastResult.battleReport.lastVehicleHit, hit);
+  assert.deepEqual(saved.receipts, control.receipts);
+  assert.equal(saved.caps, control.caps);
+  assert.match(v100LastVehicleHitText({ won: false, elapsedSeconds: 25, battleReport: report }), /走行感染者.*9.*1秒前/u);
+  for (const input of [
+    { won: true, elapsedSeconds: 25, battleReport: report },
+    { won: false, elapsedSeconds: 24, battleReport: report },
+    { won: false, elapsedSeconds: 35, battleReport: report },
+    { won: false, elapsedSeconds: 25, battleReport: measured() },
+  ]) assert.equal(v100LastVehicleHitText(input), null);
+  assert.equal(normalizeV100BattleReport({ ...measured(), lastVehicleHit: { ...hit, damage: -1 } }).lastVehicleHit, undefined);
+});
 
 test("result boss measurements preserve fractional HP, entering bodies and actual maximum without counting clones", () => {
   const game = {

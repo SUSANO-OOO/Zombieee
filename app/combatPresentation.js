@@ -1058,25 +1058,6 @@ const REMAINING_TEN_POSE_TUNING = Object.freeze({
   "miyamoto-musashi": { stride: 1.9, lean: .055, recoil: 4.8, brace: .072, special: 6.2 },
 });
 
-const LOCOMOTION_POSE_TUNING = Object.freeze({
-  scout: { stride: 2.4, lean: .046 },
-  ranger: { stride: 1.75, lean: .031 },
-  brute: { stride: 1.8, lean: .052 },
-  brawler: { stride: 2.7, lean: .068 },
-  gunner: { stride: 1.9, lean: .036 },
-  medic: { stride: 1.85, lean: .034 },
-  "crazy-king": { stride: 2.05, lean: .043 },
-  kumaverson: { stride: 1.75, lean: .044 },
-  babayaga: { stride: 1.8, lean: .032 },
-  guardian: { stride: 1.7, lean: .041 },
-  engineer: { stride: 1.85, lean: .036 },
-  zakimiya: { stride: 2.05, lean: .049 },
-  tky: { stride: 2.15, lean: .047 },
-  "mrs-chiha": { stride: 1.8, lean: .034 },
-  "miyamoto-musashi": { stride: 2.25, lean: .058 },
-  "mayo-chan": { stride: 2.9, lean: .064 },
-});
-
 const LOCOMOTION_STRIDE_DISTANCE = Object.freeze({
   scout: 12,
   ranger: 14,
@@ -1102,15 +1083,15 @@ function playableProceduralPose(kind, state, progress) {
   const pulse = Math.sin(Math.PI * p);
   const stride = Math.sin(Math.PI * p * 2);
   const rapid = Math.sin(Math.PI * p * 10);
-  const locomotion = LOCOMOTION_POSE_TUNING[kind];
-  if (state === "move" && locomotion) {
-    const contact = Math.abs(Math.cos(Math.PI * p * 2));
+  if (state === "move") {
+    // Travel already advances the authored leg poses. A second whole-body
+    // oscillation slides the planted foot and stretches the head and weapon.
     return {
-      offsetX: locomotion.stride * stride,
+      offsetX: 0,
       offsetY: 0,
-      rotationRadians: locomotion.lean * stride,
-      scaleX: 1.012 + (1 - contact) * .018,
-      scaleY: .988 - (1 - contact) * .018,
+      rotationRadians: 0,
+      scaleX: 1,
+      scaleY: 1,
       opacity: 1,
     };
   }
@@ -1291,7 +1272,22 @@ export function sampleAttackPresentation(kind, elapsedSeconds = 0) {
   const active = animationClipFor(kind, "active");
   const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
   if (elapsed < active.durationSeconds) return sampleAnimationClip(kind, "active", elapsed);
-  return sampleAnimationClip(kind, "recovery", elapsed - active.durationSeconds);
+  const recovery = sampleAnimationClip(kind, "recovery", elapsed - active.durationSeconds);
+  if (!PLAYABLE_COMBAT_KINDS.includes(kind)) return recovery;
+  const release = sampleAnimationClip(kind, "active", active.durationSeconds).pose;
+  const ready = sampleAnimationClip(kind, "idle", 0).pose;
+  const p = recovery.clipProgress;
+  const eased = p * p * (3 - 2 * p);
+  const pose = Object.fromEntries(Object.keys(ready).map(key => [key, release[key] + (ready[key] - release[key]) * eased]));
+  // Recovery continues from the final recoil pose. It must not introduce a
+  // second thrust or snap the body sideways after the actual impact is over.
+  return Object.freeze({ ...recovery, pose: Object.freeze(pose) });
+}
+
+export function combatGroundLift(kind, sample) {
+  if (!sample?.movement || !["move", "start-move", "retreat"].includes(sample.state)) return 0;
+  if (PLAYABLE_COMBAT_KINDS.includes(kind) && kind !== "mayo-chan") return 0;
+  return Math.abs(Math.sin((Number(sample.clipProgress) || 0) * Math.PI * 2)) * (kind === "mayo-chan" ? 2.4 : 1.8);
 }
 
 export function attackPresentationDuration(kind) {
@@ -1371,6 +1367,7 @@ export function createCombatAnimationRuntime({
     lastX: Number(x) || 0,
     lastY: Number(y) || 0,
     stateTravelDistance: 0,
+    locomotionTravelDistance: 0,
   };
 }
 
@@ -1462,6 +1459,10 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     lastX: x,
     lastY: y,
     stateTravelDistance,
+    // Keep the feet's phase across start/stop/turn clips. State-local distance
+    // still owns the authored clip events and is deliberately not repurposed.
+    locomotionTravelDistance: Math.max(0, Number(previous.locomotionTravelDistance) || 0)
+      + (moving && !requestedState ? movedDistance : 0),
   };
 }
 

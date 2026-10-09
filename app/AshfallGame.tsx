@@ -1,6 +1,7 @@
 "use client";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
+import { createV100HumanWalkRenderer, v100HumanWalkPhase } from "./v100HumanWalk.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -196,6 +197,7 @@ import {
   survivalUpgradeEffects,
   survivalWaveReward,
 } from "./survivalBattleRuntime.js";
+import { v100VehicleHitFor } from "./v100BattleReport.js";
 import {
   ENEMY_CONTENT,
   enemyBodyRadiusFor,
@@ -318,6 +320,7 @@ import {
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  combatGroundLift,
   sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
@@ -562,6 +565,7 @@ import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirear
 import {v100BrawlerComboPose,v100BrawlerCanAct,v100BrawlerCanContact} from './v100BrawlerCombo.js';
 import {createV100ImageSampler} from './v100ImageSampling.js';
 const v100ImageSampler=createV100ImageSampler();
+const v100HumanWalkRenderer=createV100HumanWalkRenderer();
 import {createV100ShotLayer} from './v100ShotLayer.js';
 const v100ShotLayer=createV100ShotLayer();
 import { V100_WEAPON_SOCKETS, v100RenderedWeaponSocket } from "./v100WeaponSockets.js";
@@ -610,7 +614,6 @@ import {
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
-import { MANUAL_ABILITY_SYMBOL_DICTIONARY, manualAbilityVisibleStateFor } from "./manualAbilityUi.js";
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
@@ -1343,6 +1346,7 @@ type Game = {
   shake: ReturnType<typeof createCameraShakeRuntime>;
   enemyBaseCollapse: number;
   resultPresented: boolean;
+  lastVehicleHit?: ReturnType<typeof v100VehicleHitFor>;
   banner: string;
   bannerTime: number;
   flashOverlay: number;
@@ -1448,6 +1452,7 @@ export type AshfallBattleResult = {
   enemyDefeatsByKind: Readonly<Record<string, number>>;
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   bossProgress?: ReturnType<typeof bossBattleResultSnapshot>;
+  lastVehicleHit?: ReturnType<typeof v100VehicleHitFor>;
   missionRuntime?: StageMissionRuntime;
   researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
 };
@@ -4366,10 +4371,14 @@ function drawSpriteFighter(
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
   const locomotionPhase = Number(animationSample.clipProgress) || 0;
+  const articulatedWalk = Boolean(options.v100AuthoredPresentation && renderKind === 'brawler'
+    && (animationSample.movement || (animationSample.requestedState === 'stop-move' && !manualAbilityActive)));
+  const articulatedWalkPhase = articulatedWalk
+    ? v100HumanWalkPhase(f.animationPresentation, size.w / frame.sourceRect.w) : null;
   const contactLift = animationSample.movement
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
-  const bob = contactLift * (renderKind === "mayo-chan" ? 2.4 : 1.8);
+  const bob = combatGroundLift(renderKind, animationSample);
   const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
   if (f.side === "zombie" && f.gateEntering) {
@@ -4465,6 +4474,7 @@ function drawSpriteFighter(
       renderWidth: size.w,
       renderHeight: size.h,
       groundAnchor: animationSample.groundAnchor,
+      articulatedWalkPhase,
       actualXDelta: fighterActualXDeltaAudit.get(f.id) ?? 0,
       deploymentPlan,
       spritePath: kumaGuardArtPose ? V100_KUMAVERSON_GUARD_ART.path : frame.path,
@@ -4485,7 +4495,9 @@ function drawSpriteFighter(
     w: frame.sourceRect.w,
     h: frame.sourceRect.h,
   }];
-  for (const slice of drawSlices) {
+  const drewArticulatedWalk = articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
+    -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h);
+  for (const slice of drewArticulatedWalk ? [] : drawSlices) {
     (options.smoothMinification ? v100ImageSampler.draw.bind(null,ctx) : ctx.drawImage.bind(ctx))(
       sprite,
       frame.sourceRect.x + slice.x,
@@ -8771,6 +8783,7 @@ function drawWorld(
 }
 
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
+  useEffect(() => () => v100HumanWalkRenderer.clear(), []);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
@@ -14168,7 +14181,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         path,
         category,
         spriteRefs.current[kind],
-        (image) => { spriteRefs.current[kind] = image; },
+        (image) => {
+          spriteRefs.current[kind] = image;
+          if (externalSessionActive) v100HumanWalkRenderer.prepare(kind,image);
+        },
       )),
       ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(
         path, category, spriteRefs.current[`card-${kind}`],
@@ -19061,6 +19077,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (g.baseHp <= 0) continue;
             const beforeHit = g.baseHp;
             g.baseHp = Math.max(0, g.baseHp - hit.damage);
+            g.lastVehicleHit = v100VehicleHitFor({ enemyKind: hit.weapon, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
             g.crawlerHitFlash = .18;
             if (beforeHit === g.baseMaxHp) {
               g.banner = "突破発生 — 移動拠点が攻撃を受けています";
@@ -22658,7 +22675,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const beforeHit = g.baseHp;
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
-                if (!deferredEnemyProjectile) g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                if (!deferredEnemyProjectile) {
+                  g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                  g.lastVehicleHit = v100VehicleHitFor({ enemyKind: f.kind, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
+                }
                 // A vehicle strike belongs to the metal impact route. Enemy
                 // vocal attacks here sounded like a human hurt reaction at the
                 // exact moment the vehicle HP fell.
@@ -23408,6 +23428,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               unitsLost: g.unitsLost,
               bossDefeated: g.bossDefeated,
               bossProgress: bossBattleResultSnapshot(g),
+              lastVehicleHit: g.lastVehicleHit,
               enemyBaseDestroyed,
               encounteredEnemyKinds: [...g.enemyKindsSeen],
               enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23473,6 +23494,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             bossProgress: bossBattleResultSnapshot(g),
+            lastVehicleHit: g.lastVehicleHit,
             enemyBaseDestroyed: g.barricadeHp <= 0,
             encounteredEnemyKinds: [...g.enemyKindsSeen],
             enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23834,7 +23856,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             disabled={!icon.available}
             aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
-            title={externalSessionActive ? undefined : `${ability.displayName} — ${manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
             onPointerCancel={(event) => event.stopPropagation()}
@@ -23844,10 +23865,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
-            {!externalSessionActive && <span className="manual-ability-label"><b>{ability.displayName}</b><small>{manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>}
           </button>;
         })}
-        {!externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -24013,16 +24032,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <h2>3択強化を選択</h2>
           {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
           <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
+          {survivalHud.nextWavePreview && <div className="survival-next-wave-preview"><strong>次は第{survivalHud.nextWavePreview.wave}波 / {survivalHud.nextWavePreview.total}体</strong><span>{survivalHud.nextWavePreview.threats}</span></div>}
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
               const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
               if (!upgrade) return null;
               const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
+              const preview = survivalHud.upgradePreviews[upgradeId];
               return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
                 <small>{externalSessionActive ? V100_SURVIVAL_UPGRADE_CATEGORIES[upgrade.category] ?? "作戦強化" : upgrade.category.toUpperCase()}</small>
                 <b>{externalSessionActive ? upgrade.displayName.replaceAll("移動拠点", "装甲車両") : upgrade.displayName}</b>
-                <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
-                <em>現在 {stack} / 選択後 {stack + 1}</em>
+                {preview ? <><span>{preview.label}</span><strong>{preview.before} → {preview.after}{preview.suffix}</strong><em>{preview.note}</em></>
+                  : <><span>1段階あたり {Math.round(upgrade.effectPerStack * 100)}%</span><em>現在 {stack} / 選択後 {stack + 1}</em></>}
               </button>;
             })}
           </div>
