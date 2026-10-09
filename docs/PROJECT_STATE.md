@@ -6,6 +6,8 @@
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
 - Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。
 
+現在の追加改善は1.0.1として[Issue #175](https://github.com/SUSANO-OOO/Zombieee/issues/175)で進める。納期は2026-10-10 06:00 JST。公開中の1.0.0は`d322d85410e5827958fec7fe28a0d6520ccb1bc9`、1.0.1は実装・検証中で未公開。
+
 以下の日時見出しは、その時点の記録である。過去の「現在」「承認待ち」や一時共有リンクを、最新状態として扱わない。
 
 ### 2026-10-09 R5最終候補の技術検証成功

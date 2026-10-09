@@ -15,7 +15,7 @@ export const V100_EVENT_PORTRAIT_PROFILES = Object.freeze({
   "mugarian-president":"president", "red-panther-commander":"commander",
 });
 export const V100_R5_STORY_CUTS = Object.freeze(Object.fromEntries([
-  "prologue-door-crisis", "chiha-confession", "ending-zakimiya-family",
+  "prologue-door-crisis", "chiha-confession", "ending-zakimiya-family", "zakimiya-c4-reunion",
   "epilogue-tky-receipt", "epilogue-main-table", "ending-tky-transport", "ending-medical-progress", "president-restrained-alive",
 ].map(name => [name, `/art/v100/story-r5/cuts/${name}.webp`])));
 
@@ -32,15 +32,26 @@ export function v100StoryExpressionFor(eventId, nodeIndex, node, owner = node?.p
   const tag = node?.sceneTag;
   if (eventId === "v100:event:prologue") return tag === "daily" ? "warm"
     : tag === "crisis" || (tag === "escape" && nodeIndex < 36) ? "alarm" : "determined";
-  if (eventId === "v100:event:epilogue") return ["unit-tky", "unit-kumaverson"].includes(owner) && nodeIndex >= 22 ? "determined" : "warm";
+  if (eventId === "v100:event:epilogue") {
+    if (owner === "unit-kumaverson" && [3, 18, 19, 22, 23, 24].includes(nodeIndex)) return "determined";
+    if (owner === "unit-tky" && [1, 3, 4, 22, 23, 24].includes(nodeIndex)) return "determined";
+    if (owner === "unit-zakimiya" && [8, 9].includes(nodeIndex)) return "alarm";
+    if (owner === "unit-mrs-chiha" && nodeIndex >= 12 && nodeIndex <= 15) return "determined";
+    if (owner === "unit-babayaga" && [12, 13, 14].includes(nodeIndex)) return "grief";
+    return "warm";
+  }
   if (eventId === "v100:event:ending") return tag === "dawn" ? "grief"
     : tag === "hospital" ? "warm" : tag === "signal" ? "determined"
       : owner === "unit-mrs-chiha" && nodeIndex < 19 ? "grief" : "warm";
   if (eventId === "v100:event:s17:post") return nodeIndex < 3 ? "alarm" : "warm";
   if (eventId === "v100:event:s06:post") return owner === "unit-babayaga" ? "alarm" : "determined";
-  if (eventId === "v100:event:s22:post") return owner === "unit-zakimiya" ? "grief" : "determined";
-  if (eventId === "v100:event:s23:pre") return nodeIndex < 6 ? "determined"
-    : owner === "unit-kumaverson" ? "determined" : "grief";
+  if (eventId === "v100:event:s22:post") return owner === "unit-zakimiya"
+    ? nodeIndex < 5 ? "grief" : nodeIndex <= 10 ? "warm" : "determined" : "determined";
+  if (eventId === "v100:event:s23:pre") {
+    if (nodeIndex === 6) return "alarm";
+    if (nodeIndex >= 16 || owner === "unit-kumaverson" || owner === "unit-paisen") return "determined";
+    return "grief";
+  }
   if (eventId === "v100:event:s25:post" && tag === "soup") return "warm";
   const match = /^v100:event:s(\d{2}):(pre|post)$/u.exec(String(eventId));
   if (match) return match[2] === "post" ? soberPosts.has(Number(match[1])) ? "grief" : "warm"
@@ -60,10 +71,14 @@ export function v100StoryDirectionFor(eventId, nodeIndex, node) {
   let cut = null;
   if (eventId === "v100:event:prologue" && node?.sceneTag === "crisis" && nodeIndex >= 20 && nodeIndex <= 23) cut = "prologue-door-crisis";
   if (eventId === "v100:event:s23:pre" && nodeIndex >= 10 && nodeIndex <= 15) cut = "chiha-confession";
+  if (eventId === "v100:event:s22:post" && nodeIndex >= 7 && nodeIndex <= 9) cut = "zakimiya-c4-reunion";
   if (eventId === "v100:event:s25:post" && nodeIndex <= 3) cut = "president-restrained-alive";
   if (eventId === "v100:event:ending" && node?.sceneTag === "dawn" && nodeIndex === 0) cut = "ending-tky-transport";
   if (eventId === "v100:event:ending" && node?.sceneTag === "hospital") cut = "ending-medical-progress";
-  if (eventId === "v100:event:epilogue" && node?.kind !== "title") cut = nodeIndex >= 22 && nodeIndex <= 24 ? "epilogue-tky-receipt" : "epilogue-main-table";
+  if (eventId === "v100:event:epilogue" && node?.kind !== "title") {
+    if (nodeIndex >= 22 && nodeIndex <= 24) cut = "epilogue-tky-receipt";
+    else if (nodeIndex === 0 || nodeIndex === 25) cut = "epilogue-main-table";
+  }
   const cue = cues[eventId]?.[nodeIndex];
   return Object.freeze({ cut, backgroundPath: cut ? V100_R5_STORY_CUTS[cut] : null,
     cinematic: Boolean(cut), expression: v100StoryExpressionFor(eventId, nodeIndex, node),

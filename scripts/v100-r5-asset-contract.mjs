@@ -1,6 +1,12 @@
 // Exact R5 additions and replacements; producer screenplay and runtime art/audio provenance bind this finite delta.
 export const V100_R5_ASSET_ADDITIONS = Object.freeze([
   {
+    "path": "/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp",
+    "bytes": 258168,
+    "hash": "sha256-c73a6694ee7e72168a7669abe825956bee0e39d13e70e6d21801586b88fbbf81",
+    "criticality": "critical"
+  },
+  {
     "path": "/art/v100/story-r5/cuts/chiha-confession.webp",
     "bytes": 251750,
     "hash": "sha256-c7ab093edbfc127cd5f1117e55d71fe63426b27dc6504ab875ee067dc229b08e",
@@ -693,12 +699,12 @@ export const V100_R5_ASSET_REPLACEMENTS = Object.freeze([
   }
 ]);
 export const V100_R5_ASSET_DELTA = Object.freeze({
-  "count": 94,
-  "artCount": 85,
-  "bytes": 11226739,
-  "distinctBytes": 11226739,
+  "count": 95,
+  "artCount": 86,
+  "bytes": 11484907,
+  "distinctBytes": 11484907,
   "audioBundleAdditions": 9,
-  "updateFromV0995Bytes": 11226739,
-  "updateFromV0982Bytes": 11226739,
-  "updateFromV0993Bytes": 11226739
+  "updateFromV0995Bytes": 11484907,
+  "updateFromV0982Bytes": 11484907,
+  "updateFromV0993Bytes": 11484907
 });

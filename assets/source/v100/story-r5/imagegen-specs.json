@@ -479,6 +479,21 @@
       "width": 1448,
       "height": 1086,
       "hasAlpha": true
+    },
+    {
+      "name": "zakimiya-c4-reunion",
+      "kind": "cut",
+      "path": "assets/source/v100/story-r5/zakimiya-c4-reunion.webp",
+      "prompt": "Create a new 16:9 cinematic game story illustration. Reference ending-zakimiya-family for exact painterly rendering and family identity; zakimiya-warm for father face and costume. After rescue from industrial detention CELL C4, wife holds swaddled infant securely with both arms at left, seen over her shoulder. Father kneels right waist up, freshly washed index finger gently grasped by infant, exhausted and holding back tears with a restrained smile. Preserve weathered black jacket, red armband, cream shirt, necklaces, bandaged forearms; clean hands. Cold enclosed corridor and warm portable lamp, open barred cell, towels and first aid box. Faces and finger contact above bottom 22% dialogue area. No dog, outdoor sunset, food, bottles, collage or smooth photographic rendering.",
+      "references": [
+        "public/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
+        "public/art/v100/story-r5/portraits/zakimiya-warm.webp"
+      ],
+      "generatedPngSha256": "d9635c49de6afa5f0d712df40a819ca4bdd24c5de6337a77ed5e8f4565faa409",
+      "selectedSha256": "26f1ef7cd83fd770e5c40a55660de486bc1bee1aaef4c747f77636e1c6ee8957",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
     }
   ]
 }

@@ -1723,6 +1723,19 @@
       }
     },
     {
+      "assetPath": "/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp",
+      "bytes": 258168,
+      "sha256": "c73a6694ee7e72168a7669abe825956bee0e39d13e70e6d21801586b88fbbf81",
+      "source": "assets/source/v100/story-r5/zakimiya-c4-reunion.webp",
+      "sourceSha256": "26f1ef7cd83fd770e5c40a55660de486bc1bee1aaef4c747f77636e1c6ee8957",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
       "assetPath": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
       "bytes": 321754,
       "sha256": "87fd704b22647591633ada45a8b52e18d8e2792cf7007a57cc7093db13cb90b2",
