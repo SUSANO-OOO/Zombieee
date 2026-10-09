@@ -311,9 +311,9 @@ for (const engine of engines) {
         await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === 'false'
           && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.running);
         const saved = await rawSave(page);
-        assert.equal(saved.survival.active.run.upgradeStacks[choice], (run.upgradeStacks[choice] ?? 0) + 1);
+        assert.equal(saved.survival.active.run.temporaryUpgradeStacks[choice], (run.temporaryUpgradeStacks[choice] ?? 0) + 1);
         assert.equal(saved.caps, checkpoint.save.caps);
-        row.savedChoice = { choice, stacks: saved.survival.active.run.upgradeStacks[choice], caps: saved.caps };
+        row.savedChoice = { choice, stacks: saved.survival.active.run.temporaryUpgradeStacks[choice], caps: saved.caps };
       });
     }
     for (const viewport of sections.includes('results') ? sizes : []) {
