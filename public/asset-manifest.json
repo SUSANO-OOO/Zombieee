@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -2302,6 +2302,14 @@
       "path": "/art/v100/story-r5/cuts/prologue-door-crisis.webp",
       "bytes": 297116,
       "hash": "sha256-25990213d1251f9c4018d02070388eda0e006fdded830c625f3e5dd1bb3fa13f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp",
+      "bytes": 258168,
+      "hash": "sha256-c73a6694ee7e72168a7669abe825956bee0e39d13e70e6d21801586b88fbbf81",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

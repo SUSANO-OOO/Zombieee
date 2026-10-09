@@ -65,7 +65,7 @@ import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100ActionPortraitSubjects, v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
-import { normalizeV100BattleReport, v100BattleReportFor } from "./v100BattleReport.js";
+import { normalizeV100BattleReport, v100BattleReportFor, v100LastVehicleHitText } from "./v100BattleReport.js";
 import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBriefing.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
@@ -1066,7 +1066,7 @@ export function V100Campaign() {
         return changed.applied && Boolean(await commitSave(changed.save));
       }} />}
       {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">新しい隊員 / 配備登録可能</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><dl><div><dt>配備登録</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSで登録できます。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで配備登録</button></div></section></div>}
-      {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">Version 1.0.0</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
+      {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">{RELEASE_LABEL}</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay">{replayFinale ? <V100PostCreditsFilm settings={save.settings} onComplete={() => { setReplayFinale(false); setReplayEventId(null); return true; }} /> : <V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { setReplayFinale(true); return true; }} />}</div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
       {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい作戦記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
@@ -1086,8 +1086,9 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   // previous interlocutor's portrait beside that voice as a false speaker.
   const secondaryNode = node.kind === "dialogue" && portrait ? slots[portraitSide === "right" ? "left" : "right"] : null;
   const secondaryOwner = secondaryNode?.portraitOwner ?? actionSubjects[1] ?? null;
-  const secondaryIndex = secondaryNode && eventId ? v100StoryEventFor(eventId)?.nodes.indexOf(secondaryNode) ?? nodeIndex : nodeIndex;
-  const secondaryExpression = v100StoryExpressionFor(eventId, secondaryIndex, secondaryNode ?? node, secondaryOwner);
+  // The listener reacts to this beat, rather than retaining the expression
+  // from their most recent spoken line.
+  const secondaryExpression = v100StoryExpressionFor(eventId, nodeIndex, node, secondaryOwner);
   const secondaryPortrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(secondaryOwner, secondaryExpression) ?? portraitFor(secondaryOwner);
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
@@ -1252,7 +1253,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
           <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
           {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
             <img src={portraitFor(activeUnit.id) ?? formationCardForUnit(activeUnit.id) ?? ""} alt={activeUnit.displayName} />
-            <div tabIndex={0} aria-label={`${activeUnit.displayName}の役割・固有技`}><h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3><strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={`${index}-${part}`}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>{activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}</div>
+            <div tabIndex={0} aria-label={`${activeUnit.displayName}の役割・固有技`}><h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3><strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={`${index}-${part}`}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong><span className="v100-briefing-callin">指揮 {activePresentation.commandCost} / 再配備 {formatV100Number(activePresentation.redeploySeconds)}秒</span>{activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}</div>
           </div> : <div className="v100-briefing-empty"><strong>この枠に呼ぶ仲間を選ぶ</strong><span>出撃中は、同じ仲間を繰り返し呼べます。</span></div>}
         </div>
         <div className="v100-callin-roster">
@@ -1263,7 +1264,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
             return <button type="button" key={"slot-" + index} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
               <span className="v100-slot-portrait">{art ? <img key={art} src={art} alt="" onLoad={(event) => { const image = event.currentTarget; const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve(); void decoded.then(() => requestAnimationFrame(() => { if (image.isConnected && image.naturalWidth > 0) image.dataset.loaded = "true"; })); }} /> : <i aria-hidden="true">＋</i>}</span>
-              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き"}</strong><em>{unit ? v100RoleLabelFor(unit.role) : "隊員を選ぶ"}</em><b>{info ? `指揮 ${info.commandCost} / 再配備 ${formatV100Number(info.redeploySeconds)}秒` : "タップして選択"}</b></span>
+              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き"}</strong><b>{info ? `指揮 ${info.commandCost}` : "隊員を選ぶ"}</b></span>
             </button>;
           })}</div>
         </div>
@@ -1281,7 +1282,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
       </div>
     </div>
     <div className="v100-sortie-status">
-      <button type="button" className="v100-sortie-selected" onClick={() => onPersonnel(activeUnitId)}><strong>{activeUnit?.displayName ?? "枠 " + (activeSlot + 1) + " は空き"}{activePresentation && <span> Lv.{activePresentation.level} / {activePresentation.description}</span>}</strong><small>{activePresentation ? "指揮 " + activePresentation.commandCost + " / 再配備 " + formatV100Number(activePresentation.redeploySeconds) + "秒 / 育成を見る" : "空き枠を押して隊員を編成"}</small></button>
+      <button type="button" className="v100-sortie-selected" onClick={() => onPersonnel(activeUnitId)}><strong>隊員の育成</strong><small>{activeUnit ? `${activeUnit.displayName}の能力・強化効果を確認` : "仲間の能力・強化効果を確認"}</small></button>
       <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>{basePresentation.label} 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
     </div>
     <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "作戦一覧へ" : "作戦地図へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成で作戦を選ぶ" : "戦闘へ"} disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>{modePreparation ? "この編成で作戦を選ぶ" : "出撃"}</button></div>
@@ -1437,6 +1438,7 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
   const bonusStar2 = runStars >= 2 && previousBestStars < 2 ? v100StageReward(stageNumber, "star:2") : 0;
   const bonusStar3 = runStars >= 3 && previousBestStars < 3 ? v100StageReward(stageNumber, "star:3") : 0;
   const boss = report?.bossProgress;
+  const lastVehicleHit = v100LastVehicleHitText(result);
   const outcome = won ? "作戦目標を達成。部隊を回収し、作戦後の報告へ進みます。"
     : Number(result?.vehicleHp) <= 0 ? `${basePresentation.label}の耐久が尽き、作戦を中断しました。`
       : "作戦目標を達成できず、作戦を中断しました。";
@@ -1446,6 +1448,7 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
       <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
       <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>作戦目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
       <div className="v100-result-feedback">
+        {lastVehicleHit && <p className="v100-result-last-hit"><strong>直前の被害</strong> {lastVehicleHit}</p>}
         <div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
         </div>

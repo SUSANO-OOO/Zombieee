@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import { RELEASE_TITLE, RELEASE_VERSION } from "../app/releaseIdentity.js";
 
 import {
   AIRSTRIKE_DEF,
@@ -140,10 +141,10 @@ test("server-renders the landscape gate before the fiction notice and PWA gate",
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜Version 1\.0\.0<\/title>/);
+  assert.ok(html.includes(`<title>${RELEASE_TITLE}</title>`));
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 1\.0\.0。"/);
+  assert.ok(html.includes(`Version ${RELEASE_VERSION}。`));
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -1561,16 +1562,13 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
   assert.match(game, /resolveDrumDetonation\(\{/);
   assert.match(game, /advanceAreaEffects\(\{/);
-  assert.match(game, /索敵マーク/);
-  assert.match(game, /対・毒吐き/);
-  assert.match(game, /対装甲破砕/);
-  assert.match(game, /フィニッシュ/);
-  assert.match(game, /直線制圧/);
-  assert.match(game, /addDamageText\(g, f\.x, f\.y - 64, "救護", \.7, "#9bf0ba"\)/);
+  assert.doesNotMatch(game, /索敵マーク|対・毒吐き|対装甲破砕|フィニッシュ|直線制圧/);
+  assert.doesNotMatch(game, /addDamageText\(g, f\.x, f\.y - 64, "救護"/);
   assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
   assert.match(game, /addShot\(g, muzzle\.x, muzzle\.y, target\.x, target\.y - 28, \.26, "human", \.26, ranged \? "projectile" : "melee", f\.kind, roleEffect \?\? undefined, f\.id, target\.id, target\.id, emphasized/);
-  assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
+  assert.match(game, /\["scout", "ranger", "brute", "brawler", "gunner", "crazy-king", "kumaverson", "babayaga"\]\.includes\(roleEffect\)/);
+  assert.match(game, /f\.abilityCooldown = 1\.8;\s*emitBattleBark\(g, "role-cue", f\.kind, f\.id\)/);
   assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && !deferredStructureImpact\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   assert.match(game, /roleEffect === "gunner"[\s\S]*playCue\("role-gunner"\)/);
   assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);

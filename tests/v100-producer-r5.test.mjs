@@ -59,15 +59,32 @@ test('R5 cuts preserve causal order and new main-cast staging',()=>{
  assert.equal(view('v100:event:prologue',27).cut,null,'inside attack cannot retain outside-door drawing');
  assert.equal(view('v100:event:s23:pre',9).cut,null,'card has not yet been picked up');
  assert.equal(view('v100:event:s23:pre',10).cut,'chiha-confession');
+ assert.equal(view('v100:event:s22:post',6).cut,null,'hands are washed before the infant grasps his finger');
+ assert.equal(view('v100:event:s22:post',7).cut,'zakimiya-c4-reunion');
+ assert.equal(view('v100:event:s22:post',10).cut,null,'the radio disclosure follows the family beat');
  for (let index=0;index<=3;index++) assert.equal(view('v100:event:s25:post',index).cut,'president-restrained-alive');
  assert.equal(view('v100:event:s25:post',4).cut,null);
  assert.equal(v100StoryExpressionFor('v100:event:s06:post',2,V100_STORY_EVENTS['v100:event:s06:post'].nodes[2],'unit-raider'),'determined');
  assert.equal(view('v100:event:ending',0).cut,'ending-tky-transport');
  assert.equal(view('v100:event:epilogue',23).cut,'epilogue-tky-receipt');
+ assert.equal(view('v100:event:epilogue',0).cut,'epilogue-main-table');
+ assert.equal(view('v100:event:epilogue',8).cut,null,'dialogue must not freeze the entire party on one establishing picture');
  assert.equal(view('v100:event:epilogue',25).cut,'epilogue-main-table');
  assert.equal(view('v100:event:epilogue',26).cut,null);
  assert.equal(view('v100:event:prologue',34).cueId,'v100-story-glass');
  assert.equal(view('v100:event:ending',19).cueId,'v100-story-latch');
  assert.equal(v100StoryExpressionFor('v100:event:s23:pre',11,V100_STORY_EVENTS['v100:event:s23:pre'].nodes[11]),'grief');
  assert.equal(V100_MAIN_CAST.length,7);assert.ok(!V100_MAIN_CAST.includes('unit-hachi'));
+});
+
+test('family reunion, confession and listeners follow the current R5 beat',()=>{
+ const expression=(id,index,owner)=>v100StoryExpressionFor(id,index,V100_STORY_EVENTS[id].nodes[index],owner);
+ assert.equal(expression('v100:event:s22:post',2,'unit-zakimiya'),'grief');
+ assert.equal(expression('v100:event:s22:post',7,'unit-zakimiya'),'warm');
+ assert.equal(expression('v100:event:s23:pre',6,'unit-paisen'),'alarm');
+ assert.equal(expression('v100:event:s23:pre',11,'unit-babayaga'),'grief');
+ assert.equal(expression('v100:event:s23:pre',20,'unit-mrs-chiha'),'determined');
+ assert.equal(expression('v100:event:s23:pre',21,'unit-babayaga'),'determined','listener now supports her decision');
+ assert.equal(expression('v100:event:epilogue',8,'unit-zakimiya'),'alarm');
+ assert.equal(expression('v100:event:epilogue',10,'unit-zakimiya'),'warm');
 });

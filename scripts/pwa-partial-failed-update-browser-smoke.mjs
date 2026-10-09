@@ -26,6 +26,7 @@ import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry } from "./pwa-expected-abort.mjs";
+import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -687,12 +688,12 @@ async function v100State(page) {
   }, { key: v100SaveKey, oldKey: saveKey });
 }
 
-async function waitForV100Ready(page) {
+async function waitForV100Ready(page, { enterTitle = true } = {}) {
   await page.waitForFunction(() => (
     document.querySelector(".v100-shell")
     && document.documentElement.dataset.pwaSaveMutationPending === "false"
   ), null, { timeout: 60_000 });
-  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
+  if (enterTitle && await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
 }
 
 async function closeContext(label) {
@@ -782,6 +783,7 @@ try {
     saveHash: sha256(oldSaveRaw ?? ""),
   });
 
+  const hashesBeforeCandidateEntry = new Set(await cacheHashes(page));
   await closeContext("close-old-partial-fixture");
   currentLabel = "candidate";
   setAudioMode("incident");
@@ -1069,12 +1071,19 @@ try {
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "candidate-unqualified-recovery-entry";
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  await waitForV100Ready(page);
+  // Compare the persisted cache before Continue can legitimately fetch the
+  // uncached confirm/navigation sounds. The relaunch invariant remains exact;
+  // UI input and its cache writes happen after this persistence observation.
+  await waitForV100Ready(page, { enterTitle: false });
   const relaunchedBefore = await workerState(page);
   const relaunchedBeforeV100 = await v100State(page);
+  const relaunchedHashes = new Set(await cacheHashes(page));
+  const relaunchAddedHashes = [...relaunchedHashes].filter(hash => !hashesBeforeRecovery.has(hash));
+  const relaunchMissingHashes = [...hashesBeforeRecovery].filter(hash => !relaunchedHashes.has(hash));
   record("close/relaunch retains the partial cache, old active manifest, and exact raw save", (
     activeMatchesManifest(relaunchedBefore.state?.active, oldManifest, oldVersion)
     && (await cacheState(page)).logicalSatisfied === cancelledCache.logicalSatisfied
+    && relaunchAddedHashes.length === 0 && relaunchMissingHashes.length === 0
     && (await currentSave(page)) === oldSaveRaw
     && relaunchedBeforeV100.raw === beforeUpdateV100.raw
     && relaunchedBeforeV100.legacyWrites.length === 0
@@ -1082,9 +1091,13 @@ try {
   ), {
     activeVersion: relaunchedBefore.state?.active?.version,
     cache: await cacheState(page),
+    relaunchAddedHashes,
+    relaunchMissingHashes,
     v100SavePreserved: relaunchedBeforeV100.raw === beforeUpdateV100.raw,
     legacyWrites: relaunchedBeforeV100.legacyWrites,
   });
+
+  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page, { timeout: 60_000 });
 
   const recoveryTransportStart = candidateTransportRequests.length;
   const recoveryBrowserTransportStart = candidateBrowserTransportRequests.length;
@@ -1188,12 +1201,27 @@ try {
     .filter((request) => candidateEntryPhaseNames.has(request.diagnosticPhase)
       && candidatePendingReleaseDeltaTransportPaths.has(request.pathname)
       && request.resourceType === "font");
-  const candidateEntryBrowserTitleRequests = candidateEntryBrowserTransportRequests.filter(request =>
-    titleVoiceBound && request.pathname === titleVoiceTransportPath
-    && candidateEntryPhaseNames.has(request.diagnosticPhase) && request.nativeTitlePreload
-    && ["other", "media"].includes(request.resourceType) && !request.isNavigationRequest);
+  // Keep every request to this title path in the entry windows. Unbound,
+  // duplicated or unexpected requests must reach validation and fail there.
+  const candidateEntryBrowserTitleRequests = candidateEntryBrowserTransportRequests
+    .filter(request => request.pathname === titleVoiceTransportPath);
+  // Classify by the actual pre-navigation cache, including unchanged objects
+  // removed by this partial-cache fixture. The post-entry planner snapshot
+  // can already include a voice that native preload fetched and verified.
+  const candidateEntryChangedTitleRequests = candidateEntryBrowserTitleRequests
+    .filter(request => candidatePendingReleaseDeltaTransportPaths.has(request.pathname));
+  const candidateEntryTitleServerRequests = candidateEntryTransportRequests.filter(request => request.pathname === titleVoiceTransportPath);
+  const candidateEntryNativeTitle = verifyEntryNativePreload({
+    browserRequests: candidateEntryBrowserTitleRequests,
+    serverRequests: candidateEntryTitleServerRequests,
+    hash: titleVoiceAsset?.hash,
+    cacheByPhase: {
+      'candidate-unqualified-incident-entry': hashesBeforeCandidateEntry,
+      'candidate-unqualified-recovery-entry': hashesBeforeRecovery,
+    },
+  });
   const candidateEntryServerCounts = countRequestsByPathAndPhase(candidateEntryChangedRequests);
-  const candidateEntryBrowserCounts = countRequestsByPathAndPhase([...candidateEntryBrowserFontRequests, ...candidateEntryBrowserTitleRequests]);
+  const candidateEntryBrowserCounts = countRequestsByPathAndPhase([...candidateEntryBrowserFontRequests, ...candidateEntryChangedTitleRequests]);
   const candidateEntryCountKeys = new Set([
     ...candidateEntryServerCounts.keys(),
     ...candidateEntryBrowserCounts.keys(),
@@ -1230,11 +1258,14 @@ try {
     && candidateEntryBrowserFontRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname))
     && candidateEntryChangedRequestBreakdown.every((entry) => entry.serverCount <= 1
       && entry.serverCount === entry.browserPreloadCount)
+    && titleVoiceBound && candidateEntryNativeTitle.valid
   ), {
     candidateEntryChangedRequests,
     candidateEntryChangedRequestBreakdown,
     candidateEntryBrowserFontRequests,
     candidateEntryBrowserTitleRequests,
+    candidateEntryTitleServerRequests,
+    candidateEntryNativeTitle,
     titleVoiceBound,
     candidateWoff2TransportPaths: [...candidateWoff2TransportPaths],
   });

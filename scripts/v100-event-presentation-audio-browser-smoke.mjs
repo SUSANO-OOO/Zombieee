@@ -12,6 +12,9 @@ import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
 import { v100EventAudioSnapshot } from "./v100-event-audio-audit.mjs";
+import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+
+if (process.platform === "win32") throw new Error("Event audio QA is hosted-only; game or audio playback on this Windows PC is disabled");
 
 const baseUrl = new URL(process.env.V100_EVENT_AUDIO_QA_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 event QA is local-only; refusing ${baseUrl}`);
@@ -38,6 +41,8 @@ const eventCases = Object.freeze([
   { id: "epilogue", eventId: "v100:event:epilogue", phase: "epilogue" },
 ]);
 const results = [];
+const cleanupErrors = [];
+const buildIdentity = await productionBuildIdentity();
 
 await mkdir(evidenceDir, { recursive: true });
 
@@ -55,15 +60,13 @@ async function nativeAudioFor(page, eventCase, nodeIndex) {
 }
 
 function diagnosticsFor(page) {
-  const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] };
+  const requestAudit = installRequestFailureAudit(page);
+  const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: requestAudit.report.unexpectedFailures,
+    requestFailureAudit: requestAudit.report, httpFailures: [] };
   page.on("console", (message) => { if (message.type() === "error") diagnostics.consoleErrors.push(message.text()); });
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
-  page.on("requestfailed", (request) => {
-    const reason = request.failure()?.errorText ?? "unknown";
-    if (reason !== "net::ERR_ABORTED") diagnostics.requestFailures.push(`${request.url()} :: ${reason}`);
-  });
   page.on("response", (response) => { if (response.status() >= 400) diagnostics.httpFailures.push(`${response.status()} ${response.url()}`); });
-  return diagnostics;
+  return { diagnostics, requestAudit };
 }
 
 function eventSave(eventCase) {
@@ -164,7 +167,7 @@ async function portraitAuditFor(page, selector) {
 }
 
 async function writeEvidenceReport(cases) {
-  const report = { generatedAt: new Date().toISOString(), build: await productionBuildIdentity(), baseUrl: String(baseUrl), evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases };
+  const report = { generatedAt: new Date().toISOString(), build: buildIdentity, baseUrl: String(baseUrl), cleanupErrors, evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases };
   const reportPath = path.join(evidenceDir, "report.json");
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
   return reportPath;
@@ -217,7 +220,7 @@ for (const engine of engines) {
         const name = `${engine}-${viewport.width}x${viewport.height}-${eventCase.id}`;
         const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
         const page = await context.newPage();
-        const diagnostics = diagnosticsFor(page);
+        const { diagnostics, requestAudit } = diagnosticsFor(page);
         const result = { name, engine, viewport, eventCase, status: "failed" };
         try {
           await seedPage(page, eventSave(eventCase));
@@ -326,12 +329,19 @@ for (const engine of engines) {
         } finally {
           result.diagnostics = diagnostics;
           results.push(result);
-          await context.close();
+          try { await requestAudit.closeContext(context); }
+          catch (error) { cleanupErrors.push({ owner: name, error: String(error) }); throw error; }
+          finally { await writeEvidenceReport(results); }
         }
       }
     }
   } finally {
-    await browser.close();
+    try { await browser.close(); }
+    catch (error) { cleanupErrors.push({ owner: engine, error: String(error) }); throw error; }
+    finally {
+      await new Promise(resolve => setImmediate(resolve));
+      await writeEvidenceReport(results);
+    }
   }
 }
 

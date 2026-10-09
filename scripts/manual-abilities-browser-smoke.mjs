@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 if (!process.env.MANUAL_ABILITIES_QA_BASE_URL) {
   throw new Error("MANUAL_ABILITIES_QA_BASE_URL is required; use the isolated QA runner");
@@ -158,7 +159,7 @@ function overlaps(left, right, gap = 2) {
 
 async function enterBattle(page) {
   const url = new URL(baseUrl);
-  url.search = new URLSearchParams({ qa: "roles", safe: "iphone-landscape" }).toString();
+  url.search = new URLSearchParams({ qa: "roles", qaHudFiniteAssets: "1", safe: "iphone-landscape" }).toString();
   await page.goto(String(url), { waitUntil: "domcontentloaded" });
   await dismissInstallOffer(page);
   const migrationButton = page.getByRole("button", { name: "内容を確認" });
@@ -167,7 +168,7 @@ async function enterBattle(page) {
   await start.waitFor({ state: "visible" });
   await page.waitForFunction(() => {
     const button = document.querySelector(".formation-footer .campaign-primary");
-    return button instanceof HTMLButtonElement && !button.disabled;
+    return button instanceof HTMLButtonElement && !button.disabled && button.getAttribute("aria-disabled") !== "true";
   });
   await start.click();
   for (let count = 0; count < 8; count += 1) {
@@ -183,6 +184,12 @@ async function enterBattle(page) {
 }
 
 async function prepareProof(page, kind = "all") {
+  // Decode every exercised human atlas through the same strict production
+  // loader. Unrelated boss atlases do not belong to an ability HUD fixture.
+  const requestedKinds = kind === "all" ? kinds : Array.isArray(kind) ? kind : [kind];
+  for (const requestedKind of [...requestedKinds, ...(requestedKinds.includes("mayo-chan") ? ["mayo-chan-feral"] : [])]) {
+    await page.evaluate((assetKind) => window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(assetKind), requestedKind);
+  }
   const proof = await page.evaluate((requestedKind) => (
     window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof(requestedKind)
   ), kind);
@@ -1357,7 +1364,7 @@ async function checkpointReloadProof(page, engine) {
   ));
   invariant(persisted?.durable, `${engine}/reload: checkpoint fixture was not durable`);
   const reloadUrl = new URL(baseUrl);
-  reloadUrl.search = new URLSearchParams({ safe: "iphone-landscape" }).toString();
+  reloadUrl.search = new URLSearchParams({ qa: "legacy", qaHudFiniteAssets: "1", safe: "iphone-landscape" }).toString();
   await page.goto(String(reloadUrl), { waitUntil: "domcontentloaded" });
   await dismissInstallOffer(page);
   const continueButton = page.locator(".title-start");
@@ -1404,11 +1411,24 @@ async function checkpointReloadProof(page, engine) {
 
 for (const engine of engines) {
   invariant(browserTypes[engine], `Unknown MANUAL_ABILITIES_QA_ENGINES value: ${engine}`);
-  const browser = await browserTypes[engine].launch({ headless: true });
+  const browser = await browserTypes[engine].launch({ headless: true, ...(engine === "chromium" ? { args: ["--mute-audio"] } : {}) });
   try {
     for (const viewport of viewports) {
       const page = await browser.newPage({ viewport });
+      await silenceBrowserOutput(page);
       page.setDefaultTimeout(timeout);
+      await page.addInitScript(() => {
+        window.__manualAbilityTextViolations = [];
+        const seen = new Set();
+        const check = () => {
+          const violations = [...document.querySelectorAll(".manual-ability-label,.manual-ability-legend")].map(node => node.className);
+          for (const button of document.querySelectorAll(".manual-ability-ready")) {
+            if (button.textContent.trim() || button.getAttribute("title")) violations.push(`${button.dataset.abilityKind}:${button.textContent.trim()}:${button.getAttribute("title") ?? ""}`);
+          }
+          for (const violation of violations) if (!seen.has(violation)) { seen.add(violation); window.__manualAbilityTextViolations.push(violation); }
+        };
+        new MutationObserver(check).observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+      });
       const diagnostics = diagnosticsFor(page);
       await enterBattle(page);
       const layout = qaScope === "full"
@@ -1438,10 +1458,13 @@ for (const engine of engines) {
         `${engine}/${viewport.height}: request failures ${diagnostics.requestFailures}`);
       invariant(diagnostics.httpErrors.length === 0,
         `${engine}/${viewport.height}: HTTP errors ${diagnostics.httpErrors}`);
+      const forbiddenAbilityText = await page.evaluate(() => window.__manualAbilityTextViolations);
+      invariant(forbiddenAbilityText.length === 0, `${engine}/${viewport.height}: removed ability text returned: ${JSON.stringify(forbiddenAbilityText)}`);
       results.push({
         engine,
         viewport,
         scope: qaScope,
+        forbiddenAbilityText,
         readyIcons: layout?.buttons.map(({ kind, rect, iconBackground }) => ({
           kind,
           rect,

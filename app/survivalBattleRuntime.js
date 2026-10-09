@@ -13,6 +13,7 @@ import {
   survivalWaveDescriptor,
 } from "./survival.js";
 import { isBossEnemyKind } from "./bossFoundation.js";
+import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
 const MAX_SURVIVAL_SPAWNS_PER_WAVE = 32;
 const INTERMISSION_SECONDS = 1.5;
@@ -239,6 +240,47 @@ export function survivalUpgradeEffects(run) {
   };
 }
 
+// Preview the same capped effects and immediate repair used by selection.
+// This is read-only: no run, reward or checkpoint is committed here.
+export function survivalUpgradePreview(run, upgradeId) {
+  const current = normalizeSurvivalRun(run);
+  if (!current || current.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION || !current.pendingUpgradeChoices.includes(upgradeId)) return null;
+  const selected = selectSurvivalUpgrade(current, upgradeId);
+  const before = survivalUpgradeEffects(current), after = survivalUpgradeEffects(selected);
+  if (upgradeId === "crawler-field-repair") return {
+    label: "選択時の車両耐久", before: current.crawler.hp, after: selected.crawler.hp,
+    suffix: ` / ${current.crawler.maxHp}`, note: selected.crawler.hp === current.crawler.hp ? "耐久は満タンです" : "選択時に回復",
+  };
+  const definitions = {
+    "assault-drill": ["攻撃力", "attackMultiplier", false],
+    "layered-armor": ["被ダメージ軽減", "defenseMultiplier", true],
+    "field-triage": ["回復量", "healingMultiplier", false],
+    "range-calibration": ["射程", "rangeMultiplier", false],
+    "rapid-redeployment": ["再配備時間の短縮", "redeployMultiplier", true],
+    "boss-breaker": ["ボスへのダメージ", "bossDamageMultiplier", false],
+  };
+  const [label, key, reduction] = definitions[upgradeId] ?? [];
+  if (!key) return null;
+  const percent = effects => Math.round((reduction ? 1 - effects[key] : effects[key] - 1) * 100);
+  const previous = percent(before), next = percent(after);
+  return { label, before: previous, after: next, suffix: "%", note: previous === next ? "効果は上限に達しています" : "この作戦中の合計効果" };
+}
+
+export function survivalNextWavePreview(run) {
+  const current = normalizeSurvivalRun(run);
+  if (!current || current.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) return null;
+  const plan = survivalWaveSpawnPlan(current.lastCompletedWave + 1, {
+    bossPool: current.bossPool, lastBossKind: current.lastBossKind, strictBossPool: current.modePolicy === "v100",
+  });
+  const groups = [
+    ["突進", ["charge", "crawler-priority"]], ["遠距離", ["ranged"]],
+    ["汚染", ["contamination"]], ["後衛狙い", ["backline"]], ["拘束", ["grab"]],
+    ["範囲攻撃", ["area"]],
+  ].map(([label, profiles]) => ({ label, count: plan.units.filter(kind => profiles.includes(ENEMY_CONTENT.find(enemy => enemy.id === kind)?.aiProfile)).length }))
+    .filter(group => group.count > 0).sort((a, b) => b.count - a.count).slice(0, 2);
+  return { wave: plan.wave, total: plan.units.length, threats: groups.map(group => `${group.label} ${group.count}体`).join(" / ") || "通常感染群" };
+}
+
 export function createSurvivalCombatRuntime(run) {
   const current = normalizeSurvivalRun(run);
   if (!current) throw new TypeError("A valid Survival run is required");
@@ -455,5 +497,7 @@ export function survivalHudSnapshot(run, {
     bossMaxHp: Math.max(0, finite(bossMaxHp, 0)),
     pendingUpgradeChoices: [...current.pendingUpgradeChoices],
     upgradeStacks: { ...current.temporaryUpgradeStacks },
+    nextWavePreview: survivalNextWavePreview(current),
+    upgradePreviews: Object.fromEntries(current.pendingUpgradeChoices.map(id => [id, survivalUpgradePreview(current, id)])),
   };
 }

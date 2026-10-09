@@ -13,3 +13,10 @@ export async function enterV100FromTitle(page, { timeout = 30000 } = {}) {
   const control = await resume.isEnabled() ? resume : page.getByRole('button', { name: '初めから', exact: true });
   await control.click({ timeout });
 }
+
+// An init script runs again after reload. Never replace imported or earned state.
+export function seedV100BrowserSaveOnce(raw) {
+  const keys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"];
+  if (localStorage.getItem(keys[0]) !== null) return;
+  for (const key of keys) localStorage.setItem(key, raw);
+}

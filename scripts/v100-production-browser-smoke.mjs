@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
@@ -143,7 +144,7 @@ async function debugSnapshot(page) {
 for (const engine of engines) {
   let browser;
   try {
-    browser = await browserTypes[engine].launch({ headless: true });
+    browser = await browserTypes[engine].launch({ headless: true, ...(engine === "chromium" ? { args: ["--mute-audio"] } : {}) });
   } catch (error) {
     throw new Error(`${engine} launch failed: ${String(error)}`);
   }
@@ -156,6 +157,7 @@ for (const engine of engines) {
         isMobile: viewport.safeArea,
       });
       const page = await context.newPage();
+      await silenceBrowserOutput(page);
       const diagnostics = diagnosticsFor(page);
       const result = { name, engine, viewport, status: "failed", pwaOfferShown: false, path: null };
       try {

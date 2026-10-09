@@ -24,13 +24,18 @@ export function v100DialogueSlots(nodes, nodeIndex) {
   return slots;
 }
 
-// Only these authored, on-screen actions name both spouses. Radio voices,
-// scene changes and unrelated narration must not inherit silent speakers.
+// Stable R5 action beats stage only people present in that action. Radio
+// voices, scene changes and unrelated narration never inherit silent speakers.
+const actionSubjects = Object.freeze({
+  "v100:event:s17:post": { 3: ["unit-mrs-chiha", "unit-babayaga"] },
+  "v100:event:s22:post": { 0: ["unit-zakimiya"], 3: ["unit-zakimiya"], 5: ["unit-paisen", "unit-zakimiya"], 7: ["unit-zakimiya"] },
+  "v100:event:s23:pre": { 10: ["unit-mrs-chiha", "unit-babayaga"] },
+  "v100:event:s30:pre": { 18: ["unit-mrs-chiha", "unit-babayaga"] },
+  "v100:event:epilogue": { 1: ["unit-tky", "unit-paisen"], 5: ["unit-tky", "unit-paisen"], 7: ["unit-zakimiya"], 11: ["unit-mrs-chiha", "unit-babayaga"], 16: ["guide-ikura", "unit-paisen"], 21: ["unit-kumaverson"] },
+});
 export function v100ActionPortraitSubjects(eventId, node, nodeIndex = null) {
-  if (node?.kind !== "action" || typeof node.text !== "string") return [];
-  const reunion = eventId === "v100:event:s17:post" && nodeIndex === 3;
-  const confession = eventId === "v100:event:s23:pre" && nodeIndex === 10;
-  return reunion || confession ? ["unit-mrs-chiha", "unit-babayaga"] : [];
+  if (!["action", "player-action"].includes(node?.kind) || typeof node.text !== "string") return [];
+  return actionSubjects[eventId]?.[nodeIndex] ?? [];
 }
 
 // Source-image framing: Ikura has 134 px of transparent headroom in a

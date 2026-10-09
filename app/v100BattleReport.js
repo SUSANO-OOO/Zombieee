@@ -1,9 +1,28 @@
 import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { V100_BOSS_BY_ID, V100_UNITS } from "./v100Registry.js";
+import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
 const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
+const enemies = new Map(ENEMY_CONTENT.map(enemy => [enemy.id, enemy]));
+
+function normalizeVehicleHit(value) {
+  if (!record(value) || !enemies.has(value.enemyKind) || !amount(value.time) || !amount(value.damage) || value.damage <= 0) return null;
+  return Object.freeze({ enemyKind: value.enemyKind, time: value.time, damage: value.damage });
+}
+
+export function v100VehicleHitFor({ enemyKind, time, beforeHp, afterHp }) {
+  if (!amount(beforeHp) || !amount(afterHp) || afterHp >= beforeHp) return null;
+  return normalizeVehicleHit({ enemyKind, time, damage: beforeHp - afterHp });
+}
+
+export function v100LastVehicleHitText(result) {
+  const hit = normalizeVehicleHit(result?.battleReport?.lastVehicleHit);
+  const elapsed = result?.elapsedSeconds;
+  if (result?.won !== false || !hit || !amount(elapsed) || hit.time > elapsed || elapsed - hit.time > 5) return null;
+  return `${enemies.get(hit.enemyKind).displayName}の攻撃で耐久を${Math.ceil(hit.damage)}失いました（終了${Math.round(elapsed - hit.time)}秒前）。`;
+}
 
 function normalizeBossProgress(value) {
   const boss = V100_BOSS_BY_ID[value?.bossId];
@@ -24,7 +43,8 @@ export function normalizeV100BattleReport(report) {
       ? [Object.freeze({ unitId: unit.id, damage: row.damage, damageTaken: row.damageTaken, healing: row.healing })] : [];
   });
   const bossProgress = normalizeBossProgress(report.bossProgress);
-  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}) });
+  const lastVehicleHit = normalizeVehicleHit(report.lastVehicleHit);
+  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}) });
 }
 
 export function v100BattleReportFor(raw) {
@@ -38,5 +58,5 @@ export function v100BattleReportFor(raw) {
     if (!values.every(amount)) return [];
     return [{ unitId: unit.id, damage: values[0], damageTaken: values[1], healing: values[2] }];
   });
-  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress });
+  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit });
 }

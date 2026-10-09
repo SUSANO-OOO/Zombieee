@@ -1387,6 +1387,10 @@
 .v100-shell .survival-upgrade-choices b { font-size: 16px; line-height: 1.2; }
 .v100-shell .survival-upgrade-choices span,
 .v100-shell .survival-upgrade-choices em { font-size: 12px; line-height: 1.25; }
+.v100-shell .survival-next-wave-preview { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; margin: 6px 0 8px; padding: 7px 10px; border-left: 3px solid #d8b878; background: #101e1b; color: #e2d6b7; font: 600 13px/1.35 var(--v100-reading-font); }
+.v100-shell .survival-next-wave-preview span { color: #becdc7; }
+.v100-shell .survival-upgrade-choices button > strong { color: #f6dfab; font: 700 19px/1.2 var(--v100-reading-font); font-variant-numeric: tabular-nums; }
+.v100-shell .survival-upgrade-screen > section { max-height: calc(100svh - 24px); overflow-y: auto; overscroll-behavior: contain; }
 
 /* Story bookends keep the location readable behind the opaque dialogue panel. */
 .v100-event-category-prologue .v100-event-backdrop,

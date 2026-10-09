@@ -5,6 +5,9 @@
 - [正式URL](https://susano-ooo.github.io/Zombieee/)のHTML release metadataを、公開中のversion・release SHAの正本とする。
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
 - Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。
+- Version 1.0.1の改善・検証・公開結果は[実行台帳 Issue #175](https://github.com/SUSANO-OOO/Zombieee/issues/175)へ記録する。納期は2026-10-10 06:00 JST。
+
+1.0.1の改善開始時点の公開版は1.0.0、release SHAは`d322d85410e5827958fec7fe28a0d6520ccb1bc9`。以降の公開version・SHAは上記の公開HTML、Release、実行台帳で確認する。
 
 以下の日時見出しは、その時点の記録である。過去の「現在」「承認待ち」や一時共有リンクを、最新状態として扱わない。
 

@@ -1,6 +1,7 @@
 "use client";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
+import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -196,6 +197,7 @@ import {
   survivalUpgradeEffects,
   survivalWaveReward,
 } from "./survivalBattleRuntime.js";
+import { v100VehicleHitFor } from "./v100BattleReport.js";
 import {
   ENEMY_CONTENT,
   enemyBodyRadiusFor,
@@ -318,6 +320,7 @@ import {
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  combatGroundLift,
   sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
@@ -562,6 +565,7 @@ import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirear
 import {v100BrawlerComboPose,v100BrawlerCanAct,v100BrawlerCanContact} from './v100BrawlerCombo.js';
 import {createV100ImageSampler} from './v100ImageSampling.js';
 const v100ImageSampler=createV100ImageSampler();
+const v100HumanWalkRenderer=createV100HumanWalkRenderer();
 import {createV100ShotLayer} from './v100ShotLayer.js';
 const v100ShotLayer=createV100ShotLayer();
 import { V100_WEAPON_SOCKETS, v100RenderedWeaponSocket } from "./v100WeaponSockets.js";
@@ -610,7 +614,6 @@ import {
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
-import { MANUAL_ABILITY_SYMBOL_DICTIONARY, manualAbilityVisibleStateFor } from "./manualAbilityUi.js";
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
@@ -1343,6 +1346,7 @@ type Game = {
   shake: ReturnType<typeof createCameraShakeRuntime>;
   enemyBaseCollapse: number;
   resultPresented: boolean;
+  lastVehicleHit?: ReturnType<typeof v100VehicleHitFor>;
   banner: string;
   bannerTime: number;
   flashOverlay: number;
@@ -1448,6 +1452,7 @@ export type AshfallBattleResult = {
   enemyDefeatsByKind: Readonly<Record<string, number>>;
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   bossProgress?: ReturnType<typeof bossBattleResultSnapshot>;
+  lastVehicleHit?: ReturnType<typeof v100VehicleHitFor>;
   missionRuntime?: StageMissionRuntime;
   researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
 };
@@ -2537,7 +2542,6 @@ function applyIncomingHumanDamage(
             + MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds,
         })
         .slice(-8);
-      addDamageText(g, target.x, target.y - 72, "受け流し", .9, "#c5e7ff");
       if (counterTarget) {
         const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
         const strikeDamage = definition.counterDamage * (isBossFighter(counterTarget) ? definition.bossDamageMultiplier : 1);
@@ -2548,7 +2552,7 @@ function applyIncomingHumanDamage(
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
         counterTarget.flash = Math.max(counterTarget.flash, .3);
         counterTarget.knock = Math.max(counterTarget.knock, isBossFighter(counterTarget) ? 5 : 14);
-        addDamageText(g, counterTarget.x, counterTarget.y - 58, `無空 -${Math.round(applied)}`, .92, "#d7efff");
+        addDamageText(g, counterTarget.x, counterTarget.y - 58, String(Math.round(applied)), .92, "#d7efff");
         addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
       }
       return Object.freeze({
@@ -2626,7 +2630,7 @@ function applyIncomingHumanDamage(
     preventedDamage += armoredGuardianDamage.prevented + guardedDamage.prevented;
     g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
     g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
-    addDamageText(g, guardian.x, guardian.y - 72, `盾 -${Math.round(guardedDamage.damage)}`, .7, "#bcd5d5");
+    addDamageText(g, guardian.x, guardian.y - 72, String(Math.round(guardedDamage.damage)), .7, "#bcd5d5");
     if (metalSource && rawInterception.guardianDamage > 0) {
       queueV100GuardContact(g, {owner:guardian,attacker:metalSource,incomingDamage:rawInterception.guardianDamage,...weaponAnchorForTarget(guardian,metalSource)});
     }
@@ -2649,9 +2653,6 @@ function applyIncomingHumanDamage(
     target.guardStandAvailable = steadfastDamage.steadfast.available;
     appliedTargetDamage = steadfastDamage.damage;
     preventedDamage += Math.max(0, protectedTarget.damage - steadfastDamage.damage);
-    if (steadfastDamage.steadfast.triggered) {
-      addDamageText(g, target.x, target.y - 78, "踏みとどまる", .95, "#d7ecec");
-    }
   } else {
     target.hp -= protectedTarget.damage;
   }
@@ -3905,6 +3906,12 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
 function spriteDisplaySize(kind: string) {
   return spriteBattleDisplaySizeFor(kind);
 }
+function articulatedCycleDistanceFor(fighter: Fighter) {
+  if (!v100UsesHumanWalk(fighter.kind, { requestedState: 'move' })) return undefined;
+  const frame = spriteFrameFor(fighter.kind,'walk-a','right');
+  const size = fitSpriteBattleDisplaySize(fighter.kind,frame,spriteDisplaySize(fighter.kind));
+  return v100HumanWalkCycleDistance(fighter.kind,size.w*compactSpriteScale(fighter.kind)*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w);
+}
 
 function compactSpriteScale(kind: string) {
   // The cover crop removes sky on short landscapes. Keep Omega's tallest
@@ -4343,7 +4350,9 @@ function drawSpriteFighter(
           f.animationPresentation?.elapsedSeconds ?? f.step,
         );
   const state = animationSample.spriteState;
-  const frame = tataraGroundCandidate
+  const articulatedWalk = Boolean(options.v100AuthoredPresentation
+    && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
+  const frame = articulatedWalk ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
     ? { sourceRect: TATARA_GROUND_ART.sourceRect, anchorX: TATARA_GROUND_ART.anchorX, anchorY: TATARA_GROUND_ART.anchorY, flipX: direction === 'right', path: TATARA_GROUND_ART.path }
     : kumaGuardArtPose
     ? { sourceRect: V100_KUMAVERSON_GUARD_ART.sourceRect, anchorX: V100_KUMAVERSON_GUARD_ART.anchorX, anchorY: V100_KUMAVERSON_GUARD_ART.anchorY, flipX: direction === 'left', path: V100_KUMAVERSON_GUARD_ART.path }
@@ -4365,11 +4374,13 @@ function drawSpriteFighter(
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
-  const locomotionPhase = Number(animationSample.clipProgress) || 0;
+  const articulatedWalkPhase = articulatedWalk
+    ? v100HumanWalkPhase(f.animationPresentation) : null;
+  const locomotionPhase = articulatedWalkPhase ?? (Number(animationSample.clipProgress) || 0);
   const contactLift = animationSample.movement
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
-  const bob = contactLift * (renderKind === "mayo-chan" ? 2.4 : 1.8);
+  const bob = combatGroundLift(renderKind, animationSample);
   const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
   if (f.side === "zombie" && f.gateEntering) {
@@ -4405,7 +4416,7 @@ function drawSpriteFighter(
     ctx.shadowColor = "rgba(232,222,188,.38)";
     ctx.shadowBlur = 2;
   }
-  const pose = animationSample.pose ?? {
+  const pose = !articulatedWalk && animationSample.pose ? animationSample.pose : {
     offsetX: 0,
     offsetY: 0,
     rotationRadians: 0,
@@ -4465,6 +4476,7 @@ function drawSpriteFighter(
       renderWidth: size.w,
       renderHeight: size.h,
       groundAnchor: animationSample.groundAnchor,
+      articulatedWalkPhase,
       actualXDelta: fighterActualXDeltaAudit.get(f.id) ?? 0,
       deploymentPlan,
       spritePath: kumaGuardArtPose ? V100_KUMAVERSON_GUARD_ART.path : frame.path,
@@ -4485,7 +4497,9 @@ function drawSpriteFighter(
     w: frame.sourceRect.w,
     h: frame.sourceRect.h,
   }];
-  for (const slice of drawSlices) {
+  const drewArticulatedWalk = articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
+    -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h);
+  for (const slice of drewArticulatedWalk ? [] : drawSlices) {
     (options.smoothMinification ? v100ImageSampler.draw.bind(null,ctx) : ctx.drawImage.bind(ctx))(
       sprite,
       frame.sourceRect.x + slice.x,
@@ -8771,6 +8785,7 @@ function drawWorld(
 }
 
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
+  useEffect(() => () => v100HumanWalkRenderer.clear(), []);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
@@ -10063,6 +10078,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighter.animationPresentation,
           {
             kind: fighter.kind,
+            locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
             state,
             deploying,
             direction,
@@ -14168,7 +14184,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         path,
         category,
         spriteRefs.current[kind],
-        (image) => { spriteRefs.current[kind] = image; },
+        (image) => {
+          spriteRefs.current[kind] = image;
+          if (externalSessionActive) v100HumanWalkRenderer.prepare(kind,image);
+        },
       )),
       ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(
         path, category, spriteRefs.current[`card-${kind}`],
@@ -15069,8 +15088,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       salvoIntervalSeconds: definition.salvoIntervalSeconds,
       projectileTravelSeconds: definition.projectileTravelSeconds,
     }].slice(-8);
-    g.banner = `${cards.find((card) => card.kind === fighter.kind)?.name ?? fighter.kind} // ${definition.displayName}`;
-    g.bannerTime = 1.15;
     setHud((current) => ({
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
@@ -18398,7 +18415,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 owner.cooldown = 0;
                 owner.retargetIn = 0;
                 addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
-                addDamageText(g, owner.x, owner.y - 72, "狂王暴走", 1, "#ffb14f");
               } else {
                 for (const enemy of g.fighters) {
                   if (enemy.side !== "zombie"
@@ -18421,7 +18437,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   event.kind === "guardian" ? "#82a8b2" : "#d9a04c",
                   22,
                 );
-                addDamageText(g, owner.x, owner.y - 72, event.kind === "guardian" ? "鉄壁展開" : "仁王立ち", 1, event.kind === "guardian" ? "#c4e8ec" : "#ffd07a");
               }
               g.flashOverlay = Math.max(g.flashOverlay, .08);
               playManualAbilityTimelineCue(
@@ -18515,7 +18530,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 nearby.flash = Math.max(nearby.flash, nearby.id === target.id ? .3 : .14);
               }
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, target.x, target.y - 52, sequential?String(Math.round(damage)):`連打×${definition.hitCount} -${Math.round(damage)}`, .65, "#ffd16d");
+              addDamageText(g, target.x, target.y - 52, String(Math.round(damage)), .65, "#ffd16d");
               if(sequential)queueV100Contact(g,{x:target.x-Math.sign(target.x-owner.x)*target.bodyRadius*.45,y:target.y-30+(event.salvoIndex%2?3:-3),direction:Math.sign(target.x-owner.x)||1,size:finalRound?70:52});
               else addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
               if(finalRound)g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.weaponHeavy);
@@ -18543,7 +18558,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               target.flash = Math.max(target.flash, .28);
               target.knock = Math.max(target.knock, 11);
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, target.x, target.y - 52, `迎撃 -${Math.round(damage)}`, .86, "#7ee7e4");
+              addDamageText(g, target.x, target.y - 52, String(Math.round(damage)), .86, "#7ee7e4");
               if(g.definition.missionConfig.v100StageNumber)queueV100Contact(g,{x:target.x,y:target.y-30,direction,size:66});
               else addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
               playManualAbilityTimelineCue(owner, "impact", target.x, "intercept-impact", {
@@ -18569,7 +18584,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.hp = Math.max(0, target.hp - strike);
                 target.flash = Math.max(target.flash, .24);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, target.x, target.y - 50, `精密 -${Math.round(damage)}`, .82, "#d8f2ff");
+                addDamageText(g, target.x, target.y - 50, String(Math.round(damage)), .82, "#d8f2ff");
                 if(g.definition.missionConfig.v100StageNumber){
                   if(appliedCount===0)queueV100ManualMuzzle(g,{owner,target:{x:target.x,y:target.y-30}});
                   queueV100ManualFirearmImpact(g,{owner,target,hpBefore});
@@ -18607,7 +18622,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               target.suppressionMultiplier = 1;
               target.damageReductionRemaining = Math.max(target.damageReductionRemaining, definition.protectionSeconds);
               target.damageReductionMultiplier = Math.min(target.damageReductionMultiplier, definition.protectionMultiplier);
-              addDamageText(g, target.x, target.y - 54, `緊急処置 +${Math.round(healing)}`, .95, "#76e5a6");
+              addDamageText(g, target.x, target.y - 54, `+${Math.round(healing)}`, .95, "#76e5a6");
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, target.x, target.y - 28, "#72dca0", 20);
               if (g.definition.missionConfig.v100StageNumber) queueV100SupportAbilityEffect(g, {
                 ownerId: owner.id,
@@ -18639,7 +18654,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.flash = Math.max(target.flash, .3);
                 target.knock = Math.max(target.knock, 14);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, target.x, target.y - 48, `地砕 -${Math.round(damage)}`, .84, "#e6b06b");
+                addDamageText(g, target.x, target.y - 48, String(Math.round(damage)), .84, "#e6b06b");
               }
               const structureTargetId = [...targetIds].find(id => id.startsWith("manual-structure:enemy-base"));
               if (structureTargetId
@@ -18658,7 +18673,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
-                addDamageText(g, baseTarget.x, baseTarget.y - 18, `地砕 -${Math.round(structureDamage)}`, .9, "#ffd06b");
+                addDamageText(g, baseTarget.x, baseTarget.y - 18, String(Math.round(structureDamage)), .9, "#ffd06b");
                 addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
               }
               if(g.definition.missionConfig.v100StageNumber) queueV100TataraGroundContact(g,{owner});
@@ -18685,7 +18700,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               target.marked = Math.max(target.marked, definition.markSeconds);
               target.flash = Math.max(target.flash, .22);
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, target.x, target.y - 54, `弱点査定 -${Math.round(damage)}`, .92, "#f0d36f");
+              addDamageText(g, target.x, target.y - 54, String(Math.round(damage)), .92, "#f0d36f");
               if(g.definition.missionConfig.v100StageNumber){
                 queueV100ManualMuzzle(g,{owner,target:{x:target.x,y:target.y-30}});
                 queueV100ManualFirearmImpact(g,{owner,target,hpBefore});
@@ -18732,9 +18747,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   g,
                   target.x,
                   target.y - 48,
-                  salvoIndex === null
-                    ? `制圧 -${Math.round(damage)}`
-                    : `制圧 ${salvoIndex + 1}/${definition.burstCount} -${Math.round(damage)}`,
+                  String(Math.round(damage)),
                   .84,
                   "#f4c66d",
                 );
@@ -18755,7 +18768,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               owner.engineerTrapLane = (event.target.trapLane ?? event.target.lane) as Lane;
               owner.engineerTrapManual = true;
               owner.engineerTrapCooldown = 0;
-              addDamageText(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 30, "捕縛罠", .9, "#e3ce77");
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 6, "#c8b158", 16);
               if (g.definition.missionConfig.v100StageNumber) queueV100SupportAbilityEffect(g, {
                 ownerId: owner.id,
@@ -18785,7 +18797,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .2);
                 target.knock = Math.max(target.knock, 8);
-                addDamageText(g, target.x, target.y - 48, `火酒 -${Math.round(damage)}`, .82, "#ffb15a");
+                addDamageText(g, target.x, target.y - 48, String(Math.round(damage)), .82, "#ffb15a");
               }
               g.areaEffects.push({
                 id: g.nextAreaEffectId++,
@@ -18846,7 +18858,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.flash = Math.max(target.flash, .28);
                 target.knock = Math.max(target.knock, definition.knockback);
                 target.stunned = Math.max(target.stunned, definition.stunSeconds);
-                addDamageText(g, target.x, target.y - 50, `光刃 -${Math.round(damage)}`, .82, "#ff70d4");
+                addDamageText(g, target.x, target.y - 50, String(Math.round(damage)), .82, "#ff70d4");
                 if (!g.definition.missionConfig.v100StageNumber) addParticles(g, target.x, target.y - 34, "#ff42c8", 11);
               }
               g.flashOverlay = Math.max(g.flashOverlay, .12);
@@ -18879,7 +18891,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, finalRound ? .3 : .18);
                 target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
-                addDamageText(g, target.x, target.y - 48, `榴弾 -${Math.round(damage)}`, .78, finalRound ? "#ffd08a" : "#d9aa63");
+                addDamageText(g, target.x, target.y - 48, String(Math.round(damage)), .78, finalRound ? "#ffd08a" : "#d9aa63");
               }
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
               else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "mrs-grenade-impact", shotIndex: event.salvoIndex, finalRound, targetId: event.target?.targetId, x: event.target.x, y: event.target.y, duration: .6 });
@@ -18929,7 +18941,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
               target.knock = Math.max(target.knock, isBossFighter(target) ? 4 : 13);
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
-              addDamageText(g, target.x, target.y - 54, `無空 -${Math.round(damage)}`, .9, "#d7efff");
+              addDamageText(g, target.x, target.y - 54, String(Math.round(damage)), .9, "#d7efff");
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
               else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "musashi-crosscut", targetId: target.id, x: target.x, y: target.y - 30, duration: .22 });
               playManualAbilityTimelineCue(owner, event.mode === "fallback" ? "fallbackCross" : "counter", target.x, event.mode === "fallback" ? "fallback-cross" : "counter", {
@@ -19061,6 +19073,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (g.baseHp <= 0) continue;
             const beforeHit = g.baseHp;
             g.baseHp = Math.max(0, g.baseHp - hit.damage);
+            g.lastVehicleHit = v100VehicleHitFor({ enemyKind: hit.weapon, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
             g.crawlerHitFlash = .18;
             if (beforeHit === g.baseMaxHp) {
               g.banner = "突破発生 — 移動拠点が攻撃を受けています";
@@ -19181,7 +19194,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             target.hp = Math.max(0, target.hp - hit.damage);
             target.flash = Math.max(target.flash, .16);
             target.knock = Math.max(target.knock, 5);
-            addDamageText(g, target.x, target.y - 48, `掃射 -${Math.round(Math.min(beforeHit, hit.damage))}`, .75, "#ffd36d");
+            addDamageText(g, target.x, target.y - 48, String(Math.round(Math.min(beforeHit, hit.damage))), .75, "#ffd36d");
             addParticles(g, target.x, target.y - 22, "#e8b354", 5);
             continue;
           }
@@ -19242,7 +19255,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
-              addDamageText(g, splashTarget.x, splashTarget.y - 43, `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`, .66, "#e4b46c");
+              addDamageText(g, splashTarget.x, splashTarget.y - 43, String(Math.round(appliedSplash)), .66, "#e4b46c");
               if (primaryTarget) {
                 appendCompletedAttackImpact(
                   g,
@@ -21169,7 +21182,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         + MANUAL_ABILITY_REGISTRY.engineer.slowSeconds,
                     );
                   }
-                    addDamageText(g, trapped.x, trapped.y - 60, "足止め", .8, "#e1c978");
                   }
                   f.engineerTrapReady = false;
                   f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
@@ -21220,7 +21232,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.supportCooldown = 1.55;
               g.roleMetrics.naoHealing += healed;
               addDamageText(g, wounded.x, wounded.y - 70, `+${Math.ceil(healed)}`, .8, "#83e0a2");
-              addDamageText(g, f.x, f.y - 64, "救護", .7, "#9bf0ba");
               addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
               if (roleEffect) playCue("role-medic");
@@ -22097,7 +22108,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     target.armorBreakStacks = 0;
                     target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, 3.2);
                     target.stunned = Math.max(target.stunned, .75);
-                    addDamageText(g, target.x, target.y - 66, "装甲破砕", .85, "#ffba70");
                   }
                 }
               }
@@ -22350,9 +22360,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                 addDamageText(g, target.x + (Math.random() - .5) * 10, target.y - 45, String(Math.round(appliedAttack.targetDamage)), .65, f.side === "human" ? "#f6d278" : "#e98a72");
               }
-              if (roleEffect && f.abilityCooldown <= 0) {
-                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "対装甲破砕" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "直線制圧" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
-                if (roleCue) { addDamageText(g, f.x, f.y - 66, roleCue, .75, "#ffe078"); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
+              if (roleEffect && f.abilityCooldown <= 0
+                && ["scout", "ranger", "brute", "brawler", "gunner", "crazy-king", "kumaverson", "babayaga"].includes(roleEffect)) {
+                f.abilityCooldown = 1.8;
+                emitBattleBark(g, "role-cue", f.kind, f.id);
               }
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
@@ -22658,7 +22669,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const beforeHit = g.baseHp;
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
-                if (!deferredEnemyProjectile) g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                if (!deferredEnemyProjectile) {
+                  g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                  g.lastVehicleHit = v100VehicleHitFor({ enemyKind: f.kind, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
+                }
                 // A vehicle strike belongs to the metal impact route. Enemy
                 // vocal attacks here sounded like a human hurt reaction at the
                 // exact moment the vehicle HP fell.
@@ -23197,6 +23211,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }),
             {
               kind: fighter.kind,
+              locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
               state: presentationState,
               deploying: fighter.gateEntering,
               direction,
@@ -23408,6 +23423,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               unitsLost: g.unitsLost,
               bossDefeated: g.bossDefeated,
               bossProgress: bossBattleResultSnapshot(g),
+              lastVehicleHit: g.lastVehicleHit,
               enemyBaseDestroyed,
               encounteredEnemyKinds: [...g.enemyKindsSeen],
               enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23473,6 +23489,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             bossProgress: bossBattleResultSnapshot(g),
+            lastVehicleHit: g.lastVehicleHit,
             enemyBaseDestroyed: g.barricadeHp <= 0,
             encounteredEnemyKinds: [...g.enemyKindsSeen],
             enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
@@ -23834,7 +23851,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             disabled={!icon.available}
             aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
-            title={externalSessionActive ? undefined : `${ability.displayName} — ${manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
             onPointerCancel={(event) => event.stopPropagation()}
@@ -23844,10 +23860,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
-            {!externalSessionActive && <span className="manual-ability-label"><b>{ability.displayName}</b><small>{manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>}
           </button>;
         })}
-        {!externalSessionActive && screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -24013,16 +24027,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <h2>3択強化を選択</h2>
           {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
           <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "この作戦中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
+          {survivalHud.nextWavePreview && <div className="survival-next-wave-preview"><strong>次は第{survivalHud.nextWavePreview.wave}波 / {survivalHud.nextWavePreview.total}体</strong><span>{survivalHud.nextWavePreview.threats}</span></div>}
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
               const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
               if (!upgrade) return null;
               const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
+              const preview = survivalHud.upgradePreviews[upgradeId];
               return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
                 <small>{externalSessionActive ? V100_SURVIVAL_UPGRADE_CATEGORIES[upgrade.category] ?? "作戦強化" : upgrade.category.toUpperCase()}</small>
                 <b>{externalSessionActive ? upgrade.displayName.replaceAll("移動拠点", "装甲車両") : upgrade.displayName}</b>
-                <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
-                <em>現在 {stack} / 選択後 {stack + 1}</em>
+                {preview ? <><span>{preview.label}</span><strong>{preview.before} → {preview.after}{preview.suffix}</strong><em>{preview.note}</em></>
+                  : <><span>1段階あたり {Math.round(upgrade.effectPerStack * 100)}%</span><em>現在 {stack} / 選択後 {stack + 1}</em></>}
               </button>;
             })}
           </div>

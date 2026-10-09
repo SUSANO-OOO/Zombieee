@@ -9,6 +9,7 @@ export const TITLE_MUSIC_SRC = "/audio/v100/score/horror.mp3";
 type Settings = { bgmEnabled: boolean; bgmVolume: number };
 
 export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; voiceActive: boolean }) {
+  const musicEnabled = settings.bgmEnabled && settings.bgmVolume > 0;
   const audioRef = useRef<HTMLAudioElement>(null);
   const stateRef = useRef({ settings, voiceActive });
   const refreshRef = useRef<(() => void) | null>(null);
@@ -20,12 +21,26 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
   useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const mix = createEndingAudioMix([audio]);
     const portrait = window.matchMedia(LANDSCAPE_BLOCK_QUERY);
     let disposed = false, pageAway = false, pending = false, generation = 0;
     let frame = 0, lastFrame = 0, gain = 0;
     const allowed = () => !disposed && !pageAway && !document.hidden && !portrait.matches
       && stateRef.current.settings.bgmEnabled && stateRef.current.settings.bgmVolume > 0;
+    const mix = createEndingAudioMix([audio], {
+      canPlay: allowed,
+      onRecoveryState: (state: string) => {
+        if (!allowed()) return;
+        if (state !== "running") {
+          cancelAnimationFrame(frame);
+          frame = 0; lastFrame = 0;
+        }
+        audio.dataset.titleMusicState = state === "gesture" ? "waiting" : state === "running" ? "playing" : state;
+        if (state === "running" && !audio.paused && !frame) {
+          lastFrame = 0;
+          frame = requestAnimationFrame(animate);
+        }
+      },
+    });
     const targetGain = () => stateRef.current.settings.bgmVolume * .30 * (stateRef.current.voiceActive ? .22 : 1);
     const silence = () => {
       generation++;
@@ -49,7 +64,9 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
     };
     const request = () => {
       if (!allowed()) { silence(); return; }
-      if (pending || !audio.paused) return;
+      if (pending || (!audio.paused && !mix.needsRecovery(audio))) return;
+      // Attach once, only when enabled. Muting later retains the native cursor.
+      if (!audio.getAttribute("src")) audio.src = TITLE_MUSIC_SRC;
       pending = true;
       const token = ++generation;
       mix.setVolume(audio, 0);
@@ -99,5 +116,5 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
       window.removeEventListener("keydown", request);
     };
   }, []);
-  return <audio ref={audioRef} src={TITLE_MUSIC_SRC} loop preload="auto" data-title-music="true" />;
+  return <audio ref={audioRef} loop preload={musicEnabled ? "auto" : "none"} data-title-music="true" />;
 }

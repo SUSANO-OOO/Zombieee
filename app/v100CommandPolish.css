@@ -14,6 +14,7 @@
 #v100-campaign .v100-result-feedback { grid-column: 1 / -1; grid-row: 4; text-align: left; }
 #v100-campaign .v100-result-feedback p, #v100-campaign .v100-star-criteria { margin: 2px 0; font-size: 12px; line-height: 1.4; color: #d7dfc5; }
 #v100-campaign .v100-result-feedback .v100-result-boss { color: #f2dab3; }
+#v100-campaign .v100-result-feedback .v100-result-last-hit { margin: 4px 0 8px; padding: 8px 10px; border-left: 3px solid #cd9564; background: #211b16; color: #f2dcc3; font-size: 14px; }
 #v100-campaign .v100-read-story-setting { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 8px 0 12px; padding: 8px; border: 1px solid #7f8f79; color: #efe4c7; font-size: 14px; cursor: pointer; }
 #v100-campaign .v100-read-story-setting input { flex: none; width: 20px; height: 20px; accent-color: #d7b875; }
 #v100-campaign .v100-read-story-setting small { display: block; margin-top: 4px; font-size: 12px; color: #b9c7b8; }
@@ -88,7 +89,7 @@
 #v100-campaign .v100-field-map-intel span:last-child { display: block; font-size: 12px; line-height: 1.25; }
 #v100-campaign .v100-field-map-drawing { position: absolute; inset: 10px 0 16px; width: 100%; height: calc(100% - 26px); opacity: .55; }
 #v100-campaign .v100-field-map-label { font-size: 28px; }
-#v100-campaign .v100-field-map-drawing.v100-mission-diagram { position: static; flex: 1; width: 100%; height: auto; min-height: 70px; margin-top: 4px; opacity: 1; color: #aee1b6; }
+#v100-campaign .v100-field-map-drawing.v100-mission-diagram { display: block; position: static; flex: 1; width: 100%; height: auto; min-height: 70px; margin-top: 4px; opacity: 1; color: #aee1b6; pointer-events: none; }
 #v100-campaign .v100-mission-diagram.is-hold { color: #ffb18c; }
 #v100-campaign .v100-briefing-streets { fill: none; stroke: #d8d0ac38; stroke-width: 1; }
 #v100-campaign .v100-briefing-route { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-dasharray: 7 4; }
