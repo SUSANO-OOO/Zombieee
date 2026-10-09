@@ -138,19 +138,20 @@ for (const engine of engines) {
         const stageId = V100_STAGE_IDS[number - 1];
         const fixture = normalizeV100Save({ ...early, availableStageIds: V100_STAGE_IDS, formationSlots: [...early.formationSlots.slice(0, 4), "unit-nao", "unit-hachi", "unit-paisen"], flowState: { phase: "formation", eventId: null, stageId, stageNumber: number, destination: "battle", nodeIndex: 0, firstClear: false, finalized: false } });
         await runCase(browser, engine, viewport, "briefing-s" + number, fixture, async (page, row) => {
+          await page.locator('.v100-formation-panel').waitFor();
+          const summary = page.locator(".v100-briefing-details > summary");
+          await within(summary, 44); await summary.tap();
           await page.locator(".v100-mission-diagram").waitFor();
           row.mission = await page.locator(".v100-mission-diagram").getAttribute("data-v100-mission-mode");
           row.diagram = await diagramWithin(page.locator(".v100-mission-diagram"));
-          await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
-          await capture(page, row, "board");
-          const summary = page.locator(".v100-briefing-details > summary");
-          await within(summary, 44); await summary.tap();
           const popup = page.locator(".v100-briefing-details > div");
           await within(popup);
           row.briefing = await popup.innerText();
           await popup.evaluate(element => { element.scrollTop = element.scrollHeight; });
           await capture(page, row, "intel");
           await summary.tap();
+          await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
+          await capture(page, row, "board");
         });
       }
       for (const [eventId, index, count] of [["v100:event:s17:post", 3, 2], ["v100:event:s23:pre", 10, 2], ["v100:event:s28:pre", 3, 0], ["v100:event:s30:pre", 18, 2]]) {

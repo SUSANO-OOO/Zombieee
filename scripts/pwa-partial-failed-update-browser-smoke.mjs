@@ -1192,8 +1192,18 @@ try {
     titleVoiceBound && request.pathname === titleVoiceTransportPath
     && candidateEntryPhaseNames.has(request.diagnosticPhase) && request.nativeTitlePreload
     && ["other", "media"].includes(request.resourceType) && !request.isNavigationRequest);
+  // A later release can reuse the exact title voice already held by the old
+  // worker. Its browser request is still a native preload, but belongs outside
+  // the missing-content transport delta and must cause no server fetch.
+  const candidateEntryChangedTitleRequests = candidateEntryBrowserTitleRequests
+    .filter(request => candidatePendingReleaseDeltaTransportPaths.has(request.pathname));
+  const candidateEntryCachedTitleRequests = candidateEntryBrowserTitleRequests
+    .filter(request => !candidatePendingReleaseDeltaTransportPaths.has(request.pathname));
+  const candidateEntryCachedTitleServerRequests = candidateEntryTransportRequests.filter(request =>
+    candidateEntryCachedTitleRequests.some(preload => preload.pathname === request.pathname
+      && preload.diagnosticPhase === request.diagnosticPhase));
   const candidateEntryServerCounts = countRequestsByPathAndPhase(candidateEntryChangedRequests);
-  const candidateEntryBrowserCounts = countRequestsByPathAndPhase([...candidateEntryBrowserFontRequests, ...candidateEntryBrowserTitleRequests]);
+  const candidateEntryBrowserCounts = countRequestsByPathAndPhase([...candidateEntryBrowserFontRequests, ...candidateEntryChangedTitleRequests]);
   const candidateEntryCountKeys = new Set([
     ...candidateEntryServerCounts.keys(),
     ...candidateEntryBrowserCounts.keys(),
@@ -1230,11 +1240,15 @@ try {
     && candidateEntryBrowserFontRequests.every((request) => candidateWoff2TransportPaths.has(request.pathname))
     && candidateEntryChangedRequestBreakdown.every((entry) => entry.serverCount <= 1
       && entry.serverCount === entry.browserPreloadCount)
+    && (candidateEntryCachedTitleRequests.length === 0 || candidateHashesBeforeRepair.has(titleVoiceAsset.hash))
+    && candidateEntryCachedTitleServerRequests.length === 0
   ), {
     candidateEntryChangedRequests,
     candidateEntryChangedRequestBreakdown,
     candidateEntryBrowserFontRequests,
     candidateEntryBrowserTitleRequests,
+    candidateEntryCachedTitleRequests,
+    candidateEntryCachedTitleServerRequests,
     titleVoiceBound,
     candidateWoff2TransportPaths: [...candidateWoff2TransportPaths],
   });

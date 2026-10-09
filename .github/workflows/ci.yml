@@ -621,7 +621,8 @@ jobs:
               GITHUB_PAGES_REQUEST_ID=v100-public-old GITHUB_PAGES_ISSUE_NUMBER=172 \
               node scripts/build-github-pages.mjs
           )
-          GITHUB_PAGES_RELEASE_VERSION=1.0.0 GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
+          candidate_version="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({ RELEASE_VERSION }) => process.stdout.write(RELEASE_VERSION))')"
+          GITHUB_PAGES_RELEASE_VERSION="$candidate_version" GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
             GITHUB_PAGES_REQUEST_ID=v100-native-pwa-candidate GITHUB_PAGES_ISSUE_NUMBER=172 \
             node scripts/build-github-pages.mjs
 
