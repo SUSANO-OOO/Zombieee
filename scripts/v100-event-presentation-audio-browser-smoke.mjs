@@ -11,6 +11,7 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
+import { v100EventAudioSnapshot } from "./v100-event-audio-audit.mjs";
 
 const baseUrl = new URL(process.env.V100_EVENT_AUDIO_QA_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 event QA is local-only; refusing ${baseUrl}`);
@@ -42,6 +43,15 @@ await mkdir(evidenceDir, { recursive: true });
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+async function nativeAudioFor(page, eventCase, nodeIndex) {
+  const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase,
+    node: V100_STORY_EVENTS[eventCase.eventId].nodes[nodeIndex], nodeIndex });
+  const handle = await page.waitForFunction(v100EventAudioSnapshot, {
+    selector: `[data-v100-event-id="${eventCase.eventId}"]`, eventId: eventCase.eventId, nodeIndex, sceneId: expected.sceneId,
+  }, { timeout });
+  try { return await handle.jsonValue(); } finally { await handle.dispose(); }
 }
 
 function diagnosticsFor(page) {
@@ -261,13 +271,16 @@ for (const engine of engines) {
           if (eventCase.id === "two-speaker") invariant(observed.portraitCount === "2", `${name} expected two portraits, got ${observed.portraitCount}`);
           assertPortraitAudit(name, initialPortraitAudit);
           assertDialogueSurfaceAudit(name, initialDialogueSurfaceAudit);
-          await page.waitForTimeout(180);
-          const before = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
+          invariant(Number(observed.nodeIndex) === (eventCase.nodeIndex ?? 0), `${name} unexpected initial cursor`);
+          const initialAudio = await nativeAudioFor(page, eventCase, eventCase.nodeIndex ?? 0);
+          const before = initialAudio.audio;
           invariant(before?.owner === "v100-event-runtime", `${name} QA audio owner missing`);
           invariant((before.receipts ?? []).some(({ action }) => action === "requested"), `${name} has no requested event audio`);
           const primary = page.locator(".v100-event-actions .v100-primary");
+          let advanced = false;
           if (eventCase.advance !== false && await primary.isVisible().catch(() => false)) {
             await clickUsable(primary, `${name} event action`);
+            advanced = true;
             await page.waitForFunction(({ selector, previousIndex }) => {
               const surface = document.querySelector(selector);
               return !surface || surface.getAttribute("data-v100-node-index") !== previousIndex;
@@ -285,6 +298,8 @@ for (const engine of engines) {
           const postActionDialogueSurfaceAudit = await dialogueSurfaceAuditFor(page, eventSelector);
           assertPortraitAudit(name, postActionPortraitAudit);
           assertDialogueSurfaceAudit(name, postActionDialogueSurfaceAudit);
+          const postActionAudio = await postActionEvent.count() > 0
+            ? await nativeAudioFor(page, eventCase, (eventCase.nodeIndex ?? 0) + Number(advanced)) : null;
           await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.stop?.("qa-boundary"));
           const after = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           const requestedKeys = uniqueRequestedKeys(after?.receipts ?? []);
@@ -298,6 +313,7 @@ for (const engine of engines) {
           result.dialogueSurfaceAudit = postActionDialogueSurfaceAudit ?? initialDialogueSurfaceAudit;
           result.expected = { category: expected.category, sceneId: expected.sceneId, transition: expected.transition, audioOwner: expected.audioOwner };
           result.receipts = after?.receipts ?? [];
+          result.audioStartSnapshots = { initial: initialAudio, postAction: postActionAudio };
           result.audioDiagnostics = after?.diagnostics ?? null;
           result.evidence = path.relative(process.cwd(), evidencePath).replaceAll("\\", "/");
           result.status = "passed";

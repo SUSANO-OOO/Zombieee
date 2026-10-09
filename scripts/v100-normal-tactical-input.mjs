@@ -2,14 +2,35 @@ import {orderedNativePointer} from './ordered-native-pointer.mjs';
 
 // Read-only observations guide ordinary UI inputs. This helper has no combat,
 // save, time, actor or result setters and does not activate a QA scenario.
-export async function nativeBattleTap(page,locator){
+export function readNativeBattleControl(els){
+  const el=els.length===1?els[0]:null;
+  if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;
+  const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+  const ownsPoint=r.width>0&&r.height>0&&document.elementFromPoint(x,y)?.closest('button')===el;
+  return{unitCard:el.matches('.unit-card'),point:ownsPoint?{x,y}:null,
+    fighterId:el.dataset?.fighterId??null,abilityKind:el.dataset?.abilityKind??null,
+    ariaLabel:el.getAttribute('aria-label')};
+}
+
+export async function nativeBattleTap(page,locator,phases=[]){
   // Live ability buttons can disappear or become unavailable between reads.
   // Observe the current match immediately; never wait for that old owner to return.
-  const state=await locator.evaluateAll(els=>{const el=els.length===1?els[0]:null;return el&&!el.disabled&&el.getAttribute('aria-disabled')!=='true'?{unitCard:el.matches('.unit-card')}:null;});
+  const observe=async name=>{
+    const phase={name,startedAt:Date.now(),status:'pending'};phases.push(phase);
+    try{const state=await locator.evaluateAll(readNativeBattleControl);phase.observation=state;phase.status='completed';return state;}
+    catch(error){phase.status='error';phase.error=String(error);throw error;}
+    finally{phase.endedAt=Date.now();}
+  };
+  let state=await observe('observe-control');
   if(!state)return false;
-  if(state.unitCard)try{await locator.scrollIntoViewIfNeeded({timeout:750});}catch{return false;}
-  const point=await locator.evaluateAll(els=>{const el=els.length===1?els[0]:null;if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return document.elementFromPoint(x,y)?.closest('button')===el?{x,y}:null;});
-  if(!point)return false;await orderedNativePointer(page,point);return true;
+  if(state.unitCard){
+    const phase={name:'scroll-control',startedAt:Date.now(),status:'pending'};phases.push(phase);
+    try{await locator.scrollIntoViewIfNeeded({timeout:750});phase.status='completed';}
+    catch(error){phase.status='error';phase.error=String(error);return false;}
+    finally{phase.endedAt=Date.now();}
+    state=await observe('refresh-control');
+  }
+  if(!state?.point)return false;await orderedNativePointer(page,state.point,phases);return true;
 }
 
 export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){

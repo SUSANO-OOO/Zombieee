@@ -226,6 +226,19 @@ test("engagement RPC loss seals page calls and stops without a retry", async () 
   }
 });
 
+test("a rejected combat snapshot retains the original protocol failure", async () => {
+  const protocolError = "Error: page.evaluate: Protocol error: Page closed";
+  const f = fixture(() => [], { readStatus: (reads) => reads === 2 ? { status: "rejected", error: protocolError } : null });
+  await assert.rejects(f.run(), error => {
+    assert.equal(error.code, "PHASE_G_CAUSAL_TRANSACTION_REJECTED");
+    assert.equal(error.phaseGCausalTransaction.lastRead.error, protocolError);
+    assert.equal(error.phaseGCausalTransaction.lastRead.budgetMs, 2000);
+    assert.equal(error.phaseGCausalNoFurtherPageRpc, true);
+    return true;
+  });
+  assert.equal(f.reads(), 2);
+});
+
 test("setup expiry retains baseline and last successful read without a post-deadline RPC", async () => {
   const f = fixture(() => []);
   await assert.rejects(f.run(), (error) => {

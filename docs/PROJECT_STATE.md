@@ -10,6 +10,10 @@ CI `37866131657` はPR Verify、WebKit frame/boss performanceと敵runtime6 shar
 
 CI `37869739404` はMac native WebKitのクレジット7ケース・音声byte range・frame/boss performanceが成功。R5イベント検証はフェード完了の待機と測定を別RPCで行って競合し、Phase GはR5の会話を進めず終幕を待って停止した。検証側を同じ会話位置・画像identityの完了判定と同時測定、正規の会話操作から映像へ進む経路へ修正。描画・入力・期限・性能の基準を維持し、ChromiumのR5イベント24ケース・終幕3画面が成功。限定差分の独立review H/M 0、製品app/publicの追加変更はない。
 
+CI `37872371660` のMac native WebKitで、R5イベント24ケース・クレジット7ケース・音声byte range、既存PWA更新18ケース・部分失敗復旧23ケース・実戦中の修復保護5ケースが成功。PR Verify、frame/boss performance、敵runtime6 shard、hosted WebKit、Stage 3音声3ルートも成功した。Phase GのStage 25は背景abilityのnative入力が500msを超え、検査側がcontextを閉じたため、後続snapshotも拒否された。終了前page/browserは生存し、原artifactを保全した。入力のstateとhit-ownerを1回の読取りへまとめ、各処理の所要時間と元のprotocol errorを記録する。500/700msの期限・キャンセル完了・後続入力停止・戦闘proofの基準は維持する。
+
+公開確認の旧手順をスタート画面の初めから／続きからに合わせ、意図的なSW遮断の通知は原因と画像を記録して正規操作で閉じる。workflowが事前作成するログを受け入れつつ、過去の画像・reportの上書きを拒否する。低速通信は実際のrequest終了から連続500msの静止を固定30秒内で確認してから再起動する。表示cursorと原稿由来sceneに一致した実音声snapshotを停止前に記録する。最終差分は全1810 tests、対象Lint 0 errors、独立review H/M 0。ChromiumのR5イベント24ケースと公開前9ケースが成功し、編成画像もdecode完了後に確認した。Stage 25のWindows WebKit 2359では同じ期限でshield→guardianの完了impact proofがCOMPLETEとなった。これはMac native音声・正式originの代替ではない。これらは固定runtimeに対するQAの修正であり、app/publicの追加変更はない。正式originでの公開後QAはdeployment後に実行する。
+
 Producerの「もうレビューはしないので最終リリースまでやってください」により追加のProducer確認待ちは解除済み。残る技術検証後、PR統合、merge result SHAへの固定tag・Release、明示的Pages request、公開後QAを行う。正式公開版は現在0.9.9.5のまま。以下の古い承認待ち・旧リンク・旧候補は当時の記録である。
 
 ### 2026-10-08 最終レビュー版の終幕と音量調整
