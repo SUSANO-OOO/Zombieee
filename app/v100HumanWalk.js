@@ -1,5 +1,6 @@
 // Articulated locomotion uses the approved atlas pixels. No face, costume,
 // weapon, source file or battle statistics are replaced.
+import { V100_MAIN_HUMAN_WALK_KINDS, v100MainHumanWalkCycleDistance, createV100MainHumanWalkRenderer } from './v100MainHumanWalk.js';
 const PAISEN = Object.freeze({ source: { x: 394, y: 0, w: 394, h: 757 },
   hip: [213, 376], knee: [251, 451], ankle: [280, 564], stance: .6, reach: 60 });
 const FRAME_COUNT = 24, CELL_W = 197, CELL_H = 379;
@@ -29,6 +30,9 @@ function footFor(phase) {
 export function v100PaisenWalkCycleDistance(renderScale) {
   return 2*PAISEN.reach*Math.max(.001,Number(renderScale)||.001)/PAISEN.stance;
 }
+export function v100HumanWalkCycleDistance(kind, renderScale) {
+  return kind === 'brawler' ? v100PaisenWalkCycleDistance(renderScale) : v100MainHumanWalkCycleDistance(kind, renderScale);
+}
 export function v100PaisenWalkPose(phase) {
   const p=cycle(phase),rise=1-2*Math.cos(p*4*Math.PI),nearHip=[215,376+rise],farHip=[204,376+rise];
   const near=footFor(p),far=footFor(p+.5),upper=length(PAISEN.hip,PAISEN.knee),lower=length(PAISEN.knee,PAISEN.ankle);
@@ -40,7 +44,7 @@ export function v100HumanWalkPhase(runtime) {
 }
 export function v100UsesHumanWalk(kind,sample,{manualAbilityActive=false}={}) {
   // An attack may move the fighter while its limbs still own an attack pose.
-  return kind==='brawler' && !manualAbilityActive
+  return (kind==='brawler' || V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) && !manualAbilityActive
     && ['idle','move','start-move','stop-move','turn'].includes(sample?.requestedState);
 }
 function piece(ctx,image,name,sourceA,sourceB,targetA,targetB) {
@@ -67,12 +71,15 @@ function paintPose(ctx,image,pose) {
   piece(ctx,image,'forearm',[169,335],[183,386],elbow,hand);
 }
 export function createV100HumanWalkRenderer({createCanvas=()=>document.createElement('canvas')}={}) {
+  const mainWalk = createV100MainHumanWalkRenderer({ createCanvas });
   let cached=null,builds=0;
-  const clear=()=>{if(cached){cached.canvas.width=0;cached.canvas.height=0;}cached=null;};
+  const clearPaisen=()=>{if(cached){cached.canvas.width=0;cached.canvas.height=0;}cached=null;};
+  const clear=()=>{clearPaisen();mainWalk.clear();};
   function prepare(kind,image) {
+    if (V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) return mainWalk.prepare(kind,image);
     if(kind!=='brawler'||!image?.naturalWidth)return false;
     if(cached?.image===image)return true;
-    clear();const canvas=createCanvas();canvas.width=CELL_W*6;canvas.height=CELL_H*4;
+    clearPaisen();const canvas=createCanvas();canvas.width=CELL_W*6;canvas.height=CELL_H*4;
     const ctx=canvas.getContext('2d');if(!ctx)return false;
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
     for(let index=0;index<FRAME_COUNT;index++){
@@ -82,10 +89,11 @@ export function createV100HumanWalkRenderer({createCanvas=()=>document.createEle
     cached={image,canvas};builds++;return true;
   }
   function draw(ctx,image,kind,phase,dx,dy,dw,dh) {
+    if (V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) return mainWalk.draw(ctx,image,kind,phase,dx,dy,dw,dh);
     if(!prepare(kind,image))return false;
     const index=Math.floor(cycle(phase)*FRAME_COUNT)%FRAME_COUNT;
     ctx.drawImage(cached.canvas,index%6*CELL_W,Math.floor(index/6)*CELL_H,CELL_W,CELL_H,dx,dy,dw,dh);
     return true;
   }
-  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:cached?1:0,bytes:cached?CELL_W*CELL_H*FRAME_COUNT*4:0,builds,frames:FRAME_COUNT})});
+  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:(cached?1:0)+mainWalk.snapshot().entries,bytes:(cached?CELL_W*CELL_H*FRAME_COUNT*4:0)+mainWalk.snapshot().bytes,builds:builds+mainWalk.snapshot().builds,frames:FRAME_COUNT})});
 }

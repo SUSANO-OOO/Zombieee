@@ -9,8 +9,9 @@ test('authored on-screen R5 actions retain only the people actually present',()=
   const owners=v100ActionPortraitSubjects(id,node,index);
   return owners.length?[{id,index,owners}]:[];
  }));
- assert.equal(subjects.length,12);
+ assert.equal(subjects.length,13);
  assert.deepEqual(subjects.find(s=>s.id==='v100:event:s17:post').owners,['unit-mrs-chiha','unit-babayaga']);
+ assert.deepEqual(subjects.find(s=>s.id==='v100:event:s30:pre'&&s.index===18).owners,['unit-mrs-chiha','unit-babayaga']);
  assert.deepEqual(subjects.find(s=>s.id==='v100:event:s22:post'&&s.index===5).owners,['unit-paisen','unit-zakimiya']);
  assert.deepEqual(subjects.find(s=>s.id==='v100:event:epilogue'&&s.index===7).owners,['unit-zakimiya']);
  assert.deepEqual(subjects.find(s=>s.id==='v100:event:epilogue'&&s.index===16).owners,['guide-ikura','unit-paisen']);
