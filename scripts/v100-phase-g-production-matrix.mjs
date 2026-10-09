@@ -3,6 +3,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { orderedNativePointer } from "./ordered-native-pointer.mjs";
@@ -2379,8 +2380,9 @@ async function productionStateContract(page, state, contractOverride = null) {
 }
 
 if (process.env.V100_PHASE_G_STATE_CONTRACT_CONTROL === "1") {
-  const browser = await playwright.chromium.launch({ headless: true });
+  const browser = await playwright.chromium.launch({ headless: true, args: ["--mute-audio"] });
   const page = await browser.newPage();
+  await silenceBrowserOutput(page);
   const results = [];
   try {
     const visibleMarkup = '<main class="v100-shell" data-v100-phase="credits"><section class="v100-staff-roll" data-v100-surface="credits"><div class="v100-credit-landscape">film<div class="v100-credit-shot">shot</div></div><div class="v100-credit-roll-window">window</div><div class="v100-credit-roll-track">staff</div><div class="v100-credit-controls">controls</div>';
@@ -2787,6 +2789,7 @@ async function captureStateImpl(engineName, viewport, state, configure, checkpoi
   const browserSession = phaseGBrowserSessionForCapture(browser, browserPolicy);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
+  await silenceBrowserOutput(page);
   const label = `${engineName}-${viewportLabel(viewport)}-${state}${checkpointContract?.variant ? `-${checkpointContract.variant}` : ""}`;
   const captureStartedAt = Date.now();
   let pageCrashPrimary = null;

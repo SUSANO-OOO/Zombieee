@@ -6,6 +6,8 @@ import path from "node:path";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
+import { silenceBrowserOutput } from "./silent-browser-output.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
@@ -61,6 +63,8 @@ const acknowledge = async page => {
   await play.or(page.locator(".v100-shell")).first().waitFor();
   if (await play.isVisible()) await play.tap();
   await ready(page);
+  if (await page.locator('.v100-start-screen').isVisible()) await enterV100FromTitle(page);
+  await ready(page);
 };
 async function within(locator, minimum = 0, requireHit = true) {
   const state = await locator.evaluate(element => {
@@ -109,6 +113,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
     for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, raw);
   }, serializeV100Save(seed));
   const page = await context.newPage();
+  await silenceBrowserOutput(page);
   page.setDefaultTimeout(30000);
   page.on("pageerror", error => row.errors.push({ kind: "page", message: String(error) }));
   page.on("console", message => { if (message.type() === "error") row.errors.push({ kind: "console", message: message.text() }); });
@@ -126,7 +131,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
 }
 for (const engine of engines) {
   const type = await pwaBrowserType(engine);
-  const browser = await type.launch({ headless: true });
+  const browser = await type.launch({ headless: true, ...(engine === 'chromium' ? {args:['--mute-audio']} : {}) });
   try {
     for (const viewport of sections.includes('presentation') ? sizes : []) {
       for (const number of [1, 2, 5, 6, 9, 16, 25, 26, 28, 29]) {

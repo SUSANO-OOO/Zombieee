@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 if (!process.env.MANUAL_ABILITIES_QA_BASE_URL) {
   throw new Error("MANUAL_ABILITIES_QA_BASE_URL is required; use the isolated QA runner");
@@ -1414,6 +1415,7 @@ for (const engine of engines) {
   try {
     for (const viewport of viewports) {
       const page = await browser.newPage({ viewport });
+      await silenceBrowserOutput(page);
       page.setDefaultTimeout(timeout);
       await page.addInitScript(() => {
         window.__manualAbilityTextViolations = [];
