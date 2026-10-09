@@ -13,6 +13,9 @@ import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
 import { installCreditTransitionAudit, assertCreditTransitionProof } from "./v100-staff-roll-transition-audit.mjs";
 import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { installRequestFailureAudit, isInjectedMedia503Console, finalizeRequestFailureEvidence } from "./browser-request-failure-audit.mjs";
+
+if (process.platform === "win32") throw new Error("Staff-roll audio QA is hosted-only; game or audio playback on this Windows PC is disabled");
 
 const upstreamOrigin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 assert.ok(["127.0.0.1", "localhost"].includes(upstreamOrigin.hostname));
@@ -40,11 +43,23 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
   await installEndingAudioGainObserver(page);
-  const result = { name, status: "failed", errors: [], mediaSamples: [], nativeEnded: [] };
+  const requestAudit = installRequestFailureAudit(page);
+  const result = { name, status: "failed", errors: [], mediaSamples: [], nativeEnded: [],
+    requestFailures: requestAudit.report.unexpectedFailures, requestFailureAudit: requestAudit.report,
+    injectedConsoleErrors: [], injectedHttpFailures: [] };
   report.cases.push(result);
   page.on("pageerror", error => result.errors.push(String(error)));
-  page.on("console", message => { if (message.type() === "error" && !failSong) result.errors.push(message.text()); });
-  page.on("response", response => { if (response.status() >= 400 && !(failSong && response.url().includes("/credits/"))) result.errors.push(`${response.status()} ${response.url()}`); });
+  const injectedSongUrl = failSong ? new URL(transport.song.path, origin).href : undefined;
+  page.on("console", message => {
+    if (message.type() !== "error") return;
+    if (isInjectedMedia503Console(message, injectedSongUrl)) result.injectedConsoleErrors.push({ text: message.text(), location: message.location() });
+    else result.errors.push(message.text());
+  });
+  page.on("response", response => {
+    if (response.status() < 400) return;
+    if (response.status() === 503 && response.url() === injectedSongUrl) result.injectedHttpFailures.push({ status: response.status(), url: response.url() });
+    else result.errors.push(`${response.status()} ${response.url()}`);
+  });
   const save = normalizeV100Save({ ...createDefaultV100Save({ playerName: "１２文字の主人公名です" }), campaignStarted: true,
     settings: { ...createDefaultV100Save().settings, bgmEnabled: !muted, reducedMotion },
     flowState: { phase: "credits", eventId: "v100:event:credits", stageId: null, stageNumber: null, nodeIndex, finalized: true, firstClear: false, destination: "credits" } });
@@ -104,7 +119,7 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
   await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
   await enterV100FromTitle(page);
   await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
-  return { page, context, result, releaseSong: () => { holdSong = false; transport.release(); } };
+  return { page, context, result, requestAudit, releaseSong: () => { holdSong = false; transport.release(); } };
 }
 
 async function readClock(page) {
@@ -150,13 +165,14 @@ async function frozen(page, action) {
   return { before, stopped, after };
 }
 
+let caseError = null;
 try {
   if (["all", "regression"].includes(selection)) {
     report.nativeEofControl = {};
     await nativeAudioEofControl(browser, origin, transport.song.path, report.nativeEofControl);
   }
   if (selection === "all") {
-  const { page, context, result, releaseSong } = await openCase("106-second-edit-with-loading-pause-rotation-pagehide", { delaySong: true });
+  const { page, context, result, releaseSong, requestAudit } = await openCase("106-second-edit-with-loading-pause-rotation-pagehide", { delaySong: true });
   try {
     await page.waitForTimeout(3500);
     result.loading = await readClock(page);
@@ -216,13 +232,13 @@ try {
     throw error;
   } finally {
     result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
-    releaseSong(); await context.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));
+    releaseSong(); await requestAudit.closeContext(context); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));
   }
 
   }
   if (!onlyRegression) for (const [name, options] of [["muted-reduced-motion", { muted: true, reducedMotion: true }], ["audio-unavailable", { failSong: true }]]) {
     if (selection === "unavailable" && !options.failSong) continue;
-    const { page, context, result } = await openCase(name, options);
+    const { page, context, result, requestAudit } = await openCase(name, options);
     try {
       await page.waitForFunction(expected => document.querySelector(".v100-staff-roll")?.getAttribute("data-v100-credit-audio") === expected, options.muted ? "muted" : "unavailable");
       if (options.reducedMotion) await page.waitForFunction(() => {
@@ -256,12 +272,12 @@ try {
       throw error;
     } finally {
       result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
-      await context.close();
+      await requestAudit.closeContext(context);
     }
   }
   if (["all", "regression"].includes(selection)) for (const name of ["saved-scene-resume", "backup-restores-playing-scene", "ended-during-save", "completion-save-failure"]) {
     const nodeIndex = name === "saved-scene-resume" ? 6 : name === "backup-restores-playing-scene" ? 9 : 0;
-    const { page, context, result } = await openCase(name, { nodeIndex });
+    const { page, context, result, requestAudit } = await openCase(name, { nodeIndex });
     try {
       result.initial = await inspectStaffRoll(page, { index: nodeIndex, playerName: "１２文字の主人公名です" });
       await page.waitForFunction(() => document.documentElement.dataset.pwaSaveMutationPending === "false");
@@ -423,11 +439,13 @@ try {
       throw error;
     } finally {
       result.mediaTrace = await page.evaluate(() => window.__creditMediaTrace).catch(() => null);
-      await context.close();
+      await requestAudit.closeContext(context);
     }
   }
   assert.equal(report.cases.length, { all: 7, regression: 4, fallback: 2, unavailable: 1 }[selection]);
-  report.status = "passed";
-} catch (error) { report.error = String(error); throw error; }
-finally { await browser.close(); await transport.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
+} catch (error) { caseError = error; }
+finally {
+  await finalizeRequestFailureEvidence({ report, browser, transport, error: caseError,
+    writeReport: value => writeFile(path.join(out, "report.json"), JSON.stringify(value, null, 2)) });
+}
 console.log(JSON.stringify({ status: report.status, cases: report.cases.length, report: path.join(out, "report.json") }));
