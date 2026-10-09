@@ -7,7 +7,7 @@
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot {
   grid-template-columns: minmax(0,1fr);
-  grid-template-rows: minmax(40px,1fr) 60px;
+  grid-template-rows: minmax(40px,1fr) max-content;
   min-height: 106px;
   gap: 7px;
   padding: 5px;
@@ -28,7 +28,7 @@
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta :is(small,strong,em,b) {
   display: block !important; position: static !important; grid-column: auto !important; grid-row: auto !important;
-  margin: 0; min-width: 0; max-height: none; line-height: 1.25; white-space: normal; overflow-wrap: anywhere;
+  flex: none; margin: 0; min-width: 0; max-height: none; line-height: 1.25; white-space: normal; overflow-wrap: anywhere;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta small { font-size: 10px; color: #aebdb0; background: none; padding: 0; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta strong { font-size: 15px; color: #f2dfb1; }
@@ -68,10 +68,10 @@
 .v100-shell .game-frame .unit-card[data-state="cooldown"] .cooldown-mask small { left: 0; right: 56%; top: auto; bottom: 2px; font-size: 10px; padding: 2px 1px; }
 @media (max-height: 460px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-track { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(7,minmax(0,1fr)); grid-template-rows: minmax(0,1fr); overflow: hidden; touch-action: manipulation; }
-  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot { width: auto; height: 100%; min-height: 0; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(40px,1fr) 48px; padding: 3px; gap: 3px; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot { width: auto; height: 100%; min-height: 0; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(40px,1fr) max-content; padding: 3px; gap: 3px; }
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait { grid-column: 1; grid-row: 1; width: 100%; height: 100%; min-height: 40px; max-height: none; }
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait img { object-position: 50% 10%; }
-  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta { grid-column: 1; grid-row: 2; justify-content: space-between; gap: 2px; text-align: center; }
+  #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta { grid-column: 1; grid-row: 2; min-height: 48px; justify-content: space-between; gap: 2px; text-align: center; }
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta strong { font-size: 12px; line-height: 1.3; }
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { font-size: 12px; line-height: 1.3; }
   #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta small { display: none !important; }

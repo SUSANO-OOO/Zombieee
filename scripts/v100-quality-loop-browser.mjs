@@ -111,6 +111,33 @@ async function diagramWithin(locator) {
   assert.deepEqual(diagram.clippedTexts, []);
   return { ...bounds, ...diagram };
 }
+async function formationCardsWithin(page, viewport) {
+  await page.evaluate(() => document.fonts.ready);
+  const cards = await page.locator('.v100-slot.filled').evaluateAll(elements => elements.map(card => {
+    const rectangle = element => { const { x, y, width, height } = element.getBoundingClientRect(); return { x, y, width, height }; };
+    const metadata = card.querySelector('.v100-slot-meta');
+    return { card: rectangle(card), portrait: rectangle(card.querySelector('.v100-slot-portrait')), metadata: rectangle(metadata),
+      text: [...metadata.querySelectorAll('small,strong,b')].filter(element => getComputedStyle(element).display !== 'none').map(element => {
+        const range = document.createRange(); range.selectNodeContents(element);
+        return { value: element.textContent, box: rectangle(element), clientHeight: element.clientHeight, scrollHeight: element.scrollHeight,
+          lines: [...range.getClientRects()].map(rect => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height })) };
+      }) };
+  }));
+  assert.equal(cards.length, 7, 'Every filled call-in card is checked');
+  for (const { card, portrait, metadata, text } of cards) {
+    assert.ok(portrait.width >= card.width - 12, 'Portrait uses the card width without a narrow vertical crop');
+    assert.ok(portrait.height >= 40, 'Portrait remains large enough to identify the unit');
+    if (viewport.height > 460) assert.ok(portrait.width / portrait.height >= 0.75, 'Desktop portrait area avoids a narrow vertical strip');
+    assert.ok(portrait.y + portrait.height <= metadata.y + 1, 'Portrait and unit details have separate rows');
+    assert.ok(metadata.y + metadata.height <= card.y + card.height, 'All unit details fit inside the card');
+    for (const item of text) {
+      assert.ok(item.scrollHeight <= item.clientHeight + 1, 'Text is not vertically clipped: ' + item.value);
+      for (const line of item.lines) assert.ok(line.x >= metadata.x - 1 && line.x + line.width <= metadata.x + metadata.width + 1
+        && line.y >= metadata.y - 1 && line.y + line.height <= metadata.y + metadata.height + 1, 'Full text is visible: ' + item.value);
+    }
+  }
+  return cards;
+}
 async function capture(page, row, name) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
   await page.waitForFunction(() => [...document.querySelectorAll('.v100-portrait-frame img')]
@@ -179,18 +206,7 @@ for (const engine of engines) {
           await capture(page, row, "intel");
           await summary.tap();
           await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
-          row.formationCards = await page.locator('.v100-slot.filled').evaluateAll(cards => cards.map(card => {
-            const rectangle = element => { const { x, y, width, height } = element.getBoundingClientRect(); return { x, y, width, height }; };
-            return { card: rectangle(card), portrait: rectangle(card.querySelector('.v100-slot-portrait')),
-              metadata: rectangle(card.querySelector('.v100-slot-meta')), cost: rectangle(card.querySelector('.v100-slot-meta b')) };
-          }));
-          for (const { card, portrait, metadata, cost } of row.formationCards) {
-            assert.ok(portrait.width >= card.width - 12, 'Portrait uses the card width without a narrow vertical crop');
-            assert.ok(portrait.height >= 40, 'Portrait remains large enough to identify the unit');
-            if (viewport.height > 460) assert.ok(portrait.width / portrait.height >= 0.75, 'Desktop face area retains both sides of the head');
-            assert.ok(portrait.y + portrait.height <= metadata.y + 1, 'Portrait and unit details have separate rows');
-            assert.ok(cost.y >= metadata.y && cost.y + cost.height <= card.y + card.height, 'Command cost stays visible in the card');
-          }
+          row.formationCards = await formationCardsWithin(page, viewport);
           await capture(page, row, "board");
         });
       }
@@ -219,6 +235,18 @@ for (const engine of engines) {
           await capture(page, row, "scene");
         });
       }
+    }
+    for (const viewport of sections.includes('presentation') ? [...sizes, { width: 760, height: 500 }] : []) {
+      const fixture = normalizeV100Save({ ...early, ownedUnitIds: [...early.ownedUnitIds, 'unit-crazy-king'],
+        unitLevels: { ...early.unitLevels, 'unit-crazy-king': 1 },
+        formationSlots: ['unit-crazy-king', ...early.formationSlots.slice(0, 4), 'unit-nao', 'unit-paisen'],
+        flowState: { phase: 'formation', eventId: null, stageId: V100_STAGE_IDS[0], stageNumber: 1, destination: 'battle', nodeIndex: 0, firstClear: false, finalized: false } });
+      await runCase(browser, engine, viewport, 'formation-long-name', fixture, async (page, row) => {
+        await page.locator('.v100-formation-panel').waitFor();
+        row.formationCards = await formationCardsWithin(page, viewport);
+        assert.ok(row.formationCards[0].text.some(item => item.value === 'クレイジーキング'));
+        await capture(page, row, 'board');
+      });
     }
     for (const viewport of sections.includes('rewards') ? sizes : []) {
       const stageId = V100_STAGE_IDS[0];
