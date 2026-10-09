@@ -1368,6 +1368,8 @@ export function createCombatAnimationRuntime({
     lastY: Number(y) || 0,
     stateTravelDistance: 0,
     locomotionTravelDistance: 0,
+    locomotionPhase: 0,
+    locomotionStopPhase: 0,
   };
 }
 
@@ -1422,6 +1424,20 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     stateElapsed = 0;
   }
   const stateChanged = state !== previous.state;
+  const strideDistance = Math.max(.001, Number(observation.locomotionCycleDistance)
+    || LOCOMOTION_STRIDE_DISTANCE[observation.kind] || 14);
+  const previousPhase = Math.max(0, Number(previous.locomotionPhase) || 0);
+  const locomotionStopPhase = state === 'stop-move' && stateChanged
+    ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
+  let locomotionPhase = previousPhase;
+  if (moving && !requestedState) locomotionPhase += movedDistance / strideDistance;
+  else if (state === 'stop-move') {
+    const t = Math.min(1, stateElapsed / animationClipFor('walker','stop-move').durationSeconds);
+    locomotionPhase = locomotionStopPhase
+      + (Math.round(locomotionStopPhase * 2) / 2 - locomotionStopPhase) * t * t * (3 - 2 * t);
+  } else if (previous.state === 'stop-move') {
+    locomotionPhase = Math.round(locomotionStopPhase * 2) / 2;
+  }
   const stateTravelDistance = state === "move"
     ? stateChanged
       ? movedDistance
@@ -1463,6 +1479,8 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     // still owns the authored clip events and is deliberately not repurposed.
     locomotionTravelDistance: Math.max(0, Number(previous.locomotionTravelDistance) || 0)
       + (moving && !requestedState ? movedDistance : 0),
+    locomotionPhase,
+    locomotionStopPhase,
   };
 }
 

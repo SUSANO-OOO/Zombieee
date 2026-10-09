@@ -35,12 +35,13 @@ export function v100PaisenWalkPose(phase) {
   return {phase:p,rise,near:{...near,hip:nearHip,knee:kneeFor(nearHip,near.point,upper,lower)},
     far:{...far,hip:farHip,knee:kneeFor(farHip,far.point,upper,lower)},upper,lower};
 }
-export function v100HumanWalkPhase(runtime,renderScale) {
-  const phase=(Math.max(0,Number(runtime?.locomotionTravelDistance)||0)/v100PaisenWalkCycleDistance(renderScale))%1;
-  if(runtime?.state!=='stop-move')return phase;
-  const t=Math.max(0,Math.min(1,(Number(runtime.elapsedSeconds)||0)/.18)),smooth=t*t*(3-2*t);
-  const settle=Math.round(phase*2)/2;
-  return phase+(settle-phase)*smooth;
+export function v100HumanWalkPhase(runtime) {
+  return Number(runtime?.locomotionPhase)||0;
+}
+export function v100UsesHumanWalk(kind,sample,{manualAbilityActive=false}={}) {
+  // An attack may move the fighter while its limbs still own an attack pose.
+  return kind==='brawler' && !manualAbilityActive
+    && ['idle','move','start-move','stop-move','turn'].includes(sample?.requestedState);
 }
 function piece(ctx,image,name,sourceA,sourceB,targetA,targetB) {
   ctx.save();ctx.translate(targetA[0],targetA[1]);

@@ -1,7 +1,7 @@
 "use client";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
-import { createV100HumanWalkRenderer, v100HumanWalkPhase } from "./v100HumanWalk.js";
+import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100PaisenWalkCycleDistance } from "./v100HumanWalk.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -3910,6 +3910,12 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
 function spriteDisplaySize(kind: string) {
   return spriteBattleDisplaySizeFor(kind);
 }
+function articulatedCycleDistanceFor(fighter: Fighter) {
+  if (fighter.kind !== 'brawler') return undefined;
+  const frame = spriteFrameFor('brawler','walk-a','right');
+  const size = fitSpriteBattleDisplaySize('brawler',frame,spriteDisplaySize('brawler'));
+  return v100PaisenWalkCycleDistance(size.w*compactSpriteScale('brawler')*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w);
+}
 
 function compactSpriteScale(kind: string) {
   // The cover crop removes sky on short landscapes. Keep Omega's tallest
@@ -4348,7 +4354,9 @@ function drawSpriteFighter(
           f.animationPresentation?.elapsedSeconds ?? f.step,
         );
   const state = animationSample.spriteState;
-  const frame = tataraGroundCandidate
+  const articulatedWalk = Boolean(options.v100AuthoredPresentation
+    && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
+  const frame = articulatedWalk ? spriteFrameFor('brawler','walk-a',direction) : tataraGroundCandidate
     ? { sourceRect: TATARA_GROUND_ART.sourceRect, anchorX: TATARA_GROUND_ART.anchorX, anchorY: TATARA_GROUND_ART.anchorY, flipX: direction === 'right', path: TATARA_GROUND_ART.path }
     : kumaGuardArtPose
     ? { sourceRect: V100_KUMAVERSON_GUARD_ART.sourceRect, anchorX: V100_KUMAVERSON_GUARD_ART.anchorX, anchorY: V100_KUMAVERSON_GUARD_ART.anchorY, flipX: direction === 'left', path: V100_KUMAVERSON_GUARD_ART.path }
@@ -4370,11 +4378,9 @@ function drawSpriteFighter(
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
-  const locomotionPhase = Number(animationSample.clipProgress) || 0;
-  const articulatedWalk = Boolean(options.v100AuthoredPresentation && renderKind === 'brawler'
-    && (animationSample.movement || (animationSample.requestedState === 'stop-move' && !manualAbilityActive)));
   const articulatedWalkPhase = articulatedWalk
-    ? v100HumanWalkPhase(f.animationPresentation, size.w / frame.sourceRect.w) : null;
+    ? v100HumanWalkPhase(f.animationPresentation) : null;
+  const locomotionPhase = articulatedWalkPhase ?? (Number(animationSample.clipProgress) || 0);
   const contactLift = animationSample.movement
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
@@ -4414,7 +4420,7 @@ function drawSpriteFighter(
     ctx.shadowColor = "rgba(232,222,188,.38)";
     ctx.shadowBlur = 2;
   }
-  const pose = animationSample.pose ?? {
+  const pose = !articulatedWalk && animationSample.pose ? animationSample.pose : {
     offsetX: 0,
     offsetY: 0,
     rotationRadians: 0,
@@ -10076,6 +10082,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighter.animationPresentation,
           {
             kind: fighter.kind,
+            locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
             state,
             deploying,
             direction,
@@ -23217,6 +23224,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }),
             {
               kind: fighter.kind,
+              locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
               state: presentationState,
               deploying: fighter.gateEntering,
               direction,
