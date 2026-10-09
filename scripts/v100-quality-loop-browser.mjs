@@ -6,6 +6,7 @@ import path from "node:path";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
+import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
@@ -111,19 +112,22 @@ async function diagramWithin(locator) {
   assert.deepEqual(diagram.clippedTexts, []);
   return { ...bounds, ...diagram };
 }
-async function formationCardsWithin(page, viewport) {
+async function formationCardsWithin(page, viewport, row) {
   await page.evaluate(() => document.fonts.ready);
-  const cards = await page.locator('.v100-slot.filled').evaluateAll(elements => elements.map(card => {
+  const cards = await page.locator('.v100-slot').evaluateAll(elements => elements.map(card => {
     const rectangle = element => { const { x, y, width, height } = element.getBoundingClientRect(); return { x, y, width, height }; };
     const metadata = card.querySelector('.v100-slot-meta');
     return { card: rectangle(card), portrait: rectangle(card.querySelector('.v100-slot-portrait')), metadata: rectangle(metadata),
       text: [...metadata.querySelectorAll('small,strong,b')].filter(element => getComputedStyle(element).display !== 'none').map(element => {
         const range = document.createRange(); range.selectNodeContents(element);
+        const style = getComputedStyle(element);
         return { value: element.textContent, box: rectangle(element), clientHeight: element.clientHeight, scrollHeight: element.scrollHeight,
+          fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight,
           lines: [...range.getClientRects()].map(rect => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height })) };
       }) };
   }));
-  assert.equal(cards.length, 7, 'Every filled call-in card is checked');
+  row.formationCards = cards;
+  assert.equal(cards.length, 7, 'Every filled or empty call-in card is checked');
   for (const { card, portrait, metadata, text } of cards) {
     assert.ok(portrait.width >= card.width - 12, 'Portrait uses the card width without a narrow vertical crop');
     assert.ok(portrait.height >= 40, 'Portrait remains large enough to identify the unit');
@@ -150,6 +154,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   const row = { id: engine + "-" + viewport.width + "x" + viewport.height + "-" + id, status: "running", errors: [], navigationAborts: [], captures: [] };
   report.cases.push(row);
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, acceptDownloads: true });
+  if (id === 'early-budget-native') await context.addInitScript(observePlayerAbilityText);
   let navigating = false;
   if (seed) {
     const decoded = deserializeV100Save(serializeV100Save(seed));
@@ -206,7 +211,7 @@ for (const engine of engines) {
           await capture(page, row, "intel");
           await summary.tap();
           await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
-          row.formationCards = await formationCardsWithin(page, viewport);
+          await formationCardsWithin(page, viewport, row);
           await capture(page, row, "board");
         });
       }
@@ -243,8 +248,15 @@ for (const engine of engines) {
         flowState: { phase: 'formation', eventId: null, stageId: V100_STAGE_IDS[0], stageNumber: 1, destination: 'battle', nodeIndex: 0, firstClear: false, finalized: false } });
       await runCase(browser, engine, viewport, 'formation-long-name', fixture, async (page, row) => {
         await page.locator('.v100-formation-panel').waitFor();
-        row.formationCards = await formationCardsWithin(page, viewport);
+        await formationCardsWithin(page, viewport, row);
         assert.ok(row.formationCards[0].text.some(item => item.value === 'クレイジーキング'));
+        await capture(page, row, 'board');
+      });
+      const emptySlots = normalizeV100Save({ ...fixture, formationSlots: [...early.formationSlots.slice(0, 4), null, null, null] });
+      await runCase(browser, engine, viewport, 'formation-empty-slots', emptySlots, async (page, row) => {
+        await page.locator('.v100-formation-panel').waitFor();
+        await formationCardsWithin(page, viewport, row);
+        assert.equal(await page.locator('.v100-slot.empty').count(), 3);
         await capture(page, row, 'board');
       });
     }
@@ -428,11 +440,21 @@ for (const engine of engines) {
       await page.getByRole('navigation', { name: '作戦準備メニュー' }).getByRole('button', { name: '編成', exact: true }).tap();
       await page.getByRole("button", { name: "戦闘へ", exact: true }).tap();
       row.native = { inputs: [], samples: [] };
+      row.abilityReceipts = [];
       const deadline = Date.now() + 125000;
       while (Date.now() < deadline && !await page.locator(".v100-result-panel").isVisible()) {
+        const receipts = await page.evaluate(() => globalThis.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.manualAbilityReceipts ?? []);
+        row.abilityReceipts = [...new Map([...row.abilityReceipts, ...receipts]
+          .map(receipt => [`${receipt.ownerId}:${receipt.activationId}:${receipt.eventType}:${receipt.at}:${receipt.salvoIndex ?? ''}`, receipt])).values()].slice(-64);
         await normalTacticalInput(page, row.native);
         await page.waitForTimeout(250);
       }
+      row.abilityText = await page.evaluate(() => globalThis.__PLAYER_ABILITY_TEXT_PROOF__);
+      assert.ok(row.native.inputs.some(input => input.action === 'ability'), 'A native ability input was exercised');
+      assert.ok(row.abilityReceipts.some(receipt => ['active-start', 'impact'].includes(receipt.eventType)), 'A production ability actually took effect');
+      assert.ok(row.abilityText.observedDraws > 0, 'Native battle canvas was observed');
+      assert.ok(row.abilityText.numericDraws > 0, 'Numerical battle feedback remains visible');
+      assert.deepEqual(row.abilityText.forbidden, [], 'No player ability names float over the battlefield');
       if (await page.locator(".v100-result-panel").isVisible()) {
         row.nativeResult = true;
         const summary = page.locator(".v100-battle-report summary");
