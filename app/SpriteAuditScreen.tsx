@@ -40,7 +40,11 @@ function SpriteCanvas({ selection, mode, gallery = false }: { selection: Selecti
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
       if (frame.flipX) ctx.scale(-1, 1);
-      ctx.drawImage(image, frame.sourceRect.x, frame.sourceRect.y, frame.sourceRect.w, frame.sourceRect.h, -target.w / 2, -target.h / 2, target.w, target.h);
+      for (const slice of frame.drawSlices ?? [{ x: 0, y: 0, w: frame.w, h: frame.h }]) {
+        ctx.drawImage(image, frame.x + slice.x, frame.y + slice.y, slice.w, slice.h,
+          -target.w / 2 + target.w * slice.x / frame.w, -target.h / 2 + target.h * slice.y / frame.h,
+          target.w * slice.w / frame.w, target.h * slice.h / frame.h);
+      }
       ctx.restore();
     };
     image.src = frame.path;

@@ -1,0 +1,37 @@
+{
+  "generator": "scripts/build-v100-takuya-vest-assets.mjs",
+  "editMethod": "built-in image generation, precise costume edit of reviewed original TAKUYA assets",
+  "preservedIdentity": [
+    "pale hair",
+    "black protective eyewear",
+    "cheek scar",
+    "asymmetric body",
+    "chains",
+    "back tubes",
+    "weapon"
+  ],
+  "sourceSha256": {
+    "stage3": "f3a247b527568e2d5d752d08eca4e9c10681a2aba1a40869c6cfcd19a5f3daac",
+    "omega": "0d6e2eba283679144bbd356605f6a4e0a24613574744de4f433f96e8b9e4285a",
+    "identity": "a677aa42e2fdb169e25b2083b6eb2a68af41b2d2fc19ea856d90aeb1a3525ab4",
+    "ending": "1335491344e367e7030da1cac08db7dff34a63b570c66f17e8a9ad704b756d48"
+  },
+  "outputSha256": {
+    "stage3": {
+      "path": "public/art/v100/bosses/takuya-battle-vest-v2.png",
+      "sha256": "52eb95dd58882b7165b98671aa2dfff106c69dbae9e1de35217c3d8927ee290d"
+    },
+    "omega": {
+      "path": "public/art/v100/bosses/takuya-omega-battle-vest-v3.png",
+      "sha256": "081ec8dda63b5a243a9856a557aef2572e81839ab9ff6f8005851b748e7b26f2"
+    },
+    "portrait": {
+      "path": "public/art/v100/portraits/takuya-omega-event-portrait-vest-v2.webp",
+      "sha256": "22afe446144ecc5d90f963c2046174e61da2a64f7e6415fcc0b51333a6038b18"
+    },
+    "ending": {
+      "path": "public/art/v100/cuts/takuya-omega-ending-defeat-vest-v3.webp",
+      "sha256": "10d72799bbc2549df5b34af39bd4bfea30709af0a1bc51ba7522eed67765f72d"
+    }
+  }
+}

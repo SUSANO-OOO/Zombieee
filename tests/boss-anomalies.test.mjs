@@ -37,8 +37,15 @@ const human = (id, x, y, lane = 1) => ({
   combatReady: true,
 });
 
-test("four anomaly runtimes are immutable, distinct, and reject unavailable bosses", () => {
-  assert.deepEqual(BOSS_ANOMALY_KINDS, ["mother", "ooguchi", "gairen", "futago"]);
+test("six anomaly runtimes are immutable, distinct, and reject unavailable bosses", () => {
+  assert.deepEqual(BOSS_ANOMALY_KINDS, [
+    "mother",
+    "ooguchi",
+    "gairen",
+    "futago",
+    "mugarian-president-mutated",
+    "takuya-omega",
+  ]);
   assert.equal(new Set(BOSS_ANOMALY_KINDS.map((kind) => (
     BOSS_ANOMALY_TUNING[kind].cooldownSeconds
   ))).size, BOSS_ANOMALY_KINDS.length);

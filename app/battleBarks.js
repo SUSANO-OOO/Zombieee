@@ -451,12 +451,14 @@ export function battleBarkPassesProbability(probability = BATTLE_BARK_CONFIG.def
 }
 
 /**
- * @param {{runtime: BattleBarkRuntime, event: BattleBarkEvent, qa?: boolean, random?: () => number}} input
+ * @param {{runtime: BattleBarkRuntime, event: BattleBarkEvent, qa?: boolean, random?: () => number, allowedSpeakerKinds?: readonly string[]}} input
  * @returns {{shown: boolean, reason?: string, runtime: BattleBarkRuntime, bark?: BattleBark}}
  */
-export function queueBattleBark({ runtime, event, qa = false, random = Math.random }) {
+export function queueBattleBark({ runtime, event, qa = false, random = Math.random, allowedSpeakerKinds }) {
   const catalog = qa ? LOCAL_QA_BATTLE_BARK_LINES : APPROVED_BATTLE_BARK_LINES;
-  const candidates = catalog.filter((line) => lineMatches(line, event)).sort((a, b) => b.priority - a.priority || (b.weight ?? BATTLE_BARK_CONFIG.defaultWeight) - (a.weight ?? BATTLE_BARK_CONFIG.defaultWeight) || a.id.localeCompare(b.id));
+  const candidates = catalog.filter((line) => lineMatches(line, event)
+    && (!allowedSpeakerKinds || allowedSpeakerKinds.includes(line.voiceKind ?? line.speakerKind ?? event.speakerKind)))
+    .sort((a, b) => b.priority - a.priority || (b.weight ?? BATTLE_BARK_CONFIG.defaultWeight) - (a.weight ?? BATTLE_BARK_CONFIG.defaultWeight) || a.id.localeCompare(b.id));
   if (!candidates.length) return { shown: false, reason: "no-approved-line", runtime };
 
   let reason = "lower-priority";

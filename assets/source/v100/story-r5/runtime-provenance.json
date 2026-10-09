@@ -1,0 +1,1805 @@
+{
+  "schemaVersion": 1,
+  "sourceTool": "OpenAI ImageGen",
+  "identityPolicy": "Original character masters retained; waist-up expression sheets and R5 story cuts",
+  "outputs": [
+    {
+      "assetPath": "/art/v100/story-r5/portraits/paisen-warm.webp",
+      "bytes": 95984,
+      "sha256": "aedadf6fb528d77fe9e40a323616327875add224e2ec9073e4cbea9cfdaaf348",
+      "source": "assets\\source\\v100\\story-r5\\paisen.webp",
+      "sourceSha256": "63aecc88dc04162a7fa70ca84d25bdfec49d30ca36fe2c1c3e1fd4a19d04d08c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/paisen-determined.webp",
+      "bytes": 93078,
+      "sha256": "6bb8e5325d18011ebf2b57f15d855704d430a465eae8ba91ebf53fa5e4ceafb8",
+      "source": "assets\\source\\v100\\story-r5\\paisen.webp",
+      "sourceSha256": "63aecc88dc04162a7fa70ca84d25bdfec49d30ca36fe2c1c3e1fd4a19d04d08c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/paisen-alarm.webp",
+      "bytes": 97078,
+      "sha256": "dedd979ab9ac2e3c7d3794aa014a850ad2fb0999c36303fcf139f799312ebe44",
+      "source": "assets\\source\\v100\\story-r5\\paisen.webp",
+      "sourceSha256": "63aecc88dc04162a7fa70ca84d25bdfec49d30ca36fe2c1c3e1fd4a19d04d08c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/paisen-grief.webp",
+      "bytes": 98676,
+      "sha256": "e3d95dc713336a30da62bd2f1c38b2787e692396abe4f3376e4156753cd645e8",
+      "source": "assets\\source\\v100\\story-r5\\paisen.webp",
+      "sourceSha256": "63aecc88dc04162a7fa70ca84d25bdfec49d30ca36fe2c1c3e1fd4a19d04d08c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/kumaverson-warm.webp",
+      "bytes": 107464,
+      "sha256": "1e690f66c5f8bd34c225920ab9e60cf7d952d8303647d81ea43a06c7bc84c0b7",
+      "source": "assets\\source\\v100\\story-r5\\kumaverson.webp",
+      "sourceSha256": "0b075c187328d0164caab4acac1a3994fc6dc71e4551f6be7007d4c82675d28d",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/kumaverson-determined.webp",
+      "bytes": 106640,
+      "sha256": "89667dee92bb80796eb6ec60e45be3fd256345b945641da1c72227edba2ebeec",
+      "source": "assets\\source\\v100\\story-r5\\kumaverson.webp",
+      "sourceSha256": "0b075c187328d0164caab4acac1a3994fc6dc71e4551f6be7007d4c82675d28d",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/kumaverson-alarm.webp",
+      "bytes": 107742,
+      "sha256": "2ac1547f6583a5e34219258dcf2bd4cfca633661ba16b3fc740808632c65f1f9",
+      "source": "assets\\source\\v100\\story-r5\\kumaverson.webp",
+      "sourceSha256": "0b075c187328d0164caab4acac1a3994fc6dc71e4551f6be7007d4c82675d28d",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/kumaverson-grief.webp",
+      "bytes": 110366,
+      "sha256": "07a9771592aa69094af00044676ba486251f51637313d2d57b7b864b0362e2d0",
+      "source": "assets\\source\\v100\\story-r5\\kumaverson.webp",
+      "sourceSha256": "0b075c187328d0164caab4acac1a3994fc6dc71e4551f6be7007d4c82675d28d",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/babayaga-warm.webp",
+      "bytes": 91432,
+      "sha256": "001a378975a781d4948aac1702c4044c01a01b835f1d52346671d9a425fa8305",
+      "source": "assets\\source\\v100\\story-r5\\babayaga.webp",
+      "sourceSha256": "2c238785a7160945eb3ac9f3acac9c9c347bd7f25778ce764fad3327daa332c4",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/babayaga-determined.webp",
+      "bytes": 90544,
+      "sha256": "a82cada49375fc8ffc70ab02f82538afba867a65e8ce44b59e3c8e2cc936ae49",
+      "source": "assets\\source\\v100\\story-r5\\babayaga.webp",
+      "sourceSha256": "2c238785a7160945eb3ac9f3acac9c9c347bd7f25778ce764fad3327daa332c4",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/babayaga-alarm.webp",
+      "bytes": 94520,
+      "sha256": "ca668a041c9d59c773f9313e67789273228ede481f20b2d52b001ec7ca566ed1",
+      "source": "assets\\source\\v100\\story-r5\\babayaga.webp",
+      "sourceSha256": "2c238785a7160945eb3ac9f3acac9c9c347bd7f25778ce764fad3327daa332c4",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/babayaga-grief.webp",
+      "bytes": 94536,
+      "sha256": "a4d617eb5c8418ad22949d70a822d006fb72ea1052b5df78d3fa6c237cb419b6",
+      "source": "assets\\source\\v100\\story-r5\\babayaga.webp",
+      "sourceSha256": "2c238785a7160945eb3ac9f3acac9c9c347bd7f25778ce764fad3327daa332c4",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/zakimiya-warm.webp",
+      "bytes": 122458,
+      "sha256": "3db8847b824d4698fc77fc0a58d42582f3b95946bb32cc2c4cf5316270789327",
+      "source": "assets\\source\\v100\\story-r5\\zakimiya.webp",
+      "sourceSha256": "4c6ce76c2eef7d6e6c0be13ab36c4fc7c7400cad08622e3965eccc9bfb82ea34",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/zakimiya-determined.webp",
+      "bytes": 127476,
+      "sha256": "f02f1122626b0214126fa2b7d0624035a8ce0c1d89ef4abc0429f28825fd6008",
+      "source": "assets\\source\\v100\\story-r5\\zakimiya.webp",
+      "sourceSha256": "4c6ce76c2eef7d6e6c0be13ab36c4fc7c7400cad08622e3965eccc9bfb82ea34",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/zakimiya-alarm.webp",
+      "bytes": 124306,
+      "sha256": "807325f24c432e80b00345171f1d380da513d85c9471ff634d8adc523b63af43",
+      "source": "assets\\source\\v100\\story-r5\\zakimiya.webp",
+      "sourceSha256": "4c6ce76c2eef7d6e6c0be13ab36c4fc7c7400cad08622e3965eccc9bfb82ea34",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/zakimiya-grief.webp",
+      "bytes": 129668,
+      "sha256": "edfb7cb6fb85e8b91b2d0eb92639be959a47382f187e3823e69c8a75814cca7d",
+      "source": "assets\\source\\v100\\story-r5\\zakimiya.webp",
+      "sourceSha256": "4c6ce76c2eef7d6e6c0be13ab36c4fc7c7400cad08622e3965eccc9bfb82ea34",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tky-warm.webp",
+      "bytes": 114730,
+      "sha256": "f18fe6e74329515648ffdb99a6fa42aa080c6c1f71af8f3a4ab8df088bf45e60",
+      "source": "assets\\source\\v100\\story-r5\\tky.webp",
+      "sourceSha256": "1ab493abcf34780158f581817cbba7157a3c05ced0e5996271125abc4745062c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tky-determined.webp",
+      "bytes": 120826,
+      "sha256": "801a25e3c2ebbbdec54d9a84c6a996d9301eccd754206cfbac37d1d95c7b71c8",
+      "source": "assets\\source\\v100\\story-r5\\tky.webp",
+      "sourceSha256": "1ab493abcf34780158f581817cbba7157a3c05ced0e5996271125abc4745062c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tky-alarm.webp",
+      "bytes": 117190,
+      "sha256": "f4260793c4ecf9cce693b004b8d1d30a416ef5e515709f24de904d8a76ced7de",
+      "source": "assets\\source\\v100\\story-r5\\tky.webp",
+      "sourceSha256": "1ab493abcf34780158f581817cbba7157a3c05ced0e5996271125abc4745062c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tky-grief.webp",
+      "bytes": 123236,
+      "sha256": "61edb3034992fe9d0a0079a83d0afad7ca811501715ab48f174eb30f63ae810e",
+      "source": "assets\\source\\v100\\story-r5\\tky.webp",
+      "sourceSha256": "1ab493abcf34780158f581817cbba7157a3c05ced0e5996271125abc4745062c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/chiha-warm.webp",
+      "bytes": 111262,
+      "sha256": "fc7d0a9a44cb9174dca2fac14aecd47e623d30afe04000c9f3d620470d9f2682",
+      "source": "assets\\source\\v100\\story-r5\\chiha.webp",
+      "sourceSha256": "564ee6194b93b38cc0cb2340244dc02b718c42766099ac7f5b151e38b1b86075",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/chiha-determined.webp",
+      "bytes": 118260,
+      "sha256": "cb0cef72211908226eca89a5c150f512e3c6ac026dae3c5726f772c5c163a098",
+      "source": "assets\\source\\v100\\story-r5\\chiha.webp",
+      "sourceSha256": "564ee6194b93b38cc0cb2340244dc02b718c42766099ac7f5b151e38b1b86075",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/chiha-alarm.webp",
+      "bytes": 113598,
+      "sha256": "f055bef0ca80ec76cb3532498fa50fb42b2812fa38bca8b423f11e4bf8414198",
+      "source": "assets\\source\\v100\\story-r5\\chiha.webp",
+      "sourceSha256": "564ee6194b93b38cc0cb2340244dc02b718c42766099ac7f5b151e38b1b86075",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/chiha-grief.webp",
+      "bytes": 123276,
+      "sha256": "e95611a07e8175ae185b61e14d316b373493df9c91fc6e561a196937e5e1e09d",
+      "source": "assets\\source\\v100\\story-r5\\chiha.webp",
+      "sourceSha256": "564ee6194b93b38cc0cb2340244dc02b718c42766099ac7f5b151e38b1b86075",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mayo-warm.webp",
+      "bytes": 162296,
+      "sha256": "9463623f99e43a8dac2615e6d98b8431bf473e32abfbc439b6c8139d9538d3ad",
+      "source": "assets\\source\\v100\\story-r5\\mayo.webp",
+      "sourceSha256": "9314ad02f84fd7b430366cc30575dcfcb9f9aad644f3a0692b25a1fec3ddb5ec",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mayo-determined.webp",
+      "bytes": 151970,
+      "sha256": "35763f30f81ee1d8274bc5f20fdc081efb0eed75467d216f4ece80dd15f28e3d",
+      "source": "assets\\source\\v100\\story-r5\\mayo.webp",
+      "sourceSha256": "9314ad02f84fd7b430366cc30575dcfcb9f9aad644f3a0692b25a1fec3ddb5ec",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mayo-alarm.webp",
+      "bytes": 177360,
+      "sha256": "97bfb8c211d478b013d55c239e27325bef60d02a65ea94e2629f3c1e4adb413f",
+      "source": "assets\\source\\v100\\story-r5\\mayo.webp",
+      "sourceSha256": "9314ad02f84fd7b430366cc30575dcfcb9f9aad644f3a0692b25a1fec3ddb5ec",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mayo-grief.webp",
+      "bytes": 160048,
+      "sha256": "fa342bc5d357c397ac070d3f03bfa23749ccda8f2ff170878b1faca8e91f17a9",
+      "source": "assets\\source\\v100\\story-r5\\mayo.webp",
+      "sourceSha256": "9314ad02f84fd7b430366cc30575dcfcb9f9aad644f3a0692b25a1fec3ddb5ec",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/king-warm.webp",
+      "bytes": 106394,
+      "sha256": "00367c6c8bfbbc17c0dc058274b24fba9c76963ce8898a7160632d1675f938e1",
+      "source": "assets\\source\\v100\\story-r5\\king.webp",
+      "sourceSha256": "178482f1f289c91790f00a7b03751626892ca7fdb83fc1765f9d5bd934df6238",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/king-determined.webp",
+      "bytes": 118194,
+      "sha256": "ecab1d943b18c982ea807df2200b2d7ac22dbd38f0bef571d4f4f255de796943",
+      "source": "assets\\source\\v100\\story-r5\\king.webp",
+      "sourceSha256": "178482f1f289c91790f00a7b03751626892ca7fdb83fc1765f9d5bd934df6238",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/king-alarm.webp",
+      "bytes": 122812,
+      "sha256": "bfd0aae255078e34bb5e76f40ceb5111adbc1d5564b69e9a54ca417157ac4e06",
+      "source": "assets\\source\\v100\\story-r5\\king.webp",
+      "sourceSha256": "178482f1f289c91790f00a7b03751626892ca7fdb83fc1765f9d5bd934df6238",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/king-grief.webp",
+      "bytes": 118034,
+      "sha256": "8e0c3b9062183ed06629720fdca741ffe10e5b5f47a21dbd26196baf5075706f",
+      "source": "assets\\source\\v100\\story-r5\\king.webp",
+      "sourceSha256": "178482f1f289c91790f00a7b03751626892ca7fdb83fc1765f9d5bd934df6238",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/ikura-warm.webp",
+      "bytes": 142660,
+      "sha256": "cff5c2a1001395730bd9607f2a3fa13096067ffbb1437746e75233e8e4fe0da3",
+      "source": "assets\\source\\v100\\story-r5\\ikura.webp",
+      "sourceSha256": "1ba49df89a3e1b1c2082b2cb62208e66c5eebf9a34e8710e58ae7eabe2504e12",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/ikura-determined.webp",
+      "bytes": 149404,
+      "sha256": "9eb426c3140b087f65770aa7f0858870f36cbb98754f29a1e1d0477b2d4cc1dd",
+      "source": "assets\\source\\v100\\story-r5\\ikura.webp",
+      "sourceSha256": "1ba49df89a3e1b1c2082b2cb62208e66c5eebf9a34e8710e58ae7eabe2504e12",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/ikura-alarm.webp",
+      "bytes": 142190,
+      "sha256": "d529005ac62ad045301de2f7397822847d5660ea6c0f7e63bc654549805e7e6d",
+      "source": "assets\\source\\v100\\story-r5\\ikura.webp",
+      "sourceSha256": "1ba49df89a3e1b1c2082b2cb62208e66c5eebf9a34e8710e58ae7eabe2504e12",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/ikura-grief.webp",
+      "bytes": 152334,
+      "sha256": "e98c234ea79719fd4b643bb1096a77ce7f385fc569e6ab8099bab39a873cd41c",
+      "source": "assets\\source\\v100\\story-r5\\ikura.webp",
+      "sourceSha256": "1ba49df89a3e1b1c2082b2cb62208e66c5eebf9a34e8710e58ae7eabe2504e12",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/musashi-warm.webp",
+      "bytes": 134082,
+      "sha256": "56e1677cf2e8103589428ac30440fbad23f95865bbbab6350241dc6ce90ca3d9",
+      "source": "assets\\source\\v100\\story-r5\\musashi.webp",
+      "sourceSha256": "00c749bbf47297761806dd315cd6f4ea3aabd28b1228bdce0f9efd987a792a9c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/musashi-determined.webp",
+      "bytes": 145684,
+      "sha256": "a5074836469850e03c68b488f9807a9b209e19a556b7429e25166cd5dfa3ae98",
+      "source": "assets\\source\\v100\\story-r5\\musashi.webp",
+      "sourceSha256": "00c749bbf47297761806dd315cd6f4ea3aabd28b1228bdce0f9efd987a792a9c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/musashi-alarm.webp",
+      "bytes": 136626,
+      "sha256": "0ace5dfcf6393f23fc8cd90cd9cec439276f7f21d3bfba05f423eff5a208f6be",
+      "source": "assets\\source\\v100\\story-r5\\musashi.webp",
+      "sourceSha256": "00c749bbf47297761806dd315cd6f4ea3aabd28b1228bdce0f9efd987a792a9c",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/musashi-grief.webp",
+      "bytes": 148384,
+      "sha256": "ab4fac36e7f898e5042f711c26554cc75f7e437bc81b111931260972fd3a3d48",
+      "source": "assets\\source\\v100\\story-r5\\musashi.webp",
+      "sourceSha256": "00c749bbf47297761806dd315cd6f4ea3aabd28b1228bdce0f9efd987a792a9c",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/hachi-warm.webp",
+      "bytes": 112812,
+      "sha256": "fcb5830eb630d36bd0f21d9456230940407deb535a1cadd7c81681c1a5876f0e",
+      "source": "assets\\source\\v100\\story-r5\\hachi.webp",
+      "sourceSha256": "4dd426357a3c0578490258c5afbb98e1ec2066e9d84e3b392e2b464586620383",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/hachi-determined.webp",
+      "bytes": 114086,
+      "sha256": "f031fc806b6fd5957deb1070df03148ecc74a95982a2e344d0c2514a10fabd06",
+      "source": "assets\\source\\v100\\story-r5\\hachi.webp",
+      "sourceSha256": "4dd426357a3c0578490258c5afbb98e1ec2066e9d84e3b392e2b464586620383",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/hachi-alarm.webp",
+      "bytes": 115932,
+      "sha256": "df1bff7342b48e0fae07023d409f7887ee0b689048dac0aad06a21fc49370345",
+      "source": "assets\\source\\v100\\story-r5\\hachi.webp",
+      "sourceSha256": "4dd426357a3c0578490258c5afbb98e1ec2066e9d84e3b392e2b464586620383",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/hachi-grief.webp",
+      "bytes": 115856,
+      "sha256": "4e29196df11e274f22fe4b0ef71942d9de74f8ed061d3e587df96285d73c2751",
+      "source": "assets\\source\\v100\\story-r5\\hachi.webp",
+      "sourceSha256": "4dd426357a3c0578490258c5afbb98e1ec2066e9d84e3b392e2b464586620383",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/nao-warm.webp",
+      "bytes": 122276,
+      "sha256": "4b717cfd82db02167dd74605c60d6b9fb70b2e6b3a588704bc2169306fda77bb",
+      "source": "assets\\source\\v100\\story-r5\\nao.webp",
+      "sourceSha256": "c52546a07f5bf91c11bdd17907ff83bcea7e7ee4be2cd06454fa2447bd754e3a",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/nao-determined.webp",
+      "bytes": 122590,
+      "sha256": "e1be74e44fc0b56b51a5a5712dc59c19352ba364c7fa01d04a6de36d7a221540",
+      "source": "assets\\source\\v100\\story-r5\\nao.webp",
+      "sourceSha256": "c52546a07f5bf91c11bdd17907ff83bcea7e7ee4be2cd06454fa2447bd754e3a",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/nao-alarm.webp",
+      "bytes": 124980,
+      "sha256": "84c831963ba6137a018075568a7f30cf5ff0b4187078b79ddb37664787a95e16",
+      "source": "assets\\source\\v100\\story-r5\\nao.webp",
+      "sourceSha256": "c52546a07f5bf91c11bdd17907ff83bcea7e7ee4be2cd06454fa2447bd754e3a",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/nao-grief.webp",
+      "bytes": 122856,
+      "sha256": "d0ce4cea21aab9bfbcd0c107147f47e4720a2d2e870b05852a1abdbce2268019",
+      "source": "assets\\source\\v100\\story-r5\\nao.webp",
+      "sourceSha256": "c52546a07f5bf91c11bdd17907ff83bcea7e7ee4be2cd06454fa2447bd754e3a",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mizuchi-warm.webp",
+      "bytes": 106636,
+      "sha256": "9d9e62f6ba0d38541b24f9582fe529cd5e447cd49472d94842baf7df607f5b95",
+      "source": "assets\\source\\v100\\story-r5\\mizuchi.webp",
+      "sourceSha256": "349b7c1152f14a4e56307bb4710ea4036ce2e64dfee4e2fc2ce05d54e6445d3b",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mizuchi-determined.webp",
+      "bytes": 107636,
+      "sha256": "060009239c6cce7dc65735a6a21a21a30950caf54a36c2f257e84a869d8f933c",
+      "source": "assets\\source\\v100\\story-r5\\mizuchi.webp",
+      "sourceSha256": "349b7c1152f14a4e56307bb4710ea4036ce2e64dfee4e2fc2ce05d54e6445d3b",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mizuchi-alarm.webp",
+      "bytes": 109364,
+      "sha256": "01d55768f39ddeaac4d7abfde32e7e4673492764b1b90fd67d1586bbe7b609f6",
+      "source": "assets\\source\\v100\\story-r5\\mizuchi.webp",
+      "sourceSha256": "349b7c1152f14a4e56307bb4710ea4036ce2e64dfee4e2fc2ce05d54e6445d3b",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/mizuchi-grief.webp",
+      "bytes": 105670,
+      "sha256": "22954392db6cb75b94f4101757b786087d206aa9298dff6125658255a7294e8c",
+      "source": "assets\\source\\v100\\story-r5\\mizuchi.webp",
+      "sourceSha256": "349b7c1152f14a4e56307bb4710ea4036ce2e64dfee4e2fc2ce05d54e6445d3b",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/raider-warm.webp",
+      "bytes": 108338,
+      "sha256": "641ebcf6e91f94d7bc755eb6014e0f96c4f5aa8f2612b74fe0d004c88dbe4d23",
+      "source": "assets\\source\\v100\\story-r5\\raider.webp",
+      "sourceSha256": "c775a93c4b1f0967ef28a3791ad1179ed6efc84fd253e12516b7673b2642e9d0",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/raider-determined.webp",
+      "bytes": 108000,
+      "sha256": "92e5d586d6dedf1a9815cf09d6ce2eaeebefb9f54537f7bc674a74b5f1079709",
+      "source": "assets\\source\\v100\\story-r5\\raider.webp",
+      "sourceSha256": "c775a93c4b1f0967ef28a3791ad1179ed6efc84fd253e12516b7673b2642e9d0",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/raider-alarm.webp",
+      "bytes": 111250,
+      "sha256": "bca3bfb390ff9371c1023e399a7b45b20611a9dfd405d1d557ced5355ef8162a",
+      "source": "assets\\source\\v100\\story-r5\\raider.webp",
+      "sourceSha256": "c775a93c4b1f0967ef28a3791ad1179ed6efc84fd253e12516b7673b2642e9d0",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/raider-grief.webp",
+      "bytes": 110078,
+      "sha256": "e87837add70eed8a73c864aa4c43fd89237f2252f6c972f860d44cc8bdcb44d0",
+      "source": "assets\\source\\v100\\story-r5\\raider.webp",
+      "sourceSha256": "c775a93c4b1f0967ef28a3791ad1179ed6efc84fd253e12516b7673b2642e9d0",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/monkey-warm.webp",
+      "bytes": 121966,
+      "sha256": "9e4c37f91be65c6613ca011c9ae7942660bcaf73e2fdacd561303cf6284f75a6",
+      "source": "assets\\source\\v100\\story-r5\\monkey.webp",
+      "sourceSha256": "3e5819e8f77cc3d10efc91b4317f590b38b56f685ca48436d3e71b8e5711afc2",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/monkey-determined.webp",
+      "bytes": 123430,
+      "sha256": "e3142e9a9944def71154d5aab6450f3d06dc447aae54dfb8ba61e7f0a505e255",
+      "source": "assets\\source\\v100\\story-r5\\monkey.webp",
+      "sourceSha256": "3e5819e8f77cc3d10efc91b4317f590b38b56f685ca48436d3e71b8e5711afc2",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/monkey-alarm.webp",
+      "bytes": 126956,
+      "sha256": "033ad371f6bfc7b71eda49734cebec9654f306652b37904ea3ef7294be418f6c",
+      "source": "assets\\source\\v100\\story-r5\\monkey.webp",
+      "sourceSha256": "3e5819e8f77cc3d10efc91b4317f590b38b56f685ca48436d3e71b8e5711afc2",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/monkey-grief.webp",
+      "bytes": 129294,
+      "sha256": "1b970d1bfe2e16b51b056cf3378e73c577aee0b333cb8646e6946e3a9b568a17",
+      "source": "assets\\source\\v100\\story-r5\\monkey.webp",
+      "sourceSha256": "3e5819e8f77cc3d10efc91b4317f590b38b56f685ca48436d3e71b8e5711afc2",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tatara-warm.webp",
+      "bytes": 150322,
+      "sha256": "a7553a32b31042b63c5373c604016ff55bdf104d6f3a17fe8c6d90fc5d2ec138",
+      "source": "assets\\source\\v100\\story-r5\\tatara.webp",
+      "sourceSha256": "e751bffc99aade3557c56d9eb6678282c027a399ee09034959286ae61c1c5633",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tatara-determined.webp",
+      "bytes": 150640,
+      "sha256": "e3ca14a3cab7043b75386d47a3c85238f34435442feee724ff7552aeb5a89df7",
+      "source": "assets\\source\\v100\\story-r5\\tatara.webp",
+      "sourceSha256": "e751bffc99aade3557c56d9eb6678282c027a399ee09034959286ae61c1c5633",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tatara-alarm.webp",
+      "bytes": 152706,
+      "sha256": "cb43457d9b3938ff2de99d746042066b06e869254df3ac44d3be60fa64fcc97f",
+      "source": "assets\\source\\v100\\story-r5\\tatara.webp",
+      "sourceSha256": "e751bffc99aade3557c56d9eb6678282c027a399ee09034959286ae61c1c5633",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/tatara-grief.webp",
+      "bytes": 155546,
+      "sha256": "05b96b7bc118273ce899321370cfd2a4baee7451ff70a88db0a8be155a231453",
+      "source": "assets\\source\\v100\\story-r5\\tatara.webp",
+      "sourceSha256": "e751bffc99aade3557c56d9eb6678282c027a399ee09034959286ae61c1c5633",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/gantetsu-warm.webp",
+      "bytes": 108208,
+      "sha256": "4f01e785b79027a91ddda592a7d2cb73618f618be4042c9294d7086b77b1da12",
+      "source": "assets\\source\\v100\\story-r5\\gantetsu.webp",
+      "sourceSha256": "5b6d52d852b0b19ae31a2d2ef72155093a47ec11df724b553eff15d15564d69b",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/gantetsu-determined.webp",
+      "bytes": 111846,
+      "sha256": "dbb937183710656c7d9bafd47b063317be36804ea7b413e52f1d214d1b336546",
+      "source": "assets\\source\\v100\\story-r5\\gantetsu.webp",
+      "sourceSha256": "5b6d52d852b0b19ae31a2d2ef72155093a47ec11df724b553eff15d15564d69b",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/gantetsu-alarm.webp",
+      "bytes": 118198,
+      "sha256": "3718e6442dc109da75fc78f1fcbd20827126022b2a2e2a75b0413a4e77f78155",
+      "source": "assets\\source\\v100\\story-r5\\gantetsu.webp",
+      "sourceSha256": "5b6d52d852b0b19ae31a2d2ef72155093a47ec11df724b553eff15d15564d69b",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/gantetsu-grief.webp",
+      "bytes": 117894,
+      "sha256": "afdf700b98c6b5f4c281c6d23738182b17775c60e6459b091cd37c1ec4dfb811",
+      "source": "assets\\source\\v100\\story-r5\\gantetsu.webp",
+      "sourceSha256": "5b6d52d852b0b19ae31a2d2ef72155093a47ec11df724b553eff15d15564d69b",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/segawa-warm.webp",
+      "bytes": 123120,
+      "sha256": "df29171e89cf3c503bb65a5c26a3220191118daa66d42c38a3bac1e8259898e2",
+      "source": "assets\\source\\v100\\story-r5\\segawa.webp",
+      "sourceSha256": "efe8bfa51e05b7feff7128d4e35db8215c5e8073b667aa3d2e0aec1bd55edaa3",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/segawa-determined.webp",
+      "bytes": 130624,
+      "sha256": "aa8cfb113427cd85ef3bcaa97aef26b79902633b94deb586c51514eac984030c",
+      "source": "assets\\source\\v100\\story-r5\\segawa.webp",
+      "sourceSha256": "efe8bfa51e05b7feff7128d4e35db8215c5e8073b667aa3d2e0aec1bd55edaa3",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/segawa-alarm.webp",
+      "bytes": 127218,
+      "sha256": "5eb90e6e94a0483f72c96e0cf89e7062cec5a2bdeb84c2e35b5f022b72a6ce69",
+      "source": "assets\\source\\v100\\story-r5\\segawa.webp",
+      "sourceSha256": "efe8bfa51e05b7feff7128d4e35db8215c5e8073b667aa3d2e0aec1bd55edaa3",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/segawa-grief.webp",
+      "bytes": 135278,
+      "sha256": "94e01ca0d81f508c0981d962e3ca2a054c160b2b5e6e530d50c9f3246df2c5dd",
+      "source": "assets\\source\\v100\\story-r5\\segawa.webp",
+      "sourceSha256": "efe8bfa51e05b7feff7128d4e35db8215c5e8073b667aa3d2e0aec1bd55edaa3",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/president-warm.webp",
+      "bytes": 123412,
+      "sha256": "4d3b983c5d7bd099eec13862553cd0d2e34b7dc438cbec66740b7fbef497dc98",
+      "source": "assets\\source\\v100\\story-r5\\president.webp",
+      "sourceSha256": "f3a4c6cbb8598c12060331a23f31b3ff828dd0e61fba3e9ea50a32c5793f962f",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/president-determined.webp",
+      "bytes": 121582,
+      "sha256": "6be3e5cb21e403c86e5136d2eef47b96d42eb5c47bcc8900613c5261aee2d69e",
+      "source": "assets\\source\\v100\\story-r5\\president.webp",
+      "sourceSha256": "f3a4c6cbb8598c12060331a23f31b3ff828dd0e61fba3e9ea50a32c5793f962f",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/president-alarm.webp",
+      "bytes": 127258,
+      "sha256": "98ded9f431ba29e3d9b18f044b3d61a8f263d2ba7c1ea667a88afe3b237cbf3a",
+      "source": "assets\\source\\v100\\story-r5\\president.webp",
+      "sourceSha256": "f3a4c6cbb8598c12060331a23f31b3ff828dd0e61fba3e9ea50a32c5793f962f",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/president-grief.webp",
+      "bytes": 126094,
+      "sha256": "81cdeab2fb439d424d309c8279933796c7ce9aa4ccbe441f3656dbcf884b6e23",
+      "source": "assets\\source\\v100\\story-r5\\president.webp",
+      "sourceSha256": "f3a4c6cbb8598c12060331a23f31b3ff828dd0e61fba3e9ea50a32c5793f962f",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/commander-warm.webp",
+      "bytes": 115300,
+      "sha256": "4ad081dd1c79245eb42696c0c888bb7bfaac4376beb5e054de6ff7078c62f2be",
+      "source": "assets\\source\\v100\\story-r5\\commander.webp",
+      "sourceSha256": "48b49ce5a15c5f6b77ae3b58b0613e66c479e6f1acc35e75aff07b0238843510",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/commander-determined.webp",
+      "bytes": 127046,
+      "sha256": "cf116834fede3c07fae1286f78533ba79d490e8f226dfdc35ee9239d136d8f39",
+      "source": "assets\\source\\v100\\story-r5\\commander.webp",
+      "sourceSha256": "48b49ce5a15c5f6b77ae3b58b0613e66c479e6f1acc35e75aff07b0238843510",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 0,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/commander-alarm.webp",
+      "bytes": 126798,
+      "sha256": "c5c55b4c1d665e8af6e2a6ab043699c4ed7928c260bd50f4c486e10d4d63cdcc",
+      "source": "assets\\source\\v100\\story-r5\\commander.webp",
+      "sourceSha256": "48b49ce5a15c5f6b77ae3b58b0613e66c479e6f1acc35e75aff07b0238843510",
+      "recipe": {
+        "extraction": {
+          "left": 0,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/portraits/commander-grief.webp",
+      "bytes": 129584,
+      "sha256": "47bb4f61bae5647d0e119329433c181e4146e2d717759f458bd19cb95a2ab475",
+      "source": "assets\\source\\v100\\story-r5\\commander.webp",
+      "sourceSha256": "48b49ce5a15c5f6b77ae3b58b0613e66c479e6f1acc35e75aff07b0238843510",
+      "recipe": {
+        "extraction": {
+          "left": 561,
+          "top": 701,
+          "width": 561,
+          "height": 672
+        },
+        "width": 512,
+        "height": 640,
+        "fit": "contain",
+        "position": "bottom",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/prologue-door-crisis.webp",
+      "bytes": 297116,
+      "sha256": "25990213d1251f9c4018d02070388eda0e006fdded830c625f3e5dd1bb3fa13f",
+      "source": "assets\\source\\v100\\story-r5\\prologue-door-crisis.webp",
+      "sourceSha256": "e7b709f0fce7a0fde973ee69dc6d9f21119e7585f8beb630a64ddd19c385f4e7",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/chiha-confession.webp",
+      "bytes": 251750,
+      "sha256": "c7ab093edbfc127cd5f1117e55d71fe63426b27dc6504ab875ee067dc229b08e",
+      "source": "assets\\source\\v100\\story-r5\\chiha-confession-r2.webp",
+      "sourceSha256": "e3e226cd4ab57cde9663bbd3c9248f44464db17fcfafa01b7e06b74a893ebb74",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
+      "bytes": 265350,
+      "sha256": "2c3e706f0be974fe3cc422696d2d7bedeba824b6dba93b0235e1d3265a10ffa1",
+      "source": "assets\\source\\v100\\story-r5\\ending-zakimiya-family.webp",
+      "sourceSha256": "a491dfb88927dec9afd5a0cbcc70cee08e3c76b1937a7347b3df1f36089546d4",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+      "bytes": 321754,
+      "sha256": "87fd704b22647591633ada45a8b52e18d8e2792cf7007a57cc7093db13cb90b2",
+      "source": "assets\\source\\v100\\story-r5\\epilogue-tky-receipt.webp",
+      "sourceSha256": "f2b83b2024b0a9015ce15cd1cfd45ea6bc1c98d0721125a0e410f41862336f71",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
+      "bytes": 361902,
+      "sha256": "d3ec6d129f97a07700f4a96e1f315f213ea8ec59eecfbdda1bde98bd5cfdd2b5",
+      "source": "assets\\source\\v100\\story-r5\\epilogue-main-table.webp",
+      "sourceSha256": "1e948d5d205f26ca1a4934be1b8ab06933a97f2b1d37078fc3e3984bf017fea7",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+      "bytes": 299446,
+      "sha256": "9f280cb137924aed3fc09cf249ace782fcf95eaa1f2a41ad22be734a0d4642bc",
+      "source": "assets\\source\\v100\\story-r5\\ending-tky-transport.webp",
+      "sourceSha256": "f0721b63cfaa5bb432123fb9ca464d917fdc03960ab616bdd320287d8f861584",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/ending-medical-progress.webp",
+      "bytes": 266714,
+      "sha256": "28737f0a1326a81c46054807972ed27022dcc3a4311a2ee6f06f0c64cd275689",
+      "source": "assets\\source\\v100\\story-r5\\ending-medical-progress.webp",
+      "sourceSha256": "c6b7ebae69cc577bb2782de080cc4b70047d7476a6b149f444ba7a275c5dd1bc",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
+      "bytes": 281400,
+      "sha256": "269a923c0c344ddbcb1070e00cb63ea71d3b66faeb86adb97714af2b97d9e173",
+      "source": "assets\\source\\v100\\story-r5\\president-restrained-alive.webp",
+      "sourceSha256": "69d261d4449c5cc1524ac7252286d3889ff9b1b687e49c3927fc349471f1e971",
+      "recipe": {
+        "width": 1280,
+        "height": 720,
+        "fit": "cover",
+        "quality": 94
+      }
+    },
+    {
+      "assetPath": "/art/v100/story-r5/objects/maintenance-retreat-door.webp",
+      "bytes": 173300,
+      "sha256": "aeeeb2fa81f1b8063f6e8310e244ecfd2a24fb2bc85730ada34f7c5875e1fcc3",
+      "source": "assets\\source\\v100\\story-r5\\maintenance-retreat-door.webp",
+      "sourceSha256": "1a739f4c31eb9197a475f63e8718ebb3c5a820a39096ecb85983df28c25c0617",
+      "recipe": {
+        "width": 768,
+        "height": 576,
+        "fit": "contain",
+        "quality": 94,
+        "alphaQuality": 100
+      }
+    }
+  ]
+}

@@ -1,0 +1,484 @@
+{
+  "tool": "OpenAI ImageGen",
+  "approvedScope": "Producer requested R5 event illustration, identity-preserving waist-up expression variants and main cast ending on 2026-10-08; original photo files excluded",
+  "records": [
+    {
+      "name": "paisen",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\paisen.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The adult Japanese man in the reference is the identity master: short black hair, strong eyebrows, navy crew neck t-shirt, muscular arms. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "c9a735a3499606c637658917432213631ce096f0d99d1c1dacd4fac95d909078",
+      "selectedSha256": "63aecc88dc04162a7fa70ca84d25bdfec49d30ca36fe2c1c3e1fd4a19d04d08c",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "chiha",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\chiha.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. First reference is the identity master of an adult Japanese woman: short swept black hair, black headband, black leather long coat, white ruffled blouse, leather belts, large heavy firearm kept low. Preserve her exact recognizable face and costume. Second reference is solely the rendering style master; do not borrow the man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "29aa7998a6a4c55e58cb5a4a3f27fc446600119d8165bd281741ba505181e5ec",
+      "selectedSha256": "564ee6194b93b38cc0cb2340244dc02b718c42766099ac7f5b151e38b1b86075",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "ikura",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\ikura.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. First reference is identity: adult woman with long vivid pink twin ponytails, gold eyes, twin rounded buns, heavy black-and-gold headphones, teal and dark leather jacket over white bustier, a black tablet. Keep every recognizable identity feature. Second reference defines ink texture and rendering style only; do not replace her face or clothing with the man. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "af24b25ec02ac5348647f70eea36a97e59f64169006cb4ccbb2f2dc382a1bfc4",
+      "selectedSha256": "1ba49df89a3e1b1c2082b2cb62208e66c5eebf9a34e8710e58ae7eabe2504e12",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "kumaverson",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\kumaverson.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese broad-shouldered heavy man with untidy medium black hair and strong brows, stained off-white t-shirt, black frying pan held low; preserve his heavier build and original face. The SECOND reference is only the drawing style guide, never replace the first person's face with it. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "964a51ba732cb4489ea9d38294587f6a30d44dd726e594f570e245488f8061f1",
+      "selectedSha256": "0b075c187328d0164caab4acac1a3994fc6dc71e4551f6be7007d4c82675d28d",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "babayaga",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\babayaga.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese lean man with short neat side-parted black hair, white dress shirt, narrow dark maroon tie, black shoulder holsters and suppressed pistol held low; preserve his original long face and restrained personality. The SECOND reference is only the drawing style guide, never replace the first person's face with it. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "056392030966f375ed5578c491abd6fdc2896381a3ea736d058635806631e8ff",
+      "selectedSha256": "2c238785a7160945eb3ac9f3acac9c9c347bd7f25778ce764fad3327daa332c4",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "zakimiya",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\zakimiya.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese man with scruffy swept black hair, tired narrow face, black worn open leather jacket with muted burgundy sleeve band over grey shirt, original flask in hand low, rugged original identity; convert full body to waist-up and match the second reference's ink rendering. The SECOND reference is only the drawing style guide, never replace the first person's face with it. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "fcf65c21067ab2cb190e304724fe11ed55c239f98d072768749e156857f63c5a",
+      "selectedSha256": "4c6ce76c2eef7d6e6c0be13ab36c4fc7c7400cad08622e3965eccc9bfb82ea34",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "tky",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\tky.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese man with center-parted chin-length black hair, angular original face, black leather long coat with dark magenta lining and sleeve bands, black shirt and original straps; pink glowing blade stays low and restrained; convert full body to waist-up matching second reference ink rendering. The SECOND reference is only the drawing style guide, never replace the first person's face with it. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "2e82d8271699d6a29940cae5b82fdf285fa405f4724ec6afc2601b5e8a00fe73",
+      "selectedSha256": "1ab493abcf34780158f581817cbba7157a3c05ced0e5996271125abc4745062c",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "segawa",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\segawa.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese researcher with short black hair, hard narrow eyes, dirty off-white long lab coat with original clipped badge and black high-neck shirt. Preserve that original face; waist-up crop and ink rendering only. Expressions: upper left cold contemptuous half-smile, upper right furious defiance, lower left alarm, lower right damaged exhausted defeat without new wounds. The SECOND is ink style only, never borrow its face. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v100/portraits/segawa-event-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "17e7d672752cd59f348d30c4567dbcf3a9c6243b5c64307ac4eef9d3d03b50b2",
+      "selectedSha256": "efe8bfa51e05b7feff7128d4e35db8215c5e8073b667aa3d2e0aec1bd55edaa3",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "musashi",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\musashi.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese older rugged swordsman with original topknot black hair, stubbled angular face and worn dark blue robes, scarf and leather shoulder armor. Both original swords stay low. Keep age and weathered face; waist-up only. The SECOND is ink style only, never borrow its face. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/miyamoto-musashi-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "c41fbb6d9d40464323ae32796970eca1f2e42827f955de9f92588f9fb1612325",
+      "selectedSha256": "00c749bbf47297761806dd315cd6f4ea3aabd28b1228bdce0f9efd987a792a9c",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "mayo",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\mayo.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: the SAME adult cream long-haired Chihuahua with huge ears, yellow bandana and original olive tactical harness. Dog chest-up ONLY, no paws or full body, preserve original muzzle, cream fur pattern and harness. Expressions use ears, eyelids, mouth: happy ears/perked soft smile; alert protective ears/closed determined mouth; startled ears/slight mouth open; tired concerned ears/drooping brows. Never anthropomorphic crying or human arms. The SECOND is ink style only, never borrow its face. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Use exactly the four expression/body states specified above. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "d293319db638eedaea98ef56d279c6ff022d9679dc658cfc50d9e8d67adb0bd7",
+      "selectedSha256": "9314ad02f84fd7b430366cc30575dcfcb9f9aad644f3a0692b25a1fec3ddb5ec",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "king",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\king.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: same adult character with original large scratched bright yellow cylindrical mascot helmet with TWO black circular eyes and red open-mouth graphic, black round lid on top, green hooded rain jacket and original chainsaw low. Face markings NEVER change and helmet is NEVER removed; emotion through head tilt, shoulders and hands: relaxed playful tilt, squared determined posture, startled backward head tilt, lowered weary head. Waist-up only. The SECOND is ink style only, never borrow its face. Retain exactly his recognizable facial structure and clothing. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Use exactly the four expression/body states specified above. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "5a458d2d6167fdfc35130632926151ca2651ab07b0fbb1c5f43b7b1cbab4cde0",
+      "selectedSha256": "178482f1f289c91790f00a7b03751626892ca7fdb83fc1765f9d5bd934df6238",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "epilogue-tky-receipt",
+      "kind": "cut",
+      "path": "assets\\source\\v100\\story-r5\\epilogue-tky-receipt.webp",
+      "prompt": "One cinematic 16:9 landscape narrative illustration for the existing mature Japanese post-apocalyptic game. Preserve every referenced character identity, recognizable face, hair, costume, age, sex and build. Unified mature graphic novel drawing matching the first navy-shirt man's reference: confident uneven ink outlines, cross-hatched shadows, matte textured painted colors, muted teal shadows and warm amber practical light. No photoreal faces, glossy CGI, generic AI beauty, random props, extra fingers, duplicate people, poster poses, lettering, watermark, or captions. All human figures are naturally framed from waist up by the table/foreground, no legs or full body. This is ONE still of a concrete story moment, NOT a grid or montage.\nInside reopened patched wooden izakaya, evening. Exactly three adults in triangular asymmetric comic staging. Black-coated TKY at center leaning forward and returning a blank receipt with amused exasperation; navy t-shirt Paisen at left has a guilty delighted half-grin with a piece of fried chicken held near his mouth; heavier white t-shirt Kuma behind the kitchen counter at right points a big wooden rice paddle at them with mock stern brows. Weapons put away. Foreground cups, fried chicken platter and the edge of Paisen's bag. Warm everyday comedy, distinct expressions, hands readable and anatomically clear. Leave lower 28% mostly the table to support game dialogue overlay.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/kumaverson-portrait-v2.webp"
+      ],
+      "generatedPngSha256": "62ed4e8907dd474edc649e08ed1c4ab28b2e2c8ea9c639d9b6b681271e5b18de",
+      "selectedSha256": "f2b83b2024b0a9015ce15cd1cfd45ea6bc1c98d0721125a0e410f41862336f71",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "ending-zakimiya-family",
+      "kind": "cut",
+      "path": "assets\\source\\v100\\story-r5\\ending-zakimiya-family.webp",
+      "prompt": "One cinematic 16:9 landscape narrative illustration for the existing mature Japanese post-apocalyptic game. Preserve every referenced character identity, recognizable face, hair, costume, age, sex and build. Unified mature graphic novel drawing matching the first navy-shirt man's reference: confident uneven ink outlines, cross-hatched shadows, matte textured painted colors, muted teal shadows and warm amber practical light. No photoreal faces, glossy CGI, generic AI beauty, random props, extra fingers, duplicate people, poster poses, lettering, watermark, or captions. All human figures are naturally framed from waist up by the table/foreground, no legs or full body. This is ONE still of a concrete story moment, NOT a grid or montage.\nInside a modest repaired hospital alcove at sunrise after the rescue. Only referenced scruffy black-jacket Zakimiya is the adult man in focus: face faithful, eyes wet with relief, a tiny sleeping clothed baby securely cradled in both arms at chest height. The child's adult mother is seen only from behind/three-quarter away, no new visible face identity; she touches his forearm. Cream Chihuahua with yellow bandana and olive medical harness perched chest-up beside a folded blanket, ears calm. Main navy-shirt style reference is not an additional person in this scene. Close intimate off-center composition, emotional restraint, bandages and water bowl on table, no weapons, no gore. Leave lower 28% foreground quiet.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp"
+      ],
+      "generatedPngSha256": "1e8b2e6ca1e5a750c98c2c71d2144358a1dc1b613a6810cb6e31419376e76e36",
+      "selectedSha256": "a491dfb88927dec9afd5a0cbcc70cee08e3c76b1937a7347b3df1f36089546d4",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "hachi",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\hachi.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese wiry scout man, spiky short black hair with orange highlights, orange hooded coat over a blue shirt, nose bandage, blue satchel and gloves, crowbar held low. Preserve his narrow mischievous face. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/scout-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-decb0bdd-32b1-4201-843f-739031108cc9.png",
+      "generatedPngSha256": "e3c192f684fd0090acd0fd5bf978272005c2e573872930bc4d0b0be444878dba",
+      "selectedSha256": "4dd426357a3c0578490258c5afbb98e1ec2066e9d84e3b392e2b464586620383",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "nao",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\nao.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese female medic with a long reddish brown braid, teal jacket with orange lining, fitted white high-neck shirt, orange strap and medical satchel. Preserve her original female face and anatomy. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/medic-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-fd30f6c2-eef5-4c87-9b20-fd9baeb7a204.png",
+      "generatedPngSha256": "52d1e87695be712bf4d6b32a6c60d97e0d2b1a785157f7f15d01278db41eddcf",
+      "selectedSha256": "c52546a07f5bf91c11bdd17907ff83bcea7e7ee4be2cd06454fa2447bd754e3a",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "mizuchi",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\mizuchi.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese WOMAN with an asymmetric black bob over one eye, goggles on her head, fitted purple suit, respirator at neck, yellow glove and long rifle held low. Preserve her female face and anatomy despite masculine speech. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/ranger-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-1d2d8a83-08dc-4071-8a16-c2fb0b108a13.png",
+      "generatedPngSha256": "6ea31063bac8c7382c7a4aa7b4697f2be6a5dca30f5f3b7c7fb612404336c682",
+      "selectedSha256": "349b7c1152f14a4e56307bb4710ea4036ce2e64dfee4e2fc2ce05d54e6445d3b",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "raider",
+      "kind": "expression",
+      "path": "assets\\source\\v100\\story-r5\\raider.webp",
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese athletic WOMAN with short blonde pixie hair, sleeveless dark top, olive ammunition harness, headphones around neck, light machine gun held low. Preserve original female face and body, never masculinize her. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/gunner-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-fbd71e17-7c26-4d8d-bddd-d1187b28291a.png",
+      "generatedPngSha256": "f49ae5d3af56005c22d0a05d51d4f99fb53604c8b4f31eb72432053203262138",
+      "selectedSha256": "c775a93c4b1f0967ef28a3791ad1179ed6efc84fd253e12516b7673b2642e9d0",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "epilogue-main-table",
+      "kind": "cut",
+      "path": "assets\\source\\v100\\story-r5\\epilogue-main-table.webp",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/outputs/projectwide-brushup-20261004/design-rebuild/main-identity-board.png",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp"
+      ],
+      "prompt": "ONE cinematic 16:9 narrative illustration for an adult Japanese post-apocalyptic game. Match the supplied navy-shirt man's professional mature graphic novel ink: confident uneven contours, cross-hatched shadows, matte textured paint, desaturated teal and amber practical lights. Preserve original faces, hair, costumes, sex and builds from references. All foreground humans waist-up, no legs/full body. Asymmetric story composition, meaningful expressions, believable hands, no glossy photoreal faces, CGI, generic AI beauty, poster lineup, text, captions or watermark. Lower 28 percent mostly quiet foreground for dialogue. This is a single illustration, not a grid. First reference establishes ink rendering; second is a reference board with SIX different adult humans and ONE cream Chihuahua, exactly those seven must appear once each, never the board grid itself. Final crowded meal at reopened patched wooden izakaya, warm evening. Black-coated center-parted TKY at center carrying a fried chicken platter and laughing; scruffy black-jacket Zakimiya front right laughing quietly; navy-shirt Paisen front left holding a troublesome bag; broad white-shirt Kuma behind counter with rice paddle, mock stern; white-shirt maroon-tie Babayaga seated beside black-leather-coat white-ruffled-blouse Mrs Chiha in back, private warm look; cream Chihuahua yellow bandana/olive harness chest-up by bench. Varied heads at different depths, table covers bodies at waists, no orange-jacket Hachi, no other people.",
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-5c20f952-0d37-4c3c-957f-44c1c54a72ea.png",
+      "generatedPngSha256": "b35bb9c7dcdb06de72bdad2b0748f3dfcb77403dfe7dba72113edde9f1bce5ea",
+      "selectedSha256": "1e948d5d205f26ca1a4934be1b8ab06933a97f2b1d37078fc3e3984bf017fea7",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "prologue-door-crisis",
+      "kind": "cut",
+      "path": "assets\\source\\v100\\story-r5\\prologue-door-crisis.webp",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/babayaga-portrait-v2.webp"
+      ],
+      "prompt": "ONE cinematic 16:9 narrative illustration for an adult Japanese post-apocalyptic game. Match the supplied navy-shirt man's professional mature graphic novel ink: confident uneven contours, cross-hatched shadows, matte textured paint, desaturated teal and amber practical lights. Preserve original faces, hair, costumes, sex and builds from references. All foreground humans waist-up, no legs/full body. Asymmetric story composition, meaningful expressions, believable hands, no glossy photoreal faces, CGI, generic AI beauty, poster lineup, text, captions or watermark. Lower 28 percent mostly quiet foreground for dialogue. This is a single illustration, not a grid. Inside wooden izakaya during daytime abrupt outbreak. Tight diagonal view across overturned chair, frosted cracked glass door at upper right showing a bloodied adult infected silhouette OUTSIDE the glass, not graphic gore. Inside navy-shirt Paisen recoils at left eyes wide with clenched hands around a rice bowl, broad white-shirt Kuma at center shields customers with frying pan, white-shirt/tie Babayaga half-turned at right reaching toward back exit. Visible protagonist only one pair of natural hands bracing chair at bottom foreground, no invented face. Men face different directions with genuine fear/urgent focus. Cold exterior light cuts through warm kitchen, flying tiny glass dust, no explosion, no floating extra hands.",
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-f5546d3d-06f8-4484-a8df-be5374581011.png",
+      "generatedPngSha256": "b3f928d4485ac724268ff5b3a2d3edd0ae6d7eec76d7271d8a27558f7bea3b7f",
+      "selectedSha256": "e7b709f0fce7a0fde973ee69dc6d9f21119e7585f8beb630a64ddd19c385f4e7",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "chiha-confession",
+      "kind": "cut",
+      "path": "assets\\source\\v100\\story-r5\\chiha-confession.webp",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/kumaverson-portrait-v2.webp"
+      ],
+      "prompt": "ONE cinematic 16:9 narrative illustration for an adult Japanese post-apocalyptic game. Match the supplied navy-shirt man's professional mature graphic novel ink: confident uneven contours, cross-hatched shadows, matte textured paint, desaturated teal and amber practical lights. Preserve original faces, hair, costumes, sex and builds from references. All foreground humans waist-up, no legs/full body. Asymmetric story composition, meaningful expressions, believable hands, no glossy photoreal faces, CGI, generic AI beauty, poster lineup, text, captions or watermark. Lower 28 percent mostly quiet foreground for dialogue. This is a single illustration, not a grid. Quiet heavy confrontation in underground concrete armory with closed blast door. Exactly four referenced adults: Mrs Chiha in black coat and white ruffled blouse in center, ashamed downcast eyes, places original ID card face down on metal table; white-shirt maroon-tie Babayaga at left picks card up and looks at his wife with hurt and restrained shock; navy-shirt Paisen at right upright, arms resting on table, unblinking serious stare; broad white-shirt Kuma background left, angry furrowed brows. Their weapons lie on a rack or low out of frame, no guns pointed at anyone. Hard low-key teal ceiling light and faint warm lamp, emotionally precise faces, readable hands/card, negative space around card; no text on card.",
+      "recoveredFromCompletedCall": true,
+      "generatedPngPath": "C:/Users/okait/.codex/generated_images/01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54/exec-eb1e93e2-0cfd-4407-8849-62090bbd0ee5.png",
+      "generatedPngSha256": "e45884e3a4694a525f1cef78a851faccc9e6ef9b9fd61ee9837cdb1d0bae220a",
+      "selectedSha256": "94ca3f72e3205d09b9219ee7ca95687dacb2ee73adc9e3fb7d9bb64d667de77a",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "monkey",
+      "kind": "expression",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/engineer-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese man with tousled short silver-grey hair, black utility shirt, olive tactical harness and gloves, original crossbow held low. Preserve original narrow face and hair. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "path": "assets\\source\\v100\\story-r5\\monkey.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-e3d1e01a-e0e0-43f6-b9b8-f646b7cf7440.png",
+      "generatedPngSha256": "346427b0541f81b3850495d957474a8024f1ff26a286584b77188db0e14556cc",
+      "selectedSha256": "3e5819e8f77cc3d10efc91b4317f590b38b56f685ca48436d3e71b8e5711afc2",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "tatara",
+      "kind": "expression",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/brute-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult Japanese broad muscular man with wavy black hair, dark blue utility clothes, heavy metal shoulder armor and huge hammer held low. Preserve original strong face and large build. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "path": "assets\\source\\v100\\story-r5\\tatara.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-7b63902c-9044-4b0b-ad62-f5960f6f0fd0.png",
+      "generatedPngSha256": "977e4a7eef7471721f5136d4a65c9d00b5908391c892d2ac2c38750121135337",
+      "selectedSha256": "e751bffc99aade3557c56d9eb6678282c027a399ee09034959286ae61c1c5633",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "gantetsu",
+      "kind": "expression",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v070/characters/portraits/guardian-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult MALE armored guardian with original sealed black visor helmet, heavy olive coat and black shield with yellow scratches. NEVER unmask him or invent a human face. Convey the four emotional states through helmet tilt, shoulders and shield grip. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "path": "assets\\source\\v100\\story-r5\\gantetsu.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-8c5fa52c-004f-4599-b1a8-01768b2d2491.png",
+      "generatedPngSha256": "f79e7d93121e662658b98594004f5060a2db92726909f5665d00c303bece5b6b",
+      "selectedSha256": "5b6d52d852b0b19ae31a2d2ef72155093a47ec11df724b553eff15d15564d69b",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "president",
+      "kind": "expression",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v100/portraits/mugarian-president-event-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: older weathered grey-haired and grey-bearded Japanese man, dark green velvet double-breasted jacket, gold buttons, maroon waistcoat, white shirt, ornate tie, gold cane held low. Preserve his age, beard, original face, stature and clothing. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "path": "assets\\source\\v100\\story-r5\\president.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-b476ac7a-8311-4ace-a0f7-3207699e151b.png",
+      "generatedPngSha256": "a9fb36b3296b2dc9d8469fcf790dae55e2618a968aa71c40192cc4df76cd8569",
+      "selectedSha256": "f3a4c6cbb8598c12060331a23f31b3ff828dd0e61fba3e9ea50a32c5793f962f",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "commander",
+      "kind": "expression",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v100/portraits/red-panther-commander-event-portrait-v1.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/public/art/v060/characters/portraits/brawler-portrait-v2.webp"
+      ],
+      "prompt": "Edit the first reference into ONE production-ready character expression atlas for a Japanese post-apocalyptic illustrated game. The FIRST reference alone is the identity master: adult male masked military commander with original black helmet, gas respirator with round red lenses, black armored long coat and red trims. NEVER unmask him. Convey the four emotional states through mask tilt, shoulders and hand posture without inventing facial anatomy. The SECOND is ink style only, never borrow that man's identity. The atlas is exactly a seamless 2 by 2 grid of four 512 by 640 cells, canvas 1024 by 1280. In every cell show this SAME adult character ONLY from the top of the head down to the waist: no knees, legs, feet or full body. Head top is 32 px, eye line 130 px, waist bottom 624 px, shared camera scale and natural torso proportions. Transparent background in all cells and between silhouettes, absolutely no text, labels, panel borders, decorative UI or drop shadows. Read order: upper left restrained warm amusement, upper right intense anger and determination, lower left visibly shocked and worried with tense brows, lower right grief and exhaustion with wet eyes and restrained closed mouth. Facial anatomy must actually change appropriately while retaining the same person, no four copies of a neutral face. Keep body pose, costume and light direction consistent. Professional mature graphic novel ink with confident uneven pen contours, cross-hatched warm skin shadows, hand-painted fabric texture, limited rust amber rim light and desaturated deep navy shadows, grounded believable anatomy. Match the supplied illustrated style, avoid photography, CGI, glossy smooth AI portrait skin, generic attractive faces, chibi, exaggerated anime proportions, extra fingers or floating weapons. Weapon/tablet if present stays below the face and does not obscure expression. This is a single coherent sprite-sheet asset, four emotional frames of the same identity.",
+      "path": "assets\\source\\v100\\story-r5\\commander.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-2bd8548b-54d9-44d4-81ba-b2e79ea01595.png",
+      "generatedPngSha256": "56553bbaf168a4ba1d3d8b5b7c7c28e053cdf30f99cf465ed874398a1018022d",
+      "selectedSha256": "48b49ce5a15c5f6b77ae3b58b0613e66c479e6f1acc35e75aff07b0238843510",
+      "width": 1122,
+      "height": 1402,
+      "hasAlpha": true
+    },
+    {
+      "name": "ending-tky-transport",
+      "kind": "cut",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/outputs/projectwide-brushup-20261004/design-rebuild/main-identity-board.png",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/epilogue-main-table.webp"
+      ],
+      "prompt": "ONE cinematic 16:9 story illustration for a Japanese post-apocalyptic game, mature graphic-novel pen contours, crosshatched shadows, matte textured paint, grounded anatomy, desaturated teal and amber practical light. First reference is the original character identity board: preserve these people's recognizable faces, hair, build, clothes, never reproduce the board grid. Second reference is the new cohesive ink rendering only. All visible human figures waist-up, no legs or full body. Believable hands, natural asymmetric staging, expressive but restrained faces, no photographic smooth faces, CGI, generic AI beauty, poster lineup, text, captions or watermark. Lower 28 percent quiet foreground for the readable dialogue panel. At sunrise immediately after a hard battle on a damaged Fukuoka road, black-coated center-parted TKY sits inside a rescue transport vehicle driving towards hospital, clear determined expression seen through open side window in foreground left. Broad white-shirt Kuma at passenger side carries a sealed recovered medical sample case on his lap, exhausted relief. Navy-shirt Paisen at right holds the open door of the separate battered armored truck for the unseen protagonist. No orange-coated Hachi. Low sun glints on chipped metal, smoke now thinning, a fork in the road visible in distance. Vehicles and window/door edges obscure all bodies below the waist. No extra duplicated humans.",
+      "path": "assets\\source\\v100\\story-r5\\ending-tky-transport.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-77f5e59d-e33a-4512-99df-5cf02cf77fbb.png",
+      "generatedPngSha256": "89d3ca34be1ee835656985cf07c1d789034fdc1259d45b4f1638afe738877db7",
+      "selectedSha256": "f0721b63cfaa5bb432123fb9ca464d917fdc03960ab616bdd320287d8f861584",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "ending-medical-progress",
+      "kind": "cut",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/outputs/projectwide-brushup-20261004/design-rebuild/main-identity-board.png",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/epilogue-main-table.webp"
+      ],
+      "prompt": "ONE cinematic 16:9 story illustration for a Japanese post-apocalyptic game, mature graphic-novel pen contours, crosshatched shadows, matte textured paint, grounded anatomy, desaturated teal and amber practical light. First reference is the original character identity board: preserve these people's recognizable faces, hair, build, clothes, never reproduce the board grid. Second reference is the new cohesive ink rendering only. All visible human figures waist-up, no legs or full body. Believable hands, natural asymmetric staging, expressive but restrained faces, no photographic smooth faces, CGI, generic AI beauty, poster lineup, text, captions or watermark. Lower 28 percent quiet foreground for the readable dialogue panel. Several days later inside a patched hospital consultation room. Close foreground of a seated anonymous adult female station worker's sleeve rolled above forearm and a physician's hands comparing that forearm with yesterday's clinical photograph on a clipboard. Patient's face is outside frame, physician seen from back and only waist up, white coat, so no invented portrait identity. Infection discoloration has stopped spreading, no open wounds or graphic gore. Original broad white-shirt Kuma stands behind them waist-up with hesitant relief and concern, genuinely listening, not celebrating a miraculous complete cure. Warm daylight cuts through cool teal medical room, practical details including bandage tray, clipboard and a patched window, restrained hopeful atmosphere. Anatomically correct arms/hands, no text in image.",
+      "path": "assets\\source\\v100\\story-r5\\ending-medical-progress.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-6ba930b6-d213-455a-bbd7-eb2580e53629.png",
+      "generatedPngSha256": "471eb598d663c5aaab9ed96ba8ffbacf32ebe2bf2e69be26d34378f1ba4f61e8",
+      "selectedSha256": "c6b7ebae69cc577bb2782de080cc4b70047d7476a6b149f444ba7a275c5dd1bc",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "chiha-confession-r2",
+      "kind": "cut",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/chiha-confession.webp"
+      ],
+      "prompt": "Edit this single narrative illustration preserving every original face, hair, clothing, anatomy, framing, ink style, lighting and environment exactly. There must be only ONE identity card in the scene: the one already held in the left man's hand. Remove the duplicate identity card lying on the foreground metal table, fill that small area with the same worn metal table surface. Do not change any people, expressions, hands, costumes, weapons, camera or other objects. No text, no new card or object.",
+      "path": "assets\\source\\v100\\story-r5\\chiha-confession-r2.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-f74c2334-a706-4724-8da9-3f6db19d6db3.png",
+      "generatedPngSha256": "10b022d0b0061c0c01d3b780c8138afe1b3cf557511d32d77ede99616875a2a0",
+      "selectedSha256": "e3e226cd4ab57cde9663bbd3c9248f44464db17fcfafa01b7e06b74a893ebb74",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "president-restrained-alive",
+      "kind": "cut",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/president.webp",
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/chiha-confession-r2.webp"
+      ],
+      "prompt": "One 16:9 cinematic hand-inked graphic novel illustration for a fictional Japanese fantasy-horror adventure. Original older executive in first reference remains recognizable: swept grey hair, grey beard, dark emerald coat, burgundy gold-pattern waistcoat, amber/navy colors. Second reference defines the confident pen contours, crosshatched matte painted shadows and the exact white-shirt maroon-tie Babayaga and black leather coat/white blouse Mrs. Chiha. Depict a NON-GRAPHIC supernatural transformed executive after safe containment, resting on his side in a medical research room. His right shoulder and forearm are dramatically enlarged with dark stone-like scales and intact leathery plating, integrated green canisters on his coat; no exposed tissue, no wounds, no blood. Clearly still a living fantastical creature rather than his healthy original body: awake alert eyes, head slightly raised, impatient frustrated facial expression and mouth speaking. Broad clinical safety bands hold his upper arms close; hands behind his back out of view. Babayaga and Chiha visible from waist up beside him checking the restraint buckles with calm focused faces. Only the executive's head and upper torso in foreground, all lower bodies outside frame. Blank papers on dark floor, intact clinical equipment and patched walls, low amber practical lamp with cool teal light. No fighting, no weapons in use, no injury or corpse. Lower 28 percent quiet dark foreground for dialogue. Natural asymmetry and believable hands, consistent mature illustrated faces, no glossy photography, CGI, poster lineup, typography or watermark.",
+      "path": "assets\\source\\v100\\story-r5\\president-restrained-alive.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-560a5c50-b730-4119-aa3b-9fe7a2622950.png",
+      "generatedPngSha256": "21b0ef73600a5ff379e40a49b4e893101421c8bd0f15c7f777784f7ac2697da9",
+      "selectedSha256": "69d261d4449c5cc1524ac7252286d3889ff9b1b687e49c3927fc349471f1e971",
+      "width": 1672,
+      "height": 941,
+      "hasAlpha": false
+    },
+    {
+      "name": "maintenance-retreat-door",
+      "kind": "object",
+      "references": [
+        "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/v100-dialogue-natural-20261001/assets/source/v100/story-r5/chiha-confession-r2.webp"
+      ],
+      "prompt": "Create one isolated transparent-background production game scenery sprite, a battered Japanese underground station maintenance retreat doorway with a narrow security shutter, reinforced rusted frame and a few waist-high stacked industrial supply crates forming a protected escape entrance. Canvas 1024 by 768, object fills most of it leaving a modest transparent edge, three-quarter side view: left wall recedes into darkness to left, opening visible on right edge so allies can emerge into battlefield to the RIGHT. Maintain practical human-scale geometry and a grounded floor contact strip. Render as mature graphic novel pen contours, matte textured worn metal paint, restrained warm amber lamp and deep teal/charcoal shadows matching reference environment. Rich material detail and believable bolts, rails, scratches and flaking paint, no flat geometric UI look. Small fixed amber work lamp above open doorway, heavy metal safety bar leaned to side, loose papers and dark concrete slab under frame. No people, no vehicle, no gun turret, no monsters, no blood, no logos, no text, no border, no cast shadow filling the transparent canvas. Transparent surroundings and doorway opening, ready to composite on an existing background. One scene object, not a sheet.",
+      "path": "assets\\source\\v100\\story-r5\\maintenance-retreat-door.webp",
+      "generatedPngPath": "C:\\Users\\okait\\.codex\\generated_images\\01a0ff8e-cdcb-7aa2-8444-1a8f408ddf54\\exec-533abf7b-bc05-4fed-8131-89372660f63c.png",
+      "generatedPngSha256": "1f91728443eb094ac4b08a49f20298e5a18a3a14c3c95ac64446c8756512ba6a",
+      "selectedSha256": "1a739f4c31eb9197a475f63e8718ebb3c5a820a39096ecb85983df28c25c0617",
+      "width": 1448,
+      "height": 1086,
+      "hasAlpha": true
+    }
+  ]
+}

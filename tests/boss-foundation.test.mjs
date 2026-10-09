@@ -22,7 +22,7 @@ import { STATION_ENEMY_TUNING } from "../app/stationEnemyMechanics.js";
 
 const EXISTING_BOSS_KINDS = ["takuya", "gate-eater"];
 const NEW_BOSS_KINDS = ["mother", "ooguchi", "gairen", "futago"];
-const ALL_BOSS_KINDS = [...EXISTING_BOSS_KINDS, "kurome", ...NEW_BOSS_KINDS];
+const ALL_BOSS_KINDS = [...EXISTING_BOSS_KINDS, "kurome", ...NEW_BOSS_KINDS, "mugarian-president-mutated", "takuya-omega"];
 
 test("existing bosses own one immutable shared contract with stable result and compendium IDs", () => {
   assert.equal(BOSS_FOUNDATION_SCHEMA_VERSION, 1);

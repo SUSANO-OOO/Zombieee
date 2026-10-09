@@ -197,10 +197,17 @@ await Promise.all(Object.entries(existingPortraits).map(async ([kind, relativeSo
     .resize(512, 512, { fit: "cover", position: "north" })
     .png()
     .toBuffer();
+  const cardOutputPath = path.join(cardDir, `${kind}-formation-card-r2.webp`);
   await sharp(cardBase)
     .composite([{ input: cardBadgeSvg(CARD_WEAPON_BADGES[kind]) }])
     .webp({ quality: 91, alphaQuality: 100, effort: 6 })
-    .toFile(path.join(cardDir, `${kind}-formation-card-r2.webp`));
+    .toFile(cardOutputPath);
+  // This card's alpha WebP decodes as black stripes in phone WebKit. Preserve
+  // its exact decoded pixels as a PNG for the card surfaces on that engine.
+  if (kind === "kumaverson") {
+    await sharp(cardOutputPath).png({ compressionLevel: 9 })
+      .toFile(path.join(cardDir, "kumaverson-formation-card-r2.png"));
+  }
 }));
 await sharp(monkeyCardSource)
   .composite([{ input: cardBadgeSvg(CARD_WEAPON_BADGES.engineer) }])

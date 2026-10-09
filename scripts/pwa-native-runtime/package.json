@@ -1,0 +1,9 @@
+{
+  "name": "zombieee-native-pwa-verification-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned WebKit with the persistent CacheStorage encoder fix from Playwright PR 41701; independent from the rendering baseline.",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

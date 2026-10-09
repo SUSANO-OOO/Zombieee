@@ -1,22 +1,29 @@
 // Helpers for browser QA that has to get past the PWA gate to reach the game.
 //
-// Since 0.9.7 a browser tab meets an invitation to install before the title, and
-// the save environment moved off the title into the data screen. Both are
-// deliberate product behaviour, and both would otherwise have to be re-handled
-// in every scenario of every suite, so they live here once.
+// The fiction notice precedes the install invitation. Since 0.9.7 the save
+// environment moved off the title into the data screen. QA handles these
+// deliberate entry steps here instead of repeating them in every scenario.
 
 /**
- * Declines the install invitation so the scenario can reach the title.
+ * Continues past the fiction notice and declines the install invitation.
  *
  * Silent when the invitation is absent: a device that already holds its pack, or
  * a context without service worker support, never sees it, and neither case is
  * a failure.
  */
 export async function dismissInstallOffer(page, { timeout = 60_000 } = {}) {
+  const deadline = Date.now() + timeout;
+  const remaining = () => Math.max(1, deadline - Date.now());
   const skip = page.getByRole("button", { name: "ブラウザで遊ぶ" });
-  await skip.waitFor({ state: "visible", timeout }).catch(() => {});
+  const notice = page.locator(".fiction-notice").getByRole("button", { name: "続ける", exact: true });
+  await skip.or(notice).first().waitFor({ state: "visible", timeout: remaining() }).catch(() => {});
+  if (await notice.isVisible().catch(() => false)) {
+    if (await notice.isEnabled()) await notice.click({ timeout: remaining() });
+    await notice.waitFor({ state: "hidden", timeout: remaining() });
+  }
+  await skip.waitFor({ state: "visible", timeout: remaining() }).catch(() => {});
   if (!(await skip.isVisible().catch(() => false))) return false;
-  await skip.click();
+  await skip.click({ timeout: remaining() });
   return true;
 }
 

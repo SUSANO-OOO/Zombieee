@@ -1,0 +1,15 @@
+{
+  "name": "mugarian-reclaimed-r1",
+  "purpose": "Credits-only reconstruction view of the liberated logistics facility. No character identity or battle asset changed.",
+  "generator": "image_gen built-in edit, 2026-10-04",
+  "reference": "public/art/v100/stages/s21-mugarian-hq-gate-r4-background-v1.webp",
+  "referenceSha256": "c5423cd968065917f1b763b8c5f3bc2d2330d4a76f07c0dea9e4759be8162407",
+  "generatedMasterSha256": "87225a93b996ed9d2456a650eedf0e4bccef6a92cd47217f9014f946c3473c1d",
+  "output": "public/art/v100/story/mugarian-reclaimed-r1.webp",
+  "outputSha256": "67209367699d5e9effdb903384333d454e359882989a6e1c45a2f89212359351",
+  "outputBytes": 431026,
+  "width": 1600,
+  "height": 900,
+  "normalization": "1600x900, WebP quality 90",
+  "reviewed": "Japanese sign 臨時診療所 legible; corporate signage covered; no people or red-cross emblems; left-side medical station remains visible beside right-side roll."
+}

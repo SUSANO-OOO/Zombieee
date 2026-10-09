@@ -1,0 +1,267 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "cell": {
+    "width": 544,
+    "height": 512
+  },
+  "atlas": {
+    "width": 4352,
+    "height": 1024
+  },
+  "commonScale": 0.33994334277620397,
+  "identityReferenceStates": [
+    "entrance",
+    "idle",
+    "move"
+  ],
+  "referenceHeight": 1312,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "frames": [
+    {
+      "state": "entrance",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 102,
+        "y": 158,
+        "width": 861,
+        "height": 1275,
+        "alphaPixels": 303548
+      },
+      "contentRect": {
+        "x": 125,
+        "y": 63,
+        "width": 293,
+        "height": 433
+      },
+      "renderedSize": {
+        "width": 293,
+        "height": 433
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "idle",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 94,
+        "y": 132,
+        "width": 870,
+        "height": 1312,
+        "alphaPixels": 330004
+      },
+      "contentRect": {
+        "x": 124,
+        "y": 50,
+        "width": 296,
+        "height": 446
+      },
+      "renderedSize": {
+        "width": 296,
+        "height": 446
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 76,
+        "y": 193,
+        "width": 921,
+        "height": 1152,
+        "alphaPixels": 293820
+      },
+      "contentRect": {
+        "x": 115,
+        "y": 104,
+        "width": 313,
+        "height": 392
+      },
+      "renderedSize": {
+        "width": 313,
+        "height": 392
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1211,
+        "height": 1299
+      },
+      "sourceBounds": {
+        "x": 10,
+        "y": 209,
+        "width": 1172,
+        "height": 948,
+        "alphaPixels": 235769
+      },
+      "contentRect": {
+        "x": 73,
+        "y": 174,
+        "width": 398,
+        "height": 322
+      },
+      "renderedSize": {
+        "width": 398,
+        "height": 322
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 26,
+        "y": 228,
+        "width": 976,
+        "height": 1147,
+        "alphaPixels": 291560
+      },
+      "contentRect": {
+        "x": 106,
+        "y": 106,
+        "width": 332,
+        "height": 390
+      },
+      "renderedSize": {
+        "width": 332,
+        "height": 390
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "phase",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 34,
+        "y": 50,
+        "width": 973,
+        "height": 1412,
+        "alphaPixels": 303292
+      },
+      "contentRect": {
+        "x": 106,
+        "y": 16,
+        "width": 331,
+        "height": 480
+      },
+      "renderedSize": {
+        "width": 331,
+        "height": 480
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 49,
+        "y": 311,
+        "width": 934,
+        "height": 989,
+        "alphaPixels": 230836
+      },
+      "contentRect": {
+        "x": 113,
+        "y": 160,
+        "width": 318,
+        "height": 336
+      },
+      "renderedSize": {
+        "width": 318,
+        "height": 336
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "defeat",
+      "source": "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 16,
+        "y": 307,
+        "width": 1498,
+        "height": 605,
+        "alphaPixels": 209687
+      },
+      "contentRect": {
+        "x": 17,
+        "y": 290,
+        "width": 509,
+        "height": 206
+      },
+      "renderedSize": {
+        "width": 509,
+        "height": 206
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    }
+  ],
+  "noClipping": true
+}

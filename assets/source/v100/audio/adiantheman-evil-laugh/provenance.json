@@ -1,0 +1,23 @@
+{
+  "creator": "adiantheman",
+  "work": "Evil Laugh",
+  "sourcePage": "https://freesound.org/people/adiantheman/sounds/829881/",
+  "downloadUrl": "https://cdn.freesound.org/previews/829/829881_16743926-hq.mp3",
+  "sourceKind": "Public HQ MP3 preview from the author CC0 sound page",
+  "license": "CC0-1.0",
+  "licenseURL": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "sourceSHA256": "ab63af0f5e1e85d39179decbdb523d8a868318398c6fcd12e01432dcb1870ab5",
+  "sourceBytes": 74732,
+  "adaptation": "70 Hz high-pass, 5.8 kHz low-pass, 35 ms entrance and 445 ms tail fade; native pitch and speed retained; mono 44.1kHz MP3 128 kbps.",
+  "ffmpeg": {
+    "package": "@ffmpeg-installer/ffmpeg@1.1.0",
+    "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-sol-r97-1ca4\\node_modules\\@ffmpeg-installer\\win32-x64\\ffmpeg.exe"
+  },
+  "runtime": {
+    "path": "/audio/v100/epilogue/king-laugh-r1.mp3",
+    "bytes": 48109,
+    "sha256": "988a67ff68d67445174cb080ed168082e957eaf6c9dc6370ac5d37b72a26cbbf"
+  },
+  "role": "One male laugh at the first visible monster grin; no battle unit voice reused.",
+  "date": "2026-10-07"
+}

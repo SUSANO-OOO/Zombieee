@@ -1,0 +1,191 @@
+{
+  "schema": "v100-ending-art-selection/v2",
+  "createdAt": "2026-10-07T12:46:52.737Z",
+  "purpose": "Producer-directed redraw of individual faces, daily recovery, relief work, family reunion and archived laboratory comedy; cinematic finale without name captions.",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in referenced-image edit",
+    "purelyHumanAuthorship": false
+  },
+  "license": {
+    "creator": "OpenAI ImageGen",
+    "name": "Output subject to applicable OpenAI Terms",
+    "url": "https://openai.com/policies/terms-of-use/",
+    "inputPermissions": "Producer-authorized original project character masters and private self-photo for fictional face only"
+  },
+  "producerApproval": {
+    "creation": "Requested in this conversation",
+    "finalImageAdoption": "Pending Producer viewing"
+  },
+  "privacy": {
+    "rawPhotosInRepository": false,
+    "rawPhotosInRuntime": false,
+    "rawPhotosInQAArtifacts": false,
+    "privatePhotoPathsInProvenance": false
+  },
+  "derivatives": {
+    "resize": {
+      "width": 1600,
+      "height": 900,
+      "fit": "fill"
+    },
+    "format": "WebP",
+    "quality": 89,
+    "library": "sharp"
+  },
+  "story": {
+    "segawa": "Recorded research video from before his canonical death; no resurrection",
+    "savedCreditsSceneIndices": "0-10",
+    "castChanges": false
+  },
+  "selected": [
+    {
+      "id": "king-monster-reveal-r5",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-monster-reveal-r5.webp",
+        "bytes": 154212,
+        "sha256": "b8f450268cbe06e5a35eab4931539f04213a1f0e1d4daa69b7e423741dfee097"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/king-monster-reveal-r5.png",
+        "bytes": 2033114,
+        "sha256": "b96d288b6a74ed21c120a2681e496058a35ecf8cbc02e409b0d8d0f4151a354b",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "private-face-reference",
+          "sha256": "483e2cdfb2f34f37eb6948ee52a20f511db601634db7b9081ecb1f5056a402b0",
+          "storedInRepository": false,
+          "storedInRuntime": false
+        }
+      ]
+    },
+    {
+      "id": "king-monster-grin-r4",
+      "runtime": {
+        "path": "/art/v100/epilogue/king-monster-grin-r4.webp",
+        "bytes": 147220,
+        "sha256": "0c46ad42dd127d995cafc803083011c509ddd7facbc54fb66227b9cd76446a88"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/king-monster-grin-r4.png",
+        "bytes": 1961227,
+        "sha256": "53f04939a7c1da33db30bd2866faceecec3b5461048841c51717170b018456e7",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "private-face-reference",
+          "sha256": "483e2cdfb2f34f37eb6948ee52a20f511db601634db7b9081ecb1f5056a402b0",
+          "storedInRepository": false,
+          "storedInRuntime": false
+        },
+        {
+          "path": "illustrated-face-reveal-r5",
+          "sha256": "b96d288b6a74ed21c120a2681e496058a35ecf8cbc02e409b0d8d0f4151a354b"
+        }
+      ]
+    },
+    {
+      "id": "hospital-courtyard-r3",
+      "runtime": {
+        "path": "/art/v100/credits/hospital-courtyard-r3.webp",
+        "bytes": 404742,
+        "sha256": "25cc9fd4de96b20cebe55431af2a4ebc9b0b02d6483236552fc7e8e46e939c26"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/hospital-courtyard-r3.png",
+        "bytes": 2850853,
+        "sha256": "d8cbfe12cd75ad3b5d19e394083bf4bc8b0fc39241e3de2e60d679572921c672",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "public/art/v070/characters/reference/nao-base-r1.png",
+          "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+        },
+        {
+          "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+          "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+        },
+        {
+          "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+          "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+        }
+      ]
+    },
+    {
+      "id": "zakimiya-family-morning-r2",
+      "runtime": {
+        "path": "/art/v100/credits/zakimiya-family-morning-r2.webp",
+        "bytes": 316374,
+        "sha256": "d85c1086b40a5e92de5cdf9c5eb3299bae9aed6afde98525aa2d4f488df6722a"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/zakimiya-family-morning-r2.png",
+        "bytes": 2638338,
+        "sha256": "732179da4fc8463f3e89f448260735400e51565423f2f922e703d0768fd46dde",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+          "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+        }
+      ]
+    },
+    {
+      "id": "ward-supplies-r4",
+      "runtime": {
+        "path": "/art/v100/credits/ward-supplies-r4.webp",
+        "bytes": 280084,
+        "sha256": "cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/ward-supplies-r4.png",
+        "bytes": 2453471,
+        "sha256": "b737c8da44dbdaa7f6fc5cb2deea2c5f4ab02430f3d037c71245b3fd4aa8fdde",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+          "sha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+        },
+        {
+          "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+          "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+        }
+      ]
+    },
+    {
+      "id": "segawa-record-r2",
+      "runtime": {
+        "path": "/art/v100/credits/segawa-record-r2.webp",
+        "bytes": 220206,
+        "sha256": "ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f"
+      },
+      "master": {
+        "path": "outputs/projectwide-brushup-20261004/design-rebuild/ending-production-r10/graphic-redraws/segawa-record-r2.png",
+        "bytes": 2259416,
+        "sha256": "66bae3762e14b40bbec428393bdf01a82b2f2ae271543d406063877a55cb9a96",
+        "storedInRepository": false
+      },
+      "identityReferences": [
+        {
+          "path": "assets/source/v100/characters/segawa-identity-master-r2.png",
+          "sha256": "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d"
+        }
+      ]
+    }
+  ]
+}

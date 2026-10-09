@@ -1,0 +1,43 @@
+.fiction-notice {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: max(22px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: #000;
+  color: #eeeae3;
+  font-family: "BIZ UDPGothic", sans-serif;
+  text-align: center;
+  opacity: 1;
+  transition: opacity .5s ease;
+}
+.fiction-notice-copy { max-width: 720px; animation: fiction-notice-in .4s ease both; }
+.fiction-notice h1 {
+  margin: 0 0 22px;
+  font: 700 clamp(21px, 3.2vw, 30px)/1.7 "Zen Kaku Gothic New", sans-serif;
+  letter-spacing: .055em;
+}
+.fiction-notice p { margin: 0; font-size: clamp(15px, 2.2vw, 19px); line-height: 1.95; }
+.fiction-notice button {
+  min-width: 116px;
+  min-height: 44px;
+  margin-top: 30px;
+  padding: 8px 24px;
+  border: 1px solid #6b6964;
+  border-radius: 2px;
+  background: transparent;
+  color: #c5c1ba;
+  font-size: 14px;
+  cursor: pointer;
+}
+.fiction-notice button:hover { border-color: #ddd8cb; color: #fff; }
+.fiction-notice button:focus-visible { outline: 2px solid #eeeae3; outline-offset: 5px; }
+.fiction-notice-leaving { opacity: 0; pointer-events: none; }
+@keyframes fiction-notice-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 580px) { .fiction-notice-line-break { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .fiction-notice { transition: none; }
+  .fiction-notice-copy { animation: none; }
+}

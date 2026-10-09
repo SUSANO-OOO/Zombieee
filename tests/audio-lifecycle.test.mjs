@@ -219,6 +219,27 @@ test("the first pointer gesture synchronously creates and resumes context, while
   await mixer.dispose();
 });
 
+test("a menu mixer can unlock and recover without diagnostic tones while keeping music and explicit test playback", async () => {
+  const context = new FakeContext();
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context, enableAcknowledgementTone: false });
+  const windowTarget = new FakeWindow();
+  mixer.attachUnlock(windowTarget);
+  await mixer.setScene("title");
+  windowTarget.fire("pointerdown");
+  await flush();
+  assert.equal(context.oscillators.length, 0);
+  assert.equal(mixer.getAudioStatus().state, AUDIO_MIXER_STATES.RUNNING);
+  assert.equal(mixer.getSceneState().sceneId, "title");
+  assert.equal(context.sources.length, 1);
+  context.state = "suspended";
+  assert.equal(await mixer.recoverAudio(), true);
+  await flush();
+  assert.equal(context.oscillators.length, 0);
+  assert.equal(mixer.playTestTone(), true);
+  assert.equal(context.oscillators.length, 1);
+  await mixer.dispose();
+});
+
 test("an explicit audio control owns its pointer and produces one manual unlock tone", async () => {
   const context = new FakeContext();
   let contextCreations = 0;
@@ -372,6 +393,48 @@ test("backgrounding during decode cancels the delayed cue without fallback or so
   assert.equal(await mixer.play("logical-loop"), null);
   assert.equal(context.resumeCount, 1);
   await mixer.dispose();
+});
+
+test("portrait rotation cancels a delayed cue and cannot override a hidden page", async () => {
+  const context = new FakeContext();
+  let releaseDecode;
+  context.decodeAudioData = () => new Promise(resolve => { releaseDecode = () => resolve({ duration: 1 }); });
+  const rotation = new EventTarget();
+  rotation.matches = false;
+  const rotate = portrait => { rotation.matches = portrait; rotation.dispatchEvent(new Event("change")); };
+  const windowTarget = new FakeWindow();
+  windowTarget.matchMedia = query => { assert.equal(query, "(orientation: portrait)"); return rotation; };
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context });
+  mixer.attachUnlock(windowTarget);
+  assert.equal(await mixer.enableAudio(), true);
+  const pending = mixer.play("logical-loop");
+  while (!releaseDecode) await Promise.resolve();
+  rotate(true);
+  releaseDecode();
+  assert.equal(await pending, null);
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.sources.length, 0);
+  windowTarget.fire("pageshow");
+  await flush();
+  assert.equal(context.state, "suspended");
+  windowTarget.fire("pagehide");
+  rotate(false);
+  await flush();
+  assert.equal(context.state, "suspended");
+  windowTarget.fire("pageshow");
+  await flush();
+  assert.equal(context.state, "running");
+  assert.ok(await mixer.play("logical-loop"));
+  assert.equal(context.sources.length, 1);
+  rotate(false);
+  await flush();
+  assert.equal(context.sources.length, 1);
+  await mixer.dispose();
+  const resumes = context.resumeCount;
+  rotate(true); rotate(false);
+  await flush();
+  assert.equal(context.resumeCount, resumes);
 });
 
 test("failed recovery reports a gesture requirement and the manual enable API can recover", async () => {

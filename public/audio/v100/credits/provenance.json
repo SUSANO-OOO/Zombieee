@@ -1,0 +1,21 @@
+{
+  "title": "追憶の幻想世界",
+  "artist": "魔王魂",
+  "credit": "音楽：魔王魂",
+  "page": "https://maou.audio/31_tsuioku_no_gensosekai/",
+  "source": "https://maou.audio/sound/song/maou_31_tsuioku_no_gensosekai.mp3",
+  "terms": "https://maou.audio/rule/",
+  "termsCheckedAt": "2026-10-03",
+  "license": "魔王魂の利用規約（無料ゲーム使用・クレジット表記）",
+  "writersAndVocals": "森田交一",
+  "bassAndGuitar": "森田交一",
+  "drums": "与野裕史",
+  "piano": "佐藤まさみ",
+  "bytes": 6309936,
+  "sha256": "a5be98c2cba42b2d0363d433aceced2946850ec25459fd59bb36cbd2c8d98248",
+  "mpegFrames": 12088,
+  "encodedDurationSeconds": 315.7681632653061,
+  "processing": "None. Original MP3; playback gain only.",
+  "runtime": "Single HTMLAudioElement, non-looping, pauses when hidden, streamed and optionally cached for offline playback.",
+  "notUsed": "Song-page artwork, photos and lyrics are not reproduced."
+}

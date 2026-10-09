@@ -127,6 +127,7 @@ export function beginKaramiteWindup({
       remainingSeconds: STATION_ENEMY_TUNING.karamite.windupSeconds,
       targetId: stableId(target),
       lane: attacker.lane,
+      direction: Math.sign(Number(target.x) - Number(attacker.x)) || -1,
     }),
   });
 }
@@ -138,6 +139,7 @@ export function advanceKaramiteWindup(runtime = createKaramiteRuntime(), elapsed
       remainingSeconds: nonNegative(runtime?.remainingSeconds),
       targetId: runtime?.targetId ?? null,
       lane: validLane(runtime?.lane) ? runtime.lane : null,
+      direction: runtime?.direction,
     });
   }
   const remainingSeconds = Math.max(
@@ -149,6 +151,7 @@ export function advanceKaramiteWindup(runtime = createKaramiteRuntime(), elapsed
     remainingSeconds: remainingSeconds <= EPSILON ? 0 : remainingSeconds,
     targetId: runtime.targetId ?? null,
     lane: validLane(runtime.lane) ? runtime.lane : null,
+    direction: runtime.direction,
   });
 }
 
@@ -191,6 +194,7 @@ export function resolveKaramiteBind({
       remainingSeconds: STATION_ENEMY_TUNING.karamite.holdSeconds,
       targetId: stableId(target),
       lane: runtime.lane,
+      direction: Math.sign(Number(target.x) - Number(attacker.x)) || runtime.direction || -1,
     }),
   });
 }
@@ -261,6 +265,7 @@ export function advanceKaramitePull({
         remainingSeconds,
         targetId: runtime.targetId,
         lane: runtime.lane,
+        direction: runtime.direction,
       })
       : idleKaramiteRuntime(),
     target: Object.freeze({

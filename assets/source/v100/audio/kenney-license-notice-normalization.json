@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "originalPath": "assets/source/v100/audio/kenney-impact/License.txt",
+      "originalSHA256": "b49aa9c56b04528b95913de13e506a0f7c5e807b9925db9bfef86af1f91120db",
+      "archiveEntry": "assets/source/v100/audio/kenney-impact/License.txt",
+      "archiveSHA256": "b49aa9c56b04528b95913de13e506a0f7c5e807b9925db9bfef86af1f91120db",
+      "normalizedSHA256": "94283f9120e58e6a1cae5762053df42ee280d37fe34be22589c92b7dbc7b2d39",
+      "normalization": "CR/LF and line-end whitespace/EOF blank lines only changed; wording unchanged"
+    },
+    {
+      "originalPath": "assets/source/v100/audio/kenney-interface/License.txt",
+      "originalSHA256": "f7966c773bbed0eca6a9c75081c44a178b38eae112724dbb5fdfbd4192d118a9",
+      "archiveEntry": "assets/source/v100/audio/kenney-interface/License.txt",
+      "archiveSHA256": "f7966c773bbed0eca6a9c75081c44a178b38eae112724dbb5fdfbd4192d118a9",
+      "normalizedSHA256": "cefbf7ebb51b02ecf4748b1112d5c6a2d04aa0ea82e885e74680b62ea6d3a712",
+      "normalization": "CR/LF and line-end whitespace/EOF blank lines only changed; wording unchanged"
+    },
+    {
+      "originalPath": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "originalSHA256": "842c42cc1942963f6fcdc18fe57e9e0631e8a4936f9803688e8152e830088eb9",
+      "archiveEntry": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "archiveSHA256": "842c42cc1942963f6fcdc18fe57e9e0631e8a4936f9803688e8152e830088eb9",
+      "normalizedSHA256": "937121d19356937b5a68218fedc5166b93459957149f3b34319e7eac3f3bd4be",
+      "normalization": "CR/LF and line-end whitespace/EOF blank lines only changed; wording unchanged"
+    }
+  ]
+}
