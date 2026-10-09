@@ -20,12 +20,26 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
   useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const mix = createEndingAudioMix([audio]);
     const portrait = window.matchMedia(LANDSCAPE_BLOCK_QUERY);
     let disposed = false, pageAway = false, pending = false, generation = 0;
     let frame = 0, lastFrame = 0, gain = 0;
     const allowed = () => !disposed && !pageAway && !document.hidden && !portrait.matches
       && stateRef.current.settings.bgmEnabled && stateRef.current.settings.bgmVolume > 0;
+    const mix = createEndingAudioMix([audio], {
+      canPlay: allowed,
+      onRecoveryState: (state: string) => {
+        if (!allowed()) return;
+        if (state !== "running") {
+          cancelAnimationFrame(frame);
+          frame = 0; lastFrame = 0;
+        }
+        audio.dataset.titleMusicState = state === "gesture" ? "waiting" : state === "running" ? "playing" : state;
+        if (state === "running" && !audio.paused && !frame) {
+          lastFrame = 0;
+          frame = requestAnimationFrame(animate);
+        }
+      },
+    });
     const targetGain = () => stateRef.current.settings.bgmVolume * .30 * (stateRef.current.voiceActive ? .22 : 1);
     const silence = () => {
       generation++;
@@ -49,7 +63,7 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
     };
     const request = () => {
       if (!allowed()) { silence(); return; }
-      if (pending || !audio.paused) return;
+      if (pending || (!audio.paused && !mix.needsRecovery(audio))) return;
       pending = true;
       const token = ++generation;
       mix.setVolume(audio, 0);

@@ -153,7 +153,21 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
 
   useLayoutEffect(() => {
     const audio = audioRef.current;
-    const mix = createEndingAudioMix([audio]);
+    const allowed = () => mountedRef.current && playbackAllowedRef.current && soundEnabledRef.current
+      && !document.hidden && !occludedRef.current && !blockedRef.current && !endedRef.current
+      && (outroRef.current === null || outroRef.current < V100_CREDITS_FADE_SECONDS);
+    const mix = createEndingAudioMix([audio], {
+      canPlay: allowed,
+      onRecoveryState: (state: string) => {
+        if (!allowed()) return;
+        playingRef.current = state === "running";
+        waitingAtRef.current = null;
+        if (state === "recovering") startupAtRef.current = performance.now();
+        const next = state === "running" ? "playing" : state === "recovering" ? "loading" : state;
+        soundStateRef.current = next;
+        setSoundState(next);
+      },
+    });
     mixRef.current = mix;
     mountedRef.current = true;
     return () => {

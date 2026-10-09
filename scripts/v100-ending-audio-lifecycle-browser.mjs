@@ -11,7 +11,7 @@ import { V100_CREDITS_MIX_GAIN } from "../app/v100StaffRoll.js";
 
 const root = process.cwd();
 const selection = process.env.V100_ENDING_LIFECYCLE_ONLY ?? "all";
-assert.ok(["all", "motion", "skip", "balance"].includes(selection), "Unknown ending lifecycle selection");
+assert.ok(["all", "motion", "skip", "balance", "recovery"].includes(selection), "Unknown ending lifecycle selection");
 const engines = process.env.V100_ENDING_LIFECYCLE_ENGINE ? [process.env.V100_ENDING_LIFECYCLE_ENGINE] : ["chromium", "webkit"];
 assert.ok(engines.every(engine => ["chromium", "webkit"].includes(engine)), "Unknown ending lifecycle engine");
 const out = path.resolve(process.env.V100_ENDING_LIFECYCLE_OUT ?? "outputs/v100-ending-audio-lifecycle");
@@ -23,13 +23,14 @@ await writeFile(entry, `import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {V100StaffRoll} from ${modulePath("V100EndingRoll.tsx")};
 import {V100PostCreditsFilm} from ${modulePath("V100PostCreditsFilm.tsx")};
+import {V100TitleMusic} from ${modulePath("V100TitleMusic.tsx")};
 import {endingAudioState} from ${modulePath("endingAudioMix.js")};
 import {v100StoryEventView} from ${modulePath("v100StoryEvents.js")};
 function Fixture(){
  const [view,setView]=useState('ready'),[enabled,setEnabled]=useState(true),[reducedMotion,setReducedMotion]=useState(false),[blocked,setBlocked]=useState(false);
  const settings={bgmEnabled:enabled,bgmVolume:.8,sfxEnabled:enabled,sfxVolume:.9,reducedMotion};
- return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button><button onClick={()=>setReducedMotion(!reducedMotion)}>Toggle motion</button><button onClick={()=>setBlocked(!blocked)}>Toggle credits menu</button></nav>
- {view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} blocked={blocked} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} blocked={blocked} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
+ return <main id='v100-campaign' data-v100-phase={view==='film'?'epilogue':'credits'} style={{height:'100%'}}><nav><button onClick={()=>setView('title')}>Open title</button><button onClick={()=>setView('credits')}>Open credits</button><button onClick={()=>setView('film')}>Open film</button><button onClick={()=>setView('ready')}>Exit player</button><button onClick={()=>setEnabled(!enabled)}>Toggle sound</button><button onClick={()=>setReducedMotion(!reducedMotion)}>Toggle motion</button><button onClick={()=>setBlocked(!blocked)}>Toggle credits menu</button></nav>
+ {view==='title'?<V100TitleMusic settings={settings} voiceActive={false}/>:view==='credits'?<V100StaffRoll nodes={v100StoryEventView('v100:event:credits','').nodes} playerName='' settings={settings} blocked={blocked} onComplete={()=>{setView('film');return true;}}/>:view==='film'?<V100PostCreditsFilm settings={settings} blocked={blocked} onComplete={()=>{setView('ready');return true;}}/>:<h1>Playback stopped</h1>}</main>;
 }
 window.__endingAudioState=endingAudioState;
 createRoot(document.getElementById('root')).render(<Fixture/>);`);
@@ -51,7 +52,7 @@ const server = createServer(async (request, response) => {
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const report = { status: "failed", selection, head: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim(), blobs: {}, evidenceKind: "Actual React ending components and native media; captured detached elements and delayed play promises. Test output is muted; no speaker acceptance.", cases: [] };
-for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "app/endingAudioMix.js", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
+for (const file of ["app/V100EndingRoll.tsx", "app/V100PostCreditsFilm.tsx", "app/V100TitleMusic.tsx", "app/endingAudioMix.js", "scripts/v100-ending-audio-lifecycle-browser.mjs"]) report.blobs[file] = execFileSync("git", ["hash-object", file], { encoding: "utf8", windowsHide: true }).trim();
 const sample = page => page.evaluate(() => window.__endingMedia.map(audio => ({ paused: audio.paused, connected: audio.isConnected, time: audio.currentTime, rate: audio.playbackRate, nativeVolume: audio.volume, gain: window.__endingAudioState(audio)?.gain ?? audio.volume, contextState: window.__endingAudioState(audio)?.context ?? null })));
 async function balanceCase(browser, engine, mode) {
   const result = { engine, mode, status: "failed", errors: [] };
@@ -176,10 +177,99 @@ async function checkSkippedTitles(page, result) {
   result.settled = await sample(page);
   assert.ok(result.settled.every(audio => audio.paused && !audio.connected), "Completing the retained titles stops every detached media element");
 }
+async function recoveryCase(browser, engine, view, rejectResume) {
+  const result = { engine, view, mode: rejectResume ? "resume-gesture" : "resume-native", status: "failed", errors: [] };
+  report.cases.push(result);
+  const context = await browser.newContext({ viewport: { width: 844, height: 390 } }), page = await context.newPage();
+  page.on("pageerror", error => result.errors.push(String(error)));
+  await page.addInitScript(() => {
+    window.__endingMedia = []; window.__endingContexts = [];
+    const Native = window.AudioContext ?? window.webkitAudioContext;
+    if (Native) {
+      const Tracked = class extends Native {
+        constructor(...args) { super(...args); this.resumeCalls = 0; this.sourceCalls = 0; window.__endingContexts.push(this); }
+        resume(...args) { this.resumeCalls++; return super.resume(...args); }
+        createMediaElementSource(...args) { this.sourceCalls++; return super.createMediaElementSource(...args); }
+      };
+      if (window.AudioContext) window.AudioContext = Tracked; else window.webkitAudioContext = Tracked;
+    }
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      this.muted = true;
+      if (!window.__endingMedia.includes(this)) window.__endingMedia.push(this);
+      return play.call(this);
+    };
+  });
+  try {
+    await page.goto(origin, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: `Open ${view}`, exact: true }).click();
+    await page.waitForFunction(() => window.__endingMedia.some(audio => !audio.paused && audio.currentTime > .6));
+    assert.ok(await page.evaluate(() => window.__endingContexts.length > 0), "This regression requires native Web Audio");
+    result.before = await sample(page);
+    result.interruption = await page.evaluate(async reject => {
+      const context = window.__endingContexts[0];
+      const before = { sources: context.sourceCalls, resumes: context.resumeCalls };
+      // Suspend the real browser context. The OS's 'interrupted' state cannot
+      // be manufactured by a desktop browser; physical recording is separate.
+      if (reject) {
+        const resume = context.resume.bind(context);
+        window.__restoreEndingResume = () => { context.resume = resume; };
+        context.resume = () => { context.resumeCalls++; return Promise.reject(new DOMException("Owned gesture-policy fixture", "NotAllowedError")); };
+      }
+      for (const audio of window.__endingMedia) audio.pause();
+      await context.suspend();
+      return before;
+    }, rejectResume);
+    if (rejectResume) {
+      await page.waitForFunction(view => view === "title"
+        ? document.querySelector('[data-title-music]')?.dataset.titleMusicState === "waiting"
+        : view === "credits" ? document.querySelector('.v100-staff-roll')?.dataset.v100CreditAudio === "gesture"
+          : document.querySelector('.v100-post-credits-film')?.dataset.v100FilmAudio === "gesture", view);
+      await page.waitForTimeout(250);
+      assert.equal(await page.evaluate(() => window.__endingContexts[0].resumeCalls), result.interruption.resumes + 1, "Recovery is bounded until a user gesture");
+      await page.evaluate(() => window.__restoreEndingResume());
+      if (view === "title") await page.mouse.click(500, 300);
+      else await page.getByRole("button", { name: view === "credits" ? "曲を再生して始める" : "音を再生", exact: true }).click();
+    }
+    await page.waitForFunction(() => window.__endingContexts[0].state === "running" && window.__endingMedia.filter(audio => audio.isConnected).every(audio => !audio.paused));
+    await page.waitForTimeout(650);
+    result.resumed = await sample(page);
+    result.resumed.forEach((audio, index) => {
+      assert.ok(audio.time > result.before[index].time + .3, "Native cursor continues after interruption");
+      assert.equal(audio.rate, 1);
+      assert.ok(audio.gain > 0, "The existing graph restores its output gain");
+    });
+    assert.equal(await page.evaluate(() => window.__endingContexts.length), 1, "No second context is created");
+    assert.equal(await page.evaluate(() => window.__endingContexts[0].sourceCalls), result.interruption.sources, "Sources are reused");
+    if (view === "film") {
+      await page.getByRole("button", { name: "スキップ", exact: true }).click();
+      await page.waitForTimeout(100);
+      const waves = (await sample(page))[1];
+      await page.evaluate(async () => { await window.__endingContexts[0].suspend(); });
+      await page.waitForTimeout(500);
+      const stoppedWaves = (await sample(page))[1];
+      assert.equal(stoppedWaves.paused, true, "Waves remain stopped after the picture ends");
+      assert.equal(stoppedWaves.gain, 0);
+      assert.ok(Math.abs(stoppedWaves.time - waves.time) < .1);
+    }
+    await page.getByRole("button", { name: "Exit player", exact: true }).click();
+    await page.waitForTimeout(350);
+    result.stopped = await sample(page);
+    assert.ok(result.stopped.every(audio => audio.paused && audio.gain === 0));
+    assert.equal(result.errors.length, 0);
+    result.status = "passed";
+  } catch (error) { result.failure = String(error); }
+  finally { await context.close(); }
+  console.log(JSON.stringify({ engine, view, mode: result.mode, status: result.status, failure: result.failure }));
+}
 try {
   for (const engine of engines) {
     const browser = await (await pwaBrowserType(engine)).launch({ headless: true, ...(engine === "chromium" ? { channel: "msedge", args: ["--mute-audio"] } : {}) });
     try {
+      if (selection === "recovery") {
+        for (const view of ["title", "credits", "film"]) for (const reject of [false, true]) await recoveryCase(browser, engine, view, reject);
+        continue;
+      }
       if (selection === "balance") {
         const probe = await browser.newContext(), page = await probe.newPage();
         const webAudio = await page.evaluate(() => Boolean(window.AudioContext || window.webkitAudioContext));

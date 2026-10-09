@@ -27,7 +27,21 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
   useLayoutEffect(() => { configRef.current = { settings, busy, onComplete }; blockedRef.current = blocked; }, [settings, busy, onComplete, blocked]);
   useLayoutEffect(() => {
     const media = [musicRef.current, wavesRef.current, laughRef.current];
-    const mix = createEndingAudioMix(media);
+    const allowed = (audio: HTMLAudioElement) => {
+      if (!mountedRef.current || completeRef.current || pausedRef.current || blockedRef.current || hiddenRef.current || document.hidden) return false;
+      const current = configRef.current.settings;
+      if (audio === musicRef.current) return current.bgmEnabled !== false && (current.bgmVolume ?? .8) > 0 && secondsRef.current < V100_POST_CREDITS_MUSIC_END;
+      if (current.sfxEnabled === false || (current.sfxVolume ?? .9) <= 0) return false;
+      if (audio === wavesRef.current) return secondsRef.current < V100_POST_CREDITS_PICTURE_END;
+      return audio === laughRef.current && laughStartedRef.current && !laughFinishedRef.current && secondsRef.current < 38;
+    };
+    const mix = createEndingAudioMix(media, {
+      canPlay: allowed,
+      onRecoveryState: (state: string) => {
+        if (!media.some(audio => audio && allowed(audio))) return;
+        updateAudioState(state === "running" ? "playing" : state);
+      },
+    });
     mixRef.current = mix;
     mountedRef.current = true;
     return () => {
@@ -39,7 +53,7 @@ export function V100PostCreditsFilm({ settings, blocked = false, busy = false, o
       mix.dispose();
       for (const audio of media) audio?.pause();
     };
-  }, []);
+  }, [updateAudioState]);
   const pauseAudio = useCallback(() => { attemptRef.current += 1; laughAttemptRef.current += 1; musicRef.current?.pause(); wavesRef.current?.pause(); laughRef.current?.pause(); }, []);
   const playLaugh = useCallback(async () => {
     const audio = laughRef.current, current = configRef.current.settings;
