@@ -306,6 +306,8 @@ for (const engine of engines) {
     if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();
       await page.getByRole("dialog", { name: "データ管理", exact: true }).getByLabel("セーブを復元", { exact: true }).setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
+      await page.getByRole("dialog", { name: "データ管理", exact: true }).waitFor({ state: "hidden" });
+      await ready(page); await enterV100FromTitle(page);
       await page.locator(".v100-map-layout").waitFor(); await ready(page);
       assert.equal((await rawSave(page)).caps, early.caps);
       const offer = page.getByRole('button', { name: '後で決める', exact: true });
