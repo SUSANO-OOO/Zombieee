@@ -15088,8 +15088,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       salvoIntervalSeconds: definition.salvoIntervalSeconds,
       projectileTravelSeconds: definition.projectileTravelSeconds,
     }].slice(-8);
-    g.banner = `${cards.find((card) => card.kind === fighter.kind)?.name ?? fighter.kind} // ${definition.displayName}`;
-    g.bannerTime = 1.15;
     setHud((current) => ({
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),

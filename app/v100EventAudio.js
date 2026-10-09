@@ -16,7 +16,6 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     logger: null,
   });
   let desired = null;
-  let activeScene = null;
   let disposed = false;
   let cueAttemptKey = null;
   const cueInstance = "v100-event-arrival-cue";
@@ -92,7 +91,6 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     const state = await mixer.setScene(presentation.sceneId);
     if (disposed || desired?.key !== key) return state;
     if (state?.sceneId === presentation.sceneId) {
-      activeScene = { key, presentation };
       record("started", presentation, { bgmAssetId: state.bgmAssetId, ambienceAssetIds: state.ambienceAssetIds });
     } else {
       record("queued", presentation, { audioState: mixer.getAudioStatus().state });
@@ -115,9 +113,8 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
 
   async function stop(reason = "route-transition") {
     if (disposed) return;
-    const previous = activeScene ?? desired;
+    const previous = desired;
     if (previous) record("stopped", previous.presentation, { reason });
-    activeScene = null;
     cancelCue();
     desired = null;
     mixer.setDialogueDucking(false, { fadeMs: 120 });
@@ -125,13 +122,22 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
   }
 
   function snapshot() {
+    const sceneState = mixer.getSceneState();
+    const diagnostics = mixer.getDiagnostics();
+    // A pre-gesture request can start asynchronously in the mixer after
+    // present() returned queued. Read the actual graph instead of caching
+    // that earlier result; observing it must never start another source.
+    const active = !disposed && desired
+      && sceneState.sceneId === desired.presentation.sceneId
+      && diagnostics.contextState === "running" && !diagnostics.lifecycleHidden
+      && diagnostics.activeSceneVoices > 0 ? desired.presentation : null;
     return {
       owner: "v100-event-runtime",
       desired: desired?.presentation ?? null,
-      active: activeScene?.presentation ?? null,
-      sceneState: mixer.getSceneState(),
+      active,
+      sceneState,
       receipts: receipts.map((entry) => ({ ...entry })),
-      diagnostics: mixer.getDiagnostics(),
+      diagnostics,
       audioStatus: mixer.getAudioStatus(),
     };
   }

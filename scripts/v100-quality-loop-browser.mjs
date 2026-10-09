@@ -454,7 +454,8 @@ for (const engine of engines) {
       assert.ok(row.abilityReceipts.some(receipt => ['active-start', 'impact'].includes(receipt.eventType)), 'A production ability actually took effect');
       assert.ok(row.abilityText.observedDraws > 0, 'Native battle canvas was observed');
       assert.ok(row.abilityText.numericDraws > 0, 'Numerical battle feedback remains visible');
-      assert.deepEqual(row.abilityText.forbidden, [], 'No player ability names float over the battlefield');
+      assert.ok(row.abilityText.observedBanners > 0, 'Transient mission banners were observed throughout native battle');
+      assert.deepEqual(row.abilityText.forbidden, [], 'No player ability names appear in the battlefield or message banner');
       if (await page.locator(".v100-result-panel").isVisible()) {
         row.nativeResult = true;
         const summary = page.locator(".v100-battle-report summary");
