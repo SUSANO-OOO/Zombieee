@@ -11,6 +11,8 @@ import { CHARACTER_PORTRAIT_ART } from "../app/spriteManifest.js";
 import { nativeBattleTap } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
+import { isOwnedTitleCloseCancellation } from "./owned-title-close-cancellation.mjs";
 
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -37,7 +39,10 @@ const report = { schema: "v100-card-portrait-visibility/v1", status: "running",
   scope: "Isolated S24-complete/Lv30 fixture; real S25 UI inputs, decoded images and visible-hidden-restored pixel probes. Hidden images are diagnostic only. No physical-device, difficulty or performance acceptance.",
   head: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
   workingTreePaths: git("diff", "--name-only").split(/\r?\n/u).filter(Boolean),
-  sourceFiles: Object.fromEntries(await Promise.all(["app/AshfallGame.tsx", "app/globals.css", "app/battleAssetPlan.js", "scripts/v100-card-portrait-browser.mjs"].map(async file => [file, hash((await readFile(file, "utf8")).replaceAll("\r\n", "\n"))]))),
+  sourceFiles: Object.fromEntries(await Promise.all(["app/AshfallGame.tsx", "app/globals.css", "app/battleAssetPlan.js",
+    "app/V100TitleMusic.tsx", "app/endingAudioMix.js", "scripts/v100-card-portrait-browser.mjs",
+    "scripts/ending-audio-gain-observer.mjs", "scripts/owned-title-close-cancellation.mjs"]
+    .map(async file => [file, hash((await readFile(file, "utf8")).replaceAll("\r\n", "\n"))]))),
   fixtureSha256: hash(raw), build: await productionBuildIdentity(), cases: [], errors: [], physicalDeviceVerified: false };
 await writeFile(path.join(out, "fixture.json"), raw);
 
@@ -138,7 +143,9 @@ const matrix = engine === "chromium"
 let currentPage;
 try {
   for (const config of matrix) {
-    const row = { ...config, name: `${config.engine}-${config.width}x${config.height}`, status: "running", states: [], inputs: [], errors: [] };
+    const row = { ...config, name: `${config.engine}-${config.width}x${config.height}`, status: "running",
+      phase: "boot", states: [], inputs: [], errors: [], titleRequests: [],
+      acceptedCloseCancellations: [], unresolvedErrors: [] };
     report.cases.push(row);
     const browser = await ({ chromium, webkit })[config.engine].launch({ headless: true,
       ...(config.engine === "chromium" ? { args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) } : {}) });
@@ -162,16 +169,68 @@ try {
       });
       await context.addInitScript(saveRaw => { for (const key of ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good"]) localStorage.setItem(key, saveRaw); }, raw);
       const page = currentPage = await context.newPage(); page.setDefaultTimeout(30_000);
-      page.on("console", m => { if (m.type() === "error") row.errors.push({ kind: "console", text: m.text() }); });
-      page.on("pageerror", e => row.errors.push({ kind: "page", text: String(e) }));
-      page.on("requestfailed", r => row.errors.push({ kind: "request", url: r.url(), text: r.failure()?.errorText }));
-      page.on("response", r => { if (r.status() >= 400) row.errors.push({ kind: "http", url: r.url(), status: r.status() }); });
+      await installEndingAudioGainObserver(page);
+      // Weak references and plain removal snapshots preserve native GC behavior.
+      // This observer does not alter playback, volume, source, events or clocks.
+      await page.addInitScript(() => {
+        const records = [];
+        const snapshot = audio => ({ src: audio.currentSrc, paused: audio.paused,
+          rate: audio.playbackRate, time: audio.currentTime, nativeVolume: audio.volume,
+          gain: window.__endingOutputGain?.(audio), connected: audio.isConnected,
+          error: audio.error?.message ?? null, observedAt: Date.now() });
+        new MutationObserver(() => {
+          for (const audio of document.querySelectorAll("audio[data-title-music]")) {
+            if (!records.some(record => record.ref.deref() === audio)) records.push({ ref: new WeakRef(audio) });
+          }
+          for (const record of records) {
+            const audio = record.ref.deref();
+            if (audio && !audio.isConnected) record.removed = snapshot(audio);
+          }
+        }).observe(document, { childList: true, subtree: true });
+        window.__cardPortraitTitleMedia = () => records.map(record => {
+          const audio = record.ref.deref();
+          return audio ? { ...snapshot(audio), collected: false } : { ...record.removed, collected: true };
+        });
+      });
+      const requests = new WeakMap(), pending = new Map();
+      let requestSequence = 0;
+      const observed = request => {
+        let record = requests.get(request);
+        if (!record) {
+          let frame = null;
+          try { if (request.frame() === page.mainFrame()) frame = "main"; } catch {}
+          record = { id: `request-${++requestSequence}`, url: request.url(),
+            resourceType: request.resourceType(), frame, startedAt: Date.now() };
+          requests.set(request, record);
+        }
+        return record;
+      };
+      const errorRecord = value => ({ ...value, at: Date.now(), phase: row.phase });
+      page.on("request", request => {
+        const record = observed(request); pending.set(record.id, record);
+        if (record.url === new URL("audio/v100/score/horror.mp3", baseUrl).href) row.titleRequests.push(record);
+      });
+      page.on("requestfinished", request => { pending.delete(observed(request).id); });
+      page.on("console", m => { if (m.type() === "error") row.errors.push(errorRecord({ kind: "console", text: m.text() })); });
+      page.on("pageerror", e => row.errors.push(errorRecord({ kind: "page", text: String(e) })));
+      page.on("requestfailed", request => {
+        const record = observed(request);
+        row.errors.push(errorRecord({ kind: "request", url: request.url(),
+          text: request.failure()?.errorText, request: record }));
+        pending.delete(record.id);
+      });
+      page.on("response", r => { if (r.status() >= 400) row.errors.push(errorRecord({ kind: "http", url: r.url(), status: r.status() })); });
+      page.on("crash", () => { row.unexpectedPageLoss = true; row.errors.push(errorRecord({ kind: "crash" })); });
+      page.on("close", () => { if (row.phase !== "context-closing") row.unexpectedPageLoss = true; });
       assert.equal((await page.goto(new URL("v100", baseUrl).href, { waitUntil: "domcontentloaded" })).status(), 200);
       await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+      row.phase = "title";
       await enterV100FromTitle(page);
+      row.phase = "formation";
       await page.locator(".v100-shell").waitFor({ state: "attached" });
       await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
       await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready");
+      row.phase = "battle";
       const guardian = page.locator('button.unit-card[data-kind="guardian"]');
       await page.waitForFunction(() => document.querySelector('button.unit-card[data-kind="guardian"]')?.dataset.state === "ready");
       await probe(page, row, "ready", kinds);
@@ -191,16 +250,35 @@ try {
       await probe(page, row, "returned-ready", ["guardian"]);
       await page.waitForLoadState("networkidle", { timeout: 30_000 });
       row.status = "captured";
+      row.phase = "captured";
+      const native = await page.evaluate(() => window.__cardPortraitTitleMedia());
+      row.close = { captureComplete: true, runtimeErrorsBeforeClose: row.errors.length,
+        pageWasOpen: !page.isClosed(), unexpectedPageLoss: row.unexpectedPageLoss === true,
+        expectedTitleUrl: new URL("audio/v100/score/horror.mp3", baseUrl).href,
+        titleMediaCount: native.length, titleMedia: native.length === 1 ? native[0] : null,
+        pendingRequestIds: [...pending.keys()], succeeded: false, error: null };
     } catch (error) {
       row.status = "failed"; row.error = String(error);
       if (currentPage && !currentPage.isClosed()) await currentPage.screenshot({ path: path.join(out, `${row.name}-failure.png`) }).catch(() => {});
       throw error;
-    } finally { try { await context?.close(); } finally { await browser.close(); currentPage = null; } }
-    assert.deepEqual(row.errors, []);
+    } finally {
+      row.phase = "context-closing";
+      if (row.close) row.close.startedAt = Date.now();
+      try {
+        await context?.close();
+        if (row.close) { row.close.completedAt = Date.now(); row.close.succeeded = true; }
+      } catch (error) {
+        if (row.close) row.close.error = String(error);
+        throw error;
+      } finally { row.phase = "closed"; await browser.close(); currentPage = null; }
+    }
+    row.acceptedCloseCancellations = row.errors.filter(error => isOwnedTitleCloseCancellation(error, row.close));
+    row.unresolvedErrors = row.errors.filter(error => !isOwnedTitleCloseCancellation(error, row.close));
+    assert.deepEqual(row.unresolvedErrors, []);
     row.status = "passed";
     console.log(JSON.stringify({ case: row.name, states: row.states.length, pixelProbes: row.states.flatMap(s => s.probes).length, status: row.status }));
   }
-  for (const row of report.cases) assert.deepEqual(row.errors, []);
+  for (const row of report.cases) assert.deepEqual(row.unresolvedErrors, []);
   assert.equal((await productionBuildIdentity()).combinedSha256, report.build.combinedSha256);
   report.status = "passed";
 } catch (error) {
