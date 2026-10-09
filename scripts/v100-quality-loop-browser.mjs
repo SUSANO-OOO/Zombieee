@@ -8,7 +8,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
-import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { enterV100FromBufferedTitle as enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
@@ -70,12 +70,6 @@ const acknowledge = async (page, enter = true) => {
   if (await play.isVisible()) await play.tap();
   await ready(page);
   if (enter && await page.locator('.v100-start-screen').isVisible()) {
-    // Finish the local preload before dismissing its owner. Cancellation on a
-    // fast departure is covered by the dedicated audio lifecycle fixture.
-    await page.waitForFunction(() => {
-      const audio = document.querySelector('[data-title-music]');
-      return audio && !audio.error && audio.networkState === HTMLMediaElement.NETWORK_IDLE && audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
-    });
     await enterV100FromTitle(page);
   }
   await ready(page);
