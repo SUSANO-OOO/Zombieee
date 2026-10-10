@@ -34,3 +34,9 @@ Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信ser
 修正では敵の180ms定数をcatalog非依存のleaf moduleへ分離した。ビルド済みの両client entryを、DOM・描画・server・browser・mediaの生成なしで別Node processから読み込む回帰検査を追加。Gore contextは実際に適用した正のdamageを必須にし、pending hitの登録を各命中判定後へ移動した。実dispatchと実area-effectを組み合わせ、外れた手榴弾による燃焼死の誤切断がないことを検査した。頭部の傷口を切断面へ寄せ、斬撃と爆発・粉砕の切断領域を分け、反転frameの切断片もworld方向と一致させた。
 
 修正後のローカル検査はbuild＋1925/1925 tests成功、source Lint 0 errors／既存25 warnings。新しい候補の遠隔検証と独立reviewが完了するまで、初回失敗を解決済みの遠隔結果とは扱わない。
+
+## 2回目の遠隔検査
+
+候補 `42b5f1809dcecad5e1349bc0453cc8f6f0b26485` は独立review High／Medium／Low 0。Pages PR buildとブラウザ起動に成功した。新combat検査はChromium／WebKitとも戦闘開始時に `Assault objective states must be decoded before battle starts` で停止した（[CI 38014986717](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38014986717)）。
+
+原因は新scriptのURLに付けた `qa=mission` が旧campaignの全asset検査を選び、V1の拠点画像を除外したこと。通常のV1 routeでは当該画像が必須decode対象となり、localhostの検査bridgeも使用できる。scriptを通常の `/v100` から開始するよう修正した。必須assetのdecode guard・製品側asset plan・48形態と死亡切断の検査条件は維持した。代表6形態は静止姿勢に加えて攻撃姿勢のPNGも保存する。遠隔での再確認は修正後候補を対象とする。

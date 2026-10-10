@@ -30,7 +30,10 @@ try{
     page.on('response',r=>{if(r.status()>=400)report.errors.push(`${r.status()} ${r.url()}`);});
     try{
       await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
-      await page.goto(new URL('v100?qa=mission',origin).href);
+      // Enter the actual V1 route. The generic qa=mission parameter selects
+      // the legacy exhaustive asset plan, which excludes V1 assault objects.
+      // The localhost bridge remains available without changing that plan.
+      await page.goto(new URL('v100',origin).href);
       const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
       await play.or(page.locator('.v100-start-screen')).first().waitFor();
       if(await play.isVisible())await play.click();
@@ -63,6 +66,9 @@ try{
           }
           const frame=spriteFrameFor(kind,r.spriteState,r.direction);
           samples.push({action,render:r,pixelScale:r.renderHeight/frame.sourceRect.h});
+          if(action==='attack'&&['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+            await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
+          }
         }
         row.motion.push({kind,side,id:proof.fighterId,samples});
         if(['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
