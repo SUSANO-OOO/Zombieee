@@ -24,7 +24,7 @@ closed context置換時の旧native要素・track回収漏れLowも修正し、�
 
 ## ローカル検証
 
-build＋全1940/1940 tests、音声47/47、CI契約6/6、source Lint 0 errors／既存25 warnings、
+最終修正78d4098でbuild＋全1943/1943 tests、音声50/50、CI契約6/6、source Lint 0 errors／既存25 warnings、
 content validator、manifest、diff check成功。
 初回全testの既存strict shell検査はsandboxのGit Bash `NtCreateDirectoryObject / 0xC0000022`で失敗。
 sourceを変えずsandbox外で同じ全testを実行して成功した。
@@ -39,3 +39,12 @@ R5原稿SHA-256 `c324ba3783074ecabe80716d971c35d73028a7f98f2a8069760153b1c8b17cd
 ユーザーPCではゲーム・browser・音声を起動していない。全testの既存HTTP検査は一時loopback serverを作成・終了する。
 遠隔browser内のMediaRecorder保存とdecode信号検査は、iOS Control Centerの保存録画成功とは異なる。
 物理iPhoneの録画改善は未確認のままで、修正完了とは報告しない。
+
+## 遠隔検査の最初の失敗
+
+PR #179／CI 38028547424のChromium job 114144464392は、新規検査が既存request監査に存在しない
+`stop()`を呼び出す後片付けのTypeErrorで失敗した。artifact 11660967358
+（zip SHA-256 `e6002c73965b226d6536dd8112896168812d23fa444efec88a96ca7441ac314d`）とjob logを保全。
+`settle()`も同じAPI取り違えだったため、既存の`closeContext()`とrequest reportで判定する。
+元の失敗を後片付けエラーで隠さず、失敗時の画面・出力状態も残すよう検査だけを修正した。
+この失敗を音声出力の成功や製品不具合の確定根拠にしない。

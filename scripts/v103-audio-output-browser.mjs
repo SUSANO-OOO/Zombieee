@@ -31,6 +31,7 @@ try {
     page.on("pageerror", error => report.errors.push(String(error)));
     page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
     page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
+    let failure;
     try {
       await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(save));
       await page.goto(new URL("v100", origin).href);
@@ -88,10 +89,24 @@ try {
       await page.waitForFunction(() => [...document.querySelectorAll("audio[data-game-audio-output]")]
         .some(audio => !audio.paused && audio.srcObject?.active), null, { timeout: 10000 });
       await capture("recovered");
-      await requests.settle();
-      assert.deepEqual(requests.report.unexpectedFailures, []);
       await page.screenshot({ path: `${out}/${width}x${height}.png` });
-    } finally { requests.stop(); await context.close(); }
+    } catch (error) {
+      failure = error; row.failure = String(error);
+      row.output = await page.evaluate(() => ({
+        text: document.body.innerText.slice(0, 2000),
+        sinks: [...document.querySelectorAll("audio[data-game-audio-output]")].map(audio => ({
+          paused: audio.paused, readyState: audio.readyState, active: audio.srcObject?.active,
+          tracks: audio.srcObject?.getAudioTracks().map(track => ({ readyState: track.readyState, muted: track.muted })),
+        })),
+      })).catch(() => null);
+      await page.screenshot({ path: `${out}/${width}x${height}-failure.png` }).catch(() => {});
+    } finally {
+      try { await requests.closeContext(context); }
+      catch (error) { row.cleanupError = String(error); failure ??= error; }
+      row.requests = requests.report;
+      if (requests.report.unexpectedFailures.length) failure ??= new Error("Unexpected browser request failure");
+    }
+    if (failure) throw failure;
   }
   assert.deepEqual(report.errors, []); report.status = "passed";
 } catch (error) {
