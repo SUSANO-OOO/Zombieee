@@ -42,6 +42,23 @@ try {
       await enterV100FromTitle(page);
       await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+      // The battle child mounts after the parent's durable write. Its initial
+      // effect is not a user gesture. Exercise one real deployment touch after
+      // that bounded attempt settles; do not invoke a diagnostic unlock API.
+      await page.waitForFunction(() => window.__ASHFALL_AUDIO_QA__?.getAudioStatus().state !== "unlocking",
+        null, { timeout: 6000 });
+      row.beforeDeployment = await page.evaluate(() => ({
+        status: window.__ASHFALL_AUDIO_QA__.getAudioStatus(),
+        contextState: window.__ASHFALL_AUDIO_QA__.getDiagnostics().contextState,
+      }));
+      await page.locator('button.unit-card[data-kind="scout"][data-state="ready"]').tap();
+      await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+        .some(fighter => fighter.side === "human" && fighter.kind === "scout" && fighter.hp > 0));
+      row.deployment = await page.evaluate(() => {
+        const state = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+        const fighter = state.fighters.find(candidate => candidate.side === "human" && candidate.kind === "scout");
+        return { action: "native-touch-deployment", time: state.time, id: fighter.id, kind: fighter.kind };
+      });
       async function waitForOutputs() {
         await page.waitForFunction(() => {
           const battle = window.__ASHFALL_AUDIO_QA__?.getDiagnostics();

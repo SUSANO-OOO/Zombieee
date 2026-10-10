@@ -105,3 +105,12 @@ artifact 11662426371（zip SHA-256 `eb8c045467897bfae35765f418e4ab94a6b42a337443
 映画は別のowned contextで、R5 epilogue最終行後のdurable cursorを通常タイトルから復元する。
 全in-case通信失敗を引き続き失敗とし、終了中の既知pending requestだけを既存の監査契約で判定する。
 cursor 27のnormalize保存、構文・対象Lint・diff成功。追加差分の独立review H0／M0／L0。PC起動0。
+
+6ed9ad7のChromiumは10録音と戦闘回帰に成功。WebKit job 114155929879は最初の録音前に失敗。
+artifact 11662507208（zip SHA-256 `f0c4d1a96b05e0e32203f786ff49d64cfd19b25a63d0609784e832eae1eec577`）を保全。
+UI contextはrunningだが、durable save後にmountするbattle contextは初回の非gesture unlockが失敗し、
+次のタッチを待っていた。通信失敗・page/console errorは0。独立調査も通常操作前提の不足と判定。
+初回の有界unlock終了とその状態を記録し、通常のscout出撃カードを一度だけnative tapする。
+実fighter生成を確認してから録音する。診断unlockは呼ばず、pageshow後は追加操作をせず自動復帰を検査。
+両owner running・BGM1・重複0・実信号・通信監査・20秒復帰上限を維持する。
+追加差分の構文・対象Lint・diff check成功。独立read-only reviewはH0／M0／L0、PC起動0。
