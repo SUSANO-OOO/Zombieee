@@ -124,7 +124,7 @@ async function pauseCheck(page, record) {
   assert.deepEqual(after.supportItemCooldowns, before.supportItemCooldowns);
   assert.deepEqual(after.airstrike, before.airstrike); assert.deepEqual(after.crawlerAbility, before.crawlerAbility);
   record.pause = { before, after };
-  await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+  await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
 }
 
 try {

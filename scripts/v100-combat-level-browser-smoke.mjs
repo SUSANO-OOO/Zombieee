@@ -72,7 +72,7 @@ try {
             assert.equal(actual.progressionLevel, level); assert.equal(actual.maxHp, Math.round(card.hp * (1 + .025 * (level - 1)))); assert.equal(actual.damage, Math.round(card.damage * (1 + .02 * (level - 1))));
             for (const field of ["speed", "laneSpeed", "range", "attackEvery"]) assert.equal(actual[field], card[field], field);
             assert.equal(actual.defense, 0); assert.equal(actual.healingMultiplier, 1); assert.equal(actual.trapDurationMultiplier, 1);
-            await shot(page, record, kind); await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+            await shot(page, record, kind); await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
           }
           const deadline = Date.now() + 90000;
           while (Date.now() < deadline) {

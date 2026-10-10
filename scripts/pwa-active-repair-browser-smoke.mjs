@@ -221,7 +221,7 @@ try {
     await button("一時停止").tap();
     await page.getByRole("dialog", { name: "一時停止メニュー", exact: true }).waitFor();
     assert.equal(await repair.isVisible(), false);
-    await button("作戦地図へ撤退").tap();
+    await button("ステージ選択へ撤退").tap();
     await page.getByRole("alertdialog").getByRole("button", { name: "実行する", exact: true }).tap();
     await page.locator('.v100-shell[data-v100-phase="map"]').waitFor(); await ready();
     const beforeRepair = await saved();

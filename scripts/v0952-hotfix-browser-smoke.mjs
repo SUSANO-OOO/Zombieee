@@ -113,7 +113,7 @@ async function reachLoadout(page, stageNumber = 1) {
     await page.locator(".map-region-tabs button").nth(regionIndex).click();
     await page.getByRole("button", { name: new RegExp(stage.displayName) }).click();
   }
-  await page.getByRole("button", { name: "この作戦を編成", exact: true }).click();
+  await page.getByRole("button", { name: "編成して出撃", exact: true }).click();
   await page.locator(".formation-screen").waitFor({ state: "visible", timeout });
 }
 

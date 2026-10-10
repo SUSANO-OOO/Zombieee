@@ -1284,7 +1284,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
       </div>
     </div>
     <div className="v100-sortie-status">
-      <button type="button" className="v100-sortie-selected" onClick={() => onPersonnel(activeUnitId)}><strong>ユニットの育成</strong><small>{activeUnit ? `${activeUnit.displayName}の能力・強化効果を確認` : "仲間の能力・強化効果を確認"}</small></button>
+      <button type="button" className="v100-sortie-selected" aria-label="ユニットの育成" onClick={() => onPersonnel(activeUnitId)}><strong>ユニットの育成</strong><small>{activeUnit ? `${activeUnit.displayName}の能力・強化効果を確認` : "仲間の能力・強化効果を確認"}</small></button>
       <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>{basePresentation.label} 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
     </div>
     <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "ステージ一覧へ" : "ステージ選択へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成でステージを選ぶ" : "戦闘へ"} disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>{modePreparation ? "この編成でステージを選ぶ" : "出撃"}</button></div>

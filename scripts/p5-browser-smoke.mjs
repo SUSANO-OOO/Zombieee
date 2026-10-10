@@ -246,7 +246,7 @@ async function withStage3FinalPresentationSuppression({
         if (!(resumeElement instanceof HTMLButtonElement)
           || resumeElement.disabled
           || resumeElement.getAttribute("aria-disabled") === "true"
-          || resumeElement.textContent?.trim() !== "作戦を再開") {
+          || resumeElement.textContent?.trim() !== "戦闘を再開") {
           throw new Error("P5_STAGE3_FINAL_REAL_RESUME_BUTTON_INVALID");
         }
         resumeElement.click();
@@ -2284,7 +2284,7 @@ async function pauseAndVerifyFrozenScriptedBark({
     `${label} consumed scripted dialogue while paused: ${pausedBark.remaining} -> ${heldBark.remaining}`);
   if (whilePaused) await whilePaused({ before, paused, held });
 
-  const resumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
+  const resumeButton = page.getByRole("button", { name: "戦闘を再開", exact: true });
   await resumeButton.waitFor({ state: "visible", timeout });
   if (deferResume) {
     return {
@@ -2362,7 +2362,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
-    await page.getByRole("button", { name: "作戦を再開", exact: true }).click({ timeout });
+    await page.getByRole("button", { name: "戦闘を再開", exact: true }).click({ timeout });
     await page.waitForFunction(
       () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
       undefined,
@@ -2578,7 +2578,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       label,
     });
     await finalCutTrace.capture();
-    const initialResumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
+    const initialResumeButton = page.getByRole("button", { name: "戦闘を再開", exact: true });
 
     result.phase = "final-cut";
     stage3Progress(label, "final-cut", startedAt);

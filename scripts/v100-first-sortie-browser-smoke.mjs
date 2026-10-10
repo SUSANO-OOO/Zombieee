@@ -51,7 +51,7 @@ try {
       assert.equal(await page.locator('[data-v100-surface="formation"]').count(),0);
       await click(page,"出撃編成へ");
       await page.locator('[data-v100-surface="formation"]').waitFor({state:"visible"});
-      await click(page,"隊員を育成");
+      await click(page,"ユニットの育成");
       await page.locator('section[data-v100-surface="personnel"]').waitFor({state:"visible"});
       await click(page,"出撃編成へ");
       await click(page,"枠を空ける");
