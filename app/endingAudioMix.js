@@ -2,9 +2,11 @@
 // volume, so its setter cannot implement either the mix or a fade envelope.
 // The native elements still own playback, seeking, buffering and their clocks.
 import { createPlaybackAudioSession } from "./audioSession.js";
+import { createAudioOutput } from "./audioOutput.js";
 
 const graphs = new WeakMap();
 const mediaOwners = new WeakMap();
+const outputs = new WeakMap();
 let sharedContext = null;
 let owners = 0;
 let closeTimer = null;
@@ -92,7 +94,7 @@ export function createEndingAudioMix(elements, {
       if (!active.length) return;
       if (context.state === "running") {
         if (recoveryPending) return;
-        if (!active.some(audio => audio.paused)) {
+        if (!active.some(audio => audio.paused) && !outputs.get(context)?.needsRecovery()) {
           recoveryAttempted = false;
           for (const audio of active) setVolume(audio, levels.get(audio));
           notify("running");
@@ -107,7 +109,10 @@ export function createEndingAudioMix(elements, {
         recoveryPending = true;
         recoveryAttempted = true;
         notify("recovering");
-        const resume = context.state === "running" ? Promise.resolve() : resumeContext(context);
+        const resume = Promise.all([
+          context.state === "running" ? Promise.resolve() : resumeContext(context),
+          outputs.get(context)?.prepare(),
+        ]);
         void resume.then(async () => {
           if (disposed) return;
           // The OS may pause native media as well as interrupt Web Audio.
@@ -161,6 +166,12 @@ export function createEndingAudioMix(elements, {
     }
     if (!sharedContext || sharedContext.state === "closed") sharedContext = contextFactory();
     const context = sharedContext;
+    if (!outputs.has(context)) outputs.set(context, createAudioOutput(context, {
+      navigatorTarget, windowTarget,
+      canPlay: () => context.state !== "closed" && owners > 0,
+      onInterrupted: () => context.dispatchEvent?.(new Event("statechange")),
+    }));
+    const output = outputs.get(context);
     watchContext(context);
     let graph = graphs.get(audio);
     if (!graph) {
@@ -176,12 +187,13 @@ export function createEndingAudioMix(elements, {
     disconnect(graph.source);
     disconnect(graph.gain);
     graph.source.connect(graph.gain);
-    graph.gain.connect(context.destination);
+    graph.gain.connect(output.destination);
     audio.volume = 1;
     // Invoke both APIs before yielding so a tap can unlock both on iPhone.
     const resume = context.state === "running" ? Promise.resolve() : resumeContext(context);
+    const outputReady = output.prepare();
     const nativePlay = audio.play().then(() => { if (disposed && mediaOwners.get(audio) === owner) audio.pause(); });
-    await Promise.all([nativePlay, resume]);
+    await Promise.all([nativePlay, resume, outputReady]);
     if (!disposed && context.state !== "running") throw new DOMException("Tap to enable sound", "NotAllowedError");
     if (!disposed) { activeMedia.add(audio); recoveryAttempted = false; notify("running"); }
   }
@@ -204,15 +216,19 @@ export function createEndingAudioMix(elements, {
     owners -= 1;
     if (owners === 0) {
       const context = sharedContext;
+      outputs.get(context)?.pause();
       // React mounts the postcredits player after disposing the credits.
       // Keep its unlocked context across that handoff, then close at the end.
       closeTimer = setTimeout(() => {
         if (owners || sharedContext !== context) return;
         sharedContext = null;
+        outputs.get(context)?.dispose();
+        outputs.delete(context);
         if (context?.state !== "closed") void context?.close().catch(() => {});
       }, 100);
     }
   }
-  const needsRecovery = audio => !disposed && graphs.has(audio) && graphs.get(audio).context.state !== "running";
+  const needsRecovery = audio => !disposed && graphs.has(audio)
+    && (graphs.get(audio).context.state !== "running" || outputs.get(graphs.get(audio).context)?.needsRecovery());
   return { setVolume, play, needsRecovery, dispose };
 }

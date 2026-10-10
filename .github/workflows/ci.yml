@@ -48,6 +48,11 @@ jobs:
             npx playwright install --with-deps chromium
           fi
       - run: npm run build
+      - name: Verify iPhone media output and encoded mix without microphone access
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V103_AUDIO_OUT: outputs/v103-audio
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
       - name: Verify all render forms and actual gore damage
         env:
           V102_COMBAT_ENGINE: ${{ matrix.engine }}
@@ -66,6 +71,7 @@ jobs:
           path: |
             outputs/v102-combat
             outputs/v102-normal-contacts
+            outputs/v103-audio
           if-no-files-found: error
           retention-days: 14
 

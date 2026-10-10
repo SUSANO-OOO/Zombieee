@@ -6,7 +6,8 @@
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
 - Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。
 - Version 1.0.1の改善・検証・公開結果は[実行台帳 Issue #175](https://github.com/SUSANO-OOO/Zombieee/issues/175)へ記録する。納期は2026-10-10 06:00 JST。
-- Version 1.0.2は[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Producer Decisions](PRODUCER_DECISIONS_1.0.2.md)に従い、iPhone録画音声、全キャラの戦闘動作、血飛沫・欠損を修正中。開始時の公開版は1.0.1、SHA `634f8de4b0fb15df902a7dd5983ea94237cfea9d`。物理iPhoneの録画音声は未確認。
+- Version 1.0.2は公開済み。release SHA `cd246a3d8e93b69d8cb6b370d40f28924a0d86b6`、PR #178、固定tag・Release・Pages・公開後9ケースを確認。iPhoneの保存録画だけが無音という実機報告があり、録画不具合は未解消。
+- Version 1.0.3は[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Producer Decisions](PRODUCER_DECISIONS_1.0.3.md)に従い、インストール済みiPhone PWAの最終音声出力を限定修正する。Safariへの切替を解決策にしない。実機録画の解消確認はブラウザ検査と区別する。
 
 1.0.1の改善開始時点の公開版は1.0.0、release SHAは`d322d85410e5827958fec7fe28a0d6520ccb1bc9`。以降の公開version・SHAは上記の公開HTML、Release、実行台帳で確認する。
 
