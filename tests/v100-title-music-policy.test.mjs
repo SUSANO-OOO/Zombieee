@@ -11,7 +11,8 @@ async function titleFixture() {
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const audio = { paused: true, dataset: {}, plays: 0, gain: 0, currentTime: 0, getAttribute(name) { return name === 'src' ? this.src ?? null : null; }, pause() { this.paused = true; } };
   const refs = [], dependencies = [], effects = [], cleanup = [];
-  let cursor = 0, disposed = false;
+  let cursor = 0, disposed = false, frameId = 0;
+  const frames = new Map();
   const surface = { addEventListener() {}, removeEventListener() {} };
   const react = {
     useRef(value) { const index = cursor++; return refs[index] ??= { current: index === 0 ? audio : value }; },
@@ -36,16 +37,18 @@ async function titleFixture() {
       throw new Error('Unexpected component dependency: ' + name);
     },
     document: { ...surface, hidden: false }, window: { ...surface, matchMedia: () => ({ ...surface, matches: false }) },
-    requestAnimationFrame: () => 1, cancelAnimationFrame() {},
+    requestAnimationFrame: callback => { frames.set(++frameId,callback); return frameId; },
+    cancelAnimationFrame: id => frames.delete(id),
   });
   return { audio, get disposed() { return disposed; },
-    async render(settings) {
+    async render(settings, voiceActive = false) {
       cursor = 0;
-      const element = componentModule.exports.V100TitleMusic({ settings, voiceActive: false });
+      const element = componentModule.exports.V100TitleMusic({ settings, voiceActive });
       while (effects.length) effects.shift()();
       await Promise.resolve();
       return element;
     },
+    tick(now) { const queued=[...frames.values()]; frames.clear(); queued.forEach(callback=>callback(now)); },
     unmount() { for (const stop of cleanup) stop?.(); },
   };
 }
@@ -56,7 +59,7 @@ test('disabled title BGM avoids preload and resumes through the same owner when 
   assert.equal(off.props.preload, 'none'); assert.equal(off.props.src, undefined); assert.equal(fixture.audio.src, undefined); assert.equal(fixture.audio.plays, 0);
   assert.equal(fixture.audio.paused, true); assert.equal(fixture.audio.gain, 0);
   const on = await fixture.render({ bgmEnabled: true, bgmVolume: .8 });
-  assert.equal(on.props.preload, 'auto'); assert.equal(fixture.audio.src, '/audio/v100/score/horror.mp3'); assert.equal(fixture.audio.plays, 1); assert.equal(fixture.audio.paused, false);
+  assert.equal(on.props.preload, 'auto'); assert.equal(fixture.audio.src, '/audio/v100/score/opening.mp3'); assert.equal(fixture.audio.plays, 1); assert.equal(fixture.audio.paused, false);
   fixture.audio.currentTime = 19;
   const zero = await fixture.render({ bgmEnabled: true, bgmVolume: 0 });
   assert.equal(zero.props.preload, 'none'); assert.equal(fixture.audio.currentTime, 19); assert.equal(fixture.audio.paused, true); assert.equal(fixture.audio.gain, 0);
@@ -70,6 +73,19 @@ test('a title opened at volume zero never receives the music URL', async () => {
   const element = await fixture.render({ bgmEnabled: true, bgmVolume: 0 });
   assert.equal(element.props.preload, 'none'); assert.equal(fixture.audio.src, undefined); assert.equal(fixture.audio.plays, 0);
   fixture.unmount();
+});
+
+test('the opening loop makes space for the title call without restarting its owner', async () => {
+  const fixture=await titleFixture(),settings={bgmEnabled:true,bgmVolume:.8};
+  await fixture.render(settings,true);
+  for(let time=1;time<3000;time+=16)fixture.tick(time);
+  assert.ok(Math.abs(fixture.audio.gain-.8*.42*.18)<.001);
+  fixture.audio.currentTime=3;
+  await fixture.render(settings,false);
+  for(let time=3001;time<9000;time+=16)fixture.tick(time);
+  assert.ok(Math.abs(fixture.audio.gain-.8*.42)<.001);
+  assert.equal(fixture.audio.plays,1);assert.equal(fixture.audio.currentTime,3);
+  fixture.unmount();assert.equal(fixture.audio.gain,0);
 });
 
 test('normal title entry uses the actual intro gesture without requiring full media prefetch', async () => {

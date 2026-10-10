@@ -161,7 +161,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
           <button type="button" disabled={busy} onClick={onCredits}>クレジット</button>
         </div>
         <button type="button" className="v100-start-modes" disabled={busy || !canOpenModes} onClick={onModes}><span>モード選択</span><small>異常発生・サバイバル</small></button>
-        {!canOpenModes && <small className="v100-start-mode-note">物語の作戦地図から利用できます</small>}
+        {!canOpenModes && <small className="v100-start-mode-note">物語のステージ選択から利用できます</small>}
       </nav>}
     </div>
     <button type="button" className="v100-start-data" disabled={busy || phase !== "complete"} onClick={onData}>データ管理</button>

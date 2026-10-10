@@ -4,8 +4,9 @@ import { useLayoutEffect, useRef } from "react";
 import { createEndingAudioMix } from "./endingAudioMix.js";
 import { LANDSCAPE_BLOCK_QUERY } from "./landscapePolicy.js";
 
-// The attributed, normalized 96-second loop is already in the offline bundle.
-export const TITLE_MUSIC_SRC = "/audio/v100/score/horror.mp3";
+// Born Of The Sky (Scott Buckley, CC-BY 4.0): the energetic drum/guitar
+// section, normalized and crossfaded into an 86-second offline loop.
+export const TITLE_MUSIC_SRC = "/audio/v100/score/opening.mp3";
 type Settings = { bgmEnabled: boolean; bgmVolume: number };
 
 export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; voiceActive: boolean }) {
@@ -41,7 +42,7 @@ export function V100TitleMusic({ settings, voiceActive }: { settings: Settings; 
         }
       },
     });
-    const targetGain = () => stateRef.current.settings.bgmVolume * .30 * (stateRef.current.voiceActive ? .22 : 1);
+    const targetGain = () => stateRef.current.settings.bgmVolume * .42 * (stateRef.current.voiceActive ? .18 : 1);
     const silence = () => {
       generation++;
       cancelAnimationFrame(frame);

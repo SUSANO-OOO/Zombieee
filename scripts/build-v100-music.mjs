@@ -7,8 +7,12 @@ const root = 'assets/source/v100/audio/scott-buckley';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 await mkdir('public/audio/v100/score', { recursive: true });
 await mkdir('outputs/completion/score-pcm', { recursive: true });
-const records = [];
-for (const track of V100_MUSIC_TRACKS) {
+const role = process.argv.find(arg => arg.startsWith('--role='))?.slice('--role='.length);
+if (role && !V100_MUSIC_TRACKS.some(track => track.role === role)) throw new Error('Unknown score role: ' + role);
+// A new title track must not rewrite any already released scene recording.
+const previous = role ? JSON.parse(await readFile(root + '/production-provenance.json', 'utf8')) : null;
+const records = previous ? previous.records.filter(record => record.role !== role) : [];
+for (const track of V100_MUSIC_TRACKS.filter(track => !role || track.role === role)) {
   const input = root + '/' + track.file + '.mp3', d = track.duration;
   // Rotate a two-second tail/head crossfade to the end. Restart joins source
   // t=2 exactly, without a repeating silence or a one-sided fade.
@@ -49,10 +53,16 @@ for (const track of V100_MUSIC_TRACKS) {
 await writeFile(root + '/production-provenance.json', JSON.stringify({
   creator:'Scott Buckley', license:'CC-BY-4.0', licenseUrl:'https://creativecommons.org/licenses/by/4.0/',
   usageUrl:'https://www.scottbuckley.com.au/library/using-this-music/',
-  acceptance:'Normal battle and daily conversation direction approved 2026-09-09. Remaining scene assignments are local candidate work; boss music unchanged.',
+  acceptance:'Normal battle and daily conversation direction approved 2026-09-09. Producer requested an exciting opening track 2026-10-10; Born Of The Sky is the implementation candidate. Remaining scene assignments require play review; boss music unchanged.',
   adaptation:'Official compositions excerpted, stereo loop seams crossfaded, two-pass loudness normalization. Not newly composed by this project.',
   ffmpegVersion:execFileSync(ffmpeg.path,['-version'],{encoding:'utf8'}).split('\n')[0], records,
 }, null, 2) + '\n');
+const opening = records.find(record => record.role === 'opening' && record.file.endsWith('.mp3'));
+if (opening) await writeFile('scripts/v100-opening-asset-contract.mjs',
+  '// Exact title-music delta from the attributed source and derivative provenance.\n'
+  + 'export const V100_OPENING_ASSET_ADDITIONS = Object.freeze(' + JSON.stringify([
+    {path:opening.file.slice('public'.length),bytes:opening.bytes,hash:'sha256-'+opening.sha256,criticality:'optional'},
+  ],null,2) + ');\nexport const V100_OPENING_ASSET_BYTES = ' + opening.bytes + ';\n');
 const unique = V100_MUSIC_TRACKS.filter((t,i,a)=>a.findIndex(o=>o.file===t.file)===i);
 await writeFile(root + '/LICENSE.md', '# Scene music sources\n\n' + unique.map(t=>"- '" + t.title + "' by Scott Buckley - released under CC-BY 4.0. https://www.scottbuckley.com.au/library/" + t.page + '/').join('\n')
   + '\n\nLicense: https://creativecommons.org/licenses/by/4.0/\nUsage: https://www.scottbuckley.com.au/library/using-this-music/\n\nFree official MP3 downloads; no purchase, subscription, account or Content ID registration. Originals remain Scott Buckley compositions. Adapted excerpts, stereo loop seams and loudness for synchronized game use. See production-provenance.json for exact source/derivative hashes and processing. In-game credits appear under 制作・素材クレジット.\n');

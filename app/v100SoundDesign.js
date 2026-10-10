@@ -1,4 +1,5 @@
 import { withV100Music } from './v100Music.js';
+import { withV100R9SoundDesign } from './v100R9SoundDesign.js';
 // V1 sound families. Source recordings and deterministic adaptations are
 // documented by build-v100-sound-design.mjs; character voices stay untouched.
 export const V100_FOLEY_RECIPES = Object.freeze({
@@ -57,12 +58,12 @@ export function v100AudioDesignCandidate(base) {
     id: `v100-story-${role}`, category: "melee", sources: v100SoundSources('foley', `story-${role}`),
     preload: "lazy", loop: false, gain: .65, priority: 52, cooldownMs: 120, maxInstances: 1,
   }));
-  return withV100Music({ ...base, assets: [...base.assets.map(asset => {
+  return withV100R9SoundDesign(withV100Music({ ...base, assets: [...base.assets.map(asset => {
     const foley = v100FoleyRole(asset.id), ambience = v100AmbienceRole(asset.id);
     const uiRole = {'ui-cancel':'cancel','ui-confirm':'confirm','ui-error':'reject','ui-hover':'navigate','ui-select':'navigate','radio-open':'confirm','radio-close':'cancel'}[asset.id];
     return uiRole ? {...asset,sources:v100SoundSources('ui','v100-ui-'+uiRole),gain:.65}
       : foley ? { ...asset, sources: v100SoundSources('foley', foley) }
       : ambience ? { ...asset, sources: v100SoundSources('ambience', ambience), gain: .65 }
       : asset;
-  }), ...storyAssets] });
+  }), ...storyAssets] }));
 }
