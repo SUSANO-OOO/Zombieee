@@ -121,6 +121,19 @@ class FakeWindow extends EventTarget {
   }
 }
 
+test("the production mixer declares playback before creating its first audio context", async () => {
+  const windowTarget = new FakeWindow();
+  windowTarget.navigator = { audioSession: { type: "auto" } };
+  const context = new FakeContext(); let categoryAtCreation;
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, enableAcknowledgementTone: false,
+    contextFactory: () => { categoryAtCreation = windowTarget.navigator.audioSession.type; return context; } });
+  mixer.attachUnlock(windowTarget);
+  try {
+    await mixer.enableAudio(); assert.equal(categoryAtCreation, "playback");
+  } finally { await mixer.dispose(); }
+  assert.equal(windowTarget.navigator.audioSession.type, "auto");
+});
+
 function manifest() {
   return {
     assets: [

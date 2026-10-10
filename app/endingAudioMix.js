@@ -1,6 +1,8 @@
 // Stream the original files through Web Audio. iPhone locks the native media
 // volume, so its setter cannot implement either the mix or a fade envelope.
 // The native elements still own playback, seeking, buffering and their clocks.
+import { createPlaybackAudioSession } from "./audioSession.js";
+
 const graphs = new WeakMap();
 const mediaOwners = new WeakMap();
 let sharedContext = null;
@@ -31,6 +33,8 @@ export function createEndingAudioMix(elements, {
   contextFactory = defaultFactory,
   canPlay = audio => !audio.paused && !audio.ended,
   onRecoveryState = () => {},
+  navigatorTarget = globalThis.navigator,
+  windowTarget = globalThis.window,
 } = {}) {
   const media = elements.filter(Boolean);
   const levels = new Map(media.map(audio => [audio, 0]));
@@ -46,6 +50,15 @@ export function createEndingAudioMix(elements, {
 
   const eligible = audio => !disposed && mediaOwners.get(audio) === owner
     && activeMedia.has(audio) && !audio.ended && canPlay(audio);
+  const playbackSession = createPlaybackAudioSession({
+    navigatorTarget, windowTarget,
+    canRecover: () => media.some(eligible),
+    onRecover: () => {
+      // Recheck native media too: the context can remain running while the OS
+      // pauses an element. Finished or cancelled one-shots remain ineligible.
+      if (watchedContext) watchContext(watchedContext, true);
+    },
+  });
   const notify = state => {
     if (disposed || recoveryState === state) return;
     recoveryState = state;
@@ -68,8 +81,8 @@ export function createEndingAudioMix(elements, {
       if (context.state !== "running") throw new DOMException("Tap to enable sound", "NotAllowedError");
     } finally { clearTimeout(timer); }
   }
-  function watchContext(context) {
-    if (watchedContext === context) return;
+  function watchContext(context, recoverNow = false) {
+    if (watchedContext === context && !recoverNow) return;
     removeStateListener();
     watchedContext = context;
     const stateChange = () => {
@@ -116,6 +129,10 @@ export function createEndingAudioMix(elements, {
     };
     context.addEventListener?.("statechange", stateChange);
     removeStateListener = () => context.removeEventListener?.("statechange", stateChange);
+    // Foreground notifications can arrive in separate tasks. A failed native
+    // replay stays latched until an explicit play succeeds; focus alone must
+    // not turn it into repeated autoplay attempts.
+    if (recoverNow) stateChange();
   }
 
   function setVolume(audio, value) {
@@ -131,6 +148,7 @@ export function createEndingAudioMix(elements, {
 
   async function play(audio) {
     if (disposed || !levels.has(audio)) return;
+    playbackSession.prepare();
     // Some desktop WebKit ports provide native MP3 media without Web Audio.
     // Their native volume is writable; retain that existing playback path.
     if (!globalThis.AudioContext && !globalThis.webkitAudioContext && contextFactory === defaultFactory) {
@@ -171,6 +189,7 @@ export function createEndingAudioMix(elements, {
   function dispose() {
     if (disposed) return;
     disposed = true;
+    playbackSession.dispose();
     removeStateListener();
     activeMedia.clear();
     for (const audio of media) {

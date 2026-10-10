@@ -31,6 +31,27 @@ function lockedMedia(play = async () => {}) {
     async play() { this.paused = false; await play(); }, pause() { this.paused = true; } };
 }
 
+test("native-media playback uses the same playback category and foreground does not replay an ended voice", async () => {
+  const fixture = contextFixture(), music = lockedMedia(), voice = lockedMedia();
+  const windowTarget = new EventTarget(); windowTarget.document = new EventTarget();
+  windowTarget.document.visibilityState = "visible";
+  const session = { type: "auto" }; let categoryAtCreation;
+  music.currentTime = 42; voice.currentTime = 2;
+  const mix = createEndingAudioMix([music, voice], { navigatorTarget: { audioSession: session }, windowTarget,
+    contextFactory: () => { categoryAtCreation = session.type; return fixture.context; }, canPlay: () => true });
+  try {
+    mix.setVolume(music, .12); await Promise.all([mix.play(music), mix.play(voice)]);
+    assert.equal(categoryAtCreation, "playback");
+    music.pause(); voice.pause(); voice.ended = true;
+    windowTarget.dispatchEvent(new Event("focus")); await wait(10);
+    assert.equal(music.paused, false); assert.equal(music.currentTime, 42);
+    assert.equal(voice.paused, true); assert.equal(voice.currentTime, 2);
+    assert.equal(fixture.context.sources, 2); assert.equal(endingAudioState(music).gain, .12);
+    assert.equal(music.playbackRate, 1);
+  } finally { mix.dispose(); }
+  assert.equal(session.type, "auto"); await wait(120);
+});
+
 test("a locked native volume still receives the exact mix and fade through the output gain", async () => {
   const fixture = contextFixture(), audio = lockedMedia();
   const mix = createEndingAudioMix([audio], { contextFactory: () => fixture.context });
@@ -51,6 +72,36 @@ test("a locked native volume still receives the exact mix and fade through the o
   assert.equal(fixture.nodes[0].output, null);
   assert.equal(fixture.nodes[1].output, null);
   await wait(120); assert.equal(fixture.context.closes, 1);
+});
+
+test("separate foreground events do not retry a rejected native replay until an explicit play succeeds", async () => {
+  const fixture = contextFixture(), audio = lockedMedia(), states = [];
+  const windowTarget = new EventTarget(); windowTarget.document = new EventTarget();
+  windowTarget.document.visibilityState = "visible";
+  let calls = 0, blocked = false;
+  audio.play = async () => {
+    calls += 1;
+    if (blocked) throw new DOMException("gesture", "NotAllowedError");
+    audio.paused = false;
+  };
+  const mix = createEndingAudioMix([audio], { contextFactory: () => fixture.context,
+    navigatorTarget: { audioSession: { type: "auto" } }, windowTarget,
+    canPlay: () => true, onRecoveryState: state => states.push(state) });
+  try {
+    mix.setVolume(audio, .2); await mix.play(audio);
+    audio.pause(); blocked = true;
+    windowTarget.document.dispatchEvent(new Event("visibilitychange")); await wait(10);
+    windowTarget.dispatchEvent(new Event("pageshow")); await wait(10);
+    windowTarget.dispatchEvent(new Event("focus")); await wait(10);
+    assert.equal(calls, 2, "Only one automatic replay after the initial play");
+    assert.equal(audio.paused, true);
+    assert.equal(states.filter(state => state === "gesture").length, 1);
+    blocked = false; await mix.play(audio);
+    audio.pause(); windowTarget.dispatchEvent(new Event("focus")); await wait(10);
+    assert.equal(calls, 4); assert.equal(audio.paused, false);
+    assert.equal(fixture.context.sources, 1);
+  } finally { mix.dispose(); }
+  await wait(120);
 });
 
 test("credits hand the unlocked context to the film and only the last owner closes it", async () => {

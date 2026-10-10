@@ -1,4 +1,5 @@
 import { AUDIO_CATEGORIES, createAudioManifest } from "./audioManifest.js";
+import { createPlaybackAudioSession } from "./audioSession.js";
 
 const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
   bgm: 1,
@@ -155,6 +156,7 @@ export class AudioMixer {
     this.onAssetFailure = typeof onAssetFailure === "function" ? onAssetFailure : null;
 
     this.context = null;
+    this.playbackAudioSession = null;
     this.contextGeneration = 0;
     this.contextCreateCount = 0;
     this.master = null;
@@ -528,6 +530,17 @@ export class AudioMixer {
     this.unlockPromise = task;
     void (async () => {
       try {
+        this.playbackAudioSession ??= createPlaybackAudioSession({
+          navigatorTarget: this.unlockTarget?.navigator ?? globalThis.navigator,
+          windowTarget: this.unlockTarget ?? globalThis.window,
+          canRecover: () => !this.disposed && !this.lifecycleHidden && Boolean(this.context)
+            && (this.activeVoices.size > 0 || Boolean(this.desiredScene))
+            && !this.settings.muted && this.settings.masterVolume > 0
+            && ((this.settings.bgmEnabled && this.settings.bgmVolume > 0)
+              || (this.settings.sfxEnabled && this.settings.sfxVolume > 0)),
+          onRecover: () => this.recoverAudio({ reason: "audio-session-return" }),
+        });
+        this.playbackAudioSession.prepare();
         if (!this.context || this.context.state === "closed") {
           this.#createContextAndGraph();
         }
@@ -1622,6 +1635,8 @@ export class AudioMixer {
     this.unlockTarget = null;
     this.lifecycleCleanup?.();
     this.contextStateCleanup?.();
+    this.playbackAudioSession?.dispose();
+    this.playbackAudioSession = null;
     this.stopAll();
     this.preloadQueue.length = 0;
     for (const item of [...this.preloadTasks.values()]) this.#settlePreloadTask(item, false);
