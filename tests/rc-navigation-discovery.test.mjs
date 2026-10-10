@@ -20,7 +20,7 @@ test("separates Survival and outbreak from the selected stage action", () => {
   assert.match(mapBlock, /className="special-operation survival-entry"/);
   assert.match(mapBlock, /className="special-operation outbreak-entry"/);
   const stageActions = mapBlock.slice(mapBlock.indexOf('className="stage-actions"'));
-  assert.match(stageActions, /この作戦を編成/);
+  assert.match(stageActions, /編成して出撃/);
   assert.doesNotMatch(stageActions, /サバイバル|異常発生任務/);
 });
 

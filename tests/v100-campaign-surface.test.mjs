@@ -70,7 +70,7 @@ test("V1 export round-trip and native storage contract remain namespace-specific
 test("V1 route exposes the name, seven-slot, event, battle, result, and postgame surfaces", async () => {
   const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");
   const spriteManifest = await readFile(path.join(ROOT, "app/spriteManifest.js"), "utf8");
-  for (const marker of ["この名前で作戦を始める", 'aria-label="7枠の編成"', "会話記録", "作戦結果", "この作戦を編成", "postgame-map"]) assert.match(source + (await readFile(path.join(ROOT, "app/v100StoryFlow.js"), "utf8")), new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
+  for (const marker of ["この名前でステージを始める", 'aria-label="7枠の編成"', "会話記録", "戦闘結果", "編成して出撃", "postgame-map"]) assert.match(source + (await readFile(path.join(ROOT, "app/v100StoryFlow.js"), "utf8")), new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
   for (const forbidden of ["LUNA RUNTIME", "REV ", "EVENT LOG", "BATTLE RESULT", "READ EVENT REPLAY", "LEGACY ENTITLEMENT", "pending result", "FORMATION / 7 ORDERED SLOTS"]) {
     assert.doesNotMatch(source, new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
   }

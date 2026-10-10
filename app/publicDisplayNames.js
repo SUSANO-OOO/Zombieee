@@ -9,7 +9,7 @@ const PUBLIC_CRAWLER_REPLACEMENTS = Object.freeze([
  * Maps the internal vehicle identifier to the producer-approved public term.
  * Save IDs, asset paths, scene IDs, and audio cue IDs remain untouched.
  */
-export function publicDisplayText(value, { crawlerLabel = "移動拠点" } = {}) {
+export function publicDisplayText(value, { crawlerLabel = "装甲車両" } = {}) {
   if (value === null || value === undefined) return value;
   let text = String(value);
   // Operational banners use a spaced double slash between speaker and action.
@@ -23,4 +23,4 @@ export function publicDisplayText(value, { crawlerLabel = "移動拠点" } = {})
   return crawlerLabel === "移動拠点" ? text : text.replaceAll("移動拠点", crawlerLabel);
 }
 
-export const PUBLIC_CRAWLER_LABEL = "移動拠点";
+export const PUBLIC_CRAWLER_LABEL = "装甲車両";

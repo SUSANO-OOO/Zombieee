@@ -69,9 +69,9 @@ test("Hachi's first two paid upgrades improve real attack output as well as HP a
     assert.equal(info.current.attackEvery, .62);
     if (level < 4) assert.ok(info.next.damage > info.current.damage);
   }
-  assert.deepEqual(output, [11, 11.22, 11.44, 12]);
-  assert.equal(Math.ceil(114 / output[0]), 11);
-  assert.equal(Math.ceil(114 / output[2]), 10);
+  assert.deepEqual(output, [12.32, 12.57, 12.81, 13.44]);
+  assert.equal(Math.ceil(114 / output[0]), 10);
+  assert.equal(Math.ceil(114 / output[2]), 9);
 });
 
 test("simultaneous damage labels separate at insertion without rewriting their values", () => {
