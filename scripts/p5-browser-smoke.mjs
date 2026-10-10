@@ -3,6 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { captureQuietDiagnosticsBoundary } from "./p5-quiet-diagnostics-boundary.mjs";
+import { P5_CURRENT_RESUME_BUTTON_TEXT, assertP5ResumeButtonText } from "./p5-resume-ui-contract.mjs";
 
 import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import {
@@ -19,6 +20,7 @@ import {
 import { publicDisplayText } from "../app/publicDisplayNames.js";
 
 const baseUrl = new URL(process.env.P5_QA_BASE_URL ?? "http://127.0.0.1:4177/");
+const resumeButtonText = assertP5ResumeButtonText(process.env.P5_QA_RESUME_BUTTON_TEXT ?? P5_CURRENT_RESUME_BUTTON_TEXT);
 if (baseUrl.hostname !== "localhost" && baseUrl.hostname !== "127.0.0.1") {
   throw new Error(`P5 QA routes are local-only; refusing non-local URL ${baseUrl}`);
 }
@@ -190,7 +192,7 @@ async function withStage3FinalPresentationSuppression({
     `${label} real resume button handle is unavailable`);
   let arm;
   try {
-    arm = await page.evaluate(({ requestedOwner, resumeElement, requireEntryGuard }) => {
+    arm = await page.evaluate(({ requestedOwner, resumeElement, requireEntryGuard, expectedResumeText }) => {
       const parameters = new URLSearchParams(location.search);
       const localRoute = ["localhost", "127.0.0.1"].includes(location.hostname)
         && parameters.get("qa") === "endgame"
@@ -246,7 +248,7 @@ async function withStage3FinalPresentationSuppression({
         if (!(resumeElement instanceof HTMLButtonElement)
           || resumeElement.disabled
           || resumeElement.getAttribute("aria-disabled") === "true"
-          || resumeElement.textContent?.trim() !== "戦闘を再開") {
+          || resumeElement.textContent?.trim() !== expectedResumeText) {
           throw new Error("P5_STAGE3_FINAL_REAL_RESUME_BUTTON_INVALID");
         }
         resumeElement.click();
@@ -359,7 +361,7 @@ async function withStage3FinalPresentationSuppression({
         entryGuardTransfer: state.entryGuardTransfer,
         entryCanvas: state.entryCanvas,
       };
-    }, { requestedOwner: owner, resumeElement: resumeButtonHandle, requireEntryGuard: adoptEntryGuard });
+    }, { requestedOwner: owner, resumeElement: resumeButtonHandle, requireEntryGuard: adoptEntryGuard, expectedResumeText: resumeButtonText });
   } finally {
     await resumeButtonHandle?.dispose();
   }
@@ -2284,7 +2286,7 @@ async function pauseAndVerifyFrozenScriptedBark({
     `${label} consumed scripted dialogue while paused: ${pausedBark.remaining} -> ${heldBark.remaining}`);
   if (whilePaused) await whilePaused({ before, paused, held });
 
-  const resumeButton = page.getByRole("button", { name: "戦闘を再開", exact: true });
+  const resumeButton = page.getByRole("button", { name: resumeButtonText, exact: true });
   await resumeButton.waitFor({ state: "visible", timeout });
   if (deferResume) {
     return {
@@ -2362,7 +2364,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
-    await page.getByRole("button", { name: "戦闘を再開", exact: true }).click({ timeout });
+    await page.getByRole("button", { name: resumeButtonText, exact: true }).click({ timeout });
     await page.waitForFunction(
       () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
       undefined,
@@ -2578,7 +2580,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       label,
     });
     await finalCutTrace.capture();
-    const initialResumeButton = page.getByRole("button", { name: "戦闘を再開", exact: true });
+    const initialResumeButton = page.getByRole("button", { name: resumeButtonText, exact: true });
 
     result.phase = "final-cut";
     stage3Progress(label, "final-cut", startedAt);
