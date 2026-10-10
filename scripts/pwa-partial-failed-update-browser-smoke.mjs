@@ -444,6 +444,10 @@ record("the candidate update plan derives changed, missing/new, removed, and ret
 });
 
 const save = createDefaultCampaignSave();
+// Chromium retains the all-disabled settings migration control. The native
+// iPhone fixture also records audio offline, so preserve a mixed BGM-on,
+// effects-off setting through the same update and rollback checks.
+const fixtureBgmEnabled = browserName === "webkit";
 save.campaignStarted = true;
 save.caps = 777;
 save.supplies = 654;
@@ -458,7 +462,7 @@ save.formationPresets = save.formationPresets.map((preset, index) => (
 ));
 save.settings = {
   ...save.settings,
-  bgmEnabled: false,
+  bgmEnabled: fixtureBgmEnabled,
   sfxEnabled: false,
   bgmVolume: 0.42,
   sfxVolume: 0.37,
@@ -868,7 +872,7 @@ try {
     && beforeUpdateV100.mirror?.campaignStarted === false
     && beforeUpdateV100.mirror?.completedStageIds?.length === 0
     && beforeUpdateV100.mirror?.ownedUnitIds?.slice().sort().join("|") === expectedInitialUnits.join("|")
-    && beforeUpdateV100.mirror?.settings?.bgmEnabled === false
+    && beforeUpdateV100.mirror?.settings?.bgmEnabled === fixtureBgmEnabled
     && beforeUpdateV100.mirror?.settings?.sfxEnabled === false
     && beforeUpdateV100.mirror?.settings?.bgmVolume === 0.42
     && beforeUpdateV100.mirror?.settings?.sfxVolume === 0.37
@@ -1401,6 +1405,7 @@ try {
         return { bytes: Array.from(new Uint8Array(bytes)), duration: buffer.duration, rms: Math.sqrt(sum / count), peak,
           streamId: owner.output.streamId, outputsForOwner: sinks.length, nativePaused: sink.paused, nativeMuted: sink.muted,
           contextState: owner.contextState, activeSceneVoices: owner.activeSceneVoices,
+          settings: owner.settings, effectiveBusGains: owner.effectiveBusGains,
           scope: "Cached installed iPhone-UA native WebKit stream encoding; remote speaker muted, not iOS Control Center capture" };
       });
       const { bytes, ...signal } = sample;
@@ -1410,6 +1415,8 @@ try {
       record("offline installed iPhone output encodes the cached scene mix without duplicate owners", (
         bytes.length > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5 && signal.rms > .0001 && signal.peak > .001
         && signal.outputsForOwner === 1 && signal.nativePaused === false && signal.contextState === "running"
+        && signal.settings.bgmEnabled === true && signal.settings.sfxEnabled === false
+        && signal.effectiveBusGains.bgm > 0
       ), { file, encodedBytes: bytes.length, ...signal });
     }
     await offline.reconnect();

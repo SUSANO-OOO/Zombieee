@@ -114,3 +114,23 @@ UI contextはrunningだが、durable save後にmountするbattle contextは初�
 実fighter生成を確認してから録音する。診断unlockは呼ばず、pageshow後は追加操作をせず自動復帰を検査。
 両owner running・BGM1・重複0・実信号・通信監査・20秒復帰上限を維持する。
 追加差分の構文・対象Lint・diff check成功。独立read-only reviewはH0／M0／L0、PC起動0。
+
+3d82834は両engineの10録音ずつ、戦闘回帰、品質72ケースずつ、性能検査に成功。
+native PWAの更新・save・rollback等は成功したが、追加offline録音がRMS/peak 0で23/24となった。
+artifact 11662284620（zip SHA-256 `7fbb38090b02b18a0bcd863c9e48447c19018142e271f5255ed3a822e35cc6b4`）
+と無音m4aを保全。元のfixtureはBGM・SEを両方無効にして保存し、その保持を明示検査していた。
+positive録音の追加前提と矛盾していたため、native WebKitだけBGM有効／SE無効の混合設定を保存・保持する。
+Chromiumは従来の両方無効を維持。raw save一致、同一installed profile、実socket切断、rollback、
+remote mute、実信号閾値・期間・単一ownerを維持し、録音時のsettings／bus gainも記録・検査する。
+この再検査が通るまでoffline録音は成功扱いにしない。PCのゲーム・browser・音声は起動していない。
+
+installed-updateのnative fixtureも、報告された現行公開1.0.2
+`cd246a3d8e93b69d8cb6b370d40f28924a0d86b6`から同一profileで更新する。
+同SHAの681 asset／679 hashを固定し、媒体変更・再取得0のapp shell更新でsave・offline・rollbackを検査。
+1.0.1のsource-bound契約とplanner test、旧0.9.9.5からのpartial失敗・修復検査は維持する。
+公開前の独立reviewは、媒体差分0ではcommit-requiredがgame mountを止めるため、従来の
+先にgameを待つdriverでは停止すると指摘（M1）。1.0.2の通常起動でV1 saveを確定してから更新し、
+candidateでは「保存済みデータを反映」を選ぶ。commit前のmount禁止・save一致を追加確認し、
+媒体差分がある旧版は従来のdownload導線を維持する。これは遠隔再実行前に検出・修正した検査不備。
+追加4ファイルの独立再reviewはH0／M0／L0。両script構文・対象ESLint・diff check、
+source-bound planner 8/8・CI YAML parseが成功。製品code・asset・save仕様の追加変更はない。

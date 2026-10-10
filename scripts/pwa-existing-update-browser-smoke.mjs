@@ -34,10 +34,12 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
 const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.5";
-const oldContract=oldVersion==='1.0.1'
+const oldContract=oldVersion==='1.0.2'
+  ? {assets:681,distinct:679,replaced:[],additions:0,bytes:0,bundled:0,network:0}
+  : oldVersion==='1.0.1'
   ? {assets:680,distinct:678,replaced:[],additions:V102_ASSET_ADDITIONS.length,bytes:V102_ASSET_BYTES,bundled:0,network:1}
   : {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
-if(!['0.9.9.5','1.0.1'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
+if(!['0.9.9.5','1.0.1','1.0.2'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
   ?? "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const expectedCandidateReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
@@ -531,6 +533,54 @@ async function screenshot(page, label) {
   });
 }
 
+async function acknowledgeLegacyGift(page, oldSave) {
+  await waitForV100Ready(page);
+  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+  await gift.waitFor({ state: "visible", timeout: 60_000 });
+  const updateDeferredDuringGift = await page.getByRole("button", { name: "更新をダウンロード", exact: true }).count() === 0;
+  const giftConfirmation = gift.getByRole("button", { name: "確認する", exact: true });
+  await page.waitForFunction(() => {
+    const button = [...document.querySelectorAll("button")].find((entry) => entry.textContent?.trim() === "確認する");
+    return button instanceof HTMLButtonElement && !button.disabled;
+  }, null, { timeout: 60_000 });
+  const beforeUpdateV100 = await v100State(page);
+  const nativeBeforeUpdate = beforeUpdateV100.native?.record?.serialized
+    ? JSON.parse(beforeUpdateV100.native.record.serialized)
+    : null;
+  const expectedInitialUnits = [...V100_INITIAL_UNIT_IDS].sort();
+  record("the unqualified V1 root claims one visible legacy gift without importing legacy progression", (
+    updateDeferredDuringGift
+    && beforeUpdateV100.oldRaw === oldSave.raw
+    && beforeUpdateV100.mirror?.caps === V100_LEGACY_GIFT.amountCaps
+    && beforeUpdateV100.mirror?.campaignStarted === false
+    && beforeUpdateV100.mirror?.completedStageIds?.length === 0
+    && beforeUpdateV100.mirror?.ownedUnitIds?.slice().sort().join("|") === expectedInitialUnits.join("|")
+    && beforeUpdateV100.mirror?.settings?.bgmEnabled === false
+    && beforeUpdateV100.mirror?.settings?.sfxEnabled === false
+    && beforeUpdateV100.mirror?.settings?.bgmVolume === 0.42
+    && beforeUpdateV100.mirror?.settings?.sfxVolume === 0.37
+    && beforeUpdateV100.mirror?.settings?.graphicsQuality === "power-save"
+    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.entitlementReceipt).length === 1
+    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.popupReceipt).length === 1
+    && beforeUpdateV100.mirror?.legacy?.popupAcknowledged === true
+    && beforeUpdateV100.native?.database === v100SaveKey
+    && JSON.stringify(nativeBeforeUpdate) === JSON.stringify(beforeUpdateV100.mirror)
+    && beforeUpdateV100.legacyWrites.length === 0
+  ), {
+    updateDeferredDuringGift,
+    oldSavePreserved: beforeUpdateV100.oldRaw === oldSave.raw,
+    mirror: beforeUpdateV100.mirror,
+    nativeDatabase: beforeUpdateV100.native?.database ?? null,
+    legacyWrites: beforeUpdateV100.legacyWrites,
+  });
+  await screenshot(page, "v1-gift-before-update");
+  markTransition("gift-confirmation-click");
+  await giftConfirmation.click();
+  await gift.waitFor({ state: "detached", timeout: 30_000 });
+  await waitForV100Ready(page);
+  return beforeUpdateV100;
+}
+
 async function closeContext(label) {
   if (!context) return;
   diagnosticPhase = label;
@@ -596,6 +646,14 @@ try {
   ), { oldWorker, oldSave: { ...oldSave, raw: oldSave.raw ? "present" : "missing", sha256: sha256(oldSave.raw ?? "") } });
   await screenshot(page, "old-installed");
 
+  const commitOnlyUpdate = oldContract.additions === 0;
+  let beforeUpdateV100;
+  if (commitOnlyUpdate) {
+    // The current installed release owns this save before the shell update.
+    // The candidate cannot mount until its complete pack is committed.
+    await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+  }
   await closeContext("close-old-installed");
   const switched = await fetch(`http://127.0.0.1:${address.port}/__qa/switch?root=candidate`).then((response) => response.json());
   record(`the same-origin server switches to the ${RELEASE_VERSION} candidate`, switched.ok === true && switched.currentLabel === "candidate", switched);
@@ -619,56 +677,24 @@ try {
     releaseSha: candidatePageManifest.manifest.releaseSha,
   });
 
-  await waitForV100Ready(page);
-  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
-  await gift.waitFor({ state: "visible", timeout: 60_000 });
   const updateButton = page.getByRole("button", { name: "更新をダウンロード", exact: true });
-  const updateDeferredDuringGift = await updateButton.count() === 0;
-  const giftConfirmation = gift.getByRole("button", { name: "確認する", exact: true });
-  await page.waitForFunction(() => {
-    const button = [...document.querySelectorAll("button")].find((entry) => entry.textContent?.trim() === "確認する");
-    return button instanceof HTMLButtonElement && !button.disabled;
-  }, null, { timeout: 60_000 });
-  const beforeUpdateV100 = await v100State(page);
-  const nativeBeforeUpdate = beforeUpdateV100.native?.record?.serialized
-    ? JSON.parse(beforeUpdateV100.native.record.serialized)
-    : null;
-  const expectedInitialUnits = [...V100_INITIAL_UNIT_IDS].sort();
-  record("the unqualified V1 root claims one visible legacy gift without importing legacy progression", (
-    updateDeferredDuringGift
-    && beforeUpdateV100.oldRaw === oldSave.raw
-    && beforeUpdateV100.mirror?.caps === V100_LEGACY_GIFT.amountCaps
-    && beforeUpdateV100.mirror?.campaignStarted === false
-    && beforeUpdateV100.mirror?.completedStageIds?.length === 0
-    && beforeUpdateV100.mirror?.ownedUnitIds?.slice().sort().join("|") === expectedInitialUnits.join("|")
-    && beforeUpdateV100.mirror?.settings?.bgmEnabled === false
-    && beforeUpdateV100.mirror?.settings?.sfxEnabled === false
-    && beforeUpdateV100.mirror?.settings?.bgmVolume === 0.42
-    && beforeUpdateV100.mirror?.settings?.sfxVolume === 0.37
-    && beforeUpdateV100.mirror?.settings?.graphicsQuality === "power-save"
-    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.entitlementReceipt).length === 1
-    && beforeUpdateV100.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.popupReceipt).length === 1
-    && beforeUpdateV100.mirror?.legacy?.popupAcknowledged === true
-    && beforeUpdateV100.native?.database === v100SaveKey
-    && JSON.stringify(nativeBeforeUpdate) === JSON.stringify(beforeUpdateV100.mirror)
-    && beforeUpdateV100.legacyWrites.length === 0
-  ), {
-    updateDeferredDuringGift,
-    oldSavePreserved: beforeUpdateV100.oldRaw === oldSave.raw,
-    mirror: beforeUpdateV100.mirror,
-    nativeDatabase: beforeUpdateV100.native?.database ?? null,
-    legacyWrites: beforeUpdateV100.legacyWrites,
-  });
-  await screenshot(page, "v1-gift-before-update");
-  markTransition("gift-confirmation-click");
-  await giftConfirmation.click();
-  await gift.waitFor({ state: "detached", timeout: 30_000 });
-  await waitForV100Ready(page);
+  const commitOnlyButton = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
+  if (commitOnlyUpdate) {
+    await commitOnlyButton.waitFor({ state: "visible", timeout: 60_000 });
+    const pendingSave = await v100State(page);
+    record("a complete no-media update blocks mounting and preserves the installed V1 save before commit", (
+      await page.locator(".v100-shell").count() === 0
+      && pendingSave.raw === beforeUpdateV100.raw
+      && pendingSave.oldRaw === oldSave.raw
+      && pendingSave.legacyWrites.length === 0
+    ), { v100SavePreserved: pendingSave.raw === beforeUpdateV100.raw, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
+  } else {
+    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+    await updateButton.waitFor({ state: "visible", timeout: 60_000 });
+  }
   diagnostics.audioOwnerAtTransition.beforeUpdate = await page.evaluate(() => (
     window.__V100_EVENT_AUDIO_QA__?.getDiagnostics?.() ?? null
   ));
-  await updateButton.waitFor({ state: "visible", timeout: 60_000 });
-
   const waitingWorker = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
     try { await registration.update(); } catch { /* the registration state below is evidence */ }
@@ -686,18 +712,19 @@ try {
     && waitingWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
   ), waitingWorker);
 
-  const commitOnlyButton = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
   const updateButtonCount = await updateButton.count();
   const commitOnlyButtonCount = await commitOnlyButton.count();
-  const updateEnabledAfterGift = updateButtonCount === 1 && await updateButton.isEnabled();
-  record("the existing app exposes the safe enabled update control after gift acknowledgement", (
-    updateButtonCount === 1 && commitOnlyButtonCount === 0 && updateEnabledAfterGift
+  const updateControl = commitOnlyUpdate ? commitOnlyButton : updateButton;
+  const updateEnabledAfterGift = await updateControl.isEnabled();
+  record("the existing app exposes the safe enabled control for its exact media delta", (
+    updateButtonCount === (commitOnlyUpdate ? 0 : 1)
+    && commitOnlyButtonCount === (commitOnlyUpdate ? 1 : 0)
+    && updateEnabledAfterGift
   ), {
     updateButtonCount,
     commitOnlyButtonCount,
     updateEnabledAfterGift,
   });
-  const updateControl = updateButton;
   await updateControl.waitFor({ state: "visible", timeout: 120_000 });
   await screenshot(page, "v1-update-ready");
   const updateAssetStart = candidateAssetRequests.length;
