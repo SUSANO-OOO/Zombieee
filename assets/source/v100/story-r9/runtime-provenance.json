@@ -1,0 +1,401 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "records": [
+    {
+      "id": "s03-cold-retrieval",
+      "sourceLines": [
+        449,
+        453
+      ],
+      "references": [],
+      "alt": "冷徹な回収班がタクヤと鎖を担架へ載せる。",
+      "path": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
+      "bytes": 335386,
+      "hash": "sha256-583856a8921eced27a05a227f7d6e0ae4895e0040735f6cd7acf0d6ac989f866",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s03-cold-retrieval.png",
+      "masterSha256": "422e375a0ccbfd2e1af2d57fa114e7e1993bba2b68cd99a7d73945606d65b81e",
+      "prompt": "assets/source/v100/story-r9/s03-cold-retrieval-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s28-physical-stop",
+      "sourceLines": [
+        2181,
+        2183
+      ],
+      "references": [],
+      "alt": "武蔵とザキミヤが保護カバーを支え、隙間の奥の停止レバーへ手を伸ばす。",
+      "path": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
+      "bytes": 334674,
+      "hash": "sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s28-physical-stop.png",
+      "masterSha256": "81cc564111f204ccf5f203bb785b08f3bf4937cf6fc0019173631d92eec0c88d",
+      "prompt": "assets/source/v100/story-r9/s28-physical-stop-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "prologue-extinguisher-escape",
+      "sourceLines": [
+        125,
+        125
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "ババヤガが消火器を噴射し、クマが椅子を押し放して厨房の勝手口へ退く。",
+      "path": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+      "bytes": 285466,
+      "hash": "sha256-4c34b90d454425bdd5552695fe8e0cea24cabfc661231bcdbebb53e7b1f5c6a4",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/prologue-extinguisher-escape.png",
+      "masterSha256": "c50de69b9158ec753a177959f5a9277afab3d61e27fc0e6d1cfa0da490eaa659",
+      "prompt": "assets/source/v100/story-r9/prologue-extinguisher-escape-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s01-nao-rescue",
+      "sourceLines": [
+        271,
+        271
+      ],
+      "references": [
+        "assets/source/v100/story-r5/nao.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "ナオが装甲車両で老人を救護し、運び終えたパイセンが隣でへたり込む。",
+      "path": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+      "bytes": 373950,
+      "hash": "sha256-1070f918cb2d6ee0fbefe094eb7fdf50248c18009dda8ba97d2fde2f7307e153",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s01-nao-rescue.png",
+      "masterSha256": "67655ef746a73c970977387d58366ba1181efa9aa697c1a235ae04d6a837bdc3",
+      "prompt": "assets/source/v100/story-r9/s01-nao-rescue-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s04-monkey-shutter",
+      "sourceLines": [
+        507,
+        507
+      ],
+      "references": [
+        "assets/source/v100/story-r5/monkey.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "モンキーが配線をつなぎ、開いたシャッターからクマが駅員を背負って運び出す。",
+      "path": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
+      "bytes": 353464,
+      "hash": "sha256-2b6e5c577e1b08b5ac686402369aa2fad7412ba993291ac280622cdb1a9dcdf2",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s04-monkey-shutter.png",
+      "masterSha256": "d143a33b1f5891e7f55c9095df2e53f93e86838eeba968b23bfc7aa9d9fabc8f",
+      "prompt": "assets/source/v100/story-r9/s04-monkey-shutter-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s09-transfer-disconnect",
+      "sourceLines": [
+        817,
+        827
+      ],
+      "references": [
+        "assets/source/v100/story-r5/ikura.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "いくらの指示したケーブルを抜く。救助映像の送信履歴は端末に残っている。",
+      "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+      "bytes": 333590,
+      "hash": "sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s09-transfer-disconnect.png",
+      "masterSha256": "022abf07872a1999101e18a61b93d1ef98745651457742ed364cd58bc2000025",
+      "prompt": "assets/source/v100/story-r9/s09-transfer-disconnect-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s11-oxygen-rescue",
+      "sourceLines": [
+        916,
+        918
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "閉じた待機室の外で供給弁を回し、管を通した酸素で研究員たちを救う。",
+      "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+      "bytes": 364686,
+      "hash": "sha256-bb722fb284a8fecf1a2456ae5789716c8b796fb4feabadef219ad91392416cd1",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s11-oxygen-rescue.png",
+      "masterSha256": "221e62e64c982a4037c85d6aed54cbb3ec0366ec3c900158f00899c8ef7db7e0",
+      "prompt": "assets/source/v100/story-r9/s11-oxygen-rescue-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s22-zakimiya-holds-son",
+      "sourceLines": [
+        1840,
+        1844
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp"
+      ],
+      "alt": "ザキミヤが息子の首を支えて抱き、妻と一緒に顔を見つめて泣き笑いする。",
+      "path": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
+      "bytes": 330890,
+      "hash": "sha256-27723b719dd9bc2516000b92ea4fd21b966948fd839d44918e740e5208ab1026",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s22-zakimiya-holds-son.png",
+      "masterSha256": "fee91f703196d4dc1220b70d4538b94aa61dc1eaa4b2403db4b607df887c7eda",
+      "prompt": "assets/source/v100/story-r9/s22-zakimiya-holds-son-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s14-train-couplers",
+      "sourceLines": [
+        1152,
+        1154
+      ],
+      "references": [
+        "assets/source/v100/story-r5/tky.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp",
+        "public/art/v090/bosses/ooguchi-identity-master-r1.webp"
+      ],
+      "alt": "ＴＫＹが大口を押さえ、三人が赤い連結解除レバーを操作する。隣の青いブレーキ管は切らずに残す。",
+      "path": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+      "bytes": 374396,
+      "hash": "sha256-97103968f88083529d922598e4387ccf3cc253c3bcc95c3994009045da36a145",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s14-train-couplers.png",
+      "masterSha256": "ba78916f6eeca9b9fd0c285cef9c7a0feb70f4d8604dfdc99f437b22b28d0892",
+      "prompt": "assets/source/v100/story-r9/s14-train-couplers-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s17-chiha-baba-reunion",
+      "sourceLines": [
+        1395,
+        1403
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp"
+      ],
+      "alt": "無傷の腕を確かめたチハがババヤガを抱きしめ、ババヤガも背中へ腕を回す。",
+      "path": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
+      "bytes": 255426,
+      "hash": "sha256-d61deb19cb1ab3b6881d82edaf3d4010ef99aa3799b74efea467ff5e1da098e7",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s17-chiha-baba-reunion.png",
+      "masterSha256": "e5279344b3bbc80d04fd52b10158a9eb4a2d7e150991a50a2a7266065600d6be",
+      "prompt": "assets/source/v100/story-r9/s17-chiha-baba-reunion-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s23-chiha-evidence-send",
+      "sourceLines": [
+        1919,
+        1923
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp"
+      ],
+      "alt": "チハ自身が証拠を送信する。三つの受信灯が点き、使い切った認証カードから細い煙が上がる。",
+      "path": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+      "bytes": 318160,
+      "hash": "sha256-a0002fe5a95407baa4e548d3c6271b949bccfa172577a60b71631db8e2bb98f1",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s23-chiha-evidence-send.png",
+      "masterSha256": "e1bc216d7f1d19e1666e0be25067f10c5e13eebfbc0a242275e6079ee90fa562",
+      "prompt": "assets/source/v100/story-r9/s23-chiha-evidence-send-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s19-seven-second-crossing",
+      "sourceLines": [
+        1614,
+        1618
+      ],
+      "references": [
+        "public/art/v075/crawler/crawler-command-base-identity-r1.png",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "別々の車線で装甲車両が敵車両を押しのけ、病院の白いバンが閉まりかけた遮断機を抜ける。",
+      "path": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
+      "bytes": 486138,
+      "hash": "sha256-880490a98efc3ebd18bbf855a2a1da1b3d67929f8e7527bc9ad98942f0536555",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s19-seven-second-crossing.png",
+      "masterSha256": "276388f2a18f0a2d595dc565385549ad1015be989ffaca74483c444028a9c10b",
+      "prompt": "assets/source/v100/story-r9/s19-seven-second-crossing-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "ending-chiha-baba-distance",
+      "sourceLines": [
+        2385,
+        2391
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp",
+        "public/art/v100/story-r5/cuts/epilogue-main-table.webp"
+      ],
+      "alt": "チハの伸ばした手をババヤガは少し避ける。それでも席を立たず、話を聞く。",
+      "path": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
+      "bytes": 313374,
+      "hash": "sha256-33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/ending-chiha-baba-distance.png",
+      "masterSha256": "f3426121dc2a71b593d9d28dfe35435906d008e6dca60958eb8532699de4d082",
+      "prompt": "assets/source/v100/story-r9/ending-chiha-baba-distance-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "ending-plates-and-karaage",
+      "sourceLines": [
+        2415,
+        2417
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/epilogue-main-table.webp"
+      ],
+      "alt": "パイセンに空の皿が重なり、ＴＫＹはまだ唐揚げを食べ、マヨは机の下で寝返りを打つ。",
+      "path": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+      "bytes": 346460,
+      "hash": "sha256-c5c82fa74c071eb08d5c2c1124c41d6d4fe39eff813784c039d5ba57698834b1",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/ending-plates-and-karaage.png",
+      "masterSha256": "b67bb9224fbdf97d46fa2e10060c390f1678a680e1b2444d9988b483246402fd",
+      "prompt": "assets/source/v100/story-r9/ending-plates-and-karaage-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s10-rescue-surveillance",
+      "sourceLines": [
+        840,
+        850
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "薬局の女性が手を振る映像と、パイセンたちが通った救助路が監視画面で繰り返されている。",
+      "path": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+      "bytes": 324668,
+      "hash": "sha256-7d7c97d154c04e2ee42d9a944ab41685a9ce29b7683d6d1abaeaa7d883f63f35",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s10-rescue-surveillance.png",
+      "masterSha256": "6b5a5befe9ab574394d9e0a6e7735388ceece9b9564cf984fe45aa8108169e6c",
+      "prompt": "assets/source/v100/story-r9/s10-rescue-surveillance-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s27-takuya-conditioning",
+      "sourceLines": [
+        2144,
+        2148
+      ],
+      "references": [
+        "public/art/v100/bosses/takuya-battle-repaired-v1.png",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "救助路へ放たれたタクヤが警笛へ進路を変え、装置を壊す訓練記録が映る。",
+      "path": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
+      "bytes": 259526,
+      "hash": "sha256-16196b9675cfeb13245db56366bb20ddb092bcd60aac90f189af8f9ac27bf0b8",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s27-takuya-conditioning.png",
+      "masterSha256": "e8bc3346d834022734820d57601038266ba7228965a883de69f48f86a9fb3414",
+      "prompt": "assets/source/v100/story-r9/s27-takuya-conditioning-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    },
+    {
+      "id": "s30-three-samples",
+      "sourceLines": [
+        2320,
+        2330
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "投薬管・血液・骨髄を別々の三容器に密閉し、回収箱の独立した溝へ収める。",
+      "path": "/art/v100/story-r9/cuts/s30-three-samples.webp",
+      "bytes": 292014,
+      "hash": "sha256-db69ffc042d9e5d893bc6c6622fba5599a6bbe206047c0b1beffd89946e23b59",
+      "criticality": "critical",
+      "authoringMaster": "assets/source/v100/story-r9/s30-three-samples.png",
+      "masterSha256": "266a50f4f334bf014f3bdc5d37653dc7733da24129a6336935a195f91fd8b811",
+      "prompt": "assets/source/v100/story-r9/s30-three-samples-prompt.txt",
+      "tool": "image_gen.imagegen",
+      "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",
+      "producerAcceptance": "pending",
+      "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+      "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34"
+    }
+  ]
+}

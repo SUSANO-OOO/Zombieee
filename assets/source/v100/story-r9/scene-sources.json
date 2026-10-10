@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "sourceScript": "STORY_SCRIPT_V100_PRODUCER_R9.md",
+  "sourceScriptSha256": "e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34",
+  "scenes": [
+    {
+      "id": "s03-cold-retrieval",
+      "sourceLines": [
+        449,
+        453
+      ],
+      "references": [],
+      "alt": "冷徹な回収班がタクヤと鎖を担架へ載せる。"
+    },
+    {
+      "id": "s28-physical-stop",
+      "sourceLines": [
+        2181,
+        2183
+      ],
+      "references": [],
+      "alt": "武蔵とザキミヤが保護カバーを支え、隙間の奥の停止レバーへ手を伸ばす。"
+    },
+    {
+      "id": "prologue-extinguisher-escape",
+      "sourceLines": [
+        125,
+        125
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "ババヤガが消火器を噴射し、クマが椅子を押し放して厨房の勝手口へ退く。"
+    },
+    {
+      "id": "s01-nao-rescue",
+      "sourceLines": [
+        271,
+        271
+      ],
+      "references": [
+        "assets/source/v100/story-r5/nao.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "ナオが装甲車両で老人を救護し、運び終えたパイセンが隣でへたり込む。"
+    },
+    {
+      "id": "s04-monkey-shutter",
+      "sourceLines": [
+        507,
+        507
+      ],
+      "references": [
+        "assets/source/v100/story-r5/monkey.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "モンキーが配線をつなぎ、開いたシャッターからクマが駅員を背負って運び出す。"
+    },
+    {
+      "id": "s09-transfer-disconnect",
+      "sourceLines": [
+        817,
+        827
+      ],
+      "references": [
+        "assets/source/v100/story-r5/ikura.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "いくらの指示したケーブルを抜く。救助映像の送信履歴は端末に残っている。"
+    },
+    {
+      "id": "s11-oxygen-rescue",
+      "sourceLines": [
+        916,
+        918
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "閉じた待機室の外で供給弁を回し、管を通した酸素で研究員たちを救う。"
+    },
+    {
+      "id": "s22-zakimiya-holds-son",
+      "sourceLines": [
+        1840,
+        1844
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp"
+      ],
+      "alt": "ザキミヤが息子の首を支えて抱き、妻と一緒に顔を見つめて泣き笑いする。"
+    },
+    {
+      "id": "s14-train-couplers",
+      "sourceLines": [
+        1152,
+        1154
+      ],
+      "references": [
+        "assets/source/v100/story-r5/tky.webp",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp",
+        "public/art/v090/bosses/ooguchi-identity-master-r1.webp"
+      ],
+      "alt": "ＴＫＹが大口を押さえ、三人が赤い連結解除レバーを操作する。隣の青いブレーキ管は切らずに残す。"
+    },
+    {
+      "id": "s17-chiha-baba-reunion",
+      "sourceLines": [
+        1395,
+        1403
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp"
+      ],
+      "alt": "無傷の腕を確かめたチハがババヤガを抱きしめ、ババヤガも背中へ腕を回す。"
+    },
+    {
+      "id": "s23-chiha-evidence-send",
+      "sourceLines": [
+        1919,
+        1923
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp"
+      ],
+      "alt": "チハ自身が証拠を送信する。三つの受信灯が点き、使い切った認証カードから細い煙が上がる。"
+    },
+    {
+      "id": "s19-seven-second-crossing",
+      "sourceLines": [
+        1614,
+        1618
+      ],
+      "references": [
+        "public/art/v075/crawler/crawler-command-base-identity-r1.png",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "別々の車線で装甲車両が敵車両を押しのけ、病院の白いバンが閉まりかけた遮断機を抜ける。"
+    },
+    {
+      "id": "ending-chiha-baba-distance",
+      "sourceLines": [
+        2385,
+        2391
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/chiha-confession.webp",
+        "public/art/v100/story-r5/cuts/epilogue-main-table.webp"
+      ],
+      "alt": "チハの伸ばした手をババヤガは少し避ける。それでも席を立たず、話を聞く。"
+    },
+    {
+      "id": "ending-plates-and-karaage",
+      "sourceLines": [
+        2415,
+        2417
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/epilogue-main-table.webp"
+      ],
+      "alt": "パイセンに空の皿が重なり、ＴＫＹはまだ唐揚げを食べ、マヨは机の下で寝返りを打つ。"
+    },
+    {
+      "id": "s10-rescue-surveillance",
+      "sourceLines": [
+        840,
+        850
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "薬局の女性が手を振る映像と、パイセンたちが通った救助路が監視画面で繰り返されている。"
+    },
+    {
+      "id": "s27-takuya-conditioning",
+      "sourceLines": [
+        2144,
+        2148
+      ],
+      "references": [
+        "public/art/v100/bosses/takuya-battle-repaired-v1.png",
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "救助路へ放たれたタクヤが警笛へ進路を変え、装置を壊す訓練記録が映る。"
+    },
+    {
+      "id": "s30-three-samples",
+      "sourceLines": [
+        2320,
+        2330
+      ],
+      "references": [
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+      ],
+      "alt": "投薬管・血液・骨髄を別々の三容器に密閉し、回収箱の独立した溝へ収める。"
+    }
+  ]
+}
