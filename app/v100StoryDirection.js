@@ -1,5 +1,6 @@
 // Authored against Producer R5 (2026-10-08). Stable event IDs and source-node
 // indices bind staging to the screenplay; no dialogue-text guessing at runtime.
+import {V100_R9_SCENE_ASSETS} from './v100R9SceneAssets.js';
 export const V100_MAIN_CAST = Object.freeze([
   "unit-kumaverson", "unit-babayaga", "unit-zakimiya", "unit-tky",
   "unit-mrs-chiha", "unit-paisen", "unit-mayo-chan",
@@ -18,6 +19,7 @@ export const V100_R5_STORY_CUTS = Object.freeze(Object.fromEntries([
   "prologue-door-crisis", "chiha-confession", "ending-zakimiya-family", "zakimiya-c4-reunion",
   "epilogue-tky-receipt", "epilogue-main-table", "ending-tky-transport", "ending-medical-progress", "president-restrained-alive",
 ].map(name => [name, `/art/v100/story-r5/cuts/${name}.webp`])));
+export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries(Object.entries(V100_R9_SCENE_ASSETS).map(([id,scene])=>[id,scene.path])));
 
 export function v100EventPortraitPath(owner, expression = "determined") {
   const profile = V100_EVENT_PORTRAIT_PROFILES[owner];
@@ -29,6 +31,16 @@ export function v100EventPortraitPath(owner, expression = "determined") {
 const soberPosts = new Set([3, 6, 10, 13, 18, 20, 25, 27, 29, 30]);
 const alarmPres = new Set([3, 6, 10, 13, 18, 20, 25, 27, 29, 30]);
 export function v100StoryExpressionFor(eventId, nodeIndex, node, owner = node?.portraitOwner) {
+  // The masked recovery force is cold and controlled even when the heroes
+  // grieve. A stage-wide post-battle expression must never make it mourn.
+  if (['red-panther-commander','segawa','mugarian-president'].includes(owner)) return 'determined';
+  if (node?.sourceDocument === 'STORY_SCRIPT_V100_PRODUCER_R9.md') {
+    if (node.expression) return node.expression;
+    if (eventId === 'v100:event:prologue') return node.sceneTag === 'daily' ? 'warm' : node.sceneTag === 'crisis' ? 'alarm' : 'determined';
+    if (eventId === 'v100:event:ending') return node.sceneTag === 'dawn' ? 'determined' : node.sceneTag === 'kumaya' && node.sourceLine < 2393 ? 'determined' : 'warm';
+    const stage=/^v100:event:s(\d{2}):(pre|post)$/u.exec(eventId??'');
+    return stage?.[2] === 'post' ? soberPosts.has(Number(stage[1])) ? 'grief' : 'warm' : 'determined';
+  }
   const tag = node?.sceneTag;
   if (eventId === "v100:event:prologue") return tag === "daily" ? "warm"
     : tag === "crisis" || (tag === "escape" && nodeIndex < 36) ? "alarm" : "determined";
@@ -68,6 +80,11 @@ const cues = Object.freeze({
 });
 
 export function v100StoryDirectionFor(eventId, nodeIndex, node) {
+  if (node?.sourceDocument === 'STORY_SCRIPT_V100_PRODUCER_R9.md') {
+    const cut=node.cutId??null;
+    return Object.freeze({cut,backgroundPath:V100_R9_STORY_CUTS[cut]??V100_R5_STORY_CUTS[cut]??null,backgroundAlt:V100_R9_SCENE_ASSETS[cut]?.alt??null,
+      insertId:node.insertId??null,cinematic:Boolean(cut||node.insertId),expression:v100StoryExpressionFor(eventId,nodeIndex,node),cueId:node.cueId??null});
+  }
   let cut = null;
   if (eventId === "v100:event:prologue" && node?.sceneTag === "crisis" && nodeIndex >= 20 && nodeIndex <= 23) cut = "prologue-door-crisis";
   if (eventId === "v100:event:s23:pre" && nodeIndex >= 10 && nodeIndex <= 15) cut = "chiha-confession";

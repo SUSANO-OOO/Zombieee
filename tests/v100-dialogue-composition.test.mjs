@@ -4,19 +4,20 @@ import {v100ActionPortraitSubjects,v100DialogueSlots} from '../app/v100DialogueC
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {v100EventPresentationFor} from '../app/v100EventPresentation.js';
 const says=owner=>({kind:'dialogue',portraitOwner:owner});
-test('authored on-screen R5 actions retain only the people actually present',()=>{
+test('authored R9 actions retain only the people present at that source beat',()=>{
  const subjects=Object.entries(V100_STORY_EVENTS).flatMap(([id,event])=>event.nodes.flatMap((node,index)=>{
   const owners=v100ActionPortraitSubjects(id,node,index);
-  return owners.length?[{id,index,owners}]:[];
+  return owners.length?[{id,index,line:node.sourceLine,owners}]:[];
  }));
- assert.equal(subjects.length,13);
+ assert.ok(subjects.length>=25);
  assert.deepEqual(subjects.find(s=>s.id==='v100:event:s17:post').owners,['unit-mrs-chiha','unit-babayaga']);
- assert.deepEqual(subjects.find(s=>s.id==='v100:event:s30:pre'&&s.index===18).owners,['unit-mrs-chiha','unit-babayaga']);
- assert.deepEqual(subjects.find(s=>s.id==='v100:event:s22:post'&&s.index===5).owners,['unit-paisen','unit-zakimiya']);
- assert.deepEqual(subjects.find(s=>s.id==='v100:event:epilogue'&&s.index===7).owners,['unit-zakimiya']);
- assert.deepEqual(subjects.find(s=>s.id==='v100:event:epilogue'&&s.index===16).owners,['guide-ikura','unit-paisen']);
+ assert.deepEqual(subjects.find(s=>s.line===2289).owners,['unit-mrs-chiha','unit-babayaga']);
+ assert.deepEqual(subjects.find(s=>s.line===1844).owners,['unit-zakimiya']);
+ assert.deepEqual(subjects.find(s=>s.line===2385).owners,['unit-babayaga','unit-mrs-chiha']);
+ assert.deepEqual(subjects.find(s=>s.line===2375).owners,['unit-mrs-chiha']);
  assert.ok(subjects.every(s=>s.owners.every(owner=>owner!=='unit-hachi')));
- assert.deepEqual(v100ActionPortraitSubjects('v100:event:s22:post',V100_STORY_EVENTS['v100:event:s22:post'].nodes[10],10),[],'CH17 is a radio voice');
+ const radio=V100_STORY_EVENTS['v100:event:s27:post'].nodes.find(node=>node.speaker?.endsWith('の声'));
+ assert.ok(radio);assert.deepEqual(v100ActionPortraitSubjects('v100:event:s22:post',radio),[],'CH17 is a radio voice');
  assert.deepEqual(v100ActionPortraitSubjects('v100:event:s23:pre',{kind:'dialogue',text:'ババヤガはカードではなく妻の顔を見る。'}),[]);
  assert.deepEqual(v100ActionPortraitSubjects('v100:event:s23:post',{kind:'action',text:'ババヤガはカードではなく妻の顔を見る。'}),[]);
 });
