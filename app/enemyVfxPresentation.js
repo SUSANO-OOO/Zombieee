@@ -1,8 +1,7 @@
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 import { V100_COMBAT_VFX_PROFILES } from "./v100CombatPresentation.js";
 
-// Normal enemy damage commits at the start of this existing presentation timer.
-export const ENEMY_NORMAL_ATTACK_SECONDS = .18;
+export { ENEMY_NORMAL_ATTACK_SECONDS } from "./enemyCombatTiming.js";
 
 const deepFreeze = (value) => {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;

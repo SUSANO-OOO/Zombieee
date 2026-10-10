@@ -24,3 +24,13 @@ Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信ser
 ## 残る確認
 
 遠隔Chromium・native WebKit、実際のPNG/video、描画性能、保存済みPWAの更新、独立review、正式公開後の取得確認は、この文書を書いた時点では未完了。物理iPhoneの保存録画の音声、実speaker聴感、発熱も未確認。上記の静的・Node結果をそれらの成功へ読み替えない。
+
+## 初回遠隔検査と修正
+
+固定候補 `68a91cf44199e656e63aaac8949126875280e1e5` の[CI 38013816771](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38013816771)は失敗。新しい動作adapterからcatalogを先に評価するimportにより、分割されたcampaignの初期化が循環し白画面になった。PR Verify job `114099585910` の実ブラウザ例外は `Cannot read properties of undefined (reading 'mother')`。Chromium／WebKitの新combat jobもタイトル待機で停止した。公開版は変更していない。
+
+独立reviewはこの候補をHigh 1／Medium 1／Low 1と判定。Highは上記起動不良、Mediumは半径外に外れた手榴弾の元targetが同tickの燃焼だけで死亡しても爆発切断扱いになる誤帰属、Lowはupright頭部切断の傷口が首の断面からずれること。
+
+修正では敵の180ms定数をcatalog非依存のleaf moduleへ分離した。ビルド済みの両client entryを、DOM・描画・server・browser・mediaの生成なしで別Node processから読み込む回帰検査を追加。Gore contextは実際に適用した正のdamageを必須にし、pending hitの登録を各命中判定後へ移動した。実dispatchと実area-effectを組み合わせ、外れた手榴弾による燃焼死の誤切断がないことを検査した。頭部の傷口を切断面へ寄せ、斬撃と爆発・粉砕の切断領域を分け、反転frameの切断片もworld方向と一致させた。
+
+修正後のローカル検査はbuild＋1925/1925 tests成功、source Lint 0 errors／既存25 warnings。新しい候補の遠隔検証と独立reviewが完了するまで、初回失敗を解決済みの遠隔結果とは扱わない。

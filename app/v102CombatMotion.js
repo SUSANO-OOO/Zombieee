@@ -1,5 +1,5 @@
 import { sampleAnimationClip } from './combatPresentation.js';
-import { ENEMY_NORMAL_ATTACK_SECONDS } from './enemyVfxPresentation.js';
+import { ENEMY_NORMAL_ATTACK_SECONDS } from './enemyCombatTiming.js';
 
 const groups = {
   light: ['brawler','scout','medic','engineer','zakimiya','tky','miyamoto-musashi'],

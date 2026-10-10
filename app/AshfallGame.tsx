@@ -2551,7 +2551,7 @@ function applyIncomingHumanDamage(
         const strikeDamage = definition.counterDamage * (isBossFighter(counterTarget) ? definition.bossDamageMultiplier : 1);
         const applied = Math.min(counterTarget.hp, strikeDamage);
         counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
-        noteV102GoreImpact(g,counterTarget,{weapon:target.kind,originX:target.x,originY:target.y});
+        noteV102GoreImpact(g,counterTarget,{weapon:target.kind,originX:target.x,originY:target.y,damage:applied});
         recordUnitDamage(g, target.kind, applied);
         if (g.definition.missionConfig.v100StageNumber) queueV100AdvancedAbilityEffect(g, { ownerId: target.id, activationId: counter.event?.activationId ?? target.manualAbility.activationId, type: "musashi-crosscut", targetId: counterTarget.id, x: counterTarget.x, y: counterTarget.y - 30, duration: .22 });
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
@@ -2662,7 +2662,7 @@ function applyIncomingHumanDamage(
     target.hp -= protectedTarget.damage;
   }
   recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore) - Math.max(0, target.hp));
-  if(target.hp<targetHpBefore)noteV102GoreImpact(g,target,{weapon:attacker?.kind,originX:attacker?.x??contactOrigin?.x,originY:attacker?.y??contactOrigin?.y});
+  if(target.hp<targetHpBefore)noteV102GoreImpact(g,target,{weapon:attacker?.kind,originX:attacker?.x??contactOrigin?.x,originY:attacker?.y??contactOrigin?.y,damage:targetHpBefore-target.hp});
   queueV100ClawContact(g, { attacker, target, hpBefore: targetHpBefore, attackKind });
   preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
@@ -18585,7 +18585,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const totalDamage = definition.impactDamage * (sequential?1:definition.hitCount);
               const damage = Math.min(target.hp, totalDamage);
               target.hp = Math.max(0, target.hp - totalDamage);
-              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.flash = Math.max(target.flash, .3);
               for (const nearby of finalRound?g.fighters:[]) {
                 if (nearby.side !== "zombie"
@@ -18623,7 +18623,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               owner.lane = target.lane;
               const damage = Math.min(target.hp, definition.impactDamage);
               target.hp = Math.max(0, target.hp - definition.impactDamage);
-              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.stunned = Math.max(target.stunned, definition.stunSeconds);
               target.flash = Math.max(target.flash, .28);
               target.knock = Math.max(target.knock, 11);
@@ -18652,7 +18652,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const hpBefore = target.hp;
                 const damage = Math.min(target.hp, strike);
                 target.hp = Math.max(0, target.hp - strike);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.flash = Math.max(target.flash, .24);
                 recordUnitDamage(g, owner.kind, damage);
                 addDamageText(g, target.x, target.y - 50, String(Math.round(damage)), .82, "#d8f2ff");
@@ -18719,7 +18719,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   || !targetIds.has(String(target.id))) continue;
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.stunned = Math.max(target.stunned, definition.stunSeconds);
                 target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, definition.armorBreakSeconds);
                 target.armorBreakStacks = 0;
@@ -18769,7 +18769,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const hpBefore = target.hp;
               const damage = Math.min(target.hp, definition.impactDamage);
               target.hp = Math.max(0, target.hp - definition.impactDamage);
-              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.marked = Math.max(target.marked, definition.markSeconds);
               target.flash = Math.max(target.flash, .22);
               recordUnitDamage(g, owner.kind, damage);
@@ -18811,7 +18811,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const hpBefore = target.hp;
                 const damage = Math.min(target.hp, strike);
                 target.hp = Math.max(0, target.hp - strike);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.suppressionStacks = Math.max(target.suppressionStacks, UNIT_ROLE_TUNING.raider.maximumSuppressionStacks);
                 target.suppressedRemaining = Math.max(target.suppressedRemaining, definition.suppressionSeconds);
                 target.flash = Math.max(target.flash, .25);
@@ -18868,7 +18868,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .2);
                 target.knock = Math.max(target.knock, 8);
@@ -18929,7 +18929,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .28);
                 target.knock = Math.max(target.knock, definition.knockback);
@@ -18964,7 +18964,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   || effectDistance(target, event.target) > definition.effectRadius) continue;
                 const damage = Math.min(target.hp, impactDamage);
                 target.hp = Math.max(0, target.hp - impactDamage);
-                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, finalRound ? .3 : .18);
                 target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
@@ -19013,7 +19013,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const strikeDamage = definition.counterDamage * (isBossFighter(target) ? definition.bossDamageMultiplier : 1);
               const damage = Math.min(target.hp, strikeDamage);
               target.hp = Math.max(0, target.hp - strikeDamage);
-              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y});
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               recordUnitDamage(g, owner.kind, damage);
               target.flash = Math.max(target.flash, .3);
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
@@ -19109,7 +19109,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             continue;
           }
           if (!hit.applyDamage) continue;
-          if(target)noteV102GoreImpact(g,target,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY});
           if (hit.targetKind === "battlefield-object") {
             const objectTarget = g.battlefieldObjects.find((candidate) => (
               candidate.id === hit.targetObjectId
@@ -19271,6 +19270,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (!target || target.side !== "zombie") continue;
             const beforeHit = target.hp;
             target.hp = Math.max(0, target.hp - hit.damage);
+            noteV102GoreImpact(g,target,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:beforeHit-target.hp});
             target.flash = Math.max(target.flash, .16);
             target.knock = Math.max(target.knock, 5);
             addDamageText(g, target.x, target.y - 48, String(Math.round(Math.min(beforeHit, hit.damage))), .75, "#ffd36d");
@@ -19331,7 +19331,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 appliedSplash = Math.min(splashTarget.hp, grenadeDamage);
                 splashTarget.hp = Math.max(0, splashTarget.hp - grenadeDamage);
               }
-              noteV102GoreImpact(g,splashTarget,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY});
+              noteV102GoreImpact(g,splashTarget,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedSplash});
               recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
@@ -19391,6 +19391,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             target.hp = Math.max(0, target.hp - hit.damage);
           }
           const appliedDamage = Math.max(0, beforeHit - target.hp);
+          noteV102GoreImpact(g,target,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedDamage});
           recordUnitDamage(g, hit.weapon as UnitKind, appliedDamage);
           if (hit.weapon === "babayaga") {
             const newcomerEffects = resolveNewcomerAttackEffects({
@@ -19859,7 +19860,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           g.fighters = impact.fighters as Fighter[];
           for (const hit of impact.hits) {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-            if (fighter) noteV102GoreImpact(g,fighter,{weapon:"aircraft",originX:g.airstrike.targetX??W/2});
+            if (fighter) noteV102GoreImpact(g,fighter,{weapon:"aircraft",originX:g.airstrike.targetX??W/2,damage:hit.damage});
             if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, fighter.x, fighter.y - 54, `航空 -${hit.damage}`, .85, "#fff0a0"); }
           }
           addParticles(
@@ -19978,7 +19979,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   fighter.hp = hpBeforeLanding.get(fighter.id) ?? fighter.hp;
                   appliedDamage = applyIncomingHumanDamage(g, fighter, hit.damage, { attackKind: "ranged" }).targetDamage;
                 }
-                if (appliedDamage > 0) noteV102GoreImpact(g,fighter,{weapon:"pod",originX:object.x});
+                if (appliedDamage > 0) noteV102GoreImpact(g,fighter,{weapon:"pod",originX:object.x,damage:appliedDamage});
                 fighter.flash = .2;
                 fighter.knock = Math.max(fighter.knock, 10);
                 addDamageText(g, fighter.x, fighter.y - 56, `着地 -${Math.round(appliedDamage)}`, .9, hit.side === "zombie" ? "#ffd06b" : "#ff8a70");
@@ -20004,7 +20005,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.nextAreaEffectId = detonation.nextAreaEffectId;
             for (const hit of detonation.hits) {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-              if (fighter) noteV102GoreImpact(g,fighter,{weapon:"explosion",originX:object.x});
+              if (fighter) noteV102GoreImpact(g,fighter,{weapon:"explosion",originX:object.x,damage:hit.damage});
               if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, fighter.x, fighter.y - 52, `爆発 -${hit.damage}`, .82, "#ffbd59"); }
             }
             addParticles(g, object.x, object.y - 8, "#f26a35", 28);
@@ -22015,7 +22016,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
-              if(appliedAttack.targetDamage>0)noteV102GoreImpact(g,target,{weapon:f.kind,originX:f.x,originY:f.y});
+              if(appliedAttack.targetDamage>0)noteV102GoreImpact(g,target,{weapon:f.kind,originX:f.x,originY:f.y,damage:appliedAttack.targetDamage});
               if (f.side === "human" && appliedAttack.targetDamage > 0) {
                 recordUnitDamage(g, f.kind, Math.max(0, targetHpBeforeMetric) - Math.max(0, target.hp));
               }

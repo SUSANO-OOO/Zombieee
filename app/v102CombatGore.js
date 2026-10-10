@@ -23,9 +23,9 @@ export function beginV102GoreStep(world,{heightFor=()=>64}={}){
     .map(f=>[f.id,{hp:f.hp,height:heightFor(f)}]));
   return s.step;
 }
-export function noteV102GoreImpact(world,target,{weapon,originX,originY}={}){
+export function noteV102GoreImpact(world,target,{weapon,originX,originY,damage}={}){
   const s=worlds.get(world);
-  if(!s?.step?.has(target?.id)||!finite(originX))return false;
+  if(!s?.step?.has(target?.id)||!finite(originX,damage)||damage<=0)return false;
   s.contexts.set(target.id,{weapon,originX,originY});
   if(s.contexts.size>V102_GORE_LIMITS.contexts)s.contexts.delete(s.contexts.keys().next().value);
   return true;
@@ -144,16 +144,18 @@ export function v102CorpseSeverPlan(world,corpse,frame,width,height){
   const e=worlds.get(world)?.wounds.get(corpse.id);if(!e?.severed||corpse.side!=='zombie')return null;
   const b=bounds(frame),sx=width/frame.sourceRect.w,sy=height/frame.sourceRect.h;
   const upright=frame.derivedFrom==='hit'||b.h>b.w*1.3;
+  const headCut=upright&&!nonHumanoid.has(corpse.kind)&&(e.style==='cut'||e.style==='saw');
   const part=nonHumanoid.has(corpse.kind)?{x:b.x+b.w*.72,y:b.y+b.h*.38,w:b.w*.28,h:b.h*.55}
-    :upright?{x:b.x+b.w*.23,y:b.y,w:b.w*.54,h:b.h*.29}
+    :headCut?{x:b.x+b.w*.23,y:b.y,w:b.w*.54,h:b.h*.29}
+    :upright?{x:b.x+b.w*.7,y:b.y+b.h*.22,w:b.w*.3,h:b.h*.48}
     :{x:b.x+b.w*.72,y:b.y+b.h*.43,w:b.w*.28,h:b.h*.55};
   const local={x:part.x*sx-width*frame.anchorX,y:part.y*sy-height*frame.anchorY,w:part.w*sx,h:part.h*sy};
-  const outline=upright&&!nonHumanoid.has(corpse.kind)
+  const outline=headCut
     ? [[local.x,local.y],[local.x+local.w,local.y],[local.x+local.w,local.y+local.h],
       ...Array.from({length:7},(_,i)=>[local.x+local.w*(1-i/6),local.y+local.h*(.9+random(e.seed,i+130)*.1)])]
     : [[local.x+local.w,local.y],[local.x+local.w,local.y+local.h],[local.x,local.y+local.h],
       ...Array.from({length:7},(_,i)=>[local.x+local.w*random(e.seed,i+130)*.15,local.y+local.h*(1-i/6)])];
-  return {...e,part,local,outline,width,height,flight:clamp((world.time-e.at)/.42),age:world.time-e.at};
+  return {...e,part,local,outline,width,height,headCut,localDirection:e.direction*(frame.flipX?-1:1),flight:clamp((world.time-e.at)/.42),age:world.time-e.at};
 }
 export function beginV102CorpseSever(ctx,plan){
   if(!plan)return;ctx.save();ctx.beginPath();ctx.rect(-plan.width,-plan.height,plan.width*2,plan.height*2);
@@ -161,10 +163,12 @@ export function beginV102CorpseSever(ctx,plan){
 }
 export function endV102CorpseSever(ctx,plan,sprite,frame,objects={}){
   if(!plan)return;ctx.restore();const r=plan.local,p=plan.part;
-  drawWound(ctx,plan.seed,r.x+r.w*.12,r.y+r.h*.7,Math.max(2,r.w*.3),Math.max(2,r.h*.22),objects['v102-flesh-wound']);
+  drawWound(ctx,plan.seed,plan.headCut?r.x+r.w*.5:r.x+r.w*.06,plan.headCut?r.y+r.h*.97:r.y+r.h*.5,
+    Math.max(2,r.w*(plan.headCut?.27:.22)),Math.max(2,r.h*(plan.headCut?.12:.3)),objects['v102-flesh-wound']);
   // The detached part is cut from the same authored death frame. It retains
   // skin, clothing and proportions, and shares that corpse's ash/opacity.
-  ctx.save();ctx.translate(r.x+r.w*.5+plan.direction*plan.flight*plan.height*.2,r.y+r.h*.5-Math.sin(plan.flight*Math.PI)*plan.height*.18);
-  ctx.rotate(plan.direction*plan.flight*2.4);ctx.save();polygon(ctx,plan.outline.map(([x,y])=>[x-r.x-r.w*.5,y-r.y-r.h*.5]));ctx.clip();ctx.drawImage(sprite,frame.sourceRect.x+p.x,frame.sourceRect.y+p.y,p.w,p.h,-r.w*.5,-r.h*.5,r.w,r.h);ctx.restore();
-  drawWound(ctx,plan.seed+4,-r.w*.2,r.h*.35,Math.max(2,r.w*.3),Math.max(1.5,r.h*.14),objects['v102-flesh-wound']);ctx.restore();
+  ctx.save();ctx.translate(r.x+r.w*.5+plan.localDirection*plan.flight*plan.height*.2,r.y+r.h*.5-Math.sin(plan.flight*Math.PI)*plan.height*.18);
+  ctx.rotate(plan.localDirection*plan.flight*2.4);ctx.save();polygon(ctx,plan.outline.map(([x,y])=>[x-r.x-r.w*.5,y-r.y-r.h*.5]));ctx.clip();ctx.drawImage(sprite,frame.sourceRect.x+p.x,frame.sourceRect.y+p.y,p.w,p.h,-r.w*.5,-r.h*.5,r.w,r.h);ctx.restore();
+  drawWound(ctx,plan.seed+4,plan.headCut?0:-r.w*.44,plan.headCut?r.h*.47:0,
+    Math.max(2,r.w*(plan.headCut?.27:.22)),Math.max(1.5,r.h*(plan.headCut?.12:.3)),objects['v102-flesh-wound']);ctx.restore();
 }
