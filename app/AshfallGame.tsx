@@ -9597,7 +9597,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       }
     });
     const detachUnlock = mixer.attachUnlock(window);
-    void mixer.preloadScene("title", { includeOptional: false });
+    // V1 owns its title audio outside this battle component. A resumed mode
+    // goes straight into combat and must not fetch the legacy title score.
+    if (!externalSessionRef.current) void mixer.preloadScene("title", { includeOptional: false });
 
     const qaWindow = window as typeof window & { __ASHFALL_AUDIO_QA__?: unknown };
     const isLocalQa = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";

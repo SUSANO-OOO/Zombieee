@@ -229,7 +229,7 @@ async function waitForBattle(page, deadline) {
   while (Date.now() < deadline) {
     const phase = await page.locator(".v100-shell").getAttribute("data-v100-phase").catch(() => null);
     if (phase === "map") {
-      await page.getByRole("button", { name: "この作戦を編成", exact: true }).click();
+      await page.getByRole("button", { name: "編成して出撃", exact: true }).click();
     } else if (phase === "formation") {
       try {
         await page.getByRole("button", { name: "戦闘へ", exact: true }).click({ timeout: 5_000 });

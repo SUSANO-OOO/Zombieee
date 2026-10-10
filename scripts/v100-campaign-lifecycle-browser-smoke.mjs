@@ -73,7 +73,7 @@ async function eventTo(page, selector, limit) {
   throw new Error(`Story did not reach ${selector}`);
 }
 async function stage(page) {
-  await page.getByRole("button", { name: "この作戦を編成", exact: true }).click();
+  await page.getByRole("button", { name: "編成して出撃", exact: true }).click();
   await eventTo(page, ".v100-formation-panel", 40);
 }
 async function battle(page) {
@@ -263,7 +263,7 @@ try {
           await pauseAction(page, "編成画面へ戻る"); await confirm(page); await phase(page, "formation");
           await shot(page, record, "loadout-return");
           await record.reload(); await phase(page, "formation");
-          await battle(page); await pauseAction(page, "作戦地図へ撤退");
+          await battle(page); await pauseAction(page, "ステージ選択へ撤退");
           const beforeFailure = await saveAt(page);
           await fault(page, true); await confirm(page);
           await page.getByRole("status").filter({ hasText: "セーブ" }).waitFor();
@@ -287,14 +287,14 @@ try {
             await record.reload(); await page.locator('[data-v100-surface="result-lose"]').waitFor();
             assert.ok(lost.lastResult.elapsedSeconds > 0);
             await shot(page, record, "real-defeat-restored");
-            await page.getByRole("button", { name: "作戦地図へ", exact: true }).click(); await phase(page, "map");
+            await page.getByRole("button", { name: "ステージ選択へ", exact: true }).click(); await phase(page, "map");
             assert.equal((await saveAt(page)).caps, before.caps);
             record.defeat = lost.lastResult;
           }
         });
         const funded = { ...createDefaultV100Save({ playerName: "育成監査" }), campaignStarted: true, caps: 100, flowState: { phase: "map", destination: "map" } };
         await withCase(browser, engine, viewport, "funded-level-fixture", { label: "isolated 100 CAPS map save, not natural progression", serialized: serializeV100Save(funded) }, async (page, record) => {
-          await page.getByRole("navigation", { name: "作戦準備メニュー", exact: true }).getByRole("button", { name: "隊員", exact: true }).click();
+          await page.getByRole("navigation", { name: "ステージ準備メニュー", exact: true }).getByRole("button", { name: "ユニット", exact: true }).click();
           const button = page.locator(".v100-personnel-focus .v100-primary");
           await fault(page, true); await button.click();
           await page.getByRole("status").filter({ hasText: "セーブ" }).waitFor();
@@ -307,7 +307,7 @@ try {
           assert.ok(!(await page.locator(".v100-personnel-focus").innerText()).includes("武器・射程・固有能力"));
           await shot(page, record, "level-up");
           await record.reload();
-          await page.getByRole("navigation", { name: "作戦準備メニュー", exact: true }).getByRole("button", { name: "隊員", exact: true }).click();
+          await page.getByRole("navigation", { name: "ステージ準備メニュー", exact: true }).getByRole("button", { name: "ユニット", exact: true }).click();
           assert.ok((await page.locator(".v100-personnel-focus").innerText()).includes("Lv.2"));
           assert.equal((await saveAt(page)).caps, upgraded.caps);
           await shot(page, record, "level-restored");

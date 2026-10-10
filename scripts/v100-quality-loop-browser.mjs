@@ -14,6 +14,7 @@ import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializ
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
 import { V100_BOSSES, V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
+import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { beginV100Survival, checkpointV100Survival } from "../app/v100SurvivalTransactions.js";
 import { beginSurvivalWave, completeSurvivalWave } from "../app/survival.js";
 import { selectSurvivalBossKind, survivalWaveReward, survivalUpgradePreview } from "../app/survivalBattleRuntime.js";
@@ -220,7 +221,11 @@ for (const engine of engines) {
           await capture(page, row, "board");
         });
       }
-      for (const [eventId, index, count] of [["v100:event:s17:post", 3, 2], ["v100:event:s23:pre", 10, 0], ["v100:event:s28:pre", 3, 0], ["v100:event:s30:pre", 18, 2]]) {
+      const pairIndex = eventId => V100_STORY_EVENTS[eventId].nodes.findIndex((node, index, nodes) =>
+        node.portraitOwner === 'unit-babayaga' && !node.cutId && nodes[index - 1]?.portraitOwner === 'unit-mrs-chiha');
+      const confessionIndex = V100_STORY_EVENTS['v100:event:s23:pre'].nodes.findIndex(node => node.cutId === 'chiha-confession');
+      for (const [eventId, index, count] of [["v100:event:s17:post", pairIndex('v100:event:s17:post'), 2], ["v100:event:s23:pre", confessionIndex, 0], ["v100:event:s28:pre", 3, 0], ["v100:event:s30:pre", pairIndex('v100:event:s30:pre'), 2]]) {
+        assert.ok(index >= 0, `Missing R9 scene fixture: ${eventId}`);
         const stageNumber = Number(eventId.split(':')[2].slice(1));
         const stageId = V100_STAGE_IDS[stageNumber - 1];
         const isPost = eventId.endsWith(':post');
@@ -229,7 +234,7 @@ for (const engine of engines) {
           battleRunId: 'quality-event-' + stageNumber, won: true, objectiveComplete: true, bossDefeated: true, vehicleHp: 408, vehicleMaxHp: 680 })) : null;
         if (isPost) assert.equal(pending.applied, true, `Post-event QA receipt: ${pending.reason}`);
         const fixture = normalizeV100Save({ ...(pending?.save ?? stageSave), eventCursor: null,
-          flowState: { phase: isPost ? "post" : "event", eventId, stageId, stageNumber, destination: "map", nodeIndex: index, firstClear: isPost, finalized: false } });
+          flowState: { phase: isPost ? "post" : "event", eventId, stageId, stageNumber, destination: "map", nodeIndex: index, scriptVersion: V100_STORY_SCRIPT_VERSION, firstClear: isPost, finalized: false } });
         await runCase(browser, engine, viewport, eventId.replaceAll(":", "-"), fixture, async (page, row) => {
           await page.locator(".v100-story-node").waitFor();
           row.owners = await page.locator(".v100-portrait-frame").evaluateAll(elements => elements.map(element => ({ owner: element.dataset.portraitOwner, side: element.dataset.portraitSide })));
@@ -424,14 +429,14 @@ for (const engine of engines) {
       if (await offer.isVisible()) { await offer.tap(); await ready(page); }
       const restoredNotice = page.locator('.v100-notice button');
       if (await restoredNotice.isVisible()) { await restoredNotice.tap(); await ready(page); }
-      await page.getByRole("button", { name: "この作戦を編成", exact: true }).tap();
+      await page.getByRole("button", { name: "編成して出撃", exact: true }).tap();
       for (let n = 0; n < 60 && !await page.locator(".v100-formation-panel").isVisible(); n++) await advanceEvent(page);
       await page.locator(".v100-slot-track .v100-slot").nth(4).tap();
       await page.getByRole("button", { name: "ナオを枠5へ配置", exact: true }).tap();
       await page.locator(".v100-sortie-selected").tap();
       assert.equal(await page.locator(".v100-personnel-focus").getAttribute("data-unit-id"), "unit-nao");
       await page.getByRole("button", { name: "出撃編成へ", exact: true }).tap();
-      await page.getByRole('navigation', { name: '作戦準備メニュー' }).getByRole('button', { name: '隊員', exact: true }).tap();
+      await page.getByRole('navigation', { name: 'ステージ準備メニュー' }).getByRole('button', { name: 'ユニット', exact: true }).tap();
       await page.locator(".v100-personnel-card").first().tap();
       const growth = page.locator(".v100-unit-growth-notes summary");
       await within(growth, 44); await growth.tap(); row.growthBox = await within(page.locator(".v100-unit-growth-notes p"));
@@ -442,7 +447,7 @@ for (const engine of engines) {
       row.afterUpgrade = await rawSave(page);
       assert.equal(row.afterUpgrade.unitLevels["unit-hachi"], 2);
       assert.equal(row.afterUpgrade.caps, early.caps - 30);
-      await page.getByRole('navigation', { name: '作戦準備メニュー' }).getByRole('button', { name: '編成', exact: true }).tap();
+      await page.getByRole('navigation', { name: 'ステージ準備メニュー' }).getByRole('button', { name: '編成', exact: true }).tap();
       await page.getByRole("button", { name: "戦闘へ", exact: true }).tap();
       row.native = { inputs: [], samples: [] };
       row.abilityReceipts = [];

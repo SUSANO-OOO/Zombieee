@@ -123,7 +123,7 @@ try {
             await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().paused === false);
             await page.getByRole("button", { name: "一時停止", exact: true }).click(); await shot(page, record, "paused");
             if (short) await fault(page, true);
-            await page.getByRole("button", { name: "作戦地図へ撤退", exact: true }).click();
+            await page.getByRole("button", { name: "ステージ選択へ撤退", exact: true }).click();
             if (short) {
               const before = await saved(page); await page.getByRole("button", { name: "実行する", exact: true }).click();
               const retry = page.getByRole("button", { name: "一括保存を再試行", exact: true }); await retry.waitFor();

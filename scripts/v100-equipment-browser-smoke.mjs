@@ -75,8 +75,8 @@ for(const [engine,type] of Object.entries({chromium,webkit}).filter(([engine])=>
     assert.deepEqual(record.native,record.save);
     await arrive(page);assert.deepEqual(await saved(page),record.save);await openEquipment(page);
     assert.equal(await page.getByLabel('装備枠 1',{exact:true}).inputValue(),'field-machete');
-    await page.getByRole('button',{name:'出撃装備へ',exact:true}).click();await page.getByRole('button',{name:'作戦地図へ',exact:true}).click();
-    await action(page,()=>page.getByRole('button',{name:'この作戦を編成',exact:true}).click());
+    await page.getByRole('button',{name:'出撃装備へ',exact:true}).click();await page.getByRole('button',{name:'ステージ選択へ',exact:true}).click();
+    await action(page,()=>page.getByRole('button',{name:'編成して出撃',exact:true}).click());
     for(let n=0;n<40;n++){await ready(page);if(await page.locator('.v100-formation-panel').isVisible())break;const skip=page.getByRole('button',{name:'スキップ',exact:true});await action(page,()=>skip.isVisible().then(visible=>visible?skip.click():page.locator('.v100-event-actions .v100-primary').click()));}
     await action(page,()=>page.getByRole('button',{name:'戦闘へ',exact:true}).click());
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);

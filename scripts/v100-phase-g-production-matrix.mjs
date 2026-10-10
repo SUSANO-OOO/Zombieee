@@ -4663,7 +4663,7 @@ for (const viewport of requiredViewports) {
     const savedBeforeDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
       Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),
     )));
-    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
+    await click(page, page.getByText("ステージ詳細・記録", { exact: true }), "map details disclosure");
     await page.locator(".v100-map-detail[open]").waitFor({ state: "visible", timeout });
     const contentVisible = await page.locator(".v100-map-detail[open]").evaluate(details => {
       const detailRect = details.getBoundingClientRect();
@@ -4688,7 +4688,7 @@ for (const viewport of requiredViewports) {
     const disclosureScreenshot = await saveScreenshot(page, imagePath(disclosureLabel), disclosureLabel);
     // Compact details deliberately fold the briefing. Keep its visible state
     // contract intact and record the native disclosure as separate evidence.
-    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details return to briefing");
+    await click(page, page.getByText("ステージ詳細・記録", { exact: true }), "map details return to briefing");
     invariant(await page.locator(".v100-map-detail[open]").count() === 0, "locked map details did not close");
     const savedAfterDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
       Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),

@@ -11,6 +11,7 @@ import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
+if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(["localhost", "127.0.0.1"].includes(origin.hostname));
 assert.equal(origin.search, "");
@@ -73,7 +74,7 @@ function plannedFormation(save) {
 }
 async function prepareEconomy(stageNumber) {
   let save=await saveAt();
-  await uiClick(button("隊員を編成"));
+  await uiClick(button("ユニットを編成"));
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
@@ -82,7 +83,7 @@ async function prepareEconomy(stageNumber) {
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
-  await uiClick(button("作戦地図へ"));
+  await uiClick(button("ステージ選択へ"));
   // Reserve a modest vehicle progression and the first unlocked healing supply.
   await uiClick(button("出撃装備を選ぶ"));
   if(save.supportPurchaseUnlockedIds.includes("support-healing")) {
@@ -103,8 +104,8 @@ async function prepareEconomy(stageNumber) {
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
     await uiClick(button("出撃装備へ"));
   }
-  await uiClick(button("作戦地図へ"));
-  await uiClick(button("隊員を編成"));
+  await uiClick(button("ステージ選択へ"));
+  await uiClick(button("ユニットを編成"));
   const targetLevel=Math.min(save.levelCap,Math.max(1,Math.ceil(stageNumber*.8)));
   for(let n=0;n<210;n++) {
     const ids=plannedFormation(save).filter(id=>save.unitLevels[id]<targetLevel).sort((a,b)=>save.unitLevels[a]-save.unitLevels[b]);
@@ -115,7 +116,7 @@ async function prepareEconomy(stageNumber) {
     await uiClick(selectPersonnel(unit));await uiClick(button(`強化 ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
-  await uiClick(button("作戦地図へ"));
+  await uiClick(button("ステージ選択へ"));
 }
 async function configureFormation() {
   const save=await saveAt();const wanted=plannedFormation(save);
@@ -203,7 +204,7 @@ async function battle(stage) {
     } catch (error) {
       const saved = await saveAt();
       const result = saved?.pendingResult;
-      if (await phaseAt() !== "result" || !await page.getByLabel("作戦結果",{exact:true}).isVisible()
+      if (await phaseAt() !== "result" || !await page.getByLabel("戦闘結果",{exact:true}).isVisible()
         || result?.battleRunId !== `v100:${stage.id}:${record.openingSave.revision}`) throw error;
       record.completedResultHandoff = {error:String(error),battleRunId:result.battleRunId};
       break;
@@ -214,7 +215,7 @@ async function battle(stage) {
 async function acceptResult(record) {
   await ready();record.result=(await saveAt()).pendingResult??(await saveAt()).lastResult;
   assert.equal(record.result?.battleRunId, `v100:${record.id}:${record.openingSave.revision}`, "Result must belong to this recorded normal battle");
-  record.resultText=await page.getByLabel("作戦結果",{exact:true}).innerText();
+  record.resultText=await page.getByLabel("戦闘結果",{exact:true}).innerText();
   record.status=record.result?.won===true?"won":"lost";
   await page.screenshot({path:path.join(out,`s${record.number}-result.png`)});await persist();
   if(record.status!=="won")throw new Error(`Normal-play defeat at Stage ${record.number}; preserve the result and diagnose before a new attempt`);
@@ -224,7 +225,7 @@ try {
  await page.goto(origin.href);await button("ブラウザで遊ぶ").click();
  if (!resumeDir) {
    await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新通し確認");
-   await uiClick(button("この名前で作戦を始める"));
+   await uiClick(button("この名前でステージを始める"));
  } else {
    await ready();
    const previous = JSON.parse(await readFile(path.join(resumeDir,"report.json")));
@@ -243,7 +244,7 @@ try {
      assert.equal(reason.battleRunId,restored.lastResult?.battleRunId);
      assert.ok(reason.finding?.length && reason.operatorChanges?.length);
      assert.equal(await phaseAt(),"result");
-     await uiClick(button("作戦地図へ"));
+     await uiClick(button("ステージ選択へ"));
      const after=await saveAt();
      for(const key of ["caps","receipts","completedStageIds","unitLevels","ownedUnitIds"])assert.deepEqual(after[key],restored[key],`Defeat return preserves ${key}`);
      report.retry={...reason,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
@@ -261,17 +262,17 @@ try {
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
     await context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true});
-    if(save.readStoryEventIds.includes("v100:event:epilogue")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
+    if(save.readStoryEventIds.includes("v100:event:credits")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
     const stage=V100_STAGES.find(stage=>save.availableStageIds.includes(stage.id)&&!save.completedStageIds.includes(stage.id));assert.ok(stage,"No next unfinished stage");
     if(preparedStage!==stage.number){await prepareEconomy(stage.number);preparedStage=stage.number;}
-    await uiClick(button("この作戦を編成"));
+    await uiClick(button("編成して出撃"));
   } else if(phase==="formation") await configureFormation();
   else if(phase==="battle") await battle(V100_STAGES.find(stage=>stage.id===save.flowState.stageId));
   else if(phase==="result") await acceptResult(report.stages.at(-1));
   else if(phase==="credits") {
     report.staffRoll=await inspectStaffRoll(page,{playerName:save.playerName});
     await page.screenshot({path:path.join(out,"staff-roll-start.png")});
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({state:"visible",timeout:360000});
+    await page.locator('[data-v100-surface="map"]').waitFor({state:"visible",timeout:360000});
     assert.ok((await saveAt()).readStoryEventIds.includes("v100:event:credits"));
     report.events["v100:event:credits"]=11;
   }
@@ -288,7 +289,7 @@ try {
     await uiClick(page.locator(".v100-event-actions .v100-primary"));
   } else throw new Error(`Unexpected phase ${phase}`);
  }
- if(!["passed", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach completed epilogue within its finite event count");
+ if(!["passed", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
 } catch(error) {report.status="failed";report.error=String(error);await page.screenshot({path:path.join(out,"failure.png")}).catch(()=>{});process.exitCode=1;}
 finally {
   try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);process.exitCode=1; }

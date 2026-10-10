@@ -67,7 +67,7 @@ try {
             assert.equal(record.initial.caps, profile === "old-played" ? 180 : profile === "v1-existing" ? 37 : 0);
             assert.equal(record.initial.completedStageIds.length, 0);
             if (profile === "v1-existing") { assert.equal(record.initial.playerName, current.playerName); await page.locator(".v100-map-layout").waitFor(); }
-            else { await page.locator("#v100-player-name").fill("入口確認"); await page.getByRole("button", { name: "この名前で作戦を始める", exact: true }).click(); await page.locator('[data-v100-event-id="v100:event:prologue"]').waitFor(); await ready(page); }
+            else { await page.locator("#v100-player-name").fill("入口確認"); await page.getByRole("button", { name: "この名前でステージを始める", exact: true }).click(); await page.locator('[data-v100-event-id="v100:event:prologue"]').waitFor(); await ready(page); }
             await shot(page, record, "entered"); record.beforeReload = await saved(page); record.legacyWrites.push(...await page.evaluate(() => window.__ROOT_LEGACY_WRITES__));
             await open(page, url, true); await ready(page); record.afterReload = await saved(page); record.legacyWrites.push(...await page.evaluate(() => window.__ROOT_LEGACY_WRITES__));
             assert.deepEqual(record.afterReload.flowState, record.beforeReload.flowState); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);

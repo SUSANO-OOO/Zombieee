@@ -19,7 +19,7 @@ for(const [engine,type]of Object.entries({chromium,webkit})){
    save.pendingResult={...source.result,won,objectiveComplete:won,stars:won?source.result.stars:0};save.flowState={...save.flowState,phase:'result',destination:'result',finalized:false};
    await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
    await page.goto(new URL('v100',origin).href);
-   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),panel=page.getByLabel('作戦結果',{exact:true});
+   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),panel=page.getByLabel('戦闘結果',{exact:true});
    await play.or(panel).first().waitFor();if(await play.isVisible())await play.click();await panel.waitFor();
    const controls=panel.locator('.v100-result-actions button');
    record.controls=await controls.evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{text:e.textContent,rect:{x:r.x,y:r.y,width:r.width,height:r.height},unoccluded:e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))};}));

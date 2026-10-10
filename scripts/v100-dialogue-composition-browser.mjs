@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {V100_STORY_EVENTS,V100_STORY_SCRIPT_VERSION} from '../app/v100StoryEvents.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
@@ -12,6 +13,7 @@ import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
+await mkdir(dirname(out),{recursive:true});
 await mkdir(out,{recursive:false});
 const ownerCase=(owner)=>{
  for(const [eventId,event] of Object.entries(V100_STORY_EVENTS)){
@@ -86,7 +88,7 @@ for(const engine of engines){
    }
    assert.deepEqual(result.errors,[]);result.status='passed';
   }catch(error){result.status='failed';result.error=String(error);await page.screenshot({path:out+'/'+engine+'-'+fixture.id+'-failure.png'}).catch(()=>{});}
-  finally{await context.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2));}
+  finally{await context.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({engine,viewport,fixture:fixture.id,status:result.status,error:result.error}));}
  }}finally{await browser.close();}
 }
 report.status=report.results.every(r=>r.status==='passed')?'passed':'failed';
