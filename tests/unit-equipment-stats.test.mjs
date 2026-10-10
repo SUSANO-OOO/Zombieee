@@ -21,11 +21,11 @@ test("Hachi vest rounds HP to 86 while a weapon keeps fractional damage", () => 
   const card = Object.freeze(applyV100UnitLevelProgression(unitContentFor("scout"), 1));
   const result = applyUnitEquipmentEffects(card, aggregateEquipmentEffects(["reinforced-vest", "field-machete"]));
   assert.equal(result.hp, 86);
-  close(result.damage, 11.55);
-  assert.equal(result.speed, 27);
+  close(result.damage, 12.936);
+  assert.equal(result.speed, 39.15);
   assert.equal(result.attackEvery, .62);
   assert.equal(card.hp, 80);
-  assert.equal(card.damage, 11);
+  assert.equal(card.damage, 12.32);
 });
 
 test("equipment and survival retain distinct attack, range, healing and defense multipliers", () => {

@@ -65,7 +65,7 @@ test("V1 escort profiles retain every wave and finish an unobstructed supported 
   for (const stage of V100_STAGES.filter(stage => stage.missionType === "escort")) {
     const definition = v100BattleDefinitionFor(stage.id), config = definition.missionConfig;
     assert.equal(definition.timeline.length, 6);
-    const expectedPressure = stage.number < 10 ? 29 : stage.number < 20 ? 33 : 37;
+    const expectedPressure = stage.number < 10 ? 35 : stage.number < 20 ? 39 : 43;
     assert.equal(definition.timeline.reduce((total,wave)=>total+wave.units.length,0),expectedPressure);
     assert.ok(definition.timeline.every((wave,index)=>index===0 || wave.units.length>=definition.timeline[index-1].units.length));
     assert.ok(definition.timeline.at(-1).at < config.durationSeconds);

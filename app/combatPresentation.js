@@ -1370,6 +1370,7 @@ export function createCombatAnimationRuntime({
     locomotionTravelDistance: 0,
     locomotionPhase: 0,
     locomotionStopPhase: 0,
+    locomotionSettle: 1,
   };
 }
 
@@ -1431,13 +1432,8 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
   let locomotionPhase = previousPhase;
   if (moving && !requestedState) locomotionPhase += movedDistance / strideDistance;
-  else if (state === 'stop-move') {
-    const t = Math.min(1, stateElapsed / animationClipFor('walker','stop-move').durationSeconds);
-    locomotionPhase = locomotionStopPhase
-      + (Math.round(locomotionStopPhase * 2) / 2 - locomotionStopPhase) * t * t * (3 - 2 * t);
-  } else if (previous.state === 'stop-move') {
-    locomotionPhase = Math.round(locomotionStopPhase * 2) / 2;
-  }
+  // A planted foot must not slide while the fighter is stationary. Settling
+  // lowers the airborne foot in the rig; it never advances the gait phase.
   const stateTravelDistance = state === "move"
     ? stateChanged
       ? movedDistance
@@ -1481,6 +1477,7 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
       + (moving && !requestedState ? movedDistance : 0),
     locomotionPhase,
     locomotionStopPhase,
+    locomotionSettle: moving ? 0 : Math.min(1, (Number(previous.locomotionSettle) || 0) + dt / .16),
   };
 }
 
