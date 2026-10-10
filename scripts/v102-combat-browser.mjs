@@ -73,7 +73,7 @@ try{
           if(V177_JOINT_ATLASES[kind]&&action!=='hit-light'){
             assert.equal(r.jointAtlasPath,V177_JOINT_ATLASES[kind].path,`${kind}/${action}: actual joint draw connection`);
             assert.ok(Number.isInteger(r.jointLowerFrame)&&Number.isInteger(r.jointUpperFrame));
-            if(['wind-up','attack','recovery'].includes(action))assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),`${kind}/${action}: muzzle follows drawn weapon`);
+            if(['wind-up','attack','recovery'].includes(action))assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),`${kind}/${action}: attack origin follows drawn weapon or mouth`);
           }
           // Authored special guards and boss poses retain their own transforms.
           // The generic action adapter and all movement retain rigid anatomy.
@@ -82,13 +82,13 @@ try{
             assert.equal(r.poseScaleY,1,`${kind}/${action}: vertical anatomy`);
             assert.equal(r.direction,action==='move-right'?'right':'left',`${kind}/${action}: movement facing`);
           }
-          if(action==='attack'&&['ranger','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+          if(action==='attack'&&['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
             await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
           }
         }
         const scale=samples[0].pixelScale;
         assert.ok(samples.every(s=>Math.abs(s.pixelScale-scale)<1e-8),`${kind}: ordinary movement, attack and hit keep one source-pixel scale`);
-        if(['ranger','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+        if(['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
           await page.screenshot({path:`${out}/${width}x${height}-${kind}.png`});
         }
       }

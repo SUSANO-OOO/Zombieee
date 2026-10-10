@@ -1,8 +1,9 @@
 # Issue #177: actual joint animation candidate
 
-The current runtime connection covers ranger walking, stopping, aiming, firing,
-recoil and recovery. It retains the approved head, rifle and hands. Clothing and
-occluded limbs derive from a built-in imagegen parts study. This is one candidate
+The current runtime connections cover ranger walking, stopping, aiming, firing,
+recoil and recovery, plus normal Mayo's diagonal run, ground settling and bite.
+They retain the approved head, weapons and equipment. Clothing and
+occluded limbs derive from built-in imagegen parts studies. These are two candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -49,3 +50,34 @@ blend and has zero inverted triangles; the smallest signed area ratio is
 natural. Normal-speed continuous visual review and native WebKit performance
 remain acceptance requirements. Local game/browser/audio playback is disabled;
 browser verification runs through remote Actions.
+
+`mayo-r1/` uses 17 explicitly bound rigid paint layers and a parented jaw. The
+original head is partitioned into head and jaw without repainting its identity;
+tail and harness remain original paint. The 0.3 stance fraction and 56 px span
+give a 186.667 px source travel cycle, rather than speeding up a short walking
+cycle. Diagonal pairs share support, with a short flight interval and no bone
+stretching. Painted planted soles meet y=432. Four settle banks retain each
+foot's travel phase through attacks. The jaw closes at the beginning of the
+engine's active attack state; the melee effect uses the rendered mouth socket.
+
+The quadruped texture contains cropped parts rather than repeated body frames:
+80,006 bytes downloaded and 421,888 bytes decoded. Its 151 real Blender poses
+are interpolated as rigid transforms, preserving limb proportions between keys.
+The original painter order and a small moving mouth interior preserve occlusion.
+The generated data and texture can be reproduced with project Sharp alone:
+
+```powershell
+node scripts/build-v177-quadruped-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-quadruped-joints.test.mjs tests/v177-joint-presentation.test.mjs
+```
+
+Mayo r6 clipped two head-edge pixels at maximum attack extension and was
+rejected. R7 reduced head extension; R8 additionally aligned the bite with real
+damage contact. Expanded-pixel review rejected R8's detached old chin edge and
+R9's exposed hinge gap. R10 moves the complete chin with the jaw and retains
+original neck fur behind the hinge, with no new face painting. Its unchanged
+bone export retains fixed lengths and painted ground support within 0.01 source
+pixels. The feral form, retreat, other owned actions, all remaining
+units, normal-speed continuous play and native performance still require work.
+The iPhone saved-recording audio defect remains unresolved.

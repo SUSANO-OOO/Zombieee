@@ -8748,7 +8748,7 @@ function drawWorld(
     const ctx = shotCtx;
     for (const sourceShot of g.shots) {
     let shot = sourceShot;
-    const sourceFighter = g.definition.missionConfig.v100StageNumber && V100_WEAPON_SOCKETS[sourceShot.weapon??""]
+    const sourceFighter = g.definition.missionConfig.v100StageNumber && (V100_WEAPON_SOCKETS[sourceShot.weapon??""] || sourceShot.weapon === 'mayo-chan')
       ? g.fighters.find(f=>f.id===sourceShot.sourceId) : undefined;
     const liveSocket = sourceFighter ? fighterWeaponSockets.get(sourceFighter) : undefined;
     if (liveSocket && !shotRenderOrigins.has(sourceShot)) shotRenderOrigins.set(sourceShot,liveSocket);
