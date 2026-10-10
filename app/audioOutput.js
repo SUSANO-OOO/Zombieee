@@ -53,7 +53,9 @@ export function createAudioOutput(context, {
   const pause = () => {
     desired = false;
     generation += 1;
-    pending?.cancel();
+    const cancelled = pending;
+    pending = null;
+    cancelled?.cancel();
     audio?.pause();
   };
   const onHidden = () => { if (!allowed()) pause(); };

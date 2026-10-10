@@ -49,6 +49,10 @@ export function createEndingAudioMix(elements, {
   owners += 1;
   clearTimeout(closeTimer);
   closeTimer = null;
+  // Register before a title/film owner registers its show callback. Its next
+  // play may run synchronously, before the lazily-created output's listener.
+  const foregroundOutput = () => outputs.get(sharedContext)?.foreground();
+  windowTarget?.addEventListener?.("pageshow", foregroundOutput);
 
   const eligible = audio => !disposed && mediaOwners.get(audio) === owner
     && activeMedia.has(audio) && !audio.ended && canPlay(audio);
@@ -164,7 +168,11 @@ export function createEndingAudioMix(elements, {
       if (!disposed) activeMedia.add(audio);
       return;
     }
-    if (!sharedContext || sharedContext.state === "closed") sharedContext = contextFactory();
+    if (!sharedContext || sharedContext.state === "closed") {
+      outputs.get(sharedContext)?.dispose();
+      outputs.delete(sharedContext);
+      sharedContext = contextFactory();
+    }
     const context = sharedContext;
     if (!outputs.has(context)) outputs.set(context, createAudioOutput(context, {
       navigatorTarget, windowTarget,
@@ -201,6 +209,7 @@ export function createEndingAudioMix(elements, {
   function dispose() {
     if (disposed) return;
     disposed = true;
+    windowTarget?.removeEventListener?.("pageshow", foregroundOutput);
     playbackSession.dispose();
     removeStateListener();
     activeMedia.clear();

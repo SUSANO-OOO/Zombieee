@@ -17,6 +17,11 @@ API非対応は既存の直接出力。再生拒否・timeoutはgesture復帰へ
 独立reviewでpageshow listener順による復帰失敗を再現。mixerがoutputのpageAwayを解除してから復帰するよう修正し、
 AudioSession非対応fixtureのpagehide→pageshow回帰を追加した。最終独立reviewと遠隔検査は別途記録する。
 
+32e87eeの独立reviewでは同じtask内のending owner交代がキャンセル済み出力promiseを再利用するMediumを再現。
+pause時にpendingを同期で切り離し、旧attemptのgeneration／identity guardを保った。即時owner交代の回帰を追加。
+titleの同期pageshowにも同じguard順のMediumがあり、ending mix作成時に先行するforeground listenerを登録。
+closed context置換時の旧native要素・track回収漏れLowも修正し、両方の実module回帰を追加した。
+
 ## ローカル検証
 
 build＋全1940/1940 tests、音声47/47、CI契約6/6、source Lint 0 errors／既存25 warnings、

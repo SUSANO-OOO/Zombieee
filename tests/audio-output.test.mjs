@@ -151,3 +151,45 @@ test("credits and postcredits share one media output while preserving gains, cur
   next.dispose(); await wait(120);
   assert.equal(sink.paused, true); assert.equal(sink.srcObject, null); assert.equal(f.tracks[0].stops, 1);
 });
+
+test("same-task ending handoff cannot inherit the previous owner's cancelled output promise", async () => {
+  const f = fixture(); f.context.state = "running";
+  const music = f.doc.createElement(), ending = f.doc.createElement();
+  const first = createEndingAudioMix([music], { ...f.options, contextFactory: () => f.context, canPlay: () => true });
+  const cancelled = first.play(music).then(() => "played", error => error.name);
+  first.dispose();
+  const next = createEndingAudioMix([ending], { ...f.options, contextFactory: () => f.context, canPlay: () => true });
+  next.setVolume(ending, .2); await next.play(ending);
+  assert.equal(await cancelled, "AbortError");
+  assert.equal(f.elements.length, 1); assert.equal(f.elements[0].plays, 2);
+  assert.equal(f.elements[0].paused, false); assert.equal(f.tracks[0].stops, 0);
+  assert.equal(endingAudioState(ending).gain, .2);
+  next.dispose(); await wait(120); assert.equal(f.tracks[0].stops, 1);
+});
+
+test("title-style synchronous pageshow playback clears the output guard before its late listener", async () => {
+  const f = fixture(); delete f.win.navigator.audioSession; f.context.state = "running";
+  const music = f.doc.createElement();
+  const mix = createEndingAudioMix([music], { ...f.options, contextFactory: () => f.context, canPlay: () => true });
+  let showPlay;
+  f.win.addEventListener("pageshow", () => { showPlay = mix.play(music); });
+  mix.setVolume(music, .12); await mix.play(music);
+  f.win.dispatchEvent(new Event("pagehide"));
+  assert.equal(f.elements[0].paused, true);
+  f.win.dispatchEvent(new Event("pageshow")); await showPlay;
+  assert.equal(f.elements[0].paused, false); assert.equal(endingAudioState(music).gain, .12);
+  mix.dispose(); await wait(120);
+});
+
+test("replacing a closed ending context releases its old media element and tracks", async () => {
+  const f = fixture(), nextFixture = fixture(); f.context.state = "running"; nextFixture.context.state = "running";
+  let created = 0;
+  const music = f.doc.createElement(), ending = f.doc.createElement();
+  const mix = createEndingAudioMix([music, ending], { ...f.options,
+    contextFactory: () => ++created === 1 ? f.context : nextFixture.context, canPlay: () => true });
+  await mix.play(music); await f.context.close();
+  await mix.play(ending);
+  assert.equal(f.elements[0].removed, true); assert.equal(f.elements[0].srcObject, null); assert.equal(f.tracks[0].stops, 1);
+  assert.equal(f.elements.length, 2); assert.equal(f.elements[1].paused, false);
+  mix.dispose(); await wait(120); assert.equal(nextFixture.tracks[0].stops, 1);
+});
