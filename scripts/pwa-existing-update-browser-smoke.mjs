@@ -24,7 +24,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
-import { V102_ASSET_ADDITIONS, V102_ASSET_BYTES } from './v102-asset-contract.mjs';
+import { V177_INSTALLED_ASSET_CONTRACT } from './v177-installed-asset-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Installed PWA QA is hosted-only; local game, browser and audio are disabled');
 
@@ -34,13 +34,11 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
 const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.5";
-const oldContract=oldVersion==='1.0.2'
-  ? {assets:681,distinct:679,replaced:[],additions:0,bytes:0,bundled:0,network:0}
-  : oldVersion==='1.0.1'
-  ? {assets:680,distinct:678,replaced:[],additions:V102_ASSET_ADDITIONS.length,bytes:V102_ASSET_BYTES,bundled:0,network:1}
-  : {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
+const oldContract = V177_INSTALLED_ASSET_CONTRACT[oldVersion]
+  ?? {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp','/art/v090/characters/miyamoto-musashi-battle-r1.png'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
 if(!['0.9.9.5','1.0.1','1.0.2'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
 const commitOnlyUpdate = oldContract.additions === 0;
+const oldHasV100Root = oldVersion !== '0.9.9.5';
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
   ?? "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const expectedCandidateReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
@@ -229,13 +227,15 @@ const retainedCacheEntryCount = new Set([...oldDistinctHashes, ...candidateDisti
 const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset) => (
   `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`
 )));
-record("candidate preserves unchanged assets and declares the approved WebKit card replacement", (
+record("candidate preserves unchanged assets and declares only the approved media changes", (
   oldDistinctHashes.size === oldContract.distinct
   && candidateDistinctHashes.size === assetContract.distinctHashes
-  && JSON.stringify(replacedOldPaths) === JSON.stringify(oldContract.replaced)
+  && JSON.stringify(replacedOldPaths.slice().sort()) === JSON.stringify(oldContract.replaced.slice().sort())
   && candidateByPath.get(V100_WEBKIT_CARD_REPLACEMENT.path)?.hash === V100_WEBKIT_CARD_REPLACEMENT.hash
   && candidateManifest.assets.length === assetContract.count
   && candidateNewHashAssets.length === oldContract.additions
+  && (!oldContract.changed || JSON.stringify(candidateNewHashAssets.map(({path,bytes,hash}) => ({path,bytes,hash})).sort((a,b) => a.path.localeCompare(b.path)))
+    === JSON.stringify(oldContract.changed.map(({path,bytes,hash}) => ({path,bytes,hash})).sort((a,b) => a.path.localeCompare(b.path))))
   && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === oldContract.bytes
   && candidateNewHashAssets.length === candidateNewHashes.size
   && candidateNewBundledAssets.length === oldContract.bundled
@@ -534,9 +534,9 @@ async function screenshot(page, label) {
   });
 }
 
-async function acknowledgeLegacyGift(page, oldSave) {
+async function acknowledgeLegacyGift(page, oldSave, giftLabel = "新しい戦闘記録を開始しました") {
   await waitForV100Ready(page);
-  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+  const gift = page.getByRole("dialog", { name: giftLabel, exact: true });
   await gift.waitFor({ state: "visible", timeout: 60_000 });
   const updateDeferredDuringGift = await page.getByRole("button", { name: "更新をダウンロード", exact: true }).count() === 0;
   const giftConfirmation = gift.getByRole("button", { name: "確認する", exact: true });
@@ -604,7 +604,7 @@ await mkdir(evidenceDir, { recursive: true });
 try {
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "old-install-entry";
-  await page.goto(commitOnlyUpdate ? baseUrl : legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
+  await page.goto(oldHasV100Root ? baseUrl : legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const oldPageManifest = await manifestFromPage(page);
   record(`existing profile initially loads the ${oldVersion} manifest`, (
     oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
@@ -630,7 +630,7 @@ try {
   ), oldInstalled);
 
   await page.getByRole("button", { name: "ゲームを始める" }).click();
-  if (commitOnlyUpdate) await waitForV100Ready(page);
+  if (oldHasV100Root) await waitForV100Ready(page);
   else await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   await page.waitForTimeout(500);
   const oldSave = await saveState(page);
@@ -649,10 +649,10 @@ try {
   await screenshot(page, "old-installed");
 
   let beforeUpdateV100;
-  if (commitOnlyUpdate) {
+  if (oldHasV100Root) {
     // Install and start the current release through its normal V1 root.
     // Do not mount a legacy renderer and navigate away during its asset loads.
-    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave, "新しい作戦記録を開始しました");
   }
   await closeContext("close-old-installed");
   const switched = await fetch(`http://127.0.0.1:${address.port}/__qa/switch?root=candidate`).then((response) => response.json());
@@ -689,7 +689,16 @@ try {
       && pendingSave.legacyWrites.length === 0
     ), { v100SavePreserved: pendingSave.raw === beforeUpdateV100.raw, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
   } else {
-    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+    if (oldHasV100Root) {
+      await waitForV100Ready(page);
+      const pendingSave = await v100State(page);
+      record("a media update preserves the installed V1 save and does not repeat its acknowledged gift", (
+        pendingSave.raw === beforeUpdateV100.raw
+        && pendingSave.oldRaw === oldSave.raw
+        && pendingSave.legacyWrites.length === 0
+        && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
+      ), { v100SavePreserved: pendingSave.raw === beforeUpdateV100.raw, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
+    } else beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
     await updateButton.waitFor({ state: "visible", timeout: 60_000 });
   }
   diagnostics.audioOwnerAtTransition.beforeUpdate = await page.evaluate(() => (
@@ -805,7 +814,7 @@ try {
     && relaunchedSave.raw === oldSave.raw
     && relaunchedV100.raw === beforeUpdateV100.raw
     && relaunchedV100.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
   ), {
     relaunchedWorker: workerSummary(relaunchedWorker),
     legacySavePreserved: relaunchedSave.raw === oldSave.raw,
@@ -948,4 +957,7 @@ try {
 }
 
 console.log(`\n${results.filter((result) => result.passed).length} / ${results.length} persistent PWA update cases passed`);
+// Keep full storage/worker snapshots in the artifact. Repeat the concise cause
+// after them so a provider's bounded log tail still identifies every failure.
+for (const failure of failures) console.log(`[FAIL SUMMARY] ${failure.name} :: ${JSON.stringify({error:failure.error,phase:failure.phase,changedLogicalAssets:failure.changedLogicalAssets,changedBytes:failure.changedBytes,replacedOldPaths:failure.replacedOldPaths})}`);
 if (failures.length > 0) process.exitCode = 1;

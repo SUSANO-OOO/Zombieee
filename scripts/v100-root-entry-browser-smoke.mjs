@@ -61,7 +61,7 @@ try {
           } else {
             await ready(page); assert.equal(await page.locator(".title-screen-v060").count(), 0);
             if (profile === "old-played") {
-              const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page);
+              const gift = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page);
             }
             record.initial = await saved(page);
             assert.equal(record.initial.caps, profile === "old-played" ? 180 : profile === "v1-existing" ? 37 : 0);
@@ -72,7 +72,7 @@ try {
             await open(page, url, true); await ready(page); record.afterReload = await saved(page); record.legacyWrites.push(...await page.evaluate(() => window.__ROOT_LEGACY_WRITES__));
             assert.deepEqual(record.afterReload.flowState, record.beforeReload.flowState); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
             assert.deepEqual(record.legacyWrites, []); assert.equal(await page.evaluate(k => localStorage.getItem(k), oldKey), profile === "old-played" ? oldBytes : null);
-            if (profile === "old-played") { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); assert.equal(await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0); }
+            if (profile === "old-played") { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); assert.equal(await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0); }
             await shot(page, record, "reloaded"); record.status = "passed-v1-root-entry-and-reload";
           }
           assert.deepEqual(record.errors, []); console.log(JSON.stringify({ name: record.name, status: record.status, images: record.images.length }));

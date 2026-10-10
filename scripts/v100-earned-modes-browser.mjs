@@ -63,12 +63,12 @@ try{
  outbreak.result=(await save()).outbreak.lastResult;assert.equal(outbreak.result.won,true,'Preserve and diagnose a normal-play defeat');
  const afterOutbreak=await save();campaignPreserved(afterOutbreak);assert.equal(afterOutbreak.caps,seed.caps+outbreak.result.rewardCaps);assert.equal(afterOutbreak.bosses.defeatCounts[boss.id],seed.bosses.defeatCounts[boss.id]+1);
  await shot('outbreak-result');await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('region',{name:'異常発生の戦果',exact:true}).waitFor();assert.deepEqual(await save(),afterOutbreak);outbreak.status='passed';
- await click('異常発生一覧へ');await click('サバイバル');await shot('survival-hub');await click('防衛継続作戦へ出撃');
+ await click('異常発生一覧へ');await click('サバイバル');await shot('survival-hub');await click('サバイバルへ出撃');
  const survival={mode:'survival',status:'running',inputs:[],waves:[],turnedIds:[],turnedObservations:[],opening:await save()};report.modes.push(survival);assert.deepEqual(survival.opening.survival.active.run.bossPool,['takuya']);await persist();
  const survivalStart=Date.now();last=0;
  while(!await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).isVisible()){
    assert.ok(Date.now()-survivalStart<20*60_000,'bounded first five ordinary survival waves');assert.deepEqual(report.errors,[]);
-   assert.equal(await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).isVisible(),false,'Preserve and diagnose a normal survival defeat');
+   assert.equal(await page.getByRole('region',{name:'サバイバルの戦果',exact:true}).isVisible(),false,'Preserve and diagnose a normal survival defeat');
    const observation=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return {wave:s?.survivalRun?.currentWave??null,turned:(s?.fighters??[]).filter(f=>f.side==='zombie'&&f.kind==='turned'&&Number.isFinite(Number(f.hp))&&Number(f.hp)>0).map(f=>({id:f.id,time:s.time}))};});
    const wave=observation.wave;if(wave&&!survival.waves.includes(wave))survival.waves.push(wave);
    for(const turned of observation.turned) if(!survival.turnedIds?.includes(turned.id)) { (survival.turnedIds??=[]).push(turned.id); (survival.turnedObservations??[]).push(turned); }
@@ -86,9 +86,9 @@ try{
  await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('dialog',{name:'ボス撃破強化選択',exact:true}).waitFor();assert.deepEqual(await save(),survival.checkpoint);
  survival.checkpointReadback=await durableReadback(survival.checkpoint);await persist();
  survival.choice=await page.locator('.survival-upgrade-choices button').first().innerText();await page.locator('.survival-upgrade-choices button').first().click();await ready();survival.upgraded=await save();
- await click('一時停止');await click('ステージ選択へ撤退');await click('実行する');await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).waitFor();
+ await click('一時停止');await click('ステージ選択へ撤退');await click('実行する');await page.getByRole('region',{name:'サバイバルの戦果',exact:true}).waitFor();
  const final=await save();survival.result=final.survival.lastResult;campaignPreserved(final);assert.equal(final.survival.active,null);assert.equal(final.survival.totalRuns,seed.survival.totalRuns+1);assert.equal(final.caps,afterOutbreak.caps+survival.result.totalCaps);
- await shot('survival-result');await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('region',{name:'防衛継続作戦の戦果',exact:true}).waitFor();assert.deepEqual(await save(),final);survival.finalReadback=await durableReadback(final);survival.status='passed';assert.deepEqual(report.errors,[]);report.status='passed';
+ await shot('survival-result');await page.reload();await click('ブラウザで遊ぶ');await page.getByRole('region',{name:'サバイバルの戦果',exact:true}).waitFor();assert.deepEqual(await save(),final);survival.finalReadback=await durableReadback(final);survival.status='passed';assert.deepEqual(report.errors,[]);report.status='passed';
 }catch(e){report.status='failed';report.error=String(e.stack??e);await shot('failure').catch(()=>{});process.exitCode=1;}
 finally{
  report.finalSave=await save().catch(()=>null);await persist();

@@ -58,7 +58,7 @@ try {
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().paused === false);
           await page.getByRole("button", { name: "一時停止", exact: true }).click(); await page.getByRole("button", { name: "ステージ選択へ撤退", exact: true }).click();
           await action(page, () => page.getByRole("button", { name: "実行する", exact: true }).click());
-          await page.getByRole("region", { name: "防衛継続作戦の戦果", exact: true }).waitFor();
+          await page.getByRole("region", { name: "サバイバルの戦果", exact: true }).waitFor();
           assert.equal(await page.locator(".v100-topbar h1").innerText(), "戦果"); assert.ok((await page.locator(".v100-save-meta").innerText()).includes(RELEASE_LABEL));
           assert.equal(await page.title(), RELEASE_TITLE); record.result = (await saved(page)).survival.lastResult;
           await shot(page, record, "result"); assert.deepEqual(record.errors, []); record.status = "passed-metadata-and-copy-audio-disabled";

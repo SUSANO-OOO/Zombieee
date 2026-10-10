@@ -15410,7 +15410,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         ? { won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }
         : { musicMode: desiredMusicModeRef.current, eventId, storyLineIndex })
       : (typeof outcome === "boolean" ? { won: outcome, eventId, storyLineIndex } : { eventId, storyLineIndex });
-    const sceneId = screen === "battle" && takuyaEntranceAudioActive
+    // The V1 parent owns every non-battle screen. A resumed survival session
+    // mounts here before its assets are ready, while this local screen is
+    // still "title". Do not request the parent's opening score in that gap.
+    const sceneId = externalSessionActive && screen !== "battle" ? null
+      : screen === "battle" && takuyaEntranceAudioActive
       ? TAKUYA_ENTRANCE_AUDIO.bossSceneId
       : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
@@ -15427,7 +15431,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       if (desiredProductionSceneRef.current !== sceneId) return;
       setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, takuyaEntranceAudioActive]);
+  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, externalSessionActive, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;

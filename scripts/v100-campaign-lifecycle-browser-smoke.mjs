@@ -167,7 +167,7 @@ try {
       for (const viewport of viewports) {
         if (scope !== "lifecycle") {
           await withCase(browser, engine, viewport, "legacy-title-popup-and-older-restore", { label: "validated legacy played-history fixture; actual production UI", legacySerialized }, async (page, record) => {
-            const popup = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+            const popup = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true });
             await popup.waitFor();
             assert.ok((await popup.innerText()).includes("付与CAPS: 180"));
             assert.ok((await popup.innerText()).includes("新しいCAPS残高: 180"));
@@ -205,20 +205,20 @@ try {
             await data.locator("article input[type=file]").setInputFiles({ name: "legacy-history.json", mimeType: "application/json", buffer: Buffer.from(createCampaignManualExport(legacySerialized)) });
             await page.getByRole("status").filter({ hasText: "過去のプレイ履歴を確認" }).waitFor(); await ready(page);
             assert.equal((await saveAt(page)).caps, 0); assert.equal((await saveAt(page)).campaignStarted, false);
-            assert.equal(await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+            assert.equal(await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0);
             await shot(page, record, "history-verified-data-no-gift-overlay");
             await data.getByRole("button", { name: "閉じる", exact: true }).click();
             const retry = page.getByRole("button", { name: "表示の保存を再試行", exact: true }); await retry.waitFor(); await ready(page);
             assert.equal((await saveAt(page)).caps, 180); assert.equal((await saveAt(page)).legacy.popupAcknowledged, false);
             await shot(page, record, "gift-paint-ack-write-rejected");
             const second = await context.newPage(); await enter(second); await ready(second);
-            assert.equal(await second.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+            assert.equal(await second.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0);
             assert.equal((await saveAt(second)).caps, 180);
             await page.evaluate(() => { window.__V100_ACK_WRITE_FAILURE__ = false; sessionStorage.setItem("v100-fixture-ack-released", "true"); });
             await retry.click();
             await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).legacy.popupAcknowledged === true, key); await ready(page);
-            await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).getByRole("button", { name: "確認する", exact: true }).click();
-            assert.equal(await second.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+            await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).getByRole("button", { name: "確認する", exact: true }).click();
+            assert.equal(await second.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0);
             await second.waitForLoadState("networkidle"); await second.close();
             await page.evaluate(() => new Promise((resolve, reject) => {
               const request = indexedDB.open("nishijin-campaign-v100"); request.onerror = () => reject(request.error);
@@ -233,7 +233,7 @@ try {
             await recovery.getByRole("button", { name: "直前の正常なセーブを復元する", exact: true }).click();
             await ready(page); assert.equal((await saveAt(page)).caps, 180); assert.equal((await saveAt(page)).legacy.popupAcknowledged, true);
             await record.reload(); await ready(page);
-            assert.equal(await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+            assert.equal(await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0);
             await shot(page, record, "recovered-no-second-gift");
             record.storage = { manualHistoryOnly: true, ackAbortHeld: true, simultaneousPopupOwners: 1, caps: 180, explicitRecovery: true };
           });

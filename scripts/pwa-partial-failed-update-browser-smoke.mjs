@@ -829,7 +829,7 @@ try {
   ), { candidateVersion: candidateManifestFromPage.version, userDataDir, cache: candidateCacheBefore });
 
   await waitForV100Ready(page);
-  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+  const gift = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true });
   await gift.waitFor({ state: "visible", timeout: 60_000 });
   const updateNotice = page.getByRole("button", { name: /^(?:更新をダウンロード|不足分だけ再取得)$/u });
   const updateControlsDuringGift = await updateNotice.evaluateAll((controls) => controls.map((control) => {
@@ -1098,7 +1098,7 @@ try {
     && (await currentSave(page)) === oldSaveRaw
     && relaunchedBeforeV100.raw === beforeUpdateV100.raw
     && relaunchedBeforeV100.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
   ), {
     activeVersion: relaunchedBefore.state?.active?.version,
     cache: await cacheState(page),
@@ -1347,7 +1347,7 @@ try {
     && committedRelaunchV100.raw === beforeUpdateV100.raw
     && committedRelaunchV100.oldRaw === oldSaveRaw
     && committedRelaunchV100.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
   ), {
     activeVersion: committedRelaunch.state?.active?.version,
     v100SavePreserved: committedRelaunchV100.raw === beforeUpdateV100.raw,

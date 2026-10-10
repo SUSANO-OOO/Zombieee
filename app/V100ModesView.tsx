@@ -48,7 +48,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
   </>;
   const result = save.outbreak.lastResult;
   if (save.outbreak.view === "result" && result) return <section className="v100-panel v100-mode-result" data-v100-surface="outbreak-result" aria-label="異常発生の戦果">
-    <span className="v100-kicker">異常発生 / 戦果</span><h2>{result.won ? "再制圧成功" : "作戦失敗"}</h2>
+    <span className="v100-kicker">異常発生 / 戦果</span><h2>{result.won ? "再制圧成功" : "再制圧失敗"}</h2>
     <h3>{bosses.find(boss => boss.id === result.bossId)?.displayName}</h3>
     <dl><div><dt>獲得CAPS</dt><dd>+{result.rewardCaps}</dd></div><div><dt>装甲車両</dt><dd>{result.vehicleHp} / {result.vehicleMaxHp}</dd></div><div><dt>経過時間</dt><dd>{result.elapsedSeconds}秒</dd></div><div><dt>装備</dt><dd>{v100EquipmentFor(result.grantedEquipmentId)?.displayName ?? "なし"}</dd></div></dl>
     <button type="button" onClick={() => void onSave(dismissV100OutbreakResult(save))}>異常発生一覧へ</button>
@@ -72,7 +72,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
       const rewardOwned = item && (save.equipment.inventory[item.id] ?? 0) >= v100EquipmentQuantityCap(item.id);
       const clears = save.outbreak.clearCounts[boss.id] ?? 0;
       return <article className="v100-equipment-card" key={boss.id} data-outbreak-boss-id={boss.id}>
-        <span className="v100-kicker">物語 第{boss.stageNumber}作戦 / 撃破済み</span><h3>{boss.displayName}</h3>
+        <span className="v100-kicker">物語 ステージ {boss.stageNumber} / 撃破済み</span><h3>{boss.displayName}</h3>
         <p>総撃破 {defeatCounts[boss.id] ?? 0}回 / 異常発生制圧 {clears}回 / サバイバル制圧 {save.survival.clearCounts[boss.id] ?? 0}回</p>
         {tab === "outbreak" && <><p>制圧報酬 {boss.rewardCaps} CAPS</p><p>初回装備：{item?.displayName ?? "なし"}{clears > 0 ? "（初回制圧済み）" : rewardOwned ? "（所持上限のため追加なし）" : ""}</p><button type="button" onClick={() => void onSave(beginV100Outbreak(save, boss.id, { runId: runId() }))}>この異常個体と再戦</button></>}
         {tab === "compendium" && <p>物語での撃破後、異常発生に出現します。個別の撃破記録は全モードで共有します。</p>}

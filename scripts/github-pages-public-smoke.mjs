@@ -125,14 +125,14 @@ try {
       await closeBlockedWorkerNotice(page, record, "initial-entry");
       await enterV100FromTitle(page);
       await ready(page);
-      if (oldBytes) { const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page); }
+      if (oldBytes) { const gift = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page); }
       record.initial = await mirror(page); assert.equal(record.initial.caps, oldBytes ? 180 : profile === "v1-existing" ? 37 : 0);
       assert.deepEqual(record.initial.completedStageIds, profile === "v1-existing" ? current.completedStageIds : []);
       if (profile !== "v1-existing") { await page.locator("#v100-player-name").fill("公開確認"); await page.getByRole("button", { name: "この名前でステージを始める", exact: true }).click(); }
       await advance(page, ".v100-map-layout", 220); await ready(page); record.beforeReload = await mirror(page); record.legacyWrites.push(...await page.evaluate(() => window.__PUBLIC_LEGACY_WRITES__));
       record.phase = "map-network-quiescence"; record.beforeReloadNetwork = await settlePublicMapNetwork(page, network);
       record.phase = "intentional-map-reload"; await boot(page, target.href, true); record.phase = "after-map-reload"; await ready(page); record.afterReload = await mirror(page); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.deepEqual(record.afterReload.completedStageIds, record.beforeReload.completedStageIds); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
-      assert.equal(await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count(), 0);
+      assert.equal(await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count(), 0);
       if (oldBytes) { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); }
       await closeBlockedWorkerNotice(page, record, "map-reload");
       await enterV100FromTitle(page);

@@ -492,7 +492,7 @@ async function verify(contract) {
   });
 
   await waitForV100Ready(page);
-  const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
+  const gift = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true });
   await gift.waitFor({ state: "visible", timeout: 90_000 });
   const updateButton = page.getByRole("button", { name: "更新をダウンロード", exact: true });
   const updateDeferredDuringGift = await updateButton.count() === 0;
@@ -587,7 +587,7 @@ async function verify(contract) {
     && reopened.oldRaw === legacySaveRaw
     && reopened.raw === beforeUpdate.raw
     && reopened.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true }).count() === 0
+    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
   ), { worker: workerSummary(reopenedWorker), legacyWrites: reopened.legacyWrites });
 
   await context.setOffline(true);

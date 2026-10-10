@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
-import {V100_STORY_EVENTS,V100_STORY_SCRIPT_VERSION} from '../app/v100StoryEvents.js';
+import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
 import {v100StoryPageFor} from '../app/v100StoryPages.js';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {publicDisplayText} from '../app/publicDisplayNames.js';
-import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
-import {V100_STAGE_IDS} from '../app/v100Registry.js';
+import {serializeV100Save} from '../app/v100Save.js';
+import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
@@ -39,6 +39,9 @@ const insertCases=insertIds.map(insertId=>{
 assert.equal(cutCases.length,17);
 assert.equal(insertCases.length,18);
 const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases];
+// Validate every checkpoint before starting a browser, including the settled
+// reward-confirmation phase. A malformed seed must not become a UI timeout.
+const fixtureSaves=new Map(cases.map(fixture=>[fixture.id,serializeV100Save(createV100DialogueFixture(fixture))]));
 const report={scope:'Explicit isolated story fixtures; visual composition and native next controls, not whole-campaign acceptance',build:await productionBuildIdentity(),results:[]};
 const engines=(process.env.V100_DIALOGUE_QA_ENGINES??'chromium,webkit').split(',');
 for(const engine of engines){
@@ -53,11 +56,8 @@ for(const engine of engines){
   page.on('requestfailed',request=>result.errors.push(request.failure()?.errorText+' '+request.url()));
   page.on('response',response=>{if(response.status()>=400)result.errors.push(response.status()+' '+response.url());});
   try{
-   const phase=fixture.eventId.endsWith(':post')?'post':fixture.eventId.endsWith(':ending')?'ending':'event';
-   const stageNumber=V100_STORY_EVENTS[fixture.eventId].stageNumber??null;
    const storyPage=v100StoryPageFor(fixture.eventId,V100_STORY_EVENTS[fixture.eventId].nodes,fixture.nodeIndex);
-   const save=normalizeV100Save({...createDefaultV100Save({playerName:'構図確認'}),campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,Math.max(0,(stageNumber??1)-1)),flowState:{phase,eventId:fixture.eventId,stageId:stageNumber?V100_STAGE_IDS[stageNumber-1]:null,stageNumber,destination:phase,nodeIndex:fixture.nodeIndex,scriptVersion:V100_STORY_SCRIPT_VERSION,firstClear:false,finalized:true}});
-   await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
+   await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},fixtureSaves.get(fixture.id));
    await page.goto(new URL('v100',origin).href);
    const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),scene=page.locator('[data-v100-event-id="'+fixture.eventId+'"]');
    await play.or(page.locator('.v100-start-screen')).or(scene).first().waitFor({state:'visible'});if(await play.isVisible())await play.click();

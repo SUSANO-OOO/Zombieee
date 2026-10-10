@@ -57,7 +57,7 @@ try {
             await action(page, () => page.getByRole("button", { name: "戦闘へ", exact: true }).click());
           } else {
             await page.getByRole("button", { name: "異常発生・記録", exact: true }).click();
-            if (mode === "survival") { await page.getByRole("button", { name: "サバイバル", exact: true }).click(); await action(page, () => page.getByRole("button", { name: "防衛継続作戦へ出撃", exact: true }).click()); }
+            if (mode === "survival") { await page.getByRole("button", { name: "サバイバル", exact: true }).click(); await action(page, () => page.getByRole("button", { name: "サバイバルへ出撃", exact: true }).click()); }
             else await action(page, () => page.getByRole("button", { name: "この異常個体と再戦", exact: true }).click());
           }
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().running);
