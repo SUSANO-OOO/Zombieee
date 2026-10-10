@@ -79,6 +79,8 @@ try{
             await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
           }
         }
+        const scale=samples[0].pixelScale;
+        assert.ok(samples.every(s=>Math.abs(s.pixelScale-scale)<1e-8),`${kind}: ordinary movement, attack and hit keep one source-pixel scale`);
         if(['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
           await page.screenshot({path:`${out}/${width}x${height}-${kind}.png`});
         }
@@ -93,6 +95,10 @@ try{
         const gore=await page.evaluate(id=>({effects:window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().combatGore,body:window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id)}),id);
         assert.equal(gore.effects.impacts.filter(e=>e.targetId===id).length,1,'one actual damage receipt produces one spray');
         assert.ok(gore.body.corpse,'real defeat owns the severed body');
+        const live=gore.body.renderHistory.at(-1),dead=gore.body.corpseRenderHistory.at(-1);
+        assert.ok(live&&dead,'live and dead bodies must both have actual paint receipts');
+        const liveFrame=spriteFrameFor(kind,live.spriteState,live.direction),deadFrame=spriteFrameFor(kind,'death',dead.direction);
+        assert.ok(Math.abs(live.renderHeight/liveFrame.sourceRect.h-dead.renderHeight/deadFrame.sourceRect.h)<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
         await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}.png`});
         row.gore.push({kind,id,...gore});
       }

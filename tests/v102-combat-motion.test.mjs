@@ -2,17 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {sampleAnimationClip,sampleAttackPresentation,animationClipFor,createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
-import {V102_MOTION_GROUPS,v102CombatMotionSample,v102GroundLift,v102TravelCycleDistance} from '../app/v102CombatMotion.js';
+import {V102_MOTION_GROUPS,v102CombatMotionSample,v102GroundLift,v102TravelCycleDistance,v102BattleBodyScale} from '../app/v102CombatMotion.js';
 
 test('all allies, enemies and alternate bodies retain anatomy throughout locomotion and actions',()=>{
   assert.deepEqual(Object.keys(V102_MOTION_GROUPS).sort(),[...spriteKinds].sort());
   for(const kind of spriteKinds)for(const state of ['idle','move','wind-up','active','recovery','hit-heavy'])for(const p of [0,.25,.5,.9]){
     const s=sampleAnimationClip(kind,state,animationClipFor(kind,state).durationSeconds*p);
     const r=v102CombatMotionSample(kind,s);
-    assert.equal(r.bodyScale,1,kind);assert.equal(r.pose.scaleX,1,kind);assert.equal(r.pose.scaleY,1,kind);assert.equal(r.pose.offsetY,0,kind);
+    assert.equal(r.bodyScale,s.bodyScale,kind+' preserves its authored character scale');assert.equal(r.bodyScale,v102BattleBodyScale(kind),kind);assert.equal(r.pose.scaleX,1,kind);assert.equal(r.pose.scaleY,1,kind);assert.equal(r.pose.offsetY,0,kind);
     if(state==='recovery')assert.notEqual(r.spriteState,'attack-a',kind);
     if(V102_MOTION_GROUPS[kind]!=='floating')assert.equal(v102GroundLift(kind,r,1.8),0,kind);
     assert.ok(v102TravelCycleDistance(kind,80)>=9);
+  }
+});
+test('ordinary motion and native contact retain the original boss, heavy ally and animal sizes',()=>{
+  for(const [kind,scale]of [['mother',2.38],['gairen',2.45],['kurome',1.95],['crusher',1.1],['guardian',1.14],['mayo-chan',.82]]){
+    const moving=v102CombatMotionSample(kind,sampleAnimationClip(kind,'move',.1));
+    const contact=v102CombatMotionSample(kind,sampleAnimationClip(kind,'active',0),{ownedPose:true});
+    assert.equal(v102BattleBodyScale(kind),scale);assert.equal(moving.bodyScale,scale);assert.equal(contact.bodyScale,scale);
   }
 });
 test('enemy contact follows its actual attack timer and does not restart its windup',()=>{

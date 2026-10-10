@@ -9,7 +9,7 @@ import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 if(process.platform==='win32')throw new Error('Enemy motion QA is hosted-only; local game and audio playback are disabled');
 const engine=process.env.V100_ENEMY_MOTION_ENGINE??'chromium',out=process.env.V100_ENEMY_MOTION_OUT;
 assert.ok(out);await mkdir(out,{recursive:false});
-const report={engine,build:await productionBuildIdentity(),inputs:[],errors:[],scope:'S1 native deployment only, level-1 owned Guardian fixture. Observe real ordinary walker and crusher attacks, without actor/time/HP/result setters. Not a campaign or win acceptance.'};
+const report={engine,build:await productionBuildIdentity(),inputs:[],errors:[],scope:'S1 native deployment only, up to three level-1 owned Guardians cover the three deployment lanes. Observe real ordinary walker and crusher attacks, without actor/time/HP/result setters. Not a campaign or win acceptance.'};
 const browser=await(await pwaBrowserType(engine)).launch();
 try {
  const context=await browser.newContext({viewport:{width:844,height:340},isMobile:true,hasTouch:true,recordVideo:{dir:out+'/videos',size:{width:844,height:340}}});
@@ -19,9 +19,10 @@ try {
  const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:['unit-gantetsu',null,null,null,null,null,null],flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
  await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
  await page.addInitScript(()=>{
-  const audit={rows:[],captures:{},skippedNonAttackSamples:0,completedKinds:[]};window.__ENEMY_CONTACT_MOTION__=audit;const seen=new Map(),copies=new Map(),proof=new Map(),completed=new Set();
+  const audit={rows:[],captures:{},timeline:[],skippedNonAttackSamples:0,completedKinds:[]};window.__ENEMY_CONTACT_MOTION__=audit;const seen=new Map(),copies=new Map(),proof=new Map(),completed=new Set();let lastTimelineSecond=-1;
   window.__ENEMY_CONTACT_EXPORT__=()=>{for(const [key,c]of copies){audit.captures[key]=c.toDataURL('image/png');c.width=c.height=0;}copies.clear();};
   function observe(){const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.(),canvas=document.querySelector('.game-shell canvas');
+   if(s?.running&&Math.floor(s.time)>lastTimelineSecond&&audit.timeline.length<90){lastTimelineSecond=Math.floor(s.time);audit.timeline.push({time:s.time,pageSeconds:performance.now()/1000,wave:s.wave,baseHp:s.baseHp,queued:s.deployQueue?.length??0,fighters:s.fighters.filter(f=>f.hp>0).slice(0,64).map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,attack:f.attack,windup:f.attackWindup,targetId:f.targetId,combatReady:f.combatReady}))});}
    if(s?.running&&canvas)for(const f of s.fighters.filter(f=>['walker','crusher'].includes(f.kind)&&f.hp>0&&f.combatReady)) {
     const r=f.renderAudit;if(!r?.assetReady||seen.get(f.id)===r.renderSequence||completed.has(f.kind)||audit.rows.length>=5000)continue;seen.set(f.id,r.renderSequence);
     if(!(f.attack>0||f.attackWindup>0)){audit.skippedNonAttackSamples++;continue;}
@@ -41,11 +42,12 @@ try {
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   const deadline=Date.now()+80000;let observed=false;
   while(Date.now()<deadline){
-   const state=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__.getSnapshot(),a=window.__ENEMY_CONTACT_MOTION__;return {time:s.time,running:s.running,humans:s.fighters.filter(f=>f.side==='human'&&f.hp>0).length,ready:['walker','crusher'].every(kind=>a.rows.some(r=>r.kind===kind&&r.windup>.08)&&a.rows.filter(r=>r.kind===kind&&r.attack>.065&&r.attack<.13&&r.flash<=0).length>=2)};});
+   const state=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__.getSnapshot(),a=window.__ENEMY_CONTACT_MOTION__;return {time:s.time,running:s.running,humans:s.fighters.filter(f=>f.side==='human'&&f.hp>0).length,queued:s.deployQueue?.length??0,ready:['walker','crusher'].every(kind=>a.completedKinds.includes(kind))};});
    if(state.ready){observed=true;break;}if(!state.running)break;
-   if(state.humans<2&&await nativeBattleTap(page,page.locator('button.unit-card[data-kind="guardian"]').first()))report.inputs.push({time:state.time,action:'deploy',kind:'guardian'});
+   if(state.humans+state.queued<3&&await nativeBattleTap(page,page.locator('button.unit-card[data-kind="guardian"]').first()))report.inputs.push({time:state.time,action:'deploy',kind:'guardian'});
    await page.waitForTimeout(350);
   }
+  report.finalState=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__.getSnapshot();return {time:s.time,running:s.running,over:s.over,won:s.won,wave:s.wave,baseHp:s.baseHp,deployQueue:s.deployQueue,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,x:f.x,y:f.y,lane:f.lane,attack:f.attack,windup:f.attackWindup,targetId:f.targetId,combatReady:f.combatReady}))};});
   await page.evaluate(()=>window.__ENEMY_CONTACT_EXPORT__());report.audit=await page.evaluate(()=>window.__ENEMY_CONTACT_MOTION__);
   for(const [name,data]of Object.entries(report.audit.captures))if(data.startsWith('data:'))await writeFile(out+'/'+name+'.png',Buffer.from(data.split(',')[1],'base64'));delete report.audit.captures;
   assert.ok(observed,'Both enemies must perform real windup and contact');assert.deepEqual(report.errors,[]);

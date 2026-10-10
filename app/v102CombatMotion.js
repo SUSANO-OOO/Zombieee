@@ -1,4 +1,4 @@
-import { sampleAnimationClip } from './combatPresentation.js';
+import { animationClipFor, sampleAnimationClip } from './combatPresentation.js';
 import { ENEMY_NORMAL_ATTACK_SECONDS } from './enemyCombatTiming.js';
 
 const groups = {
@@ -50,7 +50,13 @@ export function v102CombatMotionSample(kind,sample,{ownedPose=false,side,attack=
     const recoil=(1-p)*(1-p);
     pose={...IDENTITY,offsetX:-force*recoil,rotationRadians:-.022*recoil};
   }
-  return {...result,bodyScale:1,pose};
+  return {...result,pose};
+}
+
+// Character-specific scale is identity data (including the giant bosses).
+// It remains constant through ordinary clips and must also size their corpse.
+export function v102BattleBodyScale(kind) {
+  return animationClipFor(kind,'idle').bodyScale;
 }
 
 export function v102GroundLift(kind,sample,legacyLift) {

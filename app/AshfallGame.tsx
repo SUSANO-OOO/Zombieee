@@ -3,7 +3,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
-import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance } from "./v102CombatMotion.js";
+import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
@@ -3920,7 +3920,7 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
   }
   const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
-  const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w;
+  const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind)/frame.sourceRect.w;
   return v100UsesHumanWalk(kind, { requestedState: 'move' })
     ? v100HumanWalkCycleDistance(kind,scale)
     : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale);
@@ -3928,7 +3928,7 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
 function v102GoreBodyHeight(fighter: Fighter) {
   const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'idle','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
-  return (frame.contentRect?.h??frame.sourceRect.h)*size.h/frame.sourceRect.h*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y);
+  return (frame.contentRect?.h??frame.sourceRect.h)*size.h/frame.sourceRect.h*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind);
 }
 
 function compactSpriteScale(kind: string) {
@@ -4394,7 +4394,7 @@ function drawSpriteFighter(
     : options.v100AuthoredPresentation && renderKind === 'gate-eater'
     ? v100GateEaterAuthoredSize(frame,direction,spriteDisplaySize(renderKind))
     : options.v100AuthoredPresentation
-    ? v102BattleDisplaySize(renderKind,frame,spriteDisplaySize(renderKind),direction)
+    ? v102BattleDisplaySize(renderKind,frame,spriteDisplaySize(renderKind))
     : fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = compactSpriteScale(renderKind);
   const depthScale = activeBattlefieldDepthScale(f.y) * (isKuromeClone(f) ? V100_KUROME_CLONE_TUNING.bodyScale : 1);
@@ -8455,12 +8455,14 @@ function drawWorld(
     if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
       const authoredSize = g.definition.missionConfig.v100StageNumber
-        ? v102BattleDisplaySize(corpseRenderKind,frame,spriteDisplaySize(corpseRenderKind),corpse.side === 'human'?'right':'left')
+        ? v102BattleDisplaySize(corpseRenderKind,frame,spriteDisplaySize(corpseRenderKind))
         : fitSpriteBattleDisplaySize(corpseRenderKind, frame, spriteDisplaySize(corpseRenderKind));
-      const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+      const compactScale = g.definition.missionConfig.v100StageNumber
+        ? compactSpriteScale(corpseRenderKind) : compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
       const depthScale = activeBattlefieldDepthScale(corpse.y);
-      const width = authoredSize.w * compactScale * depthScale;
-      const height = authoredSize.h * compactScale * depthScale;
+      const bodyScale = g.definition.missionConfig.v100StageNumber ? v102BattleBodyScale(corpseRenderKind) : 1;
+      const width = authoredSize.w * compactScale * depthScale * bodyScale;
+      const height = authoredSize.h * compactScale * depthScale * bodyScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
       if (fighterRenderAuditEnabled) {
         recordCorpseRenderAudit(corpse.id, {
@@ -8480,6 +8482,7 @@ function drawWorld(
           frameFlipX: frame.flipX,
           renderWidth: width,
           renderHeight: height,
+          bodyScale,
           groundAnchor: 1,
           actualXDelta: 0,
         });
