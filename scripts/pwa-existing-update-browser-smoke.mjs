@@ -40,6 +40,7 @@ const oldContract=oldVersion==='1.0.2'
   ? {assets:680,distinct:678,replaced:[],additions:V102_ASSET_ADDITIONS.length,bytes:V102_ASSET_BYTES,bundled:0,network:1}
   : {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
 if(!['0.9.9.5','1.0.1','1.0.2'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
+const commitOnlyUpdate = oldContract.additions === 0;
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
   ?? "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const expectedCandidateReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
@@ -603,7 +604,7 @@ await mkdir(evidenceDir, { recursive: true });
 try {
   ({ context, page } = await openPersistent(userDataDir));
   diagnosticPhase = "old-install-entry";
-  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
+  await page.goto(commitOnlyUpdate ? baseUrl : legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
   const oldPageManifest = await manifestFromPage(page);
   record(`existing profile initially loads the ${oldVersion} manifest`, (
     oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
@@ -629,7 +630,8 @@ try {
   ), oldInstalled);
 
   await page.getByRole("button", { name: "ゲームを始める" }).click();
-  await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
+  if (commitOnlyUpdate) await waitForV100Ready(page);
+  else await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   await page.waitForTimeout(500);
   const oldSave = await saveState(page);
   // The old generation has the same asynchronous worker-readiness contract as
@@ -646,12 +648,10 @@ try {
   ), { oldWorker, oldSave: { ...oldSave, raw: oldSave.raw ? "present" : "missing", sha256: sha256(oldSave.raw ?? "") } });
   await screenshot(page, "old-installed");
 
-  const commitOnlyUpdate = oldContract.additions === 0;
   let beforeUpdateV100;
   if (commitOnlyUpdate) {
-    // The current installed release owns this save before the shell update.
-    // The candidate cannot mount until its complete pack is committed.
-    await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+    // Install and start the current release through its normal V1 root.
+    // Do not mount a legacy renderer and navigate away during its asset loads.
     beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
   }
   await closeContext("close-old-installed");

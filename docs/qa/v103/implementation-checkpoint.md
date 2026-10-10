@@ -134,3 +134,17 @@ candidateでは「保存済みデータを反映」を選ぶ。commit前のmount
 媒体差分がある旧版は従来のdownload導線を維持する。これは遠隔再実行前に検出・修正した検査不備。
 追加4ファイルの独立再reviewはH0／M0／L0。両script構文・対象ESLint・diff check、
 source-bound planner 8/8・CI YAML parseが成功。製品code・asset・save仕様の追加変更はない。
+
+b4a7510の両engine計20録音を回収し、ファイルbyte・期間・非ゼロ信号・FFmpeg null decodeを確認。
+native partialは24/24。offline録音は27,778 bytes／2.4584秒／RMS 0.00120208／peak 0.0086191、
+BGMオン・SEオフ、単一owner、context runningで成功。artifact 11663419635
+（zip SHA-256 `db284cb45890f6b1aeadeaea4421988996ffa8373d04ce9944a31870dcc3e524`）。
+
+1.0.2 installed-updateは更新・媒体再取得0・両save・再起動・offline・rollback成功の18/19。
+旧legacy renderer画像 `infected-battle-gutter-v1.png` のcancelled 1件を通信監査が検出した。
+artifact 11664587470（zip SHA-256 `c6d0844492067f305e1c38dff46574b07b0d991e324895d993ace0ecd4b01b80`）
+と元ログを保全。旧検査はlegacy画面へ入り、通常V1へ再navigationしていたため、
+現行1.0.2の検査は実ユーザーと同じ通常rootからinstall・起動し、旧rendererをmountしない。
+旧0.9.9.5等のlegacy導線、全通信失敗監査、save／更新／offline／rollback条件は維持する。
+製品codeは変更せず、未知の失敗を除外せず、元の失敗を成功へ置き換えない。
+この2ファイル差分の独立read-only reviewはH0／M0／L0、構文・対象ESLint・diff check成功。
