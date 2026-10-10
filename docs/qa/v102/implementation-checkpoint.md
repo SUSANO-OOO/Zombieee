@@ -13,7 +13,7 @@
 
 ## この時点で確認したこと
 
-Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信serverは起動していない。
+Windows、Node 24.19。ゲーム画面・ブラウザ・音声は起動していない。全test内の既存HTTP検査は、一時loopback serverでassetを取得し終了する。
 
 - `npm test`：buildを含め1922/1922成功。
 - Lint：製品・script・testsは0 errors、既存25 warnings。ローカルの未追跡`output/`に保存済みのbundleはvendor lint errorsを含むため、全件ログを保持し、ソース検証では当該生成物のみ除外した。CIの通常Lintは変更していない。
@@ -70,3 +70,11 @@ sequence読取りと操作を同じJS taskへまとめ、その後の描画更�
 driverの生存2体上限は、製品のleast-populated順 `[1,0,2]` に対して3laneを覆う保証がない。生存＋待機queueの合計3体まで通常tapで出撃するよう修正した。contact完了は同一個体の非flash windup後に2 contact frameが必要。80秒・5,000行・contact窓・attack-b・固定scaleのassertを維持し、simulation秒ごとの90件×最大64体の配置履歴と最終snapshotを保存する。actor・時刻・HP・結果setterは使用しない。
 
 体格修正と配置driverを含む現候補はbuild＋全1,932/1,932 tests成功、source Lint 0 errors／既存25 warnings、diff check成功。前回の全test中のGit Bash OS object権限エラーは、同じ検査を許可された実行環境で行い解消した。判定やtestの内容は変更していない。配置・体格の限定独立reviewはHigh／Medium／Low 0、対象13件成功。遠隔検証・公開・実機録画の成功はまだ主張しない。
+
+## 死亡検査の生前・死後描画待機
+
+候補 `6dcad4bc4e12ee5486a6cc86d35823928808f6db` の[CI 38019302976](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38019302976)は、Chromium・WebKitとも1280×720の全48形態とGoreに成功した後、844×390の死亡描画receipt不足で停止した。旧reportは失敗個体をassert前に保存していないため、生前・死後のどちらが欠けたかは確定できない。Pages PR buildは成功した。
+
+検査factoryの実命中待ちは80msで、描画前のcatch-upが最大5×1/60秒（83.33ms）進むと、生存時の初回描画を失う経路がある。同じJS task内で生成直後に既存の検査pauseを設定し、生存HPと実paintを確認してから再開する。実damage・切断woundとcorpseの実paintを待ち、失敗sampleもassert前に保存する。実scriptのcallback、実frame schedule、実pending hit処理を組み合わせた無音Node検査で、旧手順の失敗と新手順の両receiptを再現する。
+
+製品code・命中時間・HP計算・描画scaleの判定条件は変更していない。限定独立reviewはHigh／Medium／Low 0、対象14/14 tests、構文・Lint・diff checkに成功。build＋全1,933/1,933 tests成功。初回は同じGit Bash OS object権限エラー1件で失敗し、原logを保持したまま許可された環境で同じ全検査を実行した。修正後候補の遠隔確認は別途必要。

@@ -88,11 +88,23 @@ try{
       assert.equal(row.motion.length,48);
       for(const kind of ['walker','crusher','spindle','red-panther-knife']){
         await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
-        const proof=await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase:'die'}),kind);
+        const proof=await page.evaluate(kind=>{
+          const qa=window.__ASHFALL_BATTLE_QA__;
+          const proof=qa.prepareEnemyFacingRuntimeProof({kind,phase:'die'});
+          // A delayed frame can advance the 80ms hit before the first paint.
+          // Hold the existing fixture until its living body is actually drawn.
+          qa.setEnemyVfxProofPaused(true);
+          return proof;
+        },kind);
         const id=proof.fighterId??proof.enemyId;
         assert.ok(Number.isFinite(id),JSON.stringify(proof));
-        await page.waitForFunction(id=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().combatGore.wounds.some(w=>w.targetId===id&&w.lethal&&w.severed),id);
+        await page.waitForFunction(id=>{const a=window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id);return a.fighter?.hp>0&&a.renderHistory.length>0;},id);
+        const liveBeforeDamage=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id),id);
+        assert.equal(liveBeforeDamage.fighter.hp,proof.initial.enemyHp,'the living paint precedes any applied damage');
+        await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(false));
+        await page.waitForFunction(id=>{const qa=window.__ASHFALL_BATTLE_QA__;return qa.getPhaseGCombatSnapshot().combatGore.wounds.some(w=>w.targetId===id&&w.lethal&&w.severed)&&qa.getEnemyFacingRuntimeAudit(id).corpseRenderHistory.length>0;},id);
         const gore=await page.evaluate(id=>({effects:window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().combatGore,body:window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id)}),id);
+        row.gore.push({kind,id,liveBeforeDamage,...gore});
         assert.equal(gore.effects.impacts.filter(e=>e.targetId===id).length,1,'one actual damage receipt produces one spray');
         assert.ok(gore.body.corpse,'real defeat owns the severed body');
         const live=gore.body.renderHistory.at(-1),dead=gore.body.corpseRenderHistory.at(-1);
@@ -100,7 +112,6 @@ try{
         const liveFrame=spriteFrameFor(kind,live.spriteState,live.direction),deadFrame=spriteFrameFor(kind,'death',dead.direction);
         assert.ok(Math.abs(live.renderHeight/liveFrame.sourceRect.h-dead.renderHeight/deadFrame.sourceRect.h)<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
         await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}.png`});
-        row.gore.push({kind,id,...gore});
       }
       // Replacing the battlefield clears the old effects; merely returning to
       // an active actor cannot resurrect gore from a previous fixture.
