@@ -1540,4 +1540,5 @@ try {
 }
 
 console.log(`\n${results.filter((result) => result.passed).length} / ${results.length} partial-failed PWA cases passed`);
+for (const failure of failures) console.log(`[FAIL SUMMARY] ${failure.name} :: ${JSON.stringify(Object.fromEntries(Object.entries(failure).filter(([key])=>key!=='name').map(([key,value])=>[key,value&&typeof value==='object'?JSON.stringify(value).slice(0,2000):typeof value==='string'?value.slice(0,3000):value])))}`);
 if (failures.length > 0) process.exitCode = 1;

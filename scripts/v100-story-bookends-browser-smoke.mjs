@@ -38,6 +38,14 @@ async function inspect(page, eventId, phase, index, result) {
   const expected = v100EventPresentationFor({ eventId, phase, node, nodeIndex: index });
   const surface = page.locator(`[data-v100-event-id="${eventId}"][data-v100-node-index="${index}"]`);
   await surface.waitFor({ state: "visible", timeout: 15000 });
+  // A node's text changes before the new backdrop finishes decoding. Verify
+  // the decoded destination instead of sampling the retained previous cut.
+  if (expected.backgroundPath) await page.waitForFunction(({ selector, background }) => {
+    const backdrop = document.querySelector(selector)?.querySelector(".v100-event-backdrop");
+    const image = backdrop?.querySelector(".v100-event-image:not(.v100-event-image-previous)");
+    return Boolean(backdrop && getComputedStyle(backdrop).backgroundImage.includes(background)
+      && image?.complete && image.naturalWidth > 0 && new URL(image.src).pathname.endsWith(background));
+  }, { selector: `[data-v100-event-id="${eventId}"][data-v100-node-index="${index}"]`, background: expected.backgroundPath }, { timeout: 15000 });
   const state = await surface.evaluate(element => {
     const backdrop = element.querySelector(".v100-event-backdrop");
     const copy = element.querySelector(".v100-credits-shot, .v100-node-copy, .v100-node-title");

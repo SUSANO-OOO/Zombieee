@@ -61,4 +61,19 @@ try {
  }catch(e){report.status='failed';report.error=String(e);await page.screenshot({path:out+'/failure.png'}).catch(()=>{});}
  finally{await context.close();report.video=await page.video()?.path();}
 }finally{await browser.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2));}
-console.log(JSON.stringify({status:report.status,error:report.error,inputs:report.inputs.length,rows:report.audit?.rows.length}));if(report.status==='failed')process.exitCode=1;
+console.log(JSON.stringify({status:report.status,error:report.error,inputs:report.inputs.length,rows:report.audit?.rows.length}));
+if(report.status==='failed'){
+ // Keep the bounded observation contract. Persist enough ordinary-play data
+ // in the CI log to distinguish missing attacks from sampling or survival.
+ console.log('[ENEMY CONTACT FAILURE] '+JSON.stringify({
+  completedKinds:report.audit?.completedKinds??[],finalState:report.finalState,
+  timeline:report.audit?.timeline?.slice(-12),
+  attackSamples:['walker','crusher'].map(kind=>({kind,
+   samples:report.audit?.rows?.filter(r=>r.kind===kind).length??0,
+   owners:[...new Set(report.audit?.rows?.filter(r=>r.kind===kind).map(r=>r.id)??[])],
+   windup:report.audit?.rows?.filter(r=>r.kind===kind&&r.windup>.08&&r.flash<=0).length??0,
+   contact:report.audit?.rows?.filter(r=>r.kind===kind&&r.attack>.065&&r.attack<.13&&r.flash<=0).length??0,
+  })),errors:report.errors,
+ }));
+ process.exitCode=1;
+}

@@ -105,7 +105,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   brawler: {
     path: "/brawler-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 362, 589], [0, 117, 362, 589], [0, 118, 304, 589]],
+    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 280, 589], [0, 117, 362, 589], [0, 118, 304, 589]],
   },
   scout: {
     path: "/scout-sprites-v2.png", width: 2172, height: 724,
@@ -135,7 +135,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   infected: {
     path: "/infected-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 362, 590], [0, 151, 362, 590], [0, 194, 362, 589], [0, 135, 323, 590]],
+    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 304, 590], [0, 151, 358, 590], [0, 194, 362, 589], [0, 135, 323, 590]],
   },
   spitter: {
     path: "/spitter-sprites-v1.png", width: 2172, height: 724,
@@ -145,12 +145,12 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   shade: {
     path: "/shade-raider-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[49, 119, 309, 573], [2, 152, 362, 571], [0, 158, 362, 560], [0, 148, 359, 571], [3, 275, 332, 569], [37, 174, 314, 573]],
+    visible: [[49, 119, 309, 573], [2, 152, 362, 571], [65, 158, 362, 560], [0, 148, 359, 571], [3, 275, 332, 569], [37, 174, 314, 573]],
   },
   crusher: {
     path: "/crusher-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[74, 139, 362, 585], [0, 150, 362, 585], [0, 157, 359, 587], [12, 100, 362, 590], [0, 216, 362, 595], [0, 179, 329, 589]],
+    visible: [[74, 139, 362, 585], [80, 150, 362, 585], [74, 157, 359, 587], [12, 100, 336, 589], [0, 216, 362, 595], [0, 179, 329, 589]],
   },
   takuya: {
     path: "/takuya-boss-sprites-v2.png", width: 2172, height: 724,
@@ -166,6 +166,24 @@ const LEGACY_PADDED_CELL = Object.freeze({
   innerHeight: 725,
   gutter: 16,
 });
+
+// Source-bound exclusions checked against the complete connected body in
+// each cell. Detached impact debris, projectiles and muzzle flashes remain.
+const LEGACY_NEIGHBOUR_RECTANGLES = Object.freeze({
+  brawler: { "attack-a": [350, 0, 44, 757] },
+  infected: { "walk-b": [320, 0, 74, 757], "attack-a": [360, 300, 34, 75], "attack-b": [368, 576, 26, 40] },
+  shade: { "walk-b": [0, 0, 40, 757], "attack-a": [0, 490, 28, 55] },
+  crusher: { "walk-a": [0, 0, 64, 757], "walk-b": [0, 0, 64, 757], "attack-a": [320, 450, 74, 175] },
+});
+
+function slicesAroundRectangle(width, height, [x, y, w, h]) {
+  return [
+    { x: 0, y: 0, w: width, h: y },
+    { x: 0, y, w: x, h },
+    { x: x + w, y, w: width - x - w, h },
+    { x: 0, y: y + h, w: width, h: height - y - h },
+  ].filter(slice => slice.w > 0 && slice.h > 0);
+}
 
 const NEWCOMER_VISIBLE = Object.freeze({
   zakimiya: {
@@ -383,6 +401,8 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
         visible,
         nativeDirection,
         direction,
+        drawSlices: LEGACY_NEIGHBOUR_RECTANGLES[auditKey]?.[state]
+          ? slicesAroundRectangle(source.w, source.h, LEGACY_NEIGHBOUR_RECTANGLES[auditKey][state]) : undefined,
         authoredCell: { x: sourceXOffset, y: sourceYOffset, w: authoredWidth, h: audit.height },
         anchorX: (sourceXOffset + authoredWidth / 2) / LEGACY_PADDED_CELL.width,
         derivedFrom: state === "death" ? "hit" : undefined,
@@ -453,6 +473,9 @@ function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } 
         visible: NEWCOMER_VISIBLE[kind][direction][index],
         nativeDirection: direction,
         direction,
+        // A separate fragment of the next coat intrudes into TKY's thrust.
+        drawSlices: kind === "tky" && state === "attack-a"
+          ? slicesAroundRectangle(480, 448, [direction === "right" ? 360 : 50, 240, 70, 90]) : undefined,
       });
     }
     Object.freeze(frames[state]);

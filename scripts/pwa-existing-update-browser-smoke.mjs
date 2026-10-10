@@ -25,6 +25,7 @@ import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { V177_INSTALLED_ASSET_CONTRACT } from './v177-installed-asset-contract.mjs';
+import { inspectV177InstalledSaveTransition } from './v177-installed-save-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Installed PWA QA is hosted-only; local game, browser and audio are disabled');
 
@@ -692,12 +693,16 @@ try {
     if (oldHasV100Root) {
       await waitForV100Ready(page);
       const pendingSave = await v100State(page);
-      record("a media update preserves the installed V1 save and does not repeat its acknowledged gift", (
-        pendingSave.raw === beforeUpdateV100.raw
+      const saveTransition=inspectV177InstalledSaveTransition(beforeUpdateV100,pendingSave);
+      record("a media update preserves the installed V1 save with only empty R9 metadata and no repeated gift", (
+        saveTransition.preserved
         && pendingSave.oldRaw === oldSave.raw
         && pendingSave.legacyWrites.length === 0
         && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
-      ), { v100SavePreserved: pendingSave.raw === beforeUpdateV100.raw, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
+      ), { saveTransition, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
+      // From this one verified read onward, all reload/commit/offline/rollback
+      // checks continue comparing exact mirror bytes rather than normalizing.
+      if(saveTransition.preserved)beforeUpdateV100=pendingSave;
     } else beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
     await updateButton.waitFor({ state: "visible", timeout: 60_000 });
   }
@@ -959,5 +964,5 @@ try {
 console.log(`\n${results.filter((result) => result.passed).length} / ${results.length} persistent PWA update cases passed`);
 // Keep full storage/worker snapshots in the artifact. Repeat the concise cause
 // after them so a provider's bounded log tail still identifies every failure.
-for (const failure of failures) console.log(`[FAIL SUMMARY] ${failure.name} :: ${JSON.stringify({error:failure.error,phase:failure.phase,changedLogicalAssets:failure.changedLogicalAssets,changedBytes:failure.changedBytes,replacedOldPaths:failure.replacedOldPaths})}`);
+for (const failure of failures) console.log(`[FAIL SUMMARY] ${failure.name} :: ${JSON.stringify(Object.fromEntries(Object.entries(failure).filter(([key])=>key!=='name').map(([key,value])=>[key,value&&typeof value==='object'?JSON.stringify(value).slice(0,2000):typeof value==='string'?value.slice(0,3000):value])))}`);
 if (failures.length > 0) process.exitCode = 1;
