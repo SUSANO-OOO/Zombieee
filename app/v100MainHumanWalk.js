@@ -1,3 +1,5 @@
+import { spriteSheetPath } from './spriteManifest.js';
+
 // Fixed-length legs use the approved walk-a pixels; face, weapon and clothing stay authored.
 const rigs = {
   kumaverson: { path: '/art/v060/characters/kumaverson-battle-v1.png', hip:[250,285],knee:[259,331],ankle:[258,404],target:[245,291],reach:29,lift:17,
@@ -30,9 +32,62 @@ const rigs = {
     foot:[[145,394],[171,392],[173,410],[195,415],[197,430],[174,434],[152,426],[141,415]],
     body:[[0,0],[480,0],[480,278],[250,278],[233,299],[222,325],[210,344],[201,358],[193,337],[170,352],[152,348],[165,321],[182,280],[0,280]],detail:[] },
 };
+// Additional rigs retain the approved source painting. Each limb is a rigid
+// cutout with overlapping joint margins, rather than a warped full-body mesh.
+function bonePolygon(a,b,radius) {
+  const length=Math.hypot(b[0]-a[0],b[1]-a[1]),dx=(b[0]-a[0])/length,dy=(b[1]-a[1])/length;
+  return [[a[0]-dx*radius-dy*radius,a[1]-dy*radius+dx*radius],
+    [a[0]-dx*radius+dy*radius,a[1]-dy*radius-dx*radius],
+    [b[0]+dx*radius+dy*radius,b[1]+dy*radius-dx*radius],
+    [b[0]+dx*radius-dy*radius,b[1]+dy*radius+dx*radius]];
+}
+function addRig(kind,hip,knee,ankle,detail=[],{reach=34,lift=16}={}) {
+  rigs[kind]={path:spriteSheetPath(kind),hip,knee,ankle,target:[hip[0],hip[1]+10],reach,lift,detail,
+    thigh:bonePolygon(hip,knee,19),calf:bonePolygon(knee,ankle,16),
+    foot:[[ankle[0]-23,ankle[1]-12],[ankle[0]+43,ankle[1]-12],[ankle[0]+49,434],[ankle[0]-24,434]],
+    body:[[0,0],[480,0],[480,hip[1]+3],[0,hip[1]+3]]};
+}
+addRig('scout',[245,251],[294,319],[318,395],[
+  [[100,320],[122,265],[161,245],[191,212],[191,240],[183,266],[162,279],[143,278],[116,312]],
+  [[231,218],[268,249],[323,286],[325,307],[302,319],[265,282],[231,267]],
+]);
+Object.assign(rigs.scout,{
+  thigh:[[225,236],[262,243],[279,266],[305,288],[316,316],[309,337],[281,339],[262,310],[246,287],[231,270]],
+  calf:[[280,316],[312,315],[318,351],[328,390],[332,404],[310,409],[297,381],[288,353]],
+  foot:[[308,380],[330,384],[336,398],[369,390],[381,405],[356,421],[314,434],[303,412]],
+});
+addRig('ranger',[239,230],[260,307],[290,404],[
+  [[209,153],[251,157],[332,219],[371,264],[362,276],[316,240],[239,191]],
+]);
+addRig('medic',[239,253],[261,333],[296,411],[
+  [[131,234],[177,229],[208,278],[198,391],[156,407],[134,353]],
+  [[221,192],[358,247],[353,284],[225,245]],
+]);
+addRig('brute',[240,261],[261,332],[273,409],[
+  [[206,177],[347,287],[339,308],[207,204]],
+],{reach:29,lift:14});
+addRig('gunner',[215,266],[231,335],[249,409],[
+  [[198,218],[383,271],[376,318],[223,287]],
+]);
+addRig('guardian',[240,288],[255,345],[284,410],[
+  [[251,150],[353,150],[353,405],[251,405]],
+  [[146,235],[205,238],[191,302],[160,383],[130,388],[143,332]],
+],{reach:25,lift:12});
+addRig('engineer',[238,255],[255,324],[276,403],[
+  [[166,205],[195,214],[211,252],[201,282],[179,280],[166,255]],
+  [[195,210],[373,243],[365,306],[200,269]],
+]);
+addRig('crazy-king',[238,307],[258,362],[280,412],[
+  [[156,270],[192,264],[246,286],[338,348],[347,366],[331,389],[300,386],[232,351],[170,319],[147,301],[144,282]],
+],{reach:28,lift:14});
+addRig('miyamoto-musashi',[238,268],[266,339],[292,410],[
+  [[137,224],[230,245],[221,292],[168,341],[124,357]],
+  [[153,270],[166,263],[327,408],[319,420]],
+  [[101,278],[107,271],[274,380],[269,390]],
+],{reach:29,lift:15});
 export const V100_MAIN_HUMAN_WALK_KINDS=Object.freeze(Object.keys(rigs));
 export const V100_MAIN_HUMAN_WALK_ASSETS=Object.freeze(Object.fromEntries(Object.entries(rigs).map(([kind,rig])=>[kind,rig.path])));
-const stance=.65, frameCount=24, cellW=240, cellH=224;
+const stance=.65, frameCount=20, columns=5, cellW=160, cellH=150;
 const cycle=p=>((Number(p)||0)%1+1)%1;
 const length=(a,b)=>Math.hypot(b[0]-a[0],b[1]-a[1]);
 function kneeFor(hip,ankle,upper,lower){
@@ -67,11 +122,11 @@ export function createV100MainHumanWalkRenderer({createCanvas=()=>document.creat
     if(!rigs[kind]||!image?.naturalWidth)return false;
     if(cache.get(kind)?.image===image)return true;
     const old=cache.get(kind);if(old){old.canvas.width=0;old.canvas.height=0;cache.delete(kind);}
-    const canvas=createCanvas();canvas.width=cellW*6;canvas.height=cellH*4;const ctx=canvas.getContext('2d');if(!ctx)return false;
+    const canvas=createCanvas();canvas.width=cellW*columns;canvas.height=cellH*4;const ctx=canvas.getContext('2d');if(!ctx)return false;
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    for(let i=0;i<frameCount;i++){ctx.save();ctx.translate(i%6*cellW,Math.floor(i/6)*cellH);ctx.scale(.5,.5);paint(ctx,image,kind,v100MainHumanWalkPose(kind,i/frameCount));ctx.restore();}
+    for(let i=0;i<frameCount;i++){ctx.save();ctx.translate(i%columns*cellW,Math.floor(i/columns)*cellH);ctx.scale(cellW/480,cellH/448);paint(ctx,image,kind,v100MainHumanWalkPose(kind,i/frameCount));ctx.restore();}
     cache.set(kind,{image,canvas});builds++;return true;
   }
-  function draw(ctx,image,kind,phase,dx,dy,dw,dh){if(!prepare(kind,image))return false;const i=Math.floor(cycle(phase)*frameCount)%frameCount;ctx.drawImage(cache.get(kind).canvas,i%6*cellW,Math.floor(i/6)*cellH,cellW,cellH,dx,dy,dw,dh);return true;}
+  function draw(ctx,image,kind,phase,dx,dy,dw,dh){if(!prepare(kind,image))return false;const i=Math.floor(cycle(phase)*frameCount)%frameCount;ctx.drawImage(cache.get(kind).canvas,i%columns*cellW,Math.floor(i/columns)*cellH,cellW,cellH,dx,dy,dw,dh);return true;}
   return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:cache.size,bytes:cache.size*cellW*cellH*frameCount*4,builds,frames:frameCount})});
 }

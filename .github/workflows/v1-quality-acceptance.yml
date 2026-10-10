@@ -50,7 +50,7 @@ jobs:
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_PAGES_REQUEST_ID: v101-quality-ci
-          GITHUB_PAGES_ISSUE_NUMBER: "175"
+          GITHUB_PAGES_ISSUE_NUMBER: "177"
         run: |
           npm run build
           export GITHUB_PAGES_RELEASE_VERSION="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({RELEASE_VERSION})=>process.stdout.write(RELEASE_VERSION))')"

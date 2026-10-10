@@ -1,0 +1,26 @@
+# Version 1.0.2 — 実装時点の確認
+
+対象正本は `docs/PRODUCER_DECISIONS_1.0.2.md`、台帳はIssue #177。
+公開1.0.1 `634f8de4b0fb15df902a7dd5983ea94237cfea9d`からの差分である。
+
+## 実装
+
+- 音声：両ミキサーの再生カテゴリをplaybackに統一。前景復帰は既存の再生要求だけを一度回復する。消音、終了、中断継続中、別の音声所有者への干渉を防ぐ。録音ファイルへの音声収録成功は未確認。
+- 動作：48種の描画形態を対応表へ固定。15人の人型歩行は同一原画の関節切り出しで組み立てる。移動距離から足運びと歩行画像の周期を決める。汎用動作の伸縮、接地中の上下浮遊、ポーズごとの拡大縮小を除く。専用の盾、連続技、boss能力、撤退は既存の武器socketを維持する。
+- Gore：実際に減ったHPをstable IDで一回だけ観測する。範囲効果がfighter objectを置換しても見失わない。銃撃、斬撃、チェーンソー、打撃、爆発、出血を描き分け、火傷のtickでは血を噴かせない。敵の切断片は同じ死亡原画から描き、死体の透明度・灰化・除去を共有する。味方の復帰、報酬、damage計算、saveには書き込まない。
+- 傷口：新規の配布画像は1枚、20,952 bytes。[出典・生成prompt・hash](combat-gore-provenance.json)。写真原本を使用・配布しない。
+- QA：Windowsで起動前に拒否する遠隔ブラウザ用scriptを追加。3画面サイズ、全48形態、実際のdamageから死亡・切断までを検査する。通常のtouch出撃から敵のwindup/contactも別に観測する。
+
+## この時点で確認したこと
+
+Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信serverは起動していない。
+
+- `npm test`：buildを含め1922/1922成功。
+- Lint：製品・script・testsは0 errors、既存25 warnings。ローカルの未追跡`output/`に保存済みのbundleはvendor lint errorsを含むため、全件ログを保持し、ソース検証では当該生成物のみ除外した。CIの通常Lintは変更していない。
+- content validator、asset manifest検査、103枚のlossless raster derivative検査に成功。後者は差分0、可視pixel差分0、alpha差分0。
+- R5原稿と保管原稿のSHA-256は両方 `c324ba3783074ecabe80716d971c35d73028a7f98f2a8069760153b1c8b17cd6`。
+- manifestは681 assets、177,926,708 bytes。1.0.1からの追加downloadは上記20,952 bytesのみ、既存assetの削除・再downloadなしをtestした。
+
+## 残る確認
+
+遠隔Chromium・native WebKit、実際のPNG/video、描画性能、保存済みPWAの更新、独立review、正式公開後の取得確認は、この文書を書いた時点では未完了。物理iPhoneの保存録画の音声、実speaker聴感、発熱も未確認。上記の静的・Node結果をそれらの成功へ読み替えない。

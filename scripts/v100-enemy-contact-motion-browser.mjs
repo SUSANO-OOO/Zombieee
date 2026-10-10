@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
-import {chromium,webkit} from 'playwright';
+import {pwaBrowserType} from './pwa-browser-runtime.mjs';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+if(process.platform==='win32')throw new Error('Enemy motion QA is hosted-only; local game and audio playback are disabled');
 const engine=process.env.V100_ENEMY_MOTION_ENGINE??'chromium',out=process.env.V100_ENEMY_MOTION_OUT;
 assert.ok(out);await mkdir(out,{recursive:false});
 const report={engine,build:await productionBuildIdentity(),inputs:[],errors:[],scope:'S1 native deployment only, level-1 owned Guardian fixture. Observe real ordinary walker and crusher attacks, without actor/time/HP/result setters. Not a campaign or win acceptance.'};
-const browser=await ({chromium,webkit}[engine]).launch();
+const browser=await(await pwaBrowserType(engine)).launch();
 try {
  const context=await browser.newContext({viewport:{width:844,height:340},isMobile:true,hasTouch:true,recordVideo:{dir:out+'/videos',size:{width:844,height:340}}});
  const page=await context.newPage();
@@ -33,7 +35,7 @@ try {
  });
  try {
   await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);
-  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),start=page.getByRole('button',{name:'戦闘へ',exact:true});await play.or(start).first().waitFor();if(await play.isVisible())await play.click();await start.click();
+  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),start=page.getByRole('button',{name:'戦闘へ',exact:true});await play.or(page.locator('.v100-start-screen')).first().waitFor();if(await play.isVisible())await play.click();await enterV100FromTitle(page);await start.click();
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   const deadline=Date.now()+80000;let observed=false;
   while(Date.now()<deadline){

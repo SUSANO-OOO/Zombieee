@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import {noteV102GoreImpact} from '../app/v102CombatGore.js';
 import {
   advancePendingWeaponHits,
   cancelPendingWeaponTransaction,
@@ -93,6 +94,7 @@ function runContact(mode, options = {}) {
   const effects = [];
   const record = (kind) => (...args) => { effects.push([kind, ...args]); };
   const context = {
+    noteV102GoreImpact,
     g, pendingWeaponStep: { due: hits }, canceledWeaponTransactions: new Set(),
     createCompletedAttackImpactReceipt, cancelPendingWeaponTransaction,
     productionCueQaLogRef: { current: requests },

@@ -100,8 +100,8 @@ test('gait render cache builds once per source, draws one cached frame and relea
   for(const phase of [.1,.3,.8])renderer.draw(context,image,kind,phase,10,20,80,100);
   assert.equal(draws.length-before,3,'per-frame draw must not rebuild the rig');
  }
- assert.equal(renderer.snapshot().entries,6);
- assert.equal(renderer.snapshot().builds,6);
+ assert.equal(renderer.snapshot().entries,1+V100_MAIN_HUMAN_WALK_KINDS.length);
+ assert.equal(renderer.snapshot().builds,1+V100_MAIN_HUMAN_WALK_KINDS.length);
  assert.ok(renderer.snapshot().bytes<34*1024*1024);
  renderer.clear();assert.equal(renderer.snapshot().entries,0);assert.equal(renderer.snapshot().bytes,0);
  assert.ok(canvases.every(canvas=>canvas.width===0&&canvas.height===0));
