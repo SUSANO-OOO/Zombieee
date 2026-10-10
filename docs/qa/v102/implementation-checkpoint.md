@@ -46,3 +46,11 @@ Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信ser
 候補 `7829a3d0a3dc7fecdadfa02cf58c241563f35d18` の[CI 38015679756](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38015679756)は通常V1戦闘へ入り、Chromiumは10形態後に左右のassertで停止した。保存reportではscout・guardianのwind-upが直前のstart-move、engineerのstopがhit-lightの描画receiptを取得していた。描画sequenceの読取りと操作を別RPCで行う間に、旧姿勢の描画が進む競合があった。
 
 sequence読取りと操作を同じJS taskへまとめ、その後の描画更新を待つ。左右・解剖比率のassertを維持し、構え・攻撃・復帰・被弾でも要求したactionの描画receiptであることを追加検査する。失敗した形態と操作のsampleもassert前にreportへ保存する。製品の動作code・asset・saveは変更していない。
+
+## 通常戦闘の観測上限
+
+候補 `bbed51a64c227506cecae39f47682ec05c58300a` の[CI 38016444082](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38016444082)ではChromium・WebKitとも全48形態と実damageによるGore検査に成功し、WebKitは通常touch出撃からwalker・crusherのwindup/contactも確認した。Chromiumの通常戦闘検査は失敗。保存した5,000行のうちcrusher 1,977行は全て移動であり、simulation 62.3秒で記録上限へ達した。walkerのwindup 156行・contact 46行は記録済みだが、後続crusherの攻撃を判定できなかった。
+
+観測行を実際のwindup・attack中へ限定し、同一個体でwindupとcontact 2 frameを保存済みの敵種は記録を止める。5,000行・80秒の上限、180msの攻撃時間に対するcontact窓、描画姿勢・固定scaleのassert、通常touchのみの操作は維持する。完成済みの敵種が後から現れる敵の記録枠を使い切らないことを、browserやmediaを生成しないobserverの回帰検査で確認する。
+
+限定差分の独立reviewはHigh／Medium／Low 0。observer回帰2件とCI契約6件、対象Lint、構文検査、diff checkに成功。製品codeは変更していない。修正後候補での遠隔再検証は別途確認する。

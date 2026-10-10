@@ -19,16 +19,18 @@ try {
  const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:['unit-gantetsu',null,null,null,null,null,null],flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
  await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
  await page.addInitScript(()=>{
-  const audit={rows:[],captures:{}};window.__ENEMY_CONTACT_MOTION__=audit;const seen=new Map(),copies=new Map();
+  const audit={rows:[],captures:{},skippedNonAttackSamples:0,completedKinds:[]};window.__ENEMY_CONTACT_MOTION__=audit;const seen=new Map(),copies=new Map(),proof=new Map(),completed=new Set();
   window.__ENEMY_CONTACT_EXPORT__=()=>{for(const [key,c]of copies){audit.captures[key]=c.toDataURL('image/png');c.width=c.height=0;}copies.clear();};
   function observe(){const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.(),canvas=document.querySelector('.game-shell canvas');
    if(s?.running&&canvas)for(const f of s.fighters.filter(f=>['walker','crusher'].includes(f.kind)&&f.hp>0&&f.combatReady)) {
-    const r=f.renderAudit;if(!r?.assetReady||seen.get(f.id)===r.renderSequence||audit.rows.length>=5000)continue;seen.set(f.id,r.renderSequence);
+    const r=f.renderAudit;if(!r?.assetReady||seen.get(f.id)===r.renderSequence||completed.has(f.kind)||audit.rows.length>=5000)continue;seen.set(f.id,r.renderSequence);
+    if(!(f.attack>0||f.attackWindup>0)){audit.skippedNonAttackSamples++;continue;}
     const target=s.fighters.find(t=>t.id===f.targetId);
     audit.rows.push({time:s.time,pageSeconds:performance.now()/1000,id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,depthScale:f.renderDepthScale,attack:f.attack,windup:f.attackWindup,sequence:f.attackSequence,flash:f.flash,targetId:f.targetId,targetHp:target?.hp??null,render:{...r}});
     const phase=f.attackWindup>.08?'windup':f.attack>.065&&f.attack<.13?'contact':null;
     const key=f.kind+'-'+phase;
     if(phase&&f.flash<=0&&!audit.captures[key]){const c=document.createElement('canvas');c.width=canvas.width;c.height=canvas.height;c.getContext('2d').drawImage(canvas,0,0);copies.set(key,c);audit.captures[key]='pending';}
+    if(f.flash<=0){const p=proof.get(f.id)??{windup:false,contacts:0};p.windup ||= f.attackWindup>.08;if(phase==='contact'&&p.windup)p.contacts++;proof.set(f.id,p);if(p.windup&&p.contacts>=2){completed.add(f.kind);audit.completedKinds.push(f.kind);}}
    }
    requestAnimationFrame(observe);
   }requestAnimationFrame(observe);
