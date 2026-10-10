@@ -3066,7 +3066,18 @@ const summary = {
   results,
 };
 await writeFile(path.join(evidenceDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
-console.log(JSON.stringify(summary, null, 2));
+// The full snapshots remain in the artifact. Printing every render history
+// can consume the provider's entire log tail and hide the actual failure.
+console.log(JSON.stringify({
+  ...Object.fromEntries(Object.entries(summary).filter(([,value]) => value === null
+    || ["string", "number", "boolean"].includes(typeof value))),
+  report: path.join(evidenceDir, "summary.json"),
+  cases: results.map(({kind, engine, viewport, status, error, blocker}) => ({
+    kind, engine, viewport, status,
+    ...(error ? {error: String(error).slice(0, 6_000)} : {}),
+    ...(blocker ? {blocker: String(blocker).slice(0, 2_000)} : {}),
+  })),
+}, null, 2));
 
 if (summary.failed > 0) {
   throw new Error(`P5 browser smoke failed ${summary.failed}/${results.length} cases; see ${path.join(evidenceDir, "summary.json")}`);

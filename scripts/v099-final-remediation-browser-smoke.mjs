@@ -4355,7 +4355,7 @@ console.log(JSON.stringify({
     engine,
     viewport: `${viewport.width}x${viewport.height}`,
     status,
-    error,
+    error: typeof error === "string" ? error.slice(0, 6_000) : error,
   })),
 }, null, 2));
 
