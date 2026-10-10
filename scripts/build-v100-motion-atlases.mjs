@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { MOTION_DEFINITIONS as REVIEWED_MOTION_DEFINITIONS, regenerateMotionAtlases } from "./v100-reviewed-motion-generator.mjs";
+import { buildV100SpriteRepairs } from './build-v100-sprite-repairs.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 // Wide cells keep the authored lunge and fall poses at the same vertical
@@ -379,10 +380,22 @@ export const V100_MOTION_DEFINITIONS = Object.freeze([
 
 export async function buildV100MotionAtlases() {
   const generated = await regenerateMotionAtlases(path.join(ROOT, "public/art/v100"), REVIEWED_MOTION_DEFINITIONS);
+  const repairs=await buildV100SpriteRepairs();
+  for(const record of generated){
+    const definition = V100_MOTION_DEFINITIONS.find(item => path.join(ROOT, item.outputRelativePath) === record.output);
+    if (!definition) throw new Error(`Unregistered reviewed motion output: ${record.output}`);
+    record.weaponScalePolicy = definition.weaponScalePolicy;
+    const repair=repairs.find(item=>path.join(ROOT,'public',item.path)===record.output);
+    if(repair){
+      record.metadata=JSON.parse(await fs.readFile(record.output.replace(/\.png$/u,'-metadata.json'),'utf8'));
+      record.repair=repair;
+    }
+  }
   return generated.flatMap((record) => [
+    ...(record.repair?.inputs??[]).map(input=>({source:{path:`assets/source/v100/sprite-repairs/${input.file}`,sha256:input.sha256}})),
     { source: { path: record.metadata.identityMaster, sha256: record.metadata.identityMasterSha256 } },
     ...record.metadata.sources.map((source) => ({ source: { path: source.path, sha256: source.sha256 } })),
-    { output: { path: `/${path.relative(ROOT, record.output).replaceAll(path.sep, "/")}`, kind: "runtime-atlas", format: "png", width: record.metadata.atlas.width, height: record.metadata.atlas.height, channels: 4, hasAlpha: true, sha256: record.metadata.sha256, metadataPath: `/${path.relative(ROOT, record.output).replace(/\.png$/iu, "-metadata.json").replaceAll(path.sep, "/")}`, commonScale: record.metadata.commonScale, cell: record.metadata.cell, noClipping: record.metadata.frames.every((frame) => frame.clipped === false), frameMetadata: record.metadata.frames, sources: record.metadata.sources.map((source) => source.path), sourceDirection: "left-authored", directionRows: { right: "derived-horizontal-flip", left: "authored" }, identityMaster: record.metadata.identityMaster, weaponScalePolicy: "reviewed-source-locked", semanticStates: record.definition.states.map((state) => ({ state, rightRow: `${state}:right`, leftRow: `${state}:left` })) } },
+    { output: { path: `/${path.relative(ROOT, record.output).replaceAll(path.sep, "/")}`, kind: "runtime-atlas", format: "png", width: record.metadata.atlas.width, height: record.metadata.atlas.height, channels: 4, hasAlpha: true, sha256: record.metadata.sha256, metadataPath: `/${path.relative(ROOT, record.output).replace(/\.png$/iu, "-metadata.json").replaceAll(path.sep, "/")}`, commonScale: record.metadata.commonScale, cell: record.metadata.cell, noClipping: record.metadata.frames.every((frame) => frame.clipped === false), frameMetadata: record.metadata.frames, sources: record.metadata.sources.map((source) => source.path), sourceDirection: "left-authored", directionRows: { right: "derived-horizontal-flip", left: "authored" }, identityMaster: record.metadata.identityMaster, weaponScalePolicy: record.weaponScalePolicy, ...(record.metadata.spriteRepair?{spriteRepair:record.metadata.spriteRepair}:{}), semanticStates: record.definition.states.map((state) => ({ state, rightRow: `${state}:right`, leftRow: `${state}:left` })) } },
   ]);
 }
 

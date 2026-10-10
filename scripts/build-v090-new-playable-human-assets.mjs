@@ -4,6 +4,7 @@ import path from "node:path";
 
 import sharp from "sharp";
 import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
+import { buildV100SpriteRepairs } from "./build-v100-sprite-repairs.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -255,7 +256,7 @@ async function buildBattleAtlas(character, posesPath) {
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toFile(outputPath);
 
-  const decoded = await sharp(outputPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let decoded = await sharp(outputPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   for (let row = 0; row < 2; row += 1) {
     for (let column = 0; column < battleStates.length; column += 1) {
       for (let y = 0; y < cell.height; y += 1) {
@@ -294,6 +295,10 @@ async function buildBattleAtlas(character, posesPath) {
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toFile(outputPath);
 
+  if(character.kind==='miyamoto-musashi'){
+    await buildV100SpriteRepairs();
+    decoded=await sharp(outputPath).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  }
   const visible = {};
   for (let row = 0; row < 2; row += 1) {
     const direction = row === 0 ? "right" : "left";
@@ -320,16 +325,18 @@ async function buildBattleAtlas(character, posesPath) {
 }
 
 const result = {};
+const battleOnly=process.argv.find(arg=>arg.startsWith('--battle-only='))?.slice('--battle-only='.length);
+if(battleOnly&&!characters.some(character=>character.kind===battleOnly))throw new Error(`Unknown battle-only character: ${battleOnly}`);
 for (const character of characters) {
+  if(battleOnly&&character.kind!==battleOnly)continue;
   const identityPath = path.join(sourceDir, character.identity);
   const posesPath = path.join(sourceDir, character.poses);
   await verifyHash(identityPath, character.identityHash);
   await verifyHash(posesPath, character.posesHash);
-  const cardResult = await buildPortraitAndCard(character, identityPath);
+  const cardResult = battleOnly?null:await buildPortraitAndCard(character, identityPath);
   const battleResult = await buildBattleAtlas(character, posesPath);
   result[character.kind] = {
-    portrait: path.relative(root, cardResult.portraitPath),
-    card: path.relative(root, cardResult.cardPath),
+    ...(cardResult?{portrait:path.relative(root,cardResult.portraitPath),card:path.relative(root,cardResult.cardPath)}:{}),
     battle: path.relative(root, battleResult.outputPath),
     battleVisible: battleResult.visible,
   };

@@ -81,6 +81,10 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   const designAssetPaths = new Set(V100_DESIGN_ASSET_ADDITIONS.map(asset => asset.path));
   const { V100_POST_CREDITS_ASSET_ADDITIONS } = await import("../scripts/v100-post-credits-asset-contract.mjs");
   const { V100_R5_ASSET_ADDITIONS } = await import("../scripts/v100-r5-asset-contract.mjs");
+  const { V100_R9_ASSET_ADDITIONS } = await import('../scripts/v100-r9-asset-contract.mjs');
+  const { V100_OPENING_ASSET_ADDITIONS } = await import('../scripts/v100-opening-asset-contract.mjs');
+  const currentSoundAdditions = new Set([...V100_R9_ASSET_ADDITIONS,...V100_OPENING_ASSET_ADDITIONS].map(asset=>asset.path));
+  for(const expected of [...V100_R9_ASSET_ADDITIONS,...V100_OPENING_ASSET_ADDITIONS]) {const actual=current.assets.find(a=>a.path===expected.path);assert.deepEqual({path:actual?.path,bytes:actual?.bytes,hash:actual?.hash,criticality:actual?.criticality},expected);}
   const r5AudioPaths = new Set(V100_R5_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/audio/")).map(asset=>asset.path));
   const finaleAudioAssets = V100_POST_CREDITS_ASSET_ADDITIONS.filter(asset => asset.path.startsWith("/audio/"));
   assert.deepEqual(finaleAudioAssets.map(asset=>asset.path).sort(), ["/audio/v100/epilogue/king-laugh-r1.mp3", "/audio/v100/epilogue/meinohama-waves-r1.mp3"], "exactly the source-bound CC0 waves and laugh are additional ending audio");
@@ -153,11 +157,20 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => !producerFeedbackPaths.has(path))
     .filter(({ path }) => !designAssetPaths.has(path) && path !== V100_TITLE_AUDIO_ADDITION.path)
     .filter(({ path }) => path !== V100_ENDING_MUSIC_ADDITION.path)
-    .filter(({ path }) => !finaleAudioPaths.has(path) && !r5AudioPaths.has(path))
+    .filter(({ path }) => !finaleAudioPaths.has(path) && !r5AudioPaths.has(path) && !currentSoundAdditions.has(path))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !v0995VisualPolishPaths.has(path))
     .filter(({ path }) => path !== V100_WEBKIT_CARD_REPLACEMENT.path)
     .map(({ path, hash }) => [path, hash]));
+  const {V177_SPRITE_REPLACEMENTS}=await import('../scripts/v177-sprite-repair-asset-contract.mjs');
+  let legacySpriteReplacements=0;
+  for(const repair of V177_SPRITE_REPLACEMENTS){
+    if(!previousNonIcons.has(repair.path))continue;
+    assert.equal(previousNonIcons.get(repair.path),repair.previous.hash,'retain the exact published identity of the requested repair');
+    assert.equal(currentNonIcons.get(repair.path),repair.next.hash,'only the source-bound repaired sprite may replace it');
+    previousNonIcons.set(repair.path,repair.next.hash);legacySpriteReplacements++;
+  }
+  assert.equal(legacySpriteReplacements,1,'Musashi is the only repaired sprite in this legacy icon baseline');
   assert.deepEqual(currentNonIcons, previousNonIcons);
   const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
   assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);

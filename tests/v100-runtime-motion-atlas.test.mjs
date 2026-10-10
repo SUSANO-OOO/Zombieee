@@ -39,7 +39,9 @@ const MOTION_ATLASES = Object.freeze([
     columns: 8,
     policy: /hooked staff and oversized arm silhouette/u,
     commonScale: 0.33994334277620397,
-    approvedVisibleHash: "8eae7322e016b41b5b244574f41587d0483a1502ac6449cfbd2a2a739b833e90",
+    publishedVisibleHash: "8eae7322e016b41b5b244574f41587d0483a1502ac6449cfbd2a2a739b833e90",
+    repairBaseline: 'president-published-1.0.3.png',
+    approvedVisibleHash: "0534ec60d6382ae125c88d3632e7f107c2c94302a1a435981276d96c45c51e5b",
   },
   {
     kind: "boss-takuya-omega",
@@ -51,7 +53,9 @@ const MOTION_ATLASES = Object.freeze([
     columns: 8,
     policy: /oversized serrated greatsword.*same blade length and width/u,
     commonScale: 0.3218707015130674,
-    approvedVisibleHash: "e5e2b81dde0079fc6c1b5bd54a7e008a9e55696d4bd5b42e65541bf8a87c81ac",
+    publishedVisibleHash: "e5e2b81dde0079fc6c1b5bd54a7e008a9e55696d4bd5b42e65541bf8a87c81ac",
+    repairBaseline: 'omega-published-1.0.3.png',
+    approvedVisibleHash: "b7457a336d4275a49d16ce72260b4ea03bbb2f362f1e76866d035a547bc5dc23",
   },
   {
     kind: "red-panther-knife",
@@ -282,6 +286,13 @@ test("custom runtime atlases preserve approved centered cells, exact pixels, PWA
       contentSizes.push({ state, w: bounds.w, h: bounds.h });
     }
     assert.equal(approvedVisiblePixelHash(decoded, motion), motion.approvedVisibleHash, `${motion.kind} approved visible pixels`);
+    if(motion.repairBaseline){
+      const baseline=await readFile(sourceFile(`assets/source/v100/sprite-repairs/${motion.repairBaseline}`));
+      assert.equal(approvedVisiblePixelHash(decodeRgbaPng(baseline),motion),motion.publishedVisibleHash,'retain the published pixel oracle alongside the requested alpha repair');
+      assert.equal(metadata.spriteRepair.publishedBaselineSha256,sha256(baseline));
+      assert.equal(expectedOutput.spriteRepair.publishedBaselineSha256,sha256(baseline));
+      assert.equal(metadata.spriteRepair.rgbChanges,0);
+    }
 
     const distributed = distributedByPath.get(assetPath);
     assert.ok(distributed?.sourcePath, `${motion.kind} PWA sourcePath`);

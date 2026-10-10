@@ -39,6 +39,7 @@ function resolvesExclusivelyToMaster(records, assetId, masterId, visited = new S
 
 test("Version 0.9.0 visual approval ledger covers every active file and exact byte revision", async () => {
   const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
+  const repairs=JSON.parse(await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/provenance.json'),'utf8'));
   assert.equal(ledger.schemaVersion, 1);
   assert.equal(ledger.version, "0.9.0");
   assert.equal(ledger.status, "active-partial");
@@ -76,8 +77,20 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
     const canonicalData = record.path.endsWith(".svg")
       ? Buffer.from(data.toString("utf8").replaceAll("\r\n", "\n"), "utf8")
       : data;
-    assert.equal(createHash("sha256").update(canonicalData).digest("hex"), record.sha256, record.path);
-    assert.equal(canonicalData.length, record.bytes, record.path);
+    const repair=repairs.records.find(item=>`public${item.path}`===record.path);
+    if(repair){
+      assert.equal(record.path,'public/art/v090/characters/miyamoto-musashi-battle-r1.png','only the explicitly requested legacy sprite repair supersedes this ledger');
+      assert.match(repairs.producerRequest,/2026-10-10.*Musashi rear stray blade/);
+      const original=await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/musashi-published-1.0.3.png'));
+      assert.equal(createHash('sha256').update(original).digest('hex'),record.sha256,'the historical approved original is retained byte-identically');
+      assert.equal(original.length,record.bytes);
+      assert.equal(repair.originalSha256,record.sha256);
+      assert.equal(createHash('sha256').update(canonicalData).digest('hex'),repair.pngSha256);
+      assert.equal(canonicalData.length,repair.pngBytes);
+    }else{
+      assert.equal(createHash("sha256").update(canonicalData).digest("hex"), record.sha256, record.path);
+      assert.equal(canonicalData.length, record.bytes, record.path);
+    }
     const metadata = await sharp(data).metadata();
     assert.equal(metadata.width, record.width, record.path);
     assert.equal(metadata.height, record.height, record.path);
