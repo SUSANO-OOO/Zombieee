@@ -341,11 +341,14 @@ test("scene assets preload without AudioContext and pending music starts only af
   assert.equal(mixer.getSceneState().sceneId, "title");
   assert.equal(mixer.getSceneState().bgmAssetId, "bgm-title");
   assert.deepEqual(mixer.getSceneState().ambienceAssetIds, ["ambience-rain"]);
-  assert.equal(target.listenerCount(), 0);
+  for(const event of ['pointerdown','keydown','touchstart'])assert.equal(target.listeners.get(event)?.size??0,0,'gesture unlock listeners are removed');
+  for(const event of ['focus','pagehide','pageshow'])assert.equal(target.listeners.get(event)?.size,1,'bounded foreground recovery remains attached');
+  assert.equal(target.listenerCount(),3);
   assert.equal(context.sources.length, 2);
   await flushAsyncWork();
   assert.equal(network.paths.includes("/audio/ui-click.ogg"), true);
   await mixer.dispose();
+  assert.equal(target.listenerCount(),0,'disposal also removes foreground recovery listeners');
   assert.equal(context.closeCount, 1);
 });
 

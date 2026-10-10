@@ -1,0 +1,21 @@
+{
+  "creator": "OpenAI ImageGen, built-in image_gen tool",
+  "source": "Generated on 2026-10-10 for the current project. No third-party source or real-person reference.",
+  "license": "OpenAI-generated output; commercial use, modification and redistribution permitted under applicable OpenAI terms. Not claimed as human-created.",
+  "producerApproval": "2026-10-10 direct request to intensify combat blood, dismemberment and gore; autonomous implementation authorized.",
+  "master": {
+    "path": "assets/source/v102/combat-gore-r1.png",
+    "sha256": "61474bc74a1e55b2f5d4d10d898964c582584ad1b274479eb44743dc22f6b9a1",
+    "bytes": 1501175
+  },
+  "runtime": {
+    "path": "/art/v102/combat-gore/flesh-wound-r1.webp",
+    "sha256": "b4741d32083646b39d1f975bac1c7e132f0936e30fffef82173cf22338df8cd0",
+    "bytes": 20952,
+    "width": 256,
+    "height": 256
+  },
+  "runtimeAssetCount": 1,
+  "prompt": "Use case: stylized-concept. Asset type: one transparent raster game VFX cutout for an adult fictional zombie combat game, to be drawn very small over torn or severed infected monster limbs. Generate a single irregular torn flesh cross-section, isolated centrally on true transparent alpha, filling 75% of the square with generous transparent margins. It is a gruesome dark ragged injury with exposed tightly striated burgundy muscle fibers, ripped gray-green infected skin curling around only some of its perimeter, sinewy dark tendons, coagulated blood, and one small jagged splinter of old ivory bone in the middle. Two short loose hanging torn tendons at the bottom. Authentic physical tissue, asymmetric natural tearing. Style: gritty detailed painted 2D horror game illustration with restrained sharp contour lines and textured brushwork, muted desaturated earthy shadows, small wet highlights, warm light from upper left. Match mature post-apocalyptic illustrated sprites; maintain crisp readable dark silhouette at a final 12-to-25-pixel size. No full character, no face, no recognizable person. Avoid clean outlines, geometric shapes, smooth ham or steak slices, pink candy colors, diagram labels, medical models, cartoon symbols, flat vector fills, glossy 3D plastic, ornament, background, text, border, watermark. Preserve genuinely transparent background.",
+  "derivation": "Only proportional Lanczos resizing to 256x256 and WebP encoding; generated alpha preserved. No anatomical edits."
+}

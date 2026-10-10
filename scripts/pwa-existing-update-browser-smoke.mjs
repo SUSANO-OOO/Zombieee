@@ -24,6 +24,9 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { V102_ASSET_ADDITIONS, V102_ASSET_BYTES } from './v102-asset-contract.mjs';
+
+if(process.platform==='win32')throw new Error('Installed PWA QA is hosted-only; local game, browser and audio are disabled');
 
 const oldRootInput = process.env.PWA_EXISTING_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_EXISTING_UPDATE_CANDIDATE_ROOT;
@@ -31,6 +34,10 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
 const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.5";
+const oldContract=oldVersion==='1.0.1'
+  ? {assets:680,distinct:678,replaced:[],additions:V102_ASSET_ADDITIONS.length,bytes:V102_ASSET_BYTES,bundled:0,network:1}
+  : {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
+if(!['0.9.9.5','1.0.1'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
   ?? "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const expectedCandidateReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
@@ -190,7 +197,7 @@ record("old and candidate static roots are complete", (
   && oldManifest.releaseSha === expectedOldReleaseSha
   && candidateManifest.version === RELEASE_VERSION
   && candidateManifest.releaseSha === expectedCandidateReleaseSha
-  && oldManifest.assets?.length === 415
+  && oldManifest.assets?.length === oldContract.assets
   && candidateManifest.assets?.length === assetContract.count
 ), {
   oldVersion: oldManifest.version,
@@ -220,18 +227,17 @@ const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset)
   `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`
 )));
 record("candidate preserves unchanged assets and declares the approved WebKit card replacement", (
-  oldDistinctHashes.size === 413
+  oldDistinctHashes.size === oldContract.distinct
   && candidateDistinctHashes.size === assetContract.distinctHashes
-  && replacedOldPaths.length === 1
-  && replacedOldPaths[0] === "/art/v080/characters/cards/kumaverson-formation-card-r2.webp"
+  && JSON.stringify(replacedOldPaths) === JSON.stringify(oldContract.replaced)
   && candidateByPath.get(V100_WEBKIT_CARD_REPLACEMENT.path)?.hash === V100_WEBKIT_CARD_REPLACEMENT.hash
   && candidateManifest.assets.length === assetContract.count
-  && candidateNewHashAssets.length === assetContract.additionsFromV0995
-  && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
+  && candidateNewHashAssets.length === oldContract.additions
+  && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === oldContract.bytes
   && candidateNewHashAssets.length === candidateNewHashes.size
-  && candidateNewBundledAssets.length === assetContract.bundledAudioAdditionsFromV0995
+  && candidateNewBundledAssets.length === oldContract.bundled
   && candidateNewBundledAssets.every((asset) => asset.bundlePath === assetContract.audioBundlePath)
-  && candidateExpectedNetworkPaths.size === assetContract.networkSourcesFromV0995
+  && candidateExpectedNetworkPaths.size === oldContract.network
 ), {
   oldDistinctHashes: oldDistinctHashes.size,
   replacedOldPaths,

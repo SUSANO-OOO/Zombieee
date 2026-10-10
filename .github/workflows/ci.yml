@@ -16,6 +16,59 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
+  v102-combat:
+    name: V1.0.2 Combat (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+      - name: Verify all render forms and actual gore damage
+        env:
+          V102_COMBAT_ENGINE: ${{ matrix.engine }}
+          V102_COMBAT_OUT: outputs/v102-combat
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs
+      - name: Observe ordinary enemy contacts through native touch deployment
+        env:
+          V100_ENEMY_MOTION_ENGINE: ${{ matrix.engine }}
+          V100_ENEMY_MOTION_OUT: outputs/v102-normal-contacts
+          V100_ENEMY_MOTION_ASSERT: "1"
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-enemy-contact-motion-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v102-combat-${{ matrix.engine }}
+          path: |
+            outputs/v102-combat
+            outputs/v102-normal-contacts
+          if-no-files-found: error
+          retention-days: 14
+
   verify:
     name: PR Verify
     runs-on: ubuntu-latest
@@ -660,6 +713,44 @@ jobs:
         with:
           name: v100-native-webkit-pwa
           path: outputs/v100-native-pwa
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Build the installed 1.0.1 release for the recording-audio update
+        id: build_v101_pwa_site
+        if: ${{ !cancelled() && steps.build_native_pwa_sites.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          old_sha=634f8de4b0fb15df902a7dd5983ea94237cfea9d
+          old_source="$RUNNER_TEMP/v101-public-source"
+          git worktree add --detach "$old_source" "$old_sha"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$old_source/node_modules"
+          (
+            cd "$old_source"
+            npm run build
+            GITHUB_PAGES_RELEASE_VERSION=1.0.1 GITHUB_PAGES_RELEASE_SHA="$old_sha" \
+              GITHUB_PAGES_REQUEST_ID=v102-installed-old GITHUB_PAGES_ISSUE_NUMBER=175 \
+              node scripts/build-github-pages.mjs
+          )
+
+      - name: Verify native installed 1.0.1 update without losing saves
+        if: ${{ !cancelled() && steps.build_v101_pwa_site.outcome == 'success' }}
+        env:
+          PWA_EXISTING_UPDATE_OLD_ROOT: ${{ runner.temp }}/v101-public-source/_site
+          PWA_EXISTING_UPDATE_OLD_VERSION: "1.0.1"
+          PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA: 634f8de4b0fb15df902a7dd5983ea94237cfea9d
+          PWA_EXISTING_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PWA_EXISTING_UPDATE_BROWSER: webkit
+          PWA_EXISTING_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/installed-v101
+        run: node scripts/pwa-existing-update-browser-smoke.mjs
+
+      - name: Upload installed 1.0.1 PWA update evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v102-installed-pwa-update
+          path: outputs/v100-native-pwa/installed-v101
           if-no-files-found: warn
           retention-days: 14
 

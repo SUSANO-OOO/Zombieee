@@ -147,6 +147,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .map(({ path, hash }) => [path, hash]));
   const currentNonIcons = new Map(current.assets
     .filter(({ path }) => !path.startsWith("/icons/"))
+    .filter(({ path }) => path !== '/art/v102/combat-gore/flesh-wound-r1.webp')
     .filter(({ path }) => !v100ApprovedPaths.has(path))
     .filter(({ path }) => !phoneReviewPaths.has(path))
     .filter(({ path }) => !producerFeedbackPaths.has(path))

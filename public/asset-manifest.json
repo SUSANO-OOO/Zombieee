@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -3045,6 +3045,14 @@
       "category": "object",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v100/vfx/stage30-dawn-damage-v1.webp"
+    },
+    {
+      "path": "/art/v102/combat-gore/flesh-wound-r1.webp",
+      "bytes": 20952,
+      "hash": "sha256-b4741d32083646b39d1f975bac1c7e132f0936e30fffef82173cf22338df8cd0",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
     },
     {
       "path": "/assets/v100/maps/chapter-1-nishijin.webp",

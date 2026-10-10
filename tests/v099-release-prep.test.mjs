@@ -1,3 +1,4 @@
+import { V102_ASSET_ADDITIONS, V102_ASSET_BYTES } from '../scripts/v102-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -58,7 +59,7 @@ test("the published0.9.9.5 pack reuses414 assets and replaces the broken WebKit 
   assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
   const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
-  assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.1");
+  assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.2");
   assert.equal(update.downloadCount, assetContract.additionsFromV0995); assert.equal(update.downloadBytes, assetContract.bytesFromV0995);
   assert.equal(update.unchangedCount, 414); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
   assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/") || V100_COMPLETION_ASSET_ADDITIONS.some(expected=>expected.path===asset.path)));
@@ -68,15 +69,15 @@ test("the published0.9.9.5 pack reuses414 assets and replaces the broken WebKit 
   assert.deepEqual(completed, { verified: true, errors: [], missingPaths: [] });
 });
 
-test("the Version 1.0.1 release candidate has one immutable identity and complete manifest", () => {
+test("the Version 1.0.2 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes,
-    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes,
-    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes,
-    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes,
+    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES,
+    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES,
+    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES,
+    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES,
   });
-  assert.equal(RELEASE_VERSION, "1.0.1");
+  assert.equal(RELEASE_VERSION, "1.0.2");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(v100ApprovedAssets.length, assetContract.artAdditionsFromV0995);
@@ -114,7 +115,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
-  assert.equal(update.toVersion, "1.0.1");
+  assert.equal(update.toVersion, "1.0.2");
   assert.equal(update.downloadCount, 107 + V100_COMPLETION_ASSET_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 347);
@@ -134,7 +135,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.deepEqual(verified, { verified: true, errors: [], missingPaths: [] });
 });
 
-test("the published Version 0.9.9.3 pack updates to 1.0.1 while reusing unchanged runtime assets", () => {
+test("the published Version 0.9.9.3 pack updates to 1.0.2 while reusing unchanged runtime assets", () => {
   assert.equal(publishedV0993.version, "0.9.9.3");
   assert.equal(publishedV0993Source.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(publishedV0993.releaseSha, PUBLISHED_V0993_SHA);
@@ -149,7 +150,7 @@ test("the published Version 0.9.9.3 pack updates to 1.0.1 while reusing unchange
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
-  assert.equal(update.toVersion, "1.0.1");
+  assert.equal(update.toVersion, "1.0.2");
   assert.equal(update.downloadCount, 58 + V100_COMPLETION_ASSET_ADDITIONS.length);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 396);
@@ -169,16 +170,26 @@ test("the published Version 0.9.9.3 pack updates to 1.0.1 while reusing unchange
   assert.deepEqual(verified, { verified: true, errors: [], missingPaths: [] });
 });
 
-test('the published 1.0.0 pack updates to 1.0.1 without downloading existing media again', () => {
+test('the published 1.0.0 pack updates to 1.0.2 without downloading existing media again', () => {
   const publishedV100 = { ...JSON.parse(execFileSync('git', ['show', `${PUBLISHED_V100_SHA}:public/asset-manifest.json`], { encoding: 'utf8' })), releaseSha: PUBLISHED_V100_SHA };
   assert.equal(publishedV100.version, '1.0.0');
   const storedHashes = new Set(publishedV100.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV100, publishedManifest: candidate, storedHashes });
   assert.equal(update.available, true);
-  assert.equal(update.fromVersion, '1.0.0'); assert.equal(update.toVersion, '1.0.1');
-  assert.equal(update.downloadBytes, 258168);
-  assert.deepEqual(update.diff.downloadable.map(asset => asset.path), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp']);
+  assert.equal(update.fromVersion, '1.0.0'); assert.equal(update.toVersion, '1.0.2');
+  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES);
+  assert.deepEqual(update.diff.downloadable.map(asset => asset.path), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...V102_ASSET_ADDITIONS.map(asset=>asset.path)]);
   assert.equal(update.removedCount, 0);
   const complete = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...storedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.deepEqual(complete, { verified: true, errors: [], missingPaths: [] });
+});
+
+test('installed 1.0.1 downloads only the new gore texture and retains every existing asset',()=>{
+  const sha='634f8de4b0fb15df902a7dd5983ea94237cfea9d';
+  const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
+  const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
+  assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.1');assert.equal(update.toVersion,'1.0.2');
+  assert.equal(update.downloadBytes,V102_ASSET_BYTES);assert.equal(update.removedCount,0);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path),V102_ASSET_ADDITIONS.map(a=>a.path));
+  assert.equal(update.unchangedCount,previous.assets.length);
 });

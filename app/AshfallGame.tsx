@@ -2,6 +2,9 @@
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
+import { v102BattleDisplaySize } from "./v102BattleScale.js";
+import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
+import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
@@ -2086,6 +2089,7 @@ function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
   v100ShotLayer.clear();
   clearV100ContactQueue(g);
+  clearV102CombatGore(g);
   clearV100ManualFirearmVfx(g);
   clearV100SupportAbilityEffects(g);
   clearV100AdvancedAbilityEffects(g);
@@ -2547,6 +2551,7 @@ function applyIncomingHumanDamage(
         const strikeDamage = definition.counterDamage * (isBossFighter(counterTarget) ? definition.bossDamageMultiplier : 1);
         const applied = Math.min(counterTarget.hp, strikeDamage);
         counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
+        noteV102GoreImpact(g,counterTarget,{weapon:target.kind,originX:target.x,originY:target.y,damage:applied});
         recordUnitDamage(g, target.kind, applied);
         if (g.definition.missionConfig.v100StageNumber) queueV100AdvancedAbilityEffect(g, { ownerId: target.id, activationId: counter.event?.activationId ?? target.manualAbility.activationId, type: "musashi-crosscut", targetId: counterTarget.id, x: counterTarget.x, y: counterTarget.y - 30, duration: .22 });
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
@@ -2657,6 +2662,7 @@ function applyIncomingHumanDamage(
     target.hp -= protectedTarget.damage;
   }
   recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore) - Math.max(0, target.hp));
+  if(target.hp<targetHpBefore)noteV102GoreImpact(g,target,{weapon:attacker?.kind,originX:attacker?.x??contactOrigin?.x,originY:attacker?.y??contactOrigin?.y,damage:targetHpBefore-target.hp});
   queueV100ClawContact(g, { attacker, target, hpBefore: targetHpBefore, attackKind });
   preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
@@ -3906,11 +3912,23 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
 function spriteDisplaySize(kind: string) {
   return spriteBattleDisplaySizeFor(kind);
 }
-function articulatedCycleDistanceFor(fighter: Fighter) {
-  if (!v100UsesHumanWalk(fighter.kind, { requestedState: 'move' })) return undefined;
-  const frame = spriteFrameFor(fighter.kind,'walk-a','right');
-  const size = fitSpriteBattleDisplaySize(fighter.kind,frame,spriteDisplaySize(fighter.kind));
-  return v100HumanWalkCycleDistance(fighter.kind,size.w*compactSpriteScale(fighter.kind)*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w);
+function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
+  if(!v100) {
+    if(!v100UsesHumanWalk(fighter.kind,{requestedState:'move'}))return undefined;
+    const frame=spriteFrameFor(fighter.kind,'walk-a','right'),size=fitSpriteBattleDisplaySize(fighter.kind,frame,spriteDisplaySize(fighter.kind));
+    return v100HumanWalkCycleDistance(fighter.kind,size.w*compactSpriteScale(fighter.kind)*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w);
+  }
+  const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
+  const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
+  const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind)/frame.sourceRect.w;
+  return v100UsesHumanWalk(kind, { requestedState: 'move' })
+    ? v100HumanWalkCycleDistance(kind,scale)
+    : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale);
+}
+function v102GoreBodyHeight(fighter: Fighter) {
+  const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'idle','right');
+  const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
+  return (frame.contentRect?.h??frame.sourceRect.h)*size.h/frame.sourceRect.h*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind);
 }
 
 function compactSpriteScale(kind: string) {
@@ -4070,6 +4088,10 @@ type FighterRenderAudit = {
   deploymentPlan?: ReturnType<typeof crawlerDeploymentRenderPlan>;
   spritePath?: string | null;
   renderedPanSocket?: { x: number; y: number } | null;
+  poseScaleX?: number;
+  poseScaleY?: number;
+  bodyScale?: number;
+  articulatedWalkPhase?: number | null;
 };
 type FighterDrawOptions = {
   world?: Game;
@@ -4252,7 +4274,7 @@ function drawSpriteFighter(
   const advancedManualPose = options.v100AuthoredPresentation && f.side === "human" && f.hp > 0
     ? v100AdvancedManualPose(f.manualAbility, { hp: f.hp })
     : null;
-  const animationSample = kumaGuardArtPose
+  const baseAnimationSample = kumaGuardArtPose
     ? { ...sampleAnimationClip(f.kind, "special", 0), spriteState: kumaGuardCandidate, movement: false, bodyScale: 1, pose: V100_KUMAVERSON_STABLE_POSE }
     : guardianGuardPose
     ? {...sampleAnimationClip(f.kind,"special",0),spriteState:guardianGuardPose,movement:false,bodyScale:1,pose:V100_GUARDIAN_STABLE_POSE}
@@ -4349,6 +4371,10 @@ function drawSpriteFighter(
           f.animationPresentation?.state ?? (moving ? "move" : "idle"),
           f.animationPresentation?.elapsedSeconds ?? f.step,
         );
+  const animationSample = options.v100AuthoredPresentation
+    ? v102CombatMotionSample(renderKind,baseAnimationSample,{side:f.side,attack:f.attack,attackWindup:f.attackWindup,abilityWindup:f.abilityWindup,
+      ownedPose:Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||f.mayoRetreat||f.stationAbility.phase!=='idle')})
+    : baseAnimationSample;
   const state = animationSample.spriteState;
   const articulatedWalk = Boolean(options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
@@ -4367,6 +4393,8 @@ function drawSpriteFighter(
     ? v100EnemyContactSize(renderKind,frame,direction,spriteDisplaySize(renderKind))
     : options.v100AuthoredPresentation && renderKind === 'gate-eater'
     ? v100GateEaterAuthoredSize(frame,direction,spriteDisplaySize(renderKind))
+    : options.v100AuthoredPresentation
+    ? v102BattleDisplaySize(renderKind,frame,spriteDisplaySize(renderKind))
     : fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = compactSpriteScale(renderKind);
   const depthScale = activeBattlefieldDepthScale(f.y) * (isKuromeClone(f) ? V100_KUROME_CLONE_TUNING.bodyScale : 1);
@@ -4380,7 +4408,9 @@ function drawSpriteFighter(
   const contactLift = animationSample.movement
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
-  const bob = combatGroundLift(renderKind, animationSample);
+  const bob = options.v100AuthoredPresentation
+    ? v102GroundLift(renderKind,animationSample,combatGroundLift(renderKind,animationSample))
+    : combatGroundLift(renderKind, animationSample);
   const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
   if (f.side === "zombie" && f.gateEntering) {
@@ -4481,6 +4511,9 @@ function drawSpriteFighter(
       deploymentPlan,
       spritePath: kumaGuardArtPose ? V100_KUMAVERSON_GUARD_ART.path : frame.path,
       renderedPanSocket: kumaGuardArtPose ? fighterShieldSockets.get(f) ?? null : null,
+      poseScaleX: pose.scaleX,
+      poseScaleY: pose.scaleY,
+      bodyScale: animationSample.bodyScale,
     });
   }
   ctx.globalAlpha *= effectivePoseOpacity;
@@ -4512,6 +4545,7 @@ function drawSpriteFighter(
       size.h * slice.h / frame.sourceRect.h,
     );
   }
+  if(options.v100AuthoredPresentation&&options.world)drawV102GoreWound(ctx,options.world,f,frame,size,options.v100StageObjects);
   ctx.restore();
   return {
     clipRect: null,
@@ -8411,6 +8445,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
+  if(g.definition.missionConfig.v100StageNumber)drawV102GoreGround(ctx,g);
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
@@ -8419,11 +8454,15 @@ function drawWorld(
     const sprite = sprites[corpseRenderKind];
     if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
-      const authoredSize = fitSpriteBattleDisplaySize(corpseRenderKind, frame, spriteDisplaySize(corpseRenderKind));
-      const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+      const authoredSize = g.definition.missionConfig.v100StageNumber
+        ? v102BattleDisplaySize(corpseRenderKind,frame,spriteDisplaySize(corpseRenderKind))
+        : fitSpriteBattleDisplaySize(corpseRenderKind, frame, spriteDisplaySize(corpseRenderKind));
+      const compactScale = g.definition.missionConfig.v100StageNumber
+        ? compactSpriteScale(corpseRenderKind) : compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
       const depthScale = activeBattlefieldDepthScale(corpse.y);
-      const width = authoredSize.w * compactScale * depthScale;
-      const height = authoredSize.h * compactScale * depthScale;
+      const bodyScale = g.definition.missionConfig.v100StageNumber ? v102BattleBodyScale(corpseRenderKind) : 1;
+      const width = authoredSize.w * compactScale * depthScale * bodyScale;
+      const height = authoredSize.h * compactScale * depthScale * bodyScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
       if (fighterRenderAuditEnabled) {
         recordCorpseRenderAudit(corpse.id, {
@@ -8443,6 +8482,7 @@ function drawWorld(
           frameFlipX: frame.flipX,
           renderWidth: width,
           renderHeight: height,
+          bodyScale,
           groundAnchor: 1,
           actualXDelta: 0,
         });
@@ -8473,6 +8513,8 @@ function drawWorld(
         ctx.scale(1, allyCue.bodyScaleY);
       }
       if (frame.flipX) ctx.scale(-1, 1);
+      const goreSeverPlan=v102CorpseSeverPlan(g,corpse,frame,width,height);
+      beginV102CorpseSever(ctx,goreSeverPlan);
       for (const slice of frame.drawSlices ?? [{ x: 0, y: 0, w: frame.w, h: frame.h }]) {
         (g.definition.missionConfig.v100StageNumber ? v100ImageSampler.draw.bind(null,ctx) : ctx.drawImage.bind(ctx))(sprite,
           frame.x + slice.x, frame.y + slice.y, slice.w, slice.h,
@@ -8480,6 +8522,7 @@ function drawWorld(
           -height * frame.anchorY + height * slice.y / frame.h,
           width * slice.w / frame.w, height * slice.h / frame.h);
       }
+      endV102CorpseSever(ctx,goreSeverPlan,sprite,frame,stageObjects);
       ctx.filter = "none";
     } else {
       ctx.globalAlpha = corpse.state === "ashing" || corpse.state === "ash" ? Math.min(.55, corpse.life / 2) : .65;
@@ -8658,6 +8701,7 @@ function drawWorld(
     }
   }
 
+  if(g.definition.missionConfig.v100StageNumber)drawV102GoreAir(ctx,g,graphicsProfile.effectDensity,stageObjects);
   // Low roadside props sit below the routing corridor and mask only feet at
   // the near edge. Drawing them last prevents fighters from appearing on top
   // of wire, rubble, fallen signs, or supply crates.
@@ -9986,8 +10030,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       prepareAnimationFoundationProof: (
         kind: UnitKind | EnemyKind = "scout",
         side: "human" | "zombie" = "human",
+        renderForm?: string,
       ) => {
         const g = gameRef.current;
+        clearTransientRenderObjects(g);
         g.fighters = [];
         g.corpses = [];
         g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
@@ -10017,6 +10063,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         fighter.laneSpeed = 0;
         fighter.damage = 0;
         fighter.cooldown = 99;
+        fighter.attack = 0;
+        fighter.attackWindup = 0;
+        fighter.abilityWindup = 0;
+        fighter.flash = 0;
+        if (renderForm === "mayo-chan-feral" && kind === "mayo-chan") {
+          fighter.manualAbility = { ...fighter.manualAbility!, phase: "feral" };
+        } else if (kind === "futago" && ["futago-separated-a", "futago-separated-b"].includes(renderForm ?? "")) {
+          fighter.v100TwinPart = renderForm!.endsWith("a") ? "a" : "b";
+        } else if (kind === "futago" && renderForm === "futago") {
+          fighter.v100TwinPart = undefined;
+        } else if (renderForm && renderForm !== kind) {
+          throw new Error(`Unsupported animation proof form: ${kind}/${renderForm}`);
+        }
         fighter.aiMoveDirection = 0;
         fighter.animationPresentation = createCombatAnimationRuntime({
           deploying: true,
@@ -10039,7 +10098,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       stepAnimationFoundationProof: (
         fighterId: number,
-        action: "deploy" | "deploy-move-right" | "move-right" | "move-left" | "stop" | "hit-light" | "hit-heavy" | "reload",
+        action: "deploy" | "deploy-move-right" | "move-right" | "move-left" | "stop" | "hit-light" | "hit-heavy" | "reload" | "wind-up" | "attack" | "recovery",
         seconds = .05,
       ) => {
         const g = gameRef.current;
@@ -10049,6 +10108,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         let direction = fighter.animationPresentation.direction;
         let state: string | null = null;
         let deploying = false;
+        fighter.attack = 0;
+        fighter.attackWindup = 0;
+        fighter.flash = 0;
         if (action === "deploy" || action === "deploy-move-right") {
           deploying = true;
           fighter.gateEntering = true;
@@ -10073,12 +10135,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             fighter.aiMoveDirection = 0;
           }
           if (["hit-light", "hit-heavy", "reload"].includes(action)) state = action;
+          fighter.knock = action === "hit-heavy" ? 16 : 0;
+          if (["hit-light", "hit-heavy"].includes(action)) fighter.flash = .08;
+          if (action === "wind-up") fighter.attackWindup = animationClipFor(fighter.kind,"wind-up").durationSeconds * .5;
+          if (action === "attack") fighter.attack = fighter.side === "zombie" ? .12
+            : attackPresentationDuration(fighter.kind) - animationClipFor(fighter.kind,"active").durationSeconds * .3;
+          if (action === "recovery") fighter.attack = fighter.side === "zombie" ? .03
+            : animationClipFor(fighter.kind,"recovery").durationSeconds * .6;
         }
         fighter.animationPresentation = advanceCombatAnimationRuntime(
           fighter.animationPresentation,
           {
             kind: fighter.kind,
-            locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
+            locomotionCycleDistance: articulatedCycleDistanceFor(fighter,Boolean(g.definition.missionConfig.v100StageNumber)),
             state,
             deploying,
             direction,
@@ -13285,6 +13354,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           battleGeneration: g.battleAudioGeneration,
           time: g.time,
           phase: g.phase,
+          combatGore: getV102GoreSnapshot(g),
           objective: objectiveForBattle(g.definition, g),
           running: g.running,
           paused: g.paused,
@@ -18222,6 +18292,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
         if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) {
         performanceCounters.simulationTicks += 1;
+        const goreStep=beginV102GoreStep(g,{heightFor:v102GoreBodyHeight});
         g.time += dt;
         g.manualAbilityVfx = g.manualAbilityVfx
           .map((effect) => {
@@ -18517,6 +18588,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const totalDamage = definition.impactDamage * (sequential?1:definition.hitCount);
               const damage = Math.min(target.hp, totalDamage);
               target.hp = Math.max(0, target.hp - totalDamage);
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.flash = Math.max(target.flash, .3);
               for (const nearby of finalRound?g.fighters:[]) {
                 if (nearby.side !== "zombie"
@@ -18554,6 +18626,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               owner.lane = target.lane;
               const damage = Math.min(target.hp, definition.impactDamage);
               target.hp = Math.max(0, target.hp - definition.impactDamage);
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.stunned = Math.max(target.stunned, definition.stunSeconds);
               target.flash = Math.max(target.flash, .28);
               target.knock = Math.max(target.knock, 11);
@@ -18582,6 +18655,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const hpBefore = target.hp;
                 const damage = Math.min(target.hp, strike);
                 target.hp = Math.max(0, target.hp - strike);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.flash = Math.max(target.flash, .24);
                 recordUnitDamage(g, owner.kind, damage);
                 addDamageText(g, target.x, target.y - 50, String(Math.round(damage)), .82, "#d8f2ff");
@@ -18648,6 +18722,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   || !targetIds.has(String(target.id))) continue;
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.stunned = Math.max(target.stunned, definition.stunSeconds);
                 target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, definition.armorBreakSeconds);
                 target.armorBreakStacks = 0;
@@ -18697,6 +18772,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const hpBefore = target.hp;
               const damage = Math.min(target.hp, definition.impactDamage);
               target.hp = Math.max(0, target.hp - definition.impactDamage);
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               target.marked = Math.max(target.marked, definition.markSeconds);
               target.flash = Math.max(target.flash, .22);
               recordUnitDamage(g, owner.kind, damage);
@@ -18738,6 +18814,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const hpBefore = target.hp;
                 const damage = Math.min(target.hp, strike);
                 target.hp = Math.max(0, target.hp - strike);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 target.suppressionStacks = Math.max(target.suppressionStacks, UNIT_ROLE_TUNING.raider.maximumSuppressionStacks);
                 target.suppressedRemaining = Math.max(target.suppressedRemaining, definition.suppressionSeconds);
                 target.flash = Math.max(target.flash, .25);
@@ -18794,6 +18871,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .2);
                 target.knock = Math.max(target.knock, 8);
@@ -18854,6 +18932,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .28);
                 target.knock = Math.max(target.knock, definition.knockback);
@@ -18888,6 +18967,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   || effectDistance(target, event.target) > definition.effectRadius) continue;
                 const damage = Math.min(target.hp, impactDamage);
                 target.hp = Math.max(0, target.hp - impactDamage);
+                noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, finalRound ? .3 : .18);
                 target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
@@ -18936,6 +19016,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const strikeDamage = definition.counterDamage * (isBossFighter(target) ? definition.bossDamageMultiplier : 1);
               const damage = Math.min(target.hp, strikeDamage);
               target.hp = Math.max(0, target.hp - strikeDamage);
+              noteV102GoreImpact(g,target,{weapon:owner.kind,originX:owner.x,originY:owner.y,damage});
               recordUnitDamage(g, owner.kind, damage);
               target.flash = Math.max(target.flash, .3);
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
@@ -19192,6 +19273,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (!target || target.side !== "zombie") continue;
             const beforeHit = target.hp;
             target.hp = Math.max(0, target.hp - hit.damage);
+            noteV102GoreImpact(g,target,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:beforeHit-target.hp});
             target.flash = Math.max(target.flash, .16);
             target.knock = Math.max(target.knock, 5);
             addDamageText(g, target.x, target.y - 48, String(Math.round(Math.min(beforeHit, hit.damage))), .75, "#ffd36d");
@@ -19252,6 +19334,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 appliedSplash = Math.min(splashTarget.hp, grenadeDamage);
                 splashTarget.hp = Math.max(0, splashTarget.hp - grenadeDamage);
               }
+              noteV102GoreImpact(g,splashTarget,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedSplash});
               recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
@@ -19311,6 +19394,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             target.hp = Math.max(0, target.hp - hit.damage);
           }
           const appliedDamage = Math.max(0, beforeHit - target.hp);
+          noteV102GoreImpact(g,target,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedDamage});
           recordUnitDamage(g, hit.weapon as UnitKind, appliedDamage);
           if (hit.weapon === "babayaga") {
             const newcomerEffects = resolveNewcomerAttackEffects({
@@ -19779,6 +19863,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           g.fighters = impact.fighters as Fighter[];
           for (const hit of impact.hits) {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
+            if (fighter) noteV102GoreImpact(g,fighter,{weapon:"aircraft",originX:g.airstrike.targetX??W/2,damage:hit.damage});
             if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, fighter.x, fighter.y - 54, `航空 -${hit.damage}`, .85, "#fff0a0"); }
           }
           addParticles(
@@ -19897,6 +19982,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   fighter.hp = hpBeforeLanding.get(fighter.id) ?? fighter.hp;
                   appliedDamage = applyIncomingHumanDamage(g, fighter, hit.damage, { attackKind: "ranged" }).targetDamage;
                 }
+                if (appliedDamage > 0) noteV102GoreImpact(g,fighter,{weapon:"pod",originX:object.x,damage:appliedDamage});
                 fighter.flash = .2;
                 fighter.knock = Math.max(fighter.knock, 10);
                 addDamageText(g, fighter.x, fighter.y - 56, `着地 -${Math.round(appliedDamage)}`, .9, hit.side === "zombie" ? "#ffd06b" : "#ff8a70");
@@ -19922,6 +20008,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.nextAreaEffectId = detonation.nextAreaEffectId;
             for (const hit of detonation.hits) {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
+              if (fighter) noteV102GoreImpact(g,fighter,{weapon:"explosion",originX:object.x,damage:hit.damage});
               if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, fighter.x, fighter.y - 52, `爆発 -${hit.damage}`, .82, "#ffbd59"); }
             }
             addParticles(g, object.x, object.y - 8, "#f26a35", 28);
@@ -19952,6 +20039,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const activeMedicalIds = g.battlefieldObjects.filter((object) => object.kind === "medical" && object.phase === "active" && object.hp > 0).map((object) => object.id);
         const areaStep = advanceAreaEffects({ areaEffects: g.areaEffects, fighters: g.fighters, seconds: dt, activeSupplyIds: activeMedicalIds });
         for (const change of areaStep.changes) {
+          if (change.kind === "damage") noteV102GorePeriodicDamage(g,change.id,change.amount,"burn");
           if (change.kind === "damage" && change.sourceUnitKind) recordUnitDamage(g, change.sourceUnitKind, change.measuredDamage);
         }
         g.areaEffects = retainActiveAreaEffects(areaStep.areaEffects) as AreaEffect[];
@@ -20235,6 +20323,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (f.bleedRemaining > 0) {
             const hpBeforeBleed = f.hp;
             Object.assign(f, advanceBleedDamage(f, dt));
+            noteV102GorePeriodicDamage(g,f.id,Math.max(0,hpBeforeBleed)-Math.max(0,f.hp),"bleed");
             if (f.side === "human") recordUnitDamageTaken(g, f.kind, Math.max(0, hpBeforeBleed) - Math.max(0, f.hp));
             else if (f.bleedSourceKind) recordUnitDamage(g, f.bleedSourceKind, Math.max(0, hpBeforeBleed) - Math.max(0, f.hp));
             if (f.hp <= 0) continue;
@@ -21930,6 +22019,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
+              if(appliedAttack.targetDamage>0)noteV102GoreImpact(g,target,{weapon:f.kind,originX:f.x,originY:f.y,damage:appliedAttack.targetDamage});
               if (f.side === "human" && appliedAttack.targetDamage > 0) {
                 recordUnitDamage(g, f.kind, Math.max(0, targetHpBeforeMetric) - Math.max(0, target.hp));
               }
@@ -23014,6 +23104,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
         }
         dissolveOrphanedKuromeClones(g.fighters);
+        finishV102GoreStep(g,goreStep);
         const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
         for (const fighter of dead) {
           if (!claimDefeatResolution(g.resolvedDefeatIds, fighter.id)) continue;
@@ -23211,7 +23302,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }),
             {
               kind: fighter.kind,
-              locomotionCycleDistance: articulatedCycleDistanceFor(fighter),
+              locomotionCycleDistance: articulatedCycleDistanceFor(fighter,Boolean(g.definition.missionConfig.v100StageNumber)),
               state: presentationState,
               deploying: fighter.gateEntering,
               direction,

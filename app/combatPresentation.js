@@ -1445,10 +1445,10 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     : 0;
   if (state === "move") {
     const current = animationClipFor(observation.kind ?? "walker", state);
-    const strideDistance = LOCOMOTION_STRIDE_DISTANCE[observation.kind]
-      ?? Math.max(10, current.durationSeconds * 44);
-    stateElapsed = strideDistance > 0
-      ? stateTravelDistance / strideDistance * current.durationSeconds
+    const clipStride = Number(observation.locomotionCycleDistance) > 0 ? strideDistance
+      : LOCOMOTION_STRIDE_DISTANCE[observation.kind] ?? Math.max(10, current.durationSeconds * 44);
+    stateElapsed = clipStride > 0
+      ? stateTravelDistance / clipStride * current.durationSeconds
       : 0;
   }
   const eventStart = stateChanged || previous.eventCursorInitialized !== true

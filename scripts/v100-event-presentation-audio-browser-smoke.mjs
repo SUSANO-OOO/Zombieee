@@ -56,7 +56,12 @@ async function nativeAudioFor(page, eventCase, nodeIndex) {
   const handle = await page.waitForFunction(v100EventAudioSnapshot, {
     selector: `[data-v100-event-id="${eventCase.eventId}"]`, eventId: eventCase.eventId, nodeIndex, sceneId: expected.sceneId,
   }, { timeout });
-  try { return await handle.jsonValue(); } finally { await handle.dispose(); }
+  try {
+    const result = await handle.jsonValue();
+    result.audioSession = await page.evaluate(() => ({ supported: Boolean(navigator.audioSession), type: navigator.audioSession?.type ?? null }));
+    invariant(!result.audioSession.supported || result.audioSession.type === "playback", "Native audio must request the playback session category");
+    return result;
+  } finally { await handle.dispose(); }
 }
 
 function diagnosticsFor(page) {

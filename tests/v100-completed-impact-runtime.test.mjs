@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot} from '../app/v102CombatGore.js';
+import {advanceAreaEffects} from '../app/gameRules.js';
 import {
   advancePendingWeaponHits,
   cancelPendingWeaponTransaction,
@@ -91,8 +93,10 @@ function runContact(mode, options = {}) {
     attackObservation: observed ? { ...observed, impactOrdinal: shotIndex } : undefined,
   }));
   const effects = [];
+  const goreStep=options.gore?beginV102GoreStep(Object.assign(g,{definition:{missionConfig:{v100StageNumber:1}},corpses:[]})):null;
   const record = (kind) => (...args) => { effects.push([kind, ...args]); };
   const context = {
+    noteV102GoreImpact,
     g, pendingWeaponStep: { due: hits }, canceledWeaponTransactions: new Set(),
     createCompletedAttackImpactReceipt, cancelPendingWeaponTransaction,
     productionCueQaLogRef: { current: requests },
@@ -118,9 +122,16 @@ function runContact(mode, options = {}) {
     unitAudioCueFor: (_kind, _category, event) => event,
   };
   vm.runInNewContext(dispatchCode, context);
+  if(options.burn){
+    const area=advanceAreaEffects({fighters:g.fighters,seconds:.1,areaEffects:[{id:1,kind:'burn',x:100,y:0,radius:30,remaining:1,amountPerSecond:10,phase:'active'}]});
+    for(const change of area.changes)if(change.kind==='damage')noteV102GorePeriodicDamage(g,change.id,change.amount,'burn');
+    g.fighters=area.fighters;
+  }
+  if(goreStep)finishV102GoreStep(g,goreStep);
   return JSON.parse(JSON.stringify({
     receipts: g.completedAttackImpacts,
     gameplay: { fighters: g.fighters, roleMetrics: g.roleMetrics, effects, pendingCount: g.pendingWeaponHits.length },
+    ...(options.gore?{gore:getV102GoreSnapshot(g)}:{}),
   }));
 }
 
@@ -167,6 +178,17 @@ test("grenade secondary-only contact cannot become evidence for the original pri
     assert.equal(result.gameplay.fighters.find((fighter) => fighter.id === 2).hp, 63.5);
     assert.deepEqual(result.gameplay, runContact("grenade", { ...options, observed: false }).gameplay);
   }
+});
+
+test('missed grenade cannot turn a same-tick burn-only death into a blast or severed corpse',()=>{
+  const result=runContact('grenade',{outsideRadius:true,hp:1,gore:true,burn:true});
+  assert.equal(result.gameplay.fighters.find(f=>f.id===1).hp,0,'real area burn defeats the out-of-radius target');
+  assert.equal(result.gore.impacts.some(e=>e.targetId===1),false);
+  assert.equal(result.gore.wounds.some(e=>e.targetId===1),false);
+  assert.equal(result.gore.impacts.filter(e=>e.targetId===2).length,1,'actual secondary grenade damage retains its blast');
+  assert.equal(result.gore.impacts.find(e=>e.targetId===2).style,'blast');
+  const contact=runContact('grenade',{hp:1,gore:true});
+  assert.equal(contact.gore.wounds.find(e=>e.targetId===1).severed,true,'real lethal grenade impact still severs');
 });
 
 test("primary burst multi-hit preserves one attack identity and distinct exact impact ordinals", () => {

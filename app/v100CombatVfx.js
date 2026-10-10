@@ -1,6 +1,7 @@
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
+ 'v102-flesh-wound':'/art/v102/combat-gore/flesh-wound-r1.webp',
  'v100-support-aircraft':'/art/v100/combat-vfx/aircraft-support-r1.webp',
  'v100-explosion':'/art/v100/combat-vfx/explosion-fire-smoke.webp',
  'v100-smoke-a':'/art/v100/combat-vfx/blackSmoke01.webp',
