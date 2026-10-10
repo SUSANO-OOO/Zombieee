@@ -1,9 +1,10 @@
 # Issue #177: actual joint animation candidate
 
 The current runtime connections cover ranger walking, stopping, aiming, firing,
-recoil and recovery, plus normal Mayo's diagonal run, ground settling and bite.
+recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
+and Scout's biped gait, ground settling and crowbar anticipation/contact/return.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are two candidates
+occluded limbs derive from built-in imagegen parts studies. These are three candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -81,3 +82,33 @@ bone export retains fixed lengths and painted ground support within 0.01 source
 pixels. The feral form, retreat, other owned actions, all remaining
 units, normal-speed continuous play and native performance still require work.
 The iPhone saved-recording audio defect remains unresolved.
+
+`scout-r1/` binds 16 explicit paint parts to fixed-length Blender leg and arm
+chains. The original face, backpack, holding hand and crowbar retain their
+source pixels. Both knees bend forward; each boot faces the travel direction.
+The 94 px span and 0.62 stance fraction give 151.613 px per travel cycle,
+approximately 23.79 world pixels before depth/compact scaling. The earlier
+60 px span trial was rejected because it made the legs cycle too quickly at
+the increased ally speed. All 300 exported action frames clear the source-cell
+edges, and planted painted soles stay at y=432 within 0.001 source pixels.
+
+Ordinary attacks hold the current settled leg phase. The weapon and hand use
+the same evaluated transform. Interpolating the arm and weapon independently
+exposed a wrist gap between source keys; the runtime now resolves the authored
+two-bone arms against that same shoulder and hand. This preserves limb lengths,
+shoulder/elbow/wrist continuity and the evaluated Blender bend at source keys.
+The combat melee effect uses the transformed painted crowbar tip. The texture
+downloads 46,982 bytes and decodes 407,552 bytes only when Scout is required.
+
+```powershell
+node scripts/build-v177-biped-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-biped-joints.test.mjs tests/v177-quadruped-joints.test.mjs tests/v177-joint-presentation.test.mjs
+```
+
+The biped and quadruped builders share the explicit rigid-parts baker. This
+refactor reproduces Mayo's existing texture, pose data and provenance exactly.
+Offline production-render contact sheets were reviewed in both directions,
+through windup, contact, recovery and stopping. They do not replace continuous
+normal battle review, remote native WebKit performance, or the remaining
+actions/forms in the Producer's full 48-form requirement.

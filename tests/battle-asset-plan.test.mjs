@@ -136,6 +136,6 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v100/characters/tatara-ground-strike-r1.webp",
   ]);
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
-  assert.equal(full.persistent.length, legacy.persistent.length+2);
-  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key),['joint-ranger','joint-mayo-chan']);
+  assert.equal(full.persistent.length, legacy.persistent.length+3);
+  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key),['joint-scout','joint-ranger','joint-mayo-chan']);
 });

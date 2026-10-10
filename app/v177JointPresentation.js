@@ -1,12 +1,13 @@
 import { V177_JOINT_ATLASES as bakedAtlases } from './v177JointData.js';
 import { V177_QUADRUPED_JOINT_ATLASES as quadrupedAtlases } from './v177QuadrupedJointData.js';
+import { V177_BIPED_JOINT_ATLASES as bipedAtlases } from './v177BipedJointData.js';
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
@@ -48,6 +49,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
   if(!atlas || !plan || !image?.naturalWidth)return false;
   if(atlas.type==='rigid-parts'){
     const matrix=new Float64Array(6);
+    const scratch=atlas.armConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
     ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);
     for(const part of atlas.parts){
       if(part.bone==='jaw'){
@@ -59,7 +61,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
         }
         ctx.closePath();ctx.fill();
       }
-      jointMatrix(matrix,atlas,plan,part.bone,part.upper);
+      jointMatrix(matrix,atlas,plan,part.bone,part.upper,scratch);
       const s=part.source,d=part.destination;
       ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
     }
@@ -76,13 +78,37 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
 
 // Interpolate rigid transforms, rather than matrix coefficients that shorten
 // limbs between samples. The actual Blender root travel was removed by bake.
-function jointMatrix(out,atlas,plan,bone,upper){
+function interpolatedMatrix(out,atlas,plan,bone,upper){
   const a=atlas.poses[upper?plan.upperIndex:plan.lowerIndex][bone];
   const b=atlas.poses[upper?plan.upperNextIndex:plan.lowerNextIndex][bone];
   const p=upper?plan.upperBlend:plan.lowerBlend,angleA=Math.atan2(a[1],a[0]),angleB=Math.atan2(b[1],b[0]);
   const delta=Math.atan2(Math.sin(angleB-angleA),Math.cos(angleB-angleA)),angle=angleA+delta*p,c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=a[4]+(b[4]-a[4])*p;
   out[5]=a[5]+(b[5]-a[5])*p+(upper&&plan.attackPhase!==null?plan.upperOffsetY:0);
+  return out;
+}
+
+// Independent rigid interpolation can separate a wrist from its weapon between
+// source keys. Resolve the authored two-bone chain against the same interpolated
+// shoulder and painted hand, keeping both limb lengths and the grip intact.
+function jointMatrix(out,atlas,plan,bone,upper,scratch){
+  const arm=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
+  if(!arm)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
+  interpolatedMatrix(parent,atlas,plan,arm.parentBone,upper);
+  interpolatedMatrix(effector,atlas,plan,arm.effectorBone,upper);
+  const [sx,sy]=arm.shoulder,[ex,ey]=arm.elbow,[wx,wy]=arm.wrist;
+  const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
+  const tx=effector[0]*wx+effector[2]*wy+effector[4],ty=effector[1]*wx+effector[3]*wy+effector[5];
+  const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
+  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
+  const sign=(ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1;
+  const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
+  const isUpper=bone===arm.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
+  const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
+  const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
+  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
   return out;
 }
 
