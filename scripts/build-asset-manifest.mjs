@@ -62,6 +62,7 @@ import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
 import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
 import { V100_FONT_ASSETS } from "../app/v100Typography.js";
 import { v100RegionalMapPaths } from "../app/v100RegionalMap.js";
+import { V177_JOINT_ATLASES } from "../app/v177JointPresentation.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -221,6 +222,9 @@ for (const kind of spriteKinds) {
     // Battle rendering cannot proceed without the atlases it draws.
     criticality: "critical",
   });
+}
+for (const atlas of Object.values(V177_JOINT_ATLASES)) {
+  record(atlas.path,{pack:"units",category:"unit",criticality:"critical"});
 }
 // The Takuya renderer now uses the repaired V1 atlas, while the published
 // legacy battle gutter remains a released compatibility asset. It is not a

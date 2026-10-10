@@ -8,6 +8,7 @@ import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -22,7 +23,8 @@ const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitI
 const browser=await(await pwaBrowserType(engine)).launch();
 try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
-    const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true});
+    const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
+      recordVideo:{dir:`${out}/videos`,size:{width,height}}});
     const page=await context.newPage(),row={width,height,motion:[],gore:[]};report.cases.push(row);
     const requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>report.errors.push(String(e)));
@@ -68,6 +70,11 @@ try{
           assert.ok(Number.isFinite(r.poseScaleX)&&Number.isFinite(r.poseScaleY),`${kind}/${action}: finite pose`);
           const expectedState={'wind-up':'wind-up',attack:'active',recovery:'recovery','hit-light':'hit-light'}[action];
           if(expectedState)assert.equal(r.requestedState,expectedState,`${kind}/${action}: paint follows the requested action`);
+          if(V177_JOINT_ATLASES[kind]&&action!=='hit-light'){
+            assert.equal(r.jointAtlasPath,V177_JOINT_ATLASES[kind].path,`${kind}/${action}: actual joint draw connection`);
+            assert.ok(Number.isInteger(r.jointLowerFrame)&&Number.isInteger(r.jointUpperFrame));
+            if(['wind-up','attack','recovery'].includes(action))assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),`${kind}/${action}: muzzle follows drawn weapon`);
+          }
           // Authored special guards and boss poses retain their own transforms.
           // The generic action adapter and all movement retain rigid anatomy.
           if(['move-right','move-left'].includes(action)){
@@ -75,13 +82,13 @@ try{
             assert.equal(r.poseScaleY,1,`${kind}/${action}: vertical anatomy`);
             assert.equal(r.direction,action==='move-right'?'right':'left',`${kind}/${action}: movement facing`);
           }
-          if(action==='attack'&&['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+          if(action==='attack'&&['ranger','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
             await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
           }
         }
         const scale=samples[0].pixelScale;
         assert.ok(samples.every(s=>Math.abs(s.pixelScale-scale)<1e-8),`${kind}: ordinary movement, attack and hit keep one source-pixel scale`);
-        if(['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+        if(['ranger','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
           await page.screenshot({path:`${out}/${width}x${height}-${kind}.png`});
         }
       }

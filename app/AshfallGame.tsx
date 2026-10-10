@@ -2,6 +2,7 @@
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
+import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
@@ -3921,9 +3922,9 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
   const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
   const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind)/frame.sourceRect.w;
-  return v100UsesHumanWalk(kind, { requestedState: 'move' })
+  return v177JointCycleDistance(kind,scale) ?? (v100UsesHumanWalk(kind, { requestedState: 'move' })
     ? v100HumanWalkCycleDistance(kind,scale)
-    : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale);
+    : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
 }
 function v102GoreBodyHeight(fighter: Fighter) {
   const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'idle','right');
@@ -4092,6 +4093,10 @@ type FighterRenderAudit = {
   poseScaleY?: number;
   bodyScale?: number;
   articulatedWalkPhase?: number | null;
+  jointAtlasPath?: string | null;
+  jointLowerFrame?: number | null;
+  jointUpperFrame?: number | null;
+  renderedWeaponSocket?: {x:number;y:number} | null;
 };
 type FighterDrawOptions = {
   world?: Game;
@@ -4371,14 +4376,19 @@ function drawSpriteFighter(
           f.animationPresentation?.state ?? (moving ? "move" : "idle"),
           f.animationPresentation?.elapsedSeconds ?? f.step,
         );
+  const authoredPoseOwned=Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||f.mayoRetreat||f.stationAbility.phase!=='idle');
   const animationSample = options.v100AuthoredPresentation
     ? v102CombatMotionSample(renderKind,baseAnimationSample,{side:f.side,attack:f.attack,attackWindup:f.attackWindup,abilityWindup:f.abilityWindup,
-      ownedPose:Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||f.mayoRetreat||f.stationAbility.phase!=='idle')})
+      ownedPose:authoredPoseOwned})
     : baseAnimationSample;
   const state = animationSample.spriteState;
-  const articulatedWalk = Boolean(options.v100AuthoredPresentation
+  const jointAtlas = V177_JOINT_ATLASES[renderKind];
+  const jointImage = jointAtlas ? sprites[jointAtlas.key] : null;
+  const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
+    ? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned}) : null;
+  const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
-  const frame = articulatedWalk ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
+  const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
     ? { sourceRect: TATARA_GROUND_ART.sourceRect, anchorX: TATARA_GROUND_ART.anchorX, anchorY: TATARA_GROUND_ART.anchorY, flipX: direction === 'right', path: TATARA_GROUND_ART.path }
     : kumaGuardArtPose
     ? { sourceRect: V100_KUMAVERSON_GUARD_ART.sourceRect, anchorX: V100_KUMAVERSON_GUARD_ART.anchorX, anchorY: V100_KUMAVERSON_GUARD_ART.anchorY, flipX: direction === 'left', path: V100_KUMAVERSON_GUARD_ART.path }
@@ -4402,7 +4412,7 @@ function drawSpriteFighter(
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
-  const articulatedWalkPhase = articulatedWalk
+  const articulatedWalkPhase = articulatedWalk || jointPose
     ? v100HumanWalkPhase(f.animationPresentation) : null;
   const locomotionPhase = articulatedWalkPhase ?? (Number(animationSample.clipProgress) || 0);
   const contactLift = animationSample.movement
@@ -4446,7 +4456,7 @@ function drawSpriteFighter(
     ctx.shadowColor = "rgba(232,222,188,.38)";
     ctx.shadowBlur = 2;
   }
-  const pose = !articulatedWalk && animationSample.pose ? animationSample.pose : {
+  const pose = !articulatedWalk && !jointPose && animationSample.pose ? animationSample.pose : {
     offsetX: 0,
     offsetY: 0,
     rotationRadians: 0,
@@ -4455,7 +4465,9 @@ function drawSpriteFighter(
     opacity: 1,
   };
   const facingSign = direction === "left" ? -1 : 1;
-  const weaponSocket = v100RenderedWeaponSocket({kind:renderKind,state,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale});
+  const weaponSocket = jointPose
+    ? v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale})
+    : v100RenderedWeaponSocket({kind:renderKind,state,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale});
   if (weaponSocket) fighterWeaponSockets.set(f,weaponSocket);
   if (options.world && options.v100AuthoredPresentation && ["tky", "mrs-chiha", "zakimiya"].includes(f.kind)) {
     const abilitySocket = v100RenderedAbilityOriginSocket({ kind: f.kind, frame, state, direction, size, pose, x: f.x, y: f.y, bob, depthScale });
@@ -4507,6 +4519,10 @@ function drawSpriteFighter(
       renderHeight: size.h,
       groundAnchor: animationSample.groundAnchor,
       articulatedWalkPhase,
+      jointAtlasPath: jointPose ? jointAtlas.path : null,
+      jointLowerFrame: jointPose?.lowerIndex ?? null,
+      jointUpperFrame: jointPose?.upperIndex ?? null,
+      renderedWeaponSocket: weaponSocket,
       actualXDelta: fighterActualXDeltaAudit.get(f.id) ?? 0,
       deploymentPlan,
       spritePath: kumaGuardArtPose ? V100_KUMAVERSON_GUARD_ART.path : frame.path,
@@ -4530,8 +4546,10 @@ function drawSpriteFighter(
     w: frame.sourceRect.w,
     h: frame.sourceRect.h,
   }];
-  const drewArticulatedWalk = articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
-    -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
+  const drewArticulatedWalk = jointPose
+    ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h)
+    : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
+      -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
   for (const slice of drewArticulatedWalk ? [] : drawSlices) {
     (options.smoothMinification ? v100ImageSampler.draw.bind(null,ctx) : ctx.drawImage.bind(ctx))(
       sprite,
@@ -12736,6 +12754,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
       ensureUnitRenderProofAsset: async (kind: UnitKind) => {
+        const joint = V177_JOINT_ATLASES[kind];
+        const existingJoint = joint ? spriteRefs.current[joint.key] : null;
+        if (joint && (!existingJoint?.naturalWidth || !decodedBattleImagesRef.current.has(existingJoint))) {
+          await loadImageWithTimeout({src:joint.path,requireDecode:true,
+            decodeAttempts:REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,decodeTimeoutMs:REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+            onReady:(image:HTMLImageElement)=>{decodedBattleImagesRef.current.add(image);spriteRefs.current[joint.key]=image;}});
+          if(!spriteRefs.current[joint.key]?.naturalWidth)throw new Error(`Joint proof asset did not decode: ${kind}`);
+        }
         const path = spriteSheetPath(kind);
         const existing = spriteRefs.current[kind];
         if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {
@@ -14258,7 +14284,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         spriteRefs.current[kind],
         (image) => {
           spriteRefs.current[kind] = image;
-          if (externalSessionActive) v100HumanWalkRenderer.prepare(kind,image);
+          if (externalSessionActive && !V177_JOINT_ATLASES[kind]) v100HumanWalkRenderer.prepare(kind,image);
         },
       )),
       ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(

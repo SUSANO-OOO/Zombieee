@@ -2,6 +2,7 @@ import { V100_R9_ASSET_ADDITIONS, V100_R9_ASSET_BYTES } from '../scripts/v100-r9
 import { V100_OPENING_ASSET_ADDITIONS, V100_OPENING_ASSET_BYTES } from '../scripts/v100-opening-asset-contract.mjs';
 import { V177_SPRITE_REPLACEMENTS, V177_SPRITE_BYTES_DELTA } from '../scripts/v177-sprite-repair-asset-contract.mjs';
 import { V177_SPRITE_UPDATE_BYTES } from '../scripts/v100-release-asset-contract.mjs';
+import { V177_JOINT_ASSET_ADDITIONS, V177_JOINT_ASSET_BYTES } from '../scripts/v177-joint-asset-contract.mjs';
 import { V102_ASSET_ADDITIONS, V102_ASSET_BYTES } from '../scripts/v102-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -79,10 +80,10 @@ test("the published0.9.9.5 pack reuses413 assets and refreshes Musashi and the b
 test("the Version 1.0.3 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA,
-    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA,
-    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES,
-    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES,
+    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES,
+    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES,
+    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES,
+    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES,
   });
   assert.equal(RELEASE_VERSION, "1.0.3");
   assert.equal(candidate.version, RELEASE_VERSION);
@@ -184,8 +185,8 @@ test('the published 1.0.0 pack updates to 1.0.3 without downloading existing med
   const update = evaluateUpdate({ installedManifest: publishedV100, publishedManifest: candidate, storedHashes });
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, '1.0.0'); assert.equal(update.toVersion, '1.0.3');
-  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes);
-  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path)].sort());
+  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);
+  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path),...V177_JOINT_ASSET_ADDITIONS.map(asset=>asset.path)].sort());
   assert.equal(update.removedCount, 0);
   const complete = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...storedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.deepEqual(complete, { verified: true, errors: [], missingPaths: [] });
@@ -196,8 +197,8 @@ test('installed 1.0.1 downloads the gore texture, R9 scenes and opening while re
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.1');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes);assert.equal(update.removedCount,0);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path)].sort());
+  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());
   assert.equal(update.unchangedCount,previous.assets.length-3);
 });
 
@@ -206,6 +207,6 @@ test('installed 1.0.2 downloads only the exact R9 and opening additions without 
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.2');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes);assert.equal(update.removedCount,0);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-3);
+  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-3);
 });
