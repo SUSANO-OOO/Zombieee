@@ -3,9 +3,10 @@
 The current runtime connections cover ranger walking, stopping, aiming, firing,
 recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
 Scout's biped gait, ground settling and crowbar anticipation/contact/return,
-and Walker/Turned's gait, settling and claw reach/return.
+Walker/Turned's gait, settling and claw reach/return, and Runner's separately
+authored running gait with opposed bent arms and a short flight phase.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are five form candidates
+occluded limbs derive from built-in imagegen parts studies. These are six form candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -147,3 +148,22 @@ node --test tests/v177-enemy-joints.test.mjs tests/v177-installed-asset-contract
 
 Normal-speed play, the remaining forms/actions and physical recording audio
 remain unaccepted. These source checks do not close the complete quality goal.
+
+`runner-r1/` shares every exact painted part with `walker-r1/`, as the approved
+source frames also match in every state and direction. Its actual Blender
+motion is different: a 96 px span, 0.48 stance fraction, 20 px lift and 200 px
+travel per cycle give a short flight phase and a longer stride. Bent arms swing
+in opposite phases. Claw anticipation and recovery retain this bent-arm stance,
+avoiding a jump down to the walking form's hanging hands. Bone lengths, real
+painted support, world-space planted feet, elbow/wrist continuity and the
+stationary attack handover are checked through source and production samples.
+
+Only the motion and source authoring data are added. The source parts refer to
+`../walker-r1/`, and both runtime pose objects use `joint-walker` and the exact
+same WebP. Running therefore adds no texture download, decode or PWA asset.
+
+```powershell
+node scripts/build-v177-runner-joints.mjs
+node scripts/build-asset-manifest.mjs --check
+node --test tests/v177-runner-joints.test.mjs tests/v177-enemy-joints.test.mjs
+```

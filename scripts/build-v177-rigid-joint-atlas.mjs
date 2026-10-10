@@ -54,7 +54,7 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  const lowerCount=poses.length;
  for(let i=0;i<=count;i++)poses.push(pose(actions.get('attack').frames[i*2]));
  await mkdir(path.resolve('public/art/v100/joints'),{recursive:true});await writeFile(path.resolve('public'+assetPath),bytes);
- const atlas={type:'rigid-parts',key:`joint-${d.kind}`,path:assetPath,width:d.width,height:d.height,
+ const atlas={type:'rigid-parts',key:d.assetKey??`joint-${d.kind}`,path:assetPath,width:d.width,height:d.height,
   frameCount:count,settleLevels:4,cycleDistance:d.motion.walk.spanPx/d.motion.walk.stanceFraction,
   decodedWidth:width,decodedHeight:height,decodedBytes:width*height*4,
   parts:rows.map(row=>({name:row.name,bone:row.bone,source:row.source,destination:row.destination,upper:row.upper})),poses,pelvisOffsets,lowerCount,
@@ -64,7 +64,7 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  const provenance={schema:'zombieee-joint-atlas/1',kind:d.kind,assetPath,bytes:bytes.length,sha256:sha(bytes),
   generatedPartsStudySha256:d.sheetSha256,identitySourceSha256:d.sourceSha256,identityBinding:d.identityBinding,motionSha256:sha(motionBytes),
   parts:d.parts.map(({name,file,sha256,original})=>({name,file,sha256,original:Boolean(original)})),
-  source:description,groundY:d.motion.walk.groundY,decodedBytes:atlas.decodedBytes,poses:poses.length,
+  source:description,...(d.sharedPaintSource?{sharedPaintSource:d.sharedPaintSource}:{}),groundY:d.motion.walk.groundY,decodedBytes:atlas.decodedBytes,poses:poses.length,
   scope:{totalUnits:48,allUnitAcceptance:false,normalPlayAcceptance:false},...(aliases.length?{aliases}:{})};
  await writeFile(path.join(dir,'provenance.json'),JSON.stringify(provenance,null,2)+'\n');
  return {assetPath,bytes:bytes.length,hash:sha(bytes),atlas:[width,height],decodedBytes:atlas.decodedBytes,poses:poses.length};
