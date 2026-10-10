@@ -34,10 +34,13 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
 const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.5";
-const oldContract=oldVersion==='1.0.1'
+const oldContract=oldVersion==='1.0.2'
+  ? {assets:681,distinct:679,replaced:[],additions:0,bytes:0,bundled:0,network:0}
+  : oldVersion==='1.0.1'
   ? {assets:680,distinct:678,replaced:[],additions:V102_ASSET_ADDITIONS.length,bytes:V102_ASSET_BYTES,bundled:0,network:1}
   : {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
-if(!['0.9.9.5','1.0.1'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
+if(!['0.9.9.5','1.0.1','1.0.2'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
+const commitOnlyUpdate = oldContract.additions === 0;
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
   ?? "55d796cc577d1d9f903a4d2c6b4382196511db27";
 const expectedCandidateReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA?.trim();
@@ -531,99 +534,11 @@ async function screenshot(page, label) {
   });
 }
 
-async function closeContext(label) {
-  if (!context) return;
-  diagnosticPhase = label;
-  teardown = true;
-  await context.close();
-  context = null;
-  teardown = false;
-}
-
-async function clickAndWait(page, locator, timeoutMs = 300_000) {
-  await locator.waitFor({ state: "visible", timeout: timeoutMs });
-  await locator.click();
-}
-
-let context = null;
-let page = null;
-const userDataDir = await mkdtemp(path.join(os.tmpdir(), "z-pwa-"));
-await mkdir(evidenceDir, { recursive: true });
-
-try {
-  ({ context, page } = await openPersistent(userDataDir));
-  diagnosticPhase = "old-install-entry";
-  await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
-  const oldPageManifest = await manifestFromPage(page);
-  record(`existing profile initially loads the ${oldVersion} manifest`, (
-    oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
-  ), oldPageManifest);
-
-  await clickAndWait(page, page.getByRole("button", { name: "ダウンロードを開始" }));
-  await page.getByRole("button", { name: "ゲームを始める" }).waitFor({ state: "visible", timeout: 300_000 });
-  const oldInstalled = await page.evaluate(async () => {
-    const manifest = await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json();
-    const cache = await caches.open("zombieee-assets-v1");
-    const keys = await cache.keys();
-    return {
-      version: manifest.version,
-      assetCount: manifest.assets.length,
-      distinctHashCount: new Set(manifest.assets.map((asset) => asset.hash)).size,
-      assetCacheEntries: keys.filter((request) => new URL(request.url).pathname.includes("/__pwa-asset__/" )).length,
-    };
-  });
-  record("the existing installed app completes the full old release pack", (
-    oldInstalled.version === oldVersion
-    && oldInstalled.assetCount === oldManifest.assets.length
-    && oldInstalled.assetCacheEntries === oldInstalled.distinctHashCount
-  ), oldInstalled);
-
-  await page.getByRole("button", { name: "ゲームを始める" }).click();
-  await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
-  await page.waitForTimeout(500);
-  const oldSave = await saveState(page);
-  // The old generation has the same asynchronous worker-readiness contract as
-  // update and relaunch. Retain every missing reply instead of interpreting a
-  // single MessageChannel timeout as an absent committed manifest.
-  const oldWorker = await waitForActiveVersion(page, oldVersion);
-  record("the old installed profile has an active worker, correct scope, and a real save", (
-    oldWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
-    && oldWorker.activeWorkerState === "activated"
-    && oldWorker.activeState?.active?.version === oldVersion
-    && typeof oldSave.raw === "string"
-    && oldSave.raw.length > 0
-    && sha256(oldSave.raw) === saveFixtureHash
-  ), { oldWorker, oldSave: { ...oldSave, raw: oldSave.raw ? "present" : "missing", sha256: sha256(oldSave.raw ?? "") } });
-  await screenshot(page, "old-installed");
-
-  await closeContext("close-old-installed");
-  const switched = await fetch(`http://127.0.0.1:${address.port}/__qa/switch?root=candidate`).then((response) => response.json());
-  record(`the same-origin server switches to the ${RELEASE_VERSION} candidate`, switched.ok === true && switched.currentLabel === "candidate", switched);
-
-  ({ context, page } = await openPersistent(userDataDir));
-  const candidateAssetRequests = [];
-  page.on("request", (request) => {
-    const pathname = new URL(request.url()).pathname;
-    if (/\/(?:art|audio|assets\/v100|fonts|pwa-bundles|pwa-optimized)\//.test(pathname)) candidateAssetRequests.push(pathname);
-  });
-  diagnosticPhase = "candidate-unqualified-entry";
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  const candidatePageManifest = await manifestFromPage(page);
-  record(`the existing profile sees the ${RELEASE_VERSION} manifest without reinstalling`, (
-    candidatePageManifest.ok
-    && candidatePageManifest.status === 200
-    && candidatePageManifest.manifest.version === RELEASE_VERSION
-    && candidatePageManifest.manifest.releaseSha === candidateManifest.releaseSha
-  ), {
-    version: candidatePageManifest.manifest.version,
-    releaseSha: candidatePageManifest.manifest.releaseSha,
-  });
-
+async function acknowledgeLegacyGift(page, oldSave) {
   await waitForV100Ready(page);
   const gift = page.getByRole("dialog", { name: "新しい作戦記録を開始しました", exact: true });
   await gift.waitFor({ state: "visible", timeout: 60_000 });
-  const updateButton = page.getByRole("button", { name: "更新をダウンロード", exact: true });
-  const updateDeferredDuringGift = await updateButton.count() === 0;
+  const updateDeferredDuringGift = await page.getByRole("button", { name: "更新をダウンロード", exact: true }).count() === 0;
   const giftConfirmation = gift.getByRole("button", { name: "確認する", exact: true });
   await page.waitForFunction(() => {
     const button = [...document.querySelectorAll("button")].find((entry) => entry.textContent?.trim() === "確認する");
@@ -664,11 +579,122 @@ try {
   await giftConfirmation.click();
   await gift.waitFor({ state: "detached", timeout: 30_000 });
   await waitForV100Ready(page);
+  return beforeUpdateV100;
+}
+
+async function closeContext(label) {
+  if (!context) return;
+  diagnosticPhase = label;
+  teardown = true;
+  await context.close();
+  context = null;
+  teardown = false;
+}
+
+async function clickAndWait(page, locator, timeoutMs = 300_000) {
+  await locator.waitFor({ state: "visible", timeout: timeoutMs });
+  await locator.click();
+}
+
+let context = null;
+let page = null;
+const userDataDir = await mkdtemp(path.join(os.tmpdir(), "z-pwa-"));
+await mkdir(evidenceDir, { recursive: true });
+
+try {
+  ({ context, page } = await openPersistent(userDataDir));
+  diagnosticPhase = "old-install-entry";
+  await page.goto(commitOnlyUpdate ? baseUrl : legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
+  const oldPageManifest = await manifestFromPage(page);
+  record(`existing profile initially loads the ${oldVersion} manifest`, (
+    oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
+  ), oldPageManifest);
+
+  await clickAndWait(page, page.getByRole("button", { name: "ダウンロードを開始" }));
+  await page.getByRole("button", { name: "ゲームを始める" }).waitFor({ state: "visible", timeout: 300_000 });
+  const oldInstalled = await page.evaluate(async () => {
+    const manifest = await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json();
+    const cache = await caches.open("zombieee-assets-v1");
+    const keys = await cache.keys();
+    return {
+      version: manifest.version,
+      assetCount: manifest.assets.length,
+      distinctHashCount: new Set(manifest.assets.map((asset) => asset.hash)).size,
+      assetCacheEntries: keys.filter((request) => new URL(request.url).pathname.includes("/__pwa-asset__/" )).length,
+    };
+  });
+  record("the existing installed app completes the full old release pack", (
+    oldInstalled.version === oldVersion
+    && oldInstalled.assetCount === oldManifest.assets.length
+    && oldInstalled.assetCacheEntries === oldInstalled.distinctHashCount
+  ), oldInstalled);
+
+  await page.getByRole("button", { name: "ゲームを始める" }).click();
+  if (commitOnlyUpdate) await waitForV100Ready(page);
+  else await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
+  await page.waitForTimeout(500);
+  const oldSave = await saveState(page);
+  // The old generation has the same asynchronous worker-readiness contract as
+  // update and relaunch. Retain every missing reply instead of interpreting a
+  // single MessageChannel timeout as an absent committed manifest.
+  const oldWorker = await waitForActiveVersion(page, oldVersion);
+  record("the old installed profile has an active worker, correct scope, and a real save", (
+    oldWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
+    && oldWorker.activeWorkerState === "activated"
+    && oldWorker.activeState?.active?.version === oldVersion
+    && typeof oldSave.raw === "string"
+    && oldSave.raw.length > 0
+    && sha256(oldSave.raw) === saveFixtureHash
+  ), { oldWorker, oldSave: { ...oldSave, raw: oldSave.raw ? "present" : "missing", sha256: sha256(oldSave.raw ?? "") } });
+  await screenshot(page, "old-installed");
+
+  let beforeUpdateV100;
+  if (commitOnlyUpdate) {
+    // Install and start the current release through its normal V1 root.
+    // Do not mount a legacy renderer and navigate away during its asset loads.
+    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+  }
+  await closeContext("close-old-installed");
+  const switched = await fetch(`http://127.0.0.1:${address.port}/__qa/switch?root=candidate`).then((response) => response.json());
+  record(`the same-origin server switches to the ${RELEASE_VERSION} candidate`, switched.ok === true && switched.currentLabel === "candidate", switched);
+
+  ({ context, page } = await openPersistent(userDataDir));
+  const candidateAssetRequests = [];
+  page.on("request", (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (/\/(?:art|audio|assets\/v100|fonts|pwa-bundles|pwa-optimized)\//.test(pathname)) candidateAssetRequests.push(pathname);
+  });
+  diagnosticPhase = "candidate-unqualified-entry";
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  const candidatePageManifest = await manifestFromPage(page);
+  record(`the existing profile sees the ${RELEASE_VERSION} manifest without reinstalling`, (
+    candidatePageManifest.ok
+    && candidatePageManifest.status === 200
+    && candidatePageManifest.manifest.version === RELEASE_VERSION
+    && candidatePageManifest.manifest.releaseSha === candidateManifest.releaseSha
+  ), {
+    version: candidatePageManifest.manifest.version,
+    releaseSha: candidatePageManifest.manifest.releaseSha,
+  });
+
+  const updateButton = page.getByRole("button", { name: "更新をダウンロード", exact: true });
+  const commitOnlyButton = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
+  if (commitOnlyUpdate) {
+    await commitOnlyButton.waitFor({ state: "visible", timeout: 60_000 });
+    const pendingSave = await v100State(page);
+    record("a complete no-media update blocks mounting and preserves the installed V1 save before commit", (
+      await page.locator(".v100-shell").count() === 0
+      && pendingSave.raw === beforeUpdateV100.raw
+      && pendingSave.oldRaw === oldSave.raw
+      && pendingSave.legacyWrites.length === 0
+    ), { v100SavePreserved: pendingSave.raw === beforeUpdateV100.raw, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
+  } else {
+    beforeUpdateV100 = await acknowledgeLegacyGift(page, oldSave);
+    await updateButton.waitFor({ state: "visible", timeout: 60_000 });
+  }
   diagnostics.audioOwnerAtTransition.beforeUpdate = await page.evaluate(() => (
     window.__V100_EVENT_AUDIO_QA__?.getDiagnostics?.() ?? null
   ));
-  await updateButton.waitFor({ state: "visible", timeout: 60_000 });
-
   const waitingWorker = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
     try { await registration.update(); } catch { /* the registration state below is evidence */ }
@@ -686,18 +712,19 @@ try {
     && waitingWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
   ), waitingWorker);
 
-  const commitOnlyButton = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
   const updateButtonCount = await updateButton.count();
   const commitOnlyButtonCount = await commitOnlyButton.count();
-  const updateEnabledAfterGift = updateButtonCount === 1 && await updateButton.isEnabled();
-  record("the existing app exposes the safe enabled update control after gift acknowledgement", (
-    updateButtonCount === 1 && commitOnlyButtonCount === 0 && updateEnabledAfterGift
+  const updateControl = commitOnlyUpdate ? commitOnlyButton : updateButton;
+  const updateEnabledAfterGift = await updateControl.isEnabled();
+  record("the existing app exposes the safe enabled control for its exact media delta", (
+    updateButtonCount === (commitOnlyUpdate ? 0 : 1)
+    && commitOnlyButtonCount === (commitOnlyUpdate ? 1 : 0)
+    && updateEnabledAfterGift
   ), {
     updateButtonCount,
     commitOnlyButtonCount,
     updateEnabledAfterGift,
   });
-  const updateControl = updateButton;
   await updateControl.waitFor({ state: "visible", timeout: 120_000 });
   await screenshot(page, "v1-update-ready");
   const updateAssetStart = candidateAssetRequests.length;

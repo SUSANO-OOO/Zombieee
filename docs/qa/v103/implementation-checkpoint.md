@@ -1,0 +1,150 @@
+# 1.0.3 音声出力 checkpoint
+
+## 元の失敗
+
+公開1.0.2 `cd246a3d8e93b69d8cb6b370d40f28924a0d86b6`で、iPhone 14 Pro Max／iOS 26.7.1の
+インストール済みPWAは聞こえるが、保存録画だけ無音。版表示と通話なしをProducerが確認。
+AudioSessionの再生カテゴリ・復帰だけでは解消しなかった。Issue #177はopen。
+
+## 限定変更
+
+共通`audioOutput.js`でiOSの最終出力をMediaStream→native audioへ渡す。
+1 contextに1出力、通常mixerとendingのcontextは別、endingのowner共有・100ms引継ぎを維持。
+native volumeは1、既存Web Audio gain／duck／limiter／音源・SE・voiceを維持する。
+非表示・portrait・pagehide・disposeで出力を停止し、遅延playを無効化する。
+API非対応は既存の直接出力。再生拒否・timeoutはgesture復帰へ通知し、並列の直接出力を作らない。
+
+独立reviewでpageshow listener順による復帰失敗を再現。mixerがoutputのpageAwayを解除してから復帰するよう修正し、
+AudioSession非対応fixtureのpagehide→pageshow回帰を追加した。最終独立reviewと遠隔検査は別途記録する。
+
+32e87eeの独立reviewでは同じtask内のending owner交代がキャンセル済み出力promiseを再利用するMediumを再現。
+pause時にpendingを同期で切り離し、旧attemptのgeneration／identity guardを保った。即時owner交代の回帰を追加。
+titleの同期pageshowにも同じguard順のMediumがあり、ending mix作成時に先行するforeground listenerを登録。
+closed context置換時の旧native要素・track回収漏れLowも修正し、両方の実module回帰を追加した。
+
+## ローカル検証
+
+最終修正78d4098でbuild＋全1943/1943 tests、音声50/50、CI契約6/6、source Lint 0 errors／既存25 warnings、
+content validator、manifest、diff check成功。
+初回全testの既存strict shell検査はsandboxのGit Bash `NtCreateDirectoryObject / 0xC0000022`で失敗。
+sourceを変えずsandbox外で同じ全testを実行して成功した。
+最初のlintは保全した未追跡`output/`の旧browser vendor bundleまで走査して75 errorsとなった。
+製品sourceと検査sourceを対象に、同ディレクトリだけを除外して再実行した。CIのclean checkoutには存在しない。
+
+R5原稿SHA-256 `c324ba3783074ecabe80716d971c35d73028a7f98f2a8069760153b1c8b17cd6`。
+全681配布素材177,926,708 bytesは1.0.2と同じhash。manifestは版番号だけ変更。
+公開1.0.2→1.0.3で既存mediaの追加取得・削除0を検査。
+脚本、save、報酬、人物、戦闘動作、Goreの製品変更なし。
+
+ユーザーPCではゲーム・browser・音声を起動していない。全testの既存HTTP検査は一時loopback serverを作成・終了する。
+遠隔browser内のMediaRecorder保存とdecode信号検査は、iOS Control Centerの保存録画成功とは異なる。
+物理iPhoneの録画改善は未確認のままで、修正完了とは報告しない。
+
+## 遠隔検査の最初の失敗
+
+PR #179／CI 38028547424のChromium job 114144464392は、新規検査が既存request監査に存在しない
+`stop()`を呼び出す後片付けのTypeErrorで失敗した。artifact 11660967358
+（zip SHA-256 `e6002c73965b226d6536dd8112896168812d23fa444efec88a96ca7441ac314d`）とjob logを保全。
+`settle()`も同じAPI取り違えだったため、既存の`closeContext()`とrequest reportで判定する。
+元の失敗を後片付けエラーで隠さず、失敗時の画面・出力状態も残すよう検査だけを修正した。
+この失敗を音声出力の成功や製品不具合の確定根拠にしない。
+
+再検査38028841146／Chromium job 114145402346では元の`Expected one active output, got 2`を保全できた。
+製品sourceを照合すると、親のevent/UI mixerはbattle中も常駐し、子battle mixerが別contextを所有する。
+従ってglobal要素数1の検査は「1 contextに1出力」の契約と一致していなかった。
+各mixerのdiagnosticsにnative stream IDを加え、二つのownerそれぞれに1出力だけが対応し、
+event場面音が0、battle BGMが1、重複loopが0であることを実streamと照合する。
+録音信号の基準は維持し、context数を音源の二重再生と混同しない。
+外側browser closeの失敗でも元のfailureとsummaryを残すよう保護。音声関連52/52、対象Lint・構文・diff成功。
+
+## 実信号と復旧検査
+
+3d5565bの遠隔Chromium job 114147515724は音声・全戦闘form・通常接触まで成功。
+artifact 11661936604（zip SHA-256 `050446c67a233555653b344bea4bf5eaec0e6ca2f4f59409610333f5fa3cefbb`）の
+3画面サイズ×通常／復帰の6 m4aすべてを回収。各40,388 bytes／2.380秒／stereo、RMS 0.0293–0.0360、peak 0.1699–0.3303。
+各ownerのstream IDは復帰前後で同一、event場面音0・battle BGM1・重複loop0。
+
+native WebKit job 114147515726は1280×720の通常／復帰と844×390の通常、計3録音に非ゼロ信号を確認。
+844×390復帰直後のowner状態検査で失敗し、artifact 11661951864
+（zip SHA-256 `2a4818acac6bd548594db0687f1bd30b4568e4ccba74c1d591e0b2f0ef791588`）を保全。
+検査のdecodeが別のhardware AudioContextを開いていたためOfflineAudioContextへ変更。
+復帰の待機は両ownerのcontext running・native再生・BGM1・重複0を20秒上限で確認する。
+製品の復帰成功はこの再検査が通るまで未確認とする。
+
+同runのPR Verifyはpartial PWA 21/23。全681素材hashが同じためrelease deltaは0だが、
+fixtureが媒体差分ありと非bundle媒体差分取得を必須としていた。
+実際の欠損cache修復は完了し、commit／save保存／offline／rollback条件は成功している。
+差分0を許しながら、欠損に由来する実修復取得の存在・一意性、未知path0、保持hash再取得0、
+3失敗＋1保留のbundle試行、進捗境界等の既存条件を維持するよう検査を修正した。
+planner・manifest・復旧・版identityの無音37/37、対象Lint・構文・diff成功。
+
+既存native PWA検査はdefault UAで直接出力を使うため、WebKit persistent partial fixtureをiPhone UAに設定。
+同じinstalled profileをorigin socket切断後にSWから再起動した箇所で、event ownerのnative streamを
+実MediaRecorderで保存・OfflineAudioContextでdecodeし、1 ownerに1出力と非ゼロ信号を追加確認する。
+既存remote speaker muteと全復旧・save条件を維持。これも物理iPhoneのOS画面録画とは区別する。
+
+7b900beの追加検査に対する独立reviewで、offline録音の保存先を作成する前にwriteするMediumを確認。
+保存直前にmkdirし、既存録音への上書きを拒否するよう修正した。該当差分の独立再確認はH0／M0／L0。
+2本の検査sourceの構文、request監査mock 12/12、対象Lint、diff check成功。PCのbrowser・音声未起動。
+
+7b900beの遠隔Chromium／native WebKitは両方とも3サイズ×通常／復帰の6録音と戦闘回帰に成功。
+計12 m4aを回収し、すべて非ゼロ信号。844×340復帰の実byteをFFmpegのnull出力でもdecodeした。
+artifactはChromium 11661758245（zip SHA-256 `dc768ca56d71331f2f5bc9b6d6fd978a096e5489a72352e9323896f63a522171`）、
+WebKit 11661454246（`47eab95efa3067c381878e5001c7ba497aae8020ee2de20d10fe332aab1a6003`）。
+このheadは後続の検査修正前であり、最終headの全CI合格の代用にはしない。
+
+既存staff-roll検査はdesktop UAのため、iPhone出力経路でのnativeファイルsourceを別途追加確認する。
+通常のタイトル・クレジット・終幕と終幕復帰を実操作し、共有ending contextの4録音に同じ信号基準を適用。
+追加箇所のreviewで、終了判定に継続する親UI出力まで含めたMediumを確認し、録音済ending stream IDだけを
+停止確認へ結び付けた。離脱eventのfade終了を待ってから録音する。対象Lint・構文・diff成功。
+
+596d6b3の追加native検査は両engineで4録音・復帰・ending stream停止まで成功。
+Chromiumはcredits skipによる未完了media GETの`net::ERR_ABORTED`がcase内の通信失敗に分類され、全体は失敗。
+artifact 11662426371（zip SHA-256 `eb8c045467897bfae35765f418e4ab94a6b42a337443f37fc8ff38f410d38f45`）とlogを保全。
+通信監査API・信号基準を変更せず、title→credits録音後は検査自身のcontextを既存closeContextで閉じる。
+映画は別のowned contextで、R5 epilogue最終行後のdurable cursorを通常タイトルから復元する。
+全in-case通信失敗を引き続き失敗とし、終了中の既知pending requestだけを既存の監査契約で判定する。
+cursor 27のnormalize保存、構文・対象Lint・diff成功。追加差分の独立review H0／M0／L0。PC起動0。
+
+6ed9ad7のChromiumは10録音と戦闘回帰に成功。WebKit job 114155929879は最初の録音前に失敗。
+artifact 11662507208（zip SHA-256 `f0c4d1a96b05e0e32203f786ff49d64cfd19b25a63d0609784e832eae1eec577`）を保全。
+UI contextはrunningだが、durable save後にmountするbattle contextは初回の非gesture unlockが失敗し、
+次のタッチを待っていた。通信失敗・page/console errorは0。独立調査も通常操作前提の不足と判定。
+初回の有界unlock終了とその状態を記録し、通常のscout出撃カードを一度だけnative tapする。
+実fighter生成を確認してから録音する。診断unlockは呼ばず、pageshow後は追加操作をせず自動復帰を検査。
+両owner running・BGM1・重複0・実信号・通信監査・20秒復帰上限を維持する。
+追加差分の構文・対象Lint・diff check成功。独立read-only reviewはH0／M0／L0、PC起動0。
+
+3d82834は両engineの10録音ずつ、戦闘回帰、品質72ケースずつ、性能検査に成功。
+native PWAの更新・save・rollback等は成功したが、追加offline録音がRMS/peak 0で23/24となった。
+artifact 11662284620（zip SHA-256 `7fbb38090b02b18a0bcd863c9e48447c19018142e271f5255ed3a822e35cc6b4`）
+と無音m4aを保全。元のfixtureはBGM・SEを両方無効にして保存し、その保持を明示検査していた。
+positive録音の追加前提と矛盾していたため、native WebKitだけBGM有効／SE無効の混合設定を保存・保持する。
+Chromiumは従来の両方無効を維持。raw save一致、同一installed profile、実socket切断、rollback、
+remote mute、実信号閾値・期間・単一ownerを維持し、録音時のsettings／bus gainも記録・検査する。
+この再検査が通るまでoffline録音は成功扱いにしない。PCのゲーム・browser・音声は起動していない。
+
+installed-updateのnative fixtureも、報告された現行公開1.0.2
+`cd246a3d8e93b69d8cb6b370d40f28924a0d86b6`から同一profileで更新する。
+同SHAの681 asset／679 hashを固定し、媒体変更・再取得0のapp shell更新でsave・offline・rollbackを検査。
+1.0.1のsource-bound契約とplanner test、旧0.9.9.5からのpartial失敗・修復検査は維持する。
+公開前の独立reviewは、媒体差分0ではcommit-requiredがgame mountを止めるため、従来の
+先にgameを待つdriverでは停止すると指摘（M1）。1.0.2の通常起動でV1 saveを確定してから更新し、
+candidateでは「保存済みデータを反映」を選ぶ。commit前のmount禁止・save一致を追加確認し、
+媒体差分がある旧版は従来のdownload導線を維持する。これは遠隔再実行前に検出・修正した検査不備。
+追加4ファイルの独立再reviewはH0／M0／L0。両script構文・対象ESLint・diff check、
+source-bound planner 8/8・CI YAML parseが成功。製品code・asset・save仕様の追加変更はない。
+
+b4a7510の両engine計20録音を回収し、ファイルbyte・期間・非ゼロ信号・FFmpeg null decodeを確認。
+native partialは24/24。offline録音は27,778 bytes／2.4584秒／RMS 0.00120208／peak 0.0086191、
+BGMオン・SEオフ、単一owner、context runningで成功。artifact 11663419635
+（zip SHA-256 `db284cb45890f6b1aeadeaea4421988996ffa8373d04ce9944a31870dcc3e524`）。
+
+1.0.2 installed-updateは更新・媒体再取得0・両save・再起動・offline・rollback成功の18/19。
+旧legacy renderer画像 `infected-battle-gutter-v1.png` のcancelled 1件を通信監査が検出した。
+artifact 11664587470（zip SHA-256 `c6d0844492067f305e1c38dff46574b07b0d991e324895d993ace0ecd4b01b80`）
+と元ログを保全。旧検査はlegacy画面へ入り、通常V1へ再navigationしていたため、
+現行1.0.2の検査は実ユーザーと同じ通常rootからinstall・起動し、旧rendererをmountしない。
+旧0.9.9.5等のlegacy導線、全通信失敗監査、save／更新／offline／rollback条件は維持する。
+製品codeは変更せず、未知の失敗を除外せず、元の失敗を成功へ置き換えない。
+この2ファイル差分の独立read-only reviewはH0／M0／L0、構文・対象ESLint・diff check成功。

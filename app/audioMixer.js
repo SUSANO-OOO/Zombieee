@@ -1,5 +1,6 @@
 import { AUDIO_CATEGORIES, createAudioManifest } from "./audioManifest.js";
 import { createPlaybackAudioSession } from "./audioSession.js";
+import { createAudioOutput } from "./audioOutput.js";
 
 const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
   bgm: 1,
@@ -157,6 +158,7 @@ export class AudioMixer {
 
     this.context = null;
     this.playbackAudioSession = null;
+    this.audioOutput = null;
     this.contextGeneration = 0;
     this.contextCreateCount = 0;
     this.master = null;
@@ -331,12 +333,16 @@ export class AudioMixer {
       if (this.desiredScene) this.pendingScene = this.desiredScene;
     };
     const suspendForBackground = () => {
+      this.audioOutput?.pause();
       const context = this.context;
       if (!context || context.state !== "running" || typeof context.suspend !== "function") return;
       void Promise.resolve(context.suspend()).catch(() => undefined);
     };
     const onPageShow = () => {
       pageHidden = false;
+      // This listener predates output creation. Clear the output's pagehide
+      // guard before recovery rather than relying on DOM listener order.
+      this.audioOutput?.foreground();
       clearNavigationPending();
       this.lifecycleHidden = readHidden();
       recover("pageshow");
@@ -462,6 +468,8 @@ export class AudioMixer {
   }
 
   #releaseContextGraph() {
+    this.audioOutput?.dispose();
+    this.audioOutput = null;
     this.sceneTransitionToken += 1;
     for (const category of AUDIO_CATEGORIES) this.categoryGenerations[category] += 1;
     for (const voice of [...this.activeVoices.values()]) this.#cleanupVoice(voice);
@@ -544,10 +552,13 @@ export class AudioMixer {
         if (!this.context || this.context.state === "closed") {
           this.#createContextAndGraph();
         }
-        if (this.context.state !== "running" && typeof this.context.resume === "function") {
-          await this.#resumeContextWithTimeout(this.context);
-        }
+        // Start both unlock APIs in the gesture task, before awaiting either.
+        const outputReady = this.audioOutput.prepare();
+        const contextReady = this.context.state !== "running" && typeof this.context.resume === "function"
+          ? this.#resumeContextWithTimeout(this.context) : Promise.resolve();
+        await Promise.all([outputReady, contextReady]);
         if (this.lifecycleHidden || lifecycleGeneration !== this.lifecycleGeneration) {
+          this.audioOutput?.pause();
           if (this.context?.state === "running" && typeof this.context.suspend === "function") {
             await Promise.resolve(this.context.suspend()).catch(() => undefined);
           }
@@ -615,7 +626,7 @@ export class AudioMixer {
     }
     if (this.context.state === "running") {
       if (this.audioStatus.state === AUDIO_MIXER_STATES.FAILED
-        || this.audioStatus.state === AUDIO_MIXER_STATES.RECOVERY_NEEDED) {
+        || this.audioStatus.state === AUDIO_MIXER_STATES.RECOVERY_NEEDED || this.audioOutput?.needsRecovery()) {
         return this.unlock({ reason });
       }
       this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
@@ -628,6 +639,13 @@ export class AudioMixer {
   #createGraph() {
     const context = this.context;
     if (!context || this.master) return;
+    this.audioOutput = createAudioOutput(context, {
+      navigatorTarget: this.unlockTarget?.navigator ?? globalThis.navigator,
+      windowTarget: this.unlockTarget ?? globalThis.window,
+      canPlay: () => !this.disposed && !this.lifecycleHidden,
+      onInterrupted: () => { void this.recoverAudio({ reason: "media-output-paused" }); },
+      timeoutMs: this.unlockTimeoutMs,
+    });
     this.master = context.createGain();
     this.limiter = typeof context.createDynamicsCompressor === "function" ? context.createDynamicsCompressor() : null;
     if (this.limiter) {
@@ -637,9 +655,9 @@ export class AudioMixer {
       setParamValue(this.limiter.attack, 0.003, context.currentTime);
       setParamValue(this.limiter.release, 0.18, context.currentTime);
       this.master.connect(this.limiter);
-      this.limiter.connect(context.destination);
+      this.limiter.connect(this.audioOutput.destination);
     } else {
-      this.master.connect(context.destination);
+      this.master.connect(this.audioOutput.destination);
     }
     this.dialogueMusicDuck = context.createGain();
     setParamValue(this.dialogueMusicDuck.gain, this.persistentDuckLevel, context.currentTime);
@@ -721,7 +739,7 @@ export class AudioMixer {
       // The unlock acknowledgement must remain audible even when a legacy
       // save left master/SFX buses at zero. It stays on this context and
       // limiter; ordinary test tones continue through the UI bus.
-      gain.connect(respectSettings ? uiBus : (this.limiter ?? context.destination));
+      gain.connect(respectSettings ? uiBus : (this.limiter ?? this.audioOutput.destination));
       oscillator.onended = () => {
         safeDisconnect(oscillator);
         safeDisconnect(gain);
@@ -1571,6 +1589,7 @@ export class AudioMixer {
       contextState: this.context?.state ?? null,
       contextGeneration: this.contextGeneration,
       contextCreateCount: this.contextCreateCount,
+      output: this.audioOutput?.snapshot() ?? null,
       lifecycleHidden: this.lifecycleHidden,
       unlockTimeoutMs: this.unlockTimeoutMs,
       assetLoadTimeoutMs: this.assetLoadTimeoutMs,
@@ -1637,6 +1656,8 @@ export class AudioMixer {
     this.contextStateCleanup?.();
     this.playbackAudioSession?.dispose();
     this.playbackAudioSession = null;
+    this.audioOutput?.dispose();
+    this.audioOutput = null;
     this.stopAll();
     this.preloadQueue.length = 0;
     for (const item of [...this.preloadTasks.values()]) this.#settlePreloadTask(item, false);

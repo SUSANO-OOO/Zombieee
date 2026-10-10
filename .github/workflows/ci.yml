@@ -48,6 +48,11 @@ jobs:
             npx playwright install --with-deps chromium
           fi
       - run: npm run build
+      - name: Verify iPhone media output and encoded mix without microphone access
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V103_AUDIO_OUT: outputs/v103-audio
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
       - name: Verify all render forms and actual gore damage
         env:
           V102_COMBAT_ENGINE: ${{ matrix.engine }}
@@ -66,6 +71,7 @@ jobs:
           path: |
             outputs/v102-combat
             outputs/v102-normal-contacts
+            outputs/v103-audio
           if-no-files-found: error
           retention-days: 14
 
@@ -716,41 +722,41 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Build the installed 1.0.1 release for the recording-audio update
-        id: build_v101_pwa_site
+      - name: Build the installed 1.0.2 release for the recording-audio update
+        id: build_v102_pwa_site
         if: ${{ !cancelled() && steps.build_native_pwa_sites.outcome == 'success' }}
         run: |
           set -euo pipefail
-          old_sha=634f8de4b0fb15df902a7dd5983ea94237cfea9d
-          old_source="$RUNNER_TEMP/v101-public-source"
+          old_sha=cd246a3d8e93b69d8cb6b370d40f28924a0d86b6
+          old_source="$RUNNER_TEMP/v102-public-source"
           git worktree add --detach "$old_source" "$old_sha"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$old_source/node_modules"
           (
             cd "$old_source"
             npm run build
-            GITHUB_PAGES_RELEASE_VERSION=1.0.1 GITHUB_PAGES_RELEASE_SHA="$old_sha" \
-              GITHUB_PAGES_REQUEST_ID=v102-installed-old GITHUB_PAGES_ISSUE_NUMBER=175 \
+            GITHUB_PAGES_RELEASE_VERSION=1.0.2 GITHUB_PAGES_RELEASE_SHA="$old_sha" \
+              GITHUB_PAGES_REQUEST_ID=v103-installed-old GITHUB_PAGES_ISSUE_NUMBER=177 \
               node scripts/build-github-pages.mjs
           )
 
-      - name: Verify native installed 1.0.1 update without losing saves
-        if: ${{ !cancelled() && steps.build_v101_pwa_site.outcome == 'success' }}
+      - name: Verify native installed 1.0.2 update without losing saves
+        if: ${{ !cancelled() && steps.build_v102_pwa_site.outcome == 'success' }}
         env:
-          PWA_EXISTING_UPDATE_OLD_ROOT: ${{ runner.temp }}/v101-public-source/_site
-          PWA_EXISTING_UPDATE_OLD_VERSION: "1.0.1"
-          PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA: 634f8de4b0fb15df902a7dd5983ea94237cfea9d
+          PWA_EXISTING_UPDATE_OLD_ROOT: ${{ runner.temp }}/v102-public-source/_site
+          PWA_EXISTING_UPDATE_OLD_VERSION: "1.0.2"
+          PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA: cd246a3d8e93b69d8cb6b370d40f28924a0d86b6
           PWA_EXISTING_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
           PWA_EXISTING_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           PWA_EXISTING_UPDATE_BROWSER: webkit
-          PWA_EXISTING_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/installed-v101
+          PWA_EXISTING_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/installed-v102
         run: node scripts/pwa-existing-update-browser-smoke.mjs
 
-      - name: Upload installed 1.0.1 PWA update evidence
+      - name: Upload installed 1.0.2 PWA update evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v102-installed-pwa-update
-          path: outputs/v100-native-pwa/installed-v101
+          name: v103-installed-pwa-update
+          path: outputs/v100-native-pwa/installed-v102
           if-no-files-found: warn
           retention-days: 14
 

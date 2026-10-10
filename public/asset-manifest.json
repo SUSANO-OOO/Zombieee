@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
