@@ -85,4 +85,3 @@ test('the separately authored running motion reuses every exact painted part and
  for(const state of ['hit-light','death','ability'])assert.equal(v177JointPose('runner',{requestedState:state},{}),null);
  assert.equal(v177JointPose('runner',{requestedState:'active'},{},{ownedPose:true}),null);
 });
-
