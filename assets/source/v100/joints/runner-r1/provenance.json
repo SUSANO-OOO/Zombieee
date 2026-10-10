@@ -1,0 +1,128 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "runner",
+  "assetPath": "/art/v100/joints/walker-r1.webp",
+  "bytes": 36616,
+  "sha256": "322d6c0118e8c732fefdc26fad7b21edac214d66942b499a6baae19d85778530",
+  "generatedPartsStudySha256": "8b9fbac356952810e34276cfddd745c962306f5f49723045f81092ef4e9c1585",
+  "identitySourceSha256": "5d824b2c4d276d8e008ec846dea38643792dc382ee9d64349532c843791773ea",
+  "identityBinding": {
+    "path": "/art/v060/characters/legacy/infected-battle-gutter-v1.png",
+    "sourceSha256": "2b84bd0400bdd8ea1a8b4ba85e9bd5fedf508febd58a47264450fba468638e50",
+    "sourceRect": {
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.906318082788671,
+      "tx": 69.61220043572985,
+      "ty": -117.22875816993462,
+      "flipX": true
+    }
+  },
+  "motionSha256": "052dcbbf6b47bce8ac6ea91039c49a3ff3b3271c70ecc507f41525f344e91c17",
+  "parts": [
+    {
+      "name": "head",
+      "file": "../walker-r1/head.png",
+      "sha256": "0569155dbd3c328e2f5d031e43f61f321b9d686c60434ea8e36d1d849dc5769c",
+      "original": true
+    },
+    {
+      "name": "near-hand",
+      "file": "../walker-r1/near-hand.png",
+      "sha256": "c970ceb969502673b49e7267553aea32f10131e4bca5c6a25c4c1f01fc35d690",
+      "original": true
+    },
+    {
+      "name": "far-hand",
+      "file": "../walker-r1/far-hand.png",
+      "sha256": "d4f9c1be173d9935c20485e79989ee205d5ae1bec80948dff522ad3247e97d31",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "../walker-r1/torso.png",
+      "sha256": "8fcf2fbaa2ef50396c45da94dd47e4699b83ce48af151940e6e0df1153cabeea",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "../walker-r1/pelvis.png",
+      "sha256": "2694e9c1455aecb76855749b4e82c16d148ce86a06e1174d5cd3bf5061a9e17d",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "../walker-r1/near-upper-arm.png",
+      "sha256": "0db54ba739bf02b2a633d3565ea0eee270a27e35c0bf63dfcb6e999312608dfa",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "../walker-r1/near-forearm.png",
+      "sha256": "f9feef05c39e5623c42381aef7abe7bf6ac91a3e1aff5a9ffdd5f6c1c137ac68",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "../walker-r1/far-upper-arm.png",
+      "sha256": "bba77f1b1b4ec95838dd148637b2edd09983102cbe7bc4d52d1a49a26df2fd3c",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "../walker-r1/far-forearm.png",
+      "sha256": "074bb2894d20a42803bc9ba5ddf6438df397369ae93c36985773f3ffe1d0f99e",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "../walker-r1/near-thigh.png",
+      "sha256": "818390f2981bfee66ca0600a9be65820d3a8e9a946a172172bae696fc8c6a191",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "../walker-r1/near-shin.png",
+      "sha256": "4b449ddaa172b0b03129f366f3bc940f35cea89208e7dceed654e61e148f9aba",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "../walker-r1/near-boot.png",
+      "sha256": "70f8b21049cbdfa470c391ab8d86fa0e4d582447fbd057a9fb2d8b6b92961908",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "../walker-r1/far-thigh.png",
+      "sha256": "e5bd6e8a1f7e890f1772aa7760c58807e5f955c82879e1c9930b18f94da38e49",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "../walker-r1/far-shin.png",
+      "sha256": "1cb86a5ab472d1f26d2028fc89054ee308ea451ce45794b13bebb69ffb1a21f0",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "../walker-r1/far-boot.png",
+      "sha256": "589309f219951b6cbe0077285936f323403c2cef50d636a72d9b849f04632198",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 fixed-length running, short flight and opposed bent-arm swing; exact shared infected paint and legacy source scale",
+  "sharedPaintSource": "../walker-r1",
+  "groundY": 432,
+  "decodedBytes": 325632,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

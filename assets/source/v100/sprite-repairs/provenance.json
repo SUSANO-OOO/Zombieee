@@ -1,0 +1,4929 @@
+{
+  "format": "nishijin-issue177-sprite-repairs",
+  "producerRequest": "2026-10-10: remove white background remnants and Miyamoto Musashi rear stray blade",
+  "imageEditing": "built-in image_gen; generated alpha guides only for bosses; localized cloth patch only for Musashi",
+  "records": [
+    {
+      "name": "president",
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourcePath": "/pwa-optimized/art/v100/bosses/mugarian-president-mutated-battle-v2.webp",
+      "originalSha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a",
+      "pngSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "pngBytes": 3250138,
+      "hash": "sha256-5dbf4de7a5c32463ca80b4035cde995562660f14011fc78d9f56c3841ebc1274",
+      "bytes": 2308850,
+      "previous": {
+        "bytes": 2317698,
+        "hash": "sha256-eaa46570186d3c382956f1ad915f88e279db7c23d13918c3535fde5063c88586",
+        "criticality": "critical"
+      },
+      "inputs": [
+        {
+          "file": "president-published-1.0.3.png",
+          "sha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a"
+        },
+        {
+          "file": "president-alpha-guide-r1.png",
+          "sha256": "690ec180f4ce3bf5e8c730555bedf4a6a816a332b63416ec367afa0f1b0ca3e9"
+        }
+      ],
+      "operation": "original-RGB-preserved; alpha-only-removal-of-guide-confirmed-pale-components",
+      "rgbChanges": 0,
+      "removed": [
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            197,
+            72
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8
+        },
+        {
+          "column": 0,
+          "pixels": 19,
+          "seed": [
+            217,
+            79
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 16,
+          "seed": [
+            253,
+            80
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.125
+        },
+        {
+          "column": 0,
+          "pixels": 10,
+          "seed": [
+            225,
+            94
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            324,
+            118
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            386,
+            144
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 9,
+          "seed": [
+            399,
+            162
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 22,
+          "seed": [
+            144,
+            166
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 26,
+          "seed": [
+            136,
+            193
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 111,
+          "seed": [
+            398,
+            195
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.4864864864864865
+        },
+        {
+          "column": 0,
+          "pixels": 28,
+          "seed": [
+            198,
+            204
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.35714285714285715
+        },
+        {
+          "column": 0,
+          "pixels": 52,
+          "seed": [
+            411,
+            213
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.5576923076923077
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            380,
+            223
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 0,
+          "pixels": 30,
+          "seed": [
+            131,
+            229
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 8,
+          "seed": [
+            244,
+            235
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            375,
+            264
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 25,
+          "seed": [
+            407,
+            305
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.12
+        },
+        {
+          "column": 0,
+          "pixels": 17,
+          "seed": [
+            214,
+            313
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.11764705882352941
+        },
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            407,
+            322
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            362,
+            337
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            305,
+            346
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            404,
+            349
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            365,
+            350
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 25,
+          "seed": [
+            267,
+            360
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 48,
+          "seed": [
+            202,
+            385
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.16666666666666666
+        },
+        {
+          "column": 0,
+          "pixels": 18,
+          "seed": [
+            255,
+            390
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.4444444444444444
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            308,
+            391
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            196,
+            393
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 0,
+          "pixels": 6,
+          "seed": [
+            402,
+            397
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            256,
+            400
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 7,
+          "seed": [
+            251,
+            439
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            267,
+            466
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            277,
+            482
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 5,
+          "seed": [
+            294,
+            53
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            289,
+            59
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            279,
+            64
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            183,
+            72
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            401,
+            140
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            390,
+            141
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            134,
+            151
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            132,
+            160
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            389,
+            160
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            399,
+            167
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            392,
+            184
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            394,
+            184
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            392,
+            196
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            394,
+            229
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            360,
+            248
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            364,
+            258
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            201,
+            263
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            389,
+            267
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            384,
+            295
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 6,
+          "seed": [
+            389,
+            302
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            387,
+            329
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 36,
+          "seed": [
+            395,
+            345
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            371,
+            346
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            299,
+            347
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 21,
+          "seed": [
+            283,
+            356
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            204,
+            360
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            305,
+            362
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            309,
+            401
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            385,
+            455
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            353,
+            477
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            367,
+            480
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            235,
+            109
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            209,
+            117
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 8,
+          "seed": [
+            300,
+            118
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.875
+        },
+        {
+          "column": 2,
+          "pixels": 55,
+          "seed": [
+            272,
+            120
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.14545454545454545
+        },
+        {
+          "column": 2,
+          "pixels": 29,
+          "seed": [
+            231,
+            146
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            406,
+            169
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 2,
+          "pixels": 22,
+          "seed": [
+            168,
+            171
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.7727272727272727
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            396,
+            175
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 25,
+          "seed": [
+            158,
+            182
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.56
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            415,
+            183
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 31,
+          "seed": [
+            150,
+            193
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.5161290322580645
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            409,
+            202
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 21,
+          "seed": [
+            146,
+            208
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.42857142857142855
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            409,
+            212
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            408,
+            216
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 41,
+          "seed": [
+            142,
+            220
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.7073170731707317
+        },
+        {
+          "column": 2,
+          "pixels": 153,
+          "seed": [
+            243,
+            221
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.6078431372549019
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            236,
+            241
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 94,
+          "seed": [
+            401,
+            241
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            135,
+            245
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            236,
+            252
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 48,
+          "seed": [
+            411,
+            256
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.20833333333333334
+        },
+        {
+          "column": 2,
+          "pixels": 7,
+          "seed": [
+            127,
+            276
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            359,
+            284
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            374,
+            303
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            120,
+            305
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 18,
+          "seed": [
+            222,
+            313
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 133,
+          "seed": [
+            388,
+            314
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 20,
+          "seed": [
+            393,
+            339
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            189,
+            340
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            123,
+            345
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 6,
+          "seed": [
+            378,
+            345
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 23,
+          "seed": [
+            201,
+            353
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.13043478260869565
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            379,
+            357
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            227,
+            358
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            231,
+            359
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 7,
+          "seed": [
+            176,
+            365
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 37,
+          "seed": [
+            387,
+            370
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            227,
+            377
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            307,
+            383
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8
+        },
+        {
+          "column": 2,
+          "pixels": 35,
+          "seed": [
+            382,
+            391
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            207,
+            412
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            196,
+            426
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            320,
+            436
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            189,
+            441
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            329,
+            443
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 7,
+          "seed": [
+            346,
+            491
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 103,
+          "seed": [
+            386,
+            491
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.7087378640776699
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            349,
+            494
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            269,
+            183
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            207,
+            215
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            376,
+            218
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            192,
+            225
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            457,
+            234
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            188,
+            236
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            189,
+            245
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            197,
+            250
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            453,
+            253
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            455,
+            253
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            189,
+            257
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            183,
+            259
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            185,
+            259
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            175,
+            267
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            350,
+            280
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            456,
+            283
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            318,
+            284
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            448,
+            291
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            149,
+            294
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            146,
+            298
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 8,
+          "seed": [
+            438,
+            298
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            443,
+            300
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            434,
+            302
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            292,
+            303
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            418,
+            304
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            180,
+            305
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            417,
+            308
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            406,
+            309
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 7,
+          "seed": [
+            386,
+            316
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            114,
+            324
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            101,
+            331
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            105,
+            332
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            98,
+            333
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 6,
+          "seed": [
+            88,
+            338
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            102,
+            352
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            119,
+            356
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            117,
+            362
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            156,
+            370
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            157,
+            382
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            146,
+            383
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            282,
+            393
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            277,
+            399
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            110,
+            413
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            90,
+            429
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 7,
+          "seed": [
+            86,
+            440
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            81,
+            448
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            284,
+            465
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            183,
+            127
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            419,
+            131
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            409,
+            149
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            399,
+            173
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            392,
+            202
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 44,
+          "seed": [
+            409,
+            210
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            199,
+            224
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 16,
+          "seed": [
+            113,
+            244
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            358,
+            244
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            371,
+            248
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            179,
+            264
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            173,
+            268
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            170,
+            273
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 4,
+          "pixels": 8,
+          "seed": [
+            380,
+            274
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 4,
+          "pixels": 18,
+          "seed": [
+            111,
+            278
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 4,
+          "pixels": 6,
+          "seed": [
+            226,
+            286
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 5,
+          "seed": [
+            218,
+            294
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            374,
+            303
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            170,
+            323
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 4,
+          "pixels": 5,
+          "seed": [
+            238,
+            340
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            107,
+            342
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            219,
+            349
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            318,
+            358
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            323,
+            367
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 18,
+          "seed": [
+            292,
+            381
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.5555555555555556
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            291,
+            389
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            358,
+            419
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            365,
+            450
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            418,
+            475
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            238,
+            487
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            198,
+            17
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            238,
+            73
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            205,
+            84
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            245,
+            84
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            233,
+            87
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            253,
+            109
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 35,
+          "seed": [
+            179,
+            111
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 126,
+          "seed": [
+            215,
+            111
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.753968253968254
+        },
+        {
+          "column": 5,
+          "pixels": 58,
+          "seed": [
+            203,
+            125
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.39655172413793105
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            404,
+            136
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            112,
+            138
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            426,
+            144
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            423,
+            155
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 13,
+          "seed": [
+            328,
+            156
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            109,
+            161
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 25,
+          "seed": [
+            316,
+            175
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 127,
+          "seed": [
+            217,
+            181
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.6692913385826772
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            131,
+            188
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            181,
+            200
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 5,
+          "pixels": 83,
+          "seed": [
+            410,
+            205
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            165,
+            208
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 47,
+          "seed": [
+            420,
+            221
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            220,
+            229
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            347,
+            251
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            359,
+            263
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 139,
+          "seed": [
+            394,
+            291
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.9784172661870504
+        },
+        {
+          "column": 5,
+          "pixels": 32,
+          "seed": [
+            400,
+            317
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            157,
+            341
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            178,
+            347
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            296,
+            348
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 41,
+          "seed": [
+            394,
+            348
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            277,
+            354
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            135,
+            355
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            262,
+            359
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            162,
+            365
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            303,
+            365
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 36,
+          "seed": [
+            389,
+            370
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            380,
+            371
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 28,
+          "seed": [
+            161,
+            372
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.32142857142857145
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            326,
+            408
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            319,
+            432
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            279,
+            168
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            254,
+            184
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            257,
+            186
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            417,
+            195
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            251,
+            197
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            409,
+            197
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 7,
+          "seed": [
+            410,
+            204
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            416,
+            222
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            410,
+            225
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            231,
+            234
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            410,
+            235
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 14,
+          "seed": [
+            346,
+            241
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            149,
+            259
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 56,
+          "seed": [
+            402,
+            266
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            153,
+            312
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            370,
+            317
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            182,
+            327
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            383,
+            342
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            149,
+            348
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            381,
+            349
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            187,
+            375
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            231,
+            395
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            367,
+            402
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            227,
+            405
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            360,
+            410
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            364,
+            413
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            158,
+            450
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            293,
+            291
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            288,
+            298
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 6,
+          "seed": [
+            253,
+            321
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            245,
+            332
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            232,
+            336
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            187,
+            349
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            174,
+            356
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            413,
+            429
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 8,
+          "seed": [
+            431,
+            434
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 4,
+          "seed": [
+            401,
+            439
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            403,
+            452
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            417,
+            454
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 4,
+          "seed": [
+            204,
+            461
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 45,
+          "seed": [
+            282,
+            479
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        }
+      ]
+    },
+    {
+      "name": "omega",
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-omega-battle-v2.webp",
+      "originalSha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8",
+      "pngSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "pngBytes": 3197702,
+      "hash": "sha256-8fa9cb272f06459c460be09f131248e6ce3d9d3db1f3e75c28b1c87264cec534",
+      "bytes": 2018816,
+      "previous": {
+        "bytes": 2026194,
+        "hash": "sha256-69b07efe91c9e97c56bf644dff4c2360ca9b1708239e920280962f01a6b98cd5",
+        "criticality": "critical"
+      },
+      "inputs": [
+        {
+          "file": "omega-published-1.0.3.png",
+          "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8"
+        },
+        {
+          "file": "omega-alpha-guide-r1.png",
+          "sha256": "a3d7a9c5059a208bdbf54bea2634efb56985fffb88fa30097e7422f5b5fa3365"
+        }
+      ],
+      "operation": "original-RGB-preserved; alpha-only-removal-of-guide-confirmed-pale-components",
+      "rgbChanges": 0,
+      "removed": [
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            179,
+            78
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 54,
+          "seed": [
+            212,
+            81
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.07407407407407407
+        },
+        {
+          "column": 0,
+          "pixels": 17,
+          "seed": [
+            170,
+            120
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            152,
+            126
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            305,
+            132
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 0,
+          "pixels": 50,
+          "seed": [
+            149,
+            176
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 122,
+          "seed": [
+            218,
+            208
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.07377049180327869
+        },
+        {
+          "column": 0,
+          "pixels": 11,
+          "seed": [
+            229,
+            211
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            231,
+            234
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 0,
+          "pixels": 12,
+          "seed": [
+            361,
+            252
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            204,
+            286
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            175,
+            357
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 0,
+          "pixels": 6,
+          "seed": [
+            242,
+            372
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            232,
+            388
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            220,
+            395
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            217,
+            404
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            203,
+            427
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 6,
+          "seed": [
+            200,
+            429
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 5,
+          "seed": [
+            211,
+            459
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 8,
+          "seed": [
+            253,
+            459
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.625
+        },
+        {
+          "column": 0,
+          "pixels": 4,
+          "seed": [
+            214,
+            466
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 0,
+          "pixels": 3,
+          "seed": [
+            297,
+            485
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            222,
+            45
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 5,
+          "seed": [
+            220,
+            46
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6
+        },
+        {
+          "column": 1,
+          "pixels": 76,
+          "seed": [
+            222,
+            50
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.3026315789473684
+        },
+        {
+          "column": 1,
+          "pixels": 75,
+          "seed": [
+            188,
+            67
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.26666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 44,
+          "seed": [
+            182,
+            68
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.022727272727272728
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            379,
+            198
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            239,
+            201
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            240,
+            206
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            380,
+            213
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            379,
+            221
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            217,
+            268
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            224,
+            276
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 6,
+          "seed": [
+            411,
+            292
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            348,
+            306
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 4,
+          "seed": [
+            200,
+            342
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            255,
+            351
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            279,
+            352
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            233,
+            437
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            235,
+            457
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            295,
+            476
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 1,
+          "pixels": 3,
+          "seed": [
+            246,
+            486
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            246,
+            81
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            232,
+            82
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            288,
+            96
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 7,
+          "seed": [
+            286,
+            99
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.7142857142857143
+        },
+        {
+          "column": 2,
+          "pixels": 15,
+          "seed": [
+            281,
+            102
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.7333333333333333
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            179,
+            104
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 48,
+          "seed": [
+            189,
+            112
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.3333333333333333
+        },
+        {
+          "column": 2,
+          "pixels": 40,
+          "seed": [
+            184,
+            116
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            176,
+            131
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 17,
+          "seed": [
+            168,
+            152
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            151,
+            170
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 2,
+          "pixels": 151,
+          "seed": [
+            145,
+            181
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.26490066225165565
+        },
+        {
+          "column": 2,
+          "pixels": 23,
+          "seed": [
+            222,
+            237
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            246,
+            244
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            138,
+            249
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 7,
+          "seed": [
+            135,
+            275
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8571428571428571
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            236,
+            275
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            235,
+            301
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            137,
+            306
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            345,
+            324
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 2,
+          "pixels": 5,
+          "seed": [
+            153,
+            347
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            162,
+            351
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            289,
+            356
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            185,
+            368
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            161,
+            399
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            297,
+            409
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            150,
+            414
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            146,
+            417
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            144,
+            419
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 6,
+          "seed": [
+            304,
+            419
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 4,
+          "seed": [
+            132,
+            458
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            147,
+            479
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            316,
+            481
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            151,
+            483
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 2,
+          "pixels": 3,
+          "seed": [
+            319,
+            493
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            230,
+            210
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            202,
+            221
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            170,
+            232
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            172,
+            232
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            196,
+            236
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 3,
+          "pixels": 7,
+          "seed": [
+            150,
+            241
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            295,
+            243
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            429,
+            244
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 106,
+          "seed": [
+            163,
+            254
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.2830188679245283
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            141,
+            255
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            413,
+            255
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            408,
+            258
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            148,
+            259
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 14,
+          "seed": [
+            387,
+            264
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            374,
+            271
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 9,
+          "seed": [
+            143,
+            272
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 7,
+          "seed": [
+            368,
+            276
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            132,
+            281
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            352,
+            286
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            117,
+            288
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 8,
+          "seed": [
+            346,
+            288
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            136,
+            299
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            145,
+            301
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 4,
+          "seed": [
+            115,
+            307
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            154,
+            314
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 7,
+          "seed": [
+            114,
+            326
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            135,
+            335
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 121,
+          "seed": [
+            191,
+            336
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.4132231404958678
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            147,
+            347
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 3,
+          "pixels": 6,
+          "seed": [
+            197,
+            365
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 5,
+          "seed": [
+            191,
+            373
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            182,
+            384
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 6,
+          "seed": [
+            136,
+            422
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            333,
+            475
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            109,
+            491
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 3,
+          "pixels": 3,
+          "seed": [
+            370,
+            495
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 5,
+          "seed": [
+            160,
+            119
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            167,
+            119
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 15,
+          "seed": [
+            136,
+            211
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 4,
+          "pixels": 8,
+          "seed": [
+            404,
+            212
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 223,
+          "seed": [
+            129,
+            219
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            425,
+            234
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            233,
+            237
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 4,
+          "pixels": 5,
+          "seed": [
+            238,
+            241
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 4,
+          "seed": [
+            224,
+            278
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            194,
+            316
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            161,
+            339
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            159,
+            355
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            175,
+            359
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            402,
+            370
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            151,
+            376
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            306,
+            423
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 4,
+          "pixels": 3,
+          "seed": [
+            277,
+            445
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            269,
+            116
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            215,
+            119
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            205,
+            125
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 8,
+          "seed": [
+            176,
+            141
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            358,
+            154
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            363,
+            179
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            364,
+            187
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            224,
+            234
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            217,
+            235
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            240,
+            258
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 5,
+          "seed": [
+            233,
+            264
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            191,
+            271
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            190,
+            276
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            172,
+            308
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 5,
+          "seed": [
+            168,
+            314
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            177,
+            346
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            162,
+            353
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            136,
+            355
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            344,
+            372
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            361,
+            420
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            183,
+            435
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 6,
+          "seed": [
+            179,
+            440
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            183,
+            441
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 3,
+          "seed": [
+            180,
+            449
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 5,
+          "seed": [
+            358,
+            458
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 4,
+          "seed": [
+            184,
+            482
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 5,
+          "pixels": 7,
+          "seed": [
+            184,
+            490
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            300,
+            129
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 7,
+          "seed": [
+            337,
+            138
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            310,
+            144
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 6,
+          "pixels": 20,
+          "seed": [
+            297,
+            152
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.05
+        },
+        {
+          "column": 6,
+          "pixels": 28,
+          "seed": [
+            304,
+            152
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.07142857142857142
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            350,
+            158
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 7,
+          "seed": [
+            252,
+            242
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            236,
+            264
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 24,
+          "seed": [
+            253,
+            273
+          ],
+          "explicitGap": true,
+          "guideTransparentRatio": 0.20833333333333334
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            332,
+            300
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            338,
+            303
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            416,
+            307
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            194,
+            314
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            355,
+            316
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            410,
+            316
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            403,
+            327
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            361,
+            336
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            369,
+            343
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            389,
+            346
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 9,
+          "seed": [
+            369,
+            360
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            180,
+            369
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        },
+        {
+          "column": 6,
+          "pixels": 11,
+          "seed": [
+            161,
+            378
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            389,
+            383
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 7,
+          "seed": [
+            151,
+            384
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            404,
+            389
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 3,
+          "seed": [
+            142,
+            402
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 6,
+          "pixels": 11,
+          "seed": [
+            231,
+            405
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.9090909090909091
+        },
+        {
+          "column": 6,
+          "pixels": 5,
+          "seed": [
+            212,
+            410
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6
+        },
+        {
+          "column": 6,
+          "pixels": 6,
+          "seed": [
+            283,
+            448
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8333333333333334
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            352,
+            454
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 6,
+          "pixels": 4,
+          "seed": [
+            337,
+            472
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.75
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            335,
+            308
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            142,
+            396
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 5,
+          "seed": [
+            75,
+            443
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            80,
+            444
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 7,
+          "seed": [
+            98,
+            444
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8571428571428571
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            69,
+            445
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            90,
+            445
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 4,
+          "seed": [
+            198,
+            446
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 7,
+          "seed": [
+            498,
+            447
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            191,
+            448
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            198,
+            448
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 4,
+          "seed": [
+            477,
+            453
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            42,
+            456
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            279,
+            458
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 1
+        },
+        {
+          "column": 7,
+          "pixels": 5,
+          "seed": [
+            444,
+            471
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.8
+        },
+        {
+          "column": 7,
+          "pixels": 7,
+          "seed": [
+            431,
+            472
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.7142857142857143
+        },
+        {
+          "column": 7,
+          "pixels": 3,
+          "seed": [
+            379,
+            487
+          ],
+          "explicitGap": false,
+          "guideTransparentRatio": 0.6666666666666666
+        }
+      ]
+    },
+    {
+      "name": "musashi",
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "sourcePath": "/pwa-optimized/art/v090/characters/miyamoto-musashi-battle-r1.webp",
+      "originalSha256": "e05b1eedcdae7371b6b4fac63e09c492e907593c4951aaec63a642b9e36637e6",
+      "pngSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+      "pngBytes": 2026536,
+      "hash": "sha256-f2d7d2c01c4bdb8f58a5cf341275d3ed983838b26374556707a49c47eb83724d",
+      "bytes": 1269282,
+      "previous": {
+        "bytes": 1277560,
+        "hash": "sha256-b364a9c87a6641aa30e7cdaf611111ddd058e90a8768a2e92cd306945506a321",
+        "criticality": "critical"
+      },
+      "inputs": [
+        {
+          "file": "musashi-published-1.0.3.png",
+          "sha256": "e05b1eedcdae7371b6b4fac63e09c492e907593c4951aaec63a642b9e36637e6"
+        },
+        {
+          "file": "musashi-walk-r2.png",
+          "sha256": "70f16217aa900dc335a16af99e86049572cf556e9dd9fc9a1744ad20bf97c36b"
+        },
+        {
+          "file": "musashi-idle-r2.png",
+          "sha256": "e1ed3fab15231e4eec4496a65f44f7e5e143cb619ec794d945dc9c95fdb30695"
+        }
+      ],
+      "operation": "localized-generated-cloak-repair-and-neighbour-removal; all-other-pixels-preserved",
+      "bladeMask": [
+        [
+          110,
+          239
+        ],
+        [
+          122,
+          239
+        ],
+        [
+          216,
+          311
+        ],
+        [
+          218,
+          324
+        ],
+        [
+          203,
+          326
+        ],
+        [
+          110,
+          259
+        ]
+      ],
+      "neighbourMask": [
+        [
+          312,
+          225
+        ],
+        [
+          450,
+          225
+        ],
+        [
+          450,
+          355
+        ],
+        [
+          358,
+          355
+        ],
+        [
+          358,
+          290
+        ],
+        [
+          312,
+          260
+        ]
+      ],
+      "editedPixels": 2725,
+      "neighbourPixels": 14261
+    }
+  ]
+}

@@ -49,7 +49,7 @@ try {
   await ready();
   assert.equal(await phase(), "map");
   assert.deepEqual((await save()).completedStageIds, seed.completedStageIds);
-  await button("この作戦を編成").click();
+  await button("編成して出撃").click();
   for (let step = 0; step < 80; step++) {
     await ready();
     const current = await phase();

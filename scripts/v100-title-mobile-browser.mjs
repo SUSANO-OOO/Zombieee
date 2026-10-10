@@ -170,7 +170,7 @@ try {
           if (engine === "chromium" && viewport.width === 1280) {
             await button(page, "初めから").click();
             await page.getByLabel("呼ばれたい名前", { exact: true }).fill("試遊確認");
-            await button(page, "この名前で作戦を始める").click();
+            await button(page, "この名前でステージを始める").click();
             await advance(page, "map"); result.freshStoryToMap = true;
           }
           assert.equal((await helper(page, "seed")).ok, true);
@@ -196,10 +196,10 @@ try {
           await page.locator(".v100-mode-survival").click(); await page.locator("[data-v100-survival=hub]").waitFor({ state: "visible" });
           await button(page, "モード選択へ").click();
           await page.locator(".v100-mode-outbreak").click(); await page.locator("[data-mode-tab=outbreak]").waitFor({ state: "visible" });
-          await button(page, "モード選択へ").click(); await button(page, "作戦地図へ").click();
+          await button(page, "モード選択へ").click(); await button(page, "ステージ選択へ").click();
           await dismissFixtureNotice(page);
           if (viewport.width > viewport.height) {
-            await button(page, "この作戦を編成").click(); await advance(page, "formation");
+            await button(page, "編成して出撃").click(); await advance(page, "formation");
             await picture(page, `${id}-formation.png`);
             result.portraits = await page.locator(".v100-slot.filled .v100-slot-portrait img").evaluateAll(images => images.map(image => {
               const rect = image.getBoundingClientRect(), parent = image.parentElement.getBoundingClientRect(), style = getComputedStyle(image);

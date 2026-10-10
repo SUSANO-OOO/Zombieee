@@ -62,7 +62,7 @@ export async function finalizeRequestFailureEvidence({ report, browser, transpor
   await new Promise(resolve => setImmediate(resolve));
   for (const row of report.cases) {
     if (row.errors.length > 0 || row.requestFailures.length > 0) row.status = 'failed';
-    if (row.status !== 'passed') failure ??= new Error(`Native audio diagnostics failed: ${row.name}`);
+    if (row.status !== 'passed') failure ??= new Error(`Native audio diagnostics failed: ${row.name}; ${JSON.stringify({errors:row.errors,requestFailures:row.requestFailures})}`);
   }
   report.status = failure ? 'failed' : 'passed';
   if (failure) report.error = String(failure);

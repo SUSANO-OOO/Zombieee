@@ -199,8 +199,8 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(screens, /ユニット図鑑/);
   assert.match(screens, /ability\?\.displayName/);
   assert.match(screens, /className="map-operation-tabs"/);
-  assert.match(screens, /防衛継続作戦/);
-  assert.match(screens, /この作戦を編成/);
+  assert.match(screens, /防衛継続ステージ/);
+  assert.match(screens, /編成して出撃/);
   assert.match(screens, /aria-pressed=\{selected\}/);
   assert.doesNotMatch(screens, /formation-selection-mark/);
   const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
@@ -285,11 +285,11 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
   assert.match(battleUi, /第\{hud\.phase\}段階/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
   assert.match(battleUi, /同時出撃 \{hud\.summonedCount\}\/7/);
-  assert.match(battleUi, /移動拠点一斉掃射/);
+  assert.match(battleUi, /装甲車両一斉掃射/);
   assert.match(battleUi, />一時停止</);
   assert.doesNotMatch(battleUi, />CRAWLER<|>PAUSED<|>SEC<|aria-label="Survivor units"/);
-  assert.match(screens, /作戦時間[\s\S]*撃破数[\s\S]*移動拠点HP[\s\S]*戦闘不能/);
-  assert.match(game, /★ 作戦成功・移動拠点HP 1%以上/);
+  assert.match(screens, /戦闘時間[\s\S]*撃破数[\s\S]*装甲車両HP[\s\S]*戦闘不能/);
+  assert.match(game, /★ ステージクリア・装甲車両HP 1%以上/);
   assert.doesNotMatch(screens, />LOCK<|>TIME<|>KILLS<|>CRAWLER<|>LOSSES<|TAP TO RELOAD|CRAWLER SYSTEM CHECK/);
   assert.doesNotMatch(campaign, /label: "(?:WAVE|WARNING|BOSS)\b/);
   assert.match(story, /STORY_SCRIPT_VERSION = "outbreak-origin-v8"/);
@@ -392,7 +392,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /const enemyBaseLabel = v100CorporateControlLabel\(gameRef\.current\.definition\) \?\? \(gameRef\.current\.researchCoreTargets \? "目標耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"\)/);
   assert.match(game, /v100CorporateControlLabel\(gameRef\.current\.definition\) \|\| gameRef\.current\.researchCoreTargets \? "v100-control-health"/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
-  assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
+  assert.match(screens, /result\.won \? "ステージクリア" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
   assert.match(campaign, /最終機会 — 感染拠点を破壊/);
   assert.match(css, /\.barrier-health/);
@@ -594,7 +594,7 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /同時出撃 \{hud\.summonedCount\}\/7/);
   assert.match(game, /advanceLimitFor\(g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /支援ゲージ/);
-  assert.match(game, /移動拠点一斉掃射/);
+  assert.match(game, /装甲車両一斉掃射/);
   assert.match(game, /g\.deployCooldowns\[kind\] = card\.deployCooldown/);
 
   const removedRuntimeContracts = `${game}\n${css}\n${rules}\n${productionAudio}`;

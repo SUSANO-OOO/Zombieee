@@ -22,10 +22,10 @@ test("unarmed level quote uses battle HP, damage, defense, timing and command re
   assert.equal(quote.redeploySeconds, 8);
   assert.equal(quote.current.hp, 80);
   assert.equal(quote.next.hp, 82);
-  assert.equal(quote.current.damage, 11);
+  assert.equal(quote.current.damage, 12.32);
   nearly(quote.current.defense, .02);
   nearly(quote.next.defense, .0215);
-  assert.equal(quote.current.speed, 27);
+  assert.equal(quote.current.speed, 39.15);
   assert.equal(quote.current.attackEvery, .62);
 });
 
@@ -41,7 +41,7 @@ test("vest quote includes the same rounded HP in current and next permanent leve
   assert.equal(formatV100Number(quote.current.defense * 100, 2), "2.45");
   assert.equal(formatV100Number(quote.next.defense * 100, 2), "2.6");
   assert.equal(formatV100Number((quote.next.defense - quote.current.defense) * 100, 2), "0.15");
-  assert.deepEqual(quote.nextOutputGrowth, { stat: "damage", level: 8, value: 13, withinCap: false });
+  assert.deepEqual(quote.nextOutputGrowth, { stat: "damage", level: 8, value: 14.56, withinCap: false });
   save.levelCap = 10;
   assert.equal(v100UnitPresentation(save, "unit-hachi").nextOutputGrowth.withinCap, true);
   save.unitLevels["unit-hachi"] = 30;

@@ -5,20 +5,24 @@ import { fileURLToPath } from "node:url";
 
 import { isRetryableTargetClosedLog } from "./run-v0995-enemy-runtime-bounded.mjs";
 import { createWebKitHostResourceTelemetry } from "./webkit-host-resource-telemetry.mjs";
+import { P5_CURRENT_RESUME_BUTTON_TEXT, p5ResumeButtonTextForSource } from "./p5-resume-ui-contract.mjs";
 
-function runAttempt(baseRoot, attemptDir) {
+async function runAttempt(baseRoot, attemptDir) {
+  const resumeButtonText = baseRoot
+    ? p5ResumeButtonTextForSource(await readFile(path.join(baseRoot, "app/AshfallGame.tsx"), "utf8"))
+    : P5_CURRENT_RESUME_BUTTON_TEXT;
   const args = baseRoot
     ? ["scripts/run-browser-qa-against-build.mjs", "scripts/p5-browser-smoke.mjs", baseRoot]
     : ["scripts/run-browser-qa-with-server.mjs", "scripts/p5-browser-smoke.mjs"];
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, args, {
       cwd: process.cwd(),
-      env: { ...process.env, P5_QA_EVIDENCE_DIR: attemptDir },
+      env: { ...process.env, P5_QA_EVIDENCE_DIR: attemptDir, P5_QA_RESUME_BUTTON_TEXT: resumeButtonText },
       stdio: "inherit",
       windowsHide: true,
     });
     child.once("error", reject);
-    child.once("exit", (code, signal) => resolve({ code, signal }));
+    child.once("exit", (code, signal) => resolve({ code, signal, resumeButtonText }));
   });
 }
 

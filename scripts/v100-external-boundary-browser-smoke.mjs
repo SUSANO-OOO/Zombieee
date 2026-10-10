@@ -210,7 +210,7 @@ try {
           await pause.getByRole("slider",{name:"BGM音量",exact:true}).press("Home");
           await page.getByRole("status").filter({hasText:"設定を保存しています"}).waitFor();
           assert.equal(await page.evaluate(() => document.documentElement.dataset.pwaSaveMutationPending), "true");
-          await pause.getByRole("button",{name:"作戦を再開",exact:true}).click();
+          await pause.getByRole("button",{name:"戦闘を再開",exact:true}).click();
           await samePausedRun();
           await page.evaluate(() => { window.__V1_SETTINGS_HOLD__ = false; });
           await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).settings.bgmVolume === 0 && document.documentElement.dataset.pwaSaveMutationPending === "false", V100_PRIMARY_STORAGE_KEY);
@@ -241,7 +241,7 @@ try {
           if (lane === "settlement") {
             const changed = await v1Save();
             assert.ok(changed.revision > saved.revision);
-            await pause.getByRole("button",{name:"作戦を再開",exact:true}).click();
+            await pause.getByRole("button",{name:"戦闘を再開",exact:true}).click();
             await page.locator('.v100-shell[data-v100-phase="result"]').waitFor({state:"visible",timeout:120000});
             const settled=await v1Save();
             const result=settled.pendingResult ?? settled.lastResult;

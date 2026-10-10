@@ -1,0 +1,802 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "runner",
+  "status": "Frozen real-joint running candidate; full 48-form/all-action and normal-play acceptance pending",
+  "width": 480,
+  "height": 448,
+  "sourceSha256": "5d824b2c4d276d8e008ec846dea38643792dc382ee9d64349532c843791773ea",
+  "sheetSha256": "8b9fbac356952810e34276cfddd745c962306f5f49723045f81092ef4e9c1585",
+  "order": [
+    "far-upper-arm",
+    "far-forearm",
+    "far-hand",
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "near-upper-arm",
+    "pelvis",
+    "torso",
+    "head",
+    "near-forearm",
+    "near-hand"
+  ],
+  "parts": [
+    {
+      "name": "head",
+      "bone": "head",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        480,
+        0
+      ],
+      "toA": [
+        0,
+        0
+      ],
+      "toB": [
+        480,
+        0
+      ],
+      "polygon": [
+        [
+          270,
+          24
+        ],
+        [
+          314,
+          17
+        ],
+        [
+          355,
+          39
+        ],
+        [
+          353,
+          85
+        ],
+        [
+          337,
+          112
+        ],
+        [
+          313,
+          128
+        ],
+        [
+          289,
+          113
+        ],
+        [
+          278,
+          86
+        ]
+      ],
+      "file": "../walker-r1/head.png",
+      "sha256": "0569155dbd3c328e2f5d031e43f61f321b9d686c60434ea8e36d1d849dc5769c"
+    },
+    {
+      "name": "near-hand",
+      "bone": "arm-0-hand",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        480,
+        0
+      ],
+      "toA": [
+        0,
+        0
+      ],
+      "toB": [
+        480,
+        0
+      ],
+      "polygon": [
+        [
+          215,
+          267
+        ],
+        [
+          232,
+          266
+        ],
+        [
+          241,
+          281
+        ],
+        [
+          237,
+          290
+        ],
+        [
+          222,
+          300
+        ],
+        [
+          212,
+          289
+        ]
+      ],
+      "file": "../walker-r1/near-hand.png",
+      "sha256": "c970ceb969502673b49e7267553aea32f10131e4bca5c6a25c4c1f01fc35d690"
+    },
+    {
+      "name": "far-hand",
+      "bone": "arm-1-hand",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        480,
+        0
+      ],
+      "toA": [
+        0,
+        0
+      ],
+      "toB": [
+        480,
+        0
+      ],
+      "polygon": [
+        [
+          307,
+          238
+        ],
+        [
+          321,
+          236
+        ],
+        [
+          333,
+          248
+        ],
+        [
+          338,
+          265
+        ],
+        [
+          328,
+          282
+        ],
+        [
+          316,
+          278
+        ],
+        [
+          311,
+          261
+        ]
+      ],
+      "file": "../walker-r1/far-hand.png",
+      "sha256": "d4f9c1be173d9935c20485e79989ee205d5ae1bec80948dff522ad3247e97d31"
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "crop": [
+        53,
+        16,
+        255,
+        300
+      ],
+      "a": [
+        248,
+        75
+      ],
+      "b": [
+        173,
+        278
+      ],
+      "toA": [
+        283,
+        100
+      ],
+      "toB": [
+        228,
+        252
+      ],
+      "perpendicular": 0.8,
+      "file": "../walker-r1/torso.png",
+      "sha256": "8fcf2fbaa2ef50396c45da94dd47e4699b83ce48af151940e6e0df1153cabeea"
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "crop": [
+        391,
+        37,
+        231,
+        161
+      ],
+      "a": [
+        499,
+        84
+      ],
+      "b": [
+        511,
+        292
+      ],
+      "toA": [
+        233,
+        239
+      ],
+      "toB": [
+        228,
+        282
+      ],
+      "perpendicular": 1.8,
+      "file": "../walker-r1/pelvis.png",
+      "sha256": "2694e9c1455aecb76855749b4e82c16d148ce86a06e1174d5cd3bf5061a9e17d"
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "crop": [
+        706,
+        52,
+        178,
+        259
+      ],
+      "a": [
+        764,
+        104
+      ],
+      "b": [
+        830,
+        276
+      ],
+      "toA": [
+        216,
+        143
+      ],
+      "toB": [
+        215,
+        214
+      ],
+      "perpendicular": 0.8,
+      "file": "../walker-r1/near-upper-arm.png",
+      "sha256": "0db54ba739bf02b2a633d3565ea0eee270a27e35c0bf63dfcb6e999312608dfa"
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "crop": [
+        1032,
+        77,
+        157,
+        232
+      ],
+      "a": [
+        1082,
+        130
+      ],
+      "b": [
+        1146,
+        280
+      ],
+      "toA": [
+        215,
+        214
+      ],
+      "toB": [
+        223,
+        272
+      ],
+      "perpendicular": 0.85,
+      "file": "../walker-r1/near-forearm.png",
+      "sha256": "f9feef05c39e5623c42381aef7abe7bf6ac91a3e1aff5a9ffdd5f6c1c137ac68"
+    },
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "crop": [
+        80,
+        333,
+        201,
+        290
+      ],
+      "a": [
+        145,
+        386
+      ],
+      "b": [
+        237,
+        577
+      ],
+      "toA": [
+        284,
+        127
+      ],
+      "toB": [
+        303,
+        194
+      ],
+      "perpendicular": 0.75,
+      "file": "../walker-r1/far-upper-arm.png",
+      "sha256": "bba77f1b1b4ec95838dd148637b2edd09983102cbe7bc4d52d1a49a26df2fd3c"
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "crop": [
+        406,
+        350,
+        175,
+        262
+      ],
+      "a": [
+        453,
+        402
+      ],
+      "b": [
+        532,
+        569
+      ],
+      "toA": [
+        303,
+        194
+      ],
+      "toB": [
+        314,
+        237
+      ],
+      "perpendicular": 1.1,
+      "file": "../walker-r1/far-forearm.png",
+      "sha256": "074bb2894d20a42803bc9ba5ddf6438df397369ae93c36985773f3ffe1d0f99e"
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "crop": [
+        75,
+        627,
+        216,
+        211
+      ],
+      "a": [
+        151,
+        664
+      ],
+      "b": [
+        251,
+        807
+      ],
+      "toA": [
+        239,
+        253
+      ],
+      "toB": [
+        265,
+        330
+      ],
+      "perpendicular": 0.8,
+      "file": "../walker-r1/near-thigh.png",
+      "sha256": "818390f2981bfee66ca0600a9be65820d3a8e9a946a172172bae696fc8c6a191"
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "crop": [
+        402,
+        640,
+        179,
+        270
+      ],
+      "a": [
+        507,
+        698
+      ],
+      "b": [
+        486,
+        870
+      ],
+      "toA": [
+        265,
+        330
+      ],
+      "toB": [
+        249,
+        408
+      ],
+      "perpendicular": 0.7,
+      "file": "../walker-r1/near-shin.png",
+      "sha256": "4b449ddaa172b0b03129f366f3bc940f35cea89208e7dceed654e61e148f9aba"
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "crop": [
+        689,
+        710,
+        217,
+        169
+      ],
+      "a": [
+        757,
+        762
+      ],
+      "b": [
+        863,
+        843
+      ],
+      "toA": [
+        249,
+        408
+      ],
+      "toB": [
+        285,
+        430
+      ],
+      "perpendicular": 1.1,
+      "file": "../walker-r1/near-boot.png",
+      "sha256": "70f8b21049cbdfa470c391ab8d86fa0e4d582447fbd057a9fb2d8b6b92961908"
+    },
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "crop": [
+        1009,
+        627,
+        209,
+        216
+      ],
+      "a": [
+        1072,
+        676
+      ],
+      "b": [
+        1164,
+        818
+      ],
+      "toA": [
+        216,
+        251
+      ],
+      "toB": [
+        239,
+        326
+      ],
+      "perpendicular": 0.8,
+      "file": "../walker-r1/far-thigh.png",
+      "sha256": "e5bd6e8a1f7e890f1772aa7760c58807e5f955c82879e1c9930b18f94da38e49"
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "crop": [
+        82,
+        942,
+        208,
+        267
+      ],
+      "a": [
+        214,
+        1006
+      ],
+      "b": [
+        156,
+        1169
+      ],
+      "toA": [
+        239,
+        326
+      ],
+      "toB": [
+        215,
+        408
+      ],
+      "perpendicular": 0.7,
+      "file": "../walker-r1/far-shin.png",
+      "sha256": "1cb86a5ab472d1f26d2028fc89054ee308ea451ce45794b13bebb69ffb1a21f0"
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "crop": [
+        390,
+        1030,
+        216,
+        149
+      ],
+      "a": [
+        446,
+        1073
+      ],
+      "b": [
+        565,
+        1139
+      ],
+      "toA": [
+        215,
+        408
+      ],
+      "toB": [
+        251,
+        430
+      ],
+      "perpendicular": 1.1,
+      "file": "../walker-r1/far-boot.png",
+      "sha256": "589309f219951b6cbe0077285936f323403c2cef50d636a72d9b849f04632198"
+    }
+  ],
+  "motion": {
+    "walk": {
+      "spanPx": 96,
+      "liftPx": 20,
+      "stanceFraction": 0.48,
+      "groundY": 432
+    }
+  },
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        228,
+        252
+      ],
+      [
+        228,
+        228
+      ]
+    ],
+    "spine": [
+      [
+        228,
+        252
+      ],
+      [
+        283,
+        100
+      ]
+    ],
+    "head": [
+      [
+        291,
+        108
+      ],
+      [
+        317,
+        54
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          216,
+          251
+        ],
+        "knee": [
+          239,
+          326
+        ],
+        "ankle": [
+          215,
+          408
+        ],
+        "toe": [
+          251,
+          430
+        ],
+        "offset": 0.5,
+        "center": 216,
+        "paintedPaw": "far-boot",
+        "groundAnkleY": 400.5
+      },
+      {
+        "hip": [
+          239,
+          253
+        ],
+        "knee": [
+          265,
+          330
+        ],
+        "ankle": [
+          249,
+          408
+        ],
+        "toe": [
+          285,
+          430
+        ],
+        "offset": 0,
+        "center": 245,
+        "paintedPaw": "near-boot",
+        "groundAnkleY": 396.5
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          216,
+          143
+        ],
+        "elbow": [
+          215,
+          214
+        ],
+        "wrist": [
+          223,
+          272
+        ],
+        "grip": [
+          226,
+          295
+        ],
+        "walkWrist": [
+          248,
+          218
+        ],
+        "walkSwingPx": 14,
+        "walkPhaseOffset": 0.5,
+        "walkLiftPx": 5
+      },
+      {
+        "shoulder": [
+          284,
+          127
+        ],
+        "elbow": [
+          303,
+          194
+        ],
+        "wrist": [
+          314,
+          237
+        ],
+        "grip": [
+          322,
+          269
+        ],
+        "walkLiftPx": 5,
+        "walkWrist": [
+          297,
+          204
+        ],
+        "walkSwingPx": 14,
+        "walkPhaseOffset": 0
+      }
+    ],
+    "attack": {
+      "windupEnd": 0.28,
+      "activeEnd": 0.55,
+      "armTargets": [
+        [
+          315,
+          190
+        ],
+        [
+          335,
+          178
+        ]
+      ],
+      "handAngles": [
+        -1.1,
+        -1
+      ]
+    }
+  },
+  "originalHeadPreserved": true,
+  "originalHandsPreserved": true,
+  "lowerLayers": [
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "pelvis"
+  ],
+  "pelvisY": 252,
+  "muzzle": [
+    227,
+    286
+  ],
+  "weaponBone": "arm-0-hand",
+  "armConstraints": [
+    {
+      "shoulder": [
+        216,
+        143
+      ],
+      "elbow": [
+        215,
+        214
+      ],
+      "wrist": [
+        223,
+        272
+      ],
+      "grip": [
+        226,
+        295
+      ],
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "parentBone": "spine",
+      "effectorBone": "arm-0-hand"
+    },
+    {
+      "shoulder": [
+        284,
+        127
+      ],
+      "elbow": [
+        303,
+        194
+      ],
+      "wrist": [
+        314,
+        237
+      ],
+      "grip": [
+        322,
+        269
+      ],
+      "walkLiftPx": 7,
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "parentBone": "spine",
+      "effectorBone": "arm-1-hand"
+    }
+  ],
+  "identityBinding": {
+    "path": "/art/v060/characters/legacy/infected-battle-gutter-v1.png",
+    "sourceSha256": "2b84bd0400bdd8ea1a8b4ba85e9bd5fedf508febd58a47264450fba468638e50",
+    "sourceRect": {
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.906318082788671,
+      "tx": 69.61220043572985,
+      "ty": -117.22875816993462,
+      "flipX": true
+    }
+  },
+  "referenceFrame": {
+    "width": 394,
+    "height": 757,
+    "scale": 0.906318082788671,
+    "tx": 69.61220043572985,
+    "ty": -117.22875816993462
+  },
+  "assetKey": "joint-walker",
+  "sharedPaintSource": "../walker-r1"
+}

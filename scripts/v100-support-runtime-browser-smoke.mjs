@@ -80,7 +80,7 @@ async function battle(page) {
   await page.waitForFunction(() => document.querySelector(".v100-shell") || document.querySelector("[role=dialog][aria-label='ゲームデータの準備'] button"));
   const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
   if (await offer.isVisible()) await offer.click();
-  await clickSaved(page, page.getByRole("button", { name: "この作戦を編成", exact: true }));
+  await clickSaved(page, page.getByRole("button", { name: "編成して出撃", exact: true }));
   for (let n = 0; n < 40; n++) {
     await readyCampaign(page);
     if (await page.locator(".v100-formation-panel").isVisible()) break;
@@ -124,7 +124,7 @@ async function pauseCheck(page, record) {
   assert.deepEqual(after.supportItemCooldowns, before.supportItemCooldowns);
   assert.deepEqual(after.airstrike, before.airstrike); assert.deepEqual(after.crawlerAbility, before.crawlerAbility);
   record.pause = { before, after };
-  await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+  await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
 }
 
 try {

@@ -72,7 +72,7 @@ async function run(engine) {
   assert.ok(item.result?.over,"Real battle did not finish within the observation window");assert.equal(item.result.won,true);
   assert.ok(item.samples.some(s=>s.targets[0].hp===0&&s.targets[1].hp>0),"Both targets were not independently resolved");
   assert.ok(item.result.researchCoreTargets.every(target=>target.hp===0));assert.equal(item.result.eventIndex,6);
-  await page.getByLabel("作戦結果",{exact:true}).waitFor({timeout:20_000});
+  await page.getByLabel("戦闘結果",{exact:true}).waitFor({timeout:20_000});
   item.savedResult=await page.evaluate(()=>JSON.parse(localStorage.getItem("nishijin-campaign-v100"))?.pendingResult);
   assert.ok(item.savedResult?.won);assert.equal(item.savedResult.researchCoreTargets.length,2);assert.ok(item.savedResult.researchCoreTargets.every(target=>target.hp===0));
   await page.screenshot({path:path.join(out,`${engine}-result.png`)});assert.deepEqual(item.errors,[]);item.status="passed";

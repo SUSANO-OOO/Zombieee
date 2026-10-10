@@ -34,9 +34,9 @@ for(const [engine,browserType] of Object.entries({chromium,webkit})){
     AudioBufferSourceNode.prototype.start=function(...args){window.audioStartEvidence.push({at:performance.now(),loop:this.loop,duration:this.buffer?.duration});return original.apply(this,args);};
    });
    await page.goto(new URL('v100',origin).href);
-   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),nav=page.getByRole('navigation',{name:'作戦準備メニュー'});
+   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),nav=page.getByRole('navigation',{name:'ステージ準備メニュー'});
    await play.or(nav).first().waitFor({state:'visible'});if(await play.isVisible())await play.click();
-   await nav.waitFor();await visibleControl(page.getByRole('button',{name:'この作戦を編成',exact:true}));await shot('map');
+   await nav.waitFor();await visibleControl(page.getByRole('button',{name:'編成して出撃',exact:true}));await shot('map');
    await page.getByRole('button',{name:'会話記録',exact:true}).click();
    await page.getByRole('dialog',{name:'会話記録',exact:true}).getByRole('button',{name:'プロローグ',exact:true}).click();
    const replay=page.locator('[data-v100-replay-index]');
@@ -56,7 +56,7 @@ for(const [engine,browserType] of Object.entries({chromium,webkit})){
    }
    await replay.getByRole('button',{name:'閉じる',exact:true}).click();
    await page.waitForFunction(()=>window.__V100_EVENT_AUDIO_QA__?.getSnapshot().desired?.sceneId==='map');
-   await nav.getByRole('button',{name:'隊員',exact:true}).click();
+   await nav.getByRole('button',{name:'ユニット',exact:true}).click();
    await page.locator('.v100-personnel-card').filter({has:page.getByRole('heading',{name:'ナオ',exact:true})}).click();
    const purchase=page.getByRole('button',{name:/配備登録 \d+ CAPS/});
    await visibleControl(purchase);await visibleControl(page.locator('.v100-personnel-focus h3'));
@@ -98,7 +98,7 @@ for(const [engine,browserType] of Object.entries({chromium,webkit})){
      await visibleControl(focus.getByRole('button',{name:/CAPSで強化/}));
     }
    }
-   await nav.getByRole('button',{name:'作戦',exact:true}).click();await page.getByRole('button',{name:'この作戦を編成',exact:true}).click();
+   await nav.getByRole('button',{name:'ステージ',exact:true}).click();await page.getByRole('button',{name:'編成して出撃',exact:true}).click();
    await page.getByRole('button',{name:'スキップ',exact:true}).click();await page.locator('section[data-v100-surface="formation"]').waitFor();
    await visibleControl(page.getByRole('button',{name:'戦闘へ',exact:true}));await visibleControl(page.getByRole('button',{name:/編成枠7/}));
    await page.getByRole('button',{name:/編成枠5/}).click();await page.getByRole('button',{name:'ナオを枠5へ配置',exact:true}).click();

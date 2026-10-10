@@ -930,5 +930,11 @@
       "clipped": false
     }
   ],
-  "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8"
+  "sha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+  "spriteRepair": {
+    "provenance": "assets/source/v100/sprite-repairs/provenance.json",
+    "publishedBaselineSha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8",
+    "rgbChanges": 0,
+    "operation": "original-RGB-preserved; alpha-only-removal-of-guide-confirmed-pale-components"
+  }
 }

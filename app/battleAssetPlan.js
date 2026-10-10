@@ -16,6 +16,7 @@ import { V100_KUMAVERSON_GUARD_ART } from "./v100KumaversonPresentation.js";
 import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
+import { V177_JOINT_ATLASES } from "./v177JointPresentation.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -109,6 +110,9 @@ export function requiredBattleAssetPlan({
       .map(([key, path]) => frozenEntry({ key, path, category: "crawler" })),
     ...Object.entries(BATTLE_SUPPORT_ASSET_PATHS)
       .map(([key, path]) => frozenEntry({ key, path, category: "support" })),
+    ...[...new Map((includeV100Sprites && v100Stage ? requiredKinds.filter(kind => V177_JOINT_ATLASES[kind])
+      .map(kind => [V177_JOINT_ATLASES[kind].key,V177_JOINT_ATLASES[kind]]) : [])).values()]
+      .map(atlas => frozenEntry({key:atlas.key,path:atlas.path,category:"unit"})),
   ];
   const guardSprite = includeV100Sprites && v100Stage && requiredKinds.includes("kumaverson")
     ? [{ kind: "kumaverson-guard", path: V100_KUMAVERSON_GUARD_ART.path, category: "unit" }]

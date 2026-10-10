@@ -1868,7 +1868,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
         lifecycle,
         resumeAfterCapture: false,
       });
-      invariant(state.semantic.bannerText.includes("移動拠点から出撃"),
+      invariant(state.semantic.bannerText.includes("装甲車両から出撃"),
         `${name}: deployment banner copy is missing`);
       result.states.push(state);
     } else if (stateId === "manual-ability-banner") {
@@ -2056,7 +2056,7 @@ async function runFullHudCase(browserType, engine, viewport) {
       lifecycle,
       resumeAfterCapture: true,
     });
-    invariant(deploymentBanner.semantic.bannerText.includes("移動拠点から出撃"),
+    invariant(deploymentBanner.semantic.bannerText.includes("装甲車両から出撃"),
       `${name}: deployment banner copy is missing`);
     result.states.push(deploymentBanner);
 
@@ -3402,7 +3402,7 @@ async function queueAndPauseAtFirstDeploymentFrame(
             } : null,
           };
         }
-        const bannerReady = snapshot.banner?.includes("移動拠点から出撃") === true;
+        const bannerReady = snapshot.banner?.includes("装甲車両から出撃") === true;
         const progress = snapshot.computedProgress;
         if (!(fighter.kind === kind && bannerReady && progress === 0)) {
           return {
@@ -4355,7 +4355,7 @@ console.log(JSON.stringify({
     engine,
     viewport: `${viewport.width}x${viewport.height}`,
     status,
-    error,
+    error: typeof error === "string" ? error.slice(0, 6_000) : error,
   })),
 }, null, 2));
 

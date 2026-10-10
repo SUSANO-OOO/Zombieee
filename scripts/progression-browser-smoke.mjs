@@ -372,7 +372,7 @@ for (const engine of engines) {
             && mapNavigation.specialLabels.some((label) => label.includes("OUTBREAK")),
           `special operations are not separated: ${JSON.stringify(mapNavigation)}`);
           invariant(mapNavigation.stageActionLabels.length === 1
-            && mapNavigation.stageActionLabels[0].includes("この作戦を編成")
+            && mapNavigation.stageActionLabels[0].includes("編成して出撃")
             && mapNavigation.stageActionVisible,
           `stage detail still mixes global operations: ${JSON.stringify(mapNavigation)}`);
           invariant(["目的", "基本報酬", "次の未取得星報酬", "星判定"]
@@ -434,7 +434,7 @@ for (const engine of engines) {
           invariant(mapNavigation.documentWidth <= viewport.width && mapNavigation.documentHeight <= viewport.height,
             `map viewport overflow: ${JSON.stringify(mapNavigation)}`);
           await page.screenshot({ path: path.join(evidenceDir, `${name}-map-navigation.png`) });
-          await activate(page, page.getByRole("button", { name: "この作戦を編成", exact: true }), viewport.safeArea);
+          await activate(page, page.getByRole("button", { name: "編成して出撃", exact: true }), viewport.safeArea);
           await page.waitForFunction(() => document.querySelector(".game-shell")?.getAttribute("data-screen") === "loadout",
             undefined, { timeout });
           const selectedUnit = page.locator('.formation-unit-select[aria-pressed="true"]').first();
@@ -582,7 +582,7 @@ for (const engine of engines) {
               && snapshot.settings.sfxVolume === .65;
           }, undefined, { timeout });
           const audioSettings = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().settings);
-          await activate(page, page.getByRole("button", { name: "作戦を再開", exact: true }), viewport.safeArea);
+          await activate(page, page.getByRole("button", { name: "戦闘を再開", exact: true }), viewport.safeArea);
 
           for (const [kind, entries] of Object.entries(diagnostics)) {
             invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);

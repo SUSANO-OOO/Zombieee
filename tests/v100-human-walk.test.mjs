@@ -17,7 +17,7 @@ test('the two feet exchange contact, clear the ground, and keep anatomical segme
     }
   }
 });
-test('starting and stopping preserve travel phase and settle a supporting foot without resetting the gait',()=>{
+test('starting and stopping freeze horizontal foot travel while the airborne foot settles',()=>{
   for(const phase of [.04,.22,.4,.61,.89]) {
     const distance=v100PaisenWalkCycleDistance(.15),x=phase*distance;
     let r=createCombatAnimationRuntime({x:0,y:0});
@@ -27,10 +27,29 @@ test('starting and stopping preserve travel phase and settle a supporting foot w
     r=advanceCombatAnimationRuntime(r,{kind:'brawler',x,y:0,locomotionCycleDistance:distance},.15);
     const beforeIdle=v100HumanWalkPhase(r);
     r=advanceCombatAnimationRuntime(r,{kind:'brawler',x,y:0,locomotionCycleDistance:distance},.04);
-    assert.equal(r.state,'idle');const settled=Math.round(phase*2)/2;
-    assert.equal(v100HumanWalkPhase(r),settled);assert.ok(Math.abs(settled-beforeIdle)<.02);
+    assert.equal(r.state,'idle');const settled=phase;
+    assert.equal(v100HumanWalkPhase(r),settled);assert.equal(beforeIdle,settled);
+    assert.equal(r.locomotionSettle,1);
     r=advanceCombatAnimationRuntime(r,{kind:'brawler',x:x+1,y:0,locomotionCycleDistance:distance},.02);
     assert.ok(Math.abs(v100HumanWalkPhase(r)-(settled+1/distance))<1e-10);
+  }
+});
+
+test('settling lowers only the lifted foot and preserves every leg length and horizontal contact',()=>{
+  for(const kind of ['brawler',...V100_MAIN_HUMAN_WALK_KINDS])for(const phase of [.05,.22,.4,.61,.89]){
+    const poseFor=settle=>kind==='brawler'?v100PaisenWalkPose(phase,{settle}):v100MainHumanWalkPose(kind,phase,{settle});
+    const walking=poseFor(0),resting=poseFor(1);
+    for(const settle of [.1,.4,.7,1]){
+      const pose=poseFor(settle);
+      for(const name of ['near','far']){
+        const leg=pose[name];
+        assert.equal(leg.point[0],walking[name].point[0],kind+' must not slide sideways');
+        assert.ok(leg.point[1]>=walking[name].point[1]&&leg.point[1]<=resting[name].point[1],kind+' lowers smoothly');
+        assert.ok(Math.abs(Math.hypot(leg.knee[0]-leg.hip[0],leg.knee[1]-leg.hip[1])-pose.upper)<.001,kind);
+        assert.ok(Math.abs(Math.hypot(leg.point[0]-leg.knee[0],leg.point[1]-leg.knee[1])-pose.lower)<.001,kind);
+      }
+    }
+    assert.ok(resting.near.planted&&resting.far.planted,kind+' rests on both feet');
   }
 });
 test('moving attacks and the sequential combo retain their attack art',()=>{
@@ -99,6 +118,10 @@ test('gait render cache builds once per source, draws one cached frame and relea
   renderer.prepare(kind,image);const before=draws.length;
   for(const phase of [.1,.3,.8])renderer.draw(context,image,kind,phase,10,20,80,100);
   assert.equal(draws.length-before,3,'per-frame draw must not rebuild the rig');
+  renderer.draw(context,image,kind,.8,10,20,80,100,{settle:1});
+  const rested=draws.length;
+  renderer.draw(context,image,kind,.8,10,20,80,100,{settle:1});
+  assert.equal(draws.length-rested,1,'a stationary rest pose is cached');
  }
  assert.equal(renderer.snapshot().entries,1+V100_MAIN_HUMAN_WALK_KINDS.length);
  assert.equal(renderer.snapshot().builds,1+V100_MAIN_HUMAN_WALK_KINDS.length);

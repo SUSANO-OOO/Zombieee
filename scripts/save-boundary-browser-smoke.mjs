@@ -258,7 +258,7 @@ async function assertPointerCancellationLifecycle(page, viewport) {
     await probe.mouse.up();
     await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.releaseSaveBoundaryPersistence?.());
     await waitSaveBoundaryClear(probe);
-    await probe.getByRole("button", { name: "作戦を再開", exact: true }).click();
+    await probe.getByRole("button", { name: "戦闘を再開", exact: true }).click();
     await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === false, null, { timeout });
     await probe.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
     await probe.mouse.move(point.x, point.y);
@@ -748,7 +748,7 @@ for (const engine of engines) {
         await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().saveBoundaryPending === false, null, { timeout });
         await pauseButton.click();
         await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === true, null, { timeout });
-        await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+        await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
         await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === false, null, { timeout });
         const afterResume = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
         invariant(afterResume.saveBoundaryPending === false, `${name}: save boundary stayed active after clear`);

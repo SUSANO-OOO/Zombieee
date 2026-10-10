@@ -10,6 +10,7 @@ import {mugarianPresidentCompactScale} from '../app/v100BossPresentation.js';
 import {v102BattleDisplaySize} from '../app/v102BattleScale.js';
 import {v102BattleBodyScale,v102TravelCycleDistance} from '../app/v102CombatMotion.js';
 import {v100UsesHumanWalk,v100HumanWalkCycleDistance} from '../app/v100HumanWalk.js';
+import {v177JointCycleDistance} from '../app/v177JointPresentation.js';
 
 const source=readFileSync(new URL('../app/AshfallGame.tsx',import.meta.url),'utf8');
 const ast=ts.createSourceFile('AshfallGame.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -28,7 +29,7 @@ function fixture(viewport,depth){
  const globals={activeStageViewportId:viewport,STAGE_VIEWPORT_IDS,COMPACT_BATTLE_SPRITE_SCALE,mugarianPresidentCompactScale,
   compactBattleViewport:()=>viewport!==STAGE_VIEWPORT_IDS.STANDARD,activeBattlefieldDepthScale:()=>depth,
   bossRenderKind:f=>f.kind,spriteFrameFor,spriteDisplaySize:spriteBattleDisplaySizeFor,fitSpriteBattleDisplaySize,
-  v102BattleDisplaySize,v102BattleBodyScale,v102TravelCycleDistance,v100UsesHumanWalk,v100HumanWalkCycleDistance};
+  v102BattleDisplaySize,v102BattleBodyScale,v102TravelCycleDistance,v100UsesHumanWalk,v100HumanWalkCycleDistance,v177JointCycleDistance};
  const code=ts.transpileModule(`${functions}\nfunction corpseSize(corpse,g){const corpseRenderKind=corpse.kind;${corpseDeclarations}\nreturn {width,height,bodyScale};}\n({compactSpriteScale,v102GoreBodyHeight,articulatedCycleDistanceFor,corpseSize})`,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  return vm.runInNewContext(code,globals);
 }
@@ -54,7 +55,7 @@ test('actual V1 gait measures travel against the rendered body scale',()=>{
  for(const kind of spriteKinds){
   const frame=spriteFrameFor(kind,'walk-a','right'),size=v102BattleDisplaySize(kind,frame,spriteBattleDisplaySizeFor(kind));
   const scale=size.w*f.compactSpriteScale(kind)*.9*sampleAnimationClip(kind,'idle',0).bodyScale/frame.sourceRect.w;
-  const expected=v100UsesHumanWalk(kind,{requestedState:'move'})?v100HumanWalkCycleDistance(kind,scale):v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale);
+  const expected=v177JointCycleDistance(kind,scale)??(v100UsesHumanWalk(kind,{requestedState:'move'})?v100HumanWalkCycleDistance(kind,scale):v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
   assert.equal(f.articulatedCycleDistanceFor({kind,y:280},true),expected,kind);
  }
 });

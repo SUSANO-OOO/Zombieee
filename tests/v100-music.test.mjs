@@ -6,13 +6,16 @@ import { PRODUCTION_AUDIO_MANIFEST as old, V100_AUDIO_MANIFEST as current, INSTA
 import { V100_MUSIC_TRACKS, V100_STORY_SCORE_CUTS, v100SurfaceScore } from '../app/v100Music.js';
 import { V100_STORY_EVENTS } from '../app/v100StoryEvents.js';
 import { v100EventPresentationFor } from '../app/v100EventPresentation.js';
+import { V100_R9_SOUND_RECIPES } from '../app/v100R9SoundDesign.js';
+import { V100_EVENT_FOLEY_RECIPES } from '../app/v100SoundDesign.js';
 
 test('approved normal/daily music is separate from other scene roles and keeps the original boss', () => {
   for (const id of ['boss','story-boss']) assert.deepEqual(current.sceneById[id],old.sceneById[id]);
   assert.deepEqual(current.assetById['music-boss'],old.assetById['music-boss']);
   assert.equal(current.sceneById.stage1.bgm,'music-v100-score-normal');
   assert.equal(current.sceneById['story-kumaya-daily'].bgm,'music-v100-score-daily');
-  assert.equal(new Set(V100_MUSIC_TRACKS.map(t=>t.file)).size,8);
+  assert.equal(new Set(V100_MUSIC_TRACKS.map(t=>t.file)).size,9);
+  assert.equal(current.sceneById.title.bgm,'music-v100-score-opening');
   assert.equal(current.sceneById.map.bgm,current.sceneById.loadout.bgm);
   for(const id of ['silence-prologue-title','silence-station-seal']) assert.equal(current.sceneById[id].bgm??null,null);
 });
@@ -27,8 +30,13 @@ test('every canonical stage event has a playable scene score; only authored phys
       assert.ok(scene,eventId+' '+node.sourceLine);
       if(node.kind==='dialogue') assert.equal(view.cueId,null);
       else if(view.cueId) {
-        assert.match(view.cueId,/^v100-story-(fabric|door-close|paper|latch)$/u);
-        assert.equal(current.assetById[view.cueId].loop,false);
+        const physicalCues = new Set(Object.keys(V100_EVENT_FOLEY_RECIPES).map(name=>'v100-story-'+name)
+          .concat(Object.entries(V100_R9_SOUND_RECIPES).filter(([,recipe])=>!recipe.loop).map(([name])=>'v100-r9-'+name),
+            ['sfx-v070-cart-stall','sfx-v070-machine-stop','sfx-v070-power-switch','sfx-v070-seal-engage','weapon-rifle']));
+        assert.ok(physicalCues.has(view.cueId),`Authored physical cue: ${view.cueId}`);
+        const assets=current.assetById[view.cueId] ? [view.cueId] : current.poolById[view.cueId]?.assetIds;
+        assert.ok(assets?.length,view.cueId);
+        for(const id of assets)assert.equal(current.assetById[id].loop,false,id);
       }
       if(node.kind!=='title')assert.ok(current.assetById[scene.bgm],eventId+' '+node.sourceLine);
       visited.add(eventId);
@@ -61,6 +69,7 @@ test('surface score cannot compete with combat; preparation and mode hubs/result
   assert.equal(v100SurfaceScore({ready:true,phase:'map',modeResult:'victory'}).sceneId,'victory');
   assert.equal(v100SurfaceScore({ready:true,phase:'map',battleActive:true,modeResult:'victory'}),null);
   assert.equal(v100SurfaceScore({ready:true,phase:'event'}),null);
+  assert.equal(v100SurfaceScore({ready:true,phase:'title'}).sceneId,'title');
   assert.deepEqual(v100SurfaceScore({ready:true,phase:'map'}),v100SurfaceScore({ready:true,phase:'formation'}));
   assert.equal(v100SurfaceScore({ready:true,phase:'result',won:false}).sceneId,'defeat');
 });
@@ -68,7 +77,7 @@ test('surface score cannot compete with combat; preparation and mode hubs/result
 test('new music has exact attributed source and derivative hashes and preserves every legacy install source', async () => {
   const provenance=JSON.parse(await readFile('assets/source/v100/audio/scott-buckley/production-provenance.json','utf8'));
   assert.equal(provenance.license,'CC-BY-4.0');
-  assert.equal(provenance.records.length,18);
+  assert.equal(provenance.records.length,20);
   for(const record of provenance.records){
     const hash=path=>readFile(path).then(b=>createHash('sha256').update(b).digest('hex'));
     assert.equal(await hash(record.file),record.sha256,record.file);

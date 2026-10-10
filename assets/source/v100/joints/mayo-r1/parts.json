@@ -1,0 +1,910 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "mayo-chan",
+  "status": "Candidate real-joint runtime source; all-unit and normal-play visual acceptance pending",
+  "width": 480,
+  "height": 448,
+  "sourceSha256": "d38f52a5f2e99532880f528ec2051e03542703b247eda831a60709514a16f49d",
+  "sheetSha256": "a0bf090c110102f0f9860f6f15acb007ce986333cdf393ccc14b37fc715d52eb",
+  "originalHeadPreserved": true,
+  "originalTailAndEquipmentPreserved": true,
+  "motion": {
+    "walk": {
+      "spanPx": 56,
+      "liftPx": 24,
+      "stanceFraction": 0.3,
+      "flightLiftPx": 8,
+      "stanceCompressionPx": 1.5,
+      "groundY": 432
+    }
+  },
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        148,
+        325
+      ],
+      [
+        148,
+        303
+      ]
+    ],
+    "spine": [
+      [
+        148,
+        325
+      ],
+      [
+        314,
+        291
+      ]
+    ],
+    "head": [
+      [
+        332,
+        280
+      ],
+      [
+        370,
+        220
+      ]
+    ],
+    "extras": [
+      {
+        "name": "tail",
+        "parent": "spine",
+        "a": [
+          138,
+          251
+        ],
+        "b": [
+          90,
+          199
+        ],
+        "walkAngle": 0.06
+      },
+      {
+        "name": "jaw",
+        "parent": "head",
+        "a": [
+          399,
+          249
+        ],
+        "b": [
+          432,
+          254
+        ]
+      }
+    ],
+    "legs": [
+      {
+        "hip": [
+          138,
+          324
+        ],
+        "knee": [
+          112,
+          371
+        ],
+        "ankle": [
+          125,
+          416
+        ],
+        "toe": [
+          151,
+          432
+        ],
+        "offset": 0,
+        "center": 138,
+        "groundAnkleY": 416.5,
+        "paintedPaw": "far-rear-paw"
+      },
+      {
+        "hip": [
+          158,
+          326
+        ],
+        "knee": [
+          131,
+          376
+        ],
+        "ankle": [
+          146,
+          417
+        ],
+        "toe": [
+          172,
+          433
+        ],
+        "offset": 0.5,
+        "center": 158,
+        "groundAnkleY": 413.5,
+        "paintedPaw": "near-rear-paw"
+      },
+      {
+        "hip": [
+          308,
+          290
+        ],
+        "knee": [
+          328,
+          347
+        ],
+        "ankle": [
+          312,
+          414
+        ],
+        "toe": [
+          340,
+          430
+        ],
+        "offset": 0.5,
+        "center": 308,
+        "groundAnkleY": 411.5,
+        "paintedPaw": "far-front-paw"
+      },
+      {
+        "hip": [
+          320,
+          292
+        ],
+        "knee": [
+          338,
+          352
+        ],
+        "ankle": [
+          324,
+          420
+        ],
+        "toe": [
+          352,
+          436
+        ],
+        "offset": 0,
+        "center": 320,
+        "groundAnkleY": 418.5,
+        "paintedPaw": "near-front-paw"
+      }
+    ],
+    "arms": [],
+    "attack": {
+      "bodyShift": [
+        6,
+        1.4
+      ],
+      "headShift": [
+        8,
+        0
+      ],
+      "headAngle": 0.035,
+      "windupEnd": 0.28,
+      "activeEnd": 0.55
+    }
+  },
+  "order": [
+    "far-rear-upper",
+    "far-rear-lower",
+    "far-rear-paw",
+    "far-front-upper",
+    "far-front-lower",
+    "far-front-paw",
+    "tail",
+    "near-rear-upper",
+    "near-rear-lower",
+    "near-rear-paw",
+    "torso",
+    "gear",
+    "near-front-upper",
+    "near-front-lower",
+    "near-front-paw",
+    "jaw",
+    "head"
+  ],
+  "parts": [
+    {
+      "name": "head",
+      "bone": "head",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "polygon": [
+        [
+          280,
+          80
+        ],
+        [
+          480,
+          80
+        ],
+        [
+          480,
+          284
+        ],
+        [
+          430,
+          284
+        ],
+        [
+          405,
+          305
+        ],
+        [
+          398,
+          324
+        ],
+        [
+          350,
+          324
+        ],
+        [
+          319,
+          293
+        ],
+        [
+          285,
+          258
+        ],
+        [
+          282,
+          210
+        ]
+      ],
+      "file": "head.png",
+      "sha256": "ebefd845decd33d945131bffd167a68fa88e95a88f0f95c4faa165ec38da3261",
+      "maskedOriginalJaw": true,
+      "jawHingeOverlap": {
+        "maxX": 410,
+        "source": "original attached neck fur retained behind the jaw pivot"
+      }
+    },
+    {
+      "name": "tail",
+      "bone": "tail",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "polygon": [
+        [
+          0,
+          80
+        ],
+        [
+          180,
+          80
+        ],
+        [
+          180,
+          210
+        ],
+        [
+          158,
+          258
+        ],
+        [
+          100,
+          262
+        ],
+        [
+          0,
+          192
+        ]
+      ],
+      "file": "tail.png",
+      "sha256": "5fc644bd4ac95cbfb7d49d90dda70edaf4309035547c28642a410bc61a9c5c3a"
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "crop": [
+        316,
+        90,
+        319,
+        251
+      ],
+      "a": [
+        350,
+        225
+      ],
+      "b": [
+        603,
+        225
+      ],
+      "toA": [
+        113,
+        277
+      ],
+      "toB": [
+        306,
+        277
+      ],
+      "perpendicular": 1,
+      "file": "torso.png",
+      "sha256": "9b27260ec4d481cfc046654935610fe02a18437135550cfc244bf0ca75314df3"
+    },
+    {
+      "name": "gear",
+      "bone": "spine",
+      "original": true,
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ],
+      "polygon": [
+        [
+          92,
+          220
+        ],
+        [
+          131,
+          206
+        ],
+        [
+          183,
+          205
+        ],
+        [
+          194,
+          196
+        ],
+        [
+          269,
+          192
+        ],
+        [
+          303,
+          202
+        ],
+        [
+          328,
+          220
+        ],
+        [
+          340,
+          243
+        ],
+        [
+          347,
+          271
+        ],
+        [
+          338,
+          294
+        ],
+        [
+          324,
+          313
+        ],
+        [
+          305,
+          329
+        ],
+        [
+          283,
+          341
+        ],
+        [
+          261,
+          332
+        ],
+        [
+          245,
+          339
+        ],
+        [
+          217,
+          341
+        ],
+        [
+          197,
+          335
+        ],
+        [
+          178,
+          329
+        ],
+        [
+          158,
+          339
+        ],
+        [
+          130,
+          342
+        ],
+        [
+          111,
+          329
+        ],
+        [
+          95,
+          306
+        ],
+        [
+          90,
+          277
+        ]
+      ],
+      "file": "gear.png",
+      "sha256": "9dd511bb07ccb90adfeb73c14e3b78050aae202f8eeb9f05ff098dd9e9fe0c00"
+    },
+    {
+      "name": "far-rear-upper",
+      "bone": "leg-0-upper",
+      "crop": [
+        335,
+        980,
+        265,
+        200
+      ],
+      "a": [
+        474,
+        1058
+      ],
+      "b": [
+        442,
+        1151
+      ],
+      "toA": [
+        138,
+        324
+      ],
+      "toB": [
+        112,
+        371
+      ],
+      "perpendicular": 0.4,
+      "file": "far-rear-upper.png",
+      "sha256": "4dce90e1ebb180bef36e4bf0da5e1fa265980cdaf4fb7ca37d394fbe4b0b7642"
+    },
+    {
+      "name": "far-rear-lower",
+      "bone": "leg-0-lower",
+      "crop": [
+        707,
+        1004,
+        157,
+        191
+      ],
+      "a": [
+        800,
+        1046
+      ],
+      "b": [
+        757,
+        1185
+      ],
+      "toA": [
+        112,
+        371
+      ],
+      "toB": [
+        125,
+        416
+      ],
+      "perpendicular": 0.7,
+      "file": "far-rear-lower.png",
+      "sha256": "8b0e3b60cf5a7a0eea4cfdb58a1a27129cb112c8dfdb42c536daedac0482df11"
+    },
+    {
+      "name": "far-rear-paw",
+      "bone": "leg-0-foot",
+      "crop": [
+        1030,
+        1091,
+        152,
+        150
+      ],
+      "a": [
+        1067,
+        1132
+      ],
+      "b": [
+        1139,
+        1210
+      ],
+      "toA": [
+        125,
+        416
+      ],
+      "toB": [
+        151,
+        432
+      ],
+      "perpendicular": 1,
+      "file": "far-rear-paw.png",
+      "sha256": "5c6cfbb842a9d3b8b6a79f0e5bc020abb754c8c65f572e75ad46a6e72f13323f"
+    },
+    {
+      "name": "near-rear-upper",
+      "bone": "leg-1-upper",
+      "crop": [
+        650,
+        687,
+        265,
+        269
+      ],
+      "a": [
+        790,
+        753
+      ],
+      "b": [
+        784,
+        909
+      ],
+      "toA": [
+        158,
+        326
+      ],
+      "toB": [
+        131,
+        376
+      ],
+      "perpendicular": 0.55,
+      "file": "near-rear-upper.png",
+      "sha256": "d3cf4c9b27cf22868dd41792c60087e771cea0244353bc0c5b00744c8d98d5f0"
+    },
+    {
+      "name": "near-rear-lower",
+      "bone": "leg-1-lower",
+      "crop": [
+        997,
+        680,
+        208,
+        227
+      ],
+      "a": [
+        1116,
+        740
+      ],
+      "b": [
+        1117,
+        895
+      ],
+      "toA": [
+        131,
+        376
+      ],
+      "toB": [
+        146,
+        417
+      ],
+      "perpendicular": 0.65,
+      "file": "near-rear-lower.png",
+      "sha256": "b0bcb62fa3def6a0fdc87ae3aa0917077702266b710ad86be597e7267e43db46"
+    },
+    {
+      "name": "near-rear-paw",
+      "bone": "leg-1-foot",
+      "crop": [
+        74,
+        1070,
+        162,
+        173
+      ],
+      "a": [
+        118,
+        1132
+      ],
+      "b": [
+        191,
+        1213
+      ],
+      "toA": [
+        146,
+        417
+      ],
+      "toB": [
+        172,
+        433
+      ],
+      "perpendicular": 1,
+      "file": "near-rear-paw.png",
+      "sha256": "2c9ceb8e4ff60bab7ea4b073464dca5eb62e4c24add1e2b61e0a7ff070253e1b"
+    },
+    {
+      "name": "far-front-upper",
+      "bone": "leg-2-upper",
+      "crop": [
+        1002,
+        408,
+        214,
+        260
+      ],
+      "a": [
+        1118,
+        466
+      ],
+      "b": [
+        1110,
+        614
+      ],
+      "toA": [
+        308,
+        290
+      ],
+      "toB": [
+        328,
+        347
+      ],
+      "perpendicular": 0.6,
+      "file": "far-front-upper.png",
+      "sha256": "6e5d8be2e3e56dfc0c1636323ca17399053497230532443158f5eab7753c7ff2"
+    },
+    {
+      "name": "far-front-lower",
+      "bone": "leg-2-lower",
+      "crop": [
+        101,
+        707,
+        150,
+        231
+      ],
+      "a": [
+        194,
+        758
+      ],
+      "b": [
+        151,
+        886
+      ],
+      "toA": [
+        328,
+        347
+      ],
+      "toB": [
+        312,
+        414
+      ],
+      "perpendicular": 0.55,
+      "file": "far-front-lower.png",
+      "sha256": "c8c036586c9222e604c9051070af36526a7d62e880b82fef23efeae46d9274ef"
+    },
+    {
+      "name": "far-front-paw",
+      "bone": "leg-2-foot",
+      "crop": [
+        390,
+        785,
+        174,
+        135
+      ],
+      "a": [
+        431,
+        821
+      ],
+      "b": [
+        524,
+        880
+      ],
+      "toA": [
+        312,
+        414
+      ],
+      "toB": [
+        340,
+        430
+      ],
+      "perpendicular": 1,
+      "file": "far-front-paw.png",
+      "sha256": "2be05c0d040b818c7b4d8061a5db9ce4ed96f3c0619e699a9fa43e54038fa7fc"
+    },
+    {
+      "name": "near-front-upper",
+      "bone": "leg-3-upper",
+      "crop": [
+        64,
+        396,
+        205,
+        278
+      ],
+      "a": [
+        160,
+        455
+      ],
+      "b": [
+        171,
+        601
+      ],
+      "toA": [
+        320,
+        292
+      ],
+      "toB": [
+        338,
+        352
+      ],
+      "perpendicular": 0.6,
+      "file": "near-front-upper.png",
+      "sha256": "5a62854489b924f5ba7f8e6c3f07c957e99ab7c8c96a072bb26a9b8f8265910a"
+    },
+    {
+      "name": "near-front-lower",
+      "bone": "leg-3-lower",
+      "crop": [
+        360,
+        414,
+        217,
+        257
+      ],
+      "a": [
+        431,
+        457
+      ],
+      "b": [
+        512,
+        606
+      ],
+      "toA": [
+        338,
+        352
+      ],
+      "toB": [
+        324,
+        420
+      ],
+      "perpendicular": 0.55,
+      "file": "near-front-lower.png",
+      "sha256": "51562ee4090b332ae53e19792e6931311c478845475d889f4d42e9f883bae5a2"
+    },
+    {
+      "name": "near-front-paw",
+      "bone": "leg-3-foot",
+      "crop": [
+        682,
+        493,
+        190,
+        153
+      ],
+      "a": [
+        735,
+        558
+      ],
+      "b": [
+        827,
+        618
+      ],
+      "toA": [
+        324,
+        420
+      ],
+      "toB": [
+        352,
+        436
+      ],
+      "perpendicular": 1,
+      "file": "near-front-paw.png",
+      "sha256": "145331b1c49405a3e4e74b4ef877de00385913f9244f896ccee0b93dd191af14"
+    },
+    {
+      "name": "jaw",
+      "bone": "jaw",
+      "original": true,
+      "file": "jaw.png",
+      "sha256": "6155d963ed29a72cbb2cc42f47b7f6da9ee6055c50a2ac1553849146e621df31",
+      "polygon": [
+        [
+          398,
+          250
+        ],
+        [
+          410,
+          251
+        ],
+        [
+          415,
+          249
+        ],
+        [
+          419,
+          243
+        ],
+        [
+          424,
+          243
+        ],
+        [
+          425,
+          249
+        ],
+        [
+          432,
+          249
+        ],
+        [
+          480,
+          247
+        ],
+        [
+          480,
+          285
+        ],
+        [
+          410,
+          285
+        ],
+        [
+          410,
+          269
+        ],
+        [
+          398,
+          267
+        ]
+      ]
+    }
+  ],
+  "mouth": {
+    "color": "#20120e",
+    "headBone": "head",
+    "jawBone": "jaw",
+    "upper": [
+      [
+        396,
+        238
+      ],
+      [
+        433,
+        239
+      ]
+    ],
+    "lower": [
+      [
+        438,
+        253
+      ],
+      [
+        403,
+        251
+      ]
+    ]
+  },
+  "lowerLayers": [
+    "far-rear-upper",
+    "far-rear-lower",
+    "far-rear-paw",
+    "far-front-upper",
+    "far-front-lower",
+    "far-front-paw",
+    "near-rear-upper",
+    "near-rear-lower",
+    "near-rear-paw",
+    "near-front-upper",
+    "near-front-lower",
+    "near-front-paw"
+  ],
+  "pelvisY": 325,
+  "muzzle": [
+    422,
+    247
+  ],
+  "weaponBone": "jaw",
+  "identityBinding": {
+    "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": 0,
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false,
+    "sourceSha256": "9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c"
+  }
+}

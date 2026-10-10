@@ -1,5 +1,5 @@
 import { V100_EVENT_IDS, V100_STAGE_BY_ID, V100_STAGE_IDS, v100EventPhaseForId } from "./v100Registry.js";
-import { v100StoryEventFor, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
+import { V100_STORY_SCRIPT_VERSION, v100StoryEventFor, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
 
 export const V100_FLOW_PHASES = Object.freeze([
   "name", "event", "formation", "battle", "result", "post", "first-clear-post", "ending", "credits", "epilogue", "map",
@@ -40,15 +40,16 @@ function destinationForPhase(phase, eventId, stageId) {
 }
 
 /**
- * @param {{playerName?: string, completedStageIds?: string[], readStoryEventIds?: string[],
- * flowState?: {phase?: string, eventId?: string | null, stageId?: string | null, stageNumber?: number | null, nodeIndex?: number, firstClear?: boolean, finalized?: boolean, destination?: string} | null,
- * eventCursor?: {eventId?: string, nodeIndex?: number} | null,
+ * @param {{playerName?: string, completedStageIds?: string[], readStoryEventIds?: string[], readStoryVersions?: Record<string,string>,
+ * flowState?: {phase?: string, eventId?: string | null, stageId?: string | null, stageNumber?: number | null, nodeIndex?: number, firstClear?: boolean, finalized?: boolean, destination?: string, scriptVersion?: string} | null,
+ * eventCursor?: {eventId?: string, nodeIndex?: number, scriptVersion?: string} | null,
  * pendingResult?: Record<string, unknown> | null, lastResult?: Record<string, unknown> | null}} [input]
  */
 export function createV100StoryFlowState({
   playerName = "",
   completedStageIds = [],
   readStoryEventIds = [],
+  readStoryVersions = {},
   flowState = null,
   eventCursor = null,
   pendingResult = null,
@@ -71,15 +72,25 @@ export function createV100StoryFlowState({
     ?? (acknowledgedReward || (savedPhase === "result" && lastResult?.won === false && lastResult.stageId === saved.stageId) ? lastResult : null);
   const restoredEventId = cursorEventId ?? savedEventId;
   const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId) ?? restoredResult?.stageId;
-  const phase = savedPhase
+  let phase = savedPhase
     ?? (playerName && restoredEventId ? v100EventPhaseForId(restoredEventId)
       : pendingResult && typeof pendingResult === "object" && playerName ? "result" : playerName ? "event" : "name");
-  const eventId = EVENT_PHASES.includes(phase)
+  let eventId = EVENT_PHASES.includes(phase)
     ? restoredEventId ?? (phase === "event" ? "v100:event:prologue" : null)
     : null;
   const stageId = V100_STAGE_BY_ID[restoredStageId] ? restoredStageId : null;
   const stageNumber = stageId ? stageNumberFor(stageId) : (Number.isInteger(Number(saved.stageNumber)) ? Number(saved.stageNumber) : null);
-  const nodeIndex = cursor?.nodeIndex !== undefined ? Math.max(0, Math.floor(Number(cursor.nodeIndex) || 0)) : Math.max(0, Math.floor(Number(saved.nodeIndex) || 0));
+  let nodeIndex = cursor?.nodeIndex !== undefined ? Math.max(0, Math.floor(Number(cursor.nodeIndex) || 0)) : Math.max(0, Math.floor(Number(saved.nodeIndex) || 0));
+  const staleScript = (cursor?.scriptVersion ?? saved.scriptVersion) !== V100_STORY_SCRIPT_VERSION;
+  // R9 includes the homecoming in its ending. Resume a partially read R5
+  // epilogue there, without settling any battle/reward a second time.
+  if (staleScript && phase === 'epilogue') {
+    phase = readStoryEventIds.includes('v100:event:epilogue') ? 'map' : 'ending';
+    eventId = phase === 'map' ? null : 'v100:event:ending';
+    nodeIndex = 0;
+  } else if (staleScript && ['event','post','ending'].includes(phase)) {
+    nodeIndex = 0;
+  }
   const safePhase = phase === "event" && !eventId ? (playerName ? "map" : "name") : phase;
   const safeEventId = safePhase === "event" && !eventId ? "v100:event:prologue" : eventId;
   return Object.freeze({
@@ -90,18 +101,21 @@ export function createV100StoryFlowState({
     playerName: playerName || null,
     completedStageIds: [...completedStageIds],
     readStoryEventIds: [...readStoryEventIds],
+    readStoryVersions: {...readStoryVersions},
+    scriptVersion: V100_STORY_SCRIPT_VERSION,
     pendingResult: restoredResult && typeof restoredResult === "object" ? { ...restoredResult } : null,
     firstClear: saved.firstClear === true,
     canSkip: Boolean(playerName),
     finalized: saved.finalized === true,
-    destination: typeof saved.destination === "string" ? saved.destination : destinationForPhase(safePhase, safeEventId, stageId),
+    destination: phase !== savedPhase && staleScript ? destinationForPhase(safePhase, safeEventId, stageId) : typeof saved.destination === "string" ? saved.destination : destinationForPhase(safePhase, safeEventId, stageId),
     nodeIndex,
   });
 }
 
 export function shouldAutoSkipV100StoryEvent(state, { enabled = false, replay = false } = {}) {
   return enabled === true && !replay && ["event", "post", "ending", "epilogue"].includes(state?.phase)
-    && v100EventPhaseForId(state?.eventId) === state.phase && state.readStoryEventIds?.includes(state.eventId) === true;
+    && v100EventPhaseForId(state?.eventId) === state.phase && state.readStoryEventIds?.includes(state.eventId) === true
+    && state.readStoryVersions?.[state.eventId] === V100_STORY_SCRIPT_VERSION;
 }
 
 export function v100StoryFlowCheckpoint(state, nodeIndex = state?.nodeIndex ?? 0) {
@@ -117,12 +131,15 @@ export function v100StoryFlowCheckpoint(state, nodeIndex = state?.nodeIndex ?? 0
       nodeIndex: safeIndex,
       firstClear: state?.firstClear === true,
       finalized: state?.finalized === true,
+      scriptVersion: V100_STORY_SCRIPT_VERSION,
     }),
     eventCursor: eventActive ? Object.freeze({
       eventId: state.eventId,
       phase: state.phase,
       nodeIndex: safeIndex,
       nodeKey: `${state.eventId}:${safeIndex}`,
+      scriptVersion: V100_STORY_SCRIPT_VERSION,
+      sourceKey: v100StoryEventFor(state.eventId)?.nodes[safeIndex]?.sourceKey ?? null,
     }) : null,
   });
 }
@@ -168,7 +185,10 @@ export function completeV100Event(state, { skipped = false } = {}) {
   }
   if (state.eventId.endsWith(":first-clear-post")) return finalizeV100Flow(state);
   if (state.eventId === "v100:event:ending") return { accepted: true, state: stateWith(state, { phase: "credits", eventId: "v100:event:credits", destination: "credits", canSkip: true }) };
-  if (state.eventId === "v100:event:credits") return { accepted: true, state: stateWith(state, { phase: "epilogue", eventId: "v100:event:epilogue", destination: "epilogue", canSkip: true }) };
+  if (state.eventId === "v100:event:credits") {
+    if (!v100StoryEventFor('v100:event:epilogue')?.nodes.length) return {accepted:true,state:stateWith(state,{phase:'map',eventId:null,destination:'postgame-map',canSkip:false})};
+    return { accepted: true, state: stateWith(state, { phase: "epilogue", eventId: "v100:event:epilogue", destination: "epilogue", canSkip: true }) };
+  }
   if (state.eventId === "v100:event:epilogue") return { accepted: true, state: stateWith(state, { phase: "map", eventId: null, destination: "postgame-map", canSkip: false }) };
   return { accepted: false, reason: "event-transition-not-defined", state };
 }
@@ -238,15 +258,17 @@ export function skipV100StoryEvent(state) {
 
 export function markV100FlowEventRead(state, eventId) {
   if (!V100_EVENT_IDS.includes(eventId)) return state;
-  if (state.readStoryEventIds.includes(eventId)) return state;
-  return stateWith(state, { readStoryEventIds: [...state.readStoryEventIds, eventId] });
+  return stateWith(state, {
+    readStoryEventIds: [...new Set([...state.readStoryEventIds, eventId])],
+    readStoryVersions: {...state.readStoryVersions,[eventId]:V100_STORY_SCRIPT_VERSION},
+  });
 }
 
 export function v100StoryFlowContract() {
   return Object.freeze({
     order: ["name", "prologue", "stage-pre", "formation", "battle", "result", "stage-post", "first-clear-finalize", "map"],
     defeatDestination: "formation",
-    stage30Destination: ["ending", "credits", "epilogue", "postgame-map"],
+    stage30Destination: ["ending", "credits", "postgame-map"],
     skipCannotCross: ["formation", "battle", "result", "first-clear-finalize"],
   });
 }

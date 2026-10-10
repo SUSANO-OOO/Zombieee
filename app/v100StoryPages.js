@@ -8,7 +8,8 @@ export function v100StoryPageFor(eventId, nodes, startIndex = 0) {
     let characters = Array.from(first.text ?? "").length;
     while (end + 1 < nodes.length && end - start < 2) {
       const next = nodes[end + 1];
-      if (!["action", "dialogue"].includes(next.kind) || next.sceneTag !== first.sceneTag) break;
+      if (!["action", "dialogue"].includes(next.kind) || next.sceneTag !== first.sceneTag
+        || first.cueId || next.cueId || next.cutId !== first.cutId || next.insertId !== first.insertId) break;
       const length = Array.from(next.text ?? "").length;
       if (characters + length > 90) break;
       end += 1; characters += length;

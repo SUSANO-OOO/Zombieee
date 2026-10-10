@@ -98,7 +98,7 @@ try {
     const freshStart = page.getByRole("button", { name: "初めから", exact: true });
     await freshStart.click();
     await page.locator("#v100-name-title").waitFor({ state: "visible", timeout: 120_000 });
-    const startButton = page.getByRole("button", { name: "この名前で作戦を始める", exact: true });
+    const startButton = page.getByRole("button", { name: "この名前でステージを始める", exact: true });
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
     const initialTitle = await page.title();
     if (expectedTitle && initialTitle !== expectedTitle) {

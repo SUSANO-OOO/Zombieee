@@ -16,6 +16,56 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
+  r9-story:
+    name: R9 Story (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+      - name: Inspect all 17 R9 illustrations and 18 diagrams at three viewports
+        env:
+          V100_DIALOGUE_QA_ENGINES: ${{ matrix.engine }}
+          V100_DIALOGUE_QA_OUT: outputs/r9-story/composition
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs
+      - name: Inspect R9 bookends, restored R5 cursor and credits to map
+        env:
+          V100_BOOKENDS_ENGINES: ${{ matrix.engine }}
+          V100_BOOKENDS_EVIDENCE_DIR: outputs/r9-story/bookends
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-story-bookends-browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r9-story-${{ matrix.engine }}
+          path: outputs/r9-story
+          if-no-files-found: error
+          retention-days: 14
+
   v102-combat:
     name: V1.0.2 Combat (${{ matrix.engine }})
     strategy:

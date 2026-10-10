@@ -46,7 +46,7 @@ try{
     await normalTacticalInput(page,record);await page.waitForTimeout(300);
    }
    record.last=last;
-   const result=page.getByLabel('作戦結果',{exact:true});await result.waitFor();
+   const result=page.getByLabel('戦闘結果',{exact:true});await result.waitFor();
    record.result=await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('nishijin-campaign-v100'));return s.pendingResult??s.lastResult;});
    assert.equal(record.result?.stageId,previous.id);assert.equal(record.result?.won,true);
    assert.ok(record.transitions.some(s=>s.mission.powerActivated===(number===28?4:3)),'All physical nodes must be operated');

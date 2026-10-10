@@ -189,6 +189,26 @@
       "path": "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
       "sha256": "74fe005e27175c96568231a837fd3a713bc697ea61c293c3fd7982be5a8399cb"
     },
+    "assets/source/v100/sprite-repairs/omega-alpha-guide-r1.png": {
+      "path": "assets/source/v100/sprite-repairs/omega-alpha-guide-r1.png",
+      "sha256": "a3d7a9c5059a208bdbf54bea2634efb56985fffb88fa30097e7422f5b5fa3365"
+    },
+    "assets/source/v100/sprite-repairs/omega-published-1.0.3.png": {
+      "path": "assets/source/v100/sprite-repairs/omega-published-1.0.3.png",
+      "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8"
+    },
+    "assets/source/v100/sprite-repairs/president-alpha-guide-r1.png": {
+      "path": "assets/source/v100/sprite-repairs/president-alpha-guide-r1.png",
+      "sha256": "690ec180f4ce3bf5e8c730555bedf4a6a816a332b63416ec367afa0f1b0ca3e9"
+    },
+    "assets/source/v100/sprite-repairs/president-published-1.0.3.png": {
+      "path": "assets/source/v100/sprite-repairs/president-published-1.0.3.png",
+      "sha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a"
+    },
+    "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png": {
+      "path": "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png",
+      "sha256": "1d2fa278b7b807afa765f1091242c22cb19b500271b0a25d4c73efc1d5ed71c7"
+    },
     "public/art/v060/battle-nishijin-defense-line-v1.webp": {
       "path": "public/art/v060/battle-nishijin-defense-line-v1.webp",
       "sha256": "4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89"
@@ -304,10 +324,6 @@
     "public/art/v100/mission-objects/twin-reactor-landmark-v1.png": {
       "path": "public/art/v100/mission-objects/twin-reactor-landmark-v1.png",
       "sha256": "bf23593e6a376cbfe9441726b2a761505b5e8fa10c4cea1fdaac4617e816e3ea"
-    },
-    "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png": {
-      "path": "assets/source/v100/stages/s21-mugarian-hq-gate-r4.png",
-      "sha256": "1d2fa278b7b807afa765f1091242c22cb19b500271b0a25d4c73efc1d5ed71c7"
     }
   },
   "outputs": {
@@ -2361,7 +2377,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a",
+      "sha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
       "metadataPath": "/public/art/v100/bosses/mugarian-president-mutated-battle-v2-metadata.json",
       "commonScale": 0.33994334277620397,
       "cell": {
@@ -2673,7 +2689,12 @@
       ],
       "identityMasterSha256": "be58f640e7b918e0a37a04d6e128b448c71926483a95f9a5a161cd83dfae0d72",
       "repair": "explicit-reviewed-gap-seeds-local-palette",
-      "reviewedGapSeedCount": 108
+      "reviewedGapSeedCount": 108,
+      "spriteRepair": {
+        "provenance": "assets/source/v100/sprite-repairs/provenance.json",
+        "publishedBaselineSha256": "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a",
+        "rgbChanges": 0
+      }
     },
     "/public/art/v100/bosses/takuya-omega-battle-v2.png": {
       "path": "/public/art/v100/bosses/takuya-omega-battle-v2.png",
@@ -2683,7 +2704,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8",
+      "sha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
       "metadataPath": "/public/art/v100/bosses/takuya-omega-battle-v2-metadata.json",
       "commonScale": 0.3218707015130674,
       "cell": {
@@ -2995,7 +3016,12 @@
       ],
       "identityMasterSha256": "d46f6a96f693dbf0aa9b81b9ef2b1f5797f461c87505c7390c80464e3a0249af",
       "repair": "explicit-reviewed-gap-seeds-local-palette",
-      "reviewedGapSeedCount": 78
+      "reviewedGapSeedCount": 78,
+      "spriteRepair": {
+        "provenance": "assets/source/v100/sprite-repairs/provenance.json",
+        "publishedBaselineSha256": "16241ef40b809c2258822af01653d3b04cf02c959e835ff2e427a2338d3756c8",
+        "rgbChanges": 0
+      }
     },
     "/public/art/v100/enemies/red-panther-commander-battle-v2.png": {
       "path": "/public/art/v100/enemies/red-panther-commander-battle-v2.png",

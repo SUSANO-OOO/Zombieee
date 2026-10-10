@@ -1,0 +1,139 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "mayo-chan",
+  "assetPath": "/art/v100/joints/mayo-r1.webp",
+  "bytes": 80006,
+  "sha256": "b2f4fa920406bec60009f16795f7eebf0f6ea868f5d07aed5cd6e1b2288ffff7",
+  "generatedPartsStudySha256": "a0bf090c110102f0f9860f6f15acb007ce986333cdf393ccc14b37fc715d52eb",
+  "identitySourceSha256": "d38f52a5f2e99532880f528ec2051e03542703b247eda831a60709514a16f49d",
+  "identityBinding": {
+    "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": 0,
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false,
+    "sourceSha256": "9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c"
+  },
+  "motionSha256": "8478bb7b0a276090262918af009d0f1250da719b2c4c23d2e0ce3bfe130980a0",
+  "parts": [
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "ebefd845decd33d945131bffd167a68fa88e95a88f0f95c4faa165ec38da3261",
+      "original": true
+    },
+    {
+      "name": "tail",
+      "file": "tail.png",
+      "sha256": "5fc644bd4ac95cbfb7d49d90dda70edaf4309035547c28642a410bc61a9c5c3a",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "9b27260ec4d481cfc046654935610fe02a18437135550cfc244bf0ca75314df3",
+      "original": false
+    },
+    {
+      "name": "gear",
+      "file": "gear.png",
+      "sha256": "9dd511bb07ccb90adfeb73c14e3b78050aae202f8eeb9f05ff098dd9e9fe0c00",
+      "original": true
+    },
+    {
+      "name": "far-rear-upper",
+      "file": "far-rear-upper.png",
+      "sha256": "4dce90e1ebb180bef36e4bf0da5e1fa265980cdaf4fb7ca37d394fbe4b0b7642",
+      "original": false
+    },
+    {
+      "name": "far-rear-lower",
+      "file": "far-rear-lower.png",
+      "sha256": "8b0e3b60cf5a7a0eea4cfdb58a1a27129cb112c8dfdb42c536daedac0482df11",
+      "original": false
+    },
+    {
+      "name": "far-rear-paw",
+      "file": "far-rear-paw.png",
+      "sha256": "5c6cfbb842a9d3b8b6a79f0e5bc020abb754c8c65f572e75ad46a6e72f13323f",
+      "original": false
+    },
+    {
+      "name": "near-rear-upper",
+      "file": "near-rear-upper.png",
+      "sha256": "d3cf4c9b27cf22868dd41792c60087e771cea0244353bc0c5b00744c8d98d5f0",
+      "original": false
+    },
+    {
+      "name": "near-rear-lower",
+      "file": "near-rear-lower.png",
+      "sha256": "b0bcb62fa3def6a0fdc87ae3aa0917077702266b710ad86be597e7267e43db46",
+      "original": false
+    },
+    {
+      "name": "near-rear-paw",
+      "file": "near-rear-paw.png",
+      "sha256": "2c9ceb8e4ff60bab7ea4b073464dca5eb62e4c24add1e2b61e0a7ff070253e1b",
+      "original": false
+    },
+    {
+      "name": "far-front-upper",
+      "file": "far-front-upper.png",
+      "sha256": "6e5d8be2e3e56dfc0c1636323ca17399053497230532443158f5eab7753c7ff2",
+      "original": false
+    },
+    {
+      "name": "far-front-lower",
+      "file": "far-front-lower.png",
+      "sha256": "c8c036586c9222e604c9051070af36526a7d62e880b82fef23efeae46d9274ef",
+      "original": false
+    },
+    {
+      "name": "far-front-paw",
+      "file": "far-front-paw.png",
+      "sha256": "2be05c0d040b818c7b4d8061a5db9ce4ed96f3c0619e699a9fa43e54038fa7fc",
+      "original": false
+    },
+    {
+      "name": "near-front-upper",
+      "file": "near-front-upper.png",
+      "sha256": "5a62854489b924f5ba7f8e6c3f07c957e99ab7c8c96a072bb26a9b8f8265910a",
+      "original": false
+    },
+    {
+      "name": "near-front-lower",
+      "file": "near-front-lower.png",
+      "sha256": "51562ee4090b332ae53e19792e6931311c478845475d889f4d42e9f883bae5a2",
+      "original": false
+    },
+    {
+      "name": "near-front-paw",
+      "file": "near-front-paw.png",
+      "sha256": "145331b1c49405a3e4e74b4ef877de00385913f9244f896ccee0b93dd191af14",
+      "original": false
+    },
+    {
+      "name": "jaw",
+      "file": "jaw.png",
+      "sha256": "6155d963ed29a72cbb2cc42f47b7f6da9ee6055c50a2ac1553849146e621df31",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length diagonal run, ground settling and parented jaw contact; original head, jaw, tail and equipment",
+  "groundY": 432,
+  "decodedBytes": 421888,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

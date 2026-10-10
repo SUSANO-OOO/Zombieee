@@ -5,6 +5,7 @@ import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
+import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -259,7 +260,7 @@ export function v100BattleDefinitionFor(stageId) {
   const missionNode = V100_NODE_PROFILES[stageId];
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const timeline = stageTimeline(stage, missionType, bossKind);
+  const timeline = v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' });
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }

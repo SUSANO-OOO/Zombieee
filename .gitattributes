@@ -47,3 +47,6 @@ tests/v099-hud-states-bounded.test.mjs text eol=lf
 docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md text eol=lf
 # The supplied R5 manuscript is an immutable byte-for-byte source snapshot.
 docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R5.md -text
+# Preserve the supplied R9 manuscript and deterministic generated registry.
+docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md -text
+app/v100StoryEvents.js text eol=lf

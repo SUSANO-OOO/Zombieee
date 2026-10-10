@@ -1,0 +1,18 @@
+{
+  "kind": "engineer",
+  "tool": "built-in image_gen.imagegen",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "local workshop output/issue177-gun-parts-r1/engineer/parts-study-r1.png",
+  "bytes": 807613,
+  "sha256": "a9df8c53a7afe5aac344010e3d0fe79f5e71a10e41a5103147bdd44b25c88817",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden parts study; original head/hands/weapon kept; normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands"
+  ]
+}

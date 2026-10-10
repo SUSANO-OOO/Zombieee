@@ -35,6 +35,7 @@ const actionSubjects = Object.freeze({
 });
 export function v100ActionPortraitSubjects(eventId, node, nodeIndex = null) {
   if (!["action", "player-action"].includes(node?.kind) || typeof node.text !== "string") return [];
+  if (node.sourceDocument === 'STORY_SCRIPT_V100_PRODUCER_R9.md') return node.actionSubjects ?? [];
   return actionSubjects[eventId]?.[nodeIndex] ?? [];
 }
 

@@ -4,6 +4,7 @@ import { V100_MAIN_HUMAN_WALK_KINDS, v100MainHumanWalkCycleDistance, createV100M
 const PAISEN = Object.freeze({ source: { x: 394, y: 0, w: 394, h: 757 },
   hip: [213, 376], knee: [251, 451], ankle: [280, 564], stance: .6, reach: 60 });
 const FRAME_COUNT = 24, CELL_W = 197, CELL_H = 379;
+const REST_W = 160, REST_H = Math.round(CELL_H * REST_W / CELL_W);
 const polygons = Object.freeze({
   thigh: [[182,353],[232,354],[247,377],[271,438],[252,460],[222,469],[207,440],[186,401]],
   calf: [[234,445],[269,442],[273,498],[293,550],[279,573],[267,566],[252,521]],
@@ -21,11 +22,12 @@ function kneeFor(hip,ankle,upper,lower) {
   const bend=Math.sqrt(Math.max(0,upper*upper-along*along));
   return [hip[0]+dx/distance*along+dy/distance*bend,hip[1]+dy/distance*along-dx/distance*bend];
 }
-function footFor(phase) {
+function footFor(phase,settle=0) {
   const p=cycle(phase),{stance,reach}=PAISEN;
   if(p<=stance+1e-10)return {point:[210+reach*(1-2*Math.min(p,stance)/stance),564],planted:true};
   const t=(p-stance)/(1-stance),smooth=t*t*(3-2*t);
-  return {point:[210+reach*(2*smooth-1),564-26*Math.sin(Math.PI*t)],planted:false};
+  const airborne=1-Math.max(0,Math.min(1,Number(settle)||0));
+  return {point:[210+reach*(2*smooth-1),564-26*Math.sin(Math.PI*t)*airborne],planted:airborne===0};
 }
 export function v100PaisenWalkCycleDistance(renderScale) {
   return 2*PAISEN.reach*Math.max(.001,Number(renderScale)||.001)/PAISEN.stance;
@@ -33,9 +35,9 @@ export function v100PaisenWalkCycleDistance(renderScale) {
 export function v100HumanWalkCycleDistance(kind, renderScale) {
   return kind === 'brawler' ? v100PaisenWalkCycleDistance(renderScale) : v100MainHumanWalkCycleDistance(kind, renderScale);
 }
-export function v100PaisenWalkPose(phase) {
+export function v100PaisenWalkPose(phase,{settle=0}={}) {
   const p=cycle(phase),rise=1-2*Math.cos(p*4*Math.PI),nearHip=[215,376+rise],farHip=[204,376+rise];
-  const near=footFor(p),far=footFor(p+.5),upper=length(PAISEN.hip,PAISEN.knee),lower=length(PAISEN.knee,PAISEN.ankle);
+  const near=footFor(p,settle),far=footFor(p+.5,settle),upper=length(PAISEN.hip,PAISEN.knee),lower=length(PAISEN.knee,PAISEN.ankle);
   return {phase:p,rise,near:{...near,hip:nearHip,knee:kneeFor(nearHip,near.point,upper,lower)},
     far:{...far,hip:farHip,knee:kneeFor(farHip,far.point,upper,lower)},upper,lower};
 }
@@ -78,7 +80,7 @@ function paintPose(ctx,image,pose) {
 export function createV100HumanWalkRenderer({createCanvas=()=>document.createElement('canvas')}={}) {
   const mainWalk = createV100MainHumanWalkRenderer({ createCanvas });
   let cached=null,builds=0;
-  const clearPaisen=()=>{if(cached){cached.canvas.width=0;cached.canvas.height=0;}cached=null;};
+  const clearPaisen=()=>{if(cached)for(const canvas of [cached.canvas,cached.settled])if(canvas){canvas.width=0;canvas.height=0;}cached=null;};
   const clear=()=>{clearPaisen();mainWalk.clear();};
   function prepare(kind,image) {
     if (V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) return mainWalk.prepare(kind,image);
@@ -93,12 +95,21 @@ export function createV100HumanWalkRenderer({createCanvas=()=>document.createEle
     }
     cached={image,canvas};builds++;return true;
   }
-  function draw(ctx,image,kind,phase,dx,dy,dw,dh) {
-    if (V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) return mainWalk.draw(ctx,image,kind,phase,dx,dy,dw,dh);
+  function draw(ctx,image,kind,phase,dx,dy,dw,dh,options={}) {
+    if (V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) return mainWalk.draw(ctx,image,kind,phase,dx,dy,dw,dh,options);
     if(!prepare(kind,image))return false;
     const index=Math.floor(cycle(phase)*FRAME_COUNT)%FRAME_COUNT;
-    ctx.drawImage(cached.canvas,index%6*CELL_W,Math.floor(index/6)*CELL_H,CELL_W,CELL_H,dx,dy,dw,dh);
+    const s=Math.min(1,Math.max(0,Number(options.settle)||0)),key=`${index}:${s}`;
+    if(s>0){
+      if(cached.settleKey!==key){
+        cached.settled??=createCanvas();cached.settled.width=REST_W;cached.settled.height=REST_H;
+        const c=cached.settled.getContext('2d');if(!c)return false;
+        c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.scale(REST_W/PAISEN.source.w,REST_H/PAISEN.source.h);
+        paintPose(c,image,v100PaisenWalkPose(index/FRAME_COUNT,{settle:s}));cached.settleKey=key;
+      }
+      ctx.drawImage(cached.settled,dx,dy,dw,dh);
+    }else ctx.drawImage(cached.canvas,index%6*CELL_W,Math.floor(index/6)*CELL_H,CELL_W,CELL_H,dx,dy,dw,dh);
     return true;
   }
-  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:(cached?1:0)+mainWalk.snapshot().entries,bytes:(cached?CELL_W*CELL_H*FRAME_COUNT*4:0)+mainWalk.snapshot().bytes,builds:builds+mainWalk.snapshot().builds,frames:FRAME_COUNT})});
+  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:(cached?1:0)+mainWalk.snapshot().entries,bytes:(cached?CELL_W*CELL_H*FRAME_COUNT*4:0)+(cached?.settled?REST_W*REST_H*4:0)+mainWalk.snapshot().bytes,builds:builds+mainWalk.snapshot().builds,frames:FRAME_COUNT})});
 }

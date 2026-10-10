@@ -1,5 +1,6 @@
 import { access, writeFile } from 'node:fs/promises';
 const sources = {
+  BornOfTheSky: '2025/08/BornOfTheSky.mp3',
   Intervention: '2019/01/sb_intervention_nomelody.mp3',
   TheOldOnes: '2018/10/sb_theoldones.mp3',
   AKindOfHope: '2022/10/AKindOfHope.mp3',

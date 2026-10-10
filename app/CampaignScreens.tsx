@@ -448,7 +448,7 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, on
       <h1><span>西新</span><b>世紀末物語</b></h1>
       <p>アーリーアクセス版　{RELEASE_LABEL}</p>
     </div>
-    <p className="title-copy">西新が終わった夜から四十三日。指揮官の作戦が、街の明日をつなぐ。</p>
+    <p className="title-copy">西新が終わった夜から四十三日。指揮官の判断が、街の明日をつなぐ。</p>
     {/*
       The save environment badge used to sit here, showing the player an origin,
       a storage scope and an isolation notice before they had pressed anything.
@@ -574,12 +574,12 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
   };
   return <div className="campaign-overlay map-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="エリアマップ">
     <header className="campaign-header"><div><small>CHAPTER 1</small><h1>発生から四十三日</h1></div><div className="map-resource"><small>キャップ</small><b>{supplyCurrency}</b></div></header>
-    <nav className="map-operation-tabs" aria-label="特殊作戦と部隊管理">
-      <button className="special-operation survival-entry" onClick={onOpenSurvival}><small>SURVIVAL</small><b>防衛継続作戦</b></button>
+    <nav className="map-operation-tabs" aria-label="特殊ステージと部隊管理">
+      <button className="special-operation survival-entry" onClick={onOpenSurvival}><small>SURVIVAL</small><b>防衛継続ステージ</b></button>
       <button className="special-operation outbreak-entry" onClick={onOpenOutbreak}><small>OUTBREAK</small><b>異常発生任務</b></button>
       <span className="map-operation-tools"><button className="records-entry" onClick={onOpenRecords}>記録・図鑑</button><button onClick={onOpenPersonnel}>部隊</button></span>
     </nav>
-    <nav className="map-region-tabs" aria-label="作戦区域">
+    <nav className="map-region-tabs" aria-label="エリア">
       {regions.map((region) => <button
         key={region.id}
         type="button"
@@ -597,7 +597,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         data-landmark-region={activeRegionId}
         data-landmark-source={landmarkResolution.source}
         data-landmark-missing={String(landmarkResolution.missing)}
-        aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}
+        aria-label={`${activeRegion?.name ?? "エリア"} エリアマップ`}
       >
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
         {landmarkResolution.landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
@@ -613,9 +613,9 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         </div>
       </section>
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
-        <div className="stage-preview" style={assetsReady && !assetError ? artStyle(stageVisualFor(displayedStage.id)) : undefined} role="img" aria-label={`${displayedStage.displayName}の作戦区域`} />
+        <div className="stage-preview" style={assetsReady && !assetError ? artStyle(stageVisualFor(displayedStage.id)) : undefined} role="img" aria-label={`${displayedStage.displayName}のエリア`} />
         <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
-        <div className="stage-actions"><button className="campaign-primary" data-ui-cue={displayedStage.unlocked ? "confirm" : "reject"} aria-disabled={!displayedStage.unlocked} onClick={() => { if (displayedStage.unlocked) onOpenLoadout(); }}>この作戦を編成</button></div>
+        <div className="stage-actions"><button className="campaign-primary" data-ui-cue={displayedStage.unlocked ? "confirm" : "reject"} aria-disabled={!displayedStage.unlocked} onClick={() => { if (displayedStage.unlocked) onOpenLoadout(); }}>編成して出撃</button></div>
         <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
         <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
       </aside>
@@ -632,7 +632,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
   const categoryLabel = {
     background: "戦場背景",
     base: "感染拠点",
-    crawler: "移動拠点",
+    crawler: "装甲車両",
     unit: "味方ユニット",
     enemy: "敵ユニット",
     optional: "任意演出",
@@ -658,7 +658,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
           </button>
         </article>;
       })}</div></section>
-      <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} data-ui-cue="none" onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>必要 {supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
+      <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} data-ui-cue="none" onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>必要 {supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 装甲車両一斉掃射</span></div></section>
     </div>
     <footer className="formation-footer">
       <div className="asset-readiness" data-state={assetReadiness.state} role="status" aria-live="polite">
@@ -668,7 +668,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
         {(assetReadiness.retryAvailable || assetError) && !assetsReady && <button type="button" className="asset-retry" disabled={assetReadiness.retrying} onClick={onReloadAssets}>{assetReadiness.retrying ? "失敗項目を再試行中…" : "この画面で失敗・待機項目だけ再試行"}</button>}
       </div>
       <p>1〜7名で出撃できます。同じ仲間は戦闘中に何度でも再召喚できます。</p>
-      <button className="campaign-primary" data-ui-cue="none" aria-disabled={formationUnitIds.length === 0 || !assetsReady} onClick={onStartBattle}><span>{assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button>
+      <button className="campaign-primary" data-ui-cue="none" aria-disabled={formationUnitIds.length === 0 || !assetsReady} onClick={onStartBattle}><span>{assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetsReady ? selectedStage.missionLabel : "装甲車両を点検中"}</small></button>
     </footer>
   </div>;
 }
@@ -708,14 +708,14 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, 
 
 function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick<Props, "selectedStage" | "result" | "onRetry" | "onContinueResult">) {
   if (!result) return null;
-  return <div className={`campaign-overlay result-screen ${result.won ? "win" : "lose"}`} style={artStyle(stageVisualFor(selectedStage.id))} aria-label="作戦結果">
+  return <div className={`campaign-overlay result-screen ${result.won ? "win" : "lose"}`} style={artStyle(stageVisualFor(selectedStage.id))} aria-label="戦闘結果">
     <section className="result-panel">
-      <header><small>{selectedStage.displayName}</small><h1>{result.won ? "作戦成功" : "戦線崩壊"}</h1><div className="result-stars" aria-label={`今回の星 ${result.currentStars}`}>{stars(result.currentStars)}</div></header>
+      <header><small>{selectedStage.displayName}</small><h1>{result.won ? "ステージクリア" : "戦線崩壊"}</h1><div className="result-stars" aria-label={`今回の星 ${result.currentStars}`}>{stars(result.currentStars)}</div></header>
       <div className="result-records"><span><small>今回の星</small><b>{stars(result.currentStars)}</b></span><span><small>過去最高星</small><b>{stars(result.previousBestStars)}</b></span><span data-highlight={result.newBest}><small>最高記録更新</small><b>{result.newBest ? "更新" : "維持"}</b></span></div>
       <div className="result-rewards"><h2>獲得報酬</h2><dl><div><dt>通常クリア報酬</dt><dd>{result.clearReward}</dd></div><div><dt>新規星到達報酬</dt><dd>{result.newStarReward}</dd></div><div className="total"><dt>合計獲得キャップ</dt><dd>{result.totalReward}</dd></div></dl><p>所持：{result.capsAfter} キャップ</p></div>
-      {result.missionFacts.length > 0 && <section className="result-mission-facts" aria-live="polite"><h2>作戦記録</h2>{result.missionFacts.map((fact) => <p key={fact}>{fact}</p>)}</section>}
-      {(result.newlyUnlockedUnits.length > 0 || result.newlyUnlockedStages.length > 0) && <section className="result-unlocks" aria-live="polite"><h2>新たな戦力を解放</h2>{result.newlyUnlockedUnits.map((label) => <p key={`unit-${label}`}><b>ユニット</b><span>{label}</span></p>)}{result.newlyUnlockedStages.map((label) => <p key={`stage-${label}`}><b>作戦区域</b><span>{label}</span></p>)}</section>}
-      <div className="result-stats"><span><small>作戦時間</small><b>{formatTime(result.time)}</b></span><span><small>撃破数</small><b>{result.kills}</b></span><span><small>移動拠点HP</small><b>{Math.round(result.baseHpRatio * 100)}%</b></span><span><small>戦闘不能</small><b>{result.unitsLost}</b></span></div>
+      {result.missionFacts.length > 0 && <section className="result-mission-facts" aria-live="polite"><h2>戦闘記録</h2>{result.missionFacts.map((fact) => <p key={fact}>{fact}</p>)}</section>}
+      {(result.newlyUnlockedUnits.length > 0 || result.newlyUnlockedStages.length > 0) && <section className="result-unlocks" aria-live="polite"><h2>新たな戦力を解放</h2>{result.newlyUnlockedUnits.map((label) => <p key={`unit-${label}`}><b>ユニット</b><span>{label}</span></p>)}{result.newlyUnlockedStages.map((label) => <p key={`stage-${label}`}><b>エリア</b><span>{label}</span></p>)}</section>}
+      <div className="result-stats"><span><small>戦闘時間</small><b>{formatTime(result.time)}</b></span><span><small>撃破数</small><b>{result.kills}</b></span><span><small>装甲車両HP</small><b>{Math.round(result.baseHpRatio * 100)}%</b></span><span><small>戦闘不能</small><b>{result.unitsLost}</b></span></div>
       <footer><button className="campaign-secondary" onClick={onRetry}>同じ編成で再戦</button><button className="campaign-primary" onClick={onContinueResult}>エリアマップへ</button></footer>
     </section>
   </div>;
@@ -762,7 +762,7 @@ function OutbreakResultScreen({ outbreakResult, onRetry, onContinueOutbreakResul
   return <div className={`campaign-overlay outbreak-result-screen ${outbreakResult.won ? "win" : "lose"}`} style={artStyle(PRODUCTION_VISUALS.command)} aria-label="異常発生任務結果">
     <section className="outbreak-result-panel">
       <header><small>{outbreakResult.displayName}</small><h1>{outbreakResult.won ? "異常個体を制圧" : "制圧失敗"}</h1><p>{outbreakResult.bossName}</p></header>
-      <div className="outbreak-result-stats"><span><small>作戦時間</small><b>{formatTime(outbreakResult.time)}</b></span><span><small>撃破数</small><b>{outbreakResult.kills}</b></span><span><small>戦闘不能</small><b>{outbreakResult.unitsLost}</b></span><span><small>獲得キャップ</small><b>+{outbreakResult.earnedCaps}</b></span></div>
+      <div className="outbreak-result-stats"><span><small>戦闘時間</small><b>{formatTime(outbreakResult.time)}</b></span><span><small>撃破数</small><b>{outbreakResult.kills}</b></span><span><small>戦闘不能</small><b>{outbreakResult.unitsLost}</b></span><span><small>獲得キャップ</small><b>+{outbreakResult.earnedCaps}</b></span></div>
       {outbreakResult.won && <section className="outbreak-result-unlock"><h2>{outbreakResult.firstClear ? "初回制圧報酬" : "再制圧記録"}</h2>{outbreakResult.survivalUnlocked && <p><b>SURVIVAL</b><span>{outbreakResult.bossName}をboss抽選へ追加</span></p>}{outbreakResult.equipmentGrants.map((grant) => <p key={grant.equipmentId}><b>固有装備</b><span>{grant.displayName} ×{grant.quantity}</span></p>)}<small>所持 {outbreakResult.capsAfter} キャップ</small></section>}
       <footer><button className="campaign-secondary" onClick={onRetry}>同じ編成で再戦</button><button className="campaign-primary" onClick={onContinueOutbreakResult}>任務一覧へ</button></footer>
     </section>
@@ -795,13 +795,13 @@ function RecordsScreen({
     <nav className="records-tabs" aria-label="記録分類">{tabs.map((tab) => <button key={tab.id} aria-pressed={section === tab.id} onClick={() => setSection(tab.id)}>{tab.label}</button>)}</nav>
     {section === "summary" && <main className="records-summary">
       <section className="records-totals"><article><small>本編制圧</small><b>{recordsSummary.clearedStages}/{recordsSummary.totalStages}</b><span>★ {recordsSummary.collectedStars}</span></article><article><small>SURVIVAL最高</small><b>WAVE {recordsSummary.highestSurvivalWave}</b><span>{recordsSummary.survivalRuns} runs</span></article><article><small>異常発生制圧</small><b>{recordsSummary.outbreakClears}/5</b><span>BOSS累計 {recordsSummary.bossKills}</span></article><article><small>0.9.0戦闘記録</small><b>{recordsSummary.victories}勝 / {recordsSummary.defeats}敗</b><span>撤退 {recordsSummary.withdrawals}</span></article><article><small>交戦時間</small><b>{formatRecordTime(recordsSummary.battleSeconds)}</b><span>撃破 {recordsSummary.kills}</span></article><article><small>獲得CAPS</small><b>{recordsSummary.capsEarned.toLocaleString("ja-JP")}</b><span>戦闘不能 {recordsSummary.unitsLost}</span></article></section>
-      <section className="records-unit-stats"><h2>隊員別累計</h2>{recordsSummary.unitStats.length > 0 ? <table><thead><tr><th>隊員</th><th>与ダメージ</th><th>被ダメージ</th><th>回復したHP</th></tr></thead><tbody>{recordsSummary.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table> : <p>隊員別の戦闘記録はまだありません。</p>}</section>
-      <section className="records-recent"><h2>最近の作戦</h2>{recordsSummary.recentResults.length > 0 ? recordsSummary.recentResults.map((result) => <article key={result.resultId}><div><small>{result.categoryLabel}</small><b>{result.operationLabel}</b></div><strong data-outcome={result.outcomeLabel}>{result.outcomeLabel}</strong><span>撃破 {result.kills}{result.reachedWave > 0 ? ` / WAVE ${result.reachedWave}` : ""}</span></article>) : <p>0.9.0で確定した作戦記録はまだありません。</p>}</section>
+      <section className="records-unit-stats"><h2>ユニット別累計</h2>{recordsSummary.unitStats.length > 0 ? <table><thead><tr><th>ユニット</th><th>与ダメージ</th><th>被ダメージ</th><th>回復したHP</th></tr></thead><tbody>{recordsSummary.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table> : <p>ユニット別の戦闘記録はまだありません。</p>}</section>
+      <section className="records-recent"><h2>最近のステージ</h2>{recordsSummary.recentResults.length > 0 ? recordsSummary.recentResults.map((result) => <article key={result.resultId}><div><small>{result.categoryLabel}</small><b>{result.operationLabel}</b></div><strong data-outcome={result.outcomeLabel}>{result.outcomeLabel}</strong><span>撃破 {result.kills}{result.reachedWave > 0 ? ` / WAVE ${result.reachedWave}` : ""}</span></article>) : <p>0.9.0で確定した戦闘記録はまだありません。</p>}</section>
     </main>}
     {section === "unit" && <main className="compendium-grid unit-compendium">{units.map((unit) => {
       const ability = MANUAL_ABILITY_REGISTRY[unit.kind as keyof typeof MANUAL_ABILITY_REGISTRY];
       const art = unit.discovered ? personnelCardArt[unit.kind] : "";
-      return <article key={unit.id} data-locked={!unit.discovered}><div className="unit-compendium-art" data-identity-master={v090IdentityMasterKinds.has(unit.kind) ? "v090" : "legacy"} style={art ? { backgroundImage: `url('${art}')` } : undefined} role="img" aria-label={unit.discovered ? `${unit.name}人物記録` : "未確認隊員"} /><section><small>{unit.discovered ? `${unit.role} // ${unit.rangeBand}` : "CLASSIFIED"}</small><h2>{unit.discovered ? unit.name : "未確認隊員"}</h2>{unit.discovered ? <><p>{unit.description}</p><p className="compendium-ability"><b>{ability?.displayName ?? "能力未登録"}</b>{ability?.summary ?? "能力情報を確認できません。"}</p><dl><div><dt>武器</dt><dd>{unit.weaponName}</dd></div><div><dt>優先対象</dt><dd>{unit.primaryTarget}</dd></div><div><dt>Level</dt><dd>{unit.owned ? `${unit.level} / 上限 ${unit.levelCap}` : "未加入"}</dd></div><div><dt>再使用</dt><dd>{ability ? `${ability.cooldownSeconds}秒` : "未登録"}</dd></div></dl></> : <p>物語を進めると人物・武器・能力情報が解禁されます。</p>}</section></article>;
+      return <article key={unit.id} data-locked={!unit.discovered}><div className="unit-compendium-art" data-identity-master={v090IdentityMasterKinds.has(unit.kind) ? "v090" : "legacy"} style={art ? { backgroundImage: `url('${art}')` } : undefined} role="img" aria-label={unit.discovered ? `${unit.name}人物記録` : "未確認ユニット"} /><section><small>{unit.discovered ? `${unit.role} // ${unit.rangeBand}` : "CLASSIFIED"}</small><h2>{unit.discovered ? unit.name : "未確認ユニット"}</h2>{unit.discovered ? <><p>{unit.description}</p><p className="compendium-ability"><b>{ability?.displayName ?? "能力未登録"}</b>{ability?.summary ?? "能力情報を確認できません。"}</p><dl><div><dt>武器</dt><dd>{unit.weaponName}</dd></div><div><dt>優先対象</dt><dd>{unit.primaryTarget}</dd></div><div><dt>Level</dt><dd>{unit.owned ? `${unit.level} / 上限 ${unit.levelCap}` : "未加入"}</dd></div><div><dt>再使用</dt><dd>{ability ? `${ability.cooldownSeconds}秒` : "未登録"}</dd></div></dl></> : <p>物語を進めると人物・武器・能力情報が解禁されます。</p>}</section></article>;
     })}</main>}
     {section === "enemy" && <main className="compendium-grid enemy-compendium">{enemyCompendium.map((enemy) => <article key={enemy.id} data-locked={!enemy.encountered}><div className="compendium-art" aria-label={enemy.encountered ? `${enemy.displayName}戦闘記録` : "未確認感染体"}><i style={enemy.artStyle} aria-hidden="true" /></div><section><small>{enemy.encountered ? enemy.classification : "UNIDENTIFIED"}</small><h2>{enemy.encountered ? enemy.displayName : "未確認感染体"}</h2>{enemy.encountered ? <><p>{enemy.attackProfile}</p><dl><div><dt>初回遭遇</dt><dd>{enemy.firstEncounterLabel}</dd></div><div><dt>交戦</dt><dd>{enemy.encounterCount}回</dd></div><div><dt>撃破</dt><dd>{enemy.defeatCount}</dd></div></dl></> : <p>実戦で遭遇すると記録が解禁されます。</p>}</section></article>)}</main>}
     {section === "boss" && <main className="compendium-grid boss-compendium">{bossCompendium.map((boss) => <article key={boss.id} data-locked={!boss.encountered}><div className="compendium-art" aria-label={boss.encountered ? `${boss.displayName}図鑑画像` : "未確認BOSS"}><i style={boss.artStyle} aria-hidden="true" /></div><section><small>{boss.encountered ? boss.classification : "CLASSIFIED"}</small><h2>{boss.encountered ? boss.displayName : "未確認BOSS"}</h2>{boss.encountered ? <><p><b>{boss.attackName}</b>{boss.attackSummary}</p><dl><div><dt>初回遭遇</dt><dd>{boss.firstEncounterLabel}</dd></div><div><dt>撃破</dt><dd>{boss.defeatCount}</dd></div><div><dt>発見済み弱点</dt><dd>{boss.defeatCount > 0 ? boss.weakness : "未発見"}</dd></div><div><dt>固有装備</dt><dd>{boss.defeatCount > 0 ? boss.equipmentName : "解析中"}</dd></div></dl></> : <p>初遭遇前は攻撃特性と弱点を開示しません。</p>}</section></article>)}</main>}
