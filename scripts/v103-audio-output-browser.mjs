@@ -43,12 +43,27 @@ try {
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
       await page.waitForFunction(() => [...document.querySelectorAll("audio[data-game-audio-output]")]
         .some(audio => !audio.paused && audio.srcObject?.active), null, { timeout: 20000 });
+      await page.waitForFunction(() => window.__ASHFALL_AUDIO_QA__?.getDiagnostics().activeBgmVoices === 1
+        && window.__V100_EVENT_AUDIO_QA__?.getDiagnostics().activeSceneVoices === 0, null, { timeout: 20000 });
       async function capture(label) {
         const sample = await page.evaluate(async () => {
           const sinks = [...document.querySelectorAll("audio[data-game-audio-output]")];
           const active = sinks.filter(audio => !audio.paused && audio.srcObject?.active);
-          if (active.length !== 1) throw new Error(`Expected one active output, got ${active.length}`);
-          const sink = active[0], stream = sink.srcObject;
+          // The parent event/UI mixer remains mounted while the battle child
+          // owns a separate mixer. Bind each real sink to its own context.
+          const owners = { battle: window.__ASHFALL_AUDIO_QA__.getDiagnostics(),
+            ui: window.__V100_EVENT_AUDIO_QA__.getDiagnostics() };
+          const ids = Object.values(owners).map(owner => owner.output?.streamId);
+          if (ids.some(id => !id) || new Set(ids).size !== 2 || active.length !== 2)
+            throw new Error(`Expected one output per battle/UI owner, got ${active.length}`);
+          if (ids.some(id => active.filter(audio => audio.srcObject.id === id).length !== 1))
+            throw new Error("Native output does not match its owning context");
+          if (Object.values(owners).some(owner => owner.output.mode !== "media-stream"
+            || owner.contextState !== "running" || owner.duplicateLoopInstanceKeys.length))
+            throw new Error("Invalid or duplicated owner mix");
+          if (owners.ui.activeSceneVoices !== 0 || owners.battle.activeBgmVoices !== 1)
+            throw new Error("Departing scene or duplicate battle music is still active");
+          const sink = active.find(audio => audio.srcObject.id === owners.battle.output.streamId), stream = sink.srcObject;
           if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native output");
           const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(type => MediaRecorder.isTypeSupported(type));
           if (!mimeType) throw new Error("Native audio encoding is unavailable");
@@ -69,14 +84,18 @@ try {
             }
             return { mimeType: recorder.mimeType, bytes: Array.from(new Uint8Array(bytes)),
               rms: Math.sqrt(sum / count), peak, duration: buffer.duration, sampleRate: buffer.sampleRate,
-              channels: buffer.numberOfChannels, outputs: active.length, paused: sink.paused };
+              channels: buffer.numberOfChannels, outputs: active.length, paused: sink.paused,
+              owners: Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
+                contextState: owner.contextState, output: owner.output, activeSceneVoices: owner.activeSceneVoices,
+                activeBgmVoices: owner.activeBgmVoices, duplicateLoopInstanceKeys: owner.duplicateLoopInstanceKeys,
+              }])) };
           } finally { await decoder.close(); }
         });
         const { bytes, ...signal } = sample;
         assert.ok(bytes.length > 1000, `${label}: encoded output is empty`);
         assert.ok(signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid encoded duration`);
         assert.ok(signal.rms > .0001 && signal.peak > .001, `${label}: recorded mix is silent`);
-        assert.equal(signal.outputs, 1); assert.equal(signal.paused, false);
+        assert.equal(signal.outputs, 2); assert.equal(signal.paused, false);
         const file = `${width}x${height}-${label}.${signal.mimeType.includes("mp4") ? "m4a" : "webm"}`;
         await writeFile(`${out}/${file}`, Buffer.from(bytes));
         row.recordings.push({ label, file, bytes: bytes.length, ...signal });
@@ -110,8 +129,11 @@ try {
   }
   assert.deepEqual(report.errors, []); report.status = "passed";
 } catch (error) {
-  report.status = "failed"; report.failure = String(error); throw error;
+  report.status = "failed"; report.failure = String(error);
 } finally {
-  await browser.close(); await writeFile(`${out}/summary.json`, JSON.stringify(report, null, 2));
+  try { await browser.close(); }
+  catch (error) { report.cleanupError = String(error); report.status = "failed"; report.failure ??= String(error); }
+  await writeFile(`${out}/summary.json`, JSON.stringify(report, null, 2));
 }
 console.log(JSON.stringify({ engine, status: report.status, cases: report.cases.length, errors: report.errors.length }));
+if (report.status !== "passed") process.exitCode = 1;

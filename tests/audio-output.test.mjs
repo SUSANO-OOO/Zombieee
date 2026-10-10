@@ -35,7 +35,7 @@ function fixture() {
     createMediaElementSource(audio) { const source = node(); source.audio = audio; return source; },
     createMediaStreamDestination() {
       const destination = node(), track = { stops: 0, stop() { this.stops += 1; } };
-      tracks.push(track); destination.stream = { getTracks: () => [track] }; return destination;
+      tracks.push(track); destination.stream = { id: `test-stream-${tracks.length}`, getTracks: () => [track] }; return destination;
     },
     async resume() { order.push("resume"); this.state = "running"; this.dispatchEvent(new Event("statechange")); },
     async suspend() { this.state = "suspended"; this.dispatchEvent(new Event("statechange")); },
@@ -49,6 +49,7 @@ test("iPhone/iPad output preserves a single native media route without requestin
   const f = fixture(), output = createAudioOutput(f.context, f.options);
   assert.equal(f.elements.length, 1);
   assert.equal(output.snapshot().mode, "media-stream");
+  assert.equal(output.snapshot().streamId, f.elements[0].srcObject.id);
   assert.notEqual(output.destination, f.context.destination);
   assert.equal(output.destination.connections.length, 1);
   assert.equal(output.destination.connections[0].stream, f.elements[0].srcObject);

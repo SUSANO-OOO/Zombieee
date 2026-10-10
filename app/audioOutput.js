@@ -126,6 +126,6 @@ export function createAudioOutput(context, {
     prepare, pause, dispose,
     foreground: onPageShow,
     needsRecovery: () => mode === "media-stream" && (!desired || audio.paused),
-    snapshot: () => ({ mode, paused: audio?.paused ?? null, disposed }),
+    snapshot: () => ({ mode, paused: audio?.paused ?? null, disposed, streamId: streamNode?.stream.id ?? null }),
   };
 }

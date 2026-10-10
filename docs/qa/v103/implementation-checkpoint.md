@@ -48,3 +48,11 @@ PR #179／CI 38028547424のChromium job 114144464392は、新規検査が既存r
 `settle()`も同じAPI取り違えだったため、既存の`closeContext()`とrequest reportで判定する。
 元の失敗を後片付けエラーで隠さず、失敗時の画面・出力状態も残すよう検査だけを修正した。
 この失敗を音声出力の成功や製品不具合の確定根拠にしない。
+
+再検査38028841146／Chromium job 114145402346では元の`Expected one active output, got 2`を保全できた。
+製品sourceを照合すると、親のevent/UI mixerはbattle中も常駐し、子battle mixerが別contextを所有する。
+従ってglobal要素数1の検査は「1 contextに1出力」の契約と一致していなかった。
+各mixerのdiagnosticsにnative stream IDを加え、二つのownerそれぞれに1出力だけが対応し、
+event場面音が0、battle BGMが1、重複loopが0であることを実streamと照合する。
+録音信号の基準は維持し、context数を音源の二重再生と混同しない。
+外側browser closeの失敗でも元のfailureとsummaryを残すよう保護。音声関連52/52、対象Lint・構文・diff成功。
