@@ -203,7 +203,7 @@ try {
     await page.screenshot({ path: path.join(out, `${engine}-rights.png`) });
     await dialog.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
     console.log(JSON.stringify({ engine, status: "playing-106-second-edit-at-original-music-speed", seeks: 0 }));
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 150000 });
+    await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible", timeout: 150000 });
     const proof = await page.evaluate(() => ({ ...window.__creditMediaProof, save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));
     result.nativeEnded = proof.ended; result.mediaSamples = proof.samples;
     assert.deepEqual(proof.ended, [], "The edit fades before the unmodified full song reaches EOF");
@@ -219,11 +219,11 @@ try {
     assert.equal(new Set(proof.samples.filter(row => row.shot !== null).map(row => row.shot)).size, V100_CREDITS_FILM.length);
     result.fade = { startedAtMusicSeconds: fade[0].time, stopped: fade.find(row => row.gain === 0 && row.paused), samples: fade.length, nominal };
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
-    assert.equal(proof.save.flowState.phase, "epilogue");
+    assert.equal(proof.save.flowState.phase, "map");
     result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof);
     assertCreditTransitionProof(result.filmTransitions, { shots: V100_CREDITS_FILM.length, cuts: V100_CREDITS_FILM.length - 1 });
     assert.deepEqual(result.errors, []); result.status = "passed";
-    await page.screenshot({ path: path.join(out, `${engine}-epilogue.png`) });
+    await page.screenshot({ path: path.join(out, `${engine}-map-after-credits.png`) });
   } catch (error) {
     result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof).catch(() => null);
     result.failureClock = await readClock(page).catch(() => null);
@@ -263,7 +263,7 @@ try {
       assert.ok(result.geometry.every(row => row.height >= 44 && row.fits && row.reachable));
       await page.screenshot({ path: path.join(out, `${engine}-${name}.png`) });
       await page.getByRole("button", { name: "スキップ", exact: true }).click();
-      await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible" });
+      await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible" });
       assert.deepEqual(result.errors, []); result.status = "passed";
     } catch (error) {
       result.failureClock = await readClock(page).catch(() => null);
@@ -425,9 +425,9 @@ try {
         await page.evaluate(() => window.__restoreCreditStorage());
         await page.locator(".v100-staff-roll").getByRole("button", { name: "続ける", exact: true }).click();
       }
-      await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 15000 });
+      await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible", timeout: 15000 });
       const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
-      assert.equal(saved.flowState.phase, "epilogue");
+      assert.equal(saved.flowState.phase, "map");
       assert.equal(saved.readStoryEventIds.filter(id => id === "v100:event:credits").length, 1);
       result.evidence = "seeded saved cursor, or real visual speed control with original native music at 1x and isolated storage fault; separate from the normal 106-second edit proof";
       assert.deepEqual(result.errors, []); result.status = "passed";

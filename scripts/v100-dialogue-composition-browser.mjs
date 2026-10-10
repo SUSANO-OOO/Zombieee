@@ -1,10 +1,15 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
-import {chromium,webkit} from 'playwright';
-import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
+import {pwaBrowserType} from './pwa-browser-runtime.mjs';
+import {V100_STORY_EVENTS,V100_STORY_SCRIPT_VERSION} from '../app/v100StoryEvents.js';
+import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
+import {v100StoryPageFor} from '../app/v100StoryPages.js';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+import {publicDisplayText} from '../app/publicDisplayNames.js';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
 await mkdir(out,{recursive:false});
@@ -17,23 +22,27 @@ const ownerCase=(owner)=>{
 };
 const all=Object.entries(V100_STORY_EVENTS).flatMap(([eventId,event])=>event.nodes.map((node,nodeIndex)=>({eventId,nodeIndex,node})));
 const longest=all.filter(x=>x.node.kind==='dialogue').sort((a,b)=>b.node.text.length-a.node.text.length)[0];
-const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:5},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},
- {id:'s17-reunion',eventId:'v100:event:s17:post',nodeIndex:4,includes:'ほんとに来た'},
- {id:'s05-door',eventId:'v100:event:s05:post',nodeIndex:1,includes:'保守員を背に'},
- {id:'s03-defense-line',eventId:'v100:event:s03:pre',nodeIndex:0,includes:'防衛線の照明がひとつ消える'},
- {id:'s27-file',eventId:'v100:event:s27:post',nodeIndex:0,includes:'工場排水'},
- {id:'s28-segawa',eventId:'v100:event:s28:pre',nodeIndex:3,includes:'報告書では、毎年',radio:true},
- {id:'s28-motive',eventId:'v100:event:s28:pre',nodeIndex:5,includes:'西新に撒いたら三日で止まった',radio:true},
- {id:'s29-instruction',eventId:'v100:event:s29:pre',nodeIndex:6,includes:'両方やります！'},
- {id:'s30-paisen',eventId:'v100:event:s30:pre',nodeIndex:20,includes:'指一本触れさせねえ！'},
- {id:'s30-return',eventId:'v100:event:s30:pre',nodeIndex:0,includes:'見えない待機路'},
- {id:'s30-defeat',eventId:'v100:event:s30:post',nodeIndex:0,includes:'巨体が防衛線の路面へ崩れる',backdrop:'takuya-omega-ending-defeat-original-costume-v4.webp'},
- {id:'s30-cleared',eventId:'v100:event:s30:post',nodeIndex:6,includes:'最後の避難バス',backdrop:'s30-defense-line-aftermath-background-v1.webp'}];
+// Every new illustrated cut and explanatory insert is inspected. Fixtures
+// bind to the current producer script, rather than obsolete R5 node indices.
+const cutCases=Object.entries(V100_R9_SCENE_ASSETS).map(([cutId,asset])=>{
+ const found=all.find(({node})=>node.cutId===cutId);
+ assert.ok(found,`Unbound R9 cut: ${cutId}`);
+ return {id:cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop:asset.path};
+});
+const insertIds=[...new Set(all.map(({node})=>node.insertId).filter(Boolean))];
+const insertCases=insertIds.map(insertId=>{
+ const found=all.find(({node})=>node.insertId===insertId);
+ return {id:'insert-'+insertId,eventId:found.eventId,nodeIndex:found.nodeIndex,insertId};
+});
+assert.equal(cutCases.length,17);
+assert.equal(insertCases.length,18);
+const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases];
 const report={scope:'Explicit isolated story fixtures; visual composition and native next controls, not whole-campaign acceptance',build:await productionBuildIdentity(),results:[]};
-const engines=Object.entries({chromium,webkit}).filter(([name])=>(process.env.V100_DIALOGUE_QA_ENGINES??'chromium,webkit').split(',').includes(name));
-for(const [engine,browserType] of engines){
+const engines=(process.env.V100_DIALOGUE_QA_ENGINES??'chromium,webkit').split(',');
+for(const engine of engines){
+ const browserType=await pwaBrowserType(engine);
  const browser=await browserType.launch({headless:true,...(process.env.V100_DIALOGUE_QA_EXECUTABLE?{executablePath:process.env.V100_DIALOGUE_QA_EXECUTABLE}:{})});
- try{for(const viewport of [{width:844,height:340},{width:1280,height:720}])for(const fixture of cases){
+ try{for(const viewport of [{width:844,height:340},{width:844,height:390},{width:1280,height:720}])for(const fixture of cases){
   const context=await browser.newContext({viewport,hasTouch:true,isMobile:true});
   const page=await context.newPage();page.setDefaultTimeout(20000);
   const result={engine,viewport,fixture,errors:[],status:'running'};report.results.push(result);
@@ -42,24 +51,28 @@ for(const [engine,browserType] of engines){
   page.on('requestfailed',request=>result.errors.push(request.failure()?.errorText+' '+request.url()));
   page.on('response',response=>{if(response.status()>=400)result.errors.push(response.status()+' '+response.url());});
   try{
-   const phase=fixture.eventId.endsWith(':post')?'post':fixture.eventId.endsWith(':pre')?'pre':fixture.eventId.endsWith(':ending')?'ending':'event';
-   const stageNumber=V100_STORY_EVENTS[fixture.eventId].stageNumber??3;
-   const save=normalizeV100Save({...createDefaultV100Save({playerName:'構図確認'}),campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,stageNumber-1),flowState:{phase,eventId:fixture.eventId,stageId:V100_STAGE_IDS[stageNumber-1],stageNumber,destination:phase,nodeIndex:fixture.nodeIndex,firstClear:false,finalized:true}});
+   const phase=fixture.eventId.endsWith(':post')?'post':fixture.eventId.endsWith(':ending')?'ending':'event';
+   const stageNumber=V100_STORY_EVENTS[fixture.eventId].stageNumber??null;
+   const storyPage=v100StoryPageFor(fixture.eventId,V100_STORY_EVENTS[fixture.eventId].nodes,fixture.nodeIndex);
+   const save=normalizeV100Save({...createDefaultV100Save({playerName:'構図確認'}),campaignStarted:true,revision:7,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,Math.max(0,(stageNumber??1)-1)),flowState:{phase,eventId:fixture.eventId,stageId:stageNumber?V100_STAGE_IDS[stageNumber-1]:null,stageNumber,destination:phase,nodeIndex:fixture.nodeIndex,scriptVersion:V100_STORY_SCRIPT_VERSION,firstClear:false,finalized:true}});
    await page.addInitScript(value=>{for(const key of ['nishijin-campaign-v100','nishijin-campaign-v100:mirror','nishijin-campaign-v100:last-known-good'])localStorage.setItem(key,value);},serializeV100Save(save));
    await page.goto(new URL('v100',origin).href);
    const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),scene=page.locator('[data-v100-event-id="'+fixture.eventId+'"]');
-   await play.or(scene).first().waitFor({state:'visible'});if(await play.isVisible())await play.click();
+   await play.or(page.locator('.v100-start-screen')).or(scene).first().waitFor({state:'visible'});if(await play.isVisible())await play.click();
+   await enterV100FromTitle(page);
    await scene.waitFor({state:'visible'});
+   if(fixture.backdrop)await page.waitForFunction(({selector,path})=>getComputedStyle(document.querySelector(selector+' .v100-event-backdrop')).backgroundImage.includes(path),{selector:'[data-v100-event-id="'+fixture.eventId+'"]',path:fixture.backdrop});
    await page.waitForFunction(()=>[...document.images].every(img=>img.complete&&img.naturalWidth>0));
    const geometry=await scene.evaluate(element=>{
     const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
     const box=element.querySelector('.v100-node-copy');
-    return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:box.querySelector('p').innerText,backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    result.geometry=geometry;
-   if(fixture.includes)assert.ok(geometry.textValue.includes(fixture.includes));
+   const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
+   assert.ok(geometry.textValue.replace(/\s/gu,'').includes(expectedText.replace(/\s/gu,'')),`${fixture.id} authored text missing`);
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
-   if(fixture.radio)assert.equal(geometry.portraits.length,0,'offscreen radio voice must not inherit an on-screen speaker portrait');
+   if(fixture.insertId)assert.equal(await scene.locator('[data-v100-insert="'+fixture.insertId+'"]').count(),1,'the explanatory diagram must be visible');
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));
    for(const rect of [geometry.copy,geometry.text,geometry.actions]){assert.ok(rect.x>=0&&rect.y>=0&&rect.right<=viewport.width&&rect.bottom<=viewport.height);}
    assert.ok(geometry.actions.x>=geometry.text.right,'Actions must not overlap the dialogue');

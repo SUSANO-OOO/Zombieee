@@ -5,6 +5,8 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {v100EventPresentationFor} from '../app/v100EventPresentation.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+if(process.platform==='win32')throw new Error('R9 music QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL,out=process.env.V100_MUSIC_QA_OUT??'outputs/v100-music-runtime-r1';
 await mkdir(out,{recursive:false});
 const report={scope:'Native Chromium preparation/replay input, then isolated source-bound audio-owner scene probes. No campaign progression acceptance or physical-speaker audition.',build:await productionBuildIdentity(),errors:[],checks:[]};
@@ -34,17 +36,18 @@ try{
     AudioBufferSourceNode.prototype.start=function(...args){window.musicStarts.push({at:performance.now(),loop:this.loop,duration:this.buffer?.duration});return original.apply(this,args);};
   });
   await page.goto(new URL('v100',origin).href);
-  const nav=page.getByRole('navigation',{name:'作戦準備メニュー'}),play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
-  await play.or(nav).first().waitFor();if(await play.isVisible())await play.click();
-  await nav.getByRole('button',{name:'隊員',exact:true}).click();
+  const nav=page.getByRole('navigation',{name:'ステージ準備メニュー'}),play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
+  await play.or(page.locator('.v100-start-screen')).first().waitFor();if(await play.isVisible())await play.click();
+  await enterV100FromTitle(page);
+  await nav.getByRole('button',{name:'ユニット',exact:true}).click();
   await check('preparation');
   const before=await page.evaluate(()=>window.musicStarts.filter(s=>s.loop&&s.duration>60).length);
-  for(const name of ['支援','装備','車両','作戦'])await nav.getByRole('button',{name,exact:true}).click();
+  for(const name of ['支援','装備','車両','ステージ'])await nav.getByRole('button',{name,exact:true}).click();
   await page.waitForTimeout(500);
   assert.equal(await page.evaluate(()=>window.musicStarts.filter(s=>s.loop&&s.duration>60).length),before,'Preparation tabs never restart the score');
   await page.getByRole('button',{name:'異常発生・記録',exact:true}).click();
   await check('preparation');
-  await page.getByRole('button',{name:'作戦地図へ',exact:true}).click();
+  await page.getByRole('button',{name:'ステージ選択へ',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.musicStarts.filter(s=>s.loop&&s.duration>60).length),before,'Optional-mode hub keeps preparation music running');
   await page.getByRole('button',{name:'会話記録',exact:true}).click();
   await page.getByRole('dialog',{name:'会話記録',exact:true}).getByRole('button',{name:'プロローグ',exact:true}).click();
@@ -60,7 +63,7 @@ try{
   await replay.getByRole('button',{name:'閉じる',exact:true}).click();await check('preparation');
   // Probe real canonical presentation metadata in the same runtime owner.
   const cases=[['v100:event:s01:pre',null,'tension'],['v100:event:s03:pre',null,'horror'],
-    ['v100:event:s01:post',null,'relief'],['v100:event:s03:post',526,'loss'],
+    ['v100:event:s01:post',null,'relief'],['v100:event:s03:post',421,'loss'],
     ['v100:event:ending',null,'ending']];
   for(const [eventId,line,role] of cases){
     const node=V100_STORY_EVENTS[eventId].nodes.find(n=>line?n.sourceLine===line:n.kind==='dialogue');

@@ -14,7 +14,7 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
-import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
 import { unitContentFor } from "../app/content/unitCatalog.js";
@@ -89,7 +89,7 @@ const extraBattleContracts = Object.freeze([
 })));
 const coreStates = [
   "title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management",
-  "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal",
+  "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "postgame-map", "data-management-modal",
 ];
 const onlyState = process.env.V100_PHASE_G_ONLY ?? "";
 const onlyVariant = process.env.V100_PHASE_G_ONLY_VARIANT ?? "";
@@ -865,7 +865,7 @@ function relativeEvidence(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
 
-function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null, vehicleUpgradeLevel = 3 } = {}) {
+function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], readStoryEventIds = [], readStoryVersions = {}, flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null, vehicleUpgradeLevel = 3 } = {}) {
   const base = createDefaultV100Save({ playerName: "QAプレイヤー" });
   return normalizeV100Save({
     ...base,
@@ -875,6 +875,8 @@ function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds =
     caps: 9999,
     availableStageIds,
     completedStageIds,
+    readStoryEventIds,
+    readStoryVersions,
     registeredUnitIds: V100_UNITS.map((unit) => unit.id),
     ownedUnitIds: V100_UNITS.map((unit) => unit.id),
     unitLevels: unitLevels ?? base.unitLevels,
@@ -916,7 +918,7 @@ function eventSave(phase, eventId, { nodeIndex = 0, stageNumber = 30 } = {}) {
   return fullSave({
     availableStageIds: V100_STAGE_IDS,
     completedStageIds: V100_STAGE_IDS.slice(0, 29),
-    flowState: { phase, eventId, stageId, stageNumber: boundedStageNumber, destination: phase, nodeIndex, firstClear: false, finalized: true },
+    flowState: { phase, eventId, stageId, stageNumber: boundedStageNumber, destination: phase, nodeIndex, scriptVersion:V100_STORY_SCRIPT_VERSION, firstClear: false, finalized: true },
   });
 }
 
@@ -2333,7 +2335,7 @@ const stateContracts = Object.freeze({
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-landscape", ".v100-credit-shot", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], forbiddenSelectors: [".v100-credit-memory", ".v100-credit-brand"], elementCounts: { ".v100-staff-roll audio": 1 } },
-  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-post-credits-film", ".v100-post-credit-picture", ".v100-post-credit-landscape", ".v100-post-credit-controls"], elementCounts: { ".v100-post-credits-film audio": 3, ".v100-post-credits-film .v100-credit-shot": 2 } },
+  "postgame-map": { phases: ["map"], surfaces:["campaign"], selectors: ['[data-v100-surface="map"]', '.v100-command-tabs', '.v100-stage-list'], forbiddenSelectors:['.v100-post-credits-film'] },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
 });
@@ -3824,7 +3826,7 @@ async function formationPage(page, save, stageName = null) {
     await click(page, page.locator(".v100-stage-list button").filter({ hasText: stageName }).first(), "stage selection");
     await page.waitForTimeout(50);
   }
-  const cta = page.getByRole("button", { name: /この作戦を編成|再出撃/u }).first();
+  const cta = page.getByRole("button", { name: /編成して出撃|再出撃/u }).first();
   await click(page, cta, "map formation CTA");
   await advanceStory(page, ".v100-formation-panel");
   checkpointRecorderFor(page)?.markOnce("formation-visible", "completed", { selector: ".v100-formation-panel" });
@@ -4714,12 +4716,12 @@ for (const viewport of requiredViewports) {
   });
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "隊員", exact: true }), "personnel formation");
+    await click(page, page.getByRole("navigation", { name: "ステージ準備メニュー" }).getByRole("button", { name: "ユニット", exact: true }), "personnel formation");
     await page.locator('main.v100-shell[data-v100-surface="personnel"]').waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "support-vehicle-management", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "支援", exact: true }), "support management");
+    await click(page, page.getByRole("navigation", { name: "ステージ準備メニュー" }).getByRole("button", { name: "支援", exact: true }), "support management");
     await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
     const saveBeforeManagementNavigation = await page.evaluate(() => localStorage.getItem("nishijin-campaign-v100"));
     const supportContract = await productionStateContract(page, "support-vehicle-management");
@@ -4829,19 +4831,17 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "credits", async (page) => { await openRoute(page, eventSave("credits", "v100:event:credits")); await page.locator('[data-v100-surface="credits"]').waitFor({ state: "visible", timeout }); });
-  await captureState("chromium", viewport, "epilogue-postgame", async (page) => {
-    const save = eventSave("epilogue", "v100:event:epilogue");
-    // This visual capture runs muted; native-media QA covers the audible film.
-    // Avoid waiting forever for a browser autoplay gesture before the fade-in.
-    await openRoute(page, { ...save, settings: { ...save.settings, bgmEnabled: false, sfxEnabled: false } });
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout });
-    // R5 epilogue dialogue precedes the film. Use the product's story control
-    // to enter the cinematic surface; the full dialogue is checked separately.
-    await advanceStory(page, ".v100-post-credits-film");
-    await page.waitForFunction(() => {
-      const film = document.querySelector(".v100-post-credits-film"), image = film?.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
-      return Number(film?.getAttribute("data-v100-film-elapsed")) >= 4.3 && image instanceof HTMLImageElement && image.dataset.creditDecoded === "true" && image.naturalWidth > 0;
-    }, null, { timeout });
+  await captureState("chromium", viewport, "postgame-map", async (page) => {
+    // Enter the actual R9 destination through the staff-roll skip control.
+    // Normal-duration music/fade and storage failure remain separate lanes.
+    const save = fullSave({completedStageIds:V100_STAGE_IDS,availableStageIds:V100_STAGE_IDS,
+      readStoryEventIds:['v100:event:ending'],readStoryVersions:{'v100:event:ending':V100_STORY_SCRIPT_VERSION},
+      flowState:{phase:'credits',eventId:'v100:event:credits',nodeIndex:0,scriptVersion:V100_STORY_SCRIPT_VERSION,finalized:true,firstClear:false,destination:'credits'}});
+    await openRoute(page,{...save,settings:{...save.settings,bgmEnabled:false,sfxEnabled:false}});
+    await page.locator('.v100-staff-roll').getByRole('button',{name:'スキップ',exact:true}).click();
+    await page.locator('[data-v100-surface="map"]').waitFor({state:'visible',timeout});
+    const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
+    invariant(stored.flowState.phase==='map'&&stored.completedStageIds.length===30,'R9 credits preserve completed progress and return to the stage map');
   });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());

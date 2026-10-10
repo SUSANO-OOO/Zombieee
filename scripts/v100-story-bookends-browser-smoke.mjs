@@ -3,9 +3,10 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { chromium, webkit } from "playwright";
+import { pwaBrowserType } from './pwa-browser-runtime.mjs';
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STORY_EVENTS, v100StoryEventView } from "../app/v100StoryEvents.js";
+import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION, v100StoryEventView } from "../app/v100StoryEvents.js";
+import { enterV100FromTitle } from './v100-title-qa-entry.mjs';
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll, completeStaffRollByFilmEnd } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
@@ -13,6 +14,7 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
+if(process.platform==='win32')throw new Error('R9 bookend QA is hosted-only; local game/browser/audio playback is disabled');
 
 const transport = await startNativeAudioQaOrigin(new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/"));
 const origin = transport.origin;
@@ -91,14 +93,15 @@ async function inspect(page, eventId, phase, index, result) {
 try {
   for (const engine of engineNames) {
     assert.ok(["chromium", "webkit"].includes(engine));
-    const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
+    const browser = await (await pwaBrowserType(engine)).launch({ headless: true });
     try {
       for (const viewport of sizes) {
         for (const suffix of eventSuffixes) {
-          const eventId = `v100:event:${suffix}`;
+          const legacyEpilogue = suffix === 'epilogue';
+          const eventId = `v100:event:${legacyEpilogue?'ending':suffix}`;
           assert.ok(V100_STORY_EVENTS[eventId], `Unknown event ${eventId}`);
           const stageNumber = V100_STORY_EVENTS[eventId].stageNumber;
-          const phase = stageNumber ? (suffix.endsWith(":pre") ? "event" : "post") : suffix === "prologue" ? "event" : suffix;
+          const phase = stageNumber ? (suffix.endsWith(":pre") ? "event" : "post") : suffix === "prologue" ? "event" : legacyEpilogue?'ending':suffix;
           const name = `${engine}-${viewport.width}x${viewport.height}-${suffix.replaceAll(":", "-")}`;
           const context = await browser.newContext({ viewport, hasTouch: viewport.width === 844, isMobile: viewport.width === 844 });
           const page = await context.newPage();
@@ -119,17 +122,17 @@ try {
           page.on("response", response => { if (response.status() >= 400) result.diagnostics.http.push({ url: response.url(), status: response.status() }); });
           try {
             let save = normalizeV100Save({ ...createDefaultV100Save({ playerName }), campaignStarted: true,
-              flowState: { phase, eventId, stageId: null, stageNumber: null, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
+              flowState: { phase:legacyEpilogue?'epilogue':phase, eventId:legacyEpilogue?'v100:event:epilogue':eventId, stageId: null, stageNumber: null, nodeIndex: 0, scriptVersion:legacyEpilogue?'producer-r5':V100_STORY_SCRIPT_VERSION, finalized: true, firstClear: false, destination: legacyEpilogue?'epilogue':phase } });
             if (stageNumber) {
               assert.ok(["s01:pre", "s20:post", "s25:post"].includes(suffix));
               const stageId = V100_STAGE_IDS[stageNumber - 1];
               const initial = normalizeV100Save({ ...save, availableStageIds: V100_STAGE_IDS.slice(0, stageNumber), completedStageIds: V100_STAGE_IDS.slice(0, stageNumber - 1) });
-              if (suffix.endsWith(":pre")) save = normalizeV100Save({ ...initial, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, finalized: true, firstClear: false, destination: phase } });
+              if (suffix.endsWith(":pre")) save = normalizeV100Save({ ...initial, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, scriptVersion:V100_STORY_SCRIPT_VERSION, finalized: true, firstClear: false, destination: phase } });
               else {
               const result = createV100BattleResult({ stageId, battleRunId: name, won: true, bossDefeated: true, vehicleHp: 680, vehicleMaxHp: 680, objectiveComplete: true, elapsedSeconds: 120, unitDeaths: 0 });
               const pending = recordV100PendingResult(initial, result);
               assert.equal(pending.applied, true, pending.reason);
-              save = normalizeV100Save({ ...pending.save, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, finalized: false, firstClear: true, destination: phase } });
+              save = normalizeV100Save({ ...pending.save, flowState: { phase, eventId, stageId, stageNumber, nodeIndex: 0, scriptVersion:V100_STORY_SCRIPT_VERSION, finalized: false, firstClear: true, destination: phase } });
               }
             }
             await context.addInitScript(({ origin, serialized }) => {
@@ -139,6 +142,7 @@ try {
             const response = await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
             assert.equal(response?.ok(), true);
             await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+            await enterV100FromTitle(page);
             if (suffix === "credits") {
               result.staffRollEvidence = "native media seeks through all 11 scenes; full-duration completion is verified separately";
               for (let index = 0; index < 11; index++) {
@@ -146,7 +150,8 @@ try {
                 if ([0, 5, 10].includes(index)) await page.screenshot({ path: path.join(out, `${name}-${index}.png`) });
               }
               await completeStaffRollByFilmEnd(page);
-              await inspect(page, "v100:event:epilogue", "epilogue", 0, result);
+              assert.equal(await page.locator('.v100-post-credits-film').count(),0,'R9 does not append the retired R5 film');
+              result.destination='map';
               assert.equal(result.observations.filter(row => row.scene).length, 11);
               for (const [kind, errors] of Object.entries(result.diagnostics)) assert.deepEqual(errors, [], `${name} ${kind}`);
               result.status = "passed";

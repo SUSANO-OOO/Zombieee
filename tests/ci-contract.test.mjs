@@ -208,7 +208,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["v102-combat", "verify", "v100-webkit-frame-control", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "verify", "v100-webkit-frame-control", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -216,6 +216,8 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
   assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
+  assert.deepEqual(jobs['r9-story'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+  assert.equal(jobs['r9-story']['continue-on-error'],undefined);
   assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(jobs['v102-combat']['continue-on-error'],undefined);
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));

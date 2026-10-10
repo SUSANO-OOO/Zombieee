@@ -9,6 +9,8 @@ import { validateProductionEnemyRuntimeShards } from "../scripts/v0995-enemy-run
 const manifest = JSON.parse(await readFile(new URL("../docs/qa/v100/phase-g-screenshot-manifest.json", import.meta.url), "utf8"));
 const coreViewports = new Set(["1280x720", "844x390", "844x340"]);
 const extraViewports = new Set(["667x375", "736x414", "932x430"]);
+// This is the immutable historical R5 report. The current R9 validator
+// requires postgame-map instead; old evidence cannot satisfy that contract.
 const coreStates = ["title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management", "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal"];
 const combatActors = V100_REPRESENTATIVE_COMBAT_CONTRACT.map(({ actor }) => actor);
 const causalSequence = ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"];

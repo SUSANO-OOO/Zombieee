@@ -85,5 +85,5 @@ export async function completeStaffRollByFilmEnd(page) {
   for (let attempt = 0; attempt < 3 && await root.getAttribute("data-v100-credit-speed") !== "4"; attempt++)
     await root.getByRole("button", { name: /映像と文字の速さ/u }).click();
   assert.equal(await root.locator("audio").evaluate(audio => audio.playbackRate), 1);
-  await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 40000 });
+  await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible", timeout: 40000 });
 }

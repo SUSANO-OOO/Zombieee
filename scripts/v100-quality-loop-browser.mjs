@@ -166,7 +166,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   await context.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(uiSeed));
   const page = await context.newPage();
   let titleMusicRequests = 0;
-  page.on("request", request => { if (new URL(request.url()).pathname.endsWith('/audio/v100/score/horror.mp3')) titleMusicRequests++; });
+  page.on("request", request => { if (new URL(request.url()).pathname.endsWith('/audio/v100/score/opening.mp3')) titleMusicRequests++; });
   await silenceBrowserOutput(page);
   page.setDefaultTimeout(30000);
   page.on("pageerror", error => row.errors.push({ kind: "page", message: String(error) }));

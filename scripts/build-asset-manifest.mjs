@@ -9,9 +9,10 @@
 import { createHash } from "node:crypto";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertV100ArtAllowed } from './rejected-v100-art.mjs';
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
-import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_R5_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
+import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_R5_STORY_CUTS, V100_R9_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
 import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
 import {
   ASSET_MANIFEST_SCHEMA,
@@ -113,6 +114,7 @@ const excluded = new Set();
  */
 function record(assetPath, classification) {
   if (typeof assetPath !== "string" || !assetPath.startsWith("/")) return;
+  assertV100ArtAllowed(assetPath);
   if (!ASSET_EXTENSION.test(assetPath)) return;
   if (EXCLUDED_PATH.test(assetPath)) {
     excluded.add(assetPath);
@@ -270,6 +272,7 @@ for (const owner of Object.keys(V100_EVENT_PORTRAIT_PROFILES)) for (const expres
   record(v100EventPortraitPath(owner, expression), {pack:"units",category:"portrait",criticality:"critical"});
 }
 for (const assetPath of Object.values(V100_R5_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
+for (const assetPath of Object.values(V100_R9_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
 record(V100_RETREAT_DOOR_ART,{pack:"campaign-core",category:"object",criticality:"critical"});
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
@@ -359,10 +362,12 @@ for (const [assetPath, classification] of entries) {
       absolute = path.join(publicDir, transportPath.replace(/^\//, ""));
       [stats, body] = await Promise.all([stat(absolute), readFile(absolute)]);
     }
+    const assetHash = createHash("sha256").update(body).digest("hex");
+    assertV100ArtAllowed(transportPath, assetHash);
     assets.push({
       path: assetPath,
       bytes: stats.size,
-      hash: `sha256-${createHash("sha256").update(body).digest("hex")}`,
+      hash: `sha256-${assetHash}`,
       pack: classification.pack,
       category: classification.category,
       criticality: classification.criticality,
