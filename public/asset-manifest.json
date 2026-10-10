@@ -1863,6 +1863,38 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/red-panther-commander-r1.webp",
+      "bytes": 34474,
+      "hash": "sha256-bc917cd193ceeeb359b0cc99632b9253906a032f8037bf0bd44f686e405cfebd",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/red-panther-knife-r1.webp",
+      "bytes": 31080,
+      "hash": "sha256-6fd6955d5213d04e0f4fa29c3c7a33614695106320a86f06866f1239061c26d4",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/red-panther-shield-r1.webp",
+      "bytes": 41612,
+      "hash": "sha256-18a9b9b441c751bf7899743d6f9250d0e776181b9144fbdafa51a6cb5d33007b",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/red-panther-smg-r1.webp",
+      "bytes": 31692,
+      "hash": "sha256-a56a14031c445f01561057193aa82b983b083fbc2c641914269a5b45bef63293",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/scout-r1.webp",
       "bytes": 46982,
       "hash": "sha256-57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",

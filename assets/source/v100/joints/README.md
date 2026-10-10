@@ -5,9 +5,10 @@ recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
 Scout's biped gait, ground settling and crowbar anticipation/contact/return,
 Walker/Turned's gait, settling and claw reach/return, and Runner's separately
 authored running gait with opposed bent arms and a short flight phase, plus
-Gunner, Medic and Engineer walking, settling, aiming, recoil and recovery.
+Gunner, Medic and Engineer walking, settling, aiming, recoil and recovery,
+and the four Red Panther forms' weapon-specific military motion.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are nine form candidates
+occluded limbs derive from built-in imagegen parts studies. These are thirteen form candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -188,7 +189,7 @@ sole support, world-space planted feet, shoulder/elbow/wrist continuity, grip
 reachability without fallback, preserved original pixels and exact mirrored
 muzzle placement. Each firearm adds one conditional texture: 31,178, 33,662 and
 27,900 download bytes respectively, totaling 92,740 bytes and 759,808 decoded
-bytes. All seven current joint textures total 1,142,358 download bytes.
+bytes. These seven joint textures total 1,142,358 download bytes.
 
 ```powershell
 node scripts/build-v177-firearm-joints.mjs
@@ -201,3 +202,40 @@ leaving its source cell. Contact sheets use the actual production draw helper
 in both travel directions and through each attack phase. Normal-speed remote
 play and visual acceptance remain pending; hit, defeat, deployment, abilities
 and remaining forms still require the Producer's complete 48-form work.
+
+The four `red-panther-*-r1/` sources add Knife, SMG, Shield and Commander with
+16, 15, 15 and 17 explicit painted parts. The knife thrust, short shield bash,
+two-handed SMG aim/recoil and one-handed pistol aim/recoil are separate actions.
+The source's head, masks, insignia, backpack, hands, weapons, shield and coat
+panels remain. The Commander coat panels have separate parented bones. Both
+arms have fixed-length upper/lower chains; free hands have their own effectors.
+The heavier shield carrier uses a shorter, more grounded gait. In each form,
+the 544x512 source padding and ground anchor are recovered from the normalized
+480x448 authoring paint before world travel, rendering and contact effects.
+
+Knife's approved source has an extra rear arm and hand. The candidate excludes
+that region while retaining the backpack, actual free hand and knife hand.
+This repairs the new joint path; the remaining hit/death/ability owners still
+need their complete animation work. Transparent source pixels are never
+inferred from an opaque-pixel count: SMG and Commander contain mostly translucent
+paint. Original cutouts and visible costume overlays copy their source RGBA
+directly inside each explicit mask, avoiding Canvas premultiplication drift.
+Tests also verify the original red sleeve insignia and translucent source paint.
+
+The new textures download 31,080, 31,692, 41,612 and 34,474 bytes, respectively.
+They total 138,858 download bytes and 1,273,856 decoded bytes. All eleven current
+joint textures total 1,281,216 download bytes; each is conditionally loaded.
+
+```powershell
+node scripts/build-v177-panther-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-panther-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The 305 Blender frames per form and 1,803 production gait/settle samples per
+form check support, fixed lengths, grip reachability, arm continuity and world
+foot drift. Production checks also cover attack entry/return, opaque weapon
+tips, mirrored effects and preserved original scale. These are thirteen form
+candidates within the full 48-form/all-action scope. Normal-speed play, the
+remaining forms/actions, native performance and physical iPhone recording
+remain unaccepted.

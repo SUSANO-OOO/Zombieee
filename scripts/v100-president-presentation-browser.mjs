@@ -41,7 +41,8 @@ const viewports = backgroundBlitAblation || shadowBlurAblation || rasterGroupAbl
 assert.ok(!backgroundBlitAblation || (viewports.length === 1 && viewports[0].width === 1280 && viewports[0].height === 720), "background blit ablation requires 1280x720");
 const sourcePath = "/art/v100/bosses/mugarian-president-mutated-battle-v2.png";
 const sourceFile = new URL(`../public${sourcePath}`, import.meta.url);
-const expectedManifestHash = "6f38bd9479fa2ab739fedfc383525398185519bebd64befaec271fb3eb3c9e5a";
+// Issue #177 removes enclosed white matte; the source-bound repair preserves every RGB byte.
+const expectedManifestHash = "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c";
 
 function fixture() {
   const base = createDefaultV100Save({ playerName: "S25 president presentation" });

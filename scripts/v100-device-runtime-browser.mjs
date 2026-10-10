@@ -575,7 +575,8 @@ if (failures.length > 0) {
     name: result.name, error: result.error, blankBaseline: result.blankBaseline,
     performance: result.performance && { p95RafMs: result.performance.p95RafMs,
       medianFps: result.performance.medianFps, effectiveRenderHz: result.performance.effectiveRenderHz,
-      callbackDiagnostic: result.performance.callbackDiagnostic, gates: result.performance.gates },
+      // Full callback samples remain in report.json. Keep measured failures visible in bounded CI logs.
+      callbackDiagnosticStoredInReport: Boolean(result.performance.callbackDiagnostic), gates: result.performance.gates },
     diagnosticCounts: Object.fromEntries(Object.entries(result.diagnostics).map(([kind, items]) => [kind, items.length])),
   })) }, null, 2));
   process.exitCode = 1;

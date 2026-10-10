@@ -1,0 +1,133 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "red-panther-knife",
+  "assetPath": "/art/v100/joints/red-panther-knife-r1.webp",
+  "bytes": 31080,
+  "sha256": "6fd6955d5213d04e0f4fa29c3c7a33614695106320a86f06866f1239061c26d4",
+  "generatedPartsStudySha256": "a72651aff94c1f8783526d7a39071f63d57c50f31e00d3cf656f4654fa2eaa13",
+  "identitySourceSha256": "06db498b84eb40ddcf5d5268d8d1b34d05de802810b38b2e78a44af8cc0ba544",
+  "identityBinding": {
+    "path": "/art/v100/enemies/red-panther-knife-battle-v2.png",
+    "sourceSha256": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "referenceTransform": {
+      "scale": 1.0861618798955615,
+      "tx": -55.436031331592744,
+      "ty": -106.73629242819845,
+      "flipX": false
+    }
+  },
+  "motionSha256": "e7b4a1e8e603c6d864af539b29849a01859e498bcfb940d88e26c9180b9195a9",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "3f741346296c312d1c7cb99ed6b6a7158e2d2c5aa436e6aa13c7c89c94bf435d",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "e155a8803490b2112e4e7af5b17de6244a7626654699908be21fa23d9798ecb4",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "fca6fcde109195a9a2d3a50429c8f9692074428ce16028a186ccf9061cd0d782",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "c7d1aaad2fb40931be3ee7b760689d70a6a3bc006fbb29f0ef8fb443acfd58f9",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "ed2ee07d5fcf0c947fa61ef3bd3848ad91782adee0db78250e857b1613264c47",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "642bf14a52bc8cf101489e52ded54811fc787793e74acde6d9b6bc0820534e46",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "6300b25c4e7bcdbea91a78d35c55a188e79b47edb4ee88db6fce8eb3471194c3",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "5c575ce37db1137017bcb4308005e65e3eaa5fa6712e64cf8c0b7f466cf21dc3",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "ab982ca199f6fce8070d6ef0b67e17edc905eca561ffc8076fd95ca4e783d3b8",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "d1a99f077ab91f12e7284432e1a4469f62523f1b22c59400b97b0e768e57ae21",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "98c4335b61964999dee2a6ca8471a98fe6f10ba17884099019c7fbae54dfa78a",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "15aebbabc54fd3ce15b71864652fbae29b82e941554c6d54ba60c121b98b9e71",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "10e5a457a8d7c442d725709cbabbba500fb8deb884a071645fc0e3a661fc663e",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "64be9baff5a9bc160b567075afc469b701334428f09b98dc7f5d1e9049c94b2e",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "fb19ad8424b3d8304c4fb99c3191f851fb6595751ca208fb638342a074ace8ae",
+      "original": true
+    },
+    {
+      "name": "backpack",
+      "file": "backpack.png",
+      "sha256": "9e984266050fbe6c1bcbfad7fff0062dc4308b229444a639af9277395eac15b6",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length military gait, settling, weapon-specific knife thrust/shield bash/gun aim and recovery; original masked head, visible insignia, equipment, hands and coat panels",
+  "groundY": 432,
+  "decodedBytes": 264192,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

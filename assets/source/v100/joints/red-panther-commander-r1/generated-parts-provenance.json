@@ -1,0 +1,21 @@
+{
+  "kind": "red-panther-commander",
+  "tool": "built-in image_gen.imagegen",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-panther-parts-r1/red-panther-commander/parts-study-r1.png",
+  "bytes": 1094255,
+  "sha256": "ebdbf6b94742670671cc5668591155ef4d0ef28e8d7f643f5938b1e97c425e0c",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden costume/anatomy study; original head, visible insignia and gear retained; normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand",
+    "coat-far",
+    "coat-near"
+  ]
+}

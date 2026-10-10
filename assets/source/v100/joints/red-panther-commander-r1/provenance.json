@@ -1,0 +1,139 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "red-panther-commander",
+  "assetPath": "/art/v100/joints/red-panther-commander-r1.webp",
+  "bytes": 34474,
+  "sha256": "bc917cd193ceeeb359b0cc99632b9253906a032f8037bf0bd44f686e405cfebd",
+  "generatedPartsStudySha256": "ebdbf6b94742670671cc5668591155ef4d0ef28e8d7f643f5938b1e97c425e0c",
+  "identitySourceSha256": "b6392497a98c9f2302931aaa302758a68a983ea7f9c4a218c4dd8ed79a31d900",
+  "identityBinding": {
+    "path": "/art/v100/enemies/red-panther-commander-battle-v2.png",
+    "sourceSha256": "b8bd7198dd7b602ae03f20f1cd36340e713cbb06941e673a8b4c33bdf0f2cc19",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "referenceTransform": {
+      "scale": 0.9203539823008849,
+      "tx": -10.796460176991161,
+      "ty": -24.495575221238937,
+      "flipX": false
+    }
+  },
+  "motionSha256": "53b5bdbd2c4e008c032edab7069d2987e30b4ac26ca809a76ae048c2d7a9f0ca",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "24c3a48bc9e7f299bad1b6b123028e8033785c7935979ecfaf452cb1a2dd7501",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "d817decf23e71f81bb15c7ef593290b9d2d48b4729ecf5cf70b676447d476d61",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "aa4ae574e80974539c21d769ce96cc0904b956502480927599fdf82df0ec7a75",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "cd65c75b15071e0ef6f7215b02ae45210928f7d2b4716e73de38310e3c7a1fd0",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "bc0c308555ff71238ca384a7993528b7159dfb79391accba1f940dd118be321b",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "03a755858f7497877a231202aec83f37e611b18fbdd46a126b882c0a209f2770",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "b70ec8fbf5dbc226e0772dc97b916a269f4d0544e87aca1c3eb8915db6086d70",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "34063062df6dfbae954537eae8e3fe0f907975aab2e7f3c9cbfde3cfaa9c25da",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "859c82c2d87c3de7f89b03e7c728349080075edb20b5e6af0fe0dfbec7c68321",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "6bca1c8062ef9730ae7697c1df1770ee415d1cf357708480ee54b3cab54ff358",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "da6055d560d911686ca41bfd476b7e8cd425a33b0b3df1709af9106edaa5186f",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "f8e4cf83f4a09ec15083aa54952d6f03cbeab3cfa7752e9e9dd11efb4c06c546",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "3e48fbf77ebf2aa096c600cfbcd48ad8181e25da2f74f854c6e09aee466b8b82",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "9ad4ca89f412db51aa0b5f2a3f7af69115ff51d3f8e047c2bb1f5d451da06b5b",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "04218436e91576bf1d7af949647207be45d7f4e942f6891f59b50d1630c96d2d",
+      "original": true
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "949220e2f16fbc8fde89b852e6574f008591d1f8157c0797baffa472a36f1c98",
+      "original": true
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "421921abc231104bbacbedf394785ddfc7d9ea1195b7f47177bb247bd09f55d0",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length military gait, settling, weapon-specific knife thrust/shield bash/gun aim and recovery; original masked head, visible insignia, equipment, hands and coat panels",
+  "groundY": 432,
+  "decodedBytes": 258048,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

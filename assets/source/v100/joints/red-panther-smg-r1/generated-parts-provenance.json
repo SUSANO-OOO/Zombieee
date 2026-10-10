@@ -1,0 +1,19 @@
+{
+  "kind": "red-panther-smg",
+  "tool": "built-in image_gen.imagegen",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-panther-parts-r1/red-panther-smg/parts-study-r1.png",
+  "bytes": 1117651,
+  "sha256": "310c7637541de7cd845a6b37325fa695c6b1b1f1f1cce40fcf458a814d8440a2",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden costume/anatomy study; original head, visible insignia and gear retained; normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "backpack"
+  ]
+}
