@@ -1405,7 +1405,8 @@ try {
       });
       const { bytes, ...signal } = sample;
       const file = "offline-native-output.m4a";
-      await writeFile(path.join(evidenceDir, file), Buffer.from(bytes));
+      await mkdir(evidenceDir, { recursive: true });
+      await writeFile(path.join(evidenceDir, file), Buffer.from(bytes), { flag: "wx" });
       record("offline installed iPhone output encodes the cached scene mix without duplicate owners", (
         bytes.length > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5 && signal.rms > .0001 && signal.peak > .001
         && signal.outputsForOwner === 1 && signal.nativePaused === false && signal.contextState === "running"

@@ -82,3 +82,7 @@ planner・manifest・復旧・版identityの無音37/37、対象Lint・構文・
 同じinstalled profileをorigin socket切断後にSWから再起動した箇所で、event ownerのnative streamを
 実MediaRecorderで保存・OfflineAudioContextでdecodeし、1 ownerに1出力と非ゼロ信号を追加確認する。
 既存remote speaker muteと全復旧・save条件を維持。これも物理iPhoneのOS画面録画とは区別する。
+
+7b900beの追加検査に対する独立reviewで、offline録音の保存先を作成する前にwriteするMediumを確認。
+保存直前にmkdirし、既存録音への上書きを拒否するよう修正した。該当差分の独立再確認はH0／M0／L0。
+2本の検査sourceの構文、request監査mock 12/12、対象Lint、diff check成功。PCのbrowser・音声未起動。
