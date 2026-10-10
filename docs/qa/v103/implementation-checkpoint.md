@@ -56,3 +56,29 @@ PR #179／CI 38028547424のChromium job 114144464392は、新規検査が既存r
 event場面音が0、battle BGMが1、重複loopが0であることを実streamと照合する。
 録音信号の基準は維持し、context数を音源の二重再生と混同しない。
 外側browser closeの失敗でも元のfailureとsummaryを残すよう保護。音声関連52/52、対象Lint・構文・diff成功。
+
+## 実信号と復旧検査
+
+3d5565bの遠隔Chromium job 114147515724は音声・全戦闘form・通常接触まで成功。
+artifact 11661936604（zip SHA-256 `050446c67a233555653b344bea4bf5eaec0e6ca2f4f59409610333f5fa3cefbb`）の
+3画面サイズ×通常／復帰の6 m4aすべてを回収。各40,388 bytes／2.380秒／stereo、RMS 0.0293–0.0360、peak 0.1699–0.3303。
+各ownerのstream IDは復帰前後で同一、event場面音0・battle BGM1・重複loop0。
+
+native WebKit job 114147515726は1280×720の通常／復帰と844×390の通常、計3録音に非ゼロ信号を確認。
+844×390復帰直後のowner状態検査で失敗し、artifact 11661951864
+（zip SHA-256 `2a4818acac6bd548594db0687f1bd30b4568e4ccba74c1d591e0b2f0ef791588`）を保全。
+検査のdecodeが別のhardware AudioContextを開いていたためOfflineAudioContextへ変更。
+復帰の待機は両ownerのcontext running・native再生・BGM1・重複0を20秒上限で確認する。
+製品の復帰成功はこの再検査が通るまで未確認とする。
+
+同runのPR Verifyはpartial PWA 21/23。全681素材hashが同じためrelease deltaは0だが、
+fixtureが媒体差分ありと非bundle媒体差分取得を必須としていた。
+実際の欠損cache修復は完了し、commit／save保存／offline／rollback条件は成功している。
+差分0を許しながら、欠損に由来する実修復取得の存在・一意性、未知path0、保持hash再取得0、
+3失敗＋1保留のbundle試行、進捗境界等の既存条件を維持するよう検査を修正した。
+planner・manifest・復旧・版identityの無音37/37、対象Lint・構文・diff成功。
+
+既存native PWA検査はdefault UAで直接出力を使うため、WebKit persistent partial fixtureをiPhone UAに設定。
+同じinstalled profileをorigin socket切断後にSWから再起動した箇所で、event ownerのnative streamを
+実MediaRecorderで保存・OfflineAudioContextでdecodeし、1 ownerに1出力と非ゼロ信号を追加確認する。
+既存remote speaker muteと全復旧・save条件を維持。これも物理iPhoneのOS画面録画とは区別する。

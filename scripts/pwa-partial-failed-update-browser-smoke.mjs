@@ -415,7 +415,9 @@ const allowedDownloadPaths = new Set([
 record("the candidate update plan derives changed, missing/new, removed, and retained sets without a release-size literal", (
   oldHashes.size > 0
   && candidateHashes.size > 0
-  && candidateReleaseDeltaAssets.length > 0
+  // A shell/audio-code hotfix can retain every media hash. The deliberately
+  // partial cache must still require real repairs in that case.
+  && candidateDownloadableAssets.length > 0
   && candidateMissingNewAssets.length === manifestDelta.missingNew.length
   && retainedHashes.size > 0
   && retainedSharedHashes.size < sharedHashCandidates.length
@@ -528,6 +530,8 @@ async function openPersistent(userDataDir) {
     viewport: { width: 844, height: 390 },
     deviceScaleFactor: 3,
     hasTouch: true,
+    ...(browserName === "webkit" ? { isMobile: true,
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1" } : {}),
   });
   await context.addInitScript(() => {
     if (typeof AudioNode !== "undefined") {
@@ -940,6 +944,7 @@ try {
   const incidentAssetRequests = candidateTransportRequests
     .slice(incidentTransportStart)
     .map(({ pathname }) => pathname);
+  const incidentRepairRequests = incidentAssetRequests.filter((pathname) => candidateDownloadTransportPaths.has(pathname));
   const incidentUnchangedStoredRefetches = incidentAssetRequests.filter((pathname) => (
     pathname !== bundlePathname
     && unchangedStoredAssets.some((asset) => transportPathFor(asset) === pathname)
@@ -953,15 +958,15 @@ try {
   ));
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
-  record("the incident requests only release-delta assets, three failed bundle attempts and one held request, with failed logical slices visible", (
+  record("the incident requests only candidate repair assets, three failed bundle attempts and one held request, with failed logical slices visible", (
     partialCache.logicalSatisfied === retainedOldLogicalCount
     // The incident snapshot is taken while one bundle request is held. Newly
     // added art may still be queued; require a unique subset now, then the
     // complete exact delta after the recovered generation commits below.
     && incidentChangedRequests.every((pathname) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
-    && incidentChangedRequests.some((pathname) => pathname !== bundlePathname)
-    && new Set(incidentChangedRequests.filter((pathname) => pathname !== bundlePathname)).size
-      === incidentChangedRequests.filter((pathname) => pathname !== bundlePathname).length
+    && incidentRepairRequests.some((pathname) => pathname !== bundlePathname)
+    && new Set(incidentRepairRequests.filter((pathname) => pathname !== bundlePathname)).size
+      === incidentRepairRequests.filter((pathname) => pathname !== bundlePathname).length
     && incidentProgressCompleted !== null
     && incidentProgressTotal >= candidateProgressTotalMin
     && incidentProgressTotal <= candidateProgressTotalMax
@@ -984,6 +989,8 @@ try {
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
     exactReleaseDelta: [...candidatePendingReleaseDeltaTransportPaths],
+    expectedRepairTransports: [...candidateDownloadTransportPaths],
+    incidentRepairRequests,
     incidentAssetRequests,
     incidentRuntimeAudioSourceRequests,
     incidentUnexpectedRequests,
@@ -1363,6 +1370,47 @@ try {
       v100SavePreserved: offlineV100.raw === beforeUpdateV100.raw,
       legacyWrites: offlineV100.legacyWrites,
     });
+    if (browserName === "webkit") {
+      // This is the same persistent installed profile, with its real origin
+      // disconnected. Keep the remote fixture's speaker mute; record the
+      // actual pre-speaker stream without changing the application graph.
+      await page.waitForFunction(() => {
+        const owner = window.__V100_EVENT_AUDIO_QA__?.getDiagnostics();
+        return owner?.contextState === "running" && owner.output?.mode === "media-stream"
+          && !owner.output.paused && owner.activeSceneVoices > 0;
+      }, null, { timeout: 20000 });
+      const sample = await page.evaluate(async () => {
+        const owner = window.__V100_EVENT_AUDIO_QA__.getDiagnostics();
+        const sinks = [...document.querySelectorAll("audio[data-game-audio-output]")]
+          .filter(audio => audio.srcObject?.id === owner.output.streamId && !audio.paused);
+        if (sinks.length !== 1 || owner.duplicateLoopInstanceKeys.length) throw new Error("Invalid offline output owner");
+        const sink = sinks[0], mimeType = "audio/mp4", chunks = [];
+        if (!MediaRecorder.isTypeSupported(mimeType)) throw new Error("Native audio encoding unavailable");
+        const recorder = new MediaRecorder(sink.srcObject, { mimeType });
+        const stopped = new Promise((resolve, reject) => {
+          recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+          recorder.onerror = reject; recorder.onstop = resolve;
+        });
+        recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
+        const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
+        const buffer = await new OfflineAudioContext(2, 1, 44100).decodeAudioData(bytes.slice(0));
+        let sum = 0, peak = 0, count = 0;
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) for (const value of buffer.getChannelData(channel)) {
+          sum += value * value; peak = Math.max(peak, Math.abs(value)); count++;
+        }
+        return { bytes: Array.from(new Uint8Array(bytes)), duration: buffer.duration, rms: Math.sqrt(sum / count), peak,
+          streamId: owner.output.streamId, outputsForOwner: sinks.length, nativePaused: sink.paused, nativeMuted: sink.muted,
+          contextState: owner.contextState, activeSceneVoices: owner.activeSceneVoices,
+          scope: "Cached installed iPhone-UA native WebKit stream encoding; remote speaker muted, not iOS Control Center capture" };
+      });
+      const { bytes, ...signal } = sample;
+      const file = "offline-native-output.m4a";
+      await writeFile(path.join(evidenceDir, file), Buffer.from(bytes));
+      record("offline installed iPhone output encodes the cached scene mix without duplicate owners", (
+        bytes.length > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5 && signal.rms > .0001 && signal.peak > .001
+        && signal.outputsForOwner === 1 && signal.nativePaused === false && signal.contextState === "running"
+      ), { file, encodedBytes: bytes.length, ...signal });
+    }
     await offline.reconnect();
   }
 

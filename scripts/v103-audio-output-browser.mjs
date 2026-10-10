@@ -41,10 +41,18 @@ try {
       await enterV100FromTitle(page);
       await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-      await page.waitForFunction(() => [...document.querySelectorAll("audio[data-game-audio-output]")]
-        .some(audio => !audio.paused && audio.srcObject?.active), null, { timeout: 20000 });
-      await page.waitForFunction(() => window.__ASHFALL_AUDIO_QA__?.getDiagnostics().activeBgmVoices === 1
-        && window.__V100_EVENT_AUDIO_QA__?.getDiagnostics().activeSceneVoices === 0, null, { timeout: 20000 });
+      async function waitForOutputs() {
+        await page.waitForFunction(() => {
+          const battle = window.__ASHFALL_AUDIO_QA__?.getDiagnostics();
+          const ui = window.__V100_EVENT_AUDIO_QA__?.getDiagnostics();
+          return battle?.activeBgmVoices === 1 && ui?.activeSceneVoices === 0
+            && [battle, ui].every(owner => owner.contextState === "running" && !owner.output?.paused
+              && owner.duplicateLoopInstanceKeys.length === 0
+              && [...document.querySelectorAll("audio[data-game-audio-output]")]
+                .some(audio => audio.srcObject?.id === owner.output?.streamId && !audio.paused && audio.srcObject.active));
+        }, null, { timeout: 20000 });
+      }
+      await waitForOutputs();
       async function capture(label) {
         const sample = await page.evaluate(async () => {
           const sinks = [...document.querySelectorAll("audio[data-game-audio-output]")];
@@ -60,7 +68,8 @@ try {
             throw new Error("Native output does not match its owning context");
           if (Object.values(owners).some(owner => owner.output.mode !== "media-stream"
             || owner.contextState !== "running" || owner.duplicateLoopInstanceKeys.length))
-            throw new Error("Invalid or duplicated owner mix");
+            throw new Error(`Invalid or duplicated owner mix: ${JSON.stringify(Object.fromEntries(Object.entries(owners)
+              .map(([name, owner]) => [name, { state: owner.contextState, output: owner.output, duplicates: owner.duplicateLoopInstanceKeys }])) )}`);
           if (owners.ui.activeSceneVoices !== 0 || owners.battle.activeBgmVoices !== 1)
             throw new Error("Departing scene or duplicate battle music is still active");
           const sink = active.find(audio => audio.srcObject.id === owners.battle.output.streamId), stream = sink.srcObject;
@@ -74,8 +83,10 @@ try {
           });
           recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
           const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-          const decoder = new AudioContext();
-          try {
+          // Decode saved bytes without opening another hardware audio session
+          // that could interrupt the very outputs being measured on WebKit.
+          const decoder = new OfflineAudioContext(2, 1, 44100);
+          {
             const buffer = await decoder.decodeAudioData(bytes.slice(0));
             let sum = 0, peak = 0, count = 0;
             for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
@@ -89,7 +100,7 @@ try {
                 contextState: owner.contextState, output: owner.output, activeSceneVoices: owner.activeSceneVoices,
                 activeBgmVoices: owner.activeBgmVoices, duplicateLoopInstanceKeys: owner.duplicateLoopInstanceKeys,
               }])) };
-          } finally { await decoder.close(); }
+          }
         });
         const { bytes, ...signal } = sample;
         assert.ok(bytes.length > 1000, `${label}: encoded output is empty`);
@@ -105,14 +116,14 @@ try {
       row.hidden = await page.evaluate(() => [...document.querySelectorAll("audio[data-game-audio-output]")].every(audio => audio.paused));
       assert.equal(row.hidden, true);
       await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-      await page.waitForFunction(() => [...document.querySelectorAll("audio[data-game-audio-output]")]
-        .some(audio => !audio.paused && audio.srcObject?.active), null, { timeout: 10000 });
+      await waitForOutputs();
       await capture("recovered");
       await page.screenshot({ path: `${out}/${width}x${height}.png` });
     } catch (error) {
       failure = error; row.failure = String(error);
       row.output = await page.evaluate(() => ({
         text: document.body.innerText.slice(0, 2000),
+        owners: { battle: window.__ASHFALL_AUDIO_QA__?.getDiagnostics(), ui: window.__V100_EVENT_AUDIO_QA__?.getDiagnostics() },
         sinks: [...document.querySelectorAll("audio[data-game-audio-output]")].map(audio => ({
           paused: audio.paused, readyState: audio.readyState, active: audio.srcObject?.active,
           tracks: audio.srcObject?.getAudioTracks().map(track => ({ readyState: track.readyState, muted: track.muted })),
