@@ -86,3 +86,14 @@ planner・manifest・復旧・版identityの無音37/37、対象Lint・構文・
 7b900beの追加検査に対する独立reviewで、offline録音の保存先を作成する前にwriteするMediumを確認。
 保存直前にmkdirし、既存録音への上書きを拒否するよう修正した。該当差分の独立再確認はH0／M0／L0。
 2本の検査sourceの構文、request監査mock 12/12、対象Lint、diff check成功。PCのbrowser・音声未起動。
+
+7b900beの遠隔Chromium／native WebKitは両方とも3サイズ×通常／復帰の6録音と戦闘回帰に成功。
+計12 m4aを回収し、すべて非ゼロ信号。844×340復帰の実byteをFFmpegのnull出力でもdecodeした。
+artifactはChromium 11661758245（zip SHA-256 `dc768ca56d71331f2f5bc9b6d6fd978a096e5489a72352e9323896f63a522171`）、
+WebKit 11661454246（`47eab95efa3067c381878e5001c7ba497aae8020ee2de20d10fe332aab1a6003`）。
+このheadは後続の検査修正前であり、最終headの全CI合格の代用にはしない。
+
+既存staff-roll検査はdesktop UAのため、iPhone出力経路でのnativeファイルsourceを別途追加確認する。
+通常のタイトル・クレジット・終幕と終幕復帰を実操作し、共有ending contextの4録音に同じ信号基準を適用。
+追加箇所のreviewで、終了判定に継続する親UI出力まで含めたMediumを確認し、録音済ending stream IDだけを
+停止確認へ結び付けた。離脱eventのfade終了を待ってから録音する。対象Lint・構文・diff成功。
