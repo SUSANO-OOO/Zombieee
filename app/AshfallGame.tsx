@@ -4176,6 +4176,8 @@ function drawSpriteFighter(
   const mayoFeral = f.kind === "mayo-chan"
     && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
   const renderKind = mayoFeral ? "mayo-chan-feral" : bossRenderKind(f);
+  const jointAtlas = V177_JOINT_ATLASES[renderKind];
+  const jointImage = jointAtlas ? sprites[jointAtlas.key] : null;
   const kumaGuardCandidate = options.v100AuthoredPresentation && f.side === 'human' && f.kind === 'kumaverson'
     ? v100KumaversonGuardPose(f.manualAbility, MANUAL_ABILITY_REGISTRY.kumaverson, f.flash, { moving: f.gateEntering || f.animationPresentation?.state === 'move', attacking: f.attack > 0 || f.attackWindup > 0 || f.abilityWindup > 0 })
     : null;
@@ -4243,7 +4245,7 @@ function drawSpriteFighter(
     ? 0 : f.flash;
   const soukiPose = options.v100AuthoredPresentation && f.side === 'zombie' && f.kind === 'sprinter'
     ? v100SoukiPose(f.stationAbility,actionPresentationFlash) : null;
-  const enemyContactPose = options.v100AuthoredPresentation && f.side === 'zombie'
+  const enemyContactPose = options.v100AuthoredPresentation && f.side === 'zombie' && !jointImage?.naturalWidth
     ? v100EnemyContactPose(f.kind,{attack:f.attack,attackWindup:f.attackWindup,flash:actionPresentationFlash,abilityPhase:f.stationAbility.phase}) : null;
   const stationAbilityPose = options.v100AuthoredPresentation && f.side === 'zombie'
     ? v100StationAbilityPose(f.kind,f.stationAbility,actionPresentationFlash) : null;
@@ -4382,8 +4384,6 @@ function drawSpriteFighter(
       ownedPose:authoredPoseOwned})
     : baseAnimationSample;
   const state = animationSample.spriteState;
-  const jointAtlas = V177_JOINT_ATLASES[renderKind];
-  const jointImage = jointAtlas ? sprites[jointAtlas.key] : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
     ? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
@@ -9876,6 +9876,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       __ASHFALL_BATTLE_QA__?: unknown;
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
+    const ensureJointRenderProofAsset = async (kind: string) => {
+      const joint = V177_JOINT_ATLASES[kind];
+      const existing = joint ? spriteRefs.current[joint.key] : null;
+      if (!joint || (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing))) return;
+      await loadImageWithTimeout({src:joint.path,requireDecode:true,
+        decodeAttempts:REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,decodeTimeoutMs:REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+        onReady:(image:HTMLImageElement)=>{decodedBattleImagesRef.current.add(image);spriteRefs.current[joint.key]=image;}});
+      if(!spriteRefs.current[joint.key]?.naturalWidth)throw new Error(`Joint proof asset did not decode: ${kind}`);
+    };
     const qaPresentationQuiescenceSnapshot = () => {
       const state = qaPresentationQuiescenceRef.current;
       const g = gameRef.current;
@@ -12733,6 +12742,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         };
       },
       ensureEnemyFacingProofAsset: async (kind: EnemyKind) => {
+        await ensureJointRenderProofAsset(kind);
         const existing = spriteRefs.current[kind];
         if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {
           return { kind, path: spriteSheetPath(kind), width: existing.naturalWidth, height: existing.naturalHeight, reused: true };
@@ -12754,14 +12764,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
       ensureUnitRenderProofAsset: async (kind: UnitKind) => {
-        const joint = V177_JOINT_ATLASES[kind];
-        const existingJoint = joint ? spriteRefs.current[joint.key] : null;
-        if (joint && (!existingJoint?.naturalWidth || !decodedBattleImagesRef.current.has(existingJoint))) {
-          await loadImageWithTimeout({src:joint.path,requireDecode:true,
-            decodeAttempts:REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,decodeTimeoutMs:REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
-            onReady:(image:HTMLImageElement)=>{decodedBattleImagesRef.current.add(image);spriteRefs.current[joint.key]=image;}});
-          if(!spriteRefs.current[joint.key]?.naturalWidth)throw new Error(`Joint proof asset did not decode: ${kind}`);
-        }
+        await ensureJointRenderProofAsset(kind);
         const path = spriteSheetPath(kind);
         const existing = spriteRefs.current[kind];
         if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {

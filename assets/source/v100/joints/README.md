@@ -2,9 +2,10 @@
 
 The current runtime connections cover ranger walking, stopping, aiming, firing,
 recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
-and Scout's biped gait, ground settling and crowbar anticipation/contact/return.
+Scout's biped gait, ground settling and crowbar anticipation/contact/return,
+and Walker/Turned's gait, settling and claw reach/return.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are three candidates
+occluded limbs derive from built-in imagegen parts studies. These are five form candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -112,3 +113,37 @@ Offline production-render contact sheets were reviewed in both directions,
 through windup, contact, recovery and stopping. They do not replace continuous
 normal battle review, remote native WebKit performance, or the remaining
 actions/forms in the Producer's full 48-form requirement.
+
+`walker-r1/` retains the original head and both hands. Twelve hidden clothing
+and limb pieces were adopted from the built-in imagegen study; 15 visible parts
+bind to the actual Blender biped. The source's charcoal shirt, muddy brown
+pants, worn brown boots and hunched silhouette remain its identity. Walker
+and Turned already share every source frame in both directions, so they use
+one texture and pose object. The battle loader deduplicates this shared key.
+
+The legacy source cell is 394x757 with substantial transparent padding. Its
+authoring reference was normalized to 480x448. The runtime explicitly inverts
+that normalization for paint, gait distance and claw sockets, preserving the
+original source-pixel scale and ground anchor through movement, contact, hit
+and defeat. Ordinary contact uses the new joint owner when its texture is
+ready; existing abilities, hit and death owners remain intact. Both unit and
+enemy QA loading paths ensure the joint texture before reusing an old sprite.
+
+The r2 authoring trial failed because a walking hand target exceeded its arm
+reach. R3 raises that swinging hand enough to keep the original fixed lengths;
+no reach clamp or bone stretch was added. All 300 exported frames clear the
+source-cell edges. Both painted soles, lengths and hand attachment stay within
+0.001 source pixels. Production interpolation also checks 1,803 gait/settle
+samples for elbow/wrist continuity. Cropped clothing avoids the study's lower
+leg paint being duplicated in a thigh or pelvis layer.
+
+The texture downloads 36,616 bytes and decodes 325,632 bytes. Reproduce it with:
+
+```powershell
+node scripts/build-v177-enemy-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-enemy-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+Normal-speed play, the remaining forms/actions and physical recording audio
+remain unaccepted. These source checks do not close the complete quality goal.

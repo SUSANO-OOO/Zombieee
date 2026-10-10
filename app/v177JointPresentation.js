@@ -1,18 +1,19 @@
 import { V177_JOINT_ATLASES as bakedAtlases } from './v177JointData.js';
 import { V177_QUADRUPED_JOINT_ATLASES as quadrupedAtlases } from './v177QuadrupedJointData.js';
 import { V177_BIPED_JOINT_ATLASES as bipedAtlases } from './v177BipedJointData.js';
+import { V177_ENEMY_JOINT_ATLASES as enemyAtlases } from './v177EnemyJointData.js';
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
   return atlas && Number.isFinite(renderScale) && renderScale > 0
-    ? atlas.cycleDistance * renderScale : undefined;
+    ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
 export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
@@ -50,7 +51,9 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
   if(atlas.type==='rigid-parts'){
     const matrix=new Float64Array(6);
     const scratch=atlas.armConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
-    ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);
+    const reference=atlas.referenceFrame;
+    ctx.save();ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
+    if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
     for(const part of atlas.parts){
       if(part.bone==='jaw'){
         ctx.fillStyle=atlas.mouth.color;ctx.beginPath();let started=false;
@@ -120,9 +123,11 @@ export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,po
     const m=jointMatrix(new Float64Array(6),atlas,plan,atlas.weaponBone,true),[sx,sy]=atlas.muzzle;
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];dy=0;
   }else [px,py]=atlas.muzzles[plan.upperIndex-atlas.lowerCount];
+  const reference=atlas.referenceFrame;
+  if(reference){px=(px-reference.tx)/reference.scale;py=(py-reference.ty)/reference.scale;dy/=reference.scale;}
   const facing=direction==='left'?-1:1;
-  const lx=(px/atlas.width-frame.anchorX)*size.w*(frame.flipX?-1:1)*pose.scaleX;
-  const ly=((py+dy)/atlas.height-frame.anchorY)*size.h*pose.scaleY;
+  const lx=(px/(reference?.width??atlas.width)-frame.anchorX)*size.w*(frame.flipX?-1:1)*pose.scaleX;
+  const ly=((py+dy)/(reference?.height??atlas.height)-frame.anchorY)*size.h*pose.scaleY;
   const angle=pose.rotationRadians*facing,c=Math.cos(angle),s=Math.sin(angle);
   return {x:x+pose.offsetX*depthScale*facing+lx*c-ly*s,
     y:y-bob+pose.offsetY*depthScale+lx*s+ly*c};

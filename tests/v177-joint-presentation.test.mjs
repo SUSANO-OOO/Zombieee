@@ -37,7 +37,7 @@ test('actual-travel gait phase freezes while stationary and survives attack tran
   assert.ok(Math.abs(v177JointPose('ranger',{requestedState:'active'},{...runtime,locomotionPhase:phase}).phase-phase)<1e-12);
   assert.equal(v177JointPose('ranger',{requestedState:'hit'},runtime),null);
   assert.equal(v177JointPose('ranger',{requestedState:'active'},runtime,{ownedPose:true}),null);
-  assert.equal(v177JointPose('walker',{requestedState:'move'},runtime),null);
+  assert.equal(v177JointPose('spitter',{requestedState:'move'},runtime),null);
 });
 
 test('real bone exports preserve leg lengths, actual painted support points, grips and clothing winding',async()=>{

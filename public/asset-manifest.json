@@ -1847,6 +1847,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/walker-r1.webp",
+      "bytes": 36616,
+      "hash": "sha256-322d6c0118e8c732fefdc26fad7b21edac214d66942b499a6baae19d85778530",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/boundary-gate-states-r1.webp",
       "bytes": 611568,
       "hash": "sha256-091a1c3ff4300e3399750ca8f0148680432dbc3aecd24dba12cc2e3a605f2813",

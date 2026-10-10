@@ -110,8 +110,9 @@ export function requiredBattleAssetPlan({
       .map(([key, path]) => frozenEntry({ key, path, category: "crawler" })),
     ...Object.entries(BATTLE_SUPPORT_ASSET_PATHS)
       .map(([key, path]) => frozenEntry({ key, path, category: "support" })),
-    ...(includeV100Sprites && v100Stage ? requiredKinds.filter(kind => V177_JOINT_ATLASES[kind])
-      .map(kind => frozenEntry({key:V177_JOINT_ATLASES[kind].key,path:V177_JOINT_ATLASES[kind].path,category:"unit"})) : []),
+    ...[...new Map((includeV100Sprites && v100Stage ? requiredKinds.filter(kind => V177_JOINT_ATLASES[kind])
+      .map(kind => [V177_JOINT_ATLASES[kind].key,V177_JOINT_ATLASES[kind]]) : [])).values()]
+      .map(atlas => frozenEntry({key:atlas.key,path:atlas.path,category:"unit"})),
   ];
   const guardSprite = includeV100Sprites && v100Stage && requiredKinds.includes("kumaverson")
     ? [{ kind: "kumaverson-guard", path: V100_KUMAVERSON_GUARD_ART.path, category: "unit" }]
