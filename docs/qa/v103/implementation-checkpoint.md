@@ -97,3 +97,11 @@ WebKit 11661454246（`47eab95efa3067c381878e5001c7ba497aae8020ee2de20d10fe332aab
 通常のタイトル・クレジット・終幕と終幕復帰を実操作し、共有ending contextの4録音に同じ信号基準を適用。
 追加箇所のreviewで、終了判定に継続する親UI出力まで含めたMediumを確認し、録音済ending stream IDだけを
 停止確認へ結び付けた。離脱eventのfade終了を待ってから録音する。対象Lint・構文・diff成功。
+
+596d6b3の追加native検査は両engineで4録音・復帰・ending stream停止まで成功。
+Chromiumはcredits skipによる未完了media GETの`net::ERR_ABORTED`がcase内の通信失敗に分類され、全体は失敗。
+artifact 11662426371（zip SHA-256 `eb8c045467897bfae35765f418e4ab94a6b42a337443f37fc8ff38f410d38f45`）とlogを保全。
+通信監査API・信号基準を変更せず、title→credits録音後は検査自身のcontextを既存closeContextで閉じる。
+映画は別のowned contextで、R5 epilogue最終行後のdurable cursorを通常タイトルから復元する。
+全in-case通信失敗を引き続き失敗とし、終了中の既知pending requestだけを既存の監査契約で判定する。
+cursor 27のnormalize保存、構文・対象Lint・diff成功。追加差分の独立review H0／M0／L0。PC起動0。

@@ -5,6 +5,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle, finishV100TitleIntro, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
+import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
 
 if (process.platform === "win32") throw new Error("Audio QA is hosted-only; local browser and audio playback are disabled");
@@ -139,11 +140,11 @@ try {
     if (failure) throw failure;
   }
   // Native file sources use the shared ending context, while battle uses
-  // decoded buffers. Exercise the actual title -> credits -> film ownership.
-  const context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
+  // decoded buffers. Exercise title -> credits and the durable film cursor.
+  let context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1" });
-  const page = await context.newPage(), requests = installRequestFailureAudit(page);
-  const mediaCase = { recordings: [] }; report.nativeMedia = mediaCase;
+  let page = await context.newPage(), requests = installRequestFailureAudit(page);
+  const mediaCase = { recordings: [], fixture: "title-to-credits and restored post-epilogue film in separate owned contexts" }; report.nativeMedia = mediaCase;
   page.on("pageerror", error => report.errors.push(String(error)));
   page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
   page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
@@ -210,8 +211,26 @@ try {
     await captureNativeMedia("title", ".v100-start-screen");
     await page.getByRole("button", { name: "続きから", exact: true }).click();
     await captureNativeMedia("credits", ".v100-staff-roll");
-    await page.locator(".v100-staff-roll").getByRole("button", { name: "スキップ", exact: true }).click();
-    await page.locator(".v100-event-actions").getByRole("button", { name: "スキップ", exact: true }).click();
+    // Closing this owned case gives an in-flight native song request an exact
+    // teardown boundary. Keep real in-case failures unexpected. Film resumes
+    // through the normal saved cursor after the final R5 epilogue line.
+    await requests.closeContext(context);
+    mediaCase.creditsRequests = requests.report;
+    assert.deepEqual(requests.report.unexpectedFailures, []);
+    context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1" });
+    page = await context.newPage(); requests = installRequestFailureAudit(page);
+    page.on("pageerror", error => report.errors.push(String(error)));
+    page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
+    page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
+    const filmSave = normalizeV100Save({ ...endingSave, flowState: { ...endingSave.flowState, phase: "epilogue",
+      eventId: "v100:event:epilogue", destination: "epilogue", nodeIndex: v100StoryEventView("v100:event:epilogue", "").nodes.length } });
+    await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(filmSave));
+    await page.goto(new URL("v100", origin).href);
+    const filmEntry = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
+    await filmEntry.or(page.locator(".v100-start-screen")).first().waitFor();
+    if (await filmEntry.isVisible()) await filmEntry.click();
+    await enterV100FromTitle(page);
     await captureNativeMedia("film", ".v100-post-credits-film");
     await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
     assert.equal(await page.locator("audio[data-game-audio-output]").evaluateAll(outputs => outputs.every(audio => audio.paused)), true);
