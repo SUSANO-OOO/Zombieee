@@ -49,28 +49,36 @@ try{
           return qa.prepareAnimationFoundationProof(baseKind,side,kind);
         },{kind,baseKind,side});
         const samples=[];
+        row.motion.push({kind,side,id:proof.fighterId,samples});
         for(const action of ['move-right','move-left','wind-up','attack','recovery','hit-light','stop']){
-          const previous=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence??0,proof.fighterId);
-          await page.evaluate(({id,action})=>window.__ASHFALL_BATTLE_QA__.stepAnimationFoundationProof(id,action,.06),{id:proof.fighterId,action});
+          // Read the paint receipt and apply the input in one JS task. Separate
+          // RPCs allow a paint of the previous direction between those actions.
+          const previous=await page.evaluate(({id,action})=>{
+            const qa=window.__ASHFALL_BATTLE_QA__;
+            const sequence=qa.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence??0;
+            qa.stepAnimationFoundationProof(id,action,.06);
+            return sequence;
+          },{id:proof.fighterId,action});
           await page.waitForFunction(({id,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence>previous,{id:proof.fighterId,previous});
           const sample=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id),proof.fighterId);
           const r=sample.renderAudit;
+          const frame=spriteFrameFor(kind,r.spriteState,r.direction);
+          samples.push({action,render:r,pixelScale:r.renderHeight/frame.sourceRect.h});
           assert.ok(r.assetReady&&r.renderWidth>0&&r.renderHeight>0,`${kind}/${action}: actual sprite renderer`);
           assert.ok(Number.isFinite(r.poseScaleX)&&Number.isFinite(r.poseScaleY),`${kind}/${action}: finite pose`);
+          const expectedState={'wind-up':'wind-up',attack:'active',recovery:'recovery','hit-light':'hit-light'}[action];
+          if(expectedState)assert.equal(r.requestedState,expectedState,`${kind}/${action}: paint follows the requested action`);
           // Authored special guards and boss poses retain their own transforms.
           // The generic action adapter and all movement retain rigid anatomy.
           if(['move-right','move-left'].includes(action)){
             assert.equal(r.poseScaleX,1,`${kind}/${action}: horizontal anatomy`);
             assert.equal(r.poseScaleY,1,`${kind}/${action}: vertical anatomy`);
-            assert.equal(r.direction,action==='move-right'?'right':'left');
+            assert.equal(r.direction,action==='move-right'?'right':'left',`${kind}/${action}: movement facing`);
           }
-          const frame=spriteFrameFor(kind,r.spriteState,r.direction);
-          samples.push({action,render:r,pixelScale:r.renderHeight/frame.sourceRect.h});
           if(action==='attack'&&['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
             await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
           }
         }
-        row.motion.push({kind,side,id:proof.fighterId,samples});
         if(['gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
           await page.screenshot({path:`${out}/${width}x${height}-${kind}.png`});
         }

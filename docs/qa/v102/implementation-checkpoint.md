@@ -40,3 +40,9 @@ Windows、Node 24.19。ゲーム・ブラウザ・音声・ローカル配信ser
 候補 `42b5f1809dcecad5e1349bc0453cc8f6f0b26485` は独立review High／Medium／Low 0。Pages PR buildとブラウザ起動に成功した。新combat検査はChromium／WebKitとも戦闘開始時に `Assault objective states must be decoded before battle starts` で停止した（[CI 38014986717](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38014986717)）。
 
 原因は新scriptのURLに付けた `qa=mission` が旧campaignの全asset検査を選び、V1の拠点画像を除外したこと。通常のV1 routeでは当該画像が必須decode対象となり、localhostの検査bridgeも使用できる。scriptを通常の `/v100` から開始するよう修正した。必須assetのdecode guard・製品側asset plan・48形態と死亡切断の検査条件は維持した。代表6形態は静止姿勢に加えて攻撃姿勢のPNGも保存する。遠隔での再確認は修正後候補を対象とする。
+
+## 描画receiptと検査操作の競合
+
+候補 `7829a3d0a3dc7fecdadfa02cf58c241563f35d18` の[CI 38015679756](https://github.com/SUSANO-OOO/Zombieee/actions/runs/38015679756)は通常V1戦闘へ入り、Chromiumは10形態後に左右のassertで停止した。保存reportではscout・guardianのwind-upが直前のstart-move、engineerのstopがhit-lightの描画receiptを取得していた。描画sequenceの読取りと操作を別RPCで行う間に、旧姿勢の描画が進む競合があった。
+
+sequence読取りと操作を同じJS taskへまとめ、その後の描画更新を待つ。左右・解剖比率のassertを維持し、構え・攻撃・復帰・被弾でも要求したactionの描画receiptであることを追加検査する。失敗した形態と操作のsampleもassert前にreportへ保存する。製品の動作code・asset・saveは変更していない。
