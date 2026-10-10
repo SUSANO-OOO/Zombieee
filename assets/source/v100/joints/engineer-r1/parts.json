@@ -1,0 +1,1010 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "engineer",
+  "status": "Explicit firearm-family candidate; all-unit/all-action and normal-play acceptance pending",
+  "width": 480,
+  "height": 448,
+  "sourceSha256": "83a82ea1d500a5a32d9c3806bb41f8b51b1024b64a7e44d4d04a616e014af10d",
+  "sheetSha256": "a9df8c53a7afe5aac344010e3d0fe79f5e71a10e41a5103147bdd44b25c88817",
+  "parts": [
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "original": false,
+      "sha256": "95b6bd9d9aba3dc8559aefa537435ccc6adc3e1757cf9af07ac699939b6a3a50",
+      "studyCell": 0,
+      "sourceAxis": [
+        [
+          180.93537414965985,
+          69.64
+        ],
+        [
+          180.471340839304,
+          293.91999999999996
+        ]
+      ],
+      "restAxis": [
+        [
+          246,
+          101
+        ],
+        [
+          235,
+          203
+        ]
+      ],
+      "targetWidth": 99,
+      "originalTorsoRegion": [
+        [
+          222,
+          85
+        ],
+        [
+          250,
+          94
+        ],
+        [
+          264,
+          90
+        ],
+        [
+          277,
+          105
+        ],
+        [
+          270,
+          139
+        ],
+        [
+          269,
+          156
+        ],
+        [
+          260,
+          187
+        ],
+        [
+          254,
+          204
+        ],
+        [
+          219,
+          206
+        ],
+        [
+          203,
+          187
+        ],
+        [
+          205,
+          167
+        ],
+        [
+          215,
+          143
+        ],
+        [
+          214,
+          119
+        ]
+      ],
+      "excludedOriginalWeapon": [
+        [
+          226,
+          150
+        ],
+        [
+          246,
+          157
+        ],
+        [
+          270,
+          174
+        ],
+        [
+          319,
+          196
+        ],
+        [
+          337,
+          203
+        ],
+        [
+          337,
+          183
+        ],
+        [
+          346,
+          181
+        ],
+        [
+          350,
+          190
+        ],
+        [
+          347,
+          212
+        ],
+        [
+          352,
+          217
+        ],
+        [
+          350,
+          224
+        ],
+        [
+          341,
+          224
+        ],
+        [
+          332,
+          219
+        ],
+        [
+          311,
+          222
+        ],
+        [
+          290,
+          226
+        ],
+        [
+          284,
+          221
+        ],
+        [
+          289,
+          217
+        ],
+        [
+          293,
+          213
+        ],
+        [
+          287,
+          210
+        ],
+        [
+          280,
+          204
+        ],
+        [
+          256,
+          191
+        ],
+        [
+          248,
+          185
+        ],
+        [
+          237,
+          191
+        ],
+        [
+          224,
+          183
+        ],
+        [
+          213,
+          174
+        ],
+        [
+          213,
+          160
+        ]
+      ],
+      "sourceArmExclusions": [
+        [
+          [
+            182,
+            145
+          ],
+          [
+            196,
+            141
+          ],
+          [
+            209,
+            149
+          ],
+          [
+            225,
+            154
+          ],
+          [
+            239,
+            169
+          ],
+          [
+            236,
+            184
+          ],
+          [
+            219,
+            180
+          ],
+          [
+            202,
+            170
+          ],
+          [
+            185,
+            166
+          ]
+        ],
+        [
+          [
+            263,
+            148
+          ],
+          [
+            276,
+            149
+          ],
+          [
+            281,
+            170
+          ],
+          [
+            302,
+            196
+          ],
+          [
+            309,
+            209
+          ],
+          [
+            294,
+            218
+          ],
+          [
+            281,
+            198
+          ],
+          [
+            270,
+            177
+          ],
+          [
+            259,
+            164
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "original": false,
+      "sha256": "5f5bd656216d0ef9ea2291f14bcd9cb6da29aa1046f19971f2e99863eae99b92",
+      "studyCell": 1,
+      "sourceAxis": [
+        [
+          491.1041257367387,
+          121.77
+        ],
+        [
+          481.2124370956147,
+          216.12
+        ]
+      ],
+      "restAxis": [
+        [
+          235,
+          197
+        ],
+        [
+          235,
+          241
+        ]
+      ],
+      "targetWidth": 76
+    },
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "file": "far-thigh.png",
+      "original": false,
+      "sha256": "36e61fa0394be17d58595d4e6c32466923c063d67263d33bd27e36f56319db45",
+      "studyCell": 5,
+      "sourceAxis": [
+        [
+          479.44736842105266,
+          356.83
+        ],
+        [
+          525.7930029154519,
+          561.27
+        ]
+      ],
+      "restAxis": [
+        [
+          222,
+          219
+        ],
+        [
+          248,
+          311
+        ]
+      ],
+      "targetWidth": 37
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "file": "far-shin.png",
+      "original": false,
+      "sha256": "074bb434ed1c129e70f9db61eed9fc30b313fb36d7cc5ae36b1bf4225297c24d",
+      "studyCell": 6,
+      "sourceAxis": [
+        [
+          786.2238095238096,
+          459.06
+        ],
+        [
+          783.8619344773791,
+          596.52
+        ]
+      ],
+      "restAxis": [
+        [
+          248,
+          311
+        ],
+        [
+          227,
+          410
+        ]
+      ],
+      "targetWidth": 31
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "file": "far-boot.png",
+      "original": false,
+      "sha256": "8279282cd1143fe47841575aa615a7f786e166d67e5a6808ada20681f41e84de",
+      "studyCell": 7,
+      "sourceAxis": [
+        [
+          1046.5019267822736,
+          492.88
+        ],
+        [
+          1176,
+          594
+        ]
+      ],
+      "restAxis": [
+        [
+          227,
+          410
+        ],
+        [
+          263,
+          430
+        ]
+      ],
+      "targetWidth": 30
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "file": "near-thigh.png",
+      "original": false,
+      "sha256": "9ee8f2aa4c7eb3af61e68d03aa440f278cdc39f772504b5c2aa1cf27c922c1f3",
+      "studyCell": 2,
+      "sourceAxis": [
+        [
+          774.1151351351351,
+          62.480000000000004
+        ],
+        [
+          804.0973534971645,
+          263.12
+        ]
+      ],
+      "restAxis": [
+        [
+          242,
+          219
+        ],
+        [
+          270,
+          311
+        ]
+      ],
+      "targetWidth": 35
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "file": "near-shin.png",
+      "original": false,
+      "sha256": "7a47efaed8026b07c7dbbe981fe30de22385e7f0d0af2a44cf8d92c22cc3a2cd",
+      "studyCell": 3,
+      "sourceAxis": [
+        [
+          1068.5588972431078,
+          146.97
+        ],
+        [
+          1085.830733229329,
+          295.74
+        ]
+      ],
+      "restAxis": [
+        [
+          270,
+          311
+        ],
+        [
+          254,
+          409
+        ]
+      ],
+      "targetWidth": 30
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "file": "near-boot.png",
+      "original": false,
+      "sha256": "162d70fd96b12e8893e8a07336937c81afc40ea8102a0149bc93b9c357d6db5b",
+      "studyCell": 4,
+      "sourceAxis": [
+        [
+          132.10746268656717,
+          479.52
+        ],
+        [
+          261,
+          600
+        ]
+      ],
+      "restAxis": [
+        [
+          254,
+          409
+        ],
+        [
+          292,
+          429
+        ]
+      ],
+      "targetWidth": 30
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "file": "near-upper-arm.png",
+      "original": false,
+      "sha256": "6265cce9c6876341081de6c2e4de8ff4fd0c31cfad6eebab94a983bf9715d848",
+      "studyCell": 8,
+      "sourceAxis": [
+        [
+          197.6001221001221,
+          687.89
+        ],
+        [
+          138.89764492753622,
+          885.38
+        ]
+      ],
+      "restAxis": [
+        [
+          207,
+          118
+        ],
+        [
+          190,
+          153
+        ]
+      ],
+      "targetWidth": 33
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "file": "near-forearm.png",
+      "original": false,
+      "sha256": "b79e30458abb6f6e195a7ecf376ed1c18d86d258610cc811aaf13bb72f6339f3",
+      "studyCell": 9,
+      "sourceAxis": [
+        [
+          424.4584178498986,
+          734.51
+        ],
+        [
+          534.260989010989,
+          902.42
+        ]
+      ],
+      "restAxis": [
+        [
+          190,
+          153
+        ],
+        [
+          218,
+          165
+        ]
+      ],
+      "targetWidth": 24
+    },
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "file": "far-upper-arm.png",
+      "original": false,
+      "sha256": "cc462720149a79c043695b1f15cdc1a573dca630eb0a43245e593e00d8df0a7f",
+      "studyCell": 11,
+      "sourceAxis": [
+        [
+          1073.6409836065575,
+          697.96
+        ],
+        [
+          1098.8667711598746,
+          896.3199999999999
+        ]
+      ],
+      "restAxis": [
+        [
+          266,
+          122
+        ],
+        [
+          272,
+          172
+        ]
+      ],
+      "targetWidth": 30
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "file": "far-forearm.png",
+      "original": false,
+      "sha256": "fb60e45fa392f40133547828e4d608d3d2137f0201dbe4a47ab0146d1498cf52",
+      "studyCell": 12,
+      "sourceAxis": [
+        [
+          135.70632911392406,
+          1041.04
+        ],
+        [
+          233.114406779661,
+          1190.68
+        ]
+      ],
+      "restAxis": [
+        [
+          272,
+          172
+        ],
+        [
+          293,
+          201
+        ]
+      ],
+      "targetWidth": 23
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "original": true,
+      "sha256": "0958b378773f1e37ca146364c4344f8bb8d4aeb4114efbda1d34fb0f61d86739",
+      "polygon": [
+        [
+          238,
+          14
+        ],
+        [
+          281,
+          14
+        ],
+        [
+          290,
+          36
+        ],
+        [
+          287,
+          66
+        ],
+        [
+          274,
+          86
+        ],
+        [
+          260,
+          101
+        ],
+        [
+          236,
+          91
+        ],
+        [
+          229,
+          67
+        ],
+        [
+          224,
+          49
+        ]
+      ]
+    },
+    {
+      "name": "weapon-and-hands",
+      "bone": "weapon-0",
+      "file": "weapon-and-hands.png",
+      "original": true,
+      "sha256": "669d89fa38340f5925de958b9d0496098df3a4824f6f415520fbd1b3214ccd98",
+      "polygon": [
+        [
+          226,
+          150
+        ],
+        [
+          246,
+          157
+        ],
+        [
+          270,
+          174
+        ],
+        [
+          319,
+          196
+        ],
+        [
+          337,
+          203
+        ],
+        [
+          337,
+          183
+        ],
+        [
+          346,
+          181
+        ],
+        [
+          350,
+          190
+        ],
+        [
+          347,
+          212
+        ],
+        [
+          352,
+          217
+        ],
+        [
+          350,
+          224
+        ],
+        [
+          341,
+          224
+        ],
+        [
+          332,
+          219
+        ],
+        [
+          311,
+          222
+        ],
+        [
+          290,
+          226
+        ],
+        [
+          284,
+          221
+        ],
+        [
+          289,
+          217
+        ],
+        [
+          293,
+          213
+        ],
+        [
+          287,
+          210
+        ],
+        [
+          280,
+          204
+        ],
+        [
+          256,
+          191
+        ],
+        [
+          248,
+          185
+        ],
+        [
+          237,
+          191
+        ],
+        [
+          224,
+          183
+        ],
+        [
+          213,
+          174
+        ],
+        [
+          213,
+          160
+        ]
+      ]
+    }
+  ],
+  "order": [
+    "far-upper-arm",
+    "far-forearm",
+    "far-shin",
+    "far-thigh",
+    "far-boot",
+    "near-shin",
+    "near-thigh",
+    "near-boot",
+    "pelvis",
+    "torso",
+    "head",
+    "near-upper-arm",
+    "near-forearm",
+    "weapon-and-hands"
+  ],
+  "lowerLayers": [
+    "far-shin",
+    "far-thigh",
+    "far-boot",
+    "near-shin",
+    "near-thigh",
+    "near-boot",
+    "pelvis"
+  ],
+  "pelvisY": 203,
+  "identityBinding": {
+    "path": "/art/v070/characters/engineer-battle-v1.png",
+    "sourceSha256": "8b8587b1fba86e2a44cbe15576e6d64407ecfca4d1c1747eb460583c17669d8e",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0.5,
+    "ty": 0
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 94,
+      "liftPx": 20,
+      "stanceFraction": 0.62,
+      "groundY": 432
+    }
+  },
+  "muzzle": [
+    342,
+    214
+  ],
+  "weaponBone": "weapon-0",
+  "armConstraints": [
+    {
+      "shoulder": [
+        207,
+        118
+      ],
+      "elbow": [
+        190,
+        153
+      ],
+      "wrist": [
+        218,
+        165
+      ],
+      "grip": [
+        241,
+        176
+      ],
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "parentBone": "spine",
+      "effectorBone": "weapon-0"
+    },
+    {
+      "shoulder": [
+        266,
+        122
+      ],
+      "elbow": [
+        272,
+        172
+      ],
+      "wrist": [
+        293,
+        201
+      ],
+      "grip": [
+        301,
+        209
+      ],
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "parentBone": "spine",
+      "effectorBone": "weapon-0"
+    }
+  ],
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        235,
+        203
+      ],
+      [
+        235,
+        179
+      ]
+    ],
+    "spine": [
+      [
+        235,
+        203
+      ],
+      [
+        246,
+        101
+      ]
+    ],
+    "head": [
+      [
+        256,
+        100
+      ],
+      [
+        258,
+        48
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          222,
+          219
+        ],
+        "knee": [
+          248,
+          311
+        ],
+        "ankle": [
+          227,
+          410
+        ],
+        "toe": [
+          263,
+          430
+        ],
+        "offset": 0.5,
+        "center": 223,
+        "paintedPaw": "far-boot",
+        "groundAnkleY": 408.5
+      },
+      {
+        "hip": [
+          242,
+          219
+        ],
+        "knee": [
+          270,
+          311
+        ],
+        "ankle": [
+          254,
+          409
+        ],
+        "toe": [
+          292,
+          429
+        ],
+        "offset": 0,
+        "center": 242,
+        "paintedPaw": "near-boot",
+        "groundAnkleY": 405.5
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          207,
+          118
+        ],
+        "elbow": [
+          190,
+          153
+        ],
+        "wrist": [
+          218,
+          165
+        ],
+        "grip": [
+          241,
+          176
+        ]
+      },
+      {
+        "shoulder": [
+          266,
+          122
+        ],
+        "elbow": [
+          272,
+          172
+        ],
+        "wrist": [
+          293,
+          201
+        ],
+        "grip": [
+          301,
+          209
+        ]
+      }
+    ],
+    "extras": [],
+    "weapons": [
+      {
+        "name": "weapon-0",
+        "a": [
+          241,
+          176
+        ],
+        "b": [
+          342,
+          214
+        ],
+        "armIndex": 0,
+        "supportArm": 1
+      }
+    ],
+    "firearm": true,
+    "attack": {
+      "windupEnd": 0.28,
+      "activeEnd": 0.7,
+      "aimAngle": -0.39922076957525254,
+      "aimShift": [
+        9,
+        -13
+      ],
+      "recoilPx": 2.5
+    }
+  }
+}

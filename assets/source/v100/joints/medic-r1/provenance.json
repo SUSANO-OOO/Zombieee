@@ -1,0 +1,133 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "medic",
+  "assetPath": "/art/v100/joints/medic-r1.webp",
+  "bytes": 33662,
+  "sha256": "a0242fdaaee0cbf14bf61e517bbcd3e9e77f471221db6b5a2d0686b91a64b5e7",
+  "generatedPartsStudySha256": "bec72f2ff1c6d86a5329cbbf597b45a526f6f776babcc9ee41c6775dbd112e00",
+  "identitySourceSha256": "65de5f69abd2bfa0bfc397bfd27f3d9ad6289fda268dcae1db7f36318e6fedaa",
+  "identityBinding": {
+    "path": "/art/v070/characters/medic-battle-v1.png",
+    "sourceSha256": "af6334921739405e331d3ebdf578a2961c462c7f96a12a6328deda4d9b81801d",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "3d1bfc0583160c2d13b3169caba3fd11deef24c730336c44f651269c2017b998",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "85285f5a128093454c32cf8783996027e4447d9a32eb93b3d28e4aa91e1c526b",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "6e613fd43227f2fead959a5635f66f4867bf00a041267732fabe8fa8f4d4682e",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "1c204d61e2627b678bdbab81dff8bf389be334e6274b8035eacfb3ff5d319920",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "39ce0ebb06716b0163b2425e1c711fab4fba52e6cfc6971b0f722fd9929a6860",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "434457c0a527146d9441e7b33af62c1f51b3819c6359877e41a739d41cc3625a",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "fdbbfd0876e65341a1728f1f3ee2d2e57555e80bbf6da9bdc8c3e2ce4a38cd3c",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "ec20974e4d757c128cdc104b871dcbcf22761796063660f64bf6c713dab2f9ec",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "d2de9d080d27435262293f670a1edd61132d1c7e15d312febb56aa28e795e617",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "f7405dc8061da7a24202098e96817fa6e40ed2e8928b9c3029ab97f4de1f44c9",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "578beae05899b8179c52aed6b05904d2ca814ecc251b3ad48e76af93d1d361b6",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "f9862f394fc7c12f61a5c9b4335ae4c1e88646d7a050396c32e7c142559c6d5c",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "1d57b2306b0f7b97276b49e0ed92b4b9fd7361cfbf64b1331b5210c8cb45b170",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "c2a1d5d791c1909a82c4a7b071302134688b7957ed1f33c8ac6018b31a5c0bd4",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "f4f8f8c2314b5521125066ee38e17bf5b72285cc8632b4cd8931ac9b49baa443",
+      "original": true
+    },
+    {
+      "name": "medical-bag",
+      "file": "medical-bag.png",
+      "sha256": "a5bece4935d7464ba53ad6c8857306b05a0c6bdd70108863cb996b9efe22bc9e",
+      "original": true
+    },
+    {
+      "name": "bag-straps",
+      "file": "bag-straps.png",
+      "sha256": "a7225f88f9d26cc4f126121470cf4e7b8581c76ffd129b0fb3c44bd4f5b32a86",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length legs and both arms holding the original gun/crossbow and hands; source-bound chest, gear, feet, aiming and recoil",
+  "groundY": 432,
+  "decodedBytes": 251904,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

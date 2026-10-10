@@ -1,0 +1,121 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "gunner",
+  "assetPath": "/art/v100/joints/gunner-r1.webp",
+  "bytes": 31178,
+  "sha256": "3407a631718bc0129f2e6d2839a02bc819f93536764b71fcf5231b1875b92879",
+  "generatedPartsStudySha256": "330f24697751c329a7f4681e1687e88699e2eda4d3c0c91979ce1f8b4df708e3",
+  "identitySourceSha256": "8f3923f7d3bac612eb42c608c7c851548a0c6aee2f06aae134848c27840f5398",
+  "identityBinding": {
+    "path": "/art/v070/characters/gunner-battle-v1.png",
+    "sourceSha256": "b47f4ecfe80d2c8bd8dcbb42f71d76b9092a1506a5db6eeca4aefb584f6387a7",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.178470254957507,
+      "tx": -42.83286118980169,
+      "ty": -77.09915014164301,
+      "flipX": false
+    }
+  },
+  "motionSha256": "ba25d0191716769f07d83b07c9fa53ad9e1491a56b08e6a1e22d60c1c57d11c7",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "7607fc7baf8bb62c499eb23dd25f2aef43972f32e597cf8ce99da3b58ec0f6c1",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "8fccd1a19023824fa91238be9e0c05c84ba8c75d30565d3ced1d1c0964c34ca2",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "0f71ceba1da5696e6546539cc19d11e9804b0e15952bf84c1f4b8e9b8179db87",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "d4bec514f63dee0b2673fdeaff060b0d9c0a683bc7add2a9c56cafe3d49dd49b",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "8bbd8e8995ab1fa98af7ef580510316142e7bb0cf8aa45be92b293c8b55a13e2",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "60ab5894049034c18f2e81ce92a6f6c6649d6393c101dd44519036541fe58d1a",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "5e9185c4d78dc58540fb67468991ffdb44d26e4a42d3c4d93da10a9fee714527",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "9634bce0e8918cec0a1eab3caafb8fcf506c7fb3881b386cdc287f71986fcbdf",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "5c400c12029cc46477262840191ffd31abf788135754e57271e511beab7ca254",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "44528dfb897c1ef2f0fd8b9d234f9ffe17e8098090ac102079c23dec77ee0333",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "237fb0f6dce6b0e0eba8f3df00b8a9845a692fe5419bfbd915e794d7cebf9c7e",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "5cb412b16d1e7f7b7f18e91be256cfd9265ca03ae8e437efa297449fcb4704c6",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "6ceec2993b34a99255d013041344b1277f2d6665ac72d1b5f517f2374388c457",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "d8bb0fc2e9291e6546552cdcc915fe20c1d08ef547650b3bd2b0669e7b009e7c",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length legs and both arms holding the original gun/crossbow and hands; source-bound chest, gear, feet, aiming and recoil",
+  "groundY": 432,
+  "decodedBytes": 282624,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

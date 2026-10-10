@@ -4,9 +4,10 @@ The current runtime connections cover ranger walking, stopping, aiming, firing,
 recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
 Scout's biped gait, ground settling and crowbar anticipation/contact/return,
 Walker/Turned's gait, settling and claw reach/return, and Runner's separately
-authored running gait with opposed bent arms and a short flight phase.
+authored running gait with opposed bent arms and a short flight phase, plus
+Gunner, Medic and Engineer walking, settling, aiming, recoil and recovery.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are six form candidates
+occluded limbs derive from built-in imagegen parts studies. These are nine form candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -167,3 +168,36 @@ node scripts/build-v177-runner-joints.mjs
 node scripts/build-asset-manifest.mjs --check
 node --test tests/v177-runner-joints.test.mjs tests/v177-enemy-joints.test.mjs
 ```
+
+`gunner-r1/`, `medic-r1/` and `engineer-r1/` bind 14, 16 and 14 painted parts
+to actual Blender 5.2 fixed-length legs and arm chains. Each source exports
+five actions with 61 evaluated frames, sampled into 151 runtime poses.
+The original head, both hands and gun or crossbow are retained. Medic's original
+bag and straps remain separate from the two leg chains. The visible original
+chest, shirt and equipment overlay hidden torso fill; the original stationary
+arm and weapon regions are explicitly excluded to avoid duplicate limbs.
+Waists and hips follow each original character's anatomy, rather than the
+old whole-sprite approximate pivots. Generated upper shins, thighs and pelvis
+are cropped to prevent adjacent study parts or duplicate kneepads from entering
+the runtime paint. Prompts and generation hashes are frozen beside each source.
+
+Both arms target the same original weapon transform through travel, aiming,
+recoil and recovery. The production renderer resolves the authored two-bone
+chains between sampled Blender keys. Tests check fixed lengths, real painted
+sole support, world-space planted feet, shoulder/elbow/wrist continuity, grip
+reachability without fallback, preserved original pixels and exact mirrored
+muzzle placement. Each firearm adds one conditional texture: 31,178, 33,662 and
+27,900 download bytes respectively, totaling 92,740 bytes and 759,808 decoded
+bytes. All seven current joint textures total 1,142,358 download bytes.
+
+```powershell
+node scripts/build-v177-firearm-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-firearm-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+Offline source coverage checks all 305 evaluated frames per firearm for paint
+leaving its source cell. Contact sheets use the actual production draw helper
+in both travel directions and through each attack phase. Normal-speed remote
+play and visual acceptance remain pending; hit, defeat, deployment, abilities
+and remaining forms still require the Producer's complete 48-form work.
