@@ -136,13 +136,15 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
 // Resolve authored two-bone chains against the same interpolated endpoints.
 // A planted quadruped paw retains the travel/settling pose while its hip follows
 // the attacking torso. Independent limb interpolation can detach the knee or paw.
+// Bipeds with a separately painted lower pelvis keep that pelvis as the hip
+// owner while the upper torso leans; the feet never follow the attack pose.
 function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const chain=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone)
     ??atlas.legConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
   if(!chain)return interpolatedMatrix(out,atlas,plan,bone,upper);
   const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
-  interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?true:upper);
+  interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?chain.parentUpper!==false:upper);
   interpolatedMatrix(effector,atlas,plan,chain.effectorBone,leg?false:upper);
   const [sx,sy]=chain.hip??chain.shoulder,[ex,ey]=chain.knee??chain.elbow,[wx,wy]=chain.ankle??chain.wrist;
   // A supporting hand can come from an approved two-hand attack frame while

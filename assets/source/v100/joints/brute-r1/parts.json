@@ -1806,5 +1806,45 @@
       "torsoAnticipation": 0.11,
       "walkWeaponSwing": 2
     }
-  }
+  },
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        226,
+        261
+      ],
+      "knee": [
+        188,
+        331
+      ],
+      "ankle": [
+        155,
+        406
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        247,
+        265
+      ],
+      "knee": [
+        263,
+        335
+      ],
+      "ankle": [
+        286,
+        407
+      ]
+    }
+  ]
 }

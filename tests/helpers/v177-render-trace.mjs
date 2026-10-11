@@ -1,5 +1,19 @@
 import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../../app/v177JointPresentation.js';
+import {readFileSync} from 'node:fs';import {gunzipSync} from 'node:zlib';
+
+// The original golden remains an immutable control for the legacy interpolation
+// path. Planned leg correction and Mayo anticipation are tested independently
+// against actual painted joints; they are deliberately visible runtime changes.
+export function jointLegacyInterpolationControlDigest(kinds){
+ const bytes=readFileSync(new URL('../fixtures/v177-pre-leg-mayo-atlas-r1.json.gz',import.meta.url));
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),'e4b10ee7839f6c7b6e57ed6f907761ef0d497368e8d2acbdc6a75a9088cb5355');
+ const original=new Map(kinds.map(k=>[k,V177_JOINT_ATLASES[k]]));
+ try{
+  for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes)):{...atlas,legConstraints:undefined};
+  return jointRenderTraceDigest(kinds);
+ }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}
+}
 export function jointRenderTraceDigest(kinds){
  const hash=createHash('sha256');let poses=0,paintCalls=0;
  const quant=n=>typeof n==='number'?Math.round(n*1e6)/1e6:n;

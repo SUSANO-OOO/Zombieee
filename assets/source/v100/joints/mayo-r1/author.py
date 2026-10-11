@@ -130,7 +130,7 @@ for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
         half=phase%.5
         bob=(walk['stanceCompressionPx']*math.sin(math.pi*half/stance) if half<=stance else -walk['flightLiftPx']*math.sin(math.pi*(half-stance)/(.5-stance)))*(1-settle) if walking else 0
         attack=spec.get('attack',{});shift=attack.get('bodyShift',[0,0])
-        body=Matrix.Translation(Vector(((travel+shift[0]*amount-3*anticipation)/100,0,(-bob-shift[1]*amount)/100)))
+        body=Matrix.Translation(Vector(((travel+shift[0]*amount-attack.get('anticipationPx',3)*anticipation)/100,0,(-bob-shift[1]*amount)/100)))
         matrices={'root':Matrix.Translation(Vector((travel/100,0,0)))@data.bones['root'].matrix_local}
         for name in ['pelvis','spine','head']:matrices[name]=body@data.bones[name].matrix_local
         if action_name=='attack':

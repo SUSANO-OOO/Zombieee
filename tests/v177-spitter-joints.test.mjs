@@ -9,7 +9,7 @@ import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
 import {validateJointTransform} from '../scripts/build-v177-rigid-joint-atlas.mjs';
-import {jointRenderTraceDigest} from './helpers/v177-render-trace.mjs';
+import {jointLegacyInterpolationControlDigest} from './helpers/v177-render-trace.mjs';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 const atlases={spitter:V177_JOINT_ATLASES.spitter};
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -105,11 +105,11 @@ test('Only the source-bound leaf throat inflates, returns and cannot stretch ana
  assert.equal(atlas.weaponBone,'head');assert.deepEqual(atlas.muzzle,[340,81]);
 });
 
-test('Soft-organ interpolation preserves the committed original27 render trace',()=>{
+test('Soft-organ interpolation preserves the immutable original27 legacy control before planned leg correction',()=>{
  const kinds=['abomination','brawler','brute','crazy-king','crusher','engineer','grappler','guardian','gunner','kumaverson','mayo-chan','medic','miyamoto-musashi','mrs-chiha','ranger','red-panther-commander','red-panther-knife','red-panther-shield','red-panther-smg','runner','scout','shade','sprinter','tky','turned','walker','zakimiya'];
  // Captured from immutable9986fd6 before adding soft-organ support. Do not
  // regenerate this expected digest from the current implementation.
- assert.deepEqual(jointRenderTraceDigest(kinds),{sha256:'02ada85acfa2e93632142c651d7df25cc208e6dbe22becee8292c7ca5117357f',forms:27,poses:1701,paintCalls:25263,precision:.000001});
+ assert.deepEqual(jointLegacyInterpolationControlDigest(kinds),{sha256:'02ada85acfa2e93632142c651d7df25cc208e6dbe22becee8292c7ca5117357f',forms:27,poses:1701,paintCalls:25263,precision:.000001});
 });
 test('Spitter mouth emission and soles share mirrored coordinates and enemy-only conditional loading',async()=>{
  for(const kind of ['spitter']){

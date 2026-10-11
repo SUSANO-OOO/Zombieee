@@ -798,5 +798,45 @@
     "ty": -117.22875816993462
   },
   "assetKey": "joint-walker",
-  "sharedPaintSource": "../walker-r1"
+  "sharedPaintSource": "../walker-r1",
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        216,
+        251
+      ],
+      "knee": [
+        239,
+        326
+      ],
+      "ankle": [
+        215,
+        408
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        239,
+        253
+      ],
+      "knee": [
+        265,
+        330
+      ],
+      "ankle": [
+        249,
+        408
+      ]
+    }
+  ]
 }

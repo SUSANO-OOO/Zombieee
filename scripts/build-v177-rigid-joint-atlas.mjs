@@ -36,9 +36,12 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  }
  if(d.legConstraints){
   assert.equal(d.legConstraints.length,d.rig.legs.length,'Each declared leg requires its own chain');
+  const lowerPelvis=d.parts.some(p=>p.bone==='pelvis'&&d.lowerLayers.includes(p.name));
   const owned=new Set();
   for(let i=0;i<d.rig.legs.length;i++){
-   const c=d.legConstraints[i],leg=d.rig.legs[i];assert.equal(c.parentBone,'spine');
+   const c=d.legConstraints[i],leg=d.rig.legs[i];
+   assert.equal(c.parentBone,lowerPelvis?'pelvis':'spine','Leg hip must follow the actual painted body owner');
+   assert.equal(c.parentUpper??true,!lowerPelvis,'A lower pelvis retains the gait while the upper torso attacks');
    for(const [key,suffix]of [['upperBone','upper'],['lowerBone','lower'],['effectorBone','foot']]){
     assert.equal(c[key],`leg-${i}-${suffix}`);assert.ok(!owned.has(c[key]),'A limb bone cannot belong to multiple chains');owned.add(c[key]);
     assert.ok(d.parts.some(p=>p.bone===c[key]&&d.lowerLayers.includes(p.name)),'Leg paint must retain the travel/settling owner');

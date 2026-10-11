@@ -431,3 +431,26 @@ node --test tests/v177-feral-joints.test.mjs tests/v177-installed-asset-contract
 The full scope remains all 48 forms and all actions. The remaining nineteen
 forms, complete hit/death/deploy/ability/frenzy/retreat ownership, continuous
 native play, performance and physical recording audio are still pending.
+
+### Continuous leg attachment across existing rigid forms
+
+The next candidate adds explicit fixed-length hip/knee/ankle chains to all
+28 registered rigid forms, including aliases. Bipeds retain their separately
+painted lower pelvis as the hip owner while the upper torso attacks. Both
+quadruped forms join their legs to the visible torso, with paws held by the
+travel/settling pose. Original part images and all 26 runtime texture hashes,
+bytes, resolution and drawing order remain unchanged.
+
+Ordinary Mayo's authored anticipation moves back 1.5 source pixels instead
+of 3 to keep every held gait reachable. Its walk/settle matrices, forward
+bite, original paint and stride stay unchanged. Failed reach prototypes are
+retained in output; no bone is stretched and the reach threshold is retained.
+
+Actual renderer checks cover 72,660 travel/settling/attack poses across the
+28 rigid forms and another 14,701 ordinary-Mayo anticipation combinations.
+The original27/original28 golden digests remain immutable legacy controls,
+with new leg correction disabled and the source-bound pre-correction Mayo
+atlas restored only in those controls. The current production leg path must
+independently satisfy exact attachment, planted-foot and fixed-reach checks.
+Ranger's separately baked mesh poses require their own audit; this work does
+not imply all48/all-action or native continuous-play acceptance.

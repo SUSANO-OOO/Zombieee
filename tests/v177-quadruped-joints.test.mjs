@@ -62,7 +62,9 @@ test('interpolated production paint keeps planted feet, fixed proportions and th
   const plan=v177JointPose('mayo-chan',{requestedState:state,clipProgress:p},runtime),matrices=render(plan);
   for(let i=0;i<17;i++){
    const m=matrices[i];assert.ok(Math.abs(m[0]*m[3]-m[1]*m[2]-1)<1e-12,'No interpolated limb shortening');
-   if(!atlas.parts[i].upper)assert.deepEqual(m,base[i],'Biting must not teleport the feet');
+   // Paws remain planted while hip/knee pieces follow the biting torso through
+   // fixed-length IK. Freezing the entire leg would detach it from the body.
+   if(atlas.parts[i].bone.endsWith('-foot'))assert.deepEqual(m,base[i],'Biting must not teleport the feet');
   }
  }
  for(const phase of [.001,.01471,.0549,.1274,.2413]){

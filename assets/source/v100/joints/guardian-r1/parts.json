@@ -1600,5 +1600,45 @@
         0
       ]
     }
-  }
+  },
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        217,
+        235
+      ],
+      "knee": [
+        185,
+        320
+      ],
+      "ankle": [
+        137,
+        400
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        246,
+        235
+      ],
+      "knee": [
+        277,
+        320
+      ],
+      "ankle": [
+        312,
+        403
+      ]
+    }
+  ]
 }

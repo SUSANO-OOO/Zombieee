@@ -182,7 +182,8 @@
       ],
       "headAngle": 0.035,
       "windupEnd": 0.28,
-      "activeEnd": 0.55
+      "activeEnd": 0.55,
+      "anticipationPx": 1.5
     }
   },
   "order": [
@@ -906,5 +907,83 @@
     },
     "flipX": false,
     "sourceSha256": "9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c"
-  }
+  },
+  "legConstraints": [
+    {
+      "parentBone": "spine",
+      "parentUpper": true,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        138,
+        324
+      ],
+      "knee": [
+        112,
+        371
+      ],
+      "ankle": [
+        125,
+        416
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "parentUpper": true,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        158,
+        326
+      ],
+      "knee": [
+        131,
+        376
+      ],
+      "ankle": [
+        146,
+        417
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "parentUpper": true,
+      "upperBone": "leg-2-upper",
+      "lowerBone": "leg-2-lower",
+      "effectorBone": "leg-2-foot",
+      "hip": [
+        308,
+        290
+      ],
+      "knee": [
+        328,
+        347
+      ],
+      "ankle": [
+        312,
+        414
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "parentUpper": true,
+      "upperBone": "leg-3-upper",
+      "lowerBone": "leg-3-lower",
+      "effectorBone": "leg-3-foot",
+      "hip": [
+        320,
+        292
+      ],
+      "knee": [
+        338,
+        352
+      ],
+      "ankle": [
+        324,
+        420
+      ]
+    }
+  ]
 }

@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "12728579d1787f93569a8315d213a5b479279f2a",
+  "sourcePath": "app/v177QuadrupedJointData.js",
+  "sourceGitBlob": "55ed7a88483b950845b6bb0a18e137654a2a8487",
+  "sourceSha256": "9f3516dcb393f9f78135bc4824231a147b945f343a89abc10c2bf9412a3aa6e0",
+  "snapshotSha256": "e4b10ee7839f6c7b6e57ed6f907761ef0d497368e8d2acbdc6a75a9088cb5355",
+  "snapshotBytes": 38880,
+  "verifiedOriginal28Trace": {
+    "sha256": "3ca7b6f34efc55eca1e7dd7b1c7de43208cce67cda534003040309775713f44b",
+    "forms": 28,
+    "poses": 1764,
+    "paintCalls": 26523,
+    "precision": 0.000001
+  },
+  "role": "Immutable legacy interpolation control only; current Mayo attack reach has separate geometry acceptance"
+}

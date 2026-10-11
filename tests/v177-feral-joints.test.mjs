@@ -12,7 +12,7 @@ import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
 import {validateJointTransform} from '../scripts/build-v177-rigid-joint-atlas.mjs';
-import {jointRenderTraceDigest} from './helpers/v177-render-trace.mjs';
+import {jointLegacyInterpolationControlDigest} from './helpers/v177-render-trace.mjs';
 const revision='frozen-r1',kind='mayo-chan-feral',dir='assets/source/v100/joints/mayo-feral-r1/';
 const d=JSON.parse(await readFile(dir+'parts.json')),motion=JSON.parse(gunzipSync(await readFile(dir+'motion.json.gz'))),atlas=V177_JOINT_ATLASES[kind];
 assert.deepEqual(motion.rig,d.rig);
@@ -146,9 +146,9 @@ test('Feral keeps its own original identity, bounded texture and preload through
  assert.ok(!requiredBattleAssetPlan({stageId,formationKinds:['mayo-chan'],includeV100Sprites:false}).paths.includes(atlas.path));
 });
 
-test('Optional leg chains and packing preserve the original28 renderer trace',()=>{
+test('Optional leg correction retains the immutable original28 legacy renderer control',()=>{
  const kinds=Object.keys(V177_JOINT_ATLASES).filter(k=>k!==kind);
- assert.deepEqual(jointRenderTraceDigest(kinds),{sha256:'3ca7b6f34efc55eca1e7dd7b1c7de43208cce67cda534003040309775713f44b',forms:28,poses:1764,paintCalls:26523,precision:.000001});
+ assert.deepEqual(jointLegacyInterpolationControlDigest(kinds),{sha256:'3ca7b6f34efc55eca1e7dd7b1c7de43208cce67cda534003040309775713f44b',forms:28,poses:1764,paintCalls:26523,precision:.000001});
 });
 
 test('Feral form and actual retreat distance own the same gait without advancing on knockback',()=>{
