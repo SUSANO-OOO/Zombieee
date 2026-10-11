@@ -4452,7 +4452,7 @@ function drawSpriteFighter(
     // The full-sprite bloom dominated narrow WebKit battle frames when several
     // units were hit together. Keep the warm impact rim without a wide blur.
     ctx.shadowBlur = 6;
-  } else if (compactScale > 1) {
+  } else if (compactScale > 1 && !jointPose) {
     ctx.shadowColor = "rgba(232,222,188,.38)";
     ctx.shadowBlur = 2;
   }
