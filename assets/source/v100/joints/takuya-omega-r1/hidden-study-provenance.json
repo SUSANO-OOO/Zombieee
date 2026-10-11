@@ -1,0 +1,158 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "1bf8646fa3bebea37effabedba44f2a417913166de68fe601a2784aca1a93341",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+    "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 1088,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "cb6e77ac7ebd6b910e2afd7f556cc9aada2ef79f464da971c179b12ec2adb4ba",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 1632,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "f5836afe8d26f134d8d0d4d30d2ddcc672247a1053d8161d9d35d78afa0b685b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 2720,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "6246287361b49ca93cc4396d356211caa185a0c00a46c9db69112dfe581be8da",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "hit": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 2176,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "bd023e4f9785acce64cbc163c9fa66799cbc2faa6e712cdda945998ef4a96a3f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    }
+  },
+  "identityMaster": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+  "identityMasterSha256": "d46f6a96f693dbf0aa9b81b9ef2b1f5797f461c87505c7390c80464e3a0249af",
+  "usage": "Cells0..9 complete own occluded stitched tissue/black-short seams; black-leather cell11 fills only the far boot region occluded by the original cleaver. Cell10 unused. Original face, giant hand, complete cleaver/gripping hand, near boot, tubing and visible costume/boot pixels retain exact canonical RGBA. No orange vest or rejected identity.",
+  "visibleOriginalParts": [
+    "near-boot",
+    "head",
+    "giant-hand",
+    "cleaver-and-hand",
+    "back-tubes"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}
