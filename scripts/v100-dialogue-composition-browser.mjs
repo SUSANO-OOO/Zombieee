@@ -4,6 +4,7 @@ import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
+import {v100StoryInsertFor} from '../app/v100StoryInserts.js';
 import {v100StoryPageFor} from '../app/v100StoryPages.js';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {publicDisplayText} from '../app/publicDisplayNames.js';
@@ -38,7 +39,19 @@ const insertCases=insertIds.map(insertId=>{
 });
 assert.equal(cutCases.length,17);
 assert.equal(insertCases.length,18);
-const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases];
+const insertStateCases=[
+ {id:'message-backlog-received',insertId:'message-backlog',matches:state=>state.messageVisible&&!state.dated},
+ {id:'message-backlog-dated',insertId:'message-backlog',matches:state=>state.dated},
+ {id:'family-ledger-confirmed',insertId:'family-ledger',matches:state=>state.familyConfirmed},
+ {id:'medical-observation-followup',insertId:'medical-observation',matches:state=>state.observed},
+].map(({id,insertId,matches})=>{
+ const found=all.find(({node})=>node.insertId===insertId&&matches(v100StoryInsertFor(insertId,node.sourceLine)));
+ assert.ok(found,`Unbound R9 insert state: ${id}`);
+ return {id:'insert-'+id,eventId:found.eventId,nodeIndex:found.nodeIndex,insertId};
+});
+const phoneMessage=all.find(({node})=>node.insertId==='message-backlog'&&node.sourceLine===604)?.node.text;
+assert.ok(phoneMessage,'the phone graphic must retain the received producer message');
+const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases,...insertStateCases];
 // Validate every checkpoint before starting a browser, including the settled
 // reward-confirmation phase. A malformed seed must not become a UI timeout.
 const fixtureSaves=new Map(cases.map(fixture=>[fixture.id,serializeV100Save(createV100DialogueFixture(fixture))]));
@@ -72,6 +85,8 @@ for(const engine of engines){
     const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
     const box=element.querySelector('.v100-node-copy');
     const insertTitle=element.querySelector('.v100-insert-heading');
+    const phoneMessage=element.querySelector('.v100-insert-phone-message');
+    const phone=phoneMessage?{text:phoneMessage.textContent,lines:[...phoneMessage.querySelectorAll('tspan')].map(rect),panel:rect(element.querySelector('[data-v100-insert="message-backlog"] .v100-insert-arrival'))}:null;
     const identityFrames=[...element.querySelectorAll('[data-v100-insert="takuya-identity"] svg svg')].map(frame=>{
      const style=getComputedStyle(frame);
      const clipId=frame.querySelector('g[clip-path]')?.getAttribute('clip-path')?.match(/^url\(#(.+)\)$/u)?.[1];
@@ -80,7 +95,7 @@ for(const engine of engines){
      const sourceFrameClipped=Boolean(clip&&Number(clip.getAttribute('x'))===viewBox.x&&Number(clip.getAttribute('y'))===viewBox.y&&Number(clip.getAttribute('width'))===viewBox.width&&Number(clip.getAttribute('height'))===viewBox.height);
      return {width:Number(frame.getAttribute('width')),height:Number(frame.getAttribute('height')),computedWidth:parseFloat(style.width),computedHeight:parseFloat(style.height),overflowX:style.overflowX,overflowY:style.overflowY,filter:style.filter,sourceFrameClipped};
     });
-      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,identityFrames,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,identityFrames,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    result.geometry=geometry;
    const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
@@ -88,6 +103,12 @@ for(const engine of engines){
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
    if(fixture.insertId)assert.equal(await scene.locator('[data-v100-insert="'+fixture.insertId+'"]').count(),1,'the explanatory diagram must be visible');
    if(geometry.insertTitle)assert.ok(geometry.insertTitle.y>=geometry.headingBox.bottom+1,'diagram title must sit below the location heading and its rule');
+   if(fixture.id==='insert-message-backlog-received'||fixture.id==='insert-message-backlog-dated'){
+    assert.ok(geometry.phone,'the received message must be visible');
+    assert.equal(geometry.phone.text,phoneMessage,'the diagram must preserve the producer message, including the request');
+    assert.equal(geometry.phone.lines.length,4);
+    for(const line of geometry.phone.lines)assert.ok(line.x>=geometry.phone.panel.x+1&&line.right<=geometry.phone.panel.right-1&&line.y>=geometry.phone.panel.y+1&&line.bottom<=geometry.phone.panel.bottom-1,'each complete message line must fit inside the phone panel');
+   }
    if(fixture.insertId==='takuya-identity'){
     assert.equal(geometry.identityFrames.length,2,'the identity comparison must show two isolated figures');
     for(const frame of geometry.identityFrames){

@@ -1412,6 +1412,7 @@
 .v100-insert-heading { fill:#e7d9b7; font:600 30px var(--v100-reading-font); }
 .v100-insert-body { fill:#e5e6d4; font:500 27px var(--v100-reading-font); }
 .v100-insert-small { fill:#c4d0bc; font:500 22px var(--v100-reading-font); }
+.v100-insert-phone-message { font-size:24px; }
 .v100-insert-arrival { animation:v100-insert-arrive .6s ease-out both; }
 .v100-insert-transfer { animation:v100-insert-arrive .8s ease-out both; }
 .v100-insert-scan { animation:v100-insert-scan 1.8s linear both; }
