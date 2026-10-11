@@ -2015,6 +2015,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/mugarian-president-mutated-r1.webp",
+      "bytes": 58224,
+      "hash": "sha256-2d7843e0e191c0bd602c818d8531c6a37df9f6d9e00dd6e193aa3ea2d3aa50f7",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/ooguchi-r1.webp",
       "bytes": 41130,
       "hash": "sha256-850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a",

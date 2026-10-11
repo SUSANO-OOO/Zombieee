@@ -1,0 +1,157 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "77c896c231d372237099ff5203e8c17bc3d713201ee28749c46c2943650fb51a",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+    "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 1088,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "7652965b249f6e22142b221139e7197ba00b45278804f754d96a50cedec35afb",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 1632,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "abc449ef9159a125a68f69ecfcf74d5a12fa0bab452b9a1b10d2080f242e4c68",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 2720,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "21af49296f70631fe0381def35c562a7da6e223dcc95e964de0e59995962f182",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 2176,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5ac3d23640811d83ca99588fe39b8fdd7f92fdad7618b4703ddb60ded120c8e1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    }
+  },
+  "usage": "Fourteen own tissue/cloth cells0..13 complete occluded torso/pelvis/limb/coat seams. Cells14/15 unused. Native544x512 original head, both original feet, giant claw hand, original abdominal claw hand and complete cane/gripping hand retain canonical RGBA without resampling.",
+  "visibleOriginalParts": [
+    "far-shoe",
+    "near-claw-foot",
+    "head",
+    "giant-claw-hand",
+    "abdominal-claw-hand",
+    "cane-and-hand"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}
