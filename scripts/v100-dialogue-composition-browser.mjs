@@ -65,16 +65,39 @@ for(const engine of engines){
    await scene.waitFor({state:'visible'});
    if(fixture.backdrop)await page.waitForFunction(({selector,path})=>getComputedStyle(document.querySelector(selector+' .v100-event-backdrop')).backgroundImage.includes(path),{selector:'[data-v100-event-id="'+fixture.eventId+'"]',path:fixture.backdrop});
    await page.waitForFunction(()=>[...document.images].every(img=>img.complete&&img.naturalWidth>0));
+   if(fixture.insertId==='takuya-identity')await scene.locator('[data-v100-insert="takuya-identity"] image').evaluateAll(async images=>{
+    await Promise.all(images.map(async element=>{const image=new Image();image.src=element.getAttribute('href');await image.decode();}));
+   });
    const geometry=await scene.evaluate(element=>{
     const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
     const box=element.querySelector('.v100-node-copy');
-      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+    const insertTitle=element.querySelector('.v100-insert-heading');
+    const identityFrames=[...element.querySelectorAll('[data-v100-insert="takuya-identity"] svg svg')].map(frame=>{
+     const style=getComputedStyle(frame);
+     const clipId=frame.querySelector('g[clip-path]')?.getAttribute('clip-path')?.match(/^url\(#(.+)\)$/u)?.[1];
+     const clip=clipId&&frame.querySelector('#'+CSS.escape(clipId)+' rect');
+     const viewBox=frame.viewBox.baseVal;
+     const sourceFrameClipped=Boolean(clip&&Number(clip.getAttribute('x'))===viewBox.x&&Number(clip.getAttribute('y'))===viewBox.y&&Number(clip.getAttribute('width'))===viewBox.width&&Number(clip.getAttribute('height'))===viewBox.height);
+     return {width:Number(frame.getAttribute('width')),height:Number(frame.getAttribute('height')),computedWidth:parseFloat(style.width),computedHeight:parseFloat(style.height),overflowX:style.overflowX,overflowY:style.overflowY,filter:style.filter,sourceFrameClipped};
+    });
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,identityFrames,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    result.geometry=geometry;
    const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
    assert.ok(geometry.textValue.replace(/\s/gu,'').includes(expectedText.replace(/\s/gu,'')),`${fixture.id} authored text missing`);
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
    if(fixture.insertId)assert.equal(await scene.locator('[data-v100-insert="'+fixture.insertId+'"]').count(),1,'the explanatory diagram must be visible');
+   if(geometry.insertTitle)assert.ok(geometry.insertTitle.y>=geometry.headingBox.bottom+1,'diagram title must sit below the location heading and its rule');
+   if(fixture.insertId==='takuya-identity'){
+    assert.equal(geometry.identityFrames.length,2,'the identity comparison must show two isolated figures');
+    for(const frame of geometry.identityFrames){
+     assert.ok(Math.abs(frame.computedWidth-frame.width)<.05&&Math.abs(frame.computedHeight-frame.height)<.05,'outer diagram sizing must not resize a sprite frame');
+     assert.equal(frame.overflowX,'hidden','adjacent animation columns must stay clipped');
+     assert.equal(frame.overflowY,'hidden','adjacent animation rows must stay clipped');
+     assert.equal(frame.filter,'none','the diagram shadow belongs only to its outer frame');
+     assert.equal(frame.sourceFrameClipped,true,'letterbox space must not reveal the neighboring sprite');
+    }
+   }
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));
    for(const rect of [geometry.copy,geometry.text,geometry.actions]){assert.ok(rect.x>=0&&rect.y>=0&&rect.right<=viewport.width&&rect.bottom<=viewport.height);}
    assert.ok(geometry.actions.x>=geometry.text.right,'Actions must not overlap the dialogue');
