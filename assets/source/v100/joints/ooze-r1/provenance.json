@@ -1,0 +1,179 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "ooze",
+  "assetPath": "/art/v100/joints/ooze-r1.webp",
+  "bytes": 58562,
+  "sha256": "6513946285a392a7929f3c2a20acbf78bedcfed78827e94039bb79bec36d4a09",
+  "generatedPartsStudySha256": "0831d99c321b094f342bbfaaa93b2408d8e0f9ece7f6c6b1251f4699c0e69245",
+  "identitySourceSha256": "fc955bd9df6bca66ed6e9ef498108659bec126cb00843d3cb389ccca20c2cc11",
+  "identityBinding": {
+    "path": "/art/v070/characters/ooze-battle-v1.png",
+    "sourceSha256": "7f940e50ea8541b4b8f556c6a3aabd1723a1eb6bc5f6263b7b54decb1368406a",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.3333333333333333,
+      "tx": -79.33333333333331,
+      "ty": -144,
+      "flipX": false
+    }
+  },
+  "motionSha256": "cf6506e173183cf13bfca618da69269412e0b6c7655c9e27a1db4811a6582787",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "fc955bd9df6bca66ed6e9ef498108659bec126cb00843d3cb389ccca20c2cc11",
+      "path": "/art/v070/characters/ooze-battle-v1.png",
+      "sourceSha256": "7f940e50ea8541b4b8f556c6a3aabd1723a1eb6bc5f6263b7b54decb1368406a",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "09cfa399817666e819c31ded3257af9aedcf73c6a0e591e6a49c05e37299f67d",
+      "path": "/art/v070/characters/ooze-battle-v1.png",
+      "sourceSha256": "7f940e50ea8541b4b8f556c6a3aabd1723a1eb6bc5f6263b7b54decb1368406a",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "315f56cb7c06cb5629bc0ba8febdee6329bd0b97561465f1fcb463f8bd7fe29e",
+      "path": "/art/v070/characters/ooze-battle-v1.png",
+      "sourceSha256": "7f940e50ea8541b4b8f556c6a3aabd1723a1eb6bc5f6263b7b54decb1368406a",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "ee755c47fc5f6468e24f75d40ce84bc31722d3e12feade938f49e4acba61a136",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "5a7510cabcc38b320e3fb3a445f07ef2f60861e9eb0780cbb6e2f8f5608aa7f8",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "ad6842e626fa217544624912f6a6e5289290ef158268fc023c6dbcf2fa654799",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "e5ac7e02cfb41b5b4363dbe6e129488737b768736aae3b331e4e77ecd0679494",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "4349ac5042443aa0a130552b3b861b888943c7fbdaff93e4f6cbba855c88ca22",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "5ea5f6a0147d97279de84f4bcc466181d6997210bbe5573105741b73bb30866a",
+      "original": false
+    },
+    {
+      "name": "far-boot-shaft",
+      "file": "far-boot-shaft.png",
+      "sha256": "fd35015479ef5fa32aff1635896426e8f00d895b78a51298949729793d2da5d6",
+      "original": true
+    },
+    {
+      "name": "near-boot-shaft",
+      "file": "near-boot-shaft.png",
+      "sha256": "62447cb41eca269c39cb1f53707038b1a365bb80a19e7f89b4abd918233eff64",
+      "original": true
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "f127a429c290def83e4ed2eef5c2b23c2faeae27965342426a187d900e1f25e6",
+      "original": true
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "f7494cfda0502a2a5f811b06765a72d3eff5a8a2a2897470efb5e7bbd462014d",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "8721ddf1ad396c3e9e7040f3a93f2e8e0a71d5d5e35d5aa53d2d866ecdf57bb9",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "d3a5525557a5fbb3f9e83741eebfbc2ace0788d1b15de5fb2a37fb77c7d2139c",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "c85243e7fdb87ae13d54c8ac28d926988adf3efd14c1f12b67d3c46638ce99f2",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "6d43a555ac0b93d4b70579c23dc7e17171a072b02a6fbd21915a716b164b417e",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "c8ede4396ce4c0085d49dabab91b65672aba0378cb991049914dff12160bae07",
+      "original": true
+    },
+    {
+      "name": "near-hand",
+      "file": "near-hand.png",
+      "sha256": "4004ff3961168c0aee24770be58dc20585b8f5cba8e1a3ec1ff0adb0586b5f6f",
+      "original": true
+    },
+    {
+      "name": "far-hand",
+      "file": "far-hand.png",
+      "sha256": "6e77afe9c22d786a02b325e7e087a65d648b8659f3c3a710734040905141fd34",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length Ooze heavy gait, forward-bending knees, planted support and independent two-hand mud throw. Original face, visible costume/backpack, metal cuffs, fingers and green boots retained. Hidden costume completion explicitly bound. Mud emission follows the rendered far hand. All48/all-action and continuous normal-play acceptance pending.",
+  "decodedBytes": 391168,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

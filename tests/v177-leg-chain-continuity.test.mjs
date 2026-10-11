@@ -36,8 +36,8 @@ function assertLegs(kind,d,raw){
  }
 }
 
-test('All28 rigid forms keep their painted hip, knee and ankle joined through travel, settling and attack',()=>{
- const rigid=Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.type==='rigid-parts');assert.equal(rigid.length,28);
+test('All29 rigid forms keep their painted hip, knee and ankle joined through travel, settling and attack',()=>{
+ const rigid=Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.type==='rigid-parts');assert.equal(rigid.length,29);
  assert.deepEqual(Object.keys(V177_JOINT_ATLASES).filter(k=>V177_JOINT_ATLASES[k].type!=='rigid-parts'),['ranger']);
  let samples=0;
  for(const [kind,atlas]of rigid){
@@ -64,7 +64,7 @@ test('All28 rigid forms keep their painted hip, knee and ankle joined through tr
   assert.equal(v177JointPose(kind,{requestedState:'hit'},{}),null,kind+' preserves separate hit owner');
   assert.equal(v177JointPose(kind,{requestedState:'active'},{},{ownedPose:true}),null,kind+' preserves dedicated ability owner');
  }
- assert.equal(samples,72660);
+ assert.equal(samples,75255);
 });
 
 test('Mayo reduces only the unreachable anticipation while retaining its painted texture, gait and forward bite',async()=>{

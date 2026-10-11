@@ -147,7 +147,7 @@ test('Feral keeps its own original identity, bounded texture and preload through
 });
 
 test('Optional leg correction retains the immutable original28 legacy renderer control',()=>{
- const kinds=Object.keys(V177_JOINT_ATLASES).filter(k=>k!==kind);
+ const kinds=['abomination','brawler','brute','crazy-king','crusher','engineer','grappler','guardian','gunner','kumaverson','mayo-chan','medic','miyamoto-musashi','mrs-chiha','ranger','red-panther-commander','red-panther-knife','red-panther-shield','red-panther-smg','runner','scout','shade','spitter','sprinter','tky','turned','walker','zakimiya'];
  assert.deepEqual(jointLegacyInterpolationControlDigest(kinds),{sha256:'3ca7b6f34efc55eca1e7dd7b1c7de43208cce67cda534003040309775713f44b',forms:28,poses:1764,paintCalls:26523,precision:.000001});
 });
 

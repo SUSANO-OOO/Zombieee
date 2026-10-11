@@ -1,0 +1,21 @@
+{
+  "kind": "ooze",
+  "tool": "image_gen built-in",
+  "generatedFile": "exec-c7bd41bd-e67e-4047-bf0e-943101516479.png",
+  "sourceReferenceSha256": "fc955bd9df6bca66ed6e9ef498108659bec126cb00843d3cb389ccca20c2cc11",
+  "imageSha256": "0831d99c321b094f342bbfaaa93b2408d8e0f9ece7f6c6b1251f4699c0e69245",
+  "transparentBackground": true,
+  "prompt": "parts-prompt.txt",
+  "scope": "Hidden green costume and dark pant joint completion only. Original visible face/hair, fingers, metal cuffs, green boot shafts/soles and infected backpack/costume retained. Far shaft and sole use the same25px integer source translation. No other character identity or weapon used.",
+  "reference": "identity-reference.png",
+  "originalParts": [
+    "far-boot-shaft",
+    "near-boot-shaft",
+    "far-boot",
+    "near-boot",
+    "head",
+    "near-hand",
+    "far-hand"
+  ],
+  "productionConnected": true
+}
