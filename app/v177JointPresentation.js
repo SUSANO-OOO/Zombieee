@@ -5,13 +5,14 @@ import { V177_ENEMY_JOINT_ATLASES as enemyAtlases } from './v177EnemyJointData.j
 import { V177_RUNNER_JOINT_ATLASES as runnerAtlases } from './v177RunnerJointData.js';
 import { V177_FIREARM_JOINT_ATLASES as firearmAtlases } from './v177FirearmJointData.js';
 import { V177_PANTHER_JOINT_ATLASES as pantherAtlases } from './v177PantherJointData.js';
+import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.js';
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
@@ -55,7 +56,8 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
     const matrix=new Float64Array(6);
     const scratch=atlas.armConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
     const reference=atlas.referenceFrame;
-    ctx.save();ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
+    ctx.save();if(atlas.paintStyle==='pixel-art')ctx.imageSmoothingEnabled=false;
+    ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
     if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
     for(const part of atlas.parts){
       if(part.bone==='jaw'){
@@ -89,8 +91,19 @@ function interpolatedMatrix(out,atlas,plan,bone,upper){
   const b=atlas.poses[upper?plan.upperNextIndex:plan.lowerNextIndex][bone];
   const p=upper?plan.upperBlend:plan.lowerBlend,angleA=Math.atan2(a[1],a[0]),angleB=Math.atan2(b[1],b[0]);
   const delta=Math.atan2(Math.sin(angleB-angleA),Math.cos(angleB-angleA)),angle=angleA+delta*p,c=Math.cos(angle),s=Math.sin(angle);
-  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=a[4]+(b[4]-a[4])*p;
-  out[5]=a[5]+(b[5]-a[5])*p+(upper&&plan.attackPhase!==null?plan.upperOffsetY:0);
+  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;
+  const pivot=atlas.interpolationPivots?.[bone];
+  if(pivot){
+    // A fast swing must interpolate its authored grip, rather than the
+    // translation of the distant image origin. Otherwise the grip can arc
+    // outside the arm's fixed reach between two perfectly valid source keys.
+    const [px,py]=pivot,ax=a[0]*px+a[2]*py+a[4],ay=a[1]*px+a[3]*py+a[5];
+    const bx=b[0]*px+b[2]*py+b[4],by=b[1]*px+b[3]*py+b[5];
+    out[4]=ax+(bx-ax)*p-c*px+s*py;out[5]=ay+(by-ay)*p-s*px-c*py;
+  }else{
+    out[4]=a[4]+(b[4]-a[4])*p;out[5]=a[5]+(b[5]-a[5])*p;
+  }
+  if(upper&&plan.attackPhase!==null)out[5]+=plan.upperOffsetY;
   return out;
 }
 

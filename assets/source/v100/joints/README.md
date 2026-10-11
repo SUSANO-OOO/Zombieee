@@ -6,9 +6,10 @@ Scout's biped gait, ground settling and crowbar anticipation/contact/return,
 Walker/Turned's gait, settling and claw reach/return, and Runner's separately
 authored running gait with opposed bent arms and a short flight phase, plus
 Gunner, Medic and Engineer walking, settling, aiming, recoil and recovery,
-and the four Red Panther forms' weapon-specific military motion.
+the four Red Panther forms' weapon-specific military motion, and Brute,
+Brawler, Crazy King and Kumaverson's distinct melee actions.
 They retain the approved head, weapons and equipment. Clothing and
-occluded limbs derive from built-in imagegen parts studies. These are thirteen form candidates
+occluded limbs derive from built-in imagegen parts studies. These are seventeen form candidates
 within the Producer's complete 48-form scope, including allies, enemies, bosses
 and derived forms. Other units, hits, defeat, deployment, turns and abilities
 still require authoring and visual acceptance. No overall acceptance or release
@@ -223,8 +224,8 @@ directly inside each explicit mask, avoiding Canvas premultiplication drift.
 Tests also verify the original red sleeve insignia and translucent source paint.
 
 The new textures download 31,080, 31,692, 41,612 and 34,474 bytes, respectively.
-They total 138,858 download bytes and 1,273,856 decoded bytes. All eleven current
-joint textures total 1,281,216 download bytes; each is conditionally loaded.
+They total 138,858 download bytes and 1,273,856 decoded bytes; each is
+conditionally loaded.
 
 ```powershell
 node scripts/build-v177-panther-joints.mjs
@@ -235,7 +236,49 @@ node --test tests/v177-panther-joints.test.mjs tests/v177-installed-asset-contra
 The 305 Blender frames per form and 1,803 production gait/settle samples per
 form check support, fixed lengths, grip reachability, arm continuity and world
 foot drift. Production checks also cover attack entry/return, opaque weapon
-tips, mirrored effects and preserved original scale. These are thirteen form
-candidates within the full 48-form/all-action scope. Normal-speed play, the
+tips, mirrored effects and preserved original scale. Together with the melee
+sources below, these are seventeen form candidates in the 48-form/all-action scope. Normal-speed play, the
 remaining forms/actions, native performance and physical iPhone recording
 remain unaccepted.
+
+The four melee sources add 14, 15, 15 and 15 explicit painted parts. Brute keeps
+both original holding hands on the hammer and follows its forward swing with
+the torso. Brawler keeps the original bare fists and pixel art, with a separate
+guarding hand. Crazy King levels the actual chainsaw for contact; Kumaverson
+raises the original pan while bracing the already leaning torso. The original
+head, visible clothing and weapon paint remain source-bound. The shorts exclude
+Brawler's old stationary forearm, and an explicit mask removes a detached study
+fragment beside Kumaverson's thigh. The two leg chains stay separate.
+
+A rejected heavy-swing trial reached 82.219 source pixels between runtime keys
+against a 60.008-pixel arm, despite valid evaluated Blender keys. Interpolating
+the translation of the distant image origin displaced the holding point. The
+new sources declare the actual grip and torso pivots; runtime interpolation
+follows those authored points and preserves rigid rotation. The same dense
+production check now measures at most 59.546 pixels for that arm, without using
+the reach fallback or changing the fixed lengths. Existing sources retain their
+unchanged interpolation path. Brawler uses nearest-neighbor atlas paint and
+temporarily disables smoothing inside the saved canvas state.
+
+Brute's large original hammer needs a 576x448 attack envelope; its reference
+scale and ground anchor still derive from the original 480x448 source. The
+other three retain 480x448 envelopes. Tests check every painted outline in all
+305 evaluated frames, real soles, fixed lengths, planted world-space feet,
+arm/grip continuity, attack handover, original RGBA, pixel paint and mirrored
+contact sockets. Each source adds 151 runtime poses and one conditional texture.
+The four textures download 36,642, 21,604, 39,606 and 33,956 bytes, totaling
+131,808 download bytes and 1,183,744 decoded bytes. All fifteen joint textures
+total 1,413,024 download bytes. A built-in imagegen torso edit removes the
+study's erroneous orange arm strip from Brawler's shirt; only study cell zero
+is replaced, with all other study pixels unchanged. Its full edit prompt and
+source hashes remain beside the frozen source.
+
+```powershell
+node scripts/build-v177-melee-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-melee-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+These are seventeen form candidates within the same 48-form/all-action scope.
+Normal-speed play, remaining forms/actions, native performance and saved
+physical-iPhone recording audio remain unaccepted.

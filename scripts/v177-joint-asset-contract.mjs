@@ -11,5 +11,9 @@ export const V177_JOINT_ASSET_ADDITIONS = Object.freeze([
   Object.freeze({path:'/art/v100/joints/red-panther-smg-r1.webp',bytes:31692,hash:'sha256-a56a14031c445f01561057193aa82b983b083fbc2c641914269a5b45bef63293'}),
   Object.freeze({path:'/art/v100/joints/red-panther-shield-r1.webp',bytes:41612,hash:'sha256-18a9b9b441c751bf7899743d6f9250d0e776181b9144fbdafa51a6cb5d33007b'}),
   Object.freeze({path:'/art/v100/joints/red-panther-commander-r1.webp',bytes:34474,hash:'sha256-bc917cd193ceeeb359b0cc99632b9253906a032f8037bf0bd44f686e405cfebd'}),
+  Object.freeze({path:'/art/v100/joints/brute-r1.webp',bytes:36642,hash:'sha256-8fe2d63e4cf27485fbf2de83512a002e85e76d2973dc8e42ba4dca2582b8c8b5'}),
+  Object.freeze({path:'/art/v100/joints/brawler-r1.webp',bytes:21604,hash:'sha256-c33d2ac536e714e2b5d8cc3ad8dd7e2ee1793fc4d3002d77b4517ceb96ebc2a6'}),
+  Object.freeze({path:'/art/v100/joints/crazy-king-r1.webp',bytes:39606,hash:'sha256-7310422fc7238d89c8194c40bbafd2f70724a3b979b76be7d4d939f7a773f257'}),
+  Object.freeze({path:'/art/v100/joints/kumaverson-r1.webp',bytes:33956,hash:'sha256-b21eb685a87bc72b7ce7687f78eb6b3b486f37a6a0b59bf11a2fc87ad5266364'}),
 ]);
-export const V177_JOINT_ASSET_BYTES = 1281216;
+export const V177_JOINT_ASSET_BYTES = 1413024;

@@ -1,0 +1,20 @@
+{
+  "kind": "kumaverson",
+  "tool": "built-in image_gen.imagegen",
+  "originalGeneratedImage": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-384f5dee-da1f-4f06-a0ef-4d2890e55701.png",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-melee-parts-r1/kumaverson/parts-study-r1.png",
+  "bytes": 1027529,
+  "sha256": "2431f3e7c33129de970156330c631819b6dce25f7453e8e7d79343eae64bafe2",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden anatomy/costume parts study; source face, visible costume, weapon and hands retained; visual and normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

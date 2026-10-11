@@ -1,0 +1,20 @@
+{
+  "kind": "crazy-king",
+  "tool": "built-in image_gen.imagegen",
+  "originalGeneratedImage": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-3d8e4f5f-27f2-4039-bca5-42f1a3fceb7c.png",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-melee-parts-r1/crazy-king/parts-study-r1.png",
+  "bytes": 894958,
+  "sha256": "fb8b6d114ee18c651800be344b5c232778a6e7a5938f25bc4ca3b38bef5bc973",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden anatomy/costume parts study; source face, visible costume, weapon and hands retained; visual and normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}
