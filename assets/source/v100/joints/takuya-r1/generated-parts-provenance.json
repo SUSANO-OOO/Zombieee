@@ -1,0 +1,52 @@
+{
+  "schema": "zombieee-hidden-joint-completion/1",
+  "kind": "takuya",
+  "tool": "image_gen.imagegen",
+  "origin": "OpenAI ImageGen under Producer-authorized original game asset development",
+  "projectOriginal": true,
+  "thirdPartyDownloadedVisuals": false,
+  "promptFile": "parts-prompt.txt",
+  "studyFile": "hidden-parts-study.png",
+  "sha256": "be1889114440192e95f79d6a341a5939b8472293cad9eec155c88ea70b915dbb",
+  "width": 1254,
+  "height": 1254,
+  "grid": {
+    "rows": 4,
+    "columns": 4
+  },
+  "transparentBackground": true,
+  "transparentPixels": 1157458,
+  "reference": "identity-reference.png",
+  "additionalReference": "original-attack-a.png",
+  "sourceBinding": {
+    "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+    "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 512,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.85,
+      "tx": 22,
+      "ty": -83,
+      "flipX": true
+    }
+  },
+  "scope": "Canonical bare torso, harness, chain, hair, glasses, boots, hands/cuffs and rectangular heavy weapon retain source RGBA. Study cells fill only occluded limb and shorts joints; rejected orange vest is excluded.",
+  "originalParts": [
+    "torso",
+    "pelvis",
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands",
+    "weapon-cable"
+  ],
+  "status": "Only hidden limb completion adopted; original face, hands, cuffs, boots, weapon, harness and black shorts retained. Rejected orange vest excluded.",
+  "adopted": true,
+  "counted": false,
+  "productionConnected": false,
+  "normalPlayAccepted": false
+}
