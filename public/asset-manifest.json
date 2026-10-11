@@ -1839,6 +1839,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/cagewalker-r1.webp",
+      "bytes": 55424,
+      "hash": "sha256-af5e21aa0856bfc3ead8af88b5b7c3786c04b73d3f3c2b6e9ba2d6154be3f381",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/crazy-king-r1.webp",
       "bytes": 39606,
       "hash": "sha256-7310422fc7238d89c8194c40bbafd2f70724a3b979b76be7d4d939f7a773f257",
