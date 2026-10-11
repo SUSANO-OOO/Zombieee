@@ -2087,6 +2087,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/spindle-r1.webp",
+      "bytes": 33514,
+      "hash": "sha256-159c81bd5a20271648f0fd12e8ff8d3bd26f83d110e32177eb2518373d602b97",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/spitter-r1.webp",
       "bytes": 37788,
       "hash": "sha256-c1d11b6c38f5cb9753fb46bbb6db73d7db7d9c79886bd9c50418b3647f4a7ffb",
