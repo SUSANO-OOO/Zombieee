@@ -1,0 +1,48 @@
+{
+  "createdAt": "2026-10-11T11:32:26.401Z",
+  "tool": "built-in image_gen",
+  "input": "walk-a.png",
+  "canonicalSourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+  "generatedFile": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-3c00449b-e2d1-4c59-a424-eb5efdbfce1b.png",
+  "sheetSha256": "e016db700c1439e79fa73185fdca584fc20f27a22f7150934e60fdf141d12db1",
+  "width": 1448,
+  "height": 1086,
+  "hasAlpha": true,
+  "transparentPixels": 1216346,
+  "layout": {
+    "columns": 4,
+    "rows": 3
+  },
+  "status": "Source-bound hidden joint completion adopted; original identity retained",
+  "productionConnected": true,
+  "counted": true,
+  "normalPlayAccepted": false,
+  "reference": "identity-reference.png",
+  "copiedFile": "hidden-parts-study.png",
+  "sourceBinding": {
+    "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+    "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "scope": "Original single eye, pierced ivory head shell, visible tissue and blue veins, folded back fin, both claw hands and hock feet remain source-bound. Generated tissue only completes occluded joints. Original bright ground streak is excluded from the body part masks.",
+  "originalParts": [
+    "near-foot",
+    "far-foot",
+    "back-fin",
+    "head",
+    "near-hand",
+    "far-hand"
+  ],
+  "adopted": true
+}

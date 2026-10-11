@@ -6,6 +6,23 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
 
+export function validateJointParentAttachment(definition,name,attachment){
+ assert.ok(['head','spine'].includes(attachment.parent),'Only explicit head or thorax attachments are supported');
+ assert.ok(Array.isArray(attachment.pivot)&&attachment.pivot.length===2&&attachment.pivot.every(Number.isFinite),'Attachment requires a finite original joint');
+ if(name==='head'){
+  assert.equal(attachment.parent,'spine','The original head attaches to its thorax');
+  assert.deepEqual(attachment.pivot,definition.rig.head[0]);
+ }else{
+  assert.ok(!/^(?:root|pelvis|spine|arm-|leg-|weapon-)/.test(name),'Secondary organs cannot own constrained body bones');
+  const extra=definition.rig.extras?.find(e=>e.name===name);
+  assert.ok(extra&&extra.parent===attachment.parent,'Attachment must follow its declared source anatomy');
+  assert.deepEqual(attachment.pivot,extra.a);
+  assert.ok(!definition.rig.extras.some(e=>e.parent===name),'Only leaf organs may attach through this path');
+ }
+ assert.ok(definition.parts.some(p=>p.bone===name)&&definition.parts.some(p=>p.bone===attachment.parent),'Both sides of the original joint require owned paint');
+ assert.deepEqual(definition.interpolationPivots?.[name],attachment.pivot);
+}
+
 export function validateJointTransform(definition,name,matrix){
  const soft=definition.softBones?.[name];
  if(!soft){assert.ok(Math.abs(matrix[0]*matrix[3]-matrix[1]*matrix[2]-1)<.0001,`Non-rigid evaluated transform: ${name}`);return;}
@@ -27,6 +44,7 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  const dir=path.resolve(sourceDirectory);
  const d=JSON.parse(await readFile(path.join(dir,'parts.json'))),motionBytes=await readFile(path.join(dir,'motion.json.gz'));
  const motion=JSON.parse(gunzipSync(motionBytes));
+ for(const [name,attachment]of Object.entries(d.parentAttachments??{}))validateJointParentAttachment(d,name,attachment);
  const sha=b=>createHash('sha256').update(b).digest('hex');
  assert.equal(sha(await readFile(path.resolve('public'+d.identityBinding.path))),d.identityBinding.sourceSha256);
  assert.equal(sha(await readFile(path.join(dir,'identity-reference.png'))),d.sourceSha256);
@@ -87,10 +105,8 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  function pose(frame){
   const dx=frame.bones.root.head[0]-d.rig.root[0];
   for(const [name,attachment]of Object.entries(d.parentAttachments??{})){
-   assert.equal(attachment.parent,'head','Only explicitly attached leaf head organs are supported');
-   assert.deepEqual(d.interpolationPivots?.[name],attachment.pivot);
    const a=frame.deform[name],b=frame.deform[attachment.parent],[x,y]=attachment.pivot;
-   assert.ok(Math.hypot(a[0]*x+a[2]*y+a[4]-b[0]*x-b[2]*y-b[4],a[1]*x+a[3]*y+a[5]-b[1]*x-b[3]*y-b[5])<.001,'Authored head organ attachment must be exact');
+   assert.ok(Math.hypot(a[0]*x+a[2]*y+a[4]-b[0]*x-b[2]*y-b[4],a[1]*x+a[3]*y+a[5]-b[1]*x-b[3]*y-b[5])<.001,'Authored anatomical attachment must be exact');
   }
   return Object.fromEntries(bones.map(name=>{
    const m=[...frame.deform[name]];m[4]-=dx;

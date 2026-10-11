@@ -1,0 +1,173 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "kurome",
+  "assetPath": "/art/v100/joints/kurome-r1.webp",
+  "bytes": 39354,
+  "sha256": "5c542caaee18731de8d2306be8a0e35af7a96ceafbfba189363e2d1ac4ae4977",
+  "generatedPartsStudySha256": "e016db700c1439e79fa73185fdca584fc20f27a22f7150934e60fdf141d12db1",
+  "identitySourceSha256": "07600b769452397ba78e45a1be5cbc677e83691649cca456f605a1e4c6e0e8ef",
+  "identityBinding": {
+    "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+    "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "da9600618f7188ce380f5c6380afb3342ffbc4aa49c58d748835684a7e9900f3",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "07600b769452397ba78e45a1be5cbc677e83691649cca456f605a1e4c6e0e8ef",
+      "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "96d46adc8d197744cfc31f30ed40ed1c6f8d1d048396dabe7230ef47f838ee75",
+      "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "9120adb0214440eb4096ff641f75d60e15ac89c65e455432acf446827bb885cc",
+      "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "06ab0f60db46b965e9e902fb591a85783c1805ff49602b23f72bff18f939bd81",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "8c3fe44d7649bb7fe49abfdbad367ec507438948fc248e55edd8fdd8dd18218e",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "d9f28e890c6ef7ee1112fc0afc6ecdce6d685795b8d95cae71f733a80ed7d150",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "e2eac9a3e6a1291fb179aeec8d76e601142b8ecad3c26f9cbc43f35c96490660",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "43f955e5eb4ad07679e273e267fb18be8fbc8b18bfed8121449435b2a477c65c",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "07e3116fc4423e39b60a26356b3eb9eeb1c22152f2719f1ffa76928bb03f5148",
+      "original": false
+    },
+    {
+      "name": "near-foot",
+      "file": "near-foot.png",
+      "sha256": "414466688371d5a649c66ebe7cf5dadef376ada24cf755266d24cf5d4c625a4c",
+      "original": true
+    },
+    {
+      "name": "far-foot",
+      "file": "far-foot.png",
+      "sha256": "1af1ba8473c461414601baa3b3303edcc7d14aa2442c32bac9114a2be443f8e8",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "2708d1cd2910edd6515a70c12b4d01a9e9ed456623b7b3a703347c1bc52c9289",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "aae60267f08b582e9cfad9788f8ac3d7790eae03e3c2b9e049557c25d0ae50e8",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "1c0c6e2286020fbb4e948a404d9cfeead556486d9e7df58e0ae255e05874f668",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "b65293cfb0be499fce43f843d7332bfb1dba541737b187bb0a8a2dd736059aec",
+      "original": false
+    },
+    {
+      "name": "back-fin",
+      "file": "back-fin.png",
+      "sha256": "2d97f4b5c87fe027be8c1c951ba1143f6f7725ab60aba9a73626ec492b6ab43d",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "cc5f3ae0bdf79501cdb55a26be5476e5cceb8f96442a2bd677d79cabd8c74c0d",
+      "original": true
+    },
+    {
+      "name": "near-hand",
+      "file": "near-hand.png",
+      "sha256": "c9832e8efad17d13093e49a5df88f6f41507f89b3ffafb124cc0f0a6e0331b07",
+      "original": true
+    },
+    {
+      "name": "far-hand",
+      "file": "far-hand.png",
+      "sha256": "9323fd56a65bc159a1c2ef22fc9918dd8124d2c08cf80992dafe2e98b6da4c9b",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length Kurome alien hock gait, planted claw feet and free-arm eye-beam bracing. Original single eye, head shell, tissue, blue veins, back fin, long claw hands and hock feet retained; hidden joints explicitly completed. Head and fin follow original thorax attachments; emission follows the rendered eye. All48/all-action and continuous normal-play acceptance pending.",
+  "decodedBytes": 333824,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

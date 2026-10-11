@@ -1903,6 +1903,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/kurome-r1.webp",
+      "bytes": 39354,
+      "hash": "sha256-5c542caaee18731de8d2306be8a0e35af7a96ceafbfba189363e2d1ac4ae4977",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/mayo-feral-r1.webp",
       "bytes": 101258,
       "hash": "sha256-7b44687bdb460747584d538cb94a5ff000993ef49c0619b9a3669098bacc81a8",
