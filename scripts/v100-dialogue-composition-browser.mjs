@@ -11,6 +11,7 @@ import {publicDisplayText} from '../app/publicDisplayNames.js';
 import {serializeV100Save} from '../app/v100Save.js';
 import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+import {readV100IdentityFrames,assertV100IdentityFrames} from './v100-identity-frame-geometry.mjs';
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
@@ -85,24 +86,27 @@ for(const engine of engines){
     const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
     const box=element.querySelector('.v100-node-copy');
     const insertTitle=element.querySelector('.v100-insert-heading');
+    const caption=element.querySelector('.v100-story-insert figcaption');
+    const insertCaption=caption?{...rect(caption),text:caption.textContent,visibility:getComputedStyle(caption).visibility,opacity:Number(getComputedStyle(caption).opacity)}:null;
+    const insertLabels=[...element.querySelectorAll('.v100-story-insert svg text')].map(rect);
     const phoneMessage=element.querySelector('.v100-insert-phone-message');
     const phone=phoneMessage?{text:phoneMessage.textContent,lines:[...phoneMessage.querySelectorAll('tspan')].map(rect),panel:rect(element.querySelector('[data-v100-insert="message-backlog"] .v100-insert-arrival'))}:null;
-    const identityFrames=[...element.querySelectorAll('[data-v100-insert="takuya-identity"] svg svg')].map(frame=>{
-     const style=getComputedStyle(frame);
-     const clipId=frame.querySelector('g[clip-path]')?.getAttribute('clip-path')?.match(/^url\(#(.+)\)$/u)?.[1];
-     const clip=clipId&&frame.querySelector('#'+CSS.escape(clipId)+' rect');
-     const viewBox=frame.viewBox.baseVal;
-     const sourceFrameClipped=Boolean(clip&&Number(clip.getAttribute('x'))===viewBox.x&&Number(clip.getAttribute('y'))===viewBox.y&&Number(clip.getAttribute('width'))===viewBox.width&&Number(clip.getAttribute('height'))===viewBox.height);
-     return {width:Number(frame.getAttribute('width')),height:Number(frame.getAttribute('height')),computedWidth:parseFloat(style.width),computedHeight:parseFloat(style.height),overflowX:style.overflowX,overflowY:style.overflowY,filter:style.filter,sourceFrameClipped};
-    });
-      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,identityFrames,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
+   geometry.identityFrames=await scene.evaluate(readV100IdentityFrames);
    result.geometry=geometry;
    const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
    assert.ok(geometry.textValue.replace(/\s/gu,'').includes(expectedText.replace(/\s/gu,'')),`${fixture.id} authored text missing`);
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
    if(fixture.insertId)assert.equal(await scene.locator('[data-v100-insert="'+fixture.insertId+'"]').count(),1,'the explanatory diagram must be visible');
    if(geometry.insertTitle)assert.ok(geometry.insertTitle.y>=geometry.headingBox.bottom+1,'diagram title must sit below the location heading and its rule');
+   if(geometry.insertTitle){
+    const caption=geometry.insertCaption;
+    assert.ok(caption&&caption.text.trim()&&caption.visibility==='visible'&&caption.opacity===1,'the explanatory caption must stay visible');
+    assert.ok([caption.x,caption.y,caption.right,caption.bottom].every(Number.isFinite)&&caption.x>=0&&caption.y>=0&&caption.right<=viewport.width&&caption.bottom<=viewport.height,'the complete diagram caption must fit in the viewport');
+    assert.ok(caption.bottom<=geometry.copy.y-4,'the diagram caption must clear the dialogue panel by at least 4px');
+    assert.ok(geometry.insertLabels.every(label=>caption.y>=label.bottom+1),'the diagram caption must not cover labels inside the diagram');
+   }
    if(fixture.id==='insert-message-backlog-received'||fixture.id==='insert-message-backlog-dated'){
     assert.ok(geometry.phone,'the received message must be visible');
     assert.equal(geometry.phone.text,phoneMessage,'the diagram must preserve the producer message, including the request');
@@ -110,14 +114,18 @@ for(const engine of engines){
     for(const line of geometry.phone.lines)assert.ok(line.x>=geometry.phone.panel.x+1&&line.right<=geometry.phone.panel.right-1&&line.y>=geometry.phone.panel.y+1&&line.bottom<=geometry.phone.panel.bottom-1,'each complete message line must fit inside the phone panel');
    }
    if(fixture.insertId==='takuya-identity'){
-    assert.equal(geometry.identityFrames.length,2,'the identity comparison must show two isolated figures');
-    for(const frame of geometry.identityFrames){
-     assert.ok(Math.abs(frame.computedWidth-frame.width)<.05&&Math.abs(frame.computedHeight-frame.height)<.05,'outer diagram sizing must not resize a sprite frame');
-     assert.equal(frame.overflowX,'hidden','adjacent animation columns must stay clipped');
-     assert.equal(frame.overflowY,'hidden','adjacent animation rows must stay clipped');
-     assert.equal(frame.filter,'none','the diagram shadow belongs only to its outer frame');
-     assert.equal(frame.sourceFrameClipped,true,'letterbox space must not reveal the neighboring sprite');
+    assertV100IdentityFrames(geometry.identityFrames);
+    const figures=scene.locator('[data-v100-insert="takuya-identity"] svg svg');
+    const styles=await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style')));
+    try{
+     await figures.evaluateAll(frames=>{for(const frame of frames){frame.style.width=(Number(frame.getAttribute('width'))+20)+'px';frame.style.height=(Number(frame.getAttribute('height'))+20)+'px';}});
+     const resized=await scene.evaluate(readV100IdentityFrames);
+     assert.throws(()=>assertV100IdentityFrames(resized),/outer diagram sizing must not resize a sprite frame/,'actual CSS resize must fail the same geometry contract');
+    }finally{
+     await figures.evaluateAll((frames,styles)=>{frames.forEach((frame,i)=>styles[i]===null?frame.removeAttribute('style'):frame.setAttribute('style',styles[i]));},styles);
     }
+    const restored=await scene.evaluate(readV100IdentityFrames);assertV100IdentityFrames(restored);
+    geometry.identitySizingControl={cssResizeRejected:true,restoredGeometryValid:true};
    }
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));
    for(const rect of [geometry.copy,geometry.text,geometry.actions]){assert.ok(rect.x>=0&&rect.y>=0&&rect.right<=viewport.width&&rect.bottom<=viewport.height);}
@@ -131,7 +139,7 @@ for(const engine of engines){
     for(const owner of Object.keys(beforeSides))if(afterSides[owner])assert.equal(afterSides[owner],beforeSides[owner]);
    }
    assert.deepEqual(result.errors,[]);result.status='passed';
-  }catch(error){result.status='failed';result.error=String(error);await page.screenshot({path:out+'/'+engine+'-'+fixture.id+'-failure.png'}).catch(()=>{});}
+  }catch(error){result.status='failed';result.error=String(error);await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'-failure.png'}).catch(()=>{});}
   finally{await context.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({engine,viewport,fixture:fixture.id,status:result.status,error:result.error}));}
  }}finally{await browser.close();}
 }

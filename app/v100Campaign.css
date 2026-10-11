@@ -1421,7 +1421,7 @@
 @keyframes v100-insert-arrive { from { opacity:0; } to { opacity:1; } }
 @keyframes v100-insert-cross { from { transform:translateX(0); } to { transform:translateX(420px); } }
 @keyframes v100-insert-scan { from { transform:translateY(0); } to { transform:translateY(160px); } }
-@media (max-height:400px) { .v100-story-insert { height:calc(100% - 125px); } .v100-story-insert figcaption { font-size:12px; } }
+@media (max-height:400px) { .v100-story-insert { height:calc(100% - 125px); } .v100-story-insert figcaption { font-size:12px; transform:translateY(-10px); background:#0b1518; border-radius:3px; } }
 @media (prefers-reduced-motion:reduce) { .v100-story-insert * { animation:none !important; } .v100-story-insert[data-crossing] .v100-insert-van { transform:translateX(420px); } }
 .v100-portrait-frame[data-v100-expression] .v100-portrait { animation: v100-event-dissolve .22s ease both; }
 @keyframes v100-event-dissolve { from { opacity: 0; } to { opacity: 1; } }
