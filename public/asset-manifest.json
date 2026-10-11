@@ -1863,6 +1863,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/gairen-r1.webp",
+      "bytes": 65988,
+      "hash": "sha256-cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/gate-eater-r1.webp",
       "bytes": 61574,
       "hash": "sha256-aa7b1598546bb8e89f3794fc214e84b23d6e5738e6d7c93361ca1ad78bb42bdc",

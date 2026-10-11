@@ -1,0 +1,155 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "4d7cd41ecc9669fef6d0d133b29b25e8f9cde433ee5379ce8bbe905d8e43a7d0",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v090/bosses/gairen-battle-r1.png",
+    "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": true
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "identity-reference.png",
+      "sha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "walk-a": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-walk-a.png",
+      "sha256": "be882888594fffa361af7e78ebce3c4799772707dd90554b616a7c9b6cf99ff1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "walk-b": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-walk-b.png",
+      "sha256": "81522e0ca88d7ad6b66a961cca4d01c2f6111e188cc7351789af9f421fa1f29f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "attack-a": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-attack-a.png",
+      "sha256": "51d5cc306931d5f1f2fa2cd38be80dd42e104bd48eee7975247657802a7e217a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "attack-b": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-attack-b.png",
+      "sha256": "c0cc3ddc48155dd1e5c915e467d5a2211b3fca67a2427dbabeff1d6b713f4811",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "hit": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-hit.png",
+      "sha256": "e0154d7bd72cabc6619eb60d3fa739c071afcbe21c35007f3a7385ca8f6210eb",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    }
+  },
+  "usage": "Generated paint only in owned concealed limb joints and under-shell torso. Original visible armor, face, claws and feet retain canonical RGBA. Mirrored right-facing reference explicitly binds original cells.",
+  "generatedParts": [
+    "far-thigh",
+    "far-shin",
+    "near-thigh",
+    "near-shin",
+    "torso-underpaint",
+    "front-upper-arm",
+    "front-forearm",
+    "rear-upper-arm",
+    "rear-forearm"
+  ],
+  "adopted": true,
+  "productionConnected": false,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

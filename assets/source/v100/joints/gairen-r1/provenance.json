@@ -1,0 +1,251 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "gairen",
+  "assetPath": "/art/v100/joints/gairen-r1.webp",
+  "bytes": 65988,
+  "sha256": "cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "4d7cd41ecc9669fef6d0d133b29b25e8f9cde433ee5379ce8bbe905d8e43a7d0",
+  "identitySourceSha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6",
+  "identityBinding": {
+    "path": "/art/v090/bosses/gairen-battle-r1.png",
+    "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": true
+  },
+  "motionSha256": "23aa763f03554fe94903ff6104bad64311599d92806f03a19f5f899984eca92e",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "identity-reference.png",
+      "sha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "walk-a": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-walk-a.png",
+      "sha256": "be882888594fffa361af7e78ebce3c4799772707dd90554b616a7c9b6cf99ff1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "walk-b": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-walk-b.png",
+      "sha256": "81522e0ca88d7ad6b66a961cca4d01c2f6111e188cc7351789af9f421fa1f29f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "attack-a": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-attack-a.png",
+      "sha256": "51d5cc306931d5f1f2fa2cd38be80dd42e104bd48eee7975247657802a7e217a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "attack-b": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-attack-b.png",
+      "sha256": "c0cc3ddc48155dd1e5c915e467d5a2211b3fca67a2427dbabeff1d6b713f4811",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    },
+    "hit": {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": true,
+      "file": "original-hit.png",
+      "sha256": "e0154d7bd72cabc6619eb60d3fa739c071afcbe21c35007f3a7385ca8f6210eb",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "mirrorX": true
+      },
+      "reason": "Normalize canonical left-facing anatomy to the joint renderer right-facing source; no identity repaint."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "8aeeb4005dec16304afc87831c50732893c24f623c192515e2c7a3fa769ac8b9",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "4c1a80aacd162dd99027021aa397d8ef18d72ac268f5927990e193199c157319",
+      "original": false
+    },
+    {
+      "name": "far-paw",
+      "file": "far-paw.png",
+      "sha256": "817c7613ac640c0d034aa7a44dc789e8c9550eea2ccee232cf96958546543a57",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "467581731fcaac9e933817243143feca5aa28833306773a3ed6df14430f8167e",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "f4f8574bfd838676cde452db8f2de2183320dc87f7b854913d8865f2551b9946",
+      "original": false
+    },
+    {
+      "name": "near-paw",
+      "file": "near-paw.png",
+      "sha256": "40f4b1fbd3b08506e0519b68a9f1bff3d0ef829eced579d9776f45d99adad80e",
+      "original": true
+    },
+    {
+      "name": "torso-underpaint",
+      "file": "torso-underpaint.png",
+      "sha256": "b2cc723c92012037ee0b39fc9291517dedea60d0fd5293cff40bcd14cd158687",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "f4edbe2e8d8422ce4a31c72fc35b800ff0c559bf461fafac2291e4940c7db3fb",
+      "original": true
+    },
+    {
+      "name": "front-upper-arm",
+      "file": "front-upper-arm.png",
+      "sha256": "7f691f112d3faad385797b6b49b5fd253eb47ae6bde56c4cd81165ef6e05f75e",
+      "original": false
+    },
+    {
+      "name": "front-forearm",
+      "file": "front-forearm.png",
+      "sha256": "0ce492ec4641fdc55bf630ea4dadcddb0ec1a0dbb5f57f647f97cf236deaf6af",
+      "original": false
+    },
+    {
+      "name": "front-claw",
+      "file": "front-claw.png",
+      "sha256": "da536bbdf78e279b5fe5c0c0a2b5d37b0bc00baeabcb032034c2c830a92707e1",
+      "original": true
+    },
+    {
+      "name": "rear-upper-arm",
+      "file": "rear-upper-arm.png",
+      "sha256": "77344f06fd459b3e7e7cd6cf45d8a69156ea4bb31ab8b56b2650e5ae641e6809",
+      "original": false
+    },
+    {
+      "name": "rear-forearm",
+      "file": "rear-forearm.png",
+      "sha256": "559ae3229a6f8040d5370c1761fd80b27b279c65df7fc68d922ad36eb4fea712",
+      "original": false
+    },
+    {
+      "name": "rear-claw",
+      "file": "rear-claw.png",
+      "sha256": "419a2cf54a01c8e4e35361053fceb9c682652a6f24d6ae974ef3fab26a3ea9ae",
+      "original": true
+    },
+    {
+      "name": "armor",
+      "file": "armor.png",
+      "sha256": "cf35ca6d1f1ddb9e6e794501f3ca6014687fd63f1f66f9c3684ae4e7bbc2947c",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "ad43abbd3aa1dc910e1e8557715c3f8f42c088b686251b7c4f2e215928865ba5",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 two fixed-length planted legs and independent original hooked claws: lift before impact, downward swipe, braced rear arm and recovery. Original closed armor, face and two feet retain canonical paint; right-facing original normalization is explicit. Hidden joint completion confined to owned anatomy. Existing five-shell exposure/sweep, hit and death owners retained; all48/all-action native normal-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 421888,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
