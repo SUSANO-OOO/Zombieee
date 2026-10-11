@@ -8,13 +8,14 @@ import { V177_PANTHER_JOINT_ATLASES as pantherAtlases } from './v177PantherJoint
 import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.js';
 import { V177_GUARD_ENEMY_JOINT_ATLASES as guardEnemyAtlases } from './v177GuardEnemyJointData.js';
 import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJointData.js';
+import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJointData.js';
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];

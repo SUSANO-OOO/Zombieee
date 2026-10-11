@@ -1,0 +1,175 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "shade",
+  "assetPath": "/art/v100/joints/shade-r1.webp",
+  "bytes": 35896,
+  "sha256": "647f7db80624cdfc24f629ee30d3dedca14303cc91c9fb42f10c640da32ff413",
+  "generatedPartsStudySha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+  "identitySourceSha256": "c89fd1c9f54bb61f7b0c5adb9601511094364bcd765f5687143132c5719b399a",
+  "identityBinding": {
+    "path": "/art/v060/characters/legacy/shade-battle-gutter-v1.png",
+    "sourceSha256": "9b32752942adf2b925812c0cbd7c730323518f79c1de22c4eb4eef13138fb2ce",
+    "sourceRect": {
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.9928400954653938,
+      "tx": 45.403341288782826,
+      "ty": -150.79713603818618,
+      "flipX": true
+    }
+  },
+  "motionSha256": "1ad1fb3a1013555dcdd11392fbe89d9bba83a208864ce2168d0f13b043d83ef6",
+  "originalPoseBindings": {
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "687da1c46dee5077b24841b75570de9af588324d251dcee2d72b6ef03cd12a62",
+      "path": "/art/v060/characters/legacy/shade-battle-gutter-v1.png",
+      "sourceSha256": "9b32752942adf2b925812c0cbd7c730323518f79c1de22c4eb4eef13138fb2ce",
+      "sourceRect": {
+        "x": 1182,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "flipX": true,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 490
+        },
+        {
+          "x": 28,
+          "y": 490,
+          "w": 366,
+          "h": 55
+        },
+        {
+          "x": 0,
+          "y": 545,
+          "w": 394,
+          "h": 212
+        }
+      ]
+    },
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "c89fd1c9f54bb61f7b0c5adb9601511094364bcd765f5687143132c5719b399a",
+      "path": "/art/v060/characters/legacy/shade-battle-gutter-v1.png",
+      "sourceSha256": "9b32752942adf2b925812c0cbd7c730323518f79c1de22c4eb4eef13138fb2ce",
+      "sourceRect": {
+        "x": 394,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "flipX": true
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "da13a6daab9259ccd307806313521418ee8d87fe8f78fd973069e1bc62bdb8f3",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "3c08cdbe44cecdc18ca2ce2c80d54d2ab69ede5b9af67fc026ea4d5a41b6681e",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "8236da9110d3093b1cf64137372d0670d25d132fab6367ec9d1adb7cec1c714d",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "767458026f0f119e17618a3fc5979abf02a677771bb0f2fd8a30ea839e593d98",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "7194d0f430ee1432fc72e0edef6ffc514ce406476f3e9cf91467b15b7d5d9e19",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "2918dd5695a56e4fa1c35ba16a306b21970625041887a845f80f07f6a50ea7d6",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "25a117684bad82f3ff9e922d4ac4bed8d163919c0f06bb801f4f9d93fc027242",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "8df835bf97aea98d02b1d2e67010a755e16d5f5fdb6e5f745caa1913145358f3",
+      "original": true
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "6bba624eb8e224595f53e641655b9f443f43e685f78227953f3d69fe831035b5",
+      "original": true
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "b2a6a9140c9a45aca681f24c39daca3e356cb4e13a6e199f6cdf93d9db8aa862",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "8795015ed86b8807b09010584a70b9e4d0fa4053895fe7c0cc63a21f0930535a",
+      "original": true
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "e708b284256624e219bb4a4fe3ed801036edb911d1894cb688e2b0b294dcf00b",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "47e9c47c9722f8df3ceff09e626f8cfc6c90f005795371535b0ce6e3752daabe",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "f699bf5d5b1fffc150d711fa7d159a983e97272244f0af01d5e009d138999b9b",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "85473e16bf7b27d79a2125e9744138c277284bfb75cd4c02cc00827d7e872f1c",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length infected martial run, planted support and original bent guard/punch. Original head, visible costume, approved attack arms, fists and boots retained; generated hidden completion and joint caps explicitly bound. All48/all-action and continuous normal-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 251904,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

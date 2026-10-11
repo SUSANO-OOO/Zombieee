@@ -350,3 +350,31 @@ node --test tests/v177-newcomer-joints.test.mjs tests/v177-installed-asset-contr
 The scope remains all 48 forms and all actions. The remaining 22 forms, complete
 hit/death/deploy/ability/frenzy/retreat ownership, continuous normal-speed play,
 native performance and saved physical-iPhone recording audio remain pending.
+
+The infected martial source adds Shade to the local candidate: twenty-seven
+forms and twenty-four conditional textures. Its original attack arms, fists,
+face, visible mesh shirt, trousers and boots remain bound to approved source
+rectangles and exact RGBA. Four hidden joint-cap regions explicitly record
+their study cell, hash, rest axes and masks. The original bent guard supplies
+the neutral hand position; offsets from an earlier, rejected walk-arm study
+are not applied to it. Both feet exchange positions during the run, and their
+planted world-space soles remain fixed. The source contains 305 evaluated
+Blender frames, 151 runtime poses and 1,986 dense checked interpolation samples.
+
+Shade adds 35,896 download bytes and 251,904 decoded bytes. All twenty-four
+textures total 1,754,588 download bytes. Authoring sources are excluded from
+the PWA pack. Tests also check that the guard remains beside the face, feet
+exchange order, mirrored contacts match visible fists, and the texture loads
+once only for a battle that includes this enemy.
+
+```powershell
+node scripts/build-v177-infected-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-infected-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+This local extension does not change the remote twenty-six-form candidate
+until a new verified push. The goal remains all 48 forms and all actions;
+remaining 21 forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
+continuous normal-speed play, native performance and physical recording audio
+are not accepted by these offline source checks.

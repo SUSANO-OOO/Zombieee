@@ -1,0 +1,179 @@
+{
+  "kind": "shade",
+  "scope": "Hidden anatomical completion and four explicitly recorded joint caps beneath original approved arms; original visible head, torso paint, fists, arm paint and boots retained.",
+  "tool": "image_gen built-in",
+  "sourceReferenceSha256": "c89fd1c9f54bb61f7b0c5adb9601511094364bcd765f5687143132c5719b399a",
+  "imageSha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+  "prompt": "parts-prompt.txt",
+  "generatedFile": "exec-ff6cd868-833b-4653-be94-2ed154c8684c.png",
+  "reference": "identity-reference.png",
+  "hiddenJointCaps": [
+    {
+      "part": "far-upper-arm",
+      "studySha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+      "studyCell": 11,
+      "studyFile": "parts-study-r1.png",
+      "sourceAxis": [
+        [
+          1099.6910009182736,
+          648.21
+        ],
+        [
+          1151.3805513016846,
+          911.8199999999999
+        ]
+      ],
+      "restAxis": [
+        [
+          313,
+          128
+        ],
+        [
+          357,
+          138
+        ]
+      ],
+      "targetWidth": 28,
+      "endpoints": [
+        [
+          313,
+          128
+        ],
+        [
+          357,
+          138
+        ]
+      ],
+      "radiusPx": 18.2,
+      "mask": "two explicit joint endpoint circles, behind original RGBA"
+    },
+    {
+      "part": "far-forearm",
+      "studySha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+      "studyCell": 12,
+      "studyFile": "parts-study-r1.png",
+      "sourceAxis": [
+        [
+          88.92345276872965,
+          1001.26
+        ],
+        [
+          243.55166051660515,
+          1190.92
+        ]
+      ],
+      "restAxis": [
+        [
+          357,
+          138
+        ],
+        [
+          412,
+          132
+        ]
+      ],
+      "targetWidth": 24,
+      "endpoints": [
+        [
+          357,
+          138
+        ],
+        [
+          412,
+          132
+        ]
+      ],
+      "radiusPx": 15.600000000000001,
+      "mask": "two explicit joint endpoint circles, behind original RGBA"
+    },
+    {
+      "part": "near-upper-arm",
+      "studySha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+      "studyCell": 8,
+      "studyFile": "parts-study-r1.png",
+      "sourceAxis": [
+        [
+          157.18039772727272,
+          648.63
+        ],
+        [
+          103.58655876143561,
+          917.46
+        ]
+      ],
+      "restAxis": [
+        [
+          257,
+          92
+        ],
+        [
+          225,
+          137
+        ]
+      ],
+      "targetWidth": 32,
+      "endpoints": [
+        [
+          257,
+          92
+        ],
+        [
+          225,
+          137
+        ]
+      ],
+      "radiusPx": 20.8,
+      "mask": "two explicit joint endpoint circles, behind original RGBA"
+    },
+    {
+      "part": "near-forearm",
+      "studySha256": "cb06d5c71132e3f40021706077f8088f68edf7ec54fd3b1dd9db4b203ebca999",
+      "studyCell": 9,
+      "studyFile": "parts-study-r1.png",
+      "sourceAxis": [
+        [
+          441.67981072555204,
+          647.3
+        ],
+        [
+          542.5334872979215,
+          899.5999999999999
+        ]
+      ],
+      "restAxis": [
+        [
+          225,
+          137
+        ],
+        [
+          269,
+          117
+        ]
+      ],
+      "targetWidth": 25,
+      "endpoints": [
+        [
+          225,
+          137
+        ],
+        [
+          269,
+          117
+        ]
+      ],
+      "radiusPx": 16.25,
+      "mask": "two explicit joint endpoint circles, behind original RGBA"
+    }
+  ],
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "far-upper-arm",
+    "far-forearm",
+    "near-upper-arm",
+    "near-forearm",
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}
