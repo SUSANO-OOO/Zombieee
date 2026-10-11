@@ -128,7 +128,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assertMacRuntime(phaseGJob, "chromium webkit", { requirePreflightGate: false });
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
   assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
-  assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 1);
+  assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 2);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
   assert.match(nativePwaJob,/runs-on: macos-15-intel/u);
@@ -208,7 +208,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "verify", "v100-webkit-frame-control", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -270,6 +270,26 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.equal(hudCapture.env.ISSUE156_WEBKIT_HUD_STATE, undefined);
   assert.equal(hudCapture.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS, "60000");
   assert.equal(jobs["webkit-viewport"]["timeout-minutes"], 20);
+});
+
+test("compact shadow diagnostics cannot consume or replace the primary performance job",async()=>{
+  const {jobs}=loadYaml(await readFile('.github/workflows/ci.yml','utf8'));
+  const primary=jobs['v100-webkit-frame-control'],diagnostic=jobs['v177-webkit-shadow-diagnostic'];
+  assert.equal(primary['timeout-minutes'],30);
+  assert.equal(primary.steps.some(s=>s.env?.V100_PRESIDENT_SHADOW_BLUR_ABLATION),false);
+  assert.ok(primary.steps.some(s=>s.id==='preserved_primary_perf'&&s.if==='always()'));
+  assert.equal(diagnostic.needs,'v100-webkit-frame-control');
+  assert.equal(diagnostic.if,"${{ always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled') }}");
+  assert.equal(diagnostic['runs-on'],'macos-15');assert.equal(diagnostic['timeout-minutes'],20);
+  assert.equal(diagnostic['continue-on-error'],undefined);
+  assert.ok(diagnostic.steps.some(s=>s.run==='node scripts/verify-playwright-container-runtime.mjs --macos-arm64'));
+  const probe=diagnostic.steps.find(s=>s.env?.V100_PRESIDENT_SHADOW_BLUR_ABLATION==='1');
+  assert.equal(probe.env.V100_PRESIDENT_DIAGNOSTIC_VIEWPORT,'844x390');
+  assert.equal(probe.env.V100_PRESIDENT_BASELINE_ONLY,'1');assert.equal(probe.env.V100_PRESIDENT_RECORD_VIDEO,'0');
+  const upload=diagnostic.steps.at(-1);assert.equal(upload.if,'always()');
+  assert.equal(upload.with['if-no-files-found'],'error');
+  assert.equal(upload.with.path,probe.env.V100_PRESIDENT_PRESENTATION_OUT);
+  assert.ok(!Object.values(jobs).filter(j=>j!==diagnostic).some(j=>[j.needs].flat().includes('v177-webkit-shadow-diagnostic')),'No acceptance lane depends on diagnostic success');
 });
 
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
