@@ -127,6 +127,7 @@ test("background observations wait for fresh pointer preflight and retain the pa
   const result = await background; await next;
   assert.equal(result.liveHumanTargetCount, 2);
   assert.equal(result.bossEngaged, true);
+  assert.equal(result.setupRuntime.fixture, true);
   assert.deepEqual(events, ["visibility", "boss", "live-count", "runtime", "actor", "unit", "vehicle", "next-pointer"]);
 });
 

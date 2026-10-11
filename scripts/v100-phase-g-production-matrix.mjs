@@ -18,6 +18,7 @@ import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEv
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
 import { unitContentFor } from "../app/content/unitCatalog.js";
+import { COMBAT_ROLE_RULES } from "../app/combatLifecycle.js";
 import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence } from "../app/v100PhaseGContract.js";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
@@ -239,6 +240,29 @@ function sameDeploymentCardIdentity(left, right) {
     && left.nodeId === right.nodeId
     && left.kind === right.kind
     && left.slot === right.slot;
+}
+
+function ordinaryMeleeProofFrontline(runtime, enemy, diagnostics, attackObserved = false) {
+  const none = { pending: false, kind: null };
+  if (attackObserved || runtime?.screen !== "battle"
+    || COMBAT_ROLE_RULES[enemy?.id]?.attackType !== "melee") return none;
+  const fighters = runtime.fighters ?? [];
+  if (!fighters.some((fighter) => fighter.side === "zombie" && fighter.kind === enemy.id
+    && Number(fighter.hp) > 0 && fighter.combatReady === true && fighter.gateEntering !== true)) return none;
+  // Two living marksmen can kite and kill a melee actor before contact. A
+  // real arriving frontline unit also counts, so this plan never duplicates
+  // it while it traverses the production deployment gate.
+  if (fighters.some((fighter) => fighter.side === "human" && Number(fighter.hp) > 0
+    && COMBAT_ROLE_RULES[unitContentFor(fighter.kind)?.id]?.attackType === "melee")) return none;
+  const candidates = deploymentCandidatesFromDiagnostics(diagnostics, new Set())
+    .map((card, index) => ({ card, index, content: unitContentFor(card.kind) }))
+    .filter(({ content }) => content && Number(content.hp) > 0
+      && COMBAT_ROLE_RULES[content.id]?.attackType === "melee");
+  candidates.sort((left, right) => Number(right.content.hp) - Number(left.content.hp)
+    || Number(left.content.damage) / Math.max(.01, Number(left.content.attackEvery))
+      - Number(right.content.damage) / Math.max(.01, Number(right.content.attackEvery))
+    || left.index - right.index);
+  return { pending: true, kind: candidates[0]?.card.kind ?? null };
 }
 
 function sameNormalizedDeploymentOwner(left, right) {
@@ -995,7 +1019,7 @@ async function readPhaseGSustainState(page, { bossIsLive, readSetupRuntime,
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
-      return { bossEngaged, liveHumanTargetCount };
+      return { bossEngaged, liveHumanTargetCount, setupRuntime };
     })();
     return withDeploymentPreinputDeadline(page, observation, DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS,
       "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT", { phase: "sustain-observation" });
@@ -4144,9 +4168,26 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // the initial three deployments first, then use only affordable native
       // cards; the deferred proof unit need not wait for an enemy to attack a
       // formation that has already died.
+      let meleeFrontline = { pending: false, kind: null };
       if (!bossKind && proofActor && bossDeploymentFinished
-        && (!proofUnitDeployed || liveHumanTargetCount < 2)) {
-        const requestedKind = !proofUnitDeployed ? proofUnitKind : null;
+        && !completedImpactProofEnabled && !proofActorAttackObserved) {
+        meleeFrontline = ordinaryMeleeProofFrontline(backgroundState.setupRuntime, proofActorContent, null);
+        if (meleeFrontline.pending) {
+          const diagnostics = await withPhaseGPageInputLock(page, () => withDeploymentPreinputDeadline(page,
+            readBattleDeploymentDiagnostics(page, { phase: "proof-melee-frontline" }),
+            DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS, "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT",
+            { phase: "proof-melee-frontline" }));
+          meleeFrontline = ordinaryMeleeProofFrontline(backgroundState.setupRuntime, proofActorContent, diagnostics,
+            proofActorAttackObserved);
+        }
+      }
+      if (!bossKind && proofActor && bossDeploymentFinished
+        && (!proofUnitDeployed || liveHumanTargetCount < 2 || meleeFrontline.pending)
+        && (!proofUnitDeployed || !meleeFrontline.pending || meleeFrontline.kind)) {
+        // Keep the original attack deadline/predicate. Select an affordable
+        // production melee card instead of spending the remaining command on
+        // another marksman while the exact ordinary melee proof is pending.
+        const requestedKind = !proofUnitDeployed ? proofUnitKind : meleeFrontline.kind;
         const pointer = await performVerifiedDeploymentPointer(page, {
           requestedKind, phase: "proof-target-continuity",
         });
