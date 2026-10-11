@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
-import {spriteKinds,spriteFrameFor} from '../app/spriteManifest.js';
+import {spriteKinds} from '../app/spriteManifest.js';
 import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
@@ -10,6 +10,7 @@ import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {assertV177EnemyLiveRender} from './v177-enemy-live-render-contract.mjs';
+import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -65,8 +66,7 @@ try{
           await page.waitForFunction(({id,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence>previous,{id:proof.fighterId,previous});
           const sample=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id),proof.fighterId);
           const r=sample.renderAudit;
-          const frame=spriteFrameFor(kind,r.spriteState,r.direction);
-          samples.push({action,render:r,pixelScale:r.renderHeight/frame.sourceRect.h});
+          samples.push({action,render:r,pixelScale:renderedSourcePixelScale(r)});
           assert.ok(r.assetReady&&r.renderWidth>0&&r.renderHeight>0,`${kind}/${action}: actual sprite renderer`);
           assert.ok(Number.isFinite(r.poseScaleX)&&Number.isFinite(r.poseScaleY),`${kind}/${action}: finite pose`);
           const expectedState={'wind-up':'wind-up',attack:'active',recovery:'recovery','hit-light':'hit-light'}[action];
@@ -148,8 +148,7 @@ try{
         assert.ok(gore.body.corpse,'real defeat owns the severed body');
         const live=gore.body.renderHistory.at(-1),dead=gore.body.corpseRenderHistory.at(-1);
         assert.ok(live&&dead,'live and dead bodies must both have actual paint receipts');
-        const liveFrame=spriteFrameFor(kind,live.spriteState,live.direction),deadFrame=spriteFrameFor(kind,'death',dead.direction);
-        assert.ok(Math.abs(live.renderHeight/liveFrame.sourceRect.h-dead.renderHeight/deadFrame.sourceRect.h)<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
+        assert.ok(Math.abs(renderedSourcePixelScale(live)-renderedSourcePixelScale(dead))<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
         await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}.png`});
       }
       // Replacing the battlefield clears the old effects; merely returning to

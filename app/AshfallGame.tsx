@@ -4081,6 +4081,7 @@ type FighterRenderAudit = {
   clipRect: { x: number; y: number; w: number; h: number } | null;
   direction?: "left" | "right" | null;
   sourceRow?: number | null;
+  sourceRect?: { x: number; y: number; w: number; h: number } | null;
   frameFlipX?: boolean | null;
   renderWidth?: number | null;
   renderHeight?: number | null;
@@ -4514,6 +4515,7 @@ function drawSpriteFighter(
       clipRect: null,
       direction,
       sourceRow: frame.sourceRect.y,
+      sourceRect: { ...frame.sourceRect },
       frameFlipX: frame.flipX,
       renderWidth: size.w,
       renderHeight: size.h,
@@ -8497,6 +8499,7 @@ function drawWorld(
           clipRect: null,
           direction: corpse.side === "human" ? "right" : "left",
           sourceRow: frame.sourceRect.y,
+          sourceRect: { ...frame.sourceRect },
           frameFlipX: frame.flipX,
           renderWidth: width,
           renderHeight: height,
