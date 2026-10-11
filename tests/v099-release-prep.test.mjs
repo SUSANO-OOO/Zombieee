@@ -1,7 +1,7 @@
 import { V100_R9_ASSET_ADDITIONS, V100_R9_ASSET_BYTES } from '../scripts/v100-r9-asset-contract.mjs';
 import { V100_OPENING_ASSET_ADDITIONS, V100_OPENING_ASSET_BYTES } from '../scripts/v100-opening-asset-contract.mjs';
 import { V177_SPRITE_REPLACEMENTS, V177_SPRITE_BYTES_DELTA } from '../scripts/v177-sprite-repair-asset-contract.mjs';
-import { V177_SPRITE_UPDATE_BYTES } from '../scripts/v100-release-asset-contract.mjs';
+import { V177_SPRITE_UPDATE_BYTES, V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES } from '../scripts/v100-release-asset-contract.mjs';
 import { V177_JOINT_ASSET_ADDITIONS, V177_JOINT_ASSET_BYTES } from '../scripts/v177-joint-asset-contract.mjs';
 import { V102_ASSET_ADDITIONS, V102_ASSET_BYTES } from '../scripts/v102-asset-contract.mjs';
 import assert from "node:assert/strict";
@@ -63,13 +63,13 @@ test("the six motion atlas replacements preserve source-bound old/new transport 
   }
 });
 
-test("the published0.9.9.5 pack reuses413 assets and refreshes Musashi and the broken WebKit card", () => {
+test("the published0.9.9.5 pack reuses412 assets and refreshes Musashi, Anchor Bloom and the broken WebKit card", () => {
   assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
   const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
   assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, assetContract.additionsFromV0995); assert.equal(update.downloadBytes, assetContract.bytesFromV0995);
-  assert.equal(update.unchangedCount, 413); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
+  assert.equal(update.unchangedCount, 412); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
   assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/") || spriteRefreshPaths.includes(asset.path) || V100_COMPLETION_ASSET_ADDITIONS.some(expected=>expected.path===asset.path)));
   const incomplete = verifyUpdatePayload({ manifest: candidate, storedHashes: retainedHashes, expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, assetContract.additionsFromV0995);
@@ -124,10 +124,10 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "1.0.3");
-  assert.equal(update.downloadCount, 108 + V100_COMPLETION_ASSET_ADDITIONS.length);
+  assert.equal(update.downloadCount, 108 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
   assert.equal(update.unchangedCount, 346);
-  assert.equal(update.reusedCount, 3);
+  assert.equal(update.reusedCount, 2);
   assert.equal(update.removedCount, 27);
 
   const completedHashes = new Set([
@@ -159,10 +159,10 @@ test("the published Version 0.9.9.3 pack updates to 1.0.3 while reusing unchange
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
   assert.equal(update.toVersion, "1.0.3");
-  assert.equal(update.downloadCount, 59 + V100_COMPLETION_ASSET_ADDITIONS.length);
+  assert.equal(update.downloadCount, 59 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
   assert.equal(update.unchangedCount, 395);
-  assert.equal(update.reusedCount, 3);
+  assert.equal(update.reusedCount, 2);
   assert.equal(update.removedCount, 20);
 
   const completedHashes = new Set([
@@ -199,7 +199,7 @@ test('installed 1.0.1 downloads the gore texture, R9 scenes and opening while re
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.1');assert.equal(update.toVersion,'1.0.3');
   assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
   assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());
-  assert.equal(update.unchangedCount,previous.assets.length-3);
+  assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length);
 });
 
 test('installed 1.0.2 downloads only the exact R9 and opening additions without removing existing media',()=>{
@@ -208,5 +208,5 @@ test('installed 1.0.2 downloads only the exact R9 and opening additions without 
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.2');assert.equal(update.toVersion,'1.0.3');
   assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-3);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length);
 });

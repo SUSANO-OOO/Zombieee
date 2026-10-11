@@ -1266,8 +1266,8 @@
     },
     {
       "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
-      "bytes": 1727262,
-      "hash": "sha256-0f39067f32bd473222d353e21057670afdd799cca204d102a1af3dc035522174",
+      "bytes": 1641792,
+      "hash": "sha256-cb2e25e889723aa08d23025763048a5540992d703aaeb735c4cdabb0be8a5a43",
       "pack": "units",
       "category": "enemy",
       "criticality": "critical",
@@ -1820,6 +1820,14 @@
       "hash": "sha256-a426198839b80b54d42923e6e0a9d1e4e719611c84524fa2e81ff6c6753ce766",
       "pack": "campaign-core",
       "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/anchor-bloom-r1.webp",
+      "bytes": 41226,
+      "hash": "sha256-b9ff3ec5757ad17715130bd308427a40964b8f430108c5bfb274a1de9fe12219",
+      "pack": "units",
+      "category": "unit",
       "criticality": "critical"
     },
     {

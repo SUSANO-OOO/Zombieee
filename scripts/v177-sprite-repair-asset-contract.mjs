@@ -1,3 +1,4 @@
+import { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';
 // Exact source-bound sprite fixes; no other published art changes.
 export const V177_SPRITE_REPLACEMENTS = Object.freeze([
   {
@@ -50,6 +51,7 @@ export const V177_SPRITE_REPLACEMENTS = Object.freeze([
       "criticality": "critical"
     },
     "delta": -8278
-  }
+  },
+  ...V177_ANCHOR_SPRITE_REPLACEMENTS,
 ]);
-export const V177_SPRITE_BYTES_DELTA = -24504;
+export const V177_SPRITE_BYTES_DELTA = -109974;

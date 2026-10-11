@@ -113,9 +113,12 @@ export const V100_TITLE_AUDIO_ADDITION = Object.freeze({ path: V100_TITLE_VOICE.
 const r5RemovedPaths = new Set(V100_R5_ASSET_REMOVALS.map(asset=>asset.path));
 const r5ReplacementByPath = new Map(V100_R5_ASSET_REPLACEMENTS.map(asset=>[asset.path,asset.next]));
 const spriteReplacementByPath = new Map(V177_SPRITE_REPLACEMENTS.map(asset=>[asset.path,asset.next]));
-// Musashi was already present in every compared installed pack; his changed
-// hash requires one additional download. The two bosses were already new.
-export const V177_SPRITE_UPDATE_BYTES = V177_SPRITE_REPLACEMENTS.reduce((sum,asset)=>sum+(asset.path.includes('/v090/')?asset.next.bytes:asset.delta),0);
+// Musashi and Anchor Bloom are present in the compared legacy packs. Their
+// changed hashes require the complete new payload, while the two bosses are
+// already counted among new V1 assets. The legacy base already counts Musashi.
+const legacySpriteRefreshes = V177_SPRITE_REPLACEMENTS.filter(asset=>asset.path.includes('/v090/')||asset.path.includes('/v0995/'));
+export const V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES = legacySpriteRefreshes.length - 1;
+export const V177_SPRITE_UPDATE_BYTES = V177_SPRITE_REPLACEMENTS.reduce((sum,asset)=>sum+(legacySpriteRefreshes.includes(asset)?asset.next.bytes:asset.delta),0);
 export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_POST_CREDITS_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS,V100_TITLE_AUDIO_ADDITION).filter(asset=>!r5RemovedPaths.has(asset.path)).map(asset=>r5ReplacementByPath.get(asset.path)??asset).concat(V100_R5_ASSET_ADDITIONS,V102_ASSET_ADDITIONS,V100_R9_ASSET_ADDITIONS,V100_OPENING_ASSET_ADDITIONS,V177_JOINT_ASSET_ADDITIONS).map(asset=>spriteReplacementByPath.get(asset.path)??asset));
 const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 const endingAssetsBytes = [...V100_CREDITS_FILM_ASSET_ADDITIONS, ...V100_POST_CREDITS_ASSET_ADDITIONS].reduce((sum, asset) => sum + asset.bytes, 0);
@@ -127,10 +130,10 @@ const bundledAudioAdditionsFromV0995 = 28 + V100_R5_ASSET_DELTA.audioBundleAddit
 export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   count: 457 + V100_COMPLETION_ASSET_ADDITIONS.length,
   distinctHashes: 455 + V100_COMPLETION_ASSET_ADDITIONS.length,
-  additionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length,
+  additionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
   bundledAudioAdditionsFromV0995,
   audioBundlePath: "/pwa-bundles/audio-v1.bin",
-  networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1,
+  networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1 + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
   artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
