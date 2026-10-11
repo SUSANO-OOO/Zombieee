@@ -2047,6 +2047,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/resonator-r1.webp",
+      "bytes": 39254,
+      "hash": "sha256-3d932476e029ab1c492d5e1cd68bc05c8d14c24034117bd1874ff934285de521",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/scout-r1.webp",
       "bytes": 46982,
       "hash": "sha256-57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",

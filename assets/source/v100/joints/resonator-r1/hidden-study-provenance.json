@@ -1,0 +1,160 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/resonator-battle-v2.png",
+    "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "ae1a87594d84d5ef55f5f7fc860d920774780ab536768074c44c5b0300d51e17",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "c02f951665ee7efa8b3142f25e17b0a7121fff22c3ba96b96fe41d96474fe5b6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "da5bdd2609b24e8369f9654c8bc3cb9c723385156afafa6a7b3c7e447934c400",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "69a8ebea10f473d3a2826927110cb6de9064c264aa6220d2e98c912c03d4835d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "526f4ef20e7802dc76bfcbff46ae4f363d357c08d710e0f93d950d854d01251b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5cceed3885237decd6081391ea0d3e7a119ee65588dcd3a73f705cddd15af901",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Only cells0..6, Resonator material, for concealed owned joints and under-costume continuation. Cagewalker rows never used. Exact canonical RGBA retains giant throat/head, charcoal/ochre costume, hands and boots. Sonic source follows original throat, not a hand.",
+  "generatedParts": [
+    "far-upper",
+    "far-lower",
+    "near-upper",
+    "near-lower",
+    "large-upper",
+    "large-lower",
+    "small-upper",
+    "small-lower",
+    "torso-underpaint"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

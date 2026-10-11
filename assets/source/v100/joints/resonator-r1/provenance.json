@@ -1,0 +1,257 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "resonator",
+  "assetPath": "/art/v100/joints/resonator-r1.webp",
+  "bytes": 39254,
+  "sha256": "3d932476e029ab1c492d5e1cd68bc05c8d14c24034117bd1874ff934285de521",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+  "identitySourceSha256": "ae1a87594d84d5ef55f5f7fc860d920774780ab536768074c44c5b0300d51e17",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/resonator-battle-v2.png",
+    "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "6e04b6cd42eec1f12903faf514c6ee9edc818ac6bcfcd5ae23a3013a58b8107c",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "ae1a87594d84d5ef55f5f7fc860d920774780ab536768074c44c5b0300d51e17",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "c02f951665ee7efa8b3142f25e17b0a7121fff22c3ba96b96fe41d96474fe5b6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "da5bdd2609b24e8369f9654c8bc3cb9c723385156afafa6a7b3c7e447934c400",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "69a8ebea10f473d3a2826927110cb6de9064c264aa6220d2e98c912c03d4835d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "526f4ef20e7802dc76bfcbff46ae4f363d357c08d710e0f93d950d854d01251b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5cceed3885237decd6081391ea0d3e7a119ee65588dcd3a73f705cddd15af901",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-upper",
+      "file": "far-upper.png",
+      "sha256": "69646b1d4c9a931b4f42ec4be30304bb2fac2c2f4e42fba17ff882a64ec8646f",
+      "original": false
+    },
+    {
+      "name": "far-lower",
+      "file": "far-lower.png",
+      "sha256": "c384e05e150b1c760873e6dfd93ab352664757a1226629f8db2a80e0f190b55e",
+      "original": false
+    },
+    {
+      "name": "far-foot",
+      "file": "far-foot.png",
+      "sha256": "9716806f94be785356d8a37fe75997afba133a59502efbd01700b7efaf801bd4",
+      "original": true
+    },
+    {
+      "name": "near-upper",
+      "file": "near-upper.png",
+      "sha256": "3df236b491995951d8ff65c3117d017aecf1bb84e26dac5310997c9e50ee5ffc",
+      "original": false
+    },
+    {
+      "name": "near-lower",
+      "file": "near-lower.png",
+      "sha256": "f2fa7f23c8fa227d1e83d935673ca7bede9a2e1c2cb70260ab6b2c3468a30105",
+      "original": false
+    },
+    {
+      "name": "near-foot",
+      "file": "near-foot.png",
+      "sha256": "79fc14eb7d7bc1e7a27e18691acfe6e97ef415556b953b23b5ffb5795979a2c8",
+      "original": true
+    },
+    {
+      "name": "large-upper",
+      "file": "large-upper.png",
+      "sha256": "510aaa3241afc2e071a4c7bef48659f1240b96ec9997a5c5b388a3ece8303f7c",
+      "original": false
+    },
+    {
+      "name": "large-lower",
+      "file": "large-lower.png",
+      "sha256": "38c18cbc2c561dc92559c81ecdc017fc3156f7b7943d4cc3c427dab839b6ddd6",
+      "original": false
+    },
+    {
+      "name": "large-claw",
+      "file": "large-claw.png",
+      "sha256": "546adf2947ecc3919b01d1a3faed6a64e5e0a04c9649b66d8b4835ce24bd7770",
+      "original": true
+    },
+    {
+      "name": "small-upper",
+      "file": "small-upper.png",
+      "sha256": "1cd036c25d34e5a0e5cc9f4b406f87440e1cc1e71082abffb9b2bc2745820934",
+      "original": false
+    },
+    {
+      "name": "small-lower",
+      "file": "small-lower.png",
+      "sha256": "5a1486d5aceaaf708ff45d75a4a0ac5aac11eb076f2df842f2fff93526cf4d40",
+      "original": false
+    },
+    {
+      "name": "small-claw",
+      "file": "small-claw.png",
+      "sha256": "531e810bf18b61b39a3150adb9136f50522f2519c88c60d48b265250fd1ab948",
+      "original": true
+    },
+    {
+      "name": "torso-underpaint",
+      "file": "torso-underpaint.png",
+      "sha256": "4431ab1fcf759fd100f37aa794b2fd6f8401a3435f93f5b4ed9fbc1eed29402e",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "407785aece6bff79cf60e51a00d2d1983b5fcb88e8c74186b699e28c744c4230",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "682940d9c446b830c653e0d7bdfd008a1b5bac2996e83332544360b93966bef5",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "966643fb4b74e90f5aee546e17cb6935ab32bb9ee54b422a74f2319935263ae1",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length original Resonator two-leg gait, planted support, forward arm opening and rear brace with original throat-bound sonic origin. Original giant open throat, head, visible charcoal and ochre costume, hands and boots retain exact canonical RGBA. Hidden owned joints only; native walk-a reference and original contact planes retained. Dedicated rupture howl, hit and death owners preserved. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 431.5,
+  "decodedBytes": 200704,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
