@@ -12,7 +12,7 @@ import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
-import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "./v100-runtime-observation.mjs";
+import { readRuntimeObservation, installRuntimeObservationDiagnostics, runtimePerformanceConsoleSummary } from "./v100-runtime-observation.mjs";
 import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
@@ -573,13 +573,13 @@ const failures = report.results.filter((result) => result.status !== "passed" ||
 if (failures.length > 0) {
   console.error(JSON.stringify({ status: "failed", report: reportPath, failures: failures.map(result => ({
     name: result.name, error: result.error, blankBaseline: result.blankBaseline,
-    performance: result.performance && { p95RafMs: result.performance.p95RafMs,
-      medianFps: result.performance.medianFps, effectiveRenderHz: result.performance.effectiveRenderHz,
-      // Full callback samples remain in report.json. Keep measured failures visible in bounded CI logs.
-      callbackDiagnosticStoredInReport: Boolean(result.performance.callbackDiagnostic), gates: result.performance.gates },
+    performance: runtimePerformanceConsoleSummary(result.performance),
     diagnosticCounts: Object.fromEntries(Object.entries(result.diagnostics).map(([kind, items]) => [kind, items.length])),
   })) }, null, 2));
   process.exitCode = 1;
 } else {
-  console.log(JSON.stringify({ status: "passed", report: reportPath, cases: report.results.length }, null, 2));
+  console.log(JSON.stringify({ status: "passed", report: reportPath, cases: report.results.length,
+    measurements: callbackDiagnostic ? report.results.map(result => ({ name: result.name,
+      performance: runtimePerformanceConsoleSummary(result.performance) })) : undefined,
+  }, null, 2));
 }

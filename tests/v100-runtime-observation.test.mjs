@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import vm from "node:vm";
-import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "../scripts/v100-runtime-observation.mjs";
+import { readRuntimeObservation, installRuntimeObservationDiagnostics, runtimePerformanceConsoleSummary } from "../scripts/v100-runtime-observation.mjs";
 
 test("serialized observation transfers only live acceptance fields with one unchanged native read", () => {
   const human = Object.freeze({ id: 1, kind: "guardian", side: "human", hp: 37, maxHp: 90, x: 350, y: 255, lane: 1, renderAuditHistory: [{ large: true }] });
@@ -71,4 +71,43 @@ test("diagnostic storage remains bounded without hiding native calls or exceptio
   assert.equal(output.timeline.records.length, 12_000);
   assert.equal(output.timeline.overflow, 5);
   assert.equal(c.getterOwner.getSnapshot, c.nativeGetter);
+});
+
+test("CI costs stay readable with full-size diagnostics while raw evidence and failed gates remain unchanged", () => {
+  const records = Array.from({ length: 12_000 }, (_, index) => ({ kind: "raf", startedAt: index * 16, endedAt: index * 16 + 9, durationMs: 9, frameTimestamp: index * 16 }));
+  const value = { p95RafMs: 57, medianFps: 59, effectiveRenderHz: 58,
+    raf: { count: 1_700, elapsedMs: 30_104, times: records.map(row => row.frameTimestamp), intervals: Array(1_699).fill(16) },
+    callbackDiagnostic: { diagnosticOnly: true, count: 1_701, p50Ms: 7, p95Ms: 18, maxMs: 42, over8Ms: 417, over16Ms: 110, over33Ms: 2,
+      timeline: { clock: "performance.now", maxRecords: 12_000, overflow: 3, records,
+        costs: { raf: { count: 1_701, p95Ms: 18, maxMs: 42, records }, snapshot: { count: 40, p95Ms: 2, maxMs: 7 }, futureUnknownKind: { records } } } },
+    gates: { sampleCount: true, p95Raf: false, medianFps: true, renderCadence: true } };
+  const before = JSON.stringify(value), summary = runtimePerformanceConsoleSummary(value);
+  assert.ok(JSON.stringify(summary).length < 2_048, "Bounded console diagnostics must not lose the measured failure to log truncation");
+  assert.equal(summary.p95RafMs, 57);
+  assert.equal(summary.rafSampleCount, 1_700);
+  assert.equal(summary.rafElapsedMs, 30_104);
+  assert.equal(summary.callbackDiagnosticStoredInReport, true);
+  assert.equal(summary.callbackDiagnostic.p95Ms, 18);
+  assert.equal(summary.callbackDiagnostic.timeline.overflow, 3);
+  assert.deepEqual(summary.callbackDiagnostic.timeline.costs, { raf: { count: 1_701, p95Ms: 18, maxMs: 42 }, snapshot: { count: 40, p95Ms: 2, maxMs: 7 } });
+  assert.deepEqual(summary.gates, value.gates);
+  assert.equal(summary.gates.p95Raf, false);
+  assert.equal(JSON.stringify(value), before, "The report retains all original samples, costs and gate results");
+});
+
+test("successful diagnostic controls expose their measured values without inventing missing timing", () => {
+  const c = timingContext();
+  c.window.__V100_RAF_CALLBACK_DIAG__.start();
+  c.window.requestAnimationFrame(() => c.advance(5));
+  c.pending.shift()(123);
+  const diagnostic = c.window.__V100_RAF_CALLBACK_DIAG__.stop();
+  const value = { p95RafMs: 16, medianFps: 62.5, effectiveRenderHz: 60, callbackDiagnostic: diagnostic, gates: { p95Raf: true } };
+  const summary = runtimePerformanceConsoleSummary(value);
+  assert.equal(summary.p95RafMs, 16);
+  assert.equal(summary.callbackDiagnostic.p95Ms, diagnostic.p95Ms);
+  assert.equal(summary.callbackDiagnostic.timeline.costs.raf.count, diagnostic.count);
+  assert.equal(summary.gates.p95Raf, true);
+  assert.equal(summary.rafElapsedMs, undefined);
+  assert.equal(runtimePerformanceConsoleSummary({ gates: { p95Raf: false } }).callbackDiagnostic, null);
+  assert.equal(runtimePerformanceConsoleSummary(null), null);
 });
