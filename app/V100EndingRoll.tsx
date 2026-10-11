@@ -100,6 +100,12 @@ export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, fil
 }
 
 export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = false, blocked = false, onScene, onComplete }: Props) {
+  const soundEnabled = settings.bgmEnabled !== false && (settings.bgmVolume ?? .8) > 0;
+  const [songRequested, setSongRequested] = useState(soundEnabled);
+  if (soundEnabled && !songRequested) setSongRequested(true);
+  // A muted start owns no song request. Once requested, keep the same source
+  // across later pauses/mutes instead of aborting or restarting its transport.
+  const attachSong = songRequested || soundEnabled;
   const audioRef = useRef<HTMLAudioElement>(null);
   const rollRef = useRef<HTMLDivElement>(null);
   const rollWindowRef = useRef<HTMLDivElement>(null), rollFooterRef = useRef<HTMLElement>(null);
@@ -142,7 +148,6 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     if (rollRef.current) rollRef.current.style.transform = "translate3d(0, " + scroll.offset + "px, 0)";
   }, []);
   const lastFrameShotRef = useRef(frame.shotIndex);
-  const soundEnabled = settings.bgmEnabled !== false && (settings.bgmVolume ?? .8) > 0;
   const soundEnabledRef = useRef(soundEnabled);
   useLayoutEffect(() => {
     callbacksRef.current = { onScene, onComplete, busy };
@@ -372,7 +377,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
   const current = nodes[frame.index];
   const currentShot = V100_CREDITS_FILM[frame.shotIndex];
   return <section ref={stageRef} className={`v100-staff-roll ${settings.reducedMotion ? "v100-credits-reduced" : ""} ${outro ? "v100-credits-outro" : ""}`} aria-label="スタッフロール" data-v100-surface="credits" data-v100-event-id="v100:event:credits" data-v100-event-category="credits" data-v100-audio-owner="v100-staff-roll" data-v100-credit-speed={speed} data-v100-credit-scene={current?.sceneLabel} data-v100-credit-shot={currentShot?.id} data-v100-credit-shot-index={frame.shotIndex} data-v100-node-index={frame.index} data-v100-credit-audio={soundState} data-v100-credit-progress={frame.progress.toFixed(4)}>
-    <audio ref={audioRef} src={V100_CREDITS_SONG.src} preload="metadata" crossOrigin="anonymous"
+    <audio ref={audioRef} src={attachSong ? V100_CREDITS_SONG.src : undefined} preload={attachSong ? "metadata" : "none"} crossOrigin="anonymous"
       onLoadedMetadata={event => {
         const audio = event.currentTarget;
         if (Number.isFinite(audio.duration) && audio.duration > 0) {

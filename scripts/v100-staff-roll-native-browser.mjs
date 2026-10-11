@@ -46,8 +46,11 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
   const requestAudit = installRequestFailureAudit(page);
   const result = { name, status: "failed", errors: [], mediaSamples: [], nativeEnded: [],
     requestFailures: requestAudit.report.unexpectedFailures, requestFailureAudit: requestAudit.report,
-    injectedConsoleErrors: [], injectedHttpFailures: [] };
+    injectedConsoleErrors: [], injectedHttpFailures: [], songRequests: [] };
   report.cases.push(result);
+  page.on("request", request => {
+    if (request.url() === new URL(transport.song.path, origin).href) result.songRequests.push({ url: request.url(), method: request.method(), at: Date.now() });
+  });
   page.on("pageerror", error => result.errors.push(String(error)));
   const injectedSongUrl = failSong ? new URL(transport.song.path, origin).href : undefined;
   page.on("console", message => {
@@ -262,6 +265,33 @@ try {
       result.geometry = await page.locator(".v100-credit-buttons").evaluate(root => [...root.querySelectorAll("button")].map(button => { const r = button.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { label: button.textContent, height: r.height, fits: r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth, reachable: hit === button || button.contains(hit) }; }));
       assert.ok(result.geometry.every(row => row.height >= 44 && row.fits && row.reachable));
       await page.screenshot({ path: path.join(out, `${engine}-${name}.png`) });
+      if (options.muted) {
+        assert.deepEqual(result.songRequests, [], "A muted start must not preload a song that cannot play");
+        result.mutedSource = await page.locator(".v100-staff-roll audio").evaluate(audio => {
+          window.__creditMutedAudioElement = audio;
+          return { src: audio.getAttribute("src"), preload: audio.preload, paused: audio.paused };
+        });
+        assert.deepEqual(result.mutedSource, { src: null, preload: "none", paused: true });
+        const applyBgm = async enabled => {
+          await page.getByRole("button", { name: "メニュー", exact: true }).click();
+          const menu = page.getByRole("dialog", { name: "メニュー", exact: true });
+          await menu.getByRole("checkbox", { name: "BGM", exact: true }).setChecked(enabled);
+          await menu.getByRole("button", { name: "設定を保存", exact: true }).click();
+          await menu.getByRole("status").filter({ hasText: "設定を保存しました。" }).waitFor();
+          await menu.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
+        };
+        await applyBgm(true);
+        await page.waitForFunction(() => {
+          const root = document.querySelector(".v100-staff-roll"), audio = root?.querySelector("audio");
+          return root?.dataset.v100CreditAudio === "playing" && audio === window.__creditMutedAudioElement && !audio.paused && audio.readyState >= 3 && audio.currentTime > .1;
+        });
+        result.enabledSource = await readNativeMedia(page);
+        assert.ok(result.songRequests.length > 0, "Enabling BGM must request and play the real song");
+        await applyBgm(false);
+        await page.waitForFunction(() => document.querySelector(".v100-staff-roll")?.dataset.v100CreditAudio === "muted" && document.querySelector(".v100-staff-roll audio")?.paused);
+        result.remutedSource = await page.locator(".v100-staff-roll audio").evaluate(audio => ({ sameElement: audio === window.__creditMutedAudioElement, src: audio.getAttribute("src"), paused: audio.paused }));
+        assert.deepEqual(result.remutedSource, { sameElement: true, src: transport.song.path, paused: true }, "Re-muting keeps the requested source and the native element");
+      }
       await page.getByRole("button", { name: "スキップ", exact: true }).click();
       await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible" });
       assert.deepEqual(result.errors, []); result.status = "passed";
