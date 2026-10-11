@@ -1847,9 +1847,33 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/crusher-r1.webp",
+      "bytes": 48332,
+      "hash": "sha256-3d181e781fe03486dfebaaa59e3761d95a09f24ab27a0d9b115c7ea5faa29338",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/engineer-r1.webp",
       "bytes": 27900,
       "hash": "sha256-564e3640d01f581f3317f9401ee10e919ed58d7bff9580e1d15bb72010e1c197",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/grappler-r1.webp",
+      "bytes": 33934,
+      "hash": "sha256-df73594ee69487b746b6af179e5d2418b01500e42b64d3c7492c27fa420df86d",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/guardian-r1.webp",
+      "bytes": 43014,
+      "hash": "sha256-d187f913f9ea170856f59b7df142f6408759ca405caf355c8797e1baa179102d",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -1930,6 +1954,14 @@
       "path": "/art/v100/joints/scout-r1.webp",
       "bytes": 46982,
       "hash": "sha256-57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/sprinter-r1.webp",
+      "bytes": 34264,
+      "hash": "sha256-756209bb37ca3a9656c6d3d4a50f84d532bc8ceaf5a19f196800b911137dbdc8",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

@@ -82,13 +82,13 @@ try{
             assert.equal(r.poseScaleY,1,`${kind}/${action}: vertical anatomy`);
             assert.equal(r.direction,action==='move-right'?'right':'left',`${kind}/${action}: movement facing`);
           }
-          if(action==='attack'&&['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+          if(action==='attack'&&(V177_JOINT_ATLASES[kind]||['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind))){
             await page.screenshot({path:`${out}/${width}x${height}-${kind}-attack.png`});
           }
         }
         const scale=samples[0].pixelScale;
         assert.ok(samples.every(s=>Math.abs(s.pixelScale-scale)<1e-8),`${kind}: ordinary movement, attack and hit keep one source-pixel scale`);
-        if(['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
+        if(V177_JOINT_ATLASES[kind]||['ranger','mayo-chan','gunner','scout','crazy-king','spindle','takuya-omega','futago-separated-b'].includes(kind)){
           await page.screenshot({path:`${out}/${width}x${height}-${kind}.png`});
         }
       }

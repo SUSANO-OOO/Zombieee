@@ -282,3 +282,35 @@ node --test tests/v177-melee-joints.test.mjs tests/v177-installed-asset-contract
 These are seventeen form candidates within the same 48-form/all-action scope.
 Normal-speed play, remaining forms/actions, native performance and saved
 physical-iPhone recording audio remain unaccepted.
+
+The shield and enemy sources extend the candidate to twenty-two forms with
+nineteen conditional textures. Guardian has two constrained holding arms and
+separate original coat panels; Grappler retains the original long claw and
+cuffed hand with chain. Sprinter retains the forward body, three-stripe
+trousers, face and hands, with bent opposed arms and a support fraction below
+one half so the evaluated gait includes real flight. Crusher and Abomination
+share their already identical approved source and one texture/data object,
+including coarse pixel paint, a raised-fist anticipation and forward slam.
+
+Each new source contains 305 evaluated Blender frames and 151 runtime poses.
+The dense checks cover fixed limb lengths, real painted soles, world foot
+support, no wrist/weapon separation between keys, attack handover, unchanged
+source RGBA, original scale, mirrored sockets and every painted outline in the
+480x448 envelope. Running elbows stay below the shoulders through the cycle.
+The built-in image_gen studies supply hidden joint paint; their full prompts,
+reference binding and generation hashes are frozen in each source directory.
+Original faces, shield, hands and chain are copied from the approved painting.
+The new textures download 43,014, 33,934, 34,264 and 48,332 bytes, totaling
+159,544 bytes downloaded and 1,376,256 bytes decoded. All nineteen textures
+total 1,572,568 download bytes. No authoring source enters the installed pack.
+
+```powershell
+node scripts/build-v177-guard-enemy-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-guard-enemy-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+These are twenty-two form candidates in the unchanged 48-form/all-action scope.
+Remaining forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
+normal-speed visual play acceptance, native performance and the saved physical
+iPhone recording remain unaccepted.

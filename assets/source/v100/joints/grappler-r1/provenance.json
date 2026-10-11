@@ -1,0 +1,126 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "grappler",
+  "assetPath": "/art/v100/joints/grappler-r1.webp",
+  "bytes": 33934,
+  "sha256": "df73594ee69487b746b6af179e5d2418b01500e42b64d3c7492c27fa420df86d",
+  "generatedPartsStudySha256": "17f60373f730a3ace55d3f7e9704cd00cdc526bdab4dba83d1a06208a280adad",
+  "identitySourceSha256": "2dd5a1463a74d75af6f3eb4222798de7eb636f00ee71bfa63f37647973f45c4e",
+  "identityBinding": {
+    "path": "/art/v070/characters/grappler-battle-v1.png",
+    "sourceSha256": "b92bd82d999ba66ab2bc6d1a80dc7ff9e2c54c80d14b47464149f6618762d108",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "94dc14fd2b968fedc444cb0628d6149b950bdbe07c96f1e1a702e918549b3077",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "6ebed72232e0baebe39d4b9c46c172c6072cd7fef095c8a14afcde5c045200ce",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "17d0ffd5f3dfef83a2bb2fc1dc07f9fb7b32fe582102ff6790aea99a36b5b6cc",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "d8d291cf4698cee7a743c6f8d82ebf576bf0679b6a9c41371c8a4e1293a4b203",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "5c31f811a1535cfdf0794f3c68ef03fb66a3b3fdd31f7a747b7c467566692262",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "af308c862ffac3e00427dad60a0948da254e3da396ccfcd464b62f81a5521077",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "2cd445e887f0c0283ae261c4b85e0108b8a62b0fa8eef1ed8a5382ad4aa130c1",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "3b478281cbec0a54919b811af2ff881503b608f37b4de1c08680fc445b6c2928",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "10ef2bfdbb8442622af1857e58dc4dc5ce0aabb3162c3616503ef120a52286a2",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "ef79ed20bdf050036ec055ef8f2245f70f0dd206a845209559a28db993354cfb",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "3c95ee6ef29edcff11e673775bc4aa1c18ffdf6af02676ede7a40601856dbfd6",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "2a73136b53252f0055c7bffc16087d9e58f3df236725b18e0d1d723f0dc44327",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "ac4ca9f49de62173f5b2c8404fe1ad8dd98f7fd518add11fc73f881cf166d052",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "220cad3f1a7ceb68b0c136944e8729363a22a973d6f067064809190787c4d43d",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "6ef9253a1f018aa643d09db6c36aaa0184c7d2582c34c13847ff299524a9fd0f",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "063f8fb29d39eea28c27c208098d95d0cb2432905741205bea876fe4ddd10d1d",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; guarded two-arm shield bash, long claw reach, forward running with flight and bent arm opposition, raised heavy fist slam; original heads, visible costume, hands, shield and chain; coarse crusher pixel paint",
+  "decodedBytes": 256000,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

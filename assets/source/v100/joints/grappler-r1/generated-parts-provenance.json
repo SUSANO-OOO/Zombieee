@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a12578-4773-7873-a12e-fb0962b19020\\exec-9e072442-ab24-42d1-bbe0-c3149baa3dea.png",
+  "prompt": "parts-prompt.txt",
+  "sha256": "17f60373f730a3ace55d3f7e9704cd00cdc526bdab4dba83d1a06208a280adad",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/grappler/walk-a.png",
+  "role": "identity-preserving hidden anatomical parts; original visible painting overlaid",
+  "reference": "identity-reference.png",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

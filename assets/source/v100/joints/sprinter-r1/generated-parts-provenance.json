@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a12578-4773-7873-a12e-fb0962b19020\\exec-443f31bb-b58a-4708-b94b-bf4c56c9e604.png",
+  "prompt": "parts-prompt.txt",
+  "sha256": "13b85f4cde559e4cabbc40cddeb921512a4d326b7181ff1cab50dc0016344a6d",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/sprinter/walk-a.png",
+  "role": "identity-preserving hidden anatomical parts; original visible painting overlaid",
+  "reference": "identity-reference.png",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

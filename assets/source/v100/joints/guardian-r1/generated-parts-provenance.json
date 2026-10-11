@@ -1,0 +1,16 @@
+{
+  "tool": "built-in image_gen",
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a12578-4773-7873-a12e-fb0962b19020\\exec-816d8dba-fb16-48dd-94c4-dc34ab6ace06.png",
+  "prompt": "parts-prompt.txt",
+  "sha256": "d4f85fdc179c033b3dd44c2281055498c1a6511be848137e5f0891db61cffc5d",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/guardian/walk-a.png",
+  "role": "identity-preserving hidden anatomical parts; original visible painting overlaid",
+  "reference": "identity-reference.png",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "coat-far",
+    "coat-near"
+  ]
+}

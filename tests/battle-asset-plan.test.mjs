@@ -50,7 +50,8 @@ test("all 20 campaign stages have a closed required visual plan", () => {
     }
     assert.deepEqual(
       new Set(plan.persistent.map(({ key }) => key)),
-      new Set([...Object.keys(BATTLE_CRAWLER_ASSET_PATHS), ...Object.keys(BATTLE_SUPPORT_ASSET_PATHS), "joint-brawler", "joint-engineer", "joint-walker"]),
+      new Set([...Object.keys(BATTLE_CRAWLER_ASSET_PATHS), ...Object.keys(BATTLE_SUPPORT_ASSET_PATHS), "joint-brawler", "joint-engineer", "joint-walker",
+        ...stage.enemyKinds.filter(kind=>["grappler","sprinter","crusher","abomination"].includes(kind)).map(kind=>"joint-"+(kind==="abomination"?"crusher":kind))]),
     );
     assert.equal(plan.paths.length, new Set(plan.paths).size, `${stage.id}/dedupe`);
     assert.ok(Object.isFrozen(plan) && Object.isFrozen(plan.paths));
@@ -136,6 +137,6 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v100/characters/tatara-ground-strike-r1.webp",
   ]);
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
-  assert.equal(full.persistent.length, legacy.persistent.length+15);
-  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson']);
+  assert.equal(full.persistent.length, legacy.persistent.length+19);
+  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key).sort(),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-guardian','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-grappler','joint-sprinter','joint-crusher','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson'].sort());
 });
