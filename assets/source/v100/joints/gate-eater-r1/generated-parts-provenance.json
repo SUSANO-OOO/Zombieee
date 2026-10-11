@@ -1,0 +1,243 @@
+{
+  "createdAt": "2026-10-11T10:27:01.646Z",
+  "tool": "image_gen",
+  "originalGenerationFile": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-96f45fe9-15f0-4ef7-ad4b-2914ceb679ea.png",
+  "copiedFile": "hidden-parts-study.png",
+  "sha256": "471fd00d16a2f45dfece1446c339acb7b912a83c6d9e64bd88bb4bc70c778717",
+  "bytes": 1082331,
+  "width": 1448,
+  "height": 1086,
+  "trueAlpha": true,
+  "transparentPixels": 1160353,
+  "sourceBinding": {
+    "path": "/art/v070/characters/gate-eater-battle-v1.png",
+    "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "prompt": "output/issue177-gate-eater-source-r1/hidden-parts-prompt.txt",
+  "cells": [
+    {
+      "name": "hidden-pelvis",
+      "cell": {
+        "x": 0,
+        "y": 0,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 73,
+        "y": 62,
+        "width": 239,
+        "height": 204
+      },
+      "pixels": 34794
+    },
+    {
+      "name": "near-thigh",
+      "cell": {
+        "x": 362,
+        "y": 0,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 480,
+        "y": 13,
+        "width": 171,
+        "height": 337
+      },
+      "pixels": 39841
+    },
+    {
+      "name": "far-thigh",
+      "cell": {
+        "x": 724,
+        "y": 0,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 837,
+        "y": 32,
+        "width": 183,
+        "height": 316
+      },
+      "pixels": 37458
+    },
+    {
+      "name": "near-calf",
+      "cell": {
+        "x": 1086,
+        "y": 0,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 1204,
+        "y": 25,
+        "width": 171,
+        "height": 305
+      },
+      "pixels": 27966
+    },
+    {
+      "name": "far-calf",
+      "cell": {
+        "x": 0,
+        "y": 362,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 102,
+        "y": 367,
+        "width": 168,
+        "height": 320
+      },
+      "pixels": 33195
+    },
+    {
+      "name": "near-upper-arm",
+      "cell": {
+        "x": 362,
+        "y": 362,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 465,
+        "y": 392,
+        "width": 172,
+        "height": 302
+      },
+      "pixels": 36269
+    },
+    {
+      "name": "far-upper-arm",
+      "cell": {
+        "x": 724,
+        "y": 362,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 836,
+        "y": 392,
+        "width": 173,
+        "height": 305
+      },
+      "pixels": 32854
+    },
+    {
+      "name": "near-forearm",
+      "cell": {
+        "x": 1086,
+        "y": 362,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 1201,
+        "y": 398,
+        "width": 183,
+        "height": 283
+      },
+      "pixels": 25565
+    },
+    {
+      "name": "far-forearm",
+      "cell": {
+        "x": 0,
+        "y": 724,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 81,
+        "y": 740,
+        "width": 192,
+        "height": 287
+      },
+      "pixels": 26089
+    },
+    {
+      "name": "near-hand-underlay",
+      "cell": {
+        "x": 362,
+        "y": 724,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 453,
+        "y": 809,
+        "width": 197,
+        "height": 153
+      },
+      "pixels": 19454
+    },
+    {
+      "name": "far-hand-underlay",
+      "cell": {
+        "x": 724,
+        "y": 724,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 810,
+        "y": 822,
+        "width": 204,
+        "height": 148
+      },
+      "pixels": 16415
+    },
+    {
+      "name": "hidden-abdomen",
+      "cell": {
+        "x": 1086,
+        "y": 724,
+        "width": 362,
+        "height": 362
+      },
+      "alphaBounds": {
+        "x": 1160,
+        "y": 760,
+        "width": 213,
+        "height": 221
+      },
+      "pixels": 36198
+    }
+  ],
+  "prototypeOnly": false,
+  "adopted": true,
+  "counted": true,
+  "visibleSourceFaceHandsFeetShieldBackpackMustRemainOriginal": true,
+  "generatedPelvisAndAbdomenOnlyBehindShield": true,
+  "reference": "identity-reference.png",
+  "scope": "Original face, hair, fingers, feet, chest, damaged tissue, shield, yellow canister and tubing are retained. Generated abdomen/pelvis is occluded behind the original shield; generated limbs complete hidden joint surfaces only.",
+  "originalParts": [
+    "backpack",
+    "near-foot",
+    "far-foot",
+    "head",
+    "shield",
+    "lower-tubes",
+    "near-hand",
+    "far-hand"
+  ],
+  "productionConnected": true,
+  "normalPlayAccepted": false,
+  "all48Accepted": false
+}

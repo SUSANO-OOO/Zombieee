@@ -1,0 +1,185 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "gate-eater",
+  "assetPath": "/art/v100/joints/gate-eater-r1.webp",
+  "bytes": 61574,
+  "sha256": "aa7b1598546bb8e89f3794fc214e84b23d6e5738e6d7c93361ca1ad78bb42bdc",
+  "generatedPartsStudySha256": "471fd00d16a2f45dfece1446c339acb7b912a83c6d9e64bd88bb4bc70c778717",
+  "identitySourceSha256": "71b433aff6b1c590b2e1b81cc31b6482cf731cf9bc14ff6759a2b0a781be945f",
+  "identityBinding": {
+    "path": "/art/v070/characters/gate-eater-battle-v1.png",
+    "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "7adaa4b46d17037b5b87a54352383791040da67837389032180e3b5b9c91144a",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "71b433aff6b1c590b2e1b81cc31b6482cf731cf9bc14ff6759a2b0a781be945f",
+      "path": "/art/v070/characters/gate-eater-battle-v1.png",
+      "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "6577c3b1f9741c9130aafdad5a487729c4c0fa92d6533c239657d4c7ac5fd72a",
+      "path": "/art/v070/characters/gate-eater-battle-v1.png",
+      "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "77cf0a6f033042526dfe80a58f0e26c33b9dc06154e21ee39fabd1c6adc42677",
+      "path": "/art/v070/characters/gate-eater-battle-v1.png",
+      "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "7c03ee687bd6f8dc83876c57ea659fa996689e846a3b28111a4e24ed0cfe1ac5",
+      "original": false
+    },
+    {
+      "name": "backpack",
+      "file": "backpack.png",
+      "sha256": "1d25ae84b5aedf545989a80353021167d78e2d62f484294f6fe88fdf323a561a",
+      "original": true
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "8e43d7a5b7b918151472460f5f8bde346135dbaa4ead7a197fe0f839c92aeb21",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "a9806aa95f582d435d91aa39abfe3ab0cde8e267446f038a5dc03b3ca468f978",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "a2e98d37c90a68d84265a825c03df2d4b95bada42bb1fb7d93cbd2c23474ec85",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "853751c72cc581387003a737d716602b70c2df43cc00cc047dd5caf5d216a569",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "8f2bb0abc9c06a5e6b4d657b0d4ac7af64a54928b21f38f9d29475afcdc7ef63",
+      "original": false
+    },
+    {
+      "name": "near-foot",
+      "file": "near-foot.png",
+      "sha256": "299af8b47fe70e037b00250d7e38fb056c162140ed1e5974fb48993cc0c3542a",
+      "original": true
+    },
+    {
+      "name": "far-foot",
+      "file": "far-foot.png",
+      "sha256": "3a4f5425e244789370c12330ee34c4a7a80a54a1e9f63ae3d9de1e257dd57ee0",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "caffad8269281505f813ab10453bc7cb666559a02206f5ee687ddd36bbc0ea33",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "51c15fbee53159c3c45a9b73ed3641d2181835c031dd27384002cf49ce7cd1cd",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "171a2a81cc692fe0db560bbbb5f4ef17dcdfba2b5c003b9015e7c7a60bf939ee",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "af515221189c60a62cae04ec5c136b935c29473fdf63b4971e4ae517742f62a5",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "a9ab96ff9d7f7abe041883e4b1aa6244b0d7fb1c3406651019c18b61cd533ed1",
+      "original": true
+    },
+    {
+      "name": "shield",
+      "file": "shield.png",
+      "sha256": "680c4c9c4009794b7ee70eb93a5f48ce9831754459687dfb070a24a2f26ef780",
+      "original": true
+    },
+    {
+      "name": "lower-tubes",
+      "file": "lower-tubes.png",
+      "sha256": "ba21dc919c06d9cc199291f956835daacfd4c3bac3f06ede00e8fa2986f07930",
+      "original": true
+    },
+    {
+      "name": "near-hand",
+      "file": "near-hand.png",
+      "sha256": "2a652a4f06f130fec0f286f86d66b515c098a7ad4a427a09475265f4cc21c2e1",
+      "original": true
+    },
+    {
+      "name": "far-hand",
+      "file": "far-hand.png",
+      "sha256": "2b836ddcd89f184b4b2d37c297f92567425b83cd239181b7adc03d8e1c1fa41d",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length Gate Eater heavy gait, planted bare feet and held shield ram. Original face, hair, chest, damaged tissue, fingers, feet, shield, yellow canister and tubing retained. Hidden anatomy completion explicitly bound; the original hand stays on the shield handle. Contact follows the rendered shield. All48/all-action and continuous normal-play acceptance pending.",
+  "decodedBytes": 411648,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
