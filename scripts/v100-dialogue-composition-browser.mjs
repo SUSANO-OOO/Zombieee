@@ -11,7 +11,7 @@ import {publicDisplayText} from '../app/publicDisplayNames.js';
 import {serializeV100Save} from '../app/v100Save.js';
 import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
-import {readV100IdentityFrames,assertV100IdentityFrames} from './v100-identity-frame-geometry.mjs';
+import {readV100IdentityFrames,assertV100IdentityFrames,assertV100IdentitySizingControl} from './v100-identity-frame-geometry.mjs';
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
@@ -117,15 +117,18 @@ for(const engine of engines){
     assertV100IdentityFrames(geometry.identityFrames);
     const figures=scene.locator('[data-v100-insert="takuya-identity"] svg svg');
     const styles=await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style')));
+    const control=geometry.identitySizingControl={operation:'css-transform-scale',scale:1.1,before:geometry.identityFrames};
     try{
-     await figures.evaluateAll(frames=>{for(const frame of frames){frame.style.width=(Number(frame.getAttribute('width'))+20)+'px';frame.style.height=(Number(frame.getAttribute('height'))+20)+'px';}});
-     const resized=await scene.evaluate(readV100IdentityFrames);
-     assert.throws(()=>assertV100IdentityFrames(resized),/outer diagram sizing must not resize a sprite frame/,'actual CSS resize must fail the same geometry contract');
+     await figures.evaluateAll(frames=>{for(const frame of frames){frame.style.setProperty('transform-origin','0 0','important');frame.style.setProperty('transform','scale(1.1)','important');}});
+     control.scaled=await scene.evaluate(readV100IdentityFrames);
+     control.changedFrames=assertV100IdentitySizingControl(control.before,control.scaled);
+     control.cssScaleRejected=true;
     }finally{
      await figures.evaluateAll((frames,styles)=>{frames.forEach((frame,i)=>styles[i]===null?frame.removeAttribute('style'):frame.setAttribute('style',styles[i]));},styles);
+     assert.deepEqual(await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style'))),styles,'the sizing control must restore the exact original inline styles');
+     control.restored=await scene.evaluate(readV100IdentityFrames);assertV100IdentityFrames(control.restored);
+     control.restoredGeometryValid=true;
     }
-    const restored=await scene.evaluate(readV100IdentityFrames);assertV100IdentityFrames(restored);
-    geometry.identitySizingControl={cssResizeRejected:true,restoredGeometryValid:true};
    }
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));
    for(const rect of [geometry.copy,geometry.text,geometry.actions]){assert.ok(rect.x>=0&&rect.y>=0&&rect.right<=viewport.width&&rect.bottom<=viewport.height);}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assertV100IdentityFrames} from '../scripts/v100-identity-frame-geometry.mjs';
+import {assertV100IdentityFrames,assertV100IdentitySizingControl} from '../scripts/v100-identity-frame-geometry.mjs';
 
 // Independent source-cell controls. These are not native-browser acceptance.
 const frames=()=>[
@@ -28,4 +28,19 @@ test('Identity acceptance rejects changed geometry, missing measurements and nei
     a=>{a[1].sourceFrameClipped=false;},
     a=>{a.pop();},
   ]){const bad=frames();mutate(bad);assert.throws(()=>assertV100IdentityFrames(bad));}
+});
+
+test('The hosted sizing control rejects each enlarged source frame and preserves the original acceptance',()=>{
+  const before=frames(),scaled=frames();for(const f of scaled){f.relativeTransform[0]*=1.1;f.relativeTransform[3]*=1.1;f.cssTransform='matrix(1.1, 0, 0, 1.1, 0, 0)';}
+  const evidence=assertV100IdentitySizingControl(before,scaled);
+  assert.equal(evidence.length,2);assert.ok(evidence.every(e=>e.widthScale>1.05&&e.heightScale>1.05&&e.maxCornerDisplacementPx>20));
+  assert.doesNotThrow(()=>assertV100IdentityFrames(before));
+});
+
+test('A CSS-only no-op, partial mutation or missing rendered matrix cannot pass the sizing control',()=>{
+  const before=frames(),noop=frames();for(const f of noop){f.cssWidth='999px';f.cssHeight='999px';f.cssTransform='matrix(1.1, 0, 0, 1.1, 0, 0)';}
+  assert.throws(()=>assertV100IdentitySizingControl(before,noop),/must actually enlarge/);
+  const partial=frames();partial[0].relativeTransform[0]*=1.1;partial[0].relativeTransform[3]*=1.1;
+  assert.throws(()=>assertV100IdentitySizingControl(before,partial),/must actually enlarge/);
+  const missing=frames();missing[0].relativeTransform=null;assert.throws(()=>assertV100IdentitySizingControl(before,missing),/finite rendered geometry/);
 });

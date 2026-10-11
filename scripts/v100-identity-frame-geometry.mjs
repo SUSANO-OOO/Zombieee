@@ -14,11 +14,28 @@ export function readV100IdentityFrames(element) {
       viewBox:{x:box.x,y:box.y,width:box.width,height:box.height},
       preserveAspectRatio:{align:frame.preserveAspectRatio.baseVal.align,meetOrSlice:frame.preserveAspectRatio.baseVal.meetOrSlice},
       cssWidth:style.width,cssHeight:style.height,
+      cssTransform:style.transform,transformOrigin:style.transformOrigin,transformBox:style.transformBox,
       // Cancel responsive outer-SVG and page transforms before comparison.
       relativeTransform:relative?['a','b','c','d','e','f'].map(k=>relative[k]):null,
       overflowX:style.overflowX,overflowY:style.overflowY,filter:style.filter,
       sourceFrameClipped:Boolean(clip&&Number(clip.getAttribute('x'))===box.x&&Number(clip.getAttribute('y'))===box.y&&Number(clip.getAttribute('width'))===box.width&&Number(clip.getAttribute('height'))===box.height),
     };
+  });
+}
+
+export function assertV100IdentitySizingControl(before,scaled) {
+  assertV100IdentityFrames(before);
+  assert.equal(scaled.length,before.length,'the sizing control must retain both source figures');
+  return scaled.map((frame,i)=>{
+    const original=before[i],m=frame.relativeTransform,b=original.relativeTransform,box=original.viewBox;
+    assert.ok(Array.isArray(m)&&m.length===6&&m.every(Number.isFinite),'the sizing control requires finite rendered geometry');
+    const widthScale=Math.hypot(m[0],m[1])/Math.hypot(b[0],b[1]);
+    const heightScale=Math.hypot(m[2],m[3])/Math.hypot(b[2],b[3]);
+    assert.ok(widthScale>1.05&&heightScale>1.05,'the CSS sizing control must actually enlarge each rendered source frame');
+    const maxCornerDisplacementPx=Math.max(...[[0,0],[box.width,0],[0,box.height],[box.width,box.height]].map(([x,y])=>Math.hypot((m[0]-b[0])*x+(m[2]-b[2])*y+m[4]-b[4],(m[1]-b[1])*x+(m[3]-b[3])*y+m[5]-b[5])));
+    assert.ok(maxCornerDisplacementPx>1,'the CSS sizing control must visibly change the rendered source corners');
+    assert.throws(()=>assertV100IdentityFrames(before.map((f,j)=>i===j?frame:f)),/outer diagram sizing must not resize a sprite frame/,'each actually enlarged frame must fail the unchanged geometry contract');
+    return {index:i,widthScale,heightScale,maxCornerDisplacementPx};
   });
 }
 
