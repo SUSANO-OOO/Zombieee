@@ -22,7 +22,7 @@
       "flipX": false
     }
   },
-  "motionSha256": "da9600618f7188ce380f5c6380afb3342ffbc4aa49c58d748835684a7e9900f3",
+  "motionSha256": "331543d18814181fe9d074269f7f705f2eb84f1c242f6fb948007b4b2d4bd221",
   "originalPoseBindings": {
     "walk-a": {
       "file": "identity-reference.png",

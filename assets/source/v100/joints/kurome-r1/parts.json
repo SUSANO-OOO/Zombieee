@@ -3015,5 +3015,6 @@
     ]
   ],
   "alienHockPolicy": "Each two-segment hip/knee/hock chain terminates in its original elongated hock-to-claw-foot paint. No human boot or additional foot is generated.",
-  "visibleIdentityPolicy": "Original single eye, pierced ivory head shell, visible tissue and blue veins, folded back fin, both claw hands and hock feet remain source-bound. Generated tissue only completes occluded joints. Original bright ground streak is excluded from the body part masks."
+  "visibleIdentityPolicy": "Original single eye, pierced ivory head shell, visible tissue and blue veins, folded back fin, both claw hands and hock feet remain source-bound. Generated tissue only completes occluded joints. Original bright ground streak is excluded from the body part masks.",
+  "settlingPolicy": "Walking back-fin sway fades with locomotion settling; fully settled idle and attack entry/recovery share the same attached fin transform. The original fin texture, normal gait and attack remain unchanged."
 }

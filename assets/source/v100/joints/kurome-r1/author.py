@@ -145,7 +145,7 @@ for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
             matrices[name]=attached@data.bones[name].matrix_local
         for extra in spec.get('extras',[]):
             parent_deform=matrices['head']@data.bones['head'].matrix_local.inverted() if extra['parent']=='head' else torso if extra['parent']=='spine' else body
-            angle=extra.get('walkAngle',0)*math.sin(phase*2*math.pi) if walking else extra.get('attackAngle',0)*amount+extra.get('anticipationAngle',0)*anticipation
+            angle=extra.get('walkAngle',0)*math.sin(phase*2*math.pi)*(1-settle) if walking else extra.get('attackAngle',0)*amount+extra.get('anticipationAngle',0)*anticipation
             extra_deform=parent_deform@transform(extra['a'],extra['a'],angle)
             if extra.get('softScale'):
                 inflation=0 if walking else smooth(phase/.28) if phase<.28 else 1 if phase<.55 else 1-smooth((phase-.55)/.45)
