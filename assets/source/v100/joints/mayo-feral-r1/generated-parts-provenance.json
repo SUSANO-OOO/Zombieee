@@ -1,0 +1,99 @@
+{
+  "tool": "built-in imagegen edit",
+  "generatedImage": "parts-study-r1.png",
+  "sha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "transparent": true,
+  "prompt": "parts-prompt.txt",
+  "sourceBindings": {
+    "walk-a": {
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "531c8864a8953d2982e31941b97ae886ef11c13fa5e19c58fb2f19402c5a01e8",
+      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    },
+    "attack-a": {
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "fb7961958cf3d8d7479e5ff8c44b44db9e5da8dbc8caa5edca225e986433a2de",
+      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    },
+    "attack-b": {
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "315d9f17f1ee94e31853b07393e56155a51ec0eedf1e4d0a42d2dc55eb45d6ef",
+      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    }
+  },
+  "scope": "Explicit hidden belly and continuous limb fur completion. Original face, ears, eyes, nose, tail, harness, collar, four paws and four fanged mouth petals retained from the approved feral source. Body and legs stay rigid; only independent leaf mouth organs fold/open within authored bounds. All48/all-action/native acceptance pending.",
+  "reference": "identity-reference.png",
+  "frozenPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "4d3dda77f5be27c9a6cf2a93acb72114ff6eaa66e77ede86ed507decbcb06982",
+      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    }
+  },
+  "originalParts": [
+    "torso",
+    "far-rear-paw",
+    "near-rear-paw",
+    "far-front-paw",
+    "near-front-paw",
+    "tail",
+    "neck-underlap",
+    "gear",
+    "head",
+    "idle-mouth",
+    "mouth-core",
+    "mouth-petal-0",
+    "mouth-petal-1",
+    "mouth-petal-2",
+    "mouth-petal-3"
+  ],
+  "repairs": [
+    "Source rear knee corrected before authoring; no limb stretching",
+    "Bent-study elbow fur rectified along explicit source centerlines; opaque interior rows complete the occluded far elbow",
+    "Original raised front leg excluded from torso and harness; hidden belly underlap fills that occlusion",
+    "Complete original lower petal/strand retained without a detached tip",
+    "Independent leg interpolation replaced by fixed-length hip/knee/ankle chains; paws keep their last travel/settle pose",
+    "Opt-in height-sorted texture packing retains half-resolution paint and drawing order"
+  ]
+}

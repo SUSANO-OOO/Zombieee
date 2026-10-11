@@ -397,3 +397,37 @@ download bytes. Authoring sources remain excluded from the PWA pack.
 The scope remains all 48 forms and all actions. The remaining twenty forms,
 complete hit/death/deploy/ability/frenzy/retreat ownership, continuous native
 play, performance and physical recording audio require separate evidence.
+
+The dedicated feral Mayo source extends the candidate to twenty-nine forms and
+twenty-six conditional textures. It retains the approved feral face, eyes,
+ears, nose, tail, harness, collar, four paws and four fanged mouth petals. It
+does not alias ordinary Mayo. Explicit hidden belly and limb fur completion
+removes the original raised foreleg from the torso and closes the curved
+study's occluded elbow. The complete lower strand stays attached. Source masks,
+integer offsets, centerlines, prompts and the generated study are retained.
+
+Four fixed-length hip/knee/ankle chains join the interpolated torso to the last
+travel/settled paw positions during movement and attack. Six leaf head organs
+fold/open within their explicit scale bounds; the body and legs stay rigid.
+Tests cover 305 evaluated frames, 1,986 dense source/paint samples and 6,195
+runtime chain poses, exact original RGBA, actual soles, world-space planted
+feet, all source outlines and mirrored visible attack contacts. Existing 28
+forms retain the immutable pre-change trace. Texture packing changes positions
+only and keeps the default layouts and paint resolution of existing sources.
+
+The new texture downloads 101,258 bytes and decodes to 409,600 bytes. All 26
+textures total 1,893,634 download bytes. A roster containing ordinary Mayo
+preloads the feral form before transformation, once; unrelated rosters do not.
+Retreat running uses the same resolved form and actual-distance gait; authored
+fall/rise poses retain their separate owner. Authoring sources stay outside
+the PWA pack.
+
+```powershell
+node scripts/build-v177-feral-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-feral-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The full scope remains all 48 forms and all actions. The remaining nineteen
+forms, complete hit/death/deploy/ability/frenzy/retreat ownership, continuous
+native play, performance and physical recording audio are still pending.

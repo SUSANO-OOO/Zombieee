@@ -63,6 +63,9 @@ export function requiredBattleAssetPlan({
   const requiredKinds = includeAllSprites
     ? [...(includeV100Sprites ? spriteKinds : legacySpriteKinds)]
     : unique([...formationKinds, ...enemyKinds, "turned"]);
+  if (includeV100Sprites && requiredKinds.includes("mayo-chan") && !requiredKinds.includes("mayo-chan-feral")) {
+    requiredKinds.push("mayo-chan-feral");
+  }
   if (includeV100Sprites && requiredKinds.includes("futago")) {
     for (const part of ["a", "b"]) if (!requiredKinds.includes(`futago-separated-${part}`)) requiredKinds.push(`futago-separated-${part}`);
   }

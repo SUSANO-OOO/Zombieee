@@ -1895,6 +1895,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/mayo-feral-r1.webp",
+      "bytes": 101258,
+      "hash": "sha256-7b44687bdb460747584d538cb94a5ff000993ef49c0619b9a3669098bacc81a8",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/mayo-r1.webp",
       "bytes": 80006,
       "hash": "sha256-b2f4fa920406bec60009f16795f7eebf0f6ea868f5d07aed5cd6e1b2288ffff7",

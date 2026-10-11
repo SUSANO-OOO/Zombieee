@@ -623,6 +623,7 @@ import {
   createMayoRetreatRuntime,
   mayoRetreatBlocksDamage,
   mayoRetreatSpriteState,
+  mayoBattleRenderKind,
 } from "./mayoLifecycle.js";
 
 const W = 960;
@@ -3919,7 +3920,7 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
     const frame=spriteFrameFor(fighter.kind,'walk-a','right'),size=fitSpriteBattleDisplaySize(fighter.kind,frame,spriteDisplaySize(fighter.kind));
     return v100HumanWalkCycleDistance(fighter.kind,size.w*compactSpriteScale(fighter.kind)*activeBattlefieldDepthScale(fighter.y)/frame.sourceRect.w);
   }
-  const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
+  const kind=mayoBattleRenderKind(fighter)??bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
   const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind)/frame.sourceRect.w;
   return v177JointCycleDistance(kind,scale) ?? (v100UsesHumanWalk(kind, { requestedState: 'move' })
@@ -3927,7 +3928,7 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
     : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
 }
 function v102GoreBodyHeight(fighter: Fighter) {
-  const kind=bossRenderKind(fighter),frame=spriteFrameFor(kind,'idle','right');
+  const kind=mayoBattleRenderKind(fighter)??bossRenderKind(fighter),frame=spriteFrameFor(kind,'idle','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
   return (frame.contentRect?.h??frame.sourceRect.h)*size.h/frame.sourceRect.h*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind);
 }
@@ -4173,9 +4174,7 @@ function drawSpriteFighter(
     recordAudit = true,
     allowDiagnosticFallback = false,
   } = options;
-  const mayoFeral = f.kind === "mayo-chan"
-    && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
-  const renderKind = mayoFeral ? "mayo-chan-feral" : bossRenderKind(f);
+  const renderKind = mayoBattleRenderKind(f) ?? bossRenderKind(f);
   const jointAtlas = V177_JOINT_ATLASES[renderKind];
   const jointImage = jointAtlas ? sprites[jointAtlas.key] : null;
   const kumaGuardCandidate = options.v100AuthoredPresentation && f.side === 'human' && f.kind === 'kumaverson'
@@ -4378,7 +4377,8 @@ function drawSpriteFighter(
           f.animationPresentation?.state ?? (moving ? "move" : "idle"),
           f.animationPresentation?.elapsedSeconds ?? f.step,
         );
-  const authoredPoseOwned=Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||f.mayoRetreat||f.stationAbility.phase!=='idle');
+  const articulatedMayoRetreat = f.kind === "mayo-chan" && f.mayoRetreat?.phase === "run" && Boolean(jointImage?.naturalWidth);
+  const authoredPoseOwned=Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||(f.mayoRetreat&&!articulatedMayoRetreat)||f.stationAbility.phase!=='idle');
   const animationSample = options.v100AuthoredPresentation
     ? v102CombatMotionSample(renderKind,baseAnimationSample,{side:f.side,attack:f.attack,attackWindup:f.attackWindup,abilityWindup:f.abilityWindup,
       ownedPose:authoredPoseOwned})

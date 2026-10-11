@@ -9,13 +9,14 @@ import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.j
 import { V177_GUARD_ENEMY_JOINT_ATLASES as guardEnemyAtlases } from './v177GuardEnemyJointData.js';
 import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJointData.js';
 import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJointData.js';
+import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 
-const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
+const locomotionStates = new Set(['idle','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
@@ -57,7 +58,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
   if(!atlas || !plan || !image?.naturalWidth)return false;
   if(atlas.type==='rigid-parts'){
     const matrix=new Float64Array(6);
-    const scratch=atlas.armConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
+    const scratch=atlas.armConstraints || atlas.legConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
     const reference=atlas.referenceFrame;
     ctx.save();if(atlas.paintStyle==='pixel-art')ctx.imageSmoothingEnabled=false;
     ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
@@ -132,19 +133,21 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
   return out;
 }
 
-// Independent rigid interpolation can separate a wrist from its weapon between
-// source keys. Resolve the authored two-bone chain against the same interpolated
-// shoulder and painted hand, keeping both limb lengths and the grip intact.
+// Resolve authored two-bone chains against the same interpolated endpoints.
+// A planted quadruped paw retains the travel/settling pose while its hip follows
+// the attacking torso. Independent limb interpolation can detach the knee or paw.
 function jointMatrix(out,atlas,plan,bone,upper,scratch){
-  const arm=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
-  if(!arm)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  const chain=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone)
+    ??atlas.legConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
+  if(!chain)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
-  interpolatedMatrix(parent,atlas,plan,arm.parentBone,upper);
-  interpolatedMatrix(effector,atlas,plan,arm.effectorBone,upper);
-  const [sx,sy]=arm.shoulder,[ex,ey]=arm.elbow,[wx,wy]=arm.wrist;
+  interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?true:upper);
+  interpolatedMatrix(effector,atlas,plan,chain.effectorBone,leg?false:upper);
+  const [sx,sy]=chain.hip??chain.shoulder,[ex,ey]=chain.knee??chain.elbow,[wx,wy]=chain.ankle??chain.wrist;
   // A supporting hand can come from an approved two-hand attack frame while
   // the arm retains its original neutral anatomy and visible sleeve paint.
-  const [twx,twy]=arm.effectorWrist??arm.wrist;
+  const [twx,twy]=chain.effectorWrist??chain.ankle??chain.wrist;
   const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
   const tx=effector[0]*twx+effector[2]*twy+effector[4],ty=effector[1]*twx+effector[3]*twy+effector[5];
   const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
@@ -152,7 +155,7 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
   const sign=(ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1;
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
-  const isUpper=bone===arm.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
+  const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
   const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
   const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;

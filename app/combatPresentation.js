@@ -1430,8 +1430,9 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   const previousPhase = Math.max(0, Number(previous.locomotionPhase) || 0);
   const locomotionStopPhase = state === 'stop-move' && stateChanged
     ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
+  const advancingGait = moving && (!requestedState || requestedState === "retreat");
   let locomotionPhase = previousPhase;
-  if (moving && !requestedState) locomotionPhase += movedDistance / strideDistance;
+  if (advancingGait) locomotionPhase += movedDistance / strideDistance;
   // A planted foot must not slide while the fighter is stationary. Settling
   // lowers the airborne foot in the rig; it never advances the gait phase.
   const stateTravelDistance = state === "move"
@@ -1474,7 +1475,7 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     // Keep the feet's phase across start/stop/turn clips. State-local distance
     // still owns the authored clip events and is deliberately not repurposed.
     locomotionTravelDistance: Math.max(0, Number(previous.locomotionTravelDistance) || 0)
-      + (moving && !requestedState ? movedDistance : 0),
+      + (advancingGait ? movedDistance : 0),
     locomotionPhase,
     locomotionStopPhase,
     locomotionSettle: moving ? 0 : Math.min(1, (Number(previous.locomotionSettle) || 0) + dt / .16),

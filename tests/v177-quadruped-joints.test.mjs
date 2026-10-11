@@ -82,7 +82,8 @@ test('interpolated production paint keeps planted feet, fixed proportions and th
  assert.ok(Math.abs(right.x-(300+contact[0]-240))<1e-10);assert.ok(Math.abs(right.y-(500+contact[1]-432))<1e-10);
  assert.ok(Math.abs(right.x+left.x-600)<1e-10);assert.equal(right.y,left.y);
  assert.equal(v177JointPose('mayo-chan',{requestedState:'active'},runtime,{ownedPose:true}),null);
- assert.equal(v177JointPose('mayo-chan-feral',{requestedState:'move'},runtime),null,'Derived identity still requires its own paint and acceptance');
+ assert.equal(v177JointPose('unregistered-quadruped',{requestedState:'move'},runtime),null,'Unregistered anatomy cannot silently reuse a different identity');
+ assert.notEqual(V177_JOINT_ATLASES['mayo-chan-feral'],atlas,'Feral anatomy owns its separate source and rig');
 });
 
 test('opaque head and jaw preserve original paint; conditional atlas bytes and memory stay source-bound',async()=>{

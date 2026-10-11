@@ -97,7 +97,7 @@ test("a finite HUD runtime plan loads the selected formation and authored stage 
     includeAllSprites: false,
   });
   assert.deepEqual(plan.sprites.map(({ kind }) => kind), [
-    "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned",
+    "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned", "mayo-chan-feral",
   ]);
   assert.ok(!plan.sprites.some(({ kind }) => kind === "spindle"));
 });
@@ -137,6 +137,6 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v100/characters/tatara-ground-strike-r1.webp",
   ]);
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
-  assert.equal(full.persistent.length, legacy.persistent.length+25);
-  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key).sort(),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-guardian','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-grappler','joint-sprinter','joint-crusher','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson','joint-zakimiya','joint-tky','joint-mrs-chiha','joint-miyamoto-musashi','joint-shade','joint-spitter'].sort());
+  assert.equal(full.persistent.length, legacy.persistent.length+26);
+  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key).sort(),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-guardian','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-grappler','joint-sprinter','joint-crusher','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson','joint-zakimiya','joint-tky','joint-mrs-chiha','joint-miyamoto-musashi','joint-shade','joint-spitter','joint-mayo-chan-feral'].sort());
 });
