@@ -1,0 +1,25 @@
+{
+  "kind": "tky",
+  "tool": "built-in image_gen.imagegen",
+  "mode": "transparent edit using the approved identity reference",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-8f256b4e-3007-405c-8df9-b4cedcdf4b1e.png",
+  "selectedStudyPath": "output/issue177-newcomer-parts-r1/tky/parts-study-r1.png",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/tky/walk-a.png",
+  "referenceSha256": "3b7c28308344509fab86a286f6ef0a2cf1ca8364552f117bf62eeea809975156",
+  "sha256": "d41c19c2b915e47ea270c540a22ef3b0e79a694966fd48505c8abd00d61b7aec",
+  "width": 1254,
+  "height": 1254,
+  "transparentPixels": 1180332,
+  "visiblePixels": 347011,
+  "fullPrompt": "Use case: identity-preserve.\nAsset type: one 1024 x 1024 square transparent 4 by 4 detached anatomical paint-parts study for the existing TKY game sprite.\nUse input image 1 as the sole identity and paint reference. Preserve the slim black leather dark coat with very dark burgundy lining, black shirt, worn black narrow trousers, black gloves and black lace-up combat boots with subtle muted magenta trim. The final game retains the original head, visible coat panels, hands and the one magenta energy sword. This sheet supplies matching otherwise hidden body parts for true shoulder/elbow/hip/knee rigging. Do not redesign the character or add any sword.\nRegular 4 by 4 cells, one detached component per occupied cell, wide fully transparent spacing. Row order left to right:\nRow1: (1) short black leather coat torso over black shirt, collar to waist ONLY, no arms, head, long coat tails, equipment or sword; (2) small black trouser pelvis and dark belt, no torso or legs; (3) near black trouser thigh; (4) near black trouser shin, knee upper end ankle lower end.\nRow2: (5) near black lace-up boot with subtle muted magenta trim, ankle upper left, flat sole and toe right; (6) far black trouser thigh; (7) far matching shin; (8) far matching boot, toe right and flat sole.\nRow3: (9) near slim black leather upper sleeve shoulder top elbow bottom; (10) near black leather forearm sleeve elbow top wrist bottom, NO hand; (11) near black gloved hand, fingers downward; (12) far black leather upper sleeve shoulder top elbow bottom.\nRow4: (13) far black leather forearm sleeve, no hand; (14) far black gloved hand; (15) empty transparent; (16) empty transparent.\nStraight vertical limb pieces with rounded overlapping joint ends. Match the original detailed gritty 2D painted illustration and restrained black/dark burgundy palette, side view facing right. No face, head, hair, sword, orange vest, chain, new equipment, attached duplicated limbs, ground, shadow, checkerboard, background, numbers, text, labels, border or grid lines. Genuinely transparent background.\n",
+  "status": "Prepared hidden-parts study only; not connected to runtime, not included in22-form coverage or PWA assets. Original visible paint/identity/weapon to be preserved during authoring.",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "adoptedDerivedParts": 10,
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands"
+  ]
+}

@@ -19,5 +19,9 @@ export const V177_JOINT_ASSET_ADDITIONS = Object.freeze([
   Object.freeze({path:'/art/v100/joints/grappler-r1.webp',bytes:33934,hash:'sha256-df73594ee69487b746b6af179e5d2418b01500e42b64d3c7492c27fa420df86d'}),
   Object.freeze({path:'/art/v100/joints/sprinter-r1.webp',bytes:34264,hash:'sha256-756209bb37ca3a9656c6d3d4a50f84d532bc8ceaf5a19f196800b911137dbdc8'}),
   Object.freeze({path:'/art/v100/joints/crusher-r1.webp',bytes:48332,hash:'sha256-3d181e781fe03486dfebaaa59e3761d95a09f24ab27a0d9b115c7ea5faa29338'}),
+  Object.freeze({path:'/art/v100/joints/zakimiya-r1.webp',bytes:30216,hash:'sha256-5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f'}),
+  Object.freeze({path:'/art/v100/joints/tky-r1.webp',bytes:36212,hash:'sha256-59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22'}),
+  Object.freeze({path:'/art/v100/joints/mrs-chiha-r1.webp',bytes:37776,hash:'sha256-5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec'}),
+  Object.freeze({path:'/art/v100/joints/miyamoto-musashi-r1.webp',bytes:41920,hash:'sha256-d8fd78012fa9dc63631b7e724d94953ff04c010c2f017176d7d04b684e2430a8'}),
 ]);
-export const V177_JOINT_ASSET_BYTES = 1572568;
+export const V177_JOINT_ASSET_BYTES = 1718692;

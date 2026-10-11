@@ -13,6 +13,10 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  const sha=b=>createHash('sha256').update(b).digest('hex');
  assert.equal(sha(await readFile(path.resolve('public'+d.identityBinding.path))),d.identityBinding.sourceSha256);
  assert.equal(sha(await readFile(path.join(dir,'identity-reference.png'))),d.sourceSha256);
+ for(const binding of Object.values(d.poseBindings??{})){
+  assert.equal(sha(await readFile(path.resolve('public'+binding.path))),binding.sourceSha256,'Changed original weapon/hand source');
+  assert.equal(sha(await readFile(path.join(dir,binding.file))),binding.sha256,'Changed original pose reference');
+ }
  const width=512,ratio=.5,padding=2,rows=[];let x=padding,y=padding,lineHeight=0;
  for(const name of d.order){
   const p=d.parts.find(p=>p.name===name),bytes=await readFile(path.join(dir,p.file));
@@ -66,6 +70,7 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  captureAtlas?.(atlas);
  const provenance={schema:'zombieee-joint-atlas/1',kind:d.kind,assetPath,bytes:bytes.length,sha256:sha(bytes),
   generatedPartsStudySha256:d.sheetSha256,identitySourceSha256:d.sourceSha256,identityBinding:d.identityBinding,motionSha256:sha(motionBytes),
+  ...(d.poseBindings?{originalPoseBindings:d.poseBindings}:{}),
   parts:d.parts.map(({name,file,sha256,original})=>({name,file,sha256,original:Boolean(original)})),
   source:description,...(d.sharedPaintSource?{sharedPaintSource:d.sharedPaintSource}:{}),groundY:d.motion.walk.groundY,decodedBytes:atlas.decodedBytes,poses:poses.length,
   scope:{totalUnits:48,allUnitAcceptance:false,normalPlayAcceptance:false},...(aliases.length?{aliases}:{})};

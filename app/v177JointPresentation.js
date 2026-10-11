@@ -7,13 +7,14 @@ import { V177_FIREARM_JOINT_ATLASES as firearmAtlases } from './v177FirearmJoint
 import { V177_PANTHER_JOINT_ATLASES as pantherAtlases } from './v177PantherJointData.js';
 import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.js';
 import { V177_GUARD_ENEMY_JOINT_ATLASES as guardEnemyAtlases } from './v177GuardEnemyJointData.js';
+import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJointData.js';
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases}));
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
@@ -118,8 +119,11 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   interpolatedMatrix(parent,atlas,plan,arm.parentBone,upper);
   interpolatedMatrix(effector,atlas,plan,arm.effectorBone,upper);
   const [sx,sy]=arm.shoulder,[ex,ey]=arm.elbow,[wx,wy]=arm.wrist;
+  // A supporting hand can come from an approved two-hand attack frame while
+  // the arm retains its original neutral anatomy and visible sleeve paint.
+  const [twx,twy]=arm.effectorWrist??arm.wrist;
   const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
-  const tx=effector[0]*wx+effector[2]*wy+effector[4],ty=effector[1]*wx+effector[3]*wy+effector[5];
+  const tx=effector[0]*twx+effector[2]*twy+effector[4],ty=effector[1]*twx+effector[3]*twy+effector[5];
   const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
   if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001)return interpolatedMatrix(out,atlas,plan,bone,upper);
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));

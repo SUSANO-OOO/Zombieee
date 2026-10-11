@@ -1,0 +1,200 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "tky",
+  "assetPath": "/art/v100/joints/tky-r1.webp",
+  "bytes": 36212,
+  "sha256": "59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22",
+  "generatedPartsStudySha256": "d41c19c2b915e47ea270c540a22ef3b0e79a694966fd48505c8abd00d61b7aec",
+  "identitySourceSha256": "3b7c28308344509fab86a286f6ef0a2cf1ca8364552f117bf62eeea809975156",
+  "identityBinding": {
+    "path": "/art/v090/characters/tky-battle-r1.png",
+    "sourceSha256": "1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "0a602fb575916c335add8b9cf5dfd20c83ddbbd696fc412f0d7b99ac9cbe4af9",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "3b7c28308344509fab86a286f6ef0a2cf1ca8364552f117bf62eeea809975156",
+      "path": "/art/v090/characters/tky-battle-r1.png",
+      "sourceSha256": "1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "8ad2e986b6b756cde68f6aa6603b6167adc4d2d9915355bc940f5b40afb0fac9",
+      "path": "/art/v090/characters/tky-battle-r1.png",
+      "sourceSha256": "1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 480,
+          "h": 240
+        },
+        {
+          "x": 0,
+          "y": 240,
+          "w": 360,
+          "h": 90
+        },
+        {
+          "x": 430,
+          "y": 240,
+          "w": 50,
+          "h": 90
+        },
+        {
+          "x": 0,
+          "y": 330,
+          "w": 480,
+          "h": 118
+        }
+      ]
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "09c09e33242f98ba7168f09e558412f133200c35fb1e9611ac7a36094a464859",
+      "path": "/art/v090/characters/tky-battle-r1.png",
+      "sourceSha256": "1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "964bca4530490f8cf1caff088c3fb957a7d1846993b0264fbd204e2e88d24b86",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "5a02870157e1ee69c3c00adde00bef7d0a3e8a4fdc6fb8f099f8c8db6e3859ea",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "2eef04e3bd5a0d87243168256305bc0c7b5cfcbf5f85ddf2dea18e7545c23b1f",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "b6560faf5bf8c159992988f698db376f1ef6668002dc4726658e1a5bbfda4d1b",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "3eff2351304b9046a6fe8ef1250b39e071ec6b807926aba576321e8b77e64728",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "52472502ac70d103499009889789a243a6e3e8de982702b658bad3ab0c72292d",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "441d08535b02e1420f4a865b30a55b1f3d551da90d47adb75428d752de208b4e",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "e3468572cc4ea397eff0cdff1afc869df57da565049da4a004a104f599eee327",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "19999af53207905a3dbc688453fd65e4822affffb0b2acb23c47b57edf1c3b4b",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "591b2a5341f4849961fc3d5fcc88895df51b91bd7d1b7378ffde0b7966017b50",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "14785abe4402bdc318c32752d003a1b1d6732b6c788825a13bfd18ba3e4defc7",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "f890a946a580593114245339863d093e149c5d6b355efb095b4d8c958f36d04a",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "a47ff1a85211a65dc1fea1ee11c899acee51295a56ccfd4e94d70cdadb72ce4e",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "86b7f84944f520ffb7849eed5c0c074d9970fd6d0308a58b8df854c3e2190221",
+      "original": true
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "4c6f675e80f58cf45be0db5eb534884d44dee807e3864317dc513a34e8d2bd7c",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "1633da3c89f9b80d4e67fe53ba1b81c70c4791b7b57afbe8711fa8e7e4ddaf39",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; original short-knife thrust, two-hand energy katana, two-hand gatling, independent original two-katana attack. Source-bound faces, hands, blades and boots; visible costume preserved; hidden coat panels with separate bones. No rejected Takuya identity or rear stray blade.",
+  "groundY": 432,
+  "decodedBytes": 335872,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

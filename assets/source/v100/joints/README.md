@@ -314,3 +314,39 @@ These are twenty-two form candidates in the unchanged 48-form/all-action scope.
 Remaining forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
 normal-speed visual play acceptance, native performance and the saved physical
 iPhone recording remain unaccepted.
+
+The four original-bound human sources extend the candidate to twenty-six forms
+and twenty-three conditional textures. Zakimiya retains his original short
+knife; TKY uses the complete approved energy katana and both original holding
+hands; Chiha carries one original gatling with two articulated holding arms;
+Musashi retains his legitimate two attack katanas on independent weapon bones.
+This does not restore his unrelated rear stray blade. Original faces, visible
+costume, weapon paint and boots remain source-bound RGBA. TKY's front boot comes
+from the approved attack pose so the old walk blade glow cannot enter his leg.
+Original references, integer source offsets, source rectangles and hashes are
+frozen in `parts.json`. The builder checks each additional pose binding.
+
+The supporting hand can use a distinct original painted grip point while the
+arm retains its neutral shoulder, elbow, wrist, lengths and sleeve paint.
+Blender and production interpolation resolve the same point; existing sources
+keep their unchanged path. Hidden coat panels come from only cells 14 and 15
+of separate built-in imagegen edits, with prompts and provenance alongside the
+sources. The original other fourteen study cells are retained. No weapon or
+limb is baked into a moving coat panel.
+
+The four sources contain 305 evaluated frames and 151 runtime poses each.
+Tests check all painted outlines, exact original RGBA, fixed lengths, actual
+soles, planted world-space feet and 1,986 dense travel/settle/attack samples per
+source. Their textures download 146,124 bytes and decode to 1,132,544 bytes.
+All twenty-three joint textures total 1,718,692 download bytes. No authoring
+source enters the PWA pack.
+
+```powershell
+node scripts/build-v177-newcomer-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-newcomer-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The scope remains all 48 forms and all actions. The remaining 22 forms, complete
+hit/death/deploy/ability/frenzy/retreat ownership, continuous normal-speed play,
+native performance and saved physical-iPhone recording audio remain pending.

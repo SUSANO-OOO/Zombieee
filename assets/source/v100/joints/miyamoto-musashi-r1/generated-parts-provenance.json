@@ -1,0 +1,26 @@
+{
+  "kind": "miyamoto-musashi",
+  "tool": "built-in image_gen.imagegen",
+  "mode": "transparent edit using the approved identity reference",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-f81c529e-5d48-4e66-88e9-f2354c79a1e9.png",
+  "selectedStudyPath": "output/issue177-newcomer-parts-r1/miyamoto-musashi/parts-study-r1.png",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/miyamoto-musashi/walk-a.png",
+  "referenceSha256": "cd9da7d16bf3d703d189dbf7ad1d90d7b5ec074a727d3a22600b78b147e480e0",
+  "sha256": "7e73661675fea4af6f93cedc29915696ccb4c8178412b7de962364c127afa037",
+  "width": 1254,
+  "height": 1254,
+  "transparentPixels": 1162516,
+  "visiblePixels": 367869,
+  "fullPrompt": "Use case: identity-preserve.\nAsset type: one square 1024 x 1024 transparent 4 by 4 detached anatomical paint-parts study for the existing Miyamoto Musashi game sprite.\nUse input image as the sole character and paint reference. Preserve the weathered dark navy/charcoal ragged layered samurai robe, dark loose trousers, cloth shin wraps and worn brown wrapped boots. The final game keeps the exact original painted head/hair, visible robe panels, hands and the ONE original katana. This sheet supplies only otherwise hidden anatomical parts for true hips/knees/shoulders/elbows; do not draw a new full character, a sword or a blade behind him.\nExactly a regular 4 by 4 layout with generous fully transparent spacing, one detached component per occupied cell. Row order left to right:\nRow1: (1) short layered dark navy/charcoal cloth robe torso, collar to waist ONLY, no head, arms, hanging robe panels, hands, sword or equipment; (2) small dark trouser pelvis with ragged cloth sash, no torso or legs; (3) near thigh in loose dark weathered trousers; (4) near shin in weathered dark cloth wraps, knee top ankle bottom.\nRow2: (5) near worn brown wrapped boot, ankle upper left, flat sole, toe right; (6) far loose dark trouser thigh; (7) far cloth-wrapped shin; (8) far brown wrapped boot, flat sole toe right.\nRow3: (9) near upper arm in ragged dark layered cloth sleeve, shoulder top elbow bottom; (10) near forearm in dark cloth wraps, elbow top wrist bottom, NO hand; (11) near bare weathered human hand; (12) far matching ragged dark upper sleeve.\nRow4: (13) far cloth-wrapped forearm with no hand; (14) far bare weathered hand; (15) empty transparent; (16) empty transparent.\nLimb pieces must be straight along the vertical axis, with rounded overlapping ends at joints. Match the original detailed restrained gritty 2D painted sprite, dark blue/charcoal/brown cloth palette, side view facing right. No shiny new armor, face, head, hair, blade, sword, scabbard, bow, new accessories, attached duplicate limbs, background, shadow, ground, checkerboard, labels, numbers, text, border or grid. Genuinely transparent background.\n",
+  "status": "Prepared hidden-parts study only; not connected to runtime, not included in22-form coverage or PWA assets. Original visible paint/identity/weapon to be preserved during authoring.",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "adoptedDerivedParts": 10,
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands",
+    "secondary-weapon-and-hand"
+  ]
+}
