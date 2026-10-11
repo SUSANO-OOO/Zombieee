@@ -378,3 +378,22 @@ until a new verified push. The goal remains all 48 forms and all actions;
 remaining 21 forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
 continuous normal-speed play, native performance and physical recording audio
 are not accepted by these offline source checks.
+
+Spitter extends the local candidate to twenty-eight forms and twenty-five
+conditional textures. Its original hood, face, visible olive coat, claws,
+wrapped feet, acid throat and jaw remain source-bound. Original throat paint
+inflates from 0.18 to its authored full size as a separate leaf head organ;
+the head, torso and all limb lengths stay rigid. The jaw hinge and throat
+anchor follow the interpolated head exactly. Acid emission uses the visible
+mouth socket, including mirrored rendering, rather than an unrelated fist.
+
+Twenty source layers contain 305 evaluated Blender frames, 151 runtime poses
+and 1,986 dense checked interpolation samples. Tests reject undeclared body
+scaling, detached organs, shear and inversion, and preserve the immutable
+twenty-seven-form renderer trace from commit 9986fd6. Spitter downloads 37,788
+bytes and decodes to 294,912 bytes; all twenty-five textures total 1,792,376
+download bytes. Authoring sources remain excluded from the PWA pack.
+
+The scope remains all 48 forms and all actions. The remaining twenty forms,
+complete hit/death/deploy/ability/frenzy/retreat ownership, continuous native
+play, performance and physical recording audio require separate evidence.

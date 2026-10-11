@@ -89,12 +89,25 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
 
 // Interpolate rigid transforms, rather than matrix coefficients that shorten
 // limbs between samples. The actual Blender root travel was removed by bake.
-function interpolatedMatrix(out,atlas,plan,bone,upper){
+function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
+  const attachment=atlas.parentAttachments?.[bone];let anchorX,anchorY;
+  if(attachment){
+    interpolatedMatrix(out,atlas,plan,attachment.parent,upper,false);
+    const [px,py]=attachment.pivot;
+    anchorX=out[0]*px+out[2]*py+out[4];anchorY=out[1]*px+out[3]*py+out[5];
+  }
   const a=atlas.poses[upper?plan.upperIndex:plan.lowerIndex][bone];
   const b=atlas.poses[upper?plan.upperNextIndex:plan.lowerNextIndex][bone];
   const p=upper?plan.upperBlend:plan.lowerBlend,angleA=Math.atan2(a[1],a[0]),angleB=Math.atan2(b[1],b[0]);
   const delta=Math.atan2(Math.sin(angleB-angleA),Math.cos(angleB-angleA)),angle=angleA+delta*p,c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;
+  // A source-bound soft organ can inflate; the head, torso and limb bones
+  // retain the existing rigid path. Never interpolate limb scale.
+  if(atlas.softBones?.[bone]){
+    const sx=Math.hypot(a[0],a[1])+(Math.hypot(b[0],b[1])-Math.hypot(a[0],a[1]))*p;
+    const sy=Math.hypot(a[2],a[3])+(Math.hypot(b[2],b[3])-Math.hypot(a[2],a[3]))*p;
+    out[0]*=sx;out[1]*=sx;out[2]*=sy;out[3]*=sy;
+  }
   const pivot=atlas.interpolationPivots?.[bone];
   if(pivot){
     // A fast swing must interpolate its authored grip, rather than the
@@ -103,10 +116,19 @@ function interpolatedMatrix(out,atlas,plan,bone,upper){
     const [px,py]=pivot,ax=a[0]*px+a[2]*py+a[4],ay=a[1]*px+a[3]*py+a[5];
     const bx=b[0]*px+b[2]*py+b[4],by=b[1]*px+b[3]*py+b[5];
     out[4]=ax+(bx-ax)*p-c*px+s*py;out[5]=ay+(by-ay)*p-s*px-c*py;
+    if(atlas.softBones?.[bone]){
+      out[4]=ax+(bx-ax)*p-out[0]*px-out[2]*py;
+      out[5]=ay+(by-ay)*p-out[1]*px-out[3]*py;
+    }
+    // Child jaw/throat paint follows the interpolated head anchor exactly.
+    // Independently interpolating two world-space pivots can detach a hinge.
+    if(attachment){
+      out[4]=anchorX-out[0]*px-out[2]*py;out[5]=anchorY-out[1]*px-out[3]*py;
+    }
   }else{
     out[4]=a[4]+(b[4]-a[4])*p;out[5]=a[5]+(b[5]-a[5])*p;
   }
-  if(upper&&plan.attackPhase!==null)out[5]+=plan.upperOffsetY;
+  if(applyUpperOffset&&upper&&plan.attackPhase!==null)out[5]+=plan.upperOffsetY;
   return out;
 }
 
