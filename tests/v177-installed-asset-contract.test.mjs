@@ -9,8 +9,8 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 82, 16_172_950, 56],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 81, 16_151_998, 55],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 84, 16227408, 58],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 83, 16206456, 57],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {

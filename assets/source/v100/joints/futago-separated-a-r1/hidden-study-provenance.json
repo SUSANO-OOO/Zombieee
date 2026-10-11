@@ -1,0 +1,353 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "f314b6a5f32266a4881bc0e1c40bbfe2397e006091810b0c603dd596c44e654c",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+    "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+    "sourceRect": {
+      "x": 32,
+      "y": 441,
+      "w": 183,
+      "h": 320
+    },
+    "drawSlices": [
+      {
+        "x": 0,
+        "y": 0,
+        "w": 183,
+        "h": 320
+      }
+    ],
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 32,
+        "y": 441,
+        "w": 183,
+        "h": 320
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 183,
+          "h": 320
+        }
+      ],
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 148,
+        "ty": 128,
+        "paddingOnly": true
+      },
+      "reason": "Original native crop padded by integer pixels, without resampling or identity repaint"
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 258,
+        "y": 437,
+        "w": 249,
+        "h": 359
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 249,
+          "h": 359
+        }
+      ],
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "d94f57cc11dc00ce34905dc2072b35da48ed4ed95388426d5d2e8de497d8f257",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 512,
+        "y": 437,
+        "w": 276,
+        "h": 375
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 138,
+          "h": 187
+        },
+        {
+          "x": 138,
+          "y": 0,
+          "w": 138,
+          "h": 93
+        },
+        {
+          "x": 138,
+          "y": 93,
+          "w": 69,
+          "h": 94
+        },
+        {
+          "x": 207,
+          "y": 140,
+          "w": 69,
+          "h": 47
+        },
+        {
+          "x": 0,
+          "y": 187,
+          "w": 276,
+          "h": 188
+        }
+      ],
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "621fe3da9beb3e4b07bac3896504243aaafd8ba38bc1366c1c6d701485268449",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 771,
+        "y": 410,
+        "w": 280,
+        "h": 338
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 140,
+          "h": 84
+        },
+        {
+          "x": 17,
+          "y": 105,
+          "w": 18,
+          "h": 21
+        },
+        {
+          "x": 0,
+          "y": 126,
+          "w": 70,
+          "h": 43
+        },
+        {
+          "x": 70,
+          "y": 84,
+          "w": 70,
+          "h": 85
+        },
+        {
+          "x": 192,
+          "y": 15,
+          "w": 2,
+          "h": 3
+        },
+        {
+          "x": 196,
+          "y": 15,
+          "w": 5,
+          "h": 6
+        },
+        {
+          "x": 140,
+          "y": 42,
+          "w": 70,
+          "h": 42
+        },
+        {
+          "x": 210,
+          "y": 0,
+          "w": 70,
+          "h": 84
+        },
+        {
+          "x": 140,
+          "y": 84,
+          "w": 140,
+          "h": 85
+        },
+        {
+          "x": 0,
+          "y": 169,
+          "w": 280,
+          "h": 169
+        }
+      ],
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "42733537e49d28841d22f40f7c30ea6c472bf571d54ff7387c5cc40ea6135bd8",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 1072,
+        "y": 421,
+        "w": 342,
+        "h": 384
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 171,
+          "h": 192
+        },
+        {
+          "x": 171,
+          "y": 12,
+          "w": 21,
+          "h": 12
+        },
+        {
+          "x": 171,
+          "y": 48,
+          "w": 85,
+          "h": 48
+        },
+        {
+          "x": 256,
+          "y": 0,
+          "w": 86,
+          "h": 96
+        },
+        {
+          "x": 171,
+          "y": 96,
+          "w": 171,
+          "h": 96
+        },
+        {
+          "x": 0,
+          "y": 192,
+          "w": 342,
+          "h": 192
+        }
+      ],
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "f4c4408647c29221c931812c4ec9ad1fd3b576656d34810d40522521daa5864a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "hit": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 1401,
+        "y": 434,
+        "w": 214,
+        "h": 337
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 214,
+          "h": 337
+        }
+      ],
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "8e7066d54b90c11d816209480b0b25bf86673ad9ec883c0bffbd56dbe8a8ccdd",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    }
+  },
+  "usage": "Only concealed owned joints and under-rib completion. All six original native pose crops retain exact canonical RGBA, including semi-transparent RGB and original drawSlices; idle uses integer padding only. Source face/hair, claws, ribs, clothes and two feet retained. Native transparent foot gutter corrected by explicit registration, never by bone stretching.",
+  "generatedParts": [
+    "far-upper",
+    "far-lower",
+    "near-upper",
+    "near-lower",
+    "large-upper",
+    "large-lower",
+    "small-upper",
+    "small-lower",
+    "torso-underpaint"
+  ],
+  "adopted": true,
+  "productionConnected": false,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false,
+  "renderReferenceBinding": {
+    "pose": "walk-a",
+    "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+    "sourceRect": {
+      "x": 258,
+      "y": 437,
+      "w": 249,
+      "h": 359
+    },
+    "anchor": {
+      "x": 0.45180722891566266,
+      "y": 0.8523676880222841
+    },
+    "flipX": false,
+    "reason": "AshfallGame uses the right-facing walk-a native frame whenever a joint pose is drawn. Reference dimensions and placement must bind that exact frame, not the narrower idle crop."
+  },
+  "groundRegistration": {
+    "renderPose": "walk-a",
+    "anchorPixels": [
+      112.5,
+      306
+    ],
+    "paintedNearSoleY": 421.5,
+    "sourcePadding": {
+      "tx": 148,
+      "ty": 128,
+      "scale": 1
+    },
+    "referenceOffset": [
+      139.5,
+      115.5
+    ],
+    "reason": "Uniform original-pixel scale and actual walk-a anchor; preserve each original far-foot perspective plane. No bone scaling, source resampling or repaint."
+  }
+}

@@ -1871,6 +1871,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/futago-separated-a-r1.webp",
+      "bytes": 24404,
+      "hash": "sha256-08955e85523c9c046a0d84e7d37269335b111d58c8afb92193c66780800bf63a",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/futago-separated-b-r1.webp",
+      "bytes": 30054,
+      "hash": "sha256-4ffe7e41e67947722730a56d61883ed440482a391b0ef0596eca7d0e02280d68",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/gairen-r1.webp",
       "bytes": 65988,
       "hash": "sha256-cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf",
