@@ -9,6 +9,7 @@ import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {assertV177EnemyLiveRender} from './v177-enemy-live-render-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -16,7 +17,7 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in paused developer fixtures, plus real simulation damage/corpse effects. Not physical iPhone recording or campaign difficulty acceptance.',cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in paused fixtures, all 29 base enemy kinds in continuous live V1 simulation fixtures at 844x340, plus real damage/corpse effects. Enemy phase fixtures control target distance and movement speed; they do not accept natural campaign tempo, ally/derived-form live motion, all actions, difficulty or physical recording.',cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -25,7 +26,7 @@ try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
-    const page=await context.newPage(),row={width,height,motion:[],gore:[]};report.cases.push(row);
+    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],gore:[]};report.cases.push(row);
     const requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>report.errors.push(String(e)));
     page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
@@ -93,6 +94,30 @@ try{
         }
       }
       assert.equal(row.motion.length,48);
+      if(width===844&&height===340){
+        const enemies=spriteKinds.filter(kind=>!PLAYABLE_COMBAT_KINDS.includes(kind)&&kind!=='mayo-chan-feral'&&!kind.startsWith('futago-separated-'));
+        assert.equal(enemies.length,29,'all base enemy kinds need V1 live coverage');
+        for(const kind of enemies){
+          await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
+          for(const phase of ['move','attack']){
+            const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase}),{kind,phase});
+            const evidence={kind,phase,proof,expectedJointPath:V177_JOINT_ATLASES[kind]?.path??null,samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
+            try{
+              for(let i=0;i<15;i++){
+                await page.waitForTimeout(120);
+                evidence.samples.push(await page.evaluate(id=>{
+                  const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
+                  return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame}))};
+                },proof.fighterId));
+              }
+              evidence.summary=assertV177EnemyLiveRender({...evidence,fighterId:proof.fighterId});evidence.status='passed';
+              await page.screenshot({path:`${out}/${width}x${height}-${kind}-live-${phase}.png`});
+            }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
+            finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
+          }
+        }
+        assert.equal(row.liveEnemyMotion.length,58);
+      }
       for(const kind of ['walker','crusher','spindle','red-panther-knife']){
         await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
         const proof=await page.evaluate(kind=>{
@@ -138,5 +163,5 @@ try{
   report.status='pass';
 }catch(error){report.status='failed';report.error=String(error);}
 finally{await browser.close();await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));}
-console.log(JSON.stringify({status:report.status,engine,error:report.error,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,gore:r.gore.length}))}));
+console.log(JSON.stringify({status:report.status,engine,error:report.error,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,liveEnemyPhases:r.liveEnemyMotion.length,gore:r.gore.length}))}));
 if(report.status==='failed')process.exitCode=1;
