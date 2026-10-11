@@ -29,5 +29,6 @@ export const V177_JOINT_ASSET_ADDITIONS = Object.freeze([
   Object.freeze({path:'/art/v100/joints/ooze-r1.webp',bytes:58562,hash:'sha256-6513946285a392a7929f3c2a20acbf78bedcfed78827e94039bb79bec36d4a09'}),
   Object.freeze({path:'/art/v100/joints/gate-eater-r1.webp',bytes:61574,hash:'sha256-aa7b1598546bb8e89f3794fc214e84b23d6e5738e6d7c93361ca1ad78bb42bdc'}),
   Object.freeze({path:'/art/v100/joints/kurome-r1.webp',bytes:39354,hash:'sha256-5c542caaee18731de8d2306be8a0e35af7a96ceafbfba189363e2d1ac4ae4977'}),
+  Object.freeze({path:'/art/v100/joints/mother-r1.webp',bytes:68230,hash:'sha256-230991a43eff9f9331b68126ec3412f6fb0bc606ec2d46ce47973e16232231f1'}),
 ]);
-export const V177_JOINT_ASSET_BYTES = 2053124;
+export const V177_JOINT_ASSET_BYTES = 2121354;

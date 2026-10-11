@@ -1943,6 +1943,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/mother-r1.webp",
+      "bytes": 68230,
+      "hash": "sha256-230991a43eff9f9331b68126ec3412f6fb0bc606ec2d46ce47973e16232231f1",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/mrs-chiha-r1.webp",
       "bytes": 37776,
       "hash": "sha256-5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec",

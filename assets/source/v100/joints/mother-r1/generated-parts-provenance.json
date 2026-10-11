@@ -1,0 +1,55 @@
+{
+  "schema": "zombieee-hidden-joint-completion/1",
+  "kind": "mother",
+  "tool": "image_gen.imagegen",
+  "origin": "OpenAI ImageGen under Producer-authorized original game asset development",
+  "projectOriginal": true,
+  "thirdPartyDownloadedVisuals": false,
+  "promptFile": "parts-prompt.txt",
+  "studyFile": "hidden-parts-study.png",
+  "sha256": "ff2017cb35ed3312b252f762032d2f19a2caa04b7562744c285b2bb261e6cd78",
+  "width": 1254,
+  "height": 1254,
+  "grid": {
+    "rows": 4,
+    "columns": 4
+  },
+  "transparentBackground": true,
+  "transparentPixels": 1158571,
+  "reference": "identity-reference.png",
+  "additionalReference": "original-attack-b.png",
+  "sourceBinding": {
+    "path": "/art/v090/bosses/mother-battle-r1.png",
+    "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "scope": "Original dorsal shell, eggs, spines, visible limb tissue, head, teeth, drool and brood sacs are retained from canonical source. Hidden joint completions only; six feet are traceable original source pixels.",
+  "anatomyPolicy": "Six rear/middle/front near/far leg chains. Tripod0 far-rear/near-middle/far-front and tripod1 near-rear/far-middle/near-front, stanceFraction .72. Three front brood sacs are leaf thorax organs; original smaller rear brood and dorsal eggs remain in thorax. No sac is counted as a leg. No new head, shell, sacs, feet or claws are generated.",
+  "originalParts": [
+    "far-rear-foot",
+    "near-rear-foot",
+    "near-middle-foot",
+    "far-middle-foot",
+    "near-front-foot",
+    "far-front-foot",
+    "front-brood-0",
+    "front-brood-1",
+    "front-brood-2"
+  ],
+  "status": "Source-bound hidden joint completion adopted; no generated face, sacs, feet or claws",
+  "adopted": true,
+  "counted": false,
+  "productionConnected": false,
+  "normalPlayAccepted": false
+}
