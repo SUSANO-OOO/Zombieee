@@ -4,9 +4,13 @@ import assert from 'node:assert/strict';
 export function readV100IdentityFrames(element) {
   return [...element.querySelectorAll('[data-v100-insert="takuya-identity"] svg svg')].map(frame => {
     const style=getComputedStyle(frame);
-    const clipId=frame.querySelector('g[clip-path]')?.getAttribute('clip-path')?.match(/^url\(#(.+)\)$/u)?.[1];
+    const content=frame.querySelector('g[clip-path]');
+    const clipId=content?.getAttribute('clip-path')?.match(/^url\(#(.+)\)$/u)?.[1];
     const clip=clipId&&frame.querySelector('#'+CSS.escape(clipId)+' rect');
-    const box=frame.viewBox.baseVal,parent=frame.parentElement.getScreenCTM(),screen=frame.getScreenCTM();
+    // Measure the painted content. A nested SVG viewport's own CTM can remain
+    // unchanged when its contents are transformed; it is not a pixel oracle.
+    const box=frame.viewBox.baseVal,parent=frame.parentElement.getScreenCTM(),screen=content?.getScreenCTM();
+    const viewportScreen=frame.getScreenCTM();
     const relative=parent&&screen?parent.inverse().multiply(screen):null;
     return {
       x:Number(frame.getAttribute('x')),y:Number(frame.getAttribute('y')),
@@ -15,6 +19,8 @@ export function readV100IdentityFrames(element) {
       preserveAspectRatio:{align:frame.preserveAspectRatio.baseVal.align,meetOrSlice:frame.preserveAspectRatio.baseVal.meetOrSlice},
       cssWidth:style.width,cssHeight:style.height,
       cssTransform:style.transform,transformOrigin:style.transformOrigin,transformBox:style.transformBox,
+      contentCssTransform:content?getComputedStyle(content).transform:null,
+      viewportScreenTransform:viewportScreen?['a','b','c','d','e','f'].map(k=>viewportScreen[k]):null,
       // Cancel responsive outer-SVG and page transforms before comparison.
       relativeTransform:relative?['a','b','c','d','e','f'].map(k=>relative[k]):null,
       overflowX:style.overflowX,overflowY:style.overflowY,filter:style.filter,

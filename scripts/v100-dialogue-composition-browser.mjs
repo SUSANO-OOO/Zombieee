@@ -115,19 +115,31 @@ for(const engine of engines){
    }
    if(fixture.insertId==='takuya-identity'){
     assertV100IdentityFrames(geometry.identityFrames);
-    const figures=scene.locator('[data-v100-insert="takuya-identity"] svg svg');
+    const figures=scene.locator('[data-v100-insert="takuya-identity"] svg svg > g[clip-path]');
     const styles=await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style')));
-    const control=geometry.identitySizingControl={operation:'css-transform-scale',scale:1.1,before:geometry.identityFrames};
+    const control=geometry.identitySizingControl={operation:'painted-content-css-transform-scale',scale:1.1,before:geometry.identityFrames};
     try{
-     await figures.evaluateAll(frames=>{for(const frame of frames){frame.style.setProperty('transform-origin','0 0','important');frame.style.setProperty('transform','scale(1.1)','important');}});
+     await figures.evaluateAll(async frames=>{
+      for(const frame of frames)frame.setAttribute('style',(frame.getAttribute('style')??'')+';transform-origin:0 0!important;transform:scale(1.1)!important;');
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+     });
      control.scaled=await scene.evaluate(readV100IdentityFrames);
      control.changedFrames=assertV100IdentitySizingControl(control.before,control.scaled);
      control.cssScaleRejected=true;
+    }catch(error){
+     control.primaryError=String(error);throw error;
     }finally{
-     await figures.evaluateAll((frames,styles)=>{frames.forEach((frame,i)=>styles[i]===null?frame.removeAttribute('style'):frame.setAttribute('style',styles[i]));},styles);
-     assert.deepEqual(await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style'))),styles,'the sizing control must restore the exact original inline styles');
-     control.restored=await scene.evaluate(readV100IdentityFrames);assertV100IdentityFrames(control.restored);
-     control.restoredGeometryValid=true;
+     try{
+      await figures.evaluateAll(async(frames,styles)=>{
+       frames.forEach((frame,i)=>styles[i]===null?frame.removeAttribute('style'):frame.setAttribute('style',styles[i]));
+       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      },styles);
+      assert.deepEqual(await figures.evaluateAll(frames=>frames.map(frame=>frame.getAttribute('style'))),styles,'the sizing control must restore the exact original inline styles');
+      control.restored=await scene.evaluate(readV100IdentityFrames);assertV100IdentityFrames(control.restored);
+      control.restoredGeometryValid=true;
+     }catch(error){
+      control.restorationError=String(error);if(!control.primaryError)throw error;
+     }
     }
    }
    assert.ok(!/会話|\s\/\s\d/.test(geometry.heading));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assertV100IdentityFrames,assertV100IdentitySizingControl} from '../scripts/v100-identity-frame-geometry.mjs';
+import {readV100IdentityFrames,assertV100IdentityFrames,assertV100IdentitySizingControl} from '../scripts/v100-identity-frame-geometry.mjs';
 
 // Independent source-cell controls. These are not native-browser acceptance.
 const frames=()=>[
@@ -43,4 +43,33 @@ test('A CSS-only no-op, partial mutation or missing rendered matrix cannot pass 
   const partial=frames();partial[0].relativeTransform[0]*=1.1;partial[0].relativeTransform[3]*=1.1;
   assert.throws(()=>assertV100IdentitySizingControl(before,partial),/must actually enlarge/);
   const missing=frames();missing[0].relativeTransform=null;assert.throws(()=>assertV100IdentitySizingControl(before,missing),/finite rendered geometry/);
+});
+
+test('The pixel oracle measures transformed painted content even when the enclosing viewport is unchanged',()=>{
+  const cssDescriptor=Object.getOwnPropertyDescriptor(globalThis,'CSS');
+  const styleDescriptor=Object.getOwnPropertyDescriptor(globalThis,'getComputedStyle');
+  Object.defineProperty(globalThis,'CSS',{configurable:true,value:{escape:id=>id}});
+  Object.defineProperty(globalThis,'getComputedStyle',{configurable:true,value:element=>element.computedStyle});
+  try{
+    const nodes=frames().map((source,i)=>{
+      const matrix=Object.fromEntries(['a','b','c','d','e','f'].map((key,j)=>[key,source.relativeTransform[j]]));
+      const content={getAttribute:()=>`url(#clip-${i})`,getScreenCTM:()=>content.matrix,matrix:{...matrix},computedStyle:{transform:'none'}};
+      const clip={getAttribute:key=>String(source.viewBox[key])};
+      return {content,computedStyle:{width:'auto',height:'auto',transform:'none',transformOrigin:'0px 0px',transformBox:'view-box',overflowX:'hidden',overflowY:'hidden',filter:'none'},
+        getAttribute:key=>String(source[key]),viewBox:{baseVal:source.viewBox},preserveAspectRatio:{baseVal:{align:6,meetOrSlice:1}},
+        getScreenCTM:()=>matrix,parentElement:{getScreenCTM:()=>({inverse:()=>({multiply:screen=>screen})})},
+        querySelector:selector=>selector==='g[clip-path]'?content:clip};
+    });
+    const scene={querySelectorAll:()=>nodes};
+    assert.doesNotThrow(()=>assertV100IdentityFrames(readV100IdentityFrames(scene)));
+    for(const node of nodes){node.content.matrix.a*=1.1;node.content.matrix.d*=1.1;node.content.computedStyle.transform='matrix(1.1, 0, 0, 1.1, 0, 0)';}
+    const transformed=readV100IdentityFrames(scene);
+    assert.equal(transformed[0].viewportScreenTransform[0],frames()[0].relativeTransform[0]);
+    assert.throws(()=>assertV100IdentityFrames(transformed),/outer diagram sizing must not resize/);
+    assert.equal(assertV100IdentitySizingControl(frames(),transformed).length,2);
+  }finally{
+    for(const [key,descriptor] of [['CSS',cssDescriptor],['getComputedStyle',styleDescriptor]]){
+      if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];
+    }
+  }
 });
