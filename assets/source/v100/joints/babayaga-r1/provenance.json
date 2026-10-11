@@ -1,0 +1,245 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "babayaga",
+  "assetPath": "/art/v100/joints/babayaga-r1.webp",
+  "bytes": 22584,
+  "sha256": "68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "8a9536f5d856e5752f5cbdbc7591aa6b1f619f90b6e32667aca8c4c971b098f9",
+  "identitySourceSha256": "7e882e3dda91afb96994c64d99d40611407118b54d4e5cb840362f9ddc2f364b",
+  "identityBinding": {
+    "path": "/art/v060/characters/babayaga-battle-v1.png",
+    "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "d705df34599e04f045f957bc8723dcd0ee76b74d4a2c6bcb20c9f2a93ced21ff",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "7e882e3dda91afb96994c64d99d40611407118b54d4e5cb840362f9ddc2f364b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "7cbdc2e1b8cc9a87ce2ce6035504db577a2517843d85e0e6aeb6acaa482f33d4",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "070c0365eb758f11def7523304a79c5a1fddad4c0caff9c35b1539fbaa3f2f9e",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "56f34ff272c14b60f72d7efefd1f5a212f96d4ef8a7c76081623a58f276fef29",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "c76a59be86807c14579851d61a0a7ab055dde69582b80126ae300a4cc5f45f1a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "2c66836241a1b51a98dfe0c38de42964fd19d7cf77c8019da1dac4f0994098de",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "faf141f0bd165e00ebbd4ee7e584097ef177a13a2439649a13f37040aa6d7ba7",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "a92fd4d1e23e7f07dbccb0408e9da1d8a4fc04c2004e84135f6c26c76643397a",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "3dcefc03e31baff4bad0ea6271be682708f8620673241513047db73c25c64dc0",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "3c1f77070ed21f1cd8489f9252e43a3228486f328f66e062b86c96df9105b068",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "03c63966b84db2ca941140ed2bf902064e1107cfaed7594a0ef680262ce3e15a",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "00c4147e33809f83bd096836e9b255e60bd78b24e5fbe667d901230965d571e9",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "0895b2985d3e6538ef2a4751f22633e6cd104d71bf76122438668fca9d02b583",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "c49206f0343c51e9caa791ebf17919c86e48dd19a6e0f3eb229e494f8469d067",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "d5a05f3ce6f245d797a66637ef7f623b44afe87d0422cd2b7aaaa0822d30ea22",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "75c23fb54916730c50d799a36191a3e3747010662c7278dba8b58e79633a98fa",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "00290e6c7e2511ee907d172e58f3388f085a7108c39ded34cc2377c0e590547f",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "ee9e64a7b09325d1f23ac0d6570a87bd7e97fcddb7eac059328d5311a1109ef7",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "be7b417fdc561029040731f1b75ab141e2d22a767542f8d0c83d422107f154ad",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "12bb3c3f4a9d23accc038b2701459983cc85ac9bb2a9e8a8a4c6e6a21064cbb5",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length legs and both arms holding the original gun/crossbow and hands; source-bound chest, gear, feet, aiming and recoil",
+  "groundY": 430.5,
+  "decodedBytes": 133120,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

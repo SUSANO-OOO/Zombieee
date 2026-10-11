@@ -1,0 +1,155 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "8a9536f5d856e5752f5cbdbc7591aa6b1f619f90b6e32667aca8c4c971b098f9",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v060/characters/babayaga-battle-v1.png",
+    "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "7e882e3dda91afb96994c64d99d40611407118b54d4e5cb840362f9ddc2f364b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "7cbdc2e1b8cc9a87ce2ce6035504db577a2517843d85e0e6aeb6acaa482f33d4",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "070c0365eb758f11def7523304a79c5a1fddad4c0caff9c35b1539fbaa3f2f9e",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "56f34ff272c14b60f72d7efefd1f5a212f96d4ef8a7c76081623a58f276fef29",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "c76a59be86807c14579851d61a0a7ab055dde69582b80126ae300a4cc5f45f1a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "sourceSha256": "0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "2c66836241a1b51a98dfe0c38de42964fd19d7cf77c8019da1dac4f0994098de",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Ten own cloth cells0..9 complete hidden shirt/trouser/sleeve seams. Actual measured isolated study rectangles exclude neighboring cell spill. Original head, visible costume and shoes retain canonical idle RGBA; original two gripping hands and suppressed pistol retain attack-a RGBA with integer translation only. Cells10/11 unused.",
+  "visibleOriginalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

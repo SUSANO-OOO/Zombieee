@@ -1823,6 +1823,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/babayaga-r1.webp",
+      "bytes": 22584,
+      "hash": "sha256-68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/brawler-r1.webp",
       "bytes": 21604,
       "hash": "sha256-c33d2ac536e714e2b5d8cc3ad8dd7e2ee1793fc4d3002d77b4517ceb96ebc2a6",

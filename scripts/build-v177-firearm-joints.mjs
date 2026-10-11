@@ -1,7 +1,7 @@
 import {writeFile} from 'node:fs/promises';
 import {buildRigidJointAtlas} from './build-v177-rigid-joint-atlas.mjs';
 const atlases={};
-for(const kind of ['gunner','medic','engineer'])console.log(JSON.stringify(await buildRigidJointAtlas({
+for(const kind of ['gunner','medic','engineer','babayaga'])console.log(JSON.stringify(await buildRigidJointAtlas({
  sourceDirectory:'assets/source/v100/joints/'+kind+'-r1',assetPath:'/art/v100/joints/'+kind+'-r1.webp',
  dataFile:null,captureAtlas:atlas=>{atlases[kind]=atlas;},generator:'scripts/build-v177-firearm-joints.mjs',
  description:'Blender 5.2 fixed-length legs and both arms holding the original gun/crossbow and hands; source-bound chest, gear, feet, aiming and recoil',
