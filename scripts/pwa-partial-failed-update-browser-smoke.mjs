@@ -27,6 +27,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry } from "./pwa-expected-abort.mjs";
 import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
+import { partitionPwaUpdateTransportPaths } from "./pwa-update-request-ownership.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -948,18 +949,14 @@ try {
   const incidentAssetRequests = candidateTransportRequests
     .slice(incidentTransportStart)
     .map(({ pathname }) => pathname);
-  const incidentRepairRequests = incidentAssetRequests.filter((pathname) => candidateDownloadTransportPaths.has(pathname));
+  const incidentOwnership = partitionPwaUpdateTransportPaths(incidentAssetRequests, candidateDownloadTransportPaths, candidateBundledAudioSourcePaths);
+  const incidentRepairRequests = incidentOwnership.repair;
   const incidentUnchangedStoredRefetches = incidentAssetRequests.filter((pathname) => (
     pathname !== bundlePathname
     && unchangedStoredAssets.some((asset) => transportPathFor(asset) === pathname)
   ));
-  const incidentRuntimeAudioSourceRequests = incidentAssetRequests.filter((pathname) => (
-    candidateBundledAudioSourcePaths.has(pathname)
-  ));
-  const incidentUnexpectedRequests = incidentAssetRequests.filter((pathname) => (
-    !candidateDownloadTransportPaths.has(pathname)
-    && !candidateBundledAudioSourcePaths.has(pathname)
-  ));
+  const incidentRuntimeAudioSourceRequests = incidentOwnership.runtimeAudio;
+  const incidentUnexpectedRequests = incidentOwnership.unexpected;
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
   record("the incident requests only candidate repair assets, three failed bundle attempts and one held request, with failed logical slices visible", (
@@ -1174,6 +1171,7 @@ try {
   const recoveryAssetRequests = candidateTransportRequests
     .slice(recoveryTransportStart)
     .map((request) => request.pathname);
+  const recoveryOwnership = partitionPwaUpdateTransportPaths(recoveryAssetRequests, candidateDownloadTransportPaths, candidateBundledAudioSourcePaths);
   const completeUpdateTransportRequests = [
     ...candidateTransportRequests.slice(incidentTransportStart, incidentTransportEnd),
     ...candidateTransportRequests.slice(recoveryTransportStart),
@@ -1310,7 +1308,7 @@ try {
     pathname !== bundlePathname && unchangedStoredDirectTransportPaths.has(pathname)
   ));
   record("recovery fetches only failed or pending content, never re-fetches any successful asset, and does not fetch the bundle per slice", (
-    recoveryAssetRequests.every((pathname) => candidateDownloadTransportPaths.has(pathname))
+    recoveryOwnership.unexpected.length === 0
     && new Set(completeChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
     && completeDirectChangedRequests.length === expectedDirectChangedRequests.length
     && successfulRefetches.length === 0
@@ -1320,6 +1318,9 @@ try {
     successfulBeforeRecoveryHashes: hashesBeforeRecovery.size,
     successfulBeforeRecoveryLogicalAssets: successfulBeforeRecoveryAssets.length,
     recoveryAssetRequests,
+    recoveryRepairTransportRequests: recoveryOwnership.repair,
+    recoveryRuntimeAudioSourceRequests: recoveryOwnership.runtimeAudio,
+    recoveryUnexpectedRequests: recoveryOwnership.unexpected,
     completeUpdateTransportRequests,
     downloadTargetTransportPaths: [...candidateDownloadTransportPaths],
     completeChangedRequests,
