@@ -1,0 +1,1727 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "choir-knot",
+  "status": "Frozen original-bound Choir-knot candidate: fused original faces and pale-gray body, two connected fixed-length skeletal legs and both original feet. Ready crouch baseline is actual static pelvis, never double-added at attack entry. Original central-face emission moves with body; dedicated familiar-chorus, warning, hit and death owners remain. All48/all-action continuous native normal-play acceptance pending.",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "painted",
+  "sourceSha256": "c8733abeb16f4eeaa9b79c681755c00a332ead1d35f7c9607f9ce1025a2f65ae",
+  "sheetSha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+  "poseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "c8733abeb16f4eeaa9b79c681755c00a332ead1d35f7c9607f9ce1025a2f65ae",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "4573498c0d778d48864fbc84ec84e863ed5b417667b15f2eb444edd3d098fee3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "186eaf4782c1591719f1378b89dec01f9746b7a93097e6fcca1319e7b9503b1d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "bcb104f1bd924a0e09a6d6d605dd41caad7df0ab0b1c11aedfdf709693b25a05",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "523e3e33fb30699397b95d6858dd57eb1b259130200712f32a400cd4ff3d35d6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "0e25eaac95f887b5a3119c297ec6ccbdfccdac24a9036f7de7c0a2a10b1c0216",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-upper",
+      "bone": "leg-0-upper",
+      "file": "far-upper.png",
+      "sha256": "499296340209ab591c5944250f3a7825da63ab6eea755eae2076a2896d8e792b",
+      "original": false,
+      "studyCell": 0,
+      "studyRect": [
+        0,
+        0,
+        384,
+        720
+      ],
+      "studySha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          183.15164747915838,
+          86.03
+        ],
+        [
+          207.59363166953528,
+          626.97
+        ]
+      ],
+      "restAxis": [
+        [
+          118,
+          268
+        ],
+        [
+          123,
+          331
+        ]
+      ],
+      "targetWidth": 19,
+      "originalRegions": [
+        [
+          [
+            110,
+            252
+          ],
+          [
+            127,
+            253
+          ],
+          [
+            135,
+            273
+          ],
+          [
+            134,
+            296
+          ],
+          [
+            131,
+            321
+          ],
+          [
+            135,
+            339
+          ],
+          [
+            123,
+            347
+          ],
+          [
+            111,
+            340
+          ],
+          [
+            107,
+            321
+          ],
+          [
+            103,
+            301
+          ],
+          [
+            102,
+            280
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            127,
+            385
+          ],
+          [
+            149,
+            384
+          ],
+          [
+            155,
+            400
+          ],
+          [
+            163,
+            414
+          ],
+          [
+            167,
+            423
+          ],
+          [
+            162,
+            428
+          ],
+          [
+            139,
+            425
+          ],
+          [
+            117,
+            426
+          ],
+          [
+            99,
+            425
+          ],
+          [
+            82,
+            425
+          ],
+          [
+            74,
+            422
+          ],
+          [
+            79,
+            415
+          ],
+          [
+            96,
+            411
+          ],
+          [
+            113,
+            404
+          ]
+        ],
+        [
+          [
+            337,
+            387
+          ],
+          [
+            357,
+            387
+          ],
+          [
+            365,
+            404
+          ],
+          [
+            382,
+            414
+          ],
+          [
+            400,
+            424
+          ],
+          [
+            407,
+            438
+          ],
+          [
+            372,
+            440
+          ],
+          [
+            340,
+            439
+          ],
+          [
+            331,
+            429
+          ],
+          [
+            334,
+            414
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          110,
+          252
+        ],
+        [
+          127,
+          253
+        ],
+        [
+          135,
+          273
+        ],
+        [
+          134,
+          296
+        ],
+        [
+          131,
+          321
+        ],
+        [
+          135,
+          339
+        ],
+        [
+          123,
+          347
+        ],
+        [
+          111,
+          340
+        ],
+        [
+          107,
+          321
+        ],
+        [
+          103,
+          301
+        ],
+        [
+          102,
+          280
+        ]
+      ]
+    },
+    {
+      "name": "far-lower",
+      "bone": "leg-0-lower",
+      "file": "far-lower.png",
+      "sha256": "0f995fb280c58e7f5e6ea43190eb3039d20c5952ebb5cbb23d0c91a5680d4fa8",
+      "original": false,
+      "studyCell": 2,
+      "studyRect": [
+        768,
+        0,
+        384,
+        720
+      ],
+      "studySha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          938.9713565536206,
+          85.89000000000001
+        ],
+        [
+          973.9550166604961,
+          625.11
+        ]
+      ],
+      "restAxis": [
+        [
+          123,
+          331
+        ],
+        [
+          142,
+          396
+        ]
+      ],
+      "targetWidth": 17,
+      "originalRegions": [
+        [
+          [
+            116,
+            323
+          ],
+          [
+            133,
+            326
+          ],
+          [
+            141,
+            346
+          ],
+          [
+            147,
+            368
+          ],
+          [
+            153,
+            391
+          ],
+          [
+            151,
+            402
+          ],
+          [
+            135,
+            406
+          ],
+          [
+            127,
+            390
+          ],
+          [
+            122,
+            368
+          ],
+          [
+            117,
+            349
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            127,
+            385
+          ],
+          [
+            149,
+            384
+          ],
+          [
+            155,
+            400
+          ],
+          [
+            163,
+            414
+          ],
+          [
+            167,
+            423
+          ],
+          [
+            162,
+            428
+          ],
+          [
+            139,
+            425
+          ],
+          [
+            117,
+            426
+          ],
+          [
+            99,
+            425
+          ],
+          [
+            82,
+            425
+          ],
+          [
+            74,
+            422
+          ],
+          [
+            79,
+            415
+          ],
+          [
+            96,
+            411
+          ],
+          [
+            113,
+            404
+          ]
+        ],
+        [
+          [
+            337,
+            387
+          ],
+          [
+            357,
+            387
+          ],
+          [
+            365,
+            404
+          ],
+          [
+            382,
+            414
+          ],
+          [
+            400,
+            424
+          ],
+          [
+            407,
+            438
+          ],
+          [
+            372,
+            440
+          ],
+          [
+            340,
+            439
+          ],
+          [
+            331,
+            429
+          ],
+          [
+            334,
+            414
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          116,
+          323
+        ],
+        [
+          133,
+          326
+        ],
+        [
+          141,
+          346
+        ],
+        [
+          147,
+          368
+        ],
+        [
+          153,
+          391
+        ],
+        [
+          151,
+          402
+        ],
+        [
+          135,
+          406
+        ],
+        [
+          127,
+          390
+        ],
+        [
+          122,
+          368
+        ],
+        [
+          117,
+          349
+        ]
+      ]
+    },
+    {
+      "name": "far-foot",
+      "bone": "leg-0-foot",
+      "file": "far-foot.png",
+      "sha256": "bf5df4e2ab432f771167cd8f74abae0ec671a45a57cb882769f3f21f6c696c69",
+      "original": true,
+      "polygon": [
+        [
+          127,
+          385
+        ],
+        [
+          149,
+          384
+        ],
+        [
+          155,
+          400
+        ],
+        [
+          163,
+          414
+        ],
+        [
+          167,
+          423
+        ],
+        [
+          162,
+          428
+        ],
+        [
+          139,
+          425
+        ],
+        [
+          117,
+          426
+        ],
+        [
+          99,
+          425
+        ],
+        [
+          82,
+          425
+        ],
+        [
+          74,
+          422
+        ],
+        [
+          79,
+          415
+        ],
+        [
+          96,
+          411
+        ],
+        [
+          113,
+          404
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "near-upper",
+      "bone": "leg-1-upper",
+      "file": "near-upper.png",
+      "sha256": "f50835e555d90aa128299b8073c2a1972f1dc3848465e04b621008ac01e7c27c",
+      "original": false,
+      "studyCell": 1,
+      "studyRect": [
+        384,
+        0,
+        384,
+        720
+      ],
+      "studySha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          581.4683941892422,
+          85.89000000000001
+        ],
+        [
+          562.7678254700248,
+          625.11
+        ]
+      ],
+      "restAxis": [
+        [
+          336,
+          269
+        ],
+        [
+          348,
+          337
+        ]
+      ],
+      "targetWidth": 19,
+      "originalRegions": [
+        [
+          [
+            329,
+            256
+          ],
+          [
+            344,
+            253
+          ],
+          [
+            348,
+            272
+          ],
+          [
+            350,
+            294
+          ],
+          [
+            353,
+            318
+          ],
+          [
+            359,
+            338
+          ],
+          [
+            347,
+            349
+          ],
+          [
+            334,
+            341
+          ],
+          [
+            327,
+            319
+          ],
+          [
+            325,
+            295
+          ],
+          [
+            325,
+            274
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            127,
+            385
+          ],
+          [
+            149,
+            384
+          ],
+          [
+            155,
+            400
+          ],
+          [
+            163,
+            414
+          ],
+          [
+            167,
+            423
+          ],
+          [
+            162,
+            428
+          ],
+          [
+            139,
+            425
+          ],
+          [
+            117,
+            426
+          ],
+          [
+            99,
+            425
+          ],
+          [
+            82,
+            425
+          ],
+          [
+            74,
+            422
+          ],
+          [
+            79,
+            415
+          ],
+          [
+            96,
+            411
+          ],
+          [
+            113,
+            404
+          ]
+        ],
+        [
+          [
+            337,
+            387
+          ],
+          [
+            357,
+            387
+          ],
+          [
+            365,
+            404
+          ],
+          [
+            382,
+            414
+          ],
+          [
+            400,
+            424
+          ],
+          [
+            407,
+            438
+          ],
+          [
+            372,
+            440
+          ],
+          [
+            340,
+            439
+          ],
+          [
+            331,
+            429
+          ],
+          [
+            334,
+            414
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          329,
+          256
+        ],
+        [
+          344,
+          253
+        ],
+        [
+          348,
+          272
+        ],
+        [
+          350,
+          294
+        ],
+        [
+          353,
+          318
+        ],
+        [
+          359,
+          338
+        ],
+        [
+          347,
+          349
+        ],
+        [
+          334,
+          341
+        ],
+        [
+          327,
+          319
+        ],
+        [
+          325,
+          295
+        ],
+        [
+          325,
+          274
+        ]
+      ]
+    },
+    {
+      "name": "near-lower",
+      "bone": "leg-1-lower",
+      "file": "near-lower.png",
+      "sha256": "2c254a308e8321b87f553a000f35d2a2851afcc40ee3d997a228427553090422",
+      "original": false,
+      "studyCell": 3,
+      "studyRect": [
+        1152,
+        0,
+        384,
+        720
+      ],
+      "studySha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          1349.9496924428822,
+          84.24000000000001
+        ],
+        [
+          1336.9878048780488,
+          627.76
+        ]
+      ],
+      "restAxis": [
+        [
+          348,
+          337
+        ],
+        [
+          350,
+          400
+        ]
+      ],
+      "targetWidth": 17,
+      "originalRegions": [
+        [
+          [
+            339,
+            330
+          ],
+          [
+            356,
+            328
+          ],
+          [
+            361,
+            350
+          ],
+          [
+            361,
+            372
+          ],
+          [
+            364,
+            393
+          ],
+          [
+            361,
+            410
+          ],
+          [
+            342,
+            412
+          ],
+          [
+            338,
+            396
+          ],
+          [
+            337,
+            373
+          ],
+          [
+            333,
+            350
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            127,
+            385
+          ],
+          [
+            149,
+            384
+          ],
+          [
+            155,
+            400
+          ],
+          [
+            163,
+            414
+          ],
+          [
+            167,
+            423
+          ],
+          [
+            162,
+            428
+          ],
+          [
+            139,
+            425
+          ],
+          [
+            117,
+            426
+          ],
+          [
+            99,
+            425
+          ],
+          [
+            82,
+            425
+          ],
+          [
+            74,
+            422
+          ],
+          [
+            79,
+            415
+          ],
+          [
+            96,
+            411
+          ],
+          [
+            113,
+            404
+          ]
+        ],
+        [
+          [
+            337,
+            387
+          ],
+          [
+            357,
+            387
+          ],
+          [
+            365,
+            404
+          ],
+          [
+            382,
+            414
+          ],
+          [
+            400,
+            424
+          ],
+          [
+            407,
+            438
+          ],
+          [
+            372,
+            440
+          ],
+          [
+            340,
+            439
+          ],
+          [
+            331,
+            429
+          ],
+          [
+            334,
+            414
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          339,
+          330
+        ],
+        [
+          356,
+          328
+        ],
+        [
+          361,
+          350
+        ],
+        [
+          361,
+          372
+        ],
+        [
+          364,
+          393
+        ],
+        [
+          361,
+          410
+        ],
+        [
+          342,
+          412
+        ],
+        [
+          338,
+          396
+        ],
+        [
+          337,
+          373
+        ],
+        [
+          333,
+          350
+        ]
+      ]
+    },
+    {
+      "name": "near-foot",
+      "bone": "leg-1-foot",
+      "file": "near-foot.png",
+      "sha256": "7cc0ad64655acce7ef4beb22b4d3feee5aff8943497dba4f230c13f16f301689",
+      "original": true,
+      "polygon": [
+        [
+          337,
+          387
+        ],
+        [
+          357,
+          387
+        ],
+        [
+          365,
+          404
+        ],
+        [
+          382,
+          414
+        ],
+        [
+          400,
+          424
+        ],
+        [
+          407,
+          438
+        ],
+        [
+          372,
+          440
+        ],
+        [
+          340,
+          439
+        ],
+        [
+          331,
+          429
+        ],
+        [
+          334,
+          414
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "body",
+      "bone": "spine",
+      "file": "body.png",
+      "sha256": "52cfc2f68c2b22185c0f90a53dc810dcde08ad3913c0a7aac2341eb17f1737f1",
+      "original": true,
+      "polygon": [
+        [
+          0,
+          0
+        ],
+        [
+          480,
+          0
+        ],
+        [
+          480,
+          340
+        ],
+        [
+          0,
+          340
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            110,
+            252
+          ],
+          [
+            127,
+            253
+          ],
+          [
+            135,
+            273
+          ],
+          [
+            134,
+            296
+          ],
+          [
+            131,
+            321
+          ],
+          [
+            135,
+            339
+          ],
+          [
+            123,
+            347
+          ],
+          [
+            111,
+            340
+          ],
+          [
+            107,
+            321
+          ],
+          [
+            103,
+            301
+          ],
+          [
+            102,
+            280
+          ]
+        ],
+        [
+          [
+            329,
+            256
+          ],
+          [
+            344,
+            253
+          ],
+          [
+            348,
+            272
+          ],
+          [
+            350,
+            294
+          ],
+          [
+            353,
+            318
+          ],
+          [
+            359,
+            338
+          ],
+          [
+            347,
+            349
+          ],
+          [
+            334,
+            341
+          ],
+          [
+            327,
+            319
+          ],
+          [
+            325,
+            295
+          ],
+          [
+            325,
+            274
+          ]
+        ],
+        [
+          [
+            116,
+            323
+          ],
+          [
+            133,
+            326
+          ],
+          [
+            141,
+            346
+          ],
+          [
+            147,
+            368
+          ],
+          [
+            153,
+            391
+          ],
+          [
+            151,
+            402
+          ],
+          [
+            135,
+            406
+          ],
+          [
+            127,
+            390
+          ],
+          [
+            122,
+            368
+          ],
+          [
+            117,
+            349
+          ]
+        ],
+        [
+          [
+            339,
+            330
+          ],
+          [
+            356,
+            328
+          ],
+          [
+            361,
+            350
+          ],
+          [
+            361,
+            372
+          ],
+          [
+            364,
+            393
+          ],
+          [
+            361,
+            410
+          ],
+          [
+            342,
+            412
+          ],
+          [
+            338,
+            396
+          ],
+          [
+            337,
+            373
+          ],
+          [
+            333,
+            350
+          ]
+        ],
+        [
+          [
+            127,
+            385
+          ],
+          [
+            149,
+            384
+          ],
+          [
+            155,
+            400
+          ],
+          [
+            163,
+            414
+          ],
+          [
+            167,
+            423
+          ],
+          [
+            162,
+            428
+          ],
+          [
+            139,
+            425
+          ],
+          [
+            117,
+            426
+          ],
+          [
+            99,
+            425
+          ],
+          [
+            82,
+            425
+          ],
+          [
+            74,
+            422
+          ],
+          [
+            79,
+            415
+          ],
+          [
+            96,
+            411
+          ],
+          [
+            113,
+            404
+          ]
+        ],
+        [
+          [
+            337,
+            387
+          ],
+          [
+            357,
+            387
+          ],
+          [
+            365,
+            404
+          ],
+          [
+            382,
+            414
+          ],
+          [
+            400,
+            424
+          ],
+          [
+            407,
+            438
+          ],
+          [
+            372,
+            440
+          ],
+          [
+            340,
+            439
+          ],
+          [
+            331,
+            429
+          ],
+          [
+            334,
+            414
+          ]
+        ]
+      ],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    }
+  ],
+  "order": [
+    "far-upper",
+    "far-lower",
+    "far-foot",
+    "near-upper",
+    "near-lower",
+    "near-foot",
+    "body"
+  ],
+  "atlasPacking": "height-descending-shelves",
+  "lowerLayers": [
+    "far-upper",
+    "far-lower",
+    "far-foot",
+    "near-upper",
+    "near-lower",
+    "near-foot"
+  ],
+  "pelvisY": 277,
+  "identityBinding": {
+    "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+    "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": -0.5
+  },
+  "sourcePadding": {
+    "tx": 0,
+    "ty": 0,
+    "scale": 1
+  },
+  "interpolationPivots": {
+    "spine": [
+      238,
+      270
+    ]
+  },
+  "parentAttachments": {},
+  "muzzle": [
+    235,
+    228
+  ],
+  "weaponBone": "spine",
+  "motion": {
+    "walk": {
+      "spanPx": 20,
+      "liftPx": 9,
+      "stanceFraction": 0.7,
+      "bodyBobPx": 0.5,
+      "groundY": 431.5
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "armConstraints": [],
+  "legConstraints": [
+    {
+      "name": "far",
+      "hip": [
+        118,
+        268
+      ],
+      "knee": [
+        123,
+        331
+      ],
+      "ankle": [
+        142,
+        396
+      ],
+      "toe": [
+        116,
+        419
+      ],
+      "center": 142,
+      "offset": 0.5,
+      "paintedPaw": "far-foot",
+      "groundAnkleY": 396,
+      "paintGroundY": 422.5,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "parentBone": "spine",
+      "parentUpper": true,
+      "effectorBone": "leg-0-foot"
+    },
+    {
+      "name": "near",
+      "hip": [
+        336,
+        269
+      ],
+      "knee": [
+        348,
+        337
+      ],
+      "ankle": [
+        350,
+        400
+      ],
+      "toe": [
+        382,
+        424
+      ],
+      "center": 350,
+      "offset": 0,
+      "paintedPaw": "near-foot",
+      "groundAnkleY": 400,
+      "paintGroundY": 431.5,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "parentBone": "spine",
+      "parentUpper": true,
+      "effectorBone": "leg-1-foot"
+    }
+  ],
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        238,
+        270
+      ],
+      [
+        238,
+        246
+      ]
+    ],
+    "spine": [
+      [
+        238,
+        270
+      ],
+      [
+        238,
+        144
+      ]
+    ],
+    "head": [
+      [
+        236,
+        172
+      ],
+      [
+        236,
+        234
+      ]
+    ],
+    "bodyRestShift": [
+      0,
+      7
+    ],
+    "legs": [
+      {
+        "name": "far",
+        "hip": [
+          118,
+          268
+        ],
+        "knee": [
+          123,
+          331
+        ],
+        "ankle": [
+          142,
+          396
+        ],
+        "toe": [
+          116,
+          419
+        ],
+        "center": 142,
+        "offset": 0.5,
+        "paintedPaw": "far-foot",
+        "groundAnkleY": 396,
+        "paintGroundY": 422.5
+      },
+      {
+        "name": "near",
+        "hip": [
+          336,
+          269
+        ],
+        "knee": [
+          348,
+          337
+        ],
+        "ankle": [
+          350,
+          400
+        ],
+        "toe": [
+          382,
+          424
+        ],
+        "center": 350,
+        "offset": 0,
+        "paintedPaw": "near-foot",
+        "groundAnkleY": 400,
+        "paintGroundY": 431.5
+      }
+    ],
+    "arms": [],
+    "weapons": [],
+    "extras": [],
+    "attack": {
+      "style": "choral-pulse",
+      "bodyShift": [
+        10,
+        5
+      ],
+      "torsoAngle": 0.035,
+      "torsoAnticipation": -0.012,
+      "headAttackAngle": 0,
+      "headAnticipationAngle": 0,
+      "windupEnd": 0.28,
+      "activeEnd": 0.55
+    }
+  },
+  "visibleIdentityPolicy": "All original fused faces, oval pale-gray body and both original skeletal feet retain exact canonical RGBA. No generated face, head, torso, feet, arms, clothing or unrelated species material. Only cells0..3 of own hidden-joint study complete concealed leg seams. The fused body moves as its original single anatomy; two fixed-length legs preserve original separate contact planes and supporting stance. Seven-pixel ready crouch is removed from dynamic bob baseline so attack entry/recovery do not jump. Mouth origin follows the original central face on the body. Existing dedicated choral/nearby-enemy ability, warnings, hit and death retain original owners. All-action/native normal-play acceptance pending."
+}

@@ -55,7 +55,7 @@ export const V090_INFECTED_DEFINITIONS = deepFreeze({
     activeSeconds: 0.34,
     recoverySeconds: 0.78,
     cooldownSeconds: 7.6,
-    counterplay: "顔が順番に標的へ向く間に三脚を崩す",
+    counterplay: "顔が順番に標的へ向く予告中に脚へ集中攻撃",
     compendiumAsset: "/art/v090/enemies/choir-knot-compendium-v1.webp",
   },
   "pall-manta": {
