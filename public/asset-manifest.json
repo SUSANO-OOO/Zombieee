@@ -1959,6 +1959,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/ooguchi-r1.webp",
+      "bytes": 41130,
+      "hash": "sha256-850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/ooze-r1.webp",
       "bytes": 58562,
       "hash": "sha256-6513946285a392a7929f3c2a20acbf78bedcfed78827e94039bb79bec36d4a09",

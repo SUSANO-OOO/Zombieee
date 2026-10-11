@@ -1,0 +1,44 @@
+{
+  "schema": "zombieee-hidden-joint-completion/1",
+  "kind": "ooguchi",
+  "tool": "image_gen.imagegen",
+  "origin": "Producer-authorized original game asset development; original-bound hidden joint completion",
+  "projectOriginal": true,
+  "thirdPartyDownloadedVisuals": false,
+  "promptFile": "parts-prompt.txt",
+  "studyFile": "hidden-parts-study.png",
+  "sha256": "76d37a13bbd8f8c44e6a465b4e85f2960229a0740cd04549bdfebe879313a792",
+  "width": 1298,
+  "height": 1212,
+  "grid": {
+    "rows": 3,
+    "columns": 3,
+    "explicitComponentRects": "parts.json studyRect"
+  },
+  "transparentBackground": true,
+  "transparentPixels": 1140715,
+  "sourceBinding": {
+    "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+    "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "scope": "Original huge head/mandibles, bone ridges, torso paint and all four claws/paws preserve canonical RGBA. Generated hidden study fills only owned limb joints and concealed torso. Four legs only; no invented extra tail/limb. Special charge targeting, movement and contact timing, and dedicated hit/death owners remain in the existing runtime.",
+  "originalParts": [
+    "far-rear-paw",
+    "near-rear-paw",
+    "far-front-paw",
+    "near-front-paw",
+    "head",
+    "jaw"
+  ],
+  "adopted": true,
+  "counted": false,
+  "productionConnected": false,
+  "normalPlayAccepted": false
+}
