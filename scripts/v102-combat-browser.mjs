@@ -110,6 +110,13 @@ try{
                   return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame}))};
                 },proof.fighterId));
               }
+              if(kind==='futago'){
+                const panel=page.locator('.boss-hud.v100-boss-center');assert.equal(await panel.count(),1);
+                evidence.compactBossHud=await panel.evaluate(element=>{
+                  const r=element.getBoundingClientRect();return {at:performance.now(),rect:{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom},text:element.innerText,
+                    twinLabels:[...element.querySelectorAll('.boss-twin-hp [data-twin-part]')].map(t=>({part:t.getAttribute('data-twin-part'),text:t.innerText}))};
+                });
+              }
               evidence.summary=assertV177EnemyLiveRender({...evidence,fighterId:proof.fighterId});evidence.status='passed';
               await page.screenshot({path:`${out}/${width}x${height}-${kind}-live-${phase}.png`});
             }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
