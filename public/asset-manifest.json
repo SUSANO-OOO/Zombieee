@@ -1863,6 +1863,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/joints/futago-r1.webp",
+      "bytes": 80406,
+      "hash": "sha256-ba561d046479964ae7d76b0785e8471d05c7001b563469eb89f8eaed2ff07541",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/gairen-r1.webp",
       "bytes": 65988,
       "hash": "sha256-cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf",
