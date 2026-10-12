@@ -1832,7 +1832,7 @@
     {
       "name": "red-panther-knife",
       "output": "public/art/v100/enemies/red-panther-knife-battle-v2.png",
-      "sha256": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+      "sha256": "6551d92e7b876009dece2472081c9a3c064c5e23578acba51dab024f468781e7",
       "sources": [
         {
           "path": "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
@@ -1977,19 +1977,34 @@
             "y": 361,
             "width": 1204,
             "height": 611,
-            "alphaPixels": 375406
+            "alphaPixels": 368027
           },
           "alphaAuthored": false,
           "repair": {
             "alphaAuthored": false,
             "seedPalette": "luma>=205/chroma<=12",
             "edgePixels": 1197110,
-            "seedPixels": 0,
-            "seedCount": 0,
-            "seedResults": [],
+            "seedPixels": 7379,
+            "seedCount": 2,
+            "seedResults": [
+              {
+                "seed": [
+                  704,
+                  706
+                ],
+                "removed": 7278
+              },
+              {
+                "seed": [
+                  187,
+                  830
+                ],
+                "removed": 101
+              }
+            ],
             "zeroRemovalSeeds": [],
-            "changedPixels": 1197110,
-            "allowedMaskPixels": 1197110,
+            "changedPixels": 1204489,
+            "allowedMaskPixels": 1204489,
             "alphaChangesOutsideAllowedMask": 0,
             "rgbChangesOutsideAllowedMask": 0
           }

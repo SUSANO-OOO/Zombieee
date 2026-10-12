@@ -5,14 +5,14 @@
   "width": 480,
   "height": 448,
   "paintStyle": "painted",
-  "sourceSha256": "07600b769452397ba78e45a1be5cbc677e83691649cca456f605a1e4c6e0e8ef",
+  "sourceSha256": "20232f95175309421f78e2e52220edd3846ecfb468195c739a74b441a520a5e5",
   "sheetSha256": "e016db700c1439e79fa73185fdca584fc20f27a22f7150934e60fdf141d12db1",
   "poseBindings": {
     "walk-a": {
       "file": "identity-reference.png",
-      "sha256": "07600b769452397ba78e45a1be5cbc677e83691649cca456f605a1e4c6e0e8ef",
+      "sha256": "20232f95175309421f78e2e52220edd3846ecfb468195c739a74b441a520a5e5",
       "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
-      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
       "sourceRect": {
         "x": 480,
         "y": 0,
@@ -23,9 +23,9 @@
     },
     "attack-a": {
       "file": "original-attack-a.png",
-      "sha256": "96d46adc8d197744cfc31f30ed40ed1c6f8d1d048396dabe7230ef47f838ee75",
+      "sha256": "93c57da53e22b434a8ac364cc6079908941b6c13c0009b6cdbf1773777eb4bd8",
       "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
-      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
       "sourceRect": {
         "x": 1440,
         "y": 0,
@@ -36,9 +36,9 @@
     },
     "attack-b": {
       "file": "original-attack-b.png",
-      "sha256": "9120adb0214440eb4096ff641f75d60e15ac89c65e455432acf446827bb885cc",
+      "sha256": "d574be6de0cca1dae1f30001572b2a7e908e4e6287f7773ca9fcee351aa09ef2",
       "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
-      "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
       "sourceRect": {
         "x": 1920,
         "y": 0,
@@ -2525,7 +2525,7 @@
   "pelvisY": 245,
   "identityBinding": {
     "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
-    "sourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+    "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
     "sourceRect": {
       "x": 480,
       "y": 0,
@@ -3016,5 +3016,10 @@
   ],
   "alienHockPolicy": "Each two-segment hip/knee/hock chain terminates in its original elongated hock-to-claw-foot paint. No human boot or additional foot is generated.",
   "visibleIdentityPolicy": "Original single eye, pierced ivory head shell, visible tissue and blue veins, folded back fin, both claw hands and hock feet remain source-bound. Generated tissue only completes occluded joints. Original bright ground streak is excluded from the body part masks.",
-  "settlingPolicy": "Walking back-fin sway fades with locomotion settling; fully settled idle and attack entry/recovery share the same attached fin transform. The original fin texture, normal gait and attack remain unchanged."
+  "settlingPolicy": "Walking back-fin sway fades with locomotion settling; fully settled idle and attack entry/recovery share the same attached fin transform. The original fin texture, normal gait and attack remain unchanged.",
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+    "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
+    "reason": "Only neutral ground alpha removed in each authored row; all source RGB, body part paint, rig and motion retained"
+  }
 }

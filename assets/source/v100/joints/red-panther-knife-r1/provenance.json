@@ -8,7 +8,7 @@
   "identitySourceSha256": "06db498b84eb40ddcf5d5268d8d1b34d05de802810b38b2e78a44af8cc0ba544",
   "identityBinding": {
     "path": "/art/v100/enemies/red-panther-knife-battle-v2.png",
-    "sourceSha256": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+    "sourceSha256": "6551d92e7b876009dece2472081c9a3c064c5e23578acba51dab024f468781e7",
     "sourceRect": {
       "x": 544,
       "y": 0,
@@ -129,5 +129,10 @@
     "totalUnits": 48,
     "allUnitAcceptance": false,
     "normalPlayAcceptance": false
+  },
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+    "sourceSha256": "6551d92e7b876009dece2472081c9a3c064c5e23578acba51dab024f468781e7",
+    "reason": "Only death background pockets removed from original source; all eight nondeath cells, joint paint, rig and motion retained"
   }
 }

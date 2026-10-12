@@ -63,13 +63,13 @@ test("the six motion atlas replacements preserve source-bound old/new transport 
   }
 });
 
-test("the published0.9.9.5 pack reuses406 assets and refreshes the source-bound sprites and broken WebKit card", () => {
+test("the published0.9.9.5 pack reuses405 assets and refreshes the source-bound sprites and broken WebKit card", () => {
   assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
   const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
   assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, assetContract.additionsFromV0995); assert.equal(update.downloadBytes, assetContract.bytesFromV0995);
-  assert.equal(update.unchangedCount, 406); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
+  assert.equal(update.unchangedCount, 405); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
   assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/") || spriteRefreshPaths.includes(asset.path) || V100_COMPLETION_ASSET_ADDITIONS.some(expected=>expected.path===asset.path)));
   const incomplete = verifyUpdatePayload({ manifest: candidate, storedHashes: retainedHashes, expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, assetContract.additionsFromV0995);
@@ -126,7 +126,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, 108 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
-  assert.equal(update.unchangedCount, 340);
+  assert.equal(update.unchangedCount, 339);
   assert.equal(update.reusedCount, 2);
   assert.equal(update.removedCount, 27);
 
@@ -161,7 +161,7 @@ test("the published Version 0.9.9.3 pack updates to 1.0.3 while reusing unchange
   assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, 59 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
-  assert.equal(update.unchangedCount, 389);
+  assert.equal(update.unchangedCount, 388);
   assert.equal(update.reusedCount, 2);
   assert.equal(update.removedCount, 20);
 

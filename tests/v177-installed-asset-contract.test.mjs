@@ -9,8 +9,8 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 100, 28161658, 74],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 99, 28140706, 73],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 102, 30579256, 76],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 101, 30558304, 75],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -61,6 +61,7 @@ test("the frozen 0.9.9.5 delta includes the source-bound sprite repairs and the 
   assert.deepEqual(old.assets.filter(asset => next.get(asset.path)?.hash !== asset.hash).map(asset => asset.path).sort(), [
     "/art/v060/characters/kumaverson-battle-v1.png",
     "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
+    "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
     "/art/v090/bosses/gairen-battle-r1.png",
     "/art/v090/characters/mayo-chan-battle-r1.png",
     "/art/v090/characters/mayo-chan-feral-battle-r1.png",

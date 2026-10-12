@@ -2,6 +2,7 @@ import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-cont
 import { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';
 import { V177_MAYO_SPRITE_REPLACEMENTS } from './v177-mayo-repair-asset-contract.mjs';
 import { V177_REACTION_SPRITE_REPLACEMENTS } from './v177-reaction-repair-asset-contract.mjs';
+import { V177_GROUND_MATTE_SPRITE_REPLACEMENTS } from './v177-ground-matte-repair-asset-contract.mjs';
 // Exact source-bound sprite fixes; no other published art changes.
 export const V177_SPRITE_REPLACEMENTS = Object.freeze([
   {
@@ -59,5 +60,6 @@ export const V177_SPRITE_REPLACEMENTS = Object.freeze([
   ...V177_GAIREN_SPRITE_REPLACEMENTS,
   ...V177_MAYO_SPRITE_REPLACEMENTS,
   ...V177_REACTION_SPRITE_REPLACEMENTS,
+  ...V177_GROUND_MATTE_SPRITE_REPLACEMENTS,
 ]);
 export const V177_SPRITE_BYTES_DELTA = V177_SPRITE_REPLACEMENTS.reduce((sum, asset) => sum + asset.delta, 0);

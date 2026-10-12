@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -67,7 +68,9 @@ const MOTION_ATLASES = Object.freeze([
     columns: 5,
     policy: /serrated combat knife.*same blade length/u,
     commonScale: 0.33766233766233766,
-    approvedVisibleHash: "8c42770702a79b375b43c57923d7095a02e2d5ac73b32b6a17210e92d2f34410",
+    publishedVisibleHash: "8c42770702a79b375b43c57923d7095a02e2d5ac73b32b6a17210e92d2f34410",
+    groundMatteBaseline: "e4fb2403e87989a4c6323da65eac1e269348d695",
+    approvedVisibleHash: "4550351b9763253dbc15585ad3826fd1c34b101fd7797d7f140894620876bca5",
   },
   {
     kind: "red-panther-shield",
@@ -286,6 +289,15 @@ test("custom runtime atlases preserve approved centered cells, exact pixels, PWA
       contentSizes.push({ state, w: bounds.w, h: bounds.h });
     }
     assert.equal(approvedVisiblePixelHash(decoded, motion), motion.approvedVisibleHash, `${motion.kind} approved visible pixels`);
+    if(motion.groundMatteBaseline){
+      const baseline=execFileSync('git',['show',motion.groundMatteBaseline+':public'+assetPath],{maxBuffer:4*1024*1024});
+      assert.equal(approvedVisiblePixelHash(decodeRgbaPng(baseline),motion),motion.publishedVisibleHash,'retain the original death-background pixel oracle');
+      const proof=JSON.parse(await readFile(sourceFile('assets/source/v100/sprite-repairs/ground-matte-provenance.json'),'utf8')).records.find(r=>r.path===assetPath);
+      assert.equal(sha256(baseline),proof.previousPNG);
+      assert.equal(sha256(bytes),proof.pngSha256);
+      assert.equal(metadata.sources.at(-1).repair.rgbChangesOutsideAllowedMask,0);
+      for(let column=0;column<4;column++)for(const y of [0,CELL_HEIGHT])assert.deepEqual(await rawCell(bytes,column*CELL_WIDTH,y),await rawCell(baseline,column*CELL_WIDTH,y),'all eight nondeath cells retain their approved RGBA');
+    }
     if(motion.repairBaseline){
       const baseline=await readFile(sourceFile(`assets/source/v100/sprite-repairs/${motion.repairBaseline}`));
       assert.equal(approvedVisiblePixelHash(decodeRgbaPng(baseline),motion),motion.publishedVisibleHash,'retain the published pixel oracle alongside the requested alpha repair');
