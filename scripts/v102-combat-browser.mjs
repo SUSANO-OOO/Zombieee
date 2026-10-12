@@ -11,6 +11,7 @@ import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-enemy-live-render-contract.mjs';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
+import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -18,16 +19,28 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in paused fixtures, all 29 base enemy kinds in continuous live V1 simulation fixtures at 844x340, plus real damage/corpse effects. Enemy phase fixtures control target distance and movement speed; they do not accept natural campaign tempo, ally/derived-form live motion, all actions, difficulty or physical recording.',cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in paused fixtures and continuous move/attack at 844x340, plus real damage/corpse effects. Base enemy fixtures control target distance and speed. Additional ally/alternate-body fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all actions, difficulty or physical recording.',cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const browser=await(await pwaBrowserType(engine)).launch();
+async function captureContinuousSamples(page,proof){
+  const samples=[];
+  for(let i=0;i<15;i++){
+    await page.waitForTimeout(120);
+    samples.push(await page.evaluate(id=>{
+      const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
+      return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,
+        renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,renderKind:r.renderKind,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame,renderedWeaponSocket:r.renderedWeaponSocket}))};
+    },proof.fighterId));
+  }
+  return samples;
+}
 try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
-    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],gore:[]};report.cases.push(row);
+    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],gore:[]};report.cases.push(row);
     const requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>report.errors.push(String(e)));
     page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
@@ -103,13 +116,7 @@ try{
             const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase}),{kind,phase});
             const evidence={kind,phase,proof,...v177EnemyRuntimeRenderIdentity(proof),samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
             try{
-              for(let i=0;i<15;i++){
-                await page.waitForTimeout(120);
-                evidence.samples.push(await page.evaluate(id=>{
-                  const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
-                  return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,renderKind:r.renderKind,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame}))};
-                },proof.fighterId));
-              }
+              evidence.samples=await captureContinuousSamples(page,proof);
               if(kind==='futago'){
                 const panel=page.locator('.boss-hud.v100-boss-center');assert.equal(await panel.count(),1);
                 evidence.compactBossHud=await panel.evaluate(element=>{
@@ -124,6 +131,17 @@ try{
           }
         }
         assert.equal(row.liveEnemyMotion.length,58);
+        for(const form of V177_ADDITIONAL_CONTINUOUS_FORMS)for(const phase of ['move','attack']){
+          const proof=await page.evaluate(({form,phase})=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase}),{form,phase});
+          const evidence={form,phase,proof,samples:[],status:'pending'};row.liveAdditionalMotion.push(evidence);
+          try{
+            evidence.samples=await captureContinuousSamples(page,proof);
+            evidence.summary=assertV177AuthoredLiveRender(evidence);evidence.status='passed';
+            await page.screenshot({path:`${out}/${width}x${height}-${form}-continuous-${phase}.png`});
+          }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
+          finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
+        }
+        row.continuousCoverage=assertV177ContinuousFormCoverage(row.liveEnemyMotion,row.liveAdditionalMotion);
       }
       for(const kind of ['walker','crusher','spindle','red-panther-knife']){
         await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);

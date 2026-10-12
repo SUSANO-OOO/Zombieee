@@ -3,6 +3,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
+import { configureV177ContinuousActorProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
@@ -351,6 +352,7 @@ import {
   spriteBattleDisplaySizeFor,
   spriteFrameFor,
   spriteSheetPath,
+  spriteKinds,
 } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
@@ -12748,6 +12750,30 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
+      prepareV177ContinuousActorProof: ({form,phase}: {form:string;phase:"move"|"attack"}) => {
+        const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
+          createAnimationRuntime:createCombatAnimationRuntime,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
+        const identity=v177ProofFormIdentity(form,proofCatalog),g=gameRef.current,lane:Lane=1;
+        fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
+        g.fighters=[];g.corpses=[];g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
+        g.running=true;g.paused=false;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
+        let actor:Fighter|undefined;
+        if(identity.side==="human"){
+          if(!spawnHuman(g,identity.kind as UnitKind,false))throw new Error(`Continuous ally unavailable: ${form}`);
+          actor=g.fighters.find(f=>f.side==="human");
+        }else actor=spawnEnemy(g,identity.kind,lane);
+        let target:Fighter|undefined;
+        if(identity.side==="human")target=spawnEnemy(g,"walker",lane);
+        else{
+          if(!spawnHuman(g,"guardian",false))throw new Error(`Continuous target unavailable: ${form}`);
+          target=g.fighters.find(f=>f.side==="human");
+        }
+        if(!actor||!target)throw new Error(`Continuous actor pair unavailable: ${form}`);
+        const proof=configureV177ContinuousActorProof(actor,target,{...proofCatalog,form,phase,lane,laneY:activeLaneCenters[lane]});
+        selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
+        return proof;
+      },
       ensureEnemyFacingProofAsset: async (kind: EnemyKind) => {
         await ensureJointRenderProofAsset(kind);
         const existing = spriteRefs.current[kind];
@@ -12803,8 +12829,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighter: fighter ? {
             id: fighter.id,
             kind: fighter.kind,
-            renderKind: bossRenderKind(fighter),
+            renderKind: mayoBattleRenderKind(fighter) ?? bossRenderKind(fighter),
             v100TwinPart: fighter.v100TwinPart ?? null,
+            side: fighter.side,
+            manualAbilityPhase: fighter.manualAbility?.phase ?? null,
+            speed: fighter.speed,
+            laneSpeed: fighter.laneSpeed,
+            damage: fighter.damage,
+            range: fighter.range,
+            attackEvery: fighter.attackEvery,
             x: fighter.x,
             y: fighter.y,
             hp: fighter.hp,
