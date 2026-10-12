@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { V177_INSTALLED_ASSET_CONTRACT } from "../scripts/v177-installed-asset-contract.mjs";
+import { V177_INSTALLED_ASSET_CONTRACT, v177InstalledSourceReplacementsMatch } from "../scripts/v177-installed-asset-contract.mjs";
 import { V100_RELEASE_ASSET_CONTRACT } from "../scripts/v100-release-asset-contract.mjs";
 
 const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json", import.meta.url)));
@@ -16,6 +16,7 @@ for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
     const old = JSON.parse(execFileSync("git", ["show", `${sha}:public/asset-manifest.json`], {encoding:"utf8",maxBuffer:4*1024*1024}));
     const expected = V177_INSTALLED_ASSET_CONTRACT[version];
+    assert.equal(v177InstalledSourceReplacementsMatch(old,candidate,version),true);
     assert.equal(old.version, version);
     assert.equal(old.assets.length, expected.assets);
     const oldHashes = new Set(old.assets.map(asset => asset.hash));
@@ -47,6 +48,9 @@ for (const [version, sha, count, bytes, network] of baselines) {
 }
 test("the frozen 0.9.9.5 delta includes Musashi, Anchor Bloom, Gairen and the existing card replacement", () => {
   const old = JSON.parse(execFileSync("git", ["show", "55d796cc577d1d9f903a4d2c6b4382196511db27:public/asset-manifest.json"], {encoding:"utf8",maxBuffer:4*1024*1024}));
+  const expected=V177_INSTALLED_ASSET_CONTRACT['0.9.9.5'];
+  assert.equal(old.assets.length,expected.assets);
+  assert.equal(v177InstalledSourceReplacementsMatch(old,candidate,'0.9.9.5'),true);
   const hashes = new Set(old.assets.map(asset => asset.hash));
   const changed = candidate.assets.filter(asset => !hashes.has(asset.hash));
   assert.equal(changed.length, V100_RELEASE_ASSET_CONTRACT.additionsFromV0995);
@@ -60,4 +64,18 @@ test("the frozen 0.9.9.5 delta includes Musashi, Anchor Bloom, Gairen and the ex
     "/art/v090/characters/miyamoto-musashi-battle-r1.png",
     "/art/v0995/enemies/anchor-bloom-battle-v2.png",
   ]);
+  assert.deepEqual(expected.replaced,old.assets.filter(asset=>next.get(asset.path)?.hash!==asset.hash).map(asset=>asset.path).sort());
+  assert.equal(expected.additions,changed.length);assert.equal(expected.bytes,changed.reduce((sum,asset)=>sum+asset.bytes,0));
+  assert.equal(expected.bundled,changed.filter(asset=>asset.bundlePath).length);
+  assert.equal(expected.network,new Set(changed.map(asset=>asset.bundlePath??asset.sourcePath??asset.path)).size);
+  for(const binding of expected.sourceReplacements){
+    for(const key of ['hash','bytes','sourcePath']){
+      const altered=structuredClone(candidate),asset=altered.assets.find(a=>a.path===binding.path);
+      asset[key]=key==='bytes'?asset.bytes+1:'unapproved';
+      assert.equal(v177InstalledSourceReplacementsMatch(old,altered,'0.9.9.5'),false,`${binding.path}/${key}`);
+    }
+    const alteredOld=structuredClone(old);alteredOld.assets.find(a=>a.path===binding.path).hash='unapproved';
+    assert.equal(v177InstalledSourceReplacementsMatch(alteredOld,candidate,'0.9.9.5'),false,'the old source hash must also match');
+  }
+  assert.equal(v177InstalledSourceReplacementsMatch(old,candidate,'unknown'),false);
 });

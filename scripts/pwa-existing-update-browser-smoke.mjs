@@ -24,7 +24,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
-import { V177_INSTALLED_ASSET_CONTRACT } from './v177-installed-asset-contract.mjs';
+import { V177_INSTALLED_ASSET_CONTRACT, v177InstalledSourceReplacementsMatch } from './v177-installed-asset-contract.mjs';
 import { inspectV177InstalledSaveTransition } from './v177-installed-save-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Installed PWA QA is hosted-only; local game, browser and audio are disabled');
@@ -35,9 +35,8 @@ const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
 const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.5";
-const oldContract = V177_INSTALLED_ASSET_CONTRACT[oldVersion]
-  ?? {assets:415,distinct:413,replaced:['/art/v080/characters/cards/kumaverson-formation-card-r2.webp','/art/v090/characters/miyamoto-musashi-battle-r1.png'],additions:assetContract.additionsFromV0995,bytes:assetContract.bytesFromV0995,bundled:assetContract.bundledAudioAdditionsFromV0995,network:assetContract.networkSourcesFromV0995};
-if(!['0.9.9.5','1.0.1','1.0.2'].includes(oldVersion))throw new Error(`No source-bound PWA contract for ${oldVersion}`);
+const oldContract = V177_INSTALLED_ASSET_CONTRACT[oldVersion];
+if(!oldContract)throw new Error(`No source-bound PWA contract for ${oldVersion}`);
 const commitOnlyUpdate = oldContract.additions === 0;
 const oldHasV100Root = oldVersion !== '0.9.9.5';
 const expectedOldReleaseSha = process.env.PWA_EXISTING_UPDATE_EXPECTED_OLD_SHA
@@ -232,6 +231,7 @@ record("candidate preserves unchanged assets and declares only the approved medi
   oldDistinctHashes.size === oldContract.distinct
   && candidateDistinctHashes.size === assetContract.distinctHashes
   && JSON.stringify(replacedOldPaths.slice().sort()) === JSON.stringify(oldContract.replaced.slice().sort())
+  && v177InstalledSourceReplacementsMatch(oldManifest,candidateManifest,oldVersion)
   && candidateByPath.get(V100_WEBKIT_CARD_REPLACEMENT.path)?.hash === V100_WEBKIT_CARD_REPLACEMENT.hash
   && candidateManifest.assets.length === assetContract.count
   && candidateNewHashAssets.length === oldContract.additions
