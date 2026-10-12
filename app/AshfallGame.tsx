@@ -327,6 +327,7 @@ import {
   sampleAttackPresentation,
   combatGroundLift,
   sampleMrsChihaLauncherBash,
+  sampleMrsChihaLauncherBashWindup,
   weaponDamageEventsFor,
   weaponProfileForAction,
   weaponProfileForUnit,
@@ -4365,11 +4366,13 @@ function drawSpriteFighter(
       Math.max(0, .12 - f.flash),
     )
     : f.attackWindup > 0
-      ? sampleAnimationClip(
-        f.kind,
-        "wind-up",
-        Math.max(0, animationClipFor(f.kind, "wind-up").durationSeconds - f.attackWindup),
-      )
+      ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
+        ? sampleMrsChihaLauncherBashWindup(Math.max(0, combatNormalAttackWindupDuration(f) - f.attackWindup))
+        : sampleAnimationClip(
+          f.kind,
+          "wind-up",
+          Math.max(0, animationClipFor(f.kind, "wind-up").durationSeconds - f.attackWindup),
+        )
     : f.abilityWindup > 0
       ? sampleAnimationClip(f.kind, "wind-up", Math.max(0, .24 - f.abilityWindup))
       : f.attack > 0
@@ -21895,7 +21898,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.lane = activeLaneForY(f.y, f.lane);
             }
           } else if (target && distance <= normalAttackReach(f, target)) {
+            const mrsLauncherBash = f.side === "human"
+              && f.kind === "mrs-chiha"
+              && distance <= MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius;
             if (f.cooldown <= 0) {
+              if (f.kind === "mrs-chiha") f.attackVariant = mrsLauncherBash ? "launcher-bash" : null;
               if (beginCombatNormalAttackWindup(f, target.id, target.x)) continue;
               if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
                 f.cooldown = .1;
@@ -21933,9 +21940,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 && ["takuya", "gate-eater"].includes(target.kind)
                 ? survivalUpgradeEffects(g.survivalRun).bossDamageMultiplier
                 : 1;
-              const mrsLauncherBash = f.side === "human"
-                && f.kind === "mrs-chiha"
-                && distance <= MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius;
               const humanAttackKind = f.range > 64 && !mrsLauncherBash ? "ranged" : "melee";
               const v090DamageMultiplier = f.side === "human"
                 ? v090EnemyIncomingDamageMultiplier(g, f, target, humanAttackKind)

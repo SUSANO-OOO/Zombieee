@@ -1534,13 +1534,22 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     const currentFrame = MRS_CHIHA_LAUNCHER_BASH.frames[index];
     const end = cursor + currentFrame.durationSeconds;
     if (local < end || index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1) {
+      const phaseState = ["wind-up", "active", "recovery"][index];
+      const progress = (local - cursor) / currentFrame.durationSeconds;
       return Object.freeze({
         state: "launcher-bash",
+        requestedState: phaseState,
+        resolvedState: phaseState,
+        attackVariant: "launcher-bash",
         frameIndex: index,
         spriteState: currentFrame.spriteState,
         frameElapsedSeconds: local - cursor,
         frameDurationSeconds: currentFrame.durationSeconds,
         clipDurationSeconds: MRS_CHIHA_LAUNCHER_BASH.durationSeconds,
+        clipElapsedSeconds: local,
+        // The normal attack windup already drew the pullback. Continue that
+        // same Blender action into contact instead of snapping back to ready.
+        clipProgress: index === 0 ? (.18 + .10 * progress) / .28 : progress,
         events: currentFrame.events,
         movement: false,
         recovery: index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1,
@@ -1552,6 +1561,15 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     cursor = end;
   }
   throw new RangeError("Mrs. Chiha launcher bash clip has no frames");
+}
+
+export function sampleMrsChihaLauncherBashWindup(elapsedSeconds = 0) {
+  const sample = sampleAnimationClip("mrs-chiha", "wind-up", elapsedSeconds);
+  return Object.freeze({
+    ...sample,
+    attackVariant: "launcher-bash",
+    clipProgress: sample.clipProgress * .18 / .28,
+  });
 }
 
 export function mrsChihaLauncherBashDuration() {

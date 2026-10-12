@@ -22,7 +22,7 @@
       "flipX": false
     }
   },
-  "motionSha256": "0490bc54738e53e3d33fdc2135286e6d66e412dc808f18de825ecfe8e4d4e722",
+  "motionSha256": "372fe73fe35320c7daa730f94a287a6b287835abe5880124d04b8ab0dd5e5b2d",
   "originalPoseBindings": {
     "walk-a": {
       "file": "identity-reference.png",
@@ -152,7 +152,7 @@
   "source": "Blender 5.2 fixed-length gait and settled support; original short-knife thrust, two-hand energy katana, two-hand gatling, independent original two-katana attack. Source-bound faces, hands, blades and boots; visible costume preserved; hidden coat panels with separate bones. No rejected Takuya identity or rear stray blade.",
   "groundY": 432,
   "decodedBytes": 305152,
-  "poses": 151,
+  "poses": 182,
   "scope": {
     "totalUnits": 48,
     "allUnitAcceptance": false,
@@ -162,5 +162,14 @@
     "previousSourceSha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
     "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
     "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
+  },
+  "attackVariants": {
+    "launcher-bash": {
+      "startIndex": 151,
+      "attackBoundaries": [
+        0.28,
+        0.7
+      ]
+    }
   }
 }

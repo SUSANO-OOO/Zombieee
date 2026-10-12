@@ -115,9 +115,10 @@ def set_pose(matrices,frame):
         p=rig.pose.bones[b.name];p.matrix_basis=(parent@b.matrix_local).inverted()@matrices[b.name]
         for channel in ['location','rotation_quaternion','scale']:p.keyframe_insert(data_path=channel,frame=frame,group=b.name)
 report={'kind':kind,'status':'UNACCEPTED; actual Blender data, no production integration','motion':walk,'rig':spec,'meshDefinitions':mesh_definitions,'actions':[]}
-for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
+variants=spec.get('attackVariants',{})
+for action_name in ['walk','settle-1','settle-2','settle-3','attack']+list(variants):
     rig.animation_data_clear()
-    walking=action_name!='attack';settle=int(action_name[-1])/3 if action_name.startswith('settle-') else 0
+    walking=action_name not in ['attack',*variants];firearm=bool(spec.get('firearm')) and action_name not in variants;settle=int(action_name[-1])/3 if action_name.startswith('settle-') else 0
     for frame in range(1,62):
         phase=(frame-1)/60;scene.frame_set(frame);amount=0;anticipation=0
         if not walking:
@@ -125,16 +126,21 @@ for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
             elif phase<=.28:anticipation=1-smooth((phase-.18)/.10);amount=1-anticipation
             elif phase<=.55:amount=1
             else:amount=1-smooth((phase-.55)/.45)
-        if spec.get('firearm') and not walking:
+        if firearm and not walking:
             amount=smooth(phase/.28) if phase<.28 else 1 if phase<.7 else 1-smooth((phase-.7)/.3)
             anticipation=0
+        if action_name in variants and not walking:
+            if phase<=.18:anticipation=smooth(phase/.18);amount=0
+            elif phase<=.28:anticipation=1-smooth((phase-.18)/.10);amount=1-anticipation
+            elif phase<=.7:anticipation=0;amount=1
+            else:anticipation=0;amount=1-smooth((phase-.7)/.3)
         travel=span/stance*phase if walking else 0;bob=walk.get('bodyBobPx',1.2)*math.cos(phase*4*math.pi)*(1-settle) if walking else 0
         flight_q=phase%.5
         if walking and walk.get('flightRisePx') and stance<flight_q<.5:
             bob-=walk['flightRisePx']*math.sin(math.pi*(flight_q-stance)/(.5-stance))**2*(1-settle)
-        body=Matrix.Translation(Vector(((travel+(1.5*amount if spec.get('firearm') else 4*amount-3*anticipation))/100,0,-bob/100)))
+        body=Matrix.Translation(Vector(((travel+(1.5*amount if firearm else 4*amount-3*anticipation))/100,0,-bob/100)))
         matrices={'root':Matrix.Translation(Vector((travel/100,0,0)))@data.bones['root'].matrix_local}
-        attack=spec.get('attack',{})
+        attack=variants.get(action_name,spec.get('attack',{}))
         torso_amount=1-(1-amount)**3 if attack.get('torsoEase')=='out-cubic' else amount
         torso=body@transform(spec['spine'][0],spec['spine'][0],attack.get('torsoAngle',0)*torso_amount+attack.get('torsoAnticipation',0)*anticipation)
         matrices['pelvis']=body@data.bones['pelvis'].matrix_local
@@ -156,7 +162,7 @@ for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
         weapon_transforms={}
         for weapon in spec.get('weapons',[]):
             grip=weapon['a']
-            attack={**spec.get('attack',{}),**weapon.get('attack',{})}
+            attack={**variants.get(action_name,spec.get('attack',{})),**weapon.get('attack',{})}
             rest_angle=attack.get('walkRestAngle',0)
             if attack.get('style') in ['hammer','punch','saw','pan','shield','claw','run-lunge','slam']:
                 rest_shift=attack.get('walkRestShift',[0,0])
@@ -168,7 +174,7 @@ for action_name in ['walk','settle-1','settle-2','settle-3','attack']:
                     shift=attack['aimShift'];ant=attack['anticipationShift']
                     destination=[grip[0]+rest_shift[0]+ant[0]*anticipation+shift[0]*amount,grip[1]+rest_shift[1]+ant[1]*anticipation+shift[1]*amount]
                     w=body@transform(grip,destination,rest_angle+attack['anticipationAngle']*anticipation+attack['attackAngle']*amount)
-            elif spec.get('firearm'):
+            elif firearm:
                 if walking:
                     swing=math.sin(phase*2*math.pi)*(1-settle)
                     w=body@transform(grip,[grip[0]+2*swing,grip[1]-.5*abs(swing)],-.012*swing)

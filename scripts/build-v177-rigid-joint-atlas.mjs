@@ -122,10 +122,18 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
  }
  const lowerCount=poses.length;
  for(let i=0;i<=count;i++)poses.push(pose(actions.get('attack').frames[i*2]));
+ const attackVariants={};
+ for(const [name,variant]of Object.entries(d.rig.attackVariants??{})){
+  const action=actions.get(name);assert.ok(action?.frames.length===61,'Named attack requires 61 evaluated Blender keys');
+  const boundaries=[variant.windupEnd,variant.activeEnd];assert.ok(boundaries.every(Number.isFinite)&&boundaries[0]>0&&boundaries[0]<boundaries[1]&&boundaries[1]<1,'Invalid named attack boundaries');
+  attackVariants[name]={startIndex:poses.length,attackBoundaries:boundaries};
+  for(let i=0;i<=count;i++)poses.push(pose(action.frames[i*2]));
+ }
  await mkdir(path.resolve('public/art/v100/joints'),{recursive:true});await writeFile(path.resolve('public'+assetPath),bytes);
  const atlas={type:'rigid-parts',key:d.assetKey??`joint-${d.kind}`,path:assetPath,width:d.width,height:d.height,
   frameCount:count,settleLevels:4,cycleDistance:d.motion.walk.spanPx/d.motion.walk.stanceFraction,
   decodedWidth:width,decodedHeight:height,decodedBytes:width*height*4,
+  ...(Object.keys(attackVariants).length?{attackVariants}:{}),
   parts:rows.map(row=>({name:row.name,bone:row.bone,source:row.source,destination:row.destination,upper:row.upper})),poses,pelvisOffsets,lowerCount,
   ...(d.parentAttachments?{parentAttachments:d.parentAttachments}:{}),...(d.softBones?{softBones:d.softBones}:{}),
   attackBoundaries:[d.rig.attack.windupEnd,d.rig.attack.activeEnd],muzzle:d.muzzle,weaponBone:d.weaponBone,mouth:d.mouth,armConstraints:d.armConstraints,referenceFrame:d.referenceFrame,
@@ -140,7 +148,9 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
   ...(d.poseBindings?{originalPoseBindings:d.poseBindings}:{}),
   parts:d.parts.map(({name,file,sha256,original})=>({name,file,sha256,original:Boolean(original)})),
   source:description,...(d.sharedPaintSource?{sharedPaintSource:d.sharedPaintSource}:{}),groundY:d.motion.walk.groundY,decodedBytes:atlas.decodedBytes,poses:poses.length,
-  scope:{totalUnits:48,allUnitAcceptance:false,normalPlayAcceptance:false},...(aliases.length?{aliases}:{})};
+  scope:{totalUnits:48,allUnitAcceptance:false,normalPlayAcceptance:false},...(aliases.length?{aliases}:{}),
+  ...(d.spriteSourceRebinding?{spriteSourceRebinding:d.spriteSourceRebinding}:{}),
+  ...(Object.keys(attackVariants).length?{attackVariants}:{})};
  await writeFile(path.join(dir,'provenance.json'),JSON.stringify(provenance,null,2)+'\n');
  return {assetPath,bytes:bytes.length,hash:sha(bytes),atlas:[width,height],decodedBytes:atlas.decodedBytes,poses:poses.length};
 }

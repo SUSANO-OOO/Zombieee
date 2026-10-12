@@ -44,8 +44,8 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
   for(const [name,b]of Object.entries(f.bones))boneError=Math.max(boneError,Math.abs(distance(b.head,b.tail)-distance(first.bones[name].head,first.bones[name].tail)));
   for(const arm of d.armConstraints)gripError=Math.max(gripError,distance(transform(f.deform[arm.lowerBone],arm.wrist),transform(f.deform[arm.effectorBone],arm.effectorWrist??arm.wrist)));
   for(let li=0;li<2;li++){const leg=d.rig.legs[li],q=(n/60+leg.offset)%1,pq=((n-1)/60+leg.offset)%1,bone='leg-'+li+'-foot';
-   if(action.name==='attack'||action.name==='settle-3'||q<=d.motion.walk.stanceFraction)for(const p of soles[li])groundError=Math.max(groundError,Math.abs(transform(f.deform[bone],p)[1]-432));
-   if(n&&(action.name==='attack'||q<=d.motion.walk.stanceFraction&&pq<=d.motion.walk.stanceFraction&&q>pq))for(const p of soles[li])drift=Math.max(drift,distance(transform(f.deform[bone],p),transform(action.frames[n-1].deform[bone],p)));
+   if(action.name==='attack'||action.name==='launcher-bash'||action.name==='settle-3'||q<=d.motion.walk.stanceFraction)for(const p of soles[li])groundError=Math.max(groundError,Math.abs(transform(f.deform[bone],p)[1]-432));
+   if(n&&(action.name==='attack'||action.name==='launcher-bash'||q<=d.motion.walk.stanceFraction&&pq<=d.motion.walk.stanceFraction&&q>pq))for(const p of soles[li])drift=Math.max(drift,distance(transform(f.deform[bone],p),transform(action.frames[n-1].deform[bone],p)));
   }
   for(const part of d.parts)for(const p of outlines.get(part.name)){const q=transform(f.deform[part.bone],p);q[0]-=f.bones.root.head[0]-d.rig.root[0];assert.ok(q[0]>=0&&q[0]<=480&&q[1]>=0&&q[1]<=448,JSON.stringify({kind,action:action.name,frame:n+1,part:part.name,q}));}
  }
@@ -68,7 +68,7 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
  const weapon=await pixels(dir+'weapon-and-hands.png'),[mx,my]=atlas.muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,JSON.stringify({kind,muzzle:atlas.muzzle,alpha:weapon[(my*480+mx)*4+3]}));
  assert.equal(d.rig.legs.length,2);assert.equal(d.rig.arms.length,2);assert.equal(d.rig.weapons.length,kind==='miyamoto-musashi'?2:1);assert.ok(originalPixels>1000&&overlayPixels>1000);
  for(const [pose,binding]of Object.entries(d.poseBindings)){assert.equal(hash(await readFile(dir+binding.file)),binding.sha256);assert.equal(hash(await readFile('public'+binding.path)),binding.sourceSha256);assert.ok(pose==='walk-a'||binding.sourceRect.x>=1440);}
- assert.equal(poses,305);assert.equal(dense,1986);assert.ok(minMargin>.001);
+ assert.equal(poses,kind==='mrs-chiha'?366:305);assert.equal(dense,1986);assert.ok(minMargin>.001);
 });
 
 test('original-bound human weapons and soles share mirrored production coordinates and conditional loading',async()=>{

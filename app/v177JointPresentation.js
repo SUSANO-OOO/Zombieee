@@ -29,6 +29,8 @@ export function v177JointCycleDistance(kind, renderScale) {
 export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
   if (!atlas || ownedPose || (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state))) return null;
+  const variant=sample?.attackVariant ? atlas.attackVariants?.[sample.attackVariant] : null;
+  if(sample?.attackVariant && !variant)return null;
   const phase=cycle(runtime?.locomotionPhase);
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
   const settleIndex=Math.round(clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1));
@@ -37,7 +39,7 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
   // different fixed stance or advances a walking clock while stationary.
   const lowerIndex=settleIndex*atlas.frameCount+phaseIndex;
   let attackPhase=null;
-  const [windupEnd,activeEnd]=atlas.attackBoundaries??[.28,.7];
+  const [windupEnd,activeEnd]=variant?.attackBoundaries??atlas.attackBoundaries??[.28,.7];
   if(state==='wind-up')attackPhase=windupEnd*clamp(sample.clipProgress);
   else if(state==='active')attackPhase=windupEnd+(activeEnd-windupEnd)*clamp(sample.clipProgress);
   else if(state==='recovery')attackPhase=activeEnd+(1-activeEnd)*clamp(sample.clipProgress);
@@ -46,11 +48,12 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
   // to its ready baseline, rather than swapping to a legacy static frame.
   else if(recoveryStates.has(state))attackPhase=activeEnd+(1-activeEnd)*clamp(sample.clipProgress);
   if(atlas.type==='rigid-parts'){
+    const attackBase=variant?.startIndex??atlas.lowerCount;
     const attackFrame=(attackPhase??0)*atlas.frameCount,attackIndex=Math.floor(attackFrame);
     const nextPhase=(phaseIndex+1)%atlas.frameCount,blend=phase*atlas.frameCount-phaseIndex;
     return {lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
-      upperIndex:attackPhase===null?lowerIndex:atlas.lowerCount+attackIndex,
-      upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:atlas.lowerCount+Math.min(atlas.frameCount,attackIndex+1),
+      upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
+      upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
       upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend};
   }

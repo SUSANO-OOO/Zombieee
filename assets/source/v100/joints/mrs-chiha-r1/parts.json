@@ -2268,6 +2268,30 @@
         0,
         0
       ]
+    },
+    "attackVariants": {
+      "launcher-bash": {
+        "style": "shield",
+        "windupEnd": 0.28,
+        "activeEnd": 0.7,
+        "aimShift": [
+          32,
+          -16
+        ],
+        "anticipationShift": [
+          -10,
+          -10
+        ],
+        "anticipationAngle": 0.1,
+        "attackAngle": -0.15,
+        "torsoAngle": 0.035,
+        "torsoAnticipation": -0.025,
+        "walkWeaponSwing": 1.2,
+        "walkWeaponShift": [
+          0,
+          0
+        ]
+      }
     }
   },
   "legConstraints": [
