@@ -7,6 +7,7 @@ const crushers=new Set(['brute','kumaverson','guardian','zakimiya','brawler','cr
 const blasts=new Set(['mrs-chiha','crawler','grenade','explosion','aircraft']);
 const bullets=new Set(['ranger','babayaga','gunner','red-panther-smg','red-panther-commander','medic','engineer']);
 const nonHumanoid=new Set(['mayo-chan-feral','ooze','mother','ooguchi','spindle','choir-knot','pall-manta','anchor-bloom','resonator']);
+const protectedRetreatBody=f=>f?.kind==='mayo-chan'||f?.kind==='mayo-chan-feral';
 const v1=world=>Boolean(world?.definition?.missionConfig?.v100StageNumber);
 const finite=(...v)=>v.every(Number.isFinite);
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
@@ -19,7 +20,7 @@ export function beginV102GoreStep(world,{heightFor=()=>64}={}){
   if(!v1(world)||!finite(world.time))return null;
   const s=state(world);s.contexts.clear();s.periodic.clear();
   // A new spawn, imported fixture or restored save is not a damage event.
-  s.step=new Map(world.fighters.filter(f=>f.hp>0&&f.summonSource!=='kurome-clone'&&!f.kuromeCloneDissolved)
+  s.step=new Map(world.fighters.filter(f=>f.hp>0&&!protectedRetreatBody(f)&&f.summonSource!=='kurome-clone'&&!f.kuromeCloneDissolved)
     .map(f=>[f.id,{hp:f.hp,height:heightFor(f)}]));
   return s.step;
 }
@@ -49,7 +50,7 @@ export function finishV102GoreStep(world,step){
   // same stable ID, rather than the stale object captured before that update.
   const actors=new Map(world.fighters.map(f=>[f.id,f]));
   for(const [id,before] of step){
-    const f=actors.get(id);if(!f)continue;
+    const f=actors.get(id);if(!f||protectedRetreatBody(f))continue;
     const loss=Math.min(before.hp,Math.max(0,before.hp-f.hp));
     if(!(loss>0)||!finite(f.hp,f.x,f.y,before.height)||f.kuromeCloneDissolved)continue;
     const context=s.contexts.get(id)??{};

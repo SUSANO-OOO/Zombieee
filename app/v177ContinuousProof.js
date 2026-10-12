@@ -48,3 +48,17 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
     initial:{actorX:actor.x,targetX:target.x,actorHp:actor.hp,targetHp:target.hp},
     scope:identity.legacyFusedFixture?'controlled legacy fused-art fixture; not a natural V1 encounter':'controlled target with original actor stats; not normal campaign or balance acceptance'};
 }
+
+// Queue one controlled incoming hit, rather than setting HP, a corpse or a
+// retreat pose. The normal simulation resolves damage and the real outcome.
+// Mayo keeps its dedicated nonlethal retreat; this is not campaign balance QA.
+export function configureV177ReactionProof(actor,target,options){
+  const proof=configureV177ContinuousActorProof(actor,target,{...options,phase:'attack'});
+  actor.cooldown=99;
+  const incomingHit={eventKind:'impact',targetKind:'fighter',targetSide:actor.side,damageMode:'direct',
+    sourceId:target.id,targetId:actor.id,targetX:actor.x,targetY:actor.y-28,
+    originX:target.x,originY:target.y-24,remainingSeconds:.08,damage:actor.maxHp*100+1,
+    weapon:target.kind,shotIndex:0,recoil:0,casing:false,hitStopSeconds:0,impactDelaySeconds:.08,applyDamage:true};
+  return {...proof,phase:'defeat',outcome:actor.kind==='mayo-chan'?'retreat':'corpse',incomingHit,
+    scope:'controlled incoming damage with original actor HP and stats; real damage/defeat or protected retreat; not normal campaign or balance acceptance'};
+}

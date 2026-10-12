@@ -3,7 +3,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
-import { configureV177ContinuousActorProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
+import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
@@ -2936,6 +2936,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
 
 function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury") {
   if (fighter.kind !== "mayo-chan" || fighter.mayoRetreat) return false;
+  const renderKind = mayoBattleRenderKind(fighter) ?? "mayo-chan";
   fighter.hp = Math.max(1, fighter.hp);
   fighter.targetable = false;
   fighter.combatReady = false;
@@ -2948,7 +2949,7 @@ function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury
   fighter.manualAbility = fighter.manualAbility
     ? ({ ...fighter.manualAbility, phase: "retreat", activeRemaining: 0, target: null } as ManualAbilityRuntime)
     : null;
-  fighter.mayoRetreat = createMayoRetreatRuntime({ reason });
+  fighter.mayoRetreat = createMayoRetreatRuntime({ reason, renderKind });
   g.manualAbilityVfx = g.manualAbilityVfx.filter((effect) => effect.ownerId !== fighter.id);
   const redeploy = Math.max(36, (cards.find((card) => card.kind === "mayo-chan")?.deployCooldown ?? 24) * 1.75);
   g.deployCooldowns["mayo-chan"] = Math.max(g.deployCooldowns["mayo-chan"] ?? 0, redeploy);
@@ -8498,6 +8499,8 @@ function drawWorld(
           assetReady: true,
           x: corpse.x,
           y: corpse.y,
+          renderKind: corpseRenderKind,
+          spritePath: frame.path,
           spriteState: "death",
           requestedState: "death",
           resolvedState: frame.derivedFrom ?? "death",
@@ -12753,7 +12756,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
-      prepareV177ContinuousActorProof: ({form,phase}: {form:string;phase:"move"|"attack"}) => {
+      prepareV177ContinuousActorProof: ({form,phase}: {form:string;phase:"move"|"attack"|"defeat"}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
           createAnimationRuntime:createCombatAnimationRuntime,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
         const identity=v177ProofFormIdentity(form,proofCatalog),g=gameRef.current,lane:Lane=1;
@@ -12773,7 +12776,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           target=g.fighters.find(f=>f.side==="human");
         }
         if(!actor||!target)throw new Error(`Continuous actor pair unavailable: ${form}`);
-        const proof=configureV177ContinuousActorProof(actor,target,{...proofCatalog,form,phase,lane,laneY:activeLaneCenters[lane]});
+        const reactionProof=phase==="defeat"
+          ? configureV177ReactionProof(actor,target,{...proofCatalog,form,lane,laneY:activeLaneCenters[lane]})
+          : null;
+        const proof=reactionProof??configureV177ContinuousActorProof(actor,target,{...proofCatalog,form,phase,lane,laneY:activeLaneCenters[lane]});
+        if(reactionProof){
+          g.pendingWeaponHits.push(reactionProof.incomingHit as PendingWeaponHit);
+          g.paused=true;
+        }
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
         return proof;
       },
@@ -12836,6 +12846,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             v100TwinPart: fighter.v100TwinPart ?? null,
             side: fighter.side,
             manualAbilityPhase: fighter.manualAbility?.phase ?? null,
+            mayoRetreat: fighter.mayoRetreat ? { ...fighter.mayoRetreat } : null,
             speed: fighter.speed,
             laneSpeed: fighter.laneSpeed,
             damage: fighter.damage,

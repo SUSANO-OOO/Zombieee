@@ -81,6 +81,7 @@ test('actual transformed Mayo gait and Gore size use the visible form throughout
    [{phase:'feral'},null,'mayo-chan-feral'],
    [{phase:'ready'},{reason:'ability',phase:'run'},'mayo-chan-feral'],
    [{phase:'ready'},{reason:'injury',phase:'run'},'mayo-chan'],
+   [{phase:'retreat'},{reason:'injury',renderKind:'mayo-chan-feral',phase:'run'},'mayo-chan-feral'],
   ]){
    const fighter={kind:'mayo-chan',manualAbility,mayoRetreat,y:280},frame=spriteFrameFor(kind,'walk-a','right'),size=v102BattleDisplaySize(kind,frame,spriteBattleDisplaySizeFor(kind));
    const scale=size.w*f.compactSpriteScale(kind)*depth*v102BattleBodyScale(kind)/frame.sourceRect.w;

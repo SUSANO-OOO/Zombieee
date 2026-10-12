@@ -14,6 +14,7 @@ import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
+import {assertV177ReactionRender,assertV177ReactionCoverage} from './v177-reaction-render-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -21,7 +22,7 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus real damage/corpse effects. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Base enemy fixtures control target distance and speed. Additional ally/alternate-body fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. Base enemy movement/attack fixtures control target distance and speed. Additional ally/alternate-body movement/attack fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -43,7 +44,7 @@ try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
-    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],gore:[]};report.cases.push(row);
+    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],gore:[],reactions:[]};report.cases.push(row);
     const requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>report.errors.push(String(e)));
     page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
@@ -172,6 +173,40 @@ try{
         assert.ok(Math.abs(renderedSourcePixelScale(live)-renderedSourcePixelScale(dead))<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
         await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}.png`});
       }
+      for(const form of spriteKinds){
+        const proof=await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'defeat'}),form);
+        const evidence={form,proof,status:'pending'};row.reactions.push(evidence);
+        const observe=()=>page.evaluate(id=>{
+          const qa=window.__ASHFALL_BATTLE_QA__,s=qa.getSnapshot();
+          return {at:performance.now(),simulationTime:s.time,running:s.running,paused:s.paused,
+            route:location.pathname,visible:document.visibilityState==='visible',
+            body:qa.getEnemyFacingRuntimeAudit(id),effects:qa.getPhaseGCombatSnapshot().combatGore};
+        },proof.fighterId);
+        try{
+          // The pending incoming hit stays held until this exact living body
+          // has a native paint. No direct HP, corpse or retreat-pose injection.
+          await page.waitForFunction(id=>{
+            const a=window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id);
+            return a.fighter?.hp>0&&a.renderHistory.length>0;
+          },proof.fighterId);
+          evidence.before=await observe();
+          await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(false));
+          await page.waitForFunction(({fighterId,outcome,initial})=>{
+            const qa=window.__ASHFALL_BATTLE_QA__,a=qa.getEnemyFacingRuntimeAudit(fighterId);
+            const ready=outcome==='retreat'
+              ? a.fighter?.mayoRetreat?.phase==='run'&&a.fighter.x<initial.actorX-20
+                &&a.renderHistory.filter(r=>r.requestedState==='retreat').length>=2
+              : a.corpse&&a.corpseRenderHistory.length>=3;
+            if(ready)qa.setEnemyVfxProofPaused(true);
+            return Boolean(ready);
+          },proof);
+          evidence.after=await observe();
+          evidence.summary=assertV177ReactionRender(evidence);evidence.status='passed';
+          await page.screenshot({path:`${out}/${width}x${height}-reaction-${form}.png`});
+        }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
+        finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
+      }
+      row.reactionCoverage=assertV177ReactionCoverage(row.reactions);
       // Replacing the battlefield clears the old effects; merely returning to
       // an active actor cannot resurrect gore from a previous fixture.
       await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.prepareAnimationFoundationProof('scout','human'));
@@ -190,5 +225,5 @@ try{
   report.status='pass';
 }catch(error){report.status='failed';report.error=String(error);}
 finally{await browser.close();await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));}
-console.log(JSON.stringify({status:report.status,engine,error:report.error,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,liveEnemyPhases:r.liveEnemyMotion.length,gore:r.gore.length}))}));
+console.log(JSON.stringify({status:report.status,engine,error:report.error,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,liveEnemyPhases:r.liveEnemyMotion.length,gore:r.gore.length,reactions:r.reactions.length}))}));
 if(report.status==='failed')process.exitCode=1;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {v177AdditionalContinuousForms,v177ProofFormIdentity as sourceIdentity,configureV177ContinuousActorProof as configure} from '../app/v177ContinuousProof.js';
+import {v177AdditionalContinuousForms,v177ProofFormIdentity as sourceIdentity,configureV177ContinuousActorProof as configure,configureV177ReactionProof} from '../app/v177ContinuousProof.js';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {createManualAbilityRuntime,MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
 import {PLAYABLE_COMBAT_KINDS,createCombatAnimationRuntime} from '../app/combatPresentation.js';
@@ -44,4 +44,19 @@ test('Unknown bodies, invalid phases and actor identity substitutions fail befor
     const s=setup('scout');change(s);assert.throws(()=>configureV177ContinuousActorProof(s.actor,s.target,{form:'scout',phase:'move',lane:1,laneY:285}));
   }
   const s=setup('scout');assert.throws(()=>configureV177ContinuousActorProof(s.actor,s.target,{form:'scout',phase:'manually-stepped-pose',lane:1,laneY:285}));
+});
+
+test('all48 reaction fixtures preserve the actor HP and body, and queue one real incoming hit with the correct opposing source',()=>{
+  for(const form of spriteKinds){
+    const {actor,target}=setup(form),before=structuredClone(actor);
+    const proof=configureV177ReactionProof(actor,target,{...catalog,form,lane:1,laneY:285});
+    for(const key of ['id','kind','side','speed','laneSpeed','damage','range','attackEvery','hp','maxHp','progressionLevel'])assert.equal(actor[key],before[key],`${form}/${key}`);
+    assert.equal(proof.renderKind,form);assert.equal(proof.phase,'defeat');
+    assert.equal(proof.outcome,actor.kind==='mayo-chan'?'retreat':'corpse');
+    assert.equal(proof.incomingHit.targetId,actor.id);assert.equal(proof.incomingHit.sourceId,target.id);
+    assert.equal(proof.incomingHit.targetSide,actor.side);assert.equal(proof.incomingHit.weapon,target.kind);
+    assert.equal(proof.incomingHit.applyDamage,true);assert.ok(proof.incomingHit.remainingSeconds>0);
+    assert.ok(proof.incomingHit.damage>actor.maxHp);assert.equal(actor.cooldown,99);assert.equal(target.damage,0);
+    assert.equal(actor.mayoRetreat,undefined,'the fixture does not fabricate a retreat');
+  }
 });
