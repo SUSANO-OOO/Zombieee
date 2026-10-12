@@ -33,7 +33,8 @@ test('legacy walking infected retain their complete body without the neighbourin
 test('source-bound frame exclusions preserve every body pixel in all affected forms and directions', async () => {
   const cases = [
     ['brawler','attack-a','f1b5149ad4d4a1cc94220b40cd336d18d38372cbe26aefbf27620ba808dee836'],
-    ...['walker','runner','turned'].flatMap(kind=>['walk-b','attack-a','attack-b'].map(state=>[kind,state,'2b84bd0400bdd8ea1a8b4ba85e9bd5fedf508febd58a47264450fba468638e50'])),
+    ...['hit','death'].map(state=>['brawler',state,'f1b5149ad4d4a1cc94220b40cd336d18d38372cbe26aefbf27620ba808dee836']),
+    ...['walker','runner','turned'].flatMap(kind=>['walk-b','attack-a','attack-b','hit','death'].map(state=>[kind,state,'2b84bd0400bdd8ea1a8b4ba85e9bd5fedf508febd58a47264450fba468638e50'])),
     ...['walk-b','attack-a'].map(state=>['shade',state,'9b32752942adf2b925812c0cbd7c730323518f79c1de22c4eb4eef13138fb2ce']),
     ...['crusher','abomination'].flatMap(kind=>['walk-a','walk-b','attack-a'].map(state=>[kind,state,'41bf73592852dbb5e0ebe0a636a18220737dcbad170fb9b6b4985f6ab38ae8d9'])),
     ['tky','attack-a','1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc'],
@@ -67,5 +68,24 @@ test('source-bound frame exclusions preserve every body pixel in all affected fo
   }
   for (const kind of ['kumaverson','spitter','gunner','takuya']) {
     assert.equal(spriteFrameFor(kind,'attack-b','right').drawSlices,undefined,`${kind} attack effects stay intact`);
+  }
+});
+
+test('hit and derived death remove only the confirmed neighbour shoe or arm, retaining all other painted pixels',async()=>{
+  for(const [kind,rect,expected]of [['walker',[0,500,60,120],3106],['runner',[0,500,60,120],3106],['turned',[0,500,60,120],3106],['brawler',[0,200,44,64],333]]){
+    for(const state of ['hit','death'])for(const direction of ['left','right']){
+      const f=spriteFrameFor(kind,state,direction),s=f.sourceRect;
+      const {data,info}=await sharp(await readFile(new URL('../public'+f.path,import.meta.url))).extract({left:s.x,top:s.y,width:s.w,height:s.h}).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+      const [rx,ry,rw,rh]=rect;let excluded=0,retained=0;
+      for(let y=0;y<info.height;y++)for(let x=0;x<info.width;x++)if(data[(y*info.width+x)*4+3]){
+        const inside=x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh;
+        const covered=f.drawSlices.some(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h);
+        assert.equal(covered,!inside,`${kind}/${state}/${direction}: original pixel ${x},${y}`);
+        if(covered)retained++;else excluded++;
+      }
+      assert.equal(excluded,expected);assert.ok(retained>54000);
+      assert.equal(f.groundAnchorPixels??f.contentRect.y+f.contentRect.h-f.y,kind==='brawler'?605:606,'both proper feet keep their original baseline');
+      assert.ok(f.drawSlices.length<=4,'bounded source draw cost');
+    }
   }
 });

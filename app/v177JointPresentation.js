@@ -14,6 +14,7 @@ import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointDat
 
 const locomotionStates = new Set(['idle','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
+const recoveryStates = new Set(['reload','weapon-cycle']);
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
@@ -27,7 +28,7 @@ export function v177JointCycleDistance(kind, renderScale) {
 
 export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
-  if (!atlas || ownedPose || (!locomotionStates.has(state) && !attackStates.has(state))) return null;
+  if (!atlas || ownedPose || (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state))) return null;
   const phase=cycle(runtime?.locomotionPhase);
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
   const settleIndex=Math.round(clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1));
@@ -40,6 +41,10 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
   if(state==='wind-up')attackPhase=windupEnd*clamp(sample.clipProgress);
   else if(state==='active')attackPhase=windupEnd+(activeEnd-windupEnd)*clamp(sample.clipProgress);
   else if(state==='recovery')attackPhase=activeEnd+(1-activeEnd)*clamp(sample.clipProgress);
+  // Real firing cadence can enter reload between shots. Keep the same body,
+  // settled feet and source-bound hands while the weapon lowers and returns
+  // to its ready baseline, rather than swapping to a legacy static frame.
+  else if(recoveryStates.has(state))attackPhase=activeEnd+(1-activeEnd)*clamp(sample.clipProgress);
   if(atlas.type==='rigid-parts'){
     const attackFrame=(attackPhase??0)*atlas.frameCount,attackIndex=Math.floor(attackFrame);
     const nextPhase=(phaseIndex+1)%atlas.frameCount,blend=phase*atlas.frameCount-phaseIndex;

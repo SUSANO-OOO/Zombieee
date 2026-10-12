@@ -105,7 +105,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   brawler: {
     path: "/brawler-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 280, 589], [0, 117, 362, 589], [0, 118, 304, 589]],
+    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 280, 589], [0, 117, 362, 589], [70, 118, 304, 589]],
   },
   scout: {
     path: "/scout-sprites-v2.png", width: 2172, height: 724,
@@ -135,7 +135,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   infected: {
     path: "/infected-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 304, 590], [0, 151, 358, 590], [0, 194, 362, 589], [0, 135, 323, 590]],
+    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 304, 590], [0, 151, 358, 590], [0, 194, 362, 589], [29, 135, 323, 590]],
   },
   spitter: {
     path: "/spitter-sprites-v1.png", width: 2172, height: 724,
@@ -170,8 +170,8 @@ const LEGACY_PADDED_CELL = Object.freeze({
 // Source-bound exclusions checked against the complete connected body in
 // each cell. Detached impact debris, projectiles and muzzle flashes remain.
 const LEGACY_NEIGHBOUR_RECTANGLES = Object.freeze({
-  brawler: { "attack-a": [350, 0, 44, 757] },
-  infected: { "walk-b": [320, 0, 74, 757], "attack-a": [360, 300, 34, 75], "attack-b": [368, 576, 26, 40] },
+  brawler: { "attack-a": [350, 0, 44, 757], hit: [0, 200, 44, 64], death: [0, 200, 44, 64] },
+  infected: { "walk-b": [320, 0, 74, 757], "attack-a": [360, 300, 34, 75], "attack-b": [368, 576, 26, 40], hit: [0, 500, 60, 120], death: [0, 500, 60, 120] },
   shade: { "walk-b": [0, 0, 40, 757], "attack-a": [0, 490, 28, 55] },
   crusher: { "walk-a": [0, 0, 64, 757], "walk-b": [0, 0, 64, 757], "attack-a": [320, 450, 74, 175] },
 });
