@@ -13,6 +13,7 @@ import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-e
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
+import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -20,7 +21,7 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in paused fixtures and continuous move/attack at 844x340, plus real damage/corpse effects. Base enemy fixtures control target distance and speed. Additional ally/alternate-body fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all actions, difficulty or physical recording.',cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus real damage/corpse effects. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Base enemy fixtures control target distance and speed. Additional ally/alternate-body fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -62,34 +63,34 @@ try{
       for(const kind of spriteKinds){
         const baseKind=kind==='mayo-chan-feral'?'mayo-chan':kind.startsWith('futago-separated-')?'futago':kind;
         const side=PLAYABLE_COMBAT_KINDS.includes(baseKind)?'human':'zombie';
-        const proof=await page.evaluate(async({kind,baseKind,side})=>{
+        await page.evaluate(async({kind,side})=>{
           const qa=window.__ASHFALL_BATTLE_QA__;
           await(side==='human'?qa.ensureUnitRenderProofAsset(kind):qa.ensureEnemyFacingProofAsset(kind));
-          return qa.prepareAnimationFoundationProof(baseKind,side,kind);
-        },{kind,baseKind,side});
+        },{kind,side});
         const samples=[];
-        row.motion.push({kind,side,id:proof.fighterId,samples});
-        for(const action of ['move-right','move-left','wind-up','attack','recovery','hit-light','stop']){
-          // Read the paint receipt and apply the input in one JS task. Separate
-          // RPCs allow a paint of the previous direction between those actions.
-          const previous=await page.evaluate(({id,action})=>{
+        row.motion.push({kind,side,samples});
+        for(const {action,expectedState,joint,attackOrigin} of V177_NATIVE_ACTION_PLAN){
+          // Prepare and apply the input in one JS task, before any native paint.
+          // Fresh fighters keep completed deployment and hit states independent.
+          const proof=await page.evaluate(({kind,baseKind,side,action,expectedState})=>{
             const qa=window.__ASHFALL_BATTLE_QA__;
-            const sequence=qa.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence??0;
-            qa.stepAnimationFoundationProof(id,action,.06);
-            return sequence;
-          },{id:proof.fighterId,action});
-          await page.waitForFunction(({id,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit?.renderSequence>previous,{id:proof.fighterId,previous});
+            const prepared=qa.prepareAnimationFoundationProof(baseKind,side,kind);
+            if(expectedState!=='deploy')qa.stepAnimationFoundationProof(prepared.fighterId,'stop',.5);
+            const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
+            qa.stepAnimationFoundationProof(prepared.fighterId,action,.06);
+            return {...prepared,previous};
+          },{kind,baseKind,side,action,expectedState});
+          await page.waitForFunction(({fighterId,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit?.renderSequence>previous,proof);
           const sample=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id),proof.fighterId);
           const r=sample.renderAudit;
-          samples.push({action,render:r,pixelScale:renderedSourcePixelScale(r)});
+          samples.push({action,fighterId:proof.fighterId,render:r,pixelScale:renderedSourcePixelScale(r)});
           assert.ok(r.assetReady&&r.renderWidth>0&&r.renderHeight>0,`${kind}/${action}: actual sprite renderer`);
           assert.ok(Number.isFinite(r.poseScaleX)&&Number.isFinite(r.poseScaleY),`${kind}/${action}: finite pose`);
-          const expectedState={'wind-up':'wind-up',attack:'active',recovery:'recovery','hit-light':'hit-light'}[action];
           if(expectedState)assert.equal(r.requestedState,expectedState,`${kind}/${action}: paint follows the requested action`);
-          if(V177_JOINT_ATLASES[kind]&&action!=='hit-light'){
+          if(V177_JOINT_ATLASES[kind]&&joint){
             assert.equal(r.jointAtlasPath,V177_JOINT_ATLASES[kind].path,`${kind}/${action}: actual joint draw connection`);
             assert.ok(Number.isInteger(r.jointLowerFrame)&&Number.isInteger(r.jointUpperFrame));
-            if(['wind-up','attack','recovery'].includes(action))assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),`${kind}/${action}: attack origin follows drawn weapon or mouth`);
+            if(attackOrigin)assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),`${kind}/${action}: attack origin follows drawn weapon or mouth`);
           }
           // Authored special guards and boss poses retain their own transforms.
           // The generic action adapter and all movement retain rigid anatomy.

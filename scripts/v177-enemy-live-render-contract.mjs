@@ -49,9 +49,11 @@ export function assertV177EnemyLiveRender({kind,phase,fighterId,samples,renderKi
   if(phase==='move'){
     assert.ok(first.fighter.x-last.fighter.x>4,'the enemy must actually advance towards its target');
     assert.ok(renders.some(r=>r.actualXDelta<0&&['move','start-move'].includes(r.requestedState)),'walking requires real travel and a native locomotion draw');
+    if(expectedJointPath)assert.ok(new Set(renders.filter(r=>['start-move','move'].includes(r.requestedState)).map(r=>r.jointLowerFrame)).size>1,'enemy feet must advance through the actual-distance gait');
   }else{
     assert.ok(samples.some(s=>s.fighter.attackSequence>0),'normal AI must produce a real attack');
     assert.ok(renders.some(r=>r.requestedState==='active'),'the actual attack must reach its native active drawing');
+    if(expectedJointPath)assert.ok(new Set(renders.filter(r=>['wind-up','active','recovery'].includes(r.requestedState)).map(r=>r.jointUpperFrame)).size>1,'enemy attack rig must advance during its actual attack lifecycle');
   }
   return {kind,phase,nativeSeconds:(last.at-first.at)/1000,simulationSeconds:last.simulationTime-first.simulationTime,actualXTravel:last.fighter.x-first.fighter.x,drawReceipts:new Set(renders.map(r=>r.renderSequence)).size,states:[...new Set(renders.map(r=>r.requestedState))],jointConnected:Boolean(expectedJointPath),expectedJointPath};
 }

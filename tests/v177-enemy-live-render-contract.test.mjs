@@ -8,7 +8,7 @@ const fixture=(phase='move',kind='kurome',v100TwinPart=null)=>{
   return {kind,phase,fighterId:8,renderKind,v100TwinPart,expectedJointPath,
     samples:Array.from({length:6},(_,i)=>({at:200*i,simulationTime:i*.2,running:true,paused:false,route:'/v100',visible:true,
       fighter:{id:8,kind,renderKind,v100TwinPart,hp:2100,x:620-i*3,attackSequence:phase==='attack'?1:0},
-      renders:[{renderSequence:i+1,renderKind,assetReady:true,x:620-i*3,y:280,renderWidth:150,renderHeight:140,poseScaleX:1,poseScaleY:1,requestedState:phase==='move'?'move':'active',actualXDelta:phase==='move'?-3:0,jointAtlasPath:expectedJointPath,jointLowerFrame:2,jointUpperFrame:3}]}))};
+      renders:[{renderSequence:i+1,renderKind,assetReady:true,x:620-i*3,y:280,renderWidth:150,renderHeight:140,poseScaleX:1,poseScaleY:1,requestedState:phase==='move'?'move':'active',actualXDelta:phase==='move'?-3:0,jointAtlasPath:expectedJointPath,jointLowerFrame:2+i,jointUpperFrame:3+i}]}))};
 };
 
 test('Live evidence requires actual V1 travel and attack drawing for the connected rig',()=>{
@@ -33,6 +33,13 @@ test('a missing native draw at any observation still fails the continuous eviden
     const f=fixture();f.samples[index].renders=[];
     assert.throws(()=>assertV177EnemyLiveRender(f),/native observations require actual draw receipts/);
   }
+});
+
+test('connected enemies cannot slide on frozen feet or use a frozen attack rig',()=>{
+  const feet=fixture();for(const s of feet.samples)for(const r of s.renders)r.jointLowerFrame=2;
+  assert.throws(()=>assertV177EnemyLiveRender(feet),/enemy feet must advance/);
+  const arms=fixture('attack');for(const s of arms.samples)for(const r of s.renders)r.jointUpperFrame=3;
+  assert.throws(()=>assertV177EnemyLiveRender(arms),/enemy attack rig must advance/);
 });
 
 test('Each V1 twin selects its own connected body from the spawned part identity',()=>{
