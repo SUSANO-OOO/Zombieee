@@ -2311,7 +2311,12 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
   let latest = null;
   try {
     while (Date.now() < deadline) {
-      const read = await observePromiseWithin(readPhaseGSetupRuntime(page), deadline - Date.now());
+      // Keep this observation out of the bounded native-input operation.
+      // Queue time still consumes the original boss deadline.
+      const read = await observePromiseWithin(withPhaseGPageInputLock(page, () => {
+        invariant(Date.now() <= deadline, "BOSS_REPRESENTATIVE_DEADLINE_EXCEEDED");
+        return readPhaseGSetupRuntime(page);
+      }), deadline - Date.now());
       if (read.status !== "fulfilled") throw Object.assign(new Error(`BOSS_REPRESENTATIVE_READ_${read.status.toUpperCase()}: ${read.error ?? "original deadline"}`), {
         phaseGCausalNoFurtherPageRpc: read.status === "timeout",
       });

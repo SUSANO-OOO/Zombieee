@@ -843,6 +843,7 @@ function bossWaitFixture(samples, { budget = 150000, readStatus = null } = {}) {
     V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
     Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
     readPhaseGSetupRuntime: async () => samples[Math.min(reads++, samples.length - 1)],
+    withPhaseGPageInputLock: async (_page, operation) => operation(),
     observePromiseWithin: async (promise, remaining) => {
       budgets.push(remaining);
       const value = await promise;
@@ -858,6 +859,41 @@ const bossSample = (kind, values = {}) => ({
   fighters: [{ id: 25, side: "zombie", kind, hp: 6200, combatReady: true, gateEntering: false,
     x: 758, attackSequence: 0, attack: 0, attackWindup: 0, abilityWindup: 0,
     stationAbility: { phase: "warning", remainingSeconds: .45 }, ...values }],
+});
+
+test("representative boss reads finish before background native input starts on the same page", async () => {
+  const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "observePromiseWithin", "waitForCombatActivity"];
+  const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  assert.ok(declarations.every(Boolean));
+  let releaseRead, enteredRead;
+  const readPending = new Promise(resolve => { releaseRead = resolve; });
+  const readStarted = new Promise(resolve => { enteredRead = resolve; });
+  const events = [], sample = bossSample("takuya-omega", { attackSequence: 1 });
+  const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
+    + "\n({ withPhaseGPageInputLock, waitForCombatActivity })", {
+    phaseGPageInputTails: new WeakMap(), checkpointRecorderFor: () => null, battleTimeout: 150000,
+    invariant: (condition, message) => assert.ok(condition, message),
+    V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
+    Date, setTimeout, clearTimeout,
+    readPhaseGSetupRuntime: async () => {
+      events.push("representative-read"); enteredRead(); await readPending;
+      events.push("representative-read-finished"); return sample;
+    },
+  });
+  const page = { waitForFunction: async (_callback, arg, options) => {
+    assert.equal(arg, null); assert.equal(options.timeout, 45000); assert.equal(options.polling, 100);
+  } };
+  const bossWait = harness.waitForCombatActivity(page, { bossKind: "takuya-omega" });
+  await readStarted;
+  const background = harness.withPhaseGPageInputLock(page, async () => { events.push("background-native-input"); });
+  try {
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(events, ["representative-read"], "observation RPC must not occupy the browser during the bounded input operation");
+  } finally {
+    releaseRead(); await Promise.allSettled([bossWait, background]);
+  }
+  assert.equal(await bossWait, sample, "the actual canonical representative validator still owns acceptance");
+  assert.deepEqual(events, ["representative-read", "representative-read-finished", "background-native-input"]);
 });
 test("boss wait uses the actual canonical validator for legacy and V1 signals, preserving the winning read", async () => {
   for (const kind of ["takuya", "mugarian-president-mutated", "takuya-omega"]) {
@@ -899,6 +935,26 @@ test("boss wait rejects battle loss and deadline without restarting the budget o
     assert.equal(error.phaseGBattleSetup.representativeLastRead, lost); return true;
   });
   assert.equal(ended.reads(), 2);
+});
+
+test("waiting for the input lane consumes the original boss deadline and cannot start a late page read", async () => {
+  const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "waitForCombatActivity");
+  let now = 0, reads = 0;
+  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForCombatActivity`, {
+    checkpointRecorderFor: () => null, battleTimeout: 150000,
+    invariant: (condition, message) => assert.ok(condition, message),
+    V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
+    Date: { now: () => now },
+    readPhaseGSetupRuntime: async () => { reads += 1; return bossSample("takuya-omega", { attackSequence: 1 }); },
+    withPhaseGPageInputLock: async (_page, operation) => { await Promise.resolve(); now = 150001; return operation(); },
+    observePromiseWithin: async (promise, remaining) => {
+      assert.equal(remaining, 150000, "queue wait must not restart the boss budget");
+      try { return { status: "fulfilled", value: await promise }; }
+      catch (error) { return { status: "rejected", error: String(error) }; }
+    },
+  });
+  await assert.rejects(wait({ waitForFunction: async () => {} }, { bossKind: "takuya-omega" }), /BOSS_REPRESENTATIVE_DEADLINE_EXCEEDED/u);
+  assert.equal(reads, 0, "an expired queued observation must never issue another page RPC");
 });
 test("boss native read rejection or unresolved deadline is terminal and seals only the unresolved RPC", async () => {
   for (const status of ["rejected", "timeout"]) {
