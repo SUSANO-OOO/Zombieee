@@ -216,8 +216,33 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
   assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
-  assert.deepEqual(jobs['r9-story'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
-  assert.equal(jobs['r9-story']['continue-on-error'],undefined);
+  const story = jobs['r9-story'];
+  assert.deepEqual(story.strategy.matrix.include, [
+    {engine:'chromium',os:'ubuntu-latest',phase:'composition'},
+    {engine:'chromium',os:'ubuntu-latest',phase:'bookends'},
+    {engine:'webkit',os:'macos-15-intel',phase:'composition'},
+    {engine:'webkit',os:'macos-15-intel',phase:'bookends'},
+  ]);
+  assert.equal(story.strategy['fail-fast'],false);
+  assert.equal(story['timeout-minutes'],45);
+  assert.equal(story['continue-on-error'],undefined);
+  const storyRuns = [
+    ['composition','node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs',
+      {V100_DIALOGUE_QA_ENGINES:'${{ matrix.engine }}',V100_DIALOGUE_QA_OUT:'outputs/r9-story/composition'}],
+    ['bookends','node scripts/run-browser-qa-with-server.mjs scripts/v100-story-bookends-browser-smoke.mjs',
+      {V100_BOOKENDS_ENGINES:'${{ matrix.engine }}',V100_BOOKENDS_EVIDENCE_DIR:'outputs/r9-story/bookends'}],
+  ];
+  for (const [phase, run, env] of storyRuns) {
+    const steps = story.steps.filter(step => step.run === run);
+    assert.equal(steps.length,1);
+    assert.equal(steps[0].if,"matrix.phase == '" + phase + "'");
+    assert.deepEqual(steps[0].env,env);
+  }
+  const storyUpload = story.steps.at(-1);
+  assert.equal(storyUpload.if,'always()');
+  assert.equal(storyUpload.with.name,'r9-story-${{ matrix.engine }}-${{ matrix.phase }}');
+  assert.equal(storyUpload.with.path,'outputs/r9-story');
+  assert.equal(storyUpload.with['if-no-files-found'],'error');
   assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(jobs['v102-combat']['continue-on-error'],undefined);
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));

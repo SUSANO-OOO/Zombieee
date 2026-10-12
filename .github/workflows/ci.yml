@@ -17,13 +17,15 @@ concurrency:
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
   r9-story:
-    name: R9 Story (${{ matrix.engine }})
+    name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {engine: chromium, os: ubuntu-latest}
-          - {engine: webkit, os: macos-15-intel}
+          - {engine: chromium, os: ubuntu-latest, phase: composition}
+          - {engine: chromium, os: ubuntu-latest, phase: bookends}
+          - {engine: webkit, os: macos-15-intel, phase: composition}
+          - {engine: webkit, os: macos-15-intel, phase: bookends}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
@@ -49,11 +51,13 @@ jobs:
           fi
       - run: npm run build
       - name: Inspect all 17 R9 illustrations and 18 diagrams at three viewports
+        if: matrix.phase == 'composition'
         env:
           V100_DIALOGUE_QA_ENGINES: ${{ matrix.engine }}
           V100_DIALOGUE_QA_OUT: outputs/r9-story/composition
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs
       - name: Inspect R9 bookends, restored R5 cursor and credits to map
+        if: matrix.phase == 'bookends'
         env:
           V100_BOOKENDS_ENGINES: ${{ matrix.engine }}
           V100_BOOKENDS_EVIDENCE_DIR: outputs/r9-story/bookends
@@ -61,7 +65,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r9-story-${{ matrix.engine }}
+          name: r9-story-${{ matrix.engine }}-${{ matrix.phase }}
           path: outputs/r9-story
           if-no-files-found: error
           retention-days: 14
