@@ -1,3 +1,4 @@
+import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-contract.mjs';
 import { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';
 // Exact source-bound sprite fixes; no other published art changes.
 export const V177_SPRITE_REPLACEMENTS = Object.freeze([
@@ -53,5 +54,6 @@ export const V177_SPRITE_REPLACEMENTS = Object.freeze([
     "delta": -8278
   },
   ...V177_ANCHOR_SPRITE_REPLACEMENTS,
+  ...V177_GAIREN_SPRITE_REPLACEMENTS,
 ]);
-export const V177_SPRITE_BYTES_DELTA = -109974;
+export const V177_SPRITE_BYTES_DELTA = -131610;

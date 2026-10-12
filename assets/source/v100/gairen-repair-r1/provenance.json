@@ -1,0 +1,26 @@
+{
+  "scope": "Only imagegen-guided alpha erasure in the accidental middle leg, canonical attack-b both semantic facings. Original RGB unchanged everywhere; all other original pixels and frames retained. No generated repaint adopted.",
+  "image": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-a07815ff-2b58-43e7-b61b-d07c7de1c029.png",
+  "guideSha256": "ad7aa87453295f05f9f57a87eee0e9235d41f561f42f411559bb15793bc8b72e",
+  "beforeSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+  "removedAlphaPixelsPerFacing": 5409,
+  "ownedLocalRect": {
+    "x": 204,
+    "y": 324,
+    "w": 82,
+    "h": 124
+  },
+  "png": {
+    "bytes": 3337304,
+    "sha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179"
+  },
+  "webp": {
+    "bytes": 2239632,
+    "sha256": "fcc4506ada685f332c559920fa821d2e3c3a9db0032535cf9072e1b6287f5ec9"
+  },
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "tool": "built-in image_gen alpha guide only",
+  "originalRgbAndOtherStatesUnchanged": true,
+  "all48Acceptance": false
+}

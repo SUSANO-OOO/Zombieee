@@ -170,7 +170,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     assert.equal(currentNonIcons.get(repair.path),repair.next.hash,'only the source-bound repaired sprite may replace it');
     previousNonIcons.set(repair.path,repair.next.hash);legacySpriteReplacements++;
   }
-  assert.equal(legacySpriteReplacements,1,'Musashi is the only repaired sprite in this legacy icon baseline');
+  assert.equal(legacySpriteReplacements,2,'Only the frozen Musashi and Gairen repairs replace sprites in this legacy icon baseline');
   assert.deepEqual(currentNonIcons, previousNonIcons);
   const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
   assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);

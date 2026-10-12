@@ -9,7 +9,7 @@
   "identitySourceSha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6",
   "identityBinding": {
     "path": "/art/v090/bosses/gairen-battle-r1.png",
-    "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+    "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
     "sourceRect": {
       "x": 0,
       "y": 0,
@@ -22,7 +22,7 @@
   "originalPoseBindings": {
     "idle": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 0,
         "y": 0,
@@ -42,7 +42,7 @@
     },
     "walk-a": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 480,
         "y": 0,
@@ -62,7 +62,7 @@
     },
     "walk-b": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 960,
         "y": 0,
@@ -82,7 +82,7 @@
     },
     "attack-a": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 1440,
         "y": 0,
@@ -102,7 +102,7 @@
     },
     "attack-b": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 1920,
         "y": 0,
@@ -111,7 +111,7 @@
       },
       "flipX": true,
       "file": "original-attack-b.png",
-      "sha256": "c0cc3ddc48155dd1e5c915e467d5a2211b3fca67a2427dbabeff1d6b713f4811",
+      "sha256": "662e8d6bc9d67e9d86015447917dff0c67af3756eb96c45a66a4966815e1ef29",
       "referenceTransform": {
         "scale": 1,
         "tx": 0,
@@ -122,7 +122,7 @@
     },
     "hit": {
       "path": "/art/v090/bosses/gairen-battle-r1.png",
-      "sourceSha256": "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
       "sourceRect": {
         "x": 2400,
         "y": 0,

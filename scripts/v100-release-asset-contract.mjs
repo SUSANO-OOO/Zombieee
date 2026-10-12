@@ -113,7 +113,7 @@ export const V100_TITLE_AUDIO_ADDITION = Object.freeze({ path: V100_TITLE_VOICE.
 const r5RemovedPaths = new Set(V100_R5_ASSET_REMOVALS.map(asset=>asset.path));
 const r5ReplacementByPath = new Map(V100_R5_ASSET_REPLACEMENTS.map(asset=>[asset.path,asset.next]));
 const spriteReplacementByPath = new Map(V177_SPRITE_REPLACEMENTS.map(asset=>[asset.path,asset.next]));
-// Musashi and Anchor Bloom are present in the compared legacy packs. Their
+// Musashi, Anchor Bloom and Gairen are present in the compared legacy packs. Their
 // changed hashes require the complete new payload, while the two bosses are
 // already counted among new V1 assets. The legacy base already counts Musashi.
 const legacySpriteRefreshes = V177_SPRITE_REPLACEMENTS.filter(asset=>asset.path.includes('/v090/')||asset.path.includes('/v0995/'));
