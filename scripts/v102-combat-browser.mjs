@@ -12,6 +12,7 @@ import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-enemy-live-render-contract.mjs';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
+import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -25,6 +26,7 @@ const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitI
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const browser=await(await pwaBrowserType(engine)).launch();
 async function captureContinuousSamples(page,proof){
+  await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
   const samples=[];
   for(let i=0;i<15;i++){
     await page.waitForTimeout(120);

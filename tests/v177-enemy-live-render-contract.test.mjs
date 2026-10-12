@@ -28,6 +28,13 @@ test('Pose labels without actual travel or normal attack receipts cannot pass',(
   const noActive=fixture('attack');for(const s of noActive.samples)s.renders[0].requestedState='wind-up';assert.throws(()=>assertV177EnemyLiveRender(noActive),/active drawing/);
 });
 
+test('a missing native draw at any observation still fails the continuous evidence contract',()=>{
+  for(const index of [0,2,5]){
+    const f=fixture();f.samples[index].renders=[];
+    assert.throws(()=>assertV177EnemyLiveRender(f),/native observations require actual draw receipts/);
+  }
+});
+
 test('Each V1 twin selects its own connected body from the spawned part identity',()=>{
   for(const part of ['a','b'])for(const phase of ['move','attack']){
     const f=fixture(phase,'futago',part),path=`/art/v100/joints/futago-separated-${part}-r1.webp`;
