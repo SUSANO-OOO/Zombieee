@@ -1073,6 +1073,34 @@ async function phaseGOrderedControlInput(page, operation, deadlineMs, control) {
   }
 }
 
+async function waitForPhaseGPagePredicate(page, predicate, argument, { timeout: timeoutMs, polling = 100 }) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const remaining = deadline - Date.now();
+    const observation = withPhaseGPageInputLock(page, () => {
+      invariant(Date.now() < deadline, "FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
+      return page.evaluate(predicate, argument);
+    });
+    let value;
+    try {
+      // Queue time consumes the original observation budget. Unlike an
+      // autonomous browser poll, every read shares the native input lane.
+      value = await withDeploymentPreinputDeadline(page, observation, remaining,
+        "QA_HARNESS_FOREGROUND_OBSERVATION_TIMEOUT", { phase: "foreground-predicate" });
+    } catch (error) {
+      if (error?.phaseGTerminalInputFailure === true) {
+        phaseGPageInputState(page).terminalError ??= error;
+        error.phaseGCausalNoFurtherPageRpc = true;
+      }
+      throw error;
+    }
+    invariant(Date.now() <= deadline, "FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
+    if (value) return value;
+    await new Promise((resolve) => setTimeout(resolve, Math.min(polling, Math.max(0, deadline - Date.now()))));
+  }
+  throw new Error("FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
+}
+
 async function observePromiseWithin(promise, timeoutMs) {
   const boundedMs = Math.max(1, Math.floor(Number(timeoutMs) || 1));
   let timeoutId;
@@ -2233,11 +2261,10 @@ async function readPhaseGSetupRuntime(page) {
 }
 
 async function waitForManualMarkerObservation(page, kind, evidence = {}) {
-  let handle;
   try {
     const activation = manualMarkerActivation(evidence, kind);
     invariant(activation.ok, "manual dispatch identity invalid: " + activation.errors.join(", "));
-    handle = await page.waitForFunction((expected) => {
+    const { snapshot, observedAtPageTime } = await waitForPhaseGPagePredicate(page, (expected) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     const markedEnemy = snapshot?.fighters?.some((fighter) => String(fighter.id) === String(expected.targetId)
       && fighter.side === "zombie" && fighter.hp > 0 && Number(fighter.marked) > 0);
@@ -2248,16 +2275,15 @@ async function waitForManualMarkerObservation(page, kind, evidence = {}) {
       && snapshot.stageId === expected.stageId && markedEnemy && impact
       ? { snapshot, observedAtPageTime: performance.now() } : false;
   }, activation.identity, { timeout: Math.min(battleTimeout, 10_000), polling: 100 });
-    const { snapshot, observedAtPageTime } = await handle.jsonValue();
     evidence.afterAction = { ...snapshot, observedAtPageTime, missionObjects: snapshot.battlefieldObjects ?? [] };
     return evidence.afterAction;
   } catch (error) {
     // Preserve the actual outcome without turning a diagnostic read into a retry.
-    try { evidence.afterAction = await readPhaseGSetupRuntime(page); }
-    catch (readError) { evidence.readError = String(readError); }
+    if (!error.phaseGCausalNoFurtherPageRpc) {
+      try { evidence.afterAction = await withPhaseGPageInputLock(page, () => readPhaseGSetupRuntime(page)); }
+      catch (readError) { evidence.readError = String(readError); }
+    }
     throw error;
-  } finally {
-    if (handle) await handle.dispose();
   }
 }
 
@@ -2270,7 +2296,7 @@ async function waitForRequiredBossPresentation(page, { bossKind, waitForBossAtta
   if (!bossKind) return;
   const recorder = checkpointRecorderFor(page);
   recorder?.setAwaiting("boss-presentation", { bossKind, predicate: "real boss alive, entry complete and in frame" });
-  await page.waitForFunction((expectedKind) => {
+  await waitForPhaseGPagePredicate(page, (expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie" && fighter.kind === expectedKind && fighter.hp > 0
@@ -2292,7 +2318,7 @@ function assertRequiredBossRuntime(runtime, bossKind, label) {
 async function waitForCombatActivity(page, { bossKind = null } = {}) {
   const recorder = checkpointRecorderFor(page);
   recorder?.setAwaiting("combat-activity", { bossKind, predicate: "current production attack or completed impact" });
-  await page.waitForFunction(() => {
+  await waitForPhaseGPagePredicate(page, () => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     if (!snapshot || snapshot.screen !== "battle") return false;
     const hasFighters = snapshot.fighters?.some((fighter) => Number(fighter.hp) > 0) === true;
@@ -4626,7 +4652,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         invariant(developerBossWaveEvidence?.fallbackHumanSpawned === false,
           "boss-wave handoff cannot add a synthetic fallback human");
       }
-      await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
+      await waitForPhaseGPagePredicate(page, () => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
       if (!bossKind || !waitForBossAttack) {
         await waitForCombatActivity(page);
       } else {

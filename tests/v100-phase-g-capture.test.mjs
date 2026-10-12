@@ -807,6 +807,7 @@ test("boss presentation barrier preserves actual entry and the existing per-lane
     const calls = [];
     const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForRequiredBossPresentation`, {
       checkpointRecorderFor: () => null, battleTimeout: 45000,
+      waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
       waitForCombatActivity: async (_page, options) => calls.push(options.bossKind),
     });
     await wait({ waitForFunction: async (callback, expectedKind, options) => {
@@ -839,6 +840,7 @@ function bossWaitFixture(samples, { budget = 150000, readStatus = null } = {}) {
   const budgets = [];
   const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForCombatActivity`, {
     checkpointRecorderFor: () => null, battleTimeout: budget,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
     invariant: (condition, message) => assert.ok(condition, message),
     V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
     Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
@@ -872,6 +874,7 @@ test("representative boss reads finish before background native input starts on 
   const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
     + "\n({ withPhaseGPageInputLock, waitForCombatActivity })", {
     phaseGPageInputTails: new WeakMap(), checkpointRecorderFor: () => null, battleTimeout: 150000,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
     invariant: (condition, message) => assert.ok(condition, message),
     V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
     Date, setTimeout, clearTimeout,
@@ -942,6 +945,7 @@ test("waiting for the input lane consumes the original boss deadline and cannot 
   let now = 0, reads = 0;
   const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForCombatActivity`, {
     checkpointRecorderFor: () => null, battleTimeout: 150000,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
     invariant: (condition, message) => assert.ok(condition, message),
     V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
     Date: { now: () => now },
@@ -1078,11 +1082,13 @@ function manualMarkerEvidence() {
 }
 test("manual marker wait rejects impact-only, unrelated activation and dead marked targets and retains the positive frame", async () => {
   const declaration = parsed.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === "waitForManualMarkerObservation");
-  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, { battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail) });
+  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, {
+    battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail),
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+  });
   const target = { id: 3, side: "zombie", kind: "red-panther-smg", hp: 80, marked: 6 };
   const receipt = { ownerId: 9, activationId: 1, kind: "babayaga", eventType: "impact", at: 34.72 };
   const snapshot = { screen: "battle", stageId: "stage21", battleGeneration: 2, fighters: [target], manualAbilityReceipts: [receipt] };
-  let disposed = 0;
   const value = await wait({ waitForFunction: async (callback, kind, options) => {
     assert.equal(options.timeout, 10000);
     const check = (sample) => vm.runInNewContext(`(${callback.toString()})(kind)`, {
@@ -1099,11 +1105,10 @@ test("manual marker wait rejects impact-only, unrelated activation and dead mark
       { ...snapshot, battleGeneration: 3 },
       { ...snapshot, stageId: "stage24" }]) assert.equal(Boolean(check(invalid)), false);
     const positive = check(snapshot);
-    return { jsonValue: async () => positive, dispose: async () => { disposed += 1; } };
+    return positive;
   } }, "babayaga", manualMarkerEvidence());
   assert.equal(value.fighters[0].marked, 6);
   assert.equal(value.observedAtPageTime, 34000);
-  assert.equal(disposed, 1);
 });
 
 test("manual marker failure preserves one actual diagnostic snapshot and never retries or masks the primary failure", async () => {
@@ -1115,6 +1120,8 @@ test("manual marker failure preserves one actual diagnostic snapshot and never r
     const actual = { battleGeneration: 2, fighters: [], manualAbilityReceipts: [{ kind: "babayaga", eventType: "impact" }] };
     const evidence = manualMarkerEvidence();
     const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, {
+      waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+      withPhaseGPageInputLock: async (_page, operation) => operation(),
       battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail), readPhaseGSetupRuntime: async () => {
         reads += 1;
         if (readFails) throw new Error("context closed after primary failure");
