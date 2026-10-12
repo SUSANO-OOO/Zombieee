@@ -125,6 +125,60 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v177-normal-campaign:
+    name: V1 Normal Campaign (${{ matrix.engine }})
+    # Start the long earned-save route only after the focused candidate gates.
+    # A failed battle is evidence, never retried or replaced with a seeded win.
+    needs: [verify, v102-combat, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact feature candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Build exact normal-play candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Play all 30 stages using a fresh save, earned CAPS and real UI
+        env:
+          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-${{ matrix.engine }}
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
+      - name: Preserve normal-play results, saves, diagnostics and original-speed video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v177-normal-campaign-${{ matrix.engine }}
+          path: outputs/v177-normal-campaign-${{ matrix.engine }}
+          if-no-files-found: error
+          retention-days: 14
+
   verify:
     name: PR Verify
     runs-on: ubuntu-latest

@@ -1,23 +1,30 @@
 // A normal campaign route: fresh save, earned CAPS, real time and UI inputs.
 // Read-only save inspection records progress; no seed, QA bridge or forced result.
 import assert from "node:assert/strict";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { chromium } from "playwright";
+import { execFileSync } from "node:child_process";
 import { V100_STAGES, V100_UNITS, V100_VEHICLE, v100LevelCost } from "../app/v100Registry.js";
 import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+import { normalCampaignDeploymentCount } from "./v100-normal-play-contract.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
+const engine=process.env.V100_NORMAL_PLAY_ENGINE??'chromium';
+assert.ok(['chromium','webkit'].includes(engine));
+if(engine==='webkit')assert.equal(process.platform,'darwin','Normal campaign WebKit acceptance requires the native macOS runtime');
 assert.ok(["localhost", "127.0.0.1"].includes(origin.hostname));
 assert.equal(origin.search, "");
 const out = path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR ?? "outputs/v100-normal-campaign");
+await mkdir(path.dirname(out), { recursive: true });
 await mkdir(out, { recursive: false });
-const report = { evidenceKind:"automated normal UI playthrough; manual feel and physical-device acceptance remain separate", origin:origin.href, build:await productionBuildIdentity(), stages:[], events:{}, transactions:[], errors:[], status:"running" };
+const report = { evidenceKind:"automated normal UI playthrough; manual feel and physical-device acceptance remain separate", engine, origin:origin.href, build:await productionBuildIdentity(), stages:[], events:{}, transactions:[], errors:[], status:"running" };
 const resumeDir = process.env.V100_NORMAL_PLAY_RESUME_DIR && path.resolve(process.env.V100_NORMAL_PLAY_RESUME_DIR);
 let restoredStorage;
 if (resumeDir) {
@@ -45,9 +52,14 @@ if (resumeDir) {
     ? [{ index, number: stage.number, status: "unfinished in an earlier segment; not a victory", sourceReport: report.resumeFrom.reportSha256 }] : []);
   if (report.exploratoryContinuation) report.evidenceKind = "exploratory normal UI route across identified builds; not final-candidate whole-campaign acceptance";
 }
-const browser = await chromium.launch({headless:true});
-const context = await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,...(restoredStorage ? {storageState:restoredStorage} : {})});
+const browserType=await pwaBrowserType(engine),browser=await browserType.launch({headless:true});
+report.provenance={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),platform:process.platform,node:process.version,browserVersion:browser.version(),browserExecutable:browserType.executablePath()};
+const context = await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,recordVideo:{dir:path.join(out,'videos'),size:{width:844,height:390}},...(restoredStorage ? {storageState:restoredStorage} : {})});
+report.videoTimeOrigin={beforePageEpochMs:Date.now()};
 const page = await context.newPage();
+const video=page.video();assert.ok(video,'Normal campaign must preserve its actual native video');
+report.videoTimeOrigin.afterPageEpochMs=Date.now();
+const requests=installRequestFailureAudit(page);report.requestAudit=requests.report;
 page.setDefaultTimeout(15_000);
 const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
 const phaseAt = () => page.locator(".v100-shell").getAttribute("data-v100-phase");
@@ -59,7 +71,6 @@ async function continueRequested() {
 }
 page.on("console",m=>{if(m.type()==="error")report.errors.push({kind:"console",message:m.text()});});
 page.on("pageerror",e=>report.errors.push({kind:"page",message:String(e)}));
-page.on("requestfailed",r=>report.errors.push({kind:"request",url:r.url(),message:r.failure()?.errorText}));
 page.on("response",r=>{if(r.status()>=400)report.errors.push({kind:"http",url:r.url(),status:r.status()});});
 async function ready() {
   await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]'));
@@ -137,14 +148,10 @@ async function battle(stage) {
   const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;
   while(await phaseAt()==="battle") {
     await continueRequested();
-    const countText = await page.locator(".bay-status").allTextContents();
-    const count = countText.join(" ").match(/同時出撃\s+(\d+)\/(\d+)/u);
-    if (count) {
-      record.maximumObservedActive = Math.max(record.maximumObservedActive ?? 0,Number(count[1]));
-      assert.equal(Number(count[2]),7);assert.ok(Number(count[1])<=7,`Live deployment cap exceeded: ${count[0]}`);
-    }
     try {
-    if(report.errors.length)throw new Error("Browser diagnostics during normal battle");
+    const deploymentCount=normalCampaignDeploymentCount(await page.locator('.v100-deployed-count').evaluateAll(nodes=>nodes.length===1?nodes[0].getAttribute('aria-label'):null));
+    record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
+    if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
     const audio=page.getByRole("button",{name:"音声を有効にする",exact:true});
     if(await audio.isVisible())await audio.click();
@@ -160,7 +167,7 @@ async function battle(stage) {
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
-      } else if (/同時出撃\s+0\/7/u.test(countText.join(" ")) && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
+      } else if (deploymentCount.active===0 && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
         // An empty defense line needs an affordable escort while the next
         // expensive role is funded. Keep the ordered role cursor unchanged.
         const scout=page.locator('button.unit-card[data-kind="scout"]');
@@ -170,7 +177,7 @@ async function battle(stage) {
         }
       }
     }
-    const barrage=page.getByRole("button",{name:/^装甲車両一斉砲撃/});
+    const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
     if((stage.missionType!=="boss" ? Date.now()-start>12_000 : bossVisible)&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
@@ -213,6 +220,7 @@ async function battle(stage) {
   await acceptResult(record);
 }
 async function acceptResult(record) {
+  record.endedAt=new Date().toISOString();
   await ready();record.result=(await saveAt()).pendingResult??(await saveAt()).lastResult;
   assert.equal(record.result?.battleRunId, `v100:${record.id}:${record.openingSave.revision}`, "Result must belong to this recorded normal battle");
   record.resultText=await page.getByLabel("戦闘結果",{exact:true}).innerText();
@@ -257,7 +265,7 @@ try {
  let preparedStage=0;
  for(let steps=0;steps<6000;steps++) {
   await continueRequested();
-  if(report.errors.length)throw new Error("Browser diagnostics on normal route");
+  if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics on normal route");
   const phase=await phaseAt();const save=await saveAt();
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
@@ -294,5 +302,9 @@ try {
 finally {
   try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);process.exitCode=1; }
   try { await context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}); } catch(error) { report.storageCaptureError=String(error);process.exitCode=1; }
-  await persist();await browser.close();console.log(JSON.stringify({status:report.status,stages:report.stages.length,error:report.error}));
+  await persist();
+  try { await requests.closeContext(context);report.video=await video.path();report.videoBytes=(await stat(report.video)).size;assert.ok(report.videoBytes>0); }
+  catch(error) { report.videoCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  if(report.errors.length||requests.report.unexpectedFailures.length){report.status='failed';report.error??='Browser diagnostics on normal route';process.exitCode=1;}
+  await persist();await browser.close();console.log(JSON.stringify({engine,status:report.status,stages:report.stages.length,error:report.error}));
 }

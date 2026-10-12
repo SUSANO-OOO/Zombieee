@@ -208,7 +208,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "v177-normal-campaign", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -221,6 +221,16 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(jobs['v102-combat']['continue-on-error'],undefined);
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));
+  const normal=jobs['v177-normal-campaign'];
+  assert.deepEqual(normal.needs,['verify','v102-combat','r9-story','v100-native-webkit-pwa','v100-phase-g-production']);
+  assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+  assert.equal(normal.strategy['fail-fast'],false);assert.equal(normal['continue-on-error'],undefined);
+  assert.equal(normal.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  const normalRun=normal.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs');
+  assert.ok(normalRun);assert.equal(normalRun.env.V100_NORMAL_PLAY_ENGINE,'${{ matrix.engine }}');
+  assert.equal(normalRun.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
+  const normalUpload=normal.steps.at(-1);assert.equal(normalUpload.if,'always()');
+  assert.equal(normalUpload.with['if-no-files-found'],'error');assert.equal(normalUpload.with.path,normalRun.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);
