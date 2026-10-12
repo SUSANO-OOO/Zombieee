@@ -4,6 +4,7 @@ import path from "node:path";
 
 import sharp from "sharp";
 import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
+import { V177_MAYO_HIT_SOURCE_BOUNDS } from "./v177-mayo-source-crops.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -20,7 +21,7 @@ const sheets = Object.freeze([
     file: "mayo-chan-combat-poses-source-r1.png",
     sha256: "fe9c29393e8da17ba6f72be33498a96b6ea3212ffb0125f738ab10aac453ff63",
     size: [2172, 724],
-    bounds: [[24, 250], [285, 330], [595, 330], [885, 390], [1250, 310], [1505, 300], [1755, 405]],
+    bounds: [[24, 250], [285, 330], [595, 330], [885, 390], [1250, 310], V177_MAYO_HIT_SOURCE_BOUNDS.normal, [1755, 405]],
     output: "mayo-chan-battle-r1.png",
   }),
   Object.freeze({
@@ -28,7 +29,7 @@ const sheets = Object.freeze([
     file: "mayo-chan-feral-poses-source-r1.png",
     sha256: "b6e86d70fcd761ed80197a20c0ee386eeab45ea3820815bc25db8856b2e5aa74",
     size: [2153, 730],
-    bounds: [[20, 300], [315, 330], [620, 335], [920, 315], [1195, 325], [1475, 325], [1765, 380]],
+    bounds: [[20, 300], [315, 330], [620, 335], [920, 315], [1195, 325], V177_MAYO_HIT_SOURCE_BOUNDS.feral, [1765, 380]],
     output: "mayo-chan-feral-battle-r1.png",
   }),
 ]);
@@ -219,12 +220,19 @@ async function buildBattleAtlas(sheet) {
 
 const identityPath = path.join(sourceDir, identity.file);
 await verifyHash(identityPath, identity.sha256);
-const cardResult = await buildPortraitAndCard(identityPath);
+// Battle-source repairs must retain independently approved portrait/card
+// derivatives. Rebuilding those identities is an explicit separate operation.
+const includeIdentity = process.argv.includes("--with-identity");
+const cardResult = includeIdentity ? await buildPortraitAndCard(identityPath) : {
+  portraitPath: path.join(publicDir, "portraits/mayo-chan-event-portrait-r1.webp"),
+  cardPath: path.join(publicDir, "cards/mayo-chan-formation-card-r1.webp"),
+};
 const atlases = {};
 for (const sheet of sheets) atlases[sheet.id] = await buildBattleAtlas(sheet);
 
 console.log(JSON.stringify({
   message: "Built Version 0.9.0 Mayo-chan normal and feral assets.",
+  identityRebuilt: includeIdentity,
   result: {
     portrait: path.relative(root, cardResult.portraitPath),
     card: path.relative(root, cardResult.cardPath),

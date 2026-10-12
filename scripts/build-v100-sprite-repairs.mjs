@@ -167,7 +167,7 @@ for(const record of records){
 runtime.sources=Object.fromEntries(Object.entries(runtime.sources).sort(([a],[b])=>a.localeCompare(b)));
 await writeFile(runtimeFile,`${JSON.stringify(runtime,null,2)}\n`);
 const replacements = records.map(({ path, sourcePath, hash, bytes, previous }) => ({ path, previous: { path, bytes: previous.bytes, hash: previous.hash, criticality: previous.criticality }, next: { path, sourcePath, bytes, hash, criticality: previous.criticality }, delta: bytes - previous.bytes }));
-await writeFile(new URL('scripts/v177-sprite-repair-asset-contract.mjs', root), `// Exact source-bound sprite fixes; no other published art changes.\nexport const V177_SPRITE_REPLACEMENTS = Object.freeze(${JSON.stringify(replacements, null, 2)});\nexport const V177_SPRITE_BYTES_DELTA = ${replacements.reduce((sum, r) => sum + r.delta, 0)};\n`);
+await writeFile(new URL('scripts/v177-sprite-repair-asset-contract.mjs', root), `import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-contract.mjs';\nimport { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';\nimport { V177_MAYO_SPRITE_REPLACEMENTS } from './v177-mayo-repair-asset-contract.mjs';\n// Exact source-bound sprite fixes; no other published art changes.\nexport const V177_SPRITE_REPLACEMENTS = Object.freeze([\n${JSON.stringify(replacements, null, 2).slice(2, -2)},\n  ...V177_ANCHOR_SPRITE_REPLACEMENTS,\n  ...V177_GAIREN_SPRITE_REPLACEMENTS,\n  ...V177_MAYO_SPRITE_REPLACEMENTS,\n]);\nexport const V177_SPRITE_BYTES_DELTA = V177_SPRITE_REPLACEMENTS.reduce((sum, asset) => sum + asset.delta, 0);\n`);
 return [...records];
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

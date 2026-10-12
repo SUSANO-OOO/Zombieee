@@ -163,14 +163,19 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => path !== V100_WEBKIT_CARD_REPLACEMENT.path)
     .map(({ path, hash }) => [path, hash]));
   const {V177_SPRITE_REPLACEMENTS}=await import('../scripts/v177-sprite-repair-asset-contract.mjs');
-  let legacySpriteReplacements=0;
+  const legacySpriteReplacements=[];
   for(const repair of V177_SPRITE_REPLACEMENTS){
     if(!previousNonIcons.has(repair.path))continue;
     assert.equal(previousNonIcons.get(repair.path),repair.previous.hash,'retain the exact published identity of the requested repair');
     assert.equal(currentNonIcons.get(repair.path),repair.next.hash,'only the source-bound repaired sprite may replace it');
-    previousNonIcons.set(repair.path,repair.next.hash);legacySpriteReplacements++;
+    previousNonIcons.set(repair.path,repair.next.hash);legacySpriteReplacements.push(repair.path);
   }
-  assert.equal(legacySpriteReplacements,2,'Only the frozen Musashi and Gairen repairs replace sprites in this legacy icon baseline');
+  assert.deepEqual(legacySpriteReplacements.sort(),[
+    '/art/v090/bosses/gairen-battle-r1.png',
+    '/art/v090/characters/mayo-chan-battle-r1.png',
+    '/art/v090/characters/mayo-chan-feral-battle-r1.png',
+    '/art/v090/characters/miyamoto-musashi-battle-r1.png',
+  ],'Only the four pinned source repairs replace sprites in this legacy icon baseline');
   assert.deepEqual(currentNonIcons, previousNonIcons);
   const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
   assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);

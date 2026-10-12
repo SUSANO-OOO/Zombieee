@@ -9,8 +9,8 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 95, 20489920, 69],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 94, 20468968, 68],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 97, 24953270, 71],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 96, 24932318, 70],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -46,7 +46,7 @@ for (const [version, sha, count, bytes, network] of baselines) {
     assert.deepEqual(replaced.sort(), expected.replaced);
   });
 }
-test("the frozen 0.9.9.5 delta includes Musashi, Anchor Bloom, Gairen and the existing card replacement", () => {
+test("the frozen 0.9.9.5 delta includes Musashi, Anchor Bloom, Gairen, both Mayo faces and the existing card replacement", () => {
   const old = JSON.parse(execFileSync("git", ["show", "55d796cc577d1d9f903a4d2c6b4382196511db27:public/asset-manifest.json"], {encoding:"utf8",maxBuffer:4*1024*1024}));
   const expected=V177_INSTALLED_ASSET_CONTRACT['0.9.9.5'];
   assert.equal(old.assets.length,expected.assets);
@@ -61,6 +61,8 @@ test("the frozen 0.9.9.5 delta includes Musashi, Anchor Bloom, Gairen and the ex
   assert.deepEqual(old.assets.filter(asset => next.get(asset.path)?.hash !== asset.hash).map(asset => asset.path).sort(), [
     "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
     "/art/v090/bosses/gairen-battle-r1.png",
+    "/art/v090/characters/mayo-chan-battle-r1.png",
+    "/art/v090/characters/mayo-chan-feral-battle-r1.png",
     "/art/v090/characters/miyamoto-musashi-battle-r1.png",
     "/art/v0995/enemies/anchor-bloom-battle-v2.png",
   ]);

@@ -125,7 +125,7 @@ test('Source-bound feral petals fold and reopen on the same rigid head and visib
 test('Feral keeps its own original identity, bounded texture and preload through transformation',async()=>{
  const hash=b=>createHash('sha256').update(b).digest('hex');
  assert.notEqual(atlas,V177_JOINT_ATLASES['mayo-chan']);
- assert.equal(d.identityBinding.sourceSha256,'87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c');
+ assert.equal(d.identityBinding.sourceSha256,'c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8');
  for(const [pose,binding]of Object.entries(d.poseBindings)){
   const source=await readFile('public'+binding.path);assert.equal(hash(source),binding.sourceSha256);assert.equal(hash(await readFile(dir+binding.file)),binding.sha256);
   const frame=spriteFrameFor(kind,pose,'right');assert.equal(frame.path,binding.path);assert.deepEqual(frame.sourceRect,binding.sourceRect);

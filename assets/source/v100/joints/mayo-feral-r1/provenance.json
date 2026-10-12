@@ -43,7 +43,7 @@
       "h": 448
     },
     "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
-    "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+    "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
   },
   "motionSha256": "53ef844db453ed8ab71a145dcf63e8cda5e9e55f2fd4adb23becd86af12eff46",
   "originalPoseBindings": {
@@ -57,7 +57,7 @@
         "h": 448
       },
       "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
-      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
     },
     "attack-a": {
       "file": "original-attack-a.png",
@@ -69,7 +69,7 @@
         "h": 448
       },
       "sha256": "4d3dda77f5be27c9a6cf2a93acb72114ff6eaa66e77ede86ed507decbcb06982",
-      "sourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c"
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
     }
   },
   "parts": [
