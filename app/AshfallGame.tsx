@@ -4096,6 +4096,7 @@ type FighterRenderAudit = {
   bodyScale?: number;
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
+  renderKind?: string;
   jointLowerFrame?: number | null;
   jointUpperFrame?: number | null;
   renderedWeaponSocket?: {x:number;y:number} | null;
@@ -4522,6 +4523,7 @@ function drawSpriteFighter(
       groundAnchor: animationSample.groundAnchor,
       articulatedWalkPhase,
       jointAtlasPath: jointPose ? jointAtlas.path : null,
+      renderKind,
       jointLowerFrame: jointPose?.lowerIndex ?? null,
       jointUpperFrame: jointPose?.upperIndex ?? null,
       renderedWeaponSocket: weaponSocket,
@@ -12740,6 +12742,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighterId: enemy.id,
           targetId: human.id,
           kind: enemy.kind,
+          renderKind: bossRenderKind(enemy),
+          v100TwinPart: enemy.v100TwinPart ?? null,
           phase,
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
@@ -12799,6 +12803,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighter: fighter ? {
             id: fighter.id,
             kind: fighter.kind,
+            renderKind: bossRenderKind(fighter),
+            v100TwinPart: fighter.v100TwinPart ?? null,
             x: fighter.x,
             y: fighter.y,
             hp: fighter.hp,

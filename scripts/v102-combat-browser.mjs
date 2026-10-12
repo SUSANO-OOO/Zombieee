@@ -9,7 +9,7 @@ import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
-import {assertV177EnemyLiveRender} from './v177-enemy-live-render-contract.mjs';
+import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-enemy-live-render-contract.mjs';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
@@ -101,13 +101,13 @@ try{
           await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
           for(const phase of ['move','attack']){
             const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase}),{kind,phase});
-            const evidence={kind,phase,proof,expectedJointPath:V177_JOINT_ATLASES[kind]?.path??null,samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
+            const evidence={kind,phase,proof,...v177EnemyRuntimeRenderIdentity(proof),samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
             try{
               for(let i=0;i<15;i++){
                 await page.waitForTimeout(120);
                 evidence.samples.push(await page.evaluate(id=>{
                   const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
-                  return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame}))};
+                  return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,renderKind:r.renderKind,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame}))};
                 },proof.fighterId));
               }
               if(kind==='futago'){

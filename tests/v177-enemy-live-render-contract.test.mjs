@@ -1,7 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assertV177EnemyLiveRender} from '../scripts/v177-enemy-live-render-contract.mjs';
-const fixture=(phase='move')=>({kind:'kurome',phase,fighterId:8,expectedJointPath:'/art/v100/joints/kurome-r1.webp',samples:Array.from({length:6},(_,i)=>({at:200*i,simulationTime:i*.2,running:true,paused:false,route:'/v100',visible:true,fighter:{id:8,kind:'kurome',hp:2100,x:620-i*3,attackSequence:phase==='attack'?1:0},renders:[{renderSequence:i+1,assetReady:true,x:620-i*3,y:280,renderWidth:150,renderHeight:140,poseScaleX:1,poseScaleY:1,requestedState:phase==='move'?'move':'active',actualXDelta:phase==='move'?-3:0,jointAtlasPath:'/art/v100/joints/kurome-r1.webp',jointLowerFrame:2,jointUpperFrame:3}]}))});
+import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from '../scripts/v177-enemy-live-render-contract.mjs';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+const fixture=(phase='move',kind='kurome',v100TwinPart=null)=>{
+  const renderKind=v100TwinPart?`futago-separated-${v100TwinPart}`:kind;
+  const expectedJointPath=V177_JOINT_ATLASES[renderKind].path;
+  return {kind,phase,fighterId:8,renderKind,v100TwinPart,expectedJointPath,
+    samples:Array.from({length:6},(_,i)=>({at:200*i,simulationTime:i*.2,running:true,paused:false,route:'/v100',visible:true,
+      fighter:{id:8,kind,renderKind,v100TwinPart,hp:2100,x:620-i*3,attackSequence:phase==='attack'?1:0},
+      renders:[{renderSequence:i+1,renderKind,assetReady:true,x:620-i*3,y:280,renderWidth:150,renderHeight:140,poseScaleX:1,poseScaleY:1,requestedState:phase==='move'?'move':'active',actualXDelta:phase==='move'?-3:0,jointAtlasPath:expectedJointPath,jointLowerFrame:2,jointUpperFrame:3}]}))};
+};
 
 test('Live evidence requires actual V1 travel and attack drawing for the connected rig',()=>{
   assert.equal(assertV177EnemyLiveRender(fixture()).jointConnected,true);
@@ -18,4 +26,27 @@ test('Pose labels without actual travel or normal attack receipts cannot pass',(
   const stationary=fixture();for(const s of stationary.samples)s.fighter.x=620;assert.throws(()=>assertV177EnemyLiveRender(stationary),/actually advance/);
   const noAttack=fixture('attack');for(const s of noAttack.samples)s.fighter.attackSequence=0;assert.throws(()=>assertV177EnemyLiveRender(noAttack),/real attack/);
   const noActive=fixture('attack');for(const s of noActive.samples)s.renders[0].requestedState='wind-up';assert.throws(()=>assertV177EnemyLiveRender(noActive),/active drawing/);
+});
+
+test('Each V1 twin selects its own connected body from the spawned part identity',()=>{
+  for(const part of ['a','b'])for(const phase of ['move','attack']){
+    const f=fixture(phase,'futago',part),path=`/art/v100/joints/futago-separated-${part}-r1.webp`;
+    assert.deepEqual(v177EnemyRuntimeRenderIdentity(f),{renderKind:`futago-separated-${part}`,v100TwinPart:part,expectedJointPath:path});
+    assert.equal(assertV177EnemyLiveRender(f).expectedJointPath,path);
+  }
+});
+
+test('Fused art, wrong twin parts, missing draw identity and another body cannot pass for a V1 twin',()=>{
+  for(const mutate of [
+    f=>{f.renderKind='futago';},
+    f=>{f.v100TwinPart=null;},
+    f=>{f.samples[0].fighter.v100TwinPart='a';},
+    f=>{f.samples[0].fighter.renderKind='futago-separated-a';},
+    f=>{delete f.samples[0].renders[0].renderKind;},
+    f=>{f.samples[0].renders[0].renderKind='futago';},
+    f=>{f.samples[0].renders[0].jointAtlasPath='/art/v100/joints/futago-r1.webp';},
+    f=>{f.samples[0].renders[0].jointAtlasPath='/art/v100/joints/futago-separated-a-r1.webp';},
+    f=>{f.expectedJointPath='/art/v100/joints/futago-r1.webp';},
+  ]){const f=fixture('move','futago','b');mutate(f);assert.throws(()=>assertV177EnemyLiveRender(f));}
+  assert.throws(()=>v177EnemyRuntimeRenderIdentity({kind:'kurome',renderKind:'kurome',v100TwinPart:'b'}));
 });

@@ -1,7 +1,21 @@
 import assert from 'node:assert/strict';
+import {bossRenderKind} from '../app/bossFoundation.js';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+
+// Use the spawned actor's stable part identity, never the observed texture, to
+// select the expected art. V1 twins always spawn as two independent bodies.
+export function v177EnemyRuntimeRenderIdentity({kind,renderKind,v100TwinPart=null}) {
+  if(kind==='futago')assert.ok(['a','b'].includes(v100TwinPart),'V1 twin evidence requires its spawned part identity');
+  else assert.equal(v100TwinPart,null,'only V1 twins may declare a twin part');
+  const expectedRenderKind=bossRenderKind({kind,v100TwinPart});
+  assert.equal(renderKind,expectedRenderKind,'the prepared render form must follow the spawned actor identity');
+  return {renderKind:expectedRenderKind,v100TwinPart,expectedJointPath:V177_JOINT_ATLASES[expectedRenderKind]?.path??null};
+}
 
 // Pure evidence validation. This module never launches a browser or steps a pose.
-export function assertV177EnemyLiveRender({kind,phase,fighterId,samples,expectedJointPath=null}) {
+export function assertV177EnemyLiveRender({kind,phase,fighterId,samples,renderKind=kind,v100TwinPart=null,expectedJointPath=null}) {
+  const identity=v177EnemyRuntimeRenderIdentity({kind,renderKind,v100TwinPart});
+  if(expectedJointPath)assert.equal(expectedJointPath,identity.expectedJointPath,'the expected joint texture must belong to the spawned render form');
   assert.ok(['move','attack'].includes(phase),'unsupported continuous enemy phase');
   assert.ok(Array.isArray(samples)&&samples.length>=5,'continuous evidence needs multiple native observations');
   for(let i=0;i<samples.length;i++){
@@ -14,9 +28,12 @@ export function assertV177EnemyLiveRender({kind,phase,fighterId,samples,expected
     if(i){assert.ok(s.at>samples[i-1].at,'native observations must progress');assert.ok(s.simulationTime>=samples[i-1].simulationTime,'simulation cannot move backwards');}
     assert.equal(s.fighter?.id,fighterId,'the observed actor must be the prepared actor');
     assert.equal(s.fighter.kind,kind,'the observed actor must retain its kind');
+    assert.equal(s.fighter.v100TwinPart??null,v100TwinPart,'the observed actor must retain its twin part');
+    assert.equal(s.fighter.renderKind,identity.renderKind,'the observed render form must follow its actor identity');
     assert.ok(Number.isFinite(s.fighter.x)&&s.fighter.hp>0,'the live actor must remain finite and alive');
     assert.ok(s.renders.length>0,'native observations require actual draw receipts');
     for(const r of s.renders){
+      assert.equal(r.renderKind,identity.renderKind,'each actual draw must retain the prepared render form');
       assert.ok(r.assetReady&&r.renderWidth>0&&r.renderHeight>0,'the native actor must actually draw its ready art');
       assert.ok([r.x,r.y,r.poseScaleX,r.poseScaleY,r.renderSequence].every(Number.isFinite),'actual draw geometry must be finite');
       if(expectedJointPath&&['start-move','move','stop','idle','wind-up','active','recovery'].includes(r.requestedState)){
