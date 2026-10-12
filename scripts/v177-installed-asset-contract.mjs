@@ -29,9 +29,9 @@ export const V177_INSTALLED_ASSET_CONTRACT = Object.freeze({
   "0.9.9.5": Object.freeze({
     assets: 415, distinct: 413,
     replaced: Object.freeze(['/art/v080/characters/cards/kumaverson-formation-card-r2.webp', ...V177_SPRITE_REPLACEMENTS
-      .filter(asset => asset.path.includes('/v090/') || asset.path.includes('/v0995/')).map(asset => asset.path)].sort()),
+      .filter(asset => ['/v060/','/v090/','/v0995/'].some(version=>asset.path.includes(version))).map(asset => asset.path)].sort()),
     sourceReplacements: Object.freeze(V177_SPRITE_REPLACEMENTS
-      .filter(asset => asset.path.includes('/v090/') || asset.path.includes('/v0995/'))),
+      .filter(asset => ['/v060/','/v090/','/v0995/'].some(version=>asset.path.includes(version)))),
     additions: V100_RELEASE_ASSET_CONTRACT.additionsFromV0995,
     bytes: V100_RELEASE_ASSET_CONTRACT.bytesFromV0995,
     bundled: V100_RELEASE_ASSET_CONTRACT.bundledAudioAdditionsFromV0995,

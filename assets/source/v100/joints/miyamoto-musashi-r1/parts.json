@@ -12,7 +12,7 @@
       "file": "identity-reference.png",
       "sha256": "cd9da7d16bf3d703d189dbf7ad1d90d7b5ec074a727d3a22600b78b147e480e0",
       "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
-      "sourceSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+      "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
       "sourceRect": {
         "x": 480,
         "y": 0,
@@ -25,7 +25,7 @@
       "file": "original-attack-a.png",
       "sha256": "1ed0d5a84f5b9def792831c008c12917390a28eeb74be09511100141fe572704",
       "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
-      "sourceSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+      "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
       "sourceRect": {
         "x": 1440,
         "y": 0,
@@ -2033,7 +2033,7 @@
   "pelvisY": 207,
   "identityBinding": {
     "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
-    "sourceSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+    "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
     "sourceRect": {
       "x": 480,
       "y": 0,
@@ -2436,5 +2436,10 @@
         399
       ]
     }
-  ]
+  ],
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+    "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+    "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
+  }
 }

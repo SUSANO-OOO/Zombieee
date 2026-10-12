@@ -171,11 +171,14 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     previousNonIcons.set(repair.path,repair.next.hash);legacySpriteReplacements.push(repair.path);
   }
   assert.deepEqual(legacySpriteReplacements.sort(),[
+    '/art/v060/characters/kumaverson-battle-v1.png',
     '/art/v090/bosses/gairen-battle-r1.png',
     '/art/v090/characters/mayo-chan-battle-r1.png',
     '/art/v090/characters/mayo-chan-feral-battle-r1.png',
     '/art/v090/characters/miyamoto-musashi-battle-r1.png',
-  ],'Only the four pinned source repairs replace sprites in this legacy icon baseline');
+    '/art/v090/characters/mrs-chiha-battle-r1.png',
+    '/art/v090/characters/zakimiya-battle-r1.png',
+  ],'Only the seven pinned source repairs replace sprites in this legacy icon baseline');
   assert.deepEqual(currentNonIcons, previousNonIcons);
   const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
   assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);

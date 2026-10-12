@@ -8,7 +8,7 @@
   "identitySourceSha256": "f6b17f845892462bd5f7ac0b2ef1e935bce37cf8b556fba520bf24e2340e388b",
   "identityBinding": {
     "path": "/art/v090/characters/zakimiya-battle-r1.png",
-    "sourceSha256": "9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+    "sourceSha256": "9b6ca1bfa7a51cb2a06122fb925a8b67979ae8d9885a606f4984ae2c9758cd39",
     "sourceRect": {
       "x": 480,
       "y": 0,
@@ -28,7 +28,7 @@
       "file": "identity-reference.png",
       "sha256": "f6b17f845892462bd5f7ac0b2ef1e935bce37cf8b556fba520bf24e2340e388b",
       "path": "/art/v090/characters/zakimiya-battle-r1.png",
-      "sourceSha256": "9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+      "sourceSha256": "9b6ca1bfa7a51cb2a06122fb925a8b67979ae8d9885a606f4984ae2c9758cd39",
       "sourceRect": {
         "x": 480,
         "y": 0,
@@ -138,5 +138,10 @@
     "totalUnits": 48,
     "allUnitAcceptance": false,
     "normalPlayAcceptance": false
+  },
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+    "sourceSha256": "9b6ca1bfa7a51cb2a06122fb925a8b67979ae8d9885a606f4984ae2c9758cd39",
+    "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
   }
 }

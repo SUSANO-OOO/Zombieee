@@ -4846,10 +4846,10 @@
       "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
       "sourcePath": "/pwa-optimized/art/v090/characters/miyamoto-musashi-battle-r1.webp",
       "originalSha256": "e05b1eedcdae7371b6b4fac63e09c492e907593c4951aaec63a642b9e36637e6",
-      "pngSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
-      "pngBytes": 2026536,
-      "hash": "sha256-f2d7d2c01c4bdb8f58a5cf341275d3ed983838b26374556707a49c47eb83724d",
-      "bytes": 1269282,
+      "pngSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+      "pngBytes": 2141442,
+      "hash": "sha256-01b7cc40d256041d99414552f4c922e5d267b72782c59bdf31f0ff658857caea",
+      "bytes": 1325976,
       "previous": {
         "bytes": 1277560,
         "hash": "sha256-b364a9c87a6641aa30e7cdaf611111ddd058e90a8768a2e92cd306945506a321",
@@ -4923,7 +4923,15 @@
         ]
       ],
       "editedPixels": 2725,
-      "neighbourPixels": 14261
+      "neighbourPixels": 14261,
+      "reactionRepair": {
+        "states": [
+          "hit",
+          "death"
+        ],
+        "inputs": "assets/source/v100/sprite-repairs/reactions/inputs.json",
+        "preserveOther10Cells": true
+      }
     }
   ]
 }

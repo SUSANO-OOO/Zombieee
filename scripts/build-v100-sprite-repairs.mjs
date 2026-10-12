@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertV100ArtAllowed } from './rejected-v100-art.mjs';
+import { applyV177ReactionRepairs } from './v177-reaction-source-repairs.mjs';
 
 const root = new URL('../', import.meta.url);
 const sources = new URL('assets/source/v100/sprite-repairs/', root);
@@ -70,7 +71,11 @@ function components(data, width, height) {
 }
 async function persist(name, assetPath, originalBytes, data, info, details, inputNames) {
   assertV100ArtAllowed(assetPath, sha(originalBytes));
-  const png = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+  let png = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+  if(name==='musashi'){
+    png=await applyV177ReactionRepairs('miyamoto-musashi',png,fileURLToPath(root));
+    details={...details,reactionRepair:{states:['hit','death'],inputs:'assets/source/v100/sprite-repairs/reactions/inputs.json',preserveOther10Cells:true}};
+  }
   const transport = await sharp(png).webp({ lossless: true, effort: 6 }).toBuffer();
   const destination = new URL(`public${assetPath}`, root), sourcePath = `/pwa-optimized${assetPath.replace(/\.png$/u, '.webp')}`;
   await mkdir(new URL('.', destination), { recursive: true });
@@ -161,13 +166,14 @@ const runtime=JSON.parse(await readFile(runtimeFile,'utf8'));
 for(const record of records){
   const output=runtime.outputs[`/public${record.path}`];if(!output)continue;
   output.sha256=record.pngSha256;
-  output.spriteRepair={provenance:'assets/source/v100/sprite-repairs/provenance.json',publishedBaselineSha256:record.originalSha256,rgbChanges:0};
+  output.spriteRepair={provenance:'assets/source/v100/sprite-repairs/provenance.json',publishedBaselineSha256:record.originalSha256,
+    ...(record.name==='musashi'?{localizedOriginalIdentityRepair:true,reactionSource:'assets/source/v100/sprite-repairs/reactions/inputs.json'}:{rgbChanges:0})};
   for(const input of record.inputs){const sourcePath=`assets/source/v100/sprite-repairs/${input.file}`;runtime.sources[sourcePath]={path:sourcePath,sha256:input.sha256};}
 }
 runtime.sources=Object.fromEntries(Object.entries(runtime.sources).sort(([a],[b])=>a.localeCompare(b)));
 await writeFile(runtimeFile,`${JSON.stringify(runtime,null,2)}\n`);
 const replacements = records.map(({ path, sourcePath, hash, bytes, previous }) => ({ path, previous: { path, bytes: previous.bytes, hash: previous.hash, criticality: previous.criticality }, next: { path, sourcePath, bytes, hash, criticality: previous.criticality }, delta: bytes - previous.bytes }));
-await writeFile(new URL('scripts/v177-sprite-repair-asset-contract.mjs', root), `import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-contract.mjs';\nimport { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';\nimport { V177_MAYO_SPRITE_REPLACEMENTS } from './v177-mayo-repair-asset-contract.mjs';\n// Exact source-bound sprite fixes; no other published art changes.\nexport const V177_SPRITE_REPLACEMENTS = Object.freeze([\n${JSON.stringify(replacements, null, 2).slice(2, -2)},\n  ...V177_ANCHOR_SPRITE_REPLACEMENTS,\n  ...V177_GAIREN_SPRITE_REPLACEMENTS,\n  ...V177_MAYO_SPRITE_REPLACEMENTS,\n]);\nexport const V177_SPRITE_BYTES_DELTA = V177_SPRITE_REPLACEMENTS.reduce((sum, asset) => sum + asset.delta, 0);\n`);
+await writeFile(new URL('scripts/v177-sprite-repair-asset-contract.mjs', root), `import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-contract.mjs';\nimport { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';\nimport { V177_MAYO_SPRITE_REPLACEMENTS } from './v177-mayo-repair-asset-contract.mjs';\nimport { V177_REACTION_SPRITE_REPLACEMENTS } from './v177-reaction-repair-asset-contract.mjs';\n// Exact source-bound sprite fixes; no other published art changes.\nexport const V177_SPRITE_REPLACEMENTS = Object.freeze([\n${JSON.stringify(replacements, null, 2).slice(2, -2)},\n  ...V177_ANCHOR_SPRITE_REPLACEMENTS,\n  ...V177_GAIREN_SPRITE_REPLACEMENTS,\n  ...V177_MAYO_SPRITE_REPLACEMENTS,\n  ...V177_REACTION_SPRITE_REPLACEMENTS,\n]);\nexport const V177_SPRITE_BYTES_DELTA = V177_SPRITE_REPLACEMENTS.reduce((sum, asset) => sum + asset.delta, 0);\n`);
 return [...records];
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

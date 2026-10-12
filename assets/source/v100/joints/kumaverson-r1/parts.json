@@ -1387,7 +1387,7 @@
   "pelvisY": 235,
   "identityBinding": {
     "path": "/art/v060/characters/kumaverson-battle-v1.png",
-    "sourceSha256": "b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346",
+    "sourceSha256": "b1ae3aaa673e08fe842f654cea808e189c1cc0dc5bdaad7641e375abf9f7c4ed",
     "sourceRect": {
       "x": 480,
       "y": 0,
@@ -1702,5 +1702,10 @@
         405
       ]
     }
-  ]
+  ],
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346",
+    "sourceSha256": "b1ae3aaa673e08fe842f654cea808e189c1cc0dc5bdaad7641e375abf9f7c4ed",
+    "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
+  }
 }

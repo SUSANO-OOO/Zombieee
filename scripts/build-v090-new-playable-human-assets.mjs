@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
 import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
 import { buildV100SpriteRepairs } from "./build-v100-sprite-repairs.mjs";
+import { applyV177ReactionRepairs } from './v177-reaction-source-repairs.mjs';
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -299,6 +300,10 @@ async function buildBattleAtlas(character, posesPath) {
     await buildV100SpriteRepairs();
     decoded=await sharp(outputPath).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   }
+  if(character.kind==='mrs-chiha'){
+    await writeFile(outputPath,await applyV177ReactionRepairs(character.kind,await readFile(outputPath),root));
+    decoded=await sharp(outputPath).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  }
   const visible = {};
   for (let row = 0; row < 2; row += 1) {
     const direction = row === 0 ? "right" : "left";
@@ -333,7 +338,7 @@ for (const character of characters) {
   const posesPath = path.join(sourceDir, character.poses);
   await verifyHash(identityPath, character.identityHash);
   await verifyHash(posesPath, character.posesHash);
-  const cardResult = battleOnly?null:await buildPortraitAndCard(character, identityPath);
+  const cardResult = process.argv.includes('--with-identity')&&!battleOnly?await buildPortraitAndCard(character, identityPath):null;
   const battleResult = await buildBattleAtlas(character, posesPath);
   result[character.kind] = {
     ...(cardResult?{portrait:path.relative(root,cardResult.portraitPath),card:path.relative(root,cardResult.cardPath)}:{}),

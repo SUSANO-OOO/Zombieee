@@ -1,6 +1,7 @@
 import { V177_GAIREN_SPRITE_REPLACEMENTS } from './v177-gairen-repair-asset-contract.mjs';
 import { V177_ANCHOR_SPRITE_REPLACEMENTS } from './v177-anchor-repair-asset-contract.mjs';
 import { V177_MAYO_SPRITE_REPLACEMENTS } from './v177-mayo-repair-asset-contract.mjs';
+import { V177_REACTION_SPRITE_REPLACEMENTS } from './v177-reaction-repair-asset-contract.mjs';
 // Exact source-bound sprite fixes; no other published art changes.
 export const V177_SPRITE_REPLACEMENTS = Object.freeze([
   {
@@ -48,14 +49,15 @@ export const V177_SPRITE_REPLACEMENTS = Object.freeze([
     "next": {
       "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
       "sourcePath": "/pwa-optimized/art/v090/characters/miyamoto-musashi-battle-r1.webp",
-      "bytes": 1269282,
-      "hash": "sha256-f2d7d2c01c4bdb8f58a5cf341275d3ed983838b26374556707a49c47eb83724d",
+      "bytes": 1325976,
+      "hash": "sha256-01b7cc40d256041d99414552f4c922e5d267b72782c59bdf31f0ff658857caea",
       "criticality": "critical"
     },
-    "delta": -8278
+    "delta": 48416
   },
   ...V177_ANCHOR_SPRITE_REPLACEMENTS,
   ...V177_GAIREN_SPRITE_REPLACEMENTS,
   ...V177_MAYO_SPRITE_REPLACEMENTS,
+  ...V177_REACTION_SPRITE_REPLACEMENTS,
 ]);
 export const V177_SPRITE_BYTES_DELTA = V177_SPRITE_REPLACEMENTS.reduce((sum, asset) => sum + asset.delta, 0);

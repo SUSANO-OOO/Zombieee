@@ -40,11 +40,14 @@ test('both boss sheets remove enclosed white backgrounds without changing a sing
   }
 });
 
-test('Musashi loses the rear stray blade and adjacent cloak while the rest of his identity and poses stay byte-identical',async()=>{
+test('Musashi loses the rear stray blade and adjacent cloak while nonreaction paint stays byte-identical outside those masks',async()=>{
   const row=provenance.records.find(r=>r.name==='musashi');
   const before=await raw(new URL('musashi-published-1.0.3.png',sourceRoot)),after=await raw(new URL(`../public${row.path}`,import.meta.url));
   for(let y=0;y<896;y++)for(let x=0;x<3360;x++){
     const col=Math.floor(x/480),localX=y<448?x%480:479-x%480,localY=y%448;
+    // The separately source-bound hit/death recovery is checked against the
+    // original master and all preserved paint in v177-reaction-source-repairs.
+    if(col>=5)continue;
     const editable=col===1?inside(localX+.5,localY+.5,row.bladeMask):col===0&&inside(localX+.5,localY+.5,row.neighbourMask);
     if(editable)continue;const p=(y*3360+x)*4;
     assert.ok(after.data.subarray(p,p+4).equals(before.data.subarray(p,p+4)),`unrelated pixel ${x},${y}`);

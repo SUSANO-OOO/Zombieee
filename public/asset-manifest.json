@@ -55,8 +55,8 @@
     },
     {
       "path": "/art/v060/characters/kumaverson-battle-v1.png",
-      "bytes": 992400,
-      "hash": "sha256-cd072f9bc36253ed1aa4957b90159a2ff323b661251cc40918609ddfd256bd4e",
+      "bytes": 991162,
+      "hash": "sha256-81f61e3348e0c0ac5ac963c88620aa9e26189d74a37a10759f62931254ca2bff",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",
@@ -1047,8 +1047,8 @@
     },
     {
       "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
-      "bytes": 1269282,
-      "hash": "sha256-f2d7d2c01c4bdb8f58a5cf341275d3ed983838b26374556707a49c47eb83724d",
+      "bytes": 1325976,
+      "hash": "sha256-01b7cc40d256041d99414552f4c922e5d267b72782c59bdf31f0ff658857caea",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",
@@ -1056,8 +1056,8 @@
     },
     {
       "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
-      "bytes": 1158832,
-      "hash": "sha256-87dcbd829ab7735ffc41adbd0fae6b46bef9ffdc791b9824e50f12a5419a3b5b",
+      "bytes": 1214754,
+      "hash": "sha256-d94cf77a5cac8a38f05858d651ca87910f9a668157a50fce48f11cf0179a2696",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",
@@ -1074,8 +1074,8 @@
     },
     {
       "path": "/art/v090/characters/zakimiya-battle-r1.png",
-      "bytes": 870632,
-      "hash": "sha256-cd6413bbd543cb5b93abe10997a55f5a99a2b22b1500b0014882d8588b990d06",
+      "bytes": 945778,
+      "hash": "sha256-b829c617e2896a213b6ae96f4fd140dec315551d3e9ca28ac1afe65bb9f21fdd",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",

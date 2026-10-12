@@ -12,7 +12,7 @@
       "file": "identity-reference.png",
       "sha256": "19239e02cd4fc3ab615d0e0266df881674eb9ce5fd05c1e97e6ab88b8e424d27",
       "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
-      "sourceSha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+      "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
       "sourceRect": {
         "x": 480,
         "y": 0,
@@ -25,7 +25,7 @@
       "file": "original-attack-a.png",
       "sha256": "21a36551d2dcb1c2f00fa33471735424086f16aa94f01a85f89495cf3a6cd4f1",
       "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
-      "sourceSha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+      "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
       "sourceRect": {
         "x": 1440,
         "y": 0,
@@ -1949,7 +1949,7 @@
   "pelvisY": 181,
   "identityBinding": {
     "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
-    "sourceSha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+    "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
     "sourceRect": {
       "x": 480,
       "y": 0,
@@ -2309,5 +2309,10 @@
         394
       ]
     }
-  ]
+  ],
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+    "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
+    "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
+  }
 }
