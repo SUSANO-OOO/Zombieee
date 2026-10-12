@@ -30,7 +30,7 @@ for(const name of ["scripts/build-v090-kurome-prototype-assets.mjs","scripts/v17
   await fs.mkdir(path.dirname(target),{recursive:true});
   await fs.copyFile(path.join(root,name),target);
 }
-const log=execFileSync(process.execPath,["scripts/build-v090-kurome-prototype-assets.mjs"],{cwd:local,maxBuffer:2*1024*1024});
+const log=execFileSync(process.execPath,["scripts/build-v090-kurome-prototype-assets.mjs","--battle-only"],{cwd:local,maxBuffer:2*1024*1024});
 await fs.writeFile(path.join(stage,"kurome-builder.log"),log);
 const knife=(await regenerateMotionAtlases(path.join(stage,"knife"),MOTION_DEFINITIONS.filter(d=>d.name==="red-panther-knife")))[0];
 assert.equal(knife.metadata.sources.at(-1).repair.zeroRemovalSeeds.length,0);
@@ -74,6 +74,7 @@ for(const row of definitions){
 }
 const provenance={format:"nishijin-issue177-ground-matte-repairs",base:"e4fb2403e87989a4c6323da65eac1e269348d695",
   sourceGenerators:["scripts/build-v090-kurome-prototype-assets.mjs","scripts/v100-reviewed-motion-generator.mjs"],
+  kuromeBuilderMode:"--battle-only",
   records,nativeAllActionsAcceptance:false,normalCampaignAcceptance:false,physicalRecordingAcceptance:false};
 await fs.writeFile(path.join(root,"assets/source/v100/sprite-repairs/ground-matte-provenance.json"),JSON.stringify(provenance,null,2)+"\n");
 await fs.writeFile(path.join(root,"scripts/v177-ground-matte-repair-asset-contract.mjs"),

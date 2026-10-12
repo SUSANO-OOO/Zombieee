@@ -84,6 +84,7 @@ test("the two source-bound matte transports match the manifest with no unrelated
   const changed=current.assets.filter(a=>a.hash!==previousByPath.get(a.path)?.hash);
   assert.deepEqual(changed.map(a=>a.path).sort(),V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path).sort());
   const provenance=JSON.parse(await disk("assets/source/v100/sprite-repairs/ground-matte-provenance.json"));
+  assert.equal(provenance.kuromeBuilderMode,"--battle-only");
   for(const binding of V177_GROUND_MATTE_SPRITE_REPLACEMENTS){
     const actual=current.assets.find(a=>a.path===binding.path),source=provenance.records.find(a=>a.path===binding.path);
     for(const key of ["hash","bytes","sourcePath","criticality"])assert.equal(actual[key],binding.next[key]);
@@ -108,6 +109,9 @@ test("isolated original source builders reproduce both matte sprites, transports
   await fs.cp(path.join(root,"assets/source/v100/runtime/motion/red-panther-knife"),path.join(fixture,"assets/source/v100/runtime/motion/red-panther-knife"),{recursive:true});
   await fs.writeFile(path.join(fixture,"package.json"),JSON.stringify({type:"module"}));
   execFileSync(process.execPath,["scripts/build-v177-ground-matte-assets.mjs"],{cwd:fixture,timeout:60000,maxBuffer:2*1024*1024});
+  for(const name of ["kurome-identity-candidate-r1.webp","kurome-compendium-candidate-r1.webp"]){
+    await assert.rejects(fs.access(path.join(fixture,"output/v177-ground-matte-regeneration/kurome-root/public/art/v090-prototypes/bosses",name)),{code:"ENOENT"},"matte replay must not generate unchanged reference artwork");
+  }
   for(const kind of ["kurome","red-panther-knife"])await fs.cp(path.join(root,"assets/source/v100/joints/"+kind+"-r1"),path.join(fixture,"assets/source/v100/joints/"+kind+"-r1"),{recursive:true});
   const child=[
     "import fs from 'node:fs';",

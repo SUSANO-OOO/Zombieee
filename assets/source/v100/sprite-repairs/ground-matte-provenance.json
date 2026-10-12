@@ -5,6 +5,7 @@
     "scripts/build-v090-kurome-prototype-assets.mjs",
     "scripts/v100-reviewed-motion-generator.mjs"
   ],
+  "kuromeBuilderMode": "--battle-only",
   "records": [
     {
       "kind": "red-panther-knife",

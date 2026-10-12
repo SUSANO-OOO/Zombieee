@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { removeKuromeGroundMatte } from "./v177-kurome-ground-matte.mjs";
 
 const root = process.cwd();
+const battleOnly = process.argv.includes("--battle-only");
 const sourceDir = path.join(root, "assets/source/v090-prototypes/bosses");
 const publicDir = path.join(root, "public/art/v090-prototypes/bosses");
 const source = Object.freeze({
@@ -269,21 +270,20 @@ async function buildBattleAtlas(posePath) {
   return { atlasPath, visible: await visibleRects(atlasPath) };
 }
 
-const identityPath = await verifySource(source.identity);
+const identityPath = battleOnly ? null : await verifySource(source.identity);
 const posePath = await verifySource(source.poses);
-const reference = await buildReferenceAssets(identityPath);
+const reference = identityPath ? await buildReferenceAssets(identityPath) : null;
 const battle = await buildBattleAtlas(posePath);
 const fixedOutputs = await Promise.all([
-  reference.referencePath,
-  reference.compendiumPath,
+  ...(reference ? [reference.referencePath, reference.compendiumPath] : []),
   battle.atlasPath,
 ].map(verifyGenerated));
 
 console.log(JSON.stringify({
-  message: "Built the producer-approved Kurome boss reference assets.",
+  message: battleOnly ? "Built the source-bound Kurome battle atlas only." : "Built the producer-approved Kurome boss reference assets.",
   result: {
-    identity: path.relative(root, reference.referencePath),
-    compendium: path.relative(root, reference.compendiumPath),
+    identity: reference ? path.relative(root, reference.referencePath) : null,
+    compendium: reference ? path.relative(root, reference.compendiumPath) : null,
     battle: path.relative(root, battle.atlasPath),
     visible: battle.visible,
     fixedOutputs,
