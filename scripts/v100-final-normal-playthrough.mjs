@@ -12,6 +12,8 @@ import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -24,7 +26,7 @@ const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
 assert.equal(git("diff","--name-only"),"","Freeze tracked product and driver changes before the final route");
 assert.equal(git("diff","--cached","--name-only"),"");
 report.source={head:git("rev-parse","HEAD"),tree:git("rev-parse","HEAD^{tree}")};
-report.driver=await Promise.all(["scripts/v100-final-normal-playthrough.mjs","scripts/v100-normal-tactical-input.mjs","scripts/ordered-native-pointer.mjs"].map(async file=>({file,sha256:createHash("sha256").update(await readFile(file)).digest("hex")})));
+report.driver=await Promise.all(["scripts/v100-final-normal-playthrough.mjs","scripts/v100-normal-tactical-input.mjs","scripts/ordered-native-pointer.mjs","scripts/pwa-gate-qa.mjs","scripts/v100-title-qa-entry.mjs"].map(async file=>({file,sha256:createHash("sha256").update(await readFile(file)).digest("hex")})));
 const resumeDir = process.env.V100_NORMAL_PLAY_RESUME_DIR && path.resolve(process.env.V100_NORMAL_PLAY_RESUME_DIR);
 let restoredStorage;
 if (resumeDir) {
@@ -169,7 +171,9 @@ async function acceptResult(record) {
   await uiClick(button("次の場面へ"));
 }
 try {
- await page.goto(origin.href);await button("ブラウザで遊ぶ").click();
+ await page.goto(origin.href);
+ await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen"});
+ await enterV100FromTitle(page,{timeout:15000});
  if (!resumeDir) {
    await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新👩‍🚒確認");
    await uiClick(button("この名前でステージを始める"));

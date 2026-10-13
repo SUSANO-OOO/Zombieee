@@ -13,6 +13,8 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
 import { normalCampaignDeploymentCount } from "./v100-normal-play-contract.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -230,7 +232,9 @@ async function acceptResult(record) {
   await uiClick(button("次の場面へ"));
 }
 try {
- await page.goto(origin.href);await button("ブラウザで遊ぶ").click();
+ await page.goto(origin.href);
+ await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen"});
+ await enterV100FromTitle(page,{timeout:15000});
  if (!resumeDir) {
    await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新通し確認");
    await uiClick(button("この名前でステージを始める"));
