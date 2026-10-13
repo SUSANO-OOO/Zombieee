@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {spriteKinds} from '../app/spriteManifest.js';
-import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
+import {animationClipFor,PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
@@ -177,10 +177,10 @@ try{
         const proof=await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'defeat'}),form);
         const evidence={form,proof,status:'pending'};row.reactions.push(evidence);
         const observe=()=>page.evaluate(id=>{
-          const qa=window.__ASHFALL_BATTLE_QA__,s=qa.getSnapshot();
+          const qa=window.__ASHFALL_BATTLE_QA__,s=qa.getSnapshot(),combat=qa.getPhaseGCombatSnapshot();
           return {at:performance.now(),simulationTime:s.time,running:s.running,paused:s.paused,
             route:location.pathname,visible:document.visibilityState==='visible',
-            body:qa.getEnemyFacingRuntimeAudit(id),effects:qa.getPhaseGCombatSnapshot().combatGore};
+            body:qa.getEnemyFacingRuntimeAudit(id),effects:combat.combatGore,receipts:combat.manualAbilityReceipts};
         },proof.fighterId);
         try{
           // The pending incoming hit stays held until this exact living body
@@ -201,8 +201,21 @@ try{
             return Boolean(ready);
           },proof);
           evidence.after=await observe();
-          evidence.summary=assertV177ReactionRender(evidence);evidence.status='passed';
           await page.screenshot({path:`${out}/${width}x${height}-reaction-${form}.png`});
+          await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(false));
+          await page.waitForFunction(({fighterId,outcome,deathSeconds})=>{
+            const qa=window.__ASHFALL_BATTLE_QA__,a=qa.getEnemyFacingRuntimeAudit(fighterId);
+            const settled=a.corpseRenderHistory.slice(-3);
+            const completed=qa.getPhaseGCombatSnapshot().manualAbilityReceipts?.some(r=>r.ownerId===fighterId&&r.eventType==='retreat-complete');
+            const ready=outcome==='retreat'
+              ? !a.fighter&&!a.corpse&&completed
+              : a.corpse?.deathAge>=deathSeconds&&settled.length===3&&settled.every(r=>r.fallProgress===1);
+            if(ready)qa.setEnemyVfxProofPaused(true);
+            return Boolean(ready);
+          },{fighterId:proof.fighterId,outcome:proof.outcome,deathSeconds:animationClipFor(form,'death').durationSeconds});
+          evidence.late=await observe();
+          evidence.summary=assertV177ReactionRender(evidence);evidence.status='passed';
+          await page.screenshot({path:`${out}/${width}x${height}-reaction-settled-${form}.png`});
         }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
         finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
       }

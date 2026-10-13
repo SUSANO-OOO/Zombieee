@@ -4098,6 +4098,8 @@ type FighterRenderAudit = {
   poseScaleX?: number;
   poseScaleY?: number;
   bodyScale?: number;
+  fallProgress?: number;
+  rotationRadians?: number;
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
   renderKind?: string;
@@ -8492,6 +8494,20 @@ function drawWorld(
       const width = authoredSize.w * compactScale * depthScale * bodyScale;
       const height = authoredSize.h * compactScale * depthScale * bodyScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
+      const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
+      const dyingProgress = corpse.side === "zombie"
+        ? corpse.state === "dying" ? Math.min(1, corpse.phaseElapsed / timing.dyingSeconds) : 1
+        : g.definition.missionConfig.v100StageNumber
+          ? Math.min(1, Math.max(0, corpse.deathAge ?? 0) / animationClipFor(corpseRenderKind, "death").durationSeconds)
+          : 1;
+      const fallProgress = corpse.side === "human"
+        ? dyingProgress * dyingProgress * (3 - 2 * dyingProgress) : dyingProgress;
+      const ashingProgress = corpse.state === "ashing" ? Math.min(1, corpse.phaseElapsed / timing.ashingSeconds) : 0;
+      const fallAngle = authoredDeathPose ? 0
+        : corpse.side === "human" ? -1.18
+          : corpse.deathClass === "boss" ? .68
+            : corpse.deathClass === "heavy" ? .9 : 1.08;
+      const rotationRadians = fallDirection * fallAngle * fallProgress + (allyCue?.postureJitter ?? 0);
       if (fighterRenderAuditEnabled) {
         recordCorpseRenderAudit(corpse.id, {
           drawCount: (corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount ?? 0) + 1,
@@ -8514,25 +8530,18 @@ function drawWorld(
           renderWidth: width,
           renderHeight: height,
           bodyScale,
+          fallProgress,
+          rotationRadians,
           groundAnchor: 1,
           actualXDelta: 0,
         });
       }
-      const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
-      const dyingProgress = corpse.side === "zombie"
-        ? corpse.state === "dying" ? Math.min(1, corpse.phaseElapsed / timing.dyingSeconds) : 1
-        : 1;
-      const ashingProgress = corpse.state === "ashing" ? Math.min(1, corpse.phaseElapsed / timing.ashingSeconds) : 0;
       ctx.globalAlpha = corpse.state === "ash" ? Math.min(.55, corpse.life / 2)
         : corpse.state === "burning" ? .72
           : corpse.state === "ashing" ? Math.max(.08, .82 * (1 - ashingProgress))
             : corpse.state === "dying" ? .96 : .82;
       ctx.translate(corpse.x + (allyCue?.tremorX ?? 0), corpse.y + 5 + (allyCue?.tremorY ?? 0));
-      const fallAngle = authoredDeathPose ? 0
-        : corpse.side === "human" ? -1.18
-          : corpse.deathClass === "boss" ? .68
-            : corpse.deathClass === "heavy" ? .9 : 1.08;
-      ctx.rotate(fallDirection * fallAngle * dyingProgress + (allyCue?.postureJitter ?? 0));
+      ctx.rotate(rotationRadians);
       if (corpse.state === "ashing") {
         ctx.filter = `grayscale(${Math.round(ashingProgress * 100)}%) sepia(${Math.round(ashingProgress * 70)}%) brightness(${1 - ashingProgress * .35})`;
         ctx.scale(1 - ashingProgress * .18, 1 - ashingProgress * .48);
