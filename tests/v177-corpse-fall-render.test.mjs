@@ -13,7 +13,12 @@ const parsed = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.La
 let statements, rotation, translation;
 function visit(node) {
   if (ts.isForOfStatement(node) && ts.isBlock(node.statement) && node.expression.getText(parsed) === 'g.corpses') {
-    const branch = node.statement.statements.find(s => ts.isIfStatement(s) && s.expression.getText(parsed).startsWith('sprite?.complete'));
+    const spriteBranch=s=>{
+      if(!ts.isIfStatement(s))return null;
+      if(s.expression.getText(parsed).startsWith('sprite?.complete'))return s;
+      return s.elseStatement?spriteBranch(s.elseStatement):null;
+    };
+    const branch = node.statement.statements.map(spriteBranch).find(Boolean);
     if (branch) {
       const names = new Set(['authoredDeathPose', 'timing', 'dyingProgress', 'ashingProgress', 'fallAngle', 'fallProgress', 'corpseFallingPose', 'rotationRadians', 'groundOffsetY']);
       statements = branch.thenStatement.statements.filter(s => ts.isVariableStatement(s)
@@ -147,4 +152,12 @@ test('actual native Mayo completion polling requires the removed original actor 
   assert.deepEqual(lateResult({ ...removed, fighter: { id: 7 } }, [receipt], 'retreat'), { ready: false, pauses: [] });
   assert.deepEqual(lateResult({ ...removed, corpse: { id: 7 } }, [receipt], 'retreat'), { ready: false, pauses: [] });
   assert.deepEqual(lateResult(removed, [receipt], 'retreat'), { ready: true, pauses: [true] });
+});
+
+test('native late polling also waits for an actually landed joint-owned fragment',()=>{
+  const body=error=>({fighter:null,corpse:{deathAge:.6},corpseRenderHistory:Array.from({length:3},()=>({
+    fallProgress:1,corpseJointPose:true,corpseJointOwnedParts:['head'],corpseJointFragmentGroundError:error,
+  }))});
+  for(const error of [undefined,NaN,-.1,.1])assert.deepEqual(lateResult(body(error)),{ready:false,pauses:[]});
+  assert.deepEqual(lateResult(body(0)),{ready:true,pauses:[true]});
 });

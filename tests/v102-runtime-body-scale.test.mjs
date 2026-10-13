@@ -19,7 +19,12 @@ const declarations=new Map();let corpseDeclarations;
 function visit(node){
  if(ts.isFunctionDeclaration(node))declarations.set(node.name?.text,node.getText(ast));
  if(ts.isForOfStatement(node)&&ts.isBlock(node.statement)&&node.expression.getText(ast)==='g.corpses'){
-  const spriteBranch=node.statement.statements.find(s=>ts.isIfStatement(s)&&s.expression.getText(ast).startsWith('sprite?.complete'));
+  const findSpriteBranch=s=>{
+   if(!ts.isIfStatement(s))return null;
+   if(s.expression.getText(ast).startsWith('sprite?.complete'))return s;
+   return s.elseStatement?findSpriteBranch(s.elseStatement):null;
+  };
+  const spriteBranch=node.statement.statements.map(findSpriteBranch).find(Boolean);
   if(spriteBranch)corpseDeclarations=spriteBranch.thenStatement.statements.filter(s=>ts.isVariableStatement(s)).slice(0,7).map(s=>s.getText(ast)).join('\n');
  }
  ts.forEachChild(node,visit);
@@ -35,7 +40,7 @@ function fixture(viewport,depth){
  return vm.runInNewContext(code,globals);
 }
 
-test('actual V1 corpse sizing keeps every original body scale, viewport crop and source-pixel scale',()=>{
+test('actual fallback V1 corpse sizing keeps every original body scale, viewport crop and source-pixel scale',()=>{
  for(const viewport of Object.values(STAGE_VIEWPORT_IDS))for(const depth of [.8,1]){
   const f=fixture(viewport,depth);
   for(const kind of spriteKinds)for(const side of ['human','zombie']){

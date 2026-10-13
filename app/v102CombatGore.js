@@ -162,6 +162,12 @@ export function beginV102CorpseSever(ctx,plan){
   if(!plan)return;ctx.save();ctx.beginPath();ctx.rect(-plan.width,-plan.height,plan.width*2,plan.height*2);
   trace(ctx,plan.outline);ctx.clip('evenodd');
 }
+// Articulated corpses keep the same wound paint and seed while their actual
+// owned head/hand/weapon parts are drawn by the joint renderer.
+export function drawV102JointCorpseWound(ctx,plan,x,y,radius,objects={},fragment=false){
+  if(!plan)return;
+  drawWound(ctx,plan.seed+(fragment?4:0),x,y,radius,Math.max(1.5,radius*.55),objects['v102-flesh-wound']);
+}
 export function endV102CorpseSever(ctx,plan,sprite,frame,objects={}){
   if(!plan)return;ctx.restore();const r=plan.local,p=plan.part;
   drawWound(ctx,plan.seed,plan.headCut?r.x+r.w*.5:r.x+r.w*.06,plan.headCut?r.y+r.h*.97:r.y+r.h*.5,

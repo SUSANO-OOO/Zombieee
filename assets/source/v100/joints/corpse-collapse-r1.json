@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "source": "Source-bound rigid transforms of approved original joint parts; no new paint or identity",
+  "forms": {
+    "takuya": {
+      "atlasPath": "/art/v100/joints/takuya-r1.webp",
+      "atlasSha256": "e4ffc7c020cf80a06d1cf0ebc5cdc7f7bb82a684c1792c0b3ca1533b4e9352fc",
+      "falls": {
+        "1": [
+          {
+            "bone": "weapon-0",
+            "dx": -12,
+            "dy": -72,
+            "angle": 1.208509122536736
+          },
+          {
+            "bone": "leg-1-foot",
+            "dx": -48,
+            "dy": 0,
+            "angle": 0
+          }
+        ],
+        "-1": [
+          {
+            "bone": "weapon-0",
+            "dx": 48,
+            "dy": -72,
+            "angle": 1.208509122536736
+          },
+          {
+            "bone": "leg-0-foot",
+            "dx": 24,
+            "dy": 0,
+            "angle": 0
+          }
+        ]
+      },
+      "severedParts": {
+        "head": [
+          "head"
+        ],
+        "impact": [
+          "weapon-cable",
+          "weapon-and-hands"
+        ]
+      }
+    },
+    "mugarian-president-mutated": {
+      "atlasPath": "/art/v100/joints/mugarian-president-mutated-r1.webp",
+      "atlasSha256": "2d7843e0e191c0bd602c818d8531c6a37df9f6d9e00dd6e193aa3ea2d3aa50f7",
+      "falls": {
+        "1": [
+          {
+            "bone": "weapon-0",
+            "dx": -60,
+            "dy": 0,
+            "angle": 6.212444107171089
+          },
+          {
+            "bone": "leg-0-foot",
+            "dx": -24,
+            "dy": 0,
+            "angle": 0
+          },
+          {
+            "bone": "leg-1-foot",
+            "dx": -12,
+            "dy": 0,
+            "angle": 0
+          }
+        ],
+        "-1": [
+          {
+            "bone": "arm-0-hand",
+            "dx": 108,
+            "dy": -72,
+            "angle": 0
+          },
+          {
+            "bone": "arm-1-hand",
+            "dx": 36,
+            "dy": 12,
+            "angle": 0
+          }
+        ]
+      },
+      "severedParts": {
+        "head": [
+          "head"
+        ],
+        "impact": [
+          "giant-claw-hand"
+        ]
+      }
+    },
+    "takuya-omega": {
+      "atlasPath": "/art/v100/joints/takuya-omega-r1.webp",
+      "atlasSha256": "a4e8eca5c5494e093ecc803c4a1a9b2ddc227fb3249f4bc7726f945b59301a3f",
+      "falls": {
+        "1": [
+          {
+            "bone": "weapon-0",
+            "dx": -72,
+            "dy": -12,
+            "angle": 6.1733311446699775
+          },
+          {
+            "bone": "leg-0-foot",
+            "dx": -12,
+            "dy": 0,
+            "angle": 0
+          }
+        ],
+        "-1": [
+          {
+            "bone": "arm-0-hand",
+            "dx": 108,
+            "dy": -24,
+            "angle": 0
+          },
+          {
+            "bone": "leg-1-foot",
+            "dx": 0,
+            "dy": 12,
+            "angle": 0
+          }
+        ]
+      },
+      "severedParts": {
+        "head": [
+          "head"
+        ],
+        "impact": [
+          "giant-hand"
+        ]
+      }
+    }
+  }
+}

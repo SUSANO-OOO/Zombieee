@@ -173,6 +173,52 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   return out;
 }
 
+// Keep the actual upper/lower owners when a rendered live pose becomes a
+// corpse. Resolving to a neutral pose first would visibly reset the feet or
+// weapon. These snapshots are renderer data, never campaign/save data.
+export function v177CaptureJointPose(kind,plan) {
+  const atlas=V177_JOINT_ATLASES[kind];
+  if(!atlas || atlas.type!=='rigid-parts' || !plan)return null;
+  const lower={},upper={};
+  for(const bone of Object.keys(atlas.poses[0])){
+    lower[bone]=[...jointMatrix(new Float64Array(6),atlas,plan,bone,false)];
+    upper[bone]=[...jointMatrix(new Float64Array(6),atlas,plan,bone,true)];
+  }
+  return {lower,upper};
+}
+
+// The existing rigid interpolation and fixed-length IK own this transition.
+// In particular, the lower pelvis is not replaced by the attacking torso.
+export function v177InterpolateCapturedJointPose(kind,initial,finalPose,progress) {
+  const source=V177_JOINT_ATLASES[kind];
+  if(!source || source.type!=='rigid-parts' || !initial || !finalPose)return null;
+  const atlas={...source,poses:[initial.lower,initial.upper,finalPose]},p=clamp(progress);
+  const plan={lowerIndex:0,lowerNextIndex:2,lowerBlend:p,
+    upperIndex:1,upperNextIndex:2,upperBlend:p,attackPhase:null,upperOffsetY:0};
+  const scratch=[new Float64Array(6),new Float64Array(6)];
+  return atlas.parts.map(part=>[...jointMatrix(new Float64Array(6),atlas,plan,part.bone,part.upper,scratch)]);
+}
+
+// Draw each original atlas part once. A severed group can be drawn separately
+// from the remaining body without copying a piece from an unrelated raw frame.
+export function drawV177ResolvedJointPose(ctx,image,kind,matrices,x,y,width,height,{omitParts,onlyParts}={}) {
+  const atlas=V177_JOINT_ATLASES[kind];
+  if(!atlas || atlas.type!=='rigid-parts' || atlas.mouth || !image?.naturalWidth
+    || matrices?.length!==atlas.parts.length)return false;
+  const selected=atlas.parts.map((part,index)=>({part,matrix:matrices[index]}))
+    .filter(({part})=>(!onlyParts || onlyParts.has(part.name)) && !omitParts?.has(part.name));
+  if(!selected.length || selected.some(({matrix})=>matrix?.length!==6 || !matrix.every(Number.isFinite)))return false;
+  const reference=atlas.referenceFrame;
+  ctx.save();if(atlas.paintStyle==='pixel-art')ctx.imageSmoothingEnabled=false;
+  ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
+  if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
+  for(const {part,matrix}of selected){
+    const s=part.source,d=part.destination;
+    ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
+  }
+  ctx.restore();return true;
+}
+
 export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose,x,y,bob=0,depthScale=1}) {
   const atlas=V177_JOINT_ATLASES[kind];
   if(!atlas || !plan || plan.attackPhase===null)return null;

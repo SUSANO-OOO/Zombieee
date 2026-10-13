@@ -3,6 +3,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
+import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
@@ -4106,6 +4107,16 @@ type FighterRenderAudit = {
   corpsePoseProgress?: number;
   corpseGroundOffsetY?: number;
   corpseGroundSupportY?: number;
+  corpseJointPose?: boolean;
+  jointSourceReference?: { x: number; y: number; w: number; h: number };
+  corpseJointParts?: { name: string; sourceRect: { x: number; y: number; w: number; h: number }; matrix: number[] }[];
+  corpseJointFragmentParts?: { name: string; sourceRect: { x: number; y: number; w: number; h: number }; matrix: number[] }[];
+  corpseJointAnchor?: { x: number; y: number };
+  corpseJointRootMatrix?: number[];
+  corpseJointFragmentMatrix?: number[] | null;
+  corpseJointOwnedParts?: string[];
+  corpseJointRoot?: { x: number; y: number; angle: number; scaleX: number; scaleY: number; flipX: boolean };
+  corpseJointFragmentGroundError?: number | null;
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
   renderKind?: string;
@@ -4568,6 +4579,10 @@ function drawSpriteFighter(
     ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h)
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
+  if(options.v100AuthoredPresentation&&options.world)rememberV177CorpseJointPose(options.world,f.id,renderKind,
+    jointPose&&drewArticulatedWalk?jointPose:null,{frame,width:size.w,height:size.h,
+      x:f.x+pose.offsetX*depthScale*facingSign,y:f.y-bob+pose.offsetY*depthScale,
+      angle:pose.rotationRadians*facingSign,scaleX:pose.scaleX,scaleY:pose.scaleY,flipX:frame.flipX});
   for (const slice of drewArticulatedWalk ? [] : drawSlices) {
     (options.smoothMinification ? v100ImageSampler.draw.bind(null,ctx) : ctx.drawImage.bind(ctx))(
       sprite,
@@ -8481,14 +8496,52 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber)drawV102GoreGround(ctx,g);
+  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
     ctx.save();
     const corpseRenderKind = bossRenderKind(corpse);
     const sprite = sprites[corpseRenderKind];
-    if (sprite?.complete && sprite.naturalWidth) {
+    const jointTiming=ENEMY_DEATH_CONFIG.timings[corpse.deathClass??"normal"];
+    const jointFallProgress=corpse.state==="dying"?Math.min(1,corpse.phaseElapsed/jointTiming.dyingSeconds):1;
+    const jointAshProgress=corpse.state==="ashing"?Math.min(1,corpse.phaseElapsed/jointTiming.ashingSeconds):0;
+    const jointCorpse=g.definition.missionConfig.v100StageNumber
+      ? v177CorpseJointPresentation(g,corpse,corpseRenderKind,{progress:jointFallProgress,fallDirection,
+        ashScaleX:1-jointAshProgress*.18,ashScaleY:1-jointAshProgress*.48}) : null;
+    const jointCorpseImage=jointCorpse?sprites[jointCorpse.state.atlas.key]:null;
+    let drewJointCorpse=false;
+    if(jointCorpse&&jointCorpseImage?.complete&&jointCorpseImage.naturalWidth){
+      ctx.globalAlpha=corpse.state==="ash"?Math.min(.55,corpse.life/2):corpse.state==="burning"?.72
+        :corpse.state==="ashing"?Math.max(.08,.82*(1-jointAshProgress)):corpse.state==="dying"?.96:.82;
+      if(corpse.state==="ashing")ctx.filter=`grayscale(${Math.round(jointAshProgress*100)}%) sepia(${Math.round(jointAshProgress*70)}%) brightness(${1-jointAshProgress*.35})`;
+      drewJointCorpse=drawV177CorpseJointPresentation(ctx,jointCorpseImage,jointCorpse,stageObjects);
+    }
+    if(drewJointCorpse&&jointCorpse&&jointCorpseImage){
+      if(fighterRenderAuditEnabled){
+        const state=jointCorpse.state,reference=state.atlas.referenceFrame;
+        recordCorpseRenderAudit(corpse.id,{
+          drawCount:(corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount??0)+1,renderSequence:++fighterRenderSequence,
+          assetReady:true,x:corpse.x,y:corpse.y,renderKind:corpseRenderKind,spritePath:state.atlas.path,
+          spriteState:"death",requestedState:"death",resolvedState:"joint-death",poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,
+          direction:state.initialRoot.flipX?"left":"right",sourceRow:0,
+          sourceRect:{x:0,y:0,w:jointCorpseImage.naturalWidth,h:jointCorpseImage.naturalHeight},
+          jointSourceReference:{x:0,y:0,w:reference.width,h:reference.height},
+          frameFlipX:state.initialRoot.flipX,renderWidth:state.width,renderHeight:state.height,
+          fallProgress:jointFallProgress,rotationRadians:jointCorpse.root.angle,corpsePoseSourceBound:true,
+          corpsePoseSourceSha256:state.data.atlasSha256,corpsePoseProgress:jointCorpse.progress,
+          corpseGroundOffsetY:jointCorpse.root.y-(corpse.y+5),corpseGroundSupportY:jointCorpse.groundSupportY,
+          groundAnchor:1,actualXDelta:0,jointAtlasPath:state.atlas.path,corpseJointPose:true,
+          corpseJointParts:state.atlas.parts.flatMap((part: {name:string;source:{x:number;y:number;w:number;h:number}},index:number)=>state.owned?.has(part.name)?[]:[{name:part.name,sourceRect:{...part.source},matrix:[...jointCorpse.matrices[index]]}]),
+          corpseJointFragmentParts:state.atlas.parts.flatMap((part: {name:string;source:{x:number;y:number;w:number;h:number}},index:number)=>state.owned?.has(part.name)?[{name:part.name,sourceRect:{...part.source},matrix:[...state.initialMatrices[index]]}]:[]),
+          corpseJointAnchor:{x:state.frame.anchorX,y:state.frame.anchorY},corpseJointRootMatrix:[...jointCorpse.matrix],
+          corpseJointFragmentMatrix:jointCorpse.fragment?[...jointCorpse.fragment.matrix]:null,
+          corpseJointOwnedParts:state.owned?[...state.owned]:[],corpseJointRoot:{...jointCorpse.root},
+          corpseJointFragmentGroundError:jointCorpse.fragment?.groundError??null,
+        });
+      }
+      ctx.filter="none";
+    } else if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
       const authoredSize = g.definition.missionConfig.v100StageNumber
         ? v102BattleDisplaySize(corpseRenderKind,frame,spriteDisplaySize(corpseRenderKind))
@@ -12782,7 +12835,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
-      prepareV177ContinuousActorProof: ({form,phase}: {form:string;phase:"move"|"attack"|"defeat"}) => {
+      prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"defeat";sourceKind?:UnitKind}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
           createAnimationRuntime:createCombatAnimationRuntime,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
         const identity=v177ProofFormIdentity(form,proofCatalog),g=gameRef.current,lane:Lane=1;
@@ -12798,8 +12851,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         let target:Fighter|undefined;
         if(identity.side==="human")target=spawnEnemy(g,"walker",lane);
         else{
-          if(!spawnHuman(g,"guardian",false))throw new Error(`Continuous target unavailable: ${form}`);
-          target=g.fighters.find(f=>f.side==="human");
+          if(!spawnHuman(g,sourceKind,false))throw new Error(`Continuous target unavailable: ${form}`);
+          target=g.fighters.find(f=>f.side==="human"&&f.kind===sourceKind);
         }
         if(!actor||!target)throw new Error(`Continuous actor pair unavailable: ${form}`);
         const reactionProof=phase==="defeat"

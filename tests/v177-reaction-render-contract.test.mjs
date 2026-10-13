@@ -6,10 +6,14 @@ import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {v102CorpseFallingPose} from '../app/v102CorpsePose.js';
-const fixture=form=>{
+import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
+import {jointCorpseRenderFixture} from './helpers/v177-corpse-joint-render.mjs';
+const fixture=(form,{style=null}={})=>{
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
   const protectedBody=identity.kind==='mayo-chan',direction=identity.side==='human'?'right':'left';
+  const jointFixture=V177_CORPSE_JOINT_DATA[form]?jointCorpseRenderFixture(form,{kind:identity.kind,style}):null;
   const paint=(state,sequence)=>{
+    if(state==='death'&&jointFixture)return jointFixture.render(sequence>=20?1:.2,sequence).receipt;
     const frame=spriteFrameFor(form,state==='retreat'?'walk-a':state,direction);
     const fallProgress=state==='death'?(sequence>=20?1:.2):undefined;
     const pose=state==='death'?v102CorpseFallingPose(form,frame,frame.sourceRect.w*.2,frame.sourceRect.h*.2,-1,fallProgress):null;
@@ -30,7 +34,7 @@ const fixture=form=>{
     : {fighter:null,corpse:{id:7,kind:identity.kind,side:identity.side,v100TwinPart:identity.v100TwinPart,deathAge:.05,variant:0},renderHistory:[live],
       corpseRenderHistory:[paint('death',10),paint('death',11),paint('death',12)]};
   const after={at:1000,simulationTime:5,running:true,paused:true,route:'/v100',visible:true,body,
-    effects:protectedBody?empty:{impacts:[{targetId:7,lethal:true}],pools:[{targetId:7}],wounds:[{targetId:7,lethal:true}],pending:false}};
+    effects:protectedBody?empty:jointFixture?jointFixture.effects():{impacts:[{targetId:7,lethal:true}],pools:[{targetId:7}],wounds:[{targetId:7,lethal:true}],pending:false}};
   const late=structuredClone(after);late.at=2000;late.simulationTime=6;
   if(protectedBody){
     late.body.fighter=null;
@@ -95,5 +99,27 @@ test('a mid-fall boss source key cannot pass a completed corpse without source-b
     e=>{for(const r of e.late.body.corpseRenderHistory)delete r.corpsePoseSourceBound;},
     e=>{for(const r of e.late.body.corpseRenderHistory)r.corpseGroundOffsetY=(r.corpseGroundOffsetY??0)+1;}]){
     const evidence=fixture('takuya-omega');mutate(evidence);assert.throws(()=>assertV177ReactionRender(evidence));
+  }
+});
+
+test('actual source-loop joint corpses retain original cut and impact parts through their landed outcome',()=>{
+  for(const form of Object.keys(V177_CORPSE_JOINT_DATA))for(const style of ['cut','blast','crush']){
+    const evidence=fixture(form,{style});assert.equal(assertV177ReactionRender(evidence).form,form);
+    assert.ok(evidence.late.body.corpseRenderHistory.at(-1).corpseJointFragmentParts.length>0);
+  }
+});
+
+test('wrong joint sources, duplicate or absent parts, detached intact joints and floating fragments cannot pass',()=>{
+  for(const mutate of [
+    e=>{e.after.body.corpseRenderHistory[0].corpsePoseSourceSha256='wrong';},
+    e=>{e.after.body.corpseRenderHistory[0].corpseJointParts[0].sourceRect.x++;},
+    e=>{e.after.body.corpseRenderHistory[0].corpseJointParts.push(e.after.body.corpseRenderHistory[0].corpseJointParts[0]);},
+    e=>{e.after.body.corpseRenderHistory[0].corpseJointParts.pop();},
+    e=>{e.after.body.corpseRenderHistory[0].corpseJointParts.find(p=>p.name==='near-forearm').matrix[4]+=1;},
+    e=>{e.late.body.corpseRenderHistory.at(-1).corpseJointFragmentMatrix[5]-=1;},
+    e=>{e.late.body.corpseRenderHistory.at(-1).jointSourceReference.w++;},
+    e=>{e.late.body.corpseRenderHistory.at(-1).corpseJointOwnedParts=[];},
+  ]){
+    const evidence=fixture('takuya',{style:'cut'});mutate(evidence);assert.throws(()=>assertV177ReactionRender(evidence));
   }
 });

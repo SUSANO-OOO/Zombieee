@@ -5,6 +5,60 @@ import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {v102CorpseFallingPose,v102HasFallingDeathFrame} from '../app/v102CorpsePose.js';
+import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
+
+const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
+export function assertJointCorpsePaint(form,receipt,corpse,wound,settled=false){
+  const atlas=V177_JOINT_ATLASES[form],data=V177_CORPSE_JOINT_DATA[form],reference=atlas.referenceFrame;
+  assert.equal(receipt.corpseJointPose,true);assert.equal(receipt.corpsePoseSourceBound,true);
+  assert.equal(receipt.corpsePoseSourceSha256,data.atlasSha256);assert.equal(receipt.spritePath,data.atlasPath);
+  const owned=wound?.severed?data.severedParts[wound.style==='cut'||wound.style==='saw'?'head':'impact']:[];
+  assert.deepEqual(receipt.corpseJointOwnedParts,owned);
+  const body=receipt.corpseJointParts,fragment=receipt.corpseJointFragmentParts;
+  assert.ok(Array.isArray(body)&&Array.isArray(fragment));
+  assert.deepEqual(body.map(p=>p.name),atlas.parts.filter(p=>!owned.includes(p.name)).map(p=>p.name));
+  assert.deepEqual(fragment.map(p=>p.name),atlas.parts.filter(p=>owned.includes(p.name)).map(p=>p.name));
+  const all=[...body,...fragment];assert.equal(all.length,atlas.parts.length);assert.equal(new Set(all.map(p=>p.name)).size,all.length);
+  for(const p of all){
+    const original=atlas.parts.find(a=>a.name===p.name);assert.deepEqual(p.sourceRect,original.source);
+    assert.equal(p.matrix.length,6);assert.ok(p.matrix.every(Number.isFinite));
+    assert.ok(Math.abs(Math.hypot(p.matrix[0],p.matrix[1])-1)<.001);assert.ok(Math.abs(Math.hypot(p.matrix[2],p.matrix[3])-1)<.001);
+    assert.ok(Math.abs(p.matrix[0]*p.matrix[2]+p.matrix[1]*p.matrix[3])<.001,'a corpse part cannot shear');
+  }
+  const root=receipt.corpseJointRoot,m=receipt.corpseJointRootMatrix;
+  assert.ok(root&&m?.length===6&&m.every(Number.isFinite));assert.equal(root.angle,receipt.rotationRadians);
+  const c=Math.cos(root.angle),s=Math.sin(root.angle),sx=root.scaleX*(root.flipX?-1:1);
+  const expected=[c*sx,s*sx,-s*root.scaleY,c*root.scaleY,root.x,root.y];
+  for(let i=0;i<6;i++)assert.ok(Math.abs(m[i]-expected[i])<1e-8,'the recorded root must be the actual applied transform');
+  assert.equal(root.flipX,receipt.frameFlipX);
+  const anchor=receipt.corpseJointAnchor;assert.ok(anchor&&Number.isFinite(anchor.x)&&Number.isFinite(anchor.y));
+  function support(parts,matrix){
+    assert.equal(matrix?.length,6);assert.ok(matrix.every(Number.isFinite));let max=-Infinity;
+    for(const part of parts){const shape=data.outlines.find(p=>p.name===part.name);
+      for(const p of shape.hull){const q=transform(part.matrix,p),local=[(q[0]-reference.tx)/reference.scale/reference.width*receipt.renderWidth-anchor.x*receipt.renderWidth,
+        (q[1]-reference.ty)/reference.scale/reference.height*receipt.renderHeight-anchor.y*receipt.renderHeight];max=Math.max(max,transform(matrix,local)[1]);}
+    }
+    return max-(receipt.y+5);
+  }
+  const floorError=support(body,m);assert.ok(floorError<=1e-8,'the owned body paint must not sink below its actual floor');
+  assert.ok(Math.abs(floorError-receipt.corpseGroundOffsetY-receipt.corpseGroundSupportY)<1e-8);
+  if(fragment.length){
+    const error=support(fragment,receipt.corpseJointFragmentMatrix);
+    assert.ok(error<=1e-8);assert.ok(Math.abs(error-receipt.corpseJointFragmentGroundError)<1e-8);
+    if(settled)assert.ok(Math.abs(error)<1e-8,'the detached owned source must actually land');
+  }else{assert.equal(receipt.corpseJointFragmentMatrix,null);assert.equal(receipt.corpseJointFragmentGroundError,null);}
+  const bones=new Map(body.map(p=>[atlas.parts.find(a=>a.name===p.name).bone,p.matrix]));
+  for(const chain of [...(atlas.armConstraints??[]),...(atlas.legConstraints??[])]){
+    const parent=bones.get(chain.parentBone),upper=bones.get(chain.upperBone),lower=bones.get(chain.lowerBone),effector=bones.get(chain.effectorBone);
+    if(!parent||!upper||!lower)continue;
+    const pairs=[[transform(parent,chain.hip??chain.shoulder),transform(upper,chain.hip??chain.shoulder)],
+      [transform(upper,chain.knee??chain.elbow),transform(lower,chain.knee??chain.elbow)]];
+    if(effector)pairs.push([transform(lower,chain.ankle??chain.wrist),transform(effector,chain.effectorWrist??chain.ankle??chain.wrist)]);
+    for(const [a,b]of pairs)assert.ok(Math.hypot(a[0]-b[0],a[1]-b[1])/reference.scale<=.001,'an unsevered rendered joint must remain connected');
+  }
+  if(settled){assert.equal(receipt.corpsePoseProgress,1);assert.ok(Math.abs(floorError)<1e-8);
+    assert.ok(Math.abs(receipt.rotationRadians-(corpse.variant%2===0?-1:1)*Math.PI/2)<1e-8);}
+}
 
 export function assertV177ReactionRender({form,proof,before,after,late}){
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
@@ -60,9 +114,14 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     assert.equal(impacts.length,1,'one applied lethal hit must produce one impact');assert.equal(wounds.length,1);assert.equal(wounds[0].lethal,true);
     assert.ok(body.corpseRenderHistory.length>=3,'the actual corpse must be painted repeatedly');
     const frame=spriteFrameFor(form,'death',identity.side==='human'?'right':'left');
+    const lastLive=body.renderHistory.at(-1)??paint;
+    const jointOwner=Boolean(V177_CORPSE_JOINT_DATA[form]&&lastLive.jointAtlasPath===V177_JOINT_ATLASES[form].path);
     for(const r of body.corpseRenderHistory){
       assert.equal(r.renderKind,form,'actual corpse drawing must retain the original body');
-      assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);assert.ok(r.assetReady);
+      assert.equal(Boolean(r.corpseJointPose),jointOwner,'the last actually painted rig must own the corpse handoff');
+      if(jointOwner)assertJointCorpsePaint(form,r,body.corpse,wounds[0]);
+      else{assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
+      assert.ok(r.assetReady);
       assert.ok(r.renderSequence>paint.renderSequence);
       assert.ok(Math.abs(renderedSourcePixelScale(r)-pixelScale)<1e-8,'defeat keeps the same source-pixel scale');
       assert.ok(Number.isFinite(r.fallProgress)&&r.fallProgress>=0&&r.fallProgress<=1&&Number.isFinite(r.rotationRadians));
@@ -79,11 +138,14 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     assert.ok(late.body.corpse.deathAge>=animationClipFor(form,'death').durationSeconds);
     const settled=late.body.corpseRenderHistory.slice(-3);assert.equal(settled.length,3);
     for(const r of settled){
-      assert.equal(r.renderKind,form);assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);assert.ok(r.assetReady);
+      assert.equal(r.renderKind,form);assert.equal(Boolean(r.corpseJointPose),jointOwner);
+      if(jointOwner)assertJointCorpsePaint(form,r,late.body.corpse,wounds[0],true);
+      else{assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
+      assert.ok(r.assetReady);
       assert.equal(r.fallProgress,1);assert.ok(Number.isFinite(r.rotationRadians));
       assert.ok(r.renderSequence>body.corpseRenderHistory.at(-1).renderSequence,'settled body must be painted again after the early outcome');
       assert.ok(Math.abs(renderedSourcePixelScale(r)-pixelScale)<1e-8);
-      if(v102HasFallingDeathFrame(form,frame)){
+      if(!jointOwner&&v102HasFallingDeathFrame(form,frame)){
         const direction=late.body.corpse.variant%2===0?-1:1;
         const expected=v102CorpseFallingPose(form,frame,r.renderWidth,r.renderHeight,direction,1);
         assert.equal(r.corpsePoseSourceBound,true);assert.equal(r.corpsePoseSourceSha256,expected.sourceSha256);

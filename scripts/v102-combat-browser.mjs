@@ -9,12 +9,13 @@ import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-enemy-live-render-contract.mjs';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
-import {assertV177ReactionRender,assertV177ReactionCoverage} from './v177-reaction-render-contract.mjs';
+import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -147,32 +148,51 @@ try{
         }
         row.continuousCoverage=assertV177ContinuousFormCoverage(row.liveEnemyMotion,row.liveAdditionalMotion);
       }
-      for(const kind of ['walker','crusher','spindle','red-panther-knife']){
+      for(const kind of ['walker','crusher','spindle','red-panther-knife',...Object.keys(V177_CORPSE_JOINT_DATA)]){
         await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
-        const proof=await page.evaluate(kind=>{
+        const proof=await page.evaluate(({kind,jointCut})=>{
           const qa=window.__ASHFALL_BATTLE_QA__;
-          const proof=qa.prepareEnemyFacingRuntimeProof({kind,phase:'die'});
+          const proof=jointCut
+            ? qa.prepareV177ContinuousActorProof({form:kind,phase:'defeat',sourceKind:'tky'})
+            : qa.prepareEnemyFacingRuntimeProof({kind,phase:'die'});
           // A delayed frame can advance the 80ms hit before the first paint.
           // Hold the existing fixture until its living body is actually drawn.
           qa.setEnemyVfxProofPaused(true);
           return proof;
-        },kind);
+        },{kind,jointCut:Boolean(V177_CORPSE_JOINT_DATA[kind])});
         const id=proof.fighterId??proof.enemyId;
         assert.ok(Number.isFinite(id),JSON.stringify(proof));
         await page.waitForFunction(id=>{const a=window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id);return a.fighter?.hp>0&&a.renderHistory.length>0;},id);
         const liveBeforeDamage=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id),id);
-        assert.equal(liveBeforeDamage.fighter.hp,proof.initial.enemyHp,'the living paint precedes any applied damage');
+        assert.equal(liveBeforeDamage.fighter.hp,proof.originalActorStats?.hp??proof.initial.enemyHp,'the living paint precedes any applied damage');
         await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(false));
         await page.waitForFunction(id=>{const qa=window.__ASHFALL_BATTLE_QA__;return qa.getPhaseGCombatSnapshot().combatGore.wounds.some(w=>w.targetId===id&&w.lethal&&w.severed)&&qa.getEnemyFacingRuntimeAudit(id).corpseRenderHistory.length>0;},id);
         const gore=await page.evaluate(id=>({effects:window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().combatGore,body:window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id)}),id);
-        row.gore.push({kind,id,liveBeforeDamage,...gore});
+        row.gore.push({kind,id,proof,liveBeforeDamage,...gore});
         assert.equal(gore.effects.impacts.filter(e=>e.targetId===id).length,1,'one actual damage receipt produces one spray');
         assert.ok(gore.body.corpse,'real defeat owns the severed body');
         const live=gore.body.renderHistory.at(-1),dead=gore.body.corpseRenderHistory.at(-1);
         assert.ok(live&&dead,'live and dead bodies must both have actual paint receipts');
         assert.ok(Math.abs(renderedSourcePixelScale(live)-renderedSourcePixelScale(dead))<1e-8,`${kind}: defeat keeps the same source-pixel scale`);
         await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}.png`});
+        if(V177_CORPSE_JOINT_DATA[kind]){
+          assert.equal(proof.incomingHit.weapon,'tky');
+          assert.equal(gore.effects.wounds.find(w=>w.targetId===id)?.style,'cut');
+          await page.waitForFunction(id=>{
+            const qa=window.__ASHFALL_BATTLE_QA__,a=qa.getEnemyFacingRuntimeAudit(id),rows=a.corpseRenderHistory.slice(-3);
+            const ready=rows.length===3&&rows.every(r=>r.corpseJointPose&&r.fallProgress===1
+              &&r.corpseJointOwnedParts?.length&&Number.isFinite(r.corpseJointFragmentGroundError)&&Math.abs(r.corpseJointFragmentGroundError)<1e-8);
+            if(ready)qa.setEnemyVfxProofPaused(true);return ready;
+          },id);
+          const late=await page.evaluate(id=>({effects:window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().combatGore,
+            body:window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id)}),id);
+          for(const receipt of late.body.corpseRenderHistory.slice(-3))assertJointCorpsePaint(kind,receipt,late.body.corpse,
+            late.effects.wounds.find(w=>w.targetId===id),true);
+          row.gore.at(-1).late=late;
+          await page.screenshot({path:`${out}/${width}x${height}-gore-${kind}-settled.png`});
+        }
       }
+      assert.equal(row.gore.length,4+Object.keys(V177_CORPSE_JOINT_DATA).length);
       for(const form of spriteKinds){
         const proof=await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'defeat'}),form);
         const evidence={form,proof,status:'pending'};row.reactions.push(evidence);
@@ -209,7 +229,9 @@ try{
             const completed=qa.getPhaseGCombatSnapshot().manualAbilityReceipts?.some(r=>r.ownerId===fighterId&&r.eventType==='retreat-complete');
             const ready=outcome==='retreat'
               ? !a.fighter&&!a.corpse&&completed
-              : a.corpse?.deathAge>=deathSeconds&&settled.length===3&&settled.every(r=>r.fallProgress===1);
+              : a.corpse?.deathAge>=deathSeconds&&settled.length===3&&settled.every(r=>r.fallProgress===1
+                &&(!r.corpseJointOwnedParts?.length || r.corpseJointPose
+                  &&Number.isFinite(r.corpseJointFragmentGroundError)&&Math.abs(r.corpseJointFragmentGroundError)<1e-8));
             if(ready)qa.setEnemyVfxProofPaused(true);
             return Boolean(ready);
           },{fighterId:proof.fighterId,outcome:proof.outcome,deathSeconds:animationClipFor(form,'death').durationSeconds});
