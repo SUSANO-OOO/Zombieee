@@ -1,9 +1,49 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {mkdir,mkdtemp,readFile,realpath,rm,stat,writeFile} from 'node:fs/promises';
+import {basename,dirname,join} from 'node:path';
+import {tmpdir} from 'node:os';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
 import {chooseHumanDeploymentLane} from '../app/lanePlanner.js';
+
+function prepareContactOutput(out) {
+ const source=readFileSync(new URL('../scripts/v100-enemy-contact-motion-browser.mjs',import.meta.url),'utf8');
+ const start=source.indexOf('const engine='),end=source.indexOf('\nconst report=');
+ assert.ok(start>=0&&end>start);
+ // Execute only the real directory setup, without importing or starting a browser.
+ return vm.runInNewContext(`(async()=>{${source.slice(start,end)}\n})()`,{
+  process:{env:{V100_ENEMY_MOTION_OUT:out}},assert,mkdir,dirname,
+ });
+}
+
+async function withContactOutputFixture(run) {
+ const parent=await realpath(tmpdir()),root=await mkdtemp(join(parent,'issue177-contact-output-'));
+ try { await run(root); } finally {
+  const resolved=await realpath(root);
+  assert.equal(dirname(resolved),parent);
+  assert.ok(basename(resolved).startsWith('issue177-contact-output-'));
+  await rm(resolved,{recursive:true});
+ }
+}
+
+test('standalone enemy contact QA prepares a missing output parent on a fresh runner',async()=>{
+ await withContactOutputFixture(async root=>{
+  const out=join(root,'outputs','v102-normal-contacts');
+  await prepareContactOutput(out);
+  assert.equal((await stat(out)).isDirectory(),true);
+ });
+});
+
+test('enemy contact QA refuses an existing result directory without altering its evidence',async()=>{
+ await withContactOutputFixture(async root=>{
+  const out=join(root,'outputs','v102-normal-contacts'),sentinel=join(out,'report.json');
+  await mkdir(out,{recursive:true});await writeFile(sentinel,'previous evidence\n');
+  await assert.rejects(prepareContactOutput(out),{code:'EEXIST'});
+  assert.equal(await readFile(sentinel,'utf8'),'previous evidence\n');
+ });
+});
 
 function observerFixture() {
  const source=readFileSync(new URL('../scripts/v100-enemy-contact-motion-browser.mjs',import.meta.url),'utf8');

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
@@ -8,7 +9,7 @@ import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 if(process.platform==='win32')throw new Error('Enemy motion QA is hosted-only; local game and audio playback are disabled');
 const engine=process.env.V100_ENEMY_MOTION_ENGINE??'chromium',out=process.env.V100_ENEMY_MOTION_OUT;
-assert.ok(out);await mkdir(out,{recursive:false});
+assert.ok(out);await mkdir(dirname(out),{recursive:true});await mkdir(out,{recursive:false});
 const report={engine,build:await productionBuildIdentity(),inputs:[],errors:[],scope:'S1 native deployment only, up to three level-1 owned Guardians cover the three deployment lanes. Observe real ordinary walker and crusher attacks, without actor/time/HP/result setters. Not a campaign or win acceptance.'};
 const browser=await(await pwaBrowserType(engine)).launch();
 try {
