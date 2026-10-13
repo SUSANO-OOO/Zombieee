@@ -3,7 +3,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
-import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
+import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
@@ -4445,9 +4445,13 @@ function drawSpriteFighter(
   const contactLift = animationSample.movement
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
-  const bob = options.v100AuthoredPresentation
+  const baseBob = options.v100AuthoredPresentation
     ? v102GroundLift(renderKind,animationSample,combatGroundLift(renderKind,animationSample))
     : combatGroundLift(renderKind, animationSample);
+  const bob = baseBob + (jointPose ? v177LiveJointGroundLift(renderKind,jointPose,{
+    frame,width:size.w,height:size.h,x:f.x,y:f.y-baseBob,
+    angle:0,scaleX:1,scaleY:1,flipX:frame.flipX,
+  },f.y+5) : 0);
   const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
   if (f.side === "zombie" && f.gateEntering) {

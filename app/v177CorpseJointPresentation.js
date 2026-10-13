@@ -65,6 +65,19 @@ function outlinePoints(state,matrices,root,onlyParts,omitParts) {
   }
   return points;
 }
+
+// Keep the last living paint on the same floor as the subsequent fall. A
+// larger display size can place a source sole below its nominal frame anchor.
+export function v177LiveJointGroundLift(kind,plan,rendered,floorY) {
+  const atlas=V177_JOINT_ATLASES[kind],data=V177_CORPSE_JOINT_DATA[kind];
+  if(!atlas || !data || !plan || !Number.isFinite(floorY))return 0;
+  const initial=v177CaptureJointPose(kind,plan);if(!initial)return 0;
+  const matrices=v177InterpolateCapturedJointPose(kind,initial,atlas.poses[0],0);
+  const state={atlas,data,frame:rendered.frame,width:rendered.width,height:rendered.height};
+  const root={x:rendered.x,y:rendered.y,angle:rendered.angle,scaleX:rendered.scaleX,
+    scaleY:rendered.scaleY,flipX:rendered.flipX};
+  return Math.max(0,extent(outlinePoints(state,matrices,root)).bottom-floorY);
+}
 function probePoint(state,matrices,root,probe) {
   const index=state.atlas.parts.findIndex(p=>p.bone===probe.bone);
   return posedPoint(partPoint(state,matrices,index,probe.pixel),root);
@@ -107,9 +120,9 @@ export function sampleV177CorpseJointState(state,{progress,x,y,age=0,ashScaleX=1
   const root={...state.initialRoot,x:0,y:0,angle:state.initialRoot.angle+(state.fallDirection*Math.PI/2-state.initialRoot.angle)*p,
     scaleX:state.initialRoot.scaleX*ashScaleX,scaleY:state.initialRoot.scaleY*ashScaleY};
   const support=extent(outlinePoints(state,matrices,root,null,state.owned)).bottom;
-  const initialY=state.initialRoot.y,allowance=(1-p)*Math.max(0,initialY+state.initialSupport-floor);
+  const initialY=state.initialRoot.y;
   root.x=state.initialRoot.x+(x-state.initialRoot.x)*p;
-  root.y=Math.min(initialY+(floor-support-initialY)*p,floor-support+allowance);
+  root.y=Math.min(initialY+(floor-support-initialY)*p,floor-support);
   const sample={state,matrices,root,matrix:rootMatrix(root),progress:p,floor,groundSupportY:support,groundError:root.y+support-floor,
     bodyWounds:state.fragment?state.fragment.wounds.body.map(probe=>probePoint(state,matrices,root,probe)):[],fragment:null};
   if(state.fragment) {
