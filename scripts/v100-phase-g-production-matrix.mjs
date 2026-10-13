@@ -369,6 +369,16 @@ function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [],
       reason: taskTurnEvidenceValid ? "candidate-not-stable" : "scheduler-independent-sample-separation-missing",
     };
   }
+  // Stable DOM samples can arrive while WebKit has not serviced even the
+  // installed frame callback. Keep sampling within the existing preflight
+  // budget until that callback is observed, including the final recheck.
+  if (current.schedulerProbe?.status !== "observed") {
+    return {
+      status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      pointerCount: 0,
+      reason: "browser-scheduler-not-observed",
+    };
+  }
   return {
     status: "ready-for-pointer",
     pointerCount: 0,
