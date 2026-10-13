@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
@@ -146,11 +147,14 @@ async function seedPage(page, save) {
   });
 }
 
-async function clickUsable(locator, label) {
-  await locator.waitFor({ state: "visible", timeout });
+async function clickUsable(locator, label, { timeout: actionTimeout = timeout } = {}) {
+  const deadline = Date.now() + actionTimeout;
+  const remaining = () => Math.max(1, deadline - Date.now());
+  await locator.waitFor({ state: "visible", timeout: remaining() });
   const box = await locator.boundingBox();
   invariant(box && box.width >= 28 && box.height >= 24, `${label} unusable: ${JSON.stringify(box)}`);
-  await locator.click();
+  invariant(Date.now() < deadline, `${label} input deadline exceeded`);
+  await locator.click({ timeout: remaining() });
 }
 
 function uniqueRequestedKeys(receipts) {
@@ -235,11 +239,7 @@ for (const engine of engines) {
           url.searchParams.set("event-audio-qa", "1");
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation HTTP ${response?.status()}`);
-          const fiction = page.getByRole("button", { name: "続ける", exact: true });
-          if (await fiction.isVisible().catch(() => false)) await clickUsable(fiction, "fiction notice");
-          const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
-          await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
-          if (await offer.isVisible().catch(() => false)) await clickUsable(offer, "PWA browser play");
+          await dismissInstallOffer(page, { timeout, readySelector: ".v100-start-screen", clickControl: clickUsable });
           const eventSelector = `[data-v100-event-id="${eventCase.eventId}"]`;
           await enterV100FromTitle(page, { timeout });
           await page.locator(eventSelector).waitFor({ state: "visible", timeout });

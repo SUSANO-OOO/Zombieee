@@ -11,19 +11,31 @@
  * a context without service worker support, never sees it, and neither case is
  * a failure.
  */
-export async function dismissInstallOffer(page, { timeout = 60_000 } = {}) {
+export async function dismissInstallOffer(page, { timeout = 60_000, readySelector = null, clickControl = null } = {}) {
   const deadline = Date.now() + timeout;
   const remaining = () => Math.max(1, deadline - Date.now());
   const skip = page.getByRole("button", { name: "ブラウザで遊ぶ" });
   const notice = page.locator(".fiction-notice").getByRole("button", { name: "続ける", exact: true });
-  await skip.or(notice).first().waitFor({ state: "visible", timeout: remaining() }).catch(() => {});
+  const ready = readySelector ? page.locator(readySelector) : null;
+  const click = (control, label) => clickControl
+    ? clickControl(control, label, { timeout: remaining() })
+    : control.click({ timeout: remaining() });
+  const waitForChoice = async (choice) => {
+    const waiting = choice.first().waitFor({ state: "visible", timeout: remaining() });
+    // A supplied destination makes readiness mandatory. Legacy callers that
+    // only inspect an optional invitation retain their absent-offer behavior.
+    if (ready) await waiting;
+    else await waiting.catch(() => {});
+  };
+  await waitForChoice(ready ? skip.or(notice).or(ready) : skip.or(notice));
   if (await notice.isVisible().catch(() => false)) {
-    if (await notice.isEnabled()) await notice.click({ timeout: remaining() });
+    if (await notice.isEnabled()) await click(notice, "fiction notice");
     await notice.waitFor({ state: "hidden", timeout: remaining() });
   }
-  await skip.waitFor({ state: "visible", timeout: remaining() }).catch(() => {});
+  if (ready && await ready.isVisible()) return false;
+  await waitForChoice(ready ? skip.or(ready) : skip);
   if (!(await skip.isVisible().catch(() => false))) return false;
-  await skip.click({ timeout: remaining() });
+  await click(skip, "PWA browser play");
   return true;
 }
 
