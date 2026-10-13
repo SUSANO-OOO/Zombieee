@@ -6,6 +6,7 @@ import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177Join
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
+import { v102CorpseFallingPose, v102HasFallingDeathFrame } from "./v102CorpsePose.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
 
 import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
@@ -4100,6 +4101,11 @@ type FighterRenderAudit = {
   bodyScale?: number;
   fallProgress?: number;
   rotationRadians?: number;
+  corpsePoseSourceBound?: boolean;
+  corpsePoseSourceSha256?: string;
+  corpsePoseProgress?: number;
+  corpseGroundOffsetY?: number;
+  corpseGroundSupportY?: number;
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
   renderKind?: string;
@@ -8493,7 +8499,7 @@ function drawWorld(
       const bodyScale = g.definition.missionConfig.v100StageNumber ? v102BattleBodyScale(corpseRenderKind) : 1;
       const width = authoredSize.w * compactScale * depthScale * bodyScale;
       const height = authoredSize.h * compactScale * depthScale * bodyScale;
-      const authoredDeathPose = frame.derivedFrom !== "hit";
+      const authoredDeathPose = frame.derivedFrom !== "hit" && !v102HasFallingDeathFrame(corpseRenderKind, frame);
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const dyingProgress = corpse.side === "zombie"
         ? corpse.state === "dying" ? Math.min(1, corpse.phaseElapsed / timing.dyingSeconds) : 1
@@ -8507,7 +8513,13 @@ function drawWorld(
         : corpse.side === "human" ? -1.18
           : corpse.deathClass === "boss" ? .68
             : corpse.deathClass === "heavy" ? .9 : 1.08;
-      const rotationRadians = fallDirection * fallAngle * fallProgress + (allyCue?.postureJitter ?? 0);
+      const corpseFallingPose = v102CorpseFallingPose(corpseRenderKind, frame,
+        width * (corpse.state === "ashing" ? 1 - ashingProgress * .18 : 1),
+        height * (corpse.state === "ashing" ? 1 - ashingProgress * .48 : allyCue?.bodyScaleY ?? 1),
+        fallDirection, fallProgress);
+      const rotationRadians = corpseFallingPose?.rotationRadians
+        ?? fallDirection * fallAngle * fallProgress + (allyCue?.postureJitter ?? 0);
+      const groundOffsetY = corpseFallingPose?.groundOffsetY ?? 0;
       if (fighterRenderAuditEnabled) {
         recordCorpseRenderAudit(corpse.id, {
           drawCount: (corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount ?? 0) + 1,
@@ -8532,6 +8544,11 @@ function drawWorld(
           bodyScale,
           fallProgress,
           rotationRadians,
+          corpsePoseSourceBound: corpseFallingPose?.sourceBound,
+          corpsePoseSourceSha256: corpseFallingPose?.sourceSha256,
+          corpsePoseProgress: corpseFallingPose?.poseProgress,
+          corpseGroundOffsetY: corpseFallingPose?.groundOffsetY,
+          corpseGroundSupportY: corpseFallingPose?.groundSupportY,
           groundAnchor: 1,
           actualXDelta: 0,
         });
@@ -8540,7 +8557,7 @@ function drawWorld(
         : corpse.state === "burning" ? .72
           : corpse.state === "ashing" ? Math.max(.08, .82 * (1 - ashingProgress))
             : corpse.state === "dying" ? .96 : .82;
-      ctx.translate(corpse.x + (allyCue?.tremorX ?? 0), corpse.y + 5 + (allyCue?.tremorY ?? 0));
+      ctx.translate(corpse.x + (allyCue?.tremorX ?? 0), corpse.y + 5 + groundOffsetY + (allyCue?.tremorY ?? 0));
       ctx.rotate(rotationRadians);
       if (corpse.state === "ashing") {
         ctx.filter = `grayscale(${Math.round(ashingProgress * 100)}%) sepia(${Math.round(ashingProgress * 70)}%) brightness(${1 - ashingProgress * .35})`;

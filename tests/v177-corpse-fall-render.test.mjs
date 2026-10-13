@@ -6,39 +6,46 @@ import ts from 'typescript';
 import { animationClipFor, PLAYABLE_COMBAT_KINDS } from '../app/combatPresentation.js';
 import { ENEMY_DEATH_CONFIG } from '../app/combatLifecycle.js';
 import { spriteFrameFor, spriteKinds } from '../app/spriteManifest.js';
+import { v102CorpseFallingPose, v102HasFallingDeathFrame, V102_FALLING_DEATH_KINDS } from '../app/v102CorpsePose.js';
 
 const source = fs.readFileSync('app/AshfallGame.tsx', 'utf8');
 const parsed = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-let statements, rotation;
+let statements, rotation, translation;
 function visit(node) {
   if (ts.isForOfStatement(node) && ts.isBlock(node.statement) && node.expression.getText(parsed) === 'g.corpses') {
     const branch = node.statement.statements.find(s => ts.isIfStatement(s) && s.expression.getText(parsed).startsWith('sprite?.complete'));
     if (branch) {
-      const names = new Set(['timing', 'dyingProgress', 'ashingProgress', 'fallAngle', 'fallProgress', 'rotationRadians']);
+      const names = new Set(['authoredDeathPose', 'timing', 'dyingProgress', 'ashingProgress', 'fallAngle', 'fallProgress', 'corpseFallingPose', 'rotationRadians', 'groundOffsetY']);
       statements = branch.thenStatement.statements.filter(s => ts.isVariableStatement(s)
         && s.declarationList.declarations.some(d => names.has(d.name.getText(parsed)))).map(s => s.getText(parsed)).join('\n');
       rotation = branch.thenStatement.statements.find(s => ts.isExpressionStatement(s)
         && ts.isCallExpression(s.expression) && s.expression.expression.getText(parsed) === 'ctx.rotate')?.getText(parsed);
+      translation = branch.thenStatement.statements.find(s => ts.isExpressionStatement(s)
+        && ts.isCallExpression(s.expression) && s.expression.expression.getText(parsed) === 'ctx.translate')?.getText(parsed);
     }
   }
   ts.forEachChild(node, visit);
 }
 visit(parsed);
-assert.ok(statements && rotation, 'exercise the actual corpse renderer and its applied rotation');
-const angleFor = vm.runInNewContext(`(corpse, v100, authoredDeathPose = false) => {
+assert.ok(statements && rotation && translation, 'exercise the actual corpse renderer and its applied transforms');
+const renderFor = vm.runInNewContext(`(corpse, v100) => {
   const g = { definition: { missionConfig: { v100StageNumber: v100 ? 1 : null } } };
   const corpseRenderKind = corpse.kind, allyCue = null;
+  const frame = spriteFrameFor(corpse.kind, 'death', corpse.side === 'human' ? 'right' : 'left');
+  const width = frame.sourceRect.w * .2, height = frame.sourceRect.h * .2;
   const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
-  let angle;
-  const ctx = { rotate: value => { angle = value; } };
+  let angle, translatedY;
+  const ctx = { rotate: value => { angle = value; }, translate: (_, y) => { translatedY = y; } };
   ${statements}
   ${rotation}
-  return angle;
-}`, { animationClipFor, ENEMY_DEATH_CONFIG });
+  ${translation}
+  return { angle, translatedY, frame, width, height };
+}`, { animationClipFor, ENEMY_DEATH_CONFIG, spriteFrameFor, v102CorpseFallingPose, v102HasFallingDeathFrame });
+const angleFor = (corpse, v100) => renderFor(corpse, v100).angle;
 const fallbackAllies = PLAYABLE_COMBAT_KINDS.filter(kind => !kind.startsWith('mayo-chan')
   && spriteFrameFor(kind, 'death', 'right').derivedFrom === 'hit');
 assert.ok(fallbackAllies.length > 0);
-const corpse = (kind, seconds, variant = 0) => ({ kind, side: 'human', state: 'dying', deathClass: 'normal', deathAge: seconds, phaseElapsed: seconds, variant });
+const corpse = (kind, seconds, variant = 0) => ({ kind, x:330, y:282, side: 'human', state: 'dying', deathClass: 'normal', deathAge: seconds, phaseElapsed: seconds, variant });
 
 test('every V1 ally with a fallback death starts upright and reaches the existing final fall angle', () => {
   for (const kind of fallbackAllies) {
@@ -66,7 +73,8 @@ test('the real ally fall progresses continuously in both existing fall direction
 
 test('already authored prone death art is never rotated a second time', () => {
   for (const kind of spriteKinds) for (const side of ['human', 'zombie']) for (const seconds of [0, .05, 1]) {
-    assert.equal(angleFor({ ...corpse(kind, seconds), side }, true, true), 0, kind);
+    const frame = spriteFrameFor(kind, 'death', side === 'human' ? 'right' : 'left');
+    if (frame.derivedFrom !== 'hit' && !v102HasFallingDeathFrame(kind, frame)) assert.equal(angleFor({ ...corpse(kind, seconds), side }, true), 0, kind);
   }
 });
 
@@ -84,6 +92,22 @@ test('enemy normal, heavy and boss fall timing and endpoint remain unchanged', (
 test('legacy ally rendering retains its original fall pose', () => {
   for (const kind of fallbackAllies) for (const seconds of [0, .05, .5]) {
     assert.equal(Math.abs(angleFor(corpse(kind, seconds), false)), 1.18, kind);
+  }
+});
+
+test('actual falling-key boss renderer reaches the grounded horizontal endpoint in both fall directions', () => {
+  for (const kind of V102_FALLING_DEATH_KINDS) for (const variant of [0, 1]) {
+    const c = {...corpse(kind, ENEMY_DEATH_CONFIG.timings.boss.dyingSeconds, variant), side:'zombie', deathClass:'boss'};
+    const rendered = renderFor(c, true);
+    assert.ok(Math.abs(Math.abs(rendered.angle) - Math.PI / 2) < 1e-8, kind + ' must not stay frozen in its airborne key');
+  }
+});
+
+test('actual corpse canvas translation applies the source-bound floor contact offset', () => {
+  for (const kind of V102_FALLING_DEATH_KINDS) for (const variant of [0, 1]) {
+    const c = {...corpse(kind, ENEMY_DEATH_CONFIG.timings.boss.dyingSeconds, variant), side:'zombie', deathClass:'boss'};
+    const rendered = renderFor(c, true), expected = v102CorpseFallingPose(kind, rendered.frame, rendered.width, rendered.height, variant === 0 ? -1 : 1, 1);
+    assert.ok(Math.abs(rendered.translatedY - (c.y + 5 + expected.groundOffsetY)) < 1e-8, kind + ' must draw the measured contact offset');
   }
 });
 

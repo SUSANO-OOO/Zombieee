@@ -5,15 +5,20 @@ import {spriteKinds,spriteFrameFor} from '../app/spriteManifest.js';
 import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {v102CorpseFallingPose} from '../app/v102CorpsePose.js';
 const fixture=form=>{
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
   const protectedBody=identity.kind==='mayo-chan',direction=identity.side==='human'?'right':'left';
   const paint=(state,sequence)=>{
     const frame=spriteFrameFor(form,state==='retreat'?'walk-a':state,direction);
+    const fallProgress=state==='death'?(sequence>=20?1:.2):undefined;
+    const pose=state==='death'?v102CorpseFallingPose(form,frame,frame.sourceRect.w*.2,frame.sourceRect.h*.2,-1,fallProgress):null;
     return {renderKind:form,spritePath:frame.path,assetReady:true,renderSequence:sequence,requestedState:state,
       sourceRect:{...frame.sourceRect},sourceRow:frame.sourceRect.y,renderWidth:frame.sourceRect.w*.2,renderHeight:frame.sourceRect.h*.2,
       jointAtlasPath:V177_JOINT_ATLASES[form].path,jointLowerFrame:sequence,poseScaleX:1,poseScaleY:1,
-      fallProgress:state==='death'?.2:undefined,rotationRadians:state==='death'&&frame.derivedFrom==='hit'?.2:0};
+      x:500,y:285,fallProgress,rotationRadians:pose?.rotationRadians??(state==='death'&&frame.derivedFrom==='hit'?.2:0),
+      corpsePoseSourceBound:pose?.sourceBound,corpsePoseSourceSha256:pose?.sourceSha256,corpsePoseProgress:pose?.poseProgress,
+      corpseGroundOffsetY:pose?.groundOffsetY,corpseGroundSupportY:pose?.groundSupportY};
   };
   const live=paint('idle',1),fighter={id:7,kind:identity.kind,side:identity.side,renderKind:form,v100TwinPart:identity.v100TwinPart,hp:150,x:500};
   const empty={impacts:[],pools:[],wounds:[],pending:false};
@@ -22,7 +27,7 @@ const fixture=form=>{
   const body=protectedBody
     ? {fighter:{...fighter,hp:1,x:450,mayoRetreat:{reason:'injury',phase:'run',renderKind:form}},corpse:null,
       renderHistory:[live,paint('death',2),paint('hit',3),paint('retreat',4),paint('retreat',5)],corpseRenderHistory:[]}
-    : {fighter:null,corpse:{id:7,kind:identity.kind,side:identity.side,v100TwinPart:identity.v100TwinPart,deathAge:.05},renderHistory:[live],
+    : {fighter:null,corpse:{id:7,kind:identity.kind,side:identity.side,v100TwinPart:identity.v100TwinPart,deathAge:.05,variant:0},renderHistory:[live],
       corpseRenderHistory:[paint('death',10),paint('death',11),paint('death',12)]};
   const after={at:1000,simulationTime:5,running:true,paused:true,route:'/v100',visible:true,body,
     effects:protectedBody?empty:{impacts:[{targetId:7,lethal:true}],pools:[{targetId:7}],wounds:[{targetId:7,lethal:true}],pending:false}};
@@ -82,5 +87,13 @@ test('Mayo retreat must finish once at its real vehicle destination without a la
     e=>{e.late.effects.pools=[{targetId:7}];},e=>{e.late.body.renderHistory.at(-1).renderKind='mayo-chan';},
     e=>{e.late.receipts[0].x=110;},e=>{e.late.receipts.push({...e.late.receipts[0]});}]){
     const evidence=fixture('mayo-chan-feral');mutate(evidence);assert.throws(()=>assertV177ReactionRender(evidence));
+  }
+});
+
+test('a mid-fall boss source key cannot pass a completed corpse without source-bound floor contact',()=>{
+  for(const mutate of [e=>{for(const r of e.late.body.corpseRenderHistory)r.rotationRadians=0;},
+    e=>{for(const r of e.late.body.corpseRenderHistory)delete r.corpsePoseSourceBound;},
+    e=>{for(const r of e.late.body.corpseRenderHistory)r.corpseGroundOffsetY=(r.corpseGroundOffsetY??0)+1;}]){
+    const evidence=fixture('takuya-omega');mutate(evidence);assert.throws(()=>assertV177ReactionRender(evidence));
   }
 });

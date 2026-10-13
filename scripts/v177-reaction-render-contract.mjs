@@ -4,6 +4,7 @@ import {animationClipFor,PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.
 import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
+import {v102CorpseFallingPose,v102HasFallingDeathFrame} from '../app/v102CorpsePose.js';
 
 export function assertV177ReactionRender({form,proof,before,after,late}){
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
@@ -68,6 +69,10 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     }
     assert.equal(new Set(body.corpseRenderHistory.map(r=>r.renderSequence)).size,body.corpseRenderHistory.length);
     if(identity.side==='human'&&frame.derivedFrom==='hit')assert.ok(body.corpseRenderHistory.some(r=>r.fallProgress>0&&r.fallProgress<1),'a fallback ally body must actually paint the intermediate fall');
+    if(v102HasFallingDeathFrame(form,frame)){
+      assert.ok(body.corpseRenderHistory.some(r=>r.corpsePoseProgress>0&&r.corpsePoseProgress<1),'a falling boss key must paint its intermediate collapse');
+      for(const r of body.corpseRenderHistory)assert.equal(r.corpsePoseSourceBound,true,'the falling pose must use its exact original source outline');
+    }
     assert.equal(late.body.fighter,null);assert.equal(late.body.corpse?.id,proof.fighterId);
     assert.equal(late.body.corpse.kind,identity.kind);assert.equal(late.body.corpse.side,identity.side);
     assert.equal(late.body.corpse.v100TwinPart??null,identity.v100TwinPart);
@@ -78,6 +83,15 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
       assert.equal(r.fallProgress,1);assert.ok(Number.isFinite(r.rotationRadians));
       assert.ok(r.renderSequence>body.corpseRenderHistory.at(-1).renderSequence,'settled body must be painted again after the early outcome');
       assert.ok(Math.abs(renderedSourcePixelScale(r)-pixelScale)<1e-8);
+      if(v102HasFallingDeathFrame(form,frame)){
+        const direction=late.body.corpse.variant%2===0?-1:1;
+        const expected=v102CorpseFallingPose(form,frame,r.renderWidth,r.renderHeight,direction,1);
+        assert.equal(r.corpsePoseSourceBound,true);assert.equal(r.corpsePoseSourceSha256,expected.sourceSha256);
+        assert.equal(r.corpsePoseProgress,1);
+        assert.ok(Math.abs(r.rotationRadians-expected.rotationRadians)<1e-8,'the completed boss must not stay in its mid-fall key');
+        assert.ok(Number.isFinite(r.corpseGroundOffsetY)&&Number.isFinite(r.corpseGroundSupportY));
+        assert.ok(Math.abs(r.corpseGroundOffsetY+r.corpseGroundSupportY)<1e-8,'the actual completed outline must reach the floor without sinking');
+      }
     }
   }
   return {form,outcome:proof.outcome,nativeSeconds:(after.at-before.at)/1000,
