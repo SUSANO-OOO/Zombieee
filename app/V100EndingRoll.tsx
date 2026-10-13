@@ -101,11 +101,12 @@ export function V100CreditsFilmView({ initialFrame, paintRef, reducedMotion, fil
 
 export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = false, blocked = false, onScene, onComplete }: Props) {
   const soundEnabled = settings.bgmEnabled !== false && (settings.bgmVolume ?? .8) > 0;
-  const [songRequested, setSongRequested] = useState(soundEnabled);
-  if (soundEnabled && !songRequested) setSongRequested(true);
-  // A muted start owns no song request. Once requested, keep the same source
+  const canRequestSong = soundEnabled && !blocked;
+  const [songRequested, setSongRequested] = useState(canRequestSong);
+  if (canRequestSong && !songRequested) setSongRequested(true);
+  // A muted or blocked start owns no song request. Once requested, keep the same source
   // across later pauses/mutes instead of aborting or restarting its transport.
-  const attachSong = songRequested || soundEnabled;
+  const attachSong = songRequested || canRequestSong;
   const audioRef = useRef<HTMLAudioElement>(null);
   const rollRef = useRef<HTMLDivElement>(null);
   const rollWindowRef = useRef<HTMLDivElement>(null), rollFooterRef = useRef<HTMLElement>(null);
