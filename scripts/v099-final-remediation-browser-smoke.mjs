@@ -1627,6 +1627,24 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
     const bark = document.querySelector(".battle-barks");
     const boss = document.querySelector(".boss-hud");
     const objective = document.querySelector(".battle-objective");
+    const target = document.querySelector(".barrier-health:not(.mission-health)");
+    const targetRect = target?.getBoundingClientRect();
+    const targetFields = target ? ["span", "b"].map(tag => {
+      const element = target.querySelector(`:scope > div > ${tag}`);
+      if (!element) return null;
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const rect = range.getBoundingClientRect();
+      const fontSize = Number.parseFloat(getComputedStyle(element).fontSize);
+      return { text: element.textContent?.trim() ?? "", left: rect.left, right: rect.right,
+        height: rect.height, fontSize,
+        fits: rect.width > 0 && rect.height > 0 && rect.height <= fontSize * 1.5
+          && rect.left >= targetRect.left - 2 && rect.right <= targetRect.right + 2
+          && element.scrollWidth <= element.clientWidth + 2 };
+    }) : null;
+    const targetHealth = targetFields ? { fields: targetFields,
+      fits: targetFields.every(field => field?.fits)
+        && targetFields[0].right <= targetFields[1].left } : null;
     return {
       stageId: snapshot.stageId,
       time: snapshot.time,
@@ -1641,6 +1659,7 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
       barkText: bark?.textContent?.trim() ?? "",
       bossText: boss?.textContent?.trim() ?? "",
       objectiveText: objective?.textContent?.trim() ?? "",
+      targetHealth,
       objectiveFits: objective
         ? objective.scrollWidth <= objective.clientWidth + 2
           && objective.scrollHeight <= objective.clientHeight + 2
@@ -1648,6 +1667,8 @@ async function captureHudState(page, viewport, axisName, stateId, lifecycle = nu
     };
   });
   const screenshotPath = await screenshot(page, `${axisName}-hud-${stateId}.png`);
+  invariant(!semantic.targetHealth || semantic.targetHealth.fits,
+    `${axisName}/${stateId}: target name and HP must fit on one line without clipping or overlap ${JSON.stringify(semantic.targetHealth)}`);
   lifecycle?.event("HUD state capture complete", {
     page,
     stateId,

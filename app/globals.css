@@ -129,7 +129,7 @@ button[aria-disabled="true"]:focus-visible {
 .barrier-health.vulnerable b { color:#efb06a; text-shadow:0 0 8px rgba(224,91,56,.45); }
 .barrier-health.hit { animation:crawler-hit .16s ease-out; }
 .barrier-health.v100-control-health { width:min(28%,236px); }
-.barrier-health.v100-control-health div span,.barrier-health.v100-control-health div b { white-space:nowrap; }
+.barrier-health:not(.mission-health) div span,.barrier-health:not(.mission-health) div b { white-space:nowrap; }
 .barrier-health.omega-objective-left { left:calc(2% + var(--app-viewport-safe-left)); right:auto; }
 .barrier-health > small { display:block; margin-top:3px; color:#d17b52; font:800 clamp(5px,.52vw,7px) monospace; letter-spacing:.1em; }
 .mission-health { opacity:1; padding:5px 8px; border:1px solid rgba(216,188,118,.45); background:rgba(7,12,13,.78); }
@@ -414,7 +414,7 @@ button[aria-disabled="true"]:focus-visible {
   .battle-controls-zone .phase-block strong { grid-column:1/-1; grid-row:2; min-width:0; overflow:hidden; padding:0 3px; border-top:1px solid rgba(235,205,161,.2); border-right:0; border-left:0; font-size:14px; line-height:1; letter-spacing:0; }
   .battle-controls-zone .icon-btn { flex:0 0 42px; width:42px; height:44px; }
   .battle-controls-zone .audio-btn small { font-size:12px; line-height:1; }
-  .barrier-health { top:64px; max-width:28%; padding:4px 6px; background:rgba(5,8,9,.78); }
+  .barrier-health { top:64px; width:min(28%,236px); max-width:28%; padding:4px 6px; background:rgba(5,8,9,.78); }
   .boss-hud { top:104px; min-width:260px; }
   .boss-hud div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; }
   .boss-hud span,.boss-hud b { min-width:0; white-space:nowrap; }
