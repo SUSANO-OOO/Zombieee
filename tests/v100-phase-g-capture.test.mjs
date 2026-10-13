@@ -382,7 +382,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
   };
   visit(battle);
   assert.ok(opening && capture);
-  const helpers = ["createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof", "completedImpactTargetDeploymentKind"]
+  const helpers = ["phaseGPageInputState", "withPhaseGPageInputLock", "createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof", "completedImpactTargetDeploymentKind"]
     .map(name => parsed.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name).getText(parsed)).join("\n");
   const machine = createV100PhaseGProofMachine();
   const impacts = [{
@@ -405,6 +405,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
     waitForTimeout: async ms => { now += ms; },
   };
   const scope = {
+    phaseGPageInputTails: new WeakMap(),
     page, phaseGProofMachine: machine, battleTimeout: 150000, COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS: 2000,
     Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
     observePromiseWithin: async promise => ({ status: "fulfilled", value: await promise }),

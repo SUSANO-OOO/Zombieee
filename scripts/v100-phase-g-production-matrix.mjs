@@ -4268,7 +4268,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           });
         }
       }
-      await accelerateBossEntry();
+      await withPhaseGPageInputLock(page, accelerateBossEntry);
       await page.waitForTimeout(520);
     }
   })() : null;
@@ -4313,10 +4313,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         while (!deployed && Date.now() < deadline) {
           await captureOpeningAction();
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
-          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+          const candidateSample = await withPhaseGPageInputLock(page, () => readBattleDeploymentDiagnostics(page, {
             requestedSlot: slot + 1,
             phase: "candidate-sample",
-          });
+          }));
           recorder?.setLatestReadableState(candidateSample);
           const candidateCards = deploymentCandidatesFromDiagnostics(candidateSample, deployedKinds);
           const requestedOpeningKind = openingKinds[slot] ?? null;
@@ -4394,10 +4394,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
-          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+          const candidateSample = await withPhaseGPageInputLock(page, () => readBattleDeploymentDiagnostics(page, {
             requestedSlot: deployment + 1,
             phase: "candidate-sample",
-          });
+          }));
           recorder?.setLatestReadableState(candidateSample);
           const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
             completedImpactProofEnabled,
