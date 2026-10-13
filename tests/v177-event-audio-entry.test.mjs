@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-async function entryFixture(events, { clickElapsed = 0 } = {}) {
+async function entryFixture(events, { clickElapsed = 0, noticeClickRacesExit = false } = {}) {
   let now = 0;
   let forcedState = null;
   const clicks = [];
@@ -30,11 +30,17 @@ async function entryFixture(events, { clickElapsed = 0 } = {}) {
       throw new Error('entry visibility deadline exceeded');
     },
     async boundingBox() { return { x: 0, y: 0, width: 100, height: 44 }; },
-    async click() {
+    async click({ timeout = 45000 } = {}) {
       const name = names.find(visible);
       assert.ok(name, 'native entry click requires the visible control');
       assert.notEqual(state(), 'notice-disabled', 'disabled notice must finish its own countdown');
       clicks.push(name);
+      if (name === 'notice' && noticeClickRacesExit) {
+        now += timeout;
+        const error = new Error('notice left while its native click waited');
+        error.name = 'TimeoutError';
+        throw error;
+      }
       now += clickElapsed;
       if (name === 'notice') forcedState = null;
       if (name === 'offer') forcedState = 'title';
@@ -98,4 +104,44 @@ test('fiction and install steps share the original deadline and retain the calle
   assert.equal(checked.length, 1);
   assert.equal(checked[0].timeout, 20000);
   assert.deepEqual(fixture.clicks, ['notice']);
+});
+
+for (const [file, timeout] of [
+  ['v099-final-remediation-browser-smoke.mjs', 60000],
+  ['v100-event-presentation-audio-browser-smoke.mjs', 45000],
+  ['v100-normal-campaign-playthrough.mjs', 15000],
+  ['v100-final-normal-playthrough.mjs', 15000],
+]) test(`${file}: actual entry waits for automatic fiction exit without leaving a native notice click pending`, async () => {
+  const fixture = await entryFixture([{ at: 0, state: 'notice' }, { at: 6500, state: 'offer' }], { noticeClickRacesExit: true });
+  const source = await readFile(new URL('../scripts/' + file, import.meta.url), 'utf8');
+  const calls = source.match(/await dismissInstallOffer\(page,\s*\{[^\n]+\}\);/g);
+  assert.equal(calls?.length, 1, 'exercise the actual caller and its unchanged deadline');
+  const runEntry = new (async function () {}).constructor('page', 'timeout', 'clickUsable', 'dismissInstallOffer', calls[0]);
+  await runEntry(fixture.page, timeout, async (control, _, options) => control.click(options), fixture.dismissInstallOffer);
+  assert.deepEqual(fixture.clicks, ['offer']);
+  assert.equal(fixture.state, 'title');
+  assert.equal(fixture.now, 6500);
+  assert.equal(fixture.waits[0].timeout, timeout);
+});
+
+test('automatic fiction exit still requires the real destination and preserves native install hit-target checks', async () => {
+  const fixture = await entryFixture([{ at: 0, state: 'notice' }, { at: 6500, state: 'offer' }], { noticeClickRacesExit: true });
+  const checked = [];
+  await fixture.dismissInstallOffer(fixture.page, {
+    timeout: 15000, readySelector: '.v100-start-screen', waitForFictionDismissal: true,
+    clickControl: async (control, label, options) => { checked.push({ label, timeout: options.timeout }); await control.click(options); },
+  });
+  assert.deepEqual(fixture.clicks, ['offer']);
+  assert.deepEqual(checked, [{ label: 'PWA browser play', timeout: 8500 }]);
+});
+
+test('stuck fiction or a missing next screen fails within the original shared deadline without a notice click', async () => {
+  for (const events of [[{ at: 0, state: 'notice' }], [{ at: 0, state: 'notice' }, { at: 6500, state: 'loading' }]]) {
+    const fixture = await entryFixture(events, { noticeClickRacesExit: true });
+    await assert.rejects(fixture.dismissInstallOffer(fixture.page, {
+      timeout: 15000, readySelector: '.v100-start-screen', waitForFictionDismissal: true,
+    }), /deadline exceeded/);
+    assert.equal(fixture.now, 15000);
+    assert.deepEqual(fixture.clicks, []);
+  }
 });

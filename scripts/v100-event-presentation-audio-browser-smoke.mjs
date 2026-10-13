@@ -239,7 +239,7 @@ for (const engine of engines) {
           url.searchParams.set("event-audio-qa", "1");
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation HTTP ${response?.status()}`);
-          await dismissInstallOffer(page, { timeout, readySelector: ".v100-start-screen", clickControl: clickUsable });
+          await dismissInstallOffer(page, { timeout, readySelector: ".v100-start-screen", clickControl: clickUsable, waitForFictionDismissal: true });
           const eventSelector = `[data-v100-event-id="${eventCase.eventId}"]`;
           await enterV100FromTitle(page, { timeout });
           await page.locator(eventSelector).waitFor({ state: "visible", timeout });

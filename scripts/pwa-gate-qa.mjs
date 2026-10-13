@@ -11,7 +11,7 @@
  * a context without service worker support, never sees it, and neither case is
  * a failure.
  */
-export async function dismissInstallOffer(page, { timeout = 60_000, readySelector = null, clickControl = null } = {}) {
+export async function dismissInstallOffer(page, { timeout = 60_000, readySelector = null, clickControl = null, waitForFictionDismissal = false } = {}) {
   const deadline = Date.now() + timeout;
   const remaining = () => Math.max(1, deadline - Date.now());
   const skip = page.getByRole("button", { name: "ブラウザで遊ぶ" });
@@ -29,7 +29,11 @@ export async function dismissInstallOffer(page, { timeout = 60_000, readySelecto
   };
   await waitForChoice(ready ? skip.or(notice).or(ready) : skip.or(notice));
   if (await notice.isVisible().catch(() => false)) {
-    if (await notice.isEnabled()) await click(notice, "fiction notice");
+    // The notice closes itself after six visible seconds and a fade. A native
+    // click started during that fade can wait on a detached button until the
+    // entire entry deadline. Strict callers follow the automatic transition;
+    // the subsequent install/title controls still use real native gestures.
+    if (!waitForFictionDismissal && await notice.isEnabled()) await click(notice, "fiction notice");
     await notice.waitFor({ state: "hidden", timeout: remaining() });
   }
   if (ready && await ready.isVisible()) return false;

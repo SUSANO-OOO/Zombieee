@@ -1061,7 +1061,7 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
     invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
     await diagnosticControl.calibratePageClock("post-navigation");
     setPhase("battle setup");
-    await dismissInstallOffer(page, { timeout });
+    await dismissInstallOffer(page, { timeout, readySelector: ".game-shell", waitForFictionDismissal: true });
     setPhase("legacy screen advancement");
     await enterLegacyQaBattle(page, qaMode);
     setPhase("battle readiness");

@@ -233,7 +233,7 @@ async function acceptResult(record) {
 }
 try {
  await page.goto(origin.href);
- await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen"});
+ await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen",waitForFictionDismissal:true});
  await enterV100FromTitle(page,{timeout:15000});
  if (!resumeDir) {
    await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新通し確認");
