@@ -1016,6 +1016,7 @@ async function readPhaseGSustainState(page, { bossIsLive, readSetupRuntime,
         return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
       }).catch(() => 0);
       const setupRuntime = await readSetupRuntime();
+      if (!setupRuntime) return null;
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
@@ -3961,7 +3962,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       requiredCompletedImpactActorKeys,
     });
   };
-  const readSetupRuntime = async () => {
+  const readSetupRuntimeUnlocked = async () => {
     const runtime = await readPhaseGSetupRuntime(page);
     if (runtime?.screen === "battle") {
       const observed = deriveV100RuntimeObservation(runtime);
@@ -3970,6 +3971,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     return runtime;
   };
+  // Foreground setup polling must not overlap a sustain pointer transaction.
+  // Callers already holding the input lane use the same reader directly.
+  const readSetupRuntime = () => withPhaseGPageInputLock(page, readSetupRuntimeUnlocked);
   let proofActorAttackObserved = proofActor === null;
   let vehicleActionObserved = !requireVehicleAction;
   let proofUnitDeployed = proofUnitKind === null;
@@ -4010,7 +4014,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofActorAttackObserved) setupObservations[`zombie:${proofActor}`] ??= runtime;
     return proofActorAttackObserved;
   };
-  const readProofActorContactState = async () => {
+  const readProofActorContactState = () => withPhaseGPageInputLock(page, async () => {
     if (!proofActor) return null;
     const state = await page.evaluate((expectedKind) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
@@ -4038,7 +4042,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }, proofActor).catch(() => null);
     if (state?.mounted === true) recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
     return state;
-  };
+  });
   const observeProofUnitAttack = async (runtime = null) => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
     runtime ??= await readSetupRuntime();
@@ -4065,7 +4069,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const ordinaryTacticsAfterProof = completedImpactProofEnabled || requireVehicleAction;
   let bossDeploymentFinished = false;
   let sustainFailure = null;
-  const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
+  const bossIsLiveUnlocked = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie"
@@ -4080,6 +4084,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
+  const bossIsLive = () => withPhaseGPageInputLock(page, bossIsLiveUnlocked);
   const accelerateBossEntry = async () => {
     if (!bossKind) return;
     // Only the authored entry animation is accelerated. Spawn, sprite mount,
@@ -4103,7 +4108,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // Background observation shares the same page lane as pointer preflight.
       // Otherwise its RPCs can run during the bounded fresh-state read.
       const backgroundState = await readPhaseGSustainState(page, {
-        bossIsLive, readSetupRuntime, observeProofActorAttack, observeProofUnitAttack, observeVehicleAction,
+        bossIsLive: bossIsLiveUnlocked, readSetupRuntime: readSetupRuntimeUnlocked,
+        observeProofActorAttack, observeProofUnitAttack, observeVehicleAction,
       });
       if (!backgroundState) break;
       const { bossEngaged, liveHumanTargetCount } = backgroundState;
@@ -4116,7 +4122,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // formation roles and can defeat the QA fixture before boss entry.
         // The boss-attack fixture also needs living humans when its boss arrives.
         await withPhaseGPageInputLock(page, () => normalTacticalInput(page, tacticalRecord, { barrageWhenOverwhelmed: tacticalStageNumber >= 25, barrageEnabled: tacticalStageNumber !== 24, airstrikeAfterSeconds: tacticalStageNumber >= 24 ? 40 : 0 }));
-        await accelerateBossEntry();
+        await withPhaseGPageInputLock(page, accelerateBossEntry);
         await page.waitForTimeout(520);
         continue;
       }
@@ -4126,7 +4132,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const sustainAbilitySelector = 'button.manual-ability-ready.available:not([disabled])'
         + (manualAbilityKind ? `:not([data-ability-kind="${manualAbilityKind}"])` : "");
       const abilityButtons = page.locator(sustainAbilitySelector);
-      const abilityCount = await abilityButtons.count().catch(() => 0);
+      const abilityCount = await withPhaseGPageInputLock(page, () => abilityButtons.count().catch(() => 0));
       const proofCombatReady = proofActorAttackObserved && proofUnitAttackObserved;
       const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
         completedImpactProofEnabled,
@@ -4145,8 +4151,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         }
       }
 
-      const crawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
-      if (proofCombatReady && !vehicleActionObserved && await crawler.count().catch(() => 0)) {
+      if (proofCombatReady && !vehicleActionObserved) {
         await withPhaseGPageInputLock(page, async () => {
           const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
           if (await lockedCrawler.count().catch(() => 0)) await phaseGOrderedControlInput(page,
@@ -4155,7 +4160,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
 
       const canvas = page.locator("canvas.battlefield");
-      const box = await canvas.boundingBox().catch(() => null);
+      const box = await withPhaseGPageInputLock(page, () => canvas.boundingBox().catch(() => null));
       if (box) {
         if (!bossEngaged && proofCombatReady && !completedImpactProofEnabled) {
           await withPhaseGPageInputLock(page, async () => {
@@ -4520,7 +4525,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const ability = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
           if (!(await ability.count())) return false;
           const ownerId = await ability.getAttribute("data-fighter-id");
-          const runtime = await readSetupRuntime();
+          const runtime = await readSetupRuntimeUnlocked();
           if (manualAbilityKind === "babayaga" && !babayagaMarkerInputReady(runtime, ownerId)) return false;
           manualActionEvidence.ownerId = ownerId;
           manualActionEvidence.beforeInput = runtime;
@@ -4529,7 +4534,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           // ordinary tactical input; the receipt gate below still proves the
           // exact activation, living target, and completed impact.
           if (!(await nativeBattleTap(page, ability))) return false;
-          manualActionEvidence.afterInput = await readSetupRuntime();
+          manualActionEvidence.afterInput = await readSetupRuntimeUnlocked();
           // A pointer can land just as the owner is stunned or its target
           // changes. Count an activation only when the game records its start;
           // an ignored input may be retried inside the original 45-second
