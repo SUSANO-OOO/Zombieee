@@ -102,16 +102,96 @@ jobs:
             npx playwright install --with-deps chromium
           fi
       - run: npm run build
-      - name: Verify iPhone media output and encoded mix without microphone access
-        env:
-          V103_AUDIO_ENGINE: ${{ matrix.engine }}
-          V103_AUDIO_OUT: outputs/v103-audio
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
       - name: Verify all render forms and actual gore damage
         env:
           V102_COMBAT_ENGINE: ${{ matrix.engine }}
           V102_COMBAT_OUT: outputs/v102-combat
         run: node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v102-combat-${{ matrix.engine }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  v103-audio-output:
+    name: V1.0.3 Media Output (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+      - name: Verify iPhone media output and encoded mix without microphone access
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V103_AUDIO_OUT: outputs/v103-audio
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v103-audio-${{ matrix.engine }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  v102-enemy-contacts:
+    name: V1 Ordinary Enemy Contacts (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
       - name: Observe ordinary enemy contacts through native touch deployment
         env:
           V100_ENEMY_MOTION_ENGINE: ${{ matrix.engine }}
@@ -121,11 +201,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v102-combat-${{ matrix.engine }}
-          path: |
-            outputs/v102-combat
-            outputs/v102-normal-contacts
-            outputs/v103-audio
+          name: v102-normal-contacts-${{ matrix.engine }}
+          path: outputs
           if-no-files-found: error
           retention-days: 14
 
@@ -133,7 +210,7 @@ jobs:
     name: V1 Normal Campaign (${{ matrix.engine }})
     # Start the long earned-save route only after the focused candidate gates.
     # A failed battle is evidence, never retried or replaced with a seeded win.
-    needs: [verify, v102-combat, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
+    needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
     strategy:
       fail-fast: false
       matrix:

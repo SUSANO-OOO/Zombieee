@@ -6,6 +6,43 @@ import { load as loadYaml } from "js-yaml";
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
 import { CANONICAL_HUD_STATES } from "../scripts/run-v099-hud-states-bounded.mjs";
 
+test('split native combat, audio and ordinary contacts remain mandatory in both engines without weakening their deadlines or assertions', async () => {
+  const workflow = loadYaml(await readFile('.github/workflows/ci.yml', 'utf8'));
+  const lanes = [
+    ['v102-combat', 'v102-combat-browser.mjs', {V102_COMBAT_ENGINE:'${{ matrix.engine }}',V102_COMBAT_OUT:'outputs/v102-combat'}, 'v102-combat'],
+    ['v103-audio-output', 'v103-audio-output-browser.mjs', {V103_AUDIO_ENGINE:'${{ matrix.engine }}',V103_AUDIO_OUT:'outputs/v103-audio'}, 'v103-audio'],
+    ['v102-enemy-contacts', 'v100-enemy-contact-motion-browser.mjs', {V100_ENEMY_MOTION_ENGINE:'${{ matrix.engine }}',V100_ENEMY_MOTION_OUT:'outputs/v102-normal-contacts',V100_ENEMY_MOTION_ASSERT:'1'}, 'v102-normal-contacts'],
+  ];
+  function assertLanes(jobs) {
+    for (const [id, script, env, artifact] of lanes) {
+      const job = jobs[id];assert.ok(job, id + ' remains required');
+      assert.equal(job['timeout-minutes'], 30);assert.equal(job['continue-on-error'], undefined);
+      assert.equal(job.if, undefined);assert.equal(job.strategy['fail-fast'], false);
+      assert.deepEqual(job.strategy.matrix.include, [{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+      assert.ok(jobs['v177-normal-campaign'].needs.includes(id), id + ' cannot be bypassed before earned30');
+      const commands = job.steps.filter(step => step.run?.startsWith('node scripts/run-browser-qa-with-server.mjs'));
+      assert.equal(commands.length, 1);assert.equal(commands[0].run, 'node scripts/run-browser-qa-with-server.mjs scripts/' + script);
+      assert.deepEqual(commands[0].env, env);assert.equal(commands[0]['continue-on-error'], undefined);assert.equal(commands[0].if, undefined);
+      assert.ok(job.steps.some(step => step.run === 'npm run build'));
+      assert.ok(job.steps.some(step => step.run?.includes('npm ci --prefix scripts/pwa-native-runtime') && step.run.includes('install webkit')));
+      const upload = job.steps.at(-1);assert.equal(upload.if, 'always()');
+      assert.equal(upload.with.name, artifact + '-${{ matrix.engine }}');assert.equal(upload.with.path, 'outputs');
+      assert.equal(upload.with['if-no-files-found'], 'error');assert.equal(upload.with['retention-days'], 14);
+    }
+  }
+  assertLanes(workflow.jobs);
+  for (const mutate of [
+    jobs => { delete jobs['v103-audio-output']; },
+    jobs => { jobs['v102-enemy-contacts'].strategy.matrix.include.pop(); },
+    jobs => { jobs['v102-combat']['continue-on-error'] = true; },
+    jobs => { jobs['v177-normal-campaign'].needs = jobs['v177-normal-campaign'].needs.filter(id => id !== 'v103-audio-output'); },
+    jobs => { jobs['v102-enemy-contacts'].steps.find(step => step.env?.V100_ENEMY_MOTION_ASSERT).env.V100_ENEMY_MOTION_ASSERT = '0'; },
+    jobs => { jobs['v102-combat']['timeout-minutes'] = 60; },
+  ]) {
+    const jobs = structuredClone(workflow.jobs);mutate(jobs);assert.throws(() => assertLanes(jobs));
+  }
+});
+
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
   const attributes = (await readFile(".gitattributes", "utf8")).replaceAll("\r\n", "\n");
@@ -208,7 +245,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "v177-normal-campaign", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -247,7 +284,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.equal(jobs['v102-combat']['continue-on-error'],undefined);
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));
   const normal=jobs['v177-normal-campaign'];
-  assert.deepEqual(normal.needs,['verify','v102-combat','r9-story','v100-native-webkit-pwa','v100-phase-g-production']);
+  assert.deepEqual(normal.needs,['verify','v102-combat','v103-audio-output','v102-enemy-contacts','r9-story','v100-native-webkit-pwa','v100-phase-g-production']);
   assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(normal.strategy['fail-fast'],false);assert.equal(normal['continue-on-error'],undefined);
   assert.equal(normal.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
