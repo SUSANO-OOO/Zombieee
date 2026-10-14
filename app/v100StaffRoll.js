@@ -22,6 +22,11 @@ export const V100_CREDITS_OUTRO_SECONDS = 3.2;
 // The original song is louder than the normalized scene score. Match its
 // first 106 seconds to the scene mix while retaining the original recording.
 export const V100_CREDITS_MIX_GAIN = .15;
+export function v100CreditsOutroOvershoot(elapsed, speed = 1) {
+  if (!Number.isFinite(elapsed)) return 0;
+  const rate = Number.isFinite(speed) && speed > 0 ? speed : 1;
+  return Math.max(0, (elapsed - V100_CREDITS_DURATION) / rate);
+}
 export function v100CreditsOutroFrame(seconds) {
   const time = Math.max(0, Number(seconds) || 0);
   const phase = Math.min(1, time / V100_CREDITS_FADE_SECONDS);

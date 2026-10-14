@@ -11,7 +11,7 @@ import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
 import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
 import { installCreditTransitionAudit, assertCreditTransitionProof } from "./v100-staff-roll-transition-audit.mjs";
-import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
+import { installEndingAudioGainObserver, assertEndingGainFadeOnset } from "./ending-audio-gain-observer.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { installRequestFailureAudit, isInjectedMedia503Console, finalizeRequestFailureEvidence } from "./browser-request-failure-audit.mjs";
 
@@ -207,20 +207,22 @@ try {
     await dialog.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
     console.log(JSON.stringify({ engine, status: "playing-106-second-edit-at-original-music-speed", seeks: 0 }));
     await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible", timeout: 150000 });
-    const proof = await page.evaluate(() => ({ ...window.__creditMediaProof, save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));
+    const proof = await page.evaluate(() => ({ ...window.__creditMediaProof,
+      gainTrace: window.__endingOutputGainTrace(window.__lastCreditAudio), save: JSON.parse(localStorage.getItem("nishijin-campaign-v100")) }));
     result.nativeEnded = proof.ended; result.mediaSamples = proof.samples;
+    result.mediaGainTrace = proof.gainTrace;
     assert.deepEqual(proof.ended, [], "The edit fades before the unmodified full song reaches EOF");
     assert.deepEqual(proof.seeks, []);
     assert.ok(proof.samples.every(row => row.rate === 1));
     const nominal = result.initial.audio.gain;
     const fade = proof.samples.filter(row => row.outro && row.gain < nominal - .00001);
     assert.ok(fade.length >= 15, "Observe the gradual actual output gain fade");
-    assert.ok(fade[0].time >= V100_CREDITS_DURATION - .1 && fade[0].time < V100_CREDITS_DURATION + .35);
+    const onset = assertEndingGainFadeOnset(proof.gainTrace, nominal, V100_CREDITS_DURATION);
     assert.ok(fade.some(row => row.gain === 0 && row.paused && row.time >= V100_CREDITS_DURATION + V100_CREDITS_FADE_SECONDS - .3));
     assert.ok(fade.every((row, index) => index === 0 || row.gain <= fade[index - 1].gain));
     assert.equal(new Set(proof.samples.filter(row => row.scene !== null).map(row => row.scene)).size, 11);
     assert.equal(new Set(proof.samples.filter(row => row.shot !== null).map(row => row.shot)).size, V100_CREDITS_FILM.length);
-    result.fade = { startedAtMusicSeconds: fade[0].time, stopped: fade.find(row => row.gain === 0 && row.paused), samples: fade.length, nominal };
+    result.fade = { ...onset, firstSampledDeclineAt: fade[0].time, stopped: fade.find(row => row.gain === 0 && row.paused), samples: fade.length, nominal };
     assert.ok(proof.save.readStoryEventIds.includes("v100:event:credits"));
     assert.equal(proof.save.flowState.phase, "map");
     result.filmTransitions = await page.evaluate(() => window.__creditTransitionProof);

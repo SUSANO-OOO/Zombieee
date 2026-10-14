@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObje
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { v100CreditsCameraStyle } from "./v100CreditsFilmEdit.js";
 import { createEndingAudioMix } from "./endingAudioMix.js";
-import { V100_CREDITS_SONG, V100_CREDITS_DURATION, V100_CREDITS_FADE_SECONDS, V100_CREDITS_MIX_GAIN, v100CreditsOutroFrame, v100CreditScrollFrame, v100StaffRollSections, v100StaffRollFrame, v100StaffRollResumeSeconds } from "./v100StaffRoll.js";
+import { V100_CREDITS_SONG, V100_CREDITS_DURATION, V100_CREDITS_FADE_SECONDS, V100_CREDITS_MIX_GAIN, v100CreditsOutroOvershoot, v100CreditsOutroFrame, v100CreditScrollFrame, v100StaffRollSections, v100StaffRollFrame, v100StaffRollResumeSeconds } from "./v100StaffRoll.js";
 import "./v100StaffRoll.css";
 
 type Shot = { sceneLabel?: string; text?: string };
@@ -253,13 +253,23 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     else { const frame = requestAnimationFrame(() => { void play(); }); return () => cancelAnimationFrame(frame); }
   }, [blocked, play]);
 
-  const beginOutro = useCallback(() => {
+  const beginOutro = useCallback((outroSeconds = 0) => {
     if (outroRef.current !== null || endedRef.current) return;
-    outroRef.current = 0;
+    outroRef.current = Math.max(0, Number.isFinite(outroSeconds) ? outroSeconds : 0);
+    const closing = v100CreditsOutroFrame(outroRef.current);
+    // This phase belongs to the imperative frame paint, so output observation
+    // need not wait for React's next class-name commit.
+    if (stageRef.current) stageRef.current.dataset.v100CreditOutroStarted = "true";
+    const audio = audioRef.current;
+    if (audio) {
+      mixRef.current?.setVolume(audio, musicVolumeRef.current * closing.gain);
+      if (closing.gain === 0) audio.pause();
+    }
+    stageRef.current?.style.setProperty("--credit-curtain", String(closing.curtain));
     elapsedRef.current = V100_CREDITS_DURATION;
     setFrame(v100StaffRollFrame(V100_CREDITS_DURATION, V100_CREDITS_DURATION, nodes.length));
     setOutro(true);
-    if (audioRef.current?.paused && !audioRef.current.ended) void play();
+    if (closing.gain > 0 && audioRef.current?.paused && !audioRef.current.ended) void play();
   }, [nodes.length, play]);
 
   useEffect(() => {
@@ -316,7 +326,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
           callbacksRef.current.onScene?.(next.index);
         }
         if (next.shotIndex !== lastFrameShotRef.current || at - lastPaint >= 100) { setFrame(next); lastFrameShotRef.current = next.shotIndex; lastPaint = at; }
-        if (next.ended) beginOutro();
+        if (next.ended) beginOutro(v100CreditsOutroOvershoot(elapsedRef.current, speedRef.current));
       }
       animation = requestAnimationFrame(tick);
     };
