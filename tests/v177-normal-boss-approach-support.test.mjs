@@ -15,7 +15,7 @@ const find=node=>{if(ts.isIfStatement(node)&&node.getText(tree).includes('await 
 find(functions.get('battle'));
 assert.equal(fire.length,1,'exercise the actual normal-play barrage input, without importing its hosted browser entry point');
 
-async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true}={}){
+async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true,airstrikeRequested=false}={}){
   const stage=V100_STAGES.find(stage=>stage.number===stageNumber);
   let runtime=createCrawlerAbilityRuntime(ready?1:0,true),supportGauge=gauge;
   const record={inputs:[]},clicks=[];
@@ -25,7 +25,7 @@ async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true
     runtime=result.runtime;supportGauge=result.supportGauge;clicks.push('vehicle-barrage');
   }};
   await vm.runInNewContext('(async()=>{'+fire[0].getText(tree)+'})()',{
-    stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},
+    stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},airstrikeRequested,
   });
   return {record,clicks,supportGauge,runtime};
 }
@@ -41,7 +41,7 @@ for(const scenario of [{stageNumber:1,bossVisible:false},{stageNumber:3,bossVisi
 }
 
 test('boss approach still respects the visible button, real support cost, cooldown and existing opening delay',async()=>{
-  for(const scenario of [{visible:false},{gauge:69},{ready:false},{seconds:12}]){
+  for(const scenario of [{visible:false},{gauge:69},{ready:false},{seconds:12},{airstrikeRequested:true}]){
     const result=await runFire(scenario);assert.deepEqual(result.clicks,[]);assert.equal(result.record.inputs.length,0);
   }
 });

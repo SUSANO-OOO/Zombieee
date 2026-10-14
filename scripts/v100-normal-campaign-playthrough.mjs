@@ -12,7 +12,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import { normalCampaignDeploymentCount } from "./v100-normal-play-contract.mjs";
+import { normalCampaignDeploymentCount, normalCampaignDeployOrder, normalCampaignAirstrikeTarget } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
@@ -171,7 +171,10 @@ async function battle(stage) {
     const cards=page.locator("button.unit-card[data-kind]");
     const count=await cards.count();
     if(count&&Date.now()-lastAction>500) {
-      const card=cards.nth(cursor%count);
+      const equippedKinds=await cards.evaluateAll(elements=>elements.map(el=>el.getAttribute('data-kind')));
+      const deploymentOrder=normalCampaignDeployOrder(equippedKinds);
+      record.deploymentOrder??=deploymentOrder;
+      const card=cards.nth(equippedKinds.indexOf(deploymentOrder[cursor%count]));
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
@@ -185,11 +188,26 @@ async function battle(stage) {
         }
       }
     }
+    let airstrikeRequested=false;
+    const airstrike=page.locator('button.support-btn.airstrike');
+    if(Date.now()-start>24_000&&await airstrike.isVisible()&&await airstrike.isEnabled()) {
+      const canvas=await page.locator('.game-shell canvas').evaluate(c=>{const r=c.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,worldScale:Number(c.dataset.worldScale),worldOffsetX:Number(c.dataset.worldOffsetX),worldOffsetY:Number(c.dataset.worldOffsetY)};});
+      const anchors=await page.locator('button.manual-ability-ready').evaluateAll(elements=>elements.map(el=>({x:Number(el.getAttribute('data-owner-anchor-x')),y:Number(el.getAttribute('data-owner-anchor-y'))})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+      const aim=normalCampaignAirstrikeTarget(canvas,anchors,await page.locator('.game-shell').innerText());
+      if(aim&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
+        await airstrike.click();await page.mouse.click(aim.point.x,aim.point.y);
+        airstrikeRequested=true;
+        const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim};record.inputs.push(input);
+        // Observe the actual HUD acknowledgment; an aimed click alone is not a strike.
+        await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
+        input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
+      }
+    }
     const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
     // Pre-boss waves can destroy the vehicle too. Use the ordinary enabled
     // control instead of reserving a full gauge until a boss is on screen.
-    if((Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    if(!airstrikeRequested&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()
