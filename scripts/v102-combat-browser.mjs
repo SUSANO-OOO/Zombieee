@@ -25,7 +25,7 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. Base enemy movement/attack fixtures control target distance and speed. Additional ally/alternate-body movement/attack fixtures retain original actor stats and use an inert durable opponent. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. All movement/attack fixtures retain original actor stats and use an inert durable opponent at a controlled distance. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -131,7 +131,7 @@ try{
         for(const kind of enemies){
           await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);
           for(const phase of ['move','attack']){
-            const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase}),{kind,phase});
+            const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form:kind==='futago'?'futago-separated-a':kind,phase}),{kind,phase});
             const evidence={kind,phase,proof,...v177EnemyRuntimeRenderIdentity(proof),samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
             try{
               evidence.samples=await captureContinuousSamples(page,proof,{form:evidence.renderKind,requestedKind:kind,phase,fixtureGroup:'base-enemy'});

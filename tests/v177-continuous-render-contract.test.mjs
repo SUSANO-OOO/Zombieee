@@ -49,8 +49,21 @@ const coverage=()=>{
   const extra=V177_ADDITIONAL_CONTINUOUS_FORMS.flatMap(form=>['move','attack'].map(phase=>evidence(form,phase)));
   return {base,extra};
 };
+test('controlled enemy evidence cannot replace an original-stat move or attack for any authored body',()=>{
+  const {base,extra}=coverage();
+  for(const form of spriteKinds)for(const phase of ['move','attack']){
+    const missingBase=structuredClone(base),missingExtra=structuredClone(extra);
+    const selected=[...missingBase,...missingExtra].filter(e=>(e.renderKind??e.form)===form&&e.phase===phase);
+    assert.ok(selected.length>0);
+    for(const e of selected)delete e.proof.originalActorStats;
+    assert.throws(()=>assertV177ContinuousFormCoverage(missingBase,missingExtra),`${form}/${phase} requires actual original-stat evidence`);
+  }
+  const altered=structuredClone(base),walker=altered.find(e=>e.kind==='walker'&&e.phase==='move');
+  walker.samples[0].fighter.speed=70;
+  assert.throws(()=>assertV177ContinuousFormCoverage(altered,extra),'a real enemy must keep its captured original speed');
+});
 test('Complete move/attack coverage includes every ally, enemy and derived body and cannot hide an omitted or duplicate phase',()=>{
-  const {base,extra}=coverage();assert.deepEqual(assertV177ContinuousFormCoverage(base,extra),{forms:48,phases:98,baseEnemyPhases:58,additionalPhases:40,allActionsAcceptance:false,normalPlayAcceptance:false});
+  const {base,extra}=coverage();assert.deepEqual(assertV177ContinuousFormCoverage(base,extra),{forms:48,phases:98,baseEnemyPhases:58,additionalPhases:40,originalStatForms:48,originalStatPhases:96,allActionsAcceptance:false,normalPlayAcceptance:false});
   assert.throws(()=>assertV177ContinuousFormCoverage(base,extra.slice(1)));
   const duplicate=structuredClone(extra);duplicate[1]=structuredClone(duplicate[0]);assert.throws(()=>assertV177ContinuousFormCoverage(base,duplicate));
   const stale=structuredClone(extra);stale[0].samples[0].renders[0].jointAtlasPath='/art/v100/joints/obsolete.webp';assert.throws(()=>assertV177ContinuousFormCoverage(base,stale));

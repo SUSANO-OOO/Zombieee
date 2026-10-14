@@ -61,10 +61,16 @@ export function assertV177ContinuousFormCoverage(baseEnemies,additional){
   assert.equal(baseEnemies.length,enemyKinds.length*2);assert.equal(additional.length,V177_ADDITIONAL_CONTINUOUS_FORMS.length*2);
   for(const kind of enemyKinds)for(const phase of ['move','attack'])assert.equal(baseEnemies.filter(e=>e.kind===kind&&e.phase===phase).length,1);
   for(const form of V177_ADDITIONAL_CONTINUOUS_FORMS)for(const phase of ['move','attack'])assert.equal(additional.filter(e=>e.form===form&&e.phase===phase).length,1);
-  for(const e of baseEnemies){assert.equal(e.status,'passed');assertV177EnemyLiveRender({...e,fighterId:e.proof.fighterId});}
+  for(const e of baseEnemies){
+    assert.equal(e.status,'passed');assertV177EnemyLiveRender({...e,fighterId:e.proof.fighterId});
+    // The original enemy-facing checks still run, but changed speed/range
+    // cannot stand in for how this body really moves and attacks in V1.
+    assertV177AuthoredLiveRender({form:e.renderKind,phase:e.phase,proof:e.proof,samples:e.samples});
+  }
   for(const e of additional){assert.equal(e.status,'passed');assertV177AuthoredLiveRender(e);}
   const observed=new Set([...baseEnemies.map(e=>`${e.renderKind}/${e.phase}`),...additional.map(e=>`${e.form}/${e.phase}`)]);
   for(const form of spriteKinds)for(const phase of ['move','attack'])assert.ok(observed.has(`${form}/${phase}`),`missing continuous ${form}/${phase}`);
   return {forms:spriteKinds.length,phases:baseEnemies.length+additional.length,baseEnemyPhases:baseEnemies.length,
-    additionalPhases:additional.length,allActionsAcceptance:false,normalPlayAcceptance:false};
+    additionalPhases:additional.length,originalStatForms:new Set([...baseEnemies.map(e=>e.renderKind),...additional.map(e=>e.form)]).size,
+    originalStatPhases:observed.size,allActionsAcceptance:false,normalPlayAcceptance:false};
 }
