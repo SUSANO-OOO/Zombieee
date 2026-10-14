@@ -18,8 +18,32 @@
         2181,
         2183
       ],
-      "references": [],
-      "alt": "武蔵とザキミヤが保護カバーを支え、隙間の奥の停止レバーへ手を伸ばす。"
+      "references": [
+        "assets/source/v100/story-r9/references/s28-wide-layout-r1.png",
+        "assets/source/v100/story-r9/references/s28-physical-stop-setting-r1.webp"
+      ],
+      "alt": "武蔵とザキミヤが保護カバーを支え、隙間の奥の停止レバーへ手を伸ばす。",
+      "referenceSha256": {
+        "assets/source/v100/story-r9/references/s28-wide-layout-r1.png": "0dbba202c096256d1aec1facef6ec413dc530e0e30565946b2029d651cb22efe",
+        "assets/source/v100/story-r9/references/s28-physical-stop-setting-r1.webp": "26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e"
+      },
+      "revision": "r2-phone-readable-20261014",
+      "authoringLineage": {
+        "layoutMaster": "assets/source/v100/story-r9/references/s28-wide-layout-r1.png",
+        "prompt": "assets/source/v100/story-r9/references/s28-wide-layout-r1-prompt.txt",
+        "tool": "image_gen.imagegen",
+        "references": [
+          "assets/source/v100/story-r9/references/s28-wide-composition-guide.png",
+          "public/art/v090/characters/reference/miyamoto-musashi-identity-master-r1.png",
+          "public/art/v090/characters/reference/zakimiya-identity-master-r1.png"
+        ],
+        "referenceSha256": {
+          "assets/source/v100/story-r9/references/s28-wide-composition-guide.png": "5d540345a2d4b64680dc867dedffd53bd67558566116924757390f7a3a19a498",
+          "public/art/v090/characters/reference/miyamoto-musashi-identity-master-r1.png": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9",
+          "public/art/v090/characters/reference/zakimiya-identity-master-r1.png": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+        },
+        "layoutOnlyNotRuntime": true
+      }
     },
     {
       "id": "prologue-extinguisher-escape",

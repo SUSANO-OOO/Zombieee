@@ -8,8 +8,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
-    "bytes": 334674,
-    "hash": "sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",
+    "bytes": 233424,
+    "hash": "sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",
     "criticality": "critical"
   },
   {
@@ -259,4 +259,4 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
     "criticality": "optional"
   }
 ]);
-export const V100_R9_ASSET_BYTES=6827069;
+export const V100_R9_ASSET_BYTES=6725819;

@@ -1399,6 +1399,9 @@
 .v100-event-category-credits .v100-event-backdrop { filter: brightness(.82) saturate(.9); }
 .v100-event-backdrop[data-v100-title-card="true"] { background: #030607; filter: none; }
 .v100-event-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+/* This wide shot keeps the cover, both faces and reaching glove above dialogue on short screens. */
+.v100-event-backdrop[data-v100-background="/art/v100/story-r9/cuts/s28-physical-stop.webp"] { background-position: center top; }
+.v100-event-image[src="/art/v100/story-r9/cuts/s28-physical-stop.webp"] { object-position: center top; }
 .v100-event-image-arriving { animation: v100-event-dissolve .65s ease both; }
 .v100-event-backdrop[data-v100-cinematic="true"] { filter: brightness(.86) saturate(.92); }
 .v100-event-layout .v100-event-backdrop { transition: filter .65s ease; }

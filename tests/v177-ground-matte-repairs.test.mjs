@@ -77,12 +77,17 @@ test("Knife death gap and cord hole use original RGB while eight nondeath cells 
   assert.equal(current.groundAnchorPixels,previous.groundAnchorPixels);
 });
 
-test("the two source-bound matte transports match the manifest with no unrelated asset replacement",async()=>{
+test("the two source-bound matte transports and later R9 physical-stop cut are the exact manifest replacements",async()=>{
   const current=JSON.parse(await disk("public/asset-manifest.json")),previous=JSON.parse(old("public/asset-manifest.json"));
   const previousByPath=new Map(previous.assets.map(a=>[a.path,a]));
   assert.equal(current.assets.length,previous.assets.length);
   const changed=current.assets.filter(a=>a.hash!==previousByPath.get(a.path)?.hash);
-  assert.deepEqual(changed.map(a=>a.path).sort(),V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path).sort());
+  const storyCut="/art/v100/story-r9/cuts/s28-physical-stop.webp";
+  assert.equal(previousByPath.get(storyCut).hash,"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e");
+  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),storyCut].sort());
+  const revisedCut=current.assets.find(a=>a.path===storyCut);
+  assert.equal(revisedCut.hash,"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19");
+  assert.equal(revisedCut.bytes,233424);
   const provenance=JSON.parse(await disk("assets/source/v100/sprite-repairs/ground-matte-provenance.json"));
   assert.equal(provenance.kuromeBuilderMode,"--battle-only");
   for(const binding of V177_GROUND_MATTE_SPRITE_REPLACEMENTS){
