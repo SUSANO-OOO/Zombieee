@@ -10,17 +10,40 @@ const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthroug
 const tree=ts.createSourceFile('normal-campaign.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const battle=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name.text==='battle');
 const blocks=[];
-function visit(node){if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('airstrike.isEnabled'))blocks.push(node);ts.forEachChild(node,visit);}
+const deployBlocks=[];
+function visit(node){if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('airstrike.isEnabled'))blocks.push(node);if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('Date.now()-lastAction>500'))deployBlocks.push(node);ts.forEachChild(node,visit);}
 visit(battle);assert.equal(blocks.length,1,'exercise the actual hosted-only normal input block without importing a browser');
+assert.equal(deployBlocks.length,1);
 
 test('the visible equipped roster opens with a front unit, ranged cover and healer without losing or adding a kind',()=>{
   const kinds=['medic','babayaga','scout','kumaverson','brawler'];
   const ordered=normalCampaignDeployOrder(kinds);
-  assert.deepEqual(ordered,['scout','babayaga','medic','kumaverson','brawler']);
+  // Both Stage 3 failures at 4e24ffeb used this earned five-unit formation
+  // but opened with the fast skirmisher. Use the available frontline role.
+  assert.deepEqual(ordered,['brawler','babayaga','medic','scout','kumaverson']);
   assert.deepEqual([...ordered].sort(),[...kinds].sort());
   assert.deepEqual(kinds,['medic','babayaga','scout','kumaverson','brawler']);
   assert.deepEqual(normalCampaignDeployOrder(['future-unit','ranger']),['ranger','future-unit']);
   assert.throws(()=>normalCampaignDeployOrder(['scout','scout']));
+});
+
+test('a frontline or heavy melee role precedes a skirmisher without misclassifying the ranged Zakimiya',()=>{
+  assert.equal(normalCampaignDeployOrder(['scout','kumaverson','medic'])[0],'kumaverson');
+  assert.equal(normalCampaignDeployOrder(['scout','guardian','medic'])[0],'guardian');
+  assert.equal(normalCampaignDeployOrder(['scout','miyamoto-musashi','medic'])[0],'miyamoto-musashi');
+  assert.deepEqual(normalCampaignDeployOrder(['zakimiya','scout','medic']),['scout','zakimiya','medic']);
+  assert.deepEqual(normalCampaignDeployOrder(['medic','scout']),['scout','medic']);
+});
+
+test('the actual normal deployment caller taps the available frontline card from the recorded Stage 3 roster',async()=>{
+  const kinds=['medic','babayaga','scout','kumaverson','brawler'],clicks=[],record={inputs:[]};
+  const cards={evaluateAll:async read=>read(kinds.map(kind=>({getAttribute:()=>kind}))),nth:index=>({isEnabled:async()=>true,getAttribute:async()=>kinds[index],click:async()=>clicks.push(kinds[index])})};
+  const result=await vm.runInNewContext('(async()=>{let cursor=0,lastAction=0,lastEmergency=0;'+deployBlocks[0].getText(tree)+';return {cursor,lastAction,lastEmergency};})()',{
+    cards,count:kinds.length,normalCampaignDeployOrder,record,Date:{now:()=>2_000},start:0,deploymentCount:{active:0,limit:7},
+    page:{locator:()=>{throw Error('An enabled frontline needs no emergency replacement');}},
+  });
+  assert.deepEqual(clicks,['brawler']);assert.equal(record.inputs[0].kind,'brawler');
+  assert.equal(result.cursor,1);assert.equal(result.lastAction,2_000);assert.equal(result.lastEmergency,0);
 });
 
 test('visible anchors, vehicle health and real world transforms keep every aim inside the production airstrike range',()=>{

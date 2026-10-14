@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { AIRSTRIKE_DEF } from '../app/gameRules.js';
+import { AIRSTRIKE_DEF, UNIT_CARDS } from '../app/gameRules.js';
 
 // Read the visible counter's accessible label. Compact HUD text contains only
 // "3/7", so searching its text for "同時出撃" silently skipped the cap check
@@ -18,7 +18,12 @@ export function normalCampaignDeploymentCount(label) {
 export function normalCampaignDeployOrder(kinds) {
   assert.ok(Array.isArray(kinds) && kinds.every(kind => typeof kind === 'string' && kind.length > 0));
   assert.equal(new Set(kinds).size, kinds.length, 'normal play requires one card per equipped kind');
-  const front = kinds.find(kind => ['scout','brawler','guardian','brute','kumaverson','crazy-king','tky','miyamoto-musashi','mayo-chan'].includes(kind));
+  const melee = kinds.filter(kind => ['scout','brawler','guardian','brute','kumaverson','crazy-king','tky','miyamoto-musashi','mayo-chan'].includes(kind));
+  // The earned Stage 3 roster includes a frontline fighter. Its DOM position
+  // must not make the faster skirmisher the opening tank in every attempt.
+  const roleOf = kind => UNIT_CARDS.find(card => card.kind === kind)?.aiProfile;
+  const front = melee.find(kind => roleOf(kind) === 'frontline')
+    ?? melee.find(kind => roleOf(kind) === 'heavy') ?? melee[0];
   const ranged = kinds.find(kind => ['babayaga','ranger','gunner','engineer','zakimiya','mrs-chiha'].includes(kind));
   const healer = kinds.find(kind => kind === 'medic');
   const opening = [front,ranged,healer].filter(Boolean);
