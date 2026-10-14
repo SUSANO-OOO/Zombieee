@@ -64,9 +64,16 @@
       ],
       "references": [
         "assets/source/v100/story-r5/nao.webp",
-        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp",
+        "assets/source/v177/paisen/paisen-identity-r2.png"
       ],
-      "alt": "ナオが装甲車両で老人を救護し、運び終えたパイセンが隣でへたり込む。"
+      "alt": "ナオが装甲車両で老人を救護し、運び終えたパイセンが隣でへたり込む。",
+      "authoringMaster": "assets/source/v177/paisen/cuts/s01-nao-rescue-r2.localized-r3.png",
+      "authoringMasterSha256": "4075e0425f78fd1f71fc2ff7bc60034baa4d5de28d07c75fc2e39631abe9d26a",
+      "prompt": "assets/source/v177/paisen/cuts/s01-nao-rescue-r2.generation.json",
+      "identityRevision": "assets/source/v177/paisen/identity-revision.json",
+      "localizationProvenance": "assets/source/v177/paisen/cuts/s01-nao-rescue-r2.localized-r3.provenance.json",
+      "lossless": true
     },
     {
       "id": "s04-monkey-shutter",

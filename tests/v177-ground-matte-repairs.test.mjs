@@ -78,12 +78,13 @@ test("Knife death gap and cord hole use original RGB while eight nondeath cells 
   assert.equal(current.groundAnchorPixels,previous.groundAnchorPixels);
 });
 
-test("the two source-bound matte transports and later R9 physical-action cuts are the exact manifest replacements",async()=>{
+test("the source-bound matte, R9 action and Paisen identity repairs are the exact manifest replacements",async()=>{
   const current=JSON.parse(await disk("public/asset-manifest.json")),previous=JSON.parse(old("public/asset-manifest.json"));
   const previousByPath=new Map(previous.assets.map(a=>[a.path,a]));
   assert.equal(current.assets.length,previous.assets.length);
   const changed=current.assets.filter(a=>a.hash!==previousByPath.get(a.path)?.hash);
   const storyCuts=[
+    {path:"/art/v100/story-r9/cuts/s01-nao-rescue.webp",previous:"sha256-1070f918cb2d6ee0fbefe094eb7fdf50248c18009dda8ba97d2fde2f7307e153",hash:"sha256-ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",bytes:1210640},
     {path:"/art/v100/story-r9/cuts/s28-physical-stop.webp",previous:"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",hash:"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",bytes:233424},
     {path:"/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",previous:"sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",hash:"sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",bytes:306628},
   ];

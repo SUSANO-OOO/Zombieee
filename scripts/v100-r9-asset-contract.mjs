@@ -20,8 +20,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
-    "bytes": 373950,
-    "hash": "sha256-1070f918cb2d6ee0fbefe094eb7fdf50248c18009dda8ba97d2fde2f7307e153",
+    "bytes": 1210640,
+    "hash": "sha256-ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",
     "criticality": "critical"
   },
   {
@@ -259,4 +259,4 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
     "criticality": "optional"
   }
 ]);
-export const V100_R9_ASSET_BYTES=6698857;
+export const V100_R9_ASSET_BYTES=7535547;

@@ -8,10 +8,11 @@ const records=[],runtime={};
 await mkdir('public/art/v100/story-r9/cuts',{recursive:true});
 for(const scene of plan.scenes){
  if(!/^[a-z0-9-]+$/u.test(scene.id)||!scene.alt)throw new Error('Invalid R9 scene');
- const master=root+scene.id+'.png',prompt=root+scene.id+'-prompt.txt',assetPath='/art/v100/story-r9/cuts/'+scene.id+'.webp';
+ const master=scene.authoringMaster??root+scene.id+'.png',prompt=scene.prompt??root+scene.id+'-prompt.txt',assetPath='/art/v100/story-r9/cuts/'+scene.id+'.webp';
  const original=await readV100ArtReference(master);await readFile(prompt);
+ if(scene.authoringMasterSha256&&sha(original)!==scene.authoringMasterSha256)throw new Error('Changed R9 identity revision master: '+scene.id);
  for(const reference of scene.references ?? []) await readV100ArtReference(reference);
- await sharp(original).resize(1280,720,{fit:'cover'}).webp({quality:94}).toFile('public'+assetPath);
+ await sharp(original).resize(1280,720,{fit:'cover'}).webp(scene.lossless?{lossless:true}:{quality:94}).toFile('public'+assetPath);
  const bytes=await readFile('public'+assetPath);
  records.push({...scene,path:assetPath,bytes:bytes.length,hash:'sha256-'+sha(bytes),criticality:'critical',authoringMaster:master,masterSha256:sha(original),prompt,tool:'image_gen.imagegen',
   sourceRights:'Original image generated in this Codex session using existing project identity/style references.',producerAcceptance:'pending',sourceScript:plan.sourceScript,sourceScriptSha256:plan.sourceScriptSha256});
