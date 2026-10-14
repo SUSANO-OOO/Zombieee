@@ -260,6 +260,68 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v177-normal-campaign-diagnostic:
+    name: V1 Normal Campaign Diagnostic (${{ matrix.engine }})
+    # Investigate earned play even when focused QA fails; retain all required gates above.
+    if: always() && needs.verify.result == 'success' && contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact feature candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Build exact normal-play candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Play all 30 stages using a fresh save, earned CAPS and real UI
+        env:
+          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
+      - name: Mark diagnostic scope without promoting the original result
+        if: always()
+        env:
+          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_NORMAL_DIAGNOSTIC_NEEDS: ${{ toJSON(needs) }}
+        run: node scripts/v177-normal-diagnostic-scope.mjs
+      - name: Preserve normal-play results, saves, diagnostics and original-speed video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v177-normal-campaign-diagnostic-${{ matrix.engine }}
+          path: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
+          if-no-files-found: error
+          retention-days: 14
+
   verify:
     name: PR Verify
     runs-on: ubuntu-latest
