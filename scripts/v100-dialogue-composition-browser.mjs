@@ -17,7 +17,11 @@ function readDetailShots(element){
  const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
  return [...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>{
   const svg=figure.querySelector('svg'),clip=svg.querySelector('clipPath'),crop=clip?.querySelector('rect'),image=svg.querySelector('image');
-  return{id:figure.dataset.v177StoryDetail,frame:rect(figure),viewBox:svg.getAttribute('viewBox').split(/\s+/u).map(Number),clipRect:crop?['x','y','width','height'].map(key=>Number(crop.getAttribute(key))):null,clipId:clip?.id??null,imageClip:image?.getAttribute('clip-path')??null,href:image?.getAttribute('href')??null,pointerEvents:getComputedStyle(figure).pointerEvents};
+  const style=getComputedStyle(figure),ancestorFilters=[];
+  for(let parent=figure.parentElement;parent&&element.contains(parent);parent=parent.parentElement){
+   const filter=getComputedStyle(parent).filter;if(filter!=='none')ancestorFilters.push({className:parent.className,filter});
+  }
+  return{id:figure.dataset.v177StoryDetail,frame:rect(figure),viewBox:svg.getAttribute('viewBox').split(/\s+/u).map(Number),clipRect:crop?['x','y','width','height'].map(key=>Number(crop.getAttribute(key))):null,clipId:clip?.id??null,imageClip:image?.getAttribute('clip-path')??null,href:image?.getAttribute('href')??null,pointerEvents:style.pointerEvents,filter:style.filter,ancestorFilters,insideBackdrop:Boolean(figure.closest('.v100-event-backdrop')),layerIndex:Number(style.zIndex),veilIndex:Number(getComputedStyle(element,'::before').zIndex)};
  });
 }
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
@@ -111,6 +115,10 @@ for(const engine of engines){
      assert.equal(shot.id,detail.id);assert.deepEqual(shot.viewBox,detail.rect);assert.deepEqual(shot.clipRect,detail.rect);
      assert.ok(shot.clipId&&shot.imageClip===`url(#${shot.clipId})`,'the source image must use the explicit authored crop');
      assert.ok(shot.href.endsWith(fixture.backdrop));assert.equal(shot.pointerEvents,'none','the close-up cannot intercept native controls');
+     assert.equal(shot.filter,'none','the action close-up must remain unfiltered');
+     assert.deepEqual(shot.ancestorFilters,[],'the action close-up must remain outside filtered background ancestors');
+     assert.equal(shot.insideBackdrop,false,'the action close-up must be separate from the background grading');
+     assert.ok(Number.isFinite(shot.layerIndex)&&Number.isFinite(shot.veilIndex)&&shot.layerIndex>shot.veilIndex,'the action close-up must remain above the scene veil');
      const r=shot.frame;assert.ok(Object.values(r).every(Number.isFinite)&&r.width>0&&r.height>0);
      assert.ok(r.x>=geometry.scene.x+1&&r.right<=geometry.scene.right-1,'the complete close-up must fit inside the scene');
      assert.ok(r.y>=geometry.headingBox.bottom+1&&r.bottom<=geometry.copy.y-4,'the action close-up must clear the heading and dialogue panel');
@@ -119,6 +127,15 @@ for(const engine of engines){
    checkDetail(geometry.detailShots);
    if(detail){
     const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),style=await figure.getAttribute('style');
+    try{
+     await figure.evaluate(element=>element.style.setProperty('filter','brightness(.25)','important'));
+     const dimmed=await scene.evaluate(readDetailShots);
+     assert.throws(()=>checkDetail(dimmed),/must remain unfiltered/u,'actual CSS dimming must be rejected');
+     geometry.detailDimmingControl={operation:'actual-css-brightness-quarter',rejected:true};
+    }finally{
+     await figure.evaluate((element,value)=>value===null?element.removeAttribute('style'):element.setAttribute('style',value),style);
+     assert.equal(await figure.getAttribute('style'),style);const restored=await scene.evaluate(readDetailShots);checkDetail(restored);assert.deepEqual(restored,geometry.detailShots);
+    }
     try{
      await figure.evaluate(element=>element.style.setProperty('bottom','0px','important'));
      const shifted=await scene.evaluate(readDetailShots);

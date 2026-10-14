@@ -22,8 +22,10 @@ export function V100EventBackdrop({src,description,scene,location,title=false,ci
     }).catch(()=>{/* Keep the decoded previous frame; network diagnostics expose failure. */});
     return ()=>{cancelled=true;if(timer) clearTimeout(timer);};
   },[src,title,description]);
-  return <div className="v100-event-backdrop" data-v100-background={layers.current} data-v100-scene={scene??undefined} data-v100-location={location??undefined} data-v100-title-card={title?"true":undefined} data-v100-cinematic={cinematic?"true":undefined} style={{backgroundImage:title?"none":`url(${layers.current})`}}>
+  return <><div className="v100-event-backdrop" data-v100-background={layers.current} data-v100-scene={scene??undefined} data-v100-location={location??undefined} data-v100-title-card={title?"true":undefined} data-v100-cinematic={cinematic?"true":undefined} style={{backgroundImage:title?"none":`url(${layers.current})`}}>
     {!title && <>{layers.previous && <img className="v100-event-image v100-event-image-previous" src={layers.previous} alt="" aria-hidden="true"/>}<img key={layers.current} className={`v100-event-image ${layers.previous?"v100-event-image-arriving":""}`} src={layers.current} alt={layers.description??""} aria-hidden={layers.description?undefined:true} decoding="async"/></>}
+  </div>
+    {/* Keep the action close-up above the scene veil and outside its colour filter. */}
     {!title&&<>{layers.previous&&<V177StoryDetailShot key={'previous:'+layers.previous} src={layers.previous} previous/>}<V177StoryDetailShot key={'current:'+layers.current} src={layers.current} arriving={Boolean(layers.previous)}/></>}
-  </div>;
+  </>;
 }
