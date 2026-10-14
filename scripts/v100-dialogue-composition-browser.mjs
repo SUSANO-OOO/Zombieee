@@ -13,6 +13,7 @@ import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {readV100IdentityFrames,assertV100IdentityFrames,assertV100IdentitySizingControl} from './v100-identity-frame-geometry.mjs';
 import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
+import {readV177StoryPortraitPaint} from './v177-story-portrait-paint.mjs';
 function readDetailShots(element){
  const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
  return [...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>{
@@ -91,6 +92,9 @@ for(const engine of engines){
    await scene.waitFor({state:'visible'});
    if(fixture.backdrop)await page.waitForFunction(({selector,path})=>getComputedStyle(document.querySelector(selector+' .v100-event-backdrop')).backgroundImage.includes(path),{selector:'[data-v100-event-id="'+fixture.eventId+'"]',path:fixture.backdrop});
    await page.waitForFunction(()=>[...document.images].every(img=>img.complete&&img.naturalWidth>0));
+   const portraitPaint = await page.waitForFunction(readV177StoryPortraitPaint, '[data-v100-event-id="'+fixture.eventId+'"]');
+   try { result.portraitPaint = await portraitPaint.jsonValue(); }
+   finally { await portraitPaint.dispose(); }
    if(fixture.insertId==='takuya-identity')await scene.locator('[data-v100-insert="takuya-identity"] image').evaluateAll(async images=>{
     await Promise.all(images.map(async element=>{const image=new Image();image.src=element.getAttribute('href');await image.decode();}));
    });
