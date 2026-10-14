@@ -16,6 +16,7 @@ import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
 import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
+import {createV177VideoFrameClock} from './v177-video-frame-clock.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -28,9 +29,12 @@ const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const browser=await(await pwaBrowserType(engine)).launch();
-async function captureContinuousSamples(page,proof){
+const frameClocks=new WeakMap();
+async function captureContinuousSamples(page,proof,metadata){
   await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
+  const clock=frameClocks.get(page),section=clock?.beginSection({...metadata,fighterId:proof.fighterId});
   const samples=[];
+  try{
   for(let i=0;i<15;i++){
     await page.waitForTimeout(120);
     samples.push(await page.evaluate(id=>{
@@ -40,12 +44,14 @@ async function captureContinuousSamples(page,proof){
     },proof.fighterId));
   }
   return samples;
+  }finally{clock?.endSection(section,{completed:samples.length===15});}
 }
 try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
     const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],gore:[],reactions:[]};report.cases.push(row);
+    const frameClock=createV177VideoFrameClock(page,{engine,label:`${width}x${height}`});frameClocks.set(page,frameClock);
     const requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>report.errors.push(String(e)));
     page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
@@ -121,7 +127,7 @@ try{
             const proof=await page.evaluate(({kind,phase})=>window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({kind,phase}),{kind,phase});
             const evidence={kind,phase,proof,...v177EnemyRuntimeRenderIdentity(proof),samples:[],status:'pending'};row.liveEnemyMotion.push(evidence);
             try{
-              evidence.samples=await captureContinuousSamples(page,proof);
+              evidence.samples=await captureContinuousSamples(page,proof,{form:kind,phase});
               if(kind==='futago'){
                 const panel=page.locator('.boss-hud.v100-boss-center');assert.equal(await panel.count(),1);
                 evidence.compactBossHud=await panel.evaluate(element=>{
@@ -140,7 +146,7 @@ try{
           const proof=await page.evaluate(({form,phase})=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase}),{form,phase});
           const evidence={form,phase,proof,samples:[],status:'pending'};row.liveAdditionalMotion.push(evidence);
           try{
-            evidence.samples=await captureContinuousSamples(page,proof);
+            evidence.samples=await captureContinuousSamples(page,proof,{form,phase});
             evidence.summary=assertV177AuthoredLiveRender(evidence);evidence.status='passed';
             await page.screenshot({path:`${out}/${width}x${height}-${form}-continuous-${phase}.png`});
           }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
@@ -251,7 +257,9 @@ try{
       await page.screenshot({path:`${out}/${width}x${height}-failure.png`}).catch(()=>{});
       throw error;
     }finally{
+      const video=page.video();
       await requests.closeContext(context);
+      row.videoClock=await frameClock.finish({file:`${out}/${width}x${height}-video-clock.json`,videoPath:video?await video.path():null});
       row.requests=requests.report;
       assert.deepEqual(requests.report.unexpectedFailures,[]);
     }
