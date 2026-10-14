@@ -22,7 +22,7 @@ export const V100_R9_SCENE_ASSETS=Object.freeze({
   },
   "s09-transfer-disconnect": {
     "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
-    "alt": "いくらの指示したケーブルを抜く。救助映像の送信履歴は端末に残っている。"
+    "alt": "いくらが指した赤いケーブルの端子を接続口から抜く。救助映像の送信履歴は端末に残っている。"
   },
   "s11-oxygen-rescue": {
     "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",

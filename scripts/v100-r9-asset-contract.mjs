@@ -32,8 +32,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
-    "bytes": 333590,
-    "hash": "sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",
+    "bytes": 306628,
+    "hash": "sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",
     "criticality": "critical"
   },
   {
@@ -259,4 +259,4 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
     "criticality": "optional"
   }
 ]);
-export const V100_R9_ASSET_BYTES=6725819;
+export const V100_R9_ASSET_BYTES=6698857;

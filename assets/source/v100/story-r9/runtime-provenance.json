@@ -146,16 +146,29 @@
         827
       ],
       "references": [
-        "assets/source/v100/story-r5/ikura.webp",
-        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+        "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1.webp"
       ],
-      "alt": "いくらの指示したケーブルを抜く。救助映像の送信履歴は端末に残っている。",
+      "alt": "いくらが指した赤いケーブルの端子を接続口から抜く。救助映像の送信履歴は端末に残っている。",
+      "authoringLineage": {
+        "previousCommit": "f98e410e2a7983ceac9a1baa29078ab9ae4bca1c",
+        "previousMasterPath": "assets/source/v100/story-r9/s09-transfer-disconnect.png",
+        "previousMasterSha256": "022abf07872a1999101e18a61b93d1ef98745651457742ed364cd58bc2000025",
+        "previousPromptPath": "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1-prompt.txt",
+        "previousIdentityReferences": [
+          "assets/source/v100/story-r5/ikura.webp",
+          "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+        ]
+      },
+      "referenceSha256": {
+        "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1.webp": "54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86"
+      },
+      "revision": "r2-red-disconnected-cable-20261014",
       "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
-      "bytes": 333590,
-      "hash": "sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",
+      "bytes": 306628,
+      "hash": "sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",
       "criticality": "critical",
       "authoringMaster": "assets/source/v100/story-r9/s09-transfer-disconnect.png",
-      "masterSha256": "022abf07872a1999101e18a61b93d1ef98745651457742ed364cd58bc2000025",
+      "masterSha256": "2c3521de97207457d66a2a17cb8baff480e359302bd02ac7466e724036830e5a",
       "prompt": "assets/source/v100/story-r9/s09-transfer-disconnect-prompt.txt",
       "tool": "image_gen.imagegen",
       "sourceRights": "Original image generated in this Codex session using existing project identity/style references.",

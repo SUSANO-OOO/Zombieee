@@ -12,6 +12,14 @@ import {serializeV100Save} from '../app/v100Save.js';
 import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {readV100IdentityFrames,assertV100IdentityFrames,assertV100IdentitySizingControl} from './v100-identity-frame-geometry.mjs';
+import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
+function readDetailShots(element){
+ const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+ return [...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>{
+  const svg=figure.querySelector('svg'),clip=svg.querySelector('clipPath'),crop=clip?.querySelector('rect'),image=svg.querySelector('image');
+  return{id:figure.dataset.v177StoryDetail,frame:rect(figure),viewBox:svg.getAttribute('viewBox').split(/\s+/u).map(Number),clipRect:crop?['x','y','width','height'].map(key=>Number(crop.getAttribute(key))):null,clipId:clip?.id??null,imageClip:image?.getAttribute('clip-path')??null,href:image?.getAttribute('href')??null,pointerEvents:getComputedStyle(figure).pointerEvents};
+ });
+}
 if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
@@ -94,7 +102,33 @@ for(const engine of engines){
       return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    geometry.identityFrames=await scene.evaluate(readV100IdentityFrames);
+   geometry.detailShots=await scene.evaluate(readDetailShots);
    result.geometry=geometry;
+   const detail=v177StoryDetailShotFor(fixture.backdrop);
+   const checkDetail=shots=>{
+    assert.equal(shots.length,detail?1:0,'only the authored action close-up may appear');
+    for(const shot of shots){
+     assert.equal(shot.id,detail.id);assert.deepEqual(shot.viewBox,detail.rect);assert.deepEqual(shot.clipRect,detail.rect);
+     assert.ok(shot.clipId&&shot.imageClip===`url(#${shot.clipId})`,'the source image must use the explicit authored crop');
+     assert.ok(shot.href.endsWith(fixture.backdrop));assert.equal(shot.pointerEvents,'none','the close-up cannot intercept native controls');
+     const r=shot.frame;assert.ok(Object.values(r).every(Number.isFinite)&&r.width>0&&r.height>0);
+     assert.ok(r.x>=geometry.scene.x+1&&r.right<=geometry.scene.right-1,'the complete close-up must fit inside the scene');
+     assert.ok(r.y>=geometry.headingBox.bottom+1&&r.bottom<=geometry.copy.y-4,'the action close-up must clear the heading and dialogue panel');
+    }
+   };
+   checkDetail(geometry.detailShots);
+   if(detail){
+    const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),style=await figure.getAttribute('style');
+    try{
+     await figure.evaluate(element=>element.style.setProperty('bottom','0px','important'));
+     const shifted=await scene.evaluate(readDetailShots);
+     assert.throws(()=>checkDetail(shifted),/clear the heading and dialogue/u,'an actual CSS move into dialogue must be rejected');
+     geometry.detailOverlapControl={operation:'actual-css-bottom-zero',rejected:true};
+    }finally{
+     await figure.evaluate((element,value)=>value===null?element.removeAttribute('style'):element.setAttribute('style',value),style);
+     assert.equal(await figure.getAttribute('style'),style);const restored=await scene.evaluate(readDetailShots);checkDetail(restored);assert.deepEqual(restored,geometry.detailShots);
+    }
+   }
    const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
    assert.ok(geometry.textValue.replace(/\s/gu,'').includes(expectedText.replace(/\s/gu,'')),`${fixture.id} authored text missing`);
    if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);

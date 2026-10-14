@@ -87,10 +87,23 @@
         827
       ],
       "references": [
-        "assets/source/v100/story-r5/ikura.webp",
-        "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+        "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1.webp"
       ],
-      "alt": "いくらの指示したケーブルを抜く。救助映像の送信履歴は端末に残っている。"
+      "alt": "いくらが指した赤いケーブルの端子を接続口から抜く。救助映像の送信履歴は端末に残っている。",
+      "authoringLineage": {
+        "previousCommit": "f98e410e2a7983ceac9a1baa29078ab9ae4bca1c",
+        "previousMasterPath": "assets/source/v100/story-r9/s09-transfer-disconnect.png",
+        "previousMasterSha256": "022abf07872a1999101e18a61b93d1ef98745651457742ed364cd58bc2000025",
+        "previousPromptPath": "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1-prompt.txt",
+        "previousIdentityReferences": [
+          "assets/source/v100/story-r5/ikura.webp",
+          "public/art/v100/story-r5/cuts/prologue-door-crisis.webp"
+        ]
+      },
+      "referenceSha256": {
+        "assets/source/v100/story-r9/references/s09-transfer-disconnect-blue-r1.webp": "54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86"
+      },
+      "revision": "r2-red-disconnected-cable-20261014"
     },
     {
       "id": "s11-oxygen-rescue",
