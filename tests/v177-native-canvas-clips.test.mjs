@@ -9,12 +9,12 @@ import ts from 'typescript';
 import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
 
 const metadata={form:'ranger',phase:'move',fighterId:42,fixtureGroup:'authored-form'};
-function fixture({supported=true,constructorError=false,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
+function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constructorError=false,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
   let now=100,captures=0,stops=0,disposed=0;
   const track={getSettings:()=>({width:844,height:304,frameRate:59.94}),stop:()=>{stops++;}};
   const stream={getVideoTracks:()=>[track],getAudioTracks:()=>[],getTracks:()=>[track]};
   class Recorder{
-    static isTypeSupported(type){return supported&&type==='video/webm;codecs=vp8';}
+    static isTypeSupported(type){return supported&&supportedTypes.includes(type);}
     constructor(input,{mimeType}){assert.equal(input,stream);if(constructorError)throw Error('Native encoder unavailable');this.mimeType=mimeType;this.state='inactive';this.listeners=new Map();}
     addEventListener(type,fn){this.listeners.set(type,fn);}
     removeEventListener(type,fn){if(this.listeners.get(type)===fn)this.listeners.delete(type);}
@@ -45,6 +45,24 @@ test('native recording preserves supplied bytes, track rate and event times with
   assert.ok(receipt.stoppedAt>receipt.startedAt);assert.equal(receipt.timeOrigin,1_000_000);
   assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
   assert.equal(f.captures,1);assert.equal(f.stops,1);assert.equal(state.chunks.length,0);
+});
+
+test('engine-specific container preference preserves the native track and cannot grant a speed or performance pass',async()=>{
+  for(const [engine,mime] of [['webkit','video/mp4'],['chromium','video/webm;codecs=vp8']]){
+    const f=fixture({supportedTypes:['video/mp4','video/webm;codecs=vp8']}),receipt=await f.finish(f.start({engine}));
+    assert.equal(receipt.status,'recorded');assert.equal(receipt.mimeType,mime);assert.equal(receipt.mimePreferences[0],mime);
+    assert.equal(receipt.trackSettings.frameRate,59.94);assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
+    assert.equal(Buffer.from(receipt.videoBase64,'base64').toString(),'native-anative-b');assert.equal(f.captures,1);assert.equal(f.stops,1);
+  }
+  const fallback=fixture(),receipt=await fallback.finish(fallback.start({engine:'webkit'}));
+  assert.equal(receipt.mimeType,'video/webm;codecs=vp8','unsupported MP4 keeps an explicitly supported original native container');
+});
+
+test('host persistence forwards engine selection and retains the actual MP4 container without transcoding',async()=>{
+  const f=fixture({supportedTypes:['video/mp4','video/webm;codecs=vp8']}),directory=await mkdtemp(path.join(os.tmpdir(),'v177-native-mp4-'));
+  const clip=await beginV177NativeCanvasClip(f.page,metadata,{directory,engine:'webkit'}),receipt=await clip.finish({completed:true});
+  assert.equal(receipt.status,'recorded');assert.equal(receipt.mimeType,'video/mp4');assert.ok(receipt.file.endsWith('.mp4'));
+  assert.equal((await readFile(receipt.file)).toString(),'native-anative-b');assert.equal(receipt.originalSpeedAccepted,false);assert.equal(f.disposed,1);
 });
 
 test('an interrupted original sampler retains its native payload but cannot become a completed clip',async()=>{

@@ -6,7 +6,7 @@ import path from 'node:path';
 // These two functions execute only in the existing hosted game page. They
 // capture its original canvas track; no copied frames, playback, game-clock
 // changes, microphone, audio routing or encoder-frame-rate override is used.
-export function startNativeCanvasClip(canvas,{metadata,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000}){
+export function startNativeCanvasClip(canvas,{metadata,engine='chromium',maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000}){
   const state={metadata,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
     requestedAt:performance.now(),startedAt:null,stopRequestedAt:null,stoppedAt:null,
     status:'starting',mimeType:null,chunks:[],bytes:0,dataEvents:[],errors:[],maxBytes,stopMs};
@@ -28,7 +28,10 @@ export function startNativeCanvasClip(canvas,{metadata,maxBytes=8*1024*1024,maxM
   if(typeof MediaRecorder==='undefined'||typeof canvas?.captureStream!=='function'){
     state.status='unsupported';state.errors.push('Native canvas recording API unavailable');return state;
   }
-  state.mimeType=['video/webm;codecs=vp8','video/mp4','video/webm'].find(type=>MediaRecorder.isTypeSupported(type))??null;
+  // Preserve native frames and timing. Compare WebKit's MP4 path in the next
+  // hosted run; choosing it does not establish a performance improvement.
+  state.mimePreferences=engine==='webkit'?['video/mp4','video/webm;codecs=vp8','video/webm']:['video/webm;codecs=vp8','video/mp4','video/webm'];
+  state.mimeType=state.mimePreferences.find(type=>MediaRecorder.isTypeSupported(type))??null;
   if(!state.mimeType){state.status='unsupported';state.errors.push('No supported native video container');return state;}
   try{
     state.stream=canvas.captureStream();
@@ -70,7 +73,7 @@ export async function finishNativeCanvasClip(state,{completed}){
     const bytes=new Uint8Array(await blob.arrayBuffer());
     let binary='';
     for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
-    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,
+    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,
       width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,
       startedAt:state.startedAt,stopRequestedAt:state.stopRequestedAt,stoppedAt:state.stoppedAt,
       nativeElapsedMs:state.startedAt!==null&&state.stoppedAt!==null?state.stoppedAt-state.startedAt:null,
@@ -86,7 +89,7 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine}
   assert.ok(['base-enemy','authored-form'].includes(metadata.fixtureGroup));
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${metadata.fighterId}`);
   let handle,error,finished=false;
-  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata});}
+  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine});}
   catch(cause){error=String(cause);}
   return {async finish({completed}){
     if(finished)throw Error('Native canvas clip already finalized');finished=true;
