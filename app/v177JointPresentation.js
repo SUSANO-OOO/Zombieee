@@ -192,7 +192,14 @@ export function v177CaptureJointPose(kind,plan) {
 export function v177InterpolateCapturedJointPose(kind,initial,finalPose,progress) {
   const source=V177_JOINT_ATLASES[kind];
   if(!source || source.type!=='rigid-parts' || !initial || !finalPose)return null;
-  const atlas={...source,poses:[initial.lower,initial.upper,finalPose]},p=clamp(progress);
+  // A captured overhead weapon can rotate far before reaching its resting
+  // pose. Interpolating its image origin can carry the grip outside the arm's
+  // reach. Retain authored pivots, and otherwise interpolate the original
+  // wrist/ankle endpoint used by the same fixed-length limb chain.
+  const interpolationPivots={...source.interpolationPivots};
+  for(const chain of [...(source.armConstraints??[]),...(source.legConstraints??[])])
+    interpolationPivots[chain.effectorBone]??=chain.effectorWrist??chain.ankle??chain.wrist;
+  const atlas={...source,interpolationPivots,poses:[initial.lower,initial.upper,finalPose]},p=clamp(progress);
   const plan={lowerIndex:0,lowerNextIndex:2,lowerBlend:p,
     upperIndex:1,upperNextIndex:2,upperBlend:p,attackPhase:null,upperOffsetY:0};
   const scratch=[new Float64Array(6),new Float64Array(6)];

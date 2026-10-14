@@ -49,8 +49,12 @@ export async function buildV177CorpseJointData() {
       falls[side]={};assert.ok(recipe.falls[side]?.length);
       for(const change of recipe.falls[side]) {
         const chain=[...(atlas.armConstraints??[]),...(atlas.legConstraints??[])].find(c=>c.effectorBone===change.bone);
-        assert.ok(chain,change.bone+' must be an authored hand or foot effector');
-        const pivot=atlas.interpolationPivots[change.bone]??chain.effectorWrist??chain.ankle??chain.wrist;
+        const attachment=atlas.parentAttachments?.[change.bone];
+        assert.ok(chain||attachment,change.bone+' must be an authored effector or attached bone');
+        assert.ok([change.dx,change.dy,change.angle].every(Number.isFinite));
+        if(!chain){assert.equal(change.dx,0,'an attached bone must retain its original hinge');assert.equal(change.dy,0,'an attached bone must retain its original hinge');}
+        const pivot=atlas.interpolationPivots[change.bone]??chain?.effectorWrist??chain?.ankle??chain?.wrist??attachment?.pivot;
+        assert.ok(Array.isArray(pivot)&&pivot.length===2&&pivot.every(Number.isFinite));
         falls[side][change.bone]=movedEffector(atlas.poses[0][change.bone],pivot,change.angle,change.dx,change.dy);
       }
     }

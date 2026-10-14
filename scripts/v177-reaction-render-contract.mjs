@@ -48,6 +48,11 @@ export function assertJointCorpsePaint(form,receipt,corpse,wound,settled=false){
     if(settled)assert.ok(Math.abs(error)<1e-8,'the detached owned source must actually land');
   }else{assert.equal(receipt.corpseJointFragmentMatrix,null);assert.equal(receipt.corpseJointFragmentGroundError,null);}
   const bones=new Map(body.map(p=>[atlas.parts.find(a=>a.name===p.name).bone,p.matrix]));
+  const tubeAttachment=atlas.parentAttachments?.['back-tubes'],tube=bones.get('back-tubes'),tubeParent=bones.get(tubeAttachment?.parent);
+  if(tube&&tubeParent){
+    const a=transform(tube,tubeAttachment.pivot),b=transform(tubeParent,tubeAttachment.pivot);
+    assert.ok(Math.hypot(a[0]-b[0],a[1]-b[1])/reference.scale<=.001,'the folded tube must retain its original spine attachment');
+  }
   for(const chain of [...(atlas.armConstraints??[]),...(atlas.legConstraints??[])]){
     const parent=bones.get(chain.parentBone),upper=bones.get(chain.upperBone),lower=bones.get(chain.lowerBone),effector=bones.get(chain.effectorBone);
     if(!parent||!upper||!lower)continue;

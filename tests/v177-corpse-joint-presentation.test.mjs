@@ -13,6 +13,7 @@ import { v102CorpseSeverPlan } from '../app/v102CombatGore.js';
 import { V177_JOINT_ASSET_ADDITIONS } from '../scripts/v177-joint-asset-contract.mjs';
 import { buildV177CorpseJointData } from '../scripts/build-v177-corpse-joints.mjs';
 import { jointCorpseRenderFixture } from './helpers/v177-corpse-joint-render.mjs';
+import { assertJointCorpsePaint } from '../scripts/v177-reaction-render-contract.mjs';
 
 const multiply=(a,b)=>[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],
   a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];
@@ -24,12 +25,13 @@ async function sourcePixels(kind){
 
 // Independent full-bitmap oracle: transform every alpha>=8 source texel's
 // farthest corner. It does not use the generated hull or its support function.
-async function paintedBottom(state,sample,fragment=false){
+async function paintedBottom(state,sample,fragment=false,onlyParts=null){
   const {data,info}=await sourcePixels(state.kind),reference=state.atlas.referenceFrame;
   const ax=state.width/reference.width/reference.scale,ay=state.height/reference.height/reference.scale;
   const view=[ax,0,0,ay,-state.width*state.frame.anchorX-ax*reference.tx,-state.height*state.frame.anchorY-ay*reference.ty];
   const root=fragment?sample.fragment.matrix:sample.matrix,matrices=fragment?state.initialMatrices:sample.matrices;let bottom=-Infinity;
   for(const [i,part]of state.atlas.parts.entries()){
+    if(onlyParts&&!onlyParts.has(part.name))continue;
     if(fragment?!state.owned?.has(part.name):state.owned?.has(part.name))continue;
     const s=part.source,d=part.destination;
     const matrix=multiply(root,multiply(view,multiply(matrices[i],[d.w/s.w,0,0,d.h/s.h,d.x,d.y])));
@@ -39,6 +41,40 @@ async function paintedBottom(state,sample,fragment=false){
   }
   return bottom;
 }
+
+test('backward Omega rest lowers both original boots and blade beside its bulky body in either facing',async()=>{
+  const native=JSON.parse(fs.readFileSync('tests/fixtures/v177-4a3-omega-floor.json','utf8'));
+  for(const flipX of [false,true])for(const style of [null,'crush','cut']){
+    const fallDirection=flipX?1:-1,fixture=jointCorpseRenderFixture(native.form,{flipX,fallDirection});
+    const plan=v177JointPose(native.form,{requestedState:'idle'},{locomotionPhase:0,locomotionSettle:1});
+    const live={...fixture.live,plan,width:native.renderWidth,height:native.renderHeight,root:{...fixture.live.root,x:native.x,y:native.y}};
+    live.root.y-=v177LiveJointGroundLift(native.form,plan,{...live,...live.root},native.y+5);
+    const state=createV177CorpseJointState(native.form,live,{fallDirection,severPlan:style?{style,direction:1,at:4}:null});
+    const sample=sampleV177CorpseJointState(state,{progress:1,x:native.x,y:native.y,age:1.15});
+    for(const name of ['far-boot','near-boot','cleaver-and-hand']){
+      const gap=sample.floor-await paintedBottom(state,sample,false,new Set([name]));
+      assert.ok(gap>=-1e-8&&gap<=5,'an original boot/blade cannot remain held in the air after collapse: '+name+' gap='+gap);
+    }
+    const torsoGap=sample.floor-await paintedBottom(state,sample,false,new Set(['torso']));
+    assert.ok(torsoGap<=35,'folded original tubes must let the main body settle closer to the floor');
+    const atlas=state.atlas,pivot=atlas.interpolationPivots['back-tubes'];
+    for(const progress of [0,.25,.5,.75,1]){
+      const p=sampleV177CorpseJointState(state,{progress,x:native.x,y:native.y,age:progress*1.15});
+      const tube=p.matrices[atlas.parts.findIndex(part=>part.name==='back-tubes')],spine=p.matrices[atlas.parts.findIndex(part=>part.name==='torso')];
+      const point=m=>[m[0]*pivot[0]+m[2]*pivot[1]+m[4],m[1]*pivot[0]+m[3]*pivot[1]+m[5]],a=point(tube),b=point(spine);
+      assert.ok(Math.hypot(a[0]-b[0],a[1]-b[1])/atlas.referenceFrame.scale<=.001,'the original tube hinge stays attached through the complete fall');
+    }
+  }
+});
+
+test('native corpse evidence rejects a detached tube even when its floor and rigid part lengths remain valid',()=>{
+  const fixture=jointCorpseRenderFixture('takuya-omega',{flipX:true,fallDirection:1,style:'crush'});
+  const receipt=fixture.render(1).receipt,wound=fixture.effects().wounds.find(w=>w.targetId===7);
+  assertJointCorpsePaint('takuya-omega',receipt,fixture.corpse,wound,true);
+  // At a quarter turn this moves the tube along the floor, leaving its vertical support unchanged.
+  receipt.corpseJointParts.find(part=>part.name==='back-tubes').matrix[5]+=1;
+  assert.throws(()=>assertJointCorpsePaint('takuya-omega',receipt,fixture.corpse,wound,true),/tube.*attachment/u);
+});
 
 test('the actual 1280px Omega incoming-damage size cannot carry its sole below the floor',async()=>{
   const native=JSON.parse(fs.readFileSync('tests/fixtures/v177-4a3-omega-floor.json','utf8'));
