@@ -102,8 +102,12 @@ for(const browserName of matrix){
   await page.waitForFunction(()=>[...document.querySelectorAll('button.unit-card')].every(c=>c.dataset.state==='ready'));
   await page.waitForLoadState('networkidle',{timeout:45000});
   const decoded=await page.evaluate(()=>window.__ASHFALL_ASSET_QA__?.getDecodedRequiredPaths?.());assert.ok(Array.isArray(decoded));
+  // Required-asset cache readiness does not imply the actual DOM images have decoded and painted.
+  const geometry=new Map();
+   for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,new URL(CHARACTER_PORTRAIT_ART[kind].slice(1),base).pathname,'battle cards retain the approved original character portrait');assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;geometry.set(kind,g);}
+  await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   const before=await capture(page,row,'before');const baseline=new Map();
-   for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,new URL(CHARACTER_PORTRAIT_ART[kind].slice(1),base).pathname,'battle cards retain the approved original character portrait');assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;baseline.set(kind,await cropPortrait(before,g.clip));}
+  for(const [kind,g]of geometry)baseline.set(kind,await cropPortrait(before,g.clip));
   // Keep a native control before any resize. It distinguishes unstable
   // sampling from a resize regression without changing the fidelity gate.
   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
@@ -126,6 +130,7 @@ for(const browserName of matrix){
    }
   }
   // Preserve all four original observations before reporting a failed gate.
+  assert.ok(row.noResizeControl.every(p=>p.comparison.fraction<=.01),`${browserName} initial native portrait baseline is unstable before resize`);
   assert.deepEqual(row.fidelityViolations,[],`${browserName} portrait fidelity changed after resize`);
   await page.waitForFunction(()=>['__ASHFALL_AUDIO_QA__','__V100_EVENT_AUDIO_QA__'].every(key=>{const d=window[key]?.getDiagnostics?.();return !d||d.activePreloads===0&&d.queuedPreloads===0;}),undefined,{timeout:45000});
   await page.waitForLoadState('networkidle',{timeout:45000});assert.deepEqual(row.errors,[]);row.status='captured';
