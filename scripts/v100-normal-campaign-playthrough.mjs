@@ -146,6 +146,8 @@ async function battle(stage) {
   const record={number:stage.number,id:stage.id,startedAt:new Date().toISOString(),openingSave:await saveAt(),inputs:[],status:"running"};
   report.stages.push(record); await persist();
   const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;
+  // The outer campaign phase changes before the real asset gate releases the HUD.
+  await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
   while(await phaseAt()==="battle") {
     await continueRequested();
     try {
