@@ -187,7 +187,9 @@ async function battle(stage) {
     }
     const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
-    if((stage.missionType!=="boss" ? Date.now()-start>12_000 : bossVisible)&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    // Pre-boss waves can destroy the vehicle too. Use the ordinary enabled
+    // control instead of reserving a full gauge until a boss is on screen.
+    if((Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()
