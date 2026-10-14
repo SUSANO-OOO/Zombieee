@@ -247,13 +247,26 @@ function ordinaryMeleeProofFrontline(runtime, enemy, diagnostics, attackObserved
   if (attackObserved || runtime?.screen !== "battle"
     || COMBAT_ROLE_RULES[enemy?.id]?.attackType !== "melee") return none;
   const fighters = runtime.fighters ?? [];
-  if (!fighters.some((fighter) => fighter.side === "zombie" && fighter.kind === enemy.id
-    && Number(fighter.hp) > 0 && fighter.combatReady === true && fighter.gateEntering !== true)) return none;
+  const proofActors = fighters.filter((fighter) => fighter.side === "zombie" && fighter.kind === enemy.id
+    && Number(fighter.hp) > 0 && fighter.combatReady === true && fighter.gateEntering !== true);
+  if (!proofActors.length) return none;
   // Two living marksmen can kite and kill a melee actor before contact. A
   // real arriving frontline unit also counts, so this plan never duplicates
   // it while it traverses the production deployment gate.
-  if (fighters.some((fighter) => fighter.side === "human" && Number(fighter.hp) > 0
-    && COMBAT_ROLE_RULES[unitContentFor(fighter.kind)?.id]?.attackType === "melee")) return none;
+  if (fighters.some((fighter) => {
+    if (fighter.side !== "human" || !(Number(fighter.hp) > 0)
+      || COMBAT_ROLE_RULES[unitContentFor(fighter.kind)?.id]?.attackType !== "melee") return false;
+    if (fighter.gateEntering === true || fighter.combatReady !== true) return true;
+    const targets = (source, target) => source.targetId != null && target.id != null
+      && String(source.targetId) === String(target.id);
+    if (proofActors.some(actor => targets(fighter, actor) || targets(actor, fighter))) return true;
+    const currentEnemy = fighters.find(target => targets(fighter, target)
+      && target.side === "zombie" && Number(target.hp) > 0);
+    // A scout fighting a different living enemy is not the proof actor's
+    // frontline. Unknown/stale targets and an arriving melee unit still hold
+    // this plan, so it cannot manufacture repeated or unowned deployments.
+    return !currentEnemy || typeof currentEnemy.kind !== "string" || currentEnemy.kind === enemy.id;
+  })) return none;
   const candidates = deploymentCandidatesFromDiagnostics(diagnostics, new Set())
     .map((card, index) => ({ card, index, content: unitContentFor(card.kind) }))
     .filter(({ content }) => content && Number(content.hp) > 0
