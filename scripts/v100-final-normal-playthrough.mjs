@@ -78,7 +78,11 @@ async function ready() {
 async function uiClick(locator) { await ready(); await locator.click(); await ready(); }
 const button = name => page.getByRole("button",{name,exact:true});
 const preparationTab = name => page.getByRole("navigation",{name:"ステージ準備メニュー",exact:true}).getByRole("button",{name,exact:true});
-const selectPersonnel = unit => page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})});
+async function selectPersonnel(unit) {
+  const back=button("ユニット一覧へ");
+  if(await back.isVisible())await uiClick(back);
+  await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
+}
 function plannedFormation(save) {
   const owned=id=>save.ownedUnitIds.includes(id);
   const front=owned("unit-gantetsu")?"unit-gantetsu":"unit-paisen";
@@ -93,7 +97,7 @@ async function prepareEconomy(stageNumber) {
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
-      await uiClick(selectPersonnel(unit));
+      await selectPersonnel(unit);
       await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
@@ -128,7 +132,7 @@ async function prepareEconomy(stageNumber) {
     if(!id)break;
     const unit=V100_UNITS.find(unit=>unit.id===id);
     const cost=v100LevelCost(save.unitLevels[id]+1);
-    await uiClick(selectPersonnel(unit));await uiClick(button(`Lv.${save.unitLevels[id]+1}へ強化 / ${cost} CAPS`));
+    await selectPersonnel(unit);await uiClick(button(`Lv.${save.unitLevels[id]+1}へ強化 / ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
   await uiClick(preparationTab("ステージ"));

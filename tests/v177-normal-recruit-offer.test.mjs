@@ -73,7 +73,9 @@ function fixture({modalType='recruit',badHeading=false,tamperCaps=false,labelCas
         if(offer()||modalType==='other')throw new Error('The actual recruit or unrelated dialog obscures preparation');
         events.push(tab.name);if(!labelCase)throw stop;
       }};}};
-      assert.equal(role,'button');return{async click(){
+      assert.equal(role,'button');
+      if(options.name==='ユニット一覧へ')return{isVisible:async()=>false,async click(){assert.fail('This label fixture already shows the roster');}};
+      return{async click(){
         let rendered;
         if(labelCase==='register')rendered=registerButton(save,{registrationCost:selected.registrationCostCaps},selected,()=>{});
         else if(labelCase==='level'){const level=save.unitLevels[selected.id];rendered=levelButton(save,{level,nextLevel:level+1,upgradeCost:v100LevelCost(level+1)},selected,()=>{});}
