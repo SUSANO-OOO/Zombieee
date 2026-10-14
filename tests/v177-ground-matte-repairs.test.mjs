@@ -10,6 +10,7 @@ import {removeKuromeGroundMatte} from "../scripts/v177-kurome-ground-matte.mjs";
 import {MOTION_DEFINITIONS,regenerateMotionAtlases} from "../scripts/v100-reviewed-motion-generator.mjs";
 import {V177_GROUND_MATTE_SPRITE_REPLACEMENTS} from "../scripts/v177-ground-matte-repair-asset-contract.mjs";
 import {V177_JOINT_ASSET_ADDITIONS} from "../scripts/v177-joint-asset-contract.mjs";
+import {V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS} from '../scripts/v177-paisen-asset-contract.mjs';
 
 const root=fileURLToPath(new URL("../",import.meta.url));
 const base="e4fb2403e87989a4c6323da65eac1e269348d695";
@@ -86,7 +87,16 @@ test("the two source-bound matte transports and later R9 physical-action cuts ar
     {path:"/art/v100/story-r9/cuts/s28-physical-stop.webp",previous:"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",hash:"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",bytes:233424},
     {path:"/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",previous:"sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",hash:"sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",bytes:306628},
   ];
-  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path)].sort());
+  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path)].sort());
+  for(const retired of V177_PAISEN_RETIRED_ASSETS) {
+    const before=previousByPath.get(retired.path);
+    assert.equal(before.hash,retired.hash);assert.equal(before.bytes,retired.bytes);
+    assert.equal(current.assets.some(asset=>asset.path===retired.path),false);
+  }
+  for(const approved of V177_PAISEN_ASSET_ADDITIONS) {
+    const after=current.assets.find(asset=>asset.path===approved.path);
+    assert.equal(after.hash,approved.hash);assert.equal(after.bytes,approved.bytes);
+  }
   for(const storyCut of storyCuts){
     assert.equal(previousByPath.get(storyCut.path).hash,storyCut.previous);
     const revisedCut=current.assets.find(a=>a.path===storyCut.path);

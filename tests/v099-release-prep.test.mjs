@@ -1,3 +1,4 @@
+import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_ASSET_BYTES, V177_PAISEN_BYTES_DELTA, V177_PAISEN_UPDATE_BYTES } from '../scripts/v177-paisen-asset-contract.mjs';
 import { V100_R9_ASSET_ADDITIONS, V100_R9_ASSET_BYTES } from '../scripts/v100-r9-asset-contract.mjs';
 import { V100_OPENING_ASSET_ADDITIONS, V100_OPENING_ASSET_BYTES } from '../scripts/v100-opening-asset-contract.mjs';
 import { V177_SPRITE_REPLACEMENTS, V177_SPRITE_BYTES_DELTA } from '../scripts/v177-sprite-repair-asset-contract.mjs';
@@ -63,13 +64,13 @@ test("the six motion atlas replacements preserve source-bound old/new transport 
   }
 });
 
-test("the published0.9.9.5 pack reuses405 assets and refreshes the source-bound sprites and broken WebKit card", () => {
+test("the published0.9.9.5 pack reuses403 assets and refreshes the source-bound sprites and broken WebKit card", () => {
   assert.equal(publishedV0995.version, "0.9.9.5"); assert.equal(publishedV0995.assets.length, 415);
   const retainedHashes = new Set(publishedV0995.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV0995, publishedManifest: candidate, storedHashes: retainedHashes });
   assert.equal(update.available, true); assert.equal(update.fromVersion, "0.9.9.5"); assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, assetContract.additionsFromV0995); assert.equal(update.downloadBytes, assetContract.bytesFromV0995);
-  assert.equal(update.unchangedCount, 405); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 1);
+  assert.equal(update.unchangedCount, 403); assert.equal(update.reusedCount, 0); assert.equal(update.removedCount, 3);
   assert.ok(update.diff.downloadable.every(asset => asset.path.startsWith("/art/v100/") || spriteRefreshPaths.includes(asset.path) || V100_COMPLETION_ASSET_ADDITIONS.some(expected=>expected.path===asset.path)));
   const incomplete = verifyUpdatePayload({ manifest: candidate, storedHashes: retainedHashes, expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.equal(incomplete.verified, false); assert.equal(incomplete.missingPaths.length, assetContract.additionsFromV0995);
@@ -80,10 +81,10 @@ test("the published0.9.9.5 pack reuses405 assets and refreshes the source-bound 
 test("the Version 1.0.3 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(APPROVED_V100_ATLAS_TRANSPORT_BYTE_REDUCTION, 640_306);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES,
-    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES,
-    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES,
-    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES,
+    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA,
+    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA,
+    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES,
+    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES,
   });
   assert.equal(RELEASE_VERSION, "1.0.3");
   assert.equal(candidate.version, RELEASE_VERSION);
@@ -126,9 +127,9 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, 108 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0982Bytes);
-  assert.equal(update.unchangedCount, 339);
+  assert.equal(update.unchangedCount, 337);
   assert.equal(update.reusedCount, 2);
-  assert.equal(update.removedCount, 27);
+  assert.equal(update.removedCount, 29);
 
   const completedHashes = new Set([
     ...retainedHashes,
@@ -161,9 +162,9 @@ test("the published Version 0.9.9.3 pack updates to 1.0.3 while reusing unchange
   assert.equal(update.toVersion, "1.0.3");
   assert.equal(update.downloadCount, 59 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES);
   assert.equal(update.downloadBytes, APPROVED_SIZE_SNAPSHOTS.updateFromV0993Bytes);
-  assert.equal(update.unchangedCount, 388);
+  assert.equal(update.unchangedCount, 386);
   assert.equal(update.reusedCount, 2);
-  assert.equal(update.removedCount, 20);
+  assert.equal(update.removedCount, 22);
 
   const completedHashes = new Set([
     ...retainedHashes,
@@ -178,35 +179,35 @@ test("the published Version 0.9.9.3 pack updates to 1.0.3 while reusing unchange
   assert.deepEqual(verified, { verified: true, errors: [], missingPaths: [] });
 });
 
-test('the published 1.0.0 pack updates to 1.0.3 without downloading existing media again', () => {
+test('the published 1.0.0 pack updates to 1.0.3 downloads only the approved media revisions', () => {
   const publishedV100 = { ...JSON.parse(execFileSync('git', ['show', `${PUBLISHED_V100_SHA}:public/asset-manifest.json`], { encoding: 'utf8' })), releaseSha: PUBLISHED_V100_SHA };
   assert.equal(publishedV100.version, '1.0.0');
   const storedHashes = new Set(publishedV100.assets.map(asset => asset.hash));
   const update = evaluateUpdate({ installedManifest: publishedV100, publishedManifest: candidate, storedHashes });
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, '1.0.0'); assert.equal(update.toVersion, '1.0.3');
-  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);
-  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path),...V177_JOINT_ASSET_ADDITIONS.map(asset=>asset.path)].sort());
-  assert.equal(update.removedCount, 0);
+  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES);
+  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path),...V177_JOINT_ASSET_ADDITIONS.map(asset=>asset.path),...V177_PAISEN_ASSET_ADDITIONS.map(asset=>asset.path)].sort());
+  assert.equal(update.removedCount, V177_PAISEN_RETIRED_ASSETS.length);
   const complete = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...storedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.deepEqual(complete, { verified: true, errors: [], missingPaths: [] });
 });
 
-test('installed 1.0.1 downloads the gore texture, R9 scenes and opening while retaining existing media',()=>{
+test('installed 1.0.1 downloads the gore texture, R9 scenes and opening while retaining unrelated media',()=>{
   const sha='634f8de4b0fb15df902a7dd5983ea94237cfea9d';
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.1');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());
-  assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length);
+  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path)].sort());
+  assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
 });
 
-test('installed 1.0.2 downloads only the exact R9 and opening additions without removing existing media',()=>{
+test('installed 1.0.2 downloads only the exact R9 and opening additions and retires only the previous Paisen portraits',()=>{
   const sha='cd246a3d8e93b69d8cb6b370d40f28924a0d86b6';
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.2');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES);assert.equal(update.removedCount,0);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length);
+  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
 });

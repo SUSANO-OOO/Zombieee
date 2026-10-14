@@ -23,6 +23,11 @@ export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries(Object.entrie
 
 export function v100EventPortraitPath(owner, expression = "determined") {
   const profile = V100_EVENT_PORTRAIT_PROFILES[owner];
+  // The producer replaced Paisen's identity with three photos on 2026-10-15.
+  // Every expression must follow that same face, including secondary speakers.
+  if (owner === 'unit-paisen' && V100_EVENT_EXPRESSIONS.includes(expression)) {
+    return `/art/v100/portraits/paisen-${expression}-r2.webp`;
+  }
   return profile && V100_EVENT_EXPRESSIONS.includes(expression)
     ? `/art/v100/story-r5/portraits/${profile}-${expression}.webp` : null;
 }

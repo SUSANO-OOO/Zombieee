@@ -371,6 +371,8 @@ test("all seventeen people use independent portrait files and radio remains a se
       assert.equal(assetPath, "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp");
     } else if (["tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
       assert.equal(assetPath, `/art/v0995/characters/portraits/${kind}-event-portrait-r2.webp`);
+    } else if (kind === 'brawler') {
+      assert.equal(assetPath, '/art/v100/portraits/paisen-event-portrait-r2.webp');
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -436,7 +438,7 @@ test("historical 0.6.0 portrait provenance remains intact after 0.7.0 replacemen
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide") {
+    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide" || entry.kind === 'brawler') {
       assert.notEqual(
         entry.finalPath,
         `public${CHARACTER_PORTRAIT_ART[entry.kind]}`,

@@ -1,3 +1,4 @@
+import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -9,8 +10,8 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 102, 30451044, 76],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 101, 30430092, 75],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 108, 31838526, 82],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 107, 31817574, 81],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -34,6 +35,13 @@ for (const [version, sha, count, bytes, network] of baselines) {
     const next = new Map(candidate.assets.map(asset => [asset.path, asset]));
     const replaced = [];
     for (const asset of old.assets) {
+      const retirement = expected.sourceRetirements.find(bound=>bound.path===asset.path);
+      if(retirement) {
+        assert.deepEqual(record(asset),record(retirement),'only the exact previous Paisen image may retire');
+        assert.equal(next.has(asset.path),false);
+        replaced.push(asset.path);
+        continue;
+      }
       const replacement = next.get(asset.path);
       assert.ok(replacement, `installed asset removed: ${asset.path}`);
       if (replacement.hash !== asset.hash) replaced.push(asset.path);
@@ -69,7 +77,8 @@ test("the frozen 0.9.9.5 delta includes the source-bound sprite repairs and the 
     "/art/v090/characters/mrs-chiha-battle-r1.png",
     "/art/v090/characters/zakimiya-battle-r1.png",
     "/art/v0995/enemies/anchor-bloom-battle-v2.png",
-  ]);
+    ...V177_PAISEN_LEGACY_RETIREMENTS.map(asset=>asset.path),
+  ].sort());
   assert.deepEqual(expected.replaced,old.assets.filter(asset=>next.get(asset.path)?.hash!==asset.hash).map(asset=>asset.path).sort());
   assert.equal(expected.additions,changed.length);assert.equal(expected.bytes,changed.reduce((sum,asset)=>sum+asset.bytes,0));
   assert.equal(expected.bundled,changed.filter(asset=>asset.bundlePath).length);
@@ -84,4 +93,24 @@ test("the frozen 0.9.9.5 delta includes the source-bound sprite repairs and the 
     assert.equal(v177InstalledSourceReplacementsMatch(alteredOld,candidate,'0.9.9.5'),false,'the old source hash must also match');
   }
   assert.equal(v177InstalledSourceReplacementsMatch(old,candidate,'unknown'),false);
+});
+
+test('Paisen identity updates pin all old and new image bytes and reject stale resurrection', () => {
+  const old=JSON.parse(execFileSync('git',['show','cd246a3d8e93b69d8cb6b370d40f28924a0d86b6:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
+  for(const binding of V177_PAISEN_ASSET_ADDITIONS) {
+    const altered=structuredClone(candidate);
+    altered.assets.find(asset=>asset.path===binding.path).hash='unapproved';
+    assert.equal(v177InstalledSourceReplacementsMatch(old,altered,'1.0.2'),false);
+    const missing=structuredClone(candidate);
+    missing.assets=missing.assets.filter(asset=>asset.path!==binding.path);
+    assert.equal(v177InstalledSourceReplacementsMatch(old,missing,'1.0.2'),false);
+  }
+  for(const retired of V177_PAISEN_RETIRED_ASSETS) {
+    const resurrected=structuredClone(candidate);
+    resurrected.assets.push({...retired});
+    assert.equal(v177InstalledSourceReplacementsMatch(old,resurrected,'1.0.2'),false);
+    const changedOld=structuredClone(old);
+    changedOld.assets.find(asset=>asset.path===retired.path).bytes+=1;
+    assert.equal(v177InstalledSourceReplacementsMatch(changedOld,candidate,'1.0.2'),false);
+  }
 });

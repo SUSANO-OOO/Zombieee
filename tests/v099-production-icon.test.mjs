@@ -1,3 +1,4 @@
+import { V177_PAISEN_RETIRED_ASSETS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -180,6 +181,12 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     '/art/v090/characters/mrs-chiha-battle-r1.png',
     '/art/v090/characters/zakimiya-battle-r1.png',
   ],'Only the eight pinned source repairs replace sprites in this legacy icon baseline');
+  for(const retired of V177_PAISEN_RETIRED_ASSETS) {
+    if(!previousNonIcons.has(retired.path))continue;
+    assert.equal(previousNonIcons.get(retired.path),retired.hash);
+    assert.equal(currentNonIcons.has(retired.path),false);
+    previousNonIcons.delete(retired.path);
+  }
   assert.deepEqual(currentNonIcons, previousNonIcons);
   const song = current.assets.find(asset => asset.path === V100_ENDING_MUSIC_ADDITION.path);
   assert.deepEqual({ path: song?.path, bytes: song?.bytes, hash: song?.hash, criticality: song?.criticality }, V100_ENDING_MUSIC_ADDITION);
