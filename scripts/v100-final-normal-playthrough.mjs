@@ -14,6 +14,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -26,7 +27,7 @@ const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
 assert.equal(git("diff","--name-only"),"","Freeze tracked product and driver changes before the final route");
 assert.equal(git("diff","--cached","--name-only"),"");
 report.source={head:git("rev-parse","HEAD"),tree:git("rev-parse","HEAD^{tree}")};
-report.driver=await Promise.all(["scripts/v100-final-normal-playthrough.mjs","scripts/v100-normal-tactical-input.mjs","scripts/ordered-native-pointer.mjs","scripts/pwa-gate-qa.mjs","scripts/v100-title-qa-entry.mjs"].map(async file=>({file,sha256:createHash("sha256").update(await readFile(file)).digest("hex")})));
+report.driver=await Promise.all(["scripts/v100-final-normal-playthrough.mjs","scripts/v100-normal-tactical-input.mjs","scripts/ordered-native-pointer.mjs","scripts/pwa-gate-qa.mjs","scripts/v100-title-qa-entry.mjs","scripts/v100-normal-recruit-offer.mjs"].map(async file=>({file,sha256:createHash("sha256").update(await readFile(file)).digest("hex")})));
 const resumeDir = process.env.V100_NORMAL_PLAY_RESUME_DIR && path.resolve(process.env.V100_NORMAL_PLAY_RESUME_DIR);
 let restoredStorage;
 if (resumeDir) {
@@ -86,13 +87,14 @@ function plannedFormation(save) {
   return [front,ranged,"unit-babayaga",front,ranged,healer,healer];
 }
 async function prepareEconomy(stageNumber) {
+  await deferNormalRecruitOffer(page,{saveAt,uiClick,stageNumber,transactions:report.transactions});
   let save=await saveAt();
   await uiClick(preparationTab("ユニット"));
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await uiClick(selectPersonnel(unit));
-      await uiClick(button(`配備登録 ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
@@ -112,7 +114,7 @@ async function prepareEconomy(stageNumber) {
   const cost=V100_VEHICLE.upgradeCosts[save.vehicle.upgradeLevel]??Infinity;
   if(save.vehicle.upgradeLevel<desiredVehicleLevel&&save.caps>=cost) {
     await uiClick(preparationTab("車両"));
-    await uiClick(button(`HPを強化 / ${cost} CAPS`)); save=await saveAt();
+    await uiClick(button(`耐久を強化 / ${cost} CAPS`)); save=await saveAt();
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
   }
   await uiClick(preparationTab("ユニット"));
@@ -126,7 +128,7 @@ async function prepareEconomy(stageNumber) {
     if(!id)break;
     const unit=V100_UNITS.find(unit=>unit.id===id);
     const cost=v100LevelCost(save.unitLevels[id]+1);
-    await uiClick(selectPersonnel(unit));await uiClick(button(`強化 ${cost} CAPS`));
+    await uiClick(selectPersonnel(unit));await uiClick(button(`Lv.${save.unitLevels[id]+1}へ強化 / ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
   await uiClick(preparationTab("ステージ"));

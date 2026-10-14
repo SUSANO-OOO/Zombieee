@@ -15,6 +15,7 @@ import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs"
 import { normalCampaignDeploymentCount } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -87,13 +88,14 @@ function plannedFormation(save) {
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
+  await deferNormalRecruitOffer(page,{saveAt,uiClick,stageNumber,transactions:report.transactions});
   let save=await saveAt();
   await uiClick(preparationTab("ユニット"));
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await uiClick(selectPersonnel(unit));
-      await uiClick(button(`配備登録 ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
@@ -113,7 +115,7 @@ async function prepareEconomy(stageNumber) {
   const cost=V100_VEHICLE.upgradeCosts[save.vehicle.upgradeLevel]??Infinity;
   if(save.vehicle.upgradeLevel<desiredVehicleLevel&&save.caps>=cost) {
     await uiClick(preparationTab("車両"));
-    await uiClick(button(`HPを強化 / ${cost} CAPS`)); save=await saveAt();
+    await uiClick(button(`耐久を強化 / ${cost} CAPS`)); save=await saveAt();
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
   }
   await uiClick(preparationTab("ユニット"));
@@ -124,7 +126,7 @@ async function prepareEconomy(stageNumber) {
     if(!id)break;
     const unit=V100_UNITS.find(unit=>unit.id===id);
     const cost=v100LevelCost(save.unitLevels[id]+1);
-    await uiClick(selectPersonnel(unit));await uiClick(button(`強化 ${cost} CAPS`));
+    await uiClick(selectPersonnel(unit));await uiClick(button(`Lv.${save.unitLevels[id]+1}へ強化 / ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
   await uiClick(preparationTab("ステージ"));

@@ -7,20 +7,29 @@ import * as React from 'react';
 import { createDefaultV100Save } from '../app/v100Save.js';
 import { upgradeV100Vehicle } from '../app/v100Transactions.js';
 import { V100_UNITS, V100_VEHICLE, v100LevelCost } from '../app/v100Registry.js';
+import { deferNormalRecruitOffer } from '../scripts/v100-normal-recruit-offer.mjs';
 
 // Render the production navigation only: no game, browser or audio is started.
 const componentSource = fs.readFileSync(new URL('../app/V100Campaign.tsx', import.meta.url), 'utf8');
 const component = ts.createSourceFile('V100Campaign.tsx', componentSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-const navigation = [];
+const navigation = [],vehicleButtons=[];
 function visit(node) {
   if (ts.isJsxElement(node) && node.openingElement.tagName.getText(component) === 'nav'
     && node.openingElement.attributes.properties.some(attribute => ts.isJsxAttribute(attribute)
       && attribute.name.getText(component) === 'aria-label'
       && attribute.initializer?.text === 'ステージ準備メニュー')) navigation.push(node);
+  if(ts.isJsxElement(node)&&node.openingElement.tagName.getText(component)==='button'
+    &&node.openingElement.attributes.properties.some(attribute=>ts.isJsxAttribute(attribute)
+      &&attribute.name.getText(component)==='onClick'&&attribute.initializer?.expression?.getText(component)==='onUpgradeVehicle'))vehicleButtons.push(node);
   ts.forEachChild(node, visit);
 }
 visit(component);
 assert.equal(navigation.length, 1);
+assert.equal(vehicleButtons.length,1);
+const renderVehicleButton=vm.runInNewContext(ts.transpileModule(
+  `(save,vehicleLevel,nextCost,onUpgradeVehicle)=>(${vehicleButtons[0].getText(component)});`,
+  {compilerOptions:{target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}},
+).outputText,{React,V100_VEHICLE});
 const renderNavigation = vm.runInNewContext(ts.transpileModule(
   `(flow, surface, openSurface) => (${navigation[0].getText(component)});`,
   { compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React } },
@@ -68,16 +77,20 @@ function preparationFixture(stageNumber, { earnedVehicleUpgrade = false, missing
       return { async click() {
         const cost = V100_VEHICLE.upgradeCosts[save.vehicle.upgradeLevel];
         assert.equal(surface, 'vehicle', 'the native failure map contains no visible legacy preparation buttons');
-        assert.equal(name, `HPを強化 / ${cost} CAPS`);
+        assert.equal(name,renderVehicleButton(save,save.vehicle.upgradeLevel,cost,()=>{}).props.children,
+          'the driver must select the actual production vehicle button');
         const result = upgradeV100Vehicle(save, { now: '2026-10-13T00:01:00.000Z' });
         assert.equal(result.applied, true);
         save = result.save;
       } };
     },
-    locator() { throw new Error('These navigation cases require no unit purchase or level upgrade'); },
+    locator(selector) {
+      if(selector==='.v100-recruit-modal[role="dialog"]')return {isVisible:async()=>false};
+      throw new Error('These navigation cases require no unit purchase or level upgrade');
+    },
   };
   return {
-    bindings: { page, uiClick: locator => locator.click(), saveAt: async () => structuredClone(save), V100_UNITS, V100_VEHICLE, v100LevelCost, report },
+    bindings: { page, uiClick: locator => locator.click(), saveAt: async () => structuredClone(save), V100_UNITS, V100_VEHICLE, v100LevelCost, report,deferNormalRecruitOffer },
     initialSave, clicks, report, get save() { return save; }, get surface() { return surface; },
   };
 }
