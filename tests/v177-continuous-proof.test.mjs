@@ -38,6 +38,19 @@ test('Twin bodies and the feral form retain their own source-bound identity duri
     if(form==='mayo-chan-feral'){assert.equal(actor.manualAbility.phase,'feral');assert.equal(actor.manualAbility.activeRemaining,MANUAL_ABILITY_REGISTRY['mayo-chan'].activeSeconds);}
   }
 });
+
+test('longer-range attacks remain visible away from the opponent without enlarging any actor range or damage',()=>{
+  for(const form of spriteKinds)for(const range of [48,80,120,240]){
+    const {actor,target}=setup(form);actor.range=range;
+    const before=structuredClone(actor),proof=configureV177ContinuousActorProof(actor,target,{form,phase:'attack',lane:1,laneY:285});
+    const distance=Math.abs(target.x-actor.x);
+    assert.ok(distance>0&&distance<range,'ordinary AI keeps its real target inside the original range');
+    if(range>=120)assert.ok(distance>80,'a longer-range weapon must not be hidden behind a close target');
+    assert.ok((target.x-actor.x)*(actor.side==='human'?1:-1)>0);
+    for(const key of ['speed','laneSpeed','damage','range','attackEvery','hp','maxHp','progressionLevel'])assert.equal(actor[key],before[key]);
+    assert.equal(proof.originalActorStats.range,range);assert.equal(target.damage,0);assert.equal(actor.cooldown,0);
+  }
+});
 test('Unknown bodies, invalid phases and actor identity substitutions fail before a continuous fixture starts',()=>{
   assert.throws(()=>v177ProofFormIdentity('invented-person'));
   for(const change of [s=>{s.actor.kind='walker';},s=>{s.target.side=s.actor.side;},s=>{s.actor.speed=NaN;}]){

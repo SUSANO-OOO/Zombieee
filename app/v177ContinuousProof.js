@@ -30,7 +30,10 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
   if(!Object.values(originalActorStats).every(Number.isFinite))throw new Error('Continuous proof requires finite original actor stats');
   const facing=actor.side==='human'?'right':'left',sign=actor.side==='human'?1:-1;
   actor.x=actor.side==='human'?330:620;
-  target.x=phase==='move'?(actor.side==='human'?900:250):actor.x+sign*Math.max(12,Math.min(40,actor.range*.45));
+  // Let longer-range weapons be seen instead of hiding the arm and muzzle
+  // behind a target placed within 40px of every body. Melee spacing is retained.
+  const attackDistance=actor.range>80?actor.range*.8:Math.max(12,Math.min(40,actor.range*.45));
+  target.x=phase==='move'?(actor.side==='human'?900:250):actor.x+sign*attackDistance;
   for(const fighter of [actor,target]){
     fighter.y=laneY;fighter.lane=lane;fighter.anchorLane=lane;
     fighter.combatReady=true;fighter.gateEntering=false;fighter.spawnGrace=0;fighter.entryRampCleared=true;
