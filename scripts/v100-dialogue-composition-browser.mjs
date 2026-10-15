@@ -14,6 +14,7 @@ import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {readV100IdentityFrames,assertV100IdentityFrames,assertV100IdentitySizingControl} from './v100-identity-frame-geometry.mjs';
 import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
 import {readV177StoryPortraitPaint} from './v177-story-portrait-paint.mjs';
+import {readV177PaintedSceneImage,readV177PaintedSceneSource,inspectV177PaintedSceneFaces} from './v177-painted-scene-geometry.mjs';
 function readDetailShots(element){
  const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
  return [...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>{
@@ -129,6 +130,40 @@ for(const engine of engines){
     }
    };
    checkDetail(geometry.detailShots);
+   if(detail?.landmarks){
+    geometry.paintedImage=await scene.evaluate(readV177PaintedSceneImage);
+    geometry.paintedSource=await scene.evaluate(readV177PaintedSceneSource);
+    assert.equal(geometry.paintedSource.sha256,detail.landmarkSourceHash,'critical face coordinates must refer to the actual served revised painting');
+    geometry.paintedFaces=inspectV177PaintedSceneFaces(detail,geometry);
+    assert.deepEqual(geometry.paintedFaces.issues,[],'critical painted faces must clear the frame, heading, dialogue and action close-up');
+    if(viewport.height<=430){
+     const image=scene.locator('.v100-event-image:not(.v100-event-image-previous)'),originalStyle=await image.getAttribute('style');
+     try{
+      await image.evaluate(element=>element.style.setProperty('object-position','50% 50%','important'));
+      const centered=await scene.evaluate(readV177PaintedSceneImage);
+      const rejected=inspectV177PaintedSceneFaces(detail,{...geometry,paintedImage:centered});
+      assert.ok(rejected.issues.length>0,'actual centered compact crop must expose the face occlusion');
+      geometry.paintedFaceCropControl={operation:'actual-css-object-position-center',rejected:true,issues:rejected.issues};
+     }finally{
+      await image.evaluate((element,value)=>value===null?element.removeAttribute('style'):element.setAttribute('style',value),originalStyle);
+      assert.equal(await image.getAttribute('style'),originalStyle);
+      assert.deepEqual(inspectV177PaintedSceneFaces(detail,{...geometry,paintedImage:await scene.evaluate(readV177PaintedSceneImage)}).issues,[]);
+     }
+     const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),originalSide=await figure.getAttribute('data-side');
+     try{
+      await figure.evaluate(element=>element.setAttribute('data-side','left'));
+      const shifted=await scene.evaluate(readDetailShots);
+      const rejected=inspectV177PaintedSceneFaces(detail,{...geometry,detailShots:shifted});
+      assert.ok(rejected.issues.length>0,'actual left compact inset must expose the face occlusion');
+      geometry.paintedFaceInsetControl={operation:'actual-data-side-left',rejected:true,issues:rejected.issues};
+     }finally{
+      await figure.evaluate((element,value)=>value===null?element.removeAttribute('data-side'):element.setAttribute('data-side',value),originalSide);
+      assert.equal(await figure.getAttribute('data-side'),originalSide);
+      const restored=await scene.evaluate(readDetailShots);checkDetail(restored);assert.deepEqual(restored,geometry.detailShots);
+      assert.deepEqual(inspectV177PaintedSceneFaces(detail,{...geometry,detailShots:restored}).issues,[]);
+     }
+    }
+   }
    if(detail){
     const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),style=await figure.getAttribute('style');
     try{

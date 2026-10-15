@@ -10,7 +10,7 @@ function fixture(overrides={}) {
     complete:true,naturalWidth:512,naturalHeight:640,
     getBoundingClientRect:()=>({width:294.46875,height:368.078125}),
     getAnimations:()=>state.animations??[],...overrides.image};
-  const scene={isConnected:true,querySelectorAll:()=>[image]};
+  const scene={isConnected:true,querySelectorAll:selector=>selector==='.v100-portrait'?[image]:[]};
   const context=vm.createContext({document:{querySelector:()=>scene},getComputedStyle:()=>state});
   const observe=vm.runInContext('('+readV177StoryPortraitPaint.toString()+')',context);
   return {state,image,scene,context,observe};
@@ -45,6 +45,22 @@ test('illustrated scene with no separate portraits retains its native capture pa
   const f=fixture();f.scene.querySelectorAll=()=>[];
   const result=f.observe('.scene');assert.equal(result.nativePaintReady,true);
   assert.equal(result.portraitCount,0);
+});
+
+test('decoded current cut images also wait for their real dissolve without waiting on a prior layer',()=>{
+  const f=fixture(),paint={opacity:'.4',visibility:'visible',display:'block'};
+  const animations=[{animationName:'v100-event-dissolve',playState:'running',pending:false}];
+  const background={...f.image,currentSrc:'s01-nao-rescue.webp',src:'s01-nao-rescue.webp',naturalWidth:1280,naturalHeight:720,
+    getAnimations:()=>animations};
+  f.scene.querySelectorAll=selector=>selector==='.v100-portrait'?[f.image]:selector==='.v100-event-image:not(.v100-event-image-previous)'?[background]:[];
+  f.context.getComputedStyle=image=>image===background?paint:f.state;
+  assert.equal(f.observe('.scene'),false);
+  paint.opacity='1';assert.equal(f.observe('.scene'),false);
+  animations[0].playState='finished';
+  const result=f.observe('.scene');
+  assert.equal(result.nativePaintReady,true);assert.equal(result.backgroundCount,1);
+  assert.equal(result.backgrounds[0].source,'s01-nao-rescue.webp');
+  assert.equal(result.portraitCount,1);
 });
 
 test('actual hosted caller waits for the serialized observer before geometry and screenshot without changing its deadline',async()=>{

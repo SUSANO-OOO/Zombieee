@@ -3,7 +3,7 @@
 export function readV177StoryPortraitPaint(selector) {
   const scene = document.querySelector(selector);
   if (!scene?.isConnected) return false;
-  const portraits = [...scene.querySelectorAll('.v100-portrait')].map(image => {
+  const readImage = image => {
     const style = getComputedStyle(image), rect = image.getBoundingClientRect();
     return {
       source: image.currentSrc || image.src,
@@ -21,10 +21,12 @@ export function readV177StoryPortraitPaint(selector) {
         pending: animation.pending,
       })),
     };
-  });
-  if (portraits.some(p => !p.complete || p.naturalWidth <= 0 || p.naturalHeight <= 0
+  };
+  const portraits = [...scene.querySelectorAll('.v100-portrait')].map(readImage);
+  const backgrounds = [...scene.querySelectorAll('.v100-event-image:not(.v100-event-image-previous)')].map(readImage);
+  if ([...portraits,...backgrounds].some(p => !p.complete || p.naturalWidth <= 0 || p.naturalHeight <= 0
     || p.opacity !== 1 || p.visibility !== 'visible' || p.display === 'none'
     || p.width <= 0 || p.height <= 0
     || p.animations.some(a => a.pending || a.playState !== 'finished'))) return false;
-  return { portraits, portraitCount: portraits.length, nativePaintReady: true };
+  return { portraits, portraitCount: portraits.length, backgrounds, backgroundCount: backgrounds.length, nativePaintReady: true };
 }

@@ -1405,6 +1405,9 @@
 .v100-event-image-arriving { animation: v100-event-dissolve .65s ease both; }
 .v177-story-detail-shot { position:absolute; z-index:2; left:3.5%; bottom:150px; width:clamp(220px,32vw,440px); height:clamp(100px,32vh,220px); margin:0; overflow:hidden; border:1px solid #9e8050; border-radius:4px; background:#111b1e; box-shadow:0 6px 18px #000b; pointer-events:none; }
 .v177-story-detail-shot[data-side="right"] { right:3.5%; left:auto; }
+@media (max-height:430px) {
+  .v177-story-detail-shot[data-side="right"][data-compact-edge="true"] { right:16px; left:auto; width:clamp(170px,26vw,240px); }
+}
 .v177-story-detail-shot > svg { display:block; width:100%; height:100%; overflow:hidden; pointer-events:none; }
 .v177-story-detail-arriving { animation:v100-event-dissolve .65s ease both; }
 .v177-story-detail-previous { animation:v177-story-detail-leave .65s ease forwards; }
