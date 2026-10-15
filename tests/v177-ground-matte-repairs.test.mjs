@@ -1,3 +1,4 @@
+import { V177_PAISEN_CREDITS_ASSETS, V177_PAISEN_CREDITS_REPLACEMENTS } from '../scripts/v177-paisen-credits-asset-contract.mjs';
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs/promises";
@@ -91,15 +92,18 @@ test("the source-bound matte, R9 action and Paisen identity repairs are the exac
     {path:"/art/v100/story-r9/cuts/s28-physical-stop.webp",previous:"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",hash:"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",bytes:233424},
     {path:"/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",previous:"sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",hash:"sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",bytes:306628},
   ];
-  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)).map(a=>a.path)].sort());
+  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)).map(a=>a.path)].sort());
   for(const retired of [...V177_PAISEN_RETIRED_ASSETS,...V177_RETIRED_JOINT_SOURCE_ASSETS]) {
     const before=previousByPath.get(retired.path);
     assert.equal(before.hash,retired.hash);assert.equal(before.bytes,retired.bytes);
     assert.equal(current.assets.some(asset=>asset.path===retired.path),false);
   }
-  for(const approved of [...V177_PAISEN_ASSET_ADDITIONS,...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path))]) {
+  for(const approved of [...V177_PAISEN_CREDITS_ASSETS,...V177_PAISEN_ASSET_ADDITIONS,...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path))]) {
     const after=current.assets.find(asset=>asset.path===approved.path);
     assert.equal(after.hash,approved.hash);assert.equal(after.bytes,approved.bytes);
+  }
+  for(const row of V177_PAISEN_CREDITS_REPLACEMENTS){
+    assert.equal(previousByPath.get(row.path).hash,row.previous.hash);assert.equal(previousByPath.get(row.path).bytes,row.previous.bytes);
   }
   for(const storyCut of storyCuts){
     assert.equal(previousByPath.get(storyCut.path).hash,storyCut.previous);

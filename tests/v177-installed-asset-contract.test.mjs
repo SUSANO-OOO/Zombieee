@@ -1,3 +1,4 @@
+import { V177_PAISEN_CREDITS_REPLACEMENTS } from '../scripts/v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -10,8 +11,9 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 109, 33127342, 83],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 108, 33106390, 82],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 117, 44413998, 91],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 116, 44393046, 90],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 116, 44393046, 90],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -112,5 +114,15 @@ test('Paisen identity updates pin all old and new image bytes and reject stale r
     const changedOld=structuredClone(old);
     changedOld.assets.find(asset=>asset.path===retired.path).bytes+=1;
     assert.equal(v177InstalledSourceReplacementsMatch(changedOld,candidate,'1.0.2'),false);
+  }
+});
+
+test('each photo credits replacement rejects old-image resurrection and a changed installed source', () => {
+  const old = JSON.parse(execFileSync('git', ['show', '99f9c193ab1e35531db39225c839138cdb1c33cd:public/asset-manifest.json'], {encoding:'utf8',maxBuffer:4*1024*1024}));
+  for (const row of V177_PAISEN_CREDITS_REPLACEMENTS) {
+    const resurrected = structuredClone(candidate); Object.assign(resurrected.assets.find(asset => asset.path === row.path), row.previous);
+    assert.equal(v177InstalledSourceReplacementsMatch(old,resurrected,'1.0.3'),false);
+    const alteredOld = structuredClone(old); alteredOld.assets.find(asset => asset.path === row.path).bytes++;
+    assert.equal(v177InstalledSourceReplacementsMatch(alteredOld,candidate,'1.0.3'),false);
   }
 });

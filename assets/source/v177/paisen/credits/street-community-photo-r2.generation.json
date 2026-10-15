@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-15T09:08:55.457Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "sceneId": "street-community",
+  "actionAuthority": {
+    "source": "app/v100CreditsFilm.js",
+    "actors": [
+      "unit-hachi",
+      "unit-paisen",
+      "unit-raider",
+      "unit-mizuchi",
+      "unit-mayo-chan"
+    ],
+    "description": "商店街のあちこちで、仲間たちがシャッターを直し、物資を運び、道を掃く。"
+  },
+  "target": "public/art/v100/credits/street-community-r1.webp",
+  "targetSha256": "7a3614c3515b7e0403d2e4bc81ab83413c12134f969aa6b74b8c7ca6531b1a62",
+  "prompt": "Edit image 1, the existing 1600x900 detailed painted game illustration. Paisen is the short-haired adult man in the navy T-shirt at CENTER-RIGHT under the shutter, raising both hands to hold it up. Keep his two hands contacting the shutter, head turned right in a mild effort expression and the exact pose. Remove only his old tied waist jacket and camouflage trousers; use white knee-length shorts wherever visible, respecting foreground crates and the woman in purple. Leave the entire orange-coated Hachi, blond sweeper, dog and woman in purple unchanged. Images 2-4 are the Producer's authoritative photos of the exact adult person Paisen must resemble. Image 5 is his already registered illustrated identity: reproduce that SAME person, face and outfit faithfully in this scene. Match short black hair, broad rounded cheeks/jaw, natural dark eyes and brows, photographed nose/lips/ears and moderately stocky build. Use the plain navy-purple crew-neck T-shirt and loose white knee-length shorts from the photos, with practical dark low-top shoes only where feet are visible. Do not retain the old sharp-jawed generic anime-hero face or turn him into a different actor. Adapt the accurate photo likeness into the image's richly detailed inked/painted post-apocalyptic game style, perspective, lighting and shadows. Keep the head size/location and its natural neck-to-collar connection; no shifted neck, added limbs or camera-facing stare. Preserve every other person and prop, original action, composition, camera viewpoint, framing and background. No text, logos, symbols or added people/objects. All pixels outside Paisen's figure should be unchanged.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "wholeGameAccepted": false,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-08ca8df1-e78c-45e1-9066-cb4b0434f797.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/street-community-photo-r2.generated.png",
+  "generatedSha256": "7f751c38f6851ae7d4f35c1d495d2a561c6e69d79223d015d65d53874f11a145",
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the generated scene: facial proportions follow the registered photo identity, shirt/white shorts and overhead action retained. Localize to original pixels before adoption; outside-model differences are not accepted.",
+  "localized": "assets/source/v177/paisen/credits/street-community-photo-r2.localized-r1.png",
+  "localizedSha256": "dd5cb810126a3de40e0e4353833a434063267f826aa970faf955cc9e77f36abf",
+  "localizationProvenance": "assets/source/v177/paisen/credits/street-community-photo-r2.localized-r1.provenance.json"
+}

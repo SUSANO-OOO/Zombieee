@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-15T10:18:21.563Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "target": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.input.png",
+  "targetSha256": "0d40ad66e529b0cb2c3496f90b8cc0658ccd7ba527fffae25de729384a8d3f89",
+  "sourceScene": "assets/source/v177/paisen/credits/street-paisen-broom-r3-singing.localized-r1.png",
+  "sourceSceneSha256": "93e24b7a50cc984428413b7dc40a7fd9702badedcda5b469ce0e8fdd3d93fc71",
+  "sourceCrop": {
+    "left": 735,
+    "top": 40,
+    "width": 235,
+    "height": 235
+  },
+  "inputUpscale": 3,
+  "prompt": "Edit image 1, this enlarged close-up of a small character in the game scene. Replace his OLD generic anime facial design with a highly faithful illustrated likeness of the exact adult person in photos 2-4 and the registered illustrated master in image 5. The same person must be recognizable, without beautifying or idealizing him: broad rounded cheeks, short broad chin/jaw, photographed natural eyes/eyelids/brows, nose/tip, lips, ears and short black hairline. The man is singing joyfully with mouth naturally OPEN, chin lifted and gaze directed upward/right. Keep the head tilt and visibly open singing mouth; do not turn him toward the camera or make him cry. Preserve the exact collar/shoulder positions at the bottom of the crop. Keep the head centered in its current location and the same overall scale, with a natural neck that connects into the existing crew-neck collar. Do not move the neck, create a duplicate neck, or change the original posture. Use the existing detailed painted/inked game style and warm sunset lighting. Keep all scene details, shoulders, shirt collar and background fixed. Only head, ears, hair, face and its continuous neck may change. No text or added objects. The head occupies most of this close-up so facial fidelity is the main priority.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-e8df45f3-002c-4b08-9610-04901ddb4803.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.generated.png",
+  "generatedSha256": "158671f5f5288570e32b1c6336f4aa5353e8d3146326a4abc2df790622f026a6",
+  "generatedSize": {
+    "width": 1254,
+    "height": 1254
+  },
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the built-in output; source candidate only. Preserve original outside a registered Paisen region before runtime adoption.",
+  "localized": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.png",
+  "localizedSha256": "cd2fa103a65d516bbc654cdc14ea3fa145910f0a51ebdf10eb2373263748d53c",
+  "localizationProvenance": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.provenance.json"
+}

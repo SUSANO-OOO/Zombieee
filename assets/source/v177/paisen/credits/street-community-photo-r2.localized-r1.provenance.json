@@ -1,0 +1,161 @@
+{
+  "at": "2026-10-15T10:10:02.994Z",
+  "sceneId": "street-community",
+  "original": "public/art/v100/credits/street-community-r1.webp",
+  "originalSha256": "7a3614c3515b7e0403d2e4bc81ab83413c12134f969aa6b74b8c7ca6531b1a62",
+  "generated": "assets/source/v177/paisen/credits/street-community-photo-r2.generated.png",
+  "generatedSha256": "7f751c38f6851ae7d4f35c1d495d2a561c6e69d79223d015d65d53874f11a145",
+  "target": "assets/source/v177/paisen/credits/street-community-photo-r2.localized-r1.png",
+  "targetSha256": "dd5cb810126a3de40e0e4353833a434063267f826aa970faf955cc9e77f36abf",
+  "width": 1600,
+  "height": 900,
+  "polygons": [
+    [
+      [
+        757,
+        184
+      ],
+      [
+        813,
+        179
+      ],
+      [
+        827,
+        260
+      ],
+      [
+        858,
+        294
+      ],
+      [
+        896,
+        219
+      ],
+      [
+        971,
+        219
+      ],
+      [
+        1008,
+        270
+      ],
+      [
+        1022,
+        225
+      ],
+      [
+        1019,
+        169
+      ],
+      [
+        1077,
+        156
+      ],
+      [
+        1102,
+        233
+      ],
+      [
+        1087,
+        337
+      ],
+      [
+        1069,
+        417
+      ],
+      [
+        1085,
+        520
+      ],
+      [
+        1104,
+        644
+      ],
+      [
+        1065,
+        715
+      ],
+      [
+        961,
+        734
+      ],
+      [
+        944,
+        665
+      ],
+      [
+        902,
+        733
+      ],
+      [
+        898,
+        803
+      ],
+      [
+        800,
+        801
+      ],
+      [
+        812,
+        720
+      ],
+      [
+        823,
+        657
+      ],
+      [
+        798,
+        559
+      ],
+      [
+        835,
+        514
+      ],
+      [
+        839,
+        415
+      ],
+      [
+        779,
+        315
+      ]
+    ]
+  ],
+  "protectRects": [
+    [
+      1108,
+      290,
+      492,
+      610
+    ],
+    [
+      900,
+      720,
+      700,
+      180
+    ],
+    [
+      0,
+      0,
+      1600,
+      165
+    ]
+  ],
+  "protectPolygons": [],
+  "faceRect": [
+    890,
+    219,
+    132,
+    155
+  ],
+  "maskPath": "assets/source/v177/paisen/credits/street-community-photo-r2.localization-mask-r1.png",
+  "registeredPixels": 146395,
+  "changedPixels": 146318,
+  "changedOutsideRegisteredRegion": 0,
+  "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

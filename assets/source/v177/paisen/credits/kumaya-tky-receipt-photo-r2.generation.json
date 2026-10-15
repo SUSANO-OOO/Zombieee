@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-15T09:08:55.470Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "sceneId": "kumaya-tky-receipt",
+  "actionAuthority": {
+    "source": "app/v100CreditsFilm.js",
+    "actors": [
+      "unit-tky",
+      "unit-paisen",
+      "unit-kumaverson"
+    ],
+    "description": "パイセンの伝票をTKYが返し、店主が皿洗いを言いつける。"
+  },
+  "target": "public/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+  "targetSha256": "87fd704b22647591633ada45a8b52e18d8e2792cf7007a57cc7093db13cb90b2",
+  "prompt": "Edit image 1, the existing 1280x720 detailed painted game illustration. Paisen is the short-haired adult man in the navy T-shirt at the FRONT LEFT, holding a piece of fried chicken near his mouth and glancing right at TKY. Replace ONLY Paisen's facial identity, hair, ears, neck and navy-purple shirt; preserve his exact eating hand and food, relaxed sideward expression and seated scale. Shorts/legs are hidden and must not be invented. The black-armored man at center, long-haired pale-shirted man at right, paper receipt, wooden spoon, table food/drinks and restaurant are unchanged. Images 2-4 are the Producer's authoritative photos of the exact adult person Paisen must resemble. Image 5 is his already registered illustrated identity: reproduce that SAME person, face and outfit faithfully in this scene. Match short black hair, broad rounded cheeks/jaw, natural dark eyes and brows, photographed nose/lips/ears and moderately stocky build. Use the plain navy-purple crew-neck T-shirt and loose white knee-length shorts from the photos, with practical dark low-top shoes only where feet are visible. Do not retain the old sharp-jawed generic anime-hero face or turn him into a different actor. Adapt the accurate photo likeness into the image's richly detailed inked/painted post-apocalyptic game style, perspective, lighting and shadows. Keep the head size/location and its natural neck-to-collar connection; no shifted neck, added limbs or camera-facing stare. Preserve every other person and prop, original action, composition, camera viewpoint, framing and background. No text, logos, symbols or added people/objects. All pixels outside Paisen's figure should be unchanged.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "wholeGameAccepted": false,
+  "targetWidth": 1280,
+  "targetHeight": 720,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-83d394d9-1b54-4f76-8c20-74402398d4be.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.generated.png",
+  "generatedSha256": "925250e507fccf05a6453380876b5c1fd57c16c1208fe59a0514c9f5be39ba12",
+  "generatedSize": {
+    "width": 1672,
+    "height": 941
+  },
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the built-in output; source candidate only. Preserve original outside a registered Paisen region before runtime adoption.",
+  "producerAccepted": false,
+  "localized": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localized-r1.png",
+  "localizedSha256": "bf750945bf50fe549501c0ae88eedfd5eb6e27118ecc05f5e514b4cfcfd66311",
+  "localizationProvenance": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localized-r1.provenance.json"
+}

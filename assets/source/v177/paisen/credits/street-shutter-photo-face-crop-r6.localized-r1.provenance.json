@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-15T10:29:35.026Z",
+  "sceneId": "street-shutter",
+  "sourceScene": "assets/source/v177/paisen/credits/street-shutter-r4.localized-r2.png",
+  "sourceSceneSha256": "918df9f15d617e315c759016486556c9f0c2ca1da377c94d3959be73699a075d",
+  "generated": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.generated.png",
+  "generatedSha256": "5fec8f18628402ec04058479ea9f3d219dfd4d1de072e892bc65e1421a7e30bf",
+  "sourceCrop": {
+    "left": 1016,
+    "top": 108,
+    "width": 236,
+    "height": 230
+  },
+  "headPolygon": [
+    [
+      1038,
+      125
+    ],
+    [
+      1162,
+      120
+    ],
+    [
+      1211,
+      186
+    ],
+    [
+      1202,
+      267
+    ],
+    [
+      1156,
+      299
+    ],
+    [
+      1084,
+      288
+    ],
+    [
+      1041,
+      218
+    ]
+  ],
+  "target": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.png",
+  "targetSha256": "8bf3e00769c949f4c5c14d8bd74f7b4e6e04281cd538d31c287fc581584b7164",
+  "changedHeadPixels": 24846,
+  "changedOutsideHeadFromPrevious": 0,
+  "bodyAndOtherActorsPreserved": true,
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}
