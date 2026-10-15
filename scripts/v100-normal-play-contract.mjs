@@ -24,6 +24,14 @@ export function normalCampaignDeployOrder(kinds) {
   return [...kinds];
 }
 
+// Vehicle fire costs 70 support and the first airstrike costs 85. Preserve the
+// first aircraft opportunity until its ordinary aimed UI input is acknowledged.
+// This only selects an input; it never changes gauge, time or battle rules.
+export function normalCampaignCanSpendVehicleGauge(inputs) {
+  return Array.isArray(inputs) && inputs.some(input => input?.action === 'airstrike'
+    && input.acknowledgment?.disabled === 'true');
+}
+
 export function normalCampaignAirstrikeTarget(canvas, anchors, hudText = '') {
   if (!canvas || !['x','y','width','height','worldScale','worldOffsetX','worldOffsetY'].every(key => Number.isFinite(canvas[key])) || canvas.width <= 0 || canvas.height <= 0 || canvas.worldScale <= 0) return null;
   const visible = (anchors ?? []).filter(point => Number.isFinite(point.x) && Number.isFinite(point.y)

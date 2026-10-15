@@ -12,7 +12,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import { normalCampaignDeploymentCount, normalCampaignDeployOrder, normalCampaignAirstrikeTarget } from "./v100-normal-play-contract.mjs";
+import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder, normalCampaignAirstrikeTarget } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
@@ -205,9 +205,9 @@ async function battle(stage) {
     }
     const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
-    // Pre-boss waves can destroy the vehicle too. Use the ordinary enabled
-    // control instead of reserving a full gauge until a boss is on screen.
-    if(!airstrikeRequested&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    // Reserve the first 85-support airstrike instead of spending 70 at ~12s.
+    // After its actual HUD acknowledgment, ordinary vehicle fire remains available.
+    if(!airstrikeRequested&&normalCampaignCanSpendVehicleGauge(record.inputs)&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()

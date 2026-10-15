@@ -16,6 +16,50 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
+  v177-guardian-control-diagnostic:
+    name: V1 Guardian Control Diagnostic
+    if: github.head_ref == 'codex/177-combat-clarity'
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm run build
+      - name: Record limited diagnostic scope
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p outputs/v177-guardian-diagnostic
+          node --input-type=module -e 'import fs from "node:fs";import{execFileSync}from"node:child_process";fs.writeFileSync("outputs/v177-guardian-diagnostic/scope.json",JSON.stringify({diagnosticOnly:true,requestedHead:process.env.EXPECTED_HEAD,checkoutHead:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),variant:"stage21-panther-knife",engine:"chromium",controlDeadlineMs:500,allProductionCapturesAccepted:false,all21Accepted:false,normalCampaignAccepted:false,wholeGameAccepted:false},null,2)+"\n");'
+      - name: Inspect the original guardian input deadline
+        env:
+          DEBUG: pw:browser
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_VARIANT: stage21-panther-knife
+          V100_PHASE_G_ONLY_ENGINE: chromium
+          V100_PHASE_G_EVIDENCE_DIR: outputs/v177-guardian-diagnostic
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-guardian-control-diagnostic
+          path: outputs/v177-guardian-diagnostic
+          if-no-files-found: error
+          retention-days: 14
+
   r9-story:
     name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }})
     strategy:

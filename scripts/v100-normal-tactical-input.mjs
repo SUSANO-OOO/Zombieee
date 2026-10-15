@@ -5,11 +5,17 @@ import {orderedNativePointer} from './ordered-native-pointer.mjs';
 export function readNativeBattleControl(els){
   const el=els.length===1?els[0]:null;
   if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;
+  const mark=()=>globalThis.performance?.now?.()??null;
+  const started=mark();
   const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+  const geometryEnded=mark();
   const ownsPoint=r.width>0&&r.height>0&&document.elementFromPoint(x,y)?.closest('button')===el;
+  const hitEnded=mark();
+  const browserReadTimings=started===null||geometryEnded===null||hitEnded===null?null:
+    {geometryMs:geometryEnded-started,hitTestMs:hitEnded-geometryEnded,totalMs:hitEnded-started};
   return{unitCard:el.matches('.unit-card'),point:ownsPoint?{x,y}:null,
     fighterId:el.dataset?.fighterId??null,abilityKind:el.dataset?.abilityKind??null,
-    ariaLabel:el.getAttribute('aria-label')};
+    ariaLabel:el.getAttribute('aria-label'),browserReadTimings};
 }
 
 export async function nativeBattleTap(page,locator,phases=[]){

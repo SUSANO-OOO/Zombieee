@@ -6,6 +6,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import {V100_STAGES} from '../app/v100Registry.js';
 import {createCrawlerAbilityRuntime,requestCrawlerBarrage} from '../app/gameRules.js';
+import {normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-contract.mjs';
 
 const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
 const tree=ts.createSourceFile('normal-campaign.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
@@ -15,17 +16,17 @@ const find=node=>{if(ts.isIfStatement(node)&&node.getText(tree).includes('await 
 find(functions.get('battle'));
 assert.equal(fire.length,1,'exercise the actual normal-play barrage input, without importing its hosted browser entry point');
 
-async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true,airstrikeRequested=false}={}){
+async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true,airstrikeRequested=false,firstAirstrike=true}={}){
   const stage=V100_STAGES.find(stage=>stage.number===stageNumber);
   let runtime=createCrawlerAbilityRuntime(ready?1:0,true),supportGauge=gauge;
-  const record={inputs:[]},clicks=[];
+  const record={inputs:firstAirstrike?[{action:'airstrike',acknowledgment:{state:'cooldown',disabled:'true'}}]:[]},clicks=[];
   const request=()=>requestCrawlerBarrage({running:true,paused:false,over:false,runtime,supportGauge});
   const barrage={isVisible:async()=>visible,isEnabled:async()=>request().ok,async click(){
     const result=request();assert.equal(result.ok,true,'the real production support rule must authorize every input');
     runtime=result.runtime;supportGauge=result.supportGauge;clicks.push('vehicle-barrage');
   }};
   await vm.runInNewContext('(async()=>{'+fire[0].getText(tree)+'})()',{
-    stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},airstrikeRequested,
+    normalCampaignCanSpendVehicleGauge,stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},airstrikeRequested,
   });
   return {record,clicks,supportGauge,runtime};
 }
@@ -36,13 +37,13 @@ for(const scenario of [{stageNumber:1,bossVisible:false},{stageNumber:3,bossVisi
     assert.deepEqual(result.clicks,['vehicle-barrage']);
     assert.equal(result.supportGauge,30,'the normal production cost remains 70 from the observed full gauge');
     assert.equal(result.runtime.phase,'deploying');
-    assert.equal(result.record.inputs.length,1);assert.equal(result.record.inputs[0].action,'barrage');
+    assert.equal(result.record.inputs.length,2);assert.equal(result.record.inputs[1].action,'barrage');
   });
 }
 
 test('boss approach still respects the visible button, real support cost, cooldown and existing opening delay',async()=>{
   for(const scenario of [{visible:false},{gauge:69},{ready:false},{seconds:12},{airstrikeRequested:true}]){
-    const result=await runFire(scenario);assert.deepEqual(result.clicks,[]);assert.equal(result.record.inputs.length,0);
+    const result=await runFire(scenario);assert.deepEqual(result.clicks,[]);assert.equal(result.record.inputs.filter(input=>input.action==='barrage').length,0);
   }
 });
 
@@ -58,4 +59,8 @@ test('a genuine stage3 defeat is saved and still stops the normal route before a
   await assert.rejects(()=>accept(record),/Normal-play defeat at Stage 3/u);
   assert.equal(record.status,'lost');assert.equal(record.result.won,false);
   assert.deepEqual(events,['failure-screenshot','persist-defeat']);
+});
+
+test('the actual caller reserves the first airstrike even when production vehicle fire is enabled',async()=>{
+  for(const stageNumber of [1,3,5,30]){const r=await runFire({stageNumber,firstAirstrike:false});assert.deepEqual(r.clicks,[]);assert.equal(r.supportGauge,100);assert.equal(r.runtime.phase,'ready');}
 });

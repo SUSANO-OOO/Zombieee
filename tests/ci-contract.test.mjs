@@ -6,6 +6,65 @@ import { load as loadYaml } from "js-yaml";
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
 import { CANONICAL_HUD_STATES } from "../scripts/run-v099-hud-states-bounded.mjs";
 
+test('the focused guardian diagnostic keeps the failing host and cannot replace full acceptance', async () => {
+  const workflow = loadYaml(await readFile('.github/workflows/ci.yml', 'utf8'));
+  const id = 'v177-guardian-control-diagnostic';
+  function assertScope(candidate) {
+    const jobs = candidate.jobs, diagnostic = jobs[id], full = jobs['v100-phase-g-production'];
+    assert.ok(diagnostic);
+    assert.equal(diagnostic.if, "github.head_ref == 'codex/177-combat-clarity'");
+    assert.equal(diagnostic['runs-on'], full['runs-on']);
+    assert.equal(diagnostic['runs-on'], 'macos-15-intel');
+    assert.equal(diagnostic['timeout-minutes'], 20);
+    assert.equal(diagnostic['continue-on-error'], undefined);
+    assert.equal(diagnostic.permissions, undefined);
+    assert.deepEqual(candidate.permissions, {contents:'read'});
+    assert.equal(diagnostic.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}');
+    assert.equal(diagnostic.steps[0].with['persist-credentials'], false);
+    const run = diagnostic.steps.find(step => step.run === 'node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs');
+    assert.ok(run);
+    assert.deepEqual(run.env, {
+      DEBUG:'pw:browser', V100_PHASE_G_ONLY:'battle-extra',
+      V100_PHASE_G_ONLY_VARIANT:'stage21-panther-knife', V100_PHASE_G_ONLY_ENGINE:'chromium',
+      V100_PHASE_G_EVIDENCE_DIR:'outputs/v177-guardian-diagnostic',
+    });
+    const scope = diagnostic.steps.find(step => step.name === 'Record limited diagnostic scope');
+    for (const field of ['allProductionCapturesAccepted','all21Accepted','normalCampaignAccepted','wholeGameAccepted']) {
+      assert.ok(scope.run.includes(field + ':false'), field + ' cannot be accepted by one filtered capture');
+    }
+    assert.match(scope.run, /diagnosticOnly:true/u);
+    assert.match(scope.run, /controlDeadlineMs:500/u);
+    const fullRun = full.steps.find(step => step.run?.includes('npm run qa:v100-phase-g'));
+    assert.ok(fullRun.run.includes('npm run qa:v100-phase-g-validate'));
+    for (const env of [candidate.env,full.env,fullRun.env]) {
+      for (const field of ['V100_PHASE_G_ONLY','V100_PHASE_G_ONLY_VARIANT','V100_PHASE_G_ONLY_ENGINE']) {
+        assert.equal(env?.[field], undefined, 'the complete matrix cannot inherit diagnostic filters');
+      }
+    }
+    const normal = jobs['v177-normal-campaign'];
+    assert.ok(normal.needs.includes('v100-phase-g-production'));
+    assert.ok(!normal.needs.includes(id), 'a conditional diagnostic cannot substitute for the mandatory matrix');
+    const upload = diagnostic.steps.at(-1);
+    assert.equal(upload.if, 'always()');
+    assert.equal(upload.with.name, 'v177-guardian-control-diagnostic');
+    assert.notEqual(upload.with.name, full.steps.at(-1).with.name);
+    assert.equal(upload.with.path, 'outputs/v177-guardian-diagnostic');
+    assert.equal(upload.with['if-no-files-found'], 'error');
+  }
+  assertScope(workflow);
+  for (const mutate of [
+    candidate => { candidate.jobs[id]['runs-on'] = 'ubuntu-latest'; },
+    candidate => { candidate.jobs[id]['continue-on-error'] = true; },
+    candidate => { candidate.jobs[id].permissions = {contents:'write'}; },
+    candidate => { candidate.jobs['v100-phase-g-production'].env = {V100_PHASE_G_ONLY:'battle-extra'}; },
+    candidate => { candidate.jobs['v177-normal-campaign'].needs = [id]; },
+    candidate => { candidate.jobs[id].steps.at(-1).with.name = candidate.jobs['v100-phase-g-production'].steps.at(-1).with.name; },
+  ]) {
+    const candidate = structuredClone(workflow); mutate(candidate);
+    assert.throws(() => assertScope(candidate));
+  }
+});
+
 test('split native combat, audio and ordinary contacts remain mandatory in both engines without weakening their deadlines or assertions', async () => {
   const workflow = loadYaml(await readFile('.github/workflows/ci.yml', 'utf8'));
   const lanes = [
@@ -164,7 +223,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit", { requirePreflightGate: false });
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 8);
   assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 2);
   assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
@@ -245,7 +304,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["r9-story", "v102-combat", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "v177-normal-campaign-diagnostic", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["v177-guardian-control-diagnostic", "r9-story", "v102-combat", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "v177-normal-campaign-diagnostic", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
