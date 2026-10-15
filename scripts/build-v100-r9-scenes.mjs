@@ -12,10 +12,10 @@ for(const scene of plan.scenes){
  const original=await readV100ArtReference(master);await readFile(prompt);
  if(scene.authoringMasterSha256&&sha(original)!==scene.authoringMasterSha256)throw new Error('Changed R9 identity revision master: '+scene.id);
  for(const reference of scene.references ?? []) await readV100ArtReference(reference);
- await sharp(original).resize(1280,720,{fit:'cover'}).webp(scene.lossless?{lossless:true}:{quality:94}).toFile('public'+assetPath);
+ await sharp(original).resize(1280,720,{fit:'cover'}).webp(scene.lossless?{lossless:true,effort:scene.losslessEffort??4}:{quality:94}).toFile('public'+assetPath);
  const bytes=await readFile('public'+assetPath);
  records.push({...scene,path:assetPath,bytes:bytes.length,hash:'sha256-'+sha(bytes),criticality:'critical',authoringMaster:master,masterSha256:sha(original),prompt,tool:'image_gen.imagegen',
-  sourceRights:'Original image generated in this Codex session using existing project identity/style references.',producerAcceptance:'pending',sourceScript:plan.sourceScript,sourceScriptSha256:plan.sourceScriptSha256});
+  sourceRights:scene.sourceRights??'Original image generated in this Codex session using existing project identity/style references.',producerAcceptance:'pending',sourceScript:plan.sourceScript,sourceScriptSha256:plan.sourceScriptSha256});
  runtime[scene.id]={path:assetPath,alt:scene.alt};
 }
 await writeFile(root+'runtime-provenance.json',JSON.stringify({version:1,date:'2026-10-10',records},null,2)+'\n');

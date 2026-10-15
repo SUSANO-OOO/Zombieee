@@ -1,0 +1,17 @@
+{
+  "sceneId": "s10-rescue-surveillance",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged Paisen head crop from a detailed painted game. Images 2-4 are authoritative photos of the SAME real adult person; image 5 is his registered world-style illustration. Replace the generic angular comic head with a very faithful likeness of that exact person: broad rounded cheeks, short broad jaw/chin, natural photographed eyes/eyelids and eyebrows, broad nose/tip, lips, ears and short black hairline. Do not beautify him, sharpen the jaw, exaggerate angry brows or make a different person. Preserve the STRICT LEFT-FACING PROFILE: exactly one visible eye, same nose direction, forward lean, slightly open mouth and concerned eyes toward the monitor at image left. Keep the raised hand at image left and Kuma's face/shirt at the upper RIGHT entirely unchanged. Change ONLY Paisen's hair, head, ears, face and continuous SINGLE neck. Preserve the existing collar position, shirt, shoulders, every other person and background object. Match the original detailed gritty inked/painted rendering, natural skin texture and scene lighting; do not paste a photo or turn him toward the camera. No additional anatomy, neck, objects, text or watermark.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: identity-preserve. Asset type: localized edit input for an existing R9 game cutscene. Input1 is the sole edit target; input2–4 are the producer's authoritative three photographs of the same man; input5 is the approved painted Paisen identity master. Replace only this single man on the stairs with Paisen matching reference photos2–4 and painted master5, retaining this exact steep overhead surveillance perspective, head tilted down with gaze up the staircase (not looking at the audience), original body scale, one left hand holding this same rail, other right arm lowered, one knee raised and both feet located on these same steps. Precisely reproduce his short straight black hair, broad jaw/cheeks, eyebrows and facial identity, solid natural build, plain dark navy-purple short-sleeve T-shirt, loose white knee-length shorts and bare calves, with original dark shoes. Remove the old black full-length trousers and tactical vest/holsters from this man. Preserve the railing, stairs, wall, camera angle, grain, low contrast and the entire image in monochrome greyscale as an in-world CCTV feed. Keep anatomically connected neck, exactly two arms/two hands/two legs, no repeated limbs or fingers. No color, inset, captions or extra person. Preserve Image1's dimensions, crop and composition, gritty finely painted realistic illustration touch; do not redraw unrelated objects. Do not add text, a watermark or an ornamental frame. This is a reference-driven correction, not a new character design.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "sceneId": "chiha-confession",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged Paisen head crop from a detailed painted game. Images 2-4 are authoritative photos of the SAME real adult person; image 5 is his registered world-style illustration. Replace the generic angular comic head with a very faithful likeness of that exact person: broad rounded cheeks, short broad jaw/chin, natural photographed eyes/eyelids and eyebrows, broad nose/tip, lips, ears and short black hairline. Do not beautify him, sharpen the jaw, exaggerate angry brows or make a different person. Preserve the three-quarter head looking attentively toward image LEFT, calm serious expression and CLOSED mouth, same head center and natural neck-to-collar connection. Keep the shoulders, navy shirt and room background exactly unchanged. Change ONLY Paisen's hair, head, ears, face and continuous SINGLE neck. Preserve the existing collar position, shirt, shoulders, every other person and background object. Match the original detailed gritty inked/painted rendering, natural skin texture and scene lighting; do not paste a photo or turn him toward the camera. No additional anatomy, neck, objects, text or watermark.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {V177_PAISEN_STORY_EXISTING_ASSETS, V177_PAISEN_STORY_EXISTING_REPLACEMENTS, V177_PAISEN_STORY_EXISTING_UPDATE_BYTES, V177_PAISEN_STORY_EXISTING_BYTES_DELTA} from '../scripts/v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_ASSETS, V177_PAISEN_CREDITS_REPLACEMENTS, V177_PAISEN_CREDITS_UPDATE_BYTES, V177_PAISEN_CREDITS_BYTES_DELTA } from '../scripts/v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_ASSET_BYTES, V177_PAISEN_BYTES_DELTA, V177_PAISEN_UPDATE_BYTES } from '../scripts/v177-paisen-asset-contract.mjs';
 import { V100_R9_ASSET_ADDITIONS, V100_R9_ASSET_BYTES } from '../scripts/v100-r9-asset-contract.mjs';
@@ -84,10 +85,10 @@ test("the Version 1.0.3 release candidate has one immutable identity and complet
   assert.equal(V177_PAISEN_CREDITS_BYTES_DELTA, 8_947_768);
   assert.equal(V177_PAISEN_CREDITS_UPDATE_BYTES, 11_286_656);
   assert.deepEqual(APPROVED_SIZE_SNAPSHOTS, {
-    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA + V177_PAISEN_CREDITS_BYTES_DELTA,
-    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA + V177_PAISEN_CREDITS_BYTES_DELTA,
-    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA,
-    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA,
+    candidateTotalBytes: 166_960_752 + V100_R5_ASSET_DELTA.bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA,
+    candidateDistinctHashBytes: 166_420_849 + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA,
+    updateFromV0982Bytes: 93_972_867 + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA,
+    updateFromV0993Bytes: 83_598_173 + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA,
   });
   assert.equal(RELEASE_VERSION, "1.0.3");
   assert.equal(candidate.version, RELEASE_VERSION);
@@ -189,8 +190,8 @@ test('the published 1.0.0 pack updates to 1.0.3 downloads only the approved medi
   const update = evaluateUpdate({ installedManifest: publishedV100, publishedManifest: candidate, storedHashes });
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, '1.0.0'); assert.equal(update.toVersion, '1.0.3');
-  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES);
-  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path),...V177_JOINT_ASSET_ADDITIONS.map(asset=>asset.path),...V177_PAISEN_ASSET_ADDITIONS.map(asset=>asset.path),...V177_PAISEN_CREDITS_ASSETS.map(asset=>asset.path)].sort());
+  assert.equal(update.downloadBytes, 258168 + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES + V177_PAISEN_STORY_EXISTING_UPDATE_BYTES);
+  assert.deepEqual(update.diff.downloadable.map(asset => asset.path).sort(), ['/art/v100/story-r5/cuts/zakimiya-c4-reunion.webp', ...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_R9_ASSET_ADDITIONS.map(asset=>asset.path), ...V100_OPENING_ASSET_ADDITIONS.map(asset=>asset.path),...V177_JOINT_ASSET_ADDITIONS.map(asset=>asset.path),...V177_PAISEN_ASSET_ADDITIONS.map(asset=>asset.path),...V177_PAISEN_CREDITS_ASSETS.map(asset=>asset.path),...V177_PAISEN_STORY_EXISTING_ASSETS.map(asset=>asset.path)].sort());
   assert.equal(update.removedCount, V177_PAISEN_RETIRED_ASSETS.length);
   const complete = verifyUpdatePayload({ manifest: candidate, storedHashes: new Set([...storedHashes, ...update.diff.downloadable.map(asset => asset.hash)]), expectedVersion: RELEASE_VERSION, expectedReleaseSha: RELEASE_SHA_PLACEHOLDER });
   assert.deepEqual(complete, { verified: true, errors: [], missingPaths: [] });
@@ -201,9 +202,9 @@ test('installed 1.0.1 downloads the gore texture, R9 scenes and opening while re
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.1');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path)].sort());
-  assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_CREDITS_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
+  assert.equal(update.downloadBytes,V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES + V177_PAISEN_STORY_EXISTING_UPDATE_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths, ...V102_ASSET_ADDITIONS.map(a=>a.path), ...V100_R9_ASSET_ADDITIONS.map(a=>a.path), ...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path),...V177_PAISEN_STORY_EXISTING_ASSETS.map(a=>a.path)].sort());
+  assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_CREDITS_REPLACEMENTS.length-V177_PAISEN_STORY_EXISTING_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
 });
 
 test('installed 1.0.2 downloads only the exact R9 and opening additions and retires only the previous Paisen portraits',()=>{
@@ -211,6 +212,6 @@ test('installed 1.0.2 downloads only the exact R9 and opening additions and reti
   const previous={...JSON.parse(execFileSync('git',['show',`${sha}:public/asset-manifest.json`],{encoding:'utf8'})),releaseSha:sha};
   const update=evaluateUpdate({installedManifest:previous,publishedManifest:candidate,storedHashes:new Set(previous.assets.map(a=>a.hash))});
   assert.equal(update.available,true);assert.equal(update.fromVersion,'1.0.2');assert.equal(update.toVersion,'1.0.3');
-  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
-  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_CREDITS_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
+  assert.equal(update.downloadBytes,V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + spriteRefreshBytes + V177_JOINT_ASSET_BYTES + V177_PAISEN_ASSET_BYTES + V177_PAISEN_CREDITS_UPDATE_BYTES + V177_PAISEN_STORY_EXISTING_UPDATE_BYTES);assert.equal(update.removedCount,V177_PAISEN_RETIRED_ASSETS.length);
+  assert.deepEqual(update.diff.downloadable.map(a=>a.path).sort(),[...spriteRefreshPaths,...V100_R9_ASSET_ADDITIONS.map(a=>a.path),...V100_OPENING_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path),...V177_PAISEN_STORY_EXISTING_ASSETS.map(a=>a.path)].sort());assert.equal(update.unchangedCount,previous.assets.length-V177_SPRITE_REPLACEMENTS.length-V177_PAISEN_CREDITS_REPLACEMENTS.length-V177_PAISEN_STORY_EXISTING_REPLACEMENTS.length-V177_PAISEN_RETIRED_ASSETS.length);
 });

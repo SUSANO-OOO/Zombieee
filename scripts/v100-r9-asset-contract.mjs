@@ -14,8 +14,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
-    "bytes": 285466,
-    "hash": "sha256-4c34b90d454425bdd5552695fe8e0cea24cabfc661231bcdbebb53e7b1f5c6a4",
+    "bytes": 969994,
+    "hash": "sha256-9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
     "criticality": "critical"
   },
   {
@@ -32,14 +32,14 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
-    "bytes": 306628,
-    "hash": "sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",
+    "bytes": 1057694,
+    "hash": "sha256-0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
     "criticality": "critical"
   },
   {
     "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
-    "bytes": 364686,
-    "hash": "sha256-bb722fb284a8fecf1a2456ae5789716c8b796fb4feabadef219ad91392416cd1",
+    "bytes": 1139376,
+    "hash": "sha256-872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
     "criticality": "critical"
   },
   {
@@ -50,8 +50,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
-    "bytes": 374396,
-    "hash": "sha256-97103968f88083529d922598e4387ccf3cc253c3bcc95c3994009045da36a145",
+    "bytes": 1106538,
+    "hash": "sha256-96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
     "criticality": "critical"
   },
   {
@@ -62,8 +62,8 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
-    "bytes": 318160,
-    "hash": "sha256-a0002fe5a95407baa4e548d3c6271b949bccfa172577a60b71631db8e2bb98f1",
+    "bytes": 1055442,
+    "hash": "sha256-61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
     "criticality": "critical"
   },
   {
@@ -80,14 +80,14 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
   },
   {
     "path": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
-    "bytes": 346460,
-    "hash": "sha256-c5c82fa74c071eb08d5c2c1124c41d6d4fe39eff813784c039d5ba57698834b1",
+    "bytes": 1167152,
+    "hash": "sha256-6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
     "criticality": "critical"
   },
   {
     "path": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
-    "bytes": 324668,
-    "hash": "sha256-7d7c97d154c04e2ee42d9a944ab41685a9ce29b7683d6d1abaeaa7d883f63f35",
+    "bytes": 991058,
+    "hash": "sha256-ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
     "criticality": "critical"
   },
   {
@@ -259,4 +259,4 @@ export const V100_R9_ASSET_ADDITIONS=Object.freeze([
     "criticality": "optional"
   }
 ]);
-export const V100_R9_ASSET_BYTES=7535547;
+export const V100_R9_ASSET_BYTES=12702337;

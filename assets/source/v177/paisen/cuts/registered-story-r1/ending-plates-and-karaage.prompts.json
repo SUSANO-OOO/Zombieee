@@ -1,0 +1,12 @@
+{
+  "sceneId": "ending-plates-and-karaage",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged head crop of Paisen carrying plates in a detailed painted game ending. Images 2, 3 and 4 are the authoritative photos of the SAME adult person; image 5 is his registered world-style illustrated identity. Replace the generic angular comic face in image 1 with a very faithful likeness of this exact photographed person: broad rounded cheeks, natural low eyebrows, photographed eyes and eyelids, broad nose and tip, fuller lips, short broad jaw and chin, ears and short black hairline. Do not beautify him, sharpen his jaw or exaggerate thick angry eyebrows. Preserve the target head center and scale, downward/rightward three-quarter angle, mildly annoyed patient expression with CLOSED mouth, and eyes looking toward the person at image right, not the camera. Keep a natural single neck joining the existing navy shirt collar at its current position. Change only head, face, hair, ears and continuous neck. Preserve shirt, shoulders, plate at bottom, background and warm lighting exactly. Keep the existing detailed inked/painted gritty game style while honoring the photo likeness; no photographic pasted head, text, watermark, extra neck, limbs or objects.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

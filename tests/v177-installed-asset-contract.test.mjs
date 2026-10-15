@@ -1,3 +1,4 @@
+import {V177_PAISEN_STORY_REPLACEMENTS, V177_PAISEN_STORY_EXISTING_REPLACEMENTS} from '../scripts/v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_REPLACEMENTS } from '../scripts/v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
@@ -11,9 +12,9 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 117, 44413998, 91],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 116, 44393046, 90],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 116, 44393046, 90],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 119, 51565672, 93],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 118, 51544720, 92],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 118, 51544720, 92],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -124,5 +125,27 @@ test('each photo credits replacement rejects old-image resurrection and a change
     assert.equal(v177InstalledSourceReplacementsMatch(old,resurrected,'1.0.3'),false);
     const alteredOld = structuredClone(old); alteredOld.assets.find(asset => asset.path === row.path).bytes++;
     assert.equal(v177InstalledSourceReplacementsMatch(alteredOld,candidate,'1.0.3'),false);
+  }
+});
+
+test('every R9 photo scene rejects stale image bytes and pins the two original installed R5 sources', () => {
+  const old = JSON.parse(execFileSync('git',['show','99f9c193ab1e35531db39225c839138cdb1c33cd:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
+  for (const row of V177_PAISEN_STORY_REPLACEMENTS) {
+    const stale = structuredClone(candidate);
+    Object.assign(stale.assets.find(asset => asset.path === row.path), row.previous);
+    assert.equal(v177InstalledSourceReplacementsMatch(old,stale,'1.0.3'),false);
+    const altered = structuredClone(candidate);
+    altered.assets.find(asset => asset.path === row.path).bytes++;
+    assert.equal(v177InstalledSourceReplacementsMatch(old,altered,'1.0.3'),false);
+    if (row.path.includes('/story-r9/')) {
+      const invented = structuredClone(old); invented.assets.push({...row.previous});
+      assert.equal(v177InstalledSourceReplacementsMatch(invented,candidate,'1.0.3'),false);
+    }
+  }
+  assert.equal(V177_PAISEN_STORY_EXISTING_REPLACEMENTS.length,2);
+  for (const row of V177_PAISEN_STORY_EXISTING_REPLACEMENTS) {
+    const changedOld = structuredClone(old);
+    changedOld.assets.find(asset => asset.path === row.path).hash = 'unapproved';
+    assert.equal(v177InstalledSourceReplacementsMatch(changedOld,candidate,'1.0.3'),false);
   }
 });

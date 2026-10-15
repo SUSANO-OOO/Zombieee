@@ -1,0 +1,296 @@
+{
+  "sceneId": "s10-rescue-surveillance",
+  "runtimePath": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/s10-rescue-surveillance.png",
+  "authorSourceSha256": "212605095b5a6adb847268907d79e41bf9ffb1a3943bb0b87e9311ac9f9524f9",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/s10-rescue-surveillance.region.png",
+  "approvedRegionSha256": "1b8bc1aed5687c2397227aada0b13ee8b3967d0fa6ba3f3b969ccb1e535c0096",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/s10-rescue-surveillance.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/s10-rescue-surveillance.provenance.json",
+  "originalGitBlob": "b63ead86d7a6990ce7e9dbed03e6fe0fbb39b0d1",
+  "originalSha256": "7d7c97d154c04e2ee42d9a944ab41685a9ce29b7683d6d1abaeaa7d883f63f35",
+  "originalBytes": 324668,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 38694,
+  "registeredPixels": 38751,
+  "runtimeBytes": 991058,
+  "runtimeSha256": "ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
+  "byteDelta": 666390,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "s10-rescue-surveillance",
+    "source": "public/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+    "sourceSha256": "7d7c97d154c04e2ee42d9a944ab41685a9ce29b7683d6d1abaeaa7d883f63f35",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.localized.png",
+    "localizedSha256": "212605095b5a6adb847268907d79e41bf9ffb1a3943bb0b87e9311ac9f9524f9",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.region.png",
+    "maskSha256": "9932a4f9c6d8dc3d1c878ac416da2fe76a9d4dcad45a169719d7c1382f39bede",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 38694,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-face-r1.generated.png",
+        "generatedSha256": "c3f0647d1a624a9e6221a6299d3c467fd8925c8f27603ca1e278bcdc584c7685",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-face-r1.generation.json",
+        "crop": {
+          "left": 585,
+          "top": 185,
+          "width": 245,
+          "height": 275
+        },
+        "polygons": [
+          [
+            [
+              619,
+              248
+            ],
+            [
+              633,
+              226
+            ],
+            [
+              667,
+              212
+            ],
+            [
+              717,
+              205
+            ],
+            [
+              759,
+              220
+            ],
+            [
+              788,
+              247
+            ],
+            [
+              801,
+              280
+            ],
+            [
+              800,
+              319
+            ],
+            [
+              789,
+              343
+            ],
+            [
+              775,
+              352
+            ],
+            [
+              762,
+              367
+            ],
+            [
+              729,
+              380
+            ],
+            [
+              688,
+              398
+            ],
+            [
+              659,
+              412
+            ],
+            [
+              641,
+              411
+            ],
+            [
+              628,
+              397
+            ],
+            [
+              621,
+              375
+            ],
+            [
+              616,
+              350
+            ],
+            [
+              619,
+              334
+            ],
+            [
+              611,
+              328
+            ],
+            [
+              614,
+              318
+            ],
+            [
+              613,
+              307
+            ],
+            [
+              619,
+              293
+            ],
+            [
+              618,
+              275
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "83f08c16d489fd60c02e41fd742dc517cf2d175c2bfe7970fd1df0c0bc8be637",
+        "authorizedPixels": 29540,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      },
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-monitor-photo-face-r1.generated.png",
+        "generatedSha256": "c47eb722ff4df0d57b4d8b9c7df46453a192e6423f403fbc8c0ca7c05b24273d",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-monitor-photo-face-r1.generation.json",
+        "crop": {
+          "left": 430,
+          "top": 90,
+          "width": 130,
+          "height": 205
+        },
+        "polygons": [
+          [
+            [
+              481,
+              98
+            ],
+            [
+              500,
+              95
+            ],
+            [
+              514,
+              106
+            ],
+            [
+              517,
+              124
+            ],
+            [
+              528,
+              133
+            ],
+            [
+              538,
+              157
+            ],
+            [
+              540,
+              176
+            ],
+            [
+              533,
+              192
+            ],
+            [
+              526,
+              201
+            ],
+            [
+              524,
+              215
+            ],
+            [
+              517,
+              239
+            ],
+            [
+              514,
+              258
+            ],
+            [
+              506,
+              267
+            ],
+            [
+              496,
+              264
+            ],
+            [
+              491,
+              251
+            ],
+            [
+              487,
+              231
+            ],
+            [
+              484,
+              207
+            ],
+            [
+              475,
+              205
+            ],
+            [
+              466,
+              195
+            ],
+            [
+              454,
+              183
+            ],
+            [
+              442,
+              181
+            ],
+            [
+              440,
+              173
+            ],
+            [
+              443,
+              162
+            ],
+            [
+              450,
+              145
+            ],
+            [
+              464,
+              127
+            ],
+            [
+              477,
+              121
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.layer-2.mask.png",
+        "maskSha256": "73c8d314e1466bcf734d180b6cd814aaf3091002da42567233b4fdc28768171b",
+        "authorizedPixels": 9211,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/s10-rescue-surveillance-photo-unified-r1.prompts.json"
+  }
+}

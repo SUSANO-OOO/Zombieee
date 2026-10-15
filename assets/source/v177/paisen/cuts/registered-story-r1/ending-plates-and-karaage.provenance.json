@@ -1,0 +1,136 @@
+{
+  "sceneId": "ending-plates-and-karaage",
+  "runtimePath": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/ending-plates-and-karaage.png",
+  "authorSourceSha256": "ebcb9a4df09b072a4a6a3176ef0f2b0b71b3cf8d77b56ff0609647635aea134e",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/ending-plates-and-karaage.region.png",
+  "approvedRegionSha256": "702e2ec33373249b687ed892726fd6a1bccedc6b587305704821f9c13dd93006",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/ending-plates-and-karaage.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/ending-plates-and-karaage.provenance.json",
+  "originalGitBlob": "e04a36ff21420195eba1d188e466f27d593c85a4",
+  "originalSha256": "c5c82fa74c071eb08d5c2c1124c41d6d4fe39eff813784c039d5ba57698834b1",
+  "originalBytes": 346460,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 47999,
+  "registeredPixels": 48437,
+  "runtimeBytes": 1167152,
+  "runtimeSha256": "6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
+  "byteDelta": 820692,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "ending-plates-and-karaage",
+    "original": "public/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+    "originalSha256": "c5c82fa74c071eb08d5c2c1124c41d6d4fe39eff813784c039d5ba57698834b1",
+    "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-plates-and-karaage-photo-r1.generated.png",
+    "generatedSha256": "9829425c376ae94e332d7b91aa72bcd4c6217c17e4c701e09abc107324c46cc7",
+    "input": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-plates-and-karaage-photo-r1.input.png",
+    "crop": {
+      "left": 195,
+      "top": 0,
+      "width": 250,
+      "height": 280
+    },
+    "normalization": "Uniform cover fit to the original crop dimensions; exact source-mask union only",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-plates-and-karaage-photo-r1.region.png",
+    "maskSha256": "8a7c471a4e28a6702c423a7580c74e64befd3072322688192edc9f8046a572eb",
+    "polygons": [
+      [
+        [
+          230,
+          25
+        ],
+        [
+          271,
+          0
+        ],
+        [
+          356,
+          0
+        ],
+        [
+          409,
+          22
+        ],
+        [
+          433,
+          60
+        ],
+        [
+          440,
+          126
+        ],
+        [
+          420,
+          179
+        ],
+        [
+          391,
+          214
+        ],
+        [
+          366,
+          240
+        ],
+        [
+          355,
+          260
+        ],
+        [
+          295,
+          269
+        ],
+        [
+          252,
+          256
+        ],
+        [
+          223,
+          235
+        ],
+        [
+          217,
+          207
+        ],
+        [
+          222,
+          168
+        ],
+        [
+          230,
+          135
+        ],
+        [
+          228,
+          92
+        ]
+      ]
+    ],
+    "protectedRegions": [],
+    "target": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-plates-and-karaage-photo-r1.localized.png",
+    "targetSha256": "ebcb9a4df09b072a4a6a3176ef0f2b0b71b3cf8d77b56ff0609647635aea134e",
+    "width": 1280,
+    "height": 720,
+    "registeredPixels": 48009,
+    "changedPixels": 47999,
+    "changedOutsideRegisteredRegion": 0,
+    "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-plates-and-karaage-photo-r1.generation.json",
+    "mode": "built-in",
+    "visualReviewed": true,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "visualReviewedAt": "2026-10-15T13:37:04.972Z",
+    "visualSourceAccepted": true
+  }
+}

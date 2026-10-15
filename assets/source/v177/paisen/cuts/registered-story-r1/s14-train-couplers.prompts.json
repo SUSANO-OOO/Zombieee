@@ -1,0 +1,17 @@
+{
+  "sceneId": "s14-train-couplers",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged Paisen head crop from a detailed painted game. Images 2-4 are authoritative photos of the SAME real adult person; image 5 is his registered world-style illustration. Replace the generic angular comic head with a very faithful likeness of that exact person: broad rounded cheeks, short broad jaw/chin, natural photographed eyes/eyelids and eyebrows, broad nose/tip, lips, ears and short black hairline. Do not beautify him, sharpen the jaw, exaggerate angry brows or make a different person. Preserve the low crouching pose and head looking LEFT/back toward danger, same original head tilt and center, concerned expression with a naturally slightly OPEN mouth. Keep the navy collar, shoulder, arm and rail/train background exactly in place. Change ONLY Paisen's hair, head, ears, face and continuous SINGLE neck. Preserve the existing collar position, shirt, shoulders, every other person and background object. Match the original detailed gritty inked/painted rendering, natural skin texture and scene lighting; do not paste a photo or turn him toward the camera. No additional anatomy, neck, objects, text or watermark.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: precise-object-edit with identity-preserve. Image1 is the only edit target, a crop from a gritty detailed painted game cutscene. Image2 shows the complete original scene only to identify the correct man and preserve all poses. Image3 is the producer's authoritative clothing photograph (plain navy-purple tee, loose white knee-length shorts), Image4 is his approved painted identity master. Output exactly Image1's crop/composition and style. Only small visible areas of black trouser fabric on the crouching navy-shirted man become loose white knee-length shorts. This man is Paisen; a rear white-shirted man is different. Preserve Paisen's crouched knee and hip positions. Keep BOTH original muscular arms, fingers and wrists on the red train lever unchanged and unobscured; dark shirt, rear man, lever, rails and gravel unchanged. Do not paint white fabric over skin, create any hands, or change his posture. No captions, decorative frame, new characters or watermark. Do not globally redraw the scene. Keep foreground objects in front, exactly two existing arms and legs. Match the original scene light/shadows and natural cloth folds. White cotton should be dirtied by this scene but recognizably white.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

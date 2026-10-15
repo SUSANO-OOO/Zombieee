@@ -1,0 +1,256 @@
+{
+  "sceneId": "s09-transfer-disconnect",
+  "runtimePath": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/s09-transfer-disconnect.png",
+  "authorSourceSha256": "a72401861b109f38a599f77e38c2a15eca518afa25c82b1e5ab8da3e68b48c2c",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/s09-transfer-disconnect.region.png",
+  "approvedRegionSha256": "d1aec43522ae871f512721b86129fac61f9065e9fd28c430e6607e444b3b607c",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/s09-transfer-disconnect.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/s09-transfer-disconnect.provenance.json",
+  "originalGitBlob": "34719d6a034ee07df8c4059ed1602b6b65101b23",
+  "originalSha256": "95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",
+  "originalBytes": 306628,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 77195,
+  "registeredPixels": 77374,
+  "runtimeBytes": 1057694,
+  "runtimeSha256": "0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
+  "byteDelta": 751066,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "s09-transfer-disconnect",
+    "source": "public/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+    "sourceSha256": "95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.localized.png",
+    "localizedSha256": "a72401861b109f38a599f77e38c2a15eca518afa25c82b1e5ab8da3e68b48c2c",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.region.png",
+    "maskSha256": "762004a9f6e9b8f5e8d940a3cc8675af09be3a0bbdb53f6b7e8a74f1eebae8c2",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 77195,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-face-r1.generated.png",
+        "generatedSha256": "9d54e25886659e927d896e06e5437c1658c063b00fa3c567fe02266a2647cf3d",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-face-r1.generation.json",
+        "crop": {
+          "left": 65,
+          "top": 75,
+          "width": 285,
+          "height": 390
+        },
+        "polygons": [
+          [
+            [
+              91,
+              120
+            ],
+            [
+              135,
+              103
+            ],
+            [
+              200,
+              97
+            ],
+            [
+              276,
+              105
+            ],
+            [
+              309,
+              123
+            ],
+            [
+              323,
+              151
+            ],
+            [
+              329,
+              184
+            ],
+            [
+              325,
+              216
+            ],
+            [
+              319,
+              241
+            ],
+            [
+              324,
+              265
+            ],
+            [
+              321,
+              309
+            ],
+            [
+              315,
+              345
+            ],
+            [
+              292,
+              376
+            ],
+            [
+              263,
+              393
+            ],
+            [
+              243,
+              414
+            ],
+            [
+              220,
+              434
+            ],
+            [
+              178,
+              425
+            ],
+            [
+              148,
+              405
+            ],
+            [
+              133,
+              375
+            ],
+            [
+              114,
+              358
+            ],
+            [
+              101,
+              332
+            ],
+            [
+              92,
+              300
+            ],
+            [
+              87,
+              257
+            ],
+            [
+              86,
+              203
+            ],
+            [
+              87,
+              157
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "0fabf205f0b0cde41fe7dc7e02378844bf997f3d555c8682caa738e9d3354a2d",
+        "authorizedPixels": 66744,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      },
+      {
+        "kind": "shorts",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-shorts-r1.generated.png",
+        "generatedSha256": "ebb014db3419d491550b5c692d2886b75283f5b5be7f979c9532dc457f3bb4b4",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-shorts-r1.generation.json",
+        "crop": {
+          "left": 110,
+          "top": 585,
+          "width": 235,
+          "height": 135
+        },
+        "polygons": [
+          [
+            [
+              146,
+              679
+            ],
+            [
+              161,
+              674
+            ],
+            [
+              181,
+              666
+            ],
+            [
+              202,
+              663
+            ],
+            [
+              227,
+              655
+            ],
+            [
+              250,
+              649
+            ],
+            [
+              282,
+              642
+            ],
+            [
+              307,
+              628
+            ],
+            [
+              318,
+              627
+            ],
+            [
+              316,
+              646
+            ],
+            [
+              306,
+              679
+            ],
+            [
+              301,
+              712
+            ],
+            [
+              299,
+              720
+            ],
+            [
+              137,
+              720
+            ],
+            [
+              145,
+              708
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.layer-2.mask.png",
+        "maskSha256": "e58020124f6edb350f7d2850221d98e3efe9a3fe8390142424e5576bbef00eb2",
+        "authorizedPixels": 10630,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/s09-transfer-disconnect-photo-unified-r1.prompts.json"
+  }
+}

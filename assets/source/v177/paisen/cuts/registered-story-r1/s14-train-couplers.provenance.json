@@ -1,0 +1,339 @@
+{
+  "sceneId": "s14-train-couplers",
+  "runtimePath": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/s14-train-couplers.png",
+  "authorSourceSha256": "36da7dd6d6b17a34cfade2754625f638950420a8819dc8f276f802c9d13a58c8",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/s14-train-couplers.region.png",
+  "approvedRegionSha256": "c86f683d9d183ff44d686d63638fb4ed70060df4c3df0266e2c0e7deb51200aa",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/s14-train-couplers.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/s14-train-couplers.provenance.json",
+  "originalGitBlob": "d8b7d38a9f344d2414464825b5744194c314a053",
+  "originalSha256": "97103968f88083529d922598e4387ccf3cc253c3bcc95c3994009045da36a145",
+  "originalBytes": 374396,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 10796,
+  "registeredPixels": 10855,
+  "runtimeBytes": 1106538,
+  "runtimeSha256": "96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
+  "byteDelta": 732142,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "s14-train-couplers",
+    "source": "public/art/v100/story-r9/cuts/s14-train-couplers.webp",
+    "sourceSha256": "97103968f88083529d922598e4387ccf3cc253c3bcc95c3994009045da36a145",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.localized.png",
+    "localizedSha256": "36da7dd6d6b17a34cfade2754625f638950420a8819dc8f276f802c9d13a58c8",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.region.png",
+    "maskSha256": "a5c4f2bb19affbddaf6cb69b2db74646a1fdf81652fba0fb1d162bd51a96faa4",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 10796,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-face-r1.generated.png",
+        "generatedSha256": "482309740b7cf9ee332f681859d89aeb8ff4e2e3783b443a2f9ad3c8cd1848a4",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-face-r1.generation.json",
+        "crop": {
+          "left": 515,
+          "top": 245,
+          "width": 115,
+          "height": 140
+        },
+        "polygons": [
+          [
+            [
+              534,
+              273
+            ],
+            [
+              551,
+              261
+            ],
+            [
+              575,
+              258
+            ],
+            [
+              600,
+              268
+            ],
+            [
+              610,
+              284
+            ],
+            [
+              611,
+              304
+            ],
+            [
+              606,
+              323
+            ],
+            [
+              595,
+              339
+            ],
+            [
+              593,
+              356
+            ],
+            [
+              572,
+              373
+            ],
+            [
+              549,
+              365
+            ],
+            [
+              539,
+              351
+            ],
+            [
+              534,
+              337
+            ],
+            [
+              530,
+              330
+            ],
+            [
+              531,
+              315
+            ],
+            [
+              534,
+              298
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "aa4870c403b0c31191e0306e9c6a898b3bea8381628ed846bd53233a56acc5f7",
+        "authorizedPixels": 7038,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      },
+      {
+        "kind": "shorts",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-shorts-r1.generated.png",
+        "generatedSha256": "c29a1751673e8005b39e0c452ae40eb1ae3a7a51b55fe8ffa25023d72c5f4047",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-shorts-r1.generation.json",
+        "crop": {
+          "left": 455,
+          "top": 345,
+          "width": 240,
+          "height": 105
+        },
+        "polygons": [
+          [
+            [
+              470,
+              390
+            ],
+            [
+              481,
+              376
+            ],
+            [
+              492,
+              370
+            ],
+            [
+              510,
+              381
+            ],
+            [
+              527,
+              391
+            ],
+            [
+              545,
+              402
+            ],
+            [
+              570,
+              416
+            ],
+            [
+              578,
+              423
+            ],
+            [
+              473,
+              426
+            ],
+            [
+              468,
+              417
+            ]
+          ],
+          [
+            [
+              656,
+              376
+            ],
+            [
+              668,
+              380
+            ],
+            [
+              681,
+              389
+            ],
+            [
+              690,
+              405
+            ],
+            [
+              686,
+              416
+            ],
+            [
+              676,
+              417
+            ],
+            [
+              666,
+              411
+            ],
+            [
+              653,
+              405
+            ]
+          ]
+        ],
+        "protected": [
+          [
+            [
+              513,
+              365
+            ],
+            [
+              531,
+              363
+            ],
+            [
+              550,
+              371
+            ],
+            [
+              560,
+              382
+            ],
+            [
+              585,
+              389
+            ],
+            [
+              612,
+              393
+            ],
+            [
+              636,
+              400
+            ],
+            [
+              650,
+              411
+            ],
+            [
+              653,
+              420
+            ],
+            [
+              645,
+              434
+            ],
+            [
+              625,
+              438
+            ],
+            [
+              610,
+              431
+            ],
+            [
+              588,
+              429
+            ],
+            [
+              565,
+              424
+            ],
+            [
+              545,
+              417
+            ],
+            [
+              530,
+              405
+            ],
+            [
+              520,
+              390
+            ]
+          ],
+          [
+            [
+              625,
+              345
+            ],
+            [
+              648,
+              345
+            ],
+            [
+              655,
+              372
+            ],
+            [
+              656,
+              396
+            ],
+            [
+              660,
+              411
+            ],
+            [
+              652,
+              418
+            ],
+            [
+              633,
+              411
+            ],
+            [
+              633,
+              381
+            ]
+          ]
+        ],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.layer-2.mask.png",
+        "maskSha256": "a45970edef21b02279b00ea699c1ebe6d231e68b85f7de2655d04b9369c1f25b",
+        "authorizedPixels": 3817,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/s14-train-couplers-photo-unified-r1.prompts.json"
+  }
+}

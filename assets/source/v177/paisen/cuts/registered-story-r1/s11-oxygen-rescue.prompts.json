@@ -1,0 +1,17 @@
+{
+  "sceneId": "s11-oxygen-rescue",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, the enlarged LEFT character Paisen from a painted game rescue scene. Images 2-4 are authoritative photos of the same real adult; image 5 is his registered illustrated world-style identity. Make Paisen's face faithfully match that exact person: rounded broad cheeks and jaw, short broad chin, natural photographed eyes, brows, broad nose and tip, lips, ears and short black hair. Preserve his current head center, looking up/right toward his partner with a concerned, slightly open mouth; do not look at the camera or retain the generic angular anime face. Match the reference body build. Keep his existing plain navy-purple T-shirt, same natural neck-to-collar attachment, lean-forward pose, arm and hand positions. Replace ONLY HIS black long trousers with the reference loose white knee-length shorts, leaving his knees and lower legs naturally bare in exactly the same leg pose; the scene cuts off below his lower leg, so do not add feet or extend the image. Crucial: the large black trousered leg and white-shirt fragment on the RIGHT are a DIFFERENT foreground character, Kuma. Preserve Kuma's entire leg, shirt and overlap exactly; do not recolor that leg or add a third leg. Preserve every background pipe, door, wet floor, light and perspective. Keep the original detailed inked/painted gritty game rendering and warm/cool scene lighting, not a pasted photograph. No extra anatomy, text, watermark or objects.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in",
+      "prompt": "Use case: precise-object-edit / identity-preserve clothing. Edit IMAGE 1 ONLY, a cropped painted game scene. The character at LEFT in a navy T-shirt is Paisen. Replace ONLY HIS black long trousers with loose WHITE knee-length shorts matching clothing references in images 2 and 3, and leave his visible knee and lower leg naturally BARE, with the EXACT SAME bent-leg pose and location. His upper body is cut off by this crop; do not invent a face. IMPORTANT: preserve BOTH original hands pixel-position exactly: the clenched fist at far left and the ONE open hand at center that joins the diagonal forearm from top right. Keep that original forearm and its SINGLE hand, do not move it, duplicate fingers, add another hand or add another leg. Shorts fabric belongs behind that hand. Remove all remaining bits of Paisen's old black trouser fabric along the edges of his knee and calf; where the looser old trousers were wider than the natural bare calf, reconstruct the same nearby background floor/door behind the bare leg. The very LARGE black trousered leg in the foreground at RIGHT, and white-shirt fragment at upper right, belong to KUMA, a different character; preserve all of those foreground pixels/contours and overlaps exactly and keep Kuma's trousers black. Keep Paisen's shirt, arms, hand shapes, leg pose, camera, frame size, background pipes/door/wet floor, materials and lighting. Maintain the same detailed inked/painted gritty game style, no photoreal pasted patches, no new objects, text or watermark. This is a trousers-to-shorts change only, not a composition or anatomy redesign.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

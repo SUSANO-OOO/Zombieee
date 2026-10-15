@@ -1,3 +1,4 @@
+import {V177_PAISEN_STORY_REPLACEMENTS, V177_PAISEN_STORY_ASSETS, V177_PAISEN_STORY_EXISTING_REPLACEMENTS, V177_PAISEN_STORY_EXISTING_ASSETS} from './v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_REPLACEMENTS, V177_PAISEN_CREDITS_ASSETS } from './v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from './v177-paisen-asset-contract.mjs';
 import { V100_R9_ASSET_ADDITIONS } from "./v100-r9-asset-contract.mjs";
@@ -10,7 +11,7 @@ import { V100_RELEASE_ASSET_CONTRACT } from "./v100-release-asset-contract.mjs";
 // These installed releases already include the two bosses and Musashi. Each
 // repaired texture must therefore be downloaded in full, alongside R9 and the
 // opening score. The earlier no-media 1.0.3 contract cannot cover this update.
-const sourceReplacements = Object.freeze([...V177_SPRITE_REPLACEMENTS, ...V177_PAISEN_CREDITS_REPLACEMENTS]);
+const sourceReplacements = Object.freeze([...V177_SPRITE_REPLACEMENTS, ...V177_PAISEN_CREDITS_REPLACEMENTS, ...V177_PAISEN_STORY_EXISTING_REPLACEMENTS]);
 const replacements = Object.freeze([...sourceReplacements, ...V177_PAISEN_RETIRED_ASSETS].map(asset => asset.path).sort());
 const additions = Object.freeze([
   ...V100_R9_ASSET_ADDITIONS,
@@ -19,6 +20,7 @@ const additions = Object.freeze([
   ...V177_JOINT_ASSET_ADDITIONS,
   ...V177_PAISEN_ASSET_ADDITIONS,
   ...V177_PAISEN_CREDITS_ASSETS,
+  ...V177_PAISEN_STORY_EXISTING_ASSETS,
 ]);
 function contract(assets, distinct, changed) {
   const bundled = changed.filter(asset => asset.path.startsWith("/audio/")).length;
@@ -61,5 +63,6 @@ export function v177InstalledSourceReplacementsMatch(oldManifest, candidateManif
   return expected.sourceReplacements.every(asset=>matches(oldByPath.get(asset.path),asset.previous)
     &&matches(nextByPath.get(asset.path),asset.next))
     && expected.sourceRetirements.every(asset=>matches(oldByPath.get(asset.path),asset) && !nextByPath.has(asset.path))
-    && [...V177_PAISEN_ASSET_ADDITIONS, ...V177_PAISEN_CREDITS_ASSETS].every(asset=>matches(nextByPath.get(asset.path),asset));
+    && V177_PAISEN_STORY_REPLACEMENTS.filter(row=>row.path.includes("/story-r9/")).every(row=>!oldByPath.has(row.path))
+    && [...V177_PAISEN_ASSET_ADDITIONS, ...V177_PAISEN_CREDITS_ASSETS, ...V177_PAISEN_STORY_ASSETS].every(asset=>matches(nextByPath.get(asset.path),asset));
 }
