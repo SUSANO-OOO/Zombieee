@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-import {normalCampaignDeployOrder,normalCampaignAirstrikeTarget} from '../scripts/v100-normal-play-contract.mjs';
+import {normalCampaignDeployOrder,normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-contract.mjs';
+import {readVisibleBattleHealthBars,visibleAirstrikeTarget} from '../scripts/v100-normal-visible-aim.mjs';
 import {AIRSTRIKE_DEF,createEmergencySupportRuntime,requestAirstrike} from '../app/gameRules.js';
 
 const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
@@ -11,7 +12,7 @@ const tree=ts.createSourceFile('normal-campaign.mjs',source,ts.ScriptTarget.Late
 const battle=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name.text==='battle');
 const blocks=[];
 const deployBlocks=[];
-function visit(node){if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('airstrike.isEnabled'))blocks.push(node);if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('Date.now()-lastAction>500'))deployBlocks.push(node);ts.forEachChild(node,visit);}
+function visit(node){if(ts.isIfStatement(node)&&node.expression.getText(tree).startsWith('airVisible&&'))blocks.push(node);if(ts.isIfStatement(node)&&node.expression.getText(tree).includes('Date.now()-lastAction>500'))deployBlocks.push(node);ts.forEachChild(node,visit);}
 visit(battle);assert.equal(blocks.length,1,'exercise the actual hosted-only normal input block without importing a browser');
 assert.equal(deployBlocks.length,1);
 
@@ -57,40 +58,43 @@ test('the actual caller waits for an unavailable selected card without silently 
   assert.equal(result.cursor,0);assert.equal(result.lastAction,0);assert.equal(result.lastEmergency,0);
 });
 
-test('visible anchors, vehicle health and real world transforms keep every aim inside the production airstrike range',()=>{
+test('visible enemy bars and real world transforms keep the aim inside production placement bounds',()=>{
   for(const width of [1280,844,667])for(const worldOffsetX of [0,-40,30]) {
     const canvas={x:11,y:23,width,height:340,worldScale:width/960,worldOffsetX,worldOffsetY:-30};
-    for(const anchors of [[],[{x:width-1,y:330}],[{x:0,y:0}],[{x:width*.6,y:150},{x:width*.7,y:140}]]) {
-      const aim=normalCampaignAirstrikeTarget(canvas,anchors,'西新防衛線\n耐久\n650 / 680');
-      assert.ok(aim.defensive);
-      assert.ok(aim.point.x>canvas.x&&aim.point.x<canvas.x+width&&aim.point.y>canvas.y&&aim.point.y<canvas.y+canvas.height);
+    for(const x of [0,width*.6,width-1]) {
+      const frame={status:'read',bars:[{kind:'enemy',x,y:120},{kind:'enemy',x:x+8,y:121}]};
+      const aim=visibleAirstrikeTarget(canvas,frame);
+      assert.ok(aim.point.x>canvas.x&&aim.point.x<canvas.x+width);
+      assert.ok(aim.point.y>canvas.y&&aim.point.y<canvas.y+canvas.height);
       assert.ok(aim.worldPoint.x>=AIRSTRIKE_DEF.minX&&aim.worldPoint.x<=AIRSTRIKE_DEF.maxX);
       const request=requestAirstrike({running:true,paused:false,over:false,supportGauge:100,lane:1,...aim.worldPoint,runtime:createEmergencySupportRuntime(true)});
       assert.equal(request.ok,true);assert.equal(request.supportGauge,15);assert.equal(request.runtime.cooldownRemaining,50);
     }
   }
-  for(const canvas of [null,{x:0,y:0,width:844,height:340},{x:0,y:0,width:844,height:340,worldScale:0,worldOffsetX:0,worldOffsetY:0}])assert.equal(normalCampaignAirstrikeTarget(canvas,[]),null);
+  const frame={status:'read',bars:[{kind:'enemy',x:500,y:180}]};
+  for(const canvas of [null,{x:0,y:0,width:844,height:340},{x:0,y:0,width:844,height:340,worldScale:0,worldOffsetX:0,worldOffsetY:0}])assert.equal(visibleAirstrikeTarget(canvas,frame),null);
 });
 
 async function fire({seconds=122,gauge=100,visible=true,clear=true,cooldown=0,canvasMissing=false,ignoreAim=false}={}) {
   const box={x:0,y:0,width:960,height:540,worldScale:1,worldOffsetX:0,worldOffsetY:0};
   const canvas={dataset:{worldScale:'1',worldOffsetX:'0',worldOffsetY:'0'},getBoundingClientRect:()=>box};
-  const anchors=[{x:420,y:180}],record={inputs:[]},clicks=[];
+  const frame={status:'read',canvas:box,bars:[{kind:'enemy',x:500,y:120},{kind:'enemy',x:510,y:124}]};
+  const record={inputs:[]},clicks=[];
   let runtime={...createEmergencySupportRuntime(true),cooldownRemaining:cooldown},selected=false;
   const request=point=>requestAirstrike({running:true,paused:false,over:false,supportGauge:gauge,lane:1,x:point.x,y:point.y,runtime});
   const button={getAttribute(name){if(name==='aria-disabled')return runtime.phase==='idle'&&gauge>=85&&runtime.cooldownRemaining===0?'false':'true';if(name==='data-state')return runtime.phase==='idle'?'ready':'cooldown';return null;}};
   const airstrike={isVisible:async()=>visible,isEnabled:async()=>request({x:500,y:180}).ok,async click(){selected=true;clicks.push('select');},evaluateAll:async read=>read([button])};
   const page={locator(selector){
-    if(selector==='.game-shell canvas')return{evaluate:async read=>canvasMissing?null:read(canvas)};
-    if(selector==='button.manual-ability-ready')return{evaluateAll:async read=>read(anchors.map(p=>({getAttribute:name=>String(name.endsWith('-x')?p.x:p.y)})))};
+    if(selector==='.game-shell canvas')return{evaluate:async read=>{assert.equal(read,readVisibleBattleHealthBars);return canvasMissing?{status:'unavailable',bars:[]}:frame;}};
+    if(selector==='.boss-hud')return{isVisible:async()=>false};
     if(selector==='.game-shell')return{innerText:async()=>'西新防衛線\n耐久\n650 / 680'};
     throw Error('Unexpected normal UI read '+selector);
   },evaluate:async read=>{assert.equal(typeof read,'function');return clear;},mouse:{async click(x,y){
     assert.equal(selected,true);clicks.push('aim');if(ignoreAim)return;
     const result=request({x,y});assert.equal(result.ok,true,'production placement and resource rules authorize every request');runtime=result.runtime;gauge=result.supportGauge;
   }},async waitForFunction(read,arg,options){assert.equal(options.timeout,2_000);if(!read())throw Error('native request not acknowledged');}};
-  const run=vm.runInNewContext('(async()=>{let airstrikeRequested=false;'+blocks[0].getText(tree)+';return airstrikeRequested;})()',{
-    page,airstrike,normalCampaignAirstrikeTarget,record,start:0,Date:{now:()=>seconds*1000},
+  const run=vm.runInNewContext('(async()=>{let airstrikeRequested=false,visibleAirTarget=null;'+blocks[0].getText(tree)+';return airstrikeRequested;})()',{
+    page,airstrike,readVisibleBattleHealthBars,visibleAirstrikeTarget,normalCampaignCanSpendVehicleGauge,airVisible:seconds>12&&visible,airReady:seconds>12&&visible&&request({x:500,y:180}).ok,record,start:0,Date:{now:()=>seconds*1000},
     document:{querySelector:()=>button,elementFromPoint:()=>clear?canvas:null},
   });
   const requested=await run;return{record,clicks,gauge,runtime,requested};
@@ -103,7 +107,7 @@ test('the actual normal route requests and acknowledges V100 air support before 
 });
 
 test('disabled, cooling, obscured, missing-transform and opening states never consume support or fabricate an airstrike',async()=>{
-  for(const options of [{seconds:24},{gauge:84},{visible:false},{clear:false},{cooldown:1},{canvasMissing:true}]) {
+  for(const options of [{seconds:12},{gauge:84},{visible:false},{clear:false},{cooldown:1},{canvasMissing:true}]) {
     const result=await fire(options);assert.deepEqual(result.clicks,[]);assert.equal(result.record.inputs.length,0);assert.equal(result.requested,false);
   }
   await assert.rejects(()=>fire({ignoreAim:true}),/native request not acknowledged/u);

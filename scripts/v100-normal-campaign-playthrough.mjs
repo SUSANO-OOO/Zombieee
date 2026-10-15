@@ -1,3 +1,4 @@
+import {readVisibleBattleHealthBars,visibleAirstrikeTarget} from './v100-normal-visible-aim.mjs';
 // A normal campaign route: fresh save, earned CAPS, real time and UI inputs.
 // Read-only save inspection records progress; no seed, QA bridge or forced result.
 import assert from "node:assert/strict";
@@ -12,7 +13,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder, normalCampaignAirstrikeTarget } from "./v100-normal-play-contract.mjs";
+import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
@@ -88,7 +89,7 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  const preference=["unit-gantetsu","unit-nao","unit-babayaga","unit-mizuchi","unit-hachi","unit-kumaverson","unit-tatara","unit-monkey","unit-paisen"];
+  const preference=["unit-gantetsu","unit-paisen","unit-hachi","unit-kumaverson","unit-nao","unit-babayaga","unit-mizuchi","unit-tatara","unit-monkey"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
@@ -190,24 +191,29 @@ async function battle(stage) {
     }
     let airstrikeRequested=false;
     const airstrike=page.locator('button.support-btn.airstrike');
-    if(Date.now()-start>24_000&&await airstrike.isVisible()&&await airstrike.isEnabled()) {
-      const canvas=await page.locator('.game-shell canvas').evaluate(c=>{const r=c.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,worldScale:Number(c.dataset.worldScale),worldOffsetX:Number(c.dataset.worldOffsetX),worldOffsetY:Number(c.dataset.worldOffsetY)};});
-      const anchors=await page.locator('button.manual-ability-ready').evaluateAll(elements=>elements.map(el=>({x:Number(el.getAttribute('data-owner-anchor-x')),y:Number(el.getAttribute('data-owner-anchor-y'))})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
-      const aim=normalCampaignAirstrikeTarget(canvas,anchors,await page.locator('.game-shell').innerText());
-      if(aim&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
-        await airstrike.click();await page.mouse.click(aim.point.x,aim.point.y);
-        airstrikeRequested=true;
-        const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim};record.inputs.push(input);
-        // Observe the actual HUD acknowledgment; an aimed click alone is not a strike.
-        await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
-        input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
+    const airVisible=Date.now()-start>12_000&&await airstrike.isVisible();
+    const airReady=airVisible&&await airstrike.isEnabled();
+    let visibleAirTarget=null;
+    if(airVisible&&(airReady||!normalCampaignCanSpendVehicleGauge(record.inputs))) {
+      const frame=await page.locator('.game-shell canvas').evaluate(readVisibleBattleHealthBars);
+      const aim=frame?.canvas&&visibleAirstrikeTarget(frame.canvas,frame);
+      const bossSeen=await page.locator('.boss-hud').isVisible();
+      if(aim&&(aim.expectedVisibleBarsInRadius>=2||bossSeen)&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
+        visibleAirTarget=aim;
+        if(airReady) {
+          await airstrike.click();await page.mouse.click(aim.point.x,aim.point.y);
+          airstrikeRequested=true;
+          const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim};record.inputs.push(input);
+          await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
+          input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
+        }
       }
     }
     const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
-    // Reserve the first 85-support airstrike instead of spending 70 at ~12s.
-    // After its actual HUD acknowledgment, ordinary vehicle fire remains available.
-    if(!airstrikeRequested&&normalCampaignCanSpendVehicleGauge(record.inputs)&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    // Preserve funding for the first aircraft only while an enemy target is visible.
+    // Its actual acknowledgment or an absent target releases ordinary vehicle fire.
+    if(!airstrikeRequested&&normalCampaignCanSpendVehicleGauge(record.inputs,Boolean(visibleAirTarget))&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()

@@ -16,7 +16,7 @@ const find=node=>{if(ts.isIfStatement(node)&&node.getText(tree).includes('await 
 find(functions.get('battle'));
 assert.equal(fire.length,1,'exercise the actual normal-play barrage input, without importing its hosted browser entry point');
 
-async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true,airstrikeRequested=false,firstAirstrike=true}={}){
+async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true,gauge=100,ready=true,airstrikeRequested=false,firstAirstrike=true,observedAirstrike=true}={}){
   const stage=V100_STAGES.find(stage=>stage.number===stageNumber);
   let runtime=createCrawlerAbilityRuntime(ready?1:0,true),supportGauge=gauge;
   const record={inputs:firstAirstrike?[{action:'airstrike',acknowledgment:{state:'cooldown',disabled:'true'}}]:[]},clicks=[];
@@ -26,7 +26,7 @@ async function runFire({stageNumber=3,bossVisible=false,seconds=122,visible=true
     runtime=result.runtime;supportGauge=result.supportGauge;clicks.push('vehicle-barrage');
   }};
   await vm.runInNewContext('(async()=>{'+fire[0].getText(tree)+'})()',{
-    normalCampaignCanSpendVehicleGauge,stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},airstrikeRequested,
+    normalCampaignCanSpendVehicleGauge,visibleAirTarget:observedAirstrike?{}:null,stage,bossVisible,barrage,record,start:0,Date:{now:()=>seconds*1000},airstrikeRequested,
   });
   return {record,clicks,supportGauge,runtime};
 }
@@ -63,4 +63,8 @@ test('a genuine stage3 defeat is saved and still stops the normal route before a
 
 test('the actual caller reserves the first airstrike even when production vehicle fire is enabled',async()=>{
   for(const stageNumber of [1,3,5,30]){const r=await runFire({stageNumber,firstAirstrike:false});assert.deepEqual(r.clicks,[]);assert.equal(r.supportGauge,100);assert.equal(r.runtime.phase,'ready');}
+});
+
+test('no observed aircraft target releases legal vehicle defense even before the first strike',async()=>{
+  for(const stageNumber of [1,3,5,30]){const r=await runFire({stageNumber,firstAirstrike:false,observedAirstrike:false});assert.deepEqual(r.clicks,['vehicle-barrage']);assert.equal(r.supportGauge,30);}
 });
