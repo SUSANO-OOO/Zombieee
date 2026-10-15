@@ -89,10 +89,12 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  // Both451 Stage1 wins used this first four through ordinary UI input. In872,
-  // a third-slot healer delayed the frontliners to45-81s while only2-3 stayed up.
-  // Keep the measured opening intact, then add the earned healer and later units.
-  const preference=["unit-babayaga","unit-hachi","unit-kumaverson","unit-paisen","unit-nao","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
+  // Both451 Stage1 wins retain ranged/scout/Kuma/Paisen: no medic is owned yet.
+  // In a92, delaying the earned medic to fifth made Stage3 arrivals55-60s
+  // and left one native run with zero medic healing. The872 third-slot medic
+  // arrived17-22s and its Chromium run cleared the boss. These are controls,
+  // not fresh all30 acceptance. Keep early healing behind ranged/scout.
+  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {

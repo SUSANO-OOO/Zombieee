@@ -4,6 +4,8 @@ import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
+import {V100_R5_STORY_CUTS} from '../app/v100StoryDirection.js';
+import {V177_PAISEN_STORY_REPLACEMENTS} from './v177-paisen-story-asset-contract.mjs';
 import {v100StoryInsertFor} from '../app/v100StoryInserts.js';
 import {v100StoryPageFor} from '../app/v100StoryPages.js';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
@@ -53,6 +55,18 @@ const insertCases=insertIds.map(insertId=>{
  return {id:'insert-'+insertId,eventId:found.eventId,nodeIndex:found.nodeIndex,insertId};
 });
 assert.equal(cutCases.length,17);
+function revisedLegacyCutCases() {
+ return V177_PAISEN_STORY_REPLACEMENTS.flatMap(revision=>{
+  const asset=Object.entries(V100_R5_STORY_CUTS).find(([,path])=>path===revision.path);
+  if(!asset)return [];
+  const [cutId,backdrop]=asset,found=all.find(({node})=>node.cutId===cutId);
+  assert.ok(found,'Unbound revised legacy cut: '+cutId);
+  assert.notEqual(revision.previous.hash,revision.next.hash,'The fixture must exercise a changed painted source');
+  return [{id:'revised-'+cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop}];
+ });
+}
+const revisedLegacyCases=revisedLegacyCutCases();
+assert.equal(revisedLegacyCases.length,2);
 assert.equal(insertCases.length,18);
 const insertStateCases=[
  {id:'message-backlog-received',insertId:'message-backlog',matches:state=>state.messageVisible&&!state.dated},
@@ -66,7 +80,7 @@ const insertStateCases=[
 });
 const phoneMessage=all.find(({node})=>node.insertId==='message-backlog'&&node.sourceLine===604)?.node.text;
 assert.ok(phoneMessage,'the phone graphic must retain the received producer message');
-const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases,...insertStateCases];
+const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...revisedLegacyCases,...insertCases,...insertStateCases];
 // Validate every checkpoint before starting a browser, including the settled
 // reward-confirmation phase. A malformed seed must not become a UI timeout.
 const fixtureSaves=new Map(cases.map(fixture=>[fixture.id,serializeV100Save(createV100DialogueFixture(fixture))]));

@@ -8,6 +8,7 @@ import { V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
 import { V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { completeStaffRollByFilmEnd } from './v100-staff-roll-audit.mjs';
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+import {decodeNativeEncodedAudio, persistThenDecodeNativeAudio} from "./v103-encoded-audio-evidence.mjs";
 
 if (process.platform === "win32") throw new Error("Audio QA is hosted-only; local browser and audio playback are disabled");
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -102,33 +103,20 @@ try {
           });
           recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
           const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-          // Decode saved bytes without opening another hardware audio session
-          // that could interrupt the very outputs being measured on WebKit.
-          const decoder = new OfflineAudioContext(2, 1, 44100);
-          {
-            const buffer = await decoder.decodeAudioData(bytes.slice(0));
-            let sum = 0, peak = 0, count = 0;
-            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-              const values = buffer.getChannelData(channel);
-              for (const value of values) { sum += value * value; peak = Math.max(peak, Math.abs(value)); count += 1; }
-            }
-            return { mimeType: recorder.mimeType, bytes: Array.from(new Uint8Array(bytes)),
-              rms: Math.sqrt(sum / count), peak, duration: buffer.duration, sampleRate: buffer.sampleRate,
-              channels: buffer.numberOfChannels, outputs: active.length, paused: sink.paused,
-              owners: Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
-                contextState: owner.contextState, output: owner.output, activeSceneVoices: owner.activeSceneVoices,
-                activeBgmVoices: owner.activeBgmVoices, duplicateLoopInstanceKeys: owner.duplicateLoopInstanceKeys,
-              }])) };
-          }
+          return {mimeType:recorder.mimeType, requestedMimeType:mimeType,
+            bytes:Array.from(new Uint8Array(bytes)), outputs:active.length, paused:sink.paused,
+            owners:Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
+              contextState:owner.contextState, output:owner.output, activeSceneVoices:owner.activeSceneVoices,
+              activeBgmVoices:owner.activeBgmVoices, duplicateLoopInstanceKeys:owner.duplicateLoopInstanceKeys,
+            }]))};
         });
-        const { bytes, ...signal } = sample;
-        assert.ok(bytes.length > 1000, `${label}: encoded output is empty`);
+        const file = width + 'x' + height + '-' + label + (sample.mimeType.includes('mp4') ? '.m4a' : '.webm');
+        const signal = await persistThenDecodeNativeAudio({sample, out, file, label, recordings:row.recordings,
+          decode:bytes => page.evaluate(decodeNativeEncodedAudio, bytes)});
+        assert.ok(signal.bytes > 1000, `${label}: encoded output is empty`);
         assert.ok(signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid encoded duration`);
         assert.ok(signal.rms > .0001 && signal.peak > .001, `${label}: recorded mix is silent`);
         assert.equal(signal.outputs, 2); assert.equal(signal.paused, false);
-        const file = `${width}x${height}-${label}.${signal.mimeType.includes("mp4") ? "m4a" : "webm"}`;
-        await writeFile(`${out}/${file}`, Buffer.from(bytes));
-        row.recordings.push({ label, file, bytes: bytes.length, ...signal });
       }
       await capture("battle");
       await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
@@ -199,23 +187,17 @@ try {
       });
       recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
       const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-      const decoder = new OfflineAudioContext(2, 1, 44100), buffer = await decoder.decodeAudioData(bytes.slice(0));
-      let sum = 0, peak = 0, count = 0;
-      for (let channel = 0; channel < buffer.numberOfChannels; channel++) for (const value of buffer.getChannelData(channel)) {
-        sum += value * value; peak = Math.max(peak, Math.abs(value)); count += 1;
-      }
-      return { mimeType: recorder.mimeType, bytes: Array.from(new Uint8Array(bytes)), rms: Math.sqrt(sum / count),
-        peak, duration: buffer.duration, streamId: stream.id, sceneOutputs: candidates.length,
-        sources: [...document.querySelector(selector).querySelectorAll("audio")].map(audio => ({
-          src: audio.currentSrc, time: audio.currentTime, paused: audio.paused, rate: audio.playbackRate,
-        })) };
+      return {mimeType:recorder.mimeType, requestedMimeType:mimeType,
+        bytes:Array.from(new Uint8Array(bytes)), streamId:stream.id, sceneOutputs:candidates.length,
+        sources:[...document.querySelector(selector).querySelectorAll("audio")].map(audio => ({
+          src:audio.currentSrc, time:audio.currentTime, paused:audio.paused, rate:audio.playbackRate,
+        }))};
     }, selector);
-    const { bytes, ...signal } = sample;
-    assert.ok(bytes.length > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid native encoding`);
+    const file = 'native-' + label + (sample.mimeType.includes('mp4') ? '.m4a' : '.webm');
+    const signal = await persistThenDecodeNativeAudio({sample, out, file, label, recordings:mediaCase.recordings,
+      decode:bytes => page.evaluate(decodeNativeEncodedAudio, bytes)});
+    assert.ok(signal.bytes > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid native encoding`);
     assert.ok(signal.rms > .0001 && signal.peak > .001, `${label}: native file mix is silent`);
-    const file = `native-${label}.${signal.mimeType.includes("mp4") ? "m4a" : "webm"}`;
-    await writeFile(`${out}/${file}`, Buffer.from(bytes), { flag: "wx" });
-    mediaCase.recordings.push({ label, file, bytes: bytes.length, ...signal });
   }
   try {
     const endingSave = normalizeV100Save({ ...save, flowState: { phase: "credits", eventId: "v100:event:credits",

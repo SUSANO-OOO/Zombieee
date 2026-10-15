@@ -183,6 +183,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Install focused native engine
+        id: native_engine
         run: |
           if [ "${{ matrix.engine }}" = webkit ]; then
             npm ci --prefix scripts/pwa-native-runtime
@@ -191,11 +192,18 @@ jobs:
             npx playwright install --with-deps chromium
           fi
       - run: npm run build
+        id: production_build
       - name: Verify iPhone media output and encoded mix without microphone access
         env:
           V103_AUDIO_ENGINE: ${{ matrix.engine }}
           V103_AUDIO_OUT: outputs/v103-audio
         run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
+      - name: Diagnose native AAC streaming without a realtime AudioContext
+        if: ${{ always() && !cancelled() && steps.native_engine.outcome == 'success' && steps.production_build.outcome == 'success' }}
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V177_NATIVE_AAC_OUT: outputs/v177-native-aac
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-native-aac-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

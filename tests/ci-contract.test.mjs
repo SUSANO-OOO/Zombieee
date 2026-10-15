@@ -80,8 +80,18 @@ test('split native combat, audio and ordinary contacts remain mandatory in both 
       assert.deepEqual(job.strategy.matrix.include, [{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
       assert.ok(jobs['v177-normal-campaign'].needs.includes(id), id + ' cannot be bypassed before earned30');
       const commands = job.steps.filter(step => step.run?.startsWith('node scripts/run-browser-qa-with-server.mjs'));
-      assert.equal(commands.length, 1);assert.equal(commands[0].run, 'node scripts/run-browser-qa-with-server.mjs scripts/' + script);
-      assert.deepEqual(commands[0].env, env);assert.equal(commands[0]['continue-on-error'], undefined);assert.equal(commands[0].if, undefined);
+      const expected = 'node scripts/run-browser-qa-with-server.mjs scripts/' + script;
+      const required = commands.filter(step => step.run === expected);
+      assert.equal(required.length, 1);assert.deepEqual(required[0].env, env);
+      assert.equal(required[0]['continue-on-error'], undefined);assert.equal(required[0].if, undefined);
+      if (id === 'v103-audio-output') {
+        assert.equal(commands.length, 2);
+        const diagnostic = commands.find(step => step.run === 'node scripts/run-browser-qa-with-server.mjs scripts/v177-native-aac-browser.mjs');
+        assert.ok(diagnostic);assert.equal(diagnostic['continue-on-error'], undefined);
+        assert.equal(diagnostic.if, "${{ always() && !cancelled() && steps.native_engine.outcome == 'success' && steps.production_build.outcome == 'success' }}");
+        assert.deepEqual(diagnostic.env, {V103_AUDIO_ENGINE:env.V103_AUDIO_ENGINE,V177_NATIVE_AAC_OUT:'outputs/v177-native-aac'});
+        assert.ok(job.steps.indexOf(diagnostic) > job.steps.indexOf(required[0]));
+      } else assert.equal(commands.length, 1);
       assert.ok(job.steps.some(step => step.run === 'npm run build'));
       assert.ok(job.steps.some(step => step.run?.includes('npm ci --prefix scripts/pwa-native-runtime') && step.run.includes('install webkit')));
       const upload = job.steps.at(-1);assert.equal(upload.if, 'always()');
@@ -97,6 +107,10 @@ test('split native combat, audio and ordinary contacts remain mandatory in both 
     jobs => { jobs['v177-normal-campaign'].needs = jobs['v177-normal-campaign'].needs.filter(id => id !== 'v103-audio-output'); },
     jobs => { jobs['v102-enemy-contacts'].steps.find(step => step.env?.V100_ENEMY_MOTION_ASSERT).env.V100_ENEMY_MOTION_ASSERT = '0'; },
     jobs => { jobs['v102-combat']['timeout-minutes'] = 60; },
+    jobs => { jobs['v103-audio-output'].steps = jobs['v103-audio-output'].steps.filter(step => !step.run?.endsWith('scripts/v103-audio-output-browser.mjs')); },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v103-audio-output-browser.mjs'))['continue-on-error'] = true; },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v177-native-aac-browser.mjs')).if = 'success()'; },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v177-native-aac-browser.mjs'))['continue-on-error'] = true; },
   ]) {
     const jobs = structuredClone(workflow.jobs);mutate(jobs);assert.throws(() => assertLanes(jobs));
   }
