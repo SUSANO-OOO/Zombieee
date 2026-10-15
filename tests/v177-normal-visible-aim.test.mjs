@@ -70,13 +70,14 @@ test('unreadable pixels and incomplete transforms fail closed without inventing 
   assert.equal(visibleAirstrikeTarget({...projection,worldOffsetY:NaN},{status:'read',bars:[{kind:'enemy',x:600,y:100}]}),null);
 });
 
-test('the actual ordinary-UI formation opens with ranged/scout and protects an earned healer behind them',()=>{
+test('the actual ordinary-UI formation retains the measured first four before its earned healer',()=>{
   const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
   const tree=ts.createSourceFile('campaign.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
   const declaration=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name.text==='plannedFormation');
   const plan=vm.runInNewContext('('+declaration.getText(tree)+')');
   const owned=[...provenance.openingOwnedIds],formation=Array.from(plan({ownedUnitIds:owned}));
-  assert.deepEqual(formation.slice(0,3),['unit-babayaga','unit-hachi','unit-nao']);
+  assert.deepEqual(formation.slice(0,4),['unit-babayaga','unit-hachi','unit-kumaverson','unit-paisen']);
+  assert.equal(formation[4],'unit-nao');
   const evidence=JSON.parse(fs.readFileSync(new URL('formation-native-provenance.json',fixtures)));
   const initial=Array.from(plan({ownedUnitIds:evidence.stage1OwnedIds}));
   assert.deepEqual(initial,evidence.measuredWinningStage1Ids);assert.equal(formation.length,5);

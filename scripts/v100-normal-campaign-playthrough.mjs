@@ -89,9 +89,10 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  // Both451 native Stage1 wins opened with ranged/scout. Put an earned
-  // healer behind that pair; the9ced melee opening delayed the marksman to44s.
-  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
+  // Both451 Stage1 wins used this first four through ordinary UI input. In872,
+  // a third-slot healer delayed the frontliners to45-81s while only2-3 stayed up.
+  // Keep the measured opening intact, then add the earned healer and later units.
+  const preference=["unit-babayaga","unit-hachi","unit-kumaverson","unit-paisen","unit-nao","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
@@ -154,7 +155,7 @@ async function configureFormation() {
 async function battle(stage) {
   const record={number:stage.number,id:stage.id,startedAt:new Date().toISOString(),openingSave:await saveAt(),inputs:[],status:"running"};
   report.stages.push(record); await persist();
-  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleAirTarget=null;
+  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastEmergencyCursor=-1;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleEnemyTarget=false;
   // The outer campaign phase changes before the real asset gate releases the HUD.
   await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
   while(await phaseAt()==="battle") {
@@ -181,13 +182,14 @@ async function battle(stage) {
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
-      } else if (deploymentCount.active===0 && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
-        // An empty defense line needs an affordable escort while the next
-        // expensive role is funded. Keep the ordered role cursor unchanged.
+      } else if (deploymentCount.active===0 && cursor!==lastEmergencyCursor && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
+        // Allow one affordable escort for this pending role. Repeating the25-cost
+        // scout every12s in872 drained the funds for the62-cost frontliner.
+        // Keep the selected role pending until its actual card can be clicked.
         const scout=page.locator('button.unit-card[data-kind="scout"]');
         if(await scout.count() && await scout.isEnabled()) {
-          await scout.click();lastEmergency=Date.now();lastAction=Date.now();
-          record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout"});
+          await scout.click();lastEmergency=Date.now();lastAction=Date.now();lastEmergencyCursor=cursor;
+          record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout",pendingKind:deploymentOrder[cursor%count],deploymentCursor:cursor});
         }
       }
     }
@@ -195,17 +197,20 @@ async function battle(stage) {
     const airstrike=page.locator('button.support-btn.airstrike');
     const airVisible=Date.now()-start>12_000&&await airstrike.isVisible();
     const airReady=airVisible&&await airstrike.isEnabled();
-    let visibleAirTarget=Date.now()-lastAimReadAt<=2_000?lastVisibleAirTarget:null;
-    if(airVisible&&(airReady||!normalCampaignCanSpendVehicleGauge(record.inputs))
+    const barrage=page.locator('button.support-btn[data-category="vehicle"]');
+    const barrageReady=await barrage.isVisible()&&await barrage.isEnabled();
+    let visibleEnemyTarget=Date.now()-lastAimReadAt<=2_000&&lastVisibleEnemyTarget;
+    if(airVisible&&(airReady||barrageReady||!normalCampaignCanSpendVehicleGauge(record.inputs))
       &&(Date.now()-lastAimReadAt>=2_000||(airReady&&!lastAirReady))) {
-      lastAimReadAt=Date.now();lastVisibleAirTarget=null;visibleAirTarget=null;
+      lastAimReadAt=Date.now();lastVisibleEnemyTarget=false;visibleEnemyTarget=false;
       const frame=await observeVisibleBattleHealthBars(page.locator('.game-shell canvas'));
+      visibleEnemyTarget=frame.status==='read'&&frame.bars.some(bar=>(bar.kind==='enemy'||bar.kind==='clone')&&Number.isFinite(bar.x)&&Number.isFinite(bar.y));
+      lastVisibleEnemyTarget=visibleEnemyTarget;
       (record.airAimObservations??=[]).push({seconds:(Date.now()-start)/1000,airReady,status:frame.status,
-        bars:frame.bars,pngSha256:frame.pngSha256,source:frame.source});
+        bars:frame.bars,pngSha256:frame.pngSha256,source:frame.source,visibleEnemyTarget,barrageReady});
       const aim=frame?.canvas&&visibleAirstrikeTarget(frame.canvas,frame);
       const bossSeen=await page.locator('.boss-hud').isVisible();
       if(aim&&(aim.expectedVisibleBarsInRadius>=2||bossSeen)&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
-        visibleAirTarget=aim;lastVisibleAirTarget=aim;
         if(airReady) {
           const aimScreenshot=`s${stage.number}-air-${record.inputs.filter(input=>input.action==='airstrike').length+1}-aim.png`;
           await writeFile(path.join(out,aimScreenshot),frame.png);
@@ -214,16 +219,15 @@ async function battle(stage) {
           const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim,aimScreenshot,aimScreenshotSha256:frame.pngSha256};record.inputs.push(input);
           await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
           input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
-          lastVisibleAirTarget=null;
         }
       }
     }
     lastAirReady=airReady;
-    const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
-    // Preserve funding for the first aircraft only while an enemy target is visible.
-    // Its actual acknowledgment or an absent target releases ordinary vehicle fire.
-    if(!airstrikeRequested&&normalCampaignCanSpendVehicleGauge(record.inputs,Boolean(visibleAirTarget))&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    // A single visible enemy still needs aircraft funding even before a useful
+    // two-target aim exists. After its acknowledgment, refresh the same bounded
+    // observation for ready vehicle fire; never spend70 on an unobserved field.
+    if(!airstrikeRequested&&visibleEnemyTarget&&normalCampaignCanSpendVehicleGauge(record.inputs,visibleEnemyTarget)&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&barrageReady) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()

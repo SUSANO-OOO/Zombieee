@@ -25,7 +25,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
-import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry } from "./pwa-expected-abort.mjs";
+import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry, markPartialBundleCancelIntent } from "./pwa-expected-abort.mjs";
 import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
 import { partitionPwaUpdateTransportPaths } from "./pwa-update-request-ownership.mjs";
 
@@ -1023,6 +1023,7 @@ try {
     };
     document.addEventListener("click", captureCancel, true);
   });
+  markPartialBundleCancelIntent(audioRequests, Date.now());
   await page.getByRole("button", { name: "中断" }).click();
   await page.getByRole("heading", { name: "ダウンロードを中断しました" }).waitFor({ state: "visible", timeout: 15_000 });
   // The cancelled heading is synchronous; the diagnostic list is published

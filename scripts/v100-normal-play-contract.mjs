@@ -27,7 +27,9 @@ export function normalCampaignDeployOrder(kinds) {
 // first aircraft opportunity while an enemy target is visible and until its
 // ordinary aimed UI input is acknowledged. No visible target releases defense.
 // This only selects an input; it never changes gauge, time or battle rules.
-export function normalCampaignCanSpendVehicleGauge(inputs, hasVisibleAirstrikeTarget = true) {
-  return !hasVisibleAirstrikeTarget || (Array.isArray(inputs) && inputs.some(input => input?.action === 'airstrike'
+// Funding depends on visible opposition, not on whether two enemies already
+// fit the firing radius. Keep the same85/70 costs and ordinary UI acknowledgment.
+export function normalCampaignCanSpendVehicleGauge(inputs, hasVisibleEnemyTarget = true) {
+  return !hasVisibleEnemyTarget || (Array.isArray(inputs) && inputs.some(input => input?.action === 'airstrike'
     && input.acknowledgment?.disabled === 'true'));
 }
