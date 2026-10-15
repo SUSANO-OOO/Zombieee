@@ -1,4 +1,4 @@
-import {readVisibleBattleHealthBars,visibleAirstrikeTarget} from './v100-normal-visible-aim.mjs';
+import {observeVisibleBattleHealthBars,visibleAirstrikeTarget} from './v100-normal-visible-aim.mjs';
 // A normal campaign route: fresh save, earned CAPS, real time and UI inputs.
 // Read-only save inspection records progress; no seed, QA bridge or forced result.
 import assert from "node:assert/strict";
@@ -89,7 +89,9 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  const preference=["unit-gantetsu","unit-paisen","unit-hachi","unit-kumaverson","unit-nao","unit-babayaga","unit-mizuchi","unit-tatara","unit-monkey"];
+  // Both451 native Stage1 wins opened with ranged/scout. Put an earned
+  // healer behind that pair; the9ced melee opening delayed the marksman to44s.
+  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
@@ -152,7 +154,7 @@ async function configureFormation() {
 async function battle(stage) {
   const record={number:stage.number,id:stage.id,startedAt:new Date().toISOString(),openingSave:await saveAt(),inputs:[],status:"running"};
   report.stages.push(record); await persist();
-  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;
+  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleAirTarget=null;
   // The outer campaign phase changes before the real asset gate releases the HUD.
   await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
   while(await phaseAt()==="battle") {
@@ -193,22 +195,30 @@ async function battle(stage) {
     const airstrike=page.locator('button.support-btn.airstrike');
     const airVisible=Date.now()-start>12_000&&await airstrike.isVisible();
     const airReady=airVisible&&await airstrike.isEnabled();
-    let visibleAirTarget=null;
-    if(airVisible&&(airReady||!normalCampaignCanSpendVehicleGauge(record.inputs))) {
-      const frame=await page.locator('.game-shell canvas').evaluate(readVisibleBattleHealthBars);
+    let visibleAirTarget=Date.now()-lastAimReadAt<=2_000?lastVisibleAirTarget:null;
+    if(airVisible&&(airReady||!normalCampaignCanSpendVehicleGauge(record.inputs))
+      &&(Date.now()-lastAimReadAt>=2_000||(airReady&&!lastAirReady))) {
+      lastAimReadAt=Date.now();lastVisibleAirTarget=null;visibleAirTarget=null;
+      const frame=await observeVisibleBattleHealthBars(page.locator('.game-shell canvas'));
+      (record.airAimObservations??=[]).push({seconds:(Date.now()-start)/1000,airReady,status:frame.status,
+        bars:frame.bars,pngSha256:frame.pngSha256,source:frame.source});
       const aim=frame?.canvas&&visibleAirstrikeTarget(frame.canvas,frame);
       const bossSeen=await page.locator('.boss-hud').isVisible();
       if(aim&&(aim.expectedVisibleBarsInRadius>=2||bossSeen)&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
-        visibleAirTarget=aim;
+        visibleAirTarget=aim;lastVisibleAirTarget=aim;
         if(airReady) {
+          const aimScreenshot=`s${stage.number}-air-${record.inputs.filter(input=>input.action==='airstrike').length+1}-aim.png`;
+          await writeFile(path.join(out,aimScreenshot),frame.png);
           await airstrike.click();await page.mouse.click(aim.point.x,aim.point.y);
           airstrikeRequested=true;
-          const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim};record.inputs.push(input);
+          const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim,aimScreenshot,aimScreenshotSha256:frame.pngSha256};record.inputs.push(input);
           await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
           input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
+          lastVisibleAirTarget=null;
         }
       }
     }
+    lastAirReady=airReady;
     const barrage=page.locator('button.support-btn[data-category="vehicle"]');
     const bossVisible=await page.locator(".boss-hud").isVisible();
     // Preserve funding for the first aircraft only while an enemy target is visible.

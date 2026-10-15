@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import path from 'node:path';
 import ts from 'typescript';
 import {normalCampaignDeployOrder,normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-contract.mjs';
-import {readVisibleBattleHealthBars,visibleAirstrikeTarget} from '../scripts/v100-normal-visible-aim.mjs';
+import {observeVisibleBattleHealthBars,visibleAirstrikeTarget} from '../scripts/v100-normal-visible-aim.mjs';
 import {AIRSTRIKE_DEF,createEmergencySupportRuntime,requestAirstrike} from '../app/gameRules.js';
 
 const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
@@ -75,17 +76,17 @@ test('visible enemy bars and real world transforms keep the aim inside productio
   for(const canvas of [null,{x:0,y:0,width:844,height:340},{x:0,y:0,width:844,height:340,worldScale:0,worldOffsetX:0,worldOffsetY:0}])assert.equal(visibleAirstrikeTarget(canvas,frame),null);
 });
 
-async function fire({seconds=122,gauge=100,visible=true,clear=true,cooldown=0,canvasMissing=false,ignoreAim=false}={}) {
+async function fire({seconds=122,gauge=100,visible=true,clear=true,cooldown=0,canvasMissing=false,ignoreAim=false,lastReadSeconds=-Infinity,previousAirReady=false}={}) {
   const box={x:0,y:0,width:960,height:540,worldScale:1,worldOffsetX:0,worldOffsetY:0};
   const canvas={dataset:{worldScale:'1',worldOffsetX:'0',worldOffsetY:'0'},getBoundingClientRect:()=>box};
-  const frame={status:'read',canvas:box,bars:[{kind:'enemy',x:500,y:120},{kind:'enemy',x:510,y:124}]};
-  const record={inputs:[]},clicks=[];
+  const frame={status:'read',canvas:box,png:Buffer.from('native-aim-png'),pngSha256:'native-image-hash',bars:[{kind:'enemy',x:500,y:120},{kind:'enemy',x:510,y:124}]};
+  const record={inputs:[]},clicks=[],captures=[];let observations=0;
   let runtime={...createEmergencySupportRuntime(true),cooldownRemaining:cooldown},selected=false;
   const request=point=>requestAirstrike({running:true,paused:false,over:false,supportGauge:gauge,lane:1,x:point.x,y:point.y,runtime});
   const button={getAttribute(name){if(name==='aria-disabled')return runtime.phase==='idle'&&gauge>=85&&runtime.cooldownRemaining===0?'false':'true';if(name==='data-state')return runtime.phase==='idle'?'ready':'cooldown';return null;}};
   const airstrike={isVisible:async()=>visible,isEnabled:async()=>request({x:500,y:180}).ok,async click(){selected=true;clicks.push('select');},evaluateAll:async read=>read([button])};
   const page={locator(selector){
-    if(selector==='.game-shell canvas')return{evaluate:async read=>{assert.equal(read,readVisibleBattleHealthBars);return canvasMissing?{status:'unavailable',bars:[]}:frame;}};
+    if(selector==='.game-shell canvas')return{nativeCanvas:true};
     if(selector==='.boss-hud')return{isVisible:async()=>false};
     if(selector==='.game-shell')return{innerText:async()=>'西新防衛線\n耐久\n650 / 680'};
     throw Error('Unexpected normal UI read '+selector);
@@ -93,16 +94,19 @@ async function fire({seconds=122,gauge=100,visible=true,clear=true,cooldown=0,ca
     assert.equal(selected,true);clicks.push('aim');if(ignoreAim)return;
     const result=request({x,y});assert.equal(result.ok,true,'production placement and resource rules authorize every request');runtime=result.runtime;gauge=result.supportGauge;
   }},async waitForFunction(read,arg,options){assert.equal(options.timeout,2_000);if(!read())throw Error('native request not acknowledged');}};
-  const run=vm.runInNewContext('(async()=>{let airstrikeRequested=false,visibleAirTarget=null;'+blocks[0].getText(tree)+';return airstrikeRequested;})()',{
-    page,airstrike,readVisibleBattleHealthBars,visibleAirstrikeTarget,normalCampaignCanSpendVehicleGauge,airVisible:seconds>12&&visible,airReady:seconds>12&&visible&&request({x:500,y:180}).ok,record,start:0,Date:{now:()=>seconds*1000},
+  const run=vm.runInNewContext('(async()=>{let airstrikeRequested=false,visibleAirTarget=null,lastVisibleAirTarget=null,lastAimReadAt=initialReadAt,lastAirReady=initialAirReady;'+blocks[0].getText(tree)+';return airstrikeRequested;})()',{
+    page,airstrike,observeVisibleBattleHealthBars:async locator=>{assert.equal(typeof observeVisibleBattleHealthBars,'function');assert.equal(locator.nativeCanvas,true);observations++;return canvasMissing?{status:'unavailable',bars:[]}:frame;},visibleAirstrikeTarget,normalCampaignCanSpendVehicleGauge,
+    initialReadAt:lastReadSeconds*1000,initialAirReady:previousAirReady,stage:{number:3},path,out:'/evidence',writeFile:async(file,bytes)=>captures.push({file,bytes}),airVisible:seconds>12&&visible,airReady:seconds>12&&visible&&request({x:500,y:180}).ok,record,start:0,Date:{now:()=>seconds*1000},
     document:{querySelector:()=>button,elementFromPoint:()=>clear?canvas:null},
   });
-  const requested=await run;return{record,clicks,gauge,runtime,requested};
+  const requested=await run;return{record,clicks,captures,gauge,runtime,requested,observations};
 }
 
 test('the actual normal route requests and acknowledges V100 air support before a boss using the real85cost and50s cooldown',async()=>{
   const result=await fire();assert.deepEqual(result.clicks,['select','aim']);assert.equal(result.requested,true);
   assert.equal(result.gauge,15);assert.equal(result.runtime.phase,'radio');assert.equal(result.runtime.cooldownRemaining,50);
+  assert.equal(result.captures.length,1);assert.equal(result.captures[0].file,path.join('/evidence','s3-air-1-aim.png'));assert.ok(result.captures[0].bytes.equals(Buffer.from('native-aim-png')));
+  assert.equal(result.record.inputs[0].aimScreenshotSha256,'native-image-hash');
   assert.equal(result.record.inputs[0].action,'airstrike');assert.equal(result.record.inputs[0].acknowledgment.disabled,'true');
 });
 
@@ -111,4 +115,15 @@ test('disabled, cooling, obscured, missing-transform and opening states never co
     const result=await fire(options);assert.deepEqual(result.clicks,[]);assert.equal(result.record.inputs.length,0);assert.equal(result.requested,false);
   }
   await assert.rejects(()=>fire({ignoreAim:true}),/native request not acknowledged/u);
+});
+
+test('the actual aircraft caller does not scan or fire again inside the two-second observation interval',async()=>{
+ const result=await fire({seconds:122,lastReadSeconds:121.9,previousAirReady:true});
+ assert.equal(result.observations,0);assert.deepEqual(result.clicks,[]);assert.equal(result.captures.length,0);
+});
+
+test('aircraft becoming ready forces a fresh image and never shoots from a funding observation alone',async()=>{
+ const result=await fire({seconds:122,lastReadSeconds:121.9,previousAirReady:false});
+ assert.equal(result.observations,1);assert.deepEqual(result.clicks,['select','aim']);assert.equal(result.captures.length,1);
+ assert.equal(result.record.inputs[0].aimScreenshot,'s3-air-1-aim.png');assert.equal(result.record.inputs[0].acknowledgment.disabled,'true');
 });

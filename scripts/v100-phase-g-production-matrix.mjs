@@ -788,7 +788,10 @@ function invariant(condition, message) {
 }
 
 function phaseGBrowserLifecyclePolicy(engineName, state) {
-  const isolated = engineName === "webkit" && state === "battle-extra";
+  // Each extra battle is an independent authored fixture. Keep its native
+  // input deadline free of queues/caches from unrelated earlier captures.
+  // Full normal-campaign play remains a separate continuous single-page run.
+  const isolated = (engineName === "chromium" || engineName === "webkit") && state === "battle-extra";
   return Object.freeze({
     engineName,
     state,

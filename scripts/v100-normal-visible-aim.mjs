@@ -1,18 +1,12 @@
+import sharp from 'sharp';
+import {createHash} from 'node:crypto';
 import { AIRSTRIKE_DEF } from '../app/gameRules.js';
 
-// This function is serialized into the browser. Keep all pixel-reading inputs
-// inside it; do not read game state, seeds, clocks, gauges or result setters.
-export function readVisibleBattleHealthBars(canvasOrFrame) {
-  const live = typeof canvasOrFrame?.getContext === 'function';
-  let frame, rect;
-  try {
-    frame = live
-      ? canvasOrFrame.getContext('2d').getImageData(0, 0, canvasOrFrame.width, canvasOrFrame.height)
-      : canvasOrFrame;
-    rect = live ? canvasOrFrame.getBoundingClientRect()
-      : frame?.rect ?? { x: 0, y: 0, width: frame?.width, height: frame?.height };
-  } catch { return { status: 'unavailable', bars: [] }; }
-  const { data, width, height } = frame ?? {};
+// Scan an observed native PNG on the host; never read the live canvas context.
+export function readVisibleBattleHealthBars(frame) {
+  const {width, height} = frame ?? {};
+  const rect = frame?.rect ?? {x:0, y:0, width, height};
+  const { data } = frame ?? {};
   if (!data || !Number.isInteger(width) || !Number.isInteger(height)
     || width <= 0 || height <= 0 || data.length !== width * height * 4
     || !Number.isFinite(rect.width) || !Number.isFinite(rect.height)
@@ -30,7 +24,9 @@ export function readVisibleBattleHealthBars(canvasOrFrame) {
       for (let x = 0; x <= width; x++) {
         const i = (y * width + x) * 4;
         const match = x < width && data[i + 3] > 240
-          && color.rgb.every((v, n) => Math.abs(data[i + n] - v) <= 5);
+          && Math.abs(data[i] - color.rgb[0]) <= 5
+          && Math.abs(data[i + 1] - color.rgb[1]) <= 5
+          && Math.abs(data[i + 2] - color.rgb[2]) <= 5;
         if (match && start < 0) start = x;
         if (!match && start >= 0) {
           const length = x - start;
@@ -55,16 +51,44 @@ export function readVisibleBattleHealthBars(canvasOrFrame) {
     if (w < 5 || h < 1.4 || h > 8 || w / h < 2.3
       || g.pixels / ((g.right - g.left) * (g.bottom - g.top)) < .75) continue;
     const x = (g.left + g.right) / 2 * sx, y = (g.top + g.bottom) / 2 * sy;
-    if (live && globalThis.document?.elementFromPoint(rect.x + x, rect.y + y) !== canvasOrFrame) continue;
     bars.push({ kind: g.kind, x, y, width: w, height: h,
       bitmapRect: { left: g.left, top: g.top, width: g.right - g.left, height: g.bottom - g.top } });
   }
   return { status: 'read', width: rect.width, height: rect.height,
-    bitmapWidth: width, bitmapHeight: height, bars,
-    canvas: live ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
-      worldScale: Number(canvasOrFrame.dataset.worldScale),
-      worldOffsetX: Number(canvasOrFrame.dataset.worldOffsetX),
-      worldOffsetY: Number(canvasOrFrame.dataset.worldOffsetY) } : undefined };
+    bitmapWidth: width, bitmapHeight: height, bars };
+}
+
+function readCanvasProjectionAndOwners(element, points) {
+  if (element.tagName !== 'CANVAS') return {projection:null, owned:[]};
+  const r = element.getBoundingClientRect();
+  return {
+    projection: {x:r.x, y:r.y, width:r.width, height:r.height,
+      worldScale:Number(element.dataset.worldScale),
+      worldOffsetX:Number(element.dataset.worldOffsetX),
+      worldOffsetY:Number(element.dataset.worldOffsetY)},
+    owned: points.map(point => document.elementFromPoint(r.x + point.x, r.y + point.y) === element),
+  };
+}
+
+export async function observeVisibleBattleHealthBars(canvasLocator) {
+  const {projection} = await canvasLocator.evaluate(readCanvasProjectionAndOwners, []);
+  const keys = ['x','y','width','height','worldScale','worldOffsetX','worldOffsetY'];
+  if (!projection || !keys.every(key => Number.isFinite(projection[key]))
+    || projection.width <= 0 || projection.height <= 0 || projection.worldScale <= 0) {
+    return {status:'unavailable', bars:[]};
+  }
+  const png = await canvasLocator.screenshot({type:'png', animations:'allow', scale:'css', timeout:2_000});
+  const {data, info} = await sharp(png).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const frame = readVisibleBattleHealthBars({data, width:info.width, height:info.height,
+    rect:{x:0,y:0,width:projection.width,height:projection.height}});
+  const current = await canvasLocator.evaluate(readCanvasProjectionAndOwners,
+    frame.bars.map(bar => ({x:bar.x,y:bar.y})));
+  if (!current.projection || !keys.every(key => current.projection[key] === projection[key])) {
+    return {status:'stale', bars:[]};
+  }
+  return {...frame, bars:frame.bars.filter((bar,index) => current.owned[index]), canvas:projection,
+    png, pngSha256:createHash('sha256').update(png).digest('hex'),
+    source:'native PNG screenshot, host pixel scan, fresh visible ownership; no canvas context access'};
 }
 
 export function visibleAirstrikeTarget(canvas, frame, {
