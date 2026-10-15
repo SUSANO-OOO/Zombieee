@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { AIRSTRIKE_DEF, UNIT_CARDS } from '../app/gameRules.js';
+import { AIRSTRIKE_DEF } from '../app/gameRules.js';
 
 // Read the visible counter's accessible label. Compact HUD text contains only
 // "3/7", so searching its text for "同時出撃" silently skipped the cap check
@@ -14,20 +14,14 @@ export function normalCampaignDeploymentCount(label) {
   return {active,limit};
 }
 
-// Choose from the equipped cards visible in the HUD, without reading game state.
+// Follow the formation actually prepared through the ordinary UI. A second,
+// hidden role sort delayed the equipped medic from ~3s to ~27-31s in the D28
+// Stage 3 originals. Preserve that failed evidence; this restores the selected
+// order, rather than declaring the campaign won or changing battle rules.
 export function normalCampaignDeployOrder(kinds) {
   assert.ok(Array.isArray(kinds) && kinds.every(kind => typeof kind === 'string' && kind.length > 0));
   assert.equal(new Set(kinds).size, kinds.length, 'normal play requires one card per equipped kind');
-  const melee = kinds.filter(kind => ['scout','brawler','guardian','brute','kumaverson','crazy-king','tky','miyamoto-musashi','mayo-chan'].includes(kind));
-  // The earned Stage 3 roster includes a frontline fighter. Its DOM position
-  // must not make the faster skirmisher the opening tank in every attempt.
-  const roleOf = kind => UNIT_CARDS.find(card => card.kind === kind)?.aiProfile;
-  const front = melee.find(kind => roleOf(kind) === 'frontline')
-    ?? melee.find(kind => roleOf(kind) === 'heavy') ?? melee[0];
-  const ranged = kinds.find(kind => ['babayaga','ranger','gunner','engineer','zakimiya','mrs-chiha'].includes(kind));
-  const healer = kinds.find(kind => kind === 'medic');
-  const opening = [front,ranged,healer].filter(Boolean);
-  return [...opening,...kinds.filter(kind => !opening.includes(kind))];
+  return [...kinds];
 }
 
 export function normalCampaignAirstrikeTarget(canvas, anchors, hudText = '') {

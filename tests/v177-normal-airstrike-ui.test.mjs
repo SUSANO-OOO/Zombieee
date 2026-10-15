@@ -15,35 +15,46 @@ function visit(node){if(ts.isIfStatement(node)&&node.expression.getText(tree).in
 visit(battle);assert.equal(blocks.length,1,'exercise the actual hosted-only normal input block without importing a browser');
 assert.equal(deployBlocks.length,1);
 
-test('the visible equipped roster opens with a front unit, ranged cover and healer without losing or adding a kind',()=>{
+test('normal deployment preserves the formation prepared through the UI without a hidden role sort',()=>{
   const kinds=['medic','babayaga','scout','kumaverson','brawler'];
   const ordered=normalCampaignDeployOrder(kinds);
-  // Both Stage 3 failures at 4e24ffeb used this earned five-unit formation
-  // but opened with the fast skirmisher. Use the available frontline role.
-  assert.deepEqual(ordered,['brawler','babayaga','medic','scout','kumaverson']);
+  // The D28 originals lost with medic delayed to the third card. The earlier
+  // 2e583 WebKit control won with this same earned roster and the UI order.
+  // That control is diagnostic evidence, not fresh-candidate acceptance.
+  assert.deepEqual(ordered,['medic','babayaga','scout','kumaverson','brawler']);
   assert.deepEqual([...ordered].sort(),[...kinds].sort());
   assert.deepEqual(kinds,['medic','babayaga','scout','kumaverson','brawler']);
-  assert.deepEqual(normalCampaignDeployOrder(['future-unit','ranger']),['ranger','future-unit']);
+  assert.notEqual(ordered,kinds,'the observer must not expose a mutable formation alias');
+  assert.deepEqual(normalCampaignDeployOrder(['future-unit','ranger']),['future-unit','ranger']);
   assert.throws(()=>normalCampaignDeployOrder(['scout','scout']));
 });
 
-test('a frontline or heavy melee role precedes a skirmisher without misclassifying the ranged Zakimiya',()=>{
-  assert.equal(normalCampaignDeployOrder(['scout','kumaverson','medic'])[0],'kumaverson');
-  assert.equal(normalCampaignDeployOrder(['scout','guardian','medic'])[0],'guardian');
-  assert.equal(normalCampaignDeployOrder(['scout','miyamoto-musashi','medic'])[0],'miyamoto-musashi');
-  assert.deepEqual(normalCampaignDeployOrder(['zakimiya','scout','medic']),['scout','zakimiya','medic']);
-  assert.deepEqual(normalCampaignDeployOrder(['medic','scout']),['scout','medic']);
+test('every selected unit role retains its UI slot, including later and unfamiliar units',()=>{
+  for(const kinds of [['scout','kumaverson','medic'],['scout','guardian','medic'],['scout','miyamoto-musashi','medic'],['zakimiya','scout','medic'],['medic','scout'],[]]) {
+    assert.deepEqual(normalCampaignDeployOrder(kinds),kinds);
+  }
 });
 
-test('the actual normal deployment caller taps the available frontline card from the recorded Stage 3 roster',async()=>{
+test('the actual normal deployment caller taps the first selected card from the recorded Stage 3 roster',async()=>{
   const kinds=['medic','babayaga','scout','kumaverson','brawler'],clicks=[],record={inputs:[]};
   const cards={evaluateAll:async read=>read(kinds.map(kind=>({getAttribute:()=>kind}))),nth:index=>({isEnabled:async()=>true,getAttribute:async()=>kinds[index],click:async()=>clicks.push(kinds[index])})};
   const result=await vm.runInNewContext('(async()=>{let cursor=0,lastAction=0,lastEmergency=0;'+deployBlocks[0].getText(tree)+';return {cursor,lastAction,lastEmergency};})()',{
     cards,count:kinds.length,normalCampaignDeployOrder,record,Date:{now:()=>2_000},start:0,deploymentCount:{active:0,limit:7},
-    page:{locator:()=>{throw Error('An enabled frontline needs no emergency replacement');}},
+    page:{locator:()=>{throw Error('An enabled selected card needs no emergency replacement');}},
   });
-  assert.deepEqual(clicks,['brawler']);assert.equal(record.inputs[0].kind,'brawler');
+  assert.deepEqual(clicks,['medic']);assert.equal(record.inputs[0].kind,'medic');
   assert.equal(result.cursor,1);assert.equal(result.lastAction,2_000);assert.equal(result.lastEmergency,0);
+});
+
+test('the actual caller waits for an unavailable selected card without silently advancing the formation',async()=>{
+  const kinds=['medic','babayaga','scout','kumaverson','brawler'],clicks=[],record={inputs:[]};
+  const cards={evaluateAll:async read=>read(kinds.map(kind=>({getAttribute:()=>kind}))),nth:index=>({isEnabled:async()=>index!==0,getAttribute:async()=>kinds[index],click:async()=>clicks.push(kinds[index])})};
+  const result=await vm.runInNewContext('(async()=>{let cursor=0,lastAction=0,lastEmergency=0;'+deployBlocks[0].getText(tree)+';return {cursor,lastAction,lastEmergency};})()',{
+    cards,count:kinds.length,normalCampaignDeployOrder,record,Date:{now:()=>20_000},start:0,deploymentCount:{active:1,limit:7},
+    page:{locator:()=>{throw Error('The occupied line does not authorize an emergency replacement');}},
+  });
+  assert.deepEqual(clicks,[]);assert.equal(record.inputs.length,0);
+  assert.equal(result.cursor,0);assert.equal(result.lastAction,0);assert.equal(result.lastEmergency,0);
 });
 
 test('visible anchors, vehicle health and real world transforms keep every aim inside the production airstrike range',()=>{
