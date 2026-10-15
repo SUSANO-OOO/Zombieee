@@ -51,7 +51,7 @@ export function v100HumanWalkFrame(rightFacingFrame, direction) {
 }
 export function v100UsesHumanWalk(kind,sample,{manualAbilityActive=false}={}) {
   // An attack may move the fighter while its limbs still own an attack pose.
-  return (kind==='brawler' || V100_MAIN_HUMAN_WALK_KINDS.includes(kind)) && !manualAbilityActive
+  return V100_MAIN_HUMAN_WALK_KINDS.includes(kind) && !manualAbilityActive
     && ['idle','move','start-move','stop-move','turn'].includes(sample?.requestedState);
 }
 function piece(ctx,image,name,sourceA,sourceB,targetA,targetB) {

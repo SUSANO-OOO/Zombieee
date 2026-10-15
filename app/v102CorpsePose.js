@@ -19,8 +19,17 @@ export function v102CorpseFallingPose(kind, frame, width, height, fallDirection,
   const source = boundFrame(kind, frame);
   if (!source) return null;
   if (!(Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0)) throw new RangeError('Positive corpse dimensions are required');
-  const t = Math.max(0, Math.min(1, Number(progress) || 0)), poseProgress = t * t * (3 - 2 * t);
-  const rotationRadians = (fallDirection < 0 ? -1 : 1) * source.fallAngleRadians * poseProgress;
+  const t = Math.max(0, Math.min(1, Number(progress) || 0));
+  // The photo Paisen falls through ninety degrees on the existing .42s clock.
+  // A 30% acceleration ramp, constant middle and matching deceleration keep
+  // each 60Hz turn below the original .09rad limit without easing twice.
+  const ramp = .3, speed = 1 / (1 - ramp);
+  const allyProgress = t < ramp ? speed * t * t / (2 * ramp)
+    : t > 1 - ramp ? 1 - speed * (1 - t) * (1 - t) / (2 * ramp)
+      : speed * (t - ramp / 2);
+  const poseProgress = source.kind === 'brawler' ? allyProgress : t * t * (3 - 2 * t);
+  const angle = (fallDirection < 0 ? -1 : 1) * source.fallAngleRadians * poseProgress;
+  const rotationRadians = angle === 0 ? 0 : angle;
   const c = Math.cos(rotationRadians), s = Math.sin(rotationRadians), sign = frame.flipX ? -1 : 1;
   let groundSupportY = -Infinity;
   for (const [px, py] of source.hull) {

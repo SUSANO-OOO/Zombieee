@@ -1,3 +1,4 @@
+import { V177_PAISEN_PHOTO_SPRITES } from './v177PaisenPhotoSpriteData.js';
 import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
@@ -367,6 +368,35 @@ function frameRecord({
   });
 }
 
+
+function paisenPhotoManifestEntry() {
+  const data = V177_PAISEN_PHOTO_SPRITES;
+  const frames = {};
+  for (const state of SPRITE_STATES) {
+    const index = STATE_FRAME_INDEX[state];
+    frames[state] = {};
+    for (const direction of SPRITE_DIRECTIONS) {
+      frames[state][direction] = frameRecord({
+        path: data.sixPath, sheetWidth: data.cellWidth * 6, sheetHeight: data.cellHeight,
+        source: { x: index * data.cellWidth, y: 0, w: data.cellWidth, h: data.cellHeight },
+        visible: data.sixVisible[index], nativeDirection: 'right', direction,
+        authoredCell: data.authoredCell, anchorX: .5,
+        groundAnchorPixels: data.sixGroundAnchorPixels[index],
+        derivedFrom: state === 'death' ? 'hit' : undefined,
+      });
+    }
+    Object.freeze(frames[state]);
+  }
+  return Object.freeze({
+    path: data.sixPath,
+    sheet: Object.freeze({ width: data.cellWidth * 6, height: data.cellHeight,
+      layout: 'six-source-bound-photo-gutter-cells', cellWidth: data.cellWidth,
+      cellHeight: data.cellHeight, gutter: 16 }),
+    battleContentHeight: null, battleScale: 1, nativeDirection: 'right',
+    states: SPRITE_STATES, directions: SPRITE_DIRECTIONS, frames: Object.freeze(frames),
+  });
+}
+
 function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}) {
   const audit = LEGACY_SHEET_AUDIT[auditKey];
   const path = `/art/v060/characters/legacy/${auditKey}-battle-gutter-v1.png`;
@@ -682,7 +712,7 @@ function v100CustomAtlasManifestEntry({ kind, path, sourceStates, visible }) {
 }
 
 export const SPRITE_MANIFEST = Object.freeze({
-  brawler: legacyManifestEntry("brawler", "right"),
+  brawler: paisenPhotoManifestEntry(),
   scout: explicitAtlasManifestEntry("scout", "/art/v070/characters/scout-battle-v1.png"),
   ranger: explicitAtlasManifestEntry("ranger", "/art/v070/characters/ranger-battle-v1.png"),
   medic: explicitAtlasManifestEntry("medic", "/art/v070/characters/medic-battle-v1.png"),
@@ -765,26 +795,7 @@ export const SPRITE_MANIFEST = Object.freeze({
 const V100_PAISEN_ATLAS_PATH = "/art/v100/characters/paisen-battle-v1.png";
 const V100_PAISEN_CELL_WIDTH = 394;
 const V100_PAISEN_CELL_HEIGHT = 757;
-const V100_PAISEN_VISIBLE = Object.freeze({
-  right: Object.freeze([
-    [65, 109, 332, 602],
-    [64, 113, 347, 603],
-    [44, 113, 356, 603],
-    [35, 126, 378, 605],
-    [16, 133, 378, 605],
-    [16, 134, 320, 605],
-    [22, 516, 372, 741],
-  ]),
-  left: Object.freeze([
-    [62, 109, 329, 602],
-    [47, 113, 330, 603],
-    [38, 113, 350, 603],
-    [16, 126, 359, 605],
-    [16, 133, 378, 605],
-    [74, 134, 378, 605],
-    [22, 516, 372, 741],
-  ]),
-});
+const V100_PAISEN_VISIBLE = V177_PAISEN_PHOTO_SPRITES.sevenVisible;
 
 function v100PaisenManifestEntry() {
   const frames = {};
@@ -840,13 +851,13 @@ function v100PaisenManifestEntry() {
 
 export const V100_SPRITE_MANIFEST = Object.freeze({ paisen: v100PaisenManifestEntry() });
 export const V100_SPRITE_PROVENANCE = Object.freeze({
-  generator: "v100-paisen-atlas-r1",
-  identitySourcePath: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  identitySourceSha256: "9C4EA4D8BC5D2FD2BAE10EA5BB455F45127D1D861EDF2D3061866EB9C36DF010",
-  sourceBattleDerivativePath: "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
-  sourceBattleDerivativeSha256: "F1B5149AD4D4A1CC94220B40CD336D18D38372CBE26AEFBF27620BA808DEE836",
+  generator: 'v177-paisen-photo-fallback-r1',
+  identitySourcePath: V177_PAISEN_PHOTO_SPRITES.identityPath,
+  identitySourceSha256: V177_PAISEN_PHOTO_SPRITES.identitySha256.toUpperCase(),
+  sourceBattleDerivativePath: V177_PAISEN_PHOTO_SPRITES.sixPath,
+  sourceBattleDerivativeSha256: V177_PAISEN_PHOTO_SPRITES.sixSha256.toUpperCase(),
   atlasPath: V100_PAISEN_ATLAS_PATH,
-  atlasSha256: "B4943A31126B60C06466FE6BCAA466D027851A852FD08AE92DCFE7F5C566CAF6",
+  atlasSha256: V177_PAISEN_PHOTO_SPRITES.sevenSha256.toUpperCase(),
 });
 
 export const v100SpriteKinds = Object.freeze(Object.keys(V100_SPRITE_MANIFEST));

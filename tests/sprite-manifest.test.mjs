@@ -1,3 +1,4 @@
+const prePhotoPaisen = JSON.parse(await readFile(new URL('./fixtures/v177-pre-photo-paisen-sprite-r1.json', import.meta.url)));
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -230,7 +231,7 @@ test("approved explicit atlases have seven states in both directions and a trans
 });
 
 test("legacy source cells are segmented exactly and rendered from isolated gutter atlases", () => {
-  const standard = SPRITE_MANIFEST.brawler;
+  const standard = prePhotoPaisen.entry;
   assert.deepEqual(
     { width: standard.sheet.width, height: standard.sheet.height, gutter: standard.sheet.gutter },
     { width: 2364, height: 757, gutter: 16 },
@@ -246,7 +247,7 @@ test("legacy source cells are segmented exactly and rendered from isolated gutte
 
 test("legacy gutter atlases preserve every source-cell pixel without scaling or cropping", async () => {
   const uniqueEntries = [...new Map(
-    Object.values(SPRITE_MANIFEST)
+    [...Object.values(SPRITE_MANIFEST), prePhotoPaisen.entry]
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];

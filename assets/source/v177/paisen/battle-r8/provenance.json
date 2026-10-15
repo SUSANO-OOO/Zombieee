@@ -1,0 +1,118 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "brawler",
+  "assetPath": "/art/v100/joints/brawler-photo-r2.webp",
+  "bytes": 36100,
+  "sha256": "e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+  "generatedPartsStudySha256": "85154ec93c819204d8254b6234db422c683945b180c5f94fcab0f02d8dd39f33",
+  "identitySourceSha256": "cd36c9f9d958714874c2e7c49008d7afce673811850c4fc1e389cee65a850797",
+  "identityBinding": {
+    "path": "/art/v100/portraits/paisen-identity-r2.webp",
+    "sourceSha256": "2abe752277e3c7947755b9af17c77d9e563233073ad428dcda8397106b3b2342",
+    "role": "Producer-photo identity master; battle derivative separately source-bound",
+    "battleReference": "assets/source/v177/paisen/battle-r8/identity-reference.png",
+    "bodyReference": "assets/source/v177/paisen/battle-reference-r2.png"
+  },
+  "motionSha256": "0ada2033c4b91d4e7e716bb4a37917918efda870868604c1862e011781b251df",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "45672cb6e14f32ab5a88b4a85c60b917a3ff8ba50a244c96bb879a71e92a0661",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "e8a67d0bf9e0f91766aeaaa6afe078bb828b67e02871723ca1ca0ce558fa0abd",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "ac76559d6cc08e2af5ebbe5afb8370a800d51cd2de7a8a43cc2c1caca3fb5d73",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "2f82247fbbd77ea60c846f283ad67344da8e6e40edd1f9a402edcf0a163a4130",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "c899621be9c3cc10a567e715bb00800baa7dfb0db108a9793258f9d05bdeeb35",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "d372628cdb2ce95360d3abca9cd0cdd16975c8a3da282e1627c84d37a7c5da15",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "d23677dd6f73437498b3eee98b6f333925f9a0bb9a997812f7114f98a5400af0",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "9bc05758469a88fbe63a1fa0dcb94fad0f364654cf9f98c13d4d8a5c2cf63243",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "39d86b452f65a2a26bcfd40b102efea5d13f59f93c9592a804065722d3bb369b",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "8033f235194490160539d84f19a036eb34ddd51362d9a546ebd4779aa589be5a",
+      "original": false
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "de3dd24b263e784c42263a1f83e10451a577cf654b138dc18a4e9a5ef2877474",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "2dd1832690b4d3922730142e5486be12ddfa26e6cb9cbe20e6c992f498a3ba01",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "1280517280398d1b6d520f2f7c5c62835d2f1cf9cae59b661b3b8e4e3e0736a0",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "7bab176538337da73e7a8fd153ea216f375d094b6d9653bbf50bad1250416e88",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "3decd06af689b23434f8daf6813d30c081b46ac67a3f6b546bcc47d353c3118e",
+      "original": true
+    }
+  ],
+  "source": "UNACCEPTED private source study. Three-photo identity and adult proportions, complete hidden caps under selected reference paint, actual Blender5.2. No product adoption.",
+  "groundY": 432,
+  "decodedBytes": 251904,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

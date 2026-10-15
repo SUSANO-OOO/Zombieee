@@ -63,15 +63,6 @@
       "sourcePath": "/pwa-optimized/art/v060/characters/kumaverson-battle-v1.webp"
     },
     {
-      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
-      "bytes": 535076,
-      "hash": "sha256-fce4fe84289a6cbce8c6da7cd3f90e3602571b65803617b52e4a120909c74050",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v060/characters/legacy/brawler-battle-gutter-v1.webp"
-    },
-    {
       "path": "/art/v060/characters/legacy/crusher-battle-gutter-v1.png",
       "bytes": 924492,
       "hash": "sha256-e0c52e9ada1deb565149064073f677110b3a057d28d4c02fb4a55219de5cfd8f",
@@ -1355,6 +1346,15 @@
       "sourcePath": "/pwa-optimized/art/v100/characters/kumaverson-guard-v1.webp"
     },
     {
+      "path": "/art/v100/characters/paisen-photo-battle-v177.png",
+      "bytes": 437630,
+      "hash": "sha256-36a94398689f43f9fbc173da98c2a55bf4c1bfc4f1db9b509f54e774dbd92b06",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/characters/paisen-photo-battle-v177.webp"
+    },
+    {
       "path": "/art/v100/characters/tatara-ground-strike-r1.webp",
       "bytes": 109168,
       "hash": "sha256-b3a5ed9948952b910716799f420a589a9fa226726135badbc8980d70c4c545f1",
@@ -1823,9 +1823,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/brawler-r1.webp",
-      "bytes": 21604,
-      "hash": "sha256-c33d2ac536e714e2b5d8cc3ad8dd7e2ee1793fc4d3002d77b4517ceb96ebc2a6",
+      "path": "/art/v100/joints/brawler-photo-r2.webp",
+      "bytes": 36100,
+      "hash": "sha256-e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

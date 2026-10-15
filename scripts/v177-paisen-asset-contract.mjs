@@ -1,5 +1,4 @@
-// Paisen's producer-supplied three-photo identity revision, 2026-10-15.
-// Old source files remain for history; their old portraits leave the runtime pack.
+// Producer three-photo Paisen: opponent-facing body and exact runtime transports.
 export const V177_PAISEN_ASSET_ADDITIONS = Object.freeze([
   {
     "path": "/art/v100/portraits/paisen-event-portrait-r2.webp",
@@ -36,6 +35,13 @@ export const V177_PAISEN_ASSET_ADDITIONS = Object.freeze([
     "bytes": 244180,
     "hash": "sha256-2c9ae38f6e199dca2db145f783255c34d6a3784fc08f5def512d56e4e8e311b4",
     "criticality": "critical"
+  },
+  {
+    "path": "/art/v100/characters/paisen-photo-battle-v177.png",
+    "bytes": 437630,
+    "hash": "sha256-36a94398689f43f9fbc173da98c2a55bf4c1bfc4f1db9b509f54e774dbd92b06",
+    "criticality": "critical",
+    "sourcePath": "/pwa-optimized/art/v100/characters/paisen-photo-battle-v177.webp"
   }
 ].map(Object.freeze));
 export const V177_PAISEN_RETIRED_ASSETS = Object.freeze([
@@ -68,6 +74,13 @@ export const V177_PAISEN_RETIRED_ASSETS = Object.freeze([
     "path": "/art/v100/story-r5/portraits/paisen-warm.webp",
     "bytes": 95984,
     "hash": "sha256-aedadf6fb528d77fe9e40a323616327875add224e2ec9073e4cbea9cfdaaf348"
+  },
+  {
+    "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+    "bytes": 535076,
+    "hash": "sha256-fce4fe84289a6cbce8c6da7cd3f90e3602571b65803617b52e4a120909c74050",
+    "criticality": "critical",
+    "sourcePath": "/pwa-optimized/art/v060/characters/legacy/brawler-battle-gutter-v1.webp"
   }
 ].map(Object.freeze));
 export const V177_PAISEN_LEGACY_RETIREMENTS = Object.freeze(V177_PAISEN_RETIRED_ASSETS.filter(asset => !asset.path.startsWith('/art/v100/')));

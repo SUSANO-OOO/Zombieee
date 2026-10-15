@@ -1,0 +1,1387 @@
+{
+  "sourceHead": "35da1a0e47902e29ab4a2b37b0c95d178accc28d",
+  "role": "Historical pre-photo Paisen source and exclusions; never a live-photo acceptance oracle",
+  "entry": {
+    "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+    "sheet": {
+      "width": 2364,
+      "height": 757,
+      "layout": "six-derived-transparent-gutter-cells",
+      "cellWidth": 394,
+      "cellHeight": 757,
+      "gutter": 16
+    },
+    "sourceSheet": {
+      "path": "/brawler-sprites-v1.png",
+      "width": 2172,
+      "height": 724,
+      "cellEdges": [
+        0,
+        362,
+        724,
+        1086,
+        1448,
+        1810,
+        2172
+      ],
+      "cellWidths": [
+        362,
+        362,
+        362,
+        362,
+        362,
+        362
+      ]
+    },
+    "battleContentHeight": null,
+    "battleScale": 1,
+    "nativeDirection": "right",
+    "states": [
+      "idle",
+      "walk-a",
+      "walk-b",
+      "attack-a",
+      "attack-b",
+      "hit",
+      "death"
+    ],
+    "directions": [
+      "left",
+      "right"
+    ],
+    "frames": {
+      "idle": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 0,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 65,
+            "y": 109,
+            "w": 267,
+            "h": 493
+          },
+          "gutter": {
+            "top": 109,
+            "right": 62,
+            "bottom": 155,
+            "left": 65
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7952443857331571,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7952443857331571
+          },
+          "flipX": true,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 0,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 65,
+            "y": 109,
+            "w": 267,
+            "h": 493
+          },
+          "gutter": {
+            "top": 109,
+            "right": 62,
+            "bottom": 155,
+            "left": 65
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7952443857331571,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7952443857331571
+          },
+          "flipX": false,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "walk-a": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 394,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 394,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 458,
+            "y": 113,
+            "w": 283,
+            "h": 490
+          },
+          "gutter": {
+            "top": 113,
+            "right": 47,
+            "bottom": 154,
+            "left": 64
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7965653896961691,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7965653896961691
+          },
+          "flipX": true,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 394,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 394,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 458,
+            "y": 113,
+            "w": 283,
+            "h": 490
+          },
+          "gutter": {
+            "top": 113,
+            "right": 47,
+            "bottom": 154,
+            "left": 64
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7965653896961691,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7965653896961691
+          },
+          "flipX": false,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "walk-b": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 788,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 788,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 832,
+            "y": 113,
+            "w": 312,
+            "h": 490
+          },
+          "gutter": {
+            "top": 113,
+            "right": 38,
+            "bottom": 154,
+            "left": 44
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7965653896961691,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7965653896961691
+          },
+          "flipX": true,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 788,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 788,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 832,
+            "y": 113,
+            "w": 312,
+            "h": 490
+          },
+          "gutter": {
+            "top": 113,
+            "right": 38,
+            "bottom": 154,
+            "left": 44
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7965653896961691,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7965653896961691
+          },
+          "flipX": false,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "attack-a": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1182,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1182,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 1217,
+            "y": 126,
+            "w": 261,
+            "h": 479
+          },
+          "gutter": {
+            "top": 126,
+            "right": 98,
+            "bottom": 152,
+            "left": 35
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": true,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 350,
+              "h": 757
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1182,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1182,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 1217,
+            "y": 126,
+            "w": 261,
+            "h": 479
+          },
+          "gutter": {
+            "top": 126,
+            "right": 98,
+            "bottom": 152,
+            "left": 35
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": false,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 350,
+              "h": 757
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "attack-b": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1576,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1576,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 1592,
+            "y": 133,
+            "w": 362,
+            "h": 472
+          },
+          "gutter": {
+            "top": 133,
+            "right": 16,
+            "bottom": 152,
+            "left": 16
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": true,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1576,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1576,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 1592,
+            "y": 133,
+            "w": 362,
+            "h": 472
+          },
+          "gutter": {
+            "top": 133,
+            "right": 16,
+            "bottom": 152,
+            "left": 16
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": false,
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "hit": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1970,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1970,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 2056,
+            "y": 134,
+            "w": 234,
+            "h": 471
+          },
+          "gutter": {
+            "top": 134,
+            "right": 74,
+            "bottom": 152,
+            "left": 86
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": true,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 394,
+              "h": 200
+            },
+            {
+              "x": 44,
+              "y": 200,
+              "w": 350,
+              "h": 64
+            },
+            {
+              "x": 0,
+              "y": 264,
+              "w": 394,
+              "h": 493
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1970,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1970,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 2056,
+            "y": 134,
+            "w": 234,
+            "h": 471
+          },
+          "gutter": {
+            "top": 134,
+            "right": 74,
+            "bottom": 152,
+            "left": 86
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": false,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 394,
+              "h": 200
+            },
+            {
+              "x": 44,
+              "y": 200,
+              "w": 350,
+              "h": 64
+            },
+            {
+              "x": 0,
+              "y": 264,
+              "w": 394,
+              "h": 493
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          }
+        }
+      },
+      "death": {
+        "left": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1970,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1970,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 2056,
+            "y": 134,
+            "w": 234,
+            "h": 471
+          },
+          "gutter": {
+            "top": 134,
+            "right": 74,
+            "bottom": 152,
+            "left": 86
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": true,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 394,
+              "h": 200
+            },
+            {
+              "x": 44,
+              "y": 200,
+              "w": 350,
+              "h": 64
+            },
+            {
+              "x": 0,
+              "y": 264,
+              "w": 394,
+              "h": 493
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          },
+          "derivedFrom": "hit"
+        },
+        "right": {
+          "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+          "sheetWidth": 2364,
+          "sheetHeight": 757,
+          "x": 1970,
+          "y": 0,
+          "w": 394,
+          "h": 757,
+          "sourceRect": {
+            "x": 1970,
+            "y": 0,
+            "w": 394,
+            "h": 757
+          },
+          "contentRect": {
+            "x": 2056,
+            "y": 134,
+            "w": 234,
+            "h": 471
+          },
+          "gutter": {
+            "top": 134,
+            "right": 74,
+            "bottom": 152,
+            "left": 86
+          },
+          "anchorX": 0.5,
+          "anchorY": 0.7992073976221928,
+          "anchor": {
+            "x": 0.5,
+            "y": 0.7992073976221928
+          },
+          "flipX": false,
+          "drawSlices": [
+            {
+              "x": 0,
+              "y": 0,
+              "w": 394,
+              "h": 200
+            },
+            {
+              "x": 44,
+              "y": 200,
+              "w": 350,
+              "h": 64
+            },
+            {
+              "x": 0,
+              "y": 264,
+              "w": 394,
+              "h": 493
+            }
+          ],
+          "authoredCell": {
+            "x": 16,
+            "y": 16,
+            "w": 362,
+            "h": 724
+          },
+          "derivedFrom": "hit"
+        }
+      }
+    }
+  },
+  "frames": {
+    "idle/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 0,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 65,
+        "y": 109,
+        "w": 267,
+        "h": 493
+      },
+      "gutter": {
+        "top": 109,
+        "right": 62,
+        "bottom": 155,
+        "left": 65
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7952443857331571,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7952443857331571
+      },
+      "flipX": true,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "idle/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 0,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 65,
+        "y": 109,
+        "w": 267,
+        "h": 493
+      },
+      "gutter": {
+        "top": 109,
+        "right": 62,
+        "bottom": 155,
+        "left": 65
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7952443857331571,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7952443857331571
+      },
+      "flipX": false,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "walk-a/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 394,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 458,
+        "y": 113,
+        "w": 283,
+        "h": 490
+      },
+      "gutter": {
+        "top": 113,
+        "right": 47,
+        "bottom": 154,
+        "left": 64
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7965653896961691,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7965653896961691
+      },
+      "flipX": true,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "walk-a/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 394,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 458,
+        "y": 113,
+        "w": 283,
+        "h": 490
+      },
+      "gutter": {
+        "top": 113,
+        "right": 47,
+        "bottom": 154,
+        "left": 64
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7965653896961691,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7965653896961691
+      },
+      "flipX": false,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "walk-b/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 788,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 788,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 832,
+        "y": 113,
+        "w": 312,
+        "h": 490
+      },
+      "gutter": {
+        "top": 113,
+        "right": 38,
+        "bottom": 154,
+        "left": 44
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7965653896961691,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7965653896961691
+      },
+      "flipX": true,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "walk-b/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 788,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 788,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 832,
+        "y": 113,
+        "w": 312,
+        "h": 490
+      },
+      "gutter": {
+        "top": 113,
+        "right": 38,
+        "bottom": 154,
+        "left": 44
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7965653896961691,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7965653896961691
+      },
+      "flipX": false,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "attack-a/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1182,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1182,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 1217,
+        "y": 126,
+        "w": 261,
+        "h": 479
+      },
+      "gutter": {
+        "top": 126,
+        "right": 98,
+        "bottom": 152,
+        "left": 35
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": true,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 350,
+          "h": 757
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "attack-a/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1182,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1182,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 1217,
+        "y": 126,
+        "w": 261,
+        "h": 479
+      },
+      "gutter": {
+        "top": 126,
+        "right": 98,
+        "bottom": 152,
+        "left": 35
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": false,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 350,
+          "h": 757
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "attack-b/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1576,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1576,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 1592,
+        "y": 133,
+        "w": 362,
+        "h": 472
+      },
+      "gutter": {
+        "top": 133,
+        "right": 16,
+        "bottom": 152,
+        "left": 16
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": true,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "attack-b/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1576,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1576,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 1592,
+        "y": 133,
+        "w": 362,
+        "h": 472
+      },
+      "gutter": {
+        "top": 133,
+        "right": 16,
+        "bottom": 152,
+        "left": 16
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": false,
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "hit/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1970,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1970,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 2056,
+        "y": 134,
+        "w": 234,
+        "h": 471
+      },
+      "gutter": {
+        "top": 134,
+        "right": 74,
+        "bottom": 152,
+        "left": 86
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": true,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 200
+        },
+        {
+          "x": 44,
+          "y": 200,
+          "w": 350,
+          "h": 64
+        },
+        {
+          "x": 0,
+          "y": 264,
+          "w": 394,
+          "h": 493
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "hit/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1970,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1970,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 2056,
+        "y": 134,
+        "w": 234,
+        "h": 471
+      },
+      "gutter": {
+        "top": 134,
+        "right": 74,
+        "bottom": 152,
+        "left": 86
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": false,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 200
+        },
+        {
+          "x": 44,
+          "y": 200,
+          "w": 350,
+          "h": 64
+        },
+        {
+          "x": 0,
+          "y": 264,
+          "w": 394,
+          "h": 493
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      }
+    },
+    "death/left": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1970,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1970,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 2056,
+        "y": 134,
+        "w": 234,
+        "h": 471
+      },
+      "gutter": {
+        "top": 134,
+        "right": 74,
+        "bottom": 152,
+        "left": 86
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": true,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 200
+        },
+        {
+          "x": 44,
+          "y": 200,
+          "w": 350,
+          "h": 64
+        },
+        {
+          "x": 0,
+          "y": 264,
+          "w": 394,
+          "h": 493
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      },
+      "derivedFrom": "hit"
+    },
+    "death/right": {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "sheetWidth": 2364,
+      "sheetHeight": 757,
+      "x": 1970,
+      "y": 0,
+      "w": 394,
+      "h": 757,
+      "sourceRect": {
+        "x": 1970,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "contentRect": {
+        "x": 2056,
+        "y": 134,
+        "w": 234,
+        "h": 471
+      },
+      "gutter": {
+        "top": 134,
+        "right": 74,
+        "bottom": 152,
+        "left": 86
+      },
+      "anchorX": 0.5,
+      "anchorY": 0.7992073976221928,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7992073976221928
+      },
+      "flipX": false,
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 394,
+          "h": 200
+        },
+        {
+          "x": 44,
+          "y": 200,
+          "w": 350,
+          "h": 64
+        },
+        {
+          "x": 0,
+          "y": 264,
+          "w": 394,
+          "h": 493
+        }
+      ],
+      "authoredCell": {
+        "x": 16,
+        "y": 16,
+        "w": 362,
+        "h": 724
+      },
+      "derivedFrom": "hit"
+    }
+  }
+}

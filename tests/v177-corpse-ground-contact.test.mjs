@@ -8,10 +8,10 @@ import { V102_FALLING_DEATH_FRAMES } from '../app/v102CorpsePoseData.js';
 import { v102CorpseFallingPose, v102HasFallingDeathFrame, V102_FALLING_DEATH_KINDS } from '../app/v102CorpsePose.js';
 import { buildCorpsePoseData } from '../scripts/build-v102-corpse-pose-data.mjs';
 
-test('falling-key contact data reproduces exactly from the six original source cells without changing their images', async () => {
+test('falling-key contact data reproduces the six original boss cells and both approved-photo Paisen cells exactly', async () => {
   assert.equal(await buildCorpsePoseData(), fs.readFileSync('app/v102CorpsePoseData.js', 'utf8'));
-  assert.deepEqual(V102_FALLING_DEATH_KINDS, ['takuya', 'mugarian-president-mutated', 'takuya-omega']);
-  assert.equal(V102_FALLING_DEATH_FRAMES.length, 6);
+  assert.deepEqual(V102_FALLING_DEATH_KINDS, ['takuya', 'mugarian-president-mutated', 'takuya-omega', 'brawler']);
+  assert.equal(V102_FALLING_DEATH_FRAMES.length, 8);
   for (const source of V102_FALLING_DEATH_FRAMES) {
     const frame = spriteFrameFor(source.kind, 'death', source.direction);
     assert.equal(source.path, frame.path);assert.deepEqual(source.sourceRect, frame.sourceRect);

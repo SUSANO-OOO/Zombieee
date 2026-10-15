@@ -8,7 +8,8 @@ import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistanc
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_MELEE_JOINT_ATLASES} from '../app/v177MeleeJointData.js';
+import {V177_RETIRED_JOINT_SOURCE_ASSETS,V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
 const kinds=['brute','brawler','crazy-king','kumaverson'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -34,7 +35,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
  assert.equal(raw.length,{'brute':14,'brawler':15,'crazy-king':15,'kumaverson':15}[kind]);return {raw,calls,frame,size};
 }
 for(const kind of kinds){
- const dir=new URL('../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];
+ const dir=new URL(kind==='brawler'?'../assets/source/v177/paisen/battle-r8/':'../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];
  const matrixFor=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];
  test(kind+': evaluated Blender limbs retain fixed lengths, planted painted soles and weapon and free hands',async()=>{
   const soles=[];for(const leg of d.rig.legs){
@@ -91,6 +92,20 @@ for(const kind of kinds){
   assert.equal(v177JointPose(kind,{requestedState:'active'},{},{ownedPose:true}),null);
  });
  test(kind+': original head, hands, weapon and visible costume survive, with an opaque contact point at the exact rendered socket',async()=>{
+  if(kind==='brawler'){
+   const reference=await pixels(new URL('identity-reference.png',dir)),head=await pixels(new URL('head.png',dir)),shirt=await pixels(new URL('torso.png',dir));let originalHead=0;
+   for(let i=0;i<head.length;i+=4)if(head[i+3]>=32&&shirt[i+3]===0){assert.deepEqual(head.subarray(i,i+4),reference.subarray(i,i+4),'Photo-bound full-body reference head');originalHead++;}
+   assert.ok(originalHead>1000);assert.equal(hash(await readFile(new URL('identity-reference.png',dir))),d.sourceSha256);
+   const texture=await pixels(new URL('../public'+atlas.path,import.meta.url));let authoredPaint=0;
+   for(const part of atlas.parts){
+    const source=d.parts.find(p=>p.name===part.name),bytes=await readFile(new URL(source.file,dir));assert.equal(hash(bytes),source.sha256);
+    const b=part.destination,s=part.source,expected=await sharp(bytes).extract({left:b.x,top:b.y,width:b.w,height:b.h}).resize(s.w,s.h,{kernel:'lanczos3'}).ensureAlpha().raw().toBuffer();
+    for(let y=0;y<s.h;y++)for(let x=0;x<s.w;x++){const i=(y*s.w+x)*4,j=((s.y+y)*atlas.decodedWidth+s.x+x)*4;
+     assert.equal(texture[j+3],expected[i+3]);if(expected[i+3]===255){assert.deepEqual(texture.subarray(j,j+4),expected.subarray(i,i+4),'Every opaque source pixel belongs to the registered photo paint');authoredPaint++;}
+    }
+   }
+   assert.equal(authoredPaint,6921);assert.equal(d.identityBinding.path,'/art/v100/portraits/paisen-identity-r2.webp');
+  }else{
   const reference=await pixels(new URL('identity-reference.png',dir));let originalPixels=0,torsoPixels=0,armPaintPixels=0;
   for(const part of d.parts){
    const bytes=await readFile(new URL(part.file,dir));assert.equal(hash(bytes),part.sha256);
@@ -115,6 +130,7 @@ for(const kind of kinds){
    }
   }
   assert.ok(originalPixels>1000);assert.ok(torsoPixels>1000,JSON.stringify({kind,torsoPixels}));assert.ok(armPaintPixels>100);
+  }
   const binding=await readFile(new URL('../public'+d.identityBinding.path,import.meta.url));assert.equal(hash(binding),d.identityBinding.sourceSha256);
   const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=atlas.muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
   const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
@@ -123,7 +139,7 @@ for(const kind of kinds){
    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1}),{raw,calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500});
    const contact=transform(calls[atlas.parts.findIndex(p=>p.name==='weapon-and-hands')],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});
    assert.ok(distance(contact,[socket.x,socket.y])<1e-10,'Paint and effects share normalization and mirror');
-   for(const leg of d.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+432-leg.groundAnkleY],m=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];assert.ok(Math.abs(transform(m,p)[1]-500)<.001,'Painted sole meets the original ground anchor');}
+   for(const leg of d.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+432-leg.groundAnkleY],m=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];const sourcePlaneY=kind==='brawler'?500+((d.motion.walk.groundY-d.referenceFrame.ty)/d.referenceFrame.scale-frame.anchorY*d.referenceFrame.height)*scale:500;assert.ok(Math.abs(transform(m,p)[1]-sourcePlaneY)<.001,'Planted sole retains its exact source-to-frame ground plane');}
    const point=[240,75],p=transform(matrixFor(raw,'head'),point),actual=transform(calls[atlas.parts.findIndex(p=>p.name==='head')],point),ref=d.referenceFrame;
    assert.ok(Math.abs(actual[0]-(300+(direction==='left'?-1:1)*((p[0]-ref.tx)/ref.scale-frame.anchorX*d.referenceFrame.width)*scale))<1e-10);
    assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*d.referenceFrame.height)*scale))<1e-10);
@@ -137,8 +153,13 @@ for(const kind of kinds){
    assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,2);assert.ok(end[0]-start[0]>200);assert.ok(end[1]-start[1]>140);
    assert.ok(Math.atan2(matrixFor(active,'spine')[1],matrixFor(active,'spine')[0])>.6,'The torso follows the heavy forward swing');
   }else if(kind==='brawler'){
-   assert.equal(d.rig.attack.style,'punch');assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,1);assert.ok(end[0]-start[0]>45);assert.ok(end[1]-start[1]<-65);
-   const arm=d.armConstraints.find(a=>a.effectorBone!=='weapon-0'),before=transform(matrixFor(idle,arm.effectorBone),arm.wrist),guard=transform(matrixFor(active,arm.effectorBone),arm.wrist);assert.ok(guard[1]-before[1]<-100,'Other original fist guards the chest');
+   assert.equal(d.rig.attack.style,'punch');assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,1);
+   const strikeArm=d.armConstraints.find(a=>a.effectorBone==='weapon-0'),guardArm=d.armConstraints.find(a=>a.effectorBone!=='weapon-0');
+   const activeWrist=transform(matrixFor(active,'weapon-0'),strikeArm.wrist),activeShoulder=transform(matrixFor(active,'spine'),strikeArm.shoulder);
+   assert.ok(activeWrist[0]>activeShoulder[0]&&activeWrist[1]<strikeArm.wrist[1],'Photo-sized fist strikes forward above its resting position');
+   const guard=transform(matrixFor(active,guardArm.effectorBone),guardArm.wrist),head=transform(matrixFor(active,'head'),d.rig.head[0]);
+   assert.ok(guard[1]>head[1]&&guard[1]<d.rig.pelvis[0][1],'The second fist remains between the face and chest');
+   assert.ok(end[0]>start[0]);assert.equal(d.sourceSha256,"cd36c9f9d958714874c2e7c49008d7afce673811850c4fc1e389cee65a850797");
   }else if(kind==='crazy-king'){
    const base=transform(matrixFor(active,'weapon-0'),[217,278]);assert.ok(end[0]-base[0]>140);assert.ok(Math.abs(end[1]-base[1])<3,'Painted chainsaw levels for contact');
   }else {assert.ok(end[0]-start[0]>80);assert.ok(end[1]-start[1]<-55);}
@@ -177,8 +198,9 @@ test('fast hammer interpolation follows the authored grip rather than the distan
  }
 });
 
-test('brawler retains nearest-neighbor pixel paint and restores the surrounding canvas smoothing state',async()=>{
- const atlas=V177_JOINT_ATLASES.brawler,dir=new URL('../assets/source/v100/joints/brawler-r1/',import.meta.url);
+test('archived brawler pixel paint stays unchanged and current painted rigs restore canvas smoothing',async()=>{
+ const atlas=V177_MELEE_JOINT_ATLASES.brawler,dir=new URL('../assets/source/v100/joints/brawler-r1/',import.meta.url);
+ const retired=V177_RETIRED_JOINT_SOURCE_ASSETS.find(a=>a.path===atlas.path);assert.ok(retired);assert.equal('sha256-'+hash(await readFile(new URL('../public'+atlas.path,import.meta.url))),retired.hash);
  assert.equal(atlas.paintStyle,'pixel-art');
  const texture=await pixels(new URL('../public'+atlas.path,import.meta.url));let compared=0;
  for(const part of atlas.parts){
@@ -192,7 +214,7 @@ test('brawler retains nearest-neighbor pixel paint and restores the surrounding 
  for(const kind of kinds){
   const stack=[],draws=[],ctx={imageSmoothingEnabled:true,save(){stack.push(this.imageSmoothingEnabled);},restore(){this.imageSmoothingEnabled=stack.pop();},translate(){},scale(){},transform(){},drawImage(){draws.push(this.imageSmoothingEnabled);}};
   drawV177JointPose(ctx,{naturalWidth:512},kind,v177JointPose(kind,{requestedState:'move'},{locomotionPhase:.24,locomotionSettle:0}),0,0,480,448);
-  assert.equal(draws.length,kind==='brute'?14:15);assert.ok(draws.every(v=>v===(kind!=='brawler')));assert.equal(ctx.imageSmoothingEnabled,true);
+  assert.equal(draws.length,kind==='brute'?14:15);assert.ok(draws.every(v=>v===true));assert.equal(ctx.imageSmoothingEnabled,true);
  }
 });
 

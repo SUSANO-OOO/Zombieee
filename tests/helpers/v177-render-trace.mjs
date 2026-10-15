@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../../app/v177JointPresentation.js';
+import {V177_MELEE_JOINT_ATLASES} from '../../app/v177MeleeJointData.js';
 import {readFileSync} from 'node:fs';import {gunzipSync} from 'node:zlib';
 
 // The original golden remains an immutable control for the legacy interpolation
@@ -10,7 +11,11 @@ export function jointLegacyInterpolationControlDigest(kinds){
  assert.equal(createHash('sha256').update(bytes).digest('hex'),'e4b10ee7839f6c7b6e57ed6f907761ef0d497368e8d2acbdc6a75a9088cb5355');
  const original=new Map(kinds.map(k=>[k,V177_JOINT_ATLASES[k]]));
  try{
-  for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes)):{...atlas,legConstraints:undefined};
+  // Producer's later Paisen photo replacement has its own source/rig tests.
+  // Keep this historical control on the archived Paisen master, just as Mayo
+  // stays on its immutable pre-correction master. Never regenerate the digest.
+  for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes))
+    :{...(kind==='brawler'?V177_MELEE_JOINT_ATLASES.brawler:atlas),legConstraints:undefined};
   return jointRenderTraceDigest(kinds);
  }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}
 }

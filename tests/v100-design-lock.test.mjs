@@ -388,7 +388,7 @@ test("all 16 playable sprite statuses are finite and match the current productio
     const escaped = kind.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     assert.match(spriteManifest, new RegExp(`(?:${escaped}|"${escaped}"):\\s*explicitAtlasManifestEntry`, "u"));
   }
-  assert.match(spriteManifest, /brawler: legacyManifestEntry\("brawler", "right"\)/u);
+  assert.match(spriteManifest, /brawler: paisenPhotoManifestEntry\(\)/u);
   assert.match(spriteManifest, /hit: 5,[\s\S]*death: 5,/u);
   for (const state of ["idle", "walk-a", "walk-b", "attack-a", "attack-b", "hit", "death"]) {
     assert.match(spriteManifest, new RegExp(`"${state.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"`), `missing ${state}`);

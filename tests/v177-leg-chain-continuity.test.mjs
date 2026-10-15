@@ -9,6 +9,9 @@ for(const dir of await readdir(new URL('../assets/source/v100/joints/',import.me
  try{const d=JSON.parse(await readFile(new URL('../assets/source/v100/joints/'+dir+'/parts.json',import.meta.url)));definitions.set(d.kind,d);}
  catch(e){if(!['ENOENT','ENOTDIR'].includes(e.code))throw e;}
 }
+if(V177_JOINT_ATLASES.brawler?.path==='/art/v100/joints/brawler-photo-r2.webp'){
+ definitions.set('brawler',JSON.parse(await readFile(new URL('../assets/source/v177/paisen/battle-r8/parts.json',import.meta.url))));
+}
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){

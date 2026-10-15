@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -9,7 +10,7 @@ import sharp from "sharp";
 import {removeKuromeGroundMatte} from "../scripts/v177-kurome-ground-matte.mjs";
 import {MOTION_DEFINITIONS,regenerateMotionAtlases} from "../scripts/v100-reviewed-motion-generator.mjs";
 import {V177_GROUND_MATTE_SPRITE_REPLACEMENTS} from "../scripts/v177-ground-matte-repair-asset-contract.mjs";
-import {V177_JOINT_ASSET_ADDITIONS} from "../scripts/v177-joint-asset-contract.mjs";
+import {V177_JOINT_ASSET_ADDITIONS,V177_RETIRED_JOINT_SOURCE_ASSETS} from "../scripts/v177-joint-asset-contract.mjs";
 import {V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS} from '../scripts/v177-paisen-asset-contract.mjs';
 
 const root=fileURLToPath(new URL("../",import.meta.url));
@@ -49,7 +50,9 @@ test("Kurome loses only the ground alpha in all14 source cells while original bo
     assert.equal(hash(await disk("public"+parts.identityBinding.path)),parts.identityBinding.sourceSha256);
   }
   assert.equal(V177_JOINT_ASSET_ADDITIONS.length,45);
-  for(const asset of V177_JOINT_ASSET_ADDITIONS)assert.ok((await disk("public"+asset.path)).equals(old("public"+asset.path)),"all45 runtime joint textures remain unchanged");
+  const historicalJoints=[...V177_JOINT_ASSET_ADDITIONS.filter(asset=>asset.path!=="/art/v100/joints/brawler-photo-r2.webp"),...V177_RETIRED_JOINT_SOURCE_ASSETS];
+  assert.equal(historicalJoints.length,45);
+  for(const asset of historicalJoints)assert.ok((await disk("public"+asset.path)).equals(old("public"+asset.path)),"all45 original source joint textures remain unchanged");
   assert.throws(()=>removeKuromeGroundMatte(before.data,{...before.info,width:3359}));
   const altered=Buffer.from(before.data);altered[(417*3360+240)*4+3]=0;
   assert.throws(()=>removeKuromeGroundMatte(altered,before.info),/source drift/u);
@@ -88,13 +91,13 @@ test("the source-bound matte, R9 action and Paisen identity repairs are the exac
     {path:"/art/v100/story-r9/cuts/s28-physical-stop.webp",previous:"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",hash:"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",bytes:233424},
     {path:"/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",previous:"sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",hash:"sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",bytes:306628},
   ];
-  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path)].sort());
-  for(const retired of V177_PAISEN_RETIRED_ASSETS) {
+  assert.deepEqual(changed.map(a=>a.path).sort(),[...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)).map(a=>a.path)].sort());
+  for(const retired of [...V177_PAISEN_RETIRED_ASSETS,...V177_RETIRED_JOINT_SOURCE_ASSETS]) {
     const before=previousByPath.get(retired.path);
     assert.equal(before.hash,retired.hash);assert.equal(before.bytes,retired.bytes);
     assert.equal(current.assets.some(asset=>asset.path===retired.path),false);
   }
-  for(const approved of V177_PAISEN_ASSET_ADDITIONS) {
+  for(const approved of [...V177_PAISEN_ASSET_ADDITIONS,...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path))]) {
     const after=current.assets.find(asset=>asset.path===approved.path);
     assert.equal(after.hash,approved.hash);assert.equal(after.bytes,approved.bytes);
   }
@@ -117,7 +120,9 @@ test("the source-bound matte, R9 action and Paisen identity repairs are the exac
 
 test("isolated original source builders reproduce both matte sprites, transports and joint bindings byte-for-byte",async()=>{
   await fs.mkdir(path.join(root,"output"),{recursive:true});
-  const fixture=await fs.mkdtemp(path.join(root,"output/ground-matte-replay-"));
+  // Native libvips cannot open this nested Windows fixture after its long C-to-D junction expansion.
+  const fixture=await fs.mkdtemp(path.join(process.platform==="win32"?os.tmpdir():path.join(root,"output"),"z177-matte-"));
+  if(process.platform==="win32")await fs.symlink(path.join(root,"node_modules"),path.join(fixture,"node_modules"),"junction");
   const files=["scripts/build-v177-ground-matte-assets.mjs","scripts/build-v090-kurome-prototype-assets.mjs",
     "scripts/v177-kurome-ground-matte.mjs","scripts/v100-reviewed-motion-generator.mjs","scripts/build-v177-rigid-joint-atlas.mjs",
     "assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png","assets/source/v090-prototypes/bosses/kurome-pose-sheet-candidate-r1.png",

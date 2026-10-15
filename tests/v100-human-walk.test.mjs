@@ -59,7 +59,7 @@ test('moving attacks and the sequential combo retain their attack art',()=>{
     for(const p of [0,.25,.5,.75,.99])assert.equal(v100UsesHumanWalk(kind,sampleAnimationClip(kind,clip,duration*p)),false,kind+':'+clip);
   }
   for(const p of [0,.04,.08,.12,.18])assert.equal(v100UsesHumanWalk(kind,sampleAttackPresentation(kind,p)),false);
-  for(const clip of ['idle','move','start-move','stop-move','turn'])assert.equal(v100UsesHumanWalk(kind,sampleAnimationClip(kind,clip,0)),true);
+  for(const clip of ['idle','move','start-move','stop-move','turn'])assert.equal(v100UsesHumanWalk(kind,sampleAnimationClip(kind,clip,0)),kind!=='brawler');
   assert.equal(v100UsesHumanWalk(kind,sampleAnimationClip(kind,'move',0),{manualAbilityActive:true}),false);
  }
 });

@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { spriteFrameFor } from '../app/spriteManifest.js';
 
-export const FALLING_DEATH_KINDS = Object.freeze(['takuya', 'mugarian-president-mutated', 'takuya-omega']);
+export const FALLING_DEATH_KINDS = Object.freeze(['takuya', 'mugarian-president-mutated', 'takuya-omega', 'brawler']);
 const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 function hull(points) {
   const sorted = [...new Map(points.map(p => [p.join(','), p])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
@@ -42,7 +42,8 @@ export async function buildCorpsePoseData() {
     + '.map(frame => Object.freeze({...frame, sourceRect:Object.freeze(frame.sourceRect), drawSlices:Object.freeze(frame.drawSlices.map(Object.freeze)), hull:Object.freeze(frame.hull.map(Object.freeze))})));\n';
 }
 
-if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
+const entryPath = process.argv[1] ? await fs.realpath(process.argv[1]).catch(() => null) : null;
+if (entryPath && pathToFileURL(entryPath).href === import.meta.url) {
   const index = process.argv.indexOf('--out');
   if (index < 0 || !process.argv[index + 1]) throw new Error('Pass an explicit --out destination');
   await fs.writeFile(path.resolve(process.argv[index + 1]), await buildCorpsePoseData());

@@ -1,4 +1,6 @@
 "use client";
+
+import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
@@ -4411,8 +4413,10 @@ function drawSpriteFighter(
       ownedPose:authoredPoseOwned})
     : baseAnimationSample;
   const state = animationSample.spriteState;
+  const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
+    ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
-    ? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned}) : null;
+    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -8570,10 +8574,10 @@ function drawWorld(
         : corpse.side === "human" ? -1.18
           : corpse.deathClass === "boss" ? .68
             : corpse.deathClass === "heavy" ? .9 : 1.08;
-      const corpseFallingPose = v102CorpseFallingPose(corpseRenderKind, frame,
+      const corpseFallingPose = corpseRenderKind === "brawler" && !g.definition.missionConfig.v100StageNumber ? null : v102CorpseFallingPose(corpseRenderKind, frame,
         width * (corpse.state === "ashing" ? 1 - ashingProgress * .18 : 1),
         height * (corpse.state === "ashing" ? 1 - ashingProgress * .48 : allyCue?.bodyScaleY ?? 1),
-        fallDirection, fallProgress);
+        fallDirection, corpseRenderKind === "brawler" && corpse.side === "human" ? dyingProgress : fallProgress);
       const rotationRadians = corpseFallingPose?.rotationRadians
         ?? fallDirection * fallAngle * fallProgress + (allyCue?.postureJitter ?? 0);
       const groundOffsetY = corpseFallingPose?.groundOffsetY ?? 0;

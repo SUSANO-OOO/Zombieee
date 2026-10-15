@@ -3,7 +3,10 @@ import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import sharp from 'sharp';
-import {spriteFrameFor} from '../app/spriteManifest.js';
+import {spriteFrameFor as currentSpriteFrameFor} from '../app/spriteManifest.js';
+const prePhotoPaisen = JSON.parse(await readFile(new URL('./fixtures/v177-pre-photo-paisen-sprite-r1.json', import.meta.url)));
+// Preserve exact retired paint/exclusions; live photo routes are tested for every state separately.
+const spriteFrameFor = (kind, state, direction) => kind === 'brawler' ? prePhotoPaisen.frames[state+'/'+direction] : currentSpriteFrameFor(kind,state,direction);
 
 test('legacy walking infected retain their complete body without the neighbouring hand', async () => {
   const path = '/art/v060/characters/legacy/infected-battle-gutter-v1.png';

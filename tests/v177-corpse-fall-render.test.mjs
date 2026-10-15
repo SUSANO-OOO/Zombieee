@@ -55,10 +55,11 @@ const corpse = (kind, seconds, variant = 0) => ({ kind, x:330, y:282, side: 'hum
 test('every V1 ally with a fallback death starts upright and reaches the existing final fall angle', () => {
   for (const kind of fallbackAllies) {
     const duration = animationClipFor(kind, 'death').durationSeconds;
+    const endpoint = v102HasFallingDeathFrame(kind, spriteFrameFor(kind, 'death', 'right')) ? Math.PI / 2 : 1.18;
     assert.equal(angleFor(corpse(kind, 0), true), 0, kind + ' must not instantly jump to its final pose');
     const early = Math.abs(angleFor(corpse(kind, .05), true));
-    assert.ok(early > 0 && early < 1.18, kind + ' must paint an intermediate fall');
-    assert.ok(Math.abs(Math.abs(angleFor(corpse(kind, duration), true)) - 1.18) < 1e-12, kind);
+    assert.ok(early > 0 && early < endpoint, kind + ' must paint an intermediate fall');
+    assert.ok(Math.abs(Math.abs(angleFor(corpse(kind, duration), true)) - endpoint) < 1e-12, kind);
     assert.equal(angleFor(corpse(kind, duration + 1), true), angleFor(corpse(kind, duration), true));
   }
 });
@@ -66,10 +67,11 @@ test('every V1 ally with a fallback death starts upright and reaches the existin
 test('the real ally fall progresses continuously in both existing fall directions', () => {
   for (const kind of fallbackAllies) for (const variant of [0, 1]) {
     const duration = animationClipFor(kind, 'death').durationSeconds;
+    const endpoint = v102HasFallingDeathFrame(kind, spriteFrameFor(kind, 'death', 'right')) ? Math.PI / 2 : 1.18;
     let previous = 0;
     for (let frame = 0; frame <= Math.ceil(duration * 60); frame++) {
       const angle = Math.abs(angleFor(corpse(kind, Math.min(duration, frame / 60), variant), true));
-      assert.ok(Number.isFinite(angle) && angle >= previous - 1e-12 && angle <= 1.18 + 1e-12, kind);
+      assert.ok(Number.isFinite(angle) && angle >= previous - 1e-12 && angle <= endpoint + 1e-12, kind);
       assert.ok(angle - previous < .09, kind + ' has no one-frame rotation jump at60fps');
       previous = angle;
     }
