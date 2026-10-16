@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {captureNativeIncomingStunCase} from './v177-native-incoming-stun.mjs';
 
 export const NATIVE_GAME_CAPTURE_PHASES = Object.freeze(['move', 'attack', 'engage']);
 export const NATIVE_GAME_CAPTURE_FORMS = Object.freeze(['medic', 'ranger', 'engineer', 'abomination']);
@@ -26,6 +27,9 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'app/v177LivingStun.js', 'public/asset-manifest.json',
   'public/art/v100/joints/ranger-r2.webp', 'public/art/v100/joints/medic-r1.webp',
   'public/art/v100/joints/engineer-r1.webp', 'public/art/v100/joints/crusher-r1.webp',
+  'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
+  'app/v177IncomingStunProof.js','app/v090Infected.js','app/v177InfectedJointData.js',
+  'app/content/enemyCatalog.js','app/content/unitCatalog.js','public/art/v100/joints/spindle-r1.webp',
 ]);
 const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: false,
   naturalnessAccepted: false, physicalIphoneRecordingAccepted: false,
@@ -279,7 +283,7 @@ export async function runBrowserQa() {
       legacyV102ParallelPlaywrightRecordVideo: true, sameObservationLoadAsLegacyV102: false,
       codecOnlyCausalComparison: false },
     build: await deps.productionBuildIdentity(), status: 'running-diagnostic', ...acceptance(),
-    scope: '36 native VP8 diagnostic clips: priority medic/ranger/engineer and abomination, three real viewports, move/attack/engage. Original actor stats and explicitly inert durable opponents. Fresh owned context per viewport, one browser, canvas-only with no parallel Playwright recordVideo. Observation load differs from legacy MP4; not a codec-only causal comparison. Existing continuous thresholds unchanged. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
+    scope: '39 native VP8 diagnostic clips in three real viewports: the original36 priority medic/ranger/engineer/abomination move/attack/engage cases retain explicitly inert opponents and unchanged continuous thresholds. Three separate Ranger incoming-stun cases use original Ranger and Spindle stats, real incoming impacts and successful joint draws. Fresh owned context per viewport, one browser, canvas-only without parallel Playwright recordVideo. Observation load differs from legacy MP4; not a codec-only causal comparison. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
     sources: [], contexts: [], cases: [], errors: [], persistenceErrors: [], contextCleanup: 'not-created', browserCleanup: 'not-created' };
   assert.match(report.build.combinedSha256, /^[a-f0-9]{64}$/u);
   await mkdir(out, { recursive: true });
@@ -345,14 +349,18 @@ export async function runBrowserQa() {
           await page.getByRole('button', { name: '戦闘へ', exact: true }).click();
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
           await page.evaluate(async () => {
-            for (const kind of ['abomination', 'walker']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
+            for (const kind of ['abomination', 'walker', 'spindle']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
             for (const kind of ['guardian', 'medic', 'ranger', 'engineer']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
           });
         }, closeOwnedContext, { onDeadline: recordFailure });
-        captureCases: for (const form of NATIVE_GAME_CAPTURE_FORMS) for (const phase of NATIVE_GAME_CAPTURE_PHASES) {
+        const cases=NATIVE_GAME_CAPTURE_FORMS.flatMap(form=>NATIVE_GAME_CAPTURE_PHASES.map(phase=>({form,phase})));
+        cases.push({form:'ranger',phase:'incoming-stun'});
+        captureCases: for (const {form,phase} of cases) {
           const row = { form, phase, viewport, status: 'starting', samples: [], ...acceptance() };
           report.cases.push(row);
-          try { await withNativeGameCaseDeadline(() => captureNativeGameCase(page, row, { ...deps, out, onFailure: recordFailure }), closeOwnedContext,
+          const capture=phase==='incoming-stun'?captureNativeIncomingStunCase:captureNativeGameCase;
+          try { await withNativeGameCaseDeadline(() => capture(page, row, { ...deps, out, onFailure: recordFailure,
+            startNativeGameRafObservation,stopNativeGameRafObservation,nativeGamePerformanceReceipt,mimeType:NATIVE_GAME_CAPTURE_MIME }), closeOwnedContext,
             { onDeadline: error => { row.deadlineExpired = true; recordFailure(error); } }); }
           catch (error) {
             row.status = 'failed'; row.error = String(error);
@@ -374,7 +382,7 @@ export async function runBrowserQa() {
       try { await browser.close(); report.browserCleanup = 'completed'; }
       catch (error) { report.browserCleanup = 'failed'; recordFailure(error); }
     }
-    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length
+    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * (NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length+1)
       || report.cases.some(row => row.status !== 'observed-diagnostic') ? 'failed' : 'completed-diagnostic';
     await persist();
   }

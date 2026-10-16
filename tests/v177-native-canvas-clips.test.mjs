@@ -9,7 +9,7 @@ import ts from 'typescript';
 import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
 
 const metadata={form:'ranger',phase:'move',fighterId:42,fixtureGroup:'authored-form'};
-function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constructorError=false,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
+function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constructorError=false,startEvent=true,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
   let now=100,captures=0,stops=0,disposed=0;
   const track={getSettings:()=>({width:844,height:304,frameRate:59.94}),stop:()=>{stops++;}};
   const stream={getVideoTracks:()=>[track],getAudioTracks:()=>[],getTracks:()=>[track]};
@@ -18,7 +18,7 @@ function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constr
     constructor(input,{mimeType}){assert.equal(input,stream);if(constructorError)throw Error('Native encoder unavailable');this.mimeType=mimeType;this.state='inactive';this.listeners=new Map();}
     addEventListener(type,fn){this.listeners.set(type,fn);}
     removeEventListener(type,fn){if(this.listeners.get(type)===fn)this.listeners.delete(type);}
-    start(){this.state='recording';this.listeners.get('start')?.();}
+    start(){this.state='recording';if(startEvent)this.listeners.get('start')?.();}
     stop(){this.state='inactive';queueMicrotask(()=>{
       for(const chunk of chunks)this.listeners.get('dataavailable')?.({data:new Blob([chunk]),timecode:now-100});
       if(nativeError)this.listeners.get('error')?.({error:new Error('Native encode failure')});
@@ -163,10 +163,33 @@ test('the real host recorder accepts the separately named approach-to-attack cli
 });
 
 test('the host recorder rejects mixed legacy/engagement groups before capturing any track',async()=>{
-  for(const [phase,fixtureGroup]of [['engage','base-enemy'],['engage','authored-form'],['move','approach-to-attack'],['attack','approach-to-attack'],['unknown','approach-to-attack']]){
+  for(const [phase,fixtureGroup]of [['engage','base-enemy'],['engage','authored-form'],['move','approach-to-attack'],['attack','approach-to-attack'],['unknown','approach-to-attack'],
+    ['incoming-stun','approach-to-attack'],['incoming-stun','authored-form'],['engage','natural-incoming-stun'],['move','natural-incoming-stun']]){
     const f=fixture();
     await assert.rejects(beginV177NativeCanvasClip(f.page,{...metadata,phase,fixtureGroup},{directory:'/unused',engine:'webkit'}));
     assert.equal(f.captures,0);
+  }
+});
+
+test('incoming stun acknowledges the real native start event and retains its separately named original clip',async()=>{
+  const f=fixture(),directory=await mkdtemp(path.join(os.tmpdir(),'v177-incoming-native-'));
+  const clip=await beginV177NativeCanvasClip(f.page,{...metadata,phase:'incoming-stun',fixtureGroup:'natural-incoming-stun'},
+    {directory,engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});
+  const start=await clip.waitForStart(),receipt=await clip.finish({completed:true});
+  assert.equal(start.startedAt,receipt.startedAt);assert.equal(start.timeOrigin,receipt.timeOrigin);
+  assert.equal(receipt.status,'recorded');assert.ok(receipt.file.endsWith('natural-incoming-stun-ranger-incoming-stun-42.webm'));
+  assert.equal((await readFile(receipt.file)).toString(),'native-anative-b');assert.equal(f.captures,1);assert.equal(f.stops,1);
+  await assert.rejects(clip.waitForStart(),/did not become available/u);
+});
+
+test('a missing native start event or unavailable recorder cannot release a paused incoming proof',async()=>{
+  for(const options of [{startEvent:false},{supported:false}]){
+    const f=fixture(options),directory=await mkdtemp(path.join(os.tmpdir(),'v177-incoming-start-failure-'));
+    const clip=await beginV177NativeCanvasClip(f.page,{...metadata,phase:'incoming-stun',fixtureGroup:'natural-incoming-stun'},
+      {directory,engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});
+    await assert.rejects(clip.waitForStart(),/acknowledgment|failed before start/u);
+    const receipt=await clip.finish({completed:false});assert.notEqual(receipt.status,'recorded');assert.equal(f.disposed,1);
+    assert.equal(receipt.originalSpeedAccepted,false);
   }
 });
 

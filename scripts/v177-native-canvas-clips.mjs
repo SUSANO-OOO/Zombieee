@@ -86,16 +86,28 @@ export async function finishNativeCanvasClip(state,{completed}){
 }
 
 export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null}={}){
-  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage'].includes(metadata.phase));
+  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun'].includes(metadata.phase));
   assert.ok(Number.isFinite(metadata.fighterId));assert.ok(['chromium','webkit'].includes(engine));
   assert.ok(requestedMimeType===null||['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType),'Unknown diagnostic native container');
-  assert.ok(['base-enemy','authored-form','approach-to-attack'].includes(metadata.fixtureGroup));
+  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun'].includes(metadata.fixtureGroup));
   assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
+  assert.equal(metadata.phase==='incoming-stun',metadata.fixtureGroup==='natural-incoming-stun','Incoming stun recordings require their own natural opponent contract');
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${metadata.fighterId}`);
   let handle,error,finished=false;
   try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType});}
   catch(cause){error=String(cause);}
-  return {async finish({completed}){
+  return {async waitForStart(){
+    if(finished||!handle)throw Error('Native canvas recorder did not become available');
+    return handle.evaluate(async state=>{
+      const requestedAt=performance.now();
+      while(performance.now()-requestedAt<1000){
+        if(Number.isFinite(state.startedAt))return {startedAt:state.startedAt,timeOrigin:state.timeOrigin};
+        if(state.errors.length||state.status!=='starting')throw Error('Native canvas recorder failed before start');
+        await new Promise(resolve=>setTimeout(resolve,5));
+      }
+      throw Error('Native canvas start acknowledgment exceeded1s');
+    });
+  },async finish({completed}){
     if(finished)throw Error('Native canvas clip already finalized');finished=true;
     let receipt;
     try{

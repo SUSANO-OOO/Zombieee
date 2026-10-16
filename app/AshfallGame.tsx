@@ -8,6 +8,7 @@ import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177Join
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
+import { configureV177IncomingStunPair, armV177IncomingStunProof, releaseV177IncomingStunProof, readV177IncomingStunProof, recordV177IncomingStunImpact, recordV177IncomingStunDraw } from "./v177IncomingStunProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { v102CorpseFallingPose, v102HasFallingDeathFrame } from "./v102CorpsePose.js";
@@ -4595,6 +4596,8 @@ function drawSpriteFighter(
     ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f})
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
+  if(fighterRenderAuditEnabled&&recordAudit&&options.world)recordV177IncomingStunDraw(options.world,f,
+    Boolean(jointPose&&drewArticulatedWalk),jointPose,fighterRenderAudit.get(f));
   if(options.v100AuthoredPresentation&&options.world)rememberV177CorpseJointPose(options.world,f.id,renderKind,
     jointPose&&drewArticulatedWalk?jointPose:null,{frame,width:size.w,height:size.h,
       x:f.x+pose.offsetX*depthScale*facingSign,y:f.y-bob+pose.offsetY*depthScale,
@@ -12851,6 +12854,25 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
+      prepareV177IncomingStunProof: () => {
+        const g=gameRef.current,lane:Lane=1;
+        fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
+        g.pendingWeaponHits=[];
+        g.fighters=[];g.corpses=[];g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
+        g.running=true;g.paused=true;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
+        if(!spawnHuman(g,"ranger",false))throw new Error("Incoming stun Ranger unavailable");
+        const actor=g.fighters.find(f=>f.kind==="ranger"&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,8);
+        if(!actor||!source)throw new Error("Incoming stun original pair unavailable");
+        const proof=armV177IncomingStunProof(g,configureV177IncomingStunPair(actor,source,{lane,laneY:activeLaneCenters[lane],
+          createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState}));
+        selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(true);setEnd(null);setScreen("battle");
+        return proof;
+      },
+      releaseV177IncomingStunProof: (proofId:string) => {
+        const receipt=releaseV177IncomingStunProof(gameRef.current,proofId);setPaused(false);return receipt;
+      },
+      getV177IncomingStunProof: (afterSequence=0) => readV177IncomingStunProof(gameRef.current,afterSequence),
       prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"engage"|"defeat";sourceKind?:UnitKind}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
           createAnimationRuntime:createCombatAnimationRuntime,attackReachFor:normalAttackReach,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
@@ -20851,11 +20873,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   }
                   for (const impacted of g.fighters) {
                     if (impacted.side !== "human" || impacted.hp <= 0 || fighterDistance(impacted, f) > 58) continue;
+                    const hpBefore=impacted.hp;
                     const damage = applyIncomingHumanDamage(g, impacted, 26, {
                       attackKind: "melee",
                       attacker: f,
                     }).targetDamage;
                     impacted.stunned = Math.max(impacted.stunned, .42);
+                    if(fighterRenderAuditEnabled)recordV177IncomingStunImpact(g,f,impacted,"coil-vault",hpBefore,damage);
                     addDamageText(g, impacted.x, impacted.y - 50, `着地 -${Math.round(damage)}`, .78, "#b9978e");
                   }
                   addParticles(g, f.x, f.y + 4, "#766a63", 22);
@@ -22360,6 +22384,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
               if (!splitMachineGunBurst && !deferredHumanProjectile && !deferredEnemyProjectile) {
                 target.flash = .12;
+                if(fighterRenderAuditEnabled)recordV177IncomingStunImpact(g,f,target,"normal-hit",
+                  targetHpBeforeMetric,appliedAttack.targetDamage,committedAttackSequence);
               }
               f.attackSequence += 1;
               let crazyKingRadius: number | null = null;
