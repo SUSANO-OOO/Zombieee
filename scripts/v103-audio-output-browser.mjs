@@ -8,7 +8,7 @@ import { V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
 import { V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { completeStaffRollByFilmEnd } from './v100-staff-roll-audit.mjs';
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import {decodeNativeEncodedAudio, persistThenDecodeNativeAudio} from "./v103-encoded-audio-evidence.mjs";
+import {decodeNativeEncodedAudio, persistThenDecodeNativeAudio, recordNativeEncodedAudio} from "./v103-encoded-audio-evidence.mjs";
 
 if (process.platform === "win32") throw new Error("Audio QA is hosted-only; local browser and audio playback are disabled");
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -19,6 +19,10 @@ await mkdir(out, { recursive: true });
 const report = { engine, build: await productionBuildIdentity(),
   scope: "Production iPhone-UA media output, native stream encoding and decoded signal. macOS/Linux browser evidence; not iOS Control Center screen recording.",
   cases: [], errors: [] };
+const failures = [];
+async function installNativeRecordingClock(page) {
+  await page.addInitScript({content:'globalThis.__V103_RECORD_NATIVE_AUDIO__ = (' + recordNativeEncodedAudio.toString() + ');'});
+}
 const owned = V100_UNITS.map(unit => unit.id);
 const save = normalizeV100Save({ ...createDefaultV100Save(), campaignStarted: true, revision: 3,
   ownedUnitIds: owned, registeredUnitIds: owned, formationSlots: owned.slice(0, 7),
@@ -36,6 +40,7 @@ try {
     page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
     let failure;
     try {
+      await installNativeRecordingClock(page);
       await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(save));
       await page.goto(new URL("v100", origin).href);
       const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
@@ -94,17 +99,9 @@ try {
             throw new Error("Departing scene or duplicate battle music is still active");
           const sink = active.find(audio => audio.srcObject.id === owners.battle.output.streamId), stream = sink.srcObject;
           if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native output");
-          const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(type => MediaRecorder.isTypeSupported(type));
-          if (!mimeType) throw new Error("Native audio encoding is unavailable");
-          const chunks = [], recorder = new MediaRecorder(stream, { mimeType });
-          const stopped = new Promise((resolve, reject) => {
-            recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-            recorder.onerror = reject; recorder.onstop = resolve;
-          });
-          recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
-          const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-          return {mimeType:recorder.mimeType, requestedMimeType:mimeType,
-            bytes:Array.from(new Uint8Array(bytes)), outputs:active.length, paused:sink.paused,
+          const encoded = await globalThis.__V103_RECORD_NATIVE_AUDIO__(stream);
+          return {...encoded,
+            outputs:active.length, paused:sink.paused,
             owners:Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
               contextState:owner.contextState, output:owner.output, activeSceneVoices:owner.activeSceneVoices,
               activeBgmVoices:owner.activeBgmVoices, duplicateLoopInstanceKeys:owner.duplicateLoopInstanceKeys,
@@ -143,7 +140,8 @@ try {
       row.requests = requests.report;
       if (requests.report.unexpectedFailures.length) failure ??= new Error("Unexpected browser request failure");
     }
-    if (failure) throw failure;
+    row.status = failure ? "failed" : "passed";
+    if (failure) failures.push(failure);
   }
   // Native file sources use the shared ending context, while battle uses
   // decoded buffers. Exercise title -> credits, then its durable R9 cursor.
@@ -178,17 +176,9 @@ try {
         throw new Error("Native media output is missing or duplicated");
       const sink = candidates[0], stream = sink.srcObject;
       if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native media output");
-      const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(type => MediaRecorder.isTypeSupported(type));
-      if (!mimeType) throw new Error("Native audio encoding is unavailable");
-      const chunks = [], recorder = new MediaRecorder(stream, { mimeType });
-      const stopped = new Promise((resolve, reject) => {
-        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-        recorder.onerror = reject; recorder.onstop = resolve;
-      });
-      recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
-      const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-      return {mimeType:recorder.mimeType, requestedMimeType:mimeType,
-        bytes:Array.from(new Uint8Array(bytes)), streamId:stream.id, sceneOutputs:candidates.length,
+      const encoded = await globalThis.__V103_RECORD_NATIVE_AUDIO__(stream);
+      return {...encoded,
+        streamId:stream.id, sceneOutputs:candidates.length,
         sources:[...document.querySelector(selector).querySelectorAll("audio")].map(audio => ({
           src:audio.currentSrc, time:audio.currentTime, paused:audio.paused, rate:audio.playbackRate,
         }))};
@@ -202,6 +192,7 @@ try {
   try {
     const endingSave = normalizeV100Save({ ...save, flowState: { phase: "credits", eventId: "v100:event:credits",
       stageId: null, stageNumber: null, nodeIndex: 0, scriptVersion: V100_STORY_SCRIPT_VERSION, firstClear: false, finalized: true, canSkip: true, destination: "credits" } });
+    await installNativeRecordingClock(page);
     await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(endingSave));
     await page.goto(new URL("v100", origin).href);
     const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
@@ -224,6 +215,7 @@ try {
     page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
     page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
     const resumedSave = normalizeV100Save({ ...endingSave, flowState: { ...endingSave.flowState, nodeIndex: 5 } });
+    await installNativeRecordingClock(page);
     await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(resumedSave));
     await page.goto(new URL("v100", origin).href);
     const creditsEntry = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
@@ -251,7 +243,8 @@ try {
     mediaCase.requests = requests.report;
     if (requests.report.unexpectedFailures.length) mediaFailure ??= new Error("Unexpected native media request failure");
   }
-  if (mediaFailure) throw mediaFailure;
+  if (mediaFailure) failures.push(mediaFailure);
+  if (failures.length) { report.caseFailures = failures.map(String); throw failures[0]; }
   assert.deepEqual(report.errors, []); report.status = "passed";
 } catch (error) {
   report.status = "failed"; report.failure = String(error);

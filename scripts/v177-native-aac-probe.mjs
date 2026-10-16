@@ -3,8 +3,8 @@ export function assertNativeAacHostedPlatform(platform) {
 }
 
 // Hosted diagnostic only. It never loads the game and creates no realtime AudioContext.
-export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix }) {
-  const state = { route, mix, status: "starting", sampleRate: 48000, channels: 2, packets: [],
+export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, variant = 'original', live = false, primeFrames = 0 }) {
+  const state = { route, mix, variant, live, primeFrames, managedEvents:[], status: "starting", sampleRate: 48000, channels: 2, packets: [],
     configurations: [], events: [], playheads: [], inputs: [], errors: [], realtimeAudioContexts: 0,
     physicalRecordingAccepted: false, gameBackendChanged: false };
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -15,6 +15,7 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
   const reference = new Float32Array(totalFrames * 2), background = new Float32Array(totalFrames * 2);
   state.inputs = sourceUrls;
   try {
+    check(Number.isSafeInteger(primeFrames) && primeFrames >= 0 && primeFrames <= 3072 && primeFrames % 1024 === 0, "Invalid bounded priming window");
     check(typeof AudioEncoder === "function" && typeof AudioData === "function", "WebCodecs audio is unavailable");
     const configuration = { codec: "mp4a.40.2", sampleRate, numberOfChannels: 2, bitrate: 192000,
       aac: { format: "aac" } };
@@ -44,13 +45,16 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
     audio.controls = true; audio.disableRemotePlayback = true; audio.preload = "auto";
     audio.muted = false; audio.volume = 1;
     document.body.append(audio);
-    source = new Source(); objectUrl = URL.createObjectURL(source);
+    source = new Source();
+    for (const event of ["sourceopen","sourceended","sourceclose","startstreaming","endstreaming"]) source.addEventListener(event, () => state.managedEvents.push({event,ms:startAt === null ? null : performance.now()-startAt,streaming:source.streaming ?? null,duration:Number.isFinite(source.duration)?source.duration:String(source.duration),mediaTime:audio.currentTime}));
+    objectUrl = URL.createObjectURL(source);
     const opened = new Promise((resolve, reject) => {
       source.addEventListener("sourceopen", resolve, { once: true });
       audio.addEventListener("error", () => reject(new Error("Native source open error")), { once: true });
     });
     audio.src = objectUrl; audio.load();
     await Promise.race([opened, wait(5000).then(() => { throw new Error("Native source open timeout"); })]);
+    if (live) { source.duration = Infinity; state.explicitLiveDuration = "Infinity"; }
     buffer = source.addSourceBuffer(mime);
     const drain = () => {
       if (fatal || buffer.updating || source.readyState !== "open") return;
@@ -96,24 +100,7 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
       }
     });
     encoder.configure(configuration);
-    const start = document.getElementById("start-probe"), weapon = document.getElementById("weapon-probe");
-    check(start && weapon, "Missing native interaction controls");
-    weapon.onclick = () => {
-      if (startAt === null || mix !== "bgm-se" || seStartFrame !== null) return;
-      seRequestedAt = performance.now() - startAt;
-      seStartFrame = nextFrame;
-      state.effect = { requestedAtMs: seRequestedAt, firstInputFrame: seStartFrame,
-        sourceId: sourceUrls[1].id, observedByNativePlayheadAtMs: null };
-    };
-    document.documentElement.dataset.probeReady = "1";
-    await new Promise(resolve => { start.onclick = resolve; });
-    startAt = performance.now();
-    state.startedFromNativeClick = true;
-    const play = audio.play();
-    play.catch(error => { fatal = String(error); state.errors.push(fatal); });
-    while (nextFrame < totalFrames && !fatal) {
-      const target = nextFrame / sampleRate * 1000;
-      if (performance.now() - startAt < target) await wait(target - (performance.now() - startAt));
+    const encodeBlock = observe => {
       const pcm = new Float32Array(framesPerPacket * 2);
       for (let frame = 0; frame < framesPerPacket; frame++) {
         const cursor = nextFrame + frame;
@@ -132,6 +119,7 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
       const data = new AudioData({ format: "f32-planar", sampleRate, numberOfFrames: framesPerPacket,
         numberOfChannels: 2, timestamp: Math.round(nextFrame / sampleRate * 1e6), data: pcm });
       try { encoder.encode(data); } finally { data.close(); }
+      if (observe) {
       state.playheads.push({ ms: performance.now() - startAt, time: audio.currentTime,
         encodedFrames: nextFrame + framesPerPacket, encodeQueueSize: encoder.encodeQueueSize,
         pendingSegments: pending.length, readyState: audio.readyState, paused: audio.paused,
@@ -139,7 +127,38 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
       if (state.effect && state.effect.observedByNativePlayheadAtMs === null
           && audio.currentTime * sampleRate >= state.effect.firstInputFrame)
         state.effect.observedByNativePlayheadAtMs = performance.now() - startAt;
+      }
       nextFrame += framesPerPacket;
+    };
+    const start = document.getElementById("start-probe"), weapon = document.getElementById("weapon-probe");
+    check(start && weapon, "Missing native interaction controls");
+    weapon.onclick = () => {
+      if (startAt === null || mix !== "bgm-se" || seStartFrame !== null) return;
+      seRequestedAt = performance.now() - startAt;
+      seStartFrame = nextFrame;
+      state.effect = { requestedAtMs: seRequestedAt, firstInputFrame: seStartFrame,
+        sourceId: sourceUrls[1].id, observedByNativePlayheadAtMs: null };
+    };
+    if (primeFrames) {
+      const preparingAt = performance.now();
+      while (nextFrame < primeFrames && !fatal) encodeBlock(false);
+      while (!fatal && (state.packets.length < primeFrames/framesPerPacket || pending.length || buffer.updating || audio.readyState < 1)) {
+        check(performance.now()-preparingAt < 2000, "Native priming preparation timed out");
+        await wait(5);
+      }
+      check(!fatal, fatal);
+      state.priming = {inputFrames:nextFrame,packets:state.packets.length,prepareMs:performance.now()-preparingAt,mediaPaused:audio.paused,mediaTime:audio.currentTime};
+    }
+    document.documentElement.dataset.probeReady = "1";
+    await new Promise(resolve => { start.onclick = resolve; });
+    startAt = performance.now();
+    state.startedFromNativeClick = true;
+    const play = audio.play();
+    play.catch(error => { fatal = String(error); state.errors.push(fatal); });
+    while (nextFrame < totalFrames && !fatal) {
+      const target = (nextFrame - primeFrames) / sampleRate * 1000;
+      if (performance.now() - startAt < target) await wait(target - (performance.now() - startAt));
+      encodeBlock(true);
     }
     check(!fatal, fatal);
     await encoder.flush(); check(!fatal, fatal);
@@ -156,8 +175,8 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix })
   } catch (error) { state.status = "failed"; state.errors.push(String(error)); }
   finally {
     state.realtimeAudioContexts = globalThis.__v177RealtimeAudioContextAttempts ?? 0;
-    state.referencePcm = startAt === null ? [] : Array.from(new Uint8Array(reference.buffer));
-    state.backgroundPcm = startAt === null ? [] : Array.from(new Uint8Array(background.buffer));
+    state.referencePcm = nextFrame === 0 ? [] : Array.from(new Uint8Array(reference.buffer));
+    state.backgroundPcm = nextFrame === 0 ? [] : Array.from(new Uint8Array(background.buffer));
     try { if (encoder && encoder.state !== "closed") encoder.close(); } catch (error) { state.errors.push(String(error)); state.status = "failed"; }
     try { if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); audio.remove(); } } catch (error) { state.errors.push(String(error)); state.status = "failed"; }
     if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -199,4 +218,36 @@ export async function analyseNativeAacContent({ encoded, reference, background, 
   return { duration: decoded.duration, sampleRate: decoded.sampleRate, channels: decoded.numberOfChannels,
     rms: Math.sqrt(energy / decoded.length / decoded.numberOfChannels), peak, ...best, effectCorrelation,
     contentScope: "Decoded generated native AAC file correlated with the actual existing BGM and optional rifle PCM; not speaker or Control Center proof" };
+}
+
+export function nativeAacProbeCases() {
+  return [
+    {route:"ManagedMediaSource",variant:"original",live:false,primeFrames:0},
+    {route:"ManagedMediaSource",variant:"live",live:true,primeFrames:0},
+    {route:"ManagedMediaSource",variant:"live-primed",live:true,primeFrames:3072},
+    {route:"MediaSource",variant:"original",live:false,primeFrames:0},
+  ].flatMap(scenario => ["bgm","bgm-se"].map(mix => ({...scenario,mix})));
+}
+
+// A final advancing clock cannot hide a frozen clock during streaming.
+// Apply the same 150ms budget to every observed input-period sample.
+export function nativeAacClockEvidence(state) {
+  const budgetMs = 150;
+  const rows = Array.isArray(state.playheads) ? state.playheads.filter(row => row.encodedFrames !== undefined) : [];
+  let previous = null, maximumDelayMs = -Infinity, maximumAdvanceMs = -Infinity;
+  let maximumQueuedInputMs = -Infinity, backwards = 0, invalid = Number.isFinite(state.sampleRate) && state.sampleRate > 0 ? 0 : 1, outsideBudget = 0;
+  for (const row of rows) {
+    if (![row.ms,row.time,row.encodedFrames].every(Number.isFinite) || row.ms < 0 || row.time < 0 || !Number.isSafeInteger(row.encodedFrames) || row.encodedFrames < 0) { invalid++; continue; }
+    if (previous && (row.ms < previous.ms || row.time < previous.time)) backwards++;
+    const delay = row.ms - row.time * 1000, queued = row.encodedFrames / state.sampleRate * 1000 - row.ms;
+    maximumDelayMs = Math.max(maximumDelayMs, delay);
+    maximumAdvanceMs = Math.max(maximumAdvanceMs, -delay);
+    maximumQueuedInputMs = Math.max(maximumQueuedInputMs, queued);
+    if (Math.abs(delay) > budgetMs || queued > budgetMs) outsideBudget++;
+    previous = row;
+  }
+  return { budgetMs, observedSamples:rows.length, invalid, backwards, outsideBudget,
+    maximumDelayMs, maximumAdvanceMs, maximumQueuedInputMs,
+    accepted:rows.length>0 && invalid===0 && backwards===0 && outsideBudget===0,
+    scope:"Native observed media clock only; it does not certify physical speaker or saved Control Center timing" };
 }

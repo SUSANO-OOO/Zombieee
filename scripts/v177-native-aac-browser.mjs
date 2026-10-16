@@ -5,7 +5,7 @@ import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
 import { AacFragmentMuxer } from "./v177-aac-fragment-muxer.mjs";
-import { runNativeAacProbe, analyseNativeAacContent, assertNativeAacHostedPlatform } from "./v177-native-aac-probe.mjs";
+import { runNativeAacProbe, analyseNativeAacContent, assertNativeAacHostedPlatform, nativeAacProbeCases, nativeAacClockEvidence } from "./v177-native-aac-probe.mjs";
 import { V100_AUDIO_MANIFEST } from "../app/productionAudio.js";
 
 assertNativeAacHostedPlatform(process.platform);
@@ -34,12 +34,13 @@ const report = { at: new Date().toISOString(), engine, build: await productionBu
   cases: [], errors: [] };
 const browser = await (await pwaBrowserType(engine)).launch();
 try {
-  for (const route of ["ManagedMediaSource", "MediaSource"]) for (const mix of ["bgm", "bgm-se"]) {
+  for (const scenario of nativeAacProbeCases()) {
+    const {route,mix,variant} = scenario;
     const context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
       userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1" });
     const page = await context.newPage(), audit = installRequestFailureAudit(page);
-    const row = { route, mix, artifacts: [] }; report.cases.push(row);
-    const label = route + "-" + mix;
+    const row = { route, mix, variant, artifacts: [] }; report.cases.push(row);
+    const label = route + (variant === "original" ? "" : "-" + variant) + "-" + mix;
     page.on("pageerror", error => report.errors.push(String(error)));
     page.on("response", response => { if (response.status() >= 400) report.errors.push(response.status() + " " + response.url()); });
     try {
@@ -60,7 +61,7 @@ try {
         globalThis.__v177ProbeResult = null;
         const run = (0, eval)("(" + implementation + ")");
         globalThis.__v177ProbePromise = run(args).then(result => { globalThis.__v177ProbeResult = result; });
-      }, { implementation: runNativeAacProbe.toString(), args: { muxerSource, sourceUrls: structuredClone(sourceUrls), route, mix } });
+      }, { implementation: runNativeAacProbe.toString(), args: { muxerSource, sourceUrls: structuredClone(sourceUrls), ...scenario } });
       await page.waitForFunction(() => document.documentElement.dataset.probeReady === "1" || globalThis.__v177ProbeResult, null, { timeout: 15000 });
       if (!await page.evaluate(() => Boolean(globalThis.__v177ProbeResult))) {
         await page.getByRole("button", { name: "Start native audio probe", exact: true }).click();
@@ -100,6 +101,7 @@ try {
       row.artifacts.push(await file(label + "-encoded.m4a", encoded));
       row.content = await page.evaluate(analyseNativeAacContent, {
         encoded: Array.from(encoded), reference: referencePcm, background: backgroundPcm, effect: result.effect });
+      row.clock = nativeAacClockEvidence(result);
       await writeFile(out + "/summary.json", JSON.stringify(report, null, 2));
       assert.ok(row.content.duration >= 3.5 && row.content.duration <= 4.5, "Native decoded duration invalid");
       assert.ok(row.content.rms > .0001 && row.content.peak > .001, "Native decoded mix silent");
@@ -113,6 +115,7 @@ try {
         && event.time < result.inputDuration - .05);
       row.underflows = stalls;
       assert.equal(stalls.length, 0, "Native stream underflowed during continuous input");
+      assert.equal(row.clock.accepted, true, "Observed native media clock exceeded the same 150ms streaming budget");
       if (mix === "bgm-se") {
         assert.ok(result.effect, "Native effect click was not recorded");
         assert.ok(row.content.effectCorrelation > .6, "Rifle content absent from decoded mixed AAC");

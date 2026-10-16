@@ -24205,12 +24205,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
         <div className="bottom-hud">
           <div className="resource-stack">
-            <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
+            <div className="resource command" title="指揮はユニットの出撃に使います。カード右下の数字が必要量です。" aria-label={`出撃用の指揮 ${hud.energy} / ${COMMAND_MAX}`}><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
             <div className="stats-strip battle-stats">
               {externalSessionActive && !isSurvivalBattle ? <>
                 <span className="v100-supply-readout" title="回復・ドラム缶に使う物資。敵撃破で補充。" aria-label={`物資 ${hud.scrap}`}>物資 <b>{hud.scrap}</b></span>
-                <span className="bay-status v100-deployed-count" aria-label={`同時出撃 ${hud.summonedCount} / 7`} title="同時出撃人数 / 上限7人"><svg viewBox="0 0 16 20" aria-hidden="true"><circle cx="8" cy="4" r="3" /><path d="M4 8h8l2 7h-3v5H5v-5H2Z" /></svg><b>{hud.summonedCount}/7</b></span>
+                <span className="bay-status v100-deployed-count" aria-label={`同時出撃 ${hud.summonedCount} / 7`} title="出撃中のユニット数 / 上限7"><svg viewBox="0 0 16 20" aria-hidden="true"><circle cx="8" cy="4" r="3" /><path d="M4 8h8l2 7h-3v5H5v-5H2Z" /></svg><b>{hud.summonedCount}/7</b></span>
               </> : <>
               <span>討伐 {hud.kills}</span>
               {!isSurvivalBattle && <span title={externalSessionActive ? "回復・ドラム缶に使う物資。敵撃破で補充。" : undefined}>{externalSessionActive ? "物資" : "資材"} {hud.scrap}</span>}
@@ -24245,13 +24245,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         ? "指揮不足"
                         : null);
                  const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "同時出撃の上限" ? "full" : "blocked") : "ready";
+                 const missingCommandPoints = Math.max(0, Math.ceil(card.cost - hud.energy));
+                 const cardBlockCopy = cardBlockReason === "指揮不足" ? `指揮があと${missingCommandPoints}必要` : cardBlockReason;
                  return (
-                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockCopy ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy" aria-hidden="true"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                     {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
-                      <span className="card-state-full">{cardBlockReason}</span>
-                      <span className="card-state-compact" aria-hidden="true">{cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>
+                      <span className="card-state-full">{cardBlockCopy}</span>
+                      <span className="card-state-compact" aria-hidden="true">{cardState === "insufficient" ? `あと${missingCommandPoints}` : cardState === "full" ? "満員" : "不可"}</span>
                     </span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"

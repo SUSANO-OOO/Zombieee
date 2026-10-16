@@ -1,0 +1,3870 @@
+{
+  "head": "11843b59f44924d38c2f2660378e7c1c973c05ef",
+  "artifactId": 12010987960,
+  "zipSha256": "4c64298448ed9186244ee45c22145b2a2c6b79e30433b947fd1aceb5d898507c",
+  "scope": "Original input-period native clock observations only. Not physical timing or acceptance of the private variants. The original standard BGM-only case also exceeded 150ms during streaming, despite passing the old startup-only checks.",
+  "expectedPcmInputCodeSha256": "ebb8705df0b9b2a9b9020028d853b4771dec88f923308d59a1c9178f66f34fe8",
+  "cases": [
+    {
+      "route": "ManagedMediaSource",
+      "mix": "bgm",
+      "sourceRawFile": "evidence/v177-native-aac/ManagedMediaSource-bgm-raw.json",
+      "sourceRawSha256": "e4f1c27881a1923d64f9569696200f9cb4a2486b0aac6aa395531cfe954076f4",
+      "sampleRate": 48000,
+      "playheads": [
+        {
+          "ms": 20,
+          "time": 0,
+          "encodedFrames": 1024
+        },
+        {
+          "ms": 26,
+          "time": 0,
+          "encodedFrames": 2048
+        },
+        {
+          "ms": 65,
+          "time": 0,
+          "encodedFrames": 3072
+        },
+        {
+          "ms": 65,
+          "time": 0,
+          "encodedFrames": 4096
+        },
+        {
+          "ms": 209,
+          "time": 0,
+          "encodedFrames": 5120
+        },
+        {
+          "ms": 209,
+          "time": 0,
+          "encodedFrames": 6144
+        },
+        {
+          "ms": 210,
+          "time": 0,
+          "encodedFrames": 7168
+        },
+        {
+          "ms": 211,
+          "time": 0,
+          "encodedFrames": 8192
+        },
+        {
+          "ms": 212,
+          "time": 0,
+          "encodedFrames": 9216
+        },
+        {
+          "ms": 212,
+          "time": 0,
+          "encodedFrames": 10240
+        },
+        {
+          "ms": 214,
+          "time": 0,
+          "encodedFrames": 11264
+        },
+        {
+          "ms": 234,
+          "time": 0.014861719,
+          "encodedFrames": 12288
+        },
+        {
+          "ms": 256,
+          "time": 0.037199021,
+          "encodedFrames": 13312
+        },
+        {
+          "ms": 277,
+          "time": 0.05786782,
+          "encodedFrames": 14336
+        },
+        {
+          "ms": 299,
+          "time": 0.078996414,
+          "encodedFrames": 15360
+        },
+        {
+          "ms": 322,
+          "time": 0.078996414,
+          "encodedFrames": 16384
+        },
+        {
+          "ms": 342,
+          "time": 0.078996414,
+          "encodedFrames": 17408
+        },
+        {
+          "ms": 364,
+          "time": 0.078996414,
+          "encodedFrames": 18432
+        },
+        {
+          "ms": 389,
+          "time": 0.078996414,
+          "encodedFrames": 19456
+        },
+        {
+          "ms": 409,
+          "time": 0.078996414,
+          "encodedFrames": 20480
+        },
+        {
+          "ms": 429,
+          "time": 0.078996414,
+          "encodedFrames": 21504
+        },
+        {
+          "ms": 453,
+          "time": 0.078996414,
+          "encodedFrames": 22528
+        },
+        {
+          "ms": 483,
+          "time": 0.078996414,
+          "encodedFrames": 23552
+        },
+        {
+          "ms": 497,
+          "time": 0.078996414,
+          "encodedFrames": 24576
+        },
+        {
+          "ms": 517,
+          "time": 0.078996414,
+          "encodedFrames": 25600
+        },
+        {
+          "ms": 536,
+          "time": 0.078996414,
+          "encodedFrames": 26624
+        },
+        {
+          "ms": 556,
+          "time": 0.078996414,
+          "encodedFrames": 27648
+        },
+        {
+          "ms": 581,
+          "time": 0.078996414,
+          "encodedFrames": 28672
+        },
+        {
+          "ms": 601,
+          "time": 0.078996414,
+          "encodedFrames": 29696
+        },
+        {
+          "ms": 620,
+          "time": 0.078996414,
+          "encodedFrames": 30720
+        },
+        {
+          "ms": 644,
+          "time": 0.078996414,
+          "encodedFrames": 31744
+        },
+        {
+          "ms": 665,
+          "time": 0.078996414,
+          "encodedFrames": 32768
+        },
+        {
+          "ms": 686,
+          "time": 0.078996414,
+          "encodedFrames": 33792
+        },
+        {
+          "ms": 708,
+          "time": 0.078996414,
+          "encodedFrames": 34816
+        },
+        {
+          "ms": 729,
+          "time": 0.078996414,
+          "encodedFrames": 35840
+        },
+        {
+          "ms": 750,
+          "time": 0.078996414,
+          "encodedFrames": 36864
+        },
+        {
+          "ms": 772,
+          "time": 0.078996414,
+          "encodedFrames": 37888
+        },
+        {
+          "ms": 793,
+          "time": 0.078996414,
+          "encodedFrames": 38912
+        },
+        {
+          "ms": 812,
+          "time": 0.078996414,
+          "encodedFrames": 39936
+        },
+        {
+          "ms": 837,
+          "time": 0.078996414,
+          "encodedFrames": 40960
+        },
+        {
+          "ms": 857,
+          "time": 0.078996414,
+          "encodedFrames": 41984
+        },
+        {
+          "ms": 877,
+          "time": 0.078996414,
+          "encodedFrames": 43008
+        },
+        {
+          "ms": 901,
+          "time": 0.078996414,
+          "encodedFrames": 44032
+        },
+        {
+          "ms": 920,
+          "time": 0.078996414,
+          "encodedFrames": 45056
+        },
+        {
+          "ms": 940,
+          "time": 0.078996414,
+          "encodedFrames": 46080
+        },
+        {
+          "ms": 964,
+          "time": 0.078996414,
+          "encodedFrames": 47104
+        },
+        {
+          "ms": 984,
+          "time": 0.078996414,
+          "encodedFrames": 48128
+        },
+        {
+          "ms": 1004,
+          "time": 0.078996414,
+          "encodedFrames": 49152
+        },
+        {
+          "ms": 1028,
+          "time": 0.078996414,
+          "encodedFrames": 50176
+        },
+        {
+          "ms": 1049,
+          "time": 0.078996414,
+          "encodedFrames": 51200
+        },
+        {
+          "ms": 1068,
+          "time": 0.078996414,
+          "encodedFrames": 52224
+        },
+        {
+          "ms": 1093,
+          "time": 0.078996414,
+          "encodedFrames": 53248
+        },
+        {
+          "ms": 1112,
+          "time": 0.078996414,
+          "encodedFrames": 54272
+        },
+        {
+          "ms": 1132,
+          "time": 0.078996414,
+          "encodedFrames": 55296
+        },
+        {
+          "ms": 1156,
+          "time": 0.078996414,
+          "encodedFrames": 56320
+        },
+        {
+          "ms": 1176,
+          "time": 0.078996414,
+          "encodedFrames": 57344
+        },
+        {
+          "ms": 1196,
+          "time": 0.078996414,
+          "encodedFrames": 58368
+        },
+        {
+          "ms": 1220,
+          "time": 0.078996414,
+          "encodedFrames": 59392
+        },
+        {
+          "ms": 1240,
+          "time": 0.078996414,
+          "encodedFrames": 60416
+        },
+        {
+          "ms": 1260,
+          "time": 0.078996414,
+          "encodedFrames": 61440
+        },
+        {
+          "ms": 1284,
+          "time": 0.078996414,
+          "encodedFrames": 62464
+        },
+        {
+          "ms": 1304,
+          "time": 0.078996414,
+          "encodedFrames": 63488
+        },
+        {
+          "ms": 1324,
+          "time": 0.078996414,
+          "encodedFrames": 64512
+        },
+        {
+          "ms": 1348,
+          "time": 0.078996414,
+          "encodedFrames": 65536
+        },
+        {
+          "ms": 1368,
+          "time": 0.078996414,
+          "encodedFrames": 66560
+        },
+        {
+          "ms": 1388,
+          "time": 0.078996414,
+          "encodedFrames": 67584
+        },
+        {
+          "ms": 1413,
+          "time": 0.078996414,
+          "encodedFrames": 68608
+        },
+        {
+          "ms": 1433,
+          "time": 0.078996414,
+          "encodedFrames": 69632
+        },
+        {
+          "ms": 1452,
+          "time": 0.078996414,
+          "encodedFrames": 70656
+        },
+        {
+          "ms": 1476,
+          "time": 0.078996414,
+          "encodedFrames": 71680
+        },
+        {
+          "ms": 1496,
+          "time": 0.078996414,
+          "encodedFrames": 72704
+        },
+        {
+          "ms": 1518,
+          "time": 0.078996414,
+          "encodedFrames": 73728
+        },
+        {
+          "ms": 1540,
+          "time": 0.078996414,
+          "encodedFrames": 74752
+        },
+        {
+          "ms": 1560,
+          "time": 0.078996414,
+          "encodedFrames": 75776
+        },
+        {
+          "ms": 1580,
+          "time": 0.078996414,
+          "encodedFrames": 76800
+        },
+        {
+          "ms": 1604,
+          "time": 0.078996414,
+          "encodedFrames": 77824
+        },
+        {
+          "ms": 1625,
+          "time": 0.078996414,
+          "encodedFrames": 78848
+        },
+        {
+          "ms": 1645,
+          "time": 0.078996414,
+          "encodedFrames": 79872
+        },
+        {
+          "ms": 1668,
+          "time": 0.078996414,
+          "encodedFrames": 80896
+        },
+        {
+          "ms": 1688,
+          "time": 0.078996414,
+          "encodedFrames": 81920
+        },
+        {
+          "ms": 1708,
+          "time": 0.078996414,
+          "encodedFrames": 82944
+        },
+        {
+          "ms": 1732,
+          "time": 0.078996414,
+          "encodedFrames": 83968
+        },
+        {
+          "ms": 1752,
+          "time": 0.078996414,
+          "encodedFrames": 84992
+        },
+        {
+          "ms": 1772,
+          "time": 0.078996414,
+          "encodedFrames": 86016
+        },
+        {
+          "ms": 1796,
+          "time": 0.078996414,
+          "encodedFrames": 87040
+        },
+        {
+          "ms": 1816,
+          "time": 0.078996414,
+          "encodedFrames": 88064
+        },
+        {
+          "ms": 1836,
+          "time": 0.078996414,
+          "encodedFrames": 89088
+        },
+        {
+          "ms": 1861,
+          "time": 0.078996414,
+          "encodedFrames": 90112
+        },
+        {
+          "ms": 1880,
+          "time": 0.078996414,
+          "encodedFrames": 91136
+        },
+        {
+          "ms": 1900,
+          "time": 0.078996414,
+          "encodedFrames": 92160
+        },
+        {
+          "ms": 1926,
+          "time": 0.078996414,
+          "encodedFrames": 93184
+        },
+        {
+          "ms": 1944,
+          "time": 0.078996414,
+          "encodedFrames": 94208
+        },
+        {
+          "ms": 1964,
+          "time": 0.078996414,
+          "encodedFrames": 95232
+        },
+        {
+          "ms": 1988,
+          "time": 0.078996414,
+          "encodedFrames": 96256
+        },
+        {
+          "ms": 2008,
+          "time": 0.078996414,
+          "encodedFrames": 97280
+        },
+        {
+          "ms": 2028,
+          "time": 0.078996414,
+          "encodedFrames": 98304
+        },
+        {
+          "ms": 2052,
+          "time": 0.078996414,
+          "encodedFrames": 99328
+        },
+        {
+          "ms": 2072,
+          "time": 0.078996414,
+          "encodedFrames": 100352
+        },
+        {
+          "ms": 2094,
+          "time": 0.078996414,
+          "encodedFrames": 101376
+        },
+        {
+          "ms": 2118,
+          "time": 0.078996414,
+          "encodedFrames": 102400
+        },
+        {
+          "ms": 2136,
+          "time": 0.078996414,
+          "encodedFrames": 103424
+        },
+        {
+          "ms": 2159,
+          "time": 0.078996414,
+          "encodedFrames": 104448
+        },
+        {
+          "ms": 2188,
+          "time": 0.078996414,
+          "encodedFrames": 105472
+        },
+        {
+          "ms": 2205,
+          "time": 0.078996414,
+          "encodedFrames": 106496
+        },
+        {
+          "ms": 2220,
+          "time": 0.078996414,
+          "encodedFrames": 107520
+        },
+        {
+          "ms": 2244,
+          "time": 0.078996414,
+          "encodedFrames": 108544
+        },
+        {
+          "ms": 2264,
+          "time": 0.078996414,
+          "encodedFrames": 109568
+        },
+        {
+          "ms": 2284,
+          "time": 0.078996414,
+          "encodedFrames": 110592
+        },
+        {
+          "ms": 2308,
+          "time": 0.078996414,
+          "encodedFrames": 111616
+        },
+        {
+          "ms": 2329,
+          "time": 0.078996414,
+          "encodedFrames": 112640
+        },
+        {
+          "ms": 2348,
+          "time": 0.078996414,
+          "encodedFrames": 113664
+        },
+        {
+          "ms": 2372,
+          "time": 0.078996414,
+          "encodedFrames": 114688
+        },
+        {
+          "ms": 2392,
+          "time": 0.078996414,
+          "encodedFrames": 115712
+        },
+        {
+          "ms": 2413,
+          "time": 0.078996414,
+          "encodedFrames": 116736
+        },
+        {
+          "ms": 2437,
+          "time": 0.078996414,
+          "encodedFrames": 117760
+        },
+        {
+          "ms": 2473,
+          "time": 0.078996414,
+          "encodedFrames": 118784
+        },
+        {
+          "ms": 2486,
+          "time": 0.078996414,
+          "encodedFrames": 119808
+        },
+        {
+          "ms": 2507,
+          "time": 0.078996414,
+          "encodedFrames": 120832
+        },
+        {
+          "ms": 2521,
+          "time": 0.078996414,
+          "encodedFrames": 121856
+        },
+        {
+          "ms": 2540,
+          "time": 0.078996414,
+          "encodedFrames": 122880
+        },
+        {
+          "ms": 2565,
+          "time": 0.078996414,
+          "encodedFrames": 123904
+        },
+        {
+          "ms": 2585,
+          "time": 0.078996414,
+          "encodedFrames": 124928
+        },
+        {
+          "ms": 2604,
+          "time": 0.078996414,
+          "encodedFrames": 125952
+        },
+        {
+          "ms": 2628,
+          "time": 0.078996414,
+          "encodedFrames": 126976
+        },
+        {
+          "ms": 2649,
+          "time": 0.078996414,
+          "encodedFrames": 128000
+        },
+        {
+          "ms": 2668,
+          "time": 0.078996414,
+          "encodedFrames": 129024
+        },
+        {
+          "ms": 2692,
+          "time": 0.078996414,
+          "encodedFrames": 130048
+        },
+        {
+          "ms": 2712,
+          "time": 0.078996414,
+          "encodedFrames": 131072
+        },
+        {
+          "ms": 2732,
+          "time": 0.078996414,
+          "encodedFrames": 132096
+        },
+        {
+          "ms": 2756,
+          "time": 0.078996414,
+          "encodedFrames": 133120
+        },
+        {
+          "ms": 2776,
+          "time": 0.078996414,
+          "encodedFrames": 134144
+        },
+        {
+          "ms": 2797,
+          "time": 0.078996414,
+          "encodedFrames": 135168
+        },
+        {
+          "ms": 2820,
+          "time": 0.078996414,
+          "encodedFrames": 136192
+        },
+        {
+          "ms": 2841,
+          "time": 0.078996414,
+          "encodedFrames": 137216
+        },
+        {
+          "ms": 2860,
+          "time": 0.078996414,
+          "encodedFrames": 138240
+        },
+        {
+          "ms": 2884,
+          "time": 0.078996414,
+          "encodedFrames": 139264
+        },
+        {
+          "ms": 2905,
+          "time": 0.078996414,
+          "encodedFrames": 140288
+        },
+        {
+          "ms": 2925,
+          "time": 0.078996414,
+          "encodedFrames": 141312
+        },
+        {
+          "ms": 2949,
+          "time": 0.078996414,
+          "encodedFrames": 142336
+        },
+        {
+          "ms": 2968,
+          "time": 0.078996414,
+          "encodedFrames": 143360
+        },
+        {
+          "ms": 2988,
+          "time": 0.078996414,
+          "encodedFrames": 144384
+        },
+        {
+          "ms": 3013,
+          "time": 0.078996414,
+          "encodedFrames": 145408
+        },
+        {
+          "ms": 3033,
+          "time": 0.227740193,
+          "encodedFrames": 146432
+        },
+        {
+          "ms": 3052,
+          "time": 0.247642203,
+          "encodedFrames": 147456
+        },
+        {
+          "ms": 3077,
+          "time": 0.27242914,
+          "encodedFrames": 148480
+        },
+        {
+          "ms": 3096,
+          "time": 0.291097349,
+          "encodedFrames": 149504
+        },
+        {
+          "ms": 3117,
+          "time": 0.311758698,
+          "encodedFrames": 150528
+        },
+        {
+          "ms": 3140,
+          "time": 0.33488457,
+          "encodedFrames": 151552
+        },
+        {
+          "ms": 3160,
+          "time": 0.355542569,
+          "encodedFrames": 152576
+        },
+        {
+          "ms": 3181,
+          "time": 0.375983013,
+          "encodedFrames": 153600
+        },
+        {
+          "ms": 3204,
+          "time": 0.399014862,
+          "encodedFrames": 154624
+        },
+        {
+          "ms": 3224,
+          "time": 0.419397901,
+          "encodedFrames": 155648
+        },
+        {
+          "ms": 3244,
+          "time": 0.43939886,
+          "encodedFrames": 156672
+        },
+        {
+          "ms": 3268,
+          "time": 0.463349936,
+          "encodedFrames": 157696
+        },
+        {
+          "ms": 3288,
+          "time": 0.483230869,
+          "encodedFrames": 158720
+        },
+        {
+          "ms": 3308,
+          "time": 0.503275659,
+          "encodedFrames": 159744
+        },
+        {
+          "ms": 3333,
+          "time": 0.527724147,
+          "encodedFrames": 160768
+        },
+        {
+          "ms": 3352,
+          "time": 0.547448694,
+          "encodedFrames": 161792
+        },
+        {
+          "ms": 3372,
+          "time": 0.567320355,
+          "encodedFrames": 162816
+        },
+        {
+          "ms": 3397,
+          "time": 0.592353741,
+          "encodedFrames": 163840
+        },
+        {
+          "ms": 3416,
+          "time": 0.611179801,
+          "encodedFrames": 164864
+        },
+        {
+          "ms": 3436,
+          "time": 0.631160318,
+          "encodedFrames": 165888
+        },
+        {
+          "ms": 3461,
+          "time": 0.656619799,
+          "encodedFrames": 166912
+        },
+        {
+          "ms": 3480,
+          "time": 0.675052464,
+          "encodedFrames": 167936
+        },
+        {
+          "ms": 3500,
+          "time": 0.695110014,
+          "encodedFrames": 168960
+        },
+        {
+          "ms": 3524,
+          "time": 0.719055382,
+          "encodedFrames": 169984
+        },
+        {
+          "ms": 3544,
+          "time": 0.738808471,
+          "encodedFrames": 171008
+        },
+        {
+          "ms": 3564,
+          "time": 0.759643697,
+          "encodedFrames": 172032
+        },
+        {
+          "ms": 3588,
+          "time": 0.783550378,
+          "encodedFrames": 173056
+        },
+        {
+          "ms": 3608,
+          "time": 0.803355162,
+          "encodedFrames": 174080
+        },
+        {
+          "ms": 3628,
+          "time": 0.823312257,
+          "encodedFrames": 175104
+        },
+        {
+          "ms": 3652,
+          "time": 0.847237,
+          "encodedFrames": 176128
+        },
+        {
+          "ms": 3672,
+          "time": 0.867086967,
+          "encodedFrames": 177152
+        },
+        {
+          "ms": 3692,
+          "time": 0.887280934,
+          "encodedFrames": 178176
+        },
+        {
+          "ms": 3716,
+          "time": 0.910929164,
+          "encodedFrames": 179200
+        },
+        {
+          "ms": 3736,
+          "time": 0.930922951,
+          "encodedFrames": 180224
+        },
+        {
+          "ms": 3757,
+          "time": 0.952501531,
+          "encodedFrames": 181248
+        },
+        {
+          "ms": 3781,
+          "time": 0.975944093,
+          "encodedFrames": 182272
+        },
+        {
+          "ms": 3802,
+          "time": 0.996860015,
+          "encodedFrames": 183296
+        },
+        {
+          "ms": 3820,
+          "time": 1.015201954,
+          "encodedFrames": 184320
+        },
+        {
+          "ms": 3844,
+          "time": 1.039230531,
+          "encodedFrames": 185344
+        },
+        {
+          "ms": 3864,
+          "time": 1.059428881,
+          "encodedFrames": 186368
+        },
+        {
+          "ms": 3884,
+          "time": 1.079019729,
+          "encodedFrames": 187392
+        },
+        {
+          "ms": 3909,
+          "time": 1.104016532,
+          "encodedFrames": 188416
+        },
+        {
+          "ms": 3928,
+          "time": 1.123034556,
+          "encodedFrames": 189440
+        },
+        {
+          "ms": 3948,
+          "time": 1.143097623,
+          "encodedFrames": 190464
+        },
+        {
+          "ms": 3972,
+          "time": 1.167589486,
+          "encodedFrames": 191488
+        },
+        {
+          "ms": 3994,
+          "time": 1.188754948,
+          "encodedFrames": 192512
+        }
+      ],
+      "events": [
+        {
+          "event": "waiting",
+          "ms": 24,
+          "time": 0
+        },
+        {
+          "event": "playing",
+          "ms": 219,
+          "time": 0
+        }
+      ],
+      "inputDuration": 4.010666666666666,
+      "expectedContinuousBudgetPass": false,
+      "originalStartupEffectOnlyGatePassed": false
+    },
+    {
+      "route": "ManagedMediaSource",
+      "mix": "bgm-se",
+      "sourceRawFile": "evidence/v177-native-aac/ManagedMediaSource-bgm-se-raw.json",
+      "sourceRawSha256": "667c4f097c4cf092fa26c80e9d0ec79234526105f0b5c1f9ebab2cae15a85c3f",
+      "sampleRate": 48000,
+      "playheads": [
+        {
+          "ms": 3,
+          "time": 0,
+          "encodedFrames": 1024
+        },
+        {
+          "ms": 23,
+          "time": 0,
+          "encodedFrames": 2048
+        },
+        {
+          "ms": 58,
+          "time": 0,
+          "encodedFrames": 3072
+        },
+        {
+          "ms": 66,
+          "time": 0.00065395,
+          "encodedFrames": 4096
+        },
+        {
+          "ms": 89,
+          "time": 0.021333333333333333,
+          "encodedFrames": 5120
+        },
+        {
+          "ms": 124,
+          "time": 0.021333333333333333,
+          "encodedFrames": 6144
+        },
+        {
+          "ms": 129,
+          "time": 0.021333333333333333,
+          "encodedFrames": 7168
+        },
+        {
+          "ms": 151,
+          "time": 0.021333333333333333,
+          "encodedFrames": 8192
+        },
+        {
+          "ms": 171,
+          "time": 0.021333333333333333,
+          "encodedFrames": 9216
+        },
+        {
+          "ms": 193,
+          "time": 0.021333333333333333,
+          "encodedFrames": 10240
+        },
+        {
+          "ms": 214,
+          "time": 0.021333333333333333,
+          "encodedFrames": 11264
+        },
+        {
+          "ms": 241,
+          "time": 0.021333333333333333,
+          "encodedFrames": 12288
+        },
+        {
+          "ms": 258,
+          "time": 0.021333333333333333,
+          "encodedFrames": 13312
+        },
+        {
+          "ms": 278,
+          "time": 0.021333333333333333,
+          "encodedFrames": 14336
+        },
+        {
+          "ms": 303,
+          "time": 0.021333333333333333,
+          "encodedFrames": 15360
+        },
+        {
+          "ms": 322,
+          "time": 0.021333333333333333,
+          "encodedFrames": 16384
+        },
+        {
+          "ms": 346,
+          "time": 0.021333333333333333,
+          "encodedFrames": 17408
+        },
+        {
+          "ms": 367,
+          "time": 0.021333333333333333,
+          "encodedFrames": 18432
+        },
+        {
+          "ms": 386,
+          "time": 0.021333333333333333,
+          "encodedFrames": 19456
+        },
+        {
+          "ms": 407,
+          "time": 0.021333333333333333,
+          "encodedFrames": 20480
+        },
+        {
+          "ms": 431,
+          "time": 0.021333333333333333,
+          "encodedFrames": 21504
+        },
+        {
+          "ms": 450,
+          "time": 0.021333333333333333,
+          "encodedFrames": 22528
+        },
+        {
+          "ms": 474,
+          "time": 0.021333333333333333,
+          "encodedFrames": 23552
+        },
+        {
+          "ms": 495,
+          "time": 0.021333333333333333,
+          "encodedFrames": 24576
+        },
+        {
+          "ms": 514,
+          "time": 0.021333333333333333,
+          "encodedFrames": 25600
+        },
+        {
+          "ms": 534,
+          "time": 0.021333333333333333,
+          "encodedFrames": 26624
+        },
+        {
+          "ms": 558,
+          "time": 0.021333333333333333,
+          "encodedFrames": 27648
+        },
+        {
+          "ms": 579,
+          "time": 0.021333333333333333,
+          "encodedFrames": 28672
+        },
+        {
+          "ms": 603,
+          "time": 0.021333333333333333,
+          "encodedFrames": 29696
+        },
+        {
+          "ms": 623,
+          "time": 0.021333333333333333,
+          "encodedFrames": 30720
+        },
+        {
+          "ms": 642,
+          "time": 0.021333333333333333,
+          "encodedFrames": 31744
+        },
+        {
+          "ms": 666,
+          "time": 0.021333333333333333,
+          "encodedFrames": 32768
+        },
+        {
+          "ms": 686,
+          "time": 0.021333333333333333,
+          "encodedFrames": 33792
+        },
+        {
+          "ms": 706,
+          "time": 0.021333333333333333,
+          "encodedFrames": 34816
+        },
+        {
+          "ms": 730,
+          "time": 0.021333333333333333,
+          "encodedFrames": 35840
+        },
+        {
+          "ms": 751,
+          "time": 0.021333333333333333,
+          "encodedFrames": 36864
+        },
+        {
+          "ms": 819,
+          "time": 0.021333333333333333,
+          "encodedFrames": 37888
+        },
+        {
+          "ms": 820,
+          "time": 0.021333333333333333,
+          "encodedFrames": 38912
+        },
+        {
+          "ms": 820,
+          "time": 0.021333333333333333,
+          "encodedFrames": 39936
+        },
+        {
+          "ms": 834,
+          "time": 0.021333333333333333,
+          "encodedFrames": 40960
+        },
+        {
+          "ms": 854,
+          "time": 0.021333333333333333,
+          "encodedFrames": 41984
+        },
+        {
+          "ms": 878,
+          "time": 0.021333333333333333,
+          "encodedFrames": 43008
+        },
+        {
+          "ms": 898,
+          "time": 0.021333333333333333,
+          "encodedFrames": 44032
+        },
+        {
+          "ms": 923,
+          "time": 0.021333333333333333,
+          "encodedFrames": 45056
+        },
+        {
+          "ms": 942,
+          "time": 0.021333333333333333,
+          "encodedFrames": 46080
+        },
+        {
+          "ms": 962,
+          "time": 0.021333333333333333,
+          "encodedFrames": 47104
+        },
+        {
+          "ms": 982,
+          "time": 0.021333333333333333,
+          "encodedFrames": 48128
+        },
+        {
+          "ms": 1006,
+          "time": 0.021333333333333333,
+          "encodedFrames": 49152
+        },
+        {
+          "ms": 1036,
+          "time": 0.021333333333333333,
+          "encodedFrames": 50176
+        },
+        {
+          "ms": 1050,
+          "time": 0.021333333333333333,
+          "encodedFrames": 51200
+        },
+        {
+          "ms": 1072,
+          "time": 0.021333333333333333,
+          "encodedFrames": 52224
+        },
+        {
+          "ms": 1091,
+          "time": 0.021333333333333333,
+          "encodedFrames": 53248
+        },
+        {
+          "ms": 1110,
+          "time": 0.021333333333333333,
+          "encodedFrames": 54272
+        },
+        {
+          "ms": 1135,
+          "time": 0.021333333333333333,
+          "encodedFrames": 55296
+        },
+        {
+          "ms": 1155,
+          "time": 0.021333333333333333,
+          "encodedFrames": 56320
+        },
+        {
+          "ms": 1179,
+          "time": 0.021333333333333333,
+          "encodedFrames": 57344
+        },
+        {
+          "ms": 1199,
+          "time": 0.021333333333333333,
+          "encodedFrames": 58368
+        },
+        {
+          "ms": 1219,
+          "time": 0.021333333333333333,
+          "encodedFrames": 59392
+        },
+        {
+          "ms": 1239,
+          "time": 0.021333333333333333,
+          "encodedFrames": 60416
+        },
+        {
+          "ms": 1264,
+          "time": 0.021333333333333333,
+          "encodedFrames": 61440
+        },
+        {
+          "ms": 1283,
+          "time": 0.021333333333333333,
+          "encodedFrames": 62464
+        },
+        {
+          "ms": 1306,
+          "time": 0.021333333333333333,
+          "encodedFrames": 63488
+        },
+        {
+          "ms": 1326,
+          "time": 0.021333333333333333,
+          "encodedFrames": 64512
+        },
+        {
+          "ms": 1346,
+          "time": 0.021333333333333333,
+          "encodedFrames": 65536
+        },
+        {
+          "ms": 1366,
+          "time": 0.021333333333333333,
+          "encodedFrames": 66560
+        },
+        {
+          "ms": 1391,
+          "time": 0.021333333333333333,
+          "encodedFrames": 67584
+        },
+        {
+          "ms": 1410,
+          "time": 0.021333333333333333,
+          "encodedFrames": 68608
+        },
+        {
+          "ms": 1430,
+          "time": 0.021333333333333333,
+          "encodedFrames": 69632
+        },
+        {
+          "ms": 1455,
+          "time": 0.021333333333333333,
+          "encodedFrames": 70656
+        },
+        {
+          "ms": 1474,
+          "time": 0.021333333333333333,
+          "encodedFrames": 71680
+        },
+        {
+          "ms": 1498,
+          "time": 0.021333333333333333,
+          "encodedFrames": 72704
+        },
+        {
+          "ms": 1518,
+          "time": 0.021333333333333333,
+          "encodedFrames": 73728
+        },
+        {
+          "ms": 1538,
+          "time": 0.021333333333333333,
+          "encodedFrames": 74752
+        },
+        {
+          "ms": 1558,
+          "time": 0.021333333333333333,
+          "encodedFrames": 75776
+        },
+        {
+          "ms": 1583,
+          "time": 0.021333333333333333,
+          "encodedFrames": 76800
+        },
+        {
+          "ms": 1602,
+          "time": 0.021333333333333333,
+          "encodedFrames": 77824
+        },
+        {
+          "ms": 1622,
+          "time": 0.021333333333333333,
+          "encodedFrames": 78848
+        },
+        {
+          "ms": 1646,
+          "time": 0.021333333333333333,
+          "encodedFrames": 79872
+        },
+        {
+          "ms": 1667,
+          "time": 0.021333333333333333,
+          "encodedFrames": 80896
+        },
+        {
+          "ms": 1686,
+          "time": 0.021333333333333333,
+          "encodedFrames": 81920
+        },
+        {
+          "ms": 1710,
+          "time": 0.021333333333333333,
+          "encodedFrames": 82944
+        },
+        {
+          "ms": 1730,
+          "time": 0.021333333333333333,
+          "encodedFrames": 83968
+        },
+        {
+          "ms": 1750,
+          "time": 0.021333333333333333,
+          "encodedFrames": 84992
+        },
+        {
+          "ms": 1774,
+          "time": 0.021333333333333333,
+          "encodedFrames": 86016
+        },
+        {
+          "ms": 1794,
+          "time": 0.021333333333333333,
+          "encodedFrames": 87040
+        },
+        {
+          "ms": 1815,
+          "time": 0.021333333333333333,
+          "encodedFrames": 88064
+        },
+        {
+          "ms": 1837,
+          "time": 0.021333333333333333,
+          "encodedFrames": 89088
+        },
+        {
+          "ms": 1858,
+          "time": 0.021333333333333333,
+          "encodedFrames": 90112
+        },
+        {
+          "ms": 1879,
+          "time": 0.021333333333333333,
+          "encodedFrames": 91136
+        },
+        {
+          "ms": 1902,
+          "time": 0.021333333333333333,
+          "encodedFrames": 92160
+        },
+        {
+          "ms": 1922,
+          "time": 0.021333333333333333,
+          "encodedFrames": 93184
+        },
+        {
+          "ms": 1946,
+          "time": 0.021333333333333333,
+          "encodedFrames": 94208
+        },
+        {
+          "ms": 1966,
+          "time": 0.021333333333333333,
+          "encodedFrames": 95232
+        },
+        {
+          "ms": 1987,
+          "time": 0.021333333333333333,
+          "encodedFrames": 96256
+        },
+        {
+          "ms": 2007,
+          "time": 0.021333333333333333,
+          "encodedFrames": 97280
+        },
+        {
+          "ms": 2030,
+          "time": 0.021333333333333333,
+          "encodedFrames": 98304
+        },
+        {
+          "ms": 2051,
+          "time": 0.021333333333333333,
+          "encodedFrames": 99328
+        },
+        {
+          "ms": 2074,
+          "time": 0.021333333333333333,
+          "encodedFrames": 100352
+        },
+        {
+          "ms": 2094,
+          "time": 0.021333333333333333,
+          "encodedFrames": 101376
+        },
+        {
+          "ms": 2114,
+          "time": 0.021333333333333333,
+          "encodedFrames": 102400
+        },
+        {
+          "ms": 2139,
+          "time": 0.021333333333333333,
+          "encodedFrames": 103424
+        },
+        {
+          "ms": 2158,
+          "time": 0.021333333333333333,
+          "encodedFrames": 104448
+        },
+        {
+          "ms": 2179,
+          "time": 0.021333333333333333,
+          "encodedFrames": 105472
+        },
+        {
+          "ms": 2198,
+          "time": 0.021333333333333333,
+          "encodedFrames": 106496
+        },
+        {
+          "ms": 2224,
+          "time": 0.021333333333333333,
+          "encodedFrames": 107520
+        },
+        {
+          "ms": 2242,
+          "time": 0.021333333333333333,
+          "encodedFrames": 108544
+        },
+        {
+          "ms": 2267,
+          "time": 0.021333333333333333,
+          "encodedFrames": 109568
+        },
+        {
+          "ms": 2286,
+          "time": 0.021333333333333333,
+          "encodedFrames": 110592
+        },
+        {
+          "ms": 2306,
+          "time": 0.021333333333333333,
+          "encodedFrames": 111616
+        },
+        {
+          "ms": 2331,
+          "time": 0.021333333333333333,
+          "encodedFrames": 112640
+        },
+        {
+          "ms": 2350,
+          "time": 0.021333333333333333,
+          "encodedFrames": 113664
+        },
+        {
+          "ms": 2371,
+          "time": 0.021333333333333333,
+          "encodedFrames": 114688
+        },
+        {
+          "ms": 2394,
+          "time": 0.021333333333333333,
+          "encodedFrames": 115712
+        },
+        {
+          "ms": 2414,
+          "time": 0.021333333333333333,
+          "encodedFrames": 116736
+        },
+        {
+          "ms": 2435,
+          "time": 0.021333333333333333,
+          "encodedFrames": 117760
+        },
+        {
+          "ms": 2454,
+          "time": 0.021333333333333333,
+          "encodedFrames": 118784
+        },
+        {
+          "ms": 2479,
+          "time": 0.021333333333333333,
+          "encodedFrames": 119808
+        },
+        {
+          "ms": 2498,
+          "time": 0.021333333333333333,
+          "encodedFrames": 120832
+        },
+        {
+          "ms": 2523,
+          "time": 0.021333333333333333,
+          "encodedFrames": 121856
+        },
+        {
+          "ms": 2542,
+          "time": 0.021333333333333333,
+          "encodedFrames": 122880
+        },
+        {
+          "ms": 2563,
+          "time": 0.021333333333333333,
+          "encodedFrames": 123904
+        },
+        {
+          "ms": 2586,
+          "time": 0.021333333333333333,
+          "encodedFrames": 124928
+        },
+        {
+          "ms": 2606,
+          "time": 0.021333333333333333,
+          "encodedFrames": 125952
+        },
+        {
+          "ms": 2627,
+          "time": 0.021333333333333333,
+          "encodedFrames": 126976
+        },
+        {
+          "ms": 2646,
+          "time": 0.021333333333333333,
+          "encodedFrames": 128000
+        },
+        {
+          "ms": 2672,
+          "time": 0.021333333333333333,
+          "encodedFrames": 129024
+        },
+        {
+          "ms": 2691,
+          "time": 0.021333333333333333,
+          "encodedFrames": 130048
+        },
+        {
+          "ms": 2710,
+          "time": 0.021333333333333333,
+          "encodedFrames": 131072
+        },
+        {
+          "ms": 2734,
+          "time": 0.021333333333333333,
+          "encodedFrames": 132096
+        },
+        {
+          "ms": 2754,
+          "time": 0.021333333333333333,
+          "encodedFrames": 133120
+        },
+        {
+          "ms": 2778,
+          "time": 0.021333333333333333,
+          "encodedFrames": 134144
+        },
+        {
+          "ms": 2798,
+          "time": 0.021333333333333333,
+          "encodedFrames": 135168
+        },
+        {
+          "ms": 2820,
+          "time": 0.021333333333333333,
+          "encodedFrames": 136192
+        },
+        {
+          "ms": 2838,
+          "time": 0.021333333333333333,
+          "encodedFrames": 137216
+        },
+        {
+          "ms": 2863,
+          "time": 0.021333333333333333,
+          "encodedFrames": 138240
+        },
+        {
+          "ms": 2883,
+          "time": 0.021333333333333333,
+          "encodedFrames": 139264
+        },
+        {
+          "ms": 2902,
+          "time": 0.021333333333333333,
+          "encodedFrames": 140288
+        },
+        {
+          "ms": 2928,
+          "time": 0.021333333333333333,
+          "encodedFrames": 141312
+        },
+        {
+          "ms": 2946,
+          "time": 0.021333333333333333,
+          "encodedFrames": 142336
+        },
+        {
+          "ms": 2966,
+          "time": 0.021333333333333333,
+          "encodedFrames": 143360
+        },
+        {
+          "ms": 2990,
+          "time": 0.021333333333333333,
+          "encodedFrames": 144384
+        },
+        {
+          "ms": 3010,
+          "time": 0.173645246,
+          "encodedFrames": 145408
+        },
+        {
+          "ms": 3031,
+          "time": 0.194906079,
+          "encodedFrames": 146432
+        },
+        {
+          "ms": 3054,
+          "time": 0.21763787,
+          "encodedFrames": 147456
+        },
+        {
+          "ms": 3074,
+          "time": 0.238073774,
+          "encodedFrames": 148480
+        },
+        {
+          "ms": 3095,
+          "time": 0.258766991,
+          "encodedFrames": 149504
+        },
+        {
+          "ms": 3118,
+          "time": 0.281526878,
+          "encodedFrames": 150528
+        },
+        {
+          "ms": 3138,
+          "time": 0.301711086,
+          "encodedFrames": 151552
+        },
+        {
+          "ms": 3162,
+          "time": 0.325897645,
+          "encodedFrames": 152576
+        },
+        {
+          "ms": 3183,
+          "time": 0.347001847,
+          "encodedFrames": 153600
+        },
+        {
+          "ms": 3202,
+          "time": 0.365610696,
+          "encodedFrames": 154624
+        },
+        {
+          "ms": 3222,
+          "time": 0.385766439,
+          "encodedFrames": 155648
+        },
+        {
+          "ms": 3246,
+          "time": 0.409637633,
+          "encodedFrames": 156672
+        },
+        {
+          "ms": 3268,
+          "time": 0.431233655,
+          "encodedFrames": 157696
+        },
+        {
+          "ms": 3287,
+          "time": 0.45045163,
+          "encodedFrames": 158720
+        },
+        {
+          "ms": 3310,
+          "time": 0.473924658,
+          "encodedFrames": 159744
+        },
+        {
+          "ms": 3330,
+          "time": 0.493711052,
+          "encodedFrames": 160768
+        },
+        {
+          "ms": 3350,
+          "time": 0.513465915,
+          "encodedFrames": 161792
+        },
+        {
+          "ms": 3374,
+          "time": 0.537911627,
+          "encodedFrames": 162816
+        },
+        {
+          "ms": 3394,
+          "time": 0.557867454,
+          "encodedFrames": 163840
+        },
+        {
+          "ms": 3419,
+          "time": 0.58284354,
+          "encodedFrames": 164864
+        },
+        {
+          "ms": 3438,
+          "time": 0.601865408,
+          "encodedFrames": 165888
+        },
+        {
+          "ms": 3458,
+          "time": 0.621779913,
+          "encodedFrames": 166912
+        },
+        {
+          "ms": 3484,
+          "time": 0.647245139,
+          "encodedFrames": 167936
+        },
+        {
+          "ms": 3502,
+          "time": 0.665847775,
+          "encodedFrames": 168960
+        },
+        {
+          "ms": 3523,
+          "time": 0.687004699,
+          "encodedFrames": 169984
+        },
+        {
+          "ms": 3547,
+          "time": 0.710266717,
+          "encodedFrames": 171008
+        },
+        {
+          "ms": 3567,
+          "time": 0.730467797,
+          "encodedFrames": 172032
+        },
+        {
+          "ms": 3586,
+          "time": 0.749539551,
+          "encodedFrames": 173056
+        },
+        {
+          "ms": 3606,
+          "time": 0.769751914,
+          "encodedFrames": 174080
+        },
+        {
+          "ms": 3630,
+          "time": 0.793649334,
+          "encodedFrames": 175104
+        },
+        {
+          "ms": 3650,
+          "time": 0.813938946,
+          "encodedFrames": 176128
+        },
+        {
+          "ms": 3675,
+          "time": 0.838264716,
+          "encodedFrames": 177152
+        },
+        {
+          "ms": 3694,
+          "time": 0.857813556,
+          "encodedFrames": 178176
+        },
+        {
+          "ms": 3714,
+          "time": 0.87773635,
+          "encodedFrames": 179200
+        },
+        {
+          "ms": 3738,
+          "time": 0.90183427,
+          "encodedFrames": 180224
+        },
+        {
+          "ms": 3758,
+          "time": 0.921775504,
+          "encodedFrames": 181248
+        },
+        {
+          "ms": 3778,
+          "time": 0.941636211,
+          "encodedFrames": 182272
+        },
+        {
+          "ms": 3799,
+          "time": 0.962611894,
+          "encodedFrames": 183296
+        },
+        {
+          "ms": 3824,
+          "time": 0.98710866,
+          "encodedFrames": 184320
+        },
+        {
+          "ms": 3842,
+          "time": 1.005991546,
+          "encodedFrames": 185344
+        },
+        {
+          "ms": 3866,
+          "time": 1.029547768,
+          "encodedFrames": 186368
+        },
+        {
+          "ms": 3886,
+          "time": 1.049641672,
+          "encodedFrames": 187392
+        },
+        {
+          "ms": 3906,
+          "time": 1.06969966,
+          "encodedFrames": 188416
+        },
+        {
+          "ms": 3926,
+          "time": 1.089751429,
+          "encodedFrames": 189440
+        },
+        {
+          "ms": 3951,
+          "time": 1.114370527,
+          "encodedFrames": 190464
+        },
+        {
+          "ms": 3970,
+          "time": 1.133492436,
+          "encodedFrames": 191488
+        },
+        {
+          "ms": 3991,
+          "time": 1.154620603,
+          "encodedFrames": 192512
+        }
+      ],
+      "events": [
+        {
+          "event": "waiting",
+          "ms": 7,
+          "time": 0
+        },
+        {
+          "event": "playing",
+          "ms": 67,
+          "time": 0.001659616
+        }
+      ],
+      "inputDuration": 4.010666666666666,
+      "expectedContinuousBudgetPass": false,
+      "originalStartupEffectOnlyGatePassed": false
+    },
+    {
+      "route": "MediaSource",
+      "mix": "bgm",
+      "sourceRawFile": "evidence/v177-native-aac/MediaSource-bgm-raw.json",
+      "sourceRawSha256": "54ff47690ccde9c955c7dddba36a04b6db8b00b597676207196b4c0edf14e5b0",
+      "sampleRate": 48000,
+      "playheads": [
+        {
+          "ms": 2,
+          "time": 0,
+          "encodedFrames": 1024
+        },
+        {
+          "ms": 37,
+          "time": 0,
+          "encodedFrames": 2048
+        },
+        {
+          "ms": 44,
+          "time": 0,
+          "encodedFrames": 3072
+        },
+        {
+          "ms": 65,
+          "time": 0.018713794,
+          "encodedFrames": 4096
+        },
+        {
+          "ms": 86,
+          "time": 0.039975768,
+          "encodedFrames": 5120
+        },
+        {
+          "ms": 107,
+          "time": 0.060916268,
+          "encodedFrames": 6144
+        },
+        {
+          "ms": 129,
+          "time": 0.082883997,
+          "encodedFrames": 7168
+        },
+        {
+          "ms": 151,
+          "time": 0.105101717,
+          "encodedFrames": 8192
+        },
+        {
+          "ms": 172,
+          "time": 0.125473272,
+          "encodedFrames": 9216
+        },
+        {
+          "ms": 192,
+          "time": 0.146152565,
+          "encodedFrames": 10240
+        },
+        {
+          "ms": 215,
+          "time": 0.169167928,
+          "encodedFrames": 11264
+        },
+        {
+          "ms": 237,
+          "time": 0.190346441,
+          "encodedFrames": 12288
+        },
+        {
+          "ms": 257,
+          "time": 0.210329357,
+          "encodedFrames": 13312
+        },
+        {
+          "ms": 280,
+          "time": 0.234159062,
+          "encodedFrames": 14336
+        },
+        {
+          "ms": 301,
+          "time": 0.254626036,
+          "encodedFrames": 15360
+        },
+        {
+          "ms": 325,
+          "time": 0.278235578,
+          "encodedFrames": 16384
+        },
+        {
+          "ms": 345,
+          "time": 0.298396493,
+          "encodedFrames": 17408
+        },
+        {
+          "ms": 366,
+          "time": 0.319367612,
+          "encodedFrames": 18432
+        },
+        {
+          "ms": 385,
+          "time": 0.338838876,
+          "encodedFrames": 19456
+        },
+        {
+          "ms": 409,
+          "time": 0.363020517,
+          "encodedFrames": 20480
+        },
+        {
+          "ms": 428,
+          "time": 0.382199963,
+          "encodedFrames": 21504
+        },
+        {
+          "ms": 450,
+          "time": 0.403299535,
+          "encodedFrames": 22528
+        },
+        {
+          "ms": 473,
+          "time": 0.427193521,
+          "encodedFrames": 23552
+        },
+        {
+          "ms": 492,
+          "time": 0.446187075,
+          "encodedFrames": 24576
+        },
+        {
+          "ms": 513,
+          "time": 0.466396443,
+          "encodedFrames": 25600
+        },
+        {
+          "ms": 537,
+          "time": 0.490413151,
+          "encodedFrames": 26624
+        },
+        {
+          "ms": 557,
+          "time": 0.510242049,
+          "encodedFrames": 27648
+        },
+        {
+          "ms": 577,
+          "time": 0.530222648,
+          "encodedFrames": 28672
+        },
+        {
+          "ms": 600,
+          "time": 0.554208982,
+          "encodedFrames": 29696
+        },
+        {
+          "ms": 623,
+          "time": 0.576975817,
+          "encodedFrames": 30720
+        },
+        {
+          "ms": 644,
+          "time": 0.598114449,
+          "encodedFrames": 31744
+        },
+        {
+          "ms": 664,
+          "time": 0.618199056,
+          "encodedFrames": 32768
+        },
+        {
+          "ms": 685,
+          "time": 0.638924523,
+          "encodedFrames": 33792
+        },
+        {
+          "ms": 708,
+          "time": 0.662098617,
+          "encodedFrames": 34816
+        },
+        {
+          "ms": 728,
+          "time": 0.682141801,
+          "encodedFrames": 35840
+        },
+        {
+          "ms": 749,
+          "time": 0.702870152,
+          "encodedFrames": 36864
+        },
+        {
+          "ms": 772,
+          "time": 0.726043316,
+          "encodedFrames": 37888
+        },
+        {
+          "ms": 793,
+          "time": 0.746238454,
+          "encodedFrames": 38912
+        },
+        {
+          "ms": 813,
+          "time": 0.766230544,
+          "encodedFrames": 39936
+        },
+        {
+          "ms": 832,
+          "time": 0.786146257,
+          "encodedFrames": 40960
+        },
+        {
+          "ms": 856,
+          "time": 0.810038318,
+          "encodedFrames": 41984
+        },
+        {
+          "ms": 877,
+          "time": 0.830643632,
+          "encodedFrames": 43008
+        },
+        {
+          "ms": 900,
+          "time": 0.854169034,
+          "encodedFrames": 44032
+        },
+        {
+          "ms": 921,
+          "time": 0.874416024,
+          "encodedFrames": 45056
+        },
+        {
+          "ms": 942,
+          "time": 0.89542349,
+          "encodedFrames": 46080
+        },
+        {
+          "ms": 962,
+          "time": 0.915528027,
+          "encodedFrames": 47104
+        },
+        {
+          "ms": 985,
+          "time": 0.938363459,
+          "encodedFrames": 48128
+        },
+        {
+          "ms": 1006,
+          "time": 0.959719802,
+          "encodedFrames": 49152
+        },
+        {
+          "ms": 1029,
+          "time": 0.983043999,
+          "encodedFrames": 50176
+        },
+        {
+          "ms": 1048,
+          "time": 1.001387159,
+          "encodedFrames": 51200
+        },
+        {
+          "ms": 1070,
+          "time": 1.023226021,
+          "encodedFrames": 52224
+        },
+        {
+          "ms": 1093,
+          "time": 1.045728862,
+          "encodedFrames": 53248
+        },
+        {
+          "ms": 1113,
+          "time": 1.065728468,
+          "encodedFrames": 54272
+        },
+        {
+          "ms": 1134,
+          "time": 1.087022597,
+          "encodedFrames": 55296
+        },
+        {
+          "ms": 1156,
+          "time": 1.11017253,
+          "encodedFrames": 56320
+        },
+        {
+          "ms": 1176,
+          "time": 1.130094023,
+          "encodedFrames": 57344
+        },
+        {
+          "ms": 1196,
+          "time": 1.150017714,
+          "encodedFrames": 58368
+        },
+        {
+          "ms": 1222,
+          "time": 1.175435945,
+          "encodedFrames": 59392
+        },
+        {
+          "ms": 1242,
+          "time": 1.19545586,
+          "encodedFrames": 60416
+        },
+        {
+          "ms": 1261,
+          "time": 1.214881283,
+          "encodedFrames": 61440
+        },
+        {
+          "ms": 1285,
+          "time": 1.2383058,
+          "encodedFrames": 62464
+        },
+        {
+          "ms": 1305,
+          "time": 1.258239346,
+          "encodedFrames": 63488
+        },
+        {
+          "ms": 1325,
+          "time": 1.278780001,
+          "encodedFrames": 64512
+        },
+        {
+          "ms": 1349,
+          "time": 1.303145251,
+          "encodedFrames": 65536
+        },
+        {
+          "ms": 1368,
+          "time": 1.322162736,
+          "encodedFrames": 66560
+        },
+        {
+          "ms": 1389,
+          "time": 1.34285193,
+          "encodedFrames": 67584
+        },
+        {
+          "ms": 1413,
+          "time": 1.366303024,
+          "encodedFrames": 68608
+        },
+        {
+          "ms": 1432,
+          "time": 1.386019359,
+          "encodedFrames": 69632
+        },
+        {
+          "ms": 1452,
+          "time": 1.406124995,
+          "encodedFrames": 70656
+        },
+        {
+          "ms": 1476,
+          "time": 1.430116432,
+          "encodedFrames": 71680
+        },
+        {
+          "ms": 1497,
+          "time": 1.451127683,
+          "encodedFrames": 72704
+        },
+        {
+          "ms": 1518,
+          "time": 1.471319382,
+          "encodedFrames": 73728
+        },
+        {
+          "ms": 1537,
+          "time": 1.490210521,
+          "encodedFrames": 74752
+        },
+        {
+          "ms": 1561,
+          "time": 1.513568858,
+          "encodedFrames": 75776
+        },
+        {
+          "ms": 1582,
+          "time": 1.534308014,
+          "encodedFrames": 76800
+        },
+        {
+          "ms": 1601,
+          "time": 1.55413856,
+          "encodedFrames": 77824
+        },
+        {
+          "ms": 1671,
+          "time": 1.6213333333333333,
+          "encodedFrames": 78848
+        },
+        {
+          "ms": 1671,
+          "time": 1.6213333333333333,
+          "encodedFrames": 79872
+        },
+        {
+          "ms": 1671,
+          "time": 1.6213333333333333,
+          "encodedFrames": 80896
+        },
+        {
+          "ms": 1688,
+          "time": 1.6213333333333333,
+          "encodedFrames": 81920
+        },
+        {
+          "ms": 1728,
+          "time": 1.6213333333333333,
+          "encodedFrames": 82944
+        },
+        {
+          "ms": 1731,
+          "time": 1.6213333333333333,
+          "encodedFrames": 83968
+        },
+        {
+          "ms": 1753,
+          "time": 1.6213333333333333,
+          "encodedFrames": 84992
+        },
+        {
+          "ms": 1773,
+          "time": 1.6213333333333333,
+          "encodedFrames": 86016
+        },
+        {
+          "ms": 1797,
+          "time": 1.6213333333333333,
+          "encodedFrames": 87040
+        },
+        {
+          "ms": 1817,
+          "time": 1.6213333333333333,
+          "encodedFrames": 88064
+        },
+        {
+          "ms": 1839,
+          "time": 1.6213333333333333,
+          "encodedFrames": 89088
+        },
+        {
+          "ms": 1870,
+          "time": 1.652993135,
+          "encodedFrames": 90112
+        },
+        {
+          "ms": 1880,
+          "time": 1.663479419,
+          "encodedFrames": 91136
+        },
+        {
+          "ms": 1901,
+          "time": 1.683684906,
+          "encodedFrames": 92160
+        },
+        {
+          "ms": 1921,
+          "time": 1.703552271,
+          "encodedFrames": 93184
+        },
+        {
+          "ms": 1945,
+          "time": 1.727484001,
+          "encodedFrames": 94208
+        },
+        {
+          "ms": 1968,
+          "time": 1.750244778,
+          "encodedFrames": 95232
+        },
+        {
+          "ms": 1985,
+          "time": 1.767633557,
+          "encodedFrames": 96256
+        },
+        {
+          "ms": 2009,
+          "time": 1.791446693,
+          "encodedFrames": 97280
+        },
+        {
+          "ms": 2030,
+          "time": 1.812568083,
+          "encodedFrames": 98304
+        },
+        {
+          "ms": 2053,
+          "time": 1.83606829,
+          "encodedFrames": 99328
+        },
+        {
+          "ms": 2073,
+          "time": 1.85628364,
+          "encodedFrames": 100352
+        },
+        {
+          "ms": 2093,
+          "time": 1.875600248,
+          "encodedFrames": 101376
+        },
+        {
+          "ms": 2114,
+          "time": 1.89658175,
+          "encodedFrames": 102400
+        },
+        {
+          "ms": 2138,
+          "time": 1.920964369,
+          "encodedFrames": 103424
+        },
+        {
+          "ms": 2157,
+          "time": 1.939615839,
+          "encodedFrames": 104448
+        },
+        {
+          "ms": 2176,
+          "time": 1.959504693,
+          "encodedFrames": 105472
+        },
+        {
+          "ms": 2201,
+          "time": 1.983811555,
+          "encodedFrames": 106496
+        },
+        {
+          "ms": 2222,
+          "time": 2.005021526,
+          "encodedFrames": 107520
+        },
+        {
+          "ms": 2245,
+          "time": 2.027906213,
+          "encodedFrames": 108544
+        },
+        {
+          "ms": 2264,
+          "time": 2.047467264,
+          "encodedFrames": 109568
+        },
+        {
+          "ms": 2285,
+          "time": 2.067840821,
+          "encodedFrames": 110592
+        },
+        {
+          "ms": 2310,
+          "time": 2.092577851,
+          "encodedFrames": 111616
+        },
+        {
+          "ms": 2329,
+          "time": 2.112327875,
+          "encodedFrames": 112640
+        },
+        {
+          "ms": 2349,
+          "time": 2.132034904,
+          "encodedFrames": 113664
+        },
+        {
+          "ms": 2373,
+          "time": 2.155598741,
+          "encodedFrames": 114688
+        },
+        {
+          "ms": 2392,
+          "time": 2.175426397,
+          "encodedFrames": 115712
+        },
+        {
+          "ms": 2413,
+          "time": 2.195615219,
+          "encodedFrames": 116736
+        },
+        {
+          "ms": 2433,
+          "time": 2.215589055,
+          "encodedFrames": 117760
+        },
+        {
+          "ms": 2456,
+          "time": 2.239356312,
+          "encodedFrames": 118784
+        },
+        {
+          "ms": 2476,
+          "time": 2.259250448,
+          "encodedFrames": 119808
+        },
+        {
+          "ms": 2502,
+          "time": 2.285004999,
+          "encodedFrames": 120832
+        },
+        {
+          "ms": 2523,
+          "time": 2.305604452,
+          "encodedFrames": 121856
+        },
+        {
+          "ms": 2540,
+          "time": 2.323417269,
+          "encodedFrames": 122880
+        },
+        {
+          "ms": 2565,
+          "time": 2.348096716,
+          "encodedFrames": 123904
+        },
+        {
+          "ms": 2585,
+          "time": 2.368404788,
+          "encodedFrames": 124928
+        },
+        {
+          "ms": 2605,
+          "time": 2.388015869,
+          "encodedFrames": 125952
+        },
+        {
+          "ms": 2629,
+          "time": 2.412121227,
+          "encodedFrames": 126976
+        },
+        {
+          "ms": 2649,
+          "time": 2.432099406,
+          "encodedFrames": 128000
+        },
+        {
+          "ms": 2669,
+          "time": 2.451594638,
+          "encodedFrames": 129024
+        },
+        {
+          "ms": 2689,
+          "time": 2.471734989,
+          "encodedFrames": 130048
+        },
+        {
+          "ms": 2713,
+          "time": 2.495896051,
+          "encodedFrames": 131072
+        },
+        {
+          "ms": 2733,
+          "time": 2.51584636,
+          "encodedFrames": 132096
+        },
+        {
+          "ms": 2756,
+          "time": 2.539491114,
+          "encodedFrames": 133120
+        },
+        {
+          "ms": 2778,
+          "time": 2.561063863,
+          "encodedFrames": 134144
+        },
+        {
+          "ms": 2796,
+          "time": 2.579512618,
+          "encodedFrames": 135168
+        },
+        {
+          "ms": 2822,
+          "time": 2.604877703,
+          "encodedFrames": 136192
+        },
+        {
+          "ms": 2841,
+          "time": 2.62379838,
+          "encodedFrames": 137216
+        },
+        {
+          "ms": 2861,
+          "time": 2.644396574,
+          "encodedFrames": 138240
+        },
+        {
+          "ms": 2884,
+          "time": 2.667451005,
+          "encodedFrames": 139264
+        },
+        {
+          "ms": 2904,
+          "time": 2.68731628,
+          "encodedFrames": 140288
+        },
+        {
+          "ms": 2925,
+          "time": 2.70798629,
+          "encodedFrames": 141312
+        },
+        {
+          "ms": 2950,
+          "time": 2.733196299,
+          "encodedFrames": 142336
+        },
+        {
+          "ms": 2970,
+          "time": 2.752967468,
+          "encodedFrames": 143360
+        },
+        {
+          "ms": 2989,
+          "time": 2.771640238,
+          "encodedFrames": 144384
+        },
+        {
+          "ms": 3009,
+          "time": 2.792389025,
+          "encodedFrames": 145408
+        },
+        {
+          "ms": 3033,
+          "time": 2.816366339,
+          "encodedFrames": 146432
+        },
+        {
+          "ms": 3054,
+          "time": 2.837209301,
+          "encodedFrames": 147456
+        },
+        {
+          "ms": 3078,
+          "time": 2.860851728,
+          "encodedFrames": 148480
+        },
+        {
+          "ms": 3097,
+          "time": 2.879768438,
+          "encodedFrames": 149504
+        },
+        {
+          "ms": 3117,
+          "time": 2.900271024,
+          "encodedFrames": 150528
+        },
+        {
+          "ms": 3142,
+          "time": 2.924728258,
+          "encodedFrames": 151552
+        },
+        {
+          "ms": 3160,
+          "time": 2.943386827,
+          "encodedFrames": 152576
+        },
+        {
+          "ms": 3180,
+          "time": 2.963516624,
+          "encodedFrames": 153600
+        },
+        {
+          "ms": 3204,
+          "time": 2.987439875,
+          "encodedFrames": 154624
+        },
+        {
+          "ms": 3224,
+          "time": 3.007415125,
+          "encodedFrames": 155648
+        },
+        {
+          "ms": 3246,
+          "time": 3.028631353,
+          "encodedFrames": 156672
+        },
+        {
+          "ms": 3265,
+          "time": 3.047982475,
+          "encodedFrames": 157696
+        },
+        {
+          "ms": 3288,
+          "time": 3.071400765,
+          "encodedFrames": 158720
+        },
+        {
+          "ms": 3308,
+          "time": 3.091475946,
+          "encodedFrames": 159744
+        },
+        {
+          "ms": 3332,
+          "time": 3.115326099,
+          "encodedFrames": 160768
+        },
+        {
+          "ms": 3352,
+          "time": 3.135505471,
+          "encodedFrames": 161792
+        },
+        {
+          "ms": 3374,
+          "time": 3.15669699,
+          "encodedFrames": 162816
+        },
+        {
+          "ms": 3392,
+          "time": 3.17552389,
+          "encodedFrames": 163840
+        },
+        {
+          "ms": 3417,
+          "time": 3.200461005,
+          "encodedFrames": 164864
+        },
+        {
+          "ms": 3436,
+          "time": 3.219242124,
+          "encodedFrames": 165888
+        },
+        {
+          "ms": 3461,
+          "time": 3.24432974,
+          "encodedFrames": 166912
+        },
+        {
+          "ms": 3482,
+          "time": 3.264939564,
+          "encodedFrames": 167936
+        },
+        {
+          "ms": 3501,
+          "time": 3.284380139,
+          "encodedFrames": 168960
+        },
+        {
+          "ms": 3525,
+          "time": 3.307900271,
+          "encodedFrames": 169984
+        },
+        {
+          "ms": 3545,
+          "time": 3.328118636,
+          "encodedFrames": 171008
+        },
+        {
+          "ms": 3565,
+          "time": 3.347649496,
+          "encodedFrames": 172032
+        },
+        {
+          "ms": 3585,
+          "time": 3.367776019,
+          "encodedFrames": 173056
+        },
+        {
+          "ms": 3610,
+          "time": 3.392706322,
+          "encodedFrames": 174080
+        },
+        {
+          "ms": 3629,
+          "time": 3.411595545,
+          "encodedFrames": 175104
+        },
+        {
+          "ms": 3648,
+          "time": 3.431385589,
+          "encodedFrames": 176128
+        },
+        {
+          "ms": 3674,
+          "time": 3.45691087,
+          "encodedFrames": 177152
+        },
+        {
+          "ms": 3692,
+          "time": 3.47550579,
+          "encodedFrames": 178176
+        },
+        {
+          "ms": 3717,
+          "time": 3.499643736,
+          "encodedFrames": 179200
+        },
+        {
+          "ms": 3738,
+          "time": 3.521202504,
+          "encodedFrames": 180224
+        },
+        {
+          "ms": 3756,
+          "time": 3.53937258,
+          "encodedFrames": 181248
+        },
+        {
+          "ms": 3780,
+          "time": 3.563447509,
+          "encodedFrames": 182272
+        },
+        {
+          "ms": 3802,
+          "time": 3.584672763,
+          "encodedFrames": 183296
+        },
+        {
+          "ms": 3820,
+          "time": 3.603308876,
+          "encodedFrames": 184320
+        },
+        {
+          "ms": 3846,
+          "time": 3.629175726,
+          "encodedFrames": 185344
+        },
+        {
+          "ms": 3864,
+          "time": 3.647551313,
+          "encodedFrames": 186368
+        },
+        {
+          "ms": 3885,
+          "time": 3.667627562,
+          "encodedFrames": 187392
+        },
+        {
+          "ms": 3906,
+          "time": 3.688661528,
+          "encodedFrames": 188416
+        },
+        {
+          "ms": 3928,
+          "time": 3.711297864,
+          "encodedFrames": 189440
+        },
+        {
+          "ms": 3949,
+          "time": 3.731966504,
+          "encodedFrames": 190464
+        },
+        {
+          "ms": 3973,
+          "time": 3.755680465,
+          "encodedFrames": 191488
+        },
+        {
+          "ms": 3993,
+          "time": 3.776465451,
+          "encodedFrames": 192512
+        }
+      ],
+      "events": [
+        {
+          "event": "waiting",
+          "ms": 5,
+          "time": 0
+        },
+        {
+          "event": "playing",
+          "ms": 43,
+          "time": 0
+        },
+        {
+          "event": "playing",
+          "ms": 1674,
+          "time": 1.6213333333333333
+        }
+      ],
+      "inputDuration": 4.010666666666666,
+      "expectedContinuousBudgetPass": false,
+      "originalStartupEffectOnlyGatePassed": true
+    },
+    {
+      "route": "MediaSource",
+      "mix": "bgm-se",
+      "sourceRawFile": "evidence/v177-native-aac/MediaSource-bgm-se-raw.json",
+      "sourceRawSha256": "718df1122e40c2d43f362edd8674afbef77a6267cb9ac5d7540a844c53e405ab",
+      "sampleRate": 48000,
+      "playheads": [
+        {
+          "ms": 6,
+          "time": 0,
+          "encodedFrames": 1024
+        },
+        {
+          "ms": 25,
+          "time": 0,
+          "encodedFrames": 2048
+        },
+        {
+          "ms": 51,
+          "time": 0,
+          "encodedFrames": 3072
+        },
+        {
+          "ms": 65,
+          "time": 0.009174676,
+          "encodedFrames": 4096
+        },
+        {
+          "ms": 87,
+          "time": 0.031343247,
+          "encodedFrames": 5120
+        },
+        {
+          "ms": 108,
+          "time": 0.051516127,
+          "encodedFrames": 6144
+        },
+        {
+          "ms": 129,
+          "time": 0.072902745,
+          "encodedFrames": 7168
+        },
+        {
+          "ms": 151,
+          "time": 0.095154202,
+          "encodedFrames": 8192
+        },
+        {
+          "ms": 172,
+          "time": 0.115536649,
+          "encodedFrames": 9216
+        },
+        {
+          "ms": 193,
+          "time": 0.136983211,
+          "encodedFrames": 10240
+        },
+        {
+          "ms": 214,
+          "time": 0.157894649,
+          "encodedFrames": 11264
+        },
+        {
+          "ms": 236,
+          "time": 0.179837516,
+          "encodedFrames": 12288
+        },
+        {
+          "ms": 260,
+          "time": 0.203365916,
+          "encodedFrames": 13312
+        },
+        {
+          "ms": 280,
+          "time": 0.224035612,
+          "encodedFrames": 14336
+        },
+        {
+          "ms": 301,
+          "time": 0.244361781,
+          "encodedFrames": 15360
+        },
+        {
+          "ms": 324,
+          "time": 0.267471198,
+          "encodedFrames": 16384
+        },
+        {
+          "ms": 345,
+          "time": 0.2887363,
+          "encodedFrames": 17408
+        },
+        {
+          "ms": 364,
+          "time": 0.307586017,
+          "encodedFrames": 18432
+        },
+        {
+          "ms": 388,
+          "time": 0.331396431,
+          "encodedFrames": 19456
+        },
+        {
+          "ms": 408,
+          "time": 0.351524729,
+          "encodedFrames": 20480
+        },
+        {
+          "ms": 428,
+          "time": 0.371995492,
+          "encodedFrames": 21504
+        },
+        {
+          "ms": 453,
+          "time": 0.396852917,
+          "encodedFrames": 22528
+        },
+        {
+          "ms": 472,
+          "time": 0.415457708,
+          "encodedFrames": 23552
+        },
+        {
+          "ms": 492,
+          "time": 0.435772617,
+          "encodedFrames": 24576
+        },
+        {
+          "ms": 516,
+          "time": 0.459376798,
+          "encodedFrames": 25600
+        },
+        {
+          "ms": 536,
+          "time": 0.479515397,
+          "encodedFrames": 26624
+        },
+        {
+          "ms": 556,
+          "time": 0.499407752,
+          "encodedFrames": 27648
+        },
+        {
+          "ms": 581,
+          "time": 0.525121595,
+          "encodedFrames": 28672
+        },
+        {
+          "ms": 600,
+          "time": 0.54395183,
+          "encodedFrames": 29696
+        },
+        {
+          "ms": 622,
+          "time": 0.565535128,
+          "encodedFrames": 30720
+        },
+        {
+          "ms": 645,
+          "time": 0.588892343,
+          "encodedFrames": 31744
+        },
+        {
+          "ms": 664,
+          "time": 0.608179647,
+          "encodedFrames": 32768
+        },
+        {
+          "ms": 684,
+          "time": 0.627581159,
+          "encodedFrames": 33792
+        },
+        {
+          "ms": 709,
+          "time": 0.652455248,
+          "encodedFrames": 34816
+        },
+        {
+          "ms": 728,
+          "time": 0.671797735,
+          "encodedFrames": 35840
+        },
+        {
+          "ms": 748,
+          "time": 0.691746592,
+          "encodedFrames": 36864
+        },
+        {
+          "ms": 772,
+          "time": 0.715986784,
+          "encodedFrames": 37888
+        },
+        {
+          "ms": 791,
+          "time": 0.735322132,
+          "encodedFrames": 38912
+        },
+        {
+          "ms": 812,
+          "time": 0.756301318,
+          "encodedFrames": 39936
+        },
+        {
+          "ms": 836,
+          "time": 0.779443054,
+          "encodedFrames": 40960
+        },
+        {
+          "ms": 856,
+          "time": 0.799563239,
+          "encodedFrames": 41984
+        },
+        {
+          "ms": 876,
+          "time": 0.819542622,
+          "encodedFrames": 43008
+        },
+        {
+          "ms": 901,
+          "time": 0.844567391,
+          "encodedFrames": 44032
+        },
+        {
+          "ms": 920,
+          "time": 0.863378222,
+          "encodedFrames": 45056
+        },
+        {
+          "ms": 940,
+          "time": 0.883535886,
+          "encodedFrames": 46080
+        },
+        {
+          "ms": 965,
+          "time": 0.908667052,
+          "encodedFrames": 47104
+        },
+        {
+          "ms": 984,
+          "time": 0.928293918,
+          "encodedFrames": 48128
+        },
+        {
+          "ms": 1005,
+          "time": 0.948390086,
+          "encodedFrames": 49152
+        },
+        {
+          "ms": 1028,
+          "time": 0.9720125,
+          "encodedFrames": 50176
+        },
+        {
+          "ms": 1048,
+          "time": 0.991631421,
+          "encodedFrames": 51200
+        },
+        {
+          "ms": 1069,
+          "time": 1.012408318,
+          "encodedFrames": 52224
+        },
+        {
+          "ms": 1092,
+          "time": 1.035431087,
+          "encodedFrames": 53248
+        },
+        {
+          "ms": 1112,
+          "time": 1.056021023,
+          "encodedFrames": 54272
+        },
+        {
+          "ms": 1134,
+          "time": 1.077492004,
+          "encodedFrames": 55296
+        },
+        {
+          "ms": 1157,
+          "time": 1.100400794,
+          "encodedFrames": 56320
+        },
+        {
+          "ms": 1176,
+          "time": 1.120197879,
+          "encodedFrames": 57344
+        },
+        {
+          "ms": 1196,
+          "time": 1.140123806,
+          "encodedFrames": 58368
+        },
+        {
+          "ms": 1222,
+          "time": 1.16547088,
+          "encodedFrames": 59392
+        },
+        {
+          "ms": 1241,
+          "time": 1.184932572,
+          "encodedFrames": 60416
+        },
+        {
+          "ms": 1260,
+          "time": 1.204088435,
+          "encodedFrames": 61440
+        },
+        {
+          "ms": 1284,
+          "time": 1.228056247,
+          "encodedFrames": 62464
+        },
+        {
+          "ms": 1305,
+          "time": 1.248873976,
+          "encodedFrames": 63488
+        },
+        {
+          "ms": 1325,
+          "time": 1.268887726,
+          "encodedFrames": 64512
+        },
+        {
+          "ms": 1349,
+          "time": 1.29238514,
+          "encodedFrames": 65536
+        },
+        {
+          "ms": 1368,
+          "time": 1.311876173,
+          "encodedFrames": 66560
+        },
+        {
+          "ms": 1388,
+          "time": 1.33159168,
+          "encodedFrames": 67584
+        },
+        {
+          "ms": 1412,
+          "time": 1.355928752,
+          "encodedFrames": 68608
+        },
+        {
+          "ms": 1433,
+          "time": 1.376806257,
+          "encodedFrames": 69632
+        },
+        {
+          "ms": 1453,
+          "time": 1.396522302,
+          "encodedFrames": 70656
+        },
+        {
+          "ms": 1477,
+          "time": 1.420681084,
+          "encodedFrames": 71680
+        },
+        {
+          "ms": 1495,
+          "time": 1.439198794,
+          "encodedFrames": 72704
+        },
+        {
+          "ms": 1516,
+          "time": 1.459465113,
+          "encodedFrames": 73728
+        },
+        {
+          "ms": 1541,
+          "time": 1.484960577,
+          "encodedFrames": 74752
+        },
+        {
+          "ms": 1560,
+          "time": 1.503590558,
+          "encodedFrames": 75776
+        },
+        {
+          "ms": 1580,
+          "time": 1.523500818,
+          "encodedFrames": 76800
+        },
+        {
+          "ms": 1604,
+          "time": 1.548197596,
+          "encodedFrames": 77824
+        },
+        {
+          "ms": 1624,
+          "time": 1.568293612,
+          "encodedFrames": 78848
+        },
+        {
+          "ms": 1645,
+          "time": 1.588606821,
+          "encodedFrames": 79872
+        },
+        {
+          "ms": 1668,
+          "time": 1.611972841,
+          "encodedFrames": 80896
+        },
+        {
+          "ms": 1688,
+          "time": 1.631501367,
+          "encodedFrames": 81920
+        },
+        {
+          "ms": 1723,
+          "time": 1.666884455,
+          "encodedFrames": 82944
+        },
+        {
+          "ms": 1732,
+          "time": 1.675507919,
+          "encodedFrames": 83968
+        },
+        {
+          "ms": 1753,
+          "time": 1.696706914,
+          "encodedFrames": 84992
+        },
+        {
+          "ms": 1772,
+          "time": 1.715484636,
+          "encodedFrames": 86016
+        },
+        {
+          "ms": 1796,
+          "time": 1.739934564,
+          "encodedFrames": 87040
+        },
+        {
+          "ms": 1816,
+          "time": 1.759867096,
+          "encodedFrames": 88064
+        },
+        {
+          "ms": 1836,
+          "time": 1.779434698,
+          "encodedFrames": 89088
+        },
+        {
+          "ms": 1861,
+          "time": 1.804911362,
+          "encodedFrames": 90112
+        },
+        {
+          "ms": 1880,
+          "time": 1.823927348,
+          "encodedFrames": 91136
+        },
+        {
+          "ms": 1902,
+          "time": 1.845575395,
+          "encodedFrames": 92160
+        },
+        {
+          "ms": 1925,
+          "time": 1.868959363,
+          "encodedFrames": 93184
+        },
+        {
+          "ms": 1946,
+          "time": 1.88967871,
+          "encodedFrames": 94208
+        },
+        {
+          "ms": 1966,
+          "time": 1.909830868,
+          "encodedFrames": 95232
+        },
+        {
+          "ms": 1988,
+          "time": 1.932290596,
+          "encodedFrames": 96256
+        },
+        {
+          "ms": 2009,
+          "time": 1.952601755,
+          "encodedFrames": 97280
+        },
+        {
+          "ms": 2028,
+          "time": 1.972257223,
+          "encodedFrames": 98304
+        },
+        {
+          "ms": 2053,
+          "time": 1.996457829,
+          "encodedFrames": 99328
+        },
+        {
+          "ms": 2072,
+          "time": 2.016211458,
+          "encodedFrames": 100352
+        },
+        {
+          "ms": 2092,
+          "time": 2.036217806,
+          "encodedFrames": 101376
+        },
+        {
+          "ms": 2117,
+          "time": 2.06045284,
+          "encodedFrames": 102400
+        },
+        {
+          "ms": 2136,
+          "time": 2.080264478,
+          "encodedFrames": 103424
+        },
+        {
+          "ms": 2157,
+          "time": 2.10065712,
+          "encodedFrames": 104448
+        },
+        {
+          "ms": 2182,
+          "time": 2.125539327,
+          "encodedFrames": 105472
+        },
+        {
+          "ms": 2200,
+          "time": 2.143829183,
+          "encodedFrames": 106496
+        },
+        {
+          "ms": 2220,
+          "time": 2.163927606,
+          "encodedFrames": 107520
+        },
+        {
+          "ms": 2245,
+          "time": 2.1892309,
+          "encodedFrames": 108544
+        },
+        {
+          "ms": 2265,
+          "time": 2.208857753,
+          "encodedFrames": 109568
+        },
+        {
+          "ms": 2288,
+          "time": 2.231659785,
+          "encodedFrames": 110592
+        },
+        {
+          "ms": 2309,
+          "time": 2.252963143,
+          "encodedFrames": 111616
+        },
+        {
+          "ms": 2329,
+          "time": 2.272475901,
+          "encodedFrames": 112640
+        },
+        {
+          "ms": 2348,
+          "time": 2.291952538,
+          "encodedFrames": 113664
+        },
+        {
+          "ms": 2373,
+          "time": 2.316382237,
+          "encodedFrames": 114688
+        },
+        {
+          "ms": 2392,
+          "time": 2.335540333,
+          "encodedFrames": 115712
+        },
+        {
+          "ms": 2413,
+          "time": 2.357166351,
+          "encodedFrames": 116736
+        },
+        {
+          "ms": 2436,
+          "time": 2.379913926,
+          "encodedFrames": 117760
+        },
+        {
+          "ms": 2457,
+          "time": 2.400437809,
+          "encodedFrames": 118784
+        },
+        {
+          "ms": 2477,
+          "time": 2.421124594,
+          "encodedFrames": 119808
+        },
+        {
+          "ms": 2501,
+          "time": 2.444438481,
+          "encodedFrames": 120832
+        },
+        {
+          "ms": 2520,
+          "time": 2.463918925,
+          "encodedFrames": 121856
+        },
+        {
+          "ms": 2540,
+          "time": 2.483924172,
+          "encodedFrames": 122880
+        },
+        {
+          "ms": 2564,
+          "time": 2.507779926,
+          "encodedFrames": 123904
+        },
+        {
+          "ms": 2584,
+          "time": 2.527736238,
+          "encodedFrames": 124928
+        },
+        {
+          "ms": 2604,
+          "time": 2.547566943,
+          "encodedFrames": 125952
+        },
+        {
+          "ms": 2628,
+          "time": 2.571986759,
+          "encodedFrames": 126976
+        },
+        {
+          "ms": 2648,
+          "time": 2.592190835,
+          "encodedFrames": 128000
+        },
+        {
+          "ms": 2669,
+          "time": 2.612525308,
+          "encodedFrames": 129024
+        },
+        {
+          "ms": 2692,
+          "time": 2.63590798,
+          "encodedFrames": 130048
+        },
+        {
+          "ms": 2712,
+          "time": 2.655834429,
+          "encodedFrames": 131072
+        },
+        {
+          "ms": 2732,
+          "time": 2.676299254,
+          "encodedFrames": 132096
+        },
+        {
+          "ms": 2757,
+          "time": 2.70061526,
+          "encodedFrames": 133120
+        },
+        {
+          "ms": 2776,
+          "time": 2.720044968,
+          "encodedFrames": 134144
+        },
+        {
+          "ms": 2796,
+          "time": 2.739926949,
+          "encodedFrames": 135168
+        },
+        {
+          "ms": 2820,
+          "time": 2.763818848,
+          "encodedFrames": 136192
+        },
+        {
+          "ms": 2840,
+          "time": 2.783943816,
+          "encodedFrames": 137216
+        },
+        {
+          "ms": 2860,
+          "time": 2.804101362,
+          "encodedFrames": 138240
+        },
+        {
+          "ms": 2885,
+          "time": 2.828899777,
+          "encodedFrames": 139264
+        },
+        {
+          "ms": 2904,
+          "time": 2.848085515,
+          "encodedFrames": 140288
+        },
+        {
+          "ms": 2925,
+          "time": 2.869090476,
+          "encodedFrames": 141312
+        },
+        {
+          "ms": 2949,
+          "time": 2.893148517,
+          "encodedFrames": 142336
+        },
+        {
+          "ms": 2968,
+          "time": 2.912278005,
+          "encodedFrames": 143360
+        },
+        {
+          "ms": 2988,
+          "time": 2.932326883,
+          "encodedFrames": 144384
+        },
+        {
+          "ms": 3012,
+          "time": 2.956229735,
+          "encodedFrames": 145408
+        },
+        {
+          "ms": 3033,
+          "time": 2.976860884,
+          "encodedFrames": 146432
+        },
+        {
+          "ms": 3054,
+          "time": 2.997372356,
+          "encodedFrames": 147456
+        },
+        {
+          "ms": 3076,
+          "time": 3.020193622,
+          "encodedFrames": 148480
+        },
+        {
+          "ms": 3096,
+          "time": 3.040040575,
+          "encodedFrames": 149504
+        },
+        {
+          "ms": 3116,
+          "time": 3.059953742,
+          "encodedFrames": 150528
+        },
+        {
+          "ms": 3140,
+          "time": 3.084091368,
+          "encodedFrames": 151552
+        },
+        {
+          "ms": 3160,
+          "time": 3.103570806,
+          "encodedFrames": 152576
+        },
+        {
+          "ms": 3180,
+          "time": 3.124284299,
+          "encodedFrames": 153600
+        },
+        {
+          "ms": 3205,
+          "time": 3.14861437,
+          "encodedFrames": 154624
+        },
+        {
+          "ms": 3224,
+          "time": 3.167978093,
+          "encodedFrames": 155648
+        },
+        {
+          "ms": 3245,
+          "time": 3.189191717,
+          "encodedFrames": 156672
+        },
+        {
+          "ms": 3269,
+          "time": 3.212754798,
+          "encodedFrames": 157696
+        },
+        {
+          "ms": 3288,
+          "time": 3.232020347,
+          "encodedFrames": 158720
+        },
+        {
+          "ms": 3308,
+          "time": 3.25172439,
+          "encodedFrames": 159744
+        },
+        {
+          "ms": 3332,
+          "time": 3.27597508,
+          "encodedFrames": 160768
+        },
+        {
+          "ms": 3352,
+          "time": 3.295570984,
+          "encodedFrames": 161792
+        },
+        {
+          "ms": 3374,
+          "time": 3.317525251,
+          "encodedFrames": 162816
+        },
+        {
+          "ms": 3397,
+          "time": 3.340493514,
+          "encodedFrames": 163840
+        },
+        {
+          "ms": 3416,
+          "time": 3.359988006,
+          "encodedFrames": 164864
+        },
+        {
+          "ms": 3437,
+          "time": 3.380443436,
+          "encodedFrames": 165888
+        },
+        {
+          "ms": 3460,
+          "time": 3.404136138,
+          "encodedFrames": 166912
+        },
+        {
+          "ms": 3480,
+          "time": 3.423881404,
+          "encodedFrames": 167936
+        },
+        {
+          "ms": 3500,
+          "time": 3.444111751,
+          "encodedFrames": 168960
+        },
+        {
+          "ms": 3525,
+          "time": 3.468514653,
+          "encodedFrames": 169984
+        },
+        {
+          "ms": 3545,
+          "time": 3.488929702,
+          "encodedFrames": 171008
+        },
+        {
+          "ms": 3564,
+          "time": 3.50807485,
+          "encodedFrames": 172032
+        },
+        {
+          "ms": 3588,
+          "time": 3.531885246,
+          "encodedFrames": 173056
+        },
+        {
+          "ms": 3608,
+          "time": 3.55160254,
+          "encodedFrames": 174080
+        },
+        {
+          "ms": 3628,
+          "time": 3.571469582,
+          "encodedFrames": 175104
+        },
+        {
+          "ms": 3653,
+          "time": 3.596414187,
+          "encodedFrames": 176128
+        },
+        {
+          "ms": 3672,
+          "time": 3.615304272,
+          "encodedFrames": 177152
+        },
+        {
+          "ms": 3692,
+          "time": 3.635329719,
+          "encodedFrames": 178176
+        },
+        {
+          "ms": 3716,
+          "time": 3.66016269,
+          "encodedFrames": 179200
+        },
+        {
+          "ms": 3737,
+          "time": 3.680730299,
+          "encodedFrames": 180224
+        },
+        {
+          "ms": 3756,
+          "time": 3.700272284,
+          "encodedFrames": 181248
+        },
+        {
+          "ms": 3780,
+          "time": 3.7239917,
+          "encodedFrames": 182272
+        },
+        {
+          "ms": 3800,
+          "time": 3.744096141,
+          "encodedFrames": 183296
+        },
+        {
+          "ms": 3821,
+          "time": 3.764529561,
+          "encodedFrames": 184320
+        },
+        {
+          "ms": 3844,
+          "time": 3.787739615,
+          "encodedFrames": 185344
+        },
+        {
+          "ms": 3866,
+          "time": 3.809642469,
+          "encodedFrames": 186368
+        },
+        {
+          "ms": 3884,
+          "time": 3.82800089,
+          "encodedFrames": 187392
+        },
+        {
+          "ms": 3908,
+          "time": 3.851793717,
+          "encodedFrames": 188416
+        },
+        {
+          "ms": 3929,
+          "time": 3.87324042,
+          "encodedFrames": 189440
+        },
+        {
+          "ms": 3948,
+          "time": 3.892287615,
+          "encodedFrames": 190464
+        },
+        {
+          "ms": 3972,
+          "time": 3.916168265,
+          "encodedFrames": 191488
+        },
+        {
+          "ms": 3992,
+          "time": 3.936261875,
+          "encodedFrames": 192512
+        }
+      ],
+      "events": [
+        {
+          "event": "waiting",
+          "ms": 10,
+          "time": 0
+        },
+        {
+          "event": "playing",
+          "ms": 56,
+          "time": 0
+        }
+      ],
+      "inputDuration": 4.010666666666666,
+      "expectedContinuousBudgetPass": true,
+      "originalStartupEffectOnlyGatePassed": true
+    }
+  ]
+}
