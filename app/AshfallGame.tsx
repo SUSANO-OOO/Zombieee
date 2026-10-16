@@ -4287,7 +4287,7 @@ function drawSpriteFighter(
     ? stationAbilityPose.direction < 0 ? 'left' : 'right'
     : soukiPose ? 'left' : (guardianGuardPose || kumaGuardArtPose) && Number.isFinite(lockedDirection) && lockedDirection !== 0
     ? lockedDirection < 0 ? 'left' : 'right'
-    : manualAbilityActive
+    : manualAbilityActive && Number.isFinite(lockedDirection) && lockedDirection !== 0
     ? fallbackDirection
     : f.animationPresentation?.direction ?? fallbackDirection;
   const anomalyTuning = isBossAnomalyKind(f.kind)
