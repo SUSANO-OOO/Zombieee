@@ -17,8 +17,8 @@ test("campaign navigation exposes Survival lobby and result screens", () => {
 
 test("Survival battle HUD exposes required wave, boss, speed, and CRAWLER controls", () => {
   assert.match(ashfallSource, /className="survival-hud"/);
-  assert.match(ashfallSource, />WAVE</);
-  assert.match(ashfallSource, />NEXT BOSS</);
+  assert.match(ashfallSource, />現在の波</);
+  assert.match(ashfallSource, />次のボス</);
   assert.match(ashfallSource, /formatBattleText\("CRAWLER HP"\)/);
   assert.match(ashfallSource, /changeSurvivalSpeed\(1\).*?>1倍</s);
   assert.match(ashfallSource, /changeSurvivalSpeed\(2\).*?>2倍</s);

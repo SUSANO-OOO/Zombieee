@@ -1963,7 +1963,7 @@ const initialSurvivalGame = ({
   game.wave = run.currentWave;
   game.phase = 1;
   game.eventIndex = 0;
-  game.banner = `SURVIVAL // WAVE ${run.currentWave}`;
+  game.banner = `サバイバル / 第${run.currentWave}波`;
   game.bannerTime = 2.2;
   return game;
 };
@@ -19894,7 +19894,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 });
                 return { ...entry, ...portal, lane: portal.legacyLane as Lane };
               });
-              g.banner = `WAVE ${event.plan.wave}`;
+              g.banner = `第${event.plan.wave}波`;
               g.bannerTime = 1.8;
               playCue("wave-contact");
               emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
@@ -19916,7 +19916,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             } else if (event.type === "boss-warning") {
               announceBossEntrance(g, event.bossKind);
             } else if (event.type === "boss-combat-ready") {
-              g.banner = "BOSS COMBAT READY";
+              g.banner = "ボス戦開始";
               g.bannerTime = 1.6;
             } else if (event.type === "checkpoint" && g.survivalRun) {
               const checkpointId = `survival:${g.survivalRun.runId}:wave:${event.completedWave}`;
@@ -24155,9 +24155,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{formatBattleText(bark.speaker)}</b><span>{formatBattleText(bark.text)}</span></p>)}</div>}
             {hud.banner && <p className="battle-banner" data-message-kind="banner">{formatBattleText(hud.banner)}</p>}
           </div>}
-          <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
-          <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
-          <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
+          <div className="survival-hud" role="region" aria-label="サバイバル戦闘情報">
+          <div className="survival-wave"><small>現在の波</small><strong>{survivalHud.wave}</strong></div>
+          <div className="survival-next-boss"><small>次のボス</small><b>第{survivalHud.nextBossWave}波</b></div>
           <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
             <span>{formatBattleText("CRAWLER HP")}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
             <i><em style={{ width: `${healthPct}%` }} /></i>
@@ -24295,8 +24295,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
         </div>
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
-          <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
-          <h2>3択強化を選択</h2>
+          <small>第{survivalHud.lastCompletedWave}波を制圧</small>
+          <h2>強化を1つ選択</h2>
           {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
           <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "このステージ中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
           {survivalHud.nextWavePreview && <div className="survival-next-wave-preview"><strong>次は第{survivalHud.nextWavePreview.wave}波 / {survivalHud.nextWavePreview.total}体</strong><span>{survivalHud.nextWavePreview.threats}</span></div>}
