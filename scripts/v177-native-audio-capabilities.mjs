@@ -230,7 +230,7 @@ export async function runHostedNativeAudioCapabilities() {
       ".github/workflows/native-audio-capabilities.yml", "scripts/pwa-browser-runtime.mjs", "package-lock.json",
       "scripts/pwa-native-runtime/package.json", "scripts/pwa-native-runtime/package-lock.json",
       "scripts/pwa-native-runtime/node_modules/playwright/package.json", "scripts/pwa-native-runtime/node_modules/playwright-core/browsers.json"]) {
-      const bytes = await readFile(file), retainedFile = "source/" + file.replaceAll("/", "__");
+      const bytes = await readFile(file), retainedFile = "source/repo__" + file.replaceAll("/", "__");
       await writeFile(path.join(out, retainedFile), bytes, { flag: "wx" });
       report.sourcePins.push({ file, retainedFile, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") });
     }

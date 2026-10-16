@@ -1,0 +1,50 @@
+name: Native Game Capture Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-game-capture.yml'
+      - 'scripts/v177-native-game-capture-browser.mjs'
+      - 'tests/v177-native-game-capture.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-game-capture-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  native-game-capture:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install pinned native WebKit
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Build the exact PR candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Record three original game-canvas VP8 clips
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
+        run: node scripts/v177-native-game-capture-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-game-capture
+          path: outputs/v177-native-game-capture
+          if-no-files-found: error
+          retention-days: 7
