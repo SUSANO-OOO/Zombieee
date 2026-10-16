@@ -5,6 +5,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
+import { v177LivingStunState, v177LivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
@@ -4401,6 +4402,8 @@ function drawSpriteFighter(
         ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
           ? sampleMrsChihaLauncherBash(Math.max(0, attackDuration - f.attack))
           : sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
+        : f.animationPresentation?.state === "incapacitated" && f.hp > 0 && f.stunned > 0
+          ? v177LivingStunSample(f.kind)
         : sampleAnimationClip(
           f.kind,
           f.animationPresentation?.state ?? (moving ? "move" : "idle"),
@@ -4416,7 +4419,7 @@ function drawSpriteFighter(
   const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
-    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f}) : null;
+    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,stunRemaining:f.stunned}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -23471,7 +23474,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               ? fighter.knock >= 12 ? "hit-heavy" : "hit-light"
               : fighter.kind === "gunner" && fighter.overheated && fighter.attack <= 0
                 ? "reload"
-                : null;
+                : v177LivingStunState(fighter, {manualAbilityActive,
+                  supported:V177_JOINT_ATLASES[fighter.kind]?.type==='rigid-parts'});
           fighter.animationPresentation = advanceCombatAnimationRuntime(
             fighter.animationPresentation ?? createCombatAnimationRuntime({
               deploying: fighter.gateEntering,

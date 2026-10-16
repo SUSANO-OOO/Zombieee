@@ -18,12 +18,13 @@ const attackStates = new Set(['wind-up','active','recovery']);
 const recoveryStates = new Set(['reload','weapon-cycle']);
 const hitStates = new Set(['hit','hit-light','hit-heavy']);
 const renderedJointPoses = new WeakMap();
+const livingStunPoses = new WeakMap();
 const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
 function rememberRenderedJointPose(actor,kind,plan) {
   const key=actorKey(actor);
   if(!key)return;
   if(plan)renderedJointPoses.set(key,{kind,plan:{...plan}});
-  else renderedJointPoses.delete(key);
+  else { renderedJointPoses.delete(key); livingStunPoses.delete(key); }
 }
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
@@ -36,9 +37,11 @@ export function v177JointCycleDistance(kind, renderScale) {
     ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
-export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor }={}) {
+export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,stunRemaining=0 }={}) {
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
   if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
+  if(state==='incapacitated')return livingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
+  if(actorKey(actor))livingStunPoses.delete(actor);
   if(hitStates.has(state)) {
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
     if(previous?.kind!==kind) { rememberRenderedJointPose(actor,kind,null); return null; }
@@ -82,10 +85,153 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor }={
     upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]};
 }
 
+function resolvedJointMatrix(out,_atlas,plan,bone,upper) {
+  out.set(plan.resolvedJointPose[upper?'upper':'lower'][bone]);return out;
+}
+
+const smooth = p => { const t=clamp(p);return t*t*(3-2*t); };
+const matrixPoint = (m,[x,y]) => [m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
+function multiplyMatrix(a,b) {
+  return [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],
+    a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],
+    a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];
+}
+
+const identityMatrix = () => [1,0,0,1,0,0];
+const copyCapturedJoints = pose => ({
+  lower:Object.fromEntries(Object.entries(pose.lower).map(([k,m])=>[k,[...m]])),
+  upper:Object.fromEntries(Object.entries(pose.upper).map(([k,m])=>[k,[...m]])),
+});
+function inverseMatrix(m) {
+  const d=m[0]*m[3]-m[1]*m[2];
+  return [m[3]/d,-m[1]/d,-m[2]/d,m[0]/d,
+    (m[2]*m[5]-m[3]*m[4])/d,(m[1]*m[4]-m[0]*m[5])/d];
+}
+function transformUpperJoints(pose,t) {
+  for(const bone of Object.keys(pose.upper))pose.upper[bone]=multiplyMatrix(t,pose.upper[bone]);
+}
+
+function captureStatusJoints(atlas,plan) {
+  if(plan.resolvedJointPose)return copyCapturedJoints(plan.resolvedJointPose);
+  const pose={lower:{},upper:{}},matrix=new Float64Array(6);
+  const scratch=[new Float64Array(6),new Float64Array(6)];
+  for(const bone of Object.keys(atlas.poses[0]))for(const upper of [false,true])
+    pose[upper?'upper':'lower'][bone]=[...jointMatrix(matrix,atlas,plan,bone,upper,scratch)];
+  return pose;
+}
+
+function blendCapturedJoints(atlas,initial,neutral,p) {
+  if(p>=1)return neutral;
+  if(p<=0)return copyCapturedJoints(initial);
+  const interpolationPivots={...atlas.interpolationPivots};
+  for(const chain of [...(atlas.armConstraints??[]),...(atlas.legConstraints??[])])
+    interpolationPivots[chain.effectorBone]??=chain.effectorWrist??chain.ankle??chain.wrist;
+  const rig={...atlas,interpolationPivots,poses:[initial.lower,initial.upper,neutral.lower,neutral.upper]};
+  const plan={lowerIndex:0,lowerNextIndex:2,lowerBlend:p,upperIndex:1,upperNextIndex:3,upperBlend:p,
+    attackPhase:null,upperOffsetY:0},result={lower:{},upper:{}};
+  const scratch=[new Float64Array(6),new Float64Array(6)],matrix=new Float64Array(6);
+  for(const bone of Object.keys(atlas.poses[0]))for(const upper of [false,true])
+    result[upper?'upper':'lower'][bone]=[...jointMatrix(matrix,rig,plan,bone,upper,scratch)];
+  return result;
+}
+
+function leanCapturedJoints(atlas,pose,amplitude) {
+  const legs=atlas.legConstraints??[];
+  if(!legs.length||amplitude<=0)return resolveUpperOwnedLegs(atlas,pose);
+  const hips=legs.map(chain=>matrixPoint(pose[chain.parentUpper===false?'lower':'upper'][chain.parentBone],chain.hip));
+  const px=hips.reduce((sum,p)=>sum+p[0],0)/hips.length,py=hips.reduce((sum,p)=>sum+p[1],0)/hips.length;
+  const transform=angle=>{const c=Math.cos(angle),s=Math.sin(angle);return [c,s,-s,c,px-c*px+s*py,py-s*px-c*py];};
+  const reaches=t=>legs.every((chain,i)=>{
+    if(chain.parentUpper===false)return true;
+    const [hx,hy]=matrixPoint(t,hips[i]);
+    const [tx,ty]=matrixPoint(pose.lower[chain.effectorBone],chain.effectorWrist??chain.ankle);
+    const a=Math.hypot(chain.knee[0]-chain.hip[0],chain.knee[1]-chain.hip[1]);
+    const b=Math.hypot(chain.ankle[0]-chain.knee[0],chain.ankle[1]-chain.knee[1]);
+    const d=Math.hypot(tx-hx,ty-hy);return d<=a+b+1e-8&&d>=Math.abs(a-b)-1e-8;
+  });
+  // A low or many-legged body keeps its actual foot targets. Bound the lean by
+  // this pose's fixed limb reach instead of letting an IK fallback detach a paw.
+  let angle=-.035*amplitude,t=transform(angle);
+  for(let i=0;i<12&&!reaches(t);i++){angle*=.5;t=transform(angle);}
+  if(!reaches(t))t=transform(0);
+  // Resolve all attachments first, then move each upper matrix exactly once.
+  // Applying the transform recursively again would detach a jaw or soft organ.
+  transformUpperJoints(pose,t);
+  pose.upperTransform=multiplyMatrix(t,pose.upperTransform??identityMatrix());
+  return resolveUpperOwnedLegs(atlas,pose);
+}
+
+function resolveUpperOwnedLegs(atlas,pose) {
+  const rig={...atlas,poses:[pose.lower,pose.upper]};
+  const plan={lowerIndex:0,lowerNextIndex:0,lowerBlend:0,upperIndex:1,upperNextIndex:1,upperBlend:0,
+    attackPhase:null,upperOffsetY:0},scratch=[new Float64Array(6),new Float64Array(6)],matrix=new Float64Array(6);
+  for(const chain of atlas.legConstraints??[])if(chain.parentUpper!==false)for(const bone of [chain.upperBone,chain.lowerBone]){
+    const m=[...jointMatrix(matrix,rig,plan,bone,false,scratch)];
+    pose.lower[bone]=m;pose.upper[bone]=[...m];
+  }
+  return pose;
+}
+
+function returnPaintedJoints(atlas,entry,neutral,progress) {
+  const target=captureStatusJoints(atlas,neutral);
+  if(progress<=0)return {...copyCapturedJoints(entry.pose),upperTransform:entry.upperTransform,
+    returnPlan:Number.isFinite(entry.sourcePlan.attackPhase)?entry.sourcePlan:null};
+  if(progress>=1)return {...target,upperTransform:identityMatrix(),returnPlan:null};
+  const pose=blendCapturedJoints(atlas,entry.basePose,target,progress);
+  if(Number.isFinite(entry.sourcePlan.attackPhase)){
+    // A long two-handed swing cannot be cross-faded directly to ready: an
+    // intermediate weapon angle can lie outside both fixed arm reaches. Follow
+    // the original authored return path before joining the current carry pose.
+    const attackPhase=entry.sourcePlan.attackPhase+(1-entry.sourcePlan.attackPhase)*clamp(progress/.7);
+    const attackBase=entry.sourcePlan.upperIndex-Math.floor(entry.sourcePlan.attackPhase*atlas.frameCount);
+    const frame=attackPhase*atlas.frameCount,index=Math.floor(frame);
+    const returning={...neutral,attackPhase,upperIndex:attackBase+index,
+      upperNextIndex:attackBase+Math.min(atlas.frameCount,index+1),upperBlend:frame-index,
+      upperOffsetY:entry.sourcePlan.upperOffsetY+(neutral.upperOffsetY-entry.sourcePlan.upperOffsetY)*progress};
+    const source=captureStatusJoints(atlas,returning);
+    pose.upper=progress<=.7 ? source.upper
+      : blendCapturedJoints(atlas,source,target,smooth((progress-.7)/.3)).upper;
+    pose.returnPlan=progress<=.7?returning:null;
+  }
+  // An ordinary hit can hold an already reacting body. Strip its one common
+  // rigid transform before interpolating, then ease that transform out once.
+  // This preserves both-hand reach without recapturing a growing body lean.
+  const angle=Math.atan2(entry.upperTransform[1],entry.upperTransform[0])*(1-progress),c=Math.cos(angle),s=Math.sin(angle);
+  pose.upperTransform=[c,s,-s,c,entry.upperTransform[4]*(1-progress),entry.upperTransform[5]*(1-progress)];
+  transformUpperJoints(pose,pose.upperTransform);
+  return pose;
+}
+
+function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
+  const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
+  if(atlas.type!=='rigid-parts'||!(remaining>0)||previous?.kind!==kind){
+    rememberRenderedJointPose(actor,kind,null);return null;
+  }
+  const clock=Math.max(0,Number(runtime?.elapsedSeconds)||0),epoch=runtime?.transitionCount;
+  let entry=livingStunPoses.get(key);
+  if(!entry||entry.kind!==kind||entry.epoch!==epoch||clock<entry.clock){
+    const pose=captureStatusJoints(atlas,previous.plan),basePose=copyCapturedJoints(pose);
+    const upperTransform=previous.plan.stunUpperTransform??identityMatrix();
+    if(previous.plan.stunUpperTransform)transformUpperJoints(basePose,inverseMatrix(upperTransform));
+    entry={kind,epoch,clock,remaining,pose,basePose,upperTransform,
+      sourcePlan:previous.plan.stunReturnPlan??previous.plan};
+    livingStunPoses.set(key,entry);
+  }
+  const neutral=v177JointPose(kind,{requestedState:'idle'},runtime);
+  const elapsed=Math.max(0,clock-entry.clock),exitWindow=Math.min(.12,entry.remaining);
+  const progress=1-(1-smooth(elapsed/.12))*smooth(remaining/exitWindow);
+  const amplitude=smooth(elapsed/.1)*smooth(remaining/.1);
+  const returning=returnPaintedJoints(atlas,entry,neutral,progress);
+  const resolved=progress===0&&amplitude===0 ? returning : leanCapturedJoints(atlas,returning,amplitude);
+  return {...neutral,liveStun:true,resolvedJointPose:resolved,stunElapsed:elapsed,stunRemaining:remaining,
+    stunUpperTransform:resolved.upperTransform,stunReturnPlan:resolved.returnPlan??null};
+}
+
 export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor}={}) {
   const atlas=V177_JOINT_ATLASES[kind];
   if(!atlas || !plan || !image?.naturalWidth) { rememberRenderedJointPose(actor,kind,null); return false; }
   if(atlas.type==='rigid-parts'){
+    const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
     const matrix=new Float64Array(6);
     const scratch=atlas.armConstraints || atlas.legConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
     const reference=atlas.referenceFrame;
@@ -96,13 +242,13 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
       if(part.bone==='jaw'){
         ctx.fillStyle=atlas.mouth.color;ctx.beginPath();let started=false;
         for(const [bone,points]of [[atlas.mouth.headBone,atlas.mouth.upper],[atlas.mouth.jawBone,atlas.mouth.lower]]){
-          jointMatrix(matrix,atlas,plan,bone,true);
+          resolve(matrix,atlas,plan,bone,true);
           for(const [px,py]of points){const xx=matrix[0]*px+matrix[2]*py+matrix[4],yy=matrix[1]*px+matrix[3]*py+matrix[5];
             if(started)ctx.lineTo(xx,yy);else ctx.moveTo(xx,yy);started=true;}
         }
         ctx.closePath();ctx.fill();
       }
-      jointMatrix(matrix,atlas,plan,part.bone,part.upper,scratch);
+      resolve(matrix,atlas,plan,part.bone,part.upper,scratch);
       const s=part.source,d=part.destination;
       ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
     }
@@ -200,9 +346,10 @@ export function v177CaptureJointPose(kind,plan) {
   const atlas=V177_JOINT_ATLASES[kind];
   if(!atlas || atlas.type!=='rigid-parts' || !plan)return null;
   const lower={},upper={};
+  const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
   for(const bone of Object.keys(atlas.poses[0])){
-    lower[bone]=[...jointMatrix(new Float64Array(6),atlas,plan,bone,false)];
-    upper[bone]=[...jointMatrix(new Float64Array(6),atlas,plan,bone,true)];
+    lower[bone]=[...resolve(new Float64Array(6),atlas,plan,bone,false)];
+    upper[bone]=[...resolve(new Float64Array(6),atlas,plan,bone,true)];
   }
   return {lower,upper};
 }
@@ -251,7 +398,8 @@ export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,po
   if(!atlas || !plan || plan.attackPhase===null)return null;
   let px,py,dy=plan.upperOffsetY;
   if(atlas.type==='rigid-parts'){
-    const m=jointMatrix(new Float64Array(6),atlas,plan,atlas.weaponBone,true),[sx,sy]=atlas.muzzle;
+    const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
+    const m=resolve(new Float64Array(6),atlas,plan,atlas.weaponBone,true),[sx,sy]=atlas.muzzle;
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];dy=0;
   }else [px,py]=atlas.muzzles[plan.upperIndex-atlas.lowerCount];
   const reference=atlas.referenceFrame;
