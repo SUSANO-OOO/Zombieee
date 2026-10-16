@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { load as loadYaml } from 'js-yaml';
 import { V100_STAGE_IDS } from '../app/v100Registry.js';
 import { normalPlayStageLimit, representativeNormalPlayScope } from '../scripts/v177-representative-normal-play.mjs';
+import * as representativeEntry from '../scripts/v177-representative-normal-play.mjs';
 
 const candidateSha = 'a'.repeat(40);
 function fixture(defeatedAt = null) {
@@ -78,5 +79,12 @@ test('CI keeps independent full developer progression and bounds both normal obs
     const play = jobs[id].steps.find(step => step.run?.includes('scripts/v177-representative-normal-play.mjs'));
     assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT, '3');
     assert.equal(jobs[id]['continue-on-error'], undefined, 'unexpected failures remain hard CI failures');
+  }
+});
+
+test('the owned-server launcher can invoke an explicit representative entry without bypassing the local host guard', async () => {
+  assert.equal(typeof representativeEntry.runBrowserQa, 'function', 'importing a guarded CLI must not silently skip the real observation');
+  if (process.platform === 'win32') {
+    await assert.rejects(() => representativeEntry.runBrowserQa(), /normal-play observation is hosted-only/u);
   }
 });

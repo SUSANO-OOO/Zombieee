@@ -63,7 +63,7 @@ export function representativeNormalPlayScope({ candidateSha, engine, reportByte
   };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+export async function runBrowserQa() {
   assert.notEqual(process.platform, 'win32', 'normal-play observation is hosted-only');
   assert.equal(normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT), 3);
   const childCode = await new Promise((resolve, reject) => {
@@ -81,4 +81,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     child.on('error', reject); child.on('exit', resolve);
   });
   assert.equal(representativeCode, 0, 'independent middle/late observations retain all technical failure controls');
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  await runBrowserQa();
 }
