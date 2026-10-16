@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
+import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
 import { useGameModalScope } from "./useGameModalScope";
 
 import {
@@ -175,6 +176,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // Remembered for the visit only, so the invitation is never nagged twice in
   // one session.
   const [offerDismissed, setOfferDismissed] = useState(false);
+  const [browserPlayPending, setBrowserPlayPending] = useState(false);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof describeFailureDiagnostics> | null>(null);
@@ -211,6 +213,22 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
   const installedManifestRef = useRef<Manifest | null>(null);
   const storedHashesRef = useRef<Set<string>>(new Set());
+  const browserPlayTransitionRef = useRef<ReturnType<typeof createPaintedBrowserEntry> | null>(null);
+
+  useEffect(() => () => {
+    browserPlayTransitionRef.current?.dispose();
+    browserPlayTransitionRef.current = null;
+  }, []);
+
+  const beginBrowserPlay = useCallback(() => {
+    browserPlayTransitionRef.current ??= createPaintedBrowserEntry({
+      requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
+      cancelFrame: (frame: number) => window.cancelAnimationFrame(frame),
+      onPending: setBrowserPlayPending,
+      onEnter: () => setOfferDismissed(true),
+    });
+    browserPlayTransitionRef.current.request();
+  }, []);
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
@@ -916,8 +934,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 )}
 
                 <div className="pwa-actions pwa-secondary-actions">
-                  <button type="button" onClick={() => setOfferDismissed(true)}>
-                    {offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
+                  <button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>
+                    {browserPlayPending ? "準備しています…" : offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
                   </button>
                 </div>
                 <p className="pwa-hint">{offerCopy?.skipHint ?? "インストールせずに遊ぶこともできます。"}</p>
