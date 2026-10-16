@@ -85,23 +85,38 @@ try{
         const samples=[];
         row.motion.push({kind,side,samples});
         for(const {action,expectedState,joint,attackOrigin} of V177_NATIVE_ACTION_PLAN){
-          // Prepare and apply the input in one JS task, before any native paint.
-          // Fresh fighters keep completed deployment and hit states independent.
-          const proof=await page.evaluate(({kind,baseKind,side,action,expectedState})=>{
+          // Fresh fighters keep these states independent. Paint the initial
+          // body before applying a hit so its actual last drawn rig is known.
+          const proof=await page.evaluate(({kind,baseKind,side,expectedState})=>{
             const qa=window.__ASHFALL_BATTLE_QA__;
             const prepared=qa.prepareAnimationFoundationProof(baseKind,side,kind);
             if(expectedState!=='deploy')qa.stepAnimationFoundationProof(prepared.fighterId,'stop',.5);
             const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
-            qa.stepAnimationFoundationProof(prepared.fighterId,action,.06);
             return {...prepared,previous};
-          },{kind,baseKind,side,action,expectedState});
+          },{kind,baseKind,side,expectedState});
+          await page.waitForFunction(({fighterId,previous})=>{
+            const r=window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit;
+            return r?.renderSequence>previous&&r.assetReady;
+          },proof);
+          const beforeRender=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit,proof.fighterId);
+          proof.previous=await page.evaluate(({fighterId,action})=>{
+            const qa=window.__ASHFALL_BATTLE_QA__;
+            const previous=qa.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit?.renderSequence;
+            qa.stepAnimationFoundationProof(fighterId,action,.06);
+            return previous;
+          },{fighterId:proof.fighterId,action});
           await page.waitForFunction(({fighterId,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit?.renderSequence>previous,proof);
           const sample=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id),proof.fighterId);
           const r=sample.renderAudit;
-          samples.push({action,fighterId:proof.fighterId,render:r,pixelScale:renderedSourcePixelScale(r)});
+          samples.push({action,fighterId:proof.fighterId,render:r,pixelScale:renderedSourcePixelScale(r),
+            ...(action.startsWith('hit-')?{beforeRender}:{})});
           assert.ok(r.assetReady&&r.renderWidth>0&&r.renderHeight>0,`${kind}/${action}: actual sprite renderer`);
           assert.ok(Number.isFinite(r.poseScaleX)&&Number.isFinite(r.poseScaleY),`${kind}/${action}: finite pose`);
           if(expectedState)assert.equal(r.requestedState,expectedState,`${kind}/${action}: paint follows the requested action`);
+          if(action.startsWith('hit-')){
+            assert.equal(r.jointLowerFrame,beforeRender.jointLowerFrame,`${kind}/${action}: feet retain the last actually painted rig`);
+            assert.equal(r.jointUpperFrame,beforeRender.jointUpperFrame,`${kind}/${action}: head, hands and weapon retain the last actually painted rig`);
+          }
           if(V177_JOINT_ATLASES[kind]&&joint){
             assert.equal(r.jointAtlasPath,V177_JOINT_ATLASES[kind].path,`${kind}/${action}: actual joint draw connection`);
             assert.ok(Number.isInteger(r.jointLowerFrame)&&Number.isInteger(r.jointUpperFrame));

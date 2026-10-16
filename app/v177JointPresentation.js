@@ -13,9 +13,18 @@ import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJo
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
 
-const locomotionStates = new Set(['idle','move','start-move','stop-move','turn','retreat']);
+const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
 const recoveryStates = new Set(['reload','weapon-cycle']);
+const hitStates = new Set(['hit','hit-light','hit-heavy']);
+const renderedJointPoses = new WeakMap();
+const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
+function rememberRenderedJointPose(actor,kind,plan) {
+  const key=actorKey(actor);
+  if(!key)return;
+  if(plan)renderedJointPoses.set(key,{kind,plan:{...plan}});
+  else renderedJointPoses.delete(key);
+}
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
@@ -27,11 +36,21 @@ export function v177JointCycleDistance(kind, renderScale) {
     ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
-export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
+export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor }={}) {
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
-  if (!atlas || ownedPose || (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state))) return null;
+  if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
+  if(hitStates.has(state)) {
+    const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
+    if(previous?.kind!==kind) { rememberRenderedJointPose(actor,kind,null); return null; }
+    // The existing rigid recoil still moves the body. Keep its last painted
+    // feet, head and weapon instead of snapping to a different static hit row.
+    return {...previous.plan,reactionHeld:true};
+  }
+  if (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state)) {
+    rememberRenderedJointPose(actor,kind,null); return null;
+  }
   const variant=sample?.attackVariant ? atlas.attackVariants?.[sample.attackVariant] : null;
-  if(sample?.attackVariant && !variant)return null;
+  if(sample?.attackVariant && !variant) { rememberRenderedJointPose(actor,kind,null); return null; }
   const phase=cycle(runtime?.locomotionPhase);
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
   const settleIndex=Math.round(clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1));
@@ -63,9 +82,9 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false }={}) {
     upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]};
 }
 
-export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
+export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor}={}) {
   const atlas=V177_JOINT_ATLASES[kind];
-  if(!atlas || !plan || !image?.naturalWidth)return false;
+  if(!atlas || !plan || !image?.naturalWidth) { rememberRenderedJointPose(actor,kind,null); return false; }
   if(atlas.type==='rigid-parts'){
     const matrix=new Float64Array(6);
     const scratch=atlas.armConstraints || atlas.legConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
@@ -87,7 +106,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
       const s=part.source,d=part.destination;
       ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
     }
-    ctx.restore();return true;
+    ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
   for(const [index,dy] of [[plan.lowerIndex,0],[plan.upperIndex,plan.upperOffsetY]]) {
     const {source:s,destination:d}=atlas.frames[index];
@@ -95,7 +114,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height) {
       x+d.x/atlas.width*width,y+(d.y+dy)/atlas.height*height,
       d.w/atlas.width*width,d.h/atlas.height*height);
   }
-  return true;
+  rememberRenderedJointPose(actor,kind,plan);return true;
 }
 
 // Interpolate rigid transforms, rather than matrix coefficients that shorten

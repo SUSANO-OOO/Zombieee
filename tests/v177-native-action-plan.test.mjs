@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {V177_NATIVE_ACTION_PLAN} from '../scripts/v177-native-action-plan.mjs';
 import {spriteKinds} from '../app/spriteManifest.js';
-import {V177_JOINT_ATLASES,v177JointPose} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../app/v177JointPresentation.js';
 import {PLAYABLE_COMBAT_KINDS,animationClipFor,attackPresentationDuration,createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 
 test('native pose coverage includes every actual foundation input without duplicates or invented actions',()=>{
@@ -23,9 +23,13 @@ test('every declared joint pose is connected for all 48 original forms, includin
   assert.equal(spriteKinds.length,48);
   for(const kind of spriteKinds)for(const plan of V177_NATIVE_ACTION_PLAN){
     assert.ok(V177_JOINT_ATLASES[kind]);
+    const actor={},runtime={locomotionPhase:.2,locomotionSettle:1};
+    const ready=v177JointPose(kind,{requestedState:'idle'},runtime,{actor});
+    const ctx={save(){},restore(){},translate(){},scale(){},transform(){},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){}};
+    assert.equal(drawV177JointPose(ctx,{naturalWidth:1},kind,ready,0,0,100,120,{actor}),true);
     const state=plan.expectedState??(plan.action.startsWith('move-')?'move':'stop-move');
     const pose=v177JointPose(kind,{requestedState:state,clipProgress:.2},
-      {locomotionPhase:.2,locomotionSettle:1});
+      runtime,{actor});
     assert.equal(Boolean(pose),plan.joint,`${kind}/${plan.action}: actual joint eligibility`);
     if(plan.attackOrigin)assert.ok(pose&&Number.isInteger(pose.upperIndex));
   }

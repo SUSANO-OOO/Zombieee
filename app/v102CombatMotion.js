@@ -18,6 +18,7 @@ export const V102_MOTION_GROUPS = Object.freeze(Object.fromEntries(
 const IDENTITY = Object.freeze({offsetX:0,offsetY:0,rotationRadians:0,scaleX:1,scaleY:1,opacity:1});
 const clamp = p => Math.max(0,Math.min(1,Number(p)||0));
 const smooth = p => p*p*(3-2*p);
+const hitStates = new Set(['hit','hit-light','hit-heavy']);
 
 // Each body retains one camera scale. The painted poses own joint movement;
 // recoil is a rigid weight shift, never a change in head/weapon proportions.
@@ -25,7 +26,7 @@ export function v102CombatMotionSample(kind,sample,{ownedPose=false,side,attack=
   if (!V102_MOTION_GROUPS[kind] || ownedPose) return sample;
   const group=V102_MOTION_GROUPS[kind];
   let result=sample;
-  if(side==='zombie'&&abilityWindup<=0) {
+  if(side==='zombie'&&abilityWindup<=0&&!hitStates.has(sample.requestedState)) {
     if(attackWindup>0) result={...sample,spriteState:'attack-a'};
     else if(attack>0) {
       const elapsed=Math.max(0,ENEMY_NORMAL_ATTACK_SECONDS-attack);
@@ -46,7 +47,7 @@ export function v102CombatMotionSample(kind,sample,{ownedPose=false,side,attack=
     // Keep the released limb pose before returning to ready. Replaying
     // attack-a here was a second windup with no corresponding damage.
     result={...result,spriteState:p<.7?'attack-b':'idle'};
-  } else if(['hit','hit-light','hit-heavy'].includes(state)) {
+  } else if(hitStates.has(state)) {
     const recoil=(1-p)*(1-p);
     pose={...IDENTITY,offsetX:-force*recoil,rotationRadians:-.022*recoil};
   }
