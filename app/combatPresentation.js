@@ -1435,6 +1435,13 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   if (advancingGait) locomotionPhase += movedDistance / strideDistance;
   // A planted foot must not slide while the fighter is stationary. Settling
   // lowers the airborne foot in the rig; it never advances the gait phase.
+  // Restart from that actual plant as well. Resetting lift to a full walking
+  // pose in one update made a short stop/approach pop at the knee and foot.
+  // This only eases the lift; distance still advances the stride immediately.
+  const previousSettle = Math.max(0, Math.min(1, Number(previous.locomotionSettle) || 0));
+  const locomotionSettle = moving
+    ? Math.max(0, previousSettle - dt / .12)
+    : Math.min(1, previousSettle + dt / .16);
   const stateTravelDistance = state === "move"
     ? stateChanged
       ? movedDistance
@@ -1478,7 +1485,7 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
       + (advancingGait ? movedDistance : 0),
     locomotionPhase,
     locomotionStopPhase,
-    locomotionSettle: moving ? 0 : Math.min(1, (Number(previous.locomotionSettle) || 0) + dt / .16),
+    locomotionSettle,
   };
 }
 
