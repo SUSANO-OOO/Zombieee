@@ -24,12 +24,20 @@ export const V100_R9_INSERTS = Object.freeze({
 export function v100StoryInsertFor(id, sourceLine = 0) {
  const base=V100_R9_INSERTS[id];
  if(!base) return null;
+ const observed=id==='medical-observation'&&sourceLine>=2353;
+ const familyConfirmed=id==='family-ledger'&&(sourceLine>=1788||sourceLine>=1527&&sourceLine<=1533);
+ const detail=familyConfirmed
+  ?(sourceLine>=1788?'妻と息子 / 今朝の生存確認':'妻と息子 / 三日前の生存記録')
+  :observed?'24時間の進行停止 / 完治は未確認':base.detail;
+ const alt=familyConfirmed
+  ?(sourceLine>=1788?'護送予定表に妻と息子の今朝の生存確認印がある。':'搬送記録に妻と息子の三日前の生存確認が記されている。')
+  :observed?'投与後1時間・6時間・24時間の腕の変色は同じ範囲で、進行が止まっている。完治はまだ確認できず、観察を続ける。':base.alt;
  return {...base,id,
+  detail,alt,
   disconnected:id==='seg-lab-disconnected',stopped:id.endsWith('-stopped'),
   crossing:id==='bridge-crossing',
   dated:id==='message-backlog'&&sourceLine>=610,
   messageVisible:id==='message-backlog'&&sourceLine>=604,
-  observed:id==='medical-observation'&&sourceLine>=2353,
-  familyConfirmed:id==='family-ledger'&&(sourceLine>=1788||sourceLine>=1527&&sourceLine<=1533),
+  observed,familyConfirmed,
  };
 }
