@@ -12,6 +12,7 @@ import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJo
 import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJointData.js';
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
+import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -81,8 +82,22 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,stu
       upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend};
   }
   const upperIndex=atlas.lowerCount+(attackPhase===null ? 0 : 1+Math.round(attackPhase*atlas.frameCount));
-  return {lowerIndex,upperIndex,phase,settleIndex,attackPhase,
+  const plan={lowerIndex,upperIndex,phase,settleIndex,attackPhase,
     upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]};
+  if(atlas.upperRig){
+    const rig=atlas.upperRig,frame=(attackPhase??0)*rig.frameCount,index=Math.floor(frame);
+    const first=attackPhase===null?0:rig.attackStartIndex+index;
+    const next=attackPhase===null?0:rig.attackStartIndex+Math.min(rig.frameCount,index+1);
+    const current=v177RangerCarryPose(rig.poses[first],phase,runtime?.locomotionSettle??1);
+    const following=next===first?current:v177RangerCarryPose(rig.poses[next],phase,runtime?.locomotionSettle??1);
+    // Both source keys receive the same carry transform before fixed-length IK.
+    // Interpolating their pivots commutes with that common rigid transform.
+    plan.upperRigPoses=[current,following];
+    plan.upperRigPlan={lowerIndex:0,lowerNextIndex:0,lowerBlend:0,
+      upperIndex:0,upperNextIndex:1,upperBlend:attackPhase===null?0:frame-index,
+      attackPhase,upperOffsetY:0};
+  }
+  return plan;
 }
 
 function resolvedJointMatrix(out,_atlas,plan,bone,upper) {
@@ -254,6 +269,22 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     }
     ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
+  if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
+    const {source:s,destination:d}=atlas.frames[plan.lowerIndex];
+    ctx.drawImage(image,s.x,s.y,s.w,s.h,x+d.x/atlas.width*width,y+d.y/atlas.height*height,
+      d.w/atlas.width*width,d.h/atlas.height*height);
+    const rig={...atlas.upperRig,poses:plan.upperRigPoses};
+    const matrix=new Float64Array(6),scratch=[new Float64Array(6),new Float64Array(6)];
+    ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);ctx.translate(0,plan.upperOffsetY);
+    for(const part of rig.parts){
+      jointMatrix(matrix,rig,plan.upperRigPlan,part.bone,true,scratch);
+      const source=part.source,destination=part.destination;
+      ctx.save();ctx.transform(...matrix);
+      ctx.drawImage(image,source.x,source.y,source.w,source.h,destination.x,destination.y,destination.w,destination.h);
+      ctx.restore();
+    }
+    ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
+  }
   for(const [index,dy] of [[plan.lowerIndex,0],[plan.upperIndex,plan.upperOffsetY]]) {
     const {source:s,destination:d}=atlas.frames[index];
     ctx.drawImage(image,s.x,s.y,s.w,s.h,
@@ -401,6 +432,10 @@ export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,po
     const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
     const m=resolve(new Float64Array(6),atlas,plan,atlas.weaponBone,true),[sx,sy]=atlas.muzzle;
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];dy=0;
+  }else if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
+    const rig={...atlas.upperRig,poses:plan.upperRigPoses};
+    const m=jointMatrix(new Float64Array(6),rig,plan.upperRigPlan,rig.weaponBone,true),[sx,sy]=rig.muzzle;
+    px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];
   }else [px,py]=atlas.muzzles[plan.upperIndex-atlas.lowerCount];
   const reference=atlas.referenceFrame;
   if(reference){px=(px-reference.tx)/reference.scale;py=(py-reference.ty)/reference.scale;dy/=reference.scale;}

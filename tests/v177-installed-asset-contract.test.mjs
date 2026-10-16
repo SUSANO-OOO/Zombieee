@@ -12,9 +12,10 @@ const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 119, 51565672, 93],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 118, 51544720, 92],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 118, 51544720, 92],
+  // Same asset count; the same-source Ranger hybrid adds exactly54088 bytes.
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 119, 51619760, 93],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 118, 51598808, 92],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 118, 51598808, 92],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {

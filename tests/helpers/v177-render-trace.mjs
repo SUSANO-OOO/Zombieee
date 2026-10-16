@@ -13,9 +13,12 @@ export function jointLegacyInterpolationControlDigest(kinds){
  try{
   // Producer's later Paisen photo replacement has its own source/rig tests.
   // Keep this historical control on the archived Paisen master, just as Mayo
-  // stays on its immutable pre-correction master. Never regenerate the digest.
+  // stays on its immutable pre-correction master. Ranger's original decoded
+  // cells are byte-identical; its later continuous upper rig is tested through
+  // actual paint separately. Never regenerate this pre-change digest.
   for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes))
-    :{...(kind==='brawler'?V177_MELEE_JOINT_ATLASES.brawler:atlas),legConstraints:undefined};
+    :{...(kind==='brawler'?V177_MELEE_JOINT_ATLASES.brawler:atlas),legConstraints:undefined,
+      ...(kind==='ranger'?{upperRig:undefined}:{})};
   return jointRenderTraceDigest(kinds);
  }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}
 }

@@ -52,7 +52,10 @@ test("Kurome loses only the ground alpha in all14 source cells while original bo
     assert.equal(hash(await disk("public"+parts.identityBinding.path)),parts.identityBinding.sourceSha256);
   }
   assert.equal(V177_JOINT_ASSET_ADDITIONS.length,45);
-  const historicalJoints=[...V177_JOINT_ASSET_ADDITIONS.filter(asset=>asset.path!=="/art/v100/joints/brawler-photo-r2.webp"),...V177_RETIRED_JOINT_SOURCE_ASSETS];
+  // Keep all45 original textures in this immutable pre-repair control. The
+  // later photo body and Ranger hybrid have their own source-bound tests.
+  const laterJointPaths=new Set(["/art/v100/joints/brawler-photo-r2.webp","/art/v100/joints/ranger-r2.webp"]);
+  const historicalJoints=[...V177_JOINT_ASSET_ADDITIONS.filter(asset=>!laterJointPaths.has(asset.path)),...V177_RETIRED_JOINT_SOURCE_ASSETS];
   assert.equal(historicalJoints.length,45);
   for(const asset of historicalJoints)assert.ok((await disk("public"+asset.path)).equals(old("public"+asset.path)),"all45 original source joint textures remain unchanged");
   assert.throws(()=>removeKuromeGroundMatte(before.data,{...before.info,width:3359}));

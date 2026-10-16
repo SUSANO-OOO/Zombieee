@@ -4,12 +4,13 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
-import {V177_JOINT_ATLASES,v177JointCycleDistance,v177JointPose,drawV177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES,v177JointCycleDistance,v177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime,sampleAnimationClip} from '../app/combatPresentation.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {traceRangerPose,rangerPoint} from './helpers/v177-ranger-render.mjs';
 
 const dir=new URL('../assets/source/v100/joints/ranger-r1/',import.meta.url);
 const parts=JSON.parse(await readFile(new URL('parts.json',dir)));
@@ -79,20 +80,19 @@ test('real bone exports preserve leg lengths, actual painted support points, gri
   assert.ok(maxGrip<.01,{maxGrip});assert.ok(maxDrift<.01,{maxDrift});assert.equal(folds,0);
 });
 
-test('both image layers and the shot socket share the same pose, proportions and mirror',()=>{
+test('weighted lower and seven continuous upper parts share the actual shot socket, proportions and mirror',()=>{
   const runtime={locomotionPhase:.37,locomotionSettle:.5},plan=v177JointPose('ranger',sampleAnimationClip('ranger','active',.03),runtime);
-  const calls=[],image={naturalWidth:atlas.decodedWidth};
-  assert.equal(drawV177JointPose({drawImage:(...args)=>calls.push(args)},image,'ranger',plan,-48,-86.4,96,89.6),true);
-  assert.equal(calls.length,2);
-  for(const [i,[index,dy]]of [[plan.lowerIndex,0],[plan.upperIndex,plan.upperOffsetY]].entries()){
-    const row=atlas.frames[index],c=calls[i];
-    assert.deepEqual(c.slice(1,5),Object.values(row.source));
-    assert.ok(Math.abs(c[6]-(-86.4+(row.destination.y+dy)/448*89.6))<1e-12);
-  }
+  const size={w:96,h:89.6},frame={...spriteFrameFor('ranger','walk-a','right'),flipX:false};
+  const {painted,calls}=traceRangerPose(plan,{x:-frame.anchorX*size.w,y:-frame.anchorY*size.h,width:size.w,height:size.h});
+  assert.equal(painted,true);assert.equal(calls.length,8);
+  assert.deepEqual(calls[0].rects.slice(0,4),Object.values(atlas.frames[plan.lowerIndex].source));
+  atlas.upperRig.parts.forEach((part,i)=>assert.deepEqual(calls[i+1].rects.slice(0,4),Object.values(part.source)));
   const pose={offsetX:0,offsetY:0,rotationRadians:0,scaleX:1,scaleY:1};
-  const input={kind:'ranger',plan,size:{w:96,h:89.6},pose,x:300,y:200};
-  const right=v177RenderedJointWeaponSocket({...input,direction:'right',frame:{...spriteFrameFor('ranger','walk-a','right'),flipX:false}});
-  const left=v177RenderedJointWeaponSocket({...input,direction:'left',frame:{...spriteFrameFor('ranger','walk-a','right'),flipX:true}});
+  const input={kind:'ranger',plan,size,pose,x:300,y:200};
+  const right=v177RenderedJointWeaponSocket({...input,direction:'right',frame});
+  const left=v177RenderedJointWeaponSocket({...input,direction:'left',frame:{...frame,flipX:true}});
+  const muzzle=rangerPoint(calls.at(-1).matrix,atlas.upperRig.muzzle);
+  assert.ok(Math.hypot(right.x-300-muzzle[0],right.y-200-muzzle[1])<.001,'shot follows the painted weapon');
   assert.ok(Math.abs(right.x+left.x-600)<1e-10);assert.equal(right.y,left.y);
 });
 
