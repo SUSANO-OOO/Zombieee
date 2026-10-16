@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {animationClipFor,PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
@@ -19,15 +20,21 @@ import {stepV177PaintedFoundationInput} from './v177-painted-foundation-input.mj
 import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
 import {createV177VideoFrameClock} from './v177-video-frame-clock.mjs';
 import {beginV177NativeCanvasClip} from './v177-native-canvas-clips.mjs';
+import {v177CombatViewports,closeV177CombatReport} from './v177-combat-workload.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
+const viewportGroup=process.env.V102_COMBAT_VIEWPORT_GROUP??'all';
+const requestedViewports=v177CombatViewports(viewportGroup);
 const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
 const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack and approach-to-attack transitions at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. All movement/attack fixtures retain original actor stats and use an inert durable opponent at a controlled distance. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
+report.viewportGroup=viewportGroup;report.requestedViewports=requestedViewports;
+report.provenance={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),platform:process.platform};
+report.scope=report.scope.replace('at all three viewports','at every viewport in the requested group; the two WebKit groups together cover all three viewports');
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const browser=await(await pwaBrowserType(engine)).launch();
@@ -54,7 +61,7 @@ async function captureContinuousSamples(page,proof,metadata){
   }
 }
 try{
-  for(const [width,height]of [[1280,720],[844,390],[844,340]]){
+  for(const [width,height]of requestedViewports){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
     const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],liveEngagementMotion:[],nativeCanvasClips:[],gore:[],reactions:[]};report.cases.push(row);
@@ -295,8 +302,9 @@ try{
     }
   }
   assert.deepEqual(report.errors,[]);
+  assert.deepEqual(report.cases.map(row=>[row.width,row.height]),requestedViewports);
   report.status='pass';
 }catch(error){report.status='failed';report.error=String(error);}
-finally{await browser.close();await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));}
-console.log(JSON.stringify({status:report.status,engine,error:report.error,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,liveEnemyPhases:r.liveEnemyMotion.length,gore:r.gore.length,reactions:r.reactions.length}))}));
+finally{await closeV177CombatReport(report,()=>browser.close(),()=>writeFile(`${out}/report.json`,JSON.stringify(report,null,2)));}
+console.log(JSON.stringify({status:report.status,engine,error:report.error??report.cleanupError,cases:report.cases.map(r=>({viewport:`${r.width}x${r.height}`,forms:r.motion.length,liveEnemyPhases:r.liveEnemyMotion.length,gore:r.gore.length,reactions:r.reactions.length}))}));
 if(report.status==='failed')process.exitCode=1;

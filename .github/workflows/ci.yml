@@ -115,13 +115,14 @@ jobs:
           retention-days: 14
 
   v102-combat:
-    name: V1.0.2 Combat (${{ matrix.engine }})
+    name: V1.0.2 Combat (${{ matrix.checkLabel }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {engine: chromium, os: ubuntu-latest}
-          - {engine: webkit, os: macos-15-intel}
+          - {engine: chromium, os: ubuntu-latest, viewportGroup: all, checkLabel: chromium}
+          - {engine: webkit, os: macos-15-intel, viewportGroup: desktop-phone, checkLabel: webkit desktop-phone}
+          - {engine: webkit, os: macos-15-intel, viewportGroup: phone-short, checkLabel: webkit phone-short}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     defaults:
@@ -130,6 +131,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
@@ -149,15 +151,28 @@ jobs:
       - name: Verify all render forms and actual gore damage
         env:
           V102_COMBAT_ENGINE: ${{ matrix.engine }}
+          V102_COMBAT_VIEWPORT_GROUP: ${{ matrix.viewportGroup }}
           V102_COMBAT_OUT: outputs/v102-combat
         run: node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v102-combat-${{ matrix.engine }}
+          name: v102-combat-${{ matrix.engine }}-${{ matrix.viewportGroup }}
           path: outputs
           if-no-files-found: error
           retention-days: 14
+
+  v102-combat-webkit-summary:
+    name: V1.0.2 Combat (webkit)
+    if: always()
+    needs: [v102-combat]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every combat viewport group to succeed
+        env:
+          V177_COMBAT_MATRIX_RESULT: ${{ needs.v102-combat.result }}
+        run: test "$V177_COMBAT_MATRIX_RESULT" = success
 
   v103-audio-output:
     name: V1.0.3 Media Output (${{ matrix.engine }})
