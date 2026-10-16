@@ -5,7 +5,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
-import { v177LivingStunState, v177LivingStunSample } from "./v177LivingStun.js";
+import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
@@ -4308,6 +4308,9 @@ function drawSpriteFighter(
   const advancedManualPose = options.v100AuthoredPresentation && f.side === "human" && f.hp > 0
     ? v100AdvancedManualPose(f.manualAbility, { hp: f.hp })
     : null;
+  const rangerStunSample = options.v100AuthoredPresentation
+    ? v177RangerLivingStunSample(f,f.animationPresentation,{manualAbilityActive,
+      supported:Boolean(V177_JOINT_ATLASES[renderKind]?.upperRig)}) : null;
   const baseAnimationSample = kumaGuardArtPose
     ? { ...sampleAnimationClip(f.kind, "special", 0), spriteState: kumaGuardCandidate, movement: false, bodyScale: 1, pose: V100_KUMAVERSON_STABLE_POSE }
     : guardianGuardPose
@@ -4402,6 +4405,8 @@ function drawSpriteFighter(
         ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
           ? sampleMrsChihaLauncherBash(Math.max(0, attackDuration - f.attack))
           : sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
+        : rangerStunSample
+          ? rangerStunSample
         : f.animationPresentation?.state === "incapacitated" && f.hp > 0 && f.stunned > 0
           ? v177LivingStunSample(f.kind)
         : sampleAnimationClip(

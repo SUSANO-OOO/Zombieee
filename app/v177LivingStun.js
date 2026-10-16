@@ -16,3 +16,11 @@ export function v177LivingStunSample(kind) {
   // the same identity, scale and floor anchor; its joint transition owns motion.
   return {...sampleAnimationClip(kind,'idle',0),requestedState:'incapacitated',movement:false};
 }
+
+// Ranger keeps its original weighted-lower travel/settle runtime. Replacing
+// that runtime state would also change whether real movement advances gait.
+export function v177RangerLivingStunSample(fighter,runtime,options={}) {
+  if(fighter.kind!=='ranger'||!['idle','move','start-move','stop-move','turn'].includes(runtime?.state??'idle')
+    ||!v177LivingStunState(fighter,options))return null;
+  return v177LivingStunSample('ranger');
+}

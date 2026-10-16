@@ -41,7 +41,9 @@ export function v177JointCycleDistance(kind, renderScale) {
 export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,stunRemaining=0 }={}) {
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
   if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
-  if(state==='incapacitated')return livingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
+  if(state==='incapacitated')return kind==='ranger'&&atlas.upperRig
+    ? rangerLivingStunJointPose(kind,atlas,runtime,actor,stunRemaining)
+    : livingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
   if(actorKey(actor))livingStunPoses.delete(actor);
   if(hitStates.has(state)) {
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
@@ -217,6 +219,52 @@ function returnPaintedJoints(atlas,entry,neutral,progress) {
   return pose;
 }
 
+function captureRangerUpper(atlas,plan) {
+  if(plan.rangerStunUpperPose)return Object.fromEntries(Object.entries(plan.rangerStunUpperPose).map(([bone,m])=>[bone,[...m]]));
+  const rig={...atlas.upperRig,poses:plan.upperRigPoses},pose={},matrix=new Float64Array(6);
+  const scratch=[new Float64Array(6),new Float64Array(6)];
+  for(const bone of Object.keys(rig.poses[0]))pose[bone]=[...jointMatrix(matrix,rig,plan.upperRigPlan,bone,true,scratch)];
+  return pose;
+}
+
+function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
+  const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
+  if(!(remaining>0)||previous?.kind!==kind||!previous.plan.upperRigPlan){
+    rememberRenderedJointPose(actor,kind,null);return null;
+  }
+  let entry=livingStunPoses.get(key);
+  if(!entry||!entry.rangerUpper||remaining>entry.lastRemaining+1e-9){
+    const pose=captureRangerUpper(atlas,previous.plan);
+    const transform=previous.plan.rangerStunUpperTransform??identityMatrix(),inverse=inverseMatrix(transform);
+    const basePose=Object.fromEntries(Object.entries(pose).map(([bone,m])=>[bone,multiplyMatrix(inverse,m)]));
+    entry={kind,rangerUpper:true,pose,basePose,transform,remaining,lastRemaining:remaining,elapsed:0,plan:previous.plan};
+    livingStunPoses.set(key,entry);
+  }
+  // Only the actual remaining stun timer advances this visual reaction.
+  // Idle/move runtime transitions and repeated redraws cannot reset its clock.
+  entry.elapsed+=Math.max(0,entry.lastRemaining-remaining);entry.lastRemaining=remaining;
+  const elapsed=entry.elapsed,neutral=v177JointPose(kind,{requestedState:'idle'},runtime);
+  const target=captureRangerUpper(atlas,neutral),exitWindow=Math.min(.12,entry.remaining);
+  const progress=1-(1-smooth(elapsed/.12))*smooth(remaining/exitWindow);
+  const upper=elapsed===0?Object.fromEntries(Object.entries(entry.pose).map(([bone,m])=>[bone,[...m]]))
+    : blendCapturedJoints(atlas.upperRig,{lower:entry.basePose,upper:entry.basePose},{lower:target,upper:target},progress).upper;
+  let transform=entry.transform;
+  if(elapsed>0){
+    const amplitude=smooth(elapsed/.1)*smooth(remaining/.1);
+    // One bounded common lean, including re-hit entries, keeps both grips and
+    // the neck attached without accumulating a larger bend on every hit.
+    const angle=Math.atan2(entry.transform[1],entry.transform[0])*(1-progress)-.035*amplitude*progress;
+    const [px,py]=matrixPoint(upper.spine,[232.5,228.5]),c=Math.cos(angle),s=Math.sin(angle);
+    transform=[c,s,-s,c,px-c*px+s*py,py-s*px-c*py];
+    for(const bone of Object.keys(upper))upper[bone]=multiplyMatrix(transform,upper[bone]);
+  }
+  // The original weighted lower remains a single original cell, with its
+  // matching pelvis offset. Never crossfade a second pair of painted feet.
+  const lower=elapsed===0?entry.plan:neutral;
+  return {...neutral,lowerIndex:lower.lowerIndex,upperOffsetY:lower.upperOffsetY,phase:lower.phase,settleIndex:lower.settleIndex,
+    liveStun:true,rangerStunUpperPose:upper,rangerStunUpperTransform:transform,stunElapsed:elapsed,stunRemaining:remaining};
+}
+
 function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
   const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
   if(atlas.type!=='rigid-parts'||!(remaining>0)||previous?.kind!==kind){
@@ -277,7 +325,8 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     const matrix=new Float64Array(6),scratch=[new Float64Array(6),new Float64Array(6)];
     ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);ctx.translate(0,plan.upperOffsetY);
     for(const part of rig.parts){
-      jointMatrix(matrix,rig,plan.upperRigPlan,part.bone,true,scratch);
+      if(plan.rangerStunUpperPose)matrix.set(plan.rangerStunUpperPose[part.bone]);
+      else jointMatrix(matrix,rig,plan.upperRigPlan,part.bone,true,scratch);
       const source=part.source,destination=part.destination;
       ctx.save();ctx.transform(...matrix);
       ctx.drawImage(image,source.x,source.y,source.w,source.h,destination.x,destination.y,destination.w,destination.h);
@@ -434,7 +483,9 @@ export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,po
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];dy=0;
   }else if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
     const rig={...atlas.upperRig,poses:plan.upperRigPoses};
-    const m=jointMatrix(new Float64Array(6),rig,plan.upperRigPlan,rig.weaponBone,true),[sx,sy]=rig.muzzle;
+    const m=new Float64Array(6),[sx,sy]=rig.muzzle;
+    if(plan.rangerStunUpperPose)m.set(plan.rangerStunUpperPose[rig.weaponBone]);
+    else jointMatrix(m,rig,plan.upperRigPlan,rig.weaponBone,true);
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];
   }else [px,py]=atlas.muzzles[plan.upperIndex-atlas.lowerCount];
   const reference=atlas.referenceFrame;
