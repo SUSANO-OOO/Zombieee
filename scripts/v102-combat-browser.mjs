@@ -15,6 +15,7 @@ import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage,assertV177EngagementFormCoverage} from './v177-continuous-render-contract.mjs';
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
+import {sampleV177PaintedFoundationInput} from './v177-painted-foundation-input.mjs';
 import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
 import {createV177VideoFrameClock} from './v177-video-frame-clock.mjs';
 import {beginV177NativeCanvasClip} from './v177-native-canvas-clips.mjs';
@@ -94,19 +95,8 @@ try{
             const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
             return {...prepared,previous};
           },{kind,baseKind,side,expectedState});
-          await page.waitForFunction(({fighterId,previous})=>{
-            const r=window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit;
-            return r?.renderSequence>previous&&r.assetReady;
-          },proof);
-          const beforeRender=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.renderAudit,proof.fighterId);
-          proof.previous=await page.evaluate(({fighterId,action})=>{
-            const qa=window.__ASHFALL_BATTLE_QA__;
-            const previous=qa.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit?.renderSequence;
-            qa.stepAnimationFoundationProof(fighterId,action,.06);
-            return previous;
-          },{fighterId:proof.fighterId,action});
-          await page.waitForFunction(({fighterId,previous})=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit?.renderSequence>previous,proof);
-          const sample=await page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id),proof.fighterId);
+          const {sample,beforeRender}=await page.evaluate(sampleV177PaintedFoundationInput,
+            {fighterId:proof.fighterId,previous:proof.previous,action});
           const r=sample.renderAudit;
           samples.push({action,fighterId:proof.fighterId,render:r,pixelScale:renderedSourcePixelScale(r),
             ...(action.startsWith('hit-')?{beforeRender}:{})});
