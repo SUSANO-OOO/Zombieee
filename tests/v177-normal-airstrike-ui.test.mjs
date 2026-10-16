@@ -140,7 +140,7 @@ test('the actual empty-line caller funds its pending frontliner instead of buyin
   })};
   const context={cards,count:kinds.length,normalCampaignDeployOrder,record,cursor:0,lastAction:0,lastEmergency:0,lastEmergencyCursor:-1,start:0,
     deploymentCount:{active:0,limit:7},now:20_000,Date:{now:()=>context.now},
-    page:{locator:selector=>{assert.equal(selector,'button.unit-card[data-kind="scout"]');return {
+    page:{locator:selector=>{if(selector==='.crawler-health.critical')return {isVisible:async()=>false};assert.equal(selector,'button.unit-card[data-kind="scout"]');return {
       count:async()=>1,isEnabled:async()=>scoutReady,click:async()=>clicks.push('scout'),
     };}},
   };
@@ -158,6 +158,31 @@ test('the actual empty-line caller funds its pending frontliner instead of buyin
 });
 
 const firstAircraftAck={action:'airstrike',acknowledgment:{disabled:'true'}};
+test('a visibly critical empty line can deploy a ready escort again while its unaffordable role stays pending',async()=>{
+  const kinds=['babayaga','scout','medic','kumaverson','brawler'],clicks=[],record={inputs:[]};
+  let critical=true,scoutReady=true;
+  const cards={evaluateAll:async read=>read(kinds.map(kind=>({getAttribute:()=>kind}))),nth:index=>({
+    isEnabled:async()=>false,getAttribute:async()=>kinds[index],click:async()=>{throw Error('The pending role is unaffordable');},
+  })};
+  const context={cards,count:kinds.length,normalCampaignDeployOrder,record,cursor:13,lastAction:200_451,
+    lastEmergency:198_938,lastEmergencyCursor:13,start:0,deploymentCount:{active:0,limit:7},now:213_000,
+    Date:{now:()=>context.now},page:{locator:selector=>{
+      if(selector==='.crawler-health.critical')return {isVisible:async()=>critical};
+      assert.equal(selector,'button.unit-card[data-kind="scout"]');
+      return {count:async()=>1,isEnabled:async()=>scoutReady,click:async()=>clicks.push('scout')};
+    }},
+  };
+  vm.createContext(context);
+  const step=()=>vm.runInContext('(async()=>{'+deployBlocks[0].getText(tree)+'})()',context);
+  await step();assert.deepEqual(clicks,['scout']);
+  assert.equal(context.cursor,13);assert.equal(record.inputs[0].pendingKind,'kumaverson');
+  assert.equal(record.inputs[0].criticalEmptyLine,true);
+  context.now+=300;await step();assert.equal(clicks.length,1,'retain the actual500ms input interval');
+  scoutReady=false;context.now+=1_000;await step();assert.equal(clicks.length,1,'never bypass the real disabled card');
+  scoutReady=true;context.now+=4_000;await step();assert.equal(clicks.length,2);
+  critical=false;context.now+=20_000;await step();assert.equal(clicks.length,2,'healthy vehicles still save for the pending role');
+  assert.equal(context.cursor,13);assert.equal(record.inputs.length,2);
+});
 test('one visible enemy preserves the real85cost first aircraft even before two bars fit its firing radius',async()=>{
   const result=await fire({includeVehicle:true,bars:[{kind:'enemy',x:500,y:120}]});
   assert.equal(result.observations,1);assert.equal(result.visibleEnemyTarget,true);

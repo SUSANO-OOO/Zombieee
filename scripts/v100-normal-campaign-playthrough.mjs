@@ -184,14 +184,19 @@ async function battle(stage) {
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
-      } else if (deploymentCount.active===0 && cursor!==lastEmergencyCursor && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
-        // Allow one affordable escort for this pending role. Repeating the25-cost
-        // scout every12s in872 drained the funds for the62-cost frontliner.
-        // Keep the selected role pending until its actual card can be clicked.
-        const scout=page.locator('button.unit-card[data-kind="scout"]');
-        if(await scout.count() && await scout.isEnabled()) {
-          await scout.click();lastEmergency=Date.now();lastAction=Date.now();lastEmergencyCursor=cursor;
-          record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout",pendingKind:deploymentOrder[cursor%count],deploymentCursor:cursor});
+      } else if (deploymentCount.active===0 && Date.now()-start>15_000) {
+        // Preserve funds for the pending role while the vehicle is healthy.
+        // The2fce Stage3 originals instead left a critical vehicle undefended
+        // after its one escort died, despite a ready25-cost card. The actual
+        // visible critical HUD permits another escort; card cooldown/cost and
+        // the outer500ms input interval still apply, and the role stays pending.
+        const criticalEmptyLine=await page.locator('.crawler-health.critical').isVisible();
+        if(criticalEmptyLine || (cursor!==lastEmergencyCursor && Date.now()-lastEmergency>12_000)) {
+          const scout=page.locator('button.unit-card[data-kind="scout"]');
+          if(await scout.count() && await scout.isEnabled()) {
+            await scout.click();lastEmergency=Date.now();lastAction=Date.now();lastEmergencyCursor=cursor;
+            record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout",pendingKind:deploymentOrder[cursor%count],deploymentCursor:cursor,criticalEmptyLine});
+          }
         }
       }
     }

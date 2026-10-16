@@ -117,6 +117,26 @@ test('host persistence writes exact native payload and compact metadata, then di
   await assert.rejects(clip.finish({completed:true}),/already finalized/u);
 });
 
+test('the real host recorder accepts the separately named approach-to-attack clip without replacing move or attack',async()=>{
+  const f=fixture(),directory=await mkdtemp(path.join(os.tmpdir(),'v177-engage-clip-'));
+  const request={...metadata,phase:'engage',fixtureGroup:'approach-to-attack'};
+  const clip=await beginV177NativeCanvasClip(f.page,request,{directory,engine:'webkit'});
+  const receipt=await clip.finish({completed:true});
+  assert.equal(receipt.status,'recorded');assert.equal(receipt.metadata.phase,'engage');
+  assert.equal(receipt.metadata.fixtureGroup,'approach-to-attack');
+  assert.ok(receipt.file.endsWith('approach-to-attack-ranger-engage-42.webm'));
+  assert.equal((await readFile(receipt.file)).toString(),'native-anative-b');
+  assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
+});
+
+test('the host recorder rejects mixed legacy/engagement groups before capturing any track',async()=>{
+  for(const [phase,fixtureGroup]of [['engage','base-enemy'],['engage','authored-form'],['move','approach-to-attack'],['attack','approach-to-attack'],['unknown','approach-to-attack']]){
+    const f=fixture();
+    await assert.rejects(beginV177NativeCanvasClip(f.page,{...metadata,phase,fixtureGroup},{directory:'/unused',engine:'webkit'}));
+    assert.equal(f.captures,0);
+  }
+});
+
 test('campaign twin and authored twin clips remain distinct even when their form and fighter ID match',async()=>{
   const directory=await mkdtemp(path.join(os.tmpdir(),'v177-twin-clips-')),files=[];
   for(const fixtureGroup of ['base-enemy','authored-form']){

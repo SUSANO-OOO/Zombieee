@@ -84,9 +84,10 @@ export async function finishNativeCanvasClip(state,{completed}){
 }
 
 export async function beginV177NativeCanvasClip(page,metadata,{directory,engine}={}){
-  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack'].includes(metadata.phase));
+  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage'].includes(metadata.phase));
   assert.ok(Number.isFinite(metadata.fighterId));assert.ok(['chromium','webkit'].includes(engine));
-  assert.ok(['base-enemy','authored-form'].includes(metadata.fixtureGroup));
+  assert.ok(['base-enemy','authored-form','approach-to-attack'].includes(metadata.fixtureGroup));
+  assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${metadata.fighterId}`);
   let handle,error,finished=false;
   try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine});}
