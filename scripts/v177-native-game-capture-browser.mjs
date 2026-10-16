@@ -6,6 +6,11 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const NATIVE_GAME_CAPTURE_PHASES = Object.freeze(['move', 'attack', 'engage']);
+export const NATIVE_GAME_CAPTURE_FORMS = Object.freeze(['medic', 'ranger', 'engineer', 'abomination']);
+export const NATIVE_GAME_CAPTURE_VIEWPORTS = Object.freeze([
+  Object.freeze({ width: 1280, height: 720 }), Object.freeze({ width: 844, height: 390 }),
+  Object.freeze({ width: 844, height: 340 }),
+]);
 export const NATIVE_GAME_CAPTURE_MIME = 'video/webm;codecs=vp8';
 export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   '.github/workflows/native-game-capture.yml', 'scripts/v177-native-game-capture-browser.mjs',
@@ -17,6 +22,10 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'scripts/v177-enemy-live-render-contract.mjs', 'scripts/v100-title-qa-entry.mjs',
   'app/v177ContinuousProof.js', 'app/v177JointPresentation.js', 'app/v177EnemyJointData.js',
   'app/combatPresentation.js', 'app/v102CombatMotion.js', 'app/AshfallGame.tsx',
+  'app/v177JointData.js', 'app/v177FirearmJointData.js', 'app/v177RangerUpperMotion.js',
+  'app/v177LivingStun.js', 'public/asset-manifest.json',
+  'public/art/v100/joints/ranger-r2.webp', 'public/art/v100/joints/medic-r1.webp',
+  'public/art/v100/joints/engineer-r1.webp', 'public/art/v100/joints/crusher-r1.webp',
 ]);
 const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: false,
   naturalnessAccepted: false, physicalIphoneRecordingAccepted: false,
@@ -73,10 +82,17 @@ export function stopNativeGameRafObservation(state) {
     rows: state.rows, overflow: state.overflow, encodedFrameCount: null, encodedPtsVerified: false,
     scope: 'Native observer RAF callbacks and actual game render receipts; neither is an encoded-frame count' };
 }
-export function readNativeGameCaptureSample({ fighterId, targetId }) {
+export function readNativeGameCaptureSample({ fighterId, targetId, performanceBoundary = false }) {
   const qa = window.__ASHFALL_BATTLE_QA__, snapshot = qa.getSnapshot();
   const audit = qa.getEnemyFacingRuntimeAudit(fighterId);
-  return { at: performance.now(), simulationTime: snapshot.time, running: snapshot.running,
+  const boundary = performanceBoundary ? (() => {
+    const canvas = document.querySelector('.game-shell canvas'), rect = canvas.getBoundingClientRect();
+    return { runtimePerformance: qa.getPerformanceSnapshot(),
+      geometry: { viewport: { width: window.innerWidth, height: window.innerHeight },
+        devicePixelRatio: window.devicePixelRatio, canvas: { width: canvas.width, height: canvas.height,
+          rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height } } } };
+  })() : {};
+  return { at: performance.now(), simulationTime: snapshot.time, running: snapshot.running, ...boundary,
     paused: snapshot.paused, route: location.pathname, visible: document.visibilityState === 'visible',
     fighter: audit.fighter, target: qa.getEnemyFacingRuntimeAudit(targetId).fighter,
     completedAttackImpacts: qa.getPhaseGCombatSnapshot().completedAttackImpacts
@@ -92,7 +108,8 @@ export function nativeGameDamageReceipt(row) {
   const first = row.captureStart, last = row.samples.at(-1), proof = row.proof;
   for (const sample of [first, ...row.samples]) {
     assert.equal(sample.target?.id, proof.targetId);
-    assert.equal(sample.target.kind, 'guardian'); assert.equal(sample.target.side, 'human');
+    assert.equal(sample.target.kind, proof.side === 'human' ? 'walker' : 'guardian');
+    assert.equal(sample.target.side, proof.side === 'human' ? 'zombie' : 'human');
     for (const key of ['speed', 'laneSpeed', 'damage']) assert.equal(sample.target[key], 0, 'Only the opponent is an inert fixture');
     assert.equal(sample.target.maxHp, 1_000_000);
     assert.equal(sample.fighter.maxHp, proof.originalActorStats.maxHp);
@@ -109,29 +126,61 @@ export function nativeGameDamageReceipt(row) {
     scope: 'Observed actual HP delta against the explicitly inert durable opponent; not campaign balance acceptance' };
 }
 
+export function nativeGamePerformanceReceipt(row) {
+  const first = row.captureStart, last = row.samples.at(-1), deltas = {};
+  const keys = ['simulationTicks', 'renderFrames', 'hiddenFrameCallbacks', 'visibilityTransitions',
+    'backgroundDurationMs', 'droppedSimulationSeconds', 'scheduledSimulationSteps', 'rafRequests', 'rafCancellations'];
+  for (const key of keys) {
+    const a = first.runtimePerformance?.[key], b = last.runtimePerformance?.[key];
+    assert.ok(Number.isFinite(a) && a >= 0 && Number.isFinite(b) && b >= a, 'Missing or regressing real counter: ' + key);
+    deltas[key] = b - a;
+  }
+  for (const sample of [first, last]) {
+    assert.deepEqual(sample.geometry?.viewport, row.viewport, 'Capture must use its declared real viewport');
+    const canvas = sample.geometry.canvas;
+    assert.ok([canvas.width, canvas.height, canvas.rect.width, canvas.rect.height,
+      sample.geometry.devicePixelRatio].every(n => Number.isFinite(n) && n > 0));
+  }
+  assert.equal(first.geometry.canvas.width, last.geometry.canvas.width);
+  assert.equal(first.geometry.canvas.height, last.geometry.canvas.height);
+  assert.equal(row.nativeClip.width, first.geometry.canvas.width);
+  assert.equal(row.nativeClip.height, first.geometry.canvas.height);
+  const nativeSeconds = (last.at - first.at) / 1000, simulationSeconds = last.simulationTime - first.simulationTime;
+  assert.ok(nativeSeconds > 0 && simulationSeconds >= 0);
+  const observed = row.sourceRaf.rows.filter(r => r.at >= first.at && r.at <= last.at);
+  const gaps = observed.slice(1).map((r, i) => r.at - observed[i].at).sort((a, b) => a - b);
+  return { before: first.runtimePerformance, after: last.runtimePerformance, deltas,
+    nativeSeconds, simulationSeconds, simulationToNativeRatio: simulationSeconds / nativeSeconds,
+    nativeObserverRafGapP95Ms: gaps.length ? gaps[Math.ceil(gaps.length * .95) - 1] : null,
+    nativeObserverCallbacks: observed.length, distinctObservedRenderSequences: new Set(observed.map(r => r.renderSequence)).size,
+    geometryBefore: first.geometry, geometryAfter: last.geometry,
+    scope: 'Actual cumulative counters at the same two observed simulation/native boundaries; no reset, clock advance, performance or original-speed acceptance' };
+}
+
 export async function captureNativeGameCase(page, row, deps) {
   const { beginV177NativeCanvasClip, hasV177ContinuousDraw, assertV177AuthoredLiveRender, out } = deps;
   let clip, observation, originalFailure;
   const sampleCount = row.phase === 'engage' ? 30 : 15;
   try {
-    row.proof = await page.evaluate(phase => window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({ form: 'abomination', phase }), row.phase);
+    assert.ok(NATIVE_GAME_CAPTURE_FORMS.includes(row.form));
+    row.proof = await page.evaluate(({ form, phase }) => window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({ form, phase }), { form: row.form, phase: row.phase });
     await page.waitForFunction(hasV177ContinuousDraw, row.proof, { timeout: 5_000 });
-    row.captureStart = await page.evaluate(readNativeGameCaptureSample, row.proof);
+    row.captureStart = await page.evaluate(readNativeGameCaptureSample, { ...row.proof, performanceBoundary: true });
     observation = await page.evaluateHandle(startNativeGameRafObservation, row.proof);
-    clip = await beginV177NativeCanvasClip(page, { form: 'abomination', requestedKind: 'abomination',
-      phase: row.phase, fixtureGroup: row.phase === 'engage' ? 'approach-to-attack' : 'base-enemy',
+    clip = await beginV177NativeCanvasClip(page, { form: row.form, requestedKind: row.proof.kind,
+      phase: row.phase, fixtureGroup: row.phase === 'engage' ? 'approach-to-attack' : row.proof.side === 'human' ? 'authored-form' : 'base-enemy',
       fighterId: row.proof.fighterId, preparedRenderKind: row.proof.renderKind,
       diagnosticOnly: true, controlledOpponent: true },
-    { directory: path.join(out, 'native-canvas-clips'), engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME });
+    { directory: path.join(out, `${row.viewport.width}x${row.viewport.height}`, 'native-canvas-clips'), engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME });
     for (let i = 0; i < sampleCount; i++) {
       await page.waitForTimeout(120);
-      row.samples.push(await page.evaluate(readNativeGameCaptureSample, row.proof));
+      row.samples.push(await page.evaluate(readNativeGameCaptureSample, { ...row.proof, performanceBoundary: i === sampleCount - 1 }));
     }
     const completedClip = clip; clip = null;
     row.nativeClip = await completedClip.finish({ completed: true });
     row.sourceRaf = await observation.evaluate(stopNativeGameRafObservation);
     await observation.dispose(); observation = null;
-    assert.equal(row.nativeClip.status, 'recorded', 'All three diagnostic clips require original recorded bytes');
+    assert.equal(row.nativeClip.status, 'recorded', 'Every diagnostic clip requires original recorded bytes');
     assert.equal(row.nativeClip.requestedMimeType, NATIVE_GAME_CAPTURE_MIME);
     assert.equal(row.nativeClip.engine, 'webkit');
     assert.match(row.nativeClip.mimeType, /^video\/webm/u);
@@ -143,7 +192,7 @@ export async function captureNativeGameCase(page, row, deps) {
     assert.ok(row.sourceRaf.rows.length >= 2, 'Native RAF observations must be retained separately from encoded frames');
     for (const [i, source] of row.sourceRaf.rows.entries()) {
       assert.ok(Number.isFinite(source.at) && Number.isFinite(source.renderSequence));
-      assert.equal(source.renderKind, 'abomination');
+      assert.equal(source.renderKind, row.form);
       if (i) assert.ok(source.at > row.sourceRaf.rows[i - 1].at);
     }
     const bytes = await (deps.read ?? readFile)(row.nativeClip.file);
@@ -151,8 +200,14 @@ export async function captureNativeGameCase(page, row, deps) {
     assert.equal(createHash('sha256').update(bytes).digest('hex'), row.nativeClip.sha256);
     row.summary = assertV177AuthoredLiveRender(row);
     row.damageReceipt = nativeGameDamageReceipt(row);
+    row.performanceReceipt = nativeGamePerformanceReceipt(row);
+    assert.notEqual(row.deadlineExpired, true, 'A late operation cannot promote a timed-out capture');
     row.status = 'observed-diagnostic';
-  } catch (error) { originalFailure = error; throw error;
+  } catch (error) {
+    originalFailure = error;
+    // Retain the first capture error before cleanup can block. Its owner must
+    // receive it even when the outer deadline wins the later Promise race.
+    row.originalFailure = String(error); deps.onFailure?.(error); throw error;
   } finally {
     row.cleanupErrors = [];
     if (clip) {
@@ -180,6 +235,37 @@ async function dependencies() {
   return Object.assign({}, ...modules);
 }
 
+// page.evaluate is not covered by page.setDefaultTimeout. Close this case's
+// owned context on the existing30s operation budget; never retry its capture.
+export async function withNativeGameCaseDeadline(action, closeOwnedContext,
+  { schedule = setTimeout, cancel = clearTimeout, onDeadline = () => {} } = {}) {
+  let timer, timeoutError, closing, operationSettled = false;
+  const operation = Promise.resolve().then(action).then(value => { operationSettled = true; return value; },
+    error => { operationSettled = true; throw error; });
+  const deadline = new Promise((_, reject) => {
+    timer = schedule(() => {
+      timeoutError = new Error('Native game case exceeded its30s owned operation deadline');
+      onDeadline(timeoutError);
+      closing = Promise.resolve().then(closeOwnedContext).catch(error => { timeoutError.contextCloseError = String(error); });
+      reject(timeoutError);
+    }, 30_000);
+  });
+  try { return await Promise.race([operation, deadline]); }
+  finally {
+    cancel(timer);
+    if (closing) { await closing; timeoutError.operationSettledAtOwnerReturn = operationSettled; }
+  }
+}
+
+export async function closeNativeGameContext(context, requests,
+  { schedule = setTimeout, cancel = clearTimeout } = {}) {
+  let timer;
+  try {
+    await Promise.race([requests ? requests.closeContext(context) : context.close(),
+      new Promise((_, reject) => { timer = schedule(() => reject(new Error('Owned native game context close exceeded5s')), 5_000); })]);
+  } finally { cancel(timer); }
+}
+
 export async function runBrowserQa() {
   const binding = await nativeGameCaptureBinding();
   const deps = await dependencies();
@@ -187,14 +273,14 @@ export async function runBrowserQa() {
   const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
   assert.equal(origin.protocol, 'http:'); assert.equal(origin.hostname, '127.0.0.1');
   const report = { at: new Date().toISOString(), ...binding, tree: git(['rev-parse', 'HEAD^{tree}']),
-    engine: 'webkit', headless: true, viewport: [844, 340], runtime: deps.PWA_WEBKIT_RUNTIME,
-    contextOptions: { viewport: { width: 844, height: 340 }, isMobile: true, hasTouch: true },
+    engine: 'webkit', headless: true, viewports: NATIVE_GAME_CAPTURE_VIEWPORTS,
+    forms: NATIVE_GAME_CAPTURE_FORMS, runtime: deps.PWA_WEBKIT_RUNTIME,
     captureConditions: { canvasOnly: true, parallelPlaywrightRecordVideo: false,
       legacyV102ParallelPlaywrightRecordVideo: true, sameObservationLoadAsLegacyV102: false,
       codecOnlyCausalComparison: false },
     build: await deps.productionBuildIdentity(), status: 'running-diagnostic', ...acceptance(),
-    scope: 'Three abomination native VP8 availability clips on the real V1 route with original actor stats and an explicitly inert durable guardian opponent. This canvas-only capture omits the legacy v102 harness parallel Playwright recordVideo; its observation load differs, so it is not a codec-only causal comparison with those old MP4 captures. Existing continuous contract thresholds are unchanged. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
-    sources: [], cases: [], errors: [], persistenceErrors: [], contextCleanup: 'not-created', browserCleanup: 'not-created' };
+    scope: '36 native VP8 diagnostic clips: priority medic/ranger/engineer and abomination, three real viewports, move/attack/engage. Original actor stats and explicitly inert durable opponents. Fresh owned context per viewport, one browser, canvas-only with no parallel Playwright recordVideo. Observation load differs from legacy MP4; not a codec-only causal comparison. Existing continuous thresholds unchanged. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
+    sources: [], contexts: [], cases: [], errors: [], persistenceErrors: [], contextCleanup: 'not-created', browserCleanup: 'not-created' };
   assert.match(report.build.combinedSha256, /^[a-f0-9]{64}$/u);
   await mkdir(out, { recursive: true });
   for (const file of NATIVE_GAME_CAPTURE_SOURCES) {
@@ -214,63 +300,86 @@ export async function runBrowserQa() {
       report.status = 'failed'; primaryFailure ??= error;
     }
   };
-  let browser, context, requests, closingBrowser = false;
+  let browser, closingBrowser = false;
   try {
     browser = await (await deps.pwaBrowserType('webkit')).launch({ headless: true });
     browser.on('disconnected', () => { if (!closingBrowser) report.errors.push('Unexpected native game capture browser disconnect'); });
     report.browserVersion = browser.version();
     assert.equal(report.browserVersion, deps.PWA_WEBKIT_RUNTIME.browserVersion, 'The running native WebKit binary must match the pinned runtime');
-    context = await browser.newContext(report.contextOptions);
-    const page = await context.newPage(); page.setDefaultTimeout(30_000);
-    requests = deps.installRequestFailureAudit(page);
-    page.on('pageerror', error => report.errors.push(String(error)));
-    page.on('console', message => { if (message.type() === 'error') report.errors.push(message.text()); });
-    page.on('response', response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
-    const base = deps.createDefaultV100Save(), owned = deps.V100_UNITS.map(unit => unit.id);
-    const save = deps.normalizeV100Save({ ...base, campaignStarted: true, revision: 3,
-      ownedUnitIds: owned, registeredUnitIds: owned, formationSlots: owned.slice(0, 7),
-      flowState: { phase: 'formation', stageId: deps.V100_STAGE_IDS[0], stageNumber: 1,
-        eventId: null, destination: 'formation', nodeIndex: 0, firstClear: false, finalized: true } });
-    await page.addInitScript(deps.seedV100BrowserSaveOnce, deps.serializeV100Save(save));
-    await page.goto(new URL('v100', origin).href);
-    const play = page.getByRole('button', { name: 'ブラウザで遊ぶ', exact: true });
-    await play.or(page.locator('.v100-start-screen')).first().waitFor();
-    if (await play.isVisible()) await play.click();
-    await deps.enterV100FromTitle(page);
-    await page.getByRole('button', { name: '戦闘へ', exact: true }).click();
-    await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-    await page.evaluate(async () => {
-      await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('abomination');
-      await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');
-    });
-    for (const phase of NATIVE_GAME_CAPTURE_PHASES) {
-      const row = { form: 'abomination', phase, status: 'starting', samples: [], ...acceptance() };
-      report.cases.push(row);
-      try { await captureNativeGameCase(page, row, { ...deps, out }); }
-      catch (error) { row.status = 'failed'; row.error = String(error); recordFailure(error); }
-      await persist();
+    for (const viewport of NATIVE_GAME_CAPTURE_VIEWPORTS) {
+      const contextOptions = { viewport, isMobile: viewport.width < 1000, hasTouch: viewport.width < 1000, deviceScaleFactor: 1 };
+      const owner = { viewport, contextOptions, cleanup: 'not-created', requests: null };
+      report.contexts.push(owner);
+      let context, requests, closing;
+      const closeOwnedContext = () => closing ??= (async () => {
+        if (!context) return;
+        owner.cleanup = 'pending'; await persist();
+        try { await closeNativeGameContext(context, requests); owner.cleanup = 'completed'; }
+        catch (error) { owner.cleanup = 'failed'; recordFailure(error); throw error; }
+        finally {
+          owner.requests = requests?.report ?? null;
+          if (requests?.report.unexpectedFailures.length) recordFailure(new Error('Unexpected game capture request failure'));
+          await persist();
+        }
+      })();
+      try {
+        context = await browser.newContext(contextOptions);
+        owner.cleanup = 'open';
+        const page = await context.newPage(); page.setDefaultTimeout(30_000);
+        requests = deps.installRequestFailureAudit(page);
+        page.on('pageerror', error => report.errors.push(String(error)));
+        page.on('console', message => { if (message.type() === 'error') report.errors.push(message.text()); });
+        page.on('response', response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
+        const base = deps.createDefaultV100Save(), owned = deps.V100_UNITS.map(unit => unit.id);
+        const save = deps.normalizeV100Save({ ...base, campaignStarted: true, revision: 3,
+          ownedUnitIds: owned, registeredUnitIds: owned, formationSlots: owned.slice(0, 7),
+          flowState: { phase: 'formation', stageId: deps.V100_STAGE_IDS[0], stageNumber: 1,
+            eventId: null, destination: 'formation', nodeIndex: 0, firstClear: false, finalized: true } });
+        await withNativeGameCaseDeadline(async () => {
+          await page.addInitScript(deps.seedV100BrowserSaveOnce, deps.serializeV100Save(save));
+          await page.goto(new URL('v100', origin).href);
+          const play = page.getByRole('button', { name: 'ブラウザで遊ぶ', exact: true });
+          await play.or(page.locator('.v100-start-screen')).first().waitFor();
+          if (await play.isVisible()) await play.click();
+          await deps.enterV100FromTitle(page);
+          await page.getByRole('button', { name: '戦闘へ', exact: true }).click();
+          await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+          await page.evaluate(async () => {
+            for (const kind of ['abomination', 'walker']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
+            for (const kind of ['guardian', 'medic', 'ranger', 'engineer']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
+          });
+        }, closeOwnedContext, { onDeadline: recordFailure });
+        captureCases: for (const form of NATIVE_GAME_CAPTURE_FORMS) for (const phase of NATIVE_GAME_CAPTURE_PHASES) {
+          const row = { form, phase, viewport, status: 'starting', samples: [], ...acceptance() };
+          report.cases.push(row);
+          try { await withNativeGameCaseDeadline(() => captureNativeGameCase(page, row, { ...deps, out, onFailure: recordFailure }), closeOwnedContext,
+            { onDeadline: error => { row.deadlineExpired = true; recordFailure(error); } }); }
+          catch (error) {
+            row.status = 'failed'; row.error = String(error);
+            row.operationSettledAtOwnerReturn = error.operationSettledAtOwnerReturn ?? null;
+            recordFailure(error); await persist(); break captureCases;
+          }
+          await persist();
+        }
+      } catch (error) { recordFailure(error); }
+      finally { try { await closeOwnedContext(); } catch { /* original close failure is already retained */ } }
     }
   } catch (error) { recordFailure(error); }
   finally {
-    if (context) {
-      report.contextCleanup = 'pending'; await persist();
-      try { if (requests) await requests.closeContext(context); else await context.close(); report.contextCleanup = 'completed'; }
-      catch (error) { report.contextCleanup = 'failed'; recordFailure(error); }
-      report.requests = requests?.report ?? null;
-      if (requests?.report.unexpectedFailures.length) recordFailure(new Error('Unexpected game capture request failure'));
-    }
+    report.contextCleanup = !report.contexts.length ? 'not-created'
+      : report.contexts.every(owner => owner.cleanup === 'completed') ? 'completed' : 'failed';
     if (browser) {
       report.browserCleanup = 'pending'; await persist();
       closingBrowser = true;
       try { await browser.close(); report.browserCleanup = 'completed'; }
       catch (error) { report.browserCleanup = 'failed'; recordFailure(error); }
     }
-    report.status = report.errors.length || report.cases.length !== 3
+    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length
       || report.cases.some(row => row.status !== 'observed-diagnostic') ? 'failed' : 'completed-diagnostic';
     await persist();
   }
   console.log(JSON.stringify({ head: report.head, status: report.status, errors: report.errors,
-    cases: report.cases.map(row => ({ phase: row.phase, status: row.status })), ...acceptance() }));
+    cases: report.cases.map(row => ({ form: row.form, viewport: row.viewport, phase: row.phase, status: row.status })), ...acceptance() }));
   if (primaryFailure) throw primaryFailure;
   if (report.status === 'failed') throw new Error('Native game capture diagnostic failed; retain report and original clips');
 }

@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run build
-      - name: Record three original game-canvas VP8 clips
+      - name: Record priority units in three real viewports with native VP8
         env:
           V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
