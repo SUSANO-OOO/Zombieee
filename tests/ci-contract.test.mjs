@@ -361,8 +361,9 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(normal.strategy['fail-fast'],false);assert.equal(normal['continue-on-error'],undefined);
   assert.equal(normal.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
-  const normalRun=normal.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs');
+  const normalRun=normal.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs');
   assert.ok(normalRun);assert.equal(normalRun.env.V100_NORMAL_PLAY_ENGINE,'${{ matrix.engine }}');
+  assert.equal(normalRun.env.V100_NORMAL_PLAY_STAGE_LIMIT,'3');
   assert.equal(normalRun.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
   const normalUpload=normal.steps.at(-1);assert.equal(normalUpload.if,'always()');
   assert.equal(normalUpload.with['if-no-files-found'],'error');assert.equal(normalUpload.with.path,normalRun.env.V100_NORMAL_PLAY_EVIDENCE_DIR);

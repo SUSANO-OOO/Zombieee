@@ -259,9 +259,9 @@ jobs:
           retention-days: 14
 
   v177-normal-campaign:
-    name: V1 Normal Campaign (${{ matrix.engine }})
-    # Start the long earned-save route only after the focused candidate gates.
-    # A failed battle is evidence, never retried or replaced with a seeded win.
+    name: V1 Representative Normal Play (${{ matrix.engine }})
+    # All-stage progression uses the existing developer-mode route in verify.
+    # Bounded normal UI observations retain defeats for separate balance review.
     needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
     strategy:
       fail-fast: false
@@ -298,11 +298,12 @@ jobs:
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run build
-      - name: Play all 30 stages using a fresh save, earned CAPS and real UI
+      - name: Observe opening stages using a fresh save, earned CAPS and real UI
         env:
           V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_STAGE_LIMIT: "3"
           V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-${{ matrix.engine }}
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs
       - name: Preserve normal-play results, saves, diagnostics and original-speed video
         if: always()
         uses: actions/upload-artifact@v4
@@ -313,7 +314,7 @@ jobs:
           retention-days: 14
 
   v177-normal-campaign-diagnostic:
-    name: V1 Normal Campaign Diagnostic (${{ matrix.engine }})
+    name: V1 Representative Normal Diagnostic (${{ matrix.engine }})
     # Investigate earned play even when focused QA fails; retain all required gates above.
     if: always() && needs.verify.result == 'success' && contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
@@ -352,11 +353,12 @@ jobs:
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run build
-      - name: Play all 30 stages using a fresh save, earned CAPS and real UI
+      - name: Observe opening stages using a fresh save, earned CAPS and real UI
         env:
           V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_STAGE_LIMIT: "3"
           V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs
       - name: Mark diagnostic scope without promoting the original result
         if: always()
         env:

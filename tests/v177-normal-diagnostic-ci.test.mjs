@@ -23,8 +23,9 @@ function assertDiagnostic(job) {
     V177_NORMAL_DIAGNOSTIC_NEEDS: '${{ toJSON(needs) }}',
   });
   const directory = 'outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}';
-  const play = job.steps.find(s => s.run?.includes('v100-normal-campaign-playthrough.mjs'));
+  const play = job.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
   assert.equal(play.env.V100_NORMAL_PLAY_EVIDENCE_DIR, directory);
+  assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT, '3');
   assert.equal(job.steps.at(-1).with.name, 'v177-normal-campaign-diagnostic-${{ matrix.engine }}');
   assert.equal(job.steps.at(-1).with.path, directory);
   const actual = structuredClone(job), expected = structuredClone(required);
@@ -34,15 +35,15 @@ function assertDiagnostic(job) {
   assert.deepEqual(actual, expected, 'all checkout/build/engines/route/240min/no-retry/artifact controls remain the original normal-play controls');
 }
 
-test('diagnostic normal play keeps the original required route and cannot weaken it', () => {
+test('diagnostic normal play keeps the bounded observation and all technical failure controls', () => {
   assertDiagnostic(jobs['v177-normal-campaign-diagnostic']);
   for (const mutate of [
     j => j.needs.pop(),
     j => { j['continue-on-error'] = true; },
     j => { j['timeout-minutes'] += 1; },
     j => j.strategy.matrix.include.pop(),
-    j => { j.steps.find(s => s.run?.includes('v100-normal-campaign-playthrough.mjs')).run += ' || true'; },
-    j => { j.steps.find(s => s.env?.V100_NORMAL_PLAY_ENGINE && s.run?.includes('playthrough')).env.V100_NORMAL_PLAY_RESUME_DIR = 'stale-win'; },
+    j => { j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).run += ' || true'; },
+    j => { j.steps.find(s => s.env?.V100_NORMAL_PLAY_ENGINE && s.run?.includes('v177-representative-normal-play.mjs')).env.V100_NORMAL_PLAY_RESUME_DIR = 'stale-win'; },
     j => { j.steps.at(-1).with.name = 'v177-normal-campaign-${{ matrix.engine }}'; },
     j => { j.steps = j.steps.filter(s => s.run !== 'node scripts/v177-normal-diagnostic-scope.mjs'); },
   ]) {

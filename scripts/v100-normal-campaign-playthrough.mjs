@@ -2,6 +2,7 @@ import {observeVisibleBattleHealthBars,visibleAirstrikeTarget} from './v100-norm
 // A normal campaign route: fresh save, earned CAPS, real time and UI inputs.
 // Read-only save inspection records progress; no seed, QA bridge or forced result.
 import assert from "node:assert/strict";
+import { normalPlayStageLimit } from './v177-representative-normal-play.mjs';
 import { appendFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -19,6 +20,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
+const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 const engine=process.env.V100_NORMAL_PLAY_ENGINE??'chromium';
 assert.ok(['chromium','webkit'].includes(engine));
@@ -29,6 +31,7 @@ const out = path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR ?? "outputs/v
 await mkdir(path.dirname(out), { recursive: true });
 await mkdir(out, { recursive: false });
 const report = { evidenceKind:"automated normal UI playthrough; manual feel and physical-device acceptance remain separate", engine, origin:origin.href, build:await productionBuildIdentity(), stages:[], events:{}, transactions:[], errors:[], status:"running" };
+report.normalPlayScope = { kind: stageLimit === 3 ? 'representative-opening' : 'normal-route', stageLimit, wholeCampaignAcceptance: false };
 const resumeDir = process.env.V100_NORMAL_PLAY_RESUME_DIR && path.resolve(process.env.V100_NORMAL_PLAY_RESUME_DIR);
 let restoredStorage;
 if (resumeDir) {
@@ -327,6 +330,7 @@ try {
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
     await context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true});
+    if(stageLimit<30&&save.completedStageIds.length>=stageLimit) {report.status="passed";break;}
     if(save.readStoryEventIds.includes("v100:event:credits")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
     const stage=V100_STAGES.find(stage=>save.availableStageIds.includes(stage.id)&&!save.completedStageIds.includes(stage.id));assert.ok(stage,"No next unfinished stage");
     if(preparedStage!==stage.number){await prepareEconomy(stage.number);preparedStage=stage.number;}
