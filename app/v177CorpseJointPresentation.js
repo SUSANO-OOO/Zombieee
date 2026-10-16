@@ -1,9 +1,11 @@
 import { V177_JOINT_ATLASES, v177CaptureJointPose, v177InterpolateCapturedJointPose,
-  drawV177ResolvedJointPose } from './v177JointPresentation.js';
+  drawV177ResolvedJointPose, v177JointPaintSupportY } from './v177JointPresentation.js';
 import { V177_CORPSE_JOINT_DATA } from './v177CorpseJointData.js';
+import { V177_WALKER_FLOOR_DATA } from './v177WalkerFloorData.js';
 import { v102CorpseSeverPlan, drawV102JointCorpseWound } from './v102CombatGore.js';
 
 const worlds=new WeakMap();
+const walkerSoles=V177_WALKER_FLOOR_DATA.outlines.filter(o=>V177_WALKER_FLOOR_DATA.supportParts.includes(o.name));
 const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const ease=p=>{p=clamp(p);return p*p*(3-2*p);};
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
@@ -69,6 +71,12 @@ function outlinePoints(state,matrices,root,onlyParts,omitParts) {
 // Keep the last living paint on the same floor as the subsequent fall. A
 // larger display size can place a source sole below its nominal frame anchor.
 export function v177LiveJointGroundLift(kind,plan,rendered,floorY) {
+  if((kind==='walker'||kind==='turned')&&Number.isFinite(floorY)) {
+    const bottom=v177JointPaintSupportY(kind,plan,walkerSoles,rendered);
+    // The original ready soles float above the nominal frame anchor. A signed
+    // correction aligns both raised and sunk soles with the physical floor.
+    return bottom===null?0:bottom-floorY;
+  }
   const atlas=V177_JOINT_ATLASES[kind],data=V177_CORPSE_JOINT_DATA[kind];
   if(!atlas || !data || !plan || !Number.isFinite(floorY))return 0;
   const initial=v177CaptureJointPose(kind,plan);if(!initial)return 0;

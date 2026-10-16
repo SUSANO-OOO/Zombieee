@@ -434,6 +434,30 @@ export function v177CaptureJointPose(kind,plan) {
   return {lower,upper};
 }
 
+const supportMatrix=new Float64Array(6);
+const supportScratch=[new Float64Array(6),new Float64Array(6)];
+// Resolve the same source matrices as drawV177JointPose. This synchronous
+// support query reuses three small matrices instead of capturing/re-solving
+// every limb and allocating an array for each painted outline vertex.
+export function v177JointPaintSupportY(kind,plan,outlines,rendered) {
+  const atlas=V177_JOINT_ATLASES[kind],r=atlas?.referenceFrame;
+  if(!plan||atlas?.type!=='rigid-parts'||!r||!outlines?.length)return null;
+  const {frame,width,height,x,y,angle=0,scaleX=1,scaleY=1,flipX=false}=rendered;
+  if(!frame||![width,height,x,y,angle,scaleX,scaleY].every(Number.isFinite)||width<=0||height<=0)return null;
+  const sin=Math.sin(angle),cos=Math.cos(angle),sx=scaleX*(flipX?-1:1);
+  const xx=sin*sx*width/(r.scale*r.width),yy=cos*scaleY*height/(r.scale*r.height);
+  const origin=y-sin*sx*width*(r.tx/(r.scale*r.width)+frame.anchorX)
+    -cos*scaleY*height*(r.ty/(r.scale*r.height)+frame.anchorY);
+  const resolve=plan.resolvedJointPose?resolvedJointMatrix:jointMatrix;
+  let bottom=-Infinity;
+  for(const outline of outlines) {
+    const m=resolve(supportMatrix,atlas,plan,outline.bone,outline.upper,supportScratch);
+    const a=xx*m[0]+yy*m[1],b=xx*m[2]+yy*m[3],c=origin+xx*m[4]+yy*m[5];
+    for(const p of outline.hull)bottom=Math.max(bottom,a*p[0]+b*p[1]+c);
+  }
+  return Number.isFinite(bottom)?bottom:null;
+}
+
 // The existing rigid interpolation and fixed-length IK own this transition.
 // In particular, the lower pelvis is not replaced by the attacking torso.
 export function v177InterpolateCapturedJointPose(kind,initial,finalPose,progress) {
