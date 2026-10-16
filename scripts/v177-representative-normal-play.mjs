@@ -76,4 +76,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   assert.equal(childCode, scope.normalReportStatus === 'failed' ? 1 : 0, 'unexpected child failure is not a normal defeat');
   await writeFile(path.join(directory, 'representative-scope.json'), JSON.stringify(scope, null, 2) + '\n');
   console.log(JSON.stringify(scope));
+  const representativeCode = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [path.resolve('scripts/v177-representative-battles.mjs')], { stdio: 'inherit', env: process.env });
+    child.on('error', reject); child.on('exit', resolve);
+  });
+  assert.equal(representativeCode, 0, 'independent middle/late observations retain all technical failure controls');
 }
