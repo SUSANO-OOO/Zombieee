@@ -12863,7 +12863,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
         g.running=true;g.paused=true;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
         if(!spawnHuman(g,"ranger",false))throw new Error("Incoming stun Ranger unavailable");
-        const actor=g.fighters.find(f=>f.kind==="ranger"&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,8);
+        const actor=g.fighters.find(f=>f.kind==="ranger"&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,7);
         if(!actor||!source)throw new Error("Incoming stun original pair unavailable");
         const proof=armV177IncomingStunProof(g,configureV177IncomingStunPair(actor,source,{lane,laneY:activeLaneCenters[lane],
           createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState}));

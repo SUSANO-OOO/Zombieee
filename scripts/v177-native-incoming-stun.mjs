@@ -10,7 +10,7 @@ export function readNativeIncomingStunSample({fighterId,targetId,afterSequence=0
   const select=id=>{
     const f=snapshot.fighters.find(row=>row.id===id);
     if(!f)return null;
-    const keys=['id','kind','side','hp','maxHp','speed','laneSpeed','damage','range','attackEvery','bodyRadius',
+    const keys=['id','kind','side','x','y','knock','hp','maxHp','speed','laneSpeed','damage','range','attackEvery','bodyRadius',
       'defense','progressionLevel','progressionRank','flash','stunned','attack','attackWindup','abilityWindup',
       'cooldown','abilityCooldown','spawnGrace','stationAbility'];
     return Object.fromEntries(keys.map(key=>[key,f[key]??null]));
@@ -45,7 +45,7 @@ export function assertNativeIncomingStun(row) {
     controlledOpponent:false,originalStats:true}))assert.equal(row.nativeClip.metadata?.[key],value,'Original clip binding: '+key);
   for(const flag of ['originalStats'])assert.equal(proof[flag],true);
   for(const flag of ['inertOpponent','injectedHit','injectedStun','manualClockAdvance'])assert.equal(proof[flag],false);
-  assert.ok(Math.abs(proof.original.sourceCooldown-1.44)<1e-10);
+  assert.ok(Math.abs(proof.original.sourceCooldown-1.26)<1e-10);
   assert.equal(proof.original.sourceAbilityCooldown,2.1);
   assert.equal(first.paused,true,'Original native recording begins before releasing the original combat clock');
   assert.equal(first.fighter.hp,proof.original.actorHp);assert.equal(first.target.hp,proof.original.sourceHp);

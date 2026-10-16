@@ -23,7 +23,7 @@ function pair(){
     gateEntering:false,contained:false,stationAbility:{phase:'idle',targetIds:[]},manualAbility:{phase:'idle'}};
   const actor={...structuredClone(common),...card,id:71,kind:'ranger',side:'human',maxHp:card.hp,cooldown:0,
     spawnGrace:.95,progressionLevel:1,progressionRank:0};
-  const source={...structuredClone(common),...stats,id:72,kind:'spindle',side:'zombie',maxHp:stats.hp,cooldown:1.44,
+  const source={...structuredClone(common),...stats,id:72,kind:'spindle',side:'zombie',maxHp:stats.hp,cooldown:1.26,
     abilityCooldown:2.1,laneSpeed:70,bodyRadius:18};
   const world={time:10,battleAudioGeneration:3,running:true,paused:true,over:false,fighters:[actor,source]};
   const options={lane:1,laneY:300,createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState};
@@ -54,8 +54,8 @@ test('the production QA pair uses original spawn constructors and keeps HP, stat
     [220,300,380],createCombatAnimationRuntime,createNavigationRecoveryState,armV177IncomingStunProof,
     {current:null},()=>{},()=>{},value=>ui.push(['paused',value]),()=>{},()=>{}];
   const prepare=new Function(...names,javascript('return ('+node.initializer.getText(tree)+');'))(...values);
-  const proof=prepare();assert.deepEqual(calls,[['human','ranger',false],['enemy','spindle',1,8]]);
-  assert.equal(g.paused,true);assert.equal(proof.original.actorHp,70);assert.equal(proof.original.sourceCooldown,1.44);
+  const proof=prepare();assert.deepEqual(calls,[['human','ranger',false],['enemy','spindle',1,7]]);
+  assert.equal(g.paused,true);assert.equal(proof.original.actorHp,70);assert.equal(proof.original.sourceCooldown,1.26);
   assert.equal(proof.original.sourceAbilityCooldown,2.1);assert.deepEqual(ui,[['paused',true]]);
   assert.equal(proof.battleGeneration,9);assert.equal(g.fighters.length,2);
   assert.deepEqual(g.pendingWeaponHits,[],'A previous battle must not inject an old pending hit into the original pair');
@@ -151,7 +151,7 @@ test('repeated copies of one ready draw cannot satisfy three distinct successful
 
 test('wrong bindings, injected/inert stats, pre-record hits, labels without painted joints, death and missing return fail closed',()=>{
   const faults=[row=>row.proof.inertOpponent=true,row=>row.proof.injectedStun=true,
-    row=>row.proof.original.sourceCooldown=0,row=>row.samples[0].proofId='foreign',
+    row=>row.proof.original.sourceCooldown=0,row=>row.proof.original.sourceCooldown=1.44,row=>row.samples[0].proofId='foreign',
     row=>row.samples[0].battleGeneration++,row=>row.samples[0].fighter.hp=0,
     row=>row.samples[0].target.damage=0,row=>row.samples[0].target.hp=1e6,
     row=>row.samples[0].overflow=true,row=>row.recordingStart.startedAt=120,
