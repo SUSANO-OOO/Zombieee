@@ -6,8 +6,9 @@ import path from 'node:path';
 // These two functions execute only in the existing hosted game page. They
 // capture its original canvas track; no copied frames, playback, game-clock
 // changes, microphone, audio routing or encoder-frame-rate override is used.
-export function startNativeCanvasClip(canvas,{metadata,engine='chromium',maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000}){
-  const state={metadata,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
+export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000}){
+  if(requestedMimeType!==null&&!['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType))throw new RangeError('Unknown diagnostic native container');
+  const state={metadata,requestedMimeType,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
     requestedAt:performance.now(),startedAt:null,stopRequestedAt:null,stoppedAt:null,
     status:'starting',mimeType:null,chunks:[],bytes:0,dataEvents:[],errors:[],maxBytes,stopMs};
   let resolveStopped;
@@ -30,7 +31,7 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',maxByte
   }
   // Preserve native frames and timing. Compare WebKit's MP4 path in the next
   // hosted run; choosing it does not establish a performance improvement.
-  state.mimePreferences=engine==='webkit'?['video/mp4','video/webm;codecs=vp8','video/webm']:['video/webm;codecs=vp8','video/mp4','video/webm'];
+  state.mimePreferences=requestedMimeType?[requestedMimeType]:engine==='webkit'?['video/mp4','video/webm;codecs=vp8','video/webm']:['video/webm;codecs=vp8','video/mp4','video/webm'];
   state.mimeType=state.mimePreferences.find(type=>MediaRecorder.isTypeSupported(type))??null;
   if(!state.mimeType){state.status='unsupported';state.errors.push('No supported native video container');return state;}
   try{
@@ -73,24 +74,26 @@ export async function finishNativeCanvasClip(state,{completed}){
     const bytes=new Uint8Array(await blob.arrayBuffer());
     let binary='';
     for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
-    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,
+    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,requestedMimeType:state.requestedMimeType,
       width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,
       startedAt:state.startedAt,stopRequestedAt:state.stopRequestedAt,stoppedAt:state.stoppedAt,
       nativeElapsedMs:state.startedAt!==null&&state.stoppedAt!==null?state.stoppedAt-state.startedAt:null,
+      captureWindowMs:state.startedAt!==null&&state.stopRequestedAt!==null?state.stopRequestedAt-state.startedAt:null,
       trackSettings:state.trackSettings??null,dataEvents:state.dataEvents,errors:state.errors,completed,
       scope:'Native canvas MediaRecorder bytes and native event times; decoded contents and encoded PTS still require verification',
       originalSpeedAccepted:false,encodedPtsVerified:false,videoBase64:btoa(binary)};
   }finally{clearTimeout(timer);state.cleanup();state.chunks.length=0;}
 }
 
-export async function beginV177NativeCanvasClip(page,metadata,{directory,engine}={}){
+export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null}={}){
   assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage'].includes(metadata.phase));
   assert.ok(Number.isFinite(metadata.fighterId));assert.ok(['chromium','webkit'].includes(engine));
+  assert.ok(requestedMimeType===null||['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType),'Unknown diagnostic native container');
   assert.ok(['base-enemy','authored-form','approach-to-attack'].includes(metadata.fixtureGroup));
   assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${metadata.fighterId}`);
   let handle,error,finished=false;
-  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine});}
+  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType});}
   catch(cause){error=String(cause);}
   return {async finish({completed}){
     if(finished)throw Error('Native canvas clip already finalized');finished=true;

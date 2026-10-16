@@ -65,6 +65,39 @@ test('host persistence forwards engine selection and retains the actual MP4 cont
   assert.equal((await readFile(receipt.file)).toString(),'native-anative-b');assert.equal(receipt.originalSpeedAccepted,false);assert.equal(f.disposed,1);
 });
 
+test('a diagnostic can select supported native VP8 on WebKit without overriding capture FPS or engine identity',async()=>{
+  const f=fixture({supportedTypes:['video/mp4','video/webm;codecs=vp8']});
+  const receipt=await f.finish(f.start({engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'}));
+  assert.equal(receipt.mimeType,'video/webm;codecs=vp8');
+  assert.deepEqual(Array.from(receipt.mimePreferences),['video/webm;codecs=vp8']);
+  assert.equal(receipt.requestedMimeType,'video/webm;codecs=vp8');
+  assert.equal(receipt.captureWindowMs,receipt.stopRequestedAt-receipt.startedAt);
+  assert.equal(receipt.nativeElapsedMs,receipt.stoppedAt-receipt.startedAt);
+  assert.equal(receipt.trackSettings.frameRate,59.94);
+  assert.equal(Buffer.from(receipt.videoBase64,'base64').toString(),'native-anative-b');
+  assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
+});
+
+test('an explicitly unsupported diagnostic container cannot silently fall back to another native codec',async()=>{
+  const f=fixture();
+  const receipt=await f.finish(f.start({engine:'webkit',requestedMimeType:'video/mp4'}));
+  assert.equal(receipt.status,'unsupported');assert.equal(f.captures,0);
+  assert.equal(receipt.originalSpeedAccepted,false);
+  assert.throws(()=>f.start({requestedMimeType:'video/unknown'}),/diagnostic native container/u);
+  assert.equal(f.captures,0);
+});
+
+test('host persistence forwards an explicit diagnostic codec and preserves the actual engine and original bytes',async()=>{
+  const f=fixture({supportedTypes:['video/mp4','video/webm;codecs=vp8']});
+  const directory=await mkdtemp(path.join(os.tmpdir(),'v177-native-codec-comparison-'));
+  const clip=await beginV177NativeCanvasClip(f.page,metadata,{directory,engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});
+  const receipt=await clip.finish({completed:true});
+  assert.equal(receipt.engine,'webkit');assert.equal(receipt.mimeType,'video/webm;codecs=vp8');
+  assert.equal(receipt.requestedMimeType,'video/webm;codecs=vp8');
+  assert.equal((await readFile(receipt.file)).toString(),'native-anative-b');
+  assert.equal(receipt.originalSpeedAccepted,false);assert.equal(f.disposed,1);
+});
+
 test('an interrupted original sampler retains its native payload but cannot become a completed clip',async()=>{
   const f=fixture(),receipt=await f.finish(f.start(),{completed:false});
   assert.equal(receipt.status,'invalid');assert.ok(receipt.errors.includes('Sampling window interrupted'));
