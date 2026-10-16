@@ -185,7 +185,6 @@ export class AudioMixer {
     this.audioStatus = Object.freeze({
       state: AUDIO_MIXER_STATES.LOCKED,
       contextState: null,
-      contextTiming: audioContextTimingSnapshot(this.context),
       needsGesture: false,
       reason: "initial",
       error: null,
@@ -1588,6 +1587,7 @@ export class AudioMixer {
     return {
       unlocked: this.unlocked,
       contextState: this.context?.state ?? null,
+      contextTiming: audioContextTimingSnapshot(this.context),
       contextGeneration: this.contextGeneration,
       contextCreateCount: this.contextCreateCount,
       output: this.audioOutput?.snapshot() ?? null,

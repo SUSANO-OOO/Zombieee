@@ -12,7 +12,7 @@ import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {assertV177EnemyLiveRender,v177EnemyRuntimeRenderIdentity} from './v177-enemy-live-render-contract.mjs';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
-import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage} from './v177-continuous-render-contract.mjs';
+import {V177_ADDITIONAL_CONTINUOUS_FORMS,assertV177AuthoredLiveRender,assertV177ContinuousFormCoverage,assertV177EngagementFormCoverage} from './v177-continuous-render-contract.mjs';
 import {hasV177ContinuousDraw} from './v177-continuous-draw-readiness.mjs';
 import {V177_NATIVE_ACTION_PLAN} from './v177-native-action-plan.mjs';
 import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
@@ -25,7 +25,7 @@ const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname));
 const out=process.env.V102_COMBAT_OUT??`outputs/v102-combat-${engine}`;
 await mkdir(out,{recursive:true});
-const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. All movement/attack fixtures retain original actor stats and use an inert durable opponent at a controlled distance. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),scope:'All 48 authored render forms in all 11 supported paused foundation inputs and continuous move/attack and approach-to-attack transitions at 844x340, plus an applied-damage outcome for every form at all three viewports. Each paused input uses a fresh fighter; non-deployment inputs first finish that fixture\'s initial deployment. Reaction fixtures queue one controlled incoming hit at original actor HP; normal damage/lifecycle produces the corpse or Mayo\'s dedicated retreat. No HP, corpse or retreat pose is fabricated. All movement/attack fixtures retain original actor stats and use an inert durable opponent at a controlled distance. Legacy fused twin art is an explicit art fixture, not a natural V1 encounter. These fixtures do not accept normal campaign tempo, all 21 animation states, original-speed naturalness, difficulty or physical recording.',pausedActions:V177_NATIVE_ACTION_PLAN.map(p=>p.action),cases:[],errors:[]};
 const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
 const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,
   formationSlots:owned.slice(0,7),flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -36,9 +36,9 @@ async function captureContinuousSamples(page,proof,metadata){
   await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
   const owner=canvasClips.get(page),clip=owner?await beginV177NativeCanvasClip(page,{...metadata,fighterId:proof.fighterId,preparedRenderKind:proof.renderKind??metadata.form,v100TwinPart:proof.v100TwinPart??null,legacyFusedFixture:proof.legacyFusedFixture??false},owner):null;
   const clock=frameClocks.get(page),section=clock?.beginSection({...metadata,fighterId:proof.fighterId});
-  const samples=[];
+  const samples=[],sampleCount=proof.phase==='engage'?30:15;
   try{
-  for(let i=0;i<15;i++){
+  for(let i=0;i<sampleCount;i++){
     await page.waitForTimeout(120);
     samples.push(await page.evaluate(id=>{
       const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
@@ -48,15 +48,15 @@ async function captureContinuousSamples(page,proof,metadata){
   }
   return samples;
   }finally{
-    clock?.endSection(section,{completed:samples.length===15});
-    if(clip)owner.receipts.push(await clip.finish({completed:samples.length===15}));
+    clock?.endSection(section,{completed:samples.length===sampleCount});
+    if(clip)owner.receipts.push(await clip.finish({completed:samples.length===sampleCount}));
   }
 }
 try{
   for(const [width,height]of [[1280,720],[844,390],[844,340]]){
     const context=await browser.newContext({viewport:{width,height},isMobile:width===844,hasTouch:true,
       recordVideo:{dir:`${out}/videos`,size:{width,height}}});
-    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],nativeCanvasClips:[],gore:[],reactions:[]};report.cases.push(row);
+    const page=await context.newPage(),row={width,height,motion:[],liveEnemyMotion:[],liveAdditionalMotion:[],liveEngagementMotion:[],nativeCanvasClips:[],gore:[],reactions:[]};report.cases.push(row);
     const frameClock=createV177VideoFrameClock(page,{engine,label:`${width}x${height}`});frameClocks.set(page,frameClock);
     if(width===844&&height===340)canvasClips.set(page,{directory:`${out}/native-canvas-clips`,engine,receipts:row.nativeCanvasClips});
     const requests=installRequestFailureAudit(page);
@@ -160,6 +160,17 @@ try{
           finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
         }
         row.continuousCoverage=assertV177ContinuousFormCoverage(row.liveEnemyMotion,row.liveAdditionalMotion);
+        for(const form of spriteKinds){
+          const phase='engage',proof=await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'engage'}),form);
+          const evidence={form,phase,proof,samples:[],status:'pending'};row.liveEngagementMotion.push(evidence);
+          try{
+            evidence.samples=await captureContinuousSamples(page,proof,{form,phase,fixtureGroup:'approach-to-attack'});
+            evidence.summary=assertV177AuthoredLiveRender(evidence);evidence.status='passed';
+            await page.screenshot({path:`${out}/${width}x${height}-${form}-continuous-engage.png`});
+          }catch(error){evidence.status='failed';evidence.error=String(error);throw error;}
+          finally{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}
+        }
+        row.engagementCoverage=assertV177EngagementFormCoverage(row.liveEngagementMotion);
       }
       for(const kind of ['walker','crusher','spindle','red-panther-knife',...Object.keys(V177_CORPSE_JOINT_DATA)]){
         await page.evaluate(kind=>window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind),kind);

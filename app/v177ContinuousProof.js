@@ -20,20 +20,26 @@ export function v177ProofFormIdentity(form,{knownForms,playableKinds}){
 // Only the localhost QA bridge calls this. The actor keeps its real movement,
 // range, damage, cadence, identity and progression. An inert durable opponent
 // supplies a controlled target; normal AI and the real simulation do the work.
-export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,laneY,knownForms,playableKinds,createAnimationRuntime,feralSeconds}){
+export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,laneY,knownForms,playableKinds,createAnimationRuntime,feralSeconds,attackReachFor}){
   const identity=v177ProofFormIdentity(form,{knownForms,playableKinds});
-  if(!['move','attack'].includes(phase)||!Number.isInteger(lane)||!Number.isFinite(laneY))throw new Error('Invalid continuous proof phase or lane');
+  if(!['move','attack','engage'].includes(phase)||!Number.isInteger(lane)||!Number.isFinite(laneY))throw new Error('Invalid continuous proof phase or lane');
   if(actor?.kind!==identity.kind||actor?.side!==identity.side||!target||target.side===actor.side)throw new Error('Continuous proof actor/target identity mismatch');
   if(form==='mayo-chan-feral'&&!actor.manualAbility)throw new Error('Feral form requires its own manual ability runtime');
   if(typeof createAnimationRuntime!=='function'||(form==='mayo-chan-feral'&&!(Number.isFinite(feralSeconds)&&feralSeconds>0)))throw new Error('Continuous proof requires the original animation constructor and feral duration');
   const originalActorStats=Object.fromEntries(['speed','laneSpeed','damage','range','attackEvery','hp','maxHp'].map(key=>[key,actor[key]]));
   if(!Object.values(originalActorStats).every(Number.isFinite))throw new Error('Continuous proof requires finite original actor stats');
+  // Use the production reach rule, including the target body, without
+  // enlarging actor range or changing its original movement/cadence.
+  const reachActor=form==='mayo-chan-feral'?{...actor,manualAbility:{...actor.manualAbility,phase:'feral'}}:actor;
+  const engagementReach=phase==='engage'&&typeof attackReachFor==='function'?attackReachFor(reachActor,target):null;
+  if(phase==='engage'&&(!(actor.speed>0)||!Number.isFinite(engagementReach)||engagementReach<0))throw new Error('Engagement proof requires original speed and production attack reach');
+  const approachDistance=phase==='engage'?Math.max(8,actor.speed*1.1):null;
   const facing=actor.side==='human'?'right':'left',sign=actor.side==='human'?1:-1;
   actor.x=actor.side==='human'?330:620;
   // Let longer-range weapons be seen instead of hiding the arm and muzzle
   // behind a target placed within 40px of every body. Melee spacing is retained.
   const attackDistance=actor.range>80?actor.range*.8:Math.max(12,Math.min(40,actor.range*.45));
-  target.x=phase==='move'?(actor.side==='human'?900:250):actor.x+sign*attackDistance;
+  target.x=phase==='move'?(actor.side==='human'?900:250):actor.x+sign*(phase==='engage'?engagementReach+approachDistance:attackDistance);
   for(const fighter of [actor,target]){
     fighter.y=laneY;fighter.lane=lane;fighter.anchorLane=lane;
     fighter.combatReady=true;fighter.gateEntering=false;fighter.spawnGrace=0;fighter.entryRampCleared=true;
@@ -48,6 +54,7 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
   target.targetId=actor.id;target.speed=0;target.laneSpeed=0;target.damage=0;target.cooldown=99;
   target.hp=1_000_000;target.maxHp=1_000_000;
   return {fighterId:actor.id,targetId:target.id,...identity,phase,originalActorStats,
+    ...(phase==='engage'?{engagement:{productionAttackReach:engagementReach,approachDistance}}:{}),
     initial:{actorX:actor.x,targetX:target.x,actorHp:actor.hp,targetHp:target.hp},
     scope:identity.legacyFusedFixture?'controlled legacy fused-art fixture; not a natural V1 encounter':'controlled target with original actor stats; not normal campaign or balance acceptance'};
 }

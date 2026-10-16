@@ -97,6 +97,13 @@ try {
               .map(([name, owner]) => [name, { state: owner.contextState, output: owner.output, duplicates: owner.duplicateLoopInstanceKeys }])) )}`);
           if (owners.ui.activeSceneVoices !== 0 || owners.battle.activeBgmVoices !== 1)
             throw new Error("Departing scene or duplicate battle music is still active");
+          for (const [name, owner] of Object.entries(owners)) {
+            const timing = owner.contextTiming;
+            if (!timing || !Number.isFinite(timing.sampleRate) || timing.sampleRate <= 0
+                || [timing.baseLatencySeconds, timing.outputLatencySeconds].some(value => value !== null
+                  && (!Number.isFinite(value) || value < 0)))
+              throw new Error("Missing or invalid live AudioContext timing for " + name);
+          }
           const sink = active.find(audio => audio.srcObject.id === owners.battle.output.streamId), stream = sink.srcObject;
           if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native output");
           const encoded = await globalThis.__V103_RECORD_NATIVE_AUDIO__(stream);

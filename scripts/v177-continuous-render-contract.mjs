@@ -10,7 +10,7 @@ const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS};
 export function assertV177AuthoredLiveRender({form,phase,proof,samples}){
   const identity=v177ProofFormIdentity(form,proofCatalog),path=V177_JOINT_ATLASES[form]?.path;
   assert.ok(path,'every authored body must have its connected joint texture');
-  assert.ok(['move','attack'].includes(phase));
+  assert.ok(['move','attack','engage'].includes(phase));
   for(const key of ['kind','side','renderKind','v100TwinPart','legacyFusedFixture'])assert.equal(proof[key],identity[key],`prepared ${key} must retain the requested original body`);
   assert.equal(proof.phase,phase);assert.ok(Number.isFinite(proof.fighterId));
   assert.ok(Array.isArray(samples)&&samples.length>=5);
@@ -39,16 +39,24 @@ export function assertV177AuthoredLiveRender({form,phase,proof,samples}){
   const first=samples[0],last=samples.at(-1),renders=samples.flatMap(s=>s.renders),sign=identity.side==='human'?1:-1;
   assert.ok(last.at-first.at>=1000);assert.ok(last.simulationTime-first.simulationTime>=.5);
   assert.ok(new Set(renders.map(r=>r.renderSequence)).size>=5,'native draw receipts must advance');
-  if(phase==='move'){
+  if(phase==='move'||phase==='engage'){
     assert.ok((last.fighter.x-first.fighter.x)*sign>4,'the original actor must actually advance towards its target');
     const walking=renders.filter(r=>['start-move','move'].includes(r.requestedState));
     assert.ok(walking.some(r=>r.actualXDelta*sign>0));
     assert.ok(new Set(walking.map(r=>r.jointLowerFrame)).size>1,'the feet must advance through the actual-distance gait');
     for(const r of walking){assert.equal(r.poseScaleX,1);assert.equal(r.poseScaleY,1);}
-  }else{
+  }
+  if(phase==='attack'||phase==='engage'){
     assert.ok(samples.some(s=>s.fighter.attackSequence>0),'normal AI must perform a real attack');
     assert.ok(renders.some(r=>r.requestedState==='active'));
     assert.ok(new Set(renders.map(r=>r.jointUpperFrame)).size>1,'the attack rig must advance through its motion');
+  }
+  if(phase==='engage'){
+    assert.ok(Number.isFinite(proof.engagement?.productionAttackReach)&&proof.engagement.approachDistance>4);
+    const ordered=[...new Map(renders.map(r=>[r.renderSequence,r])).values()].sort((a,b)=>a.renderSequence-b.renderSequence);
+    const moving=ordered.findIndex(r=>['start-move','move'].includes(r.requestedState)&&r.actualXDelta*sign>0);
+    const active=ordered.findIndex(r=>r.requestedState==='active');
+    assert.ok(moving>=0&&active>moving,'a real advancing walk must precede the real attack in the same continuous capture');
   }
   return {form,phase,kind:identity.kind,side:identity.side,legacyFusedFixture:identity.legacyFusedFixture,
     nativeSeconds:(last.at-first.at)/1000,simulationSeconds:last.simulationTime-first.simulationTime,
@@ -73,4 +81,14 @@ export function assertV177ContinuousFormCoverage(baseEnemies,additional){
   return {forms:spriteKinds.length,phases:baseEnemies.length+additional.length,baseEnemyPhases:baseEnemies.length,
     additionalPhases:additional.length,originalStatForms:new Set([...baseEnemies.map(e=>e.renderKind),...additional.map(e=>e.form)]).size,
     originalStatPhases:observed.size,allActionsAcceptance:false,normalPlayAcceptance:false};
+}
+
+// This supplements the unchanged move/attack coverage; it cannot replace it.
+export function assertV177EngagementFormCoverage(rows){
+  assert.equal(rows.length,spriteKinds.length);
+  for(const form of spriteKinds){
+    const matches=rows.filter(r=>r.form===form);assert.equal(matches.length,1,`missing or duplicate engagement body: ${form}`);
+    const row=matches[0];assert.equal(row.phase,'engage');assert.equal(row.status,'passed');assertV177AuthoredLiveRender(row);
+  }
+  return {forms:spriteKinds.length,phase:'engage',originalStats:true,orderedApproachAndAttack:true,allActionsAcceptance:false,normalPlayAcceptance:false};
 }

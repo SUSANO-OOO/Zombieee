@@ -12843,9 +12843,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
-      prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"defeat";sourceKind?:UnitKind}) => {
+      prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"engage"|"defeat";sourceKind?:UnitKind}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
-          createAnimationRuntime:createCombatAnimationRuntime,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
+          createAnimationRuntime:createCombatAnimationRuntime,attackReachFor:normalAttackReach,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
         const identity=v177ProofFormIdentity(form,proofCatalog),g=gameRef.current,lane:Lane=1;
         fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
         g.fighters=[];g.corpses=[];g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
