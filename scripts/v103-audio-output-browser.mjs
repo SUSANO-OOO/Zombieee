@@ -103,7 +103,7 @@ try {
           return {...encoded,
             outputs:active.length, paused:sink.paused,
             owners:Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
-              contextState:owner.contextState, output:owner.output, activeSceneVoices:owner.activeSceneVoices,
+              contextState:owner.contextState, contextTiming:owner.contextTiming, output:owner.output, activeSceneVoices:owner.activeSceneVoices,
               activeBgmVoices:owner.activeBgmVoices, duplicateLoopInstanceKeys:owner.duplicateLoopInstanceKeys,
             }]))};
         });
