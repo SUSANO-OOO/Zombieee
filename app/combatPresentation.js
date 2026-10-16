@@ -1427,12 +1427,17 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   const stateChanged = state !== previous.state;
   const strideDistance = Math.max(.001, Number(observation.locomotionCycleDistance)
     || LOCOMOTION_STRIDE_DISTANCE[observation.kind] || 14);
-  const previousPhase = Math.max(0, Number(previous.locomotionPhase) || 0);
+  const previousPhase = Number(previous.locomotionPhase) || 0;
   const locomotionStopPhase = state === 'stop-move' && stateChanged
-    ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
+    ? previousPhase : Number(previous.locomotionStopPhase) || 0;
   const advancingGait = moving && (!requestedState || requestedState === "retreat");
   let locomotionPhase = previousPhase;
-  if (advancingGait) locomotionPhase += movedDistance / strideDistance;
+  // Target-facing attacks can travel backward during recoil or repositioning.
+  // Reverse only the local stride so its planted foot cancels actual root
+  // travel; facing, unsigned distance evidence and clip-event time stay owned
+  // by their existing paths. Every gait renderer wraps signed cycle phases.
+  const gaitDirection = (x - previous.lastX) * (direction === "left" ? -1 : 1) < 0 ? -1 : 1;
+  if (advancingGait) locomotionPhase += gaitDirection * movedDistance / strideDistance;
   // A planted foot must not slide while the fighter is stationary. Settling
   // lowers the airborne foot in the rig; it never advances the gait phase.
   // Restart from that actual plant as well. Resetting lift to a full walking

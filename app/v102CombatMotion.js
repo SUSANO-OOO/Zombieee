@@ -26,14 +26,21 @@ export function v102CombatMotionSample(kind,sample,{ownedPose=false,side,attack=
   if (!V102_MOTION_GROUPS[kind] || ownedPose) return sample;
   const group=V102_MOTION_GROUPS[kind];
   let result=sample;
+  let normalEnemyProgress=null;
   if(side==='zombie'&&abilityWindup<=0&&!hitStates.has(sample.requestedState)) {
     if(attackWindup>0) result={...sample,spriteState:'attack-a'};
     else if(attack>0) {
       const elapsed=Math.max(0,ENEMY_NORMAL_ATTACK_SECONDS-attack);
       // Enemy normal attacks use the real 180 ms timer, rather than a much
       // longer allied clip which could hide their contact pose altogether.
-      result={...sampleAnimationClip(kind,elapsed<.12?'active':'recovery',0),
-        spriteState:elapsed<.12?'attack-b':'idle',clipProgress:clamp(elapsed/ENEMY_NORMAL_ATTACK_SECONDS)};
+      // Each joint segment needs its own 0..1 progress. Reusing the whole
+      // timer jumps from partway through contact to partway through recovery.
+      const recovering=elapsed>=.12;
+      const segmentElapsed=recovering?elapsed-.12:elapsed;
+      const segmentDuration=recovering?ENEMY_NORMAL_ATTACK_SECONDS-.12:.12;
+      normalEnemyProgress=clamp(elapsed/ENEMY_NORMAL_ATTACK_SECONDS);
+      result={...sampleAnimationClip(kind,recovering?'recovery':'active',0),
+        spriteState:recovering?'idle':'attack-b',clipProgress:clamp(segmentElapsed/segmentDuration)};
     }
   }
   const p=clamp(result.clipProgress),state=result.requestedState;
@@ -46,7 +53,7 @@ export function v102CombatMotionSample(kind,sample,{ownedPose=false,side,attack=
   } else if(state==='recovery') {
     // Keep the released limb pose before returning to ready. Replaying
     // attack-a here was a second windup with no corresponding damage.
-    result={...result,spriteState:p<.7?'attack-b':'idle'};
+    result={...result,spriteState:(normalEnemyProgress??p)<.7?'attack-b':'idle'};
   } else if(hitStates.has(state)) {
     const recoil=(1-p)*(1-p);
     pose={...IDENTITY,offsetX:-force*recoil,rotationRadians:-.022*recoil};
