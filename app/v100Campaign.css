@@ -1405,11 +1405,13 @@
 /* Preserve the whole group when a short screen would crop the rear speaker's head. */
 @media (max-height:430px) {
   .v100-event-backdrop[data-v100-background$="/art/v100/story-r5/cuts/chiha-confession.webp"],
-  .v100-event-backdrop[data-v100-background$="/art/v100/story-r5/cuts/ending-tky-transport.webp"] {
+  .v100-event-backdrop[data-v100-background$="/art/v100/story-r5/cuts/ending-tky-transport.webp"],
+  .v100-event-backdrop[data-v100-background$="/art/v100/story-r9/cuts/s03-cold-retrieval.webp"] {
     background-size: contain; background-position: center top; background-repeat: no-repeat;
   }
   .v100-event-image[src$="/art/v100/story-r5/cuts/chiha-confession.webp"],
-  .v100-event-image[src$="/art/v100/story-r5/cuts/ending-tky-transport.webp"] {
+  .v100-event-image[src$="/art/v100/story-r5/cuts/ending-tky-transport.webp"],
+  .v100-event-image[src$="/art/v100/story-r9/cuts/s03-cold-retrieval.webp"] {
     object-fit: contain; object-position: center top;
   }
 }
