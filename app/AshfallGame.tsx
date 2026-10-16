@@ -7,6 +7,7 @@ import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v10
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
+import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { configureV177IncomingStunPair, armV177IncomingStunProof, releaseV177IncomingStunProof, readV177IncomingStunProof, recordV177IncomingStunImpact, recordV177IncomingStunDraw } from "./v177IncomingStunProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
@@ -4425,7 +4426,7 @@ function drawSpriteFighter(
   const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
-    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,stunRemaining:f.stunned}) : null;
+    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -4593,7 +4594,7 @@ function drawSpriteFighter(
     h: frame.sourceRect.h,
   }];
   const drewArticulatedWalk = jointPose
-    ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f})
+    ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f,world:options.world})
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
   if(fighterRenderAuditEnabled&&recordAudit&&options.world)recordV177IncomingStunDraw(options.world,f,
@@ -8515,7 +8516,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);}
+  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177JointActorHistory(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;

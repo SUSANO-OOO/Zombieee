@@ -13,6 +13,7 @@ import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJo
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
+import { v177JointActorKey } from './v177JointActorHistory.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -38,7 +39,8 @@ export function v177JointCycleDistance(kind, renderScale) {
     ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
-export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,stunRemaining=0 }={}) {
+export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0 }={}) {
+  actor=v177JointActorKey(actor,world);
   const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
   if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
   if(state==='incapacitated')return kind==='ranger'&&atlas.upperRig
@@ -290,7 +292,8 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
     stunUpperTransform:resolved.upperTransform,stunReturnPlan:resolved.returnPlan??null};
 }
 
-export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor}={}) {
+export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor,world}={}) {
+  actor=v177JointActorKey(actor,world);
   const atlas=V177_JOINT_ATLASES[kind];
   if(!atlas || !plan || !image?.naturalWidth) { rememberRenderedJointPose(actor,kind,null); return false; }
   if(atlas.type==='rigid-parts'){
