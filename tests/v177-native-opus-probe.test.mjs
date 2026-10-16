@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import ts from "typescript";
 import { assertNativeOpusHost, installNativeOpusGuard, runNativeOpusProbe, nativeOpusAcceptance, nativeOpusProbeCases,
   NATIVE_OPUS_CONFIGURATION, NATIVE_OPUS_CONTEXT, NATIVE_OPUS_RUNTIME, nativeOpusClockEvidence,
   evaluateNativeOpusEvidence, nativeOpusPacketEvidence, analyseOpusPcm } from "../scripts/v177-native-opus-probe.mjs";
@@ -253,6 +254,30 @@ test("module fix preserves rejection of the original blob request and all foreig
   assert.throws(()=>nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs',method:'POST'},fixtures),/method/u);
   assert.throws(()=>nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs',method:'GET'},
     {...fixtures,muxerSource:''}),/missing/u);
+});
+
+test("the actual probe avoids native control resources while keeping its owned Start/Fire gesture and unchanged audio settings",()=>{
+  const tree=ts.createSourceFile('probe.mjs',runNativeOpusProbe.toString(),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+  const fn=tree.statements[0],block=fn.body.statements.find(ts.isTryStatement).tryBlock.statements;
+  const start=block.findIndex(node=>node.getText(tree).startsWith('audio = document.createElement'));
+  const end=block.findIndex(node=>node.getText(tree)==='source = new Source();');
+  assert.ok(start>=0&&end>=start);
+  const requests=[],elements=[];let constructed=0;
+  const audio={controls:false,remove(){}};
+  const document={createElement:kind=>{assert.equal(kind,'audio');return audio;},body:{append:element=>{
+    elements.push(element);if(element.controls)requests.push('blob:https://v177-native-opus.invalid/native-control-icon');
+  }}};
+  class Source{constructor(){constructed++;}}
+  const initialize=new Function('document','Source','let audio,source;'+block.slice(start,end+1).map(node=>node.getText(tree)).join('\n')+';return {audio,source};');
+  const actual=initialize(document,Source);
+  assert.equal(actual.audio,audio);assert.equal(constructed,1);assert.equal(audio.controls,false);
+  assert.equal(elements.length,0);assert.equal(requests.length,0);
+  assert.equal(audio.muted,false);assert.equal(audio.volume,1);assert.equal(audio.playbackRate,1);
+  assert.equal(audio.preload,'auto');assert.equal(audio.disableRemotePlayback,true);
+  const fixtures={muxerSource:'export const fixed=true;',sources:[]};
+  const html=nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/',method:'GET'},fixtures).body;
+  assert.match(html,/id="start-probe"/u);assert.match(html,/id="weapon-probe"/u);
+  assert.throws(()=>nativeOpusFixtureResponse({url:'blob:https://v177-native-opus.invalid/native-control-icon',method:'GET'},fixtures),/Unexpected request/u);
 });
 
 test("mock driver retains all four unsupported observations without creating media or promoting acceptance", async () => {

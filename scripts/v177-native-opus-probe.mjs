@@ -120,9 +120,11 @@ export async function runNativeOpusProbe({ muxerUrl, sourceUrls, route, mix, var
     check(muxerUrl===location.origin+"/v177-opus-webm-muxer.mjs","Pinned same-origin muxer module is missing");
     state.moduleUrl=muxerUrl;state.moduleRequested=true;
     transport = await import(muxerUrl);state.moduleImported=true;
-    audio = document.createElement("audio"); audio.controls = true; audio.disableRemotePlayback = true;
+    audio = document.createElement("audio"); audio.controls = false; audio.disableRemotePlayback = true;
     audio.preload = "auto"; audio.muted = false; audio.volume = 1; audio.playbackRate = 1;
-    document.body.append(audio); source = new Source();
+    // The owned Start/Fire buttons supply the native gesture. A detached media
+    // element avoids native control chrome and its unrelated blob icon loads.
+    source = new Source();
     for (const event of ["sourceopen", "sourceended", "sourceclose", "startstreaming", "endstreaming"]) {
       source.addEventListener(event, () => state.sourceEvents.push({ event, ms: ms(), streaming: source.streaming ?? null,
         duration: Number.isFinite(source.duration) ? source.duration : String(source.duration), time: audio.currentTime }));
