@@ -1079,6 +1079,12 @@ html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
     background:rgba(16,19,18,.78);
     line-height:1;
   }
+  /* The cost owns the upper edge here; reserve the lower edge for the
+     complete shortage count rather than the former two-character label. */
+  .game-frame[data-battle-hud-layout="mobile"]:not(.v100-shell .game-frame) .unit-card .card-state {
+    right:4px !important;
+    max-width:calc(100% - 8px) !important;
+  }
 }
 
 /* Battle cards are portrait-led now that the unit name is no longer printed
