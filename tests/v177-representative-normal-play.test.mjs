@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { load as loadYaml } from 'js-yaml';
 import { V100_STAGE_IDS } from '../app/v100Registry.js';
-import { normalPlayStageLimit, representativeNormalPlayScope } from '../scripts/v177-representative-normal-play.mjs';
+import { normalPlayStageLimit, representativeNormalPlayScope, representativeNormalPlayScopeWithExit } from '../scripts/v177-representative-normal-play.mjs';
 import * as representativeEntry from '../scripts/v177-representative-normal-play.mjs';
 
 const candidateSha = 'a'.repeat(40);
@@ -69,6 +69,31 @@ test('browser faults, missing coverage, forged results and old candidate reports
   ];
   for (const mutate of mutations) { const report = fixture(3); mutate(report); assert.throws(() => observe(report)); }
   const incomplete = fixture(); incomplete.stages.pop(); assert.throws(() => observe(incomplete));
+});
+
+test('an incomplete failed child retains its saved primary error and the strict scope rejection as cause',()=>{
+  const report=fixture();report.status='failed';report.error='TimeoutError: locator.click: Timeout 15000ms exceeded';
+  report.stages=[{number:1,id:V100_STAGE_IDS[0],status:'running',openingSave:{revision:105},inputs:[],result:null}];
+  const reportBytes=Buffer.from(JSON.stringify(report)),original=Buffer.from(reportBytes);
+  assert.throws(()=>representativeNormalPlayScopeWithExit({childCode:1,candidateSha,engine:'webkit',reportBytes}),failure=>{
+    assert.equal(failure.message,report.error);assert.equal(failure.cause?.code,'ERR_ASSERTION');return true;
+  });
+  assert.deepEqual(reportBytes,original);
+  for(const childCode of [0,null])assert.throws(()=>representativeNormalPlayScopeWithExit({childCode,candidateSha,engine:'webkit',reportBytes}),
+    failure=>failure.code==='ERR_ASSERTION'&&failure.cause===undefined);
+  for(const error of [undefined,'','  ',12]) {
+    const bad={...report,error};assert.throws(()=>representativeNormalPlayScopeWithExit({childCode:1,candidateSha,engine:'webkit',
+      reportBytes:Buffer.from(JSON.stringify(bad))}),failure=>failure.code==='ERR_ASSERTION'&&failure.cause===undefined);
+  }
+  assert.throws(()=>representativeNormalPlayScopeWithExit({childCode:1,candidateSha,engine:'webkit',reportBytes:Buffer.from('{')}),SyntaxError);
+});
+
+test('the child-exit wrapper preserves successful and actual defeat observations and rejects inconsistent exits',()=>{
+  for(const defeatedAt of [null,1,2,3]) {
+    const reportBytes=Buffer.from(JSON.stringify(fixture(defeatedAt))),binding={candidateSha,engine:'webkit',reportBytes};
+    assert.deepEqual(representativeNormalPlayScopeWithExit({childCode:defeatedAt?1:0,...binding}),representativeNormalPlayScope(binding));
+    assert.throws(()=>representativeNormalPlayScopeWithExit({childCode:defeatedAt?0:1,...binding}),/unexpected child failure/u);
+  }
 });
 
 test('CI keeps independent full developer progression and bounds both normal observations to opening stages', () => {

@@ -63,6 +63,24 @@ export function representativeNormalPlayScope({ candidateSha, engine, reportByte
   };
 }
 
+export function representativeNormalPlayScopeWithExit({childCode,...binding}) {
+  try {
+    const scope=representativeNormalPlayScope(binding);
+    assert.equal(childCode,scope.normalReportStatus==='failed'?1:0,'unexpected child failure is not a normal defeat');
+    return scope;
+  }catch(scopeError) {
+    let original;
+    try{original=JSON.parse(binding.reportBytes.toString('utf8'));}catch{throw scopeError;}
+    if(Number.isInteger(childCode)&&childCode!==0&&original?.status==='failed'
+      &&typeof original.error==='string'&&original.error.trim()) {
+      // The child Error object cannot cross the process boundary. Reconstruct
+      // its saved message as primary, retaining strict validation as cause.
+      throw new Error(original.error,{cause:scopeError});
+    }
+    throw scopeError;
+  }
+}
+
 export async function runBrowserQa() {
   assert.notEqual(process.platform, 'win32', 'normal-play observation is hosted-only');
   assert.equal(normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT), 3);
@@ -72,8 +90,7 @@ export async function runBrowserQa() {
   });
   const directory = path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
   const reportBytes = await readFile(path.join(directory, 'report.json'));
-  const scope = representativeNormalPlayScope({ candidateSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine: process.env.V100_NORMAL_PLAY_ENGINE, reportBytes });
-  assert.equal(childCode, scope.normalReportStatus === 'failed' ? 1 : 0, 'unexpected child failure is not a normal defeat');
+  const scope = representativeNormalPlayScopeWithExit({childCode, candidateSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine: process.env.V100_NORMAL_PLAY_ENGINE, reportBytes });
   await writeFile(path.join(directory, 'representative-scope.json'), JSON.stringify(scope, null, 2) + '\n');
   console.log(JSON.stringify(scope));
   const representativeCode = await new Promise((resolve, reject) => {
