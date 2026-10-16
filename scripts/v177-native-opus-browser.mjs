@@ -18,6 +18,22 @@ export const NATIVE_OPUS_ASSETS = Object.freeze([
     expectedSha256: "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f" },
 ]);
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
+const NATIVE_OPUS_ORIGIN = "https://v177-native-opus.invalid";
+const NATIVE_OPUS_MODULE_URL = NATIVE_OPUS_ORIGIN + "/v177-opus-webm-muxer.mjs";
+
+// The WebKit route observes blob module loads too. Serve the pinned module as
+// one explicit same-origin fixture instead of weakening the request allowlist.
+export function nativeOpusFixtureResponse({url,method}, {muxerSource,sources}) {
+  assert.equal(method,"GET","Unexpected diagnostic request method");
+  if(url===NATIVE_OPUS_ORIGIN+"/")return {contentType:"text/html",body:'<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;self&#39; &#39;unsafe-eval&#39;; connect-src &#39;self&#39;; media-src blob:; img-src data:"><link rel="icon" href="data:,"><title>Native Opus diagnostic</title><button id="start-probe">Start native Opus probe</button><button id="weapon-probe">Fire existing rifle effect</button>'};
+  if(url===NATIVE_OPUS_MODULE_URL){
+    assert.ok(typeof muxerSource==='string'&&muxerSource.length>0,"Pinned muxer module is missing");
+    return {contentType:"text/javascript",headers:{"Cache-Control":"no-store"},body:muxerSource};
+  }
+  const original=sources.find(input=>input.url===url);
+  assert.ok(original,"Unexpected request: "+url);
+  return {contentType:"audio/mpeg",body:original.data};
+}
 
 // All original fields/bytes are retained before remux, decode or acceptance
 // checks. The separate binary offsets bind each original packet and segment.
@@ -69,7 +85,8 @@ export async function observeNativeOpusStreams(browserType, host, { muxerSource,
   assert.equal(typeof writeArtifact, "function", "Original evidence writer is required before a browser can launch");
   const report = { schemaVersion: 1, ...nativeOpusAcceptance(), diagnosticOnly: true, status: "starting",
     contextOptions: NATIVE_OPUS_CONTEXT, browserVersion: null, cases: [], errors: [], cleanup: { browser: "not-created" } };
-  const origin = "https://v177-native-opus.invalid", documentUrl = origin + "/";
+  const origin = NATIVE_OPUS_ORIGIN, documentUrl = origin + "/";
+  report.muxerModule={url:NATIVE_OPUS_MODULE_URL,bytes:Buffer.byteLength(muxerSource),sha256:sha(Buffer.from(muxerSource))};
   let browser, closingBrowser = false;
   const failure = (kind, error) => report.errors.push({ kind, message: String(error?.message ?? error) });
   try {
@@ -90,14 +107,7 @@ export async function observeNativeOpusStreams(browserType, host, { muxerSource,
         await context.route("**/*", async intercepted => {
           const request = intercepted.request(), url = request.url(); row.requests.push({ url, method: request.method() });
           try {
-            assert.equal(request.method(), "GET", "Unexpected diagnostic request method");
-            if (url === documentUrl) {
-              await intercepted.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-eval&#39; blob:; connect-src &#39;self&#39;; media-src blob:; img-src data:"><link rel="icon" href="data:,"><title>Native Opus diagnostic</title><button id="start-probe">Start native Opus probe</button><button id="weapon-probe">Fire existing rifle effect</button>' });
-              return;
-            }
-            const original = sources.find(input => input.url === url);
-            assert.ok(original, "Unexpected request: " + url);
-            await intercepted.fulfill({ contentType: "audio/mpeg", body: original.data });
+            await intercepted.fulfill(nativeOpusFixtureResponse({url,method:request.method()},{muxerSource,sources}));
           } catch (caught) { error("route-driver", caught);
             try { await intercepted.abort(); } catch (abortError) { error("route-cleanup", abortError); } }
         });
@@ -112,7 +122,7 @@ export async function observeNativeOpusStreams(browserType, host, { muxerSource,
           globalThis.__V177_NATIVE_OPUS_RESULT = null;
           const run = (0, eval)("(" + implementation + ")");
           globalThis.__V177_NATIVE_OPUS_PROMISE = run(args).then(result => { globalThis.__V177_NATIVE_OPUS_RESULT = result; });
-        }, { implementation: runNativeOpusProbe.toString(), args: { muxerSource,
+        }, { implementation: runNativeOpusProbe.toString(), args: { muxerUrl:NATIVE_OPUS_MODULE_URL,
           sourceUrls: sources.map(({ data, ...input }) => { void data; return input; }), ...scenario } });
         await page.waitForFunction(() => document.documentElement.dataset.probeReady === "1" || globalThis.__V177_NATIVE_OPUS_RESULT, null, { timeout: 15000 });
         if (!await page.evaluate(() => Boolean(globalThis.__V177_NATIVE_OPUS_RESULT))) {
@@ -150,6 +160,8 @@ export async function observeNativeOpusStreams(browserType, host, { muxerSource,
           row.feasibility = "native-probe-passed-not-production-or-physical-acceptance";
         }
         assert.equal(row.requests.filter(request => request.url === documentUrl).length, 1, "Diagnostic document request count changed");
+        assert.equal(row.requests.filter(request => request.url === NATIVE_OPUS_MODULE_URL).length,
+          state.moduleRequested?1:0,"Pinned module request count changed");
         for (const original of sources) assert.equal(row.requests.filter(request => request.url === original.url).length,
           state.sourceSignals ? 1 : 0, "Original source request count changed");
       } catch (caught) {

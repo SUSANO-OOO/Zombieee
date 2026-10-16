@@ -63,7 +63,7 @@ export function nativeOpusProbeCases() {
 }
 
 // Self-contained for page.evaluate serialization; no module closure references.
-export async function runNativeOpusProbe({ muxerSource, sourceUrls, route, mix, variant }) {
+export async function runNativeOpusProbe({ muxerUrl, sourceUrls, route, mix, variant }) {
   const state = { schemaVersion: 1, diagnosticOnly: true, physicalRecordingAccepted: false, productionBackendAccepted: false,
     latencyAccepted: false, wholeGameAccepted: false, gameBackendChanged: false, productionGameLoaded: false,
     route, mix, variant, status: "starting", sampleRate: 48000, channels: 2, inputFrames: 0, inputDuration: 4,
@@ -75,7 +75,7 @@ export async function runNativeOpusProbe({ muxerSource, sourceUrls, route, mix, 
   const describe = error => ({ name: String(error?.name ?? "Error"), message: String(error?.message ?? error) });
   const sampleRate = 48000, framesPerPacket = 480, totalFrames = 192000;
   const reference = new Float32Array(totalFrames * 2), background = new Float32Array(totalFrames * 2);
-  let audio, encoder, source, buffer, objectUrl, moduleUrl, muxer, transport, startAt = null, nextFrame = 0;
+  let audio, encoder, source, buffer, objectUrl, muxer, transport, startAt = null, nextFrame = 0;
   let seStartFrame = null, fatal = null, finishedEncoding = false;
   const pending = [], ms = () => startAt === null ? null : performance.now() - startAt;
   const fail = error => { const item = describe(error); state.errors.push(item); fatal = item.message; };
@@ -117,8 +117,9 @@ export async function runNativeOpusProbe({ muxerSource, sourceUrls, route, mix, 
     for (const input of inputs) check(input.sampleRate === sampleRate && input.length > 0, "Offline source decode rate/length mismatch");
     check(inputs[0].length >= totalFrames, "Existing BGM does not cover the four-second diagnostic");
     state.sourceSignals = inputs.map(input => ({ duration: input.duration, channels: input.numberOfChannels, sampleRate: input.sampleRate }));
-    moduleUrl = URL.createObjectURL(new Blob([muxerSource], { type: "text/javascript" }));
-    transport = await import(moduleUrl);
+    check(muxerUrl===location.origin+"/v177-opus-webm-muxer.mjs","Pinned same-origin muxer module is missing");
+    state.moduleUrl=muxerUrl;state.moduleRequested=true;
+    transport = await import(muxerUrl);state.moduleImported=true;
     audio = document.createElement("audio"); audio.controls = true; audio.disableRemotePlayback = true;
     audio.preload = "auto"; audio.muted = false; audio.volume = 1; audio.playbackRate = 1;
     document.body.append(audio); source = new Source();
@@ -240,7 +241,6 @@ export async function runNativeOpusProbe({ muxerSource, sourceUrls, route, mix, 
     clean(() => { if (encoder && encoder.state !== "closed") encoder.close(); });
     clean(() => { if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); audio.remove(); } });
     clean(() => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
-    clean(() => { if (moduleUrl) URL.revokeObjectURL(moduleUrl); });
     state.activity = JSON.parse(JSON.stringify(globalThis.__V177_NATIVE_OPUS_ACTIVITY ?? null));
   }
   return state;

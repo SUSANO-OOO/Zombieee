@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { assertNativeOpusHost, installNativeOpusGuard, runNativeOpusProbe, nativeOpusAcceptance, nativeOpusProbeCases,
   NATIVE_OPUS_CONFIGURATION, NATIVE_OPUS_CONTEXT, NATIVE_OPUS_RUNTIME, nativeOpusClockEvidence,
   evaluateNativeOpusEvidence, nativeOpusPacketEvidence, analyseOpusPcm } from "../scripts/v177-native-opus-probe.mjs";
-import { observeNativeOpusStreams, retainNativeOpusRaw, verifyNativeOpusRemux, NATIVE_OPUS_ASSETS } from "../scripts/v177-native-opus-browser.mjs";
+import { observeNativeOpusStreams, retainNativeOpusRaw, verifyNativeOpusRemux, nativeOpusFixtureResponse, NATIVE_OPUS_ASSETS } from "../scripts/v177-native-opus-browser.mjs";
 import { OpusWebmMuxer } from "../scripts/v177-opus-webm-muxer.mjs";
 
 const host = { platform: "darwin", env: { GITHUB_ACTIONS: "true", RUNNER_OS: "macOS", GITHUB_EVENT_NAME: "pull_request", V177_EXPECTED_HEAD_SHA: "a".repeat(40) } };
@@ -67,7 +67,7 @@ async function staticProbe({ response = { supported: true, config: structuredClo
   const result = await globals(values, async () => {
     // Deliberately serialize to prove there is no outer acceptance/config closure.
     const run = (0, eval)("(" + runNativeOpusProbe.toString() + ")");
-    return run({ muxerSource: "", sourceUrls: [], route: "ManagedMediaSource", mix: "bgm", variant: "live-unprimed-10ms" });
+    return run({ muxerUrl: "", sourceUrls: [], route: "ManagedMediaSource", mix: "bgm", variant: "live-unprimed-10ms" });
   });
   return { result, constructions, sourceQueries };
 }
@@ -226,6 +226,34 @@ function mockBrowser(options = {}) {
   return { type, calls };
 }
 const sourceInputs = () => NATIVE_OPUS_ASSETS.map(asset => ({ ...asset, data: Buffer.alloc(0) }));
+
+test("owned route serves the exact pinned muxer as a same-origin JavaScript module",async()=>{
+  const muxerSource=await readFile(new URL('../scripts/v177-opus-webm-muxer.mjs',import.meta.url),'utf8');
+  const fixtures={muxerSource,sources:[{url:'https://v177-native-opus.invalid/source/0.mp3',data:Buffer.from([1,2,3])}]};
+  const moduleFixture=nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs',method:'GET'},fixtures);
+  assert.equal(moduleFixture.body,muxerSource);assert.equal(moduleFixture.contentType,'text/javascript');
+  assert.equal(moduleFixture.headers['Cache-Control'],'no-store');
+  // Parse the exact served bytes in Node; this creates no browser, encoder,
+  // audio element or AudioContext. Native CSP/import still requires remote QA.
+  const exported=await import('data:text/javascript;base64,'+Buffer.from(moduleFixture.body).toString('base64'));
+  assert.equal(typeof exported.OpusWebmMuxer,'function');
+  const document=nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/',method:'GET'},fixtures);
+  const csp=document.body.match(/content="(default-src[^"]+)"/u)[1];
+  assert.match(csp,/script-src &#39;self&#39; &#39;unsafe-eval&#39;;/u);
+  assert.match(csp,/media-src blob:;/u);assert.doesNotMatch(csp,/script-src[^;]*blob:/u);
+  assert.deepEqual(nativeOpusFixtureResponse({url:fixtures.sources[0].url,method:'GET'},fixtures).body,Buffer.from([1,2,3]));
+});
+
+test("module fix preserves rejection of the original blob request and all foreign or altered fixtures",()=>{
+  const fixtures={muxerSource:'export const fixed = true;',sources:[]};
+  for(const url of ['blob:https://v177-native-opus.invalid/old-owned-module',
+    'https://outside.invalid/v177-opus-webm-muxer.mjs','https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs?other=1',
+    'https://v177-native-opus.invalid/another-module.mjs'])
+    assert.throws(()=>nativeOpusFixtureResponse({url,method:'GET'},fixtures),/Unexpected request/u);
+  assert.throws(()=>nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs',method:'POST'},fixtures),/method/u);
+  assert.throws(()=>nativeOpusFixtureResponse({url:'https://v177-native-opus.invalid/v177-opus-webm-muxer.mjs',method:'GET'},
+    {...fixtures,muxerSource:''}),/missing/u);
+});
 
 test("mock driver retains all four unsupported observations without creating media or promoting acceptance", async () => {
   const mock = mockBrowser(), rows = [];
