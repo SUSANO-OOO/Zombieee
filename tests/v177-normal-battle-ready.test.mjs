@@ -28,7 +28,7 @@ const renderCounter = vm.runInNewContext(ts.transpileModule('(hud) => (' + count
 
 function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
   const save = createDefaultV100Save({ now: '2026-10-14T00:00:00Z' }), original = structuredClone(save);
-  const report = { stages: [] }, events = [];
+  const report = { stages: [], provenance: { head: 'a'.repeat(40) } }, events = [];
   const probe = new Error('Stop the offline source probe after reading the real counter');
   const timeout = new Error('Battle HUD did not become visible within the original 15000ms step deadline');
   let parsed;
@@ -41,18 +41,21 @@ function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
         if (stuck) throw timeout;
         await Promise.resolve();ready = true;
       },
-      async evaluateAll(read) {
+      async evaluateAll(read,args) {
         events.push('read-counter');
         const node = { getAttribute(name) {
           assert.equal(name, 'aria-label');
           return renderCounter({ summonedCount: 0 }).props['aria-label'];
         } };
-        return read(ready ? (duplicate ? [node, node] : [node]) : []);
+        return read(ready ? (duplicate ? [node, node] : [node]) : [],args);
       },
     };
   } };
   const battle = vm.runInNewContext(declaration.getText(driver) + '\nbattle;', {
-    page, report, saveAt: async () => save, persist: async () => {},
+    page, report, saveAt: async () => save, persist: async () => {},out:'inert',
+    createNormalFrameCapture:async()=>({record:async()=>{}}),
+    finishNormalFrameCapture:async()=>({status:'incomplete',performanceAcceptance:false}),
+    __V177_READ_NORMAL_FRAMES__:()=>({owner:'inert',sequence:0,times:[]}),
     phaseAt: async () => 'battle', continueRequested: async () => {},
     normalCampaignDeploymentCount(label) {
       parsed = normalCampaignDeploymentCount(label);

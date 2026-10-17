@@ -134,7 +134,9 @@ export async function runHostedNativePcmDiagnostic() {
         // Independent original-input mix, not the emitted WAV as its own reference.
         for(let i=0;i<reference.length;i++){background[i]=music[i]*.18;const j=firstEffect===null?-1:i-firstEffect*2;
           reference[i]=background[i]+(j>=0?(effect[j]??0)*.5:0);
-          assert.equal(wav.readInt16LE(44+i*2),Math.round((music[i]*.18+(j>=0?(effect[j]??0)*.5:0))*32767),'Generated WAV differs from original input mix');}
+          const quantized=Math.round((music[i]*.18+(j>=0?(effect[j]??0)*.5:0))*32767);
+          // PCM16 has one zero; JavaScript Math.round also produces negative zero.
+          assert.equal(wav.readInt16LE(44+i*2),quantized===0?0:quantized,'Generated WAV differs from original input mix');}
         const referenceBytes=Buffer.from(reference.buffer),backgroundBytes=Buffer.from(background.buffer);
         row.artifacts.push(await save(label+'-reference.f32le',referenceBytes));row.artifacts.push(await save(label+'-background.f32le',backgroundBytes));
         assertActive();

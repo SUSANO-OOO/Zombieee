@@ -13,6 +13,7 @@ import { pwaBrowserType } from './pwa-browser-runtime.mjs';
 import { productionBuildIdentity } from './browser-qa-build-identity.mjs';
 import { installRequestFailureAudit } from './browser-request-failure-audit.mjs';
 import { startNativeCanvasClip, finishNativeCanvasClip } from './v177-native-canvas-clips.mjs';
+import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
 
 export const V177_REPRESENTATIVE_WINDOW_MS = 120_000;
 export function assertRepresentativeBattleObservation(row) {
@@ -72,7 +73,8 @@ async function main() {
         recordVideo: { dir: path.join(out, 'videos'), size: report.viewport } });
       const page = await context.newPage(), video = page.video();
       const requests = installRequestFailureAudit(page); row.requestAudit = requests.report;
-      let clip;
+      let clip,frameCapture;
+      const frameOwner=`${head}:representative:${number}`;
       const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
       const phaseAt = () => page.locator('.v100-shell').getAttribute('data-v100-phase');
       const persist = () => writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
@@ -94,6 +96,7 @@ async function main() {
         await writeFile(path.join(out, `s${number}-native-opening.json`), JSON.stringify(row.nativeClip, null, 2) + '\n', { flag: 'wx' });
       }
       try {
+        await page.addInitScript(installNormalFrameObserver);
         await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(fixture.save));
         await page.goto(origin.href);
         await dismissInstallOffer(page, { timeout: 15000, readySelector: '.v100-start-screen', waitForFictionDismissal: true });
@@ -104,7 +107,10 @@ async function main() {
         await page.screenshot({ path: path.join(out, `s${number}-formation.png`) });
         await page.getByRole('button', { name: '戦闘へ', exact: true }).click({ timeout: 500 });
         await page.waitForFunction(() => globalThis.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.running === true);
-        row.openingSave = await saveAt();
+        frameCapture=await createNormalFrameCapture({directory:out,label:`s${number}`,owner:frameOwner});
+        const opening=await page.evaluate(owner=>({save:JSON.parse(localStorage.getItem('nishijin-campaign-v100')),
+          frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'start')??null}),frameOwner);
+        row.openingSave=opening.save;await frameCapture.record(opening.frames);
         clip = await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip, { engine, metadata: {
           fixtureGroup: 'representative-normal-budget', stageNumber: number, phase: 'opening', form: 'whole-battle' } });
         const started = Date.now(); let lastSnapshotTime = -Infinity;
@@ -112,7 +118,7 @@ async function main() {
           const phase = await phaseAt();
           if (phase === 'result') break;
           assert.equal(phase, 'battle');
-          await normalTacticalInput(page, row, { observeSnapshot(snapshot) {
+          await normalTacticalInput(page, row, { frameOwner,observeFrameChunk:chunk=>frameCapture.record(chunk),observeSnapshot(snapshot) {
             if (!snapshot || snapshot.time - lastSnapshotTime < 2) return;
             lastSnapshotTime = snapshot.time;
             row.snapshots.push({ time: snapshot.time, baseHp: snapshot.baseHp, command: snapshot.energy,
@@ -126,7 +132,9 @@ async function main() {
         }
         row.wallElapsedMs = Date.now() - started;
         if (await phaseAt() === 'result') await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === 'false');
-        const end = await page.evaluate(() => ({ phase: document.querySelector('.v100-shell')?.dataset.v100Phase, save: JSON.parse(localStorage.getItem('nishijin-campaign-v100')) }));
+        const end = await page.evaluate(owner => ({ phase: document.querySelector('.v100-shell')?.dataset.v100Phase, save: JSON.parse(localStorage.getItem('nishijin-campaign-v100')),
+          frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'stop')??null }),frameOwner);
+        await frameCapture.record(end.frames);row.framePerformance=await frameCapture.finish();
         row.finalSave = end.save;
         if (end.phase === 'result') row.outcome = (row.finalSave.pendingResult ?? row.finalSave.lastResult)?.won ? 'won' : 'lost';
         else row.outcome = 'observed-window';
@@ -134,6 +142,7 @@ async function main() {
         await page.screenshot({ path: path.join(out, `s${number}-observation-end.png`) });
       } catch (error) { row.status = 'failed'; row.error = String(error); await page.screenshot({ path: path.join(out, `s${number}-failure.png`) }).catch(() => {}); }
       finally {
+        row.framePerformance??=await finishNormalFrameCapture(page,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
         if (clip) await finishClip(false).catch(error => { row.captureError = String(error); row.status = 'failed'; });
         try { row.finalSave ??= await saveAt(); await context.storageState({ path: path.join(out, `s${number}-browser-storage.json`), indexedDB: true }); }
         catch (error) { row.saveCaptureError = String(error); row.status = 'failed'; }

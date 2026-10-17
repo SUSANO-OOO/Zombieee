@@ -19,6 +19,7 @@ import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
+import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
@@ -164,10 +165,19 @@ async function battle(stage) {
   const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastEmergencyCursor=-1;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleEnemyTarget=false;
   // The outer campaign phase changes before the real asset gate releases the HUD.
   await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
+  const frameOwner=`${report.provenance.head}:${stage.id}:${record.openingSave.revision}`;
+  const frameCapture=await createNormalFrameCapture({directory:out,label:`s${stage.number}`,owner:frameOwner});
+  let frameStarted=false;
+  try {
   while(await phaseAt()==="battle") {
     await continueRequested();
     try {
-    const deploymentCount=normalCampaignDeploymentCount(await page.locator('.v100-deployed-count').evaluateAll(nodes=>nodes.length===1?nodes[0].getAttribute('aria-label'):null));
+    const observed=await page.locator('.v100-deployed-count').evaluateAll((nodes,{owner,action})=>({
+      value:nodes.length===1?nodes[0].getAttribute('aria-label'):null,
+      frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,action)??null,
+    }),{owner:frameOwner,action:frameStarted?'drain':'start'});
+    frameStarted=true;await frameCapture.record(observed.frames);
+    const deploymentCount=normalCampaignDeploymentCount(observed.value);
     record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
     if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
@@ -276,6 +286,9 @@ async function battle(stage) {
       break;
     }
   }
+  } finally {
+    record.framePerformance=await finishNormalFrameCapture(page,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
+  }
   await acceptResult(record);
 }
 async function acceptResult(record) {
@@ -324,6 +337,7 @@ try {
    }
  }
  let preparedStage=0;
+ await page.evaluate(installNormalFrameObserver);
  for(let steps=0;steps<6000;steps++) {
   await continueRequested();
   if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics on normal route");

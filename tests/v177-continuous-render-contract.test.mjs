@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
@@ -23,6 +25,30 @@ test('All 48 original bodies can require actual AI travel, attack motion and unc
     const e=evidence(form,phase),r=assertV177AuthoredLiveRender(e);
     assert.equal(r.form,form);assert.equal(r.expectedJointPath,V177_JOINT_ATLASES[form].path);
     assert.equal(r.legacyFusedFixture,form==='futago');
+  }
+});
+
+test('the actual continuous browser read preserves weighted Ranger paint receipts without manufacturing success',async()=>{
+  // Extract the actual hosted reader without importing its browser-launching entry point.
+  const source=await readFile('scripts/v102-combat-browser.mjs','utf8'),ast=ts.createSourceFile('combat.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),callbacks=[];
+  const visit=node=>{if(ts.isCallExpression(node)&&node.expression.getText(ast)==='page.evaluate'&&node.arguments[0]?.getText(ast).includes('renders:audit.renderHistory.map'))callbacks.push(node.arguments[0]);ts.forEachChild(node,visit);};visit(ast);
+  assert.equal(callbacks.length,1);
+  const read=new Function('window','performance','location','document','id','return ('+callbacks[0].getText(ast)+')(id)');
+  const project=sample=>read({__ASHFALL_BATTLE_QA__:{getSnapshot:()=>({time:sample.simulationTime,running:sample.running,paused:sample.paused}),
+    getEnemyFacingRuntimeAudit:()=>({fighter:sample.fighter,renderHistory:sample.renders})}},
+    {now:()=>sample.at},{pathname:sample.route},{visibilityState:sample.visible?'visible':'hidden'},sample.fighter.id);
+  for(const phase of ['move','attack']){
+    const original=evidence('ranger',phase),projected={...original,samples:original.samples.map(project)};
+    for(let i=0;i<original.samples.length;i++)assert.deepEqual(projected.samples[i].renders,original.samples[i].renders);
+    assert.doesNotThrow(()=>assertV177AuthoredLiveRender(projected));
+    for(const field of ['jointWeightedLowerDrawSucceeded','jointWeightedLower']){
+      const absent=structuredClone(original);delete absent.samples[1].renders[0][field];
+      const sampled={...absent,samples:absent.samples.map(project)};
+      assert.equal(sampled.samples[1].renders[0][field],undefined);assert.throws(()=>assertV177AuthoredLiveRender(sampled));
+    }
+    const failed=structuredClone(original);failed.samples[1].renders[0].jointWeightedLowerDrawSucceeded=false;
+    const sampled={...failed,samples:failed.samples.map(project)};
+    assert.equal(sampled.samples[1].renders[0].jointWeightedLowerDrawSucceeded,false);assert.throws(()=>assertV177AuthoredLiveRender(sampled));
   }
 });
 test('A paused label, frozen feet, different body, altered speed or missing attack origin cannot pass as native motion',()=>{

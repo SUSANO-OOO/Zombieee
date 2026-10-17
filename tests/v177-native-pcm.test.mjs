@@ -93,6 +93,21 @@ test('the hosted driver rejects local browser/audio invocation before opening an
   assert.equal(PCM_STREAM.budgetMs,150);
 });
 
+test('the actual driver accepts the one PCM16 zero and still rejects a one-integer input mismatch',async()=>{
+  const {createRequire}=await import('node:module'),ts=createRequire(import.meta.url)('typescript'),
+    source=await readFile('scripts/v177-native-pcm-browser.mjs','utf8'),ast=ts.createSourceFile('pcm.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+  const loops=[];const visit=node=>{if(ts.isForStatement(node)&&node.getText(ast).includes('Generated WAV differs from original input mix'))loops.push(node);ts.forEachChild(node,visit);};visit(ast);
+  assert.equal(loops.length,1);const values=new Float32Array([-1e-6,1e-6,.2,-.2]);
+  assert.equal(Object.is(Math.round(values[0]*.18*32767),-0),true);
+  const wav=Buffer.alloc(44+values.length*2);
+  for(let i=0;i<values.length;i++)wav.writeInt16LE(Math.round(values[i]*.18*32767),44+i*2);
+  const bindings={assert,reference:new Float32Array(values.length),background:new Float32Array(values.length),music:values,effect:new Float32Array(0),firstEffect:null,wav};
+  const check=new Function(...Object.keys(bindings),loops[0].getText(ast));
+  assert.doesNotThrow(()=>check(...Object.values(bindings)));
+  for(const index of [0,1,2,3]){const exact=wav.readInt16LE(44+index*2);wav.writeInt16LE(exact+1,44+index*2);
+    assert.throws(()=>check(...Object.values(bindings)),/Generated WAV differs/);wav.writeInt16LE(exact,44+index*2);}
+});
+
 test('the actual PCM driver refuses expired input after every pending native UI boundary',async t=>{
   // Execute the actual driver with inert native surfaces and an exact manual clock.
   const {createRequire}=await import('node:module'),path=await import('node:path'),{createHash}=await import('node:crypto');
